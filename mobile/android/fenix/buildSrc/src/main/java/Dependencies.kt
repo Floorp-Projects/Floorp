@@ -57,7 +57,7 @@ object Versions {
 
     const val google_ads_id_version = "16.0.0"
 
-    const val google_play_store_version = "1.8.0"
+    const val google_play_review_version = "2.0.0"
 
     const val protobuf = "3.21.6" // keep in sync with the version used in AS.
 }
@@ -260,7 +260,8 @@ object Deps {
     const val google_ads_id = "com.google.android.gms:play-services-ads-identifier:${Versions.google_ads_id_version}"
 
     // Required for in-app reviews
-    const val google_play_store = "com.google.android.play:core:${Versions.google_play_store_version}"
+    const val google_play_review = "com.google.android.play:review:${Versions.google_play_review_version}"
+    const val google_play_review_ktx = "com.google.android.play:review-ktx:${Versions.google_play_review_version}"
 
     const val detektApi = "io.gitlab.arturbosch.detekt:detekt-api:${Versions.detekt}"
     const val detektTest = "io.gitlab.arturbosch.detekt:detekt-test:${Versions.detekt}"
