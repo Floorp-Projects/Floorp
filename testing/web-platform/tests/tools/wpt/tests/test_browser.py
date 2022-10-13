@@ -64,15 +64,15 @@ def test_edgechromium_webdriver_version(mocked_call):
     webdriver_binary = '/usr/bin/edgedriver'
 
     # Working cases.
-    mocked_call.return_value = 'MSEdgeDriver 84.0.4147.30'
+    mocked_call.return_value = 'Microsoft Edge WebDriver 84.0.4147.30'
     assert edge.webdriver_version(webdriver_binary) == '84.0.4147.30'
-    mocked_call.return_value = 'MSEdgeDriver 87.0.1 (abcd1234-refs/branch-heads/4147@{#310})'
+    mocked_call.return_value = 'Microsoft Edge WebDriver 87.0.1 (abcd1234-refs/branch-heads/4147@{#310})'
     assert edge.webdriver_version(webdriver_binary) == '87.0.1'
 
     # Various invalid version strings
     mocked_call.return_value = 'Edge 84.0.4147.30 (dev)'
     assert edge.webdriver_version(webdriver_binary) is None
-    mocked_call.return_value = 'MSEdgeDriver New 84.0.4147.30'
+    mocked_call.return_value = 'Microsoft Edge WebDriver New 84.0.4147.30'
     assert edge.webdriver_version(webdriver_binary) is None
     mocked_call.return_value = ''
     assert edge.webdriver_version(webdriver_binary) is None
