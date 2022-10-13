@@ -35,41 +35,62 @@ let $0 = instantiate(`(module
     (unreachable)
   )
 
-  (func (export "select_unreached_result_1") (result i32)
+  (func (export "select-unreached-result1") (result i32)
     (unreachable) (i32.add (select))
   )
 
-  (func (export "select_unreached_result_2") (result i64)
+  (func (export "select-unreached-result2") (result i64)
     (unreachable) (i64.add (select (i64.const 0) (i32.const 0)))
   )
 
-  (func (export "unreachable-num")
+  (func (export "select-unreached-num")
     (unreachable)
     (select)
     (i32.eqz)
     (drop)
   )
-  (func (export "unreachable-ref")
+  (func (export "select-unreached-ref")
     (unreachable)
     (select)
     (ref.is_null)
     (drop)
   )
+
+  (type $$t (func (param i32) (result i32)))
+  (func (export "call_ref-unreached") (result i32)
+    (unreachable)
+    (call_ref $$t)
+  )
 )`);
 
-// ./test/core/unreached-valid.wast:42
+// ./test/core/unreached-valid.wast:48
 assert_trap(() => invoke($0, `select-trap-left`, [1]), `unreachable`);
 
-// ./test/core/unreached-valid.wast:43
+// ./test/core/unreached-valid.wast:49
 assert_trap(() => invoke($0, `select-trap-left`, [0]), `unreachable`);
 
-// ./test/core/unreached-valid.wast:44
+// ./test/core/unreached-valid.wast:50
 assert_trap(() => invoke($0, `select-trap-right`, [1]), `unreachable`);
 
-// ./test/core/unreached-valid.wast:45
+// ./test/core/unreached-valid.wast:51
 assert_trap(() => invoke($0, `select-trap-right`, [0]), `unreachable`);
 
-// ./test/core/unreached-valid.wast:49
+// ./test/core/unreached-valid.wast:53
+assert_trap(() => invoke($0, `select-unreached-result1`, []), `unreachable`);
+
+// ./test/core/unreached-valid.wast:54
+assert_trap(() => invoke($0, `select-unreached-result2`, []), `unreachable`);
+
+// ./test/core/unreached-valid.wast:55
+assert_trap(() => invoke($0, `select-unreached-num`, []), `unreachable`);
+
+// ./test/core/unreached-valid.wast:56
+assert_trap(() => invoke($0, `select-unreached-ref`, []), `unreachable`);
+
+// ./test/core/unreached-valid.wast:58
+assert_trap(() => invoke($0, `call_ref-unreached`, []), `unreachable`);
+
+// ./test/core/unreached-valid.wast:63
 let $1 = instantiate(`(module
   (func (export "meet-bottom")
     (block (result f64)
@@ -84,5 +105,5 @@ let $1 = instantiate(`(module
   )
 )`);
 
-// ./test/core/unreached-valid.wast:63
+// ./test/core/unreached-valid.wast:77
 assert_trap(() => invoke($1, `meet-bottom`, []), `unreachable`);
