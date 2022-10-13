@@ -4,6 +4,8 @@
   <CurrentIssues>
     <ID>AbsentOrWrongFileLicense:AutoFitTextureView.kt$mozilla.components.feature.qr.views.AutoFitTextureView.kt</ID>
     <ID>AbsentOrWrongFileLicense:QrFragment.kt$mozilla.components.feature.qr.QrFragment.kt</ID>
+    <ID>MaxLineLength:WebExtensionSupport.kt$WebExtensionSupport.&lt;no name provided&gt;$override</ID>
+    <ID>MaxLineLength:WebExtensionSupport.kt$WebExtensionSupport.&lt;no name provided&gt;$val sessionId = openTab(store, onNewTabOverride, onSelectTabOverride, extension, engineSession)</ID>
     <ID>UndocumentedPublicClass:AutoSave.kt$AutoSave</ID>
     <ID>UndocumentedPublicClass:AutoSave.kt$AutoSave$Storage</ID>
     <ID>UndocumentedPublicClass:Base64.kt$Base64</ID>
@@ -149,7 +151,7 @@
     <ID>UndocumentedPublicFunction:BrowserMenu.kt$BrowserMenu$fun dismiss()</ID>
     <ID>UndocumentedPublicFunction:BrowserMenu.kt$BrowserMenu$fun invalidate()</ID>
     <ID>UndocumentedPublicFunction:ByteArray.kt$@Suppress("MagicNumber") fun ByteArray.toHexString(hexLength: Int): String</ID>
-    <ID>UndocumentedPublicFunction:ByteArray.kt$fun ByteArray.toBitmap( offset: Int, length: Int, opts: BitmapFactory.Options? = null ): Bitmap?</ID>
+    <ID>UndocumentedPublicFunction:ByteArray.kt$fun ByteArray.toBitmap( offset: Int, length: Int, opts: BitmapFactory.Options? = null, ): Bitmap?</ID>
     <ID>UndocumentedPublicFunction:ByteArray.kt$fun ByteArray.toBitmap(opts: BitmapFactory.Options? = null): Bitmap?</ID>
     <ID>UndocumentedPublicFunction:ByteArray.kt$fun ByteArray.toHexString(): String</ID>
     <ID>UndocumentedPublicFunction:ByteArray.kt$fun ByteArray.toSha256Digest(): ByteArray</ID>
@@ -204,15 +206,9 @@
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.TrackingProtectionPolicy$fun contains(category: TrackingCategory)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.TrackingProtectionPolicy.Companion$fun none()</ID>
     <ID>UndocumentedPublicFunction:EngineVersion.kt$EngineVersion$operator fun compareTo(other: EngineVersion): Int</ID>
-    <ID>UndocumentedPublicFunction:EngineView.kt$LifecycleObserver$@OnLifecycleEvent(Lifecycle.Event.ON_CREATE) fun onCreate()</ID>
-    <ID>UndocumentedPublicFunction:EngineView.kt$LifecycleObserver$@OnLifecycleEvent(Lifecycle.Event.ON_DESTROY) fun onDestroy()</ID>
-    <ID>UndocumentedPublicFunction:EngineView.kt$LifecycleObserver$@OnLifecycleEvent(Lifecycle.Event.ON_PAUSE) fun onPause()</ID>
-    <ID>UndocumentedPublicFunction:EngineView.kt$LifecycleObserver$@OnLifecycleEvent(Lifecycle.Event.ON_RESUME) fun onResume()</ID>
-    <ID>UndocumentedPublicFunction:EngineView.kt$LifecycleObserver$@OnLifecycleEvent(Lifecycle.Event.ON_START) fun onStart()</ID>
-    <ID>UndocumentedPublicFunction:EngineView.kt$LifecycleObserver$@OnLifecycleEvent(Lifecycle.Event.ON_STOP) fun onStop()</ID>
     <ID>UndocumentedPublicFunction:Extensions.kt$fun String.toLocale(): Locale</ID>
     <ID>UndocumentedPublicFunction:Extentions.kt$fun Project.property(names: String, defaultValue: String): String</ID>
-    <ID>UndocumentedPublicFunction:ExternalAppBrowserFragment.kt$ExternalAppBrowserFragment.Companion$fun create( sessionId: String, manifest: WebAppManifest? )</ID>
+    <ID>UndocumentedPublicFunction:ExternalAppBrowserFragment.kt$ExternalAppBrowserFragment.Companion$fun create( sessionId: String, manifest: WebAppManifest?, )</ID>
     <ID>UndocumentedPublicFunction:Facts.kt$Facts$@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE) fun clearProcessors()</ID>
     <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onClearMatches()</ID>
     <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onClose()</ID>
@@ -230,7 +226,7 @@
     <ID>UndocumentedPublicFunction:HttpURLConnectionClient.kt$HttpURLConnectionClient.Companion$fun getOrCreateCookieManager(): CookieManager</ID>
     <ID>UndocumentedPublicFunction:IconGenerator.kt$IconGenerator$fun generate(context: Context, request: IconRequest): Icon</ID>
     <ID>UndocumentedPublicFunction:IconPreprarer.kt$IconPreprarer$fun prepare(context: Context, request: IconRequest): IconRequest</ID>
-    <ID>UndocumentedPublicFunction:IconProcessor.kt$IconProcessor$fun process( context: Context, request: IconRequest, resource: IconRequest.Resource?, icon: Icon, desiredSize: DesiredSize ): Icon?</ID>
+    <ID>UndocumentedPublicFunction:IconProcessor.kt$IconProcessor$fun process( context: Context, request: IconRequest, resource: IconRequest.Resource?, icon: Icon, desiredSize: DesiredSize, ): Icon?</ID>
     <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnCommitListener(l: OnCommitListener)</ID>
     <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnDispatchKeyEventPreImeListener(l: OnDispatchKeyEventPreImeListener?)</ID>
     <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnFilterListener(l: OnFilterListener)</ID>
@@ -257,10 +253,8 @@
     <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract operator fun div(other: JexlValue): JexlValue</ID>
     <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract operator fun plus(other: JexlValue): JexlValue</ID>
     <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract operator fun times(other: JexlValue): JexlValue</ID>
-    <ID>UndocumentedPublicFunction:LifecycleAwareFeature.kt$LifecycleAwareFeature$@OnLifecycleEvent(Lifecycle.Event.ON_START) fun start()</ID>
-    <ID>UndocumentedPublicFunction:LifecycleAwareFeature.kt$LifecycleAwareFeature$@OnLifecycleEvent(Lifecycle.Event.ON_STOP) fun stop()</ID>
     <ID>UndocumentedPublicFunction:Log.kt$Log$// Only for testing @VisibleForTesting fun reset()</ID>
-    <ID>UndocumentedPublicFunction:LogSink.kt$LogSink$fun log( priority: Log.Priority = Log.Priority.DEBUG, tag: String? = null, throwable: Throwable? = null, message: String? = null )</ID>
+    <ID>UndocumentedPublicFunction:LogSink.kt$LogSink$fun log( priority: Log.Priority = Log.Priority.DEBUG, tag: String? = null, throwable: Throwable? = null, message: String? = null, )</ID>
     <ID>UndocumentedPublicFunction:LoginFragment.kt$LoginFragment.Companion$fun create(authUrl: String, redirectUrl: String): LoginFragment</ID>
     <ID>UndocumentedPublicFunction:LoginFragment.kt$LoginFragment.OnLoginCompleteListener$fun onLoginComplete(code: String, state: String, action: String, fragment: LoginFragment)</ID>
     <ID>UndocumentedPublicFunction:LoginFragment.kt$LoginFragment.OnLoginCompleteListener$fun onLoginComplete(code: String, state: String, fragment: LoginFragment)</ID>
@@ -268,7 +262,7 @@
     <ID>UndocumentedPublicFunction:MemoryIconPreparer.kt$MemoryIconPreparer.PreparerMemoryCache$fun getResources(request: IconRequest): List&lt;IconRequest.Resource&gt;</ID>
     <ID>UndocumentedPublicFunction:MemoryIconProcessor.kt$MemoryIconProcessor.ProcessorMemoryCache$fun put(request: IconRequest, resource: IconRequest.Resource, icon: Icon)</ID>
     <ID>UndocumentedPublicFunction:OkHttpClient.kt$OkHttpClient.Companion$fun getOrCreateCookieManager(): CookieManager</ID>
-    <ID>UndocumentedPublicFunction:OriginVerifierFeature.kt$OriginVerifierFeature$suspend fun verify( state: CustomTabState, token: CustomTabsSessionToken, @Relation relation: Int, origin: Uri ): Boolean</ID>
+    <ID>UndocumentedPublicFunction:OriginVerifierFeature.kt$OriginVerifierFeature$suspend fun verify( state: CustomTabState, token: CustomTabsSessionToken, @Relation relation: Int, origin: Uri, ): Boolean</ID>
     <ID>UndocumentedPublicFunction:PermissionRequest.kt$PermissionRequest$fun containsVideoAndAudioSources()</ID>
     <ID>UndocumentedPublicFunction:PictureInPictureFeature.kt$PictureInPictureFeature$fun onHomePressed(): Boolean</ID>
     <ID>UndocumentedPublicFunction:Providers.kt$BaseDomainAutocompleteProvider$fun initialize(context: Context)</ID>
@@ -295,7 +289,7 @@
     <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun getStringExtra(name: String): String?</ID>
     <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun hasExtra(name: String): Boolean</ID>
     <ID>UndocumentedPublicFunction:SampleToolbarHelpers.kt$fun getToolbarConfiguration(intent: Intent): ToolbarConfiguration</ID>
-    <ID>UndocumentedPublicFunction:SendCrashReportService.kt$SendCrashReportService.Companion$fun createReportIntent( context: Context, crash: Crash, notificationTag: String? = null, notificationId: Int = 0 ): Intent</ID>
+    <ID>UndocumentedPublicFunction:SendCrashReportService.kt$SendCrashReportService.Companion$fun createReportIntent( context: Context, crash: Crash, notificationTag: String? = null, notificationId: Int = 0, ): Intent</ID>
     <ID>UndocumentedPublicFunction:SendCrashTelemetryService.kt$SendCrashTelemetryService.Companion$fun createReportIntent(context: Context, crash: Crash): Intent</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$UnsupportedSetting$operator fun getValue(thisRef: Any?, prop: KProperty&lt;*&gt;): T</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$UnsupportedSetting$operator fun setValue(thisRef: Any?, prop: KProperty&lt;*&gt;, value: T)</ID>
@@ -342,8 +336,6 @@
     <ID>UndocumentedPublicFunction:WebserverRule.kt$WebserverRule$fun url(path: String = ""): String</ID>
     <ID>UndocumentedPublicFunction:WorkManagerSyncManager.kt$fun getLastSynced(context: Context): Long</ID>
     <ID>UndocumentedPublicFunction:nodes.kt$AstNode$open fun toString(level: Int, isTopLevel: Boolean = true): String</ID>
-    <ID>UnusedPrivateMember:FennecMigrator.kt$FennecMigrator.Builder$private var loginsStorageKey: String? = null</ID>
-    <ID>UnusedPrivateMember:FennecMigrator.kt$FennecMigrator.Builder$private var masterPassword = FennecLoginsMigration.DEFAULT_MASTER_PASSWORD</ID>
     <ID>UnusedPrivateMember:GeckoPromptDelegate.kt$GeckoPromptDelegate$private operator fun Int.contains(mask: Int): Boolean</ID>
   </CurrentIssues>
 </SmellBaseline>
