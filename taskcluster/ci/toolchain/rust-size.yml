@@ -15,7 +15,7 @@ job-defaults:
 linux64-rust-size:
     treeherder:
         symbol: TL(rust-size)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     run:
         toolchain-artifact: public/build/rust-size.tar.zst
     fetches:

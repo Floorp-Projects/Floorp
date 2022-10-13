@@ -8,7 +8,7 @@ job-defaults:
         local-toolchain: true
     index:
         product: static-analysis
-    worker-type: b-linux-large
+    worker-type: b-linux-large-gcp
     worker:
         max-run-time: 3600
     run:
@@ -46,7 +46,7 @@ macosx64-clang-tidy:
         job-name: macosx64-clang-tidy
     treeherder:
         symbol: TM(clang-tidy)
-    worker-type: b-linux-large
+    worker-type: b-linux-large-gcp
     run:
         script: build-clang.sh
         arguments:
@@ -64,7 +64,7 @@ macosx64-arch64-clang-tidy:
         job-name: macosx64-aarch64-clang-tidy
     treeherder:
         symbol: TM(clang-tidy-aarch64)
-    worker-type: b-linux-large
+    worker-type: b-linux-large-gcp
     worker:
         env:
             OSX_ARCH: arm64

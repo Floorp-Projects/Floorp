@@ -5,7 +5,7 @@
 job-defaults:
     treeherder:
         tier: 2
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 3600
 
