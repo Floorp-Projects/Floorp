@@ -2242,7 +2242,6 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mRotate(StyleRotate::None()),
       mTranslate(StyleTranslate::None()),
       mScale(StyleScale::None()),
-      mContainerName(StyleContainerName::None()),
       mWillChange{{}, {0}},
       mOffsetPath(StyleOffsetPath::None()),
       mOffsetDistance(LengthPercentage::Zero()),

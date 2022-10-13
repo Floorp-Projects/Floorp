@@ -1536,6 +1536,7 @@ bitflags! {
 }
 
 /// https://drafts.csswg.org/css-contain-3/#container-name
+#[repr(transparent)]
 #[derive(
     Clone,
     Debug,
@@ -1547,23 +1548,17 @@ bitflags! {
     ToResolvedValue,
     ToShmem,
 )]
-#[repr(u8)]
-pub enum ContainerName {
-    /// The query container has no query container name.
-    None,
-    /// Specifies a query container name as an identifier.
-    Ident(CustomIdent),
-}
+pub struct ContainerName(#[css(iterable, if_empty = "none")] pub crate::OwnedSlice<CustomIdent>);
 
 impl ContainerName {
     /// Return the `none` value.
     pub fn none() -> Self {
-       Self::None
+        Self(Default::default())
     }
 
     /// Returns whether this is the `none` value.
     pub fn is_none(&self) -> bool {
-        matches!(self, Self::None)
+        self.0.is_empty()
     }
 }
 
@@ -1572,6 +1567,7 @@ impl Parse for ContainerName {
         _: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
+        let mut idents = vec![];
         let location = input.current_source_location();
         let first = input.expect_ident()?;
         if first.eq_ignore_ascii_case("none") {
@@ -1579,8 +1575,19 @@ impl Parse for ContainerName {
         }
         const DISALLOWED_CONTAINER_NAMES: &'static [&'static str] =
             &["none", "not", "or", "and", "auto", "normal"];
-
-        Ok(ContainerName::Ident(CustomIdent::from_ident(location, first, DISALLOWED_CONTAINER_NAMES)?))
+        idents.push(CustomIdent::from_ident(
+            location,
+            first,
+            DISALLOWED_CONTAINER_NAMES,
+        )?);
+        while let Ok(ident) = input.try_parse(|input| input.expect_ident_cloned()) {
+            idents.push(CustomIdent::from_ident(
+                location,
+                &ident,
+                DISALLOWED_CONTAINER_NAMES,
+            )?);
+        }
+        Ok(ContainerName(idents.into()))
     }
 }
 

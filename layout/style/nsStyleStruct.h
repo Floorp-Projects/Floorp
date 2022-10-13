@@ -1268,7 +1268,6 @@ struct StyleAnimation {
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
  private:
   using StyleContain = mozilla::StyleContain;
-  using StyleContainerName = mozilla::StyleContainerName;
   using StyleContentVisibility = mozilla::StyleContentVisibility;
 
  public:
