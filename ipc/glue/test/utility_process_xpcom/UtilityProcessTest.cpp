@@ -78,6 +78,20 @@ UtilityProcessTest::StopProcess() {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+UtilityProcessTest::TestTelemetryProbes() {
+  RefPtr<UtilityProcessManager> utilityProc =
+      UtilityProcessManager::GetSingleton();
+  MOZ_ASSERT(utilityProc, "No UtilityprocessManager?");
+
+  for (RefPtr<UtilityProcessParent>& parent :
+       utilityProc->GetAllProcessesProcessParent()) {
+    Unused << parent->SendTestTelemetryProbes();
+  }
+
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS(UtilityProcessTest, nsIUtilityProcessTest)
 
 }  // namespace mozilla::ipc
