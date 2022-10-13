@@ -49,7 +49,9 @@ class FileSystemManager : public nsISupports {
 
   void Shutdown();
 
-  FileSystemManagerChild* Actor() const;
+  void BeginRequest(
+      std::function<void(const RefPtr<FileSystemManagerChild>&)>&& aSuccess,
+      std::function<void(nsresult)>&& aFailure);
 
   already_AddRefed<Promise> GetDirectory(ErrorResult& aRv);
 

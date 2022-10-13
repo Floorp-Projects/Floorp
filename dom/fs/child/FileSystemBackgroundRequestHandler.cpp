@@ -37,8 +37,8 @@ void FileSystemBackgroundRequestHandler::Shutdown() {
   }
 }
 
-FileSystemManagerChild*
-FileSystemBackgroundRequestHandler::GetFileSystemManagerChild() const {
+const RefPtr<FileSystemManagerChild>&
+FileSystemBackgroundRequestHandler::FileSystemManagerChildStrongRef() const {
   return mFileSystemManagerChild;
 }
 
