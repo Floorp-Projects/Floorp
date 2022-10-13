@@ -12,9 +12,11 @@
  */
 
 use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
-use api::units::{DeviceIntSize, LayoutRect};
+use api::units::{DeviceIntRect, DeviceIntSize, LayoutRect};
 use api::{ColorF, PremultipliedColorF};
 use crate::device::Texel;
+use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
+
 
 unsafe impl Texel for GpuBufferBlock {}
 
@@ -87,14 +89,84 @@ impl Into<GpuBufferBlock> for PremultipliedColorF {
     }
 }
 
+impl Into<GpuBufferBlock> for DeviceIntRect {
+    fn into(self) -> GpuBufferBlock {
+        GpuBufferBlock {
+            data: [
+                self.min.x as f32,
+                self.min.y as f32,
+                self.max.x as f32,
+                self.max.y as f32,
+            ],
+        }
+    }
+}
+
+/// Record a patch to the GPU buffer for a render task
+struct DeferredBlock {
+    task_id: RenderTaskId,
+    index: usize,
+}
+
+/// Interface to allow writing multiple GPU blocks, possibly of different types
+pub struct GpuBufferWriter<'a> {
+    buffer: &'a mut Vec<GpuBufferBlock>,
+    deferred: &'a mut Vec<DeferredBlock>,
+    index: usize,
+    block_count: usize,
+}
+
+impl<'a> GpuBufferWriter<'a> {
+    fn new(
+        buffer: &'a mut Vec<GpuBufferBlock>,
+        deferred: &'a mut Vec<DeferredBlock>,
+        index: usize,
+        block_count: usize,
+    ) -> Self {
+        GpuBufferWriter {
+            buffer,
+            deferred,
+            index,
+            block_count,
+        }
+    }
+
+    /// Push one (16 byte) block of data in to the writer
+    pub fn push_one<B>(&mut self, block: B) where B: Into<GpuBufferBlock> {
+        self.buffer.push(block.into());
+    }
+
+    /// Push a reference to a render task in to the writer. Once the render
+    /// task graph is resolved, this will be patched with the UV rect of the task
+    pub fn push_render_task(&mut self, task_id: RenderTaskId) {
+        self.deferred.push(DeferredBlock {
+            task_id,
+            index: self.buffer.len(),
+        });
+        self.buffer.push(GpuBufferBlock::EMPTY);
+    }
+
+    /// Close this writer, returning the GPU address of this set of block(s).
+    pub fn finish(self) -> GpuBufferAddress {
+        assert_eq!(self.buffer.len(), self.index + self.block_count);
+
+        GpuBufferAddress {
+            u: (self.index % MAX_VERTEX_TEXTURE_WIDTH) as u16,
+            v: (self.index / MAX_VERTEX_TEXTURE_WIDTH) as u16,
+        }
+    }
+}
+
 pub struct GpuBufferBuilder {
     data: Vec<GpuBufferBlock>,
+    deferred: Vec<DeferredBlock>,
 }
 
 impl GpuBufferBuilder {
     pub fn new() -> Self {
         GpuBufferBuilder {
             data: Vec::new(),
+            deferred: Vec::new(),
         }
     }
 
@@ -121,7 +193,33 @@ impl GpuBufferBuilder {
         }
     }
 
-    pub fn finalize(mut self) -> GpuBuffer {
+    /// Begin writing a specific number of blocks
+    pub fn write_blocks(
+        &mut self,
+        block_count: usize,
+    ) -> GpuBufferWriter {
+        assert!(block_count < MAX_VERTEX_TEXTURE_WIDTH);
+
+        if self.data.len() + block_count >= MAX_VERTEX_TEXTURE_WIDTH {
+            while self.data.len() % MAX_VERTEX_TEXTURE_WIDTH != 0 {
+                self.data.push(GpuBufferBlock::EMPTY);
+            }
+        }
+
+        let index = self.data.len();
+
+        GpuBufferWriter::new(
+            &mut self.data,
+            &mut self.deferred,
+            index,
+            block_count,
+        )
+    }
+
+    pub fn finalize(
+        mut self,
+        render_tasks: &RenderTaskGraph,
+    ) -> GpuBuffer {
         let required_len = (self.data.len() + MAX_VERTEX_TEXTURE_WIDTH-1) & !(MAX_VERTEX_TEXTURE_WIDTH-1);
 
         for _ in 0 .. required_len - self.data.len() {
@@ -130,6 +228,16 @@ impl GpuBufferBuilder {
 
         let len = self.data.len();
         assert!(len % MAX_VERTEX_TEXTURE_WIDTH == 0);
+
+        // At this point, we know that the render task graph has been built, and we can
+        // query the location of any dynamic (render target) or static (texture cache)
+        // task. This allows us to patch the UV rects in to the GPU buffer before upload
+        // to the GPU.
+        for block in self.deferred.drain(..) {
+            let render_task = &render_tasks[block.task_id];
+            let target_rect = render_task.get_target_rect();
+            self.data[block.index] = target_rect.into();
+        }
 
         GpuBuffer {
             data: self.data,
