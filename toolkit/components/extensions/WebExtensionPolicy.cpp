@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "MainThreadUtils.h"
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/extensions/DocumentObserver.h"
 #include "mozilla/extensions/WebExtensionContentScript.h"
@@ -18,6 +19,7 @@
 #include "nsGlobalWindowInner.h"
 #include "nsIObserver.h"
 #include "nsISubstitutingProtocolHandler.h"
+#include "nsLiteralString.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 
@@ -174,27 +176,68 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(WebAccessibleResource)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebAccessibleResource)
 
 /*****************************************************************************
+ * WebExtensionPolicyCore
+ *****************************************************************************/
+
+WebExtensionPolicyCore::WebExtensionPolicyCore(WebExtensionPolicy* aPolicy,
+                                               const WebExtensionInit& aInit,
+                                               ErrorResult& aRv)
+    : mPolicy(aPolicy),
+      mId(NS_AtomizeMainThread(aInit.mId)),
+      mName(aInit.mName),
+      mType(NS_AtomizeMainThread(aInit.mType)),
+      mManifestVersion(aInit.mManifestVersion),
+      mExtensionPageCSP(aInit.mExtensionPageCSP),
+      mIsPrivileged(aInit.mIsPrivileged),
+      mTemporarilyInstalled(aInit.mTemporarilyInstalled),
+      mBackgroundWorkerScript(aInit.mBackgroundWorkerScript) {
+  // In practice this is not necessary, but in tests where the uuid
+  // passed in is not lowercased various tests can fail.
+  ToLowerCase(aInit.mMozExtensionHostname, mHostname);
+
+  // Initialize the base CSP and extension page CSP
+  if (mManifestVersion < 3) {
+    nsresult rv = Preferences::GetString(BASE_CSP_PREF_V2, mBaseCSP);
+    if (NS_FAILED(rv)) {
+      mBaseCSP = NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_BASE_CSP_V2);
+    }
+  } else {
+    nsresult rv = Preferences::GetString(BASE_CSP_PREF_V3, mBaseCSP);
+    if (NS_FAILED(rv)) {
+      mBaseCSP = NS_LITERAL_STRING_FROM_CSTRING(DEFAULT_BASE_CSP_V3);
+    }
+  }
+
+  if (mExtensionPageCSP.IsVoid()) {
+    if (mManifestVersion < 3) {
+      EPS().GetDefaultCSP(mExtensionPageCSP);
+    } else {
+      EPS().GetDefaultCSPV3(mExtensionPageCSP);
+    }
+  }
+
+  nsresult rv = NS_NewURI(getter_AddRefs(mBaseURI), aInit.mBaseURL);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+}
+
+/*****************************************************************************
  * WebExtensionPolicy
  *****************************************************************************/
 
 WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
                                        const WebExtensionInit& aInit,
                                        ErrorResult& aRv)
-    : mId(NS_AtomizeMainThread(aInit.mId)),
-      mName(aInit.mName),
-      mType(NS_AtomizeMainThread(aInit.mType)),
-      mManifestVersion(aInit.mManifestVersion),
-      mExtensionPageCSP(aInit.mExtensionPageCSP),
+    : mCore(new WebExtensionPolicyCore(this, aInit, aRv)),
       mLocalizeCallback(aInit.mLocalizeCallback),
-      mIsPrivileged(aInit.mIsPrivileged),
-      mTemporarilyInstalled(aInit.mTemporarilyInstalled),
       mPermissions(new AtomSet(aInit.mPermissions)) {
+  if (aRv.Failed()) {
+    return;
+  }
+
   MatchPatternOptions options;
   options.mRestrictSchemes = !HasPermission(nsGkAtoms::mozillaAddons);
-
-  // In practice this is not necessary, but in tests where the uuid
-  // passed in is not lowercased various tests can fail.
-  ToLowerCase(aInit.mMozExtensionHostname, mHostname);
 
   mHostPermissions = ParseMatches(aGlobal, aInit.mAllowedOrigins, options,
                                   ErrorBehavior::CreateEmptyPattern, aRv);
@@ -205,20 +248,6 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
   if (!aInit.mBackgroundScripts.IsNull()) {
     mBackgroundScripts.SetValue().AppendElements(
         aInit.mBackgroundScripts.Value());
-  }
-
-  if (!aInit.mBackgroundWorkerScript.IsEmpty()) {
-    mBackgroundWorkerScript.Assign(aInit.mBackgroundWorkerScript);
-  }
-
-  InitializeBaseCSP();
-
-  if (mExtensionPageCSP.IsVoid()) {
-    if (mManifestVersion < 3) {
-      EPS().GetDefaultCSP(mExtensionPageCSP);
-    } else {
-      EPS().GetDefaultCSPV3(mExtensionPageCSP);
-    }
   }
 
   mWebAccessibleResources.SetCapacity(aInit.mWebAccessibleResources.Length());
@@ -251,11 +280,6 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
   if (aInit.mReadyPromise.WasPassed()) {
     mReadyPromise = &aInit.mReadyPromise.Value();
   }
-
-  nsresult rv = NS_NewURI(getter_AddRefs(mBaseURI), aInit.mBaseURL);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
 }
 
 already_AddRefed<WebExtensionPolicy> WebExtensionPolicy::Constructor(
@@ -266,22 +290,6 @@ already_AddRefed<WebExtensionPolicy> WebExtensionPolicy::Constructor(
     return nullptr;
   }
   return policy.forget();
-}
-
-void WebExtensionPolicy::InitializeBaseCSP() {
-  if (mManifestVersion < 3) {
-    nsresult rv = Preferences::GetString(BASE_CSP_PREF_V2, mBaseCSP);
-    if (NS_FAILED(rv)) {
-      mBaseCSP.AssignLiteral(DEFAULT_BASE_CSP_V2);
-    }
-    return;
-  }
-
-  // Version 3 or higher.
-  nsresult rv = Preferences::GetString(BASE_CSP_PREF_V3, mBaseCSP);
-  if (NS_FAILED(rv)) {
-    mBaseCSP.AssignLiteral(DEFAULT_BASE_CSP_V3);
-  }
 }
 
 /* static */
@@ -334,7 +342,7 @@ bool WebExtensionPolicy::Enable() {
     mBrowsingContextGroup = group->MakeKeepAlivePtr();
   }
 
-  Unused << Proto()->SetSubstitution(MozExtensionHostname(), mBaseURI);
+  Unused << Proto()->SetSubstitution(MozExtensionHostname(), BaseURI());
 
   mActive = true;
   return true;
@@ -372,7 +380,7 @@ void WebExtensionPolicy::GetURL(const nsAString& aPath, nsAString& aResult,
 
 Result<nsString, nsresult> WebExtensionPolicy::GetURL(
     const nsAString& aPath) const {
-  nsPrintfCString spec("%s://%s/", kProto, mHostname.get());
+  nsPrintfCString spec("%s://%s/", kProto, MozExtensionHostname().get());
 
   nsCOMPtr<nsIURI> uri;
   MOZ_TRY(NS_NewURI(getter_AddRefs(uri), spec));
@@ -444,17 +452,17 @@ bool WebExtensionPolicy::BackgroundServiceWorkerEnabled(GlobalObject& aGlobal) {
 bool WebExtensionPolicy::SourceMayAccessPath(const URLInfo& aURI,
                                              const nsACString& aPath) const {
   if (aURI.Scheme() == nsGkAtoms::moz_extension &&
-      mHostname.Equals(aURI.Host())) {
+      MozExtensionHostname().Equals(aURI.Host())) {
     // An extension can always access it's own paths.
     return true;
   }
   // Bug 1786564 Static themes need to allow access to theme resources.
-  if (mType == nsGkAtoms::theme) {
+  if (Type() == nsGkAtoms::theme) {
     WebExtensionPolicy* policy = EPS().GetByHost(aURI.Host());
     return policy != nullptr;
   }
 
-  if (mManifestVersion < 3) {
+  if (ManifestVersion() < 3) {
     return IsWebAccessiblePath(aPath);
   }
   for (const auto& resource : mWebAccessibleResources) {
@@ -633,9 +641,28 @@ uint64_t WebExtensionPolicy::GetBrowsingContextGroupId(ErrorResult& aRv) {
   return 0;
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(
-    WebExtensionPolicy, mParent, mBrowsingContextGroup, mLocalizeCallback,
-    mHostPermissions, mWebAccessibleResources, mContentScripts)
+WebExtensionPolicy::~WebExtensionPolicy() { mCore->ClearPolicyWeakRef(); }
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(WebExtensionPolicy)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WebExtensionPolicy)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowsingContextGroup)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalizeCallback)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mHostPermissions)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWebAccessibleResources)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mContentScripts)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  AssertIsOnMainThread();
+  tmp->mCore->ClearPolicyWeakRef();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WebExtensionPolicy)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowsingContextGroup)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalizeCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHostPermissions)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWebAccessibleResources)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContentScripts)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebExtensionPolicy)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
