@@ -24,7 +24,7 @@ check-%::
 	if test -d $(FINAL_TARGET); then rm -rf $(FINAL_TARGET); fi;
 	$(MAKE) realchrome MOZ_JAR_MAKER_FILE_FORMAT=$*
 	@echo 'Comparing manifests...'
-	@if ! sort $(MY_MANIFEST) | diff --text -U 0 $(srcdir)/../$(REF_MANIFEST).$* - ; then \
+	@if ! diff --text -U 0 $(MY_MANIFEST) $(srcdir)/../$(REF_MANIFEST).$* ; then \
 	  echo 'TEST-UNEXPECTED-FAIL | config/tests/$(REF_MANIFEST).$* | differing content in manifest!' ; \
 	  false; \
 	fi
