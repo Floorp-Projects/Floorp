@@ -3,7 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* import-globals-from /toolkit/content/preferencesBindings.js */
-
+const { ContextualIdentityService } = ChromeUtils.import(
+    "resource://gre/modules/ContextualIdentityService.jsm"
+  );
 
 function onSiteDelete() {
     let URLBoxs = document.getElementsByClassName("URLBox");
@@ -13,11 +15,34 @@ function onSiteDelete() {
 }
 
 function onLoad() {
-    let elem = document.getElementsByClassName("URLBox");
+    let elem = document.getElementsByClassName("BrowserSidebarSettingBox");
     for (let i = 0; i < elem.length; i++) {
         var num = i;
         var url = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${num}`, undefined);
-        elem[i].value = url;
+        elem[i].querySelector(".URLBox").value = url;
+
+        let container_label = -1
+
+        let container_list = elem[i].querySelector("menupopup")
+
+        let menuitem = document.createXULElement("menuitem");
+        menuitem.value = 0
+        menuitem.setAttribute("flex", 1);
+        let containerName = document.getElementById("browserBundle").getString("userContextNone.label");
+        menuitem.setAttribute("label", containerName);
+            container_list.appendChild(menuitem);
+
+        for(let elem of ContextualIdentityService.getPublicIdentities()){
+            menuitem = document.createXULElement("menuitem");
+            menuitem.value = elem.userContextId
+            menuitem.setAttribute("flex", 1);
+            containerName = ContextualIdentityService.getUserContextLabel(elem.userContextId);
+	    if (Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${num}.usercontext`, -1) == elem.userContextId) container_label = ContextualIdentityService.getUserContextLabel(elem.userContextId)
+            menuitem.setAttribute("label", containerName);
+            container_list.appendChild(menuitem);
+        }
+	if (container_label === -1) container_label = document.getElementById("browserBundle").getString("userContextNone.label")
+        container_list.parentElement.setAttribute("label", container_label)
     }
 }
 
