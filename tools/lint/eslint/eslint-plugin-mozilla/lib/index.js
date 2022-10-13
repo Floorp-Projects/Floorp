@@ -17,6 +17,8 @@ module.exports = {
     "chrome-test": require("../lib/configs/chrome-test"),
     "mochitest-test": require("../lib/configs/mochitest-test"),
     recommended: require("../lib/configs/recommended"),
+    "require-jsdoc": require("../lib/configs/require-jsdoc"),
+    "valid-jsdoc": require("../lib/configs/valid-jsdoc"),
     "xpcshell-test": require("../lib/configs/xpcshell-test"),
   },
   environments: {
