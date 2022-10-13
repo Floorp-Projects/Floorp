@@ -396,8 +396,6 @@ class SurfaceTextureHost : public TextureHost {
 
   gfx::SurfaceFormat GetFormat() const override;
 
-  void NotifyNotUsed() override;
-
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
     return nullptr;  // XXX - implement this (for MOZ_DUMP_PAINTING)
   }
@@ -434,8 +432,6 @@ class SurfaceTextureHost : public TextureHost {
   bool NeedsDeferredDeletion() const override { return false; }
 
  protected:
-  bool EnsureAttached();
-
   mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
   const gfx::IntSize mSize;
   const gfx::SurfaceFormat mFormat;
