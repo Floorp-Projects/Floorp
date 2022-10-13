@@ -211,6 +211,7 @@
                 <menuitem id="menu_readerModeItem"
                           observes="View:ReaderView"
                           key="key_toggleReaderMode"
+                          data-l10n-id="menu-view-enter-readerview"
                           hidden="true"/>
                 <menuitem id="menu_showAllTabs"
                           hidden="true"
