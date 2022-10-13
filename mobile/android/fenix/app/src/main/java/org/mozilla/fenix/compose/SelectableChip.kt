@@ -33,6 +33,8 @@ import org.mozilla.fenix.theme.Theme
  *
  * @param text [String] displayed in this chip. Ideally should only be one word.
  * @param isSelected Whether this should be shown as selected.
+ * @param selectedTextColor Optional text [Color] when the chip is selected.
+ * @param unselectedTextColor Optional text [Color] when the chip is not selected.
  * @param selectedBackgroundColor Optional background [Color] when the chip is selected.
  * @param unselectedBackgroundColor Optional background [Color] when the chip is not selected.
  * @param onClick Callback for when the user taps this.
@@ -41,6 +43,8 @@ import org.mozilla.fenix.theme.Theme
 fun SelectableChip(
     text: String,
     isSelected: Boolean,
+    selectedTextColor: Color? = null,
+    unselectedTextColor: Color? = null,
     selectedBackgroundColor: Color? = null,
     unselectedBackgroundColor: Color? = null,
     onClick: () -> Unit,
@@ -62,9 +66,9 @@ fun SelectableChip(
             text = text.capitalize(Locale.current),
             style = TextStyle(fontSize = 14.sp),
             color = if (isSelected) {
-                FirefoxTheme.colors.textActionPrimary
+                selectedTextColor ?: FirefoxTheme.colors.textActionPrimary
             } else {
-                FirefoxTheme.colors.textActionTertiary
+                unselectedTextColor ?: FirefoxTheme.colors.textActionTertiary
             },
         )
     }
@@ -90,7 +94,7 @@ private fun SelectableChipPreview() {
 @Composable
 @Preview(uiMode = UI_MODE_NIGHT_YES)
 @Preview(uiMode = UI_MODE_NIGHT_NO)
-private fun SelectableChipWithBackgroundColorPreview() {
+private fun SelectableChipWithCustomColorsPreview() {
     FirefoxTheme(theme = Theme.getTheme()) {
         Row(
             modifier = Modifier
@@ -98,8 +102,18 @@ private fun SelectableChipWithBackgroundColorPreview() {
                 .background(FirefoxTheme.colors.layer1),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            SelectableChip(text = "Chirp", isSelected = false, unselectedBackgroundColor = Color.Cyan) { }
-            SelectableChip(text = "Chirp", isSelected = true, selectedBackgroundColor = Color.Yellow) { }
+            SelectableChip(
+                text = "Chirp",
+                isSelected = false,
+                unselectedTextColor = FirefoxTheme.colors.textSecondary,
+                unselectedBackgroundColor = Color.Cyan,
+            ) { }
+            SelectableChip(
+                text = "Chirp",
+                isSelected = true,
+                selectedTextColor = Color.Black,
+                selectedBackgroundColor = Color.Yellow,
+            ) { }
         }
     }
 }
