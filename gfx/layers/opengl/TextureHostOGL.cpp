@@ -517,38 +517,6 @@ SurfaceTextureHost::~SurfaceTextureHost() {
 
 gl::GLContext* SurfaceTextureHost::gl() const { return nullptr; }
 
-bool SurfaceTextureHost::EnsureAttached() {
-  GLContext* gl = this->gl();
-  if (!gl || !gl->MakeCurrent()) {
-    return false;
-  }
-
-  if (!mSurfTex) {
-    return false;
-  }
-
-  if (!mSurfTex->IsAttachedToGLContext((int64_t)gl)) {
-    GLuint texName;
-    gl->fGenTextures(1, &texName);
-    if (NS_FAILED(mSurfTex->AttachToGLContext((int64_t)gl, texName))) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-void SurfaceTextureHost::NotifyNotUsed() {
-  if (mSurfTex && mSurfTex->IsSingleBuffer()) {
-    if (!EnsureAttached()) {
-      return;
-    }
-    mSurfTex->ReleaseTexImage();
-  }
-
-  TextureHost::NotifyNotUsed();
-}
-
 gfx::SurfaceFormat SurfaceTextureHost::GetFormat() const { return mFormat; }
 
 void SurfaceTextureHost::DeallocateDeviceData() {
