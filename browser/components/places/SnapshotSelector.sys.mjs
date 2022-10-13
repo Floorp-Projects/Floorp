@@ -48,7 +48,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
  *   The page the snapshots are for.
  * @property {PageDataCollector.DATA_TYPE | undefined} type
  *   The type of snapshots desired.
- * @property {function} getCurrentSessionUrls
+ * @property {Function} getCurrentSessionUrls
  *   A function that returns a Set containing the urls for the current session.
  */
 
@@ -124,7 +124,7 @@ export class SnapshotSelector extends EventEmitter {
    *   Whether adult sites should be filtered from the snapshots.
    * @param {object | undefined} [options.sourceWeights]
    *   Overrides for the weights of different recommendation sources.
-   * @param {function} [options.getCurrentSessionUrls]
+   * @param {Function} [options.getCurrentSessionUrls]
    *   A function that returns a Set containing the urls for the current session.
    */
   constructor({
@@ -310,15 +310,17 @@ export class SnapshotSelector extends EventEmitter {
   /**
    * Update context details and start a rebuild.
    * Undefined properties are ignored, thus pass null to nullify a property.
-   * @param {string} [url]
+   *
+   * @param {object} context
+   * @param {string} [context.url]
    *  The url of the current context.
-   * @param {number} [time]
+   * @param {number} [context.time]
    *  The time, in milliseconds since the Unix epoch.
-   * @param {PageDataSchema.DATA_TYPE} [type]
+   * @param {PageDataSchema.DATA_TYPE} [context.type]
    *  The type of snapshots for this selector.
-   * @param {number} [sessionStartTime]
+   * @param {number} [context.sessionStartTime]
    *  The start time of the session, in milliseconds since the Unix epoch.
-   * @param {string} [rebuildImmediately] (default: false)
+   * @param {string} [context.rebuildImmediately] (default: false)
    *  Whether to rebuild immediately instead of waiting some delay. Useful on
    *  startup.
    */

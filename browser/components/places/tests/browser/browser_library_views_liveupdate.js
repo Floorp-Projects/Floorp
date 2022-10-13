@@ -196,7 +196,7 @@ async function removeAndCheckItem(itemData) {
  *        item guid of the item to search.
  * @param {object} aTree
  *        Tree to search in.
- * @returns {array}
+ * @returns {Array}
  *          [node, index, cellText] or [null, null, ""] if not found.
  */
 function getNodeForTreeItem(aItemGuid, aTree) {

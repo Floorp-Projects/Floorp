@@ -103,7 +103,7 @@ function checkLibraryPaneVisibility(library, selectedPane) {
  *
  * @see waitForClipboard
  *
- * @param {function} aPopulateClipboardFn
+ * @param {Function} aPopulateClipboardFn
  *        Function to populate the clipboard.
  * @param {string} aFlavor
  *        Data flavor to expect.
@@ -161,10 +161,8 @@ function synthesizeClickOnSelectedTreeCell(aTree, aOptions) {
  * @param {boolean} aVisible
  *        True to make the toolbar visible, false to make it hidden.
  *
- * @returns {Promise}
- * @resolves Any animation associated with updating the toolbar's visibility has
- *           finished.
- * @rejects Never.
+ * @returns {Promise} Any animation associated with updating the toolbar's
+ *                    visibility has finished.
  */
 function promiseSetToolbarVisibility(aToolbar, aVisible) {
   if (isToolbarVisible(aToolbar) != aVisible) {
@@ -199,11 +197,11 @@ function isToolbarVisible(aToolbar) {
  *
  * @param {boolean} autoCancel
  *        whether to automatically cancel the dialog at the end of the task
- * @param {function} openFn
+ * @param {Function} openFn
  *        generator function causing the dialog to open
- * @param {function} taskFn
+ * @param {Function} taskFn
  *        the task to execute once the dialog is open
- * @param {function} closeFn
+ * @param {Function} closeFn
  *        A function to be used to wait for pending work when the dialog is
  *        closing. It is passed the dialog window handle and should return a promise.
  * @param {string} [dialogUrl]
@@ -387,7 +385,7 @@ function fillBookmarkTextField(id, text, win, blur = true) {
  *
  * @param {string} type
  *        either "bookmarks" or "history".
- * @param {function} taskFn
+ * @param {Function} taskFn
  *        The task to execute once the sidebar is ready. Will get the Places
  *        tree view as input.
  */
@@ -426,7 +424,7 @@ var withSidebarTree = async function(type, taskFn) {
  *
  * @param {string} hierarchy
  *        The left pane hierarchy to open.
- * @param {function} taskFn
+ * @param {Function} taskFn
  *        The task to execute once the Library is ready.
  *        Will get { left, right } trees as argument.
  */

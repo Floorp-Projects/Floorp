@@ -371,6 +371,7 @@ add_task(async function test_separator_first() {
 /**
  * If the passed-in condition is fulfilled, awaits for the toolbar nodes
  * visibility to have been updated.
+ *
  * @param {boolean} [condition] Awaits for visibility only if this condition is true.
  * @returns {Promise} resolved when the condition is not fulfilled or the
  *          visilibily update happened.
@@ -388,6 +389,7 @@ function promiseUpdateVisibility(condition = true) {
 /**
  * Returns an array of toolbar children that are Places nodes, ignoring things
  * like the chevron or other additional buttons.
+ *
  * @returns {Array} An array of Places element nodes.
  */
 function getPlacesChildren() {
@@ -399,6 +401,7 @@ function getPlacesChildren() {
 
 /**
  * Toggles the toolbar on or off.
+ *
  * @param {boolean} show Whether to show or hide the toolbar.
  * @param {number} [expectedMinChildCount] Optional number of Places nodes that
  *        should be visible on the toolbar.

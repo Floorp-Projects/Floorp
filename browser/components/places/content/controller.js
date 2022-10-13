@@ -15,21 +15,22 @@ ChromeUtils.defineESModuleGetters(this, {
 /**
  * Represents an insertion point within a container where we can insert
  * items.
- * @param {object} an object containing the following properties:
- *   - parentId
+ *
+ * @param {object} options an object containing the following properties:
+ * @param {number} options.parentId
  *     The identifier of the parent container
- *   - parentGuid
+ * @param {*} options.parentGuid
  *     The unique identifier of the parent container
- *   - index
+ * @param {number} [options.index]
  *     The index within the container where to insert, defaults to appending
- *   - orientation
+ * @param {number} [options.orientation]
  *     The orientation of the insertion. NOTE: the adjustments to the
  *     insertion point to accommodate the orientation should be done by
  *     the person who constructs the IP, not the user. The orientation
  *     is provided for informational purposes only! Defaults to DROP_ON.
- *   - tagName
+ * @param {string} [options.tagName]
  *     The tag name if this IP is set to a tag, null otherwise.
- *   - dropNearNode
+ * @param {*} [options.dropNearNode]
  *     When defined index will be calculated based on this node
  */
 function PlacesInsertionPoint({
@@ -380,7 +381,7 @@ PlacesController.prototype = {
    *    "separator"         node is a separator line
    *    "host"              node is a host
    *
-   * @returns {array} an array of objects corresponding the selected nodes. Each
+   * @returns {Array} an array of objects corresponding the selected nodes. Each
    *         object has each of the properties above set if its corresponding
    *         node matches the rule. In addition, the annotations names for each
    *         node are set on its corresponding object as properties.
@@ -435,6 +436,7 @@ PlacesController.prototype = {
 
   /**
    * Determines if a context-menu item should be shown
+   *
    * @param {object} aMenuItem
    *        the context menu item
    * @param {object} aMetaData
@@ -776,9 +778,10 @@ PlacesController.prototype = {
    * Walk the list of folders we're removing in this delete operation, and
    * see if the selected node specified is already implicitly being removed
    * because it is a child of that folder.
+   *
    * @param {object} node
    *        Node to check for containment.
-   * @param {array} pastFolders
+   * @param {Array} pastFolders
    *        List of folders the calling function has already traversed
    * @returns {boolean} true if the node should be skipped, false otherwise.
    */
@@ -812,11 +815,12 @@ PlacesController.prototype = {
   /**
    * Creates a set of transactions for the removal of a range of items.
    * A range is an array of adjacent nodes in a view.
-   * @param {array} range
+   *
+   * @param {Array} range
    *          An array of nodes to remove. Should all be adjacent.
-   * @param {array} transactions
+   * @param {Array} transactions
    *          An array of transactions (returned)
-   * @param  {array} [removedFolders]
+   * @param  {Array} [removedFolders]
    *          An array of folder nodes that have already been removed.
    * @returns {number} The total number of items affected.
    */
@@ -929,9 +933,8 @@ PlacesController.prototype = {
   },
 
   /**
-   * Removes the set of selected ranges from history, asynchronously.
-   *
-   * @note history deletes are not undoable.
+   * Removes the set of selected ranges from history, asynchronously. History
+   * deletes are not undoable.
    */
   async _removeRowsFromHistory() {
     let nodes = this._view.selectedNodes;
@@ -955,11 +958,11 @@ PlacesController.prototype = {
   },
 
   /**
-   * Removes history visits for an history container node.
+   * Removes history visits for an history container node. History deletes are
+   * not undoable.
+   *
    * @param {object} aContainerNode
    *        The container node to remove.
-   *
-   * @note history deletes are not undoable.
    */
   async _removeHistoryContainer(aContainerNode) {
     if (PlacesUtils.nodeIsHost(aContainerNode)) {
@@ -1020,6 +1023,7 @@ PlacesController.prototype = {
   /**
    * Fills a DataTransfer object with the content of the selection that can be
    * dropped elsewhere.
+   *
    * @param {object} aEvent
    *        The dragstart event.
    */
@@ -1293,6 +1297,7 @@ PlacesController.prototype = {
 
   /**
    * Checks if we can insert into a container.
+   *
    * @param {object} container
    *          The container were we are want to drop
    * @returns {boolean}
@@ -1448,6 +1453,7 @@ var PlacesControllerDragHelper = {
    * Determines if the mouse is currently being dragged over a child node of
    * this menu. This is necessary so that the menu doesn't close while the
    * mouse is dragging over one of its submenus
+   *
    * @param {object} node
    *        The container node
    * @returns {boolean} true if the user is dragging over a node within the hierarchy of
@@ -1465,7 +1471,7 @@ var PlacesControllerDragHelper = {
   },
 
   /**
-   * @returns{object|null} The current active drag session. Returns null if there is none.
+   * @returns {object|null} The current active drag session. Returns null if there is none.
    */
   getSession: function PCDH__getSession() {
     return this.dragService.getCurrentSession();
@@ -1473,6 +1479,7 @@ var PlacesControllerDragHelper = {
 
   /**
    * Extract the first accepted flavor from a list of flavors.
+   *
    * @param {DOMStringList} aFlavors
    *        The flavors list.
    * @returns {string}
@@ -1497,6 +1504,7 @@ var PlacesControllerDragHelper = {
   /**
    * Determines whether or not the data currently being dragged can be dropped
    * on a places view.
+   *
    * @param {object} ip
    *        The insertion point where the items should be dropped.
    * @param {object} dt

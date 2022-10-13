@@ -36,8 +36,6 @@ add_task(async function test() {
    *
    * @param {string} aEffect
    *        The effect to use for the drop operation: move, copy, or link.
-   * @param {string} aMimeType
-   *        The mime type to use for the drop operation.
    */
   let simulateDragDrop = async function(aEffect) {
     info("Simulates drag/drop of a new javascript:URL to the bookmarks");

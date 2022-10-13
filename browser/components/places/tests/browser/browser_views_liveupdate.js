@@ -308,9 +308,9 @@ var bookmarksObserver = {
  *        item guid of the item to search.
  * @param {string} view
  *        either "toolbar", "menu" or "sidebar"
- * @param {function} validator
+ * @param {Function} validator
  *        function to check validity of the found node element.
- * @returns {array}
+ * @returns {Array}
  *          [node, index, valid] or [null, null, false] if not found.
  */
 function searchItemInView(itemGuid, view, validator) {
@@ -331,9 +331,9 @@ function searchItemInView(itemGuid, view, validator) {
  *
  * @param {string} itemGuid
  *        item guid of the item to search.
- * @param {function} validator
+ * @param {Function} validator
  *        function to check validity of the found node element.
- * @returns {array}
+ * @returns {Array}
  *        [node, index] or [null, null] if not found.
  */
 function getNodeForToolbarItem(itemGuid, validator) {
@@ -378,9 +378,9 @@ function getNodeForToolbarItem(itemGuid, validator) {
  *
  * @param {string} itemGuid
  *        item guid of the item to search.
- * @param {function} validator
+ * @param {Function} validator
  *        function to check validity of the found node element.
- * @returns {array}
+ * @returns {Array}
  *        [node, index] or [null, null] if not found.
  */
 function getNodeForMenuItem(itemGuid, validator) {
@@ -426,9 +426,9 @@ function getNodeForMenuItem(itemGuid, validator) {
  *
  * @param {string} itemGuid
  *        item guid of the item to search.
- * @param {function} validator
+ * @param {Function} validator
  *        function to check validity of the found node element.
- * @returns {array}
+ * @returns {Array}
  *        [node, index] or [null, null] if not found.
  */
 function getNodeForSidebarItem(itemGuid, validator) {
@@ -491,9 +491,9 @@ function getNodeForSidebarItem(itemGuid, validator) {
 /**
  * Get views affected by changes to a folder.
  *
- * @param {string} folderGuid:
+ * @param {string} folderGuid
  *        item guid of the folder we have changed.
- * @returns {array}
+ * @returns {Array<"toolbar" | "menu" | "sidebar">}
  *          subset of views: ["toolbar", "menu", "sidebar"]
  */
 async function getViewsForFolder(folderGuid) {

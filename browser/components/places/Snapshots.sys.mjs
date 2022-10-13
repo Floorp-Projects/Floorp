@@ -177,7 +177,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
  *   Whether the user created the snapshot and if they did, through what action.
  * @property {Map<type, data>} pageData
  *   Collection of PageData by type. See PageDataService.jsm
- * @property {Number} overlappingVisitScore
+ * @property {number} overlappingVisitScore
  *   Calculated score based on overlapping visits to the context url. In the range [0.0, 1.0]
  * @property {number} [relevancyScore]
  *   The relevancy score associated with the snapshot.
@@ -235,7 +235,8 @@ export const Snapshots = new (class Snapshots {
   /**
    * This is called by PageThumbs to see what thumbnails should be kept alive.
    * Currently, the last 100 snapshots are kept alive.
-   * @param {function} callback
+   *
+   * @param {Function} callback
    */
   async filterForThumbnailExpiration(callback) {
     let snapshots = await this.query();
@@ -248,6 +249,7 @@ export const Snapshots = new (class Snapshots {
 
   /**
    * Fetches page data for the given urls and stores it with snapshots.
+   *
    * @param {Array<Objects>} urls Array of {placeId, url} tuples.
    */
   async #addPageData(urls) {
@@ -365,6 +367,7 @@ export const Snapshots = new (class Snapshots {
   /**
    * Returns the url up until, but not including, any hash mark identified fragments
    * For example, given  http://www.example.org/foo.html#bar, this function will return http://www.example.org/foo.html
+   *
    * @param {string} url
    *   The url associated with the snapshot.
    * @returns {string}
@@ -595,7 +598,7 @@ export const Snapshots = new (class Snapshots {
    *   Restrict the snapshots to those with a particular type of page data available.
    * @param {number} [options.group]
    *   Restrict the snapshots to those within a particular group.
-   * @param {boolean} [includeSnapshotsInUserManagedGroups]
+   * @param {boolean} [options.includeSnapshotsInUserManagedGroups]
    *   Whether snapshots that are in a user managed group should be included.
    *   Snapshots that are part of multiple groups are excluded even if only one
    *   of the groups is user managed.
@@ -926,17 +929,18 @@ export const Snapshots = new (class Snapshots {
 
   /**
    * Calculate score for a timeOfDay entry, based on the number of interactions.
+   * This function is useful for testing scores.
    *
-   * @param {number} interactions
+   * @param {object} options Options object.
+   * @param {number} options.interactions
    *  The number of interactions with the page.
-   * @param {object} context
+   * @param {object} options.context
    *  The selection context.
-   * @param {number} min
+   * @param {number} options.min
    *  The minimum number of interactions during snapshot_timeofday_limit_days.
-   * @param {number} max
+   * @param {number} options.max
    *  The maximum number of interactions during snapshot_timeofday_limit_days.
    * @returns {float} Calculated score for the page.
-   * @note This function is useful for testing scores.
    */
   timeOfDayScore({ interactions, context, min, max }) {
     // Assign score 1.0 to the pages having more than max / 2 interactions,
@@ -1030,6 +1034,7 @@ export const Snapshots = new (class Snapshots {
    * returned comes from the following priority:
    *   1) meta data page image
    *   2) thumbnail of the page
+   *
    * @param {Snapshot} snapshot
    *
    * @returns {string?}
