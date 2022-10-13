@@ -214,7 +214,7 @@ class MatchPattern final : public nsISupports, public nsWrapperCache {
 
   // The glob against which the URL path must match. If null, the path is
   // ignored entirely. If non-null, the path must match this glob.
-  RefPtr<MatchGlob> mPath;
+  RefPtr<MatchGlobCore> mPath;
 
  public:
   // A quick way to check if a particular URL matches <all_urls> without
