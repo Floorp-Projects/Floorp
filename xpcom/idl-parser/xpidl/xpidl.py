@@ -1342,6 +1342,14 @@ class Method(object):
                 )
             if p.size_is:
                 size_param = self.namemap.get(p.size_is, p.location)
+                if (
+                    p.paramtype.count("in") == 1
+                    and size_param.paramtype.count("in") == 0
+                ):
+                    raise IDLError(
+                        "size_is parameter of an input must also be an input",
+                        p.location,
+                    )
                 if getBuiltinOrNativeTypeName(size_param.realtype) != "unsigned long":
                     raise IDLError(
                         "size_is parameter must have type 'unsigned long'",
