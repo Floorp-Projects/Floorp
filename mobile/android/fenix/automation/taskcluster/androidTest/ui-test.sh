@@ -138,6 +138,7 @@ set -o pipefail && $JAVA_BIN -jar $FLANK_BIN android run \
 	--app=$APK_APP --test=$APK_TEST \
 	--local-result-dir="${RESULTS_DIR}" \
 	--project=$GOOGLE_PROJECT \
+	--client-details=commit=$MOBILE_BASE_REPOSITORY/commit/$MOBILE_HEAD_REV,pullRequest=$MOBILE_BASE_REPOSITORY/pull/$PULL_REQUEST_NUMBER \
 	| tee flank.log
 
 exitcode=$?
