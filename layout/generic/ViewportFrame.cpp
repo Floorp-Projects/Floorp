@@ -176,6 +176,11 @@ nsDisplayWrapList* ViewportFrame::BuildDisplayListForTopLayer(
     if (!frame) {
       continue;
     }
+
+    if (frame->IsHiddenByContentVisibilityOnAnyAncestor()) {
+      continue;
+    }
+
     // There are two cases where an element in fullscreen is not in
     // the top layer:
     // 1. When building display list for purpose other than painting,
