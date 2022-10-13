@@ -8098,11 +8098,9 @@ function warnAboutClosingWindow(source) {
     PrivateBrowsingUtils.isWindowPrivate(window) &&
     !PrivateBrowsingUtils.permanentPrivateBrowsing;
 
-  let closingTabs = gBrowser.tabs.length - gBrowser._removingTabs.length;
-
   if (!isPBWindow && !toolbar.visible) {
     return gBrowser.warnAboutClosingTabs(
-      closingTabs,
+      gBrowser.visibleTabs.length,
       gBrowser.closingTabsEnum.ALL,
       source
     );
@@ -8143,7 +8141,7 @@ function warnAboutClosingWindow(source) {
     return (
       isPBWindow ||
       gBrowser.warnAboutClosingTabs(
-        closingTabs,
+        gBrowser.visibleTabs.length,
         gBrowser.closingTabsEnum.ALL,
         source
       )
@@ -8169,7 +8167,7 @@ function warnAboutClosingWindow(source) {
     AppConstants.platform != "macosx" ||
     isPBWindow ||
     gBrowser.warnAboutClosingTabs(
-      closingTabs,
+      gBrowser.visibleTabs.length,
       gBrowser.closingTabsEnum.ALL,
       source
     )
