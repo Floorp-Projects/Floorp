@@ -25,6 +25,8 @@ class JS_PUBLIC_API JSObject;
 #define FOR_EACH_JS_METRIC(_)                   \
   _(GC_REASON_2, Enumeration)                   \
   _(GC_IS_COMPARTMENTAL, Boolean)               \
+  _(GC_ZONE_COUNT, QuantityDistribution)        \
+  _(GC_ZONES_COLLECTED, QuantityDistribution)   \
   _(GC_MS, TimeDuration_MS)                     \
   _(GC_BUDGET_MS_2, TimeDuration_MS)            \
   _(GC_BUDGET_WAS_INCREASED, Boolean)           \

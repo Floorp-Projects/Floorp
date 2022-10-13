@@ -668,6 +668,28 @@
     "bug_numbers": [677411, 1297026],
     "description": "Is it a zone GC?"
   },
+  "GC_ZONE_COUNT": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 100,
+    "n_buckets": 20,
+    "bug_numbers": [1790630],
+    "description": "Total number of GC zones"
+  },
+  "GC_ZONES_COLLECTED": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 100,
+    "n_buckets": 20,
+    "bug_numbers": [1790630],
+    "description": "Number of zones collected in a zone GC"
+  },
   "GC_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
