@@ -154,11 +154,11 @@ Var ArchToInstall
 ; This might not be enough when installing on a slow network drive so it will
 ; fallback to downloading the full installer if it reaches this number.
 
-; Approximately 150 seconds with a 100 millisecond timer.
-!define InstallCleanTotalSteps 1500
+; Approximately 200 seconds with a 100 millisecond timer.
+!define InstallCleanTotalSteps 2000
 
-; Approximately 165 seconds with a 100 millisecond timer.
-!define InstallPaveOverTotalSteps 1650
+; Approximately 215 seconds with a 100 millisecond timer.
+!define InstallPaveOverTotalSteps 2150
 
 ; Blurb duty cycle
 !define BlurbDisplayMS 19500
