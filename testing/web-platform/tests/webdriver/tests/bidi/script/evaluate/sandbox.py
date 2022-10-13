@@ -49,15 +49,14 @@ async def test_sandbox(bidi_session, new_tab):
 
 @pytest.mark.asyncio
 async def test_sandbox_with_empty_name(bidi_session, new_tab):
-    # BiDi specification doesn't have restrictions of a sandbox name,
-    # that's why we want to make sure that it works with an empty name
+    # An empty string as a `sandbox` means the default realm should be used.
     await bidi_session.script.evaluate(
         expression="window.foo = 'bar'",
         target=ContextTarget(new_tab["context"], ""),
         await_promise=True,
     )
 
-    # Make sure that we can find the sandbox with the empty name
+    # Make sure that we can find the sandbox with the empty name.
     result = await bidi_session.script.evaluate(
         expression="window.foo",
         target=ContextTarget(new_tab["context"], ""),
@@ -65,13 +64,13 @@ async def test_sandbox_with_empty_name(bidi_session, new_tab):
     )
     assert result == {"type": "string", "value": "bar"}
 
-    # Make sure that changes didn't leak from sandbox
+    # Make sure that we can find the value in the default realm.
     result = await bidi_session.script.evaluate(
         expression="window.foo",
         target=ContextTarget(new_tab["context"]),
         await_promise=True,
     )
-    assert result == {"type": "undefined"}
+    assert result == {"type": "string", "value": "bar"}
 
 
 @pytest.mark.asyncio
