@@ -406,6 +406,9 @@ class HeadersPanel extends Component {
           key: path,
           role: "treeitem",
           className: "raw-headers-container",
+          onClick: event => {
+            event.stopPropagation();
+          },
         },
         td(
           {
