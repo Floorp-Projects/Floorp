@@ -30,9 +30,10 @@ add_task(async function() {
           ".reader-estimated-time"
         );
         ok(readingTimeElement, "Reading time element should be in document");
-        is(
-          readingTimeElement.textContent,
-          "9-12 minutes",
+        const args = JSON.parse(readingTimeElement.dataset.l10nArgs);
+        is(args.rangePlural, "other", "Reading time should be '9-12 minutes'");
+        ok(
+          /\b9\b.*\b12\b/.test(args.range),
           "Reading time should be '9-12 minutes'"
         );
       });
@@ -61,11 +62,9 @@ add_task(async function() {
           ".reader-estimated-time"
         );
         ok(readingTimeElement, "Reading time element should be in document");
-        is(
-          readingTimeElement.textContent,
-          "1 minute",
-          "Reading time should be '1 minute'"
-        );
+        const args = JSON.parse(readingTimeElement.dataset.l10nArgs);
+        is(args.rangePlural, "one", "Reading time should be '~1 minute'");
+        ok(/\b1\b/.test(args.range), "Reading time should be '~1 minute'");
       });
     }
   );
@@ -93,11 +92,9 @@ add_task(async function() {
           ".reader-estimated-time"
         );
         ok(readingTimeElement, "Reading time element should be in document");
-        is(
-          readingTimeElement.textContent,
-          "3 minutes",
-          "Reading time should be '3 minutes'"
-        );
+        const args = JSON.parse(readingTimeElement.dataset.l10nArgs);
+        is(args.rangePlural, "other", "Reading time should be '~3 minutes'");
+        ok(/\b3\b/.test(args.range), "Reading time should be '~3 minutes'");
       });
     }
   );
