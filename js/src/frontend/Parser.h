@@ -1330,6 +1330,23 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
       ClassInitializedMembers& classInitializedMembers, bool isStatic,
       HasHeritage hasHeritage);
 
+  FunctionNodeType synthesizePrivateMethodInitializer(
+      TaggedParserAtomIndex propAtom, AccessorType accessorType,
+      TokenPos propNamePos);
+
+#ifdef ENABLE_DECORATORS
+  Node synthesizeAccessor(Node propName, TokenPos propNamePos,
+                          TaggedParserAtomIndex propAtom,
+                          TaggedParserAtomIndex privateStateNameAtom,
+                          bool isStatic, FunctionSyntaxKind syntaxKind,
+                          ListNodeType decorators,
+                          ClassInitializedMembers& classInitializedMembers);
+
+  FunctionNodeType synthesizeAccessorBody(TokenPos propNamePos,
+                                          TaggedParserAtomIndex atom,
+                                          FunctionSyntaxKind syntaxKind);
+#endif
+
   FunctionNodeType staticClassBlock(
       ClassInitializedMembers& classInitializedMembers);
 

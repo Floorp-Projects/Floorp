@@ -7832,17 +7832,46 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       if (!privateStateDesc.append(" accessor storage")) {
         return false;
       }
-
       // Step 4. Let privateStateName be a new Private Name whose
       // [[Description]] value is privateStateDesc.
+      TokenPos propNamePos(propNameOffset, pos().end);
       auto privateStateName =
           privateStateDesc.finishParserAtom(this->parserAtoms(), ec_);
       if (!noteDeclaredPrivateName(
               propName, privateStateName, propType,
               isStatic ? FieldPlacement::Static : FieldPlacement::Instance,
-              pos())) {
+              propNamePos)) {
         return false;
       }
+
+      // Step 5. Let getter be MakeAutoAccessorGetter(homeObject, name,
+      // privateStateName).
+      Node method = synthesizeAccessor(
+          propName, propNamePos, propAtom, privateStateName, isStatic,
+          FunctionSyntaxKind::Getter, decorators, classInitializedMembers);
+      if (!method) {
+        return false;
+      }
+      if (!handler_.addClassMemberDefinition(classMembers, method)) {
+        return false;
+      }
+
+      // Step 6. Let setter be MakeAutoAccessorSetter(homeObject, name,
+      // privateStateName).
+      method = synthesizeAccessor(
+          propName, propNamePos, propAtom, privateStateName, isStatic,
+          FunctionSyntaxKind::Setter, decorators, classInitializedMembers);
+      if (!method) {
+        return false;
+      }
+      if (!handler_.addClassMemberDefinition(classMembers, method)) {
+        return false;
+      }
+
+      // Step 10. Return ClassElementDefinition Record { [[Key]]: name,
+      // [[Kind]]: accessor, [[Get]]: getter, [[Set]]: setter,
+      // [[BackingStorageKey]]: privateStateName, [[Initializers]]:
+      // initializers, [[Decorators]]: empty }.
       propName = handler_.newPrivateName(privateStateName, pos());
       propAtom = privateStateName;
       decorators = handler_.newList(ParseNodeKind::DecoratorList, pos());
@@ -7999,30 +8028,9 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
     if (!isStatic) {
       if (atype == AccessorType::Getter || atype == AccessorType::Setter) {
         classInitializedMembers.privateAccessors++;
-
-        // Synthesize a name for the lexical variable that will store the
-        // accessor body.
-        StringBuffer storedMethodName(cx_);
-        if (!storedMethodName.append(this->parserAtoms(), propAtom)) {
-          return false;
-        }
-        if (!storedMethodName.append(
-                atype == AccessorType::Getter ? ".getter" : ".setter")) {
-          return false;
-        }
-        auto storedMethodProp =
-            storedMethodName.finishParserAtom(this->parserAtoms(), ec_);
-        if (!storedMethodProp) {
-          return false;
-        }
-        if (!noteDeclaredName(storedMethodProp, DeclarationKind::Synthetic,
-                              pos())) {
-          return false;
-        }
-
         TokenPos propNamePos(propNameOffset, pos().end);
         auto initializerNode =
-            privateMethodInitializer(propNamePos, propAtom, storedMethodProp);
+            synthesizePrivateMethodInitializer(propAtom, atype, propNamePos);
         if (!initializerNode) {
           return false;
         }
@@ -9019,6 +9027,265 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
 
   return funNode;
 }
+
+template <class ParseHandler, typename Unit>
+typename ParseHandler::FunctionNodeType
+GeneralParser<ParseHandler, Unit>::synthesizePrivateMethodInitializer(
+    TaggedParserAtomIndex propAtom, AccessorType accessorType,
+    TokenPos propNamePos) {
+  if (!abortIfSyntaxParser()) {
+    return null();
+  }
+
+  // Synthesize a name for the lexical variable that will store the
+  // accessor body.
+  StringBuffer storedMethodName(cx_);
+  if (!storedMethodName.append(this->parserAtoms(), propAtom)) {
+    return null();
+  }
+  if (!storedMethodName.append(
+          accessorType == AccessorType::Getter ? ".getter" : ".setter")) {
+    return null();
+  }
+  auto storedMethodProp =
+      storedMethodName.finishParserAtom(this->parserAtoms(), ec_);
+  if (!storedMethodProp) {
+    return null();
+  }
+  if (!noteDeclaredName(storedMethodProp, DeclarationKind::Synthetic, pos())) {
+    return null();
+  }
+
+  return privateMethodInitializer(propNamePos, propAtom, storedMethodProp);
+}
+
+#ifdef ENABLE_DECORATORS
+
+template <class ParseHandler, typename Unit>
+typename ParseHandler::Node
+GeneralParser<ParseHandler, Unit>::synthesizeAccessor(
+    Node propName, TokenPos propNamePos, TaggedParserAtomIndex propAtom,
+    TaggedParserAtomIndex privateStateNameAtom, bool isStatic,
+    FunctionSyntaxKind syntaxKind, ListNodeType decorators,
+    ClassInitializedMembers& classInitializedMembers) {
+  // Decorators Proposal
+  // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-makeautoaccessorgetter
+  // The abstract operation MakeAutoAccessorGetter takes arguments homeObject
+  // (an Object), name (a property key or Private Name), and privateStateName (a
+  // Private Name) and returns a function object.
+  //
+  // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-makeautoaccessorsetter
+  // The abstract operation MakeAutoAccessorSetter takes arguments homeObject
+  // (an Object), name (a property key or Private Name), and privateStateName (a
+  // Private Name) and returns a function object.
+  if (!abortIfSyntaxParser()) {
+    return null();
+  }
+
+  AccessorType accessorType = syntaxKind == FunctionSyntaxKind::Getter
+                                  ? AccessorType::Getter
+                                  : AccessorType::Setter;
+
+  mozilla::Maybe<FunctionNodeType> initializerIfPrivate = Nothing();
+  if (handler_.isPrivateName(propName)) {
+    classInitializedMembers.privateAccessors++;
+    auto initializerNode =
+        synthesizePrivateMethodInitializer(propAtom, accessorType, propNamePos);
+    if (!initializerNode) {
+      return null();
+    }
+    initializerIfPrivate = Some(initializerNode);
+    handler_.setPrivateNameKind(propName, PrivateNameKind::GetterSetter);
+  }
+
+  // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-makeautoaccessorgetter
+  // 2. Let getter be CreateBuiltinFunction(getterClosure, 0, "get", « »).
+  //
+  // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-makeautoaccessorsetter
+  // 2. Let setter be CreateBuiltinFunction(setterClosure, 1, "set", « »).
+  FunctionNodeType funNode =
+      synthesizeAccessorBody(propNamePos, privateStateNameAtom, syntaxKind);
+  if (!funNode) {
+    return null();
+  }
+
+  // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-makeautoaccessorgetter
+  // 3. Perform MakeMethod(getter, homeObject).
+  // 4. Return getter.
+  //
+  // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-makeautoaccessorsetter
+  // 3. Perform MakeMethod(setter, homeObject).
+  // 4. Return setter.
+  return handler_.newClassMethodDefinition(propName, funNode, accessorType,
+                                           isStatic, initializerIfPrivate,
+                                           decorators);
+}
+
+template <class ParseHandler, typename Unit>
+typename ParseHandler::FunctionNodeType
+GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
+    TokenPos propNamePos, TaggedParserAtomIndex propAtom,
+    FunctionSyntaxKind syntaxKind) {
+  if (!abortIfSyntaxParser()) {
+    return null();
+  }
+
+  FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction;
+  GeneratorKind generatorKind = GeneratorKind::NotGenerator;
+  bool isSelfHosting = options().selfHostingMode;
+  FunctionFlags flags =
+      InitialFunctionFlags(syntaxKind, generatorKind, asyncKind, isSelfHosting);
+
+  // Create the top-level function node.
+  FunctionNodeType funNode = handler_.newFunction(syntaxKind, propNamePos);
+  if (!funNode) {
+    return null();
+  }
+
+  // Create the FunctionBox and link it to the function object.
+  Directives directives(true);
+  FunctionBox* funbox =
+      newFunctionBox(funNode, TaggedParserAtomIndex::null(), flags,
+                     propNamePos.begin, directives, generatorKind, asyncKind);
+  if (!funbox) {
+    return null();
+  }
+  funbox->initWithEnclosingParseContext(pc_, syntaxKind);
+  funbox->setSyntheticFunction();
+
+  // Push a SourceParseContext on to the stack.
+  ParseContext* outerpc = pc_;
+  SourceParseContext funpc(this, funbox, /* newDirectives = */ nullptr);
+  if (!funpc.init()) {
+    return null();
+  }
+
+  pc_->functionScope().useAsVarScope(pc_);
+
+  // The function we synthesize is located at the field with the
+  // accessor.
+  setFunctionStartAtCurrentToken(funbox);
+  setFunctionEndFromCurrentToken(funbox);
+
+  // Create a ListNode for the parameters + body
+  ParamsBodyNodeType paramsbody = handler_.newParamsBody(propNamePos);
+  if (!paramsbody) {
+    return null();
+  }
+  handler_.setFunctionFormalParametersAndBody(funNode, paramsbody);
+
+  if (syntaxKind == FunctionSyntaxKind::Getter) {
+    funbox->setArgCount(0);
+  } else {
+    funbox->setArgCount(1);
+  }
+
+  // Build `this` expression to access the privateStateName for use in the
+  // operations to create the getter and setter below.
+  NameNodeType thisName = newThisName();
+  if (!thisName) {
+    return null();
+  }
+
+  ThisLiteralType propThis = handler_.newThisLiteral(propNamePos, thisName);
+  if (!propThis) {
+    return null();
+  }
+
+  NameNodeType privateNameNode = privateNameReference(propAtom);
+  if (!privateNameNode) {
+    return null();
+  }
+
+  Node propFieldAccess = handler_.newPrivateMemberAccess(
+      propThis, privateNameNode, propNamePos.end);
+  if (!propFieldAccess) {
+    return null();
+  }
+
+  Node accessorBody;
+  if (syntaxKind == FunctionSyntaxKind::Getter) {
+    // Decorators Proposal
+    // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-makeautoaccessorgetter
+    // 1. Let getterClosure be a new Abstract Closure with no parameters that
+    // captures privateStateName and performs the following steps when called:
+    //  1.a. Let o be the this value.
+    //  1.b. Return ? PrivateGet(privateStateName, o).
+    accessorBody = handler_.newReturnStatement(propFieldAccess, propNamePos);
+  } else {
+    // Decorators Proposal
+    // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-makeautoaccessorsetter
+    // The abstract operation MakeAutoAccessorSetter takes arguments homeObject
+    // (an Object), name (a property key or Private Name), and privateStateName
+    // (a Private Name) and returns a function object.
+    // 1. Let setterClosure be a new Abstract Closure with parameters (value)
+    // that captures privateStateName and performs the following steps when
+    // called:
+    //   1.a. Let o be the this value.
+    notePositionalFormalParameter(funNode,
+                                  TaggedParserAtomIndex::WellKnown::value(),
+                                  /* pos = */ 0, false,
+                                  /* duplicatedParam = */ nullptr);
+
+    Node initializerExpr = handler_.newName(
+        TaggedParserAtomIndex::WellKnown::value(), propNamePos);
+    if (!initializerExpr) {
+      return null();
+    }
+
+    //   1.b. Perform ? PrivateSet(privateStateName, o, value).
+    Node assignment = handler_.newAssignment(ParseNodeKind::AssignExpr,
+                                             propFieldAccess, initializerExpr);
+    if (!assignment) {
+      return null();
+    }
+
+    accessorBody = handler_.newExprStatement(assignment, propNamePos.end);
+    if (!accessorBody) {
+      return null();
+    }
+
+    //   1.c. Return undefined.
+  }
+
+  ListNodeType statementList = handler_.newStatementList(propNamePos);
+  if (!statementList) {
+    return null();
+  }
+  handler_.addStatementToList(statementList, accessorBody);
+
+  bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
+  if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
+    return null();
+  }
+  if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
+    return null();
+  }
+
+  LexicalScopeNodeType initializerBody = finishLexicalScope(
+      pc_->varScope(), statementList, ScopeKind::FunctionLexical);
+  if (!initializerBody) {
+    return null();
+  }
+
+  handler_.setFunctionBody(funNode, initializerBody);
+
+  if (pc_->superScopeNeedsHomeObject()) {
+    funbox->setNeedsHomeObject();
+  }
+
+  if (!finishFunction()) {
+    return null();
+  }
+
+  if (!leaveInnerFunction(outerpc)) {
+    return null();
+  }
+
+  return funNode;
+}
+
+#endif
 
 bool ParserBase::nextTokenContinuesLetDeclaration(TokenKind next) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Let));
