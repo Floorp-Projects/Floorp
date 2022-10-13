@@ -42,8 +42,8 @@ Reflect.parse("class c {accessor\nset field(a) {}}");
 Reflect.parse("class c {accessor\nasync field(a) {}}");
 Reflect.parse("class c {accessor\n* field(a) {}}");
 Reflect.parse("{accessor, field(a)}");
-Reflect.parse("static accessor x = 1;");
-Reflect.parse("accessor #y = 2;");
+Reflect.parse("class c {static accessor x = 1;}");
+Reflect.parse("class c {accessor #y = 2;}");
 
 assertThrowsInstanceOf(() => Reflect.parse("class c {@ method() {};}"), SyntaxError);
 assertThrowsInstanceOf(() => Reflect.parse("class c {@((a, b, c => {}) method(a, b) {};}"), SyntaxError);
