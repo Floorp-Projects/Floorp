@@ -9,7 +9,7 @@ loadScripts({ name: "layout.js", dir: MOCHITESTS_DIR });
 
 async function runTests(browser, accDoc) {
   await loadContentScripts(browser, {
-    script: "Layout.jsm",
+    script: "Layout.sys.mjs",
     symbol: "Layout",
   });
 

@@ -6,8 +6,8 @@
 
 async function runTests(browser, accDoc) {
   const expectedLength = await invokeContentTask(browser, [], () => {
-    const { CommonUtils } = ChromeUtils.import(
-      "chrome://mochitests/content/browser/accessible/tests/browser/Common.jsm"
+    const { CommonUtils } = ChromeUtils.importESModule(
+      "chrome://mochitests/content/browser/accessible/tests/browser/Common.sys.mjs"
     );
     const hyperText = CommonUtils.getNode("paragraph", content.document);
     return Math.floor(hyperText.textContent.length / 2);
@@ -31,8 +31,8 @@ async function runTests(browser, accDoc) {
   );
 
   await invokeContentTask(browser, [], () => {
-    const { Layout } = ChromeUtils.import(
-      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+    const { Layout } = ChromeUtils.importESModule(
+      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.sys.mjs"
     );
 
     Layout.zoomDocument(content.document, 2.0);

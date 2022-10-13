@@ -2,16 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["Layout"];
-
 const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
-const { CommonUtils } = ChromeUtils.import(
-  "chrome://mochitests/content/browser/accessible/tests/browser/Common.jsm"
-);
+import { CommonUtils } from "chrome://mochitests/content/browser/accessible/tests/browser/Common.sys.mjs";
 
-const Layout = {
+export const Layout = {
   /**
    * Zoom the given document.
    */

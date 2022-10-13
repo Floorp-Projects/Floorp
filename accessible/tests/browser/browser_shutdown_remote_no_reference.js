@@ -26,7 +26,7 @@ add_task(async function() {
           "in content"
       );
       await loadContentScripts(browser, {
-        script: "Common.jsm",
+        script: "Common.sys.mjs",
         symbol: "CommonUtils",
       });
       // Create a11y service in the main process. This will trigger creating of

@@ -12,8 +12,8 @@ async function runTests(browser, accDoc) {
     await hitTest(browser, accDoc, p2, p2.firstChild);
 
     await invokeContentTask(browser, [], () => {
-      const { Layout } = ChromeUtils.import(
-        "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+      const { Layout } = ChromeUtils.importESModule(
+        "chrome://mochitests/content/browser/accessible/tests/browser/Layout.sys.mjs"
       );
 
       Layout.zoomDocument(content.document, 2.0);
