@@ -248,6 +248,27 @@ void WaylandVsyncSource::SetupFrameCallback(const MutexAutoLock& aProofOfLock) {
 
 void WaylandVsyncSource::IdleCallback() {
   LOG("WaylandVsyncSource::IdleCallback");
+
+  MutexAutoLock lock(mMutex);
+
+  if (!mVsyncEnabled || !mMonitorEnabled) {
+    // We are unwanted by either our creator or our consumer, so we just stop
+    // here without setting up a new frame callback.
+    LOG("  quit, mVsyncEnabled %d mMonitorEnabled %d", mVsyncEnabled,
+        mMonitorEnabled);
+    return;
+  }
+
+  guint duration = static_cast<guint>(
+      (TimeStamp::Now() - mLastVsyncTimeStamp).ToMilliseconds());
+  if (duration >= VSYNC_IDLE_TIMEOUT) {
+    LOG("  fire idle vsync");
+    CalculateVsyncRate(lock, TimeStamp::Now());
+    mLastVsyncTimeStamp = TimeStamp::Now();
+
+    MutexAutoUnlock unlock(mMutex);
+    NotifyVsync(mLastVsyncTimeStamp, mLastVsyncTimeStamp + GetVsyncRate());
+  }
 }
 
 void WaylandVsyncSource::FrameCallback(uint32_t aTime) {
