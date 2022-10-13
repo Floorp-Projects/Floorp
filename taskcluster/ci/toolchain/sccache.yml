@@ -18,7 +18,7 @@ job-defaults:
 linux64-sccache:
     treeherder:
         symbol: TL(sccache)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 1800
     run:
@@ -33,7 +33,7 @@ linux64-sccache:
 macosx64-sccache:
     treeherder:
         symbol: TM(sccache)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 1800
     run:
@@ -49,7 +49,7 @@ macosx64-sccache:
 macosx64-aarch64-sccache:
     treeherder:
         symbol: TM(sccache-aarch64)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 1800
     run:

@@ -6,7 +6,7 @@ job-defaults:
     description: "gn toolchain build"
     attributes:
         local-toolchain: true
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 1800
     run:

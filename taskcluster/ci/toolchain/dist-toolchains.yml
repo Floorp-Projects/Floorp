@@ -6,7 +6,7 @@ job-defaults:
     description: "sccache-dist toolchain archive build"
     attributes:
         local-toolchain: true
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     run:
         using: toolchain-script
         script: build-dist-toolchains.sh

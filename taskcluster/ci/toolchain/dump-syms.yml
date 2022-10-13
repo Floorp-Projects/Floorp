@@ -17,7 +17,7 @@ job-defaults:
 linux64-dump_syms:
     treeherder:
         symbol: TL(dump_syms)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     run:
         toolchain-artifact: public/build/dump_syms.tar.zst
     fetches:
@@ -30,7 +30,7 @@ linux64-dump_syms:
 macosx64-dump_syms:
     treeherder:
         symbol: TM(dump_syms)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     run:
         arguments: ['x86_64-apple-darwin']
         toolchain-artifact: public/build/dump_syms.tar.zst
@@ -44,7 +44,7 @@ macosx64-dump_syms:
 macosx64-aarch64-dump_syms:
     treeherder:
         symbol: TM(dump_syms-arm64)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     run:
         arguments: ['aarch64-apple-darwin']
         toolchain-artifact: public/build/dump_syms.tar.zst

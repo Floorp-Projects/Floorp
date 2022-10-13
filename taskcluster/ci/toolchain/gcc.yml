@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 3600
     run:

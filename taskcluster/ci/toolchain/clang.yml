@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    worker-type: b-linux-xlarge
+    worker-type: b-linux-xlarge-gcp
     worker:
         max-run-time: 7200
     run:
@@ -14,7 +14,7 @@ linux64-clang-5.0:
     description: "Clang 5.0 toolchain build"
     treeherder:
         symbol: TL(clang-5.0)
-    worker-type: b-linux-large
+    worker-type: b-linux-large-gcp
     run:
         script: build-clang.sh
         arguments:
@@ -36,7 +36,7 @@ linux64-clang-14-mingw-x86:
     description: "MinGW-Clang 14 x86 toolchain build"
     treeherder:
         symbol: TMW(clang-14-x86)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     run:
         script: build-clang-mingw.sh
         arguments:
@@ -60,7 +60,7 @@ linux64-clang-14-mingw-x64:
     treeherder:
         symbol: TMW(clang-14-x64)
         tier: 1
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     run:
         script: build-clang-mingw.sh
         arguments:
@@ -162,7 +162,7 @@ linux64-clang-14:
         local-toolchain: true
     treeherder:
         symbol: TL(clang-14)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 600
     run:
@@ -193,7 +193,7 @@ macosx64-clang-14-raw:
     description: "Clang 14 toolchain build"
     treeherder:
         symbol: TM(clang-14-raw)
-    worker-type: b-linux-large
+    worker-type: b-linux-large-gcp
     worker:
         max-run-time: 3600
     run:
@@ -225,7 +225,7 @@ macosx64-clang-14:
         local-toolchain: true
     treeherder:
         symbol: TM(clang-14)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 600
     run:
@@ -258,7 +258,7 @@ macosx64-aarch64-clang-14-raw:
     description: "Clang 14 toolchain build"
     treeherder:
         symbol: TM(clang-14-aarch64-raw)
-    worker-type: b-linux-large
+    worker-type: b-linux-large-gcp
     worker:
         env:
             OSX_ARCH: arm64
@@ -292,7 +292,7 @@ macosx64-aarch64-clang-14:
         local-toolchain: true
     treeherder:
         symbol: TM(clang-14-aarch64)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 600
     run:
@@ -383,7 +383,7 @@ win64-clang-14:
         local-toolchain: true
     treeherder:
         symbol: TW64(clang-14)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 600
     run:
@@ -416,7 +416,7 @@ linux64-clang-trunk-mingw-x86:
         cached_task: false
     treeherder:
         symbol: TMW(clang-trunk-x86)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     run:
         script: build-clang-mingw.sh
         arguments:
@@ -442,7 +442,7 @@ linux64-clang-trunk-mingw-x64:
     treeherder:
         symbol: TMW(clang-trunk-x64)
         tier: 1
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     run:
         script: build-clang-mingw.sh
         arguments:
@@ -550,7 +550,7 @@ linux64-clang-trunk:
         cached_task: false
     treeherder:
         symbol: TL(clang-trunk)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 600
     run:
@@ -583,7 +583,7 @@ macosx64-clang-trunk-raw:
         cached_task: false
     treeherder:
         symbol: TM(clang-trunk-raw)
-    worker-type: b-linux-large
+    worker-type: b-linux-large-gcp
     worker:
         max-run-time: 3600
     run:
@@ -615,7 +615,7 @@ macosx64-clang-trunk:
         cached_task: false
     treeherder:
         symbol: TM(clang-trunk)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 600
     run:
@@ -650,7 +650,7 @@ macosx64-aarch64-clang-trunk-raw:
         cached_task: false
     treeherder:
         symbol: TM(clang-trunk-aarch64-raw)
-    worker-type: b-linux-large
+    worker-type: b-linux-large-gcp
     worker:
         env:
             OSX_ARCH: arm64
@@ -684,7 +684,7 @@ macosx64-aarch64-clang-trunk:
         cached_task: false
     treeherder:
         symbol: TM(clang-trunk-aarch64)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 600
     run:
@@ -779,7 +779,7 @@ win64-clang-trunk:
         cached_task: false
     treeherder:
         symbol: TW64(clang-trunk)
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 600
     run:

@@ -4,7 +4,7 @@
 ---
 job-defaults:
     description: "geckodriver toolchain build"
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 1800
     run-on-projects: ['trunk']

@@ -4,7 +4,7 @@
 ---
 job-defaults:
     description: "rust repack"
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 7200
     run:
@@ -47,7 +47,7 @@ linux64-rust-1.64:
 # build environment. See the rust fetch's comments for more details.
 linux64-rust-dev:
     description: "build rust from source"
-    worker-type: b-linux-large
+    worker-type: b-linux-large-gcp
     treeherder:
         symbol: TL(rust-dev)
     run:
