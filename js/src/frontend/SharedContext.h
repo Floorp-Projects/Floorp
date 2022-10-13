@@ -608,8 +608,9 @@ class FunctionBox : public SuspendableContext {
     return hasFlag(ImmutableFlags::IsSyntheticFunction);
   }
   void setSyntheticFunction() {
-    // Field initializer or class consturctor.
-    MOZ_ASSERT(flags_.isMethod());
+    // Field initializer, class constructor or getter or setter
+    // synthesized from accessor keyword.
+    MOZ_ASSERT(flags_.isMethod() || flags_.isGetter() || flags_.isSetter());
     setFlag(ImmutableFlags::IsSyntheticFunction);
   }
 
