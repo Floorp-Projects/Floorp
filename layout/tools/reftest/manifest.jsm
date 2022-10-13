@@ -588,6 +588,9 @@ function BuildConditionSandbox(aURL) {
     sandbox.http = new sandbox.Object();
     httpProps.forEach((x) => sandbox.http[x] = hh[x]);
 
+    // set to specific Android13 version (Pixel 5 in CI)
+    sandbox.Android13 = sandbox.Android && (sandbox.http["platform"] == "Android 13");
+
     // Set OSX to be the Mac OS X version, as an integer, or undefined
     // for other platforms.  The integer is formed by 100 times the
     // major version plus the minor version, so 1006 for 10.6, 1010 for
