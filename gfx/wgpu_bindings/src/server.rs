@@ -419,17 +419,10 @@ pub extern "C" fn wgpu_server_buffer_unmap(
 
 #[no_mangle]
 pub extern "C" fn wgpu_server_buffer_destroy(global: &Global, self_id: id::BufferId) {
-    use wgc::resource::DestroyError;
-    match gfx_select!(self_id => global.buffer_destroy(self_id)) {
-        Err(DestroyError::Invalid) => {
-            // This indicates an error on our side.
-            panic!("Buffer already dropped.");
-        }
-        _ => {
-            // Other error need to be reported but are not fatal, since users
-            // can, for example, ask for a buffer to be destroyed multiple times.
-        }
-    }
+    // Per spec, there is no need for the buffer or even device to be in a valid state,
+    // even calling calling destroy multiple times is fine, so no error to push into
+    // an error scope.
+    let _ = gfx_select!(self_id => global.buffer_destroy(self_id));
 }
 
 #[no_mangle]
