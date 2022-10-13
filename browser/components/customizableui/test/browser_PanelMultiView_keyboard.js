@@ -164,8 +164,7 @@ add_setup(async function() {
   gBrowserBrowser.id = "GBrowserBrowser";
   gBrowserBrowser.setAttribute("type", "content");
   gBrowserBrowser.setAttribute("src", kEmbeddedDocUrl);
-  gBrowserBrowser.setAttribute("width", 100);
-  gBrowserBrowser.setAttribute("height", 100);
+  gBrowserBrowser.style.minWidth = gBrowserBrowser.style.minHeight = "100px";
   gBrowserView.appendChild(gBrowserBrowser);
 
   gIframeView = document.createXULElement("panelview");

@@ -118,7 +118,7 @@ menulist > menupopup > :is(menuitem, menucaption, menu) {
 }
 
 .menu-iconic-left {
-  width: 16px;
+  min-width: 16px;
   /* We can only hardcode this, to make the default GTK icon<->label spacing */
   padding-inline-end: 3px !important;
 }

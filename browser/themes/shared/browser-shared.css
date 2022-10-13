@@ -207,7 +207,7 @@ panel .text-link:-moz-lwtheme:not(:hover) {
 }
 
 #PersonalToolbar[collapsed=true] {
-  min-height: 0.1px;
+  min-height: 0;
   max-height: 0;
 }
 

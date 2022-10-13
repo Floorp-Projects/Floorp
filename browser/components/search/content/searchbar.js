@@ -99,6 +99,7 @@
       );
       if (storedWidth) {
         this.parentNode.setAttribute("width", storedWidth);
+        this.parentNode.style.width = storedWidth + "px";
       }
 
       this._stringBundle = this.querySelector("stringbundle");
