@@ -117,7 +117,6 @@ add_task(async function test_unconfigured_initial_state() {
       [
         "browser.firefox-view.feature-tour",
         JSON.stringify({
-          message: "FIREFOX_VIEW_FEATURE_TOUR",
           screen: `FEATURE_CALLOUT_1`,
           complete: false,
         }),
@@ -653,7 +652,6 @@ add_task(async function test_keyboard_focus_after_tab_pickup_opened() {
       [
         "browser.firefox-view.feature-tour",
         JSON.stringify({
-          message: "FIREFOX_VIEW_FEATURE_TOUR",
           screen: `FEATURE_CALLOUT_1`,
           complete: true,
         }),

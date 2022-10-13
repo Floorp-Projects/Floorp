@@ -100,7 +100,6 @@ const MESSAGES = () => {
                     pref: {
                       name: FIREFOX_VIEW_PREF,
                       value: JSON.stringify({
-                        message: "FIREFOX_VIEW_FEATURE_TOUR",
                         screen: "FEATURE_CALLOUT_1",
                         complete: false,
                       }),
@@ -119,7 +118,6 @@ const MESSAGES = () => {
                     pref: {
                       name: FIREFOX_VIEW_PREF,
                       value: JSON.stringify({
-                        message: "FIREFOX_VIEW_FEATURE_TOUR",
                         screen: "",
                         complete: true,
                       }),
@@ -184,7 +182,6 @@ const MESSAGES = () => {
                     pref: {
                       name: FIREFOX_VIEW_PREF,
                       value: JSON.stringify({
-                        message: "FIREFOX_VIEW_FEATURE_TOUR",
                         screen: "FEATURE_CALLOUT_2",
                         complete: false,
                       }),
@@ -199,7 +196,6 @@ const MESSAGES = () => {
                     pref: {
                       name: FIREFOX_VIEW_PREF,
                       value: JSON.stringify({
-                        message: "FIREFOX_VIEW_FEATURE_TOUR",
                         screen: "",
                         complete: true,
                       }),
@@ -258,7 +254,6 @@ const MESSAGES = () => {
                     pref: {
                       name: FIREFOX_VIEW_PREF,
                       value: JSON.stringify({
-                        message: "FIREFOX_VIEW_FEATURE_TOUR",
                         screen: "FEATURE_CALLOUT_2",
                         complete: false,
                       }),
@@ -273,7 +268,6 @@ const MESSAGES = () => {
                     pref: {
                       name: FIREFOX_VIEW_PREF,
                       value: JSON.stringify({
-                        message: "FIREFOX_VIEW_FEATURE_TOUR",
                         screen: "",
                         complete: true,
                       }),
@@ -327,7 +321,6 @@ const MESSAGES = () => {
                     pref: {
                       name: FIREFOX_VIEW_PREF,
                       value: JSON.stringify({
-                        message: "FIREFOX_VIEW_FEATURE_TOUR",
                         screen: "FEATURE_CALLOUT_3",
                         complete: false,
                       }),
@@ -342,7 +335,6 @@ const MESSAGES = () => {
                     pref: {
                       name: FIREFOX_VIEW_PREF,
                       value: JSON.stringify({
-                        message: "FIREFOX_VIEW_FEATURE_TOUR",
                         screen: "",
                         complete: true,
                       }),
@@ -396,7 +388,6 @@ const MESSAGES = () => {
                     pref: {
                       name: FIREFOX_VIEW_PREF,
                       value: JSON.stringify({
-                        message: "FIREFOX_VIEW_FEATURE_TOUR",
                         screen: "FEATURE_CALLOUT_3",
                         complete: false,
                       }),
@@ -411,7 +402,6 @@ const MESSAGES = () => {
                     pref: {
                       name: FIREFOX_VIEW_PREF,
                       value: JSON.stringify({
-                        message: "FIREFOX_VIEW_FEATURE_TOUR",
                         screen: "",
                         complete: true,
                       }),
@@ -471,7 +461,6 @@ const MESSAGES = () => {
                     pref: {
                       name: FIREFOX_VIEW_PREF,
                       value: JSON.stringify({
-                        message: "FIREFOX_VIEW_FEATURE_TOUR",
                         screen: "",
                         complete: true,
                       }),
@@ -486,7 +475,6 @@ const MESSAGES = () => {
                     pref: {
                       name: FIREFOX_VIEW_PREF,
                       value: JSON.stringify({
-                        message: "FIREFOX_VIEW_FEATURE_TOUR",
                         screen: "",
                         complete: true,
                       }),
