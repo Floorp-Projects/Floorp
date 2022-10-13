@@ -52,6 +52,10 @@ let InternalFaviconLoader = {
    * Actually cancel the request, and clear the timeout for cancelling it.
    *
    * @param {object} options
+   * @param {string} options.uri
+   * @param {number} options.innerWindowID
+   * @param {number} options.timerID
+   * @param {*} options.callback
    * @param {string} reason
    *   The reason for cancelling the request.
    */
@@ -125,6 +129,9 @@ let InternalFaviconLoader = {
    *        the chrome window in which we should look for this load
    * @param {object} filterData ({innerWindowID, uri, callback})
    *        the data we should use to find this particular load to remove.
+   * @param {number} filterData.innerWindowID
+   * @param {string} filterData.uri
+   * @param {Function} filterData.callback
    *
    * @returns {object|null}
    *   the loadData object we removed, or null if we didn't find any.
@@ -282,6 +289,7 @@ class BookmarkState {
 
   /**
    * Save edited title for the bookmark
+   *
    * @param {string} title
    */
   _titleChanged(title) {
@@ -290,6 +298,7 @@ class BookmarkState {
 
   /**
    * Save edited location for the bookmark
+   *
    * @param {string} location
    */
   _locationChanged(location) {
@@ -298,6 +307,7 @@ class BookmarkState {
 
   /**
    * Save edited tags for the bookmark
+   *
    * @param {string} tags
    *    Comma separated list of tags
    */
@@ -307,6 +317,7 @@ class BookmarkState {
 
   /**
    * Save edited keyword for the bookmark
+   *
    * @param {string} keyword
    */
   _keywordChanged(keyword) {
@@ -315,6 +326,7 @@ class BookmarkState {
 
   /**
    * Save edited parentGuid for the bookmark
+   *
    * @param {string} parentGuid
    */
   _parentGuidChanged(parentGuid) {
@@ -445,7 +457,7 @@ export var PlacesUIUtils = {
    *        key for looking up the localized string in the bundle
    * @param {number} aNumber
    *        Number based on which the final localized form is looked up
-   * @param {array} aParams
+   * @param {Array} aParams
    *        Array whose items will substitute #1, #2,... #n parameters
    *        in the string.
    *
@@ -581,9 +593,9 @@ export var PlacesUIUtils = {
    * Bookmarks one or more pages. If there is more than one, this will create
    * the bookmarks in a new folder.
    *
-   * @param {array.<nsIURI>} URIList
+   * @param {Array.<nsIURI>} URIList
    *   The list of URIs to bookmark.
-   * @param {array.<string>} [hiddenRows]
+   * @param {Array.<string>} [hiddenRows]
    *   An array of rows to be hidden.
    * @param {DOMWindow} [win]
    *   The window to use as the parent to display the bookmark dialog.
@@ -608,6 +620,7 @@ export var PlacesUIUtils = {
 
   /**
    * set and fetch a favicon. Can only be used from the parent process.
+   *
    * @param {object} browser
    *        The XUL browser element for which we're fetching a favicon.
    * @param {Principal} principal
@@ -644,6 +657,7 @@ export var PlacesUIUtils = {
 
   /**
    * Returns the closet ancestor places view for the given DOM node
+   *
    * @param {DOMNode} aNode
    *        a DOM node
    * @returns {DOMNode} the closest ancestor places view if exists, null otherwsie.
@@ -838,6 +852,7 @@ export var PlacesUIUtils = {
   /**
    * Allows opening of javascript/data URI only if the given node is
    * bookmarked (see bug 224521).
+   *
    * @param {object} aURINode
    *        a URI node
    * @param {DOMWindow} aWindow
@@ -936,7 +951,7 @@ export var PlacesUIUtils = {
   },
 
   /**
-   * @param {array<object>} aItemsToOpen
+   * @param {Array<object>} aItemsToOpen
    *   needs to be an array of objects of the form:
    *   {uri: string, isBookmark: boolean}
    * @param {object} aEvent
@@ -1007,7 +1022,7 @@ export var PlacesUIUtils = {
    * Loads a selected node's or nodes' URLs in tabs,
    * warning the user when lots of URLs are being opened
    *
-   * @param {object|array} nodeOrNodes
+   * @param {object | Array} nodeOrNodes
    *          Contains the node or nodes that we're opening in tabs
    * @param {event} event
    *          The DOM mouse/key event with modifier keys set that track the
@@ -1042,6 +1057,7 @@ export var PlacesUIUtils = {
    * Loads the node's URL in the appropriate tab or window given the
    * user's preference specified by modifier keys tracked by a
    * DOM mouse/key event.
+   *
    * @param {object} aNode
    *          An uri result node.
    * @param {object} aEvent
@@ -1118,11 +1134,11 @@ export var PlacesUIUtils = {
 
   /**
    * Helper for guessing scheme from an url string.
-   * Used to avoid nsIURI overhead in frequently called UI functions.
+   * Used to avoid nsIURI overhead in frequently called UI functions. This is not
+   * supposed be perfect, so use it only for UI purposes.
    *
    * @param {string} href The url to guess the scheme from.
    * @returns {string} guessed scheme for this url string.
-   * @note this is not supposed be perfect, so use it only for UI purposes.
    */
   guessUrlSchemeForUI(href) {
     return href.substr(0, href.indexOf(":"));
@@ -1254,11 +1270,10 @@ export var PlacesUIUtils = {
   /**
    * This function wraps potentially large places transaction operations
    * with batch notifications to the result node, hence switching the views
-   * to batch mode.
+   * to batch mode. If resultNode is not supplied, the function will
+   * pass-through to functionToWrap.
    *
    * @param {nsINavHistoryResult} resultNode The result node to turn on batching.
-   * @note If resultNode is not supplied, the function will pass-through to
-   *       functionToWrap.
    * @param {number} itemsBeingChanged The count of items being changed. If the
    *                                    count is lower than a threshold, then
    *                                    batching won't be set.
@@ -1287,12 +1302,12 @@ export var PlacesUIUtils = {
    * Processes a set of transfer items that have been dropped or pasted.
    * Batching will be applied where necessary.
    *
-   * @param {array} items A list of unwrapped nodes to process.
+   * @param {Array} items A list of unwrapped nodes to process.
    * @param {object} insertionPoint The requested point for insertion.
    * @param {boolean} doCopy Set to true to copy the items, false will move them
    *                         if possible.
    * @param {object} view The view that should be used for batching.
-   * @returns {array} Returns an empty array when the insertion point is a tag, else
+   * @returns {Array} Returns an empty array when the insertion point is a tag, else
    *                 returns an array of copied or moved guids.
    */
   async handleTransferItems(items, insertionPoint, doCopy, view) {
@@ -1451,7 +1466,7 @@ export var PlacesUIUtils = {
    * If the user does not have a persisted value for the toolbar's
    * "collapsed" attribute, try to determine whether it's customized.
    *
-   * @param {Boolean} aForceVisible Set to true to ignore if the user had
+   * @param {boolean} aForceVisible Set to true to ignore if the user had
    * previously collapsed the toolbar manually.
    */
   NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE: 3,
@@ -1803,12 +1818,13 @@ export var PlacesUIUtils = {
   },
 
   /**
-   * Tries to initiate a speculative connection to a given url.
+   * Tries to initiate a speculative connection to a given url. This is not
+   * infallible, if a speculative connection cannot be initialized, it will be a
+   * no-op.
+   *
    * @param {nsIURI|URL|string} url entity to initiate
    *        a speculative connection for.
    * @param {window} window the window from where the connection is initialized.
-   * @note This is not infallible, if a speculative connection cannot be
-   *       initialized, it will be a no-op.
    */
   setupSpeculativeConnection(url, window) {
     if (

@@ -164,6 +164,7 @@
     }
     /**
      * overriding
+     *
      * @param {object} val
      */
     set view(val) {
@@ -676,7 +677,7 @@
      * each given item guid. It will open any folder nodes that it needs
      * to in order to show the selected items.
      *
-     * @param {array} aGuids
+     * @param {Array} aGuids
      *   Guids to select.
      * @param {boolean} aOpenContainers
      *   Whether or not to open containers.

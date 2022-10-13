@@ -580,6 +580,7 @@ export const SnapshotGroups = new (class SnapshotGroups {
 
   /**
    * Prefetch a screenshot for the oldest snapshot in the group.
+   *
    * @param {number} id
    *   The id of the group to add the urls to.
    */

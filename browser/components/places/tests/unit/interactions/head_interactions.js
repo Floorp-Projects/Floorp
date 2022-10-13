@@ -95,7 +95,7 @@ async function getInteractions() {
  *
  * @param {string} topic
  * @param {string[]} expected
- * @param {function} task
+ * @param {Function} task
  */
 async function assertUrlNotification(topic, expected, task) {
   let seen = false;
@@ -130,7 +130,7 @@ async function assertUrlNotification(topic, expected, task) {
  * not sent.
  *
  * @param {string} topic
- * @param {function} task
+ * @param {Function} task
  */
 async function assertTopicNotObserved(topic, task) {
   let seen = false;
@@ -456,6 +456,7 @@ function assertRecommendations(recommendations, expected) {
 
 /**
  * Abstracts getting the right moz-page-thumb url depending on enabled features.
+ *
  * @param {string} url
  *  The page url to get a screenshot for.
  * @returns {string} a moz-page-thumb:// url

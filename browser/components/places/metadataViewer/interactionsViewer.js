@@ -24,14 +24,15 @@ class TableViewer {
   /**
    * Maximum number of rows to display by default.
    *
-   * @typedef {number}
+   * @type {number}
    */
   maxRows = 100;
 
   /**
    * The number of rows that we last filled in on the table. This allows
    * tracking to know when to clear unused rows.
-   * @typedef {number}
+   *
+   * @type {number}
    */
   #lastFilledRows = 0;
 
@@ -45,13 +46,14 @@ class TableViewer {
    * - includeTitle determines if the title attribute should be set on that
    *   column, for tooltips, e.g. if an element is likely to overflow.
    *
-   * @typedef {Map<string, object>}
+   * @type {Map<string, object>}
    */
   columnMap;
 
   /**
    * A reference for the current interval timer, if any.
-   * @typedef {number}
+   *
+   * @type {number}
    */
   #timer;
 
@@ -233,7 +235,7 @@ const metadataHandler = new (class extends TableViewer {
   /**
    * A reference to the database connection.
    *
-   * @typedef {mozIStorageConnection}
+   * @type {mozIStorageConnection}
    */
   #db = null;
 

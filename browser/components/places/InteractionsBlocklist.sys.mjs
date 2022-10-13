@@ -126,6 +126,7 @@ class _InteractionsBlocklist {
   /**
    * Only certain urls can be added as Interactions, either manually or
    * automatically.
+   *
    * @returns {Map} A Map keyed by protocol, for each protocol an object may
    *          define stricter requirements, like extension.
    */
@@ -140,6 +141,7 @@ class _InteractionsBlocklist {
   /**
    * Whether to record interactions for a given URL.
    * The rules are defined in InteractionsBlocklist.urlRequirements.
+   *
    * @param {string|URL|nsIURI} url The URL to check.
    * @returns {boolean} whether the url can be added to snapshots.
    */
@@ -226,12 +228,11 @@ class _InteractionsBlocklist {
   /**
    * Adds a regex to HOST_BLOCKLIST. Since we can't parse the base host from
    * the regex, we add it to a list of wildcard regexes. All URLs are checked
-   * against these wildcard regexes.
+   * against these wildcard regexes. Currently only exposed for tests and use in
+   * the console. In the future we could hook this up to a UI component.
    *
    * @param {string|RegExp} regexToAdd
    *   The regular expression to add to our blocklist.
-   * @note Currently only exposed for tests and use in the console. In the
-   *       future we could hook this up to a UI component.
    */
   addRegexToBlocklist(regexToAdd) {
     let regex;
@@ -254,12 +255,11 @@ class _InteractionsBlocklist {
 
   /**
    * Removes a regex from HOST_BLOCKLIST. If `regexToRemove` is not in the
-   * blocklist, this is a no-op.
+   * blocklist, this is a no-op. Currently only exposed for tests and use in the
+   * console. In the future we could hook this up to a UI component.
    *
    * @param {string|RegExp} regexToRemove
    *   The regular expression to add to our blocklist.
-   * @note Currently only exposed for tests and use in the console. In the
-   *       future we could hook this up to a UI component.
    */
   removeRegexFromBlocklist(regexToRemove) {
     let regex;

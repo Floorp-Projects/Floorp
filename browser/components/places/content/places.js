@@ -107,7 +107,7 @@ var PlacesOrganizer = {
    * Opens a given hierarchy in the left pane, stopping at the last reachable
    * container. Note: item ids should be considered deprecated.
    *
-   * @param {array|string|number} aHierarchy
+   * @param {Array | string | number} aHierarchy
    *        A single container or an array of containers, sorted from
    *        the outmost to the innermost in the hierarchy. Each
    *        container may be either an item id, a Places URI string,
@@ -329,6 +329,7 @@ var PlacesOrganizer = {
 
   /**
    * Called when a place folder is selected in the left pane.
+   *
    * @param   resetSearchBox
    *          true if the search box should also be reset, false otherwise.
    *          The search box should be reset when a new folder in the left
@@ -378,6 +379,7 @@ var PlacesOrganizer = {
 
   /**
    * Sets the search scope based on aNode's properties.
+   *
    * @param {object} aNode
    *          the node to set up scope from
    */
@@ -401,6 +403,7 @@ var PlacesOrganizer = {
    * Handle clicks on the places list.
    * Single Left click, right click or modified click do not result in any
    * special action, since they're related to selection.
+   *
    * @param {object} aEvent
    *          The mouse event.
    */
@@ -440,6 +443,7 @@ var PlacesOrganizer = {
 
   /**
    * Handle openFlatContainer events.
+   *
    * @param {object} aContainer
    *        The node the event was dispatched on.
    */
@@ -840,6 +844,7 @@ var PlacesSearchBox = {
    * Run a search for the specified text, over the collection specified by
    * the dropdown arrow. The default is all bookmarks, but can be
    * localized to the active collection.
+   *
    * @param {string} filterString
    *          The text to search for.
    */
@@ -916,6 +921,7 @@ var PlacesSearchBox = {
 
   /**
    * Updates the display with the title of the current collection.
+   *
    * @param {string} aTitle
    *          The title of the current collection.
    */
@@ -986,6 +992,7 @@ var PlacesQueryBuilder = {
    * in that case, when the user does begin a search aScope will be used (see
    * PSB_search()).  If there is an active search, it's performed again to
    * update the content tree.
+   *
    * @param {string} aScope
    *          The search scope: "bookmarks", "collection", "downloads" or
    *          "history".
@@ -1025,6 +1032,7 @@ var PlacesQueryBuilder = {
 var ViewMenu = {
   /**
    * Removes content generated previously from a menupopup.
+   *
    * @param {object} popup
    *          The popup that contains the previously generated content.
    * @param {string} startID
@@ -1078,6 +1086,7 @@ var ViewMenu = {
 
   /**
    * Fills a menupopup with a list of columns
+   *
    * @param {object} event
    *          The popupshowing event that invoked this function.
    * @param {string} startID
@@ -1190,6 +1199,7 @@ var ViewMenu = {
 
   /**
    * Shows/Hides a tree column.
+   *
    * @param {object} element
    *          The menuitem element for the column
    */
@@ -1210,6 +1220,7 @@ var ViewMenu = {
 
   /**
    * Gets the last column that was sorted.
+   *
    * @returns {object|null} the currently sorted column, null if there is no sorted column.
    */
   _getSortColumn: function VM__getSortColumn() {
@@ -1227,6 +1238,7 @@ var ViewMenu = {
 
   /**
    * Sorts the view by the specified column.
+   *
    * @param {object} aColumn
    *          The colum that is the sort key. Can be null - the
    *          current sort column or the title column will be used.
@@ -1328,6 +1340,7 @@ var ContentArea = {
   /**
    * Sets a custom view to be used rather than the default places tree
    * whenever the given query is selected in the left pane.
+   *
    * @param {string} aQueryString
    *        a query string
    * @param {object} aView

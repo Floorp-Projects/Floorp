@@ -36,6 +36,7 @@ add_setup(async function global_setup() {
 
 /**
  * Ensures that a list of interactions have been permanently stored.
+ *
  * @param {Array} expected list of interactions to be found.
  * @param {boolean} [dontFlush] Avoid flushing pending data.
  */
@@ -166,6 +167,7 @@ async function assertDatabaseValues(expected, { dontFlush = false } = {}) {
 
 /**
  * Ensures that a list of interactions have been permanently stored.
+ *
  * @param {string} url The url to query.
  * @param {string} property The property to extract.
  */

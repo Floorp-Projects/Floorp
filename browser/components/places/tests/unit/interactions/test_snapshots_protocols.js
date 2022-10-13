@@ -16,6 +16,7 @@ const TEST_LOCAL_JSON_FILE = "file:///Users/user/test.json";
 /**
  * Creates an interaction and snapshot for the given url
  * Returns the result of a query for the snapshot
+ *
  * @param {string} url
  *   The url to create the interaction and snapshot for
  */

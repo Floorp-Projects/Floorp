@@ -112,6 +112,7 @@ export const SnapshotScorer = new (class SnapshotScorer {
 
     /**
      * Maintains the current score for each seen snapshot.
+     *
      * @type {Map<string, SnapshotScore>}
      */
     let combined = new Map();

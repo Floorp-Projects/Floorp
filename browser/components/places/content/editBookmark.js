@@ -247,7 +247,7 @@ var gEditItemOverlay = {
    * @param {nsIURI[]} [aInfo.uris]
    *   If aInfo.node is not specified, this must be specified.
    *   An array of uris for bulk tagging.
-   * @param {string[]} [hiddenRows]
+   * @param {string[]} [aInfo.hiddenRows]
    *   List of rows to be hidden regardless of the item edited. Possible values:
    *   "title", "location", "keyword", "folderPicker".
    */

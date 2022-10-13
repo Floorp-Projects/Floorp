@@ -723,6 +723,7 @@ PlacesViewBase.prototype = {
 
   /**
    * Adds an "Open All in Tabs" menuitem to the bottom of the popup.
+   *
    * @param {object} aPopup
    *        a Places popup.
    */
