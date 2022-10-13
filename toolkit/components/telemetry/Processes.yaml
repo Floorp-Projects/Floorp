@@ -31,3 +31,6 @@ dynamic:
 socket:
   gecko_enum: GeckoProcessType_Socket
   description: This is the process that handles networking requests.
+utility:
+  gecko_enum: GeckoProcessType_Utility
+  description: This is a process that will hold arbitrary IPC actors requiring specific sandboxing.
