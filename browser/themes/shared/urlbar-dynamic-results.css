@@ -152,7 +152,7 @@
   display: flex;
   flex-grow: 1;
   gap: 0.9em 1.8em;
-  max-width: calc(100% - 32px);
+  max-width: calc(100% - 36px);
 }
 
 #urlbar[searchmode] .urlbarView-row[dynamicType=quickactions] .urlbarView-dynamic-quickactions-buttons {
