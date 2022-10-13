@@ -173,6 +173,7 @@
   margin-top: 2px;
   position: relative;
   overflow: hidden;
+  min-width: 16px;
 }
 
 .urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row[disabled] {
