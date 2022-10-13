@@ -13,7 +13,7 @@ worker would die without even leaving any logs.
  1 file changed, 67 insertions(+), 41 deletions(-)
 
 diff --git a/compiler-rt/lib/lsan/lsan_common.cpp b/compiler-rt/lib/lsan/lsan_common.cpp
-index ade0b8081f27..c80f24e7f6f4 100644
+index 51218770d6dc..0a69b010879b 100644
 --- a/compiler-rt/lib/lsan/lsan_common.cpp
 +++ b/compiler-rt/lib/lsan/lsan_common.cpp
 @@ -83,11 +83,9 @@ class LeakSuppressionContext {
@@ -96,7 +96,7 @@ index ade0b8081f27..c80f24e7f6f4 100644
      return false;
    suppressed_stacks_sorted = false;
    suppressed_stacks.push_back(stack_trace_id);
-@@ -596,6 +557,68 @@ static void CollectIgnoredCb(uptr chunk, void *arg) {
+@@ -600,6 +561,68 @@ static void CollectIgnoredCb(uptr chunk, void *arg) {
    }
  }
  
@@ -164,8 +164,8 @@ index ade0b8081f27..c80f24e7f6f4 100644
 +
  // Sets the appropriate tag on each chunk.
  static void ClassifyAllChunks(SuspendedThreadsList const &suspended_threads,
-                               Frontier *frontier) {
-@@ -611,6 +634,9 @@ static void ClassifyAllChunks(SuspendedThreadsList const &suspended_threads,
+                               Frontier *frontier, tid_t caller_tid,
+@@ -616,6 +639,9 @@ static void ClassifyAllChunks(SuspendedThreadsList const &suspended_threads,
    ProcessRootRegions(frontier);
    FloodFillTag(frontier, kReachable);
  
