@@ -14,6 +14,8 @@
         onload="onLoad();"
         onunload="onunload();">
 
+<stringbundle id="browserBundle"
+                src="chrome://browser/locale/browser.properties"/>
   <dialog
         buttons="accept"
         data-l10n-id="permission-dialog"
@@ -36,263 +38,161 @@
     <separator class="thin"/>
     <label id="urlLabel" control="url" data-l10n-id="permissions-address"/>
     <vbox>
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL0" class="URLBox" type="text" value="" placeholder="https://freasearch.org/"/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl0.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL1" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl1.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL2" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl2.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
       
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL3" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl3.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL4" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl4.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL5" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl5.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL6" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl6.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL7" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl7.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
       
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL8" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl8.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL9" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl9.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL10" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl10.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL11" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl11.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL12" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl12.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL13" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl13.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL14" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl14.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL15" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl15.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL16" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl16.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL17" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl17.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL18" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl18.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
 
-      <hbox>
+      <hbox class="BrowserSidebarSettingBox">
         <html:input id="customURL19" class="URLBox" type="text" value=""/>
         <menulist class="useDocumentColors" preference="floorp.browser.sidebar2.customurl19.usercontext" flex="1">
          <menupopup>
-          <menuitem data-l10n-id="no-container" value="0"/>
-          <menuitem data-l10n-id="container-1" value="1"/>
-          <menuitem data-l10n-id="container-2" value="2"/>
-          <menuitem data-l10n-id="container-3" value="3"/>
-          <menuitem data-l10n-id="container-4" value="4"/>
          </menupopup>
         </menulist>
       </hbox>
