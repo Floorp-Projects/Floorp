@@ -352,7 +352,7 @@ open class DefaultToolbarMenu(
     private fun syncMenuItem(): BrowserMenuImageText? {
         val syncItemTitle =
             if (context.components.backgroundServices.accountManagerAvailableQueue.isReady()) {
-                accountManager.accountProfileEmail ?: context.getString(R.string.sync_menu_sign_in)
+                accountManager.accountProfileEmail ?: context.getString(R.string.sync_menu_sync_and_save_data)
             } else {
                 null
             }

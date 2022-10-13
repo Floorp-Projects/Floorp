@@ -1043,9 +1043,11 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Copied to clipboard</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Sign in to sync</string>
+    <string name="sync_menu_sign_in" moz:removedIn="107" tools:ignore="UnusedResources">Sign in to sync</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sign in to Sync</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Sync and save data</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Send to all devices</string>
     <!-- An option from the share dialog to reconnect to sync -->

@@ -173,7 +173,7 @@ class ThreeDotMenuMainRobot {
 
         fun openSyncSignIn(interact: SyncSignInRobot.() -> Unit): SyncSignInRobot.Transition {
             threeDotMenuRecyclerView().perform(swipeDown())
-            mDevice.waitNotNull(Until.findObject(By.text("Sign in to sync")), waitingTime)
+            mDevice.waitNotNull(Until.findObject(By.text("Sync and save data")), waitingTime)
             signInToSyncButton().click()
 
             SyncSignInRobot().interact()
@@ -440,7 +440,7 @@ private fun bookmarksButton() = onView(allOf(withText(R.string.library_bookmarks
 private fun assertBookmarksButton() = bookmarksButton()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun signInToSyncButton() = onView(withText("Sign in to sync"))
+private fun signInToSyncButton() = onView(withText("Sync and save data"))
 private fun assertSignInToSyncButton() = signInToSyncButton().check(matches(isDisplayed()))
 
 private fun helpButton() = onView(allOf(withText(R.string.browser_menu_help)))

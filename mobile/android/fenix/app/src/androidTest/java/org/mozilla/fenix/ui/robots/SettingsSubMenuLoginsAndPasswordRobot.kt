@@ -110,5 +110,5 @@ private fun assertDefaultValueAutofillLogins(context: Context) = onView(
 private fun assertDefaultValueExceptions() = onView(ViewMatchers.withText("Exceptions"))
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-private fun assertDefaultValueSyncLogins() = onView(ViewMatchers.withText("Sign in to Sync"))
+private fun assertDefaultValueSyncLogins() = onView(ViewMatchers.withText("Sync and save data"))
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
