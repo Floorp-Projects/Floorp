@@ -112,6 +112,9 @@ def executor_kwargs(logger, test_type, test_environment, run_info_data,
         # https://chromium.googlesource.com/chromium/src/+/HEAD/docs/gpu/swiftshader.md
         chrome_options["args"].extend(["--use-gl=angle", "--use-angle=swiftshader"])
 
+    if kwargs["enable_experimental"]:
+        chrome_options["args"].extend(["--enable-experimental-web-platform-features"])
+
     # Copy over any other flags that were passed in via --binary_args
     if kwargs["binary_args"] is not None:
         chrome_options["args"].extend(kwargs["binary_args"])
