@@ -81,7 +81,7 @@
 #tabbrowser-arrowscrollbox::part(scrollbox-clip) {
   /* Needed to prevent tabstrip from growing as wide as the sum of the tabs'
      page-title widths when emulating XUL with modern flexbox. */
-  min-width: 0;
+  contain: inline-size;
 }
 
 .tabbrowser-tab {
