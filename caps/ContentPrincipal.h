@@ -76,7 +76,7 @@ class ContentPrincipal final : public BasePrincipal {
  private:
   const nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mDomain;
-  Maybe<RefPtr<extensions::WebExtensionPolicyCore>> mAddon;
+  Maybe<WeakPtr<extensions::WebExtensionPolicy>> mAddon;
 };
 
 }  // namespace mozilla

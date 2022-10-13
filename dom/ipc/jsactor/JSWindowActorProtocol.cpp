@@ -15,7 +15,6 @@
 #include "mozilla/dom/PContent.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 
-#include "mozilla/extensions/MatchPattern.h"
 #include "nsContentUtils.h"
 #include "JSActorProtocolUtils.h"
 
@@ -29,7 +28,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSWindowActorProtocol)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION(JSWindowActorProtocol)
+NS_IMPL_CYCLE_COLLECTION(JSWindowActorProtocol, mURIMatcher)
 
 /* static */ already_AddRefed<JSWindowActorProtocol>
 JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
@@ -294,18 +293,30 @@ void JSWindowActorProtocol::RemoveObservers() {
   }
 }
 
-extensions::MatchPatternSetCore* JSWindowActorProtocol::GetURIMatcher() {
+extensions::MatchPatternSet* JSWindowActorProtocol::GetURIMatcher() {
   // If we've already created the pattern set, return it.
   if (mURIMatcher || mMatches.IsEmpty()) {
     return mURIMatcher;
   }
 
-  nsTArray<RefPtr<extensions::MatchPatternCore>> patterns(mMatches.Length());
-  for (const nsString& pattern : mMatches) {
-    patterns.AppendElement(new extensions::MatchPatternCore(
-        pattern, false, false, IgnoreErrors()));
+  // Constructing the MatchPatternSet requires a JS environment to be run in.
+  // We can construct it here in the JSM scope, as we will be keeping it around.
+  AutoJSAPI jsapi;
+  MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
+  GlobalObject global(jsapi.cx(), xpc::PrivilegedJunkScope());
+
+  nsTArray<OwningStringOrMatchPattern> patterns;
+  patterns.SetCapacity(mMatches.Length());
+  for (nsString& s : mMatches) {
+    auto entry = patterns.AppendElement();
+    entry->SetAsString() = s;
   }
-  mURIMatcher = new extensions::MatchPatternSetCore(std::move(patterns));
+
+  MatchPatternOptions matchPatternOptions;
+  // Make MatchPattern's mSchemes create properly.
+  matchPatternOptions.mRestrictSchemes = false;
+  mURIMatcher = extensions::MatchPatternSet::Constructor(
+      global, patterns, matchPatternOptions, IgnoreErrors());
   return mURIMatcher;
 }
 
@@ -365,7 +376,7 @@ bool JSWindowActorProtocol::Matches(BrowsingContext* aBrowsingContext,
     return false;
   }
 
-  if (extensions::MatchPatternSetCore* uriMatcher = GetURIMatcher()) {
+  if (extensions::MatchPatternSet* uriMatcher = GetURIMatcher()) {
     if (!uriMatcher->Matches(aURI)) {
       aRv.ThrowNotSupportedError(nsPrintfCString(
           "Window protocol '%s' doesn't match uri %s", mName.get(),

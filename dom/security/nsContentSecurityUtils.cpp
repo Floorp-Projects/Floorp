@@ -459,7 +459,7 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
       sanitizedPathAndScheme.Append(u"can't get addon off main thread]"_ns);
     }
 
-    AppendUTF8toUTF16(url.FilePath(), sanitizedPathAndScheme);
+    sanitizedPathAndScheme.Append(url.FilePath());
     return FilenameTypeAndDetails(kExtensionURI, Some(sanitizedPathAndScheme));
   }
 
