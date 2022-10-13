@@ -28,6 +28,26 @@ async function testWindowOpen(iframeID) {
   BrowserTestUtils.removeTab(tab);
 }
 
+async function testWindowOpenExistingWindow() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+  let popup = await jsWindowOpen(tab.linkedBrowser, true);
+
+  info("re-focusing main window");
+  await waitForFocus(tab.linkedBrowser);
+
+  info("Entering full-screen");
+  await changeFullscreen(tab.linkedBrowser, true);
+
+  await testExpectFullScreenExit(tab.linkedBrowser, true, async () => {
+    info("Calling window.open() again should reuse the existing window");
+    jsWindowOpen(tab.linkedBrowser, true);
+  });
+
+  // Cleanup
+  await BrowserTestUtils.closeWindow(popup);
+  BrowserTestUtils.removeTab(tab);
+}
+
 add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -43,4 +63,8 @@ add_task(function test_parentWindowOpen() {
 
 add_task(function test_iframeWindowOpen() {
   return testWindowOpen(IFRAME_ID);
+});
+
+add_task(function test_parentWindowOpenExistWindow() {
+  return testWindowOpenExistingWindow();
 });
