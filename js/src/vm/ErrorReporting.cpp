@@ -78,9 +78,7 @@ bool js::ReportCompileWarning(ErrorContext* ec, ErrorMetadata&& metadata,
     return false;
   }
 
-  ec->reportWarning(&err);
-
-  return true;
+  return ec->reportWarning(&err);
 }
 
 static void ReportCompileErrorImpl(ErrorContext* ec,

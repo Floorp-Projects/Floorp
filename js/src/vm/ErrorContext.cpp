@@ -81,15 +81,17 @@ void OffThreadErrorContext::reportError(CompileError* err) {
   }
 }
 
-void OffThreadErrorContext::reportWarning(CompileError* err) {
+bool OffThreadErrorContext::reportWarning(CompileError* err) {
   auto errorPtr = getAllocator()->make_unique<CompileError>(std::move(*err));
   if (!errorPtr) {
-    return;
+    return false;
   }
   if (!errors_.warnings.append(std::move(errorPtr))) {
     ReportOutOfMemory();
-    return;
+    return false;
   }
+
+  return true;
 }
 
 void OffThreadErrorContext::ReportOutOfMemory() {
