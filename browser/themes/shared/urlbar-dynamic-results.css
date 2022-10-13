@@ -156,7 +156,7 @@
   max-width: calc(100% - 28px - 1.8em);
 }
 
-#urlbar[searchmode] .urlbarView-row[dynamicType=quickactions] .urlbarView-dynamic-quickactions-buttons {
+#urlbar[searchmodesource=actions] .urlbarView-row[dynamicType=quickactions] .urlbarView-dynamic-quickactions-buttons {
   flex-wrap: wrap;
 }
 

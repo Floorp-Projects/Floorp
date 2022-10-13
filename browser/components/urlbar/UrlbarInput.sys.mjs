@@ -2905,6 +2905,7 @@ export class UrlbarInput {
     this._searchModeLabel.textContent = "";
     this._searchModeIndicatorTitle.removeAttribute("data-l10n-id");
     this._searchModeLabel.removeAttribute("data-l10n-id");
+    this.removeAttribute("searchmodesource");
 
     if (!engineName && !source) {
       try {
@@ -2937,6 +2938,7 @@ export class UrlbarInput {
         this.inputField,
         `urlbar-placeholder-search-mode-other-${sourceName}`
       );
+      this.setAttribute("searchmodesource", sourceName);
     }
 
     this.toggleAttribute("searchmode", true);
