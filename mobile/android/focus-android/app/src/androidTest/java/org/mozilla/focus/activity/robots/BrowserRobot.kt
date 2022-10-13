@@ -287,8 +287,8 @@ class BrowserRobot {
             try {
                 longClickPageObject(webPageItemContainingText(expectedText))
 
-                webPageItemContainingText("Copy").also { it.waitForExists(waitingTime) }
-                mDevice.findObject(By.textContains("Copy")).also { it.click() }
+                webPageItemContainingText("Copy").waitForExists(waitingTime)
+                mDevice.findObject(By.textContains("Copy")).click()
 
                 break
             } catch (e: NullPointerException) {
@@ -307,7 +307,7 @@ class BrowserRobot {
         while (currentTries++ < 3) {
             try {
                 mDevice.findObject(UiSelector().textContains("Paste")).waitForExists(waitingTime)
-                mDevice.findObject(By.textContains("Paste")).also { it.click() }
+                mDevice.findObject(By.textContains("Paste")).click()
                 break
             } catch (e: NullPointerException) {
                 longPressTextInputBox()
@@ -321,7 +321,7 @@ class BrowserRobot {
         mDevice.findObject(
             UiSelector().resourceId("$packageName:id/customPanel"),
         ).waitForExists(waitingTime)
-        mDevice.findObject(UiSelector().textContains(optionName)).also { it.click() }
+        mDevice.findObject(UiSelector().textContains(optionName)).click()
     }
 
     fun clickSubmitDropDownButton() = clickPageObject(submitDropDownButton)
