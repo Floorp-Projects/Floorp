@@ -43,7 +43,7 @@ using layers::NativeLayerRootWayland;
  */
 class WaylandVsyncSource final : public gfx::VsyncSource {
  public:
-  WaylandVsyncSource();
+  WaylandVsyncSource(nsWindow* aWindow);
   virtual ~WaylandVsyncSource();
 
   static Maybe<TimeDuration> GetFastestVsyncRate();
@@ -72,6 +72,7 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
   void SetupFrameCallback(const MutexAutoLock& aProofOfLock);
   void CalculateVsyncRate(const MutexAutoLock& aProofOfLock,
                           TimeStamp aVsyncTimestamp);
+  void* GetWindow() { return mWindow; };
 
   Mutex mMutex MOZ_UNANNOTATED;
   bool mIsShutdown;
@@ -79,6 +80,7 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
   bool mMonitorEnabled;
   bool mCallbackRequested;
   MozContainer* mContainer;
+  nsWindow* mWindow;
   RefPtr<NativeLayerRootWayland> mNativeLayerRoot;
   TimeDuration mVsyncRate;
   TimeStamp mLastVsyncTimeStamp;
