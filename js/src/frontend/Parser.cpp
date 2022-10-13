@@ -7814,6 +7814,40 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       }
     }
 
+#ifdef ENABLE_DECORATORS
+    if (propType == PropertyType::FieldWithAccessor) {
+      // Decorators Proposal
+      // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-runtime-semantics-classfielddefinitionevaluation
+      //
+      // FieldDefinition : accessor ClassElementName Initializeropt
+      //
+      // Step 1. Let name be the result of evaluating ClassElementName.
+      // ...
+      // Step 3. Let privateStateDesc be the string-concatenation of name
+      // and " accessor storage".
+      StringBuffer privateStateDesc(cx_);
+      if (!privateStateDesc.append(this->parserAtoms(), propAtom)) {
+        return false;
+      }
+      if (!privateStateDesc.append(" accessor storage")) {
+        return false;
+      }
+
+      // Step 4. Let privateStateName be a new Private Name whose
+      // [[Description]] value is privateStateDesc.
+      auto privateStateName =
+          privateStateDesc.finishParserAtom(this->parserAtoms(), ec_);
+      if (!noteDeclaredPrivateName(
+              propName, privateStateName, propType,
+              isStatic ? FieldPlacement::Static : FieldPlacement::Instance,
+              pos())) {
+        return false;
+      }
+      propName = handler_.newPrivateName(privateStateName, pos());
+      propAtom = privateStateName;
+      decorators = handler_.newList(ParseNodeKind::DecoratorList, pos());
+    }
+#endif
     if (isStatic) {
       classInitializedMembers.staticFields++;
     } else {
