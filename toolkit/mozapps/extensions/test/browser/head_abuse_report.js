@@ -103,7 +103,10 @@ async function installTestExtension(
         },
       };
       break;
-    case "sitepermission":
+
+    // TODO(Bug 1789718): Remove after the deprecated XPIProvider-based
+    // implementation is also removed.
+    case "sitepermission-deprecated":
       additionalProps = {
         name: "WebMIDI test addon for https://mochi.test",
         install_origins: ["https://mochi.test"],
@@ -126,7 +129,9 @@ async function installTestExtension(
     useAddonManager: "temporary",
   };
 
-  if (type === "sitepermission") {
+  // TODO(Bug 1789718): Remove after the deprecated XPIProvider-based
+  // implementation is also removed.
+  if (type === "sitepermission-deprecated") {
     const xpi = AddonTestUtils.createTempWebExtensionFile(extensionOpts);
     const addon = await AddonManager.installTemporaryAddon(xpi);
     // The extension object that ExtensionTestUtils.loadExtension returns for

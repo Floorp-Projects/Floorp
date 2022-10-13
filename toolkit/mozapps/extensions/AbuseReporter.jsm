@@ -24,7 +24,13 @@ const MAX_STRING_LENGTH = 255;
 const MIN_MS_BETWEEN_SUBMITS = 30000;
 
 // The addon types currently supported by the integrated abuse report panel.
-const SUPPORTED_ADDON_TYPES = ["extension", "theme", "sitepermission"];
+const SUPPORTED_ADDON_TYPES = [
+  "extension",
+  "theme",
+  "sitepermission",
+  // TODO(Bug 1789718): Remove after the deprecated XPIProvider-based implementation is also removed.
+  "sitepermission-deprecated",
+];
 
 const lazy = {};
 

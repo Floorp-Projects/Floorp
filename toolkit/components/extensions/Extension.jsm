@@ -160,6 +160,7 @@ XPCOMUtils.defineLazyGetter(lazy, "NO_PROMPT_PERMISSIONS", async () => {
   );
 });
 
+// TODO(Bug 1789718): Remove after the deprecated XPIProvider-based implementation is also removed.
 XPCOMUtils.defineLazyGetter(lazy, "SCHEMA_SITE_PERMISSIONS", async () => {
   // Wait until all extension API schemas have been loaded and parsed.
   await Management.lazyInit();
@@ -574,10 +575,11 @@ ExtensionAddonObserver.init();
 
 const manifestTypes = new Map([
   ["theme", "manifest.ThemeManifest"],
-  ["sitepermission", "manifest.WebExtensionSitePermissionsManifest"],
   ["locale", "manifest.WebExtensionLangpackManifest"],
   ["dictionary", "manifest.WebExtensionDictionaryManifest"],
   ["extension", "manifest.WebExtensionManifest"],
+  // TODO(Bug 1789718): Remove after the deprecated XPIProvider-based implementation is also removed.
+  ["sitepermission-deprecated", "manifest.WebExtensionSitePermissionsManifest"],
 ]);
 
 /**
@@ -1187,7 +1189,8 @@ class ExtensionData {
     } else if (manifest.dictionaries) {
       this.type = "dictionary";
     } else if (manifest.site_permissions) {
-      this.type = "sitepermission";
+      // TODO(Bug 1789718): Remove after the deprecated XPIProvider-based implementation is also removed.
+      this.type = "sitepermission-deprecated";
     } else {
       this.type = "extension";
     }
@@ -1988,6 +1991,9 @@ class ExtensionData {
     // Generate a map of site_permission names to permission strings for site
     // permissions.  Since SitePermission addons cannot have regular permissions,
     // we reuse msgs to pass the strings to the permissions panel.
+    // NOTE: this is used as part of the synthetic addon install flow implemented for the
+    // SitePermissionAddonProvider.
+    // (and so it should not be removed as part of Bug 1789718 changes, while this additional note should be).
     if (info.sitePermissions) {
       for (let permission of info.sitePermissions) {
         try {
@@ -2341,6 +2347,7 @@ class LangpackBootstrapScope extends BootstrapScope {
   }
 }
 
+// TODO(Bug 1789718): Remove after the deprecated XPIProvider-based implementation is also removed.
 class SitePermissionBootstrapScope extends BootstrapScope {
   install(data, reason) {}
   uninstall(data, reason) {}
@@ -3461,6 +3468,7 @@ class Langpack extends ExtensionData {
   }
 }
 
+// TODO(Bug 1789718): Remove after the deprecated XPIProvider-based implementation is also removed.
 class SitePermission extends ExtensionData {
   constructor(addonData, startupReason) {
     super(addonData.resourceURI);
