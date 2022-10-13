@@ -5,9 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["ClipboardReadPasteParent"];
 
-const kPasteMenuItemClickedEventType = "PasteMenuItemClicked";
-const kPasteMenupopupHidingEventType = "PasteMenupopupHiding";
-
 const kMenuPopupId = "clipboardReadPasteMenuPopup";
 
 // Exchanges messages with the child actor and handles events from the
@@ -23,25 +20,33 @@ class ClipboardReadPasteParent extends JSWindowActorParent {
   // EventListener interface.
   handleEvent(aEvent) {
     switch (aEvent.type) {
-      case kPasteMenuItemClickedEventType: {
-        this._pasteMenuItemClicked = true;
-        this.sendAsyncMessage("ClipboardReadPaste:PasteMenuItemClicked");
+      case "command": {
+        this.onCommand();
         break;
       }
-      case kPasteMenupopupHidingEventType: {
-        // Remove the listeners before potentially sending the async message
-        // below, because that might throw.
-        this._removeMenupopupEventListeners();
+      case "popuphiding": {
+        this.onPopupHiding();
+        break;
+      }
+    }
+  }
 
-        if (this._pasteMenuItemClicked) {
-          // A message was already sent. Reset the state to handle further
-          // click/dismiss events properly.
-          this._pasteMenuItemClicked = false;
-        } else {
-          this.sendAsyncMessage("ClipboardReadPaste:PasteMenuItemDismissed");
-        }
-        break;
-      }
+  onCommand() {
+    this._pasteMenuItemClicked = true;
+    this.sendAsyncMessage("ClipboardReadPaste:PasteMenuItemClicked");
+  }
+
+  onPopupHiding() {
+    // Remove the listeners before potentially sending the async message
+    // below, because that might throw.
+    this._removeMenupopupEventListeners();
+
+    if (this._pasteMenuItemClicked) {
+      // A message was already sent. Reset the state to handle further
+      // click/dismiss events properly.
+      this._pasteMenuItemClicked = false;
+    } else {
+      this.sendAsyncMessage("ClipboardReadPaste:PasteMenuItemDismissed");
     }
   }
 
@@ -86,34 +91,22 @@ class ClipboardReadPasteParent extends JSWindowActorParent {
   }
 
   _addMenupopupEventListeners() {
-    this._menupopup.addEventListener(kPasteMenuItemClickedEventType, this);
-    this._menupopup.addEventListener(kPasteMenupopupHidingEventType, this);
+    this._menupopup.addEventListener("command", this);
+    this._menupopup.addEventListener("popuphiding", this);
   }
 
   _removeMenupopupEventListeners() {
-    this._menupopup.removeEventListener(kPasteMenuItemClickedEventType, this);
-    this._menupopup.removeEventListener(kPasteMenupopupHidingEventType, this);
+    this._menupopup.removeEventListener("command", this);
+    this._menupopup.removeEventListener("popuphiding", this);
   }
 
   _createMenupopup(aChromeDoc) {
     let menuitem = aChromeDoc.createXULElement("menuitem");
     menuitem.id = "clipboardReadPasteMenuItem";
     menuitem.setAttribute("data-l10n-id", "text-action-paste");
-    menuitem.setAttribute(
-      "oncommand",
-      "this.parentElement.dispatchEvent(new CustomEvent('" +
-        kPasteMenuItemClickedEventType +
-        "'));"
-    );
 
     let menupopup = aChromeDoc.createXULElement("menupopup");
     menupopup.id = kMenuPopupId;
-    menupopup.setAttribute(
-      "onpopuphiding",
-      "this.dispatchEvent(new CustomEvent('" +
-        kPasteMenupopupHidingEventType +
-        "'));"
-    );
     menupopup.appendChild(menuitem);
     return menupopup;
   }
