@@ -1,0 +1,10 @@
+The contents of this directory are extracted from virtualenv.pyz as downloaded
+from https://bootstrap.pypa.io/virtualenv.pyz.
+
+The virtualenv.py script is a wrapper that should be preserved and allows to
+use the extracted virtualenv.pyz as-is.
+
+It is not vendored via `mach vendor` because that would require a larger wrapper
+script that handles the same things as the zipapp already does, picking the right
+dependencies to add to the PYTHONPATH depending on the python version.
+

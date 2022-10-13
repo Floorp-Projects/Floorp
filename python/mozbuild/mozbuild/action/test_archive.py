@@ -298,7 +298,7 @@ ARCHIVE_FILES = {
         {
             "source": buildconfig.topsrcdir,
             "base": "",
-            "pattern": "third_party/python/_venv/**",
+            "pattern": "third_party/python/virtualenv/**",
         },
         {
             "source": buildconfig.topsrcdir,
