@@ -47,7 +47,7 @@ template <typename T>
 class storage_StatementCache : public ::testing::Test {};
 typedef ::testing::Types<const char[], StringWrapper> TwoStringTypes;
 
-TYPED_TEST_CASE(storage_StatementCache, TwoStringTypes);
+TYPED_TEST_SUITE(storage_StatementCache, TwoStringTypes);
 TYPED_TEST(storage_StatementCache, GetCachedStatement) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   SyncCache cache(db);
@@ -67,7 +67,7 @@ TYPED_TEST(storage_StatementCache, GetCachedStatement) {
   do_check_eq(stmt.get(), stmt2.get());
 }
 
-TYPED_TEST_CASE(storage_StatementCache, TwoStringTypes);
+TYPED_TEST_SUITE(storage_StatementCache, TwoStringTypes);
 TYPED_TEST(storage_StatementCache, FinalizeStatements) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   SyncCache cache(db);
@@ -89,7 +89,7 @@ TYPED_TEST(storage_StatementCache, FinalizeStatements) {
   do_check_success(db->Close());
 }
 
-TYPED_TEST_CASE(storage_StatementCache, TwoStringTypes);
+TYPED_TEST_SUITE(storage_StatementCache, TwoStringTypes);
 TYPED_TEST(storage_StatementCache, GetCachedAsyncStatement) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   AsyncCache cache(db);
@@ -109,7 +109,7 @@ TYPED_TEST(storage_StatementCache, GetCachedAsyncStatement) {
   do_check_eq(stmt.get(), stmt2.get());
 }
 
-TYPED_TEST_CASE(storage_StatementCache, TwoStringTypes);
+TYPED_TEST_SUITE(storage_StatementCache, TwoStringTypes);
 TYPED_TEST(storage_StatementCache, FinalizeAsyncStatements) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   AsyncCache cache(db);
