@@ -17,13 +17,23 @@
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/HashTable.h"
-#include "mozilla/RustRegex.h"
+#include "mozilla/regex_ffi_generated.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsLayoutUtils.h"
 #include "nsTStringHasher.h"
 #include "mozilla/StaticPtr.h"
+
+namespace mozilla {
+template <>
+class DefaultDelete<regex::ffi::RegexWrapper> {
+ public:
+  void operator()(regex::ffi::RegexWrapper* aPtr) const {
+    regex::ffi::regex_delete(aPtr);
+  }
+};
+}  // namespace mozilla
 
 namespace mozilla::dom {
 
@@ -610,7 +620,7 @@ class FormAutofillImpl {
       nsTArray<FormAutofillConfidences>& aResults, ErrorResult& aRv);
 
  private:
-  const RustRegex& GetRegex(RegexKey key);
+  const regex::ffi::RegexWrapper& GetRegex(RegexKey key);
 
   bool StringMatchesRegExp(const nsACString& str, RegexKey key);
   bool StringMatchesRegExp(const nsAString& str, RegexKey key);
@@ -657,7 +667,7 @@ class FormAutofillImpl {
   // Array that holds RegexWrapper that created by regex::ffi::regex_new
   using RegexWrapperArray =
       EnumeratedArray<RegexKey, RegexKey::Count,
-                      RustRegex>;
+                      UniquePtr<regex::ffi::RegexWrapper>>;
   RegexWrapperArray mRegexes;
 };
 
@@ -677,18 +687,16 @@ FormAutofillImpl::FormAutofillImpl() {
   }
 }
 
-const RustRegex& FormAutofillImpl::GetRegex(RegexKey aKey) {
+const regex::ffi::RegexWrapper& FormAutofillImpl::GetRegex(RegexKey aKey) {
   if (!mRegexes[aKey]) {
-    RustRegex regex(mRuleMap[aKey], RustRegexOptions().CaseInsensitive(true));
-    MOZ_DIAGNOSTIC_ASSERT(regex);
-    mRegexes[aKey] = std::move(regex);
+    mRegexes[aKey].reset(regex::ffi::regex_new(&mRuleMap[aKey]));
   }
-  return mRegexes[aKey];
+  return *mRegexes[aKey];
 }
 
 bool FormAutofillImpl::StringMatchesRegExp(const nsACString& aStr,
                                            RegexKey aKey) {
-  return GetRegex(aKey).IsMatch(aStr);
+  return regex::ffi::regex_is_match(&GetRegex(aKey), &aStr);
 }
 
 bool FormAutofillImpl::StringMatchesRegExp(const nsAString& aStr,
@@ -710,7 +718,7 @@ bool FormAutofillImpl::TextContentMatchesRegExp(Element& element,
 
 size_t FormAutofillImpl::CountRegExpMatches(const nsACString& aStr,
                                             RegexKey aKey) {
-  return GetRegex(aKey).CountMatches(aStr);
+  return regex::ffi::regex_count_matches(&GetRegex(aKey), &aStr);
 }
 
 size_t FormAutofillImpl::CountRegExpMatches(const nsAString& aStr,

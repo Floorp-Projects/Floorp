@@ -26,33 +26,46 @@ using namespace mozilla::dom;
  * AtomSet
  *****************************************************************************/
 
-template <typename Range, typename AsAtom>
-static AtomSet::ArrayType AtomSetFromRange(Range&& aRange,
-                                           AsAtom&& aTransform) {
-  AtomSet::ArrayType atoms;
-  atoms.SetCapacity(RangeSize(aRange));
-  std::transform(aRange.begin(), aRange.end(), MakeBackInserter(atoms),
-                 std::forward<AsAtom>(aTransform));
+AtomSet::AtomSet(const nsTArray<nsString>& aElems) {
+  mElems.SetCapacity(aElems.Length());
 
-  atoms.Sort();
+  for (const auto& elem : aElems) {
+    mElems.AppendElement(NS_AtomizeMainThread(elem));
+  }
+
+  SortAndUniquify();
+}
+
+AtomSet::AtomSet(const char** aElems) {
+  for (const char** elemp = aElems; *elemp; elemp++) {
+    mElems.AppendElement(NS_Atomize(*elemp));
+  }
+
+  SortAndUniquify();
+}
+
+AtomSet::AtomSet(std::initializer_list<nsAtom*> aIL) {
+  mElems.SetCapacity(aIL.size());
+
+  for (const auto& elem : aIL) {
+    mElems.AppendElement(elem);
+  }
+
+  SortAndUniquify();
+}
+
+void AtomSet::SortAndUniquify() {
+  mElems.Sort();
 
   nsAtom* prev = nullptr;
-  atoms.RemoveElementsBy([&prev](const RefPtr<nsAtom>& aAtom) {
+  mElems.RemoveElementsBy([&prev](const RefPtr<nsAtom>& aAtom) {
     bool remove = aAtom == prev;
     prev = aAtom;
     return remove;
   });
 
-  atoms.Compact();
-  return atoms;
+  mElems.Compact();
 }
-
-AtomSet::AtomSet(const nsTArray<nsString>& aElems)
-    : mElems(AtomSetFromRange(
-          aElems, [](const nsString& elem) { return NS_Atomize(elem); })) {}
-
-AtomSet::AtomSet(std::initializer_list<nsAtom*> aIL)
-    : mElems(AtomSetFromRange(aIL, [](nsAtom* elem) { return elem; })) {}
 
 bool AtomSet::Intersects(const AtomSet& aOther) const {
   for (const auto& atom : *this) {
@@ -66,6 +79,20 @@ bool AtomSet::Intersects(const AtomSet& aOther) const {
     }
   }
   return false;
+}
+
+void AtomSet::Add(nsAtom* aAtom) {
+  auto index = mElems.IndexOfFirstElementGt(aAtom);
+  if (index == 0 || mElems[index - 1] != aAtom) {
+    mElems.InsertElementAt(index, aAtom);
+  }
+}
+
+void AtomSet::Remove(nsAtom* aAtom) {
+  auto index = mElems.BinaryIndexOf(aAtom);
+  if (index != ArrayType::NoIndex) {
+    mElems.RemoveElementAt(index);
+  }
 }
 
 /*****************************************************************************
@@ -96,20 +123,24 @@ const nsAtom* URLInfo::HostAtom() const {
   return mHostAtom;
 }
 
-const nsCString& URLInfo::FilePath() const {
+const nsString& URLInfo::FilePath() const {
   if (mFilePath.IsEmpty()) {
+    nsCString path;
     nsCOMPtr<nsIURL> url = do_QueryInterface(mURI);
-    if (!url || NS_FAILED(url->GetFilePath(mFilePath))) {
+    if (url && NS_SUCCEEDED(url->GetFilePath(path))) {
+      AppendUTF8toUTF16(path, mFilePath);
+    } else {
       mFilePath = Path();
     }
   }
   return mFilePath;
 }
 
-const nsCString& URLInfo::Path() const {
+const nsString& URLInfo::Path() const {
   if (mPath.IsEmpty()) {
-    if (NS_FAILED(URINoRef()->GetPathQueryRef(mPath))) {
-      mPath.Truncate();
+    nsCString path;
+    if (NS_SUCCEEDED(URINoRef()->GetPathQueryRef(path))) {
+      AppendUTF8toUTF16(path, mPath);
     }
   }
   return mPath;
@@ -191,41 +222,41 @@ const nsCString& CookieInfo::RawHost() const {
 }
 
 /*****************************************************************************
- * MatchPatternCore
+ * MatchPattern
  *****************************************************************************/
 
-#define DEFINE_STATIC_ATOM_SET(name, ...)            \
-  static already_AddRefed<AtomSet> name() {          \
-    MOZ_ASSERT(NS_IsMainThread());                   \
-    static StaticRefPtr<AtomSet> sAtomSet;           \
-    RefPtr<AtomSet> atomSet = sAtomSet;              \
-    if (!atomSet) {                                  \
-      atomSet = sAtomSet = new AtomSet{__VA_ARGS__}; \
-      ClearOnShutdown(&sAtomSet);                    \
-    }                                                \
-    return atomSet.forget();                         \
-  }
-
-DEFINE_STATIC_ATOM_SET(PermittedSchemes, nsGkAtoms::http, nsGkAtoms::https,
-                       nsGkAtoms::ws, nsGkAtoms::wss, nsGkAtoms::file,
-                       nsGkAtoms::ftp, nsGkAtoms::data);
+const char* PERMITTED_SCHEMES[] = {"http", "https", "ws",   "wss",
+                                   "file", "ftp",   "data", nullptr};
 
 // Known schemes that are followed by "://" instead of ":".
-DEFINE_STATIC_ATOM_SET(HostLocatorSchemes, nsGkAtoms::http, nsGkAtoms::https,
-                       nsGkAtoms::ws, nsGkAtoms::wss, nsGkAtoms::file,
-                       nsGkAtoms::ftp, nsGkAtoms::moz_extension,
-                       nsGkAtoms::chrome, nsGkAtoms::resource, nsGkAtoms::moz,
-                       nsGkAtoms::moz_icon, nsGkAtoms::moz_gio);
+const char* HOST_LOCATOR_SCHEMES[] = {
+    "http",   "https",    "ws",  "wss",      "file",    "ftp",  "moz-extension",
+    "chrome", "resource", "moz", "moz-icon", "moz-gio", nullptr};
 
-DEFINE_STATIC_ATOM_SET(WildcardSchemes, nsGkAtoms::http, nsGkAtoms::https,
-                       nsGkAtoms::ws, nsGkAtoms::wss);
+const char* WILDCARD_SCHEMES[] = {"http", "https", "ws", "wss", nullptr};
 
-#undef DEFINE_STATIC_ATOM_SET
+/* static */
+already_AddRefed<MatchPattern> MatchPattern::Constructor(
+    dom::GlobalObject& aGlobal, const nsAString& aPattern,
+    const MatchPatternOptions& aOptions, ErrorResult& aRv) {
+  RefPtr<MatchPattern> pattern = new MatchPattern(aGlobal.GetAsSupports());
+  pattern->Init(aGlobal.Context(), aPattern, aOptions.mIgnorePath,
+                aOptions.mRestrictSchemes, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  return pattern.forget();
+}
 
-MatchPatternCore::MatchPatternCore(const nsAString& aPattern, bool aIgnorePath,
-                                   bool aRestrictSchemes, ErrorResult& aRv) {
-  MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<AtomSet> permittedSchemes = PermittedSchemes();
+void MatchPattern::Init(JSContext* aCx, const nsAString& aPattern,
+                        bool aIgnorePath, bool aRestrictSchemes,
+                        ErrorResult& aRv) {
+  RefPtr<AtomSet> permittedSchemes;
+  nsresult rv = AtomSet::Get<PERMITTED_SCHEMES>(permittedSchemes);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
 
   mPattern = aPattern;
 
@@ -251,10 +282,19 @@ MatchPatternCore::MatchPatternCore(const nsAString& aPattern, bool aIgnorePath,
   RefPtr<nsAtom> scheme = NS_AtomizeMainThread(StringHead(aPattern, index));
   bool requireHostLocatorScheme = true;
   if (scheme == nsGkAtoms::_asterisk) {
-    mSchemes = WildcardSchemes();
+    rv = AtomSet::Get<WILDCARD_SCHEMES>(mSchemes);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return;
+    }
   } else if (!aRestrictSchemes || permittedSchemes->Contains(scheme) ||
              scheme == nsGkAtoms::moz_extension) {
-    RefPtr<AtomSet> hostLocatorSchemes = HostLocatorSchemes();
+    RefPtr<AtomSet> hostLocatorSchemes;
+    rv = AtomSet::Get<HOST_LOCATOR_SCHEMES>(hostLocatorSchemes);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return;
+    }
     mSchemes = new AtomSet({scheme});
     requireHostLocatorScheme = hostLocatorSchemes->Contains(scheme);
   } else {
@@ -319,16 +359,17 @@ MatchPatternCore::MatchPatternCore(const nsAString& aPattern, bool aIgnorePath,
     return;
   }
 
-  NS_ConvertUTF16toUTF8 path(tail);
+  auto path = tail;
   if (path.IsEmpty()) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return;
   }
 
-  mPath = new MatchGlobCore(path, false, aRv);
+  mPath = new MatchGlob(this);
+  mPath->Init(aCx, path, false, aRv);
 }
 
-bool MatchPatternCore::MatchesDomain(const nsACString& aDomain) const {
+bool MatchPattern::MatchesDomain(const nsACString& aDomain) const {
   if (DomainIsWildcard() || mDomain == aDomain) {
     return true;
   }
@@ -344,8 +385,8 @@ bool MatchPatternCore::MatchesDomain(const nsACString& aDomain) const {
   return false;
 }
 
-bool MatchPatternCore::Matches(const nsAString& aURL, bool aExplicit,
-                               ErrorResult& aRv) const {
+bool MatchPattern::Matches(const nsAString& aURL, bool aExplicit,
+                           ErrorResult& aRv) const {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
   if (NS_FAILED(rv)) {
@@ -356,7 +397,7 @@ bool MatchPatternCore::Matches(const nsAString& aURL, bool aExplicit,
   return Matches(uri.get(), aExplicit);
 }
 
-bool MatchPatternCore::Matches(const URLInfo& aURL, bool aExplicit) const {
+bool MatchPattern::Matches(const URLInfo& aURL, bool aExplicit) const {
   if (aExplicit && mMatchSubdomain) {
     return false;
   }
@@ -376,7 +417,7 @@ bool MatchPatternCore::Matches(const URLInfo& aURL, bool aExplicit) const {
   return true;
 }
 
-bool MatchPatternCore::MatchesCookie(const CookieInfo& aCookie) const {
+bool MatchPattern::MatchesCookie(const CookieInfo& aCookie) const {
   if (!mSchemes->Contains(nsGkAtoms::https) &&
       (aCookie.IsSecure() || !mSchemes->Contains(nsGkAtoms::http))) {
     return false;
@@ -404,7 +445,7 @@ bool MatchPatternCore::MatchesCookie(const CookieInfo& aCookie) const {
   return StringTail(mDomain, host.Length()) == host;
 }
 
-bool MatchPatternCore::SubsumesDomain(const MatchPatternCore& aPattern) const {
+bool MatchPattern::SubsumesDomain(const MatchPattern& aPattern) const {
   if (!mMatchSubdomain && aPattern.mMatchSubdomain &&
       aPattern.mDomain == mDomain) {
     return false;
@@ -413,7 +454,7 @@ bool MatchPatternCore::SubsumesDomain(const MatchPatternCore& aPattern) const {
   return MatchesDomain(aPattern.mDomain);
 }
 
-bool MatchPatternCore::Subsumes(const MatchPatternCore& aPattern) const {
+bool MatchPattern::Subsumes(const MatchPattern& aPattern) const {
   for (auto& scheme : *aPattern.mSchemes) {
     if (!mSchemes->Contains(scheme)) {
       return false;
@@ -423,30 +464,12 @@ bool MatchPatternCore::Subsumes(const MatchPatternCore& aPattern) const {
   return SubsumesDomain(aPattern);
 }
 
-bool MatchPatternCore::Overlaps(const MatchPatternCore& aPattern) const {
+bool MatchPattern::Overlaps(const MatchPattern& aPattern) const {
   if (!mSchemes->Intersects(*aPattern.mSchemes)) {
     return false;
   }
 
   return SubsumesDomain(aPattern) || aPattern.SubsumesDomain(*this);
-}
-
-/*****************************************************************************
- * MatchPattern
- *****************************************************************************/
-
-/* static */
-already_AddRefed<MatchPattern> MatchPattern::Constructor(
-    dom::GlobalObject& aGlobal, const nsAString& aPattern,
-    const MatchPatternOptions& aOptions, ErrorResult& aRv) {
-  RefPtr<MatchPattern> pattern = new MatchPattern(
-      aGlobal.GetAsSupports(),
-      MakeAndAddRef<MatchPatternCore>(aPattern, aOptions.mIgnorePath,
-                                      aOptions.mRestrictSchemes, aRv));
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  return pattern.forget();
 }
 
 JSObject* MatchPattern::WrapObject(JSContext* aCx,
@@ -456,11 +479,16 @@ JSObject* MatchPattern::WrapObject(JSContext* aCx,
 
 /* static */
 bool MatchPattern::MatchesAllURLs(const URLInfo& aURL) {
-  RefPtr<AtomSet> permittedSchemes = PermittedSchemes();
+  RefPtr<AtomSet> permittedSchemes;
+  nsresult rv = AtomSet::Get<PERMITTED_SCHEMES>(permittedSchemes);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to retrireve PERMITTED_SCHEMES AtomSet");
+    return false;
+  }
   return permittedSchemes->Contains(aURL.Scheme());
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MatchPattern, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MatchPattern, mPath, mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MatchPattern)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -469,84 +497,6 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MatchPattern)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MatchPattern)
-
-bool MatchPatternSetCore::Matches(const nsAString& aURL, bool aExplicit,
-                                  ErrorResult& aRv) const {
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return false;
-  }
-
-  return Matches(uri.get(), aExplicit);
-}
-
-bool MatchPatternSetCore::Matches(const URLInfo& aURL, bool aExplicit) const {
-  for (const auto& pattern : mPatterns) {
-    if (pattern->Matches(aURL, aExplicit)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool MatchPatternSetCore::MatchesCookie(const CookieInfo& aCookie) const {
-  for (const auto& pattern : mPatterns) {
-    if (pattern->MatchesCookie(aCookie)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool MatchPatternSetCore::Subsumes(const MatchPatternCore& aPattern) const {
-  for (const auto& pattern : mPatterns) {
-    if (pattern->Subsumes(aPattern)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool MatchPatternSetCore::SubsumesDomain(
-    const MatchPatternCore& aPattern) const {
-  for (const auto& pattern : mPatterns) {
-    if (pattern->SubsumesDomain(aPattern)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool MatchPatternSetCore::Overlaps(
-    const MatchPatternSetCore& aPatternSet) const {
-  for (const auto& pattern : aPatternSet.mPatterns) {
-    if (Overlaps(*pattern)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool MatchPatternSetCore::Overlaps(const MatchPatternCore& aPattern) const {
-  for (const auto& pattern : mPatterns) {
-    if (pattern->Overlaps(aPattern)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool MatchPatternSetCore::OverlapsAll(
-    const MatchPatternSetCore& aPatternSet) const {
-  for (const auto& pattern : aPatternSet.mPatterns) {
-    if (!Overlaps(*pattern)) {
-      return false;
-    }
-  }
-  return aPatternSet.mPatterns.Length() > 0;
-}
 
 /*****************************************************************************
  * MatchPatternSet
@@ -557,37 +507,100 @@ already_AddRefed<MatchPatternSet> MatchPatternSet::Constructor(
     dom::GlobalObject& aGlobal,
     const nsTArray<dom::OwningStringOrMatchPattern>& aPatterns,
     const MatchPatternOptions& aOptions, ErrorResult& aRv) {
-  MatchPatternSetCore::ArrayType patterns;
+  ArrayType patterns;
 
   for (auto& elem : aPatterns) {
     if (elem.IsMatchPattern()) {
-      patterns.AppendElement(elem.GetAsMatchPattern()->Core());
+      patterns.AppendElement(elem.GetAsMatchPattern());
     } else {
-      RefPtr<MatchPatternCore> pattern =
-          new MatchPatternCore(elem.GetAsString(), aOptions.mIgnorePath,
-                               aOptions.mRestrictSchemes, aRv);
+      RefPtr<MatchPattern> pattern =
+          MatchPattern::Constructor(aGlobal, elem.GetAsString(), aOptions, aRv);
 
-      if (aRv.Failed()) {
+      if (!pattern) {
         return nullptr;
       }
       patterns.AppendElement(std::move(pattern));
     }
   }
 
-  RefPtr<MatchPatternSet> patternSet = new MatchPatternSet(
-      aGlobal.GetAsSupports(),
-      do_AddRef(new MatchPatternSetCore(std::move(patterns))));
+  RefPtr<MatchPatternSet> patternSet =
+      new MatchPatternSet(aGlobal.GetAsSupports(), std::move(patterns));
   return patternSet.forget();
 }
 
-void MatchPatternSet::GetPatterns(ArrayType& aPatterns) {
-  if (!mPatternsCache) {
-    mPatternsCache.emplace(Core()->mPatterns.Length());
-    for (auto& elem : Core()->mPatterns) {
-      mPatternsCache->AppendElement(new MatchPattern(this, do_AddRef(elem)));
+bool MatchPatternSet::Matches(const nsAString& aURL, bool aExplicit,
+                              ErrorResult& aRv) const {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return false;
+  }
+
+  return Matches(uri.get(), aExplicit);
+}
+
+bool MatchPatternSet::Matches(const URLInfo& aURL, bool aExplicit) const {
+  for (const auto& pattern : mPatterns) {
+    if (pattern->Matches(aURL, aExplicit)) {
+      return true;
     }
   }
-  aPatterns.AppendElements(*mPatternsCache);
+  return false;
+}
+
+bool MatchPatternSet::MatchesCookie(const CookieInfo& aCookie) const {
+  for (const auto& pattern : mPatterns) {
+    if (pattern->MatchesCookie(aCookie)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool MatchPatternSet::Subsumes(const MatchPattern& aPattern) const {
+  for (const auto& pattern : mPatterns) {
+    if (pattern->Subsumes(aPattern)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool MatchPatternSet::SubsumesDomain(const MatchPattern& aPattern) const {
+  for (const auto& pattern : mPatterns) {
+    if (pattern->SubsumesDomain(aPattern)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool MatchPatternSet::Overlaps(const MatchPatternSet& aPatternSet) const {
+  for (const auto& pattern : aPatternSet.mPatterns) {
+    if (Overlaps(*pattern)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool MatchPatternSet::Overlaps(const MatchPattern& aPattern) const {
+  for (const auto& pattern : mPatterns) {
+    if (pattern->Overlaps(aPattern)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool MatchPatternSet::OverlapsAll(const MatchPatternSet& aPatternSet) const {
+  for (const auto& pattern : aPatternSet.mPatterns) {
+    if (!Overlaps(*pattern)) {
+      return false;
+    }
+  }
+  return aPatternSet.mPatterns.Length() > 0;
 }
 
 JSObject* MatchPatternSet::WrapObject(JSContext* aCx,
@@ -595,7 +608,7 @@ JSObject* MatchPatternSet::WrapObject(JSContext* aCx,
   return MatchPatternSet_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MatchPatternSet, mPatternsCache, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MatchPatternSet, mPatterns, mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MatchPatternSet)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -606,14 +619,30 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(MatchPatternSet)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MatchPatternSet)
 
 /*****************************************************************************
- * MatchGlobCore
+ * MatchGlob
  *****************************************************************************/
 
-MatchGlobCore::MatchGlobCore(const nsACString& aGlob, bool aAllowQuestion,
-                             ErrorResult& aRv)
-    : mGlob(aGlob) {
+MatchGlob::~MatchGlob() { mozilla::DropJSObjects(this); }
+
+/* static */
+already_AddRefed<MatchGlob> MatchGlob::Constructor(dom::GlobalObject& aGlobal,
+                                                   const nsAString& aGlob,
+                                                   bool aAllowQuestion,
+                                                   ErrorResult& aRv) {
+  RefPtr<MatchGlob> glob = new MatchGlob(aGlobal.GetAsSupports());
+  glob->Init(aGlobal.Context(), aGlob, aAllowQuestion, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  return glob.forget();
+}
+
+void MatchGlob::Init(JSContext* aCx, const nsAString& aGlob,
+                     bool aAllowQuestion, ErrorResult& aRv) {
+  mGlob = aGlob;
+
   // Check for a literal match with no glob metacharacters.
-  auto index = mGlob.FindCharInSet(aAllowQuestion ? "*?" : "*");
+  auto index = mGlob.FindCharInSet(aAllowQuestion ? u"*?" : u"*");
   if (index < 0) {
     mPathLiteral = mGlob;
     return;
@@ -630,7 +659,7 @@ MatchGlobCore::MatchGlobCore(const nsACString& aGlob, bool aAllowQuestion,
   // Fall back to the regexp slow path.
   constexpr auto metaChars = ".+*?^${}()|[]\\"_ns;
 
-  nsAutoCString escaped;
+  nsAutoString escaped;
   escaped.Append('^');
 
   // For any continuous string of * (and ? if aAllowQuestion) wildcards, only
@@ -659,15 +688,37 @@ MatchGlobCore::MatchGlobCore(const nsACString& aGlob, bool aAllowQuestion,
 
   escaped.Append('$');
 
-  mRegExp = RustRegex(escaped);
-  if (!mRegExp) {
-    aRv.ThrowTypeError("failed to compile regex for glob");
+  // TODO: Switch to the Rust regexp crate, when Rust integration is easier.
+  // It uses a much more efficient, linear time matching algorithm, and
+  // doesn't require special casing for the literal and prefix cases.
+  mRegExp = JS::NewUCRegExpObject(aCx, escaped.get(), escaped.Length(), 0);
+  if (mRegExp) {
+    mozilla::HoldJSObjects(this);
+  } else {
+    aRv.NoteJSContextException(aCx);
   }
 }
 
-bool MatchGlobCore::Matches(const nsACString& aString) const {
+bool MatchGlob::Matches(const nsAString& aString) const {
   if (mRegExp) {
-    return mRegExp.IsMatch(aString);
+    AutoJSAPI jsapi;
+    jsapi.Init();
+    JSContext* cx = jsapi.cx();
+
+    JSAutoRealm ar(cx, mRegExp);
+
+    JS::Rooted<JSObject*> regexp(cx, mRegExp);
+    JS::Rooted<JS::Value> result(cx);
+
+    nsString input(aString);
+
+    size_t index = 0;
+    if (!JS::ExecuteRegExpNoStatics(cx, regexp, input.BeginWriting(),
+                                    aString.Length(), &index, true, &result)) {
+      return false;
+    }
+
+    return result.isBoolean() && result.toBoolean();
   }
 
   if (mIsPrefix) {
@@ -677,30 +728,27 @@ bool MatchGlobCore::Matches(const nsACString& aString) const {
   return mPathLiteral == aString;
 }
 
-/*****************************************************************************
- * MatchGlob
- *****************************************************************************/
-
-/* static */
-already_AddRefed<MatchGlob> MatchGlob::Constructor(dom::GlobalObject& aGlobal,
-                                                   const nsACString& aGlob,
-                                                   bool aAllowQuestion,
-                                                   ErrorResult& aRv) {
-  RefPtr<MatchGlob> glob =
-      new MatchGlob(aGlobal.GetAsSupports(),
-                    MakeAndAddRef<MatchGlobCore>(aGlob, aAllowQuestion, aRv));
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  return glob.forget();
-}
-
 JSObject* MatchGlob::WrapObject(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto) {
   return MatchGlob_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MatchGlob, mParent)
+NS_IMPL_CYCLE_COLLECTION_CLASS(MatchGlob)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MatchGlob)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
+  tmp->mRegExp = nullptr;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MatchGlob)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(MatchGlob)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mRegExp)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MatchGlob)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -714,7 +762,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(MatchGlob)
  * MatchGlobSet
  *****************************************************************************/
 
-bool MatchGlobSet::Matches(const nsACString& aValue) const {
+bool MatchGlobSet::Matches(const nsAString& aValue) const {
   for (auto& glob : *this) {
     if (glob->Matches(aValue)) {
       return true;
