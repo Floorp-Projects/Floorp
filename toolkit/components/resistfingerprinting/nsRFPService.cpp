@@ -425,7 +425,7 @@ double nsRFPService::ReduceTimePrecisionImpl(double aTime, TimeScale aTimeScale,
   }
 
   // Cast it back to a double and reduce it to the correct units.
-  double ret = double(clampedAndJittered) / (1000000.0 / aTimeScale);
+  double ret = double(clampedAndJittered) / (1000000.0 / double(aTimeScale));
 
   MOZ_LOG(
       gResistFingerprintingLog, LogLevel::Verbose,
