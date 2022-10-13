@@ -1,6 +1,6 @@
 [package]
 name = "mozversion"
-version = "0.5.0-alpha"
+version = "0.5.0"
 authors = ["Mozilla"]
 description = "Utility for accessing Firefox version metadata"
 keywords = ["mozilla", "firefox"]
