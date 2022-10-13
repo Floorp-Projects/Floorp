@@ -9,7 +9,6 @@ const primaryButtonSelector = `#${calloutId} .primary`;
 const featureTourPref = "browser.firefox-view.feature-tour";
 const getPrefValueByScreen = screen => {
   return JSON.stringify({
-    message: "FIREFOX_VIEW_FEATURE_TOUR",
     screen: `FEATURE_CALLOUT_${screen}`,
     complete: false,
   });
