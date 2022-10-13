@@ -1335,6 +1335,12 @@ customElements.define(
 
       this.setAttribute("extension-id", this.addon.id);
 
+      let policy = WebExtensionPolicy.getByID(this.addon.id);
+      this.setAttribute(
+        "attention",
+        lazy.OriginControls.getAttention(policy, this.ownerGlobal)
+      );
+
       this.querySelector(
         ".unified-extensions-item-name"
       ).textContent = this.addon.name;
