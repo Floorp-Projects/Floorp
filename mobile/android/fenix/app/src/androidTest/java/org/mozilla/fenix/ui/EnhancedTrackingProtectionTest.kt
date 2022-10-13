@@ -11,10 +11,13 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.ETPPolicy
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -33,7 +36,7 @@ import org.mozilla.fenix.ui.robots.settingsSubMenuEnhancedTrackingProtection
  *  - Verifying Enhanced Tracking Protection site exceptions
  */
 
-class StrictEnhancedTrackingProtectionTest {
+class EnhancedTrackingProtectionTest {
     private lateinit var mockWebServer: MockWebServer
 
     @get:Rule
@@ -41,7 +44,6 @@ class StrictEnhancedTrackingProtectionTest {
         isJumpBackInCFREnabled = false,
         isTCPCFREnabled = false,
         isWallpaperOnboardingEnabled = false,
-        etpPolicy = ETPPolicy.STRICT,
     )
 
     @Before
@@ -84,8 +86,8 @@ class StrictEnhancedTrackingProtectionTest {
         }.openEnhancedTrackingProtectionSubMenu {
             switchEnhancedTrackingProtectionToggle()
             verifyEnhancedTrackingProtectionOptionsEnabled(false)
-        }.goBack {
-        }.goBack { }
+            exitMenu()
+        }
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericPage.url) { }
@@ -108,6 +110,7 @@ class StrictEnhancedTrackingProtectionTest {
 
     @Test
     fun testStrictVisitProtectionSheet() {
+        appContext.settings().setStrictETP()
         val genericPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val trackingProtectionTest =
             TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
@@ -129,6 +132,7 @@ class StrictEnhancedTrackingProtectionTest {
 
     @Test
     fun testStrictVisitDisableExceptionToggle() {
+        appContext.settings().setStrictETP()
         val genericPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val trackingProtectionTest =
             TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
@@ -164,6 +168,7 @@ class StrictEnhancedTrackingProtectionTest {
     @Ignore("Permanent failure: https://github.com/mozilla-mobile/fenix/issues/27312")
     @Test
     fun testStrictVisitSheetDetails() {
+        appContext.settings().setStrictETP()
         val genericPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val trackingProtectionTest =
             TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
@@ -184,6 +189,39 @@ class StrictEnhancedTrackingProtectionTest {
             verifyEnhancedTrackingProtectionSheetStatus("ON", true)
         }.openDetails {
             verifyEnhancedTrackingProtectionDetailsStatus("Blocked")
+            verifyTrackingCookiesBlocked()
+            verifyCryptominersBlocked()
+            verifyFingerprintersBlocked()
+            verifyTrackingContentBlocked()
+            viewTrackingContentBlockList()
+        }
+    }
+
+    @Ignore("Permanent failure: https://github.com/mozilla-mobile/fenix/issues/27312")
+    @SmokeTest
+    @Test
+    fun customTrackingProtectionSettingsTest() {
+        val genericWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val trackingPage = TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openEnhancedTrackingProtectionSubMenu {
+            verifyEnhancedTrackingProtectionOptionsEnabled()
+            selectTrackingProtectionOption("Custom")
+            verifyCustomTrackingProtectionSettings()
+        }.goBackToHomeScreen {}
+
+        navigationToolbar {
+            // browsing a basic page to allow GV to load on a fresh run
+        }.enterURLAndEnterToBrowser(genericWebPage.url) {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(trackingPage.url) {}
+
+        enhancedTrackingProtection {
+        }.openEnhancedTrackingProtectionSheet {
+        }.openDetails {
             verifyTrackingCookiesBlocked()
             verifyCryptominersBlocked()
             verifyFingerprintersBlocked()

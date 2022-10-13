@@ -41,7 +41,6 @@ import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.customTabScreen
-import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.notificationShade
@@ -400,38 +399,6 @@ class SmokeTest {
             verifyThreeDotMenuExists()
         }.refreshPage {
             verifyPageContent("REFRESHED")
-        }
-    }
-
-    @Ignore("Permanent failure: https://github.com/mozilla-mobile/fenix/issues/27312")
-    @Test
-    fun customTrackingProtectionSettingsTest() {
-        val genericWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-        val trackingPage = TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openEnhancedTrackingProtectionSubMenu {
-            verifyEnhancedTrackingProtectionOptionsEnabled()
-            selectTrackingProtectionOption("Custom")
-            verifyCustomTrackingProtectionSettings()
-        }.goBackToHomeScreen {}
-
-        navigationToolbar {
-            // browsing a basic page to allow GV to load on a fresh run
-        }.enterURLAndEnterToBrowser(genericWebPage.url) {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingPage.url) {}
-
-        enhancedTrackingProtection {
-        }.openEnhancedTrackingProtectionSheet {
-        }.openDetails {
-            verifyTrackingCookiesBlocked()
-            verifyCryptominersBlocked()
-            verifyFingerprintersBlocked()
-            verifyTrackingContentBlocked()
-            viewTrackingContentBlockList()
         }
     }
 
