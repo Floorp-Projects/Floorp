@@ -311,16 +311,17 @@ void FileSystemRequestHandler::GetRootHandle(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aPromise);
 
-  aManager->BeginRequest(
-      [onResolve = SelectResolveCallback<FileSystemGetHandleResponse,
-                                         RefPtr<FileSystemDirectoryHandle>>(
-           aPromise, aManager),
-       onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
-        actor->SendGetRootHandle(std::move(onResolve), std::move(onReject));
-      },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+  auto&& onResolve = SelectResolveCallback<FileSystemGetHandleResponse,
+                                           RefPtr<FileSystemDirectoryHandle>>(
+      aPromise, aManager);
+
+  auto&& onReject = GetRejectCallback(aPromise);
+
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aManager->Actor()->SendGetRootHandle(std::move(onResolve),
+                                       std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetDirectoryHandle(
@@ -337,18 +338,19 @@ void FileSystemRequestHandler::GetDirectoryHandle(
     return;
   }
 
-  aManager->BeginRequest(
-      [request = FileSystemGetHandleRequest(aDirectory, aCreate),
-       onResolve = SelectResolveCallback<FileSystemGetHandleResponse,
-                                         RefPtr<FileSystemDirectoryHandle>>(
-           aPromise, aDirectory.childName(), aManager),
-       onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
-        actor->SendGetDirectoryHandle(request, std::move(onResolve),
-                                      std::move(onReject));
-      },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+  FileSystemGetHandleRequest request(aDirectory, aCreate);
+
+  auto&& onResolve = SelectResolveCallback<FileSystemGetHandleResponse,
+                                           RefPtr<FileSystemDirectoryHandle>>(
+      aPromise, aDirectory.childName(), aManager);
+
+  auto&& onReject = GetRejectCallback(aPromise);
+
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aManager->Actor()->SendGetDirectoryHandle(request, std::move(onResolve),
+                                            std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetFileHandle(
@@ -365,18 +367,19 @@ void FileSystemRequestHandler::GetFileHandle(
     return;
   }
 
-  aManager->BeginRequest(
-      [request = FileSystemGetHandleRequest(aFile, aCreate),
-       onResolve = SelectResolveCallback<FileSystemGetHandleResponse,
-                                         RefPtr<FileSystemFileHandle>>(
-           aPromise, aFile.childName(), aManager),
-       onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
-        actor->SendGetFileHandle(request, std::move(onResolve),
-                                 std::move(onReject));
-      },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+  FileSystemGetHandleRequest request(aFile, aCreate);
+
+  auto&& onResolve = SelectResolveCallback<FileSystemGetHandleResponse,
+                                           RefPtr<FileSystemFileHandle>>(
+      aPromise, aFile.childName(), aManager);
+
+  auto&& onReject = GetRejectCallback(aPromise);
+
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aManager->Actor()->SendGetFileHandle(request, std::move(onResolve),
+                                       std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetAccessHandle(
@@ -385,18 +388,18 @@ void FileSystemRequestHandler::GetAccessHandle(
   MOZ_ASSERT(aPromise);
   LOG(("getAccessHandle"));
 
-  aManager->BeginRequest(
-      [request = FileSystemGetAccessHandleRequest(aFile.entryId()),
-       onResolve = SelectResolveCallback<FileSystemGetAccessHandleResponse,
-                                         RefPtr<FileSystemSyncAccessHandle>>(
-           aPromise, aFile, aManager),
-       onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
-        actor->SendGetAccessHandle(request, std::move(onResolve),
-                                   std::move(onReject));
-      },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+  FileSystemGetAccessHandleRequest request(aFile.entryId());
+
+  auto&& onResolve = SelectResolveCallback<FileSystemGetAccessHandleResponse,
+                                           RefPtr<FileSystemSyncAccessHandle>>(
+      aPromise, aFile, aManager);
+  auto&& onReject = GetRejectCallback(aPromise);
+
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aManager->Actor()->SendGetAccessHandle(request, std::move(onResolve),
+                                         std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetFile(
@@ -406,17 +409,19 @@ void FileSystemRequestHandler::GetFile(
   MOZ_ASSERT(!aFile.entryId().IsEmpty());
   MOZ_ASSERT(aPromise);
 
-  aManager->BeginRequest(
-      [request = FileSystemGetFileRequest(aFile.entryId()),
-       onResolve =
-           SelectResolveCallback<FileSystemGetFileResponse, RefPtr<File>>(
-               aPromise, aFile.entryName(), aManager),
-       onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
-        actor->SendGetFile(request, std::move(onResolve), std::move(onReject));
-      },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+  FileSystemGetFileRequest request(aFile.entryId());
+
+  auto&& onResolve =
+      SelectResolveCallback<FileSystemGetFileResponse, RefPtr<File>>(
+          aPromise, aFile.entryName(), aManager);
+
+  auto&& onReject = GetRejectCallback(aPromise);
+
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aManager->Actor()->SendGetFile(request, std::move(onResolve),
+                                 std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetEntries(
@@ -428,17 +433,18 @@ void FileSystemRequestHandler::GetEntries(
   MOZ_ASSERT(!aDirectory.IsEmpty());
   MOZ_ASSERT(aPromise);
 
-  aManager->BeginRequest(
-      [request = FileSystemGetEntriesRequest(aDirectory, aPage),
-       onResolve = SelectResolveCallback<FileSystemGetEntriesResponse, bool>(
-           aPromise, aSink),
-       onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
-        actor->SendGetEntries(request, std::move(onResolve),
-                              std::move(onReject));
-      },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+  FileSystemGetEntriesRequest request(aDirectory, aPage);
+
+  auto&& onResolve = SelectResolveCallback<FileSystemGetEntriesResponse, bool>(
+      aPromise, aSink);
+
+  auto&& onReject = GetRejectCallback(aPromise);
+
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aManager->Actor()->SendGetEntries(request, std::move(onResolve),
+                                    std::move(onReject));
 }
 
 void FileSystemRequestHandler::RemoveEntry(
@@ -455,17 +461,18 @@ void FileSystemRequestHandler::RemoveEntry(
     return;
   }
 
-  aManager->BeginRequest(
-      [request = FileSystemRemoveEntryRequest(aEntry, aRecursive),
-       onResolve =
-           SelectResolveCallback<FileSystemRemoveEntryResponse, void>(aPromise),
-       onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
-        actor->SendRemoveEntry(request, std::move(onResolve),
-                               std::move(onReject));
-      },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+  FileSystemRemoveEntryRequest request(aEntry, aRecursive);
+
+  auto&& onResolve =
+      SelectResolveCallback<FileSystemRemoveEntryResponse, void>(aPromise);
+
+  auto&& onReject = GetRejectCallback(aPromise);
+
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aManager->Actor()->SendRemoveEntry(request, std::move(onResolve),
+                                     std::move(onReject));
 }
 
 void FileSystemRequestHandler::MoveEntry(
@@ -482,17 +489,19 @@ void FileSystemRequestHandler::MoveEntry(
     return;
   }
 
-  aManager->BeginRequest(
-      [request = FileSystemMoveEntryRequest(aEntry, aNewEntry),
-       onResolve =
-           SelectResolveCallback<FileSystemMoveEntryResponse, void>(aPromise),
-       onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
-        actor->SendMoveEntry(request, std::move(onResolve),
-                             std::move(onReject));
-      },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+  FileSystemMoveEntryRequest request(aEntry, aNewEntry);
+
+  RefPtr<FileSystemHandle> handle(aHandle);
+  auto&& onResolve =
+      SelectResolveCallback<FileSystemMoveEntryResponse, void>(aPromise);
+
+  auto&& onReject = GetRejectCallback(aPromise);
+
+  QM_TRY(OkIf(aManager && aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aManager->Actor()->SendMoveEntry(request, std::move(onResolve),
+                                   std::move(onReject));
 }
 
 void FileSystemRequestHandler::RenameEntry(
@@ -509,17 +518,18 @@ void FileSystemRequestHandler::RenameEntry(
     return;
   }
 
-  aManager->BeginRequest(
-      [request = FileSystemRenameEntryRequest(aEntry, aName),
-       onResolve =
-           SelectResolveCallback<FileSystemMoveEntryResponse, void>(aPromise),
-       onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
-        actor->SendRenameEntry(request, std::move(onResolve),
-                               std::move(onReject));
-      },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+  FileSystemRenameEntryRequest request(aEntry, aName);
+
+  auto&& onResolve =
+      SelectResolveCallback<FileSystemMoveEntryResponse, void>(aPromise);
+
+  auto&& onReject = GetRejectCallback(aPromise);
+
+  QM_TRY(OkIf(aManager && aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aManager->Actor()->SendRenameEntry(request, std::move(onResolve),
+                                     std::move(onReject));
 }
 
 void FileSystemRequestHandler::Resolve(
@@ -531,16 +541,18 @@ void FileSystemRequestHandler::Resolve(
   MOZ_ASSERT(!aEndpoints.childId().IsEmpty());
   MOZ_ASSERT(aPromise);
 
-  aManager->BeginRequest(
-      [request = FileSystemResolveRequest(aEndpoints),
-       onResolve =
-           SelectResolveCallback<FileSystemResolveResponse, void>(aPromise),
-       onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
-        actor->SendResolve(request, std::move(onResolve), std::move(onReject));
-      },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+  FileSystemResolveRequest request(aEndpoints);
+
+  auto&& onResolve =
+      SelectResolveCallback<FileSystemResolveResponse, void>(aPromise);
+
+  auto&& onReject = GetRejectCallback(aPromise);
+
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aManager->Actor()->SendResolve(request, std::move(onResolve),
+                                 std::move(onReject));
 }
 
 }  // namespace mozilla::dom::fs
