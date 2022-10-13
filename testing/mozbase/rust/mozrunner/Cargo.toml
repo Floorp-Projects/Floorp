@@ -9,7 +9,7 @@ edition = "2018"
 
 [dependencies]
 log = "0.4"
-mozprofile = { path = "../mozprofile", version = "0.8" }
+mozprofile = { path = "../mozprofile", version = "0.9" }
 plist = "1.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
