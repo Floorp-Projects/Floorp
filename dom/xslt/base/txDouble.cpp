@@ -93,7 +93,7 @@ class txStringToDouble {
         (mBuffer.Length() == 1 && mBuffer[0] == '.')) {
       return mozilla::UnspecifiedNaN<double>();
     }
-    return mSign * PR_strtod(mBuffer.get(), 0);
+    return static_cast<double>(mSign) * PR_strtod(mBuffer.get(), nullptr);
   }
 
  private:
