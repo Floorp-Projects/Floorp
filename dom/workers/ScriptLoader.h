@@ -40,8 +40,8 @@ enum WorkerScriptType { WorkerScript, DebuggerScript };
 namespace workerinternals {
 
 namespace loader {
-class ScriptLoaderRunnable;
 class ScriptExecutorRunnable;
+class AbruptCancellationRunnable;
 class CachePromiseHandler;
 class CacheLoadHandler;
 class CacheCreator;
@@ -71,7 +71,6 @@ class NetworkLoadHandler;
  *                |
  *                | Create the loader, along with the ScriptLoadRequests
  *                | call DispatchLoadScripts()
- *                | Create ScriptLoaderRunnable
  *                |
  *  #####################################################################
  *                             Enter Main thread
@@ -119,8 +118,8 @@ class NetworkLoadHandler;
 
 class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
                            public nsINamed {
-  friend class ScriptLoaderRunnable;
   friend class ScriptExecutorRunnable;
+  friend class AbruptCancellationRunnable;
   friend class CachePromiseHandler;
   friend class CacheLoadHandler;
   friend class CacheCreator;
@@ -225,6 +224,8 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
 
   void ShutdownScriptLoader(bool aResult, bool aMutedError);
 
+  void AbruptShutdown();
+
  private:
   ~WorkerScriptLoader() = default;
 
@@ -235,6 +236,8 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
   }
 
   void TryShutdown();
+
+  void DispatchAbruptShutdown();
 
   nsTArray<WorkerLoadContext*> GetLoadingList();
 
