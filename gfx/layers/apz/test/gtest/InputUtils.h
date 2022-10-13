@@ -126,9 +126,11 @@ APZEventResult PanGesture(PanGestureInput::PanGestureType aType,
                           const RefPtr<InputReceiver>& aTarget,
                           const ScreenIntPoint& aPoint,
                           const ScreenPoint& aDelta, TimeStamp aTime,
-                          Modifiers aModifiers = MODIFIER_NONE) {
+                          Modifiers aModifiers = MODIFIER_NONE,
+                          bool aSimulateMomentum = false) {
   PanGestureInput input(aType, MillisecondsSinceStartup(aTime), aTime, aPoint,
                         aDelta, aModifiers);
+  input.mSimulateMomentum = aSimulateMomentum;
   return aTarget->ReceiveInputEvent(input);
 }
 
