@@ -10,6 +10,7 @@
 #  include <initializer_list>
 #  include "mozilla/MathAlgorithms.h"
 #  include "nsTArray.h"
+#  include "cubeb/cubeb.h"
 
 namespace mozilla {
 
@@ -168,6 +169,30 @@ class AudioConfig {
     // 3F4_LFE Alias
     static ChannelLayout L7POINT1_SURROUND;
     static constexpr ChannelMap L7POINT1_SURROUND_MAP = L3F4_LFE_MAP;
+
+    // Statically check that we can static_cast a Gecko ChannelLayout to a
+    // cubeb_channel_layout.
+    static_assert(CUBEB_LAYOUT_UNDEFINED == UNKNOWN_MAP);
+    static_assert(CUBEB_LAYOUT_MONO == LMONO_MAP);
+    static_assert(CUBEB_LAYOUT_MONO_LFE == LMONO_LFE_MAP);
+    static_assert(CUBEB_LAYOUT_STEREO == LSTEREO_MAP);
+    static_assert(CUBEB_LAYOUT_STEREO_LFE == LSTEREO_LFE_MAP);
+    static_assert(CUBEB_LAYOUT_3F == L3F_MAP);
+    static_assert(CUBEB_LAYOUT_3F_LFE == L3F_LFE_MAP);
+    static_assert(CUBEB_LAYOUT_2F1 == L2F1_MAP);
+    static_assert(CUBEB_LAYOUT_2F1_LFE == L2F1_LFE_MAP);
+    static_assert(CUBEB_LAYOUT_3F1 == L3F1_MAP);
+    static_assert(CUBEB_LAYOUT_3F1_LFE == L3F1_LFE_MAP);
+    static_assert(CUBEB_LAYOUT_2F2 == L2F2_MAP);
+    static_assert(CUBEB_LAYOUT_3F2_LFE == L3F2_LFE_MAP);
+    static_assert(CUBEB_LAYOUT_QUAD == LQUAD_MAP);
+    static_assert(CUBEB_LAYOUT_QUAD_LFE == LQUAD_LFE_MAP);
+    static_assert(CUBEB_LAYOUT_3F2 == L3F2_MAP);
+    static_assert(CUBEB_LAYOUT_3F2_LFE == L3F2_LFE_MAP);
+    static_assert(CUBEB_LAYOUT_3F2_BACK == L3F2_BACK_MAP);
+    static_assert(CUBEB_LAYOUT_3F2_LFE_BACK == L3F2_BACK_LFE_MAP);
+    static_assert(CUBEB_LAYOUT_3F3R_LFE == L3F3R_LFE_MAP);
+    static_assert(CUBEB_LAYOUT_3F4_LFE == L3F4_LFE_MAP);
 
    private:
     void UpdateChannelMap();
