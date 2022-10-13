@@ -213,5 +213,5 @@
 }
 
 .urlbarView-row[dynamicType=quickactions] .urlbarView-title {
-  display: flex
+  display: flex;
 }
