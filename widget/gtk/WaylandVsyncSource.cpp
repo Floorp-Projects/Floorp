@@ -13,6 +13,7 @@
 #  include "MainThreadUtils.h"
 #  include "mozilla/ScopeExit.h"
 #  include "nsGtkUtils.h"
+#  include "mozilla/StaticPrefs_layout.h"
 
 #  include <gdk/gdkwayland.h>
 
@@ -27,10 +28,6 @@ extern mozilla::LazyLogModule gWidgetVsync;
 #  else
 #    define LOG(...)
 #  endif /* MOZ_LOGGING */
-
-// VSync idle timeout is 0.5 sec so we fire two vsync events per seconds
-// when a window becomes hidden.
-#  define VSYNC_IDLE_TIMEOUT (500)
 
 using namespace mozilla::widget;
 
@@ -84,7 +81,8 @@ WaylandVsyncSource::WaylandVsyncSource(nsWindow* aWindow)
       mWindow(aWindow),
       mVsyncRate(TimeDuration::FromMilliseconds(1000.0 / 60.0)),
       mLastVsyncTimeStamp(TimeStamp::Now()),
-      mIdleTimeoutID(0) {
+      mIdleTimerID(0),
+      mIdleTimeout(1000 / StaticPrefs::layout_throttled_frame_rate()) {
   MOZ_ASSERT(NS_IsMainThread());
 
   gWaylandVsyncSources.AppendElement(this);
@@ -231,9 +229,9 @@ void WaylandVsyncSource::SetupFrameCallback(const MutexAutoLock& aProofOfLock) {
     wl_surface_commit(surface);
     wl_display_flush(WaylandDisplayGet()->GetDisplay());
 
-    if (!mIdleTimeoutID) {
-      mIdleTimeoutID = (int)g_timeout_add(
-          VSYNC_IDLE_TIMEOUT,
+    if (!mIdleTimerID) {
+      mIdleTimerID = (int)g_timeout_add(
+          mIdleTimeout,
           [](void* data) -> gint {
             WaylandVsyncSource* vsync = static_cast<WaylandVsyncSource*>(data);
             vsync->IdleCallback();
@@ -261,7 +259,7 @@ void WaylandVsyncSource::IdleCallback() {
 
   guint duration = static_cast<guint>(
       (TimeStamp::Now() - mLastVsyncTimeStamp).ToMilliseconds());
-  if (duration >= VSYNC_IDLE_TIMEOUT) {
+  if (duration >= mIdleTimeout) {
     LOG("  fire idle vsync");
     CalculateVsyncRate(lock, TimeStamp::Now());
     mLastVsyncTimeStamp = TimeStamp::Now();
@@ -365,7 +363,7 @@ void WaylandVsyncSource::Shutdown() {
   mIsShutdown = true;
   mVsyncEnabled = false;
   mCallbackRequested = false;
-  MozClearHandleID(mIdleTimeoutID, g_source_remove);
+  MozClearHandleID(mIdleTimerID, g_source_remove);
 }
 
 }  // namespace mozilla
