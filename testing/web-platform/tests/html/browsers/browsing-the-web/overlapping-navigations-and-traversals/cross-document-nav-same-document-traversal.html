@@ -5,8 +5,9 @@
 <script src="/resources/testharnessreport.js"></script>
 
 <!--
-  According to the spec, "traverse the history by a delta" (e.g. history.back())
-  cancels any non-mature navigations.
+  According to the spec, "apply the history step" will set the ongoing
+  navigation to "traversal", canceling any navigation that is still processing
+  in parallel and hasn't yet reached "apply the history step".
 -->
 
 <body>

@@ -5,9 +5,11 @@
 <script src="/resources/testharnessreport.js"></script>
 
 <!--
-  The spec currently says that stop() must stop traverals, but this does not
-  match browsers: https://github.com/whatwg/html/issues/6905. This test assumes
-  browser behavior.
+  The spec says that stop() must not stop traverals.
+
+  (Note: the spec also says the UI "stop" button must not stop traversals, but
+  that does not match browsers. See https://github.com/whatwg/html/issues/6905.
+  But that is not what's under test here.)
 -->
 
 <body>

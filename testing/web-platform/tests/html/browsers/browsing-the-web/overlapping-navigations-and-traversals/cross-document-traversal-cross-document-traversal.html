@@ -5,25 +5,22 @@
 <script src="/resources/testharnessreport.js"></script>
 
 <!--
-  In the spec, all traversals are queued. However, what "back" and "forward"
-  mean is computed synchronously. So per spec:
+  In the spec, all traversals are queued, and that includes computing what
+  "back" and "forward" mean, based on the "current session history step". The
+  "current session history step" is updated at the end of "apply the history
+  step", at which point the queued steps in "traverse history by a delta" get to
+  run and compute what is back/forward. So the basic structure is:
 
-  - back(), back(): go back 1.
-  - back(), forward(): go forward 1 (if you're not starting from the end).
+  - back(), back(): go back once, then again.
+  - back(), forward(): go back once, then go forward.
 
-  This is not how browsers behave:
+  However, note that these observable effects (e.g., actually loading an
+  intermediate document) are done via queued tasks. Those tasks will end up not
+  running, once we switch the active document due to the second traversal. So
+  the end observable result looks like:
 
-  - Chrome seems to coalesce all traversals and apply them at once, i.e.:
-
-    - back(), back(): go back 2 at once.
-    - back(), forward(): go nowhere.
-
-  - Firefox seems to ignore traverals requests while a traversal is ongoing:
-
-    - back(), back(): go back 1.
-    - back(), forward(): go back 1.
-
-  We assert the Firefox behavior here for now.
+  - back(), back(): go back -2.
+  - back(), forward(): go nowhere.
 -->
 
 <body>
@@ -57,14 +54,11 @@ promise_test(async t => {
   iframe.contentWindow.history.forward();
   assert_equals(iframe.contentWindow.location.search, "?2", "must not go forward synchronously");
 
-  await waitForLoad(iframe);
-  assert_equals(iframe.contentWindow.location.search, "?1", "first load event must be going back");
-
   iframe.onload = t.unreached_func("second load event");
 
   await waitForPotentialNetworkLoads(t);
-  assert_equals(iframe.contentWindow.location.search, "?1", "must stay on ?1");
-}, "cross-document traversals in opposite directions: the second is ignored");
+  assert_equals(iframe.contentWindow.location.search, "?2", "must stay on ?2");
+}, "cross-document traversals in opposite directions: the result is going nowhere");
 
 promise_test(async t => {
   const iframe = await createIframe(t);
@@ -86,14 +80,11 @@ promise_test(async t => {
   iframe.contentWindow.history.forward();
   assert_equals(iframe.contentWindow.location.search, "?2", "must not go forward synchronously");
 
-  await waitForLoad(iframe);
-  assert_equals(iframe.contentWindow.location.search, "?1", "first load event must be going back");
-
   iframe.onload = t.unreached_func("second load event");
 
   await waitForPotentialNetworkLoads(t);
-  assert_equals(iframe.contentWindow.location.search, "?1", "must stay on ?1");
-}, "cross-document traversals in opposite directions, second traversal invalid at queuing time: the second is ignored");
+  assert_equals(iframe.contentWindow.location.search, "?2", "must stay on ?2");
+}, "cross-document traversals in opposite directions, second traversal invalid at queuing time but valid at the time it is run: the result is going nowhere");
 
 promise_test(async t => {
   const iframe = await createIframe(t);
@@ -119,13 +110,13 @@ promise_test(async t => {
   assert_equals(iframe.contentWindow.location.search, "?3", "must not go back synchronously (2)");
 
   await waitForLoad(iframe);
-  assert_equals(iframe.contentWindow.location.search, "?2", "first load event must be going back");
+  assert_equals(iframe.contentWindow.location.search, "?1", "first load event must be going back");
 
   iframe.onload = t.unreached_func("second load event");
 
   await waitForPotentialNetworkLoads(t);
-  assert_equals(iframe.contentWindow.location.search, "?2", "must stay on ?2");
-}, "cross-document traversals in the same (back) direction: the second is ignored");
+  assert_equals(iframe.contentWindow.location.search, "?1", "must stay on ?1");
+}, "cross-document traversals in the same (back) direction: the result is going -2 with only one load event");
 
 promise_test(async t => {
   const iframe = await createIframe(t);
@@ -159,11 +150,11 @@ promise_test(async t => {
   assert_equals(iframe.contentWindow.location.search, "?1", "must not go forward synchronously (2)");
 
   await waitForLoad(iframe);
-  assert_equals(iframe.contentWindow.location.search, "?2", "first load event must be going forward");
+  assert_equals(iframe.contentWindow.location.search, "?3", "first load event must be going forward");
 
   iframe.onload = t.unreached_func("second load event");
 
   await waitForPotentialNetworkLoads(t);
-  assert_equals(iframe.contentWindow.location.search, "?2", "must stay on ?2");
-}, "cross-document traversals in the same (forward) direction: the second is ignored");
+  assert_equals(iframe.contentWindow.location.search, "?3", "must stay on ?3");
+}, "cross-document traversals in the same (forward) direction: the result is going +2 with only one load event");
 </script>

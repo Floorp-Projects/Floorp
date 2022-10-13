@@ -5,27 +5,11 @@
 <script src="/resources/testharnessreport.js"></script>
 
 <!--
-  In the spec, all traversals are queued. However, what "back" and "forward"
-  mean is computed synchronously. So per spec:
-
-  - back(), back(): go back 1.
-  - back(), forward(): go forward 1 (if you're not starting from the end).
-
-  (The spec doesn't care about same or cross-document.)
-
-  This is not how browsers behave:
-
-  - Chrome seems to ignore same-document traversal requests if one is already in flight:
-
-    - back(), back(): go back 1.
-    - back(), forward(): go back 1 (regardless of starting at the end or not).
-
-  - Firefox seems to queue up "back" or "forward" commands:
-
-    - back(), back(): go back 1, then go back 1.
-    - back(), forward(): go back 1, then go forward 1 (regardless of starting at the end or not).
-
-  We assert the Firefox behavior here for now.
+  Compare this to cross-document-traversal-cross-document-traversal.html. Since
+  there are no network loads or document unloads to cancel tasks, both
+  traversals should observably go through. Target step calculation for the
+  second traversal should take place after the first traversal is finished. So
+  we end up with both traversals observable in sequence.
 -->
 
 <body>

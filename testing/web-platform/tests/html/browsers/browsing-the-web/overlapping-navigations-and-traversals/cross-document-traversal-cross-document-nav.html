@@ -6,9 +6,8 @@
 <script src="/resources/testharnessreport.js"></script>
 
 <!--
-  Apparently if a cross-document traversal is in progress, a cross-document
-  navigation just gets ignored. (Instead of, as you might expect, a race.)
-  This does not match the spec. This test instead asserts browser behavior.
+  According to the spec, if ongoing navigation is "traversal", the navigation
+  fails and nothing happens.
 -->
 
 <body>

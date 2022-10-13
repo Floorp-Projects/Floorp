@@ -5,19 +5,9 @@
 <script src="/resources/testharnessreport.js"></script>
 
 <!--
-  In the spec, all traversals are queued. However, what "back" and "forward"
-  mean is computed synchronously. So per spec:
-
-  - back(), back(): go back 1.
-  - back(), forward(): go forward 1 (if you're not starting from the end).
-
-  This is not how browsers behave. Furthermore, this case is apparently unlike
-  other multi-traversal test cases: both Chrome and Firefox queue up these
-  traverals, firing events for each of them. I.e.
-
-    - back(), back(): go back 1, go back 1.
-
-  We assert this shared browser behavior here for now.
+  Compare this to cross-document-traversal-cross-document-traversal.html. Since
+  there are no network loads for the first traversal here, it does observably go
+  through. So we end up with both traversals before observable in sequence.
 -->
 
 <body>
@@ -94,5 +84,5 @@ promise_test(async t => {
   await waitForLoad(iframe);
   assert_equals(iframe.contentWindow.location.search, "?3", "first load event must be going forward (search)");
   assert_equals(iframe.contentWindow.location.hash, "#2", "first load event must be going forward (hash)");
-}, "traversals in the same (forward) direction: the second is queued up");
+}, "traversals in the same (forward) direction: queued up");
 </script>

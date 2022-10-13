@@ -5,22 +5,8 @@
 <script src="/resources/testharnessreport.js"></script>
 
 <!--
-  In the spec, all traversals are queued. However, what "back" and "forward"
-  mean is computed synchronously. So per spec:
-
-  - back(), back(): go back 1.
-
-  This is not how browsers behave:
-
-  - Chrome seems to coalesce all traversals and apply them at once, i.e.:
-
-    - back(), back(): go back 2 at once.
-
-  - Firefox seems to ignore traverals requests while a traversal is ongoing:
-
-    - back(), back(): go back 1.
-
-  We assert the Firefox behavior here for now.
+  This case is not significantly different from
+  cross-document-traversal-cross-document-traversal.html.
 -->
 
 <body>
@@ -53,15 +39,15 @@ promise_test(async t => {
 
   await waitForLoad(iframe);
   assert_equals(iframe.contentWindow.location.search, "?1", "first load event must be going back (search)");
-  assert_equals(iframe.contentWindow.location.hash, "#2", "first load event must be going back (hash)");
+  assert_equals(iframe.contentWindow.location.hash, "", "first load event must be going back (hash)");
 
   iframe.contentWindow.onhashchange = t.unreached_func("hashchange event");
   iframe.onload = t.unreached_func("second load event");
 
   await waitForPotentialNetworkLoads(t);
-  assert_equals(iframe.contentWindow.location.search, "?1", "must stay on ?1#2 (search)");
-  assert_equals(iframe.contentWindow.location.hash, "#2", "must stay on ?1#2 (hash)");
-}, "traversals in the same (back) direction: the second is ignored");
+  assert_equals(iframe.contentWindow.location.search, "?1", "must stay on ?1 (search)");
+  assert_equals(iframe.contentWindow.location.hash, "", "must stay on ?1 (hash)");
+}, "traversals in the same (back) direction: coalesced");
 
 promise_test(async t => {
   const iframe = await createIframe(t);
@@ -96,13 +82,13 @@ promise_test(async t => {
 
   await waitForLoad(iframe);
   assert_equals(iframe.contentWindow.location.search, "?2", "first load event must be going forward (search)");
-  assert_equals(iframe.contentWindow.location.hash, "", "first load event must be going forward (hash)");
+  assert_equals(iframe.contentWindow.location.hash, "#3", "first load event must be going forward (hash)");
 
   iframe.contentWindow.onhashchange = t.unreached_func("hashchange event");
   iframe.onload = t.unreached_func("second load event");
 
   await waitForPotentialNetworkLoads(t);
   assert_equals(iframe.contentWindow.location.search, "?2", "must stay on ?2");
-  assert_equals(iframe.contentWindow.location.hash, "", "must stay on ?2");
-}, "traversals in the same (forward) direction: the second is ignored");
+  assert_equals(iframe.contentWindow.location.hash, "#3", "must stay on ?2");
+}, "traversals in the same (forward) direction: coalesced");
 </script>

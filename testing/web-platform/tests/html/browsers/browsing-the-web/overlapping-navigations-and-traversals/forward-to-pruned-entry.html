@@ -21,5 +21,4 @@ promise_test(async t => {
   await new Promise(r => t.step_timeout(r, 20));
   assert_equals(location.hash, "#clobber");
 }, "If forward pruning clobbers the target of a traverse, abort");
-
 </script>
