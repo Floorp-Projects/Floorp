@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Page recording its size</title>
+  </head>
+  <body>
+    <script>
+      var initialSize = { width: innerWidth, height: innerHeight };
+      var loadSize;
+      onload = () => {
+        loadSize = { width: innerWidth, height: innerHeight };
+      };
+    </script>
+  </body>
+</html>

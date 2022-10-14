@@ -12,6 +12,9 @@
 
 %{ C++
 class nsDocShellLoadState;
+namespace mozilla::dom {
+class WindowFeatures;
+}
 %}
 
 webidl BrowsingContext;
@@ -23,6 +26,7 @@ interface nsIArray;
 interface nsIRemoteTab;
 interface nsIOpenWindowInfo;
 native nsDocShellLoadStatePtr(nsDocShellLoadState*);
+[ref] native WindowFeaturesRef(const mozilla::dom::WindowFeatures);
 
 [uuid(d162f9c4-19d5-4723-931f-f1e51bfa9f68)]
 interface nsPIWindowWatcher : nsISupports
@@ -123,7 +127,7 @@ interface nsPIWindowWatcher : nsISupports
    *         window.
    */
   nsIRemoteTab openWindowWithRemoteTab(in nsIRemoteTab aOpeningTab,
-                                       in ACString aFeatures,
+                                       in WindowFeaturesRef aFeatures,
                                        in boolean aCalledFromJS,
                                        in float aOpenerFullZoom,
                                        in nsIOpenWindowInfo aOpenWindowInfo);

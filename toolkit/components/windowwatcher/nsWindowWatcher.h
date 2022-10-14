@@ -63,6 +63,8 @@ class nsWindowWatcher : public nsIWindowWatcher,
       const nsAString& aName, bool aForceNoOpener,
       mozilla::dom::BrowsingContext* aCurrentContext);
 
+  static bool HaveSpecifiedSize(const mozilla::dom::WindowFeatures& features);
+
  protected:
   virtual ~nsWindowWatcher();
 
