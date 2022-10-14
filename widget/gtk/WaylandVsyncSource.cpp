@@ -14,6 +14,7 @@
 #  include "mozilla/ScopeExit.h"
 #  include "nsGtkUtils.h"
 #  include "mozilla/StaticPrefs_layout.h"
+#  include "nsWindow.h"
 
 #  include <gdk/gdkwayland.h>
 
@@ -22,6 +23,7 @@
 #    include "nsTArray.h"
 #    include "Units.h"
 extern mozilla::LazyLogModule gWidgetVsync;
+#    undef LOG
 #    define LOG(str, ...)                             \
       MOZ_LOG(gWidgetVsync, mozilla::LogLevel::Debug, \
               ("[nsWindow %p]: " str, GetWindow(), ##__VA_ARGS__))
@@ -260,6 +262,8 @@ void WaylandVsyncSource::IdleCallback() {
   guint duration = static_cast<guint>(
       (TimeStamp::Now() - mLastVsyncTimeStamp).ToMilliseconds());
   if (duration >= mIdleTimeout) {
+    mWindow->NotifyOcclusionState(mozilla::widget::OcclusionState::OCCLUDED);
+
     LOG("  fire idle vsync");
     CalculateVsyncRate(lock, TimeStamp::Now());
     mLastVsyncTimeStamp = TimeStamp::Now();
@@ -285,6 +289,8 @@ void WaylandVsyncSource::FrameCallback(uint32_t aTime) {
 
   // Configure our next frame callback.
   SetupFrameCallback(lock);
+
+  mWindow->NotifyOcclusionState(mozilla::widget::OcclusionState::VISIBLE);
 
   int64_t tick = BaseTimeDurationPlatformUtils::TicksFromMilliseconds(aTime);
   TimeStamp callbackTimeStamp = TimeStamp::FromSystemTime(tick);
