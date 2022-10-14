@@ -8,7 +8,6 @@
 // error packets.
 /* eslint-disable no-throw-literal */
 
-const DebuggerNotificationObserver = require("DebuggerNotificationObserver");
 const { Pool } = require("resource://devtools/shared/protocol/Pool.js");
 const {
   createValueGrip,

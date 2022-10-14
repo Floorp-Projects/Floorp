@@ -12,6 +12,7 @@ module.exports = {
     loader: true,
     module: true,
     require: true,
+    DebuggerNotificationObserver: true,
   },
   overrides: [
     {

@@ -115,10 +115,35 @@ export function DevToolsLoader({
 
   this.require = Require(this.loader, { id: "devtools" });
 
-  // Services can't be imported from a Sandbox,
-  // so hand over a reference to builtin-modules.js (all all other modules)
-  // via the globals.
-  this.loader.globals.Services = Services;
+  // Various globals are available from ESM, but not from sandboxes,
+  // inject them into the globals list.
+  // Changes here should be mirrored to devtools/.eslintrc.
+  const injectedGlobals = {
+    CanonicalBrowsingContext,
+    console,
+    BrowsingContext,
+    ChromeWorker,
+    DebuggerNotificationObserver,
+    DOMPoint,
+    DOMQuad,
+    DOMRect,
+    HeapSnapshot,
+    IOUtils,
+    L10nRegistry,
+    Localization,
+    NamedNodeMap,
+    NodeFilter,
+    PathUtils,
+    Services,
+    StructuredCloneHolder,
+    TelemetryStopwatch,
+    WebExtensionPolicy,
+    WindowGlobalParent,
+    WindowGlobalChild,
+  };
+  for (const name in injectedGlobals) {
+    this.loader.globals[name] = injectedGlobals[name];
+  }
 
   // Fetch custom pseudo modules and globals
   const { modules, globals } = this.require(
