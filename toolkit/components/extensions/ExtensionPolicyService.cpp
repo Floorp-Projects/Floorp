@@ -155,6 +155,13 @@ WebExtensionPolicy* ExtensionPolicyService::GetByURL(const URLInfo& aURL) {
   return nullptr;
 }
 
+WebExtensionPolicy* ExtensionPolicyService::GetByHost(
+    const nsACString& aHost) const {
+  AssertIsOnMainThread();
+  RefPtr<WebExtensionPolicyCore> core = GetCoreByHost(aHost);
+  return core ? core->GetMainThreadPolicy() : nullptr;
+}
+
 void ExtensionPolicyService::GetAll(
     nsTArray<RefPtr<WebExtensionPolicy>>& aResult) {
   AppendToArray(aResult, mExtensions.Values());
@@ -170,8 +177,6 @@ bool ExtensionPolicyService::RegisterExtension(WebExtensionPolicy& aPolicy) {
   }
 
   mExtensions.InsertOrUpdate(aPolicy.Id(), RefPtr{&aPolicy});
-  mExtensionHosts.InsertOrUpdate(aPolicy.MozExtensionHostname(),
-                                 RefPtr{&aPolicy});
 
   {
     StaticAutoWriteLock lock(sCoreByHostLock);
@@ -190,7 +195,6 @@ bool ExtensionPolicyService::UnregisterExtension(WebExtensionPolicy& aPolicy) {
   }
 
   mExtensions.Remove(aPolicy.Id());
-  mExtensionHosts.Remove(aPolicy.MozExtensionHostname());
 
   {
     StaticAutoWriteLock lock(sCoreByHostLock);
@@ -665,8 +669,7 @@ nsresult ExtensionPolicyService::ExtensionURIToAddonId(nsIURI* aURI,
   return NS_OK;
 }
 
-NS_IMPL_CYCLE_COLLECTION(ExtensionPolicyService, mExtensions, mExtensionHosts,
-                         mObservers)
+NS_IMPL_CYCLE_COLLECTION(ExtensionPolicyService, mExtensions, mObservers)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionPolicyService)
   NS_INTERFACE_MAP_ENTRY(nsIAddonPolicyService)
