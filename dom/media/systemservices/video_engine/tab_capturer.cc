@@ -46,9 +46,17 @@ using namespace mozilla::dom;
 namespace mozilla {
 
 TabCapturerWebrtc::TabCapturerWebrtc(
-    const webrtc::DesktopCaptureOptions& options) {}
+    const webrtc::DesktopCaptureOptions& options)
+    : mMainThreadWorker(
+          TaskQueue::Create(do_AddRef(GetMainThreadSerialEventTarget()),
+                            "TabCapturerWebrtc::mMainThreadWorker")) {}
 
-TabCapturerWebrtc::~TabCapturerWebrtc() = default;
+TabCapturerWebrtc::~TabCapturerWebrtc() {
+  mMainThreadWorker->BeginShutdown();
+  // Block until the worker has run all pending tasks, since mCallback must
+  // outlive them, and libwebrtc only guarantees mCallback outlives us.
+  mMainThreadWorker->AwaitIdle();
+}
 
 bool TabCapturerWebrtc::GetSourceList(
     webrtc::DesktopCapturer::SourceList* sources) {
@@ -77,36 +85,34 @@ void TabCapturerWebrtc::Start(webrtc::DesktopCapturer::Callback* callback) {
   CaptureFrame();
 }
 
-// NOTE: this method is synchronous
 void TabCapturerWebrtc::CaptureFrame() {
-  media::Await(
-      do_AddRef(GetMainThreadSerialEventTarget()),
-      InvokeAsync(GetMainThreadSerialEventTarget(), __func__,
-                  [&] { return CaptureFrameNow(); }),
-      [&](const RefPtr<dom::ImageBitmap>& aBitmap) {
-        UniquePtr<dom::ImageBitmapCloneData> data = aBitmap->ToCloneData();
-        webrtc::DesktopSize size(data->mPictureRect.Width(),
-                                 data->mPictureRect.Height());
-        webrtc::DesktopRect rect = webrtc::DesktopRect::MakeSize(size);
-        std::unique_ptr<webrtc::DesktopFrame> frame(
-            new webrtc::BasicDesktopFrame(size));
+  InvokeAsync(mMainThreadWorker, __func__, [&] { return CaptureFrameNow(); })
+      ->Then(
+          mMainThreadWorker, __func__,
+          [&](const RefPtr<dom::ImageBitmap>& aBitmap) {
+            UniquePtr<dom::ImageBitmapCloneData> data = aBitmap->ToCloneData();
+            webrtc::DesktopSize size(data->mPictureRect.Width(),
+                                     data->mPictureRect.Height());
+            webrtc::DesktopRect rect = webrtc::DesktopRect::MakeSize(size);
+            std::unique_ptr<webrtc::DesktopFrame> frame(
+                new webrtc::BasicDesktopFrame(size));
 
-        gfx::DataSourceSurface::ScopedMap map(data->mSurface,
-                                              gfx::DataSourceSurface::READ);
-        if (!map.IsMapped()) {
-          mCallback->OnCaptureResult(
-              webrtc::DesktopCapturer::Result::ERROR_TEMPORARY, nullptr);
-          return;
-        }
-        frame->CopyPixelsFrom(map.GetData(), map.GetStride(), rect);
+            gfx::DataSourceSurface::ScopedMap map(data->mSurface,
+                                                  gfx::DataSourceSurface::READ);
+            if (!map.IsMapped()) {
+              mCallback->OnCaptureResult(
+                  webrtc::DesktopCapturer::Result::ERROR_TEMPORARY, nullptr);
+              return;
+            }
+            frame->CopyPixelsFrom(map.GetData(), map.GetStride(), rect);
 
-        mCallback->OnCaptureResult(webrtc::DesktopCapturer::Result::SUCCESS,
-                                   std::move(frame));
-      },
-      [&](nsresult aRv) {
-        mCallback->OnCaptureResult(
-            webrtc::DesktopCapturer::Result::ERROR_TEMPORARY, nullptr);
-      });
+            mCallback->OnCaptureResult(webrtc::DesktopCapturer::Result::SUCCESS,
+                                       std::move(frame));
+          },
+          [&](nsresult aRv) {
+            mCallback->OnCaptureResult(
+                webrtc::DesktopCapturer::Result::ERROR_TEMPORARY, nullptr);
+          });
 }
 
 bool TabCapturerWebrtc::IsOccluded(const webrtc::DesktopVector& pos) {
