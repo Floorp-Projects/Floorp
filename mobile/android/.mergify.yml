@@ -1,0 +1,78 @@
+queue_rules:
+  - name: default
+    conditions:
+      - status-success=complete-pr
+pull_request_rules:
+  - name: Resolve conflict
+    conditions:
+      - conflict
+    actions:
+        comment:
+          message: This pull request has conflicts when rebasing. Could you fix it @{{author}}? 🙏
+  - name: MickeyMoz - Auto Merge
+    conditions:
+      - author=MickeyMoz
+      - status-success=complete-pr
+      - files~=(Gecko.kt|publicsuffixes)
+    actions:
+      review:
+        type: APPROVE
+        message: MickeyMoz 💪
+      queue:
+        method: rebase
+        name: default
+        rebase_fallback: none
+  - name: L10N - Auto Merge
+    conditions:
+      - author~=(mozilla-l10n-automation-bot|github-actions\[bot\])
+      - status-success=complete-pr
+      - files~=(strings.xml|l10n.toml)
+    actions:
+      review:
+        type: APPROVE
+        message: LGTM 😎
+      queue:
+        method: rebase
+        name: default
+        rebase_fallback: none
+  - name: Release automation
+    conditions:
+      - author=github-actions[bot]
+      - status-success=complete-pr
+      - files~=(.buildconfig.yml|Gecko.kt)
+    actions:
+      review:
+        type: APPROVE
+        message: 🚢
+      queue:
+        method: rebase
+        name: default
+        rebase_fallback: none
+      delete_head_branch:
+        force: false
+  - name: Needs landing - Rebase
+    conditions:
+      - status-success=complete-pr
+      - label=🛬 needs landing
+      - "#approved-reviews-by>=1"
+      - -draft
+      - label!=work in progress
+      - label!=do not land
+    actions:
+      queue:
+        method: rebase
+        name: default
+        rebase_fallback: none
+  - name: Needs landing - Squash
+    conditions:
+      - status-success=complete-pr
+      - label=🛬 needs landing (squash)
+      - "#approved-reviews-by>=1"
+      - -draft
+      - label!=work in progress
+      - label!=do not land
+    actions:
+      queue:
+        method: squash
+        name: default
+        rebase_fallback: none
