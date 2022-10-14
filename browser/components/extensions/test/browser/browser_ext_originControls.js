@@ -60,7 +60,7 @@ async function testOriginControls(
   { items, selected, click, granted, revoked, attention }
 ) {
   info(
-    `Testing ${extension.id} on ${win.gBrowser.currentURI.spec} with contextMenuId=${contextMenuId}.`
+    `Testing ${extension.id} on ${gBrowser.currentURI.spec} with contextMenuId=${contextMenuId}.`
   );
 
   let button;
@@ -133,14 +133,6 @@ async function testOriginControls(
   }
 }
 
-function moveToOverflow(ext) {
-  let widgetId = `${makeWidgetId(ext.id)}-browser-action`;
-  CustomizableUI.addWidgetToArea(
-    widgetId,
-    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
-  );
-}
-
 const originControlsInContextMenu = async options => {
   // Has no permissions.
   let ext1 = await makeExtension({ id: "ext1@test" });
@@ -168,17 +160,6 @@ const originControlsInContextMenu = async options => {
 
   let extensions = [ext1, ext2, ext3, ext4];
 
-  let unifiedButton;
-  if (options.contextMenuId === "unified-extensions-context-menu") {
-    // Unified button should only show a notification indicator when extensions
-    // asking for attention are not already visible in the toolbar.
-    moveToOverflow(ext2);
-    moveToOverflow(ext3);
-    unifiedButton = options.win.document.querySelector(
-      "#unified-extensions-button"
-    );
-  }
-
   const NO_ACCESS = { id: "origin-controls-no-access", args: null };
   const ACCESS_OPTIONS = { id: "origin-controls-options", args: null };
   const ALL_SITES = { id: "origin-controls-option-all-domains", args: null };
@@ -192,13 +173,6 @@ const originControlsInContextMenu = async options => {
     await testOriginControls(ext2, options, { items: [NO_ACCESS] });
     await testOriginControls(ext3, options, { items: [NO_ACCESS] });
     await testOriginControls(ext4, options, { items: [NO_ACCESS] });
-    if (unifiedButton) {
-      is(
-        unifiedButton.getAttribute("attention"),
-        "false",
-        "No extension will have attention indicator on about:blank."
-      );
-    }
   });
 
   await BrowserTestUtils.withNewTab("http://mochi.test:8888/", async () => {
@@ -229,14 +203,6 @@ const originControlsInContextMenu = async options => {
       selected: 1,
       attention: false,
     });
-
-    if (unifiedButton) {
-      is(
-        unifiedButton.getAttribute("attention"),
-        "true",
-        "Both ext2 and ext3 are WHEN_CLICKED for example.com, so show attention indicator."
-      );
-    }
   });
 
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
@@ -267,14 +233,6 @@ const originControlsInContextMenu = async options => {
       attention: false,
     });
 
-    if (unifiedButton) {
-      is(
-        unifiedButton.getAttribute("attention"),
-        "true",
-        "ext2 is WHEN_CLICKED for example.com, show attention indicator."
-      );
-    }
-
     // Click the other option, expect example.com permission granted/revoked.
     await testOriginControls(ext2, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
@@ -283,14 +241,6 @@ const originControlsInContextMenu = async options => {
       granted: ["*://example.com/*"],
       attention: true,
     });
-    if (unifiedButton) {
-      is(
-        unifiedButton.getAttribute("attention"),
-        "false",
-        "Bot ext2 and ext3 are ALWAYS_ON for example.com, so no attention indicator."
-      );
-    }
-
     await testOriginControls(ext3, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
       selected: 2,
@@ -298,13 +248,6 @@ const originControlsInContextMenu = async options => {
       revoked: ["*://example.com/*"],
       attention: false,
     });
-    if (unifiedButton) {
-      is(
-        unifiedButton.getAttribute("attention"),
-        "true",
-        "ext3 is now WHEN_CLICKED for example.com, show attention indicator."
-      );
-    }
 
     // Other option is now selected.
     await testOriginControls(ext2, options, {
@@ -317,14 +260,6 @@ const originControlsInContextMenu = async options => {
       selected: 1,
       attention: true,
     });
-
-    if (unifiedButton) {
-      is(
-        unifiedButton.getAttribute("attention"),
-        "true",
-        "Still showing the attention indicator."
-      );
-    }
   });
 
   await Promise.all(extensions.map(e => e.unload()));
