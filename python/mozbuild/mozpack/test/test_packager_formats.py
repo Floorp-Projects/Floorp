@@ -472,7 +472,7 @@ class TestFormatters(TestErrors, unittest.TestCase):
 
         self.assertEqual(
             str(e.exception),
-            'Error: "content foo foo/" overrides ' '"content foo foo/unix"',
+            'error: "content foo foo/" overrides ' '"content foo foo/unix"',
         )
 
         # Chrome with the same name and same flags overrides the previous
@@ -482,7 +482,7 @@ class TestFormatters(TestErrors, unittest.TestCase):
 
         self.assertEqual(
             str(e.exception),
-            'Error: "content foo foo/ os=WINNT" overrides '
+            'error: "content foo foo/ os=WINNT" overrides '
             '"content foo foo/win os=WINNT"',
         )
 
@@ -494,7 +494,7 @@ class TestFormatters(TestErrors, unittest.TestCase):
 
         self.assertEqual(
             str(e.exception),
-            'Error: "content bar bar/unix" overrides ' '"content bar bar/win os=WINNT"',
+            'error: "content bar bar/unix" overrides ' '"content bar bar/win os=WINNT"',
         )
 
         # Adding something more specific still works.
@@ -519,7 +519,7 @@ class TestFormatters(TestErrors, unittest.TestCase):
 
         self.assertEqual(
             str(e.exception),
-            'Error: "skin foo classic/1.0 foo/skin/classic/foo" overrides '
+            'error: "skin foo classic/1.0 foo/skin/classic/foo" overrides '
             '"skin foo classic/1.0 foo/skin/classic/"',
         )
 
@@ -530,7 +530,7 @@ class TestFormatters(TestErrors, unittest.TestCase):
 
         self.assertEqual(
             str(e.exception),
-            'Error: "locale foo en-US foo/locale/en-US/foo" overrides '
+            'error: "locale foo en-US foo/locale/en-US/foo" overrides '
             '"locale foo en-US foo/locale/en-US/"',
         )
 
@@ -540,7 +540,7 @@ class TestFormatters(TestErrors, unittest.TestCase):
         self.assertEqual(
             self.get_output(),
             [
-                'Warning: "content foo foo/unix" is duplicated. Skipping.',
+                'warning: "content foo foo/unix" is duplicated. Skipping.',
             ],
         )
 

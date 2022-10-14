@@ -167,9 +167,9 @@ class TestManifestErrors(TestErrors, unittest.TestCase):
             self.assertEqual(len(out), 2)
             path = os.path.abspath("manifest")
             # First on line 1
-            self.assertTrue(out[0].startswith("Error: %s:1: " % path))
+            self.assertTrue(out[0].startswith("error: %s:1: " % path))
             # Second on line 4
-            self.assertTrue(out[1].startswith("Error: %s:4: " % path))
+            self.assertTrue(out[1].startswith("error: %s:4: " % path))
 
 
 if __name__ == "__main__":
