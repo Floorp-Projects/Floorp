@@ -454,7 +454,7 @@ void ClientWebGLContext::EndOfFrame() {
 
 Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
     WebGLFramebufferJS* const fb, bool vr) {
-  const auto notLost = mNotLost;
+  const FuncScope funcScope(*this, "<GetFrontBuffer>");
   if (IsContextLost()) return {};
 
   const auto& inProcess = mNotLost->inProcess;
@@ -1770,14 +1770,13 @@ void ClientWebGLContext::SetEnabledI(GLenum cap, Maybe<GLuint> i,
 
 bool ClientWebGLContext::IsEnabled(GLenum cap) const {
   const FuncScope funcScope(*this, "isEnabled");
-  const auto notLost = mNotLost;
   if (IsContextLost()) return false;
 
-  const auto& inProcess = notLost->inProcess;
+  const auto& inProcess = mNotLost->inProcess;
   if (inProcess) {
     return inProcess->IsEnabled(cap);
   }
-  const auto& child = notLost->outOfProcess;
+  const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
   bool ret = {};
   if (!child->SendIsEnabled(cap, &ret)) return false;
@@ -2486,7 +2485,6 @@ void ClientWebGLContext::GetIndexedParameter(
   retval.set(JS::NullValue());
   const FuncScope funcScope(*this, "getIndexedParameter");
   if (IsContextLost()) return;
-  auto keepalive = mNotLost;
 
   const auto& state = State();
 
@@ -2856,14 +2854,13 @@ void ClientWebGLContext::DepthRange(GLclampf zNear, GLclampf zFar) {
 
 void ClientWebGLContext::Flush(const bool flushGl) {
   const FuncScope funcScope(*this, "flush");
-  const auto notLost = mNotLost;
   if (IsContextLost()) return;
 
   if (flushGl) {
     Run<RPROC(Flush)>();
   }
 
-  if (notLost->inProcess) return;
+  if (mNotLost->inProcess) return;
   const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
 }
@@ -2884,7 +2881,7 @@ void ClientWebGLContext::Finish() {
 void ClientWebGLContext::FrontFace(GLenum mode) { Run<RPROC(FrontFace)>(mode); }
 
 GLenum ClientWebGLContext::GetError() {
-  const auto notLost = mNotLost;
+  const FuncScope funcScope(*this, "getError");
   if (mNextError) {
     const auto ret = mNextError;
     mNextError = 0;
@@ -2892,11 +2889,11 @@ GLenum ClientWebGLContext::GetError() {
   }
   if (IsContextLost()) return 0;
 
-  const auto& inProcess = notLost->inProcess;
+  const auto& inProcess = mNotLost->inProcess;
   if (inProcess) {
     return inProcess->GetError();
   }
-  const auto& child = notLost->outOfProcess;
+  const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
   GLenum ret = 0;
   if (!child->SendGetError(&ret)) {
