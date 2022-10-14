@@ -6737,7 +6737,10 @@ class _LinkMenu extends (external_React_default()).PureComponent {
             const userEventData = Object.assign({
               event: eventName,
               source,
-              action_position: index
+              action_position: index,
+              value: {
+                card_type: site.flight_id ? "spoc" : "organic"
+              }
             }, siteInfo);
             props.dispatch(userEvent(userEventData));
           }
@@ -6980,6 +6983,7 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
         tiles: cards.map(link => ({
           id: link.id,
           pos: link.pos,
+          type: this.props.flightId ? "spoc" : "organic",
           ...(link.shim ? {
             shim: link.shim
           } : {})

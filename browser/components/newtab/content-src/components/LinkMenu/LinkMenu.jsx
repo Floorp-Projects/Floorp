@@ -69,6 +69,7 @@ export class _LinkMenu extends React.PureComponent {
                   event: eventName,
                   source,
                   action_position: index,
+                  value: { card_type: site.flight_id ? "spoc" : "organic" },
                 },
                 siteInfo
               );
