@@ -36,6 +36,7 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
+    "CookieBannerDomainPrefService.cpp",
     "nsClickRule.cpp",
     "nsCookieBannerRule.cpp",
     "nsCookieBannerService.cpp",
