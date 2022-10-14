@@ -66,9 +66,8 @@ static const char kDocElementInserted[] = "initial-document-element-inserted";
 using CoreByHostMap = nsTHashMap<nsCStringASCIICaseInsensitiveHashKey,
                                  RefPtr<extensions::WebExtensionPolicyCore>>;
 
-static StaticMutex sCoreByHostMutex;
-static StaticAutoPtr<CoreByHostMap> sCoreByHost
-    MOZ_GUARDED_BY(sCoreByHostMutex);
+static StaticRWLock sCoreByHostLock;
+static StaticAutoPtr<CoreByHostMap> sCoreByHost MOZ_GUARDED_BY(sCoreByHostLock);
 
 /* static */
 mozIExtensionProcessScript& ExtensionPolicyService::ProcessScript() {
@@ -101,7 +100,7 @@ mozIExtensionProcessScript& ExtensionPolicyService::ProcessScript() {
 /* static */
 RefPtr<extensions::WebExtensionPolicyCore>
 ExtensionPolicyService::GetCoreByHost(const nsACString& aHost) {
-  StaticMutexAutoLock lock(sCoreByHostMutex);
+  StaticAutoReadLock lock(sCoreByHostLock);
   return sCoreByHost ? sCoreByHost->Get(aHost) : nullptr;
 }
 
@@ -115,7 +114,7 @@ ExtensionPolicyService::ExtensionPolicyService() {
   RegisterObservers();
 
   {
-    StaticMutexAutoLock lock(sCoreByHostMutex);
+    StaticAutoWriteLock lock(sCoreByHostLock);
     MOZ_DIAGNOSTIC_ASSERT(!sCoreByHost,
                           "ExtensionPolicyService created twice?");
     sCoreByHost = new CoreByHostMap();
@@ -126,7 +125,7 @@ ExtensionPolicyService::~ExtensionPolicyService() {
   UnregisterWeakMemoryReporter(this);
 
   {
-    StaticMutexAutoLock lock(sCoreByHostMutex);
+    StaticAutoWriteLock lock(sCoreByHostLock);
     sCoreByHost = nullptr;
   }
 }
@@ -175,7 +174,7 @@ bool ExtensionPolicyService::RegisterExtension(WebExtensionPolicy& aPolicy) {
                                  RefPtr{&aPolicy});
 
   {
-    StaticMutexAutoLock lock(sCoreByHostMutex);
+    StaticAutoWriteLock lock(sCoreByHostLock);
     sCoreByHost->InsertOrUpdate(aPolicy.MozExtensionHostname(), aPolicy.Core());
   }
   return true;
@@ -194,7 +193,7 @@ bool ExtensionPolicyService::UnregisterExtension(WebExtensionPolicy& aPolicy) {
   mExtensionHosts.Remove(aPolicy.MozExtensionHostname());
 
   {
-    StaticMutexAutoLock lock(sCoreByHostMutex);
+    StaticAutoWriteLock lock(sCoreByHostLock);
     sCoreByHost->Remove(aPolicy.MozExtensionHostname());
   }
   return true;
