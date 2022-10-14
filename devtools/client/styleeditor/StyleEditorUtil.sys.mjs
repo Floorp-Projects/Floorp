@@ -7,9 +7,8 @@
 
 const PROPERTIES_URL = "chrome://devtools/locale/styleeditor.properties";
 
-const { loader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
-);
+import { loader } from "resource://devtools/shared/loader/Loader.sys.mjs";
+
 const gStringBundle = Services.strings.createBundle(PROPERTIES_URL);
 
 const lazy = {};

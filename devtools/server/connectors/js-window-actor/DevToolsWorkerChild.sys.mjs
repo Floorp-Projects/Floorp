@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 XPCOMUtils.defineLazyGetter(lazy, "Loader", () =>
-  ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm")
+  ChromeUtils.importESModule("resource://devtools/shared/loader/Loader.sys.mjs")
 );
 
 XPCOMUtils.defineLazyGetter(lazy, "DevToolsUtils", () =>

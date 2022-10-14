@@ -26,7 +26,7 @@ only-for-build-platforms:
     - win64-devedition/opt
 
 job-template:
-    worker-type: 'b-linux'
+    worker-type: b-linux-gcp
     # This is for fast try iteration; `repackage-shippable-l10n-msix` is the "real one".
     run-on-projects: []
     worker:

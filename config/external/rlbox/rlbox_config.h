@@ -8,27 +8,6 @@
 
 #include "mozilla/Assertions.h"
 
-#ifdef XP_MACOSX
-
-// RLBox uses c++17's shared_locks by default, even for the noop_sandbox
-// However c++17 shared_lock is not supported on macOS 10.9 to 10.11
-// Thus we use Firefox's shared lock implementation
-// This can be removed if macOS 10.9 to 10.11 support is dropped
-#  include "mozilla/RWLock.h"
-namespace rlbox {
-struct rlbox_shared_lock {
-  mozilla::detail::StaticRWLock rwlock;
-};
-}  // namespace rlbox
-#  define RLBOX_USE_CUSTOM_SHARED_LOCK
-#  define RLBOX_SHARED_LOCK(name) rlbox::rlbox_shared_lock name
-#  define RLBOX_ACQUIRE_SHARED_GUARD(name, ...) \
-    mozilla::detail::StaticAutoReadLock name((__VA_ARGS__).rwlock)
-#  define RLBOX_ACQUIRE_UNIQUE_GUARD(name, ...) \
-    mozilla::detail::StaticAutoWriteLock name((__VA_ARGS__).rwlock)
-
-#endif
-
 // All uses of rlbox's function and callbacks invocations are on a single
 // thread right now, so we disable rlbox thread checks for performance
 // See (Bug 1739298) for more details

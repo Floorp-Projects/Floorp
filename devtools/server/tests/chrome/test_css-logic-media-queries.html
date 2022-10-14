@@ -28,7 +28,7 @@ Test that css-logic handles media-queries correctly
   "use strict";
 
   window.onload = function() {
-    const {require} = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
+    const {require} = ChromeUtils.importESModule("resource://devtools/shared/loader/Loader.sys.mjs");
     const {CssLogic} = require("devtools/server/actors/inspector/css-logic");
 
     SimpleTest.waitForExplicitFinish();

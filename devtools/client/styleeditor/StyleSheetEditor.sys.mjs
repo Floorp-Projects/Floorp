@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { require, loader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
-);
+import {
+  require,
+  loader,
+} from "resource://devtools/shared/loader/Loader.sys.mjs";
+
 const Editor = require("resource://devtools/client/shared/sourceeditor/editor.js");
 const {
   shortSource,

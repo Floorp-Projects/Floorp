@@ -131,8 +131,8 @@ async function testDevToolsServerKeepAlive() {
 
 async function assertServerInitialized(browser, expected, message) {
   const isInitialized = await SpecialPowers.spawn(browser, [], function() {
-    const { require } = ChromeUtils.import(
-      "resource://devtools/shared/loader/Loader.jsm"
+    const { require } = ChromeUtils.importESModule(
+      "resource://devtools/shared/loader/Loader.sys.mjs"
     );
     const {
       DevToolsServer,
@@ -144,8 +144,8 @@ async function assertServerInitialized(browser, expected, message) {
 
 async function setContentServerKeepAlive(browser, keepAlive, message) {
   await SpecialPowers.spawn(browser, [keepAlive], function(_keepAlive) {
-    const { require } = ChromeUtils.import(
-      "resource://devtools/shared/loader/Loader.jsm"
+    const { require } = ChromeUtils.importESModule(
+      "resource://devtools/shared/loader/Loader.sys.mjs"
     );
     const {
       DevToolsServer,

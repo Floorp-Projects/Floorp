@@ -5,8 +5,8 @@
 /* eslint-env browser */
 "use strict";
 (function() {
-  const { require } = ChromeUtils.import(
-    "resource://devtools/shared/loader/Loader.jsm"
+  const { require } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/Loader.sys.mjs"
   );
   const {
     gDevTools,

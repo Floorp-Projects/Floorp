@@ -12,9 +12,8 @@ const PAGE_SIZE_MAX_JUMPS = 30;
 const SEARCH_ACTION_MAX_DELAY = 300; // ms
 const ITEM_FLASH_DURATION = 300; // ms
 
-const { require } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
-);
+import { require } from "resource://devtools/shared/loader/Loader.sys.mjs";
+
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );

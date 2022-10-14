@@ -6,8 +6,8 @@
 const BaseLoader = ChromeUtils.import(
   "resource://devtools/shared/loader/base-loader.js"
 );
-const { require: devtoolsRequire, loader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
+const { require: devtoolsRequire, loader } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 const flags = devtoolsRequire("devtools/shared/flags");
 const { joinURI } = devtoolsRequire("devtools/shared/path");

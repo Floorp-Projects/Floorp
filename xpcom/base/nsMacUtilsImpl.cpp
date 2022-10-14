@@ -30,20 +30,25 @@
 #endif
 #include <sys/sysctl.h>
 
-NS_IMPL_ISUPPORTS(nsMacUtilsImpl, nsIMacUtils)
-
 using mozilla::StaticMutexAutoLock;
 using mozilla::Unused;
 
 #if defined(MOZ_SANDBOX) || defined(__aarch64__)
-StaticAutoPtr<nsCString> nsMacUtilsImpl::sCachedAppPath;
-StaticMutex nsMacUtilsImpl::sCachedAppPathMutex;
+// For thread safe setting/checking of sCachedAppPath
+static StaticMutex sCachedAppPathMutex;
+
+// Cache the appDir returned from GetAppPath to avoid doing I/O
+static StaticAutoPtr<nsCString> sCachedAppPath
+    MOZ_GUARDED_BY(sCachedAppPathMutex);
 #endif
 
-std::atomic<uint32_t> nsMacUtilsImpl::sBundleArchMaskAtomic = 0;
+// The cached machine architectures of the .app bundle which can
+// be multiple architectures for universal binaries.
+static std::atomic<uint32_t> sBundleArchMaskAtomic = 0;
 
 #if defined(__aarch64__)
-std::atomic<bool> nsMacUtilsImpl::sIsXULTranslated = false;
+// Limit XUL translation to one attempt
+static std::atomic<bool> sIsXULTranslated = false;
 #endif
 
 // Info.plist key associated with the developer repo path
@@ -54,92 +59,20 @@ std::atomic<bool> nsMacUtilsImpl::sIsXULTranslated = false;
 // Workaround this constant not being available in the macOS SDK
 #define kCFBundleExecutableArchitectureARM64 0x0100000c
 
+enum TCSMStatus { TCSM_Unknown = 0, TCSM_Available, TCSM_Unavailable };
+
 // Initialize with Unknown until we've checked if TCSM is available to set
-Atomic<nsMacUtilsImpl::TCSMStatus> nsMacUtilsImpl::sTCSMStatus(TCSM_Unknown);
+static Atomic<TCSMStatus> sTCSMStatus(TCSM_Unknown);
 
-nsresult nsMacUtilsImpl::GetArchString(nsAString& aArchString) {
-  if (!mBinaryArchs.IsEmpty()) {
-    aArchString.Assign(mBinaryArchs);
-    return NS_OK;
-  }
+#if defined(MOZ_SANDBOX) || defined(__aarch64__)
 
-  uint32_t archMask = base::PROCESS_ARCH_INVALID;
-  nsresult rv = GetArchitecturesForBundle(&archMask);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // The order in the string must always be the same so
-  // don't do this in the loop.
-  if (archMask & base::PROCESS_ARCH_PPC) {
-    mBinaryArchs.AppendLiteral("ppc");
-  }
-
-  if (archMask & base::PROCESS_ARCH_I386) {
-    if (!mBinaryArchs.IsEmpty()) {
-      mBinaryArchs.Append('-');
-    }
-    mBinaryArchs.AppendLiteral("i386");
-  }
-
-  if (archMask & base::PROCESS_ARCH_PPC_64) {
-    if (!mBinaryArchs.IsEmpty()) {
-      mBinaryArchs.Append('-');
-    }
-    mBinaryArchs.AppendLiteral("ppc64");
-  }
-
-  if (archMask & base::PROCESS_ARCH_X86_64) {
-    if (!mBinaryArchs.IsEmpty()) {
-      mBinaryArchs.Append('-');
-    }
-    mBinaryArchs.AppendLiteral("x86_64");
-  }
-
-  if (archMask & base::PROCESS_ARCH_ARM_64) {
-    if (!mBinaryArchs.IsEmpty()) {
-      mBinaryArchs.Append('-');
-    }
-    mBinaryArchs.AppendLiteral("arm64");
-  }
-
-  aArchString.Truncate();
-  aArchString.Assign(mBinaryArchs);
-
-  return (aArchString.IsEmpty() ? NS_ERROR_FAILURE : NS_OK);
-}
-
-NS_IMETHODIMP
-nsMacUtilsImpl::GetArchitecturesInBinary(nsAString& aArchString) {
-  return GetArchString(aArchString);
-}
-
-// True when running under binary translation (Rosetta).
-NS_IMETHODIMP
-nsMacUtilsImpl::GetIsTranslated(bool* aIsTranslated) {
-#ifdef __ppc__
-  static bool sInitialized = false;
-
-  // Initialize sIsNative to 1.  If the sysctl fails because it doesn't
-  // exist, then translation is not possible, so the process must not be
-  // running translated.
-  static int32_t sIsNative = 1;
-
-  if (!sInitialized) {
-    size_t sz = sizeof(sIsNative);
-    sysctlbyname("sysctl.proc_native", &sIsNative, &sz, nullptr, 0);
-    sInitialized = true;
-  }
-
-  *aIsTranslated = !sIsNative;
-#else
-  // Translation only exists for ppc code.  Other architectures aren't
-  // translated.
-  *aIsTranslated = false;
-#endif
-
+// Utility method to call ClearOnShutdown() on the main thread
+static nsresult ClearCachedAppPathOnShutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
+  ClearOnShutdown(&sCachedAppPath);
   return NS_OK;
 }
 
-#if defined(MOZ_SANDBOX) || defined(__aarch64__)
 // Get the path to the .app directory (aka bundle) for the parent process.
 // When executing in the child process, this is the outer .app (such as
 // Firefox.app) and not the inner .app containing the child process
@@ -201,22 +134,17 @@ bool nsMacUtilsImpl::GetAppPath(nsCString& aAppPath) {
     sCachedAppPath = new nsCString(aAppPath);
 
     if (NS_IsMainThread()) {
-      nsMacUtilsImpl::ClearCachedAppPathOnShutdown();
+      ClearCachedAppPathOnShutdown();
     } else {
-      NS_DispatchToMainThread(NS_NewRunnableFunction(
-          "nsMacUtilsImpl::ClearCachedAppPathOnShutdown",
-          [] { nsMacUtilsImpl::ClearCachedAppPathOnShutdown(); }));
+      NS_DispatchToMainThread(
+          NS_NewRunnableFunction("ClearCachedAppPathOnShutdown",
+                                 [] { ClearCachedAppPathOnShutdown(); }));
     }
   }
 
   return true;
 }
 
-nsresult nsMacUtilsImpl::ClearCachedAppPathOnShutdown() {
-  MOZ_ASSERT(NS_IsMainThread());
-  ClearOnShutdown(&sCachedAppPath);
-  return NS_OK;
-}
 #endif /* MOZ_SANDBOX || __aarch64__ */
 
 #if defined(MOZ_SANDBOX) && defined(DEBUG)
@@ -280,8 +208,7 @@ bool nsMacUtilsImpl::IsTCSMAvailable() {
   return (sTCSMStatus == TCSM_Available);
 }
 
-/* static */
-nsresult nsMacUtilsImpl::EnableTCSM() {
+static nsresult EnableTCSM() {
   uint32_t newVal = 1;
   int rv = sysctlbyname("kern.tcsm_enable", NULL, 0, &newVal, sizeof(newVal));
   if (rv < 0) {
@@ -289,6 +216,15 @@ nsresult nsMacUtilsImpl::EnableTCSM() {
   }
   return NS_OK;
 }
+
+#if defined(DEBUG)
+static bool IsTCSMEnabled() {
+  uint32_t oldVal = 0;
+  size_t oldValSize = sizeof(oldVal);
+  int rv = sysctlbyname("kern.tcsm_enable", &oldVal, &oldValSize, NULL, 0);
+  return (rv == 0) && (oldVal != 0);
+}
+#endif
 
 /*
  * Intentionally return void so that failures will be ignored in non-debug
@@ -304,16 +240,6 @@ void nsMacUtilsImpl::EnableTCSMIfAvailable() {
     MOZ_ASSERT(IsTCSMEnabled());
   }
 }
-
-#if defined(DEBUG)
-/* static */
-bool nsMacUtilsImpl::IsTCSMEnabled() {
-  uint32_t oldVal = 0;
-  size_t oldValSize = sizeof(oldVal);
-  int rv = sysctlbyname("kern.tcsm_enable", &oldVal, &oldValSize, NULL, 0);
-  return (rv == 0) && (oldVal != 0);
-}
-#endif
 
 // Returns 0 on error.
 /* static */

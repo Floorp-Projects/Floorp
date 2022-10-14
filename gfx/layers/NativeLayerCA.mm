@@ -1586,7 +1586,11 @@ bool NativeLayerCA::Representation::ApplyChanges(
       if (aSpecializeVideo) {
         mContentCALayer = [[AVSampleBufferDisplayLayer layer] retain];
         CMTimebaseRef timebase;
+#ifdef CMTIMEBASE_USE_SOURCE_TERMINOLOGY
+        CMTimebaseCreateWithSourceClock(kCFAllocatorDefault, CMClockGetHostTimeClock(), &timebase);
+#else
         CMTimebaseCreateWithMasterClock(kCFAllocatorDefault, CMClockGetHostTimeClock(), &timebase);
+#endif
         CMTimebaseSetRate(timebase, 1.0f);
         [(AVSampleBufferDisplayLayer*)mContentCALayer setControlTimebase:timebase];
         CFRelease(timebase);

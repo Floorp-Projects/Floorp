@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * Manages the base loader (base-loader.js) instance used to load the developer tools.
  */
@@ -11,19 +9,7 @@
 var { Loader, Require, resolveURI, unload } = ChromeUtils.import(
   "resource://devtools/shared/loader/base-loader.js"
 );
-var { requireRawId } = ChromeUtils.importESModule(
-  "resource://devtools/shared/loader/loader-plugin-raw.sys.mjs"
-);
-
-const EXPORTED_SYMBOLS = [
-  "DevToolsLoader",
-  "useDistinctSystemPrincipalLoader",
-  "releaseDistinctSystemPrincipalLoader",
-  "require",
-  "loader",
-  // Export StructuredCloneHolder for its use from builtin-modules
-  "StructuredCloneHolder",
-];
+import { requireRawId } from "resource://devtools/shared/loader/loader-plugin-raw.sys.mjs";
 
 var gNextLoaderID = 0;
 
@@ -39,7 +25,8 @@ var gNextLoaderID = 0;
 //        The same requester object should be passed to release method.
 var systemLoader = null;
 var systemLoaderRequesters = new Set();
-function useDistinctSystemPrincipalLoader(requester) {
+
+export function useDistinctSystemPrincipalLoader(requester) {
   if (!systemLoader) {
     systemLoader = new DevToolsLoader({
       invisibleToDebugger: true,
@@ -50,7 +37,7 @@ function useDistinctSystemPrincipalLoader(requester) {
   return systemLoader;
 }
 
-function releaseDistinctSystemPrincipalLoader(requester) {
+export function releaseDistinctSystemPrincipalLoader(requester) {
   systemLoaderRequesters.delete(requester);
   if (systemLoaderRequesters.size == 0) {
     systemLoader.destroy();
@@ -77,7 +64,7 @@ function releaseDistinctSystemPrincipalLoader(requester) {
  *        compartment. The debugger actor has to be running in a distinct
  *        compartment than the context it is debugging.
  */
-function DevToolsLoader({
+export function DevToolsLoader({
   invisibleToDebugger = false,
   freshCompartment = false,
 } = {}) {
@@ -128,10 +115,35 @@ function DevToolsLoader({
 
   this.require = Require(this.loader, { id: "devtools" });
 
-  // Services can't be imported from a Sandbox,
-  // so hand over a reference to builtin-modules.js (all all other modules)
-  // via the globals.
-  this.loader.globals.Services = Services;
+  // Various globals are available from ESM, but not from sandboxes,
+  // inject them into the globals list.
+  // Changes here should be mirrored to devtools/.eslintrc.
+  const injectedGlobals = {
+    CanonicalBrowsingContext,
+    console,
+    BrowsingContext,
+    ChromeWorker,
+    DebuggerNotificationObserver,
+    DOMPoint,
+    DOMQuad,
+    DOMRect,
+    HeapSnapshot,
+    IOUtils,
+    L10nRegistry,
+    Localization,
+    NamedNodeMap,
+    NodeFilter,
+    PathUtils,
+    Services,
+    StructuredCloneHolder,
+    TelemetryStopwatch,
+    WebExtensionPolicy,
+    WindowGlobalParent,
+    WindowGlobalChild,
+  };
+  for (const name in injectedGlobals) {
+    this.loader.globals[name] = injectedGlobals[name];
+  }
 
   // Fetch custom pseudo modules and globals
   const { modules, globals } = this.require(
@@ -156,7 +168,7 @@ function DevToolsLoader({
 
   // Define the loader id for these two usecases:
   // * access via the JSM (this.id)
-  // let { loader } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
+  // let { loader } = ChromeUtils.importESModule("resource://devtools/shared/loader/Loader.sys.mjs");
   // loader.id
   this.id = gNextLoaderID++;
   // * access via module's `loader` global
@@ -165,7 +177,7 @@ function DevToolsLoader({
 
   // Expose lazy helpers on `loader`
   // ie. when you use it like that from a JSM:
-  // let { loader } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
+  // let { loader } = ChromeUtils.importESModule("resource://devtools/shared/loader/Loader.sys.mjs");
   // loader.lazyGetter(...);
   this.lazyGetter = globals.loader.lazyGetter;
   this.lazyServiceGetter = globals.loader.lazyServiceGetter;
@@ -188,7 +200,7 @@ DevToolsLoader.prototype = {
 };
 
 // Export the standard instance of DevToolsLoader used by the tools.
-var loader = new DevToolsLoader({
+export var loader = new DevToolsLoader({
   /**
    * Sets whether the compartments loaded by this instance should be invisible
    * to the debugger.  Invisibility is needed for loaders that support debugging
@@ -201,4 +213,4 @@ var loader = new DevToolsLoader({
   invisibleToDebugger: Services.appinfo.name !== "Firefox",
 });
 
-var require = loader.require;
+export var require = loader.require;

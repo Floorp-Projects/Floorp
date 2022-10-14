@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["DevTools"];
 
-const { require } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
+const { require } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");

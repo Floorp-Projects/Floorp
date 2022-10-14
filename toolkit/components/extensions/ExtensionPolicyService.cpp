@@ -66,9 +66,8 @@ static const char kDocElementInserted[] = "initial-document-element-inserted";
 using CoreByHostMap = nsTHashMap<nsCStringASCIICaseInsensitiveHashKey,
                                  RefPtr<extensions::WebExtensionPolicyCore>>;
 
-static StaticMutex sCoreByHostMutex;
-static StaticAutoPtr<CoreByHostMap> sCoreByHost
-    MOZ_GUARDED_BY(sCoreByHostMutex);
+static StaticRWLock sCoreByHostLock;
+static StaticAutoPtr<CoreByHostMap> sCoreByHost MOZ_GUARDED_BY(sCoreByHostLock);
 
 /* static */
 mozIExtensionProcessScript& ExtensionPolicyService::ProcessScript() {
@@ -101,7 +100,7 @@ mozIExtensionProcessScript& ExtensionPolicyService::ProcessScript() {
 /* static */
 RefPtr<extensions::WebExtensionPolicyCore>
 ExtensionPolicyService::GetCoreByHost(const nsACString& aHost) {
-  StaticMutexAutoLock lock(sCoreByHostMutex);
+  StaticAutoReadLock lock(sCoreByHostLock);
   return sCoreByHost ? sCoreByHost->Get(aHost) : nullptr;
 }
 
@@ -115,7 +114,7 @@ ExtensionPolicyService::ExtensionPolicyService() {
   RegisterObservers();
 
   {
-    StaticMutexAutoLock lock(sCoreByHostMutex);
+    StaticAutoWriteLock lock(sCoreByHostLock);
     MOZ_DIAGNOSTIC_ASSERT(!sCoreByHost,
                           "ExtensionPolicyService created twice?");
     sCoreByHost = new CoreByHostMap();
@@ -126,7 +125,7 @@ ExtensionPolicyService::~ExtensionPolicyService() {
   UnregisterWeakMemoryReporter(this);
 
   {
-    StaticMutexAutoLock lock(sCoreByHostMutex);
+    StaticAutoWriteLock lock(sCoreByHostLock);
     sCoreByHost = nullptr;
   }
 }
@@ -156,6 +155,13 @@ WebExtensionPolicy* ExtensionPolicyService::GetByURL(const URLInfo& aURL) {
   return nullptr;
 }
 
+WebExtensionPolicy* ExtensionPolicyService::GetByHost(
+    const nsACString& aHost) const {
+  AssertIsOnMainThread();
+  RefPtr<WebExtensionPolicyCore> core = GetCoreByHost(aHost);
+  return core ? core->GetMainThreadPolicy() : nullptr;
+}
+
 void ExtensionPolicyService::GetAll(
     nsTArray<RefPtr<WebExtensionPolicy>>& aResult) {
   AppendToArray(aResult, mExtensions.Values());
@@ -171,11 +177,9 @@ bool ExtensionPolicyService::RegisterExtension(WebExtensionPolicy& aPolicy) {
   }
 
   mExtensions.InsertOrUpdate(aPolicy.Id(), RefPtr{&aPolicy});
-  mExtensionHosts.InsertOrUpdate(aPolicy.MozExtensionHostname(),
-                                 RefPtr{&aPolicy});
 
   {
-    StaticMutexAutoLock lock(sCoreByHostMutex);
+    StaticAutoWriteLock lock(sCoreByHostLock);
     sCoreByHost->InsertOrUpdate(aPolicy.MozExtensionHostname(), aPolicy.Core());
   }
   return true;
@@ -191,10 +195,9 @@ bool ExtensionPolicyService::UnregisterExtension(WebExtensionPolicy& aPolicy) {
   }
 
   mExtensions.Remove(aPolicy.Id());
-  mExtensionHosts.Remove(aPolicy.MozExtensionHostname());
 
   {
-    StaticMutexAutoLock lock(sCoreByHostMutex);
+    StaticAutoWriteLock lock(sCoreByHostLock);
     sCoreByHost->Remove(aPolicy.MozExtensionHostname());
   }
   return true;
@@ -666,8 +669,7 @@ nsresult ExtensionPolicyService::ExtensionURIToAddonId(nsIURI* aURI,
   return NS_OK;
 }
 
-NS_IMPL_CYCLE_COLLECTION(ExtensionPolicyService, mExtensions, mExtensionHosts,
-                         mObservers)
+NS_IMPL_CYCLE_COLLECTION(ExtensionPolicyService, mExtensions, mObservers)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionPolicyService)
   NS_INTERFACE_MAP_ENTRY(nsIAddonPolicyService)

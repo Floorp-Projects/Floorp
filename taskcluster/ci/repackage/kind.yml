@@ -38,7 +38,7 @@ only-for-build-platforms:
     - win64-asan-reporter-shippable/opt
 
 job-template:
-    worker-type: 'b-linux'
+    worker-type: b-linux-gcp
     worker:
         docker-image: {"in-tree": "debian11-amd64-build"}
     mozharness:

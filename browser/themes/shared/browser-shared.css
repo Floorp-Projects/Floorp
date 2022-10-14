@@ -256,6 +256,16 @@ panel .text-link:-moz-lwtheme:not(:hover) {
 }
 
 /* rules for menupopup drop indicators */
+menupopup::part(drop-indicator-container) {
+  /* TODO(emilio): When menupopups get ported to modern flex layout we can
+   * probably simplify this substantially, by making the indicator position:
+   * absolute or so (which was never properly supported in XUL). The container
+   * should become completely unnecessary then. */
+  -moz-box-flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
 menupopup::part(drop-indicator-bar) {
   position: relative;
   /* these two margins must together compensate the indicator's height */

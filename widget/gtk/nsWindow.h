@@ -459,6 +459,8 @@ class nsWindow final : public nsBaseWidget {
 
   bool ApplyEnterLeaveMutterWorkaround();
 
+  void NotifyOcclusionState(mozilla::widget::OcclusionState aState) override;
+
  protected:
   virtual ~nsWindow();
 

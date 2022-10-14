@@ -529,7 +529,7 @@ void nsTableFrame::InsertColGroups(int32_t aStartColIndex,
     colIndex += numCols;
   }
 
-  for (; *colGroupIter; ++colGroupIter) {
+  if (*colGroupIter) {
     nsTableColGroupFrame::ResetColIndices(*colGroupIter, colIndex);
   }
 }

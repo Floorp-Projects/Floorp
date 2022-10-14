@@ -46,8 +46,8 @@ function createPanelReloadTest(recordName, toolId) {
 
     const tab = await addTab(TEST_URL);
 
-    const { require } = ChromeUtils.import(
-      "resource://devtools/shared/loader/Loader.jsm"
+    const { require } = ChromeUtils.importESModule(
+      "resource://devtools/shared/loader/Loader.sys.mjs"
     );
     const {
       gDevTools,

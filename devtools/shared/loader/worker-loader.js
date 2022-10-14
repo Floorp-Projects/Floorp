@@ -505,6 +505,7 @@ this.worker = new WorkerDebuggerLoader({
     atob: this.atob,
     Services: Object.create(null),
     ChromeUtils,
+    DebuggerNotificationObserver,
 
     // The following APIs rely on the use of Components, and the worker debugger
     // does not provide alternative definitions for them. Consequently, they are
@@ -520,7 +521,6 @@ this.worker = new WorkerDebuggerLoader({
   modules: {
     Debugger,
     xpcInspector,
-    DebuggerNotificationObserver,
   },
   paths: {
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠

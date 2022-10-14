@@ -7,8 +7,8 @@
 
 "use strict";
 
-var { require } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
+var { require } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 var { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 var { gDevTools } = require("resource://devtools/client/framework/devtools.js");

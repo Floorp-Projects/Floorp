@@ -5,9 +5,7 @@
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
-const Loader = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
-);
+import * as Loader from "resource://devtools/shared/loader/Loader.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};

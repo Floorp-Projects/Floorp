@@ -39,10 +39,10 @@ easier to analyze.
 #. Click on Stop Logging.
 #. Go to the folder containing the specified log file, and gather all
    the log files. You will see several files that look like:
-   log.txt-main.1806, log.txt-child.1954, log.txt-child.1970, etc.  This
-   is because Firefox now uses multiple processes, and each process gets
-   its own log file.
-#. For many bugs, the "log.txt-main" file is the only thing you need to
+   log.txt-main.1806.moz_log, log.txt-child.1954.moz_log,
+   log.txt-child.1970.moz_log, etc.  This is because Firefox now uses
+   multiple processes, and each process gets its own log file.
+#. For many bugs, the "log.txt-main.moz_log" file is the only thing you need to
    upload as a file attachment to your Bugzilla bug (this is assuming
    you're logging to help a mozilla developer).  Other bugs may require
    all the logs to be uploaded--ask the developer if you're not sure.
@@ -77,7 +77,7 @@ Windows
 
    ::
 
-      set MOZ_LOG=timestamp,rotate:200,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5,cookie:5
+      set MOZ_LOG=timestamp,rotate:200,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5
       set MOZ_LOG_FILE=%TEMP%\log.txt
       "c:\Program Files\Mozilla Firefox\firefox.exe"
 
@@ -85,7 +85,7 @@ Windows
 
    ::
 
-      set MOZ_LOG=timestamp,rotate:200,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5,cookie:5
+      set MOZ_LOG=timestamp,rotate:200,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5
       set MOZ_LOG_FILE=%TEMP%\log.txt
       "c:\Program Files (x86)\Mozilla Firefox\firefox.exe"
 
@@ -116,7 +116,7 @@ running on Linux.
 
    ::
 
-      export MOZ_LOG=timestamp,rotate:200,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5,cookie:5
+      export MOZ_LOG=timestamp,rotate:200,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5
       export MOZ_LOG_FILE=/tmp/log.txt
       cd /path/to/firefox
       ./firefox
@@ -144,7 +144,7 @@ These instructions show how to log HTTP traffic in Firefox on Mac OS X.
 
    ::
 
-      export MOZ_LOG=timestamp,rotate:200,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5,cookie:5
+      export MOZ_LOG=timestamp,rotate:200,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5
       export MOZ_LOG_FILE=~/Desktop/log.txt
       cd /Applications/Firefox.app/Contents/MacOS
       ./firefox-bin
@@ -188,13 +188,13 @@ the same form of the arguments:
 
    ::
 
-      "c:\Program Files (x86)\Mozilla Firefox\firefox.exe" -MOZ_LOG=timestamp,rotate:200,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5,cookie:5 -MOZ_LOG_FILE=%TEMP%\log.txt
+      "c:\Program Files (x86)\Mozilla Firefox\firefox.exe" -MOZ_LOG=timestamp,rotate:200,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5 -MOZ_LOG_FILE=%TEMP%\log.txt
 
    **For 64-bit Windows:**
 
    ::
 
-      "c:\Program Files\Mozilla Firefox\firefox.exe" -MOZ_LOG=timestamp,rotate:200,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5,cookie:5 -MOZ_LOG_FILE=%TEMP%\log.txt
+      "c:\Program Files\Mozilla Firefox\firefox.exe" -MOZ_LOG=timestamp,rotate:200,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5 -MOZ_LOG_FILE=%TEMP%\log.txt
 
    (These instructions assume that you installed Firefox to the default
    location, and that drive C: is your Windows startup disk. Make the
@@ -252,6 +252,12 @@ logging modules in your MOZ_LOG environment variable.  This will cause
 each log message to be immediately written (and fflush()'d), which is
 likely to give us more information about your crash.
 
+Turning on QUIC logging
+~~~~~~~~~~~~~~~~~~~~~~~
+
+This can be done by setting `MOZ_LOG` to
+`timestamp,rotate:200,nsHttp:5,neqo_http3::*:5,neqo_transport::*:5`.
+
 Logging only HTTP request and response headers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -281,12 +287,12 @@ removing the text ``nsHostResolver:5`` from the commands above.
 Enable Logging for try server runs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can enable PR_LOGGING on try by hacking build/automation.py.in, in
-'def environment'. For example:
+You can enable logging on try by passing the `env` argument via `mach try`.
+For example:
 
 .. note::
 
-   ``def environment(...    env['MOZ_LOG'] = 'nsHttp:5'   return env``
+   ``./mach try fuzzy --env "MOZ_LOG=nsHttp:5,SSLTokensCache:5"``
 
 See also
 --------

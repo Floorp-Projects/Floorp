@@ -11,8 +11,8 @@ add_task(async function() {
   await addTab(TEST_URI);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-    const { require } = ChromeUtils.import(
-      "resource://devtools/shared/loader/Loader.jsm"
+    const { require } = ChromeUtils.importESModule(
+      "resource://devtools/shared/loader/Loader.sys.mjs"
     );
     const {
       getFontPreviewData,

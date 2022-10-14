@@ -11,7 +11,7 @@
 "use strict";
 
 window.onload = function() {
-  const { require } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
+  const { require } = ChromeUtils.importESModule("resource://devtools/shared/loader/Loader.sys.mjs");
   const WebSocketServer = require("devtools/server/socket/websocket-server");
 
   const ServerSocket = Components.Constructor("@mozilla.org/network/server-socket;1",

@@ -92,7 +92,11 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
         ]
         if CONFIG["CPU_ARCH"] == "aarch64":
             UNIFIED_SOURCES += [
-                "core/PowerCounters-mac.cpp",
+                "core/PowerCounters-mac-arm64.cpp",
+            ]
+        if CONFIG["CPU_ARCH"] == "x86_64":
+            UNIFIED_SOURCES += [
+                "core/PowerCounters-mac-amd64.cpp",
             ]
     elif CONFIG["OS_TARGET"] == "WINNT":
         if CONFIG["CC_TYPE"] == "clang-cl":

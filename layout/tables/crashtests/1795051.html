@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        * {
+            max-width: fit-content;
+        }
+    </style>
+    <script>
+      window.addEventListener('load', () => {
+        const col = document.getElementById('id_0')
+        const table = document.getElementById('id_1')
+        const colgroup_1 = document.createElement('colgroup')
+        const colgroup_2 = document.createElement('colgroup')
+        colgroup_2.span = 174
+        table.appendChild(colgroup_1)
+        table.appendChild(col)
+        table.appendChild(colgroup_2)
+        document.documentElement.getAnimations({ })
+        colgroup_1.setAttribute('span', 190)
+        colgroup_2.setAttribute('span', 0)
+      })
+    </script>
+</head>
+<table id='id_1'>
+    <col id='id_0'>
+</table>
+</html>

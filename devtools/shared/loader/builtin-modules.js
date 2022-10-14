@@ -15,35 +15,7 @@
  * they would also miss them.
  */
 
-const jsmScope = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
-);
-
 const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-
-// Steal various globals only available in JSM scope (and not Sandbox one)
-const {
-  CanonicalBrowsingContext,
-  BrowsingContext,
-  WebExtensionPolicy,
-  WindowGlobalParent,
-  WindowGlobalChild,
-  console,
-  DebuggerNotificationObserver,
-  DOMPoint,
-  DOMQuad,
-  DOMRect,
-  HeapSnapshot,
-  IOUtils,
-  L10nRegistry,
-  Localization,
-  NamedNodeMap,
-  NodeFilter,
-  PathUtils,
-  StructuredCloneHolder,
-  TelemetryStopwatch,
-  ChromeWorker,
-} = Cu.getGlobalForObject(jsmScope);
 
 /**
  * Defines a getter on a specified object that will be created upon first use.
@@ -138,7 +110,6 @@ function lazyRequireGetter(obj, properties, module, destructure) {
 
 // List of pseudo modules exposed to all devtools modules.
 exports.modules = {
-  DebuggerNotificationObserver,
   HeapSnapshot,
   InspectorUtils,
   // Expose "chrome" Promise, which aren't related to any document
@@ -184,36 +155,14 @@ defineLazyGetter(exports.modules, "xpcInspector", () => {
 // List of all custom globals exposed to devtools modules.
 // Changes here should be mirrored to devtools/.eslintrc.
 exports.globals = {
-  CanonicalBrowsingContext,
-  Ci,
-  ChromeUtils,
-  Components,
-  Cr,
-  Cu,
-  BrowsingContext,
-  WebExtensionPolicy,
-  WindowGlobalParent,
-  WindowGlobalChild,
-  console,
-  ChromeWorker,
-  DOMPoint,
-  DOMQuad,
-  NamedNodeMap,
-  NodeFilter,
-  DOMRect,
-  IOUtils,
   isWorker: false,
-  L10nRegistry,
   loader: {
     lazyGetter: defineLazyGetter,
     lazyServiceGetter: defineLazyServiceGetter,
     lazyRequireGetter,
-    // Defined by Loader.jsm
+    // Defined by Loader.sys.mjs
     id: null,
   },
-  Localization,
-  PathUtils,
-  StructuredCloneHolder,
 };
 // DevTools loader copy globals property descriptors on each module global
 // object so that we have to memoize them from here in order to instantiate each

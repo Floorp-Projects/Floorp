@@ -146,6 +146,7 @@ module.exports = {
     DataTransfer: false,
     DataTransferItem: false,
     DataTransferItemList: false,
+    DebuggerNotificationObserver: false,
     DelayNode: false,
     DeprecationReportBody: false,
     DeviceLightEvent: false,

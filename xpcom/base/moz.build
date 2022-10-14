@@ -27,7 +27,6 @@ XPIDL_SOURCES += [
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     XPIDL_SOURCES += [
         "nsIMacPreferencesReader.idl",
-        "nsIMacUtils.idl",
     ]
     EXPORTS += [
         "nsObjCExceptions.h",

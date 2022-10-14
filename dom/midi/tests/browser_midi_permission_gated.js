@@ -310,6 +310,18 @@ add_task(async function testIframeRequestMIDIAccess() {
     }
   );
 
+  const onConsoleErrorMessage = new Promise(resolve => {
+    const errorListener = {
+      observe(error) {
+        if (error.message.includes("WebMIDI access request was denied")) {
+          resolve(error);
+          Services.console.unregisterListener(errorListener);
+        }
+      },
+    };
+    Services.console.registerListener(errorListener);
+  });
+
   const rejectionMessage = await SpecialPowers.spawn(
     crossOriginIframeBrowsingContext,
     [],
@@ -330,6 +342,14 @@ add_task(async function testIframeRequestMIDIAccess() {
     rejectionMessage,
     "SecurityError",
     "requestMIDIAccess from the remote iframe was rejected"
+  );
+
+  const consoleErrorMessage = await onConsoleErrorMessage;
+  ok(
+    consoleErrorMessage.message.includes(
+      `WebMIDI access request was denied: ❝SitePermsAddons can't be installed from cross origin subframes❞`,
+      "an error message is sent to the console"
+    )
   );
 });
 

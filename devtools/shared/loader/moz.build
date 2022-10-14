@@ -15,6 +15,6 @@ DevToolsModules(
     "base-loader.js",
     "builtin-modules.js",
     "loader-plugin-raw.sys.mjs",
-    "Loader.jsm",
+    "Loader.sys.mjs",
     "worker-loader.js",
 )

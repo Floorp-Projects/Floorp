@@ -77,11 +77,7 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
 
   WebExtensionPolicy* GetByURL(const extensions::URLInfo& aURL);
 
-  WebExtensionPolicy* GetByHost(const nsACString& aHost) const {
-    nsAutoCString host;
-    ToLowerCase(aHost, host);
-    return mExtensionHosts.GetWeak(host);
-  }
+  WebExtensionPolicy* GetByHost(const nsACString& aHost) const;
 
   void GetAll(nsTArray<RefPtr<WebExtensionPolicy>>& aResult);
 
@@ -119,7 +115,6 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
       const nsTArray<RefPtr<extensions::WebExtensionContentScript>>& aScripts);
 
   nsRefPtrHashtable<nsPtrHashKey<const nsAtom>, WebExtensionPolicy> mExtensions;
-  nsRefPtrHashtable<nsCStringHashKey, WebExtensionPolicy> mExtensionHosts;
 
   nsRefPtrHashtable<nsPtrHashKey<const extensions::DocumentObserver>,
                     extensions::DocumentObserver>

@@ -31,8 +31,8 @@ add_task(async function() {
   await ContentTask.spawn(tab.linkedBrowser, [connectionPrefix], function(
     _connectionPrefix
   ) {
-    const { require } = ChromeUtils.import(
-      "resource://devtools/shared/loader/Loader.jsm"
+    const { require } = ChromeUtils.importESModule(
+      "resource://devtools/shared/loader/Loader.sys.mjs"
     );
     const { TargetActorRegistry } = ChromeUtils.import(
       "resource://devtools/server/actors/targets/target-actor-registry.jsm"
@@ -68,8 +68,8 @@ add_task(async function() {
     "Spawn a content task in order to run some assertions on actors and resource watchers directly"
   );
   await ContentTask.spawn(tab.linkedBrowser, [], function() {
-    const { require } = ChromeUtils.import(
-      "resource://devtools/shared/loader/Loader.jsm"
+    const { require } = ChromeUtils.importESModule(
+      "resource://devtools/shared/loader/Loader.sys.mjs"
     );
     const {
       getResourceWatcher,
