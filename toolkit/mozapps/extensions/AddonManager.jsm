@@ -1841,13 +1841,6 @@ var AddonManagerInternal = {
       );
     }
 
-    if (aInstallingPrincipal.scheme !== "https") {
-      throw Components.Exception(
-        `SitePermsAddons can only be installed from secure origins`,
-        Cr.NS_ERROR_INVALID_ARG
-      );
-    }
-
     if (aInstallingPrincipal.isIpAddress) {
       throw Components.Exception(
         `SitePermsAddons install disallowed when the host is an IP address`,
