@@ -703,15 +703,16 @@ interface nsIXPCComponents_Utils : nsISupports
     jsval getIncumbentGlobal([optional] in jsval callback);
 
     /**
-     * Forces the generation of an XPCWrappedJS for a given object. For internal
-     * and testing use only. This is only useful to set up wrapper map conditions
-     * for a testcase. The return value is not an XPCWrappedJS itself, but an
-     * opaque nsISupports holder that keeps the underlying XPCWrappedJS alive.
-     *
-     * if |scope| is passed, the XPCWrappedJS is generated in the scope of that object.
+     * Returns a name for the given function or object which is useful for
+     * debugging. It will be very similar to the name displayed in call
+     * stacks.
+
+     * Objects which contain a single enumerable property which is a function
+     * will generate a name based on that function. Any other non-function
+     * objects will return "nonfunction".
      */
     [implicit_jscontext]
-    nsISupports generateXPCWrappedJS(in jsval obj, [optional] in jsval scope);
+    ACString getDebugName(in jsval obj);
 
     /**
       * Retrieve the last time, in microseconds since epoch, that a given

@@ -63,9 +63,9 @@ function _setTimeoutOrIsInterval(
     },
 
     // nsINamed
-    name:
-      (aIsInterval ? "setInterval() for " : "setTimeout() for ") +
-      Cu.generateXPCWrappedJS(aCallback).QueryInterface(Ci.nsINamed).name,
+    name: `${
+      aIsInterval ? "setInterval" : "setTimeout"
+    }() for ${Cu.getDebugName(aCallback)}`,
   };
 
   timer.initWithCallback(
