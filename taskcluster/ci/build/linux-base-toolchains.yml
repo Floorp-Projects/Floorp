@@ -32,7 +32,6 @@ linux64-base-toolchains/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: true
     fetches:
         toolchain:
@@ -72,7 +71,6 @@ linux64-base-toolchains/debug:
         custom-build-variant-cfg: debug
         mozconfig-variant: debug
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: true
     fetches:
         toolchain:
@@ -109,7 +107,6 @@ linux64-base-toolchains-clang/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
-        need-xvfb: true
     fetches:
         toolchain:
             - linux64-binutils-2.31.1
@@ -147,7 +144,6 @@ linux64-base-toolchains-clang/debug:
         custom-build-variant-cfg: debug
         mozconfig-variant: debug
         tooltool-downloads: public
-        need-xvfb: true
     fetches:
         toolchain:
             - linux64-binutils-2.31.1

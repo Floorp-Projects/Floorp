@@ -108,7 +108,6 @@ jobs:
                   path: /builds/worker/artifacts/
         run:
             using: mozharness
-            need-xvfb: true
             job-script: taskcluster/scripts/tester/test-linux.sh
             script: android_emulator_pgo.py
             tooltool-downloads: internal
@@ -148,7 +147,6 @@ jobs:
                   path: /builds/worker/artifacts/
         run:
             using: mozharness
-            need-xvfb: true
             job-script: taskcluster/scripts/tester/test-linux.sh
             script: android_emulator_pgo.py
             tooltool-downloads: internal

@@ -42,7 +42,6 @@ jobs:
             script: "mozharness/scripts/fx_desktop_build.py"
             secrets: true
             tooltool-downloads: public
-            need-xvfb: true
             keep-artifacts: false
         dependencies:
             linux64-opt: build-linux64/opt

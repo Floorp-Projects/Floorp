@@ -11,7 +11,6 @@ job-defaults:
         using: mozharness
         actions: [build]
         script: mozharness/scripts/fx_desktop_build.py
-        need-xvfb: false
     optimization:
         skip-unless-expanded: null
 
