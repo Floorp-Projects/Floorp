@@ -2734,3 +2734,8 @@ pref("browser.pdfjs.feature-tour", "{\"message\":\"PDF_JS_FEATURE_TOUR\",\"scree
   pref("cookiebanners.service.mode.privateBrowsing", 1);
   pref("cookiebanners.bannerClicking.enabled", true);
 #endif
+
+// We only want to enable this pref for Desktop nightlies.
+#ifdef NIGHTLY_BUILD
+  pref("dom.sitepermsaddon-provider.enabled", true);
+#endif
