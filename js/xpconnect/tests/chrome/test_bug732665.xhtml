@@ -32,15 +32,20 @@ add_task(async () => {
   // the number of steps to the recursion limit from the caller.
   function nearNativeStackLimit(d, f) {
     f = f || function() {};
+    let failed = null;
     function inner() {
       try {
-        // eslint-disable-next-line no-with
-        with ({}) { // keep things predictable -- stay in the interpreter
-          // eslint-disable-next-line no-eval
-          var stepsFromLimit = eval("inner()"); // Use eval to force a number of native stackframes to be created.
-        }
+        // eslint-disable-next-line no-eval
+        var stepsFromLimit = eval("inner()"); // Use eval to force a number of native stackframes to be created.
         if (stepsFromLimit == d) {
-          try { f(); } catch(e) { ok(false, 'nearNativeStackLimit callback threw: ' + e); }
+          try {
+            f();
+          } catch(e) {
+            // If we didn't have enough stack space to call the (possibly
+            // trivial) test function above, we obviously can't expect to call
+            // into the test harness assertion code successfully.
+            failed = e;
+          }
         }
         return stepsFromLimit + 1;
       } catch(e) {
@@ -50,7 +55,9 @@ add_task(async () => {
         return 0;
       }
     }
-    return inner();
+    let result = inner();
+    ok(!failed, `nearNativeStackLimit callback threw: ${failed}`);
+    return result;
   }
 
   var contentSb = new Cu.Sandbox("https://www.example.com");

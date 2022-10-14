@@ -1348,6 +1348,25 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat("Button has correct text", buttonNode.text.toString(), equalTo("Submit"))
     }
 
+    @Test fun testLoadUnloadIframeDoc() {
+        mainSession.loadTestPath(REMOTE_IFRAME)
+        waitForInitialFocus()
+
+        loadTestPage("test-tree")
+        waitForInitialFocus()
+
+        mainSession.loadTestPath(REMOTE_IFRAME)
+        waitForInitialFocus()
+
+        loadTestPage("test-tree")
+        waitForInitialFocus()
+
+        mainSession.loadTestPath(REMOTE_IFRAME)
+        waitForInitialFocus()
+
+        loadTestPage("test-tree")
+        waitForInitialFocus()
+    }
 
     private fun testAccessibilityFocusIframe(page: String) {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID

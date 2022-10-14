@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -ex
+
+# N.B. Add `--release` flag to `cargo build` to make the example run faster.
+cargo build --manifest-path ../Cargo.toml
+gcc -O3 -DDEBUG -o iter iter.c -ansi -Wall -I../include -L../../target/debug -lrure
+# If you're using librure.a, then you'll need to link other stuff:
+# -lutil -ldl -lpthread -lgcc_s -lc -lm -lrt -lutil -lrure

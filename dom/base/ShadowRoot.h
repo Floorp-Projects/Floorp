@@ -67,9 +67,6 @@ class ShadowRoot final : public DocumentFragment,
   // child from the currently-assigned slot, if any.
   void MaybeUnslotHostChild(nsIContent&);
 
-  // Find the first focusable element in this tree.
-  Element* GetFirstFocusable(bool aWithMouse) const;
-
   // Shadow DOM v1
   Element* Host() const {
     MOZ_ASSERT(GetHost(),

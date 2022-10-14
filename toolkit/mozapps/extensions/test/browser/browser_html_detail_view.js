@@ -128,8 +128,8 @@ async function assertBackButtonIsDisabled(win) {
   ok(backButton.disabled, "back button is disabled");
 }
 
-add_task(async function enableHtmlViews() {
-  gProvider = new MockProvider();
+add_setup(async function enableHtmlViews() {
+  gProvider = new MockProvider(["extension", "sitepermission"]);
   gProvider.createAddons([
     {
       id: "addon1@mochi.test",

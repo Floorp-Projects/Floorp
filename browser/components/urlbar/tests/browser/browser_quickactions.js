@@ -105,8 +105,8 @@ add_task(async function enter_search_mode_button() {
     window.document.getElementById("urlbar-engine-one-off-item-actions")
   );
   Assert.ok(oneOffButton, "One off button is available when preffed on");
-  EventUtils.synthesizeMouseAtCenter(oneOffButton, {}, window);
 
+  EventUtils.synthesizeMouseAtCenter(oneOffButton, {}, window);
   await UrlbarTestUtils.assertSearchMode(window, {
     source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
     entry: "oneoff",
@@ -115,6 +115,38 @@ add_task(async function enter_search_mode_button() {
   await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
   Assert.ok(true, "Actions are shown when we enter actions search mode.");
 
+  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.promisePopupClose(window);
+  EventUtils.synthesizeKey("KEY_Escape");
+});
+
+add_task(async function enter_search_mode_oneoff_by_key() {
+  // Select actions oneoff button by keyboard.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+  });
+  await UrlbarTestUtils.enterSearchMode(window);
+  const oneOffButtons = UrlbarTestUtils.getOneOffSearchButtons(window);
+  for (;;) {
+    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
+    if (
+      oneOffButtons.selectedButton.source === UrlbarUtils.RESULT_SOURCE.ACTIONS
+    ) {
+      break;
+    }
+  }
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: " ",
+  });
+  await UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
+    entry: "oneoff",
+  });
+
+  await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeKey("KEY_Escape");
 });
@@ -128,6 +160,8 @@ add_task(async function enter_search_mode_key() {
     source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
     entry: "typed",
   });
+
+  await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeKey("KEY_Escape");
 });

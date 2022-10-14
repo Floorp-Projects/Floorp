@@ -2164,8 +2164,8 @@ dependencies = [
  "processtools",
  "profiler_helper",
  "qcms",
- "regex-ffi",
  "rsdparsa_capi",
+ "rure",
  "rusqlite",
  "rust_minidump_writer_linux",
  "static_prefs",
@@ -4400,14 +4400,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "regex-ffi"
-version = "0.1.0"
-dependencies = [
- "nsstring",
- "regex",
-]
-
-[[package]]
 name = "regex-syntax"
 version = "0.6.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4500,6 +4492,14 @@ name = "runloop"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d79b4b604167921892e84afbbaad9d5ad74e091bf6c511d9dbfb0593f09fabd"
+
+[[package]]
+name = "rure"
+version = "0.2.2"
+dependencies = [
+ "libc",
+ "regex",
+]
 
 [[package]]
 name = "rusqlite"

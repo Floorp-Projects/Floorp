@@ -3,7 +3,7 @@
 
 All notable changes to this program are documented in this file.
 
-## 0.32.0  (2022-10-13, ``)
+## 0.32.0  (2022-10-13, `4563dd583110`)
 
 ### Added
 

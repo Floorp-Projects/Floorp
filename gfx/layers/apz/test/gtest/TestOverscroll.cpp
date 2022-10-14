@@ -354,6 +354,48 @@ TEST_F(APZCOverscrollTester, OverscrollByVerticalPanGestures) {
 #endif
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
+TEST_F(APZCOverscrollTester, StuckInOverscroll_Bug1767337) {
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+
+  PanGesture(PanGestureInput::PANGESTURE_START, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, -2), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, -10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, -10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, -10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, -10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, -2), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+
+  // Send two PANGESTURE_END in a row, to see if the second one gets us
+  // stuck in overscroll.
+  PanGesture(PanGestureInput::PANGESTURE_END, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, 0), mcc->Time(), MODIFIER_NONE, true);
+  SampleAnimationOnce();
+  PanGesture(PanGestureInput::PANGESTURE_END, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, 0), mcc->Time(), MODIFIER_NONE, true);
+
+  EXPECT_TRUE(apzc->IsOverscrolled());
+
+  // Check that we recover from overscroll via an animation.
+  ParentLayerPoint expectedScrollOffset(0, 0);
+  SampleAnimationUntilRecoveredFromOverscroll(expectedScrollOffset);
+}
+#endif
+
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCOverscrollTester, OverscrollByVerticalAndHorizontalPanGestures) {
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 

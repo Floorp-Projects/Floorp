@@ -498,7 +498,8 @@ async function loadManifestFromWebManifest(aPackage, aLocation) {
     addon.previewImage = "preview.png";
   }
 
-  if (addon.type == "sitepermission") {
+  // TODO(Bug 1789718): Remove after the deprecated XPIProvider-based implementation is also removed.
+  if (addon.type == "sitepermission-deprecated") {
     addon.sitePermissions = manifest.site_permissions;
     addon.siteOrigin = manifest.install_origins[0];
   }

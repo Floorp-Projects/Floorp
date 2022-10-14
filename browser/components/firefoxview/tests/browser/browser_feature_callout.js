@@ -17,7 +17,6 @@ const primaryButtonSelector = `#${calloutId} .primary`;
 const featureTourPref = "browser.firefox-view.feature-tour";
 const getPrefValueByScreen = screen => {
   return JSON.stringify({
-    message: "FIREFOX_VIEW_FEATURE_TOUR",
     screen: `FEATURE_CALLOUT_${screen}`,
     complete: false,
   });
@@ -103,12 +102,7 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
   // Second comma-separated value of the pref is the id
   // of the last viewed screen of the feature tour
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [
-        featureTourPref,
-        '{"message":"FIREFOX_VIEW_FEATURE_TOUR","screen":"FEATURE_CALLOUT_2","complete":false}',
-      ],
-    ],
+    set: [[featureTourPref, '{"screen":"FEATURE_CALLOUT_2","complete":false}']],
   });
   // Open an about:firefoxview tab
   let tab1 = await BrowserTestUtils.openNewForegroundTab(

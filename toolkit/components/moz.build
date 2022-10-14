@@ -136,15 +136,5 @@ if CONFIG["MOZ_BACKGROUNDTASKS"]:
 if CONFIG["MOZ_BUILD_APP"] == "browser":
     DIRS += ["corroborator"]
 
-if CONFIG["COMPILE_ENVIRONMENT"]:
-    CbindgenHeader(
-        "regex_ffi_generated.h",
-        inputs=["/toolkit/components/regex-ffi"],
-    )
-
-    EXPORTS.mozilla += [
-        "!regex_ffi_generated.h",
-    ]
-
 if CONFIG["MOZ_UNIFFI_FIXTURES"]:
     DIRS += ["uniffi-bindgen-gecko-js/fixtures"]

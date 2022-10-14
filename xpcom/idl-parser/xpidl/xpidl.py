@@ -295,7 +295,7 @@ class NameMap(object):
         try:
             return self[id]
         except KeyError:
-            raise IDLError("Name '%s' not found", location)
+            raise IDLError(f"Name '{id}' not found", location)
 
 
 class RustNoncompat(Exception):
@@ -779,6 +779,13 @@ class Interface(object):
     def resolve(self, parent):
         self.idl = parent
 
+        if not self.attributes.scriptable and self.attributes.builtinclass:
+            raise IDLError(
+                "Non-scriptable interface '%s' doesn't need to be marked builtinclass"
+                % self.name,
+                self.location,
+            )
+
         # Hack alert: if an identifier is already present, libIDL assigns
         # doc comments incorrectly. This is quirks-mode extraordinaire!
         if parent.hasName(self.name):
@@ -908,7 +915,6 @@ class InterfaceAttributes(object):
     scriptable = False
     builtinclass = False
     function = False
-    noscript = False
     main_process_scriptable_only = False
 
     def setuuid(self, value):
@@ -919,9 +925,6 @@ class InterfaceAttributes(object):
 
     def setfunction(self):
         self.function = True
-
-    def setnoscript(self):
-        self.noscript = True
 
     def setbuiltinclass(self):
         self.builtinclass = True
@@ -934,7 +937,6 @@ class InterfaceAttributes(object):
         "scriptable": (False, setscriptable),
         "builtinclass": (False, setbuiltinclass),
         "function": (False, setfunction),
-        "noscript": (False, setnoscript),
         "object": (False, lambda self: True),
         "main_process_scriptable_only": (False, setmain_process_scriptable_only),
     }
@@ -1339,21 +1341,33 @@ class Method(object):
                     self.location,
                 )
             if p.size_is:
-                found_size_param = False
-                for size_param in self.params:
-                    if p.size_is == size_param.name:
-                        found_size_param = True
-                        if (
-                            getBuiltinOrNativeTypeName(size_param.realtype)
-                            != "unsigned long"
-                        ):
-                            raise IDLError(
-                                "is_size parameter must have type 'unsigned long'",
-                                self.location,
-                            )
-                if not found_size_param:
+                size_param = self.namemap.get(p.size_is, p.location)
+                if (
+                    p.paramtype.count("in") == 1
+                    and size_param.paramtype.count("in") == 0
+                ):
                     raise IDLError(
-                        "could not find is_size parameter '%s'" % p.size_is,
+                        "size_is parameter of an input must also be an input",
+                        p.location,
+                    )
+                if getBuiltinOrNativeTypeName(size_param.realtype) != "unsigned long":
+                    raise IDLError(
+                        "size_is parameter must have type 'unsigned long'",
+                        p.location,
+                    )
+            if p.iid_is:
+                iid_param = self.namemap.get(p.iid_is, p.location)
+                if (
+                    p.paramtype.count("in") == 1
+                    and iid_param.paramtype.count("in") == 0
+                ):
+                    raise IDLError(
+                        "iid_is parameter of an input must also be an input",
+                        p.location,
+                    )
+                if getBuiltinOrNativeTypeName(iid_param.realtype) != "[nsid]":
+                    raise IDLError(
+                        "iid_is parameter must be an nsIID",
                         self.location,
                     )
 
@@ -1989,7 +2003,7 @@ class IDLParser(object):
             type=p[3],
             name=p[4],
             attlist=p[1]["attlist"],
-            location=self.getLocation(p, 3),
+            location=self.getLocation(p, 4),
         )
 
     def p_paramtype(self, p):

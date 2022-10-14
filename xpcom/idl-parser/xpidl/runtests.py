@@ -54,12 +54,12 @@ class TestParser(unittest.TestCase):
         self.assertTrue(iface.attributes.builtinclass)
         self.assertTrue(iface.attributes.function)
 
-        i = self.p.parse("[noscript, uuid(abc)] interface foo {};", filename="f")
+        i = self.p.parse("[uuid(abc)] interface foo {};", filename="f")
         self.assertTrue(isinstance(i, xpidl.IDL))
         self.assertTrue(isinstance(i.productions[0], xpidl.Interface))
         iface = i.productions[0]
         self.assertEqual("foo", iface.name)
-        self.assertTrue(iface.attributes.noscript)
+        self.assertFalse(iface.attributes.scriptable)
 
     def testMethod(self):
         i = self.p.parse(

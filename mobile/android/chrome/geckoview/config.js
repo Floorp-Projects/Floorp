@@ -12,6 +12,9 @@ const PAGE_SCROLL_TRIGGER = 200; // Triggers additional getPrefsBuffer() on user
 const FILTER_CHANGE_TRIGGER = 200; // Delay between responses to filterInput changes
 const INNERHTML_VALUE_DELAY = 100; // Delay before providing prefs innerHTML value
 
+var gStringBundle = Services.strings.createBundle(
+  "chrome://browser/locale/config.properties"
+);
 var gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
   Ci.nsIClipboardHelper
 );
@@ -78,9 +81,8 @@ var NewPrefDialog = {
   // Called to update positive button to display text ("Create"/"Change), and enabled/disabled status
   // As new pref name is initially displayed, re-focused, or modifed during user input
   _updatePositiveButton: function AC_updatePositiveButton(aPrefName) {
-    document.l10n.setAttributes(
-      this._positiveButton,
-      "config-new-pref-create-button"
+    this._positiveButton.textContent = gStringBundle.GetStringFromName(
+      "newPref.createButton"
     );
     this._positiveButton.setAttribute("disabled", true);
     if (aPrefName == "") {
@@ -92,9 +94,8 @@ var NewPrefDialog = {
       return i.name == aPrefName;
     });
     if (item.length) {
-      document.l10n.setAttributes(
-        this._positiveButton,
-        "config-new-pref-change-button"
+      this._positiveButton.textContent = gStringBundle.GetStringFromName(
+        "newPref.changeButton"
       );
     } else {
       this._positiveButton.removeAttribute("disabled");
@@ -646,7 +647,9 @@ Pref.prototype = {
       resetButton.addEventListener("click", function(event) {
         AboutConfig.resetDefaultPref(event);
       });
-      resetButton.setAttribute("data-l10n-id", "config-pref-reset-button");
+      resetButton.textContent = gStringBundle.GetStringFromName(
+        "pref.resetButton"
+      );
       prefItemLine.appendChild(resetButton);
 
       const toggleButton = document.createElement("div");
@@ -654,7 +657,9 @@ Pref.prototype = {
       toggleButton.addEventListener("click", function(event) {
         AboutConfig.toggleBoolPref(event);
       });
-      toggleButton.setAttribute("data-l10n-id", "config-pref-toggle-button");
+      toggleButton.textContent = gStringBundle.GetStringFromName(
+        "pref.toggleButton"
+      );
       prefItemLine.appendChild(toggleButton);
 
       const upButton = document.createElement("div");

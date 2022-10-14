@@ -8,7 +8,7 @@ fxa-pair-device-dialog-sync2 =
 fxa-qrcode-pair-title = Sync { -brand-product-name } on your phone or tablet
 fxa-qrcode-pair-step1 = 1. Open { -brand-product-name } on your mobile device.
 
-fxa-qrcode-pair-step2 = 2. Open the <strong>menu</strong> (<img data-l10n-name="ios-menu-icon"/> on iOS or <img data-l10n-name="android-menu-icon"/> on Android) and tap <strong>Sign in to sync</strong>
+fxa-qrcode-pair-step2-signin = 2. Go to the menu (<img data-l10n-name="ios-menu-icon"/> on iOS or <img data-l10n-name="android-menu-icon"/> on Android) and tap <strong>Sync and save data</strong>
 
 fxa-qrcode-pair-step3 = 3. Tap <strong>Ready to Scan</strong> and hold your phone over this code
 

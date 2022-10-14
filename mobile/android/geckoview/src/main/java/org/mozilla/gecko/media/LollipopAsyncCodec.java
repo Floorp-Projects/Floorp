@@ -214,6 +214,11 @@ import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
   }
 
   @Override
+  public MediaFormat getInputFormat() {
+    return mCodec.getInputFormat();
+  }
+
+  @Override
   public void queueInputBuffer(
       final int index,
       final int offset,

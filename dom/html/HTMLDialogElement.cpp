@@ -143,28 +143,7 @@ void HTMLDialogElement::FocusDialog() {
     doc->FlushPendingNotifications(FlushType::Frames);
   }
 
-  Element* controlCandidate = nullptr;
-  for (auto* child = GetFirstChild(); child; child = child->GetNextNode(this)) {
-    auto* element = Element::FromNode(child);
-    if (!element) {
-      continue;
-    }
-    nsIFrame* frame = element->GetPrimaryFrame();
-    if (!frame || !frame->IsFocusable()) {
-      continue;
-    }
-    if (element->HasAttr(nsGkAtoms::autofocus)) {
-      // Find the first descendant of element of subject that this not inert and
-      // has autofocus attribute.
-      controlCandidate = element;
-      break;
-    }
-    if (!controlCandidate) {
-      // If there isn't one, then let control be the first non-inert descendant
-      // element of subject, in tree order.
-      controlCandidate = element;
-    }
-  }
+  Element* controlCandidate = GetFocusDelegate(false /* aWithMouse */);
 
   // If there isn't one of those either, then let control be subject.
   if (!controlCandidate) {

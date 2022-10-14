@@ -9,11 +9,11 @@
  * behavior for the channel's IsPending(), forcing 'true' to be returned.
  */
 
-[noscript, uuid(2ac3e1ca-049f-44c3-a519-f0681f51e9b1)]
+[uuid(2ac3e1ca-049f-44c3-a519-f0681f51e9b1)]
 interface nsIForcePendingChannel : nsISupports
 {
 
-/**
+    /**
      * forcePending(true) overrides the normal behavior for the
      * channel's IsPending(), forcing 'true' to be returned. A call to
      * forcePending(false) reverts IsPending() back to normal behavior.

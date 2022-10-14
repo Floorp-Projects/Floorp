@@ -739,6 +739,11 @@ class AbuseReport extends HTMLElement {
   }
 
   get addonType() {
+    // TODO(Bug 1789718): Remove after the deprecated XPIProvider-based
+    // implementation is also removed.
+    if (this.addon?.type === "sitepermission-deprecated") {
+      return "sitepermission";
+    }
     return this.addon?.type;
   }
 
