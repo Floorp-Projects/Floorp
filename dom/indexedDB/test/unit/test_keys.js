@@ -267,58 +267,71 @@ function* testSteps() {
   event = yield undefined;
   is(event.target.result, null, "no more results expected");
 
-  var nan = 0 / 0;
+  // Note that nan is defined below as '0 / 0'.
   var invalidKeys = [
-    nan,
-    undefined,
-    null,
-    /x/,
-    {},
-    new Date(NaN),
-    new Date("foopy"),
-    [nan],
-    [undefined],
-    [null],
-    [/x/],
-    [{}],
-    [new Date(NaN)],
-    [1, nan],
-    [1, undefined],
-    [1, null],
-    [1, /x/],
-    [1, {}],
-    [1, [nan]],
-    [1, [undefined]],
-    [1, [null]],
-    [1, [/x/]],
-    [1, [{}]],
+    "nan",
+    "undefined",
+    "null",
+    "/x/",
+    "{}",
+    "new Date(NaN)",
+    'new Date("foopy")',
+    "[nan]",
+    "[undefined]",
+    "[null]",
+    "[/x/]",
+    "[{}]",
+    "[new Date(NaN)]",
+    "[1, nan]",
+    "[1, undefined]",
+    "[1, null]",
+    "[1, /x/]",
+    "[1, {}]",
+    "[1, [nan]]",
+    "[1, [undefined]]",
+    "[1, [null]]",
+    "[1, [/x/]]",
+    "[1, [{}]]",
+    "new Uint8Array(2147483647)",
   ];
 
   function checkInvalidKeyException(ex, i, callText) {
-    let suffix = ` during ${callText} with invalid key ${i}: "${invalidKeys[i]}"`;
+    let suffix = ` during ${callText} with invalid key ${i}: ${invalidKeys[i]}`;
     ok(ex instanceof DOMException, "Threw DOMException" + suffix);
     is(ex.name, "DataError", "Threw right DOMException" + suffix);
     is(ex.code, 0, "Threw with right code" + suffix);
   }
 
   for (i = 0; i < invalidKeys.length; ++i) {
+    let key_fn = Function(
+      `"use strict"; var nan = 0 / 0; let k = (${invalidKeys[i]}); return k;`
+    );
+    let key;
     try {
-      indexedDB.cmp(invalidKeys[i], 1);
+      key = key_fn();
+    } catch (e) {
+      // If we cannot instantiate the key, we are most likely on a 32 Bit
+      // platform with insufficient memory. Just skip it.
+      info("Key instantiation failed, skipping");
+      continue;
+    }
+    try {
+      indexedDB.cmp(key, 1);
       ok(false, "didn't throw");
     } catch (ex) {
-      checkInvalidKeyException(ex, i, "cmp(invalidKeys[i], 1)");
+      checkInvalidKeyException(ex, i, "cmp(key, 1)");
     }
     try {
-      indexedDB.cmp(1, invalidKeys[i]);
+      indexedDB.cmp(1, key);
       ok(false, "didn't throw2");
     } catch (ex) {
-      checkInvalidKeyException(ex, i, "cmp(1, invalidKeys[i])");
+      checkInvalidKeyException(ex, i, "cmp(1, key)");
     }
     try {
-      store.put(1, invalidKeys[i]);
+      store.put(1, key);
       ok(false, "didn't throw3");
     } catch (ex) {
-      checkInvalidKeyException(ex, i, "store.put(1, invalidKeys[i])");
+      checkInvalidKeyException(ex, i, "store.put(1, key)");
     }
   }
 
