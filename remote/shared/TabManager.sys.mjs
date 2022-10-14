@@ -268,6 +268,25 @@ export var TabManager = {
   },
 
   /**
+   * Retrieve the tab owning a Browsing Context.
+   *
+   * @param {BrowsingContext=} browsingContext
+   *     The browsing context to get the tab from.
+   *
+   * @returns {Tab|null}
+   *     The tab owning the Browsing Context.
+   */
+  getTabForBrowsingContext(browsingContext) {
+    const browser = browsingContext?.top.embedderElement;
+    if (!browser) {
+      return null;
+    }
+
+    const tabBrowser = this.getTabBrowser(browser.ownerGlobal);
+    return tabBrowser.getTabForBrowser(browser);
+  },
+
+  /**
    * Remove the given tab.
    *
    * @param {Tab} tab

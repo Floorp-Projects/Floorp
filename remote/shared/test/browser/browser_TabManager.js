@@ -127,3 +127,22 @@ add_task(async function test_addTab_window() {
     await BrowserTestUtils.closeWindow(win2);
   }
 });
+
+add_task(async function test_getTabForBrowsingContext() {
+  const tab = await TabManager.addTab();
+  try {
+    const browser = tab.linkedBrowser;
+
+    info(`Navigate to ${TEST_URL}`);
+    const loaded = BrowserTestUtils.browserLoaded(browser);
+    BrowserTestUtils.loadURI(browser, TEST_URL);
+    await loaded;
+
+    const contexts = browser.browsingContext.getAllBrowsingContextsInSubtree();
+    is(TabManager.getTabForBrowsingContext(contexts[0]), tab);
+    is(TabManager.getTabForBrowsingContext(contexts[1]), tab);
+    is(TabManager.getTabForBrowsingContext(null), null);
+  } finally {
+    gBrowser.removeTab(tab);
+  }
+});
