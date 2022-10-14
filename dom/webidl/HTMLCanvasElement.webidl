@@ -39,10 +39,6 @@ interface HTMLCanvasElement : HTMLElement {
 partial interface HTMLCanvasElement {
   [Pure, SetterThrows]
            attribute boolean mozOpaque;
-  // A Mozilla-only extension to get a canvas context backed by double-buffered
-  // shared memory. Only privileged callers can call this.
-  [ChromeOnly, Throws]
-  nsISupports? MozGetIPCContext(DOMString contextId);
 
            attribute PrintCallback? mozPrintCallback;
 

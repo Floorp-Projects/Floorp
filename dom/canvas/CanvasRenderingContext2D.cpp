@@ -1755,16 +1755,6 @@ void CanvasRenderingContext2D::UpdateIsOpaque() {
 }
 
 NS_IMETHODIMP
-CanvasRenderingContext2D::SetIsIPC(bool aIsIPC) {
-  if (aIsIPC != mIPC) {
-    mIPC = aIsIPC;
-    ClearTarget();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 CanvasRenderingContext2D::SetContextOptions(JSContext* aCx,
                                             JS::Handle<JS::Value> aOptions,
                                             ErrorResult& aRvForDictionaryInit) {

@@ -89,7 +89,6 @@ class ImageBitmapRenderingContext final
   virtual void MarkContextClean() override;
 
   NS_IMETHOD Redraw(const gfxRect& aDirty) override;
-  NS_IMETHOD SetIsIPC(bool aIsIPC) override;
 
   virtual void DidRefresh() override;
 
