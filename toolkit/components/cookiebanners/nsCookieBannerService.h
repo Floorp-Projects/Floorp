@@ -10,9 +10,12 @@
 #include "nsCOMPtr.h"
 #include "nsTHashMap.h"
 #include "nsIObserver.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 
 namespace mozilla {
+
+class CookieBannerDomainPrefService;
 
 class nsCookieBannerService final : public nsIObserver,
                                     public nsICookieBannerService {
@@ -32,6 +35,7 @@ class nsCookieBannerService final : public nsIObserver,
   bool mIsInitialized = false;
 
   nsCOMPtr<nsICookieBannerListService> mListService;
+  RefPtr<CookieBannerDomainPrefService> mDomainPrefService;
 
   // Map of site specific cookie banner rules keyed by domain.
   nsTHashMap<nsCStringHashKey, nsCOMPtr<nsICookieBannerRule>> mRules;

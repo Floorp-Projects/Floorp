@@ -23,11 +23,14 @@ interface nsICookieBannerService : nsISupports {
    * MODE_REJECT - Only handle banners where selecting "reject all" is possible.
    * MODE_REJECT_OR_ACCEPT - Prefer selecting "reject all", if not possible
    * fall back to "accept all".
+   * MODE_UNSET - This represents the service mode is unset, the setting should
+   * fall back to default setting. This is used for the per-domain preferences.
    */
   cenum Modes : 8 {
     MODE_DISABLED,
     MODE_REJECT,
     MODE_REJECT_OR_ACCEPT,
+    MODE_UNSET,
   };
 
   /**
@@ -66,4 +69,29 @@ interface nsICookieBannerService : nsISupports {
    * Remove a cookie banner rule.
    */
   void removeRule(in nsICookieBannerRule aRule);
+
+  /**
+   * Get the domain preference of the given top-level URI. It will return the
+   * service mode if there is a site preference for the given URI. Otherwise, it
+   * will return MODE_UNSET.
+   */
+  nsICookieBannerService_Modes getDomainPref(in nsIURI aTopLevelURI,
+                                             in boolean aIsPrivate);
+
+  /**
+   * Set the domain preference of the given top-level URI.
+   */
+  void setDomainPref(in nsIURI aTopLevelURI,
+                     in nsICookieBannerService_Modes aMode,
+                     in boolean aIsPrivate);
+
+  /**
+   * Remove the domain preference of the given top-level URI.
+   */
+  void removeDomainPref(in nsIURI aTopLevelURI, in boolean aIsPrivate);
+
+  /**
+   * Remove all domain preferences.
+   */
+  void removeAllDomainPrefs(in boolean aIsPrivate);
 };
