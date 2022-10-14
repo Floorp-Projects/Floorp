@@ -1186,6 +1186,37 @@ void WidgetKeyboardEvent::GetDOMCodeName(CodeNameIndex aCodeNameIndex,
   MOZ_RELEASE_ASSERT(
       static_cast<size_t>(aCodeNameIndex) < ArrayLength(kCodeNames),
       "Illegal physical code enumeration value");
+
+  // Generate some continuous runs of codes, rather than looking them up.
+  if (aCodeNameIndex >= CODE_NAME_INDEX_KeyA &&
+      aCodeNameIndex <= CODE_NAME_INDEX_KeyZ) {
+    uint32_t index = aCodeNameIndex - CODE_NAME_INDEX_KeyA;
+    aCodeName.AssignLiteral(u"Key");
+    aCodeName.Append(u'A' + index);
+    return;
+  }
+  if (aCodeNameIndex >= CODE_NAME_INDEX_Digit0 &&
+      aCodeNameIndex <= CODE_NAME_INDEX_Digit9) {
+    uint32_t index = aCodeNameIndex - CODE_NAME_INDEX_Digit0;
+    aCodeName.AssignLiteral(u"Digit");
+    aCodeName.AppendInt(index);
+    return;
+  }
+  if (aCodeNameIndex >= CODE_NAME_INDEX_Numpad0 &&
+      aCodeNameIndex <= CODE_NAME_INDEX_Numpad9) {
+    uint32_t index = aCodeNameIndex - CODE_NAME_INDEX_Numpad0;
+    aCodeName.AssignLiteral(u"Numpad");
+    aCodeName.AppendInt(index);
+    return;
+  }
+  if (aCodeNameIndex >= CODE_NAME_INDEX_F1 &&
+      aCodeNameIndex <= CODE_NAME_INDEX_F24) {
+    uint32_t index = aCodeNameIndex - CODE_NAME_INDEX_F1;
+    aCodeName.Assign(u'F');
+    aCodeName.AppendInt(index + 1);
+    return;
+  }
+
   aCodeName = kCodeNames[aCodeNameIndex];
 }
 
