@@ -48,26 +48,20 @@ For each crate:
    currently modified crate. Note that running `cargo update` (see next step)
    will fail if you missed updating a crate's dependency.
 2. Update the crate: `cargo update -p <crate name>`
-3. Commit the changes for the modified `Cargo.toml`, and `Cargo.lock`
-   (can be found in the repositories root folder). Use a commit message
-   like `Bug XYZ - [rust-<crate name>] Release version <version>.`
+3. We also publish audit information for the crates based on Mozilla's
+   [audit criteria], and that must be updated for each release. To do that run:
+
+       % ./mach cargo vet certify <name> <version> --force
+
+4. Commit the changes for the modified [Cargo.toml] files, [Cargo.lock] and the
+   [supply-chain/] folder, which can be found in the repositories root folder.
+   Use a commit message like `Bug XYZ - [rust-<name>] Release version <version>`.
 
 [semantic versioning rules]: https://semver.org/
-## Update libraries
-
-Make relevant changes to [Cargo.toml] to upgrade dependencies, then run
-
-    % ./mach vendor rust
-    % ./mach build testing/geckodriver
-
-to pull down and vendor the upgraded libraries.
-
-The updates to dependencies should always be made as a separate
-commit to not confuse reviewers, because vendoring involves checking
-in a lot of extra code already reviewed downstream.
-
+[audit criteria]: https://mozilla.github.io/cargo-vet/audit-criteria.html
 [Cargo.toml]: https://searchfox.org/mozilla-central/source/testing/geckodriver/Cargo.toml
 [Cargo.lock]: https://searchfox.org/mozilla-central/source/Cargo.lock
+[supply-chain/]: https://searchfox.org/mozilla-central/source/supply-chain
 
 ## Update the change log
 
@@ -83,6 +77,17 @@ It is good practice to also include relevant information from the
 [webdriver], [marionette], [rust-mozrunner], and [rust-mozdevice] crates,
 since these are the most important dependencies of geckodriver and a lot
 of its functionality is implemented there.
+
+To get a list of all the changes for one of the above crates the following
+Mercurial command can be used:
+
+    % hg log -M -r <revision>::central --template "{node|short}\t{desc|firstline}\n" <path>
+
+where `<revision>` is the changeset of the last geckodriver release and `<path>`
+the location of the crate in the repository.
+
+Add the list of changes to the related release bug on Bugzilla, and also check the
+dependency list of the bug for other fixes that are worth mentioning.
 
 We follow the writing style of the existing change log, with
 one section per version (with a release date), with subsections
@@ -147,18 +152,7 @@ and run the following command to publish the crate:
 Note that if a crate has an in-tree dependency make sure to first
 change the dependency information.
 
-We also publish audit information for the crates, and that must be
-updated for each release. To do that run:
-
-    % ./mach cargo vet certify <name> <version> --force
-
-where `<name>` is the name of the crate and `<version>` is the version of the
-crate that was published.
-
-Once the above steps are done for all published crates, create a single revision
-for the supply-chain changes.
-
-[audit criteria]: https://mozilla.github.io/cargo-vet/audit-criteria.html
+Do not release the geckodriver crate yet!
 
 ## Export to GitHub
 
@@ -240,7 +234,7 @@ geckodriver needs to be manually released on github.com. Therefore start to
 4. Find the signed geckodriver archives in the [taskcluster index] by
    replacing %changeset% with the full release changeset id. Rename the
    individual files so the basename looks like 'geckodriver-v%version%-%platform%'.
-   Upload them all, including the checksum files for both the Linux platforms.
+   Upload them all, including the checksum files for the Linux platforms.
 
 5. Before announcing the release on GitHub publish the geckodriver crate as well
    on crates.io by running `cargo publish` from the release branch.
@@ -252,5 +246,3 @@ geckodriver needs to be manually released on github.com. Therefore start to
 [dev-webdriver]: https://groups.google.com/a/mozilla.org/g/dev-webdriver
 
 Congratulations!  You’ve released geckodriver!
-
-[releases page]: https://github.com/mozilla/geckodriver/releases
