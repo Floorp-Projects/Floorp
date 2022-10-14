@@ -358,20 +358,7 @@ class TaskGraphGenerator:
             for t in full_task_graph.tasks.values()
             if t.attributes["kind"] == "docker-image"
         }
-        # include all tasks with `always_target` set
-        if parameters["tasks_for"] == "hg-push":
-            always_target_tasks = {
-                t.label
-                for t in full_task_graph.tasks.values()
-                if t.attributes.get("always_target")
-            }
-        else:
-            always_target_tasks = set()
-        logger.info(
-            "Adding %d tasks with `always_target` attribute"
-            % (len(always_target_tasks) - len(always_target_tasks & target_tasks))
-        )
-        requested_tasks = target_tasks | docker_image_tasks | always_target_tasks
+        requested_tasks = target_tasks | docker_image_tasks
         target_graph = full_task_graph.graph.transitive_closure(requested_tasks)
         target_task_graph = TaskGraph(
             {l: all_tasks[l] for l in target_graph.nodes}, target_graph
