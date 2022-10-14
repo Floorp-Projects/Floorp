@@ -7,6 +7,7 @@
 #ifndef DOM_FS_CHILD_FILESYSTEMMANAGER_H_
 #define DOM_FS_CHILD_FILESYSTEMMANAGER_H_
 
+#include <functional>
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -49,7 +50,9 @@ class FileSystemManager : public nsISupports {
 
   void Shutdown();
 
-  FileSystemManagerChild* Actor() const;
+  void BeginRequest(
+      std::function<void(const RefPtr<FileSystemManagerChild>&)>&& aSuccess,
+      std::function<void(nsresult)>&& aFailure);
 
   already_AddRefed<Promise> GetDirectory(ErrorResult& aRv);
 
