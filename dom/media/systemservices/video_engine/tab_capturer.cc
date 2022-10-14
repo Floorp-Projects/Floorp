@@ -250,7 +250,8 @@ void webrtc::DesktopDeviceInfoImpl::InitializeTabList() {
         std::ostringstream uniqueId;
         uniqueId << browserId;
         desktopTab->setUniqueIdName(uniqueId.str().c_str());
-        desktop_tab_list_[desktopTab->getTabBrowserId()] = desktopTab;
+        desktop_tab_list_[static_cast<intptr_t>(
+            desktopTab->getTabBrowserId())] = desktopTab;
         free(contentTitleUTF8);
       }
     }
