@@ -44,8 +44,8 @@ if (typeof module == "object") {
   });
   // eslint-disable-next-line mozilla/valid-lazy
   XPCOMUtils.defineLazyGetter(lazy, "validateEventBreakpoint", () => {
-    const { loader } = ChromeUtils.import(
-      "resource://devtools/shared/loader/Loader.jsm"
+    const { loader } = ChromeUtils.importESModule(
+      "resource://devtools/shared/loader/Loader.sys.mjs"
     );
     return loader.require(
       "resource://devtools/server/actors/utils/event-breakpoints.js"

@@ -3518,8 +3518,20 @@ static nscoord ComputeWhereToScroll(WhereToScroll aWhereToScroll,
 }
 
 static WhereToScroll GetApplicableWhereToScroll(
-    StyleScrollSnapAlignKeyword aAlign, WhereToScroll aOriginal) {
-  switch (aAlign) {
+    const nsIScrollableFrame* aFrameAsScrollable,
+    const nsIFrame* aScrollableFrame, const nsIFrame* aTarget,
+    ScrollDirection aScrollDirection, WhereToScroll aOriginal) {
+  MOZ_ASSERT(do_QueryFrame(aFrameAsScrollable) == aScrollableFrame);
+  if (aTarget == aScrollableFrame) {
+    return aOriginal;
+  }
+
+  StyleScrollSnapAlignKeyword align =
+      aScrollDirection == ScrollDirection::eHorizontal
+          ? aFrameAsScrollable->GetScrollSnapAlignFor(aTarget).first
+          : aFrameAsScrollable->GetScrollSnapAlignFor(aTarget).second;
+
+  switch (align) {
     case StyleScrollSnapAlignKeyword::None:
       return aOriginal;
     case StyleScrollSnapAlignKeyword::Start:
@@ -3541,6 +3553,7 @@ static WhereToScroll GetApplicableWhereToScroll(
  * This needs to work even if aRect has a width or height of zero.
  */
 static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
+                             const nsIFrame* aScrollableFrame,
                              const nsIFrame* aTarget, const nsRect& aRect,
                              const nsMargin& aMargin, ScrollAxis aVertical,
                              ScrollAxis aHorizontal, ScrollFlags aScrollFlags) {
@@ -3581,8 +3594,8 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
                             visibleRect.YMost() - padding.bottom)) {
       // If the scroll-snap-align on the frame is valid, we need to respect it.
       WhereToScroll whereToScroll = GetApplicableWhereToScroll(
-          aFrameAsScrollable->GetScrollSnapAlignFor(aTarget).second,
-          aVertical.mWhereToScroll);
+          aFrameAsScrollable, aScrollableFrame, aTarget,
+          ScrollDirection::eVertical, aVertical.mWhereToScroll);
 
       nscoord maxHeight;
       scrollPt.y = ComputeWhereToScroll(
@@ -3602,8 +3615,8 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
                             visibleRect.XMost() - padding.right)) {
       // If the scroll-snap-align on the frame is valid, we need to respect it.
       WhereToScroll whereToScroll = GetApplicableWhereToScroll(
-          aFrameAsScrollable->GetScrollSnapAlignFor(aTarget).first,
-          aHorizontal.mWhereToScroll);
+          aFrameAsScrollable, aScrollableFrame, aTarget,
+          ScrollDirection::eHorizontal, aHorizontal.mWhereToScroll);
 
       nscoord maxWidth;
       scrollPt.x = ComputeWhereToScroll(
@@ -3838,7 +3851,7 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
 
       {
         AutoWeakFrame wf(container);
-        ScrollToShowRect(sf, target, targetRect, aMargin, aVertical,
+        ScrollToShowRect(sf, container, target, targetRect, aMargin, aVertical,
                          aHorizontal, aScrollFlags);
         if (!wf.IsAlive()) {
           return didScroll;

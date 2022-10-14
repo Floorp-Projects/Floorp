@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        * {
+            scroll-snap-type: y mandatory;
+            scroll-snap-align: none end;
+        }
+    </style>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        document.documentElement.contentEditable = true
+        document.execCommand('insertHorizontalRule', false, null)
+      })
+    </script>
+</head>
+</html>

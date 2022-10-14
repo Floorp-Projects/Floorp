@@ -34,7 +34,7 @@
     get markup() {
       return `
       <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
-      <hbox flex="1">
+      <hbox part="drop-indicator-container">
         <vbox part="drop-indicator-bar" hidden="true">
           <image part="drop-indicator"/>
         </vbox>

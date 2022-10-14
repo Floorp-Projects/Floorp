@@ -9796,3 +9796,20 @@ bool nsWindow::ApplyEnterLeaveMutterWorkaround() {
   }
   return false;
 }
+
+void nsWindow::NotifyOcclusionState(mozilla::widget::OcclusionState aState) {
+  if (mWindowType != eWindowType_toplevel) {
+    return;
+  }
+
+  bool isFullyOccluded = aState == mozilla::widget::OcclusionState::OCCLUDED;
+  if (mIsFullyOccluded == isFullyOccluded) {
+    return;
+  }
+  mIsFullyOccluded = isFullyOccluded;
+
+  LOG("nsWindow::NotifyOcclusionState() mIsFullyOccluded %d", mIsFullyOccluded);
+  if (mWidgetListener) {
+    mWidgetListener->OcclusionStateChanged(mIsFullyOccluded);
+  }
+}

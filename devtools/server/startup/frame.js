@@ -27,15 +27,15 @@ try {
     let loader,
       customLoader = false;
     if (content.document.nodePrincipal.isSystemPrincipal) {
-      const { useDistinctSystemPrincipalLoader } = ChromeUtils.import(
-        "resource://devtools/shared/loader/Loader.jsm"
+      const { useDistinctSystemPrincipalLoader } = ChromeUtils.importESModule(
+        "resource://devtools/shared/loader/Loader.sys.mjs"
       );
       loader = useDistinctSystemPrincipalLoader(chromeGlobal);
       customLoader = true;
     } else {
       // Otherwise, use the shared loader.
-      loader = ChromeUtils.import(
-        "resource://devtools/shared/loader/Loader.jsm"
+      loader = ChromeUtils.importESModule(
+        "resource://devtools/shared/loader/Loader.sys.mjs"
       );
     }
     const { require } = loader;
@@ -180,8 +180,10 @@ try {
 
       // When debugging chrome pages, we initialized a dedicated loader, also destroy it
       if (customLoader) {
-        const { releaseDistinctSystemPrincipalLoader } = ChromeUtils.import(
-          "resource://devtools/shared/loader/Loader.jsm"
+        const {
+          releaseDistinctSystemPrincipalLoader,
+        } = ChromeUtils.importESModule(
+          "resource://devtools/shared/loader/Loader.sys.mjs"
         );
         releaseDistinctSystemPrincipalLoader(chromeGlobal);
       }

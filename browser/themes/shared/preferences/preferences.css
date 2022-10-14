@@ -352,7 +352,7 @@ checkbox {
 }
 
 #updateRadioGroup > radio {
-  height: 30px;
+  min-height: 30px;
   margin: 2px 0;
 }
 
@@ -1012,7 +1012,7 @@ image.update-throbber {
   background-color: #ffe900;
   color: #000;
   border: 1px solid #d7b600;
-  bottom: 36px;
+  margin-top: -18px;
   opacity: .85;
 }
 

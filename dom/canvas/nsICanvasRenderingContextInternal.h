@@ -202,16 +202,6 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   void DoSecurityCheck(nsIPrincipal* aPrincipal, bool forceWriteOnly,
                        bool CORSUsed);
 
-  //
-  // shmem support
-  //
-
-  // If this context can be set to use Mozilla's Shmem segments as its backing
-  // store, this will set it to that state. Note that if you have drawn
-  // anything into this canvas before changing the shmem state, it will be
-  // lost.
-  NS_IMETHOD SetIsIPC(bool isIPC) = 0;
-
  protected:
   RefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;
   RefPtr<mozilla::dom::OffscreenCanvas> mOffscreenCanvas;

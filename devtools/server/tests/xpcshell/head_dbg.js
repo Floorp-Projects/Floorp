@@ -17,8 +17,8 @@ appInfo.updateAppInfo({
   crashReporter: true,
 });
 
-const { require, loader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
+const { require, loader } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 const { worker } = ChromeUtils.import(
   "resource://devtools/shared/loader/worker-loader.js"

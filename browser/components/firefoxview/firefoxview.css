@@ -744,6 +744,16 @@ details[open] > .page-section-header > .twisty {
       "first third";
 }
 
+@media only screen and (max-width: 43rem) {
+  .synced-tabs-list {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "first"
+      "second"
+      "third";
+  }
+}
+
 .synced-tab-a,
 .synced-tab-li-placeholder {
   box-sizing: border-box;

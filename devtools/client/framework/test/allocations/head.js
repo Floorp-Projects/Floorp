@@ -8,12 +8,12 @@
 // This is especially important for allocation sites. We need to catch the global the
 // earliest possible in order to ensure that all allocation objects come with a stack.
 //
-// If we want to track DevTools module loader we should ensure loading Loader.jsm within
+// If we want to track DevTools module loader we should ensure loading Loader.sys.mjs within
 // the `testScript` Function. i.e. after having calling startRecordingAllocations.
 let tracker;
 {
-  const { DevToolsLoader } = ChromeUtils.import(
-    "resource://devtools/shared/loader/Loader.jsm"
+  const { DevToolsLoader } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/Loader.sys.mjs"
   );
   const loader = new DevToolsLoader({
     invisibleToDebugger: true,
@@ -86,8 +86,8 @@ async function startRecordingAllocations({
       gBrowser.selectedBrowser,
       [DEBUG_ALLOCATIONS],
       async debug_allocations => {
-        const { DevToolsLoader } = ChromeUtils.import(
-          "resource://devtools/shared/loader/Loader.jsm"
+        const { DevToolsLoader } = ChromeUtils.importESModule(
+          "resource://devtools/shared/loader/Loader.sys.mjs"
         );
         const loader = new DevToolsLoader({
           invisibleToDebugger: true,
@@ -140,8 +140,8 @@ async function stopRecordingAllocations(
       gBrowser.selectedBrowser,
       [DEBUG_ALLOCATIONS],
       debug_allocations => {
-        const { DevToolsLoader } = ChromeUtils.import(
-          "resource://devtools/shared/loader/Loader.jsm"
+        const { DevToolsLoader } = ChromeUtils.importESModule(
+          "resource://devtools/shared/loader/Loader.sys.mjs"
         );
         const { tracker } = DevToolsLoader;
         ok(
@@ -162,8 +162,8 @@ async function stopRecordingAllocations(
       );
       const objectNodeIds = TrackedObjects.getAllNodeIds();
       if (objectNodeIds.length) {
-        const { DevToolsLoader } = ChromeUtils.import(
-          "resource://devtools/shared/loader/Loader.jsm"
+        const { DevToolsLoader } = ChromeUtils.importESModule(
+          "resource://devtools/shared/loader/Loader.sys.mjs"
         );
         const { tracker } = DevToolsLoader;
         // Record the heap snapshot from the content process,

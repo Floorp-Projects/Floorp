@@ -6,8 +6,8 @@
  * Test encoding a simple message.
  */
 
-const { require } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
+const { require } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 
 const QR = require("resource://devtools/shared/qrcode/index.js");

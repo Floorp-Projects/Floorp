@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.0/">
+<ShortName>sov3</ShortName>
+<Description>Secure onion v3</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC</Image>
+<Url type="text/html" method="GET" template="http://ydemw5wg5cseltau22u4fjfrmfshopaldpoznsirb3rgo2gv6uh4s2y5.onion">
+  <Param name="q" value="{searchTerms}"/>
+</Url>
+<SearchForm>http://ydemw5wg5cseltau22u4fjfrmfshopaldpoznsirb3rgo2gv6uh4s2y5.onion/sov3</SearchForm>
+</OpenSearchDescription>

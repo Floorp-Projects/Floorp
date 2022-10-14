@@ -90,6 +90,32 @@ const openSearchEngineDescriptions = [
     searchUrl: "http://example.com/inu1?q=foo",
     updateUrl: null,
   },
+  {
+    file: "secure-localhost.xml",
+    name: "secure-localhost",
+    description: "Secure localhost",
+    searchForm: "http://localhost:8080/sl",
+    searchUrl: "http://localhost:8080/sl?q=foo",
+    updateUrl: null,
+  },
+  {
+    file: "secure-onionv2.xml",
+    name: "secure-onionv2",
+    description: "Secure onion v2",
+    searchForm: "http://s3zkf3ortukqklec.onion/sov2",
+    searchUrl: "http://s3zkf3ortukqklec.onion/sov2?q=foo",
+    updateUrl: null,
+  },
+  {
+    file: "secure-onionv3.xml",
+    name: "secure-onionv3",
+    description: "Secure onion v3",
+    searchForm:
+      "http://ydemw5wg5cseltau22u4fjfrmfshopaldpoznsirb3rgo2gv6uh4s2y5.onion/sov3",
+    searchUrl:
+      "http://ydemw5wg5cseltau22u4fjfrmfshopaldpoznsirb3rgo2gv6uh4s2y5.onion/sov3?q=foo",
+    updateUrl: null,
+  },
 ];
 
 async function verifyTelemetry(probeNameFragment, engineCount, type) {
@@ -120,7 +146,7 @@ add_task(async function setup() {
 });
 
 add_task(async function() {
-  verifyTelemetry("secure_opensearch_engine_count", 6, "secure");
+  verifyTelemetry("secure_opensearch_engine_count", 9, "secure");
   verifyTelemetry("insecure_opensearch_engine_count", 4, "insecure");
   verifyTelemetry("secure_opensearch_update_count", 4, "securely updated");
   verifyTelemetry("insecure_opensearch_update_count", 4, "insecurely updated");

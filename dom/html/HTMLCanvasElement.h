@@ -163,8 +163,6 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
 
     SetHTMLBoolAttr(nsGkAtoms::moz_opaque, aValue, aRv);
   }
-  already_AddRefed<nsISupports> MozGetIPCContext(const nsAString& aContextId,
-                                                 ErrorResult& aRv);
   PrintCallback* GetMozPrintCallback() const;
   void SetMozPrintCallback(PrintCallback* aCallback);
 
