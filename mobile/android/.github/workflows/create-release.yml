@@ -1,0 +1,40 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+#
+# This workflow triggers if .buildconfig.yml is changed on any of the
+# release branches. It will ask the relbot action to create a release.
+#
+# Currently relbot has a hard-coded "current A-C" version; there is no
+# relationship between what relbot does and on which branch the
+# .builconfig.yml is updated. If the updated branch does not match with
+# what relbot thinks is current, then nothing happens.
+#
+
+name: "Create Release"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  push:
+    branches:
+      - 'releases/**'
+    paths:
+      - '.buildconfig.yml'
+
+jobs:
+  main:
+    name: "Create Release"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: "Create Release"
+        uses: mozilla-mobile/relbot@1.0.0
+        if: github.repository == 'mozilla-mobile/android-components'
+        with:
+          project: android-components
+          command: create-releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
