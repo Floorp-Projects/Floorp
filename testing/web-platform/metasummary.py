@@ -231,7 +231,7 @@ def iter_tests(manifests):
 
 
 def add_manifest(target, path, metadata):
-    dir_name = os.path.dirname(path)
+    dir_name, file_name = path.rsplit(os.sep, 1)
     key = [dir_name]
 
     add_metadata(target, key, metadata)
@@ -241,6 +241,7 @@ def add_manifest(target, path, metadata):
     for test_metadata in metadata.children:
         key.append(test_metadata.name)
         add_metadata(target, key, test_metadata)
+        add_filename(target, key, file_name)
         key.append("_subtests")
         for subtest_metadata in test_metadata.children:
             key.append(subtest_metadata.name)
@@ -259,6 +260,15 @@ simple_props = [
     "bug",
 ]
 statuses = set(["CRASH"])
+
+
+def add_filename(target, key, filename):
+    for part in key:
+        if part not in target:
+            target[part] = {}
+        target = target[part]
+
+    target["_filename"] = filename
 
 
 def add_metadata(target, key, metadata):
