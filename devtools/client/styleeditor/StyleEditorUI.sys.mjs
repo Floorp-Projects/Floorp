@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { loader, require } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
-);
+import {
+  loader,
+  require,
+} from "resource://devtools/shared/loader/Loader.sys.mjs";
+
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 const {

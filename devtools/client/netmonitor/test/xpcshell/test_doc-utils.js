@@ -6,8 +6,8 @@
 "use strict";
 
 function run_test() {
-  const { require } = ChromeUtils.import(
-    "resource://devtools/shared/loader/Loader.jsm"
+  const { require } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/Loader.sys.mjs"
   );
   const MDN_URL = "https://developer.mozilla.org/docs/";
   const GTM_PARAMS_NM =

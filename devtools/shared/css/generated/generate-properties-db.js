@@ -9,8 +9,8 @@
  * as known by the platform. It is run from ./mach_commands.py by running
  * `mach devtools-css-db`.
  */
-var { require } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
+var { require } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 var {
   generateCssProperties,

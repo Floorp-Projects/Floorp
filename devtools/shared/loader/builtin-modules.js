@@ -15,8 +15,8 @@
  * they would also miss them.
  */
 
-const jsmScope = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
+const jsmScope = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 
 const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
@@ -208,7 +208,7 @@ exports.globals = {
     lazyGetter: defineLazyGetter,
     lazyServiceGetter: defineLazyServiceGetter,
     lazyRequireGetter,
-    // Defined by Loader.jsm
+    // Defined by Loader.sys.mjs
     id: null,
   },
   Localization,

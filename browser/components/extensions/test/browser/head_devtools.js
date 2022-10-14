@@ -11,18 +11,13 @@
      TOOLBOX_BLANK_PANEL_ID,
 */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "loader",
-  "resource://devtools/shared/loader/Loader.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  loader: "resource://devtools/shared/loader/Loader.sys.mjs",
+  DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
+});
 XPCOMUtils.defineLazyGetter(this, "gDevTools", () => {
   const { gDevTools } = loader.require("devtools/client/framework/devtools");
   return gDevTools;
-});
-
-ChromeUtils.defineESModuleGetters(this, {
-  DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
 });
 
 const TOOLBOX_BLANK_PANEL_ID = "testBlankPanel";

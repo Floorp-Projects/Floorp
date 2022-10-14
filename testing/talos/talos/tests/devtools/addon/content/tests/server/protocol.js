@@ -42,7 +42,7 @@ module.exports = async function() {
     "data:,(" +
       encodeURIComponent(
         `function () {
-      const { require } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
+      const { require } = ChromeUtils.importESModule("resource://devtools/shared/loader/Loader.sys.mjs");
 
       const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
       ActorRegistry.registerModule("damp-test/tests/server/actor.js", {

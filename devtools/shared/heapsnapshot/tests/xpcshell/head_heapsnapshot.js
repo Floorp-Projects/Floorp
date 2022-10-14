@@ -11,8 +11,8 @@
 
 var CC = Components.Constructor;
 
-const { require } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
+const { require } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 const { Match } = ChromeUtils.importESModule("resource://test/Match.sys.mjs");
 const { Census } = ChromeUtils.importESModule("resource://test/Census.sys.mjs");

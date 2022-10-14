@@ -400,8 +400,8 @@ function _setupDevToolsServer(breakpointFiles, callback) {
 
   let require;
   try {
-    ({ require } = ChromeUtils.import(
-      "resource://devtools/shared/loader/Loader.jsm"
+    ({ require } = ChromeUtils.importESModule(
+      "resource://devtools/shared/loader/Loader.sys.mjs"
     ));
   } catch (e) {
     throw new Error(

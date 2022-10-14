@@ -14,8 +14,8 @@ XPCOMUtils.defineLazyGetter(lazy, "DevToolsStartup", () => {
 // We don't want to spend time initializing the full loader here so we create
 // our own lazy require.
 XPCOMUtils.defineLazyGetter(lazy, "Telemetry", function() {
-  const { require } = ChromeUtils.import(
-    "resource://devtools/shared/loader/Loader.jsm"
+  const { require } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/Loader.sys.mjs"
   );
   // eslint-disable-next-line no-shadow
   const Telemetry = require("devtools/client/shared/telemetry");

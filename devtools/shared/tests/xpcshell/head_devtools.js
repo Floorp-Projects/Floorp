@@ -5,8 +5,8 @@
 
 "use strict";
 
-const { require, DevToolsLoader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
+const { require, DevToolsLoader } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 

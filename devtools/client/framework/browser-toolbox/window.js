@@ -4,8 +4,8 @@
 
 "use strict";
 
-var { loader, require, DevToolsLoader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
+var { loader, require, DevToolsLoader } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 
 // Require this module to setup core modules
