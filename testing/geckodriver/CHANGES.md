@@ -7,6 +7,8 @@ All notable changes to this program are documented in this file.
 
 ### Added
 
+- Native aarch64 builds of geckodriver for Linux and Windows are now available.
+
 - Support `wheel` input source for [Actions], which is associated with a
   wheel-type input device. This endpoint is supported by geckodriver when
   using Firefox version ≥106.
@@ -30,12 +32,16 @@ All notable changes to this program are documented in this file.
   a location that both Firefox and geckodriver have read/write access
   to e.g.:
 
+  ```bash
   % mkdir $HOME/tmp
   % geckodriver --profile-root=~/tmp
+  ```
 
   or
 
+  ```bash
   % TMPDIR=$HOME/tmp geckodriver
+  ```
 
   Alternatively, geckodriver may be used with a Firefox install that
   is not packaged inside a sandbox e.g. from [mozilla.org].
@@ -44,6 +50,13 @@ All notable changes to this program are documented in this file.
   is used from within a Snap confinement.
 
   Implemented by [Olivier Tilloy].
+
+- On MacOS the geckodriver binary is now technically both signed and notarized.
+
+  Note: The actual validation can only be performed if the machine that starts
+  the geckodriver binary for the very first time is online. You can find more
+  details on how to work around this issue in the [macOS notarization] section
+  of the documentation.
 
 - The backup of the original Firefox preferences are now correctly restored
   on Android when the WebDriver session ends.
