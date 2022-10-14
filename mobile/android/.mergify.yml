@@ -13,8 +13,8 @@ pull_request_rules:
     conditions:
       - author=MickeyMoz
       - status-success=complete-pr
-      - files~=^android-components/(Gecko.kt|components/lib/publicsuffixlist/src/main/assets/publicsuffixes)
-      - -files~=^(?!android-components/(Gecko.kt|components/lib/publicsuffixlist/src/main/assets/publicsuffixes)).+$
+      - files~=^android-components/(Gecko\.kt|components/lib/publicsuffixlist/src/main/assets/publicsuffixes)
+      - -files~=^(?!android-components/(Gecko\.kt|components/lib/publicsuffixlist/src/main/assets/publicsuffixes)).+$
     actions:
       review:
         type: APPROVE
@@ -27,8 +27,8 @@ pull_request_rules:
     conditions:
       - author~=(mozilla-l10n-automation-bot|github-actions\[bot\])
       - status-success=complete-pr
-      - files~=^android-components/(.+/strings.xml|l10n.toml)
-      - -files~=^(?!android-components/(.+/strings.xml|l10n.toml)).+$
+      - files~=^android-components/(.+/strings\.xml|l10n\.toml)
+      - -files~=^(?!android-components/(.+/strings\.xml|l10n\.toml)).+$
     actions:
       review:
         type: APPROVE
@@ -41,8 +41,8 @@ pull_request_rules:
     conditions:
       - author=github-actions[bot]
       - status-success=complete-pr
-      - files~=^android-components/(.buildconfig.yml|buildSrc/src/main/java/Gecko.kt)
-      - -files~=^(?!android-components/(.buildconfig.yml|buildSrc/src/main/java/Gecko.kt)).+$
+      - files~=^android-components/(\.buildconfig\.yml|buildSrc/src/main/java/Gecko\.kt)
+      - -files~=^(?!android-components/(\.buildconfig\.yml|buildSrc/src/main/java/Gecko\.kt)).+$
     actions:
       review:
         type: APPROVE
