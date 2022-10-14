@@ -123,10 +123,7 @@ class BrowsingContextModule extends Module {
       );
     }
 
-    const browser = context.embedderElement;
-    const tabBrowser = lazy.TabManager.getTabBrowser(browser.ownerGlobal);
-    const tab = tabBrowser.getTabForBrowser(browser);
-
+    const tab = lazy.TabManager.getTabForBrowsingContext(context);
     await lazy.TabManager.removeTab(tab);
   }
 
