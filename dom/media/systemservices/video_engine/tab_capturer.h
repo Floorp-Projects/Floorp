@@ -19,6 +19,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/TaskQueue.h"
 
 namespace mozilla {
 
@@ -52,6 +53,7 @@ class TabCapturerWebrtc : public webrtc::DesktopCapturer {
   using CapturePromise = MozPromise<RefPtr<dom::ImageBitmap>, nsresult, true>;
   RefPtr<CapturePromise> CaptureFrameNow();
 
+  const RefPtr<TaskQueue> mMainThreadWorker;
   webrtc::DesktopCapturer::Callback* mCallback = nullptr;
   uint64_t mBrowserId = 0;
 };
