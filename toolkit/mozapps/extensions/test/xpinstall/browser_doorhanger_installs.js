@@ -2,6 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// TODO(Bug 1789718): adapt to synthetic addon type implemented by the SitePermAddonProvider
+// or remove if redundant, after the deprecated XPIProvider-based implementation is also removed.
+
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
@@ -591,7 +594,7 @@ var TESTS = [
             action: "privateBrowsingAllowed",
             view: "postInstall",
             addonId: addon.id,
-            type: "sitepermission",
+            type: "sitepermission-deprecated",
           },
         },
       ],

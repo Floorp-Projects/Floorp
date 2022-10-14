@@ -1043,6 +1043,7 @@ image.update-throbber {
 }
 
 .search-tooltip > span {
+  display: block;
   user-select: none;
   white-space: nowrap;
   overflow: hidden;

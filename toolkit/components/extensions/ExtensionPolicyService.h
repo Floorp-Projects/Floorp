@@ -60,6 +60,12 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
     return do_AddRef(&GetSingleton());
   }
 
+  // Unlike the other methods on the ExtensionPolicyService, this method is
+  // threadsafe, and can look up a WebExtensionPolicyCore by hostname on any
+  // thread.
+  static RefPtr<extensions::WebExtensionPolicyCore> GetCoreByHost(
+      const nsACString& aHost);
+
   WebExtensionPolicy* GetByID(const nsAtom* aAddonId) {
     return mExtensions.GetWeak(aAddonId);
   }

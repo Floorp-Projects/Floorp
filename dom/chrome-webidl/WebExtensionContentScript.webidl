@@ -7,7 +7,7 @@ interface URI;
 interface WindowProxy;
 
 typedef (MatchPatternSet or sequence<DOMString>) MatchPatternSetOrStringSequence;
-typedef (MatchGlob or DOMString) MatchGlobOrString;
+typedef (MatchGlob or UTF8String) MatchGlobOrString;
 
 [ChromeOnly, Exposed=Window]
 interface MozDocumentMatcher {
@@ -73,21 +73,6 @@ interface MozDocumentMatcher {
    */
   [Constant]
   readonly attribute MatchPatternSet? excludeMatches;
-
-  /**
-   * A set of glob matchers for URLs in which this script should run. If this
-   * list is present, the script will only run in URLs which match the
-   * `matches` pattern as well as one of these globs.
-   */
-  [Cached, Constant, Frozen]
-  readonly attribute sequence<MatchGlob>? includeGlobs;
-
-  /**
-   * A set of glob matchers for URLs in which this script should not run, even
-   * if they match other include patterns or globs.
-   */
-  [Cached, Constant, Frozen]
-  readonly attribute sequence<MatchGlob>? excludeGlobs;
 
   /**
    * The originAttributesPattern for which this script should be enabled for.

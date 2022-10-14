@@ -468,12 +468,25 @@ add_task(async function test_MatchGlob() {
 });
 
 add_task(async function test_MatchGlob_redundant_wildcards_backtracking() {
+  const slow_build =
+    AppConstants.DEBUG || AppConstants.TSAN || AppConstants.ASAN;
+  const first_limit = slow_build ? 200 : 20;
   {
     // Bug 1570868 - repeated * in tabs.query glob causes too much backtracking.
     let title = `Monster${"*".repeat(99)}Mash`;
 
-    let start = Date.now();
+    // The first run could take longer than subsequent runs, as the DFA is lazily created.
+    let first_start = Date.now();
     let glob = new MatchGlob(title);
+    let first_matches = glob.matches(title);
+    let first_duration = Date.now() - first_start;
+    ok(first_matches, `Expected match: ${title}, ${title}`);
+    ok(
+      first_duration < first_limit,
+      `First matching duration: ${first_duration}ms (limit: ${first_limit}ms)`
+    );
+
+    let start = Date.now();
     let matches = glob.matches(title);
     let duration = Date.now() - start;
 
@@ -484,8 +497,18 @@ add_task(async function test_MatchGlob_redundant_wildcards_backtracking() {
     // Similarly with any continuous combination of ?**???****? wildcards.
     let title = `Monster${"?*".repeat(99)}Mash`;
 
-    let start = Date.now();
+    // The first run could take longer than subsequent runs, as the DFA is lazily created.
+    let first_start = Date.now();
     let glob = new MatchGlob(title);
+    let first_matches = glob.matches(title);
+    let first_duration = Date.now() - first_start;
+    ok(first_matches, `Expected match: ${title}, ${title}`);
+    ok(
+      first_duration < first_limit,
+      `First matching duration: ${first_duration}ms (limit: ${first_limit}ms)`
+    );
+
+    let start = Date.now();
     let matches = glob.matches(title);
     let duration = Date.now() - start;
 

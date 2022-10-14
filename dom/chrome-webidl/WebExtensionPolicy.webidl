@@ -176,14 +176,14 @@ interface WebExtensionPolicy {
    * URL root is listed as a web accessible path. Access checks on a path, such
    * as performed in nsScriptSecurityManager, use sourceMayAccessPath below.
    */
-  boolean isWebAccessiblePath(DOMString pathname);
+  boolean isWebAccessiblePath(UTF8String pathname);
 
   /**
    * Returns true if the given path relative to the extension's moz-extension:
    * URL root may be accessed by web content at sourceURI.  For Manifest V2,
    * sourceURI is ignored and the path must merely be listed as web accessible.
    */
-  boolean sourceMayAccessPath(URI sourceURI, DOMString pathname);
+  boolean sourceMayAccessPath(URI sourceURI, UTF8String pathname);
 
   /**
    * Replaces localization placeholders in the given string with localized

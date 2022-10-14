@@ -6,13 +6,9 @@ var stackTop = stackBottom;
 function nearNativeStackLimit() {
   function inner() {
     try {
-      // eslint-disable-next-line no-with
-      with ({}) {
-        // keep things predictable -- stay in the interpreter
-        stackTop = stackPointerInfo();
-        // eslint-disable-next-line no-eval
-        var stepsFromLimit = eval("inner()"); // Use eval to force a number of native stackframes to be created.
-      }
+      stackTop = stackPointerInfo();
+      // eslint-disable-next-line no-eval
+      var stepsFromLimit = eval("inner()"); // Use eval to force a number of native stackframes to be created.
       return stepsFromLimit + 1;
     } catch (e) {
       // It would be nice to check here that the exception is actually an

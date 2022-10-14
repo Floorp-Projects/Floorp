@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "featureTourProgress",
   "browser.firefox-view.feature-tour",
-  '{"message":"","screen":"","complete":true}',
+  '{"screen":"","complete":true}',
   _handlePrefChange,
   val => JSON.parse(val)
 );

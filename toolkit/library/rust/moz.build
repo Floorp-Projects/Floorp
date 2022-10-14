@@ -46,3 +46,9 @@ if CONFIG["CPU_ARCH"] != "x86":
 
 if CONFIG["MOZ_BITS_DOWNLOAD"]:
     RUST_TESTS += ["bits_client"]
+
+# Export the `rure` crate's included .h file. The symbols defined in that file
+# will be exported from the `gkrust-shared` crate.
+EXPORTS += [
+    "/third_party/rust/rure/include/rure.h",
+]

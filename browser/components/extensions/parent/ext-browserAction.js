@@ -36,6 +36,11 @@ ChromeUtils.defineModuleGetter(
   "BrowserUsageTelemetry",
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "OriginControls",
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
 
 var { DefaultWeakMap } = ExtensionUtils;
 
@@ -249,7 +254,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
         node.onmouseout = event => this.handleEvent(event);
         node.onauxclick = event => this.handleEvent(event);
 
-        this.updateButton(node, this.action.getContextData(null), true);
+        this.updateButton(node, this.action.getContextData(null), true, false);
       },
 
       onBeforeCommand: event => {
@@ -566,11 +571,13 @@ this.browserAction = class extends ExtensionAPIPersistent {
 
   // Update the toolbar button |node| with the tab context data
   // in |tabData|.
-  updateButton(node, tabData, sync = false) {
+  updateButton(node, tabData, sync = false, attention = false) {
     let title = tabData.title || this.extension.name;
     let callback = () => {
       node.setAttribute("tooltiptext", title);
       node.setAttribute("label", title);
+
+      node.setAttribute("attention", attention);
 
       if (tabData.badgeText) {
         node.setAttribute("badge", tabData.badgeText);
@@ -640,7 +647,12 @@ this.browserAction = class extends ExtensionAPIPersistent {
     let node = this.widget.forWindow(window).node;
     if (node) {
       let tab = window.gBrowser.selectedTab;
-      this.updateButton(node, this.action.getContextData(tab));
+      this.updateButton(
+        node,
+        this.action.getContextData(tab),
+        false,
+        OriginControls.getAttention(this.extension.policy, window)
+      );
     }
   }
 

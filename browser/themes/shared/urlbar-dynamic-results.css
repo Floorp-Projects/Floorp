@@ -152,10 +152,11 @@
   display: flex;
   flex-grow: 1;
   gap: 0.9em 1.8em;
-  max-width: calc(100% - 32px);
+  /** parent width - help button width - gap to help button */
+  max-width: calc(100% - 28px - 1.8em);
 }
 
-#urlbar[searchmode] .urlbarView-row[dynamicType=quickactions] .urlbarView-dynamic-quickactions-buttons {
+#urlbar[searchmodesource=actions] .urlbarView-row[dynamicType=quickactions] .urlbarView-dynamic-quickactions-buttons {
   flex-wrap: wrap;
 }
 
@@ -172,6 +173,7 @@
   margin-top: 2px;
   position: relative;
   overflow: hidden;
+  min-width: 16px;
 }
 
 .urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row[disabled] {
@@ -211,5 +213,5 @@
 }
 
 .urlbarView-row[dynamicType=quickactions] .urlbarView-title {
-  display: flex
+  display: flex;
 }

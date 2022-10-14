@@ -35,6 +35,10 @@ EXPORTS += [
     "nsUTF8Utils.h",
 ]
 
+EXPORTS.mozilla += [
+    "RustRegex.h",
+]
+
 UNIFIED_SOURCES += [
     "nsASCIIMask.cpp",
     "nsReadableUtils.cpp",

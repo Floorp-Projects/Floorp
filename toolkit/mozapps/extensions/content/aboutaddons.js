@@ -1728,7 +1728,10 @@ class CategoryButton extends HTMLButtonElement {
   }
 
   get isVisible() {
-    return true;
+    // Make a category button visible only if the related addon type is
+    // supported by the AddonManager Providers actually registered to
+    // the AddonManager.
+    return AddonManager.hasAddonType(this.name);
   }
 
   get badgeCount() {

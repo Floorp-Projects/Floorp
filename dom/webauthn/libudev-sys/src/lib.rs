@@ -74,6 +74,7 @@ impl Drop for Library {
 }
 
 unsafe impl Sync for Library {}
+unsafe impl Send for Library {}
 
 lazy_static! {
   static ref LIBRARY: Library = {
@@ -108,7 +109,8 @@ impl<T> ops::Deref for Symbol<T> {
   }
 }
 
-unsafe impl<T: Sync> Sync for Symbol<T> {}
+unsafe impl<T: Sync + Send> Sync for Symbol<T> {}
+unsafe impl<T: Sync + Send> Send for Symbol<T> {}
 
 macro_rules! define {
   ($name:ident, $type:ty) => {

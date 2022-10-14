@@ -131,7 +131,6 @@ add_task(async function test_CLICK_ELEMENT() {
   SpecialPowers.pushPrefEnv([
     "browser.firefox-view.feature-tour",
     JSON.stringify({
-      message: "",
       screen: "",
       complete: true,
     }),
