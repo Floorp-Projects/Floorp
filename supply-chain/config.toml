@@ -110,6 +110,10 @@ notes = "This is a first-party crate which is also published to crates.io, but w
 audit-as-crates-io = true
 notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
 
+[policy.mozversion]
+audit-as-crates-io = true
+notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
+
 [policy.naga]
 audit-as-crates-io = true
 notes = "wgpu-core pins this crate."
