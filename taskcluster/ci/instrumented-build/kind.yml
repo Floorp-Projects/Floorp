@@ -48,7 +48,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             platform: linux32-shippable/opt
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         run:
             config:
                 - builds/releng_base_firefox.py
@@ -78,7 +78,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             platform: linux64-shippable/opt
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         run:
             config:
                 - builds/releng_base_firefox.py
@@ -104,7 +104,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             platform: osx-shippable/opt
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         worker:
             docker-image: {in-tree: debian11-amd64-build}
             max-run-time: 7200
@@ -144,7 +144,7 @@ jobs:
         shipping-product: fennec
         treeherder:
             platform: android-5-0-x86/pgo
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         worker:
             docker-image: {in-tree: android-build}
             env:
@@ -200,7 +200,7 @@ jobs:
         shipping-product: fennec
         treeherder:
             platform: android-5-0-x86_64/pgo
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         worker:
             docker-image: {in-tree: android-build}
             env:
@@ -254,7 +254,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             platform: windows2012-32-shippable/opt
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         worker:
             docker-image: {in-tree: debian11-amd64-build}
         run:
@@ -297,7 +297,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             platform: windows2012-64-shippable/opt
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         worker:
             docker-image: {in-tree: debian11-amd64-build}
         run:
