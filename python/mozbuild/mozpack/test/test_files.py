@@ -935,8 +935,8 @@ class TestMinifiedJavaScript(TestWithTmpDir):
         errors.out = sys.stderr
         self.assertEqual(
             output,
-            "Warning: JS minification verification failed for <unknown>:\n"
-            "Warning: Error message\n",
+            "warning: JS minification verification failed for <unknown>:\n"
+            "warning: Error message\n",
         )
         self.assertEqual(mini_lines, orig_f.open().readlines())
 

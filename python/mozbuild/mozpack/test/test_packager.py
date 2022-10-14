@@ -445,7 +445,7 @@ class TestSimplePackager(unittest.TestCase):
 
         self.assertEqual(
             str(e.exception),
-            'Error: "bar/baz.manifest" is included from "base.manifest", '
+            'error: "bar/baz.manifest" is included from "base.manifest", '
             'which is outside "bar"',
         )
 
@@ -468,7 +468,7 @@ class TestSimplePackager(unittest.TestCase):
 
         self.assertEqual(
             str(e.exception),
-            'Error: "bar/baz.manifest" is included from "base.manifest", '
+            'error: "bar/baz.manifest" is included from "base.manifest", '
             'which is outside "bar"',
         )
 
