@@ -550,6 +550,17 @@ spotlight:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
+fxms-message-1:
+  description: "A Firefox Messaging System message"
+  owner: omc@mozilla.com
+  hasExposure: true
+  exposureDescription: >-
+    "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
+  isEarlyStartup: false
+  schema:
+    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+  variables: {}
 pbNewtab:
   description: "A Firefox Messaging System message for the pbNewtab message channel"
   owner: omc@mozilla.com
