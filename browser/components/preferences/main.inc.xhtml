@@ -103,17 +103,14 @@
                   preference="privacy.userContext.enabled"/>
         <label id="browserContainersLearnMore" is="text-link" class="learnMore" data-l10n-id="browser-containers-learn-more"/>
         <spacer flex="1"/>
-        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-        <hbox>
-          <button id="browserContainersSettings"
-                  is="highlightable-button"
-                  class="accessory-button"
-                  data-l10n-id="browser-containers-settings"
-                  search-l10n-ids="containers-add-button.label,
-                    containers-settings-button.label,
-                    containers-remove-button.label"
-                  />
-        </hbox>
+        <button id="browserContainersSettings"
+                is="highlightable-button"
+                class="accessory-button"
+                data-l10n-id="browser-containers-settings"
+                search-l10n-ids="containers-add-button.label,
+                  containers-settings-button.label,
+                  containers-remove-button.label"
+                />
       </hbox>
     </vbox>
 </groupbox>
@@ -171,28 +168,26 @@
 <groupbox id="colorsGroup" data-category="paneGeneral" hidden="true">
   <label><html:h2 data-l10n-id="preferences-colors-header"/></label>
 
-  <hbox id="colorsSettings">
-    <hbox align="center" flex="1">
-      <description flex="1" control="colors" data-l10n-id="preferences-colors-description"/>
-      <button id="colors"
-              is="highlightable-button"
-              class="accessory-button"
-              data-l10n-id="preferences-colors-manage-button"
-              search-l10n-ids="
-                colors-page-override,
-                colors-page-override-option-always.label,
-                colors-page-override-option-auto.label,
-                colors-page-override-option-never.label,
-                colors-text-and-background,
-                colors-text-header,
-                colors-background,
-                colors-use-system,
-                colors-underline-links,
-                colors-links-header,
-                colors-unvisited-links,
-                colors-visited-links
-              "/>
-    </hbox>
+  <hbox id="colorsSettings" align="center" flex="1">
+    <description flex="1" control="colors" data-l10n-id="preferences-colors-description"/>
+    <button id="colors"
+            is="highlightable-button"
+            class="accessory-button"
+            data-l10n-id="preferences-colors-manage-button"
+            search-l10n-ids="
+              colors-page-override,
+              colors-page-override-option-always.label,
+              colors-page-override-option-auto.label,
+              colors-page-override-option-never.label,
+              colors-text-and-background,
+              colors-text-header,
+              colors-background,
+              colors-use-system,
+              colors-underline-links,
+              colors-links-header,
+              colors-unvisited-links,
+              colors-visited-links
+            "/>
   </hbox>
 </groupbox>
 
@@ -203,95 +198,86 @@
   <hbox id="fontSettings">
     <hbox align="center" flex="1">
       <label control="defaultFont" data-l10n-id="default-font"/>
-      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-      <hbox flex="1">
-        <menulist id="defaultFont" flex="1" delayprefsave="true"/>
-      </hbox>
+      <menulist id="defaultFont" flex="1" delayprefsave="true"/>
       <label id="defaultFontSizeLabel" control="defaultFontSize" data-l10n-id="default-font-size"></label>
-      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-      <hbox>
-        <menulist id="defaultFontSize" delayprefsave="true">
-          <menupopup>
-            <menuitem value="9" label="9"/>
-            <menuitem value="10" label="10"/>
-            <menuitem value="11" label="11"/>
-            <menuitem value="12" label="12"/>
-            <menuitem value="13" label="13"/>
-            <menuitem value="14" label="14"/>
-            <menuitem value="15" label="15"/>
-            <menuitem value="16" label="16"/>
-            <menuitem value="17" label="17"/>
-            <menuitem value="18" label="18"/>
-            <menuitem value="20" label="20"/>
-            <menuitem value="22" label="22"/>
-            <menuitem value="24" label="24"/>
-            <menuitem value="26" label="26"/>
-            <menuitem value="28" label="28"/>
-            <menuitem value="30" label="30"/>
-            <menuitem value="32" label="32"/>
-            <menuitem value="34" label="34"/>
-            <menuitem value="36" label="36"/>
-            <menuitem value="40" label="40"/>
-            <menuitem value="44" label="44"/>
-            <menuitem value="48" label="48"/>
-            <menuitem value="56" label="56"/>
-            <menuitem value="64" label="64"/>
-            <menuitem value="72" label="72"/>
-          </menupopup>
-        </menulist>
-      </hbox>
+      <menulist id="defaultFontSize" delayprefsave="true">
+        <menupopup>
+          <menuitem value="9" label="9"/>
+          <menuitem value="10" label="10"/>
+          <menuitem value="11" label="11"/>
+          <menuitem value="12" label="12"/>
+          <menuitem value="13" label="13"/>
+          <menuitem value="14" label="14"/>
+          <menuitem value="15" label="15"/>
+          <menuitem value="16" label="16"/>
+          <menuitem value="17" label="17"/>
+          <menuitem value="18" label="18"/>
+          <menuitem value="20" label="20"/>
+          <menuitem value="22" label="22"/>
+          <menuitem value="24" label="24"/>
+          <menuitem value="26" label="26"/>
+          <menuitem value="28" label="28"/>
+          <menuitem value="30" label="30"/>
+          <menuitem value="32" label="32"/>
+          <menuitem value="34" label="34"/>
+          <menuitem value="36" label="36"/>
+          <menuitem value="40" label="40"/>
+          <menuitem value="44" label="44"/>
+          <menuitem value="48" label="48"/>
+          <menuitem value="56" label="56"/>
+          <menuitem value="64" label="64"/>
+          <menuitem value="72" label="72"/>
+        </menupopup>
+      </menulist>
     </hbox>
 
-    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-    <hbox>
-      <button id="advancedFonts"
-              is="highlightable-button"
-              class="accessory-button"
-              data-l10n-id="advanced-fonts"
-              search-l10n-ids="
-                fonts-window.title,
-                fonts-langgroup-header,
-                fonts-proportional-size,
-                fonts-proportional-header,
-                fonts-serif,
-                fonts-sans-serif,
-                fonts-monospace,
-                fonts-langgroup-arabic.label,
-                fonts-langgroup-armenian.label,
-                fonts-langgroup-bengali.label,
-                fonts-langgroup-simpl-chinese.label,
-                fonts-langgroup-trad-chinese-hk.label,
-                fonts-langgroup-trad-chinese.label,
-                fonts-langgroup-cyrillic.label,
-                fonts-langgroup-devanagari.label,
-                fonts-langgroup-ethiopic.label,
-                fonts-langgroup-georgian.label,
-                fonts-langgroup-el.label,
-                fonts-langgroup-gujarati.label,
-                fonts-langgroup-gurmukhi.label,
-                fonts-langgroup-japanese.label,
-                fonts-langgroup-hebrew.label,
-                fonts-langgroup-kannada.label,
-                fonts-langgroup-khmer.label,
-                fonts-langgroup-korean.label,
-                fonts-langgroup-latin.label,
-                fonts-langgroup-malayalam.label,
-                fonts-langgroup-math.label,
-                fonts-langgroup-odia.label,
-                fonts-langgroup-sinhala.label,
-                fonts-langgroup-tamil.label,
-                fonts-langgroup-telugu.label,
-                fonts-langgroup-thai.label,
-                fonts-langgroup-tibetan.label,
-                fonts-langgroup-canadian.label,
-                fonts-langgroup-other.label,
-                fonts-minsize,
-                fonts-minsize-none.label,
-                fonts-default-serif.label,
-                fonts-default-sans-serif.label,
-                fonts-allow-own.label,
-              " />
-    </hbox>
+    <button id="advancedFonts"
+            is="highlightable-button"
+            class="accessory-button"
+            data-l10n-id="advanced-fonts"
+            search-l10n-ids="
+              fonts-window.title,
+              fonts-langgroup-header,
+              fonts-proportional-size,
+              fonts-proportional-header,
+              fonts-serif,
+              fonts-sans-serif,
+              fonts-monospace,
+              fonts-langgroup-arabic.label,
+              fonts-langgroup-armenian.label,
+              fonts-langgroup-bengali.label,
+              fonts-langgroup-simpl-chinese.label,
+              fonts-langgroup-trad-chinese-hk.label,
+              fonts-langgroup-trad-chinese.label,
+              fonts-langgroup-cyrillic.label,
+              fonts-langgroup-devanagari.label,
+              fonts-langgroup-ethiopic.label,
+              fonts-langgroup-georgian.label,
+              fonts-langgroup-el.label,
+              fonts-langgroup-gujarati.label,
+              fonts-langgroup-gurmukhi.label,
+              fonts-langgroup-japanese.label,
+              fonts-langgroup-hebrew.label,
+              fonts-langgroup-kannada.label,
+              fonts-langgroup-khmer.label,
+              fonts-langgroup-korean.label,
+              fonts-langgroup-latin.label,
+              fonts-langgroup-malayalam.label,
+              fonts-langgroup-math.label,
+              fonts-langgroup-odia.label,
+              fonts-langgroup-sinhala.label,
+              fonts-langgroup-tamil.label,
+              fonts-langgroup-telugu.label,
+              fonts-langgroup-thai.label,
+              fonts-langgroup-tibetan.label,
+              fonts-langgroup-canadian.label,
+              fonts-langgroup-other.label,
+              fonts-minsize,
+              fonts-minsize-none.label,
+              fonts-default-serif.label,
+              fonts-default-sans-serif.label,
+              fonts-allow-own.label,
+            " />
   </hbox>
 </groupbox>
 
@@ -301,12 +287,9 @@
 
   <hbox id="zoomBox" align="center" hidden="true">
     <label control="defaultZoom" data-l10n-id="preferences-default-zoom"/>
-    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-    <hbox>
-      <menulist id="defaultZoom">
-        <menupopup/>
-      </menulist>
-    </hbox>
+    <menulist id="defaultZoom">
+      <menupopup/>
+    </menulist>
   </hbox>
 
   <checkbox id="zoomText"
@@ -337,22 +320,19 @@
 
   <hbox id="languagesBox" align="center">
     <description flex="1" control="chooseLanguage" data-l10n-id="choose-language-description"/>
-    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-    <hbox>
-      <button id="chooseLanguage"
-              is="highlightable-button"
-              class="accessory-button"
-              data-l10n-id="choose-button"
-              search-l10n-ids="
-                webpage-languages-window2.title,
-                languages-description,
-                languages-customize-moveup.label,
-                languages-customize-movedown.label,
-                languages-customize-remove.label,
-                languages-customize-select-language.placeholder,
-                languages-customize-add.label,
-              " />
-    </hbox>
+    <button id="chooseLanguage"
+            is="highlightable-button"
+            class="accessory-button"
+            data-l10n-id="choose-button"
+            search-l10n-ids="
+              webpage-languages-window2.title,
+              languages-description,
+              languages-customize-moveup.label,
+              languages-customize-movedown.label,
+              languages-customize-remove.label,
+              languages-customize-select-language.placeholder,
+              languages-customize-add.label,
+            " />
   </hbox>
 
   <checkbox id="useSystemLocale" hidden="true"
@@ -485,18 +465,15 @@
     </vbox>
 #ifdef MOZ_UPDATER
     <spacer flex="1"/>
-    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-    <vbox>
-      <button id="showUpdateHistory"
-              is="highlightable-button"
-              class="accessory-button"
-              data-l10n-id="update-history"
-              preference="app.update.disable_button.showUpdateHistory"
-              search-l10n-ids="
-                history-title,
-                history-intro
-              "/>
-    </vbox>
+    <button id="showUpdateHistory"
+            is="highlightable-button"
+            class="accessory-button"
+            data-l10n-id="update-history"
+            preference="app.update.disable_button.showUpdateHistory"
+            search-l10n-ids="
+              history-title,
+              history-intro
+            "/>
 #endif
   </hbox>
 #ifdef MOZ_UPDATER
@@ -778,36 +755,33 @@
       <separator orient="vertical"/>
     </hbox>
 
-    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-    <hbox>
-      <button id="connectionSettings"
-              is="highlightable-button"
-              class="accessory-button"
-              data-l10n-id="network-proxy-connection-settings"
-              searchkeywords="doh trr"
-              search-l10n-ids="
-                connection-window2.title,
-                connection-proxy-option-no.label,
-                connection-proxy-option-auto.label,
-                connection-proxy-option-system.label,
-                connection-proxy-option-manual.label,
-                connection-proxy-http,
-                connection-proxy-https,
-                connection-proxy-http-port,
-                connection-proxy-socks,
-                connection-proxy-socks4,
-                connection-proxy-socks5,
-                connection-proxy-noproxy,
-                connection-proxy-noproxy-desc,
-                connection-proxy-https-sharing.label,
-                connection-proxy-autotype.label,
-                connection-proxy-reload.label,
-                connection-proxy-autologin.label,
-                connection-proxy-socks-remote-dns.label,
-                connection-dns-over-https.label,
-                connection-dns-over-https-url-custom.label,
-            " />
-    </hbox>
+    <button id="connectionSettings"
+            is="highlightable-button"
+            class="accessory-button"
+            data-l10n-id="network-proxy-connection-settings"
+            searchkeywords="doh trr"
+            search-l10n-ids="
+              connection-window2.title,
+              connection-proxy-option-no.label,
+              connection-proxy-option-auto.label,
+              connection-proxy-option-system.label,
+              connection-proxy-option-manual.label,
+              connection-proxy-http,
+              connection-proxy-https,
+              connection-proxy-http-port,
+              connection-proxy-socks,
+              connection-proxy-socks4,
+              connection-proxy-socks5,
+              connection-proxy-noproxy,
+              connection-proxy-noproxy-desc,
+              connection-proxy-https-sharing.label,
+              connection-proxy-autotype.label,
+              connection-proxy-reload.label,
+              connection-proxy-autologin.label,
+              connection-proxy-socks-remote-dns.label,
+              connection-dns-over-https.label,
+              connection-dns-over-https-url-custom.label,
+          " />
   </hbox>
 </groupbox>
 </html:template>

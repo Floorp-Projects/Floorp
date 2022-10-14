@@ -25,14 +25,10 @@
     <groupbox id="defaultEngineGroup" data-category="paneSearch" hidden="true">
       <label><html:h2 data-l10n-id="search-engine-default-header" /></label>
       <description data-l10n-id="search-engine-default-desc-2" />
-
       <hbox>
-        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-        <hbox>
-          <menulist id="defaultEngine">
-            <menupopup/>
-          </menulist>
-        </hbox>
+        <menulist id="defaultEngine">
+          <menupopup/>
+        </menulist>
       </hbox>
       <checkbox id="browserSeparateDefaultEngine"
                 data-l10n-id="search-separate-default-engine"
@@ -40,12 +36,9 @@
       <vbox id="browserPrivateEngineSelection" class="indent" hidden="true">
         <description data-l10n-id="search-engine-default-private-desc-2" />
         <hbox>
-          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-          <hbox>
-            <menulist id="defaultPrivateEngine">
-              <menupopup/>
-            </menulist>
-          </hbox>
+          <menulist id="defaultPrivateEngine">
+            <menupopup/>
+          </menulist>
         </hbox>
       </vbox>
     </groupbox>
@@ -100,22 +93,19 @@
                 data-l10n-id="search-remove-engine"
                 disabled="true"
                 />
-        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-        <hbox>
-          <button id="addEngineButton"
-                  is="highlightable-button"
-                  class="searchEngineAction"
-                  hidden="true"
-                  data-l10n-id="search-add-engine"
-                  search-l10n-ids="
-                    add-engine-button,
-                    add-engine-name,
-                    add-engine-alias,
-                    add-engine-url,
-                    add-engine-dialog.buttonlabelaccept,
-                  "
-                  />
-        </hbox>
+        <button id="addEngineButton"
+                is="highlightable-button"
+                class="searchEngineAction"
+                hidden="true"
+                data-l10n-id="search-add-engine"
+                search-l10n-ids="
+                  add-engine-button,
+                  add-engine-name,
+                  add-engine-alias,
+                  add-engine-url,
+                  add-engine-dialog.buttonlabelaccept,
+                "
+                />
       </hbox>
       <hbox id="addEnginesBox" pack="start">
         <label id="addEngines" data-l10n-id="search-find-more-link" is="text-link"></label>

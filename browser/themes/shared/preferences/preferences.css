@@ -1012,7 +1012,7 @@ image.update-throbber {
   background-color: #ffe900;
   color: #000;
   border: 1px solid #d7b600;
-  bottom: 36px;
+  margin-top: -18px;
   opacity: .85;
 }
 
