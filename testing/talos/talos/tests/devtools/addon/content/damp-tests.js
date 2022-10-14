@@ -33,7 +33,7 @@ module.exports = {
   [TEST_SUITES.INSPECTOR]: [
     // The first cold-open test is *colder* than the other cold-open tests, it will also
     // assess the impact of loading shared DevTools modules for the first time.
-    // This test will assert the impact of base loader/Loader.jsm modules loading,
+    // This test will assert the impact of base loader/Loader.sys.mjs modules loading,
     // typically gDevtools/gDevToolsBrowser/Framework modules, while the others will mostly
     // track panel-specific modules (Browser loader, but not only).
     {

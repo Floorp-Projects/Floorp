@@ -25,8 +25,8 @@ add_task(async function() {
   // Register a test actor in the child process so that we can know if and when
   // this fake actor is destroyed.
   await SpecialPowers.spawn(browser, [], () => {
-    const { require } = ChromeUtils.import(
-      "resource://devtools/shared/loader/Loader.jsm"
+    const { require } = ChromeUtils.importESModule(
+      "resource://devtools/shared/loader/Loader.sys.mjs"
     );
     const {
       DevToolsServer,

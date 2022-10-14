@@ -50,9 +50,9 @@ In more detail:
 
 Example:
 
-* File: `/devtools/shared/loader/Loader.jsm`
+* File: `/devtools/shared/loader/Loader.sys.mjs`
 * Usage:
-  * `const { loader } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm")`
+  * `const { loader } = ChromeUtils.importESModule("resource://devtools/shared/loader/Loader.sys.mjs")`
 
 Example:
 

@@ -14,8 +14,8 @@ const TEST_URL_2 =
 add_task(async function() {
   const browser = await addTab(TEST_URL_1);
   await SpecialPowers.spawn(browser, [TEST_URL_2], async function(url2) {
-    const { require } = ChromeUtils.import(
-      "resource://devtools/shared/loader/Loader.jsm"
+    const { require } = ChromeUtils.importESModule(
+      "resource://devtools/shared/loader/Loader.sys.mjs"
     );
     const {
       HighlighterEnvironment,

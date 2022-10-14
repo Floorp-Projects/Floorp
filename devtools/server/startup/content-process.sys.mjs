@@ -16,11 +16,13 @@ export function initContentProcessTarget(msg) {
   const prefix = msg.data.prefix;
   const watcherActorID = msg.data.watcherActorID;
 
-  // Lazy load Loader.jsm to prevent loading any devtools dependency too early.
+  // Lazy load Loader.sys.mjs to prevent loading any devtools dependency too early.
   const {
     useDistinctSystemPrincipalLoader,
     releaseDistinctSystemPrincipalLoader,
-  } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
+  } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/Loader.sys.mjs"
+  );
 
   // Use a unique object to identify this one usage of the loader
   const loaderRequester = {};

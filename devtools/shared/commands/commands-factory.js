@@ -7,8 +7,8 @@
 const {
   createCommandsDictionary,
 } = require("resource://devtools/shared/commands/index.js");
-const { DevToolsLoader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
+const { DevToolsLoader } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 loader.lazyRequireGetter(
   this,

@@ -6,7 +6,9 @@
 const {
   useDistinctSystemPrincipalLoader,
   releaseDistinctSystemPrincipalLoader,
-} = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
+} = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
+);
 
 function run_test() {
   const requester = {},

@@ -5,8 +5,8 @@
 "use strict";
 
 add_task(function() {
-  const { DevToolsLoader, require } = ChromeUtils.import(
-    "resource://devtools/shared/loader/Loader.jsm"
+  const { DevToolsLoader, require } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/Loader.sys.mjs"
   );
 
   // Force-load the module once in the global loader to avoid Bug 1622718.

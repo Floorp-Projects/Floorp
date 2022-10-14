@@ -25,7 +25,7 @@ declare namespace MockedExports {
     "resource://gre/modules/AppConstants.jsm": typeof import("resource://gre/modules/AppConstants.jsm");
     "resource:///modules/CustomizableUI.jsm": typeof import("resource:///modules/CustomizableUI.jsm");
     "resource:///modules/CustomizableWidgets.jsm": typeof import("resource:///modules/CustomizableWidgets.jsm");
-    "resource://devtools/shared/loader/Loader.jsm": typeof import("resource://devtools/shared/loader/Loader.jsm");
+    "resource://devtools/shared/loader/Loader.sys.mjs": typeof import("resource://devtools/shared/loader/Loader.sys.mjs");
     "resource://devtools/client/performance-new/popup/background.jsm.js": typeof import("resource://devtools/client/performance-new/popup/background.jsm.js");
     "resource://devtools/shared/loader/browser-loader.js": any;
     "resource://devtools/client/performance-new/popup/menu-button.jsm.js": typeof import("devtools/client/performance-new/popup/menu-button.jsm.js");
@@ -46,7 +46,9 @@ declare namespace MockedExports {
      * Then add the file path to the KnownModules above.
      */
     import: <S extends keyof KnownModules>(module: S) => KnownModules[S];
+    importESModule: <S extends keyof KnownModules>(module: S) => KnownModules[S];
     defineModuleGetter: (target: any, variable: string, path: string) => void;
+    defineESModuleGetters: (target: any, mappings: any) => void;
   }
 
   interface MessageManager {
@@ -221,7 +223,7 @@ declare namespace MockedExports {
   const CustomizableWidgetsJSM: any;
   const PanelMultiViewJSM: any;
 
-  const LoaderJSM: {
+  const LoaderESM: {
     require: (path: string) => any;
   };
 
@@ -362,8 +364,8 @@ declare module "resource:///modules/PanelMultiView.jsm" {
   export = MockedExports.PanelMultiViewJSM;
 }
 
-declare module "resource://devtools/shared/loader/Loader.jsm" {
-  export = MockedExports.LoaderJSM;
+declare module "resource://devtools/shared/loader/Loader.sys.mjs" {
+  export = MockedExports.LoaderESM;
 }
 
 declare var ChromeUtils: MockedExports.ChromeUtils;

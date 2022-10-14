@@ -5,8 +5,8 @@
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 
-const { require } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
+const { require } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 
 const Store = require("resource://devtools/client/responsive/store.js");

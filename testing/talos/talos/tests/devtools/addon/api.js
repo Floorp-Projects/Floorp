@@ -12,12 +12,12 @@ this.damp = class extends ExtensionAPI {
           // The DAMP loader needs to be same loader as the one used by the
           // toolbox later on. Otherwise, we will not retrieve the proper
           // instance of some modules.
-          // The main devtools loader is the exported `loader` from Loader.jsm,
+          // The main devtools loader is the exported `loader` from Loader.sys.mjs,
           // we have to use that.
 
           dump("[damp-api] Retrieve the main DevTools loader\n");
-          const { loader, require } = ChromeUtils.import(
-            "resource://devtools/shared/loader/Loader.jsm"
+          const { loader, require } = ChromeUtils.importESModule(
+            "resource://devtools/shared/loader/Loader.sys.mjs"
           );
 
           const { rootURI } = context.extension;
@@ -28,7 +28,7 @@ this.damp = class extends ExtensionAPI {
             .QueryInterface(Ci.nsIResProtocolHandler);
 
           // Serve testing/talos/talos/tests/devtools/addon/ via "resource://damp-test"
-          // Loader.jsm will map `require("damp-test/...")` to `resource://damp-test/content/...`
+          // Loader.sys.mjs will map `require("damp-test/...")` to `resource://damp-test/content/...`
           // Thus allowing to load damp files from the content folder via the DevTools loader.
           protocolHandler.setSubstitution("damp-test", dampRootDir);
 

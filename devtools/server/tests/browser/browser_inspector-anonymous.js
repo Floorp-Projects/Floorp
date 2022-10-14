@@ -62,8 +62,8 @@ async function testNativeAnonymousStartingNode(walker) {
     gBrowser.selectedBrowser,
     [[walker.actorID]],
     async function(actorID) {
-      const { require } = ChromeUtils.import(
-        "resource://devtools/shared/loader/Loader.jsm"
+      const { require } = ChromeUtils.importESModule(
+        "resource://devtools/shared/loader/Loader.sys.mjs"
       );
       const {
         DevToolsServer,

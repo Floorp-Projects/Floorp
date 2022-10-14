@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { DevToolsLoader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
+const { DevToolsLoader } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 const { DevToolsSocketStatus } = ChromeUtils.importESModule(
   "resource://devtools/shared/security/DevToolsSocketStatus.sys.mjs"
