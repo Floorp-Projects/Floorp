@@ -2138,7 +2138,7 @@ Element* nsFocusManager::FlushAndCheckIfFocusable(Element* aElement,
       }
 
       if (Element* firstFocusable =
-              root->GetFirstFocusable(aFlags & FLAG_BYMOUSE)) {
+              root->GetFocusDelegate(aFlags & FLAG_BYMOUSE)) {
         return firstFocusable;
       }
     }
