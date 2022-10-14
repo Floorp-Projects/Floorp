@@ -4815,15 +4815,14 @@ void ClientWebGLContext::VertexAttribPointerImpl(bool isFuncInt, GLuint index,
 // -------------------------------- Drawing -------------------------------
 
 void ClientWebGLContext::DrawArraysInstanced(GLenum mode, GLint first,
-                                             GLsizei count, GLsizei primcount,
-                                             FuncScopeId) {
+                                             GLsizei count, GLsizei primcount) {
   Run<RPROC(DrawArraysInstanced)>(mode, first, count, primcount);
   AfterDrawCall();
 }
 
 void ClientWebGLContext::DrawElementsInstanced(GLenum mode, GLsizei count,
                                                GLenum type, WebGLintptr offset,
-                                               GLsizei primcount, FuncScopeId) {
+                                               GLsizei primcount) {
   Run<RPROC(DrawElementsInstanced)>(mode, count, type, offset, primcount);
   AfterDrawCall();
 }
