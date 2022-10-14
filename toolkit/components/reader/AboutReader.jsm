@@ -1035,17 +1035,18 @@ AboutReader.prototype = {
 
     this._titleElement.textContent = article.title;
 
+    // TODO: Once formatRange() and selectRange() are available outside Nightly,
+    // use them here. https://bugzilla.mozilla.org/show_bug.cgi?id=1795317
     const slow = article.readingTimeMinsSlow;
     const fast = article.readingTimeMinsFast;
+    const fastStr = lazy.numberFormat.format(fast);
+    const slowStr = lazy.numberFormat.format(slow);
     this._doc.l10n.setAttributes(
       this._readTimeElement,
       "about-reader-estimated-read-time",
       {
-        range: lazy.numberFormat.formatRange(fast, slow),
-        rangePlural:
-          slow === fast
-            ? lazy.pluralRules.select(fast) // workaround for https://github.com/tc39/proposal-intl-numberformat-v3/issues/64
-            : lazy.pluralRules.selectRange(fast, slow),
+        range: fastStr === slowStr ? `~${fastStr}` : `${fastStr}–${slowStr}`,
+        rangePlural: lazy.pluralRules.select(slow),
       }
     );
 
