@@ -350,9 +350,12 @@ nsresult RangeUpdater::SelAdjSplitNode(nsIContent& aOriginalContent,
 
 nsresult RangeUpdater::SelAdjJoinNodes(
     const EditorRawDOMPoint& aStartOfRightContent,
-    const nsIContent& aRemovedContent, uint32_t aExOffsetOfRightContent,
+    const nsIContent& aRemovedContent,
+    const EditorDOMPoint& aOldPointAtRightContent,
     JoinNodesDirection aJoinNodesDirection) {
   MOZ_ASSERT(aStartOfRightContent.IsSetAndValid());
+  MOZ_ASSERT(aOldPointAtRightContent.IsSet());  // Invalid point in most cases
+  MOZ_ASSERT(aOldPointAtRightContent.HasOffset());
 
   if (mLocked) {
     // lock set by Will/DidReplaceParent, etc...
@@ -365,15 +368,34 @@ nsresult RangeUpdater::SelAdjJoinNodes(
 
   auto AdjustDOMPoint = [&](nsCOMPtr<nsINode>& aContainer,
                             uint32_t& aOffset) -> void {
-    if (aContainer == aStartOfRightContent.GetContainerParent()) {
+    // FYI: Typically, containers of aOldPointAtRightContent and
+    //      aStartOfRightContent are same.  They are different when one of the
+    //      node was moved to somewhere and they are joined by undoing splitting
+    //      a node.
+    if (aContainer == &aRemovedContent) {
+      // If the point is in the removed content, move the point to the new
+      // point in the joined node.  If left node content is moved into
+      // right node, the offset should be same.  Otherwise, we need to advance
+      // the offset to length of the removed content.
+      aContainer = aStartOfRightContent.GetContainer();
+      if (aJoinNodesDirection == JoinNodesDirection::RightNodeIntoLeftNode) {
+        aOffset += aStartOfRightContent.Offset();
+      }
+    }
+    // TODO: If aOldPointAtRightContent.GetContainer() was in aRemovedContent,
+    //       we fail to adjust container and offset here because we need to
+    //       make point to where aRemoveContent was.  However, collecting all
+    //       ancestors of the right content may be expensive.  What's the best
+    //       approach to fix this?
+    else if (aContainer == aOldPointAtRightContent.GetContainer()) {
       // If the point is in common parent of joined content nodes and it
       // pointed after the right content node, decrease the offset.
-      if (aOffset > aExOffsetOfRightContent) {
+      if (aOffset > aOldPointAtRightContent.Offset()) {
         aOffset--;
       }
       // If it pointed the right content node, adjust it to point ex-first
       // content of the right node.
-      else if (aOffset == aExOffsetOfRightContent) {
+      else if (aOffset == aOldPointAtRightContent.Offset()) {
         aContainer = aStartOfRightContent.GetContainer();
         aOffset = aStartOfRightContent.Offset();
       }
@@ -381,15 +403,6 @@ nsresult RangeUpdater::SelAdjJoinNodes(
       // If the point is in joined node, and removed content is moved to
       // start of the joined node, we need to adjust the offset.
       if (aJoinNodesDirection == JoinNodesDirection::LeftNodeIntoRightNode) {
-        aOffset += aStartOfRightContent.Offset();
-      }
-    } else if (aContainer == &aRemovedContent) {
-      // If the point is in the removed content, move the point to the new
-      // point in the joined node.  If left node content is moved into
-      // right node, the offset should be same.  Otherwise, we need to advance
-      // the offset to length of the removed content.
-      aContainer = aStartOfRightContent.GetContainer();
-      if (aJoinNodesDirection == JoinNodesDirection::RightNodeIntoLeftNode) {
         aOffset += aStartOfRightContent.Offset();
       }
     }

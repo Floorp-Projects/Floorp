@@ -489,6 +489,7 @@ class EditorDOMPointBase final {
   bool IsNextCharCollapsibleNBSP() const;
   bool IsNextCharCollapsibleASCIISpaceOrNBSP() const;
 
+  [[nodiscard]] bool HasOffset() const { return mOffset.isSome(); }
   uint32_t Offset() const {
     if (mOffset.isSome()) {
       MOZ_ASSERT(mOffset.isSome());

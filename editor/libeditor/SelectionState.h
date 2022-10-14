@@ -239,12 +239,13 @@ class MOZ_STACK_CLASS RangeUpdater final {
    *                                in aRemovedContent.  And this points where
    *                                the joined position.
    * @param aRemovedContent         The removed content.
-   * @param aExOffsetOfRightContent The offset which the container of
-   *                                aStartOfRightContent was in its parent.
+   * @param aOldPointAtRightContent The point where the right content node was
+   *                                before joining them.  The offset must have
+   *                                been initialized before the joining.
    */
   nsresult SelAdjJoinNodes(const EditorRawDOMPoint& aStartOfRightContent,
                            const nsIContent& aRemovedContent,
-                           uint32_t aExOffsetOfRightContent,
+                           const EditorDOMPoint& aOldPointAtRightContent,
                            JoinNodesDirection aJoinNodesDirection);
   void SelAdjInsertText(const dom::Text& aTextNode, uint32_t aOffset,
                         uint32_t aInsertedLength);
