@@ -102,7 +102,7 @@ class mozHunspellCallbacks {
   /**
    * Reader-writer lock for the sFileMgrMap
    */
-  static mozilla::detail::StaticRWLock sFileMgrMapLock;
+  static mozilla::StaticRWLock sFileMgrMapLock;
   /**
    * Tracks the next possibly unused id for sFileMgrMap
    */
