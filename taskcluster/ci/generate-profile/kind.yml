@@ -33,7 +33,7 @@ jobs:
             job-name: linux-profile
         treeherder:
             platform: linux32-shippable/opt
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         worker:
             chain-of-trust: true
             env:
@@ -64,7 +64,7 @@ jobs:
             job-name: linux64-profile
         treeherder:
             platform: linux64-shippable/opt
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         worker:
             chain-of-trust: true
             env:
