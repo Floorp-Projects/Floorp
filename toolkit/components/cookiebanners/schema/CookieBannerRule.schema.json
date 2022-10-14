@@ -27,7 +27,6 @@
         "path": {
           "title": "Path",
           "type": "string",
-          "default": "/",
           "description": "The path pertaining to the cookie."
         },
         "expiryRelative": {
@@ -53,7 +52,6 @@
             1,
             2
           ],
-          "default": 0,
           "description": "The SameSite attribute. See nsICookie.idl."
         },
         "isSession": {
@@ -83,7 +81,7 @@
     "id": {
       "title": "ID",
       "type": "string",
-      "description": "Unique identifier of the rule. This should match the domain field."
+      "description": "Unique identifier of the rule."
     },
     "domain": {
       "title": "Domain",
@@ -150,6 +148,10 @@
           "presence"
         ]
       }
+    },
+    "filter_expression": {
+      "type": "string",
+      "description": "This is NOT used by the cookie banner handling feature, but has special functionality in Remote Settings. See https://remote-settings.readthedocs.io/en/latest/target-filters.html#how"
     }
   },
   "description": "Rule containing instructions on how to handle a cookie banner on a specific site."
