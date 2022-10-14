@@ -228,8 +228,7 @@ class ClientWebGLExtensionInstancedArrays : public ClientWebGLExtensionBase {
       AutoJsWarning("drawElementsInstancedANGLE: Extension is `invalidated`.");
       return;
     }
-    mContext->DrawElementsInstanced(mode, count, type, offset, primcount,
-                                    FuncScopeId::drawElementsInstanced);
+    mContext->DrawElementsInstanced(mode, count, type, offset, primcount);
   }
   void VertexAttribDivisorANGLE(GLuint index, GLuint divisor) {
     if (MOZ_UNLIKELY(!mContext)) {
