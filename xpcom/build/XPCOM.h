@@ -127,7 +127,6 @@
 
 #ifdef MOZ_WIDGET_COCOA
 #  include "nsILocalFileMac.h"
-#  include "nsIMacUtils.h"
 #endif
 
 // xpcom/glue utility headers
