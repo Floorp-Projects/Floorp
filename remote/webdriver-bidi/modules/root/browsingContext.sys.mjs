@@ -17,6 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
+  pprint: "chrome://remote/content/shared/Format.sys.mjs",
   ProgressListener: "chrome://remote/content/shared/Navigate.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   waitForInitialNavigationCompleted:
@@ -131,6 +132,11 @@ class BrowsingContextModule extends Module {
    * Create a new browsing context using the provided type "tab" or "window".
    *
    * @param {Object=} options
+   * @param {string=} options.referenceContext
+   *     Id of the top-level browsing context to use as reference.
+   *     If options.type is "tab", the new tab will open in the same window as
+   *     the reference context, and will be added next to the reference context.
+   *     If options.type is "window", the reference context is ignored.
    * @param {CreateType} options.type
    *     Type of browsing context to create.
    *
@@ -140,7 +146,7 @@ class BrowsingContextModule extends Module {
    *     If the browsing context cannot be found.
    */
   async create(options = {}) {
-    const { type } = options;
+    const { referenceContext: referenceContextId = null, type } = options;
     if (type !== CreateType.tab && type !== CreateType.window) {
       throw new lazy.error.InvalidArgumentError(
         `Expected "type" to be one of ${Object.values(CreateType)}, got ${type}`
@@ -160,7 +166,38 @@ class BrowsingContextModule extends Module {
             `browsingContext.create with type "tab" not supported in ${lazy.AppInfo.name}`
           );
         }
-        let tab = await lazy.TabManager.addTab({ focus: false });
+
+        let referenceTab;
+        if (referenceContextId !== null) {
+          lazy.assert.string(
+            referenceContextId,
+            lazy.pprint`Expected "referenceContext" to be a string, got ${referenceContextId}`
+          );
+
+          const referenceBrowsingContext = lazy.TabManager.getBrowsingContextById(
+            referenceContextId
+          );
+          if (!referenceBrowsingContext) {
+            throw new lazy.error.NoSuchFrameError(
+              `Browsing Context with id ${referenceContextId} not found`
+            );
+          }
+
+          if (referenceBrowsingContext.parent) {
+            throw new lazy.error.InvalidArgumentError(
+              `referenceContext with id ${referenceContextId} is not a top-level browsing context`
+            );
+          }
+
+          referenceTab = lazy.TabManager.getTabForBrowsingContext(
+            referenceBrowsingContext
+          );
+        }
+
+        const tab = await lazy.TabManager.addTab({
+          focus: false,
+          referenceTab,
+        });
         browser = lazy.TabManager.getBrowserForTab(tab);
     }
 
