@@ -78,8 +78,6 @@ mozharness_run_schema = Schema(
         # If true, taskcluster proxy will be enabled; note that it may also be enabled
         # automatically e.g., for secrets support.  Not supported on Windows.
         Required("taskcluster-proxy"): bool,
-        # If true, the build scripts will start Xvfb.  Not supported on Windows.
-        Required("need-xvfb"): bool,
         # If false, indicate that builds should skip producing artifacts.  Not
         # supported on Windows.
         Required("keep-artifacts"): bool,
@@ -107,7 +105,6 @@ mozharness_defaults = {
     "tooltool-downloads": False,
     "secrets": False,
     "taskcluster-proxy": False,
-    "need-xvfb": False,
     "keep-artifacts": True,
     "requires-signed-builds": False,
     "use-simple-package": True,
@@ -202,12 +199,6 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         env["DIST_TARGET_UPLOADS"] = ""
         env["DIST_UPLOADS"] = ""
 
-    # Xvfb
-    if run.pop("need-xvfb"):
-        env["NEED_XVFB"] = "true"
-    else:
-        env["NEED_XVFB"] = "false"
-
     # Retry if mozharness returns TBPL_RETRY
     worker["retry-exit-status"] = [4]
 
@@ -240,9 +231,6 @@ def mozharness_on_generic_worker(config, job, taskdesc):
 
     # fail if invalid run options are included
     invalid = []
-    for prop in ["need-xvfb"]:
-        if prop in run and run.pop(prop):
-            invalid.append(prop)
     if not run.pop("keep-artifacts", True):
         invalid.append("keep-artifacts")
     if invalid:

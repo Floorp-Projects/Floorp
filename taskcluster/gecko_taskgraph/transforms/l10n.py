@@ -387,8 +387,6 @@ def make_job_description(config, jobs):
             job_description["worker"]["os"] = "windows"
             job_description["run"]["use-simple-package"] = False
             job_description["run"]["use-magic-mh-args"] = False
-        else:
-            job_description["run"]["need-xvfb"] = True
 
         if job.get("docker-image"):
             job_description["worker"]["docker-image"] = job["docker-image"]

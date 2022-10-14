@@ -33,7 +33,6 @@ linux64/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
-        need-xvfb: true
     run-on-projects: ['integration']
     use-sccache: true
     fetches:
@@ -192,7 +191,6 @@ linux64-gcc/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: true
     fetches:
         toolchain:
@@ -278,7 +276,6 @@ linux64-fuzzing/debug:
         custom-build-variant-cfg: fuzzing-debug
         mozconfig-variant: debug-fuzzing
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: true
     fetches:
         toolchain:
@@ -324,7 +321,6 @@ linux64-fuzzing-noopt/debug:
         custom-build-variant-cfg: fuzzing-debug
         mozconfig-variant: debug-fuzzing-noopt
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: true
     fetches:
         toolchain:
@@ -372,7 +368,6 @@ linux64/debug:
         custom-build-variant-cfg: debug
         mozconfig-variant: debug
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: true
     fetches:
         toolchain:
@@ -421,7 +416,6 @@ linux64/codeql-cpp:
         custom-build-variant-cfg: debug
         mozconfig-variant: debug
         tooltool-downloads: public
-        need-xvfb: true
     run-on-projects: []
     fetches:
         fetch:
@@ -524,7 +518,6 @@ linux64-devedition/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
-        need-xvfb: true
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
     fetches:
@@ -564,7 +557,6 @@ linux/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
-        need-xvfb: true
     run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr102']
     use-sccache: true
     fetches:
@@ -607,7 +599,6 @@ linux/debug:
         custom-build-variant-cfg: debug
         mozconfig-variant: debug
         tooltool-downloads: public
-        need-xvfb: true
     run-on-projects: ['release']
     use-sccache: true
     fetches:
@@ -743,7 +734,6 @@ linux-devedition/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
-        need-xvfb: true
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
     fetches:
@@ -790,7 +780,6 @@ linux-shippable/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
-        need-xvfb: true
     run-on-projects: ['release']
     fetches:
         toolchain:
@@ -832,7 +821,6 @@ linux-reproduced/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
-        need-xvfb: true
     # Original comment: Limited to trunk until bug 1596350 is fixed.
     # Addendum: Do not run on autoland, Bug 1599197
     run-on-projects: ['mozilla-central', 'comm-central']
@@ -876,7 +864,6 @@ linux64-reproduced/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
-        need-xvfb: true
     # Original comment: Limited to trunk until bug 1596350 is fixed.
     # Addendum: Do not run on autoland, Bug 1599197
     run-on-projects: ['mozilla-central', 'comm-central']
@@ -917,7 +904,6 @@ linux64-asan/opt:
         custom-build-variant-cfg: asan-tc
         mozconfig-variant: nightly-asan
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: true
     fetches:
         toolchain:
@@ -958,7 +944,6 @@ linux64-tsan/opt:
         custom-build-variant-cfg: tsan-tc
         mozconfig-variant: tsan
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: true
     fetches:
         toolchain:
@@ -1002,7 +987,6 @@ linux64-tsan-fuzzing/opt:
         custom-build-variant-cfg: fuzzing-tsan-tc
         mozconfig-variant: tsan-fuzzing
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: true
     fetches:
         toolchain:
@@ -1048,7 +1032,6 @@ linux64-asan-fuzzing/noopt:
         custom-build-variant-cfg: fuzzing-asan-tc
         mozconfig-variant: nightly-fuzzing-asan-noopt
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: true
     fetches:
         toolchain:
@@ -1096,7 +1079,6 @@ linux64-asan-fuzzing-nyx/opt:
         custom-build-variant-cfg: fuzzing-asan-tc
         mozconfig-variant: nightly-fuzzing-asan-nyx
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: true
     fetches:
         toolchain:
@@ -1143,7 +1125,6 @@ linux64-asan-fuzzing/opt:
         custom-build-variant-cfg: fuzzing-asan-tc
         mozconfig-variant: nightly-fuzzing-asan
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: true
     fetches:
         toolchain:
@@ -1189,7 +1170,6 @@ linux64-asan-fuzzing-ccov/opt:
         secrets: true
         mozconfig-variant: asan-fuzzing-ccov
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: false
     fetches:
         toolchain:
@@ -1230,7 +1210,6 @@ linux64-fuzzing-ccov/opt:
         secrets: true
         mozconfig-variant: fuzzing-ccov
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: false
     fetches:
         toolchain:
@@ -1283,7 +1262,6 @@ linux64-asan-reporter-shippable/opt:
         custom-build-variant-cfg: asan-reporter-tc
         mozconfig-variant: nightly-asan-reporter
         tooltool-downloads: public
-        need-xvfb: true
         mar-channel-id:
             firefox-mozilla-central-asan
         accepted-mar-channel-ids:
@@ -1325,7 +1303,6 @@ linux64-asan/debug:
         custom-build-variant-cfg: asan-tc-and-debug
         mozconfig-variant: debug-asan
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: true
     fetches:
         toolchain:
@@ -1379,7 +1356,6 @@ linux64-shippable/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
-        need-xvfb: true
     fetches:
         toolchain:
             - linux64-binutils
@@ -1418,7 +1394,6 @@ linux64-noopt/debug:
         mozconfig-variant: noopt-debug
         tooltool-downloads: public
         keep-artifacts: false
-        need-xvfb: true
     run-on-projects: ['mozilla-central']
     use-sccache: true
     fetches:
@@ -1549,7 +1524,6 @@ linux64-ccov/opt:
         custom-build-variant-cfg: code-coverage-opt
         mozconfig-variant: code-coverage-opt
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: false
     fetches:
         toolchain:
@@ -1590,7 +1564,6 @@ linux64-ccov/debug:
         custom-build-variant-cfg: code-coverage-debug
         mozconfig-variant: code-coverage-debug
         tooltool-downloads: public
-        need-xvfb: true
     use-sccache: false
     fetches:
         toolchain:
@@ -1628,7 +1601,6 @@ linux64-add-on-devel/opt:
         custom-build-variant-cfg: add-on-devel
         mozconfig-variant: add-on-devel
         tooltool-downloads: public
-        need-xvfb: true
     run-on-projects: ['mozilla-beta', 'mozilla-release']
     use-sccache: true
     fetches:
@@ -1671,7 +1643,6 @@ linux64-aarch64/opt:
         secrets: true
         mozconfig-variant: opt
         tooltool-downloads: public
-        need-xvfb: true
     run-on-projects: ['integration']
     fetches:
         toolchain:

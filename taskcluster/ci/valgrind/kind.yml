@@ -33,6 +33,7 @@ jobs:
             docker-image: {in-tree: valgrind-build}
             max-run-time: 72000
             env:
+                NEED_XVFB: "true"
                 PERFHERDER_EXTRA_OPTIONS: valgrind
         run:
             using: mozharness
@@ -46,7 +47,6 @@ jobs:
             script: "mozharness/scripts/fx_desktop_build.py"
             secrets: true
             tooltool-downloads: public
-            need-xvfb: true
         use-sccache: true
         fetches:
             toolchain:
