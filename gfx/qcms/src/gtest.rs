@@ -917,7 +917,7 @@ mod test {
         let mut file = std::fs::File::open(path).unwrap();
         let mut data = Vec::new();
         file.read_to_end(&mut data).unwrap();
-        Profile::new_from_slice(&data).unwrap()
+        Profile::new_from_slice(&data, false).unwrap()
     }
 
     #[test]

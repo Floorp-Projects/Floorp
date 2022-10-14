@@ -2116,8 +2116,8 @@ void gfxPlatform::InitializeCMS() {
     nsTArray<uint8_t> outputProfileData =
         gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfileData();
     if (!outputProfileData.IsEmpty()) {
-      gCMSOutputProfile = qcms_profile_from_memory(outputProfileData.Elements(),
-                                                   outputProfileData.Length());
+      gCMSOutputProfile = qcms_profile_from_memory_curves_only(outputProfileData.Elements(),
+                                                               outputProfileData.Length());
     }
   }
 
