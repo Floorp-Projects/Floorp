@@ -316,6 +316,10 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   static MOZ_THREAD_LOCAL(SharedContext*) sSharedContext;
 
+  // Try to keep around the shared context for the main thread in case canvases
+  // are rapidly recreated and destroyed.
+  static RefPtr<SharedContext> sMainSharedContext;
+
  public:
   DrawTargetWebgl();
   ~DrawTargetWebgl();
