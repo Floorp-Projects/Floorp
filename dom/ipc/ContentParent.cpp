@@ -5519,8 +5519,11 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     return IPC_OK();
   }
 
+  WindowFeatures features;
+  features.Tokenize(aFeatures);
+
   aResult = pwwatch->OpenWindowWithRemoteTab(
-      thisBrowserHost, aFeatures, aCalledFromJS, aParent.FullZoom(), openInfo,
+      thisBrowserHost, features, aCalledFromJS, aParent.FullZoom(), openInfo,
       getter_AddRefs(aNewRemoteTab));
   if (NS_WARN_IF(NS_FAILED(aResult))) {
     return IPC_OK();
@@ -5535,12 +5538,15 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   // the frameloader to display will be correct (instead of falling back to a
   // 10x10 default), we force layout if necessary to get the most up-to-date
   // dimensions. See bug 1358712 for details.
-  //
-  // This involves doing a bit of gymnastics in order to get at the FrameLoader,
-  // so we scope this to avoid polluting the main function scope.
-  {
-    nsCOMPtr<Element> frameElement = newBrowserHost->GetOwnerElement();
-    MOZ_ASSERT(frameElement);
+  nsCOMPtr<Element> frameElement = newBrowserHost->GetOwnerElement();
+  MOZ_ASSERT(frameElement);
+  if (nsWindowWatcher::HaveSpecifiedSize(features)) {
+    // We want to flush the layout anyway because of the resize to the specified
+    // size. (Bug 1793605).
+    RefPtr<Document> chromeDoc = frameElement->OwnerDoc();
+    MOZ_ASSERT(chromeDoc);
+    chromeDoc->FlushPendingNotifications(FlushType::Layout);
+  } else {
     RefPtr<nsFrameLoaderOwner> frameLoaderOwner = do_QueryObject(frameElement);
     MOZ_ASSERT(frameLoaderOwner);
     RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
