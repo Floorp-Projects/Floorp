@@ -116,21 +116,38 @@ export var TabManager = {
    * @param {Boolean=} options.focus
    *     Set to true if the new tab should be focused (selected). Defaults to
    *     false.
+   * @param {Tab=} options.referenceTab
+   *     The reference tab after which the new tab will be added. If no
+   *     reference tab is provided, the new tab will be added after all the
+   *     other tabs.
    * @param {Number} options.userContextId
    *     The user context (container) id.
    * @param {window=} options.window
    *     The window where the new tab will open. Defaults to Services.wm.getMostRecentWindow
-   *     if no window is provided.
+   *     if no window is provided. Will be ignored if referenceTab is provided.
    */
   async addTab(options = {}) {
-    const {
+    let {
       focus = false,
+      referenceTab = null,
       userContextId,
       window = Services.wm.getMostRecentWindow(null),
     } = options;
+
+    let index;
+    if (referenceTab != null) {
+      // If a reference tab was specified, the window should be the window
+      // owning the reference tab.
+      window = this._getWindowForTab(referenceTab);
+    }
+
     const tabBrowser = this.getTabBrowser(window);
+    if (referenceTab != null) {
+      index = tabBrowser.tabs.indexOf(referenceTab) + 1;
+    }
 
     const tab = await tabBrowser.addTab("about:blank", {
+      index,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       userContextId,
     });
