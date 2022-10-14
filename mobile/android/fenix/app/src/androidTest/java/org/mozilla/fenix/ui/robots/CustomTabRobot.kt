@@ -11,11 +11,13 @@ import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiObjectNotFoundException
 import androidx.test.uiautomator.UiSelector
 import junit.framework.TestCase.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
+import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -92,48 +94,39 @@ class CustomTabRobot {
     }
 
     fun fillAndSubmitLoginCredentials(userName: String, password: String) {
-        var currentTries = 0
-        while (currentTries++ < 3) {
-            try {
-                mDevice.waitForIdle(waitingTime)
-                userNameTextBox.setText(userName)
-                passwordTextBox.setText(password)
-                submitLoginButton.click()
-                mDevice.waitForObjects(mDevice.findObject(UiSelector().resourceId("$packageName:id/save_confirm")))
-                break
-            } catch (e: UiObjectNotFoundException) {
-                customTabScreen {
-                }.openMainMenu {
-                    refreshButton().click()
-                    waitForPageToLoad()
-                }
-            }
-        }
+        mDevice.waitForIdle(waitingTime)
+        setPageObjectText(webPageItemWithResourceId("username"), userName)
+        setPageObjectText(webPageItemWithResourceId("password"), password)
+        clickPageObject(webPageItemWithResourceId("submit"))
+        mDevice.waitForObjects(mDevice.findObject(UiSelector().resourceId("$packageName:id/save_confirm")))
     }
 
-    fun clickLinkMatchingText(expectedText: String) {
-        var currentTries = 0
-        while (currentTries++ < 3) {
-            try {
-                mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
-                    .waitForExists(waitingTime)
-                mDevice.findObject(UiSelector().textContains(expectedText))
-                    .waitForExists(waitingTime)
-
-                val element = mDevice.findObject(UiSelector().textContains(expectedText))
-                element.click()
-                break
-            } catch (e: UiObjectNotFoundException) {
-                customTabScreen {
-                }.openMainMenu {
-                    refreshButton().click()
-                    waitForPageToLoad()
-                }
-            }
-        }
-    }
+    fun clickLinkMatchingText(expectedText: String) = clickPageObject(webPageItemContainingText(expectedText))
 
     fun waitForPageToLoad() = progressBar.waitUntilGone(waitingTime)
+
+    fun clickPageObject(webPageItem: UiObject) {
+        for (i in 1..RETRY_COUNT) {
+            try {
+                webPageItem.also {
+                    it.waitForExists(waitingTime)
+                    it.click()
+                }
+
+                break
+            } catch (e: UiObjectNotFoundException) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openThreeDotMenu {
+                    }.refreshPage {
+                        progressBar.waitUntilGone(waitingTime)
+                    }
+                }
+            }
+        }
+    }
 
     class Transition {
         fun openMainMenu(interact: CustomTabRobot.() -> Unit): Transition {
@@ -176,16 +169,36 @@ private fun closeButton() = onView(withContentDescription("Return to previous ap
 
 private fun customTabToolbar() = mDevice.findObject(By.res("$packageName:id/toolbar"))
 
+private fun setPageObjectText(webPageItem: UiObject, text: String) {
+    for (i in 1..RETRY_COUNT) {
+        try {
+            webPageItem.also {
+                it.waitForExists(waitingTime)
+                it.setText(text)
+            }
+
+            break
+        } catch (e: UiObjectNotFoundException) {
+            if (i == RETRY_COUNT) {
+                throw e
+            } else {
+                browserScreen {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    progressBar.waitUntilGone(waitingTime)
+                }
+            }
+        }
+    }
+}
+
 private val progressBar =
     mDevice.findObject(
         UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_progress"),
     )
 
-private val submitLoginButton =
-    mDevice.findObject(
-        UiSelector()
-            .resourceId("submit")
-            .textContains("Submit Query")
-            .className("android.widget.Button")
-            .packageName("$packageName"),
-    )
+private fun webPageItemContainingText(itemText: String) =
+    mDevice.findObject(UiSelector().textContains(itemText))
+
+private fun webPageItemWithResourceId(resourceId: String) =
+    mDevice.findObject(UiSelector().resourceId(resourceId))
