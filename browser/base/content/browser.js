@@ -420,15 +420,8 @@ XPCOMUtils.defineLazyGetter(this, "gNotificationBox", () => {
     element.classList.add("global-notificationbox");
     element.setAttribute("notificationside", "top");
     element.setAttribute("prepend-notifications", true);
-    // Notification messages use the CSS box model. When using
-    // negative margins on those notification messages to animate them in or out,
-    // if the ancestry of that node is all using the XUL box model, strange glitches
-    // arise. We sidestep this by containing the global notification box within a
-    // <div> that has CSS block layout.
-    let outer = document.createElement("div");
-    outer.appendChild(element);
-    let tabNotifications = document.getElementById("tab-notification-deck");
-    gNavToolbox.insertBefore(outer, tabNotifications);
+    const tabNotifications = document.getElementById("tab-notification-deck");
+    gNavToolbox.insertBefore(element, tabNotifications);
   });
 });
 
