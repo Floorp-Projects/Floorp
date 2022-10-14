@@ -3,7 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="100dp"
     android:layout_height="50dp"
     android:background="@drawable/rounded_search_widget_background"
@@ -23,5 +22,5 @@
         android:contentDescription="@string/search_widget_voice"
         android:padding="10dp"
         android:scaleType="centerInside"
-        app:srcCompat="@drawable/ic_microphone_widget" />
+        android:background="@drawable/ic_microphone_widget" />
 </LinearLayout>

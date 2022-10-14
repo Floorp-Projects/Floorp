@@ -38,6 +38,6 @@
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
         android:layout_marginEnd="1dp"
-        android:background="@drawable/ic_microphone_widget_padded"
+        android:background="@drawable/ic_microphone_widget"
         android:contentDescription="@string/search_widget_voice" />
 </RelativeLayout>
