@@ -58,7 +58,11 @@ internal class DefaultController(
         view.startLoading()
         scope.launch {
             accountManager.withConstellation { refreshDevices() }
-            accountManager.syncNow(SyncReason.User, customEngineSubset = listOf(SyncEngine.Tabs))
+            accountManager.syncNow(
+                SyncReason.User,
+                customEngineSubset = listOf(SyncEngine.Tabs),
+                debounce = true,
+            )
         }
     }
 }

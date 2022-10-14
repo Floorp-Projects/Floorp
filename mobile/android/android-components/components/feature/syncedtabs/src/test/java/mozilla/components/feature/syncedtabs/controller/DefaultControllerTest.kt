@@ -147,6 +147,6 @@ class DefaultControllerTest {
 
         verify(view).startLoading()
         verify(constellation).refreshDevices()
-        verify(accountManager).syncNow(SyncReason.User, false, listOf(SyncEngine.Tabs))
+        verify(accountManager).syncNow(SyncReason.User, true, listOf(SyncEngine.Tabs))
     }
 }

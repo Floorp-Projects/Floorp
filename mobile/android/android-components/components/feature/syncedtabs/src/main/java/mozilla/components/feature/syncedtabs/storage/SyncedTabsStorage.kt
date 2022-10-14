@@ -65,6 +65,7 @@ class SyncedTabsStorage(
                     accountManager.syncNow(
                         reason = SyncReason.User,
                         customEngineSubset = listOf(SyncEngine.Tabs),
+                        debounce = true,
                     )
                 }
         }

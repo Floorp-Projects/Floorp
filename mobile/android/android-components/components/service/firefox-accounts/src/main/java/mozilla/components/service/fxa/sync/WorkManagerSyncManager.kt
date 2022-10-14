@@ -6,6 +6,7 @@ package mozilla.components.service.fxa.sync
 
 import android.content.Context
 import androidx.annotation.UiThread
+import androidx.annotation.VisibleForTesting
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
@@ -38,10 +39,12 @@ import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.sync.telemetry.SyncTelemetry
 import java.io.Closeable
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import mozilla.appservices.syncmanager.SyncManager as RustSyncManager
 
-private enum class SyncWorkerTag {
+@VisibleForTesting
+internal enum class SyncWorkerTag {
     Common,
     Immediate, // will not debounce a sync
     Debounce, // will debounce if another sync happened recently
@@ -260,7 +263,8 @@ internal class WorkManagerSyncDispatcher(
             .build()
     }
 
-    private fun getWorkerData(
+    @VisibleForTesting
+    internal fun getWorkerData(
         reason: SyncReason,
         customEngineSubset: List<SyncEngine> = listOf(),
     ): Data {
@@ -278,49 +282,56 @@ internal class WorkManagerSyncWorker(
 ) : CoroutineWorker(context, params) {
     private val logger = Logger("SyncWorker")
 
-    private fun isDebounced(): Boolean {
+    @VisibleForTesting
+    internal fun isDebounced(): Boolean {
         return params.tags.contains(SyncWorkerTag.Debounce.name)
     }
 
-    private fun lastSyncedWithinStaggerBuffer(): Boolean {
-        val lastSyncedTs = getLastSynced(context)
-        return lastSyncedTs != 0L && (System.currentTimeMillis() - lastSyncedTs) < SYNC_STAGGER_BUFFER_MS
+    @VisibleForTesting
+    internal fun lastSyncedWithinStaggerBuffer(engine: String): Boolean {
+        if (!isDebounced()) {
+            return false
+        }
+
+        return engineSyncTimestamp[engine]?.let {
+            (System.currentTimeMillis() - it) < SYNC_STAGGER_BUFFER_MS
+        } ?: false
     }
 
-    @Suppress("ComplexMethod")
+    private fun updateEngineSyncedTime(engine: String) {
+        engineSyncTimestamp[engine] = System.currentTimeMillis()
+    }
+
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         logger.debug("Starting sync... Tagged as: ${params.tags}")
 
-        // If this is a "debouncing" sync task, and we've very recently synced successfully, skip it.
-        if (isDebounced() && lastSyncedWithinStaggerBuffer()) {
+        // We will need a list of SyncableStores.
+        val syncableStores = params.inputData.getStringArray(KEY_DATA_STORES)?.filter {
+            !lastSyncedWithinStaggerBuffer(it)
+        }?.associate {
+            // Convert from a string back to our SyncEngine type.
+            val engine = when (it) {
+                SyncEngine.History.nativeName -> SyncEngine.History
+                SyncEngine.Bookmarks.nativeName -> SyncEngine.Bookmarks
+                SyncEngine.Passwords.nativeName -> SyncEngine.Passwords
+                SyncEngine.Tabs.nativeName -> SyncEngine.Tabs
+                SyncEngine.CreditCards.nativeName -> SyncEngine.CreditCards
+                SyncEngine.Addresses.nativeName -> SyncEngine.Addresses
+                else -> throw IllegalStateException("Invalid syncable store: $it")
+            }
+
+            updateEngineSyncedTime(engine.nativeName)
+            engine to checkNotNull(GlobalSyncableStoreProvider.getLazyStoreWithKey(engine)) {
+                "SyncableStore missing from GlobalSyncableStoreProvider: ${engine.nativeName}"
+            }
+        }
+
+        if (syncableStores.isNullOrEmpty()) {
+            // Short-circuit if there are no configured stores.
+            // Don't update the "last-synced" timestamp because we haven't actually synced anything.
             Result.success()
         } else {
-            // Otherwise, proceed as normal and start preparing to sync.
-
-            // We will need a list of SyncableStores.
-            val syncableStores = params.inputData.getStringArray(KEY_DATA_STORES)!!.associate {
-                // Convert from a string back to our SyncEngine type.
-                val engine = when (it) {
-                    SyncEngine.History.nativeName -> SyncEngine.History
-                    SyncEngine.Bookmarks.nativeName -> SyncEngine.Bookmarks
-                    SyncEngine.Passwords.nativeName -> SyncEngine.Passwords
-                    SyncEngine.Tabs.nativeName -> SyncEngine.Tabs
-                    SyncEngine.CreditCards.nativeName -> SyncEngine.CreditCards
-                    SyncEngine.Addresses.nativeName -> SyncEngine.Addresses
-                    else -> throw IllegalStateException("Invalid syncable store: $it")
-                }
-                engine to checkNotNull(GlobalSyncableStoreProvider.getLazyStoreWithKey(engine)) {
-                    "SyncableStore missing from GlobalSyncableStoreProvider: ${engine.nativeName}"
-                }
-            }
-
-            if (syncableStores.isEmpty()) {
-                // Short-circuit if there are no configured stores.
-                // Don't update the "last-synced" timestamp because we haven't actually synced anything.
-                Result.success()
-            } else {
-                doSync(syncableStores)
-            }
+            doSync(syncableStores)
         }
     }
 
@@ -511,13 +522,20 @@ internal class WorkManagerSyncWorker(
             }
         }
     }
+
+    companion object {
+        @VisibleForTesting
+        internal const val SYNC_STAGGER_BUFFER_MS = 5 * 1000L // 5 seconds.
+
+        @VisibleForTesting
+        internal val engineSyncTimestamp = ConcurrentHashMap<String, Long>()
+    }
 }
 
 private const val SYNC_STATE_PREFS_KEY = "syncPrefs"
 private const val SYNC_LAST_SYNCED_KEY = "lastSynced"
 private const val SYNC_STATE_KEY = "persistedState"
 
-private const val SYNC_STAGGER_BUFFER_MS = 5 * 60 * 1000L // 5 minutes.
 private const val SYNC_STARTUP_DELAY_MS = 5 * 1000L // 5 seconds.
 
 fun getLastSynced(context: Context): Long {

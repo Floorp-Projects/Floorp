@@ -94,7 +94,7 @@ class SyncedTabsStorageTest {
         )
         verify(accountManager, times(2)).syncNow(
             SyncReason.User,
-            false,
+            true,
             listOf(SyncEngine.Tabs),
         )
     }
