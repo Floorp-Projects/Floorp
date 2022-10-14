@@ -310,6 +310,9 @@
     <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
     <string name="sync_cfr_message">ਤੁਹਾਡੀਆਂ ਟੈਬਾਂ ਸਿੰਕ ਹੋ ਰਹੀਆਂ ਹਨ! ਆਪਣੇ ਹੋਰ ਡਿਵਾਈਸ ਉੱਤੇ ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡੋ, ਉਥੋਂ ਹੀ ਤੁਸੀਂ ਹੀ ਸ਼ੁਰੂ ਕਰੋ।</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">ਬੰਦ ਕਰੋ</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">ਨਵੀਂ %1$s ਟੈਬ ਖੋਲ੍ਹੋ</string>
@@ -1083,6 +1086,8 @@
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">ਸਾਂਝਾ ਕਰੋ</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">PDF ਵਜੋਂ ਸੰਭਾਲੋ</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">ਡਿਵਾਈਸ ‘ਤੇ ਭੇਜੋ</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1959,4 +1964,12 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ</string>
     <string name="firefox_suggest_header">Firefox ਸੁਝਾਅ</string>
+
+    <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
+    <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
+    <string name="a11y_action_label_collapse">ਸਮੇਟੋ</string>
+    <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
+    <string name="a11y_action_label_expand">ਫੈਲਾਓ</string>
+    <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
+    <string name="a11y_action_label_wallpaper_collection_learn_more">ਇਹ ਭੰਡਾਰ ਬਾਰੇ ਹੋਰ ਸਿੱਖਣ ਲਈ ਲਿੰਕ ਖੋਲ੍ਹੋ</string>
 </resources>
