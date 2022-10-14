@@ -69,7 +69,6 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   void MarkContextClean() override {}
 
   NS_IMETHOD Redraw(const gfxRect& aDirty) override { return NS_OK; }
-  NS_IMETHOD SetIsIPC(bool aIsIPC) override { return NS_OK; }
 
   void DidRefresh() override {}
 

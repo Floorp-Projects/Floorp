@@ -983,8 +983,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void SetOpaqueValueFromOpaqueAttr(bool) override{};
   bool GetIsOpaque() override { return !mInitialOptions->alpha; }
 
-  NS_IMETHOD SetIsIPC(bool) override { return NS_ERROR_NOT_IMPLEMENTED; }
-
   /**
    * An abstract base class to be implemented by callers wanting to be notified
    * that a refresh has occurred. Callers must ensure an observer is removed

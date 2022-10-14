@@ -1018,55 +1018,6 @@ already_AddRefed<nsISupports> HTMLCanvasElement::GetContext(
       aContextOptions.isObject() ? aContextOptions : JS::NullHandleValue, aRv);
 }
 
-already_AddRefed<nsISupports> HTMLCanvasElement::MozGetIPCContext(
-    const nsAString& aContextId, ErrorResult& aRv) {
-  // Note that we're a [ChromeOnly] method, so from JS we can only be called by
-  // system code.
-
-  // We only support 2d shmem contexts for now.
-  if (!aContextId.EqualsLiteral("2d")) {
-    aRv.Throw(NS_ERROR_INVALID_ARG);
-    return nullptr;
-  }
-
-  if (mOffscreenCanvas) {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-    return nullptr;
-  }
-
-  CanvasContextType contextType = CanvasContextType::Canvas2D;
-
-  if (!mCurrentContext) {
-    // This canvas doesn't have a context yet.
-
-    RefPtr<nsICanvasRenderingContextInternal> context;
-    context = CreateContext(contextType);
-    if (!context) {
-      return nullptr;
-    }
-
-    mCurrentContext = context;
-    mCurrentContext->SetIsIPC(true);
-    mCurrentContextType = contextType;
-
-    ErrorResult dummy;
-    nsresult rv = UpdateContext(nullptr, JS::NullHandleValue, dummy);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
-      return nullptr;
-    }
-  } else {
-    // We already have a context of some type.
-    if (contextType != mCurrentContextType) {
-      aRv.Throw(NS_ERROR_INVALID_ARG);
-      return nullptr;
-    }
-  }
-
-  nsCOMPtr<nsISupports> context(mCurrentContext);
-  return context.forget();
-}
-
 nsIntSize HTMLCanvasElement::GetSize() { return GetWidthHeight(); }
 
 bool HTMLCanvasElement::IsWriteOnly() const { return mWriteOnly; }

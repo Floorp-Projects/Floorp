@@ -265,9 +265,6 @@ ImageBitmapRenderingContext::Redraw(const gfxRect& aDirty) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ImageBitmapRenderingContext::SetIsIPC(bool aIsIPC) { return NS_OK; }
-
 void ImageBitmapRenderingContext::DidRefresh() {}
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ImageBitmapRenderingContext)

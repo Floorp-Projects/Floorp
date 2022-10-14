@@ -459,7 +459,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   Watchable<FrameCaptureState>* GetFrameCaptureState() override {
     return &mFrameCaptureState;
   }
-  NS_IMETHOD SetIsIPC(bool aIsIPC) override;
   // this rect is in canvas device space
   void Redraw(const mozilla::gfx::Rect& aR);
   NS_IMETHOD Redraw(const gfxRect& aR) override {
