@@ -1013,18 +1013,18 @@ static const nsAttrValue::EnumTable kDivAlignTable[] = {
     {nullptr, 0}};
 
 static const nsAttrValue::EnumTable kFrameborderTable[] = {
-    {"yes", FrameBorderProperty::Yes},
-    {"no", FrameBorderProperty::No},
-    {"1", FrameBorderProperty::Yes},
-    {"0", FrameBorderProperty::No},
+    {"yes", NS_STYLE_FRAME_YES},
+    {"no", NS_STYLE_FRAME_NO},
+    {"1", NS_STYLE_FRAME_1},
+    {"0", NS_STYLE_FRAME_0},
     {nullptr, 0}};
 
 // TODO(emilio): Nobody uses the parsed attribute here.
 static const nsAttrValue::EnumTable kScrollingTable[] = {
-    {"no", ScrollbarPreference::Never},
-    {"off", ScrollbarPreference::Never},
-    {"noscroll", ScrollbarPreference::Never},
-    {nullptr, 0}};
+    {"yes", NS_STYLE_FRAME_YES},       {"no", NS_STYLE_FRAME_NO},
+    {"on", NS_STYLE_FRAME_ON},         {"off", NS_STYLE_FRAME_OFF},
+    {"scroll", NS_STYLE_FRAME_SCROLL}, {"noscroll", NS_STYLE_FRAME_NOSCROLL},
+    {"auto", NS_STYLE_FRAME_AUTO},     {nullptr, 0}};
 
 static const nsAttrValue::EnumTable kTableVAlignTable[] = {
     {"top", StyleVerticalAlignKeyword::Top},

@@ -216,7 +216,12 @@ void nsGenericHTMLFrameElement::UnbindFromTree(bool aNullParent) {
 ScrollbarPreference nsGenericHTMLFrameElement::MapScrollingAttribute(
     const nsAttrValue* aValue) {
   if (aValue && aValue->Type() == nsAttrValue::eEnum) {
-    return ScrollbarPreference(aValue->GetEnumValue());
+    switch (aValue->GetEnumValue()) {
+      case NS_STYLE_FRAME_OFF:
+      case NS_STYLE_FRAME_NOSCROLL:
+      case NS_STYLE_FRAME_NO:
+        return ScrollbarPreference::Never;
+    }
   }
   return ScrollbarPreference::Auto;
 }

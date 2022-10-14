@@ -682,11 +682,13 @@ static nsFrameborder GetFrameBorderHelper(nsGenericHTMLElement* aContent) {
   if (nullptr != aContent) {
     const nsAttrValue* attr = aContent->GetParsedAttr(nsGkAtoms::frameborder);
     if (attr && attr->Type() == nsAttrValue::eEnum) {
-      switch (static_cast<FrameBorderProperty>(attr->GetEnumValue())) {
-        case FrameBorderProperty::Yes:
+      switch (attr->GetEnumValue()) {
+        case NS_STYLE_FRAME_YES:
+        case NS_STYLE_FRAME_1:
           return eFrameborder_Yes;
 
-        case FrameBorderProperty::No:
+        case NS_STYLE_FRAME_NO:
+        case NS_STYLE_FRAME_0:
           return eFrameborder_No;
       }
     }
