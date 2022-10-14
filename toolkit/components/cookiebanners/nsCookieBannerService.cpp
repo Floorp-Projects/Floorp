@@ -5,24 +5,25 @@
 #include "nsCookieBannerService.h"
 
 #include "CookieBannerDomainPrefService.h"
+#include "ErrorList.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/EventQueue.h"
+#include "mozilla/Logging.h"
+#include "mozilla/StaticPrefs_cookiebanners.h"
+#include "nsCOMPtr.h"
 #include "nsCookieBannerRule.h"
 #include "nsCookieInjector.h"
+#include "nsCRT.h"
+#include "nsDebug.h"
 #include "nsIClickRule.h"
 #include "nsICookieBannerListService.h"
 #include "nsICookieBannerRule.h"
 #include "nsICookie.h"
 #include "nsIEffectiveTLDService.h"
-#include "mozilla/StaticPrefs_cookiebanners.h"
-#include "ErrorList.h"
-#include "mozilla/Logging.h"
-#include "nsDebug.h"
-#include "nsCOMPtr.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
-#include "nsCRT.h"
-#include "mozilla/ClearOnShutdown.h"
 #include "nsThreadUtils.h"
-#include "mozilla/EventQueue.h"
 
 namespace mozilla {
 
@@ -287,8 +288,23 @@ nsCookieBannerService::GetCookiesForURI(
       gCookieBannerLog, LogLevel::Debug,
       ("%s. Found nsICookieBannerRule. Computed mode: %d", __FUNCTION__, mode));
 
-  // Service is disabled for current context (normal or private browsing),
-  // return empty array.
+  // We don't need to check the domain preference if the cookie banner handling
+  // service is disabled by pref.
+  if (mode != nsICookieBannerService::MODE_DISABLED) {
+    // Get the domain preference for the uri, the domain preference takes
+    // precedence over the pref setting. Note that the domain preference is
+    // supposed to stored only for top level URIs.
+    nsICookieBannerService::Modes domainPref;
+    nsresult rv = GetDomainPref(aURI, aIsPrivateBrowsing, &domainPref);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (domainPref != nsICookieBannerService::MODE_UNSET) {
+      mode = domainPref;
+    }
+  }
+
+  // Service is disabled for current context (normal, private browsing or domain
+  // preference), return empty array.
   if (mode == nsICookieBannerService::MODE_DISABLED) {
     MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
             ("%s. Returning empty array. Got MODE_DISABLED for "
