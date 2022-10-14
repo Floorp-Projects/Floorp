@@ -352,7 +352,7 @@ checkbox {
 }
 
 #updateRadioGroup > radio {
-  height: 30px;
+  min-height: 30px;
   margin: 2px 0;
 }
 
