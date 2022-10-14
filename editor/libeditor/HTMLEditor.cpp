@@ -5265,15 +5265,16 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
                                  nsIContent& aContentToRemove,
                                  JoinNodesDirection aDirection) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_DIAGNOSTIC_ASSERT(aContentToKeep.GetParentNode() ==
-                        aContentToRemove.GetParentNode());
 
   const uint32_t keepingContentLength = aContentToKeep.Length();
   const uint32_t removingContentLength = aContentToRemove.Length();
-  const Maybe<uint32_t> rightContentExIndex =
+  const EditorDOMPoint oldPointAtRightContent(
       aDirection == JoinNodesDirection::LeftNodeIntoRightNode
-          ? aContentToKeep.ComputeIndexInParentNode()
-          : aContentToRemove.ComputeIndexInParentNode();
+          ? &aContentToKeep
+          : &aContentToRemove);
+  if (MOZ_LIKELY(oldPointAtRightContent.IsSet())) {
+    Unused << oldPointAtRightContent.Offset();  // Fix the offset
+  }
 
   // Remember all selection points.
   // XXX Do we need to restore all types of selections by ourselves?  Normal
@@ -5420,14 +5421,14 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
     }
   }
 
-  if (MOZ_LIKELY(rightContentExIndex.isSome())) {
+  if (MOZ_LIKELY(oldPointAtRightContent.IsSet())) {
     DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjJoinNodes(
         EditorRawDOMPoint(
             &aContentToKeep,
             aDirection == JoinNodesDirection::LeftNodeIntoRightNode
                 ? std::min(removingContentLength, aContentToKeep.Length())
                 : std::min(keepingContentLength, aContentToKeep.Length())),
-        aContentToRemove, *rightContentExIndex, aDirection);
+        aContentToRemove, oldPointAtRightContent, aDirection);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "RangeUpdater::SelAdjJoinNodes() failed, but ignored");
   }
