@@ -16,11 +16,13 @@ class PowerMeterDevice;
 #if defined(GP_PLAT_arm64_darwin)
 class ProcessPower;
 #endif
+#if defined(GP_PLAT_amd64_darwin)
+class RAPL;
+#endif
 
 class PowerCounters {
  public:
-#if defined(_MSC_VER) || defined(GP_PLAT_arm64_darwin) || \
-    defined(GP_PLAT_amd64_linux)
+#if defined(_MSC_VER) || defined(GP_OS_darwin) || defined(GP_PLAT_amd64_linux)
   explicit PowerCounters();
   ~PowerCounters();
   void Sample();
@@ -41,6 +43,9 @@ class PowerCounters {
 #endif
 #if defined(GP_PLAT_arm64_darwin)
   mozilla::UniquePtr<ProcessPower> mProcessPower;
+#endif
+#if defined(GP_PLAT_amd64_darwin)
+  RAPL* mRapl;
 #endif
 };
 
