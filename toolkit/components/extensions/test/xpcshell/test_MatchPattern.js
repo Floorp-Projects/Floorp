@@ -468,7 +468,9 @@ add_task(async function test_MatchGlob() {
 });
 
 add_task(async function test_MatchGlob_redundant_wildcards_backtracking() {
-  const first_limit = AppConstants.DEBUG ? 200 : 10;
+  const slow_build =
+    AppConstants.DEBUG || AppConstants.TSAN || AppConstants.ASAN;
+  const first_limit = slow_build ? 200 : 20;
   {
     // Bug 1570868 - repeated * in tabs.query glob causes too much backtracking.
     let title = `Monster${"*".repeat(99)}Mash`;
