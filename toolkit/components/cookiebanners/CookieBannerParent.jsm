@@ -57,10 +57,40 @@ class CookieBannerParent extends JSWindowActorParent {
 
     // TODO: Bug 1790688: consider moving this logic to the cookie banner service.
     let mode;
-    if (this.#isPrivateBrowsing()) {
+    let isPrivateBrowsing = this.#isPrivateBrowsing();
+    if (isPrivateBrowsing) {
       mode = lazy.serviceModePBM;
     } else {
       mode = lazy.serviceMode;
+    }
+
+    // Check if we have a site preference of the top-level URI. If so, it
+    // takes precedence over the pref setting.
+    let topBrowsingContext = this.manager.browsingContext.top;
+    let topURI = topBrowsingContext.currentWindowGlobal?.documentURI;
+
+    // We don't need to check the domain preference if the cookie banner
+    // handling was disabled by pref.
+    if (mode != Ci.nsICookieBannerService.MODE_DISABLED && topURI) {
+      try {
+        let perDomainMode = Services.cookieBanners.getDomainPref(
+          topURI,
+          isPrivateBrowsing
+        );
+
+        if (perDomainMode != Ci.nsICookieBannerService.MODE_UNSET) {
+          mode = perDomainMode;
+        }
+      } catch (e) {
+        // getPerSitePref could throw with NS_ERROR_NOT_AVAILABLE if the service
+        // is disabled. We will fallback to global pref setting if any errors
+        // occur.
+        if (e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
+          Cu.reportError("The cookie banner handling service is not available");
+        } else {
+          Cu.reportError("Fail on getting domain pref:" + e);
+        }
+      }
     }
 
     // Service is disabled for current context (normal or private browsing),
