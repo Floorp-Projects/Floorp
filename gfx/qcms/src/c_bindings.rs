@@ -79,9 +79,20 @@ pub unsafe extern "C" fn qcms_profile_from_memory(
     size: usize,
 ) -> *mut Profile {
     let mem = slice::from_raw_parts(mem as *const libc::c_uchar, size);
-    let profile = Profile::new_from_slice(mem);
+    let profile = Profile::new_from_slice(mem, false);
     profile.map_or_else(null_mut, Box::into_raw)
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn qcms_profile_from_memory_curves_only(
+    mem: *const libc::c_void,
+    size: usize,
+) -> *mut Profile {
+    let mem = slice::from_raw_parts(mem as *const libc::c_uchar, size);
+    let profile = Profile::new_from_slice(mem, true);
+    profile.map_or_else(null_mut, Box::into_raw)
+}
+
 
 #[no_mangle]
 pub extern "C" fn qcms_profile_get_rendering_intent(profile: &Profile) -> Intent {
