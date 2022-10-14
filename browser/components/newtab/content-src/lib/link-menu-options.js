@@ -217,7 +217,9 @@ export const LinkMenuOptions = {
     icon: "pocket-save",
     action: ac.AlsoToMain({
       type: at.SAVE_TO_POCKET,
-      data: { site: { url: site.url, title: site.title } },
+      data: {
+        site: { url: site.url, title: site.title },
+      },
     }),
     impression: ac.ImpressionStats({
       source: eventSource,
