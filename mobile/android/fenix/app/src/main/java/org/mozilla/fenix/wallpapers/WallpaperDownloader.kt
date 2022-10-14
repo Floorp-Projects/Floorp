@@ -80,7 +80,7 @@ class WallpaperDownloader(
             if (!response.isSuccess) {
                 throw IllegalStateException()
             }
-            File(localFile.path.substringBeforeLast("/")).mkdirs()
+            localFile.parentFile?.mkdirs()
             response.body.useStream { input ->
                 input.copyTo(localFile.outputStream())
             }
