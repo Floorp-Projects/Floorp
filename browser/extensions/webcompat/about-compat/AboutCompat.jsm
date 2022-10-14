@@ -34,6 +34,8 @@ AboutCompat.prototype = {
 
     channel.owner = (
       Services.scriptSecurityManager.createContentPrincipal ||
+      // Handles fallback to earlier versions.
+      // eslint-disable-next-line mozilla/valid-services-property
       Services.scriptSecurityManager.createCodebasePrincipal
     )(uri, aLoadInfo.originAttributes);
     return channel;
