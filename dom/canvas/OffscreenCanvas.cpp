@@ -259,12 +259,17 @@ already_AddRefed<ImageBitmap> OffscreenCanvas::TransferToImageBitmap(
 
   RefPtr<ImageBitmap> result =
       ImageBitmap::CreateFromOffscreenCanvas(GetOwnerGlobal(), *this, aRv);
-  if (!result) {
+  if (aRv.Failed()) {
     return nullptr;
   }
 
-  if (mCurrentContext) {
-    mCurrentContext->ResetBitmap();
+  if (result && mCurrentContext) {
+    // FIXME(aosmond): The spec is unclear about the state of the canvas after
+    // clearing. Does it expect to preserve the WebGL state, other than the
+    // buffer state? Once we have clarity, we should ensure we clear the WebGL
+    // canvas as desired.
+    mCurrentContext->Reset();
+    mCurrentContext->SetDimensions(result->Width(), result->Height());
   }
   return result.forget();
 }

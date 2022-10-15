@@ -962,7 +962,10 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  void ResetBitmap() override;
+  NS_IMETHOD Reset() override {
+    /* (InitializeWithSurface) */
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
   UniquePtr<uint8_t[]> GetImageBuffer(int32_t* out_format) override;
   NS_IMETHOD GetInputStream(const char* mimeType,

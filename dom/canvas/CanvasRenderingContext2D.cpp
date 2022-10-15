@@ -1073,7 +1073,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(
 CanvasRenderingContext2D::~CanvasRenderingContext2D() {
   RemovePostRefreshObserver();
   RemoveShutdownObserver();
-  ResetBitmap();
+  Reset();
 
   sNumLivingContexts.set(sNumLivingContexts.get() - 1);
   if (sNumLivingContexts.get() == 0 && sErrorTarget.get()) {
@@ -1117,7 +1117,7 @@ bool CanvasRenderingContext2D::ParseColor(const nsACString& aString,
   return true;
 }
 
-void CanvasRenderingContext2D::ResetBitmap() {
+nsresult CanvasRenderingContext2D::Reset() {
   if (mCanvasElement) {
     mCanvasElement->InvalidateCanvas();
   }
@@ -1138,6 +1138,8 @@ void CanvasRenderingContext2D::ResetBitmap() {
   mIsEntireFrameInvalid = false;
   mPredictManyRedrawCalls = false;
   mFrameCaptureState = FrameCaptureState::CLEAN;
+
+  return NS_OK;
 }
 
 void CanvasRenderingContext2D::OnShutdown() {
@@ -1145,7 +1147,7 @@ void CanvasRenderingContext2D::OnShutdown() {
 
   RefPtr<PersistentBufferProvider> provider = mBufferProvider;
 
-  ResetBitmap();
+  Reset();
 
   if (provider) {
     provider->OnShutdown();
@@ -1650,7 +1652,7 @@ void CanvasRenderingContext2D::RemoveAssociatedMemory() {
 }
 
 void CanvasRenderingContext2D::ClearTarget(int32_t aWidth, int32_t aHeight) {
-  ResetBitmap();
+  Reset();
 
   mResetLayer = true;
 
