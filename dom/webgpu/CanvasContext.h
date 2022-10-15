@@ -65,7 +65,9 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
 
   void SetOpaqueValueFromOpaqueAttr(bool aOpaqueAttrValue) override {}
   bool GetIsOpaque() override { return true; }
-  NS_IMETHOD Reset() override { return NS_OK; }
+
+  void ResetBitmap() override { Unconfigure(); }
+
   void MarkContextClean() override {}
 
   NS_IMETHOD Redraw(const gfxRect& aDirty) override { return NS_OK; }

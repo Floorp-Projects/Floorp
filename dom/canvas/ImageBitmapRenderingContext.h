@@ -80,7 +80,7 @@ class ImageBitmapRenderingContext final
 
   virtual void SetOpaqueValueFromOpaqueAttr(bool aOpaqueAttrValue) override;
   virtual bool GetIsOpaque() override;
-  NS_IMETHOD Reset() override;
+  void ResetBitmap() override;
   virtual already_AddRefed<layers::Image> GetAsImage() override {
     return ClipToIntrinsicSize();
   }
