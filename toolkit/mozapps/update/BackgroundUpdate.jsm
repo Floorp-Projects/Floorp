@@ -10,7 +10,7 @@ var EXPORTED_SYMBOLS = ["BackgroundUpdate"];
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { BackgroundTasksManager } = ChromeUtils.import(
+const { EXIT_CODE } = ChromeUtils.import(
   "resource://gre/modules/BackgroundTasksManager.jsm"
 );
 const { XPCOMUtils } = ChromeUtils.importESModule(
@@ -708,7 +708,7 @@ BackgroundUpdate.REASON = {
  * more general errors reading from the default profile.
  */
 BackgroundUpdate.EXIT_CODE = {
-  ...BackgroundTasksManager.EXIT_CODE,
+  ...EXIT_CODE,
   // We clone the other exit codes simply so we can use one object for all the codes.
   DEFAULT_PROFILE_DOES_NOT_EXIST: 11,
   DEFAULT_PROFILE_CANNOT_BE_LOCKED: 12,

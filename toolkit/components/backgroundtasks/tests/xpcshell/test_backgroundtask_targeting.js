@@ -6,9 +6,9 @@
 
 "use strict";
 
-const { EXIT_CODE } = ChromeUtils.import(
-  "resource://gre/modules/BackgroundTasksManager.jsm"
-).BackgroundTasksManager;
+const { EXIT_CODE } = ChromeUtils.importESModule(
+  "resource://gre/modules/BackgroundTasksManager.sys.mjs"
+);
 
 add_task(async function test_targeting() {
   // The task itself fails if any targeting getter fails.

@@ -156,5 +156,5 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     ]
 
     EXTRA_JS_MODULES.backgroundtasks += [
-        "BackgroundTask_uninstall.jsm",
+        "BackgroundTask_uninstall.sys.mjs",
     ]

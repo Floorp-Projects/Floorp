@@ -44,7 +44,7 @@ if (
     ]
 
     EXTRA_JS_MODULES.backgroundtasks += [
-        "BackgroundTask_backgroundupdate.jsm",
+        "BackgroundTask_backgroundupdate.sys.mjs",
     ]
 
 XPCOM_MANIFESTS += [

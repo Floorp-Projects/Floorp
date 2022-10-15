@@ -7,8 +7,7 @@ var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-var EXPORTED_SYMBOLS = ["runBackgroundTask"];
-async function runBackgroundTask(commandLine) {
+export async function runBackgroundTask(commandLine) {
   if (AppConstants.platform !== "win") {
     console.log("Not a Windows install, skipping `uninstall` background task.");
     return;

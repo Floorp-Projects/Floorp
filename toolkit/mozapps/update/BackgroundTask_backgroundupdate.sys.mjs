@@ -3,21 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = [
-  "backgroundTaskTimeoutSec",
-  "maybeSubmitBackgroundUpdatePing",
-  "runBackgroundTask",
-];
-
 const { BackgroundUpdate } = ChromeUtils.import(
   "resource://gre/modules/BackgroundUpdate.jsm"
 );
 const { EXIT_CODE } = BackgroundUpdate;
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -25,13 +16,13 @@ const { AppConstants } = ChromeUtils.import(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppUpdater: "resource:///modules/AppUpdater.jsm",
-  BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
 });
 
@@ -54,7 +45,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
-const backgroundTaskTimeoutSec = Services.prefs.getIntPref(
+export const backgroundTaskTimeoutSec = Services.prefs.getIntPref(
   "app.update.background.timeoutSec",
   10 * 60
 );
@@ -189,7 +180,7 @@ async function _attemptBackgroundUpdate() {
  * profile.  Note that the Firefox policy mechanism will manage this pref, locking it to particular
  * values as appropriate.
  */
-async function maybeSubmitBackgroundUpdatePing() {
+export async function maybeSubmitBackgroundUpdatePing() {
   let SLUG = "maybeSubmitBackgroundUpdatePing";
 
   // It should be possible to turn AUSTLMY data into Glean data, but mapping histograms isn't
@@ -200,7 +191,7 @@ async function maybeSubmitBackgroundUpdatePing() {
   lazy.log.info(`${SLUG}: submitted "background-update" ping`);
 }
 
-async function runBackgroundTask(commandLine) {
+export async function runBackgroundTask(commandLine) {
   let SLUG = "runBackgroundTask";
   lazy.log.error(`${SLUG}: backgroundupdate`);
 

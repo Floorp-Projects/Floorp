@@ -3,9 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["runBackgroundTask"];
-
-async function runBackgroundTask(commandLine) {
+export async function runBackgroundTask(commandLine) {
   // This task depends on `CrashTestUtils.jsm` and requires the
   // sibling `testcrasher` library to be in the current working
   // directory.  Fail right away if we can't find the module or the

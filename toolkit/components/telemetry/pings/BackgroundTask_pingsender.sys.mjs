@@ -3,14 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const { sendStandalonePing } = ChromeUtils.import(
   "resource://gre/modules/TelemetrySend.jsm"
 );
 
-var EXPORTED_SYMBOLS = ["runBackgroundTask"];
-async function runBackgroundTask(commandLine) {
+export async function runBackgroundTask(commandLine) {
   let sends = [];
   for (let i = 0; i < commandLine.length; i += 2) {
     sends.push(

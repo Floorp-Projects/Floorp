@@ -3,11 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["BackgroundTasksUtils"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -46,7 +42,7 @@ class CannotLockProfileError extends Error {
   }
 }
 
-var BackgroundTasksUtils = {
+export var BackgroundTasksUtils = {
   // Manage our own default profile that can be overridden for testing.  It's
   // easier to do this here rather than using the profile service itself.
   _defaultProfileInitialized: false,

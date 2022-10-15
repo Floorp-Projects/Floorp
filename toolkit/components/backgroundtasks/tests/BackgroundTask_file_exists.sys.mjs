@@ -3,17 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["runBackgroundTask"];
-
-const { EXIT_CODE } = ChromeUtils.import(
-  "resource://gre/modules/BackgroundTasksManager.jsm"
-).BackgroundTasksManager;
+import { EXIT_CODE } from "resource://gre/modules/BackgroundTasksManager.sys.mjs";
 
 /**
  * Return 0 (success) if the given absolute file path exists, 11
  * (failure) otherwise.
  */
-function runBackgroundTask(commandLine) {
+export function runBackgroundTask(commandLine) {
   let path = commandLine.getArgument(0);
   let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   file.initWithPath(path);

@@ -31,7 +31,7 @@ const backgroundtaskPhases = {
       modules: [
         "resource://gre/modules/AppConstants.jsm",
         "resource://gre/modules/AsyncShutdown.jsm",
-        "resource://gre/modules/BackgroundTasksManager.jsm",
+        "resource://gre/modules/BackgroundTasksManager.sys.mjs",
         "resource://gre/modules/Console.jsm",
         "resource://gre/modules/EnterprisePolicies.sys.mjs",
         "resource://gre/modules/EnterprisePoliciesParent.sys.mjs",
@@ -120,17 +120,15 @@ const backgroundtaskPhases = {
     allowlist: {
       modules: [
         // We have a profile marker for this, even though it failed to load!
-        "resource:///modules/backgroundtasks/BackgroundTask_wait.jsm",
         "resource:///modules/backgroundtasks/BackgroundTask_wait.sys.mjs",
 
         "resource://gre/modules/ConsoleAPIStorage.jsm",
         "resource://gre/modules/Timer.jsm",
 
         // We have a profile marker for this, even though it failed to load!
-        "resource://gre/modules/backgroundtasks/BackgroundTask_wait.jsm",
         "resource://gre/modules/backgroundtasks/BackgroundTask_wait.sys.mjs",
 
-        "resource://testing-common/backgroundtasks/BackgroundTask_wait.jsm",
+        "resource://testing-common/backgroundtasks/BackgroundTask_wait.sys.mjs",
       ],
       services: ["@mozilla.org/consoleAPI-storage;1"],
     },

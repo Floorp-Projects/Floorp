@@ -3,15 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["runBackgroundTask"];
-
 const { Subprocess } = ChromeUtils.import(
   "resource://gre/modules/Subprocess.jsm"
 );
 
-async function runBackgroundTask(commandLine) {
+export async function runBackgroundTask(commandLine) {
   let sentinel = commandLine.getArgument(0);
   let count =
     commandLine.length > 1

@@ -8,24 +8,23 @@ Support for background task mode is gated on the build flag `MOZ_BACKGROUNDTASKS
 
 Background tasks are invoked with `--backgroundtask TASKNAME`.  Tasks must be packaged at build time; the background task runtime looks for regular JSM modules in the following locations (in order):
 
-1. (App-specific) `resource:///modules/backgroundtasks/BackgroundTask_TASKNAME.jsm`
-2. (Toolkit/general) `resource://gre/modules//backgroundtasks/BackgroundTask_TASKNAME.jsm`
+1. (App-specific) `resource:///modules/backgroundtasks/BackgroundTask_TASKNAME.sys.mjs`
+2. (Toolkit/general) `resource://gre/modules//backgroundtasks/BackgroundTask_TASKNAME.sys.mjs`
 
 To add a new background task, add to your `moz.build` file a stanza like:
 
 ```python
 EXTRA_JS_MODULES.backgroundtasks += [
-    "BackgroundTask_TASKNAME.jsm",
+    "BackgroundTask_TASKNAME.sys.mjs",
 ]
 ```
 
 ## Implementing a background task
 
-In `BackgroundTask_TASKNAME.jsm`, define a function `runBackgroundTask` that returns a `Promise`.  `runBackgroundTask` will be awaited and the integer value it resolves to will be used as the exit code of the `--backgroundtask TASKNAME` invocation.  Optionally, `runBackgroundTask` can take an [`nsICommandLine` instance](https://searchfox.org/mozilla-central/source/toolkit/components/commandlines/nsICommandLine.idl) as a parameter.  For example:
+In `BackgroundTask_TASKNAME.sys.mjs`, define a function `runBackgroundTask` that returns a `Promise`.  `runBackgroundTask` will be awaited and the integer value it resolves to will be used as the exit code of the `--backgroundtask TASKNAME` invocation.  Optionally, `runBackgroundTask` can take an [`nsICommandLine` instance](https://searchfox.org/mozilla-central/source/toolkit/components/commandlines/nsICommandLine.idl) as a parameter.  For example:
 
 ```javascript
-var EXPORTED_SYMBOLS = ["runBackgroundTask"];
-async function runBackgroundTask(commandLine) {
+export async function runBackgroundTask(commandLine) {
     return Number.parseInt(commandLine.getArgument(0), 10);
 }
 ```
@@ -42,7 +41,7 @@ The exit codes 2-4 have special meaning:
 * Exit code 3 (`EXIT_CODE.EXCEPTION`) means the background task invocation rejected with an exception.
 * Exit code 4 (`EXIT_CODE.TIMEOUT`) means that the background task timed out before it could complete.
 
-See [`BackgroundTasksManager.EXIT_CODE`](https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/BackgroundTasksManager.jsm) for details.
+See [`EXIT_CODE`](https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/BackgroundTasksManager.sys.mjs) for details.
 
 ## Test-only background tasks
 
@@ -50,7 +49,7 @@ There is special support for test-only background tasks.  Add to your `moz.build
 
 ```python
 TESTING_JS_MODULES.backgroundtasks += [
-    "BackgroundTask_TESTONLYTASKNAME.jsm",
+    "BackgroundTask_TESTONLYTASKNAME.sys.mjs",
 ]
 ```
 
@@ -86,7 +85,7 @@ Background tasks that are launched at shutdown (and that are not updating) do no
     gantt
         title Background tasks launched at Firefox shutdown
         dateFormat  YYYY-MM-DD
-        axisFormat  
+        axisFormat
         section Firefox
         firefox (version N)                      :2014-01-03, 3d
         updater                                  :2014-01-06, 1d

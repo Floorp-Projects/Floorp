@@ -3,16 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["runBackgroundTask"];
-
 const { Checker } = ChromeUtils.import(
   "resource://gre/modules/UpdateService.jsm"
 );
-const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
-  "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
-);
+import { EnterprisePolicyTesting } from "resource://testing-common/EnterprisePolicyTesting.sys.mjs";
 
-async function runBackgroundTask(commandLine) {
+export async function runBackgroundTask(commandLine) {
   let filePath = commandLine.getArgument(0);
   await EnterprisePolicyTesting.setupPolicyEngineWithJson(filePath);
 
