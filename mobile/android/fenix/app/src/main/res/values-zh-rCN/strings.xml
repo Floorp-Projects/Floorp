@@ -1122,9 +1122,11 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">已复制到剪贴板</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">登录同步服务</string>
+    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">登录同步服务</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">登录同步服务</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">同步并保存数据</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">发送到所有设备</string>
     <!-- An option from the share dialog to reconnect to sync -->

@@ -1119,9 +1119,11 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Copiate al area de transferentia</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Accede pro synchronisar</string>
+    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Accede pro synchronisar</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Aperir session in Sync</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Synchronisar e salvar datos</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Inviar a tote le apparatos</string>
     <!-- An option from the share dialog to reconnect to sync -->

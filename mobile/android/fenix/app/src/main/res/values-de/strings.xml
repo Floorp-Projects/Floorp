@@ -1113,9 +1113,11 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">In Zwischenablage kopiert</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Zum Synchronisieren anmelden</string>
+    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Zum Synchronisieren anmelden</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Bei Sync anmelden</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Daten synchronisieren und speichern</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">An alle Geräte senden</string>
     <!-- An option from the share dialog to reconnect to sync -->

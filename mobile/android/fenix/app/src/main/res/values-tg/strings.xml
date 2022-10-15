@@ -306,6 +306,9 @@
     <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
     <string name="sync_cfr_message">Варақаҳои шумо ҳамоҳанг карда мешаванд! Ҳамаи он ҷойҳоеро, ки шумо дар дастгоҳи дигари худ дидаед, ба даст оред.</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Пӯшидан</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Кушодани варақаи нави %1$s</string>
@@ -393,8 +396,6 @@
     <string name="preferences_gestures">Ишораҳо</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Фармоишдиҳӣ</string>
-    <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Ба воситаи ҳисоби Firefox-и худ хатбаракҳо, таърих ва чизҳои дигарро ҳамоҳанг кунед.</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Барои ҳамоҳангсозии варақаҳо, хатбаракҳо, ниҳонвожаҳо ва чизҳои дигар, ворид шавед.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -589,8 +590,6 @@
     <string name="preference_experiments_summary_2">Ба Mozilla иҷозат медиҳад, ки таҳқиқҳоро насб ва иҷро кунад</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Фаъол кардани ҳамоҳангсозӣ</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Ҳамоҳангсозӣ ва нигоҳ доштани маълумоти шумо</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -807,9 +806,6 @@
     <string name="delete_from_history">Нест кардан аз таърих</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Реҷаи хусусӣ)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Варақаҳои дигар</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1079,6 +1075,8 @@
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Мубодила кардан</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">Нигоҳ доштан ҳамчун PDF</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Фиристодан ба дастгоҳ</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1090,9 +1088,11 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Ба ҳофизаи муваққатӣ нусха бардошта шуд</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Барои ҳамоҳангсозӣ ворид шавед</string>
+    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Барои ҳамоҳангсозӣ ворид шавед</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Барои ҳамоҳангсозӣ ворид шавед</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Ҳамоҳангсозӣ ва нигоҳ доштани маълумот</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Фиристодан ба ҳамаи дастгоҳҳо</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -1221,8 +1221,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Баромадан</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Ин амал маълумоти тамошокуниро нест мекунад.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Фосилаи вақте, ки нест карда мешавад</string>
 
@@ -1957,4 +1955,12 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Гузариш ба танзимот</string>
     <string name="firefox_suggest_header">Пешниҳоди Firefox</string>
+
+    <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
+    <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
+    <string name="a11y_action_label_collapse">печондан</string>
+    <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
+    <string name="a11y_action_label_expand">баркушодан</string>
+    <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
+    <string name="a11y_action_label_wallpaper_collection_learn_more">барои гирифтани маълумоти бештар оид ба ин маҷмуа пайвандро кушоед</string>
 </resources>

@@ -303,6 +303,9 @@
     <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
     <string name="sync_cfr_message">Tab anjeun keur disingkronkeun! Pilih ti nu ditinggalkeun dina séjén parabot anjeun.</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Tutup</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Buka dina tab %1$s anyar</string>
@@ -501,6 +504,8 @@
     <string name="wallpaper_limited_edition_description_with_learn_more">Kumpulan Independent Voices anyar. %s</string>
     <!-- Description text for the limited edition wallpapers. -->
     <string name="wallpaper_limited_edition_description">Kumpulan Independent Voices anyar.</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Cobaan képrétkeun kelir</string>
     <!-- Wallpaper onboarding dialog body text. -->
     <string name="wallpapers_onboarding_dialog_body_text">Pilih latar anu nyarita ka anjeun.</string>
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
@@ -1073,6 +1078,8 @@
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Bagikeun</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">Simpen salaku PDF</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Kirim ka parangkat</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1084,9 +1091,11 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Ditiron kana papan klip</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Asup pikeun nyingkronkeun</string>
+    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Asup pikeun nyingkronkeun</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Asup ka Sync</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Singkronkeun tur simpen data</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Kirim ka sadaya parangkat</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -1263,6 +1272,8 @@
     <string name="onboarding_account_sign_in_header">Angkut di tempat nu ku anjeun tinggalkeun</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Bawa markah, jujutan, jeung kecap sandi ka %1$s di ieu parabot.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Singkronkeun tab jeung kecap sandi dina sadaya paranti pikeun pindah layar anu mulus.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Daptar</string>
     <!-- Text for the button to manually sign into Firefox account. -->
@@ -1272,8 +1283,12 @@
 
     <!-- text for the tracking protection onboarding card header -->
     <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Pripasi salawasna</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Salindung pripasi sacara baku</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s otomatis megat maskapé rerencepan nunutur anjeun ngalanglang raramat.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Miturkeun Total Cookie Protection pikeun ngeureunkeun palacak tina maké réréméh pikeun ngintip anjeun meuntas loka.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Baku (bawaan)</string>
     <!-- text for standard blocking option button description -->
@@ -1295,6 +1310,8 @@
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Kami geus ngarancang %s sangkan anjeun bisa ngatur naon anu dibagikeun onlén jeung naon anu dibagikeun ka kami.</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox ngatur sangkan anjeun bisa nangtukeun naon anu dibagikeun onlén jeung naon anu dibagikeun ka kami.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Maca wawaran salindungan kami</string>
 
@@ -1947,4 +1964,12 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Buka setélan</string>
     <string name="firefox_suggest_header">Firefox Suggest</string>
+
+    <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
+    <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
+    <string name="a11y_action_label_collapse">tilep</string>
+    <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
+    <string name="a11y_action_label_expand">batek</string>
+    <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
+    <string name="a11y_action_label_wallpaper_collection_learn_more">buka tutumbu pikeun leuwih teleb ngeunaan ieu koléksi</string>
 </resources>

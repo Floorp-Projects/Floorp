@@ -1095,9 +1095,11 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Αντιγράφηκε στο πρόχειρο</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Σύνδεση για συγχρονισμό</string>
+    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Σύνδεση για συγχρονισμό</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Σύνδεση στο Sync</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Συγχρονισμός και αποθήκευση δεδομένων</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Αποστολή σε όλες τις συσκευές</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -1970,4 +1972,11 @@
     <string name="experiments_snackbar_button">Μετάβαση στις ρυθμίσεις</string>
     <string name="firefox_suggest_header">Προτάσεις Firefox</string>
 
-    </resources>
+    <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
+    <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
+    <string name="a11y_action_label_collapse">σύμπτυξη</string>
+    <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
+    <string name="a11y_action_label_expand">ανάπτυξη</string>
+    <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
+    <string name="a11y_action_label_wallpaper_collection_learn_more">άνοιγμα συνδέσμου για περισσότερες πληροφορίες σχετικά με αυτήν τη συλλογή</string>
+</resources>

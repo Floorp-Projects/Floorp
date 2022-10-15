@@ -1080,9 +1080,11 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Đã sao chép vào khay nhớ tạm</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Đăng nhập vào đồng bộ hóa</string>
+    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Đăng nhập vào đồng bộ hóa</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Đăng nhập vào đồng bộ hóa</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Đồng bộ hóa và lưu dữ liệu</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Gửi đến tất cả các thiết bị</string>
     <!-- An option from the share dialog to reconnect to sync -->
