@@ -51,23 +51,13 @@
 // --no-optoutstudies: set `app.shield.optoutstudies.enabled=false` in the
 //   background task profile.
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["runBackgroundTask"];
-
-const { EXIT_CODE } = ChromeUtils.import(
-  "resource://gre/modules/BackgroundTasksManager.jsm"
-).BackgroundTasksManager;
+import { EXIT_CODE } from "resource://gre/modules/BackgroundTasksManager.sys.mjs";
 
 const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
-const { BackgroundTasksUtils } = ChromeUtils.import(
-  "resource://gre/modules/BackgroundTasksUtils.jsm"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { BackgroundTasksUtils } from "resource://gre/modules/BackgroundTasksUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -291,7 +281,7 @@ async function handleCommandLine(commandLine) {
   }
 }
 
-async function runBackgroundTask(commandLine) {
+export async function runBackgroundTask(commandLine) {
   console.error("runBackgroundTask: message");
 
   // Most of the task is arranging configuration.

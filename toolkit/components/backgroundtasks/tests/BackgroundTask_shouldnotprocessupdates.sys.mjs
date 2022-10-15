@@ -3,13 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["runBackgroundTask"];
-
-async function runBackgroundTask(commandLine) {
+export async function runBackgroundTask(commandLine) {
   // Exact same behaviour as `shouldprocessupdates`, but with a task name that
   // is not recognized as a task that should process updates.
-  const taskModule = ChromeUtils.import(
-    "resource://testing-common/backgroundtasks/BackgroundTask_shouldprocessupdates.jsm"
+  const taskModule = ChromeUtils.importESModule(
+    "resource://testing-common/backgroundtasks/BackgroundTask_shouldprocessupdates.sys.mjs"
   );
   return taskModule.runBackgroundTask(commandLine);
 }

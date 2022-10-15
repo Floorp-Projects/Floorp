@@ -7,15 +7,9 @@
 // the temporary profile created during background tasks.  This will
 // be a dumping ground for functionality that writes to the profile.
 
-"use strict";
+import { EXIT_CODE } from "resource://gre/modules/BackgroundTasksManager.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["runBackgroundTask"];
-
-const { EXIT_CODE } = ChromeUtils.import(
-  "resource://gre/modules/BackgroundTasksManager.jsm"
-).BackgroundTasksManager;
-
-async function runBackgroundTask(commandLine) {
+export async function runBackgroundTask(commandLine) {
   console.error("runBackgroundTask: is_profile_slim");
 
   // For now, just verify contents of profile after a network request.

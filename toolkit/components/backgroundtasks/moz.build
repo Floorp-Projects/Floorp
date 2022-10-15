@@ -35,8 +35,8 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "toolkit_backgroundtasks"
 
 EXTRA_JS_MODULES += [
-    "BackgroundTasksManager.jsm",
-    "BackgroundTasksUtils.jsm",
+    "BackgroundTasksManager.sys.mjs",
+    "BackgroundTasksUtils.sys.mjs",
 ]
 
 EXTRA_JS_MODULES.backgroundtasks += [
@@ -44,10 +44,10 @@ EXTRA_JS_MODULES.backgroundtasks += [
 ]
 
 EXTRA_JS_MODULES.backgroundtasks += [
-    "BackgroundTask_exception.jsm",
-    "BackgroundTask_failure.jsm",
-    "BackgroundTask_message.jsm",
-    "BackgroundTask_success.jsm",
+    "BackgroundTask_exception.sys.mjs",
+    "BackgroundTask_failure.sys.mjs",
+    "BackgroundTask_message.sys.mjs",
+    "BackgroundTask_success.sys.mjs",
 ]
 
 LOCAL_INCLUDES += [
@@ -58,30 +58,30 @@ BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
 TESTING_JS_MODULES += [
-    "BackgroundTasksTestUtils.jsm",
+    "BackgroundTasksTestUtils.sys.mjs",
 ]
 
 TESTING_JS_MODULES.backgroundtasks += [
-    "tests/BackgroundTask_backgroundtask_specific_pref.jsm",
-    "tests/BackgroundTask_crash.jsm",
-    "tests/BackgroundTask_file_exists.jsm",
-    "tests/BackgroundTask_jsdebugger.jsm",
-    "tests/BackgroundTask_localization.jsm",
-    "tests/BackgroundTask_not_ephemeral_profile.jsm",
-    "tests/BackgroundTask_policies.jsm",
-    "tests/BackgroundTask_profile_is_slim.jsm",
-    "tests/BackgroundTask_shouldnotprocessupdates.jsm",
-    "tests/BackgroundTask_shouldprocessupdates.jsm",
-    "tests/BackgroundTask_timeout.jsm",
-    "tests/BackgroundTask_unique_profile.jsm",
-    "tests/BackgroundTask_update_sync_manager.jsm",
-    "tests/BackgroundTask_wait.jsm",
+    "tests/BackgroundTask_backgroundtask_specific_pref.sys.mjs",
+    "tests/BackgroundTask_crash.sys.mjs",
+    "tests/BackgroundTask_file_exists.sys.mjs",
+    "tests/BackgroundTask_jsdebugger.sys.mjs",
+    "tests/BackgroundTask_localization.sys.mjs",
+    "tests/BackgroundTask_not_ephemeral_profile.sys.mjs",
+    "tests/BackgroundTask_policies.sys.mjs",
+    "tests/BackgroundTask_profile_is_slim.sys.mjs",
+    "tests/BackgroundTask_shouldnotprocessupdates.sys.mjs",
+    "tests/BackgroundTask_shouldprocessupdates.sys.mjs",
+    "tests/BackgroundTask_timeout.sys.mjs",
+    "tests/BackgroundTask_unique_profile.sys.mjs",
+    "tests/BackgroundTask_update_sync_manager.sys.mjs",
+    "tests/BackgroundTask_wait.sys.mjs",
 ]
 
 if CONFIG["MOZ_BUILD_APP"] == "browser":
     # ASRouter is Firefox-only.
     TESTING_JS_MODULES.backgroundtasks += [
-        "tests/BackgroundTask_targeting.jsm",
+        "tests/BackgroundTask_targeting.sys.mjs",
     ]
 
     FINAL_TARGET_FILES.browser.defaults.backgroundtasks += [

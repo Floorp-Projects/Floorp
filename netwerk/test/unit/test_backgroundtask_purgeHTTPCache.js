@@ -17,7 +17,7 @@ const do_backgroundtask = BackgroundTasksTestUtils.do_backgroundtask.bind(
 // which are a public API, do not change over time.
 const { EXIT_CODE } = ChromeUtils.import(
   "resource://gre/modules/BackgroundTasksManager.jsm"
-).BackgroundTasksManager;
+);
 
 const LEAF_NAME = "newCacheFolder";
 

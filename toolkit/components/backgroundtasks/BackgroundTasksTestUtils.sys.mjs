@@ -2,10 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["BackgroundTasksTestUtils"];
-
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -32,7 +28,7 @@ function getFirefoxExecutableFile() {
   return file;
 }
 
-var BackgroundTasksTestUtils = {
+export var BackgroundTasksTestUtils = {
   init(scope) {
     this.testScope = scope;
   },

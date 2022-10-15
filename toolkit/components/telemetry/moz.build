@@ -127,7 +127,7 @@ EXTRA_JS_MODULES += [
 ]
 
 EXTRA_JS_MODULES.backgroundtasks += [
-    "pings/BackgroundTask_pingsender.jsm",
+    "pings/BackgroundTask_pingsender.sys.mjs",
 ]
 
 if CONFIG["OS_ARCH"] == "WINNT":

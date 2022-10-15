@@ -3,11 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["BackgroundTasksManager"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -68,7 +64,7 @@ function locationsForBackgroundTaskNamed(name) {
 
   let locations = [];
   for (const subModule of subModules) {
-    let URI = `${subModule}/backgroundtasks/BackgroundTask_${name}.jsm`;
+    let URI = `${subModule}/backgroundtasks/BackgroundTask_${name}.sys.mjs`;
     locations.push(URI);
   }
 
@@ -76,7 +72,7 @@ function locationsForBackgroundTaskNamed(name) {
 }
 
 /**
- * Find a JSM named like `backgroundtasks/BackgroundTask_${name}.jsm`,
+ * Find an ES module named like `backgroundtasks/BackgroundTask_${name}.sys.mjs`,
  * import it, and return the whole module.
  *
  * When testing, allow to load from `XPCSHELL_TESTING_MODULES_URI`,
@@ -92,7 +88,7 @@ function findBackgroundTaskModule(name) {
     lazy.log.debug(`Looking for background task at URI: ${URI}`);
 
     try {
-      const taskModule = ChromeUtils.import(URI);
+      const taskModule = ChromeUtils.importESModule(URI);
       lazy.log.info(`Found background task at URI: ${URI}`);
       return taskModule;
     } catch (ex) {
@@ -109,7 +105,7 @@ function findBackgroundTaskModule(name) {
   );
 }
 
-class BackgroundTasksManager {
+export class BackgroundTasksManager {
   // Keep `BackgroundTasksManager.helpInfo` synchronized with `DevToolsStartup.helpInfo`.
   /* eslint-disable max-len */
   helpInfo =
@@ -196,7 +192,7 @@ class BackgroundTasksManager {
         ` '${Services.dirsvc.get("ProfD", Ci.nsIFile).path}'`
     );
 
-    let exitCode = BackgroundTasksManager.EXIT_CODE.NOT_FOUND;
+    let exitCode = EXIT_CODE.NOT_FOUND;
     try {
       let taskModule = findBackgroundTaskModule(name);
       addMarker("BackgroundTasksManager:AfterFindRunBackgroundTask");
@@ -214,7 +210,7 @@ class BackgroundTasksManager {
           new Promise(resolve =>
             lazy.setTimeout(() => {
               lazy.log.error(`Background task named '${name}' timed out`);
-              resolve(BackgroundTasksManager.EXIT_CODE.TIMEOUT);
+              resolve(EXIT_CODE.TIMEOUT);
             }, timeoutSec * 1000)
           ),
           taskModule.runBackgroundTask(commandLine),
@@ -224,7 +220,7 @@ class BackgroundTasksManager {
         );
       } catch (e) {
         lazy.log.error(`Backgroundtask named '${name}' threw exception`, e);
-        exitCode = BackgroundTasksManager.EXIT_CODE.EXCEPTION;
+        exitCode = EXIT_CODE.EXCEPTION;
       }
     } finally {
       addMarker("BackgroundTasksManager:AfterAwaitRunBackgroundTask");
@@ -254,7 +250,7 @@ class BackgroundTasksManager {
  * greater than 10 to allow for additional shared exit codes to be added here.
  * Exit codes should be between 0 and 127 to be safe across platforms.
  */
-BackgroundTasksManager.EXIT_CODE = {
+export const EXIT_CODE = {
   /**
    * The task succeeded.
    *
