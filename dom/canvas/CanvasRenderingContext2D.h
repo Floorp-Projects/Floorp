@@ -445,7 +445,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
 
   virtual void SetOpaqueValueFromOpaqueAttr(bool aOpaqueAttrValue) override;
   bool GetIsOpaque() override { return mOpaque; }
-  void ResetBitmap() override;
+  NS_IMETHOD Reset() override;
 
   bool UpdateWebRenderCanvasData(nsDisplayListBuilder* aBuilder,
                                  WebRenderCanvasData* aCanvasData) override;

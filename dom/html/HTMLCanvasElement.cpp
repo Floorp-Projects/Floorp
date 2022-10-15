@@ -1339,7 +1339,7 @@ void HTMLCanvasElement::OnMemoryPressure() {
 
 void HTMLCanvasElement::OnDeviceReset() {
   if (!mOffscreenCanvas && mCurrentContext) {
-    mCurrentContext->ResetBitmap();
+    mCurrentContext->Reset();
   }
 }
 

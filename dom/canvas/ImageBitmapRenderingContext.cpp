@@ -69,7 +69,7 @@ void ImageBitmapRenderingContext::TransferImageBitmap(
 
 void ImageBitmapRenderingContext::TransferFromImageBitmap(
     ImageBitmap* aImageBitmap) {
-  ResetBitmap();
+  Reset();
 
   if (aImageBitmap) {
     mImage = aImageBitmap->TransferAsImage();
@@ -216,13 +216,15 @@ void ImageBitmapRenderingContext::SetOpaqueValueFromOpaqueAttr(
 
 bool ImageBitmapRenderingContext::GetIsOpaque() { return false; }
 
-void ImageBitmapRenderingContext::ResetBitmap() {
+NS_IMETHODIMP
+ImageBitmapRenderingContext::Reset() {
   if (mCanvasElement) {
     mCanvasElement->InvalidateCanvas();
   }
 
   mImage = nullptr;
   mFrameCaptureState = FrameCaptureState::CLEAN;
+  return NS_OK;
 }
 
 bool ImageBitmapRenderingContext::UpdateWebRenderCanvasData(
