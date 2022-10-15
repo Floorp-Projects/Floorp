@@ -273,7 +273,14 @@
     <string name="preference_privacy_block_content_summary2">Asoj la ooypisa la ib\'ane\' uva\' vale\'n kuxh la ib\'an ka\'t unq\'a ivatze\'</string>
     <string name="preference_privacy_category_cookies">Maj ivatz unq\'a cookies</string>
 
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Ye´le, ta´ntiixh</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Maj ivatz unq´a cookies ti´ ipich´ul ta´n ka´t uxchil</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Maj ivatz unq\'a cookies tetz va\'len xaaol</string>
+
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Maj ivatz unq´a cookies uve´ at kan xo´l unq´a atinb´ale´</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">Eche´ vee´, b´an b´a´nil</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">B\'anb\'e u vi\' aq\'ab\'e\' aq\'al uva\' la jaj u aplicacione\'</string>
@@ -322,6 +329,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Taq\'onb\'al itiinsal unq\'a vee\' at ve\'t ok stuul</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Txaakan u chukul tetze´</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Q\'aavisab kan unq\'a chukb\'al tetze\' uve\' atik kan b\'axa</string>
 
@@ -330,6 +340,11 @@
     <string name="preference_search_add2">+ Aq\'o\'k uma\'t taq\'onb\'al chukb\'al tetz</string>
     <string name="preference_search_remove_title">Sojsa unq\'a taq\'onb\'ale\' uve\' nichukube\'</string>
     <string name="preference_search_remove">Sojsa</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Aq´ku´ uma´t chukul tetz</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Txaakan u chukul eetze´ uve´ pal chit asa´ata´:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -385,6 +400,10 @@
 
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Ka\'t tuuleb\'al</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Exhlal ti´ achukat unka´te</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
     <string name="content_description_forward">La b\'en axh svatz</string>
@@ -456,7 +475,38 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string moz:removedIn="106" name="onboarding_title">¡B´a´n ool tu %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Jupa</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">B´a´n ool tu %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Oora kuxhtu´. Eetz kuxhtu´. Ye´l uma´l b´alonaal ati.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Xe´ten</string>
+
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s jit eela tuk´ ka´t unq´a chukb´ale´</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Tuk kusojsa unq´a vee´ chukeltu ve´t s-a´n aq´al uva´ ye´xhib´il la pich´un.</string>
+
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Aq´kan u %1$s uva´ a´ kuxhe´ la b´anb´e aq´al uva´ ye´xhib´il la ilon kam napich´u.</string>
+
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">B\'an ooksat uyak\'il u eetze\'</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Eq\'o u tiinsab\' tetze\' tu uma\'t tanul. Maj ivatz unq\'a altziinaj kame\' as ka\'taj kam uve\' ye\' ni eq\'on ku\'tzan u vee\' nasa\' apich\'uta\'.</string>
