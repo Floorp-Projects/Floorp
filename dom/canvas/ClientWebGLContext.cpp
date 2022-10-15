@@ -454,7 +454,10 @@ bool ClientWebGLContext::UpdateWebRenderCanvasData(
     return true;
   }
 
+  const auto& size = DrawingBufferSize();
+
   if (!IsContextLost() && !renderer && mNotLost->mCanvasRenderer &&
+      mNotLost->mCanvasRenderer->GetSize() == gfx::IntSize(size.x, size.y) &&
       aCanvasData->SetCanvasRenderer(mNotLost->mCanvasRenderer)) {
     mNotLost->mCanvasRenderer->SetDirty();
     mResetLayer = false;
