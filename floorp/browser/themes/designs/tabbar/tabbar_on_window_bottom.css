@@ -109,3 +109,5 @@
 #navigator-toolbox{ padding-top: var(--uc-titlebar-padding,0px) !important; }
 
 .titlebar-buttonbox-container > .titlebar-buttonbox{ height: 100%; }
+
+:root[inFullscreen] body > #titlebar{visibility:collapse;}
