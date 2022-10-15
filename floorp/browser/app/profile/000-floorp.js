@@ -164,6 +164,26 @@ pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl16", true);
 pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl17", true);
 pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl18", true);
 pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl19", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl0.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl1.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl2.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl3.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl4.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl5.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl6.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl7.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl8.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl9.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl10.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl11.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl12.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl13.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl14.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl15.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl16.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl17.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl18.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl19.usercontext", true);
 pref("services.sync.prefs.sync.floorp.optimized.msbutton.ope", true); //サイドボタン付きマウス操作にブラウザーを最適化
 pref("services.sync.prefs.sync.floorp.optimized.verticaltab", true); //ツリー型垂直タブ等に最適化。8.7.2 からフォーカスした際の動作は別に
 pref("services.sync.prefs.sync.floorp.browser.user.interface", true);// Floorp 10 系以降のインターフェーステーマ設定
