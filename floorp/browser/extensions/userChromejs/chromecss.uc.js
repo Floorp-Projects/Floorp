@@ -326,7 +326,7 @@ window.UCL = {
 	},
 	edit: function(aFile) {
 		const prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-		let l10n = new Localization(["browser/menubar.ftl"], true);
+		let l10n = new Localization(["browser/floorp.ftl"], true);
 		const editor = Services.prefs.getCharPref("view_source.editor.path");
 		if (!editor) return prompts.alert(null, l10n.formatValueSync("not-found-editor-path"),l10n.formatValueSync("set-pref-description"));
 		try {
