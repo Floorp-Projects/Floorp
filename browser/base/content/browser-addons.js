@@ -18,11 +18,6 @@ ChromeUtils.defineModuleGetter(
   "OriginControls",
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExtensionPermissions",
-  "resource://gre/modules/ExtensionPermissions.jsm"
-);
 
 customElements.define(
   "addon-progress-notification",
@@ -1392,22 +1387,9 @@ var gUnifiedExtensions = {
       document
         .getElementById("nav-bar")
         .setAttribute("unifiedextensionsbuttonshown", true);
-
-      gBrowser.addTabsProgressListener(this);
-      window.addEventListener("TabSelect", () => this.updateAttention());
-
-      this.permListener = () => this.updateAttention();
-      lazy.ExtensionPermissions.addListener(this.permListener);
     }
 
     this._initialized = true;
-  },
-
-  uninit() {
-    if (this.permListener) {
-      lazy.ExtensionPermissions.removeListener(this.permListener);
-      this.permListener = null;
-    }
   },
 
   get isEnabled() {
@@ -1415,34 +1397,6 @@ var gUnifiedExtensions = {
       "extensions.unifiedExtensions.enabled",
       false
     );
-  },
-
-  onLocationChange(browser, webProgress, _request, _uri, flags) {
-    // Only update on top-level cross-document navigations in the selected tab.
-    if (
-      webProgress.isTopLevel &&
-      browser === gBrowser.selectedBrowser &&
-      !(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)
-    ) {
-      this.updateAttention();
-    }
-  },
-
-  // Update the attention indicator for the whole unified extensions button.
-  async updateAttention() {
-    for (let addon of await this.getActiveExtensions()) {
-      let policy = WebExtensionPolicy.getByID(addon.id);
-      let widget = this.browserActionFor(policy)?.widget;
-
-      // Only show for extensions which are not already visible in the toolbar.
-      if (!widget || widget.areaType !== CustomizableUI.TYPE_TOOLBAR) {
-        if (lazy.OriginControls.getAttention(policy, window)) {
-          this.button.setAttribute("attention", true);
-          return;
-        }
-      }
-    }
-    this.button.setAttribute("attention", false);
   },
 
   getPopupAnchorID(aBrowser, aWindow) {
@@ -1587,18 +1541,15 @@ var gUnifiedExtensions = {
 
     ExtensionsUI.originControlsMenu(menu, id);
 
-    const browserAction = this.browserActionFor(WebExtensionPolicy.getByID(id));
-    if (browserAction) {
-      browserAction.updateContextMenu(menu);
-    }
-  },
-
-  browserActionFor(policy) {
     // Ideally, we wouldn't do that because `browserActionFor()` will only be
     // defined in `global` when at least one extension has required loading the
     // `ext-browserAction` code.
-    let method = lazy.ExtensionParent.apiManager.global.browserActionFor;
-    return method?.(policy?.extension);
+    const browserAction = lazy.ExtensionParent.apiManager.global.browserActionFor?.(
+      WebExtensionPolicy.getByID(id)?.extension
+    );
+    if (browserAction) {
+      browserAction.updateContextMenu(menu);
+    }
   },
 
   async manageExtension(menu) {
