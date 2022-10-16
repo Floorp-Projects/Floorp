@@ -142,9 +142,8 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   // attributes.
   virtual bool GetIsOpaque() = 0;
 
-  // Invalidate this context and release any held resources, in preperation
-  // for possibly reinitializing with SetDimensions/InitializeWithSurface.
-  NS_IMETHOD Reset() = 0;
+  // Clear and/or release backing bitmaps, such as for transferToImageBitmap.
+  virtual void ResetBitmap() = 0;
 
   virtual already_AddRefed<mozilla::layers::Image> GetAsImage() {
     return nullptr;
