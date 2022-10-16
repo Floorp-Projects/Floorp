@@ -17,6 +17,7 @@ DevToolsModules(
     "headers-provider.js",
     "l10n.js",
     "open-request-in-tab.js",
+    "powershell.js",
     "prefs.js",
     "request-blocking.js",
     "request-utils.js",
