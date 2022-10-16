@@ -32,12 +32,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "PowerShell",
-  "resource://devtools/client/netmonitor/src/utils/powershell.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "copyString",
   "resource://devtools/shared/platform/clipboard.js",
   true
@@ -176,16 +170,6 @@ class RequestListContextMenu {
           ),
       });
     }
-
-    copySubMenu.push({
-      id: "request-list-context-copy-as-powershell",
-      label: L10N.getStr("netmonitor.context.copyAsPowerShell"),
-      accesskey: L10N.getStr("netmonitor.context.copyAsPowerShell.accesskey"),
-      // Menu item will be visible even if data hasn't arrived, so we need to check
-      // *Available property and then fetch data lazily once user triggers the action.
-      visible: !!clickedRequest,
-      click: () => this.copyAsPowerShell(clickedRequest),
-    });
 
     copySubMenu.push({
       id: "request-list-context-copy-as-fetch",
@@ -556,39 +540,6 @@ class RequestListContextMenu {
       postDataText: requestPostData ? requestPostData.postData.text : "",
     };
     copyString(Curl.generateCommand(data, platform));
-  }
-
-  async copyAsPowerShell(request) {
-    let {
-      id,
-      url,
-      method,
-      requestHeaders,
-      requestPostData,
-      requestCookies,
-    } = request;
-
-    requestHeaders =
-      requestHeaders ||
-      (await this.props.connector.requestData(id, "requestHeaders"));
-
-    requestPostData =
-      requestPostData ||
-      (await this.props.connector.requestData(id, "requestPostData"));
-
-    requestCookies =
-      requestCookies ||
-      (await this.props.connector.requestData(id, "requestCookies"));
-
-    return copyString(
-      PowerShell.generateCommand(
-        url,
-        method,
-        requestHeaders.headers,
-        requestPostData.postData,
-        requestCookies.cookies || requestCookies
-      )
-    );
   }
 
   /**
