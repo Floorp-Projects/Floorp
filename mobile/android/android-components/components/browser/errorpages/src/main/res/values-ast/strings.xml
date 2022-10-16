@@ -8,7 +8,7 @@
     <string name="mozac_browser_errorpages_generic_title">Nun se pue completar la solicitú</string>
 
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
-    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>La información adicional tocante a esti problema o fallu nun ta disponible anguaño.</p>]]></string>
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>La información adicional tocante a esti problema o error nun ta disponible anguaño.</p>]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">La conexón segura falló</string>
@@ -25,7 +25,7 @@
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
         <li>Esto podría ser un problema cola configuración del sirvidor o que daquién tea tentando de suplantalu.</li>
-        <li>Si nel pasáu te conectesti correutamente al sirvidor, el fallu quiciabes seya temporal polo qu\'anueva la páxina dempués.</li>
+        <li>Si nel pasáu te conectesti correutamente al sirvidor, l\'error quiciabes seya temporal polo qu\'anueva la páxina dempués.</li>
       </ul>]]></string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
@@ -143,9 +143,9 @@
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
-    <string name="mozac_browser_errorpages_corrupted_content_title">Fallu de conteníu toyíu</string>
+    <string name="mozac_browser_errorpages_corrupted_content_title">Error de conteníu toyíu</string>
     <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
-    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Nun se pue amosar la páxina que tentes de ver porque se detectó un fallu na tresmisión de los datos.</p>
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Nun se pue amosar la páxina que tentes de ver porque se detectó un error na tresmisión de los datos.</p>
       <ul>
         <li>Ponte en contautu colos propietarios del sitiu web pa informalos d\'esti problema.</li>
       </ul>]]></string>
@@ -153,13 +153,13 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Cascó\'l conteníu</string>
 
-    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Nun se pue amosar la páxina que tentes de ver porque se detectó un fallu na tresmisión de los datos.</p>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Nun se pue amosar la páxina que tentes de ver porque se detectó un error na tresmisión de los datos.</p>
       <ul>
         <li>Ponte en contautu colos propietarios del sitiu web pa informalos d\'esti problema.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Fallu de la codificación del conteníu</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Error de la codificación del conteníu</string>
 
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Nun se pue amosar la páxina que tentes de ver porque usa un tipu de compresión que nun ye válidu o compatible.</p>
       <ul>
@@ -213,7 +213,7 @@
 
     <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
         <li>¿Pue ser que l\'elementu se renomare, quitare o moviere?</li>
-        <li>¿La direición tien dalguna falta u otru fallu tipográficu?</li>
+        <li>¿La direición tien dalguna falta u otru error tipográficu?</li>
         <li>¿Tienes abondos permisos p\'acceder al elementu solicitáu?</li>
       </ul>]]></string>
 

@@ -197,7 +197,7 @@
     <!-- Displayed in the "Status" field for the updater when an add-on has no updates available. -->
     <string name="mozac_feature_addons_updater_status_no_update_available">Nun hai nengún anovamientu disponible</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
-    <string name="mozac_feature_addons_updater_status_error">Fallu</string>
+    <string name="mozac_feature_addons_updater_status_error">Error</string>
     <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
     <string name="mozac_feature_addons_updater_dialog_title">Información del anovador</string>
     <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->

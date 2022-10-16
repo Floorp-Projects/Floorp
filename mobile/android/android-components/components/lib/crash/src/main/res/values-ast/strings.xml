@@ -4,7 +4,7 @@
     <string name="mozac_lib_crash_dialog_title">Sentímoslo, %1$s tuvo un problema y cascó.</string>
 
     <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
-    <string name="mozac_lib_crash_dialog_checkbox">Unviar l\'informe del fallu a %1$s</string>
+    <string name="mozac_lib_crash_dialog_checkbox">Unviar l\'informe del error a %1$s</string>
 
     <!-- Label of the button closing the crash reporter dialog. -->
     <string name="mozac_lib_crash_dialog_button_close">Zarrar</string>
@@ -22,7 +22,7 @@
     <string name="mozac_lib_crash_notification_action_report">Informar</string>
 
     <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
-    <string name="mozac_lib_send_crash_report_in_progress">Unviando l\'informe del fallu a %1$s</string>
+    <string name="mozac_lib_send_crash_report_in_progress">Unviando l\'informe del error a %1$s</string>
 
     <!-- Label of notification showing that the crash handling service is gathering the crash data. -->
     <string name="mozac_lib_gathering_crash_data_in_progress">Recoyendo los datos del casque</string>
