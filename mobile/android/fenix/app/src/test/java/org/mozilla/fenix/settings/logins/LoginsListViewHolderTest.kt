@@ -25,7 +25,7 @@ class LoginsListViewHolderTest {
 
     private val baseLogin = SavedLogin(
         guid = "abcd",
-        origin = "mozilla.org",
+        origin = "https://www.mozilla.org",
         username = "admin",
         password = "password",
         timeLastUsed = 100L,
@@ -33,20 +33,21 @@ class LoginsListViewHolderTest {
 
     private lateinit var interactor: SavedLoginsInteractor
     private lateinit var binding: LoginsItemBinding
+    private lateinit var holder: LoginsListViewHolder
 
     @Before
     fun setup() {
         binding = LoginsItemBinding.inflate(LayoutInflater.from(testContext))
         interactor = mockk(relaxed = true)
+        holder = LoginsListViewHolder(
+            binding.root,
+            interactor,
+        )
         every { testContext.components.core.icons } returns BrowserIcons(testContext, mockk(relaxed = true))
     }
 
     @Test
     fun `bind url and username`() {
-        val holder = LoginsListViewHolder(
-            binding.root,
-            interactor,
-        )
         holder.bind(baseLogin)
 
         assertEquals("mozilla.org", binding.webAddressView.text)
@@ -54,11 +55,18 @@ class LoginsListViewHolderTest {
     }
 
     @Test
+    fun `GIVEN url has a mobile prefix WHEN url is binded THEN mobile prefix is stripped`() {
+        holder.bind(baseLogin.copy(origin = "https://m.mozilla.org"))
+
+        assertEquals("mozilla.org", binding.webAddressView.text)
+
+        holder.bind(baseLogin.copy(origin = "https://mobile.mozilla.org"))
+
+        assertEquals("mozilla.org", binding.webAddressView.text)
+    }
+
+    @Test
     fun `call interactor on click`() {
-        val holder = LoginsListViewHolder(
-            binding.root,
-            interactor,
-        )
         holder.bind(baseLogin)
 
         binding.root.performClick()
