@@ -331,14 +331,16 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login), MenuProvider {
     }
 
     private fun setSaveButtonState() {
-        activity?.invalidateOptionsMenu()
+        activity?.invalidateMenu()
     }
 
     override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.login_save, menu)
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu) {
+    override fun onPrepareMenu(menu: Menu) {
+        super.onPrepareMenu(menu)
+
         val saveButton = menu.findItem(R.id.save_login_button)
         val changesMadeWithNoErrors = validHostname && validUsername && validPassword
         saveButton.isEnabled = changesMadeWithNoErrors
