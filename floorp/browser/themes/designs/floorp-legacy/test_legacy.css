@@ -3211,7 +3211,7 @@ richlistitem[originaltype="loginsFooter"] .ac-site-icon {
 }
 
 #pageAction-panel-shareURL {
-  list-style-image: url(chrome://browser/skin/share.svg) !important;
+  list-style-image: url(chrome://browser/skin/material-share.svg) !important;
 }
 
 #pageAction-panel-copyURL {

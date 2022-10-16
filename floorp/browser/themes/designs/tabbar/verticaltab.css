@@ -117,6 +117,7 @@ See the above repository for updates as well as full license text. */
     top: 0;
     right:0;
     height: 40px;
+    visibility: hidden !important;
   }
   
   :root[sizemode="fullscreen"] #TabsToolbar > .titlebar-buttonbox-container:last-child,
