@@ -1,68 +1,204 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
 <head>
+<meta charset=utf-8>
 <title>WebGL in OffscreenCanvas</title>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
 <body>
-<canvas id="c" width="64" height="64"></canvas>
+<canvas id="c1" width="64" height="64"></canvas>
 <canvas id="c2" width="64" height="64"></canvas>
-<canvas id="c-ref" width="64" height="64"></canvas>
+<canvas id="c_ref" width="64" height="64"></canvas>
 <script>
 
-SimpleTest.waitForExplicitFinish();
+function todo_bug(bugId, val, text) {
+  todo(val, `[Bug ${bugId}] ${text}`);
+}
 
-function runTest() {
-
+function testWorker(onFinished) {
   var worker = new Worker("offscreencanvas.js");
 
   ok(worker, "Web worker successfully created");
 
   worker.onmessage = function(evt) {
     var msg = evt.data || {};
+    //console.log('onmessage', {evt}, msg.type, msg.result, msg.name);
     if (msg.type == "test") {
       ok(msg.result, msg.name);
     }
     if (msg.type == "imagebitmap") {
       // testing toBlob
-      // Fill c-ref with green color.
-      var c = document.getElementById("c-ref");
-      var ctx = c.getContext("2d");
+      // Fill c_ref with green color.
+      var ctx = c_ref.getContext("2d");
       ctx.rect(0, 0, 64, 64);
       ctx.fillStyle = "#00FF00";
       ctx.fill();
 
-      var htmlCanvas = document.getElementById("c");
-      var bitmapRenderer = htmlCanvas.getContext("bitmaprenderer");
+      var bitmapRenderer = c1.getContext("bitmaprenderer");
       bitmapRenderer.transferFromImageBitmap(msg.bitmap);
 
-      ok(c.toDataURL() == htmlCanvas.toDataURL(),
-         "imagebitmap should return a 64x64 green square");
+      ok(c1.toDataURL() == c_ref.toDataURL(),
+         "c1.toDataURL MUST return a 64x64 green square");
 
-      // The ownership of msg.bitmap should be transferred to canvas "c" when
-      // we called transferFromImageBitmap. So we test if the ownership is actually
-      // transferred here.
-      var htmlCanvas = document.getElementById("c2");
-      var bitmapRenderer = htmlCanvas.getContext("bitmaprenderer");
-      bitmapRenderer.transferFromImageBitmap(msg.bitmap);
+      // The ownership of msg.bitmap should be transferred to canvas c1 when
+      // we called transferFromImageBitmap, marking msg.bitmap as "detached".
+      // Ensure that transferFromImageBitmap again should throw.
+      var bitmapRenderer = c2.getContext("bitmaprenderer");
 
-      SimpleTest.doesThrow(
-        function() { c2.toDataURL(); },
-        "ImageBitmap has been transferred, toDataURL will throw.");
+      let didThrow = false;
+      try {
+        bitmapRenderer.transferFromImageBitmap(msg.bitmap)
+      } catch (e) {
+        didThrow = true;
+      }
+      todo_bug(1795506, didThrow, 'transferFromImageBitmap(detached) must throw');
+      ok(c1.toDataURL() == c_ref.toDataURL(),
+         "c2.toDataURL MUST NOT return a 64x64 green square");
 
       worker.terminate();
-      SimpleTest.finish();
+      onFinished();
     }
   }
 
   worker.postMessage({test: 'webgl_imagebitmap'});
 }
 
-SpecialPowers.pushPrefEnv({'set': [
-  ['gfx.offscreencanvas.enabled', true],
-  ['webgl.force-enabled', true],
-]}, runTest);
+function expectEq(name, expected, was, when) {
+  let msg = `${name} was ${was}`;
+  if (when) {
+    msg = `[${when}] ` + msg;
+  }
+  let eq = (was == expected);
+  if (!eq) {
+    if (typeof(expected) == 'number') {
+      eq = (Math.abs(was - expected) < 0.000001);
+    }
+  }
+  if (!eq) {
+    msg = msg + `, expected ${expected}`;
+  }
+  ok(eq, msg);
+}
+function expectMemberEq(obj, key, expected, when) {
+  const was = obj[key];
+  expectEq(`${obj}.${key}`, expected, was, when);
+}
+function expectEachMemberEq(obj, expectedByKeyMap, when) {
+  for (const [key,expected] of Object.entries(expectedByKeyMap)) {
+    expectMemberEq(obj, key, expected, when);
+  }
+}
+
+function note(text) {
+  console.log(text);
+  ok(true, text);
+}
+
+function invoke(fn) { return fn(); }
+
+invoke(async () => {
+  SimpleTest.waitForExplicitFinish();
+
+  await new Promise(go =>
+    SpecialPowers.pushPrefEnv({'set': [
+      ['gfx.offscreencanvas.enabled', true],
+      ['webgl.force-enabled', true],
+    ]}, go));
+
+  console.log('await testWorker...');
+  await new Promise(go => testWorker(go));
+
+  // -
+
+  const [W, H] = [5, 7];
+
+  note('Begin canvas2d transferToImageBitmap tests...');
+  {
+    const oc = new OffscreenCanvas(W, H);
+    const c2d = oc.getContext('2d');
+
+    c2d.fillStyle = '#00ff00';
+    c2d.fillRect(0, 0, W, H);
+    {
+      const idata = c2d.getImageData(0, 0, W, H);
+      expectEq('getImageData.data.slice(0, 4)', '[0,255,0,255]',
+               `[${idata.data.slice(0,4).join(',')}]`, 'after fillRect');
+    }
+
+    // -
+
+    const NON_DEFAULT_STATE_2D = {
+      direction: 'rtl',
+      fillStyle: '#aaaaaa',
+      font: '13px serif',
+      fontKerning: 'none',
+      globalAlpha: 0.42,
+      globalCompositeOperation: 'xor',
+      imageSmoothingEnabled: false,
+      imageSmoothingQuality: 'high',
+      lineCap: 'round',
+      lineDashOffset: 4.2,
+      lineJoin: 'round',
+      lineWidth: 3.14,
+      miterLimit: 1.0,
+      shadowBlur: 1,
+      shadowColor: '#bbbbbb',
+      shadowOffsetX: 2,
+      shadowOffsetY: 3,
+      strokeStyle: '#cccccc',
+      textAlign: 'right',
+      textBaseline: 'middle',
+    };
+    Object.assign(c2d, NON_DEFAULT_STATE_2D);
+    expectEachMemberEq(c2d, NON_DEFAULT_STATE_2D, 'before transferToImageBitmap');
+
+    const beforeTtibData = c2d.getImageData(0, 0, W, H);
+    const ib = oc.transferToImageBitmap();
+    const afterTtibData = c2d.getImageData(0, 0, W, H);
+
+    // Same state afterwards
+    expectEachMemberEq(oc, {width: W, height: H}, 'after transferToImageBitmap');
+    expectEachMemberEq(c2d, NON_DEFAULT_STATE_2D, 'after transferToImageBitmap');
+    // But bitmap cleared afterwards
+    let was = `[${afterTtibData.data.slice(0, 4).join(',')}]`;
+    expectEq('getImageData.data.slice(0, 4)', '[0,0,0,0]', was, 'after transferToImageBitmap');
+  }
+
+  note('Begin webgl transferToImageBitmap tests...');
+  {
+    const oc = new OffscreenCanvas(W, H);
+    const gl = oc.getContext('webgl', {preserveDrawingBuffer:true});
+
+    gl.clearColor(0, 1, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    const p = new Uint8Array(4);
+    gl.readPixels(0,0,1,1, gl.RGBA, gl.UNSIGNED_BYTE, p);
+    expectEq('gl.readPixels(0,0,1,1)', '[0,255,0,255]',
+             `[${p.slice(0,4).join(',')}]`, 'after gl.clear');
+
+    // -
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    expectEq(`ARRAY_BUFFER_BINDING`, buf,
+      gl.getParameter(gl.ARRAY_BUFFER_BINDING), 'before transferToImageBitmap');
+
+    const ib = oc.transferToImageBitmap();
+
+    // Same state afterwards
+    expectEachMemberEq(oc, {width: W, height: H}, 'after transferToImageBitmap');
+    expectEq(`ARRAY_BUFFER_BINDING`, buf,
+      gl.getParameter(gl.ARRAY_BUFFER_BINDING), 'after transferToImageBitmap');
+    // But bitmap cleared afterwards
+    gl.readPixels(0,0,1,1, gl.RGBA, gl.UNSIGNED_BYTE, p);
+    expectEq('gl.readPixels(0,0,1,1)', '[0,0,0,0]',
+             `[${p.slice(0,4).join(',')}]`, 'after transferToImageBitmap');
+  }
+
+  note('Tests complete.');
+  SimpleTest.finish();
+});
 
 </script>
 </body>

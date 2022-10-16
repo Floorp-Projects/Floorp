@@ -53,7 +53,7 @@
     var gl;
 
     try {
-      gl = canvas.getContext("experimental-webgl");
+      gl = canvas.getContext("webgl");
     } catch (e) {}
 
     if (!gl) {
