@@ -22,10 +22,10 @@
 #include "modules/pacing/packet_router.h"
 #include "modules/remote_bitrate_estimator/remote_estimator_proxy.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
 class RemoteBitrateEstimator;
-class RemoteBitrateObserver;
 
 // This class represents the congestion control state for receive
 // streams. For send side bandwidth estimation, this is simply
@@ -73,49 +73,20 @@ class ReceiveSideCongestionController : public CallStatsObserver {
   TimeDelta MaybeProcess();
 
  private:
-  class WrappingBitrateEstimator {
-   public:
-    WrappingBitrateEstimator(RemoteBitrateObserver* observer, Clock* clock);
-
-    WrappingBitrateEstimator() = delete;
-    WrappingBitrateEstimator(const WrappingBitrateEstimator&) = delete;
-    WrappingBitrateEstimator& operator=(const WrappingBitrateEstimator&) =
-        delete;
-
-    ~WrappingBitrateEstimator();
-
-    void IncomingPacket(int64_t arrival_time_ms,
-                        size_t payload_size,
-                        const RTPHeader& header);
-
-    TimeDelta Process();
-
-    void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms);
-
-    void RemoveStream(unsigned int ssrc);
-
-    DataRate LatestEstimate() const;
-
-    void SetMinBitrate(int min_bitrate_bps);
-
-   private:
-    void PickEstimatorFromHeader(const RTPHeader& header)
-        RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-    void PickEstimator() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-    RemoteBitrateObserver* observer_;
-    Clock* const clock_;
-    mutable Mutex mutex_;
-    std::unique_ptr<RemoteBitrateEstimator> rbe_;
-    bool using_absolute_send_time_;
-    uint32_t packets_since_absolute_send_time_;
-    int min_bitrate_bps_;
-  };
+  void PickEstimatorFromHeader(const RTPHeader& header)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  void PickEstimator() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   Clock& clock_;
   const FieldTrialBasedConfig field_trial_config_;
   RembThrottler remb_throttler_;
-  WrappingBitrateEstimator remote_bitrate_estimator_;
   RemoteEstimatorProxy remote_estimator_proxy_;
+
+  mutable Mutex mutex_;
+  std::unique_ptr<RemoteBitrateEstimator> rbe_ RTC_GUARDED_BY(mutex_);
+  bool using_absolute_send_time_ RTC_GUARDED_BY(mutex_);
+  uint32_t packets_since_absolute_send_time_ RTC_GUARDED_BY(mutex_);
+  int min_bitrate_bps_ RTC_GUARDED_BY(mutex_);
 };
 
 }  // namespace webrtc
