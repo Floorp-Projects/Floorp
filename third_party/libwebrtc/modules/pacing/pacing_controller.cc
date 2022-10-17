@@ -35,6 +35,7 @@ constexpr TimeDelta kCongestedPacketInterval = TimeDelta::Millis(500);
 // The maximum debt level, in terms of time, capped when sending packets.
 constexpr TimeDelta kMaxDebtInTime = TimeDelta::Millis(500);
 constexpr TimeDelta kMaxElapsedTime = TimeDelta::Seconds(2);
+constexpr TimeDelta kTargetPaddingDuration = TimeDelta::Millis(5);
 
 bool IsDisabled(const FieldTrialsView& field_trials, absl::string_view key) {
   return absl::StartsWith(field_trials.Lookup(key), "Disabled");
@@ -42,14 +43,6 @@ bool IsDisabled(const FieldTrialsView& field_trials, absl::string_view key) {
 
 bool IsEnabled(const FieldTrialsView& field_trials, absl::string_view key) {
   return absl::StartsWith(field_trials.Lookup(key), "Enabled");
-}
-
-TimeDelta GetDynamicPaddingTarget(const FieldTrialsView& field_trials) {
-  FieldTrialParameter<TimeDelta> padding_target("timedelta",
-                                                TimeDelta::Millis(5));
-  ParseFieldTrial({&padding_target},
-                  field_trials.Lookup("WebRTC-Pacer-DynamicPaddingTarget"));
-  return padding_target.Get();
 }
 
 std::unique_ptr<PacingController::PacketQueue> CreatePacketQueue(
@@ -85,7 +78,6 @@ PacingController::PacingController(Clock* clock,
       pace_audio_(IsEnabled(field_trials_, "WebRTC-Pacer-BlockAudio")),
       ignore_transport_overhead_(
           IsEnabled(field_trials_, "WebRTC-Pacer-IgnoreTransportOverhead")),
-      padding_target_duration_(GetDynamicPaddingTarget(field_trials_)),
       min_packet_limit_(kDefaultMinPacketLimit),
       transport_overhead_per_packet_(DataSize::Zero()),
       send_burst_interval_(TimeDelta::Zero()),
@@ -571,7 +563,7 @@ DataSize PacingController::PaddingToAdd(DataSize recommended_probe_size,
   }
 
   if (padding_rate_ > DataRate::Zero() && padding_debt_ == DataSize::Zero()) {
-    return padding_target_duration_ * padding_rate_;
+    return kTargetPaddingDuration * padding_rate_;
   }
   return DataSize::Zero();
 }

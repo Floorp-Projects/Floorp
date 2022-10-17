@@ -229,9 +229,6 @@ class PacingController {
   const bool send_padding_if_silent_;
   const bool pace_audio_;
   const bool ignore_transport_overhead_;
-  // In dynamic mode, indicates the target size when requesting padding,
-  // expressed as a duration in order to adjust for varying padding rate.
-  const TimeDelta padding_target_duration_;
 
   TimeDelta min_packet_limit_;
   DataSize transport_overhead_per_packet_;
