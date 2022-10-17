@@ -2,11 +2,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-var EXPORTED_SYMBOLS = ["DOMFullscreenParent"];
-
-class DOMFullscreenParent extends JSWindowActorParent {
+export class DOMFullscreenParent extends JSWindowActorParent {
   // These properties get set by browser-fullScreenAndPointerLock.js.
   // TODO: Bug 1743703 - Consider moving the messaging component of
   //       browser-fullScreenAndPointerLock.js into the actor

@@ -501,11 +501,11 @@ let JSWINDOWACTORS = {
 
   DOMFullscreen: {
     parent: {
-      moduleURI: "resource:///actors/DOMFullscreenParent.jsm",
+      esModuleURI: "resource:///actors/DOMFullscreenParent.sys.mjs",
     },
 
     child: {
-      moduleURI: "resource:///actors/DOMFullscreenChild.jsm",
+      esModuleURI: "resource:///actors/DOMFullscreenChild.sys.mjs",
       events: {
         "MozDOMFullscreen:Request": {},
         "MozDOMFullscreen:Entered": {},
