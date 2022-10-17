@@ -25,14 +25,12 @@
 
 #  include <windows.h>
 
-#  define UI_SNPRINTF _snprintf
 #  define UI_DIR_SEPARATOR "\\"
 
 std::string WideToUTF8(const std::wstring& wide, bool* success = 0);
 
 #else
 
-#  define UI_SNPRINTF snprintf
 #  define UI_DIR_SEPARATOR "/"
 
 #endif

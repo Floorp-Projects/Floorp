@@ -68,8 +68,8 @@ void UIError(const string& message) {
   string errorMessage;
   if (!gStrings[ST_CRASHREPORTERERROR].empty()) {
     char buf[2048];
-    UI_SNPRINTF(buf, 2048, gStrings[ST_CRASHREPORTERERROR].c_str(),
-                message.c_str());
+    snprintf(buf, 2048, gStrings[ST_CRASHREPORTERERROR].c_str(),
+             message.c_str());
     errorMessage = buf;
   } else {
     errorMessage = message;
@@ -379,13 +379,13 @@ static bool AddSubmittedReport(const string& serverResponse) {
   }
 
   char buf[1024];
-  UI_SNPRINTF(buf, 1024, gStrings["CrashID"].c_str(),
-              responseItems["CrashID"].c_str());
+  snprintf(buf, 1024, gStrings["CrashID"].c_str(),
+           responseItems["CrashID"].c_str());
   *file << buf << "\n";
 
   if (responseItems.find("ViewURL") != responseItems.end()) {
-    UI_SNPRINTF(buf, 1024, gStrings["CrashDetailsURL"].c_str(),
-                responseItems["ViewURL"].c_str());
+    snprintf(buf, 1024, gStrings["CrashDetailsURL"].c_str(),
+             responseItems["ViewURL"].c_str());
     *file << buf << "\n";
   }
 
@@ -545,8 +545,8 @@ void RewriteStrings(Json::Value& aExtraData) {
   string vendor = aExtraData.get("Vendor", mozilla).asString();
 
   char buf[4096];
-  UI_SNPRINTF(buf, sizeof(buf), gStrings[ST_CRASHREPORTERVENDORTITLE].c_str(),
-              vendor.c_str());
+  snprintf(buf, sizeof(buf), gStrings[ST_CRASHREPORTERVENDORTITLE].c_str(),
+           vendor.c_str());
   gStrings[ST_CRASHREPORTERTITLE] = buf;
 
   string str = gStrings[ST_CRASHREPORTERPRODUCTERROR];
@@ -557,31 +557,29 @@ void RewriteStrings(Json::Value& aExtraData) {
   if (pos != string::npos) pos = str.find("%s", pos + 2);
   if (pos != string::npos) {
     // Leave a format specifier for UIError to fill in
-    UI_SNPRINTF(buf, sizeof(buf),
-                gStrings[ST_CRASHREPORTERPRODUCTERROR].c_str(), product.c_str(),
-                "%s");
+    snprintf(buf, sizeof(buf), gStrings[ST_CRASHREPORTERPRODUCTERROR].c_str(),
+             product.c_str(), "%s");
     gStrings[ST_CRASHREPORTERERROR] = buf;
   } else {
     // product name is hardcoded
     gStrings[ST_CRASHREPORTERERROR] = str;
   }
 
-  UI_SNPRINTF(buf, sizeof(buf), gStrings[ST_CRASHREPORTERDESCRIPTION].c_str(),
-              product.c_str());
+  snprintf(buf, sizeof(buf), gStrings[ST_CRASHREPORTERDESCRIPTION].c_str(),
+           product.c_str());
   gStrings[ST_CRASHREPORTERDESCRIPTION] = buf;
 
-  UI_SNPRINTF(buf, sizeof(buf), gStrings[ST_CHECKSUBMIT].c_str(),
-              vendor.c_str());
+  snprintf(buf, sizeof(buf), gStrings[ST_CHECKSUBMIT].c_str(), vendor.c_str());
   gStrings[ST_CHECKSUBMIT] = buf;
 
-  UI_SNPRINTF(buf, sizeof(buf), gStrings[ST_RESTART].c_str(), product.c_str());
+  snprintf(buf, sizeof(buf), gStrings[ST_RESTART].c_str(), product.c_str());
   gStrings[ST_RESTART] = buf;
 
-  UI_SNPRINTF(buf, sizeof(buf), gStrings[ST_QUIT].c_str(), product.c_str());
+  snprintf(buf, sizeof(buf), gStrings[ST_QUIT].c_str(), product.c_str());
   gStrings[ST_QUIT] = buf;
 
-  UI_SNPRINTF(buf, sizeof(buf), gStrings[ST_ERROR_ENDOFLIFE].c_str(),
-              product.c_str());
+  snprintf(buf, sizeof(buf), gStrings[ST_ERROR_ENDOFLIFE].c_str(),
+           product.c_str());
   gStrings[ST_ERROR_ENDOFLIFE] = buf;
 }
 
