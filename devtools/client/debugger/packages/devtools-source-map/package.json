@@ -4,10 +4,6 @@
   "description": "DevTools utilities for working with source maps",
   "license": "MPL-2.0",
   "author": "Jason Laster <jlaster@mozilla.com>",
-  "repository": "github:devtools-html/debugger",
-  "bugs": "https://github.com/firefox-devtools/debugger/issues",
-  "homepage":
-    "https://github.com/firefox-devtools/debugger/tree/master/packages/source-maps#readme",
   "main": "src/index.js",
   "browser": {
     "./src/utils/assetRoot.js": "./src/utils/assetRootBrowser.js",
@@ -18,9 +14,7 @@
     "test": "jest --projects jest.config.js"
   },
   "dependencies": {
-    "babel-plugin-transform-async-to-generator": "^6.22.0",
     "md5": "^2.2.1",
-    "regenerator-runtime": "^0.13.0",
     "source-map": "0.8.0-beta.0"
   }
 }
