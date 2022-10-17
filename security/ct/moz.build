@@ -37,12 +37,6 @@ TEST_DIRS += [
 if not CONFIG["MOZ_DEBUG"]:
     DEFINES["NDEBUG"] = True
 
-if CONFIG["CC_TYPE"] == "clang-cl":
-    # -Wall on clang-cl maps to -Weverything, which turns on way too
-    # much, so we're passing through -Wall using -Xclang.
-    CXXFLAGS += ["-Xclang"]
-CXXFLAGS += ["-Wall"]
-
 CXXFLAGS += [
     "-Wextra",
     "-Wunreachable-code",
