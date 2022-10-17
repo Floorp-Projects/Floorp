@@ -15,6 +15,7 @@
 #include "frontend/ParseNode.h"
 #include "frontend/ParserAtom.h"  // TaggedParserAtomIndex, ParserAtomsTable, ParserAtom
 #include "frontend/SharedContext.h"
+#include "frontend/Stencil.h"
 #include "gc/GCContext.h"
 #include "gc/Tracer.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
@@ -47,10 +48,6 @@ static_assert(ModuleStatus::Unlinked < ModuleStatus::Linking &&
                   ModuleStatus::EvaluatingAsync < ModuleStatus::Evaluated &&
                   ModuleStatus::Evaluated < ModuleStatus::Evaluated_Error,
               "Module statuses are ordered incorrectly");
-
-static inline Value ModuleStatusValue(ModuleStatus status) {
-  return Int32Value(int32_t(status));
-}
 
 static Value StringOrNullValue(JSString* maybeString) {
   return maybeString ? StringValue(maybeString) : NullValue();
@@ -666,6 +663,58 @@ void ModuleNamespaceObject::ProxyHandler::finalize(JS::GCContext* gcx,
 }
 
 ///////////////////////////////////////////////////////////////////////////
+// CyclicModuleFields
+
+// The fields of a cyclic module record, as described in:
+// https://tc39.es/ecma262/#sec-cyclic-module-records
+class js::CyclicModuleFields {
+ public:
+  ModuleStatus status = ModuleStatus::Unlinked;
+  HeapPtr<Value> evaluationError;
+  HeapPtr<JSObject*> metaObject;
+  HeapPtr<ScriptSourceObject*> scriptSourceObject;
+  HeapPtr<ArrayObject*> requestedModules;
+  HeapPtr<ArrayObject*> importEntries;
+  HeapPtr<ArrayObject*> localExportEntries;
+  HeapPtr<ArrayObject*> indirectExportEntries;
+  HeapPtr<ArrayObject*> starExportEntries;
+  IndirectBindingMap importBindings;
+  UniquePtr<FunctionDeclarationVector> functionDeclarations;
+  Maybe<uint32_t> dfsIndex;
+  Maybe<uint32_t> dfsAncestorIndex;
+  bool hasTopLevelAwait = false;
+  Maybe<uint32_t> asyncEvaluatingPostOrder;
+  HeapPtr<PromiseObject*> topLevelCapability;
+  HeapPtr<ListObject*> asyncParentModules;
+  Maybe<uint32_t> pendingAsyncDependencies;
+  HeapPtr<ModuleObject*> cycleRoot;
+
+  void trace(JSTracer* trc);
+};
+
+void CyclicModuleFields::trace(JSTracer* trc) {
+  TraceEdge(trc, &evaluationError, "CyclicModuleFields::evaluationError");
+  TraceNullableEdge(trc, &metaObject, "CyclicModuleFields::metaObject");
+  TraceNullableEdge(trc, &scriptSourceObject,
+                    "CyclicModuleFields::scriptSourceObject");
+  TraceNullableEdge(trc, &requestedModules,
+                    "CyclicModuleFields::requestedModules");
+  TraceNullableEdge(trc, &importEntries, "CyclicModuleFields::importEntries");
+  TraceNullableEdge(trc, &localExportEntries,
+                    "CyclicModuleFields::localExportEntries");
+  TraceNullableEdge(trc, &indirectExportEntries,
+                    "CyclicModuleFields::indirectExportEntries");
+  TraceNullableEdge(trc, &starExportEntries,
+                    "CyclicModuleFields::starExportEntries");
+  TraceNullableEdge(trc, &topLevelCapability,
+                    "CyclicModuleFields::topLevelCapability");
+  TraceNullableEdge(trc, &asyncParentModules,
+                    "CyclicModuleFields::asyncParentModules");
+  TraceNullableEdge(trc, &cycleRoot, "CyclicModuleFields::cycleRoot");
+  importBindings.trace(trc);
+}
+
+///////////////////////////////////////////////////////////////////////////
 // ModuleObject
 
 /* static */ const JSClassOps ModuleObject::classOps_ = {
@@ -687,77 +736,69 @@ void ModuleNamespaceObject::ProxyHandler::finalize(JS::GCContext* gcx,
         JSCLASS_BACKGROUND_FINALIZE,
     &ModuleObject::classOps_};
 
-#define DEFINE_ARRAY_SLOT_ACCESSOR(cls, name, slot)                 \
-  ArrayObject& cls::name() const {                                  \
-    return getReservedSlot(cls::slot).toObject().as<ArrayObject>(); \
-  }
-
-DEFINE_ARRAY_SLOT_ACCESSOR(ModuleObject, requestedModules, RequestedModulesSlot)
-DEFINE_ARRAY_SLOT_ACCESSOR(ModuleObject, importEntries, ImportEntriesSlot)
-DEFINE_ARRAY_SLOT_ACCESSOR(ModuleObject, localExportEntries,
-                           LocalExportEntriesSlot)
-DEFINE_ARRAY_SLOT_ACCESSOR(ModuleObject, indirectExportEntries,
-                           IndirectExportEntriesSlot)
-DEFINE_ARRAY_SLOT_ACCESSOR(ModuleObject, starExportEntries,
-                           StarExportEntriesSlot)
-
 /* static */
 bool ModuleObject::isInstance(HandleValue value) {
   return value.isObject() && value.toObject().is<ModuleObject>();
 }
 
-// Declared as static function instead of ModuleObject method in order to
-// avoid recursive #include dependency between frontend and VM.
-static FunctionDeclarationVector* GetFunctionDeclarations(
-    ModuleObject* module) {
-  Value value = module->getReservedSlot(ModuleObject::FunctionDeclarationsSlot);
-  if (value.isUndefined()) {
-    return nullptr;
-  }
-
-  return static_cast<FunctionDeclarationVector*>(value.toPrivate());
+CyclicModuleFields* ModuleObject::cyclicModuleFields() {
+  void* ptr = getReservedSlot(CyclicModuleFieldsSlot).toPrivate();
+  MOZ_ASSERT(ptr);
+  return static_cast<CyclicModuleFields*>(ptr);
+}
+const CyclicModuleFields* ModuleObject::cyclicModuleFields() const {
+  return const_cast<ModuleObject*>(this)->cyclicModuleFields();
 }
 
-static void InitFunctionDeclarations(ModuleObject* module,
-                                     FunctionDeclarationVector&& decls) {
-  *GetFunctionDeclarations(module) = std::move(decls);
+ArrayObject& ModuleObject::requestedModules() const {
+  return *cyclicModuleFields()->requestedModules;
+}
+
+ArrayObject& ModuleObject::importEntries() const {
+  return *cyclicModuleFields()->importEntries;
+}
+
+ArrayObject& ModuleObject::localExportEntries() const {
+  return *cyclicModuleFields()->localExportEntries;
+}
+
+ArrayObject& ModuleObject::indirectExportEntries() const {
+  return *cyclicModuleFields()->indirectExportEntries;
+}
+
+ArrayObject& ModuleObject::starExportEntries() const {
+  return *cyclicModuleFields()->starExportEntries;
+}
+
+void ModuleObject::initFunctionDeclarations(
+    UniquePtr<FunctionDeclarationVector> decls) {
+  cyclicModuleFields()->functionDeclarations = std::move(decls);
 }
 
 /* static */
 ModuleObject* ModuleObject::create(JSContext* cx) {
+  Rooted<UniquePtr<CyclicModuleFields>> fields(cx);
+  fields = cx->make_unique<CyclicModuleFields>();
+  if (!fields) {
+    return nullptr;
+  }
+
   Rooted<ModuleObject*> self(
       cx, NewObjectWithGivenProto<ModuleObject>(cx, nullptr));
   if (!self) {
     return nullptr;
   }
 
-  IndirectBindingMap* bindings = cx->new_<IndirectBindingMap>();
-  if (!bindings) {
-    return nullptr;
-  }
+  InitReservedSlot(self, CyclicModuleFieldsSlot, fields.release(),
+                   MemoryUse::ModuleCyclicFields);
 
-  InitReservedSlot(self, ImportBindingsSlot, bindings,
-                   MemoryUse::ModuleBindingMap);
-
-  FunctionDeclarationVector* funDecls = cx->new_<FunctionDeclarationVector>();
-  if (!funDecls) {
-    return nullptr;
-  }
-
-  self->initReservedSlot(FunctionDeclarationsSlot, PrivateValue(funDecls));
   return self;
 }
 
 /* static */
 void ModuleObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   ModuleObject* self = &obj->as<ModuleObject>();
-  if (self->hasImportBindings()) {
-    gcx->delete_(obj, &self->importBindings(), MemoryUse::ModuleBindingMap);
-  }
-  if (FunctionDeclarationVector* funDecls = GetFunctionDeclarations(self)) {
-    // Not tracked as these may move between zones on merge.
-    gcx->deleteUntracked(funDecls);
-  }
+  gcx->delete_(obj, self->cyclicModuleFields(), MemoryUse::ModuleCyclicFields);
 }
 
 ModuleEnvironmentObject& ModuleObject::initialEnvironment() const {
@@ -778,14 +819,8 @@ ModuleEnvironmentObject* ModuleObject::environment() const {
   return &initialEnvironment();
 }
 
-bool ModuleObject::hasImportBindings() const {
-  // Import bindings may not be present if we hit OOM in initialization.
-  return !getReservedSlot(ImportBindingsSlot).isUndefined();
-}
-
 IndirectBindingMap& ModuleObject::importBindings() {
-  return *static_cast<IndirectBindingMap*>(
-      getReservedSlot(ImportBindingsSlot).toPrivate());
+  return cyclicModuleFields()->importBindings;
 }
 
 ModuleNamespaceObject* ModuleObject::namespace_() {
@@ -797,17 +832,13 @@ ModuleNamespaceObject* ModuleObject::namespace_() {
 }
 
 ScriptSourceObject* ModuleObject::scriptSourceObject() const {
-  return &getReservedSlot(ScriptSourceObjectSlot)
-              .toObject()
-              .as<ScriptSourceObject>();
+  return cyclicModuleFields()->scriptSourceObject;
 }
 
-bool ModuleObject::initAsyncSlots(JSContext* cx, bool hasTopLevelAwait,
-                                  HandleObject asyncParentModulesList) {
-  initReservedSlot(HasTopLevelAwaitSlot, BooleanValue(hasTopLevelAwait));
-  initReservedSlot(AsyncParentModulesSlot,
-                   ObjectValue(*asyncParentModulesList));
-  return true;
+void ModuleObject::initAsyncSlots(JSContext* cx, bool hasTopLevelAwait,
+                                  Handle<ListObject*> asyncParentModules) {
+  cyclicModuleFields()->hasTopLevelAwait = hasTopLevelAwait;
+  cyclicModuleFields()->asyncParentModules = asyncParentModules;
 }
 
 static uint32_t NextPostOrder(JSRuntime* rt) {
@@ -831,15 +862,15 @@ static void MaybeResetPostOrderCounter(JSRuntime* rt,
 }
 
 void ModuleObject::setAsyncEvaluating() {
-  initReservedSlot(AsyncEvaluatingPostOrderSlot,
-                   PrivateUint32Value(NextPostOrder(runtimeFromMainThread())));
+  cyclicModuleFields()->asyncEvaluatingPostOrder =
+      Some(NextPostOrder(runtimeFromMainThread()));
 }
 
 void ModuleObject::initScriptSlots(HandleScript script) {
   MOZ_ASSERT(script);
+  MOZ_ASSERT(script->sourceObject());
   initReservedSlot(ScriptSlot, PrivateGCThingValue(script));
-  initReservedSlot(ScriptSourceObjectSlot,
-                   ObjectValue(*script->sourceObject()));
+  cyclicModuleFields()->scriptSourceObject = script->sourceObject();
 }
 
 void ModuleObject::setInitialEnvironment(
@@ -847,36 +878,37 @@ void ModuleObject::setInitialEnvironment(
   initReservedSlot(EnvironmentSlot, ObjectValue(*initialEnvironment));
 }
 
-void ModuleObject::initStatusSlot() {
-  initReservedSlot(StatusSlot, ModuleStatusValue(ModuleStatus::Unlinked));
-}
-
 void ModuleObject::initImportExportData(
     Handle<ArrayObject*> requestedModules, Handle<ArrayObject*> importEntries,
     Handle<ArrayObject*> localExportEntries,
     Handle<ArrayObject*> indirectExportEntries,
     Handle<ArrayObject*> starExportEntries) {
-  initReservedSlot(RequestedModulesSlot, ObjectValue(*requestedModules));
-  initReservedSlot(ImportEntriesSlot, ObjectValue(*importEntries));
-  initReservedSlot(LocalExportEntriesSlot, ObjectValue(*localExportEntries));
-  initReservedSlot(IndirectExportEntriesSlot,
-                   ObjectValue(*indirectExportEntries));
-  initReservedSlot(StarExportEntriesSlot, ObjectValue(*starExportEntries));
+  MOZ_ASSERT(requestedModules);
+  MOZ_ASSERT(importEntries);
+  MOZ_ASSERT(localExportEntries);
+  MOZ_ASSERT(indirectExportEntries);
+  MOZ_ASSERT(starExportEntries);
+
+  cyclicModuleFields()->requestedModules = requestedModules;
+  cyclicModuleFields()->importEntries = importEntries;
+  cyclicModuleFields()->localExportEntries = localExportEntries;
+  cyclicModuleFields()->indirectExportEntries = indirectExportEntries;
+  cyclicModuleFields()->starExportEntries = starExportEntries;
 }
 
-static bool FreezeObjectProperty(JSContext* cx, Handle<NativeObject*> obj,
-                                 uint32_t slot) {
-  RootedObject property(cx, &obj->getSlot(slot).toObject());
+static bool FreezeObjectProperty(JSContext* cx, NativeObject* propertyArg) {
+  RootedObject property(cx, propertyArg);
   return FreezeObject(cx, property);
 }
 
 /* static */
 bool ModuleObject::Freeze(JSContext* cx, Handle<ModuleObject*> self) {
-  return FreezeObjectProperty(cx, self, RequestedModulesSlot) &&
-         FreezeObjectProperty(cx, self, ImportEntriesSlot) &&
-         FreezeObjectProperty(cx, self, LocalExportEntriesSlot) &&
-         FreezeObjectProperty(cx, self, IndirectExportEntriesSlot) &&
-         FreezeObjectProperty(cx, self, StarExportEntriesSlot) &&
+  CyclicModuleFields* fields = self->cyclicModuleFields();
+  return FreezeObjectProperty(cx, fields->requestedModules) &&
+         FreezeObjectProperty(cx, fields->importEntries) &&
+         FreezeObjectProperty(cx, fields->localExportEntries) &&
+         FreezeObjectProperty(cx, fields->indirectExportEntries) &&
+         FreezeObjectProperty(cx, fields->starExportEntries) &&
          FreezeObject(cx, self);
 }
 
@@ -887,27 +919,30 @@ static inline bool CheckObjectFrozen(JSContext* cx, HandleObject obj,
   return TestIntegrityLevel(cx, obj, IntegrityLevel::Frozen, result);
 }
 
-static inline bool CheckObjectPropertyFrozen(JSContext* cx,
-                                             Handle<NativeObject*> obj,
-                                             uint32_t slot, bool* result) {
-  RootedObject property(cx, &obj->getSlot(slot).toObject());
-  return CheckObjectFrozen(cx, property, result);
+static inline bool AssertObjectPropertyFrozen(JSContext* cx,
+                                              NativeObject* propertyArg) {
+  RootedObject property(cx, propertyArg);
+  bool frozen = false;
+  if (!CheckObjectFrozen(cx, property, &frozen)) {
+    return false;
+  }
+
+  MOZ_ASSERT(frozen);
+  return true;
 }
 
 /* static */ inline bool ModuleObject::AssertFrozen(
     JSContext* cx, Handle<ModuleObject*> self) {
-  static const mozilla::EnumSet<ModuleSlot> slotsToCheck = {
-      RequestedModulesSlot, ImportEntriesSlot, LocalExportEntriesSlot,
-      IndirectExportEntriesSlot, StarExportEntriesSlot};
-
-  bool frozen = false;
-  for (auto slot : slotsToCheck) {
-    if (!CheckObjectPropertyFrozen(cx, self, slot, &frozen)) {
-      return false;
-    }
-    MOZ_ASSERT(frozen);
+  CyclicModuleFields* fields = self->cyclicModuleFields();
+  if (!AssertObjectPropertyFrozen(cx, fields->requestedModules) ||
+      !AssertObjectPropertyFrozen(cx, fields->importEntries) ||
+      !AssertObjectPropertyFrozen(cx, fields->localExportEntries) ||
+      !AssertObjectPropertyFrozen(cx, fields->indirectExportEntries) ||
+      !AssertObjectPropertyFrozen(cx, fields->starExportEntries)) {
+    return false;
   }
 
+  bool frozen = false;
   if (!CheckObjectFrozen(cx, self, &frozen)) {
     return false;
   }
@@ -941,11 +976,18 @@ static inline void AssertValidModuleStatus(ModuleStatus status) {
 }
 
 ModuleStatus ModuleObject::status() const {
-  ModuleStatus status = ModuleStatus(getReservedSlot(StatusSlot).toInt32());
+  // TODO: When implementing synthetic module records it may be convenient to
+  // make this method always return a ModuleStatus::Evaluated for such a module
+  // so we can assert a module's status without checking which kind it is, even
+  // though synthetic modules don't have this field according to the spec.
+
+  ModuleStatus status = cyclicModuleFields()->status;
   AssertValidModuleStatus(status);
+
   if (status == ModuleStatus::Evaluated_Error) {
     return ModuleStatus::Evaluated;
   }
+
   return status;
 }
 
@@ -959,44 +1001,29 @@ void ModuleObject::setStatus(ModuleStatus newStatus) {
                  newStatus > status(),
              "New module status inconsistent with current status");
 
-  setReservedSlot(StatusSlot, ModuleStatusValue(newStatus));
+  cyclicModuleFields()->status = newStatus;
 }
 
 bool ModuleObject::hasTopLevelAwait() const {
-  return getReservedSlot(HasTopLevelAwaitSlot).toBoolean();
+  return cyclicModuleFields()->hasTopLevelAwait;
 }
 
 bool ModuleObject::isAsyncEvaluating() const {
-  return !getReservedSlot(AsyncEvaluatingPostOrderSlot).isUndefined();
+  return cyclicModuleFields()->asyncEvaluatingPostOrder.isSome();
 }
 
 Maybe<uint32_t> ModuleObject::maybeDfsIndex() const {
-  Value value = getReservedSlot(DFSIndexSlot);
-  if (value.isUndefined()) {
-    return mozilla::Nothing();
-  }
-
-  int32_t index = value.toInt32();
-  MOZ_ASSERT(index >= 0);
-  return Some(index);
+  return cyclicModuleFields()->dfsIndex;
 }
 
 uint32_t ModuleObject::dfsIndex() const { return maybeDfsIndex().value(); }
 
 void ModuleObject::setDfsIndex(uint32_t index) {
-  MOZ_ASSERT(index <= INT32_MAX);
-  setReservedSlot(DFSIndexSlot, Int32Value(index));
+  cyclicModuleFields()->dfsIndex = Some(index);
 }
 
 Maybe<uint32_t> ModuleObject::maybeDfsAncestorIndex() const {
-  Value value = getReservedSlot(DFSAncestorIndexSlot);
-  if (value.isUndefined()) {
-    return mozilla::Nothing();
-  }
-
-  int32_t index = value.toInt32();
-  MOZ_ASSERT(index >= 0);
-  return Some(index);
+  return cyclicModuleFields()->dfsAncestorIndex;
 }
 
 uint32_t ModuleObject::dfsAncestorIndex() const {
@@ -1004,22 +1031,16 @@ uint32_t ModuleObject::dfsAncestorIndex() const {
 }
 
 void ModuleObject::setDfsAncestorIndex(uint32_t index) {
-  MOZ_ASSERT(index <= INT32_MAX);
-  setReservedSlot(DFSAncestorIndexSlot, Int32Value(index));
+  cyclicModuleFields()->dfsAncestorIndex = Some(index);
 }
 
 void ModuleObject::clearDfsIndexes() {
-  setReservedSlot(DFSIndexSlot, UndefinedValue());
-  setReservedSlot(DFSAncestorIndexSlot, UndefinedValue());
+  cyclicModuleFields()->dfsIndex = Nothing();
+  cyclicModuleFields()->dfsAncestorIndex = Nothing();
 }
 
 PromiseObject* ModuleObject::maybeTopLevelCapability() const {
-  Value value = getReservedSlot(TopLevelCapabilitySlot);
-  if (value.isUndefined()) {
-    return nullptr;
-  }
-
-  return &value.toObject().as<PromiseObject>();
+  return cyclicModuleFields()->topLevelCapability;
 }
 
 PromiseObject* ModuleObject::topLevelCapability() const {
@@ -1028,24 +1049,27 @@ PromiseObject* ModuleObject::topLevelCapability() const {
   return capability;
 }
 
+// static
 PromiseObject* ModuleObject::createTopLevelCapability(
     JSContext* cx, Handle<ModuleObject*> module) {
-  MOZ_ASSERT(module->getReservedSlot(TopLevelCapabilitySlot).isUndefined());
+  MOZ_ASSERT(!module->maybeTopLevelCapability());
+
   Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectForAsync(cx));
   if (!resultPromise) {
     return nullptr;
   }
+
   module->setInitialTopLevelCapability(resultPromise);
   return resultPromise;
 }
 
 void ModuleObject::setInitialTopLevelCapability(
     Handle<PromiseObject*> capability) {
-  initReservedSlot(TopLevelCapabilitySlot, ObjectValue(*capability));
+  cyclicModuleFields()->topLevelCapability = capability;
 }
 
 ListObject* ModuleObject::asyncParentModules() const {
-  return &getReservedSlot(AsyncParentModulesSlot).toObject().as<ListObject>();
+  return cyclicModuleFields()->asyncParentModules;
 }
 
 bool ModuleObject::appendAsyncParentModule(JSContext* cx,
@@ -1056,12 +1080,7 @@ bool ModuleObject::appendAsyncParentModule(JSContext* cx,
 }
 
 Maybe<uint32_t> ModuleObject::maybePendingAsyncDependencies() const {
-  Value value = getReservedSlot(PendingAsyncDependenciesSlot);
-  if (value.isUndefined()) {
-    return Nothing();
-  }
-
-  return Some(value.toInt32());
+  return cyclicModuleFields()->pendingAsyncDependencies;
 }
 
 uint32_t ModuleObject::pendingAsyncDependencies() const {
@@ -1069,18 +1088,12 @@ uint32_t ModuleObject::pendingAsyncDependencies() const {
 }
 
 bool ModuleObject::hasAsyncEvaluatingPostOrder() const {
-  Value value = getReservedSlot(AsyncEvaluatingPostOrderSlot);
-  return !value.isUndefined() &&
-         value.toPrivateUint32() != ASYNC_EVALUATING_POST_ORDER_TRUE;
+  Maybe<uint32_t> value = cyclicModuleFields()->asyncEvaluatingPostOrder;
+  return value.isSome() && *value != ASYNC_EVALUATING_POST_ORDER_TRUE;
 }
 
 Maybe<uint32_t> ModuleObject::maybeAsyncEvaluatingPostOrder() const {
-  Value value = getReservedSlot(AsyncEvaluatingPostOrderSlot);
-  if (value.isUndefined()) {
-    return Nothing();
-  }
-
-  return Some(value.toPrivateUint32());
+  return cyclicModuleFields()->asyncEvaluatingPostOrder;
 }
 
 uint32_t ModuleObject::getAsyncEvaluatingPostOrder() const {
@@ -1094,30 +1107,29 @@ void ModuleObject::clearAsyncEvaluatingPostOrder() {
   JSRuntime* rt = runtimeFromMainThread();
   MaybeResetPostOrderCounter(rt, getAsyncEvaluatingPostOrder());
 
-  return setReservedSlot(AsyncEvaluatingPostOrderSlot,
-                         PrivateUint32Value(ASYNC_EVALUATING_POST_ORDER_TRUE));
+  cyclicModuleFields()->asyncEvaluatingPostOrder =
+      Some(ASYNC_EVALUATING_POST_ORDER_TRUE);
 }
 
 void ModuleObject::setPendingAsyncDependencies(uint32_t newValue) {
-  return setReservedSlot(PendingAsyncDependenciesSlot, NumberValue(newValue));
+  cyclicModuleFields()->pendingAsyncDependencies = Some(newValue);
 }
 
 void ModuleObject::setCycleRoot(ModuleObject* cycleRoot) {
-  return setReservedSlot(CycleRootSlot, ObjectValue(*cycleRoot));
+  cyclicModuleFields()->cycleRoot = cycleRoot;
 }
 
 ModuleObject* ModuleObject::getCycleRoot() const {
-  Value cycleRoot = getReservedSlot(CycleRootSlot);
-  MOZ_RELEASE_ASSERT(cycleRoot.isObject());
-  return &cycleRoot.toObject().as<ModuleObject>();
+  MOZ_RELEASE_ASSERT(cyclicModuleFields()->cycleRoot);
+  return cyclicModuleFields()->cycleRoot;
 }
 
 bool ModuleObject::hasTopLevelCapability() const {
-  return !getReservedSlot(TopLevelCapabilitySlot).isUndefined();
+  return cyclicModuleFields()->topLevelCapability;
 }
 
 bool ModuleObject::hadEvaluationError() const {
-  ModuleStatus fullStatus = ModuleStatus(getReservedSlot(StatusSlot).toInt32());
+  ModuleStatus fullStatus = cyclicModuleFields()->status;
   return fullStatus == ModuleStatus::Evaluated_Error;
 }
 
@@ -1125,15 +1137,15 @@ void ModuleObject::setEvaluationError(HandleValue newValue) {
   MOZ_ASSERT(status() != ModuleStatus::Unlinked);
   MOZ_ASSERT(!hadEvaluationError());
 
-  setReservedSlot(StatusSlot, ModuleStatusValue(ModuleStatus::Evaluated_Error));
-  setReservedSlot(EvaluationErrorSlot, newValue);
+  cyclicModuleFields()->status = ModuleStatus::Evaluated_Error;
+  cyclicModuleFields()->evaluationError = newValue;
 
   MOZ_ASSERT(status() == ModuleStatus::Evaluated);
   MOZ_ASSERT(hadEvaluationError());
 }
 
 Value ModuleObject::maybeEvaluationError() const {
-  return getReservedSlot(EvaluationErrorSlot);
+  return cyclicModuleFields()->evaluationError;
 }
 
 Value ModuleObject::evaluationError() const {
@@ -1142,28 +1154,19 @@ Value ModuleObject::evaluationError() const {
 }
 
 JSObject* ModuleObject::metaObject() const {
-  Value value = getReservedSlot(MetaObjectSlot);
-  if (value.isObject()) {
-    return &value.toObject();
-  }
-
-  MOZ_ASSERT(value.isUndefined());
-  return nullptr;
+  return cyclicModuleFields()->metaObject;
 }
 
 void ModuleObject::setMetaObject(JSObject* obj) {
   MOZ_ASSERT(obj);
   MOZ_ASSERT(!metaObject());
-  setReservedSlot(MetaObjectSlot, ObjectValue(*obj));
+  cyclicModuleFields()->metaObject = obj;
 }
 
 /* static */
 void ModuleObject::trace(JSTracer* trc, JSObject* obj) {
   ModuleObject& module = obj->as<ModuleObject>();
-
-  if (module.hasImportBindings()) {
-    module.importBindings().trace(trc);
-  }
+  module.cyclicModuleFields()->trace(trc);
 }
 
 /* static */
@@ -1176,7 +1179,8 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
   }
 #endif
   // |self| initially manages this vector.
-  FunctionDeclarationVector* funDecls = GetFunctionDeclarations(self.get());
+  UniquePtr<FunctionDeclarationVector>& funDecls =
+      self->cyclicModuleFields()->functionDeclarations;
   if (!funDecls) {
     JS_ReportErrorASCII(
         cx, "Module function declarations have already been instantiated");
@@ -1203,10 +1207,9 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
     }
   }
 
-  // Transfer ownership of the vector from |self|, then free the vector, once
-  // its contents are no longer needed.
-  self->setReservedSlot(FunctionDeclarationsSlot, UndefinedValue());
-  js_delete(funDecls);
+  // Free the vector, now its contents are no longer needed.
+  funDecls.reset();
+
   return true;
 }
 
@@ -1548,21 +1551,19 @@ bool frontend::StencilModuleMetadata::initModule(
   }
 
   // Copy the vector of declarations to the ModuleObject.
-  FunctionDeclarationVector functionDeclsCopy;
-  if (!functionDeclsCopy.appendAll(functionDecls)) {
+  auto functionDeclsCopy = MakeUnique<FunctionDeclarationVector>();
+  if (!functionDeclsCopy || !functionDeclsCopy->appendAll(functionDecls)) {
     js::ReportOutOfMemory(cx);
     return false;
   }
-  InitFunctionDeclarations(module.get(), std::move(functionDeclsCopy));
+  module->initFunctionDeclarations(std::move(functionDeclsCopy));
 
   Rooted<ListObject*> asyncParentModulesList(cx, ListObject::create(cx));
   if (!asyncParentModulesList) {
     return false;
   }
 
-  if (!module->initAsyncSlots(cx, isAsync, asyncParentModulesList)) {
-    return false;
-  }
+  module->initAsyncSlots(cx, isAsync, asyncParentModulesList);
 
   module->initImportExportData(
       requestedModulesObject, importEntriesObject, localExportEntriesObject,

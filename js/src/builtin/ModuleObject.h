@@ -23,8 +23,9 @@
 #include "js/TypeDecls.h"  // HandleValue, HandleId, HandleObject, HandleScript, MutableHandleValue, MutableHandleIdVector, MutableHandleObject
 #include "js/UniquePtr.h"  // UniquePtr
 #include "vm/JSObject.h"   // JSObject
-#include "vm/NativeObject.h"  // NativeObject
-#include "vm/ProxyObject.h"   // ProxyObject
+#include "vm/NativeObject.h"   // NativeObject
+#include "vm/ProxyObject.h"    // ProxyObject
+#include "vm/SharedStencil.h"  // FunctionDeclarationVector
 
 class JSAtom;
 class JSScript;
@@ -38,12 +39,12 @@ class Value;
 namespace js {
 
 class ArrayObject;
+class CyclicModuleFields;
 class ListObject;
-class PromiseObject;
-class ScriptSourceObject;
-
 class ModuleEnvironmentObject;
 class ModuleObject;
+class PromiseObject;
+class ScriptSourceObject;
 
 class ModuleRequestObject : public NativeObject {
  public:
@@ -290,29 +291,13 @@ constexpr uint32_t ASYNC_EVALUATING_POST_ORDER_INIT = 1;
 
 class ModuleObject : public NativeObject {
  public:
+  // Module fields including those for AbstractModuleRecords described by:
+  // https://tc39.es/ecma262/#sec-abstract-module-records
   enum ModuleSlot {
     ScriptSlot = 0,
     EnvironmentSlot,
     NamespaceSlot,
-    StatusSlot,
-    EvaluationErrorSlot,
-    MetaObjectSlot,
-    ScriptSourceObjectSlot,
-    RequestedModulesSlot,
-    ImportEntriesSlot,
-    LocalExportEntriesSlot,
-    IndirectExportEntriesSlot,
-    StarExportEntriesSlot,
-    ImportBindingsSlot,
-    FunctionDeclarationsSlot,
-    DFSIndexSlot,
-    DFSAncestorIndexSlot,
-    HasTopLevelAwaitSlot,
-    AsyncEvaluatingPostOrderSlot,
-    TopLevelCapabilitySlot,
-    AsyncParentModulesSlot,
-    PendingAsyncDependenciesSlot,
-    CycleRootSlot,
+    CyclicModuleFieldsSlot,
     SlotCount
   };
 
@@ -328,7 +313,7 @@ class ModuleObject : public NativeObject {
   void setInitialEnvironment(
       Handle<ModuleEnvironmentObject*> initialEnvironment);
 
-  void initStatusSlot();
+  void initFunctionDeclarations(UniquePtr<FunctionDeclarationVector> decls);
   void initImportExportData(Handle<ArrayObject*> requestedModules,
                             Handle<ArrayObject*> importEntries,
                             Handle<ArrayObject*> localExportEntries,
@@ -410,14 +395,12 @@ class ModuleObject : public NativeObject {
 
   static bool createEnvironment(JSContext* cx, Handle<ModuleObject*> self);
 
-  bool initAsyncSlots(JSContext* cx, bool hasTopLevelAwait,
-                      HandleObject asyncParentModulesList);
+  void initAsyncSlots(JSContext* cx, bool hasTopLevelAwait,
+                      Handle<ListObject*> asyncParentModules);
 
   static bool GatherAsyncParentCompletions(
       JSContext* cx, Handle<ModuleObject*> module,
       MutableHandle<ArrayObject*> execList);
-  // NOTE: accessor for FunctionDeclarationsSlot is defined inside
-  // ModuleObject.cpp as static function.
 
  private:
   static const JSClassOps classOps_;
@@ -425,7 +408,8 @@ class ModuleObject : public NativeObject {
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JS::GCContext* gcx, JSObject* obj);
 
-  bool hasImportBindings() const;
+  CyclicModuleFields* cyclicModuleFields();
+  const CyclicModuleFields* cyclicModuleFields() const;
 };
 
 JSObject* GetOrCreateModuleMetaObject(JSContext* cx, HandleObject module);

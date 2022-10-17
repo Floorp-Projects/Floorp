@@ -103,6 +103,7 @@ enum class GCAbortReason {
   _(PropMapChildren)                       \
   _(PropMapTable)                          \
   _(ModuleBindingMap)                      \
+  _(ModuleCyclicFields)                    \
   _(BaselineScript)                        \
   _(IonScript)                             \
   _(ArgumentsData)                         \
