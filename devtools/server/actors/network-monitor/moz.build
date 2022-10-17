@@ -15,9 +15,9 @@ DevToolsModules(
     "network-event-actor.js",
     "network-event.js",
     "network-monitor.js",
-    "network-observer.js",
     "network-parent.js",
-    "network-response-listener.js",
+    "NetworkObserver.sys.mjs",
+    "NetworkResponseListener.sys.mjs",
     "stack-trace-collector.js",
     "websocket-actor.js",
 )

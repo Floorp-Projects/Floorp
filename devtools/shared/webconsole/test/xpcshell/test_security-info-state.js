@@ -5,15 +5,6 @@
 // Tests that security info parser gives correct general security state for
 // different cases.
 
-Object.defineProperty(this, "NetworkHelper", {
-  get() {
-    return require("resource://devtools/shared/webconsole/network-helper.js");
-  },
-  configurable: true,
-  writeable: false,
-  enumerable: true,
-});
-
 const wpl = Ci.nsIWebProgressListener;
 
 // This *cannot* be used as an nsITransportSecurityInfo (since that interface is

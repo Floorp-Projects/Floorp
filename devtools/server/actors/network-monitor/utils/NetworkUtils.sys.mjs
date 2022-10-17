@@ -2,19 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const {
-  wildcardToRegExp,
-} = require("resource://devtools/server/actors/network-monitor/utils/wildcard-to-regexp.js");
+const lazy = {};
 
-loader.lazyRequireGetter(
-  this,
-  "NetworkHelper",
-  "resource://devtools/shared/webconsole/network-helper.js"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  NetworkHelper: "resource://devtools/shared/webconsole/NetworkHelper.sys.mjs",
+  wildcardToRegExp:
+    "resource://devtools/server/actors/network-monitor/utils/WildcardToRegexp.sys.mjs",
+});
 
-loader.lazyGetter(this, "tpFlagsMask", () => {
+XPCOMUtils.defineLazyGetter(lazy, "tpFlagsMask", () => {
   const trackingProtectionLevel2Enabled = Services.prefs
     .getStringPref("urlclassifier.trackingTable")
     .includes("content-track-digest256");
@@ -54,11 +52,7 @@ const LOAD_CAUSE_STRINGS = {
   [Ci.nsIContentPolicy.TYPE_WEB_IDENTITY]: "webidentity",
 };
 
-exports.causeTypeToString = function(
-  causeType,
-  loadFlags,
-  internalContentPolicyType
-) {
+function causeTypeToString(causeType, loadFlags, internalContentPolicyType) {
   let prefix = "";
   if (
     (causeType == Ci.nsIContentPolicy.TYPE_IMAGESET ||
@@ -69,19 +63,19 @@ exports.causeTypeToString = function(
   }
 
   return prefix + LOAD_CAUSE_STRINGS[causeType] || "unknown";
-};
+}
 
-exports.stringToCauseType = function(value) {
+function stringToCauseType(value) {
   return Object.keys(LOAD_CAUSE_STRINGS).find(
     key => LOAD_CAUSE_STRINGS[key] === value
   );
-};
+}
 
 function isChannelFromSystemPrincipal(channel) {
   let principal = null;
   let browsingContext = channel.loadInfo.browsingContext;
   if (!browsingContext) {
-    const topFrame = NetworkHelper.getTopFrameForRequest(channel);
+    const topFrame = lazy.NetworkHelper.getTopFrameForRequest(channel);
     if (topFrame) {
       browsingContext = topFrame.browsingContext;
     } else {
@@ -107,20 +101,20 @@ function isChannelFromSystemPrincipal(channel) {
  * @param {*} channel
  * @returns {number}
  */
-exports.getChannelBrowsingContextID = function(channel) {
+function getChannelBrowsingContextID(channel) {
   if (channel.loadInfo.browsingContextID) {
     return channel.loadInfo.browsingContextID;
   }
   // At least WebSocket channel aren't having a browsingContextID set on their loadInfo
   // We fallback on top frame element, which works, but will be wrong for WebSocket
   // in same-process iframes...
-  const topFrame = NetworkHelper.getTopFrameForRequest(channel);
+  const topFrame = lazy.NetworkHelper.getTopFrameForRequest(channel);
   // topFrame is typically null for some chrome requests like favicons
   if (topFrame && topFrame.browsingContext) {
     return topFrame.browsingContext.id;
   }
   return null;
-};
+}
 
 /**
  * Get the innerWindowId for the channel.
@@ -128,20 +122,20 @@ exports.getChannelBrowsingContextID = function(channel) {
  * @param {*} channel
  * @returns {number}
  */
-exports.getChannelInnerWindowId = function(channel) {
+function getChannelInnerWindowId(channel) {
   if (channel.loadInfo.innerWindowID) {
     return channel.loadInfo.innerWindowID;
   }
   // At least WebSocket channel aren't having a browsingContextID set on their loadInfo
   // We fallback on top frame element, which works, but will be wrong for WebSocket
   // in same-process iframes...
-  const topFrame = NetworkHelper.getTopFrameForRequest(channel);
+  const topFrame = lazy.NetworkHelper.getTopFrameForRequest(channel);
   // topFrame is typically null for some chrome requests like favicons
   if (topFrame?.browsingContext?.currentWindowGlobal) {
     return topFrame.browsingContext.currentWindowGlobal.innerWindowId;
   }
   return null;
-};
+}
 
 /**
  * Does this channel represent a Preload request.
@@ -149,7 +143,7 @@ exports.getChannelInnerWindowId = function(channel) {
  * @param {*} channel
  * @returns {boolean}
  */
-exports.isPreloadRequest = function(channel) {
+function isPreloadRequest(channel) {
   const type = channel.loadInfo.internalContentPolicyType;
   return (
     type == Ci.nsIContentPolicy.TYPE_INTERNAL_SCRIPT_PRELOAD ||
@@ -158,7 +152,7 @@ exports.isPreloadRequest = function(channel) {
     type == Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET_PRELOAD ||
     type == Ci.nsIContentPolicy.TYPE_INTERNAL_FONT_PRELOAD
   );
-};
+}
 
 /**
  * Creates a network event based on the channel.
@@ -166,7 +160,7 @@ exports.isPreloadRequest = function(channel) {
  * @param {*} channel
  * @return {Object} event - The network event
  */
-exports.createNetworkEvent = function(
+function createNetworkEvent(
   channel,
   {
     timestamp,
@@ -202,7 +196,7 @@ exports.createNetworkEvent = function(
   if (channel instanceof Ci.nsIClassifiedChannel) {
     event.isThirdPartyTrackingResource = !!(
       channel.isThirdPartyTrackingResource() &&
-      (channel.thirdPartyClassificationFlags & tpFlagsMask) == 0
+      (channel.thirdPartyClassificationFlags & lazy.tpFlagsMask) == 0
     );
   }
   const referrerInfo = channel.referrerInfo;
@@ -275,7 +269,9 @@ exports.createNetworkEvent = function(
     if (blockedReason !== undefined) {
       // We were definitely blocked, but the blocker didn't say why.
       event.blockedReason = "unknown";
-    } else if (blockedURLs.some(url => wildcardToRegExp(url).test(event.url))) {
+    } else if (
+      blockedURLs.some(url => lazy.wildcardToRegExp(url).test(event.url))
+    ) {
       channel.cancel(Cr.NS_BINDING_ABORTED);
       event.blockedReason = "devtools";
     }
@@ -293,7 +289,7 @@ exports.createNetworkEvent = function(
     channel.isMainDocumentChannel && channel.loadInfo.isTopLevelLoad;
 
   return event;
-};
+}
 
 /**
  * For a given channel, with its associated http activity object,
@@ -305,7 +301,7 @@ exports.createNetworkEvent = function(
  * @param {*} owner - The network event actor
  * @param {Object} extraStringData - The uncached response headers.
  */
-exports.fetchRequestHeadersAndCookies = function(
+function fetchRequestHeadersAndCookies(
   channel,
   owner,
   { extraStringData = "" }
@@ -325,12 +321,12 @@ exports.fetchRequestHeadersAndCookies = function(
   });
 
   if (cookieHeader) {
-    cookies = NetworkHelper.parseCookieHeader(cookieHeader);
+    cookies = lazy.NetworkHelper.parseCookieHeader(cookieHeader);
   }
 
   owner.addRequestHeaders(headers, extraStringData);
   owner.addRequestCookies(cookies);
-};
+}
 
 /**
  * Check if a given network request should be logged by a network monitor
@@ -372,7 +368,7 @@ function matchRequest(channel, filters) {
 
     if (type == "browser-element") {
       if (!channel.loadInfo.browsingContext) {
-        const topFrame = NetworkHelper.getTopFrameForRequest(channel);
+        const topFrame = lazy.NetworkHelper.getTopFrameForRequest(channel);
         // `topFrame` is typically null for some chrome requests like favicons
         // And its `browsingContext` attribute might be null if the request happened
         // while the tab is being closed.
@@ -406,7 +402,7 @@ function matchRequest(channel, filters) {
     } catch (e) {
       return false;
     }
-    const win = NetworkHelper.getWindowForRequest(channel);
+    const win = lazy.NetworkHelper.getWindowForRequest(channel);
     return windows.includes(win);
   }
 
@@ -436,7 +432,7 @@ function legacyMatchRequest(channel, filters) {
   }
 
   if (filters.window) {
-    let win = NetworkHelper.getWindowForRequest(channel);
+    let win = lazy.NetworkHelper.getWindowForRequest(channel);
     if (filters.matchExactWindow) {
       return win == filters.window;
     }
@@ -456,7 +452,7 @@ function legacyMatchRequest(channel, filters) {
   }
 
   if (filters.browserId) {
-    const topFrame = NetworkHelper.getTopFrameForRequest(channel);
+    const topFrame = lazy.NetworkHelper.getTopFrameForRequest(channel);
     // `topFrame` is typically null for some chrome requests like favicons
     // And its `browsingContext` attribute might be null if the request happened
     // while the tab is being closed.
@@ -484,4 +480,14 @@ function legacyMatchRequest(channel, filters) {
 
   return false;
 }
-exports.matchRequest = matchRequest;
+
+export const NetworkUtils = {
+  causeTypeToString,
+  createNetworkEvent,
+  fetchRequestHeadersAndCookies,
+  getChannelBrowsingContextID,
+  getChannelInnerWindowId,
+  isPreloadRequest,
+  matchRequest,
+  stringToCauseType,
+};

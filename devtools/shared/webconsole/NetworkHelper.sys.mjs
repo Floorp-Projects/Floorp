@@ -60,17 +60,20 @@
  *  Mihai Sucan (Mozilla Corp.)
  */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
-const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 
-loader.lazyGetter(this, "certDecoder", () => {
+ChromeUtils.defineESModuleGetters(lazy, {
+  DevToolsInfaillibleUtils:
+    "resource://devtools/shared/DevToolsInfaillibleUtils.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+});
+
+XPCOMUtils.defineLazyGetter(lazy, "certDecoder", () => {
   const { asn1js } = ChromeUtils.import(
     "chrome://global/content/certviewer/asn1js_bundle.jsm"
   );
@@ -113,7 +116,7 @@ const COOKIE_SAMESITE = {
  * Most of the following functions have been taken from the Firebug source. They
  * have been modified to match the Firefox coding rules.
  */
-var NetworkHelper = {
+export var NetworkHelper = {
   /**
    * Converts text with a given charset to unicode.
    *
@@ -670,7 +673,7 @@ var NetworkHelper = {
         // validation. Return info as info.state = insecure.
         return info;
       } else {
-        DevToolsUtils.reportException(
+        lazy.DevToolsInfaillibleUtils.reportException(
           "NetworkHelper.parseSecurityInfo",
           "Security state " + state + " has no known STATE_IS_* flags."
         );
@@ -718,7 +721,7 @@ var NetworkHelper = {
         info.hsts = sss.isSecureURI(uri, originAttributes);
         info.hpkp = pkps.hostHasPins(uri);
       } else {
-        DevToolsUtils.reportException(
+        lazy.DevToolsInfaillibleUtils.reportException(
           "NetworkHelper.parseSecurityInfo",
           "Could not get HSTS/HPKP status as hostname is not available."
         );
@@ -766,8 +769,8 @@ var NetworkHelper = {
       const certHash = cert.sha256Fingerprint;
       let parsedCert = decodedCertificateCache.get(certHash);
       if (!parsedCert) {
-        parsedCert = await certDecoder.parse(
-          certDecoder.pemToDER(cert.getBase64DERString())
+        parsedCert = await lazy.certDecoder.parse(
+          lazy.certDecoder.pemToDER(cert.getBase64DERString())
         );
         decodedCertificateCache.set(certHash, parsedCert);
       }
@@ -799,7 +802,7 @@ var NetworkHelper = {
         sha256: parsedCert.fingerprint.sha256,
       };
     } else {
-      DevToolsUtils.reportException(
+      lazy.DevToolsInfaillibleUtils.reportException(
         "NetworkHelper.parseCertificateInfo",
         "Secure connection established without certificate."
       );
@@ -829,7 +832,7 @@ var NetworkHelper = {
       case Ci.nsITransportSecurityInfo.TLS_VERSION_1_3:
         return "TLSv1.3";
       default:
-        DevToolsUtils.reportException(
+        lazy.DevToolsInfaillibleUtils.reportException(
           "NetworkHelper.formatSecurityProtocol",
           "protocolVersion " + version + " is unknown."
         );
@@ -864,7 +867,7 @@ var NetworkHelper = {
       }
 
       if (!isCipher) {
-        DevToolsUtils.reportException(
+        lazy.DevToolsInfaillibleUtils.reportException(
           "NetworkHelper.getReasonsForWeakness",
           "STATE_IS_BROKEN without a known reason. Full state was: " + state
         );
@@ -909,7 +912,3 @@ var NetworkHelper = {
     return paramsArray;
   },
 };
-
-for (const prop of Object.getOwnPropertyNames(NetworkHelper)) {
-  exports[prop] = NetworkHelper[prop];
-}

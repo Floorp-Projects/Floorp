@@ -17,6 +17,10 @@ var {
 const lazy = {};
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  NetworkHelper: "resource://devtools/shared/webconsole/NetworkHelper.sys.mjs",
+});
+
 ChromeUtils.defineModuleGetter(
   lazy,
   "FileUtils",
@@ -472,10 +476,6 @@ DevToolsUtils.defineLazyGetter(this, "NetUtil", () => {
   return ChromeUtils.import("resource://gre/modules/NetUtil.jsm").NetUtil;
 });
 
-DevToolsUtils.defineLazyGetter(this, "NetworkHelper", () => {
-  return require("resource://devtools/shared/webconsole/network-helper.js");
-});
-
 /**
  * Performs a request to load the desired URL and returns a promise.
  *
@@ -618,7 +618,10 @@ function mainThreadFetch(
         if (!charset) {
           charset = aOptions.charset || "UTF-8";
         }
-        const unicodeSource = NetworkHelper.convertToUnicode(source, charset);
+        const unicodeSource = lazy.NetworkHelper.convertToUnicode(
+          source,
+          charset
+        );
 
         // Look for any source map URL in the response.
         let sourceMapURL;

@@ -4,11 +4,11 @@
 
 "use strict";
 
-loader.lazyRequireGetter(
-  this,
-  "NetworkHelper",
-  "resource://devtools/shared/webconsole/network-helper.js"
-);
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  NetworkHelper: "resource://devtools/shared/webconsole/NetworkHelper.sys.mjs",
+});
 
 const {
   getTheme,
@@ -121,7 +121,7 @@ Converter.prototype = {
     this.listener.onStartRequest(request);
 
     // Initialize stuff.
-    const win = NetworkHelper.getWindowForRequest(request);
+    const win = lazy.NetworkHelper.getWindowForRequest(request);
     if (!win || !Components.isSuccessCode(request.status)) {
       return;
     }

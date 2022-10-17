@@ -19,11 +19,10 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/NetUtil.jsm"
 );
 
-loader.lazyRequireGetter(
-  this,
-  "NetworkUtils",
-  "resource://devtools/server/actors/network-monitor/utils/network-utils.js"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  NetworkUtils:
+    "resource://devtools/server/actors/network-monitor/utils/NetworkUtils.sys.mjs",
+});
 
 loader.lazyRequireGetter(
   this,
@@ -79,7 +78,7 @@ const NetworkContentActor = ActorClassWithSpec(networkContentSpec, {
         securityFlags:
           Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
         contentPolicyType:
-          NetworkUtils.stringToCauseType(cause.type) ||
+          lazy.NetworkUtils.stringToCauseType(cause.type) ||
           Ci.nsIContentPolicy.TYPE_OTHER,
       });
 

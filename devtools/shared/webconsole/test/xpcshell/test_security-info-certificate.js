@@ -5,15 +5,6 @@
 // Tests that NetworkHelper.parseCertificateInfo parses certificate information
 // correctly.
 
-Object.defineProperty(this, "NetworkHelper", {
-  get() {
-    return require("resource://devtools/shared/webconsole/network-helper.js");
-  },
-  configurable: true,
-  writeable: false,
-  enumerable: true,
-});
-
 const DUMMY_CERT = {
   getBase64DERString() {
     // This is the base64-encoded contents of the "DigiCert ECC Secure Server CA"

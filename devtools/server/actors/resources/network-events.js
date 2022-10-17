@@ -13,18 +13,14 @@ const { WatcherRegistry } = ChromeUtils.importESModule(
 );
 const Targets = require("resource://devtools/server/actors/targets/index.js");
 
-loader.lazyRequireGetter(
-  this,
-  "NetworkObserver",
-  "resource://devtools/server/actors/network-monitor/network-observer.js",
-  true
-);
+const lazy = {};
 
-loader.lazyRequireGetter(
-  this,
-  "NetworkUtils",
-  "resource://devtools/server/actors/network-monitor/utils/network-utils.js"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  NetworkObserver:
+    "resource://devtools/server/actors/network-monitor/NetworkObserver.sys.mjs",
+  NetworkUtils:
+    "resource://devtools/server/actors/network-monitor/utils/NetworkUtils.sys.mjs",
+});
 
 loader.lazyRequireGetter(
   this,
@@ -60,7 +56,7 @@ class NetworkEventWatcher {
     this.onNetworkEventUpdated = onUpdated;
     // Boolean to know if we keep previous document network events or not.
     this.persist = false;
-    this.listener = new NetworkObserver(
+    this.listener = new lazy.NetworkObserver(
       { sessionContext: watcherActor.sessionContext },
       {
         onNetworkEvent: this.onNetworkEvent.bind(this),
@@ -234,7 +230,7 @@ class NetworkEventWatcher {
       );
     if (isParentProcessOnlyBrowserToolbox) {
       // We should ignore all requests coming from BrowsingContext running in another process
-      const browsingContextID = NetworkUtils.getChannelBrowsingContextID(
+      const browsingContextID = lazy.NetworkUtils.getChannelBrowsingContextID(
         channel
       );
       const browsingContext = BrowsingContext.get(browsingContextID);

@@ -4,16 +4,18 @@
 
 "use strict";
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  NetworkUtils:
+    "resource://devtools/server/actors/network-monitor/utils/NetworkUtils.sys.mjs",
+});
+
 loader.lazyRequireGetter(
   this,
   "ChannelEventSinkFactory",
   "resource://devtools/server/actors/network-monitor/channel-event-sink.js",
   true
-);
-loader.lazyRequireGetter(
-  this,
-  "NetworkUtils",
-  "resource://devtools/server/actors/network-monitor/utils/network-utils.js"
 );
 loader.lazyRequireGetter(
   this,
@@ -102,7 +104,7 @@ StackTraceCollector.prototype = {
       }
     }
 
-    if (!NetworkUtils.matchRequest(channel, this.filters)) {
+    if (!lazy.NetworkUtils.matchRequest(channel, this.filters)) {
       return;
     }
 

@@ -2,26 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-loader.lazyRequireGetter(
-  this,
-  "NetworkHelper",
-  "resource://devtools/shared/webconsole/network-helper.js"
-);
-loader.lazyRequireGetter(
-  this,
-  "CacheEntry",
-  "resource://devtools/shared/platform/cache-entry.js",
-  true
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  CacheEntry: "resource://devtools/shared/platform/CacheEntry.sys.mjs",
+  NetworkHelper: "resource://devtools/shared/webconsole/NetworkHelper.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+});
 
 // Network logging
 
@@ -46,31 +38,28 @@ ChromeUtils.defineModuleGetter(
  *        A Map of certificate fingerprints to decoded certificates, to avoid
  *        repeatedly decoding previously-seen certificates.
  */
-function NetworkResponseListener(owner, httpActivity, decodedCertificateCache) {
-  this.owner = owner;
-  this.receivedData = "";
-  this.httpActivity = httpActivity;
-  this.bodySize = 0;
-  // Indicates if the response had a size greater than response body limit.
-  this.truncated = false;
-  // Note that this is really only needed for the non-e10s case.
-  // See bug 1309523.
-  const channel = this.httpActivity.channel;
-  this._wrappedNotificationCallbacks = channel.notificationCallbacks;
-  channel.notificationCallbacks = this;
-  this._decodedCertificateCache = decodedCertificateCache;
-}
+export class NetworkResponseListener {
+  constructor(owner, httpActivity, decodedCertificateCache) {
+    this.QueryInterface = ChromeUtils.generateQI([
+      "nsIStreamListener",
+      "nsIInputStreamCallback",
+      "nsIRequestObserver",
+      "nsIInterfaceRequestor",
+    ]);
 
-exports.NetworkResponseListener = NetworkResponseListener;
-
-NetworkResponseListener.prototype = {
-  QueryInterface: ChromeUtils.generateQI([
-    "nsIStreamListener",
-    "nsIInputStreamCallback",
-    "nsIRequestObserver",
-    "nsIInterfaceRequestor",
-  ]),
-
+    this.owner = owner;
+    this.receivedData = "";
+    this.httpActivity = httpActivity;
+    this.bodySize = 0;
+    // Indicates if the response had a size greater than response body limit.
+    this.truncated = false;
+    // Note that this is really only needed for the non-e10s case.
+    // See bug 1309523.
+    const channel = this.httpActivity.channel;
+    this._wrappedNotificationCallbacks = channel.notificationCallbacks;
+    channel.notificationCallbacks = this;
+    this._decodedCertificateCache = decodedCertificateCache;
+  }
   // nsIInterfaceRequestor implementation
 
   /**
@@ -85,7 +74,7 @@ NetworkResponseListener.prototype = {
       return this._wrappedNotificationCallbacks.getInterface(iid);
     }
     throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
-  },
+  }
 
   /**
    * Forward notifications for interfaces this object implements, in case other
@@ -103,62 +92,62 @@ NetworkResponseListener.prototype = {
         throw e;
       }
     }
-  },
+  }
 
   /**
    * This NetworkResponseListener tracks the NetworkObserver.openResponses object
    * to find the associated uncached headers.
    * @private
    */
-  _foundOpenResponse: false,
+  _foundOpenResponse = false;
 
   /**
    * If the channel already had notificationCallbacks, hold them here internally
    * so that we can forward getInterface requests to that object.
    */
-  _wrappedNotificationCallbacks: null,
+  _wrappedNotificationCallbacks = null;
 
   /**
    * A Map of certificate fingerprints to decoded certificates, to avoid repeatedly
    * decoding previously-seen certificates.
    */
-  _decodedCertificateCache: null,
+  _decodedCertificateCache = null;
 
   /**
    * The response listener owner.
    */
-  owner: null,
+  owner = null;
 
   /**
    * The response will be written into the outputStream of this nsIPipe.
    * Both ends of the pipe must be blocking.
    */
-  sink: null,
+  sink = null;
 
   /**
    * The HttpActivity object associated with this response.
    */
-  httpActivity: null,
+  httpActivity = null;
 
   /**
    * Stores the received data as a string.
    */
-  receivedData: null,
+  receivedData = null;
 
   /**
    * The uncompressed, decoded response body size.
    */
-  bodySize: null,
+  bodySize = null;
 
   /**
    * Response size on the wire, potentially compressed / encoded.
    */
-  transferredSize: null,
+  transferredSize = null;
 
   /**
    * The nsIRequest we are started for.
    */
-  request: null,
+  request = null;
 
   /**
    * Set the async listener for the given nsIAsyncInputStream. This allows us to
@@ -175,7 +164,7 @@ NetworkResponseListener.prototype = {
   setAsyncListener(stream, listener) {
     // Asynchronously wait for the stream to be readable or closed.
     stream.asyncWait(listener, 0, 0, Services.tm.mainThread);
-  },
+  }
 
   /**
    * Stores the received data, if request/response body logging is enabled. It
@@ -202,7 +191,7 @@ NetworkResponseListener.prototype = {
         "devtools.netmonitor.responseBodyLimit"
       );
       if (this.receivedData.length <= limit || limit == 0) {
-        this.receivedData += NetworkHelper.convertToUnicode(
+        this.receivedData += lazy.NetworkHelper.convertToUnicode(
           data,
           request.contentCharset
         );
@@ -212,7 +201,7 @@ NetworkResponseListener.prototype = {
         this.truncated = true;
       }
     }
-  },
+  }
 
   /**
    * See documentation at
@@ -261,7 +250,7 @@ NetworkResponseListener.prototype = {
       if (!charset) {
         charset = this.httpActivity.charset;
       }
-      NetworkHelper.loadFromCache(
+      lazy.NetworkHelper.loadFromCache(
         this.httpActivity.url,
         charset,
         this._onComplete.bind(this)
@@ -313,7 +302,7 @@ NetworkResponseListener.prototype = {
     }
     // Asynchronously wait for the data coming from the request.
     this.setAsyncListener(this.sink.inputStream, this);
-  },
+  }
 
   /**
    * Parse security state of this request and report it to the client.
@@ -332,7 +321,7 @@ NetworkResponseListener.prototype = {
     // was a redirect from http to https, the request object seems to contain
     // security info for the https request after redirect.
     const secinfo = this.httpActivity.channel.securityInfo;
-    const info = await NetworkHelper.parseSecurityInfo(
+    const info = await lazy.NetworkHelper.parseSecurityInfo(
       secinfo,
       this.request.loadInfo.originAttributes,
       this.httpActivity,
@@ -350,7 +339,7 @@ NetworkResponseListener.prototype = {
     }
 
     this.httpActivity.owner.addSecurityInfo(info, isRacing);
-  },
+  }
 
   /**
    * Fetches cache information from CacheEntry
@@ -358,12 +347,12 @@ NetworkResponseListener.prototype = {
    */
   _fetchCacheInformation() {
     const httpActivity = this.httpActivity;
-    CacheEntry.getCacheEntry(this.request, descriptor => {
+    lazy.CacheEntry.getCacheEntry(this.request, descriptor => {
       httpActivity.owner.addResponseCache({
         responseCache: descriptor,
       });
     });
-  },
+  }
 
   /**
    * Handle the onStopRequest by closing the sink output stream.
@@ -379,7 +368,7 @@ NetworkResponseListener.prototype = {
     }
     this._findOpenResponse();
     this.sink.outputStream.close();
-  },
+  }
 
   // nsIProgressEventSink implementation
 
@@ -392,11 +381,11 @@ NetworkResponseListener.prototype = {
     // Need to forward as well to keep things like Download Manager's progress
     // bar working properly.
     this._forwardNotification(Ci.nsIProgressEventSink, "onProgress", arguments);
-  },
+  }
 
   onStatus() {
     this._forwardNotification(Ci.nsIProgressEventSink, "onStatus", arguments);
-  },
+  }
 
   /**
    * Find the open response object associated to the current request. The
@@ -426,7 +415,7 @@ NetworkResponseListener.prototype = {
 
     this.httpActivity.owner.addResponseHeaders(openResponse.headers);
     this.httpActivity.owner.addResponseCookies(openResponse.cookies);
-  },
+  }
 
   /**
    * Clean up the response listener once the response input stream is closed.
@@ -463,7 +452,7 @@ NetworkResponseListener.prototype = {
       if (!charset) {
         charset = this.httpActivity.charset;
       }
-      NetworkHelper.loadFromCache(
+      lazy.NetworkHelper.loadFromCache(
         this.httpActivity.url,
         charset,
         this._onComplete.bind(this)
@@ -471,7 +460,7 @@ NetworkResponseListener.prototype = {
     } else {
       this._onComplete();
     }
-  },
+  }
 
   /**
    * Handler for when the response completes. This function cleans up the
@@ -485,7 +474,7 @@ NetworkResponseListener.prototype = {
     // Make sure all the security and response content info are sent
     this._getResponseContent(data);
     this._onSecurityInfo.then(() => this._destroy());
-  },
+  }
 
   /**
    * Create the response object and send it to the client.
@@ -508,7 +497,7 @@ NetworkResponseListener.prototype = {
 
     if (
       !response.mimeType ||
-      !NetworkHelper.isTextMimeType(response.mimeType)
+      !lazy.NetworkHelper.isTextMimeType(response.mimeType)
     ) {
       response.encoding = "base64";
       try {
@@ -546,7 +535,7 @@ NetworkResponseListener.prototype = {
       blockedReason: reason,
       blockingExtension: id,
     });
-  },
+  }
 
   _destroy() {
     this._wrappedNotificationCallbacks = null;
@@ -556,7 +545,7 @@ NetworkResponseListener.prototype = {
     this.converter = null;
     this.request = null;
     this.owner = null;
-  },
+  }
 
   /**
    * The nsIInputStreamCallback for when the request input stream is ready -
@@ -598,5 +587,5 @@ NetworkResponseListener.prototype = {
       this.onStreamClose();
       this.offset = 0;
     }
-  },
-};
+  }
+}

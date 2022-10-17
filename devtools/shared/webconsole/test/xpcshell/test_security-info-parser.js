@@ -4,15 +4,6 @@
 
 // Test that NetworkHelper.parseSecurityInfo returns correctly formatted object.
 
-Object.defineProperty(this, "NetworkHelper", {
-  get() {
-    return require("resource://devtools/shared/webconsole/network-helper.js");
-  },
-  configurable: true,
-  writeable: false,
-  enumerable: true,
-});
-
 const wpl = Ci.nsIWebProgressListener;
 const MockCertificate = {
   getBase64DERString() {

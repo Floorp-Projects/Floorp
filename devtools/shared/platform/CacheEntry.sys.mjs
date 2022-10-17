@@ -2,19 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+const lazy = {};
 
-loader.lazyRequireGetter(
-  this,
-  "NetworkHelper",
-  "resource://devtools/shared/webconsole/network-helper.js"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  NetworkHelper: "resource://devtools/shared/webconsole/NetworkHelper.sys.mjs",
+});
 
 /**
  * Module to fetch cache objects from CacheStorageService
  * and return them as an object.
  */
-exports.CacheEntry = {
+export const CacheEntry = {
   /**
    * Flag for cache session being initialized.
    */
@@ -31,7 +29,7 @@ exports.CacheEntry = {
     try {
       const cacheService = Services.cache2;
       if (cacheService) {
-        let loadContext = NetworkHelper.getRequestLoadContext(request);
+        let loadContext = lazy.NetworkHelper.getRequestLoadContext(request);
         if (!loadContext) {
           // Get default load context if we can't fetch.
           loadContext = Services.loadContextInfo.default;

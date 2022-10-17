@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /* global FinalizationRegistry, WeakRef */
 
 /**
@@ -23,7 +21,7 @@
  *
  * So, this custom map solves aforementioned issues.
  */
-class ChannelMap {
+export class ChannelMap {
   constructor() {
     this.weakMap = new WeakMap();
     this.refMap = new Map();
@@ -74,5 +72,3 @@ class ChannelMap {
     this.refMap.clear();
   }
 }
-
-exports.ChannelMap = ChannelMap;
