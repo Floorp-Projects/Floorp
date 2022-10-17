@@ -28,8 +28,6 @@ namespace webrtc {
 // FakePeerConnectionBase then overriding the interesting methods. This class
 // takes care of providing default implementations for all the pure virtual
 // functions specified in the interfaces.
-// TODO(nisse): Try to replace this with DummyPeerConnection, from
-// api/test/ ?
 class FakePeerConnectionBase : public PeerConnectionInternal {
  public:
   // PeerConnectionInterface implementation.

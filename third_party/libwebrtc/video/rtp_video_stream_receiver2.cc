@@ -651,11 +651,11 @@ void RtpVideoStreamReceiver2::OnRecoveredPacket(const uint8_t* rtp_packet,
 
   packet.IdentifyExtensions(rtp_header_extensions_);
   packet.set_payload_type_frequency(kVideoPayloadTypeFrequency);
-  // TODO(nisse): UlpfecReceiverImpl::ProcessReceivedFec passes both
-  // original (decapsulated) media packets and recovered packets to
-  // this callback. We need a way to distinguish, for setting
-  // packet.recovered() correctly. Ideally, move RED decapsulation out
-  // of the Ulpfec implementation.
+  // TODO(bugs.webrtc.org/7135): UlpfecReceiverImpl::ProcessReceivedFec passes
+  // both original (decapsulated) media packets and recovered packets to this
+  // callback. We need a way to distinguish, for setting packet.recovered()
+  // correctly. Ideally, move RED decapsulation out of the Ulpfec
+  // implementation.
 
   ReceivePacket(packet);
 }

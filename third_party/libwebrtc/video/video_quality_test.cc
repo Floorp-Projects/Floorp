@@ -954,7 +954,6 @@ void VideoQualityTest::SetupThumbnails(Transport* send_transport,
     // sender_call.
     VideoSendStream::Config thumbnail_send_config(recv_transport);
     thumbnail_send_config.rtp.ssrcs.push_back(kThumbnailSendSsrcStart + i);
-    // TODO(nisse): Could use a simpler VP8-only encoder factory.
     thumbnail_send_config.encoder_settings.encoder_factory =
         &video_encoder_factory_;
     thumbnail_send_config.encoder_settings.bitrate_allocator_factory =

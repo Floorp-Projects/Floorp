@@ -1245,8 +1245,8 @@ void LegacyStatsCollector::ExtractSenderInfo() {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
 
   for (const auto& sender : pc_->GetSenders()) {
-    // TODO(nisse): SSRC == 0 currently means none. Delete check when
-    // that is fixed.
+    // TODO(bugs.webrtc.org/8694): SSRC == 0 currently means none. Delete check
+    // when that is fixed.
     if (!sender->ssrc()) {
       continue;
     }

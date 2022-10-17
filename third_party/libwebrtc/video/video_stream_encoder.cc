@@ -2274,7 +2274,6 @@ void VideoStreamEncoder::RunPostEncode(const EncodedImage& encoded_image,
   absl::optional<int> encode_duration_us;
   if (encoded_image.timing_.flags != VideoSendTiming::kInvalid) {
     encode_duration_us =
-        // TODO(nisse): Maybe use capture_time_ms_ rather than encode_start_ms_?
         TimeDelta::Millis(encoded_image.timing_.encode_finish_ms -
                           encoded_image.timing_.encode_start_ms)
             .us();
