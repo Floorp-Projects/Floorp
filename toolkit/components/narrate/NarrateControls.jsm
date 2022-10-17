@@ -47,7 +47,10 @@ function NarrateControls(win, languagePromise) {
   toggleButton.className = "dropdown-toggle toolbar-button narrate-toggle";
   toggleButton.dataset.telemetryId = "reader-listen";
   let tip = win.document.createElement("span");
-  let labelText = gStrings.GetStringFromName("listen");
+  let shortcutNarrateKey = gStrings.GetStringFromName("narrate-key-shortcut");
+  let labelText = gStrings.formatStringFromName("listen-label", [
+    shortcutNarrateKey,
+  ]);
   tip.textContent = labelText;
   tip.className = "hover-label";
   toggleButton.append(tip);
