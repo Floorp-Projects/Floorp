@@ -383,6 +383,23 @@ rtc_source_set("test_support") {
   ]
 }
 
+rtc_library("fixed_fps_video_frame_writer_adapter") {
+  visibility = [ "*" ]
+  testonly = true
+  sources = [
+    "testsupport/fixed_fps_video_frame_writer_adapter.cc",
+    "testsupport/fixed_fps_video_frame_writer_adapter.h",
+  ]
+  deps = [
+    ":video_test_support",
+    "../api/units:time_delta",
+    "../api/video:video_frame",
+    "../rtc_base:checks",
+    "../system_wrappers",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
 rtc_library("video_test_support") {
   testonly = true
 
@@ -533,6 +550,22 @@ if (rtc_include_tests && !build_with_chromium) {
     }
   }
 
+  rtc_library("fixed_fps_video_frame_writer_adapter_test") {
+    testonly = true
+    sources = [ "testsupport/fixed_fps_video_frame_writer_adapter_test.cc" ]
+    deps = [
+      ":fixed_fps_video_frame_writer_adapter",
+      ":test_support",
+      ":video_test_support",
+      "../api/units:time_delta",
+      "../api/units:timestamp",
+      "../api/video:video_frame",
+      "../rtc_base/synchronization:mutex",
+      "time_controller",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  }
+
   rtc_test("test_support_unittests") {
     deps = [
       ":call_config_utils",
@@ -541,6 +574,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":fake_video_codecs",
       ":fileutils",
       ":fileutils_unittests",
+      ":fixed_fps_video_frame_writer_adapter_test",
       ":frame_generator_impl",
       ":perf_test",
       ":rtc_expect_death",
