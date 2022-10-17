@@ -1,0 +1,853 @@
+Revert a change that breaks bindgen until things are sorted out.
+https://github.com/rust-lang/rust-bindgen/issues/2312
+
+---
+ .../clangd/unittests/FindTargetTests.cpp      |  2 +-
+ clang/include/clang/AST/Decl.h                |  6 +---
+ clang/include/clang/AST/DeclCXX.h             |  8 ++---
+ clang/include/clang/AST/DeclTemplate.h        |  3 +-
+ clang/lib/AST/ASTDiagnostic.cpp               |  2 +-
+ clang/lib/AST/Decl.cpp                        | 31 +++----------------
+ clang/lib/AST/DeclCXX.cpp                     | 17 +++++-----
+ clang/lib/AST/DeclPrinter.cpp                 |  4 +--
+ clang/lib/AST/DeclTemplate.cpp                |  5 ++-
+ clang/lib/AST/NestedNameSpecifier.cpp         |  2 +-
+ clang/lib/AST/TemplateName.cpp                |  2 +-
+ clang/lib/CodeGen/CodeGenTypes.cpp            |  2 +-
+ clang/lib/Sema/SemaTemplateInstantiate.cpp    |  6 ++--
+ .../ast-dump-record-definition-data-json.cpp  |  4 +--
+ clang/test/ExtractAPI/enum.c                  | 16 +++++-----
+ clang/test/Index/annotate-comments-typedef.m  |  2 +-
+ clang/test/Index/c-index-api-loadTU-test.m    |  2 +-
+ clang/test/Index/c-index-getCursor-test.m     |  4 +--
+ clang/test/Index/print-type.c                 |  8 ++---
+ clang/test/Index/print-type.cpp               |  8 ++---
+ clang/test/Index/targeted-annotation.c        | 10 +++---
+ clang/test/Index/targeted-cursor.c            |  2 +-
+ clang/test/Index/usrs.m                       |  6 ++--
+ clang/test/Sema/address-packed.c              |  8 ++---
+ clang/test/Sema/attr-flag-enum.c              |  2 +-
+ clang/test/SemaCXX/attr-unused.cpp            |  2 +-
+ clang/test/SemaCXX/lambda-expressions.cpp     | 20 ++++++------
+ clang/test/SemaCXX/ms-interface.cpp           |  2 +-
+ clang/test/SemaObjCXX/arc-0x.mm               | 12 +++----
+ .../Templight/templight-empty-entries-fix.cpp | 16 +++++-----
+ clang/unittests/AST/ASTTraverserTest.cpp      |  2 +-
+ llvm/utils/lit/lit/TestRunner.py              |  1 -
+ 32 files changed, 92 insertions(+), 125 deletions(-)
+
+diff --git a/clang-tools-extra/clangd/unittests/FindTargetTests.cpp b/clang-tools-extra/clangd/unittests/FindTargetTests.cpp
+index 336572aede2a..57838eafd651 100644
+--- a/clang-tools-extra/clangd/unittests/FindTargetTests.cpp
++++ b/clang-tools-extra/clangd/unittests/FindTargetTests.cpp
+@@ -1640,7 +1640,7 @@ TEST_F(FindExplicitReferencesTest, All) {
+               int (*$2^fptr)(int $3^a, int) = nullptr;
+              }
+            )cpp",
+-           "0: targets = {(unnamed)}\n"
++           "0: targets = {}\n"
+            "1: targets = {x}, decl\n"
+            "2: targets = {fptr}, decl\n"
+            "3: targets = {a}, decl\n"},
+diff --git a/clang/include/clang/AST/Decl.h b/clang/include/clang/AST/Decl.h
+index 1e05d1e425a2..d566564ee7d0 100644
+--- a/clang/include/clang/AST/Decl.h
++++ b/clang/include/clang/AST/Decl.h
+@@ -291,9 +291,7 @@ public:
+ 
+   /// Pretty-print the unqualified name of this declaration. Can be overloaded
+   /// by derived classes to provide a more user-friendly name when appropriate.
+-  virtual void printName(raw_ostream &OS, const PrintingPolicy &Policy) const;
+-  /// Calls printName() with the ASTContext printing policy from the decl.
+-  void printName(raw_ostream &OS) const;
++  virtual void printName(raw_ostream &os) const;
+ 
+   /// Get the actual, stored name of the declaration, which may be a special
+   /// name.
+@@ -3656,8 +3654,6 @@ public:
+     return getExtInfo()->TemplParamLists[i];
+   }
+ 
+-  void printName(raw_ostream &OS, const PrintingPolicy &Policy) const override;
+-
+   void setTemplateParameterListsInfo(ASTContext &Context,
+                                      ArrayRef<TemplateParameterList *> TPLists);
+ 
+diff --git a/clang/include/clang/AST/DeclCXX.h b/clang/include/clang/AST/DeclCXX.h
+index ce83424dd207..126d51133ac9 100644
+--- a/clang/include/clang/AST/DeclCXX.h
++++ b/clang/include/clang/AST/DeclCXX.h
+@@ -4100,7 +4100,7 @@ public:
+     return llvm::makeArrayRef(getTrailingObjects<BindingDecl *>(), NumBindings);
+   }
+ 
+-  void printName(raw_ostream &OS, const PrintingPolicy &Policy) const override;
++  void printName(raw_ostream &os) const override;
+ 
+   static bool classof(const Decl *D) { return classofKind(D->getKind()); }
+   static bool classofKind(Kind K) { return K == Decomposition; }
+@@ -4213,8 +4213,7 @@ private:
+ 
+ public:
+   /// Print this UUID in a human-readable format.
+-  void printName(llvm::raw_ostream &OS,
+-                 const PrintingPolicy &Policy) const override;
++  void printName(llvm::raw_ostream &OS) const override;
+ 
+   /// Get the decomposed parts of this declaration.
+   Parts getParts() const { return PartVal; }
+@@ -4267,8 +4266,7 @@ class UnnamedGlobalConstantDecl : public ValueDecl,
+ 
+ public:
+   /// Print this in a human-readable format.
+-  void printName(llvm::raw_ostream &OS,
+-                 const PrintingPolicy &Policy) const override;
++  void printName(llvm::raw_ostream &OS) const override;
+ 
+   const APValue &getValue() const { return Value; }
+ 
+diff --git a/clang/include/clang/AST/DeclTemplate.h b/clang/include/clang/AST/DeclTemplate.h
+index 5cd1de4d2413..7d883f1922d7 100644
+--- a/clang/include/clang/AST/DeclTemplate.h
++++ b/clang/include/clang/AST/DeclTemplate.h
+@@ -3342,8 +3342,7 @@ private:
+ 
+ public:
+   /// Print this template parameter object in a human-readable format.
+-  void printName(llvm::raw_ostream &OS,
+-                 const PrintingPolicy &Policy) const override;
++  void printName(llvm::raw_ostream &OS) const override;
+ 
+   /// Print this object as an equivalent expression.
+   void printAsExpr(llvm::raw_ostream &OS) const;
+diff --git a/clang/lib/AST/ASTDiagnostic.cpp b/clang/lib/AST/ASTDiagnostic.cpp
+index 079fd268f4d3..079fc8bd1505 100644
+--- a/clang/lib/AST/ASTDiagnostic.cpp
++++ b/clang/lib/AST/ASTDiagnostic.cpp
+@@ -1893,7 +1893,7 @@ class TemplateDiff {
+         TPO->printAsInit(OS, Policy);
+         return;
+       }
+-      VD->printName(OS, Policy);
++      VD->printName(OS);
+       return;
+     }
+ 
+diff --git a/clang/lib/AST/Decl.cpp b/clang/lib/AST/Decl.cpp
+index d1dd93b0a5b6..b326933b1d7d 100644
+--- a/clang/lib/AST/Decl.cpp
++++ b/clang/lib/AST/Decl.cpp
+@@ -1602,12 +1602,8 @@ Module *Decl::getOwningModuleForLinkage(bool IgnoreLinkage) const {
+   llvm_unreachable("unknown module kind");
+ }
+ 
+-void NamedDecl::printName(raw_ostream &OS, const PrintingPolicy&) const {
+-  OS << Name;
+-}
+-
+-void NamedDecl::printName(raw_ostream &OS) const {
+-  printName(OS, getASTContext().getPrintingPolicy());
++void NamedDecl::printName(raw_ostream &os) const {
++  os << Name;
+ }
+ 
+ std::string NamedDecl::getQualifiedNameAsString() const {
+@@ -1625,7 +1621,7 @@ void NamedDecl::printQualifiedName(raw_ostream &OS,
+                                    const PrintingPolicy &P) const {
+   if (getDeclContext()->isFunctionOrMethod()) {
+     // We do not print '(anonymous)' for function parameters without name.
+-    printName(OS, P);
++    printName(OS);
+     return;
+   }
+   printNestedNameSpecifier(OS, P);
+@@ -1636,7 +1632,7 @@ void NamedDecl::printQualifiedName(raw_ostream &OS,
+     // fall back to "(anonymous)".
+     SmallString<64> NameBuffer;
+     llvm::raw_svector_ostream NameOS(NameBuffer);
+-    printName(NameOS, P);
++    printName(NameOS);
+     if (NameBuffer.empty())
+       OS << "(anonymous)";
+     else
+@@ -1759,7 +1755,7 @@ void NamedDecl::getNameForDiagnostic(raw_ostream &OS,
+   if (Qualified)
+     printQualifiedName(OS, Policy);
+   else
+-    printName(OS, Policy);
++    printName(OS);
+ }
+ 
+ template<typename T> static bool isRedeclarableImpl(Redeclarable<T> *) {
+@@ -4474,23 +4470,6 @@ void TagDecl::setQualifierInfo(NestedNameSpecifierLoc QualifierLoc) {
+   }
+ }
+ 
+-void TagDecl::printName(raw_ostream &OS, const PrintingPolicy &Policy) const {
+-  DeclarationName Name = getDeclName();
+-  // If the name is supposed to have an identifier but does not have one, then
+-  // the tag is anonymous and we should print it differently.
+-  if (Name.isIdentifier() && !Name.getAsIdentifierInfo()) {
+-    // If the caller wanted to print a qualified name, they've already printed
+-    // the scope. And if the caller doesn't want that, the scope information
+-    // is already printed as part of the type.
+-    PrintingPolicy Copy(Policy);
+-    Copy.SuppressScope = true;
+-    getASTContext().getTagDeclType(this).print(OS, Copy);
+-    return;
+-  }
+-  // Otherwise, do the normal printing.
+-  Name.print(OS, Policy);
+-}
+-
+ void TagDecl::setTemplateParameterListsInfo(
+     ASTContext &Context, ArrayRef<TemplateParameterList *> TPLists) {
+   assert(!TPLists.empty());
+diff --git a/clang/lib/AST/DeclCXX.cpp b/clang/lib/AST/DeclCXX.cpp
+index b92210996fdb..40a7ae80b61a 100644
+--- a/clang/lib/AST/DeclCXX.cpp
++++ b/clang/lib/AST/DeclCXX.cpp
+@@ -3269,17 +3269,16 @@ DecompositionDecl *DecompositionDecl::CreateDeserialized(ASTContext &C,
+   return Result;
+ }
+ 
+-void DecompositionDecl::printName(llvm::raw_ostream &OS,
+-                                  const PrintingPolicy &Policy) const {
+-  OS << '[';
++void DecompositionDecl::printName(llvm::raw_ostream &os) const {
++  os << '[';
+   bool Comma = false;
+   for (const auto *B : bindings()) {
+     if (Comma)
+-      OS << ", ";
+-    B->printName(OS, Policy);
++      os << ", ";
++    B->printName(os);
+     Comma = true;
+   }
+-  OS << ']';
++  os << ']';
+ }
+ 
+ void MSPropertyDecl::anchor() {}
+@@ -3315,8 +3314,7 @@ MSGuidDecl *MSGuidDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
+   return new (C, ID) MSGuidDecl(nullptr, QualType(), Parts());
+ }
+ 
+-void MSGuidDecl::printName(llvm::raw_ostream &OS,
+-                           const PrintingPolicy &) const {
++void MSGuidDecl::printName(llvm::raw_ostream &OS) const {
+   OS << llvm::format("GUID{%08" PRIx32 "-%04" PRIx16 "-%04" PRIx16 "-",
+                      PartVal.Part1, PartVal.Part2, PartVal.Part3);
+   unsigned I = 0;
+@@ -3425,8 +3423,7 @@ UnnamedGlobalConstantDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
+       UnnamedGlobalConstantDecl(C, nullptr, QualType(), APValue());
+ }
+ 
+-void UnnamedGlobalConstantDecl::printName(llvm::raw_ostream &OS,
+-                                          const PrintingPolicy &) const {
++void UnnamedGlobalConstantDecl::printName(llvm::raw_ostream &OS) const {
+   OS << "unnamed-global-constant";
+ }
+ 
+diff --git a/clang/lib/AST/DeclPrinter.cpp b/clang/lib/AST/DeclPrinter.cpp
+index 0071f9b00137..ad90e536c0de 100644
+--- a/clang/lib/AST/DeclPrinter.cpp
++++ b/clang/lib/AST/DeclPrinter.cpp
+@@ -1711,7 +1711,7 @@ void DeclPrinter::VisitOMPDeclareReductionDecl(OMPDeclareReductionDecl *D) {
+       Out << OpName;
+     } else {
+       assert(D->getDeclName().isIdentifier());
+-      D->printName(Out, Policy);
++      D->printName(Out);
+     }
+     Out << " : ";
+     D->getType().print(Out, Policy);
+@@ -1741,7 +1741,7 @@ void DeclPrinter::VisitOMPDeclareReductionDecl(OMPDeclareReductionDecl *D) {
+ void DeclPrinter::VisitOMPDeclareMapperDecl(OMPDeclareMapperDecl *D) {
+   if (!D->isInvalidDecl()) {
+     Out << "#pragma omp declare mapper (";
+-    D->printName(Out, Policy);
++    D->printName(Out);
+     Out << " : ";
+     D->getType().print(Out, Policy);
+     Out << " ";
+diff --git a/clang/lib/AST/DeclTemplate.cpp b/clang/lib/AST/DeclTemplate.cpp
+index c419cb7006b5..15092541b8f1 100644
+--- a/clang/lib/AST/DeclTemplate.cpp
++++ b/clang/lib/AST/DeclTemplate.cpp
+@@ -1532,10 +1532,9 @@ TemplateParamObjectDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
+   return TPOD;
+ }
+ 
+-void TemplateParamObjectDecl::printName(llvm::raw_ostream &OS,
+-                                        const PrintingPolicy &Policy) const {
++void TemplateParamObjectDecl::printName(llvm::raw_ostream &OS) const {
+   OS << "<template param ";
+-  printAsExpr(OS, Policy);
++  printAsExpr(OS);
+   OS << ">";
+ }
+ 
+diff --git a/clang/lib/AST/NestedNameSpecifier.cpp b/clang/lib/AST/NestedNameSpecifier.cpp
+index 36f2c47b3000..ab656fd9ddf6 100644
+--- a/clang/lib/AST/NestedNameSpecifier.cpp
++++ b/clang/lib/AST/NestedNameSpecifier.cpp
+@@ -287,7 +287,7 @@ void NestedNameSpecifier::print(raw_ostream &OS, const PrintingPolicy &Policy,
+             dyn_cast_or_null<ClassTemplateSpecializationDecl>(getAsRecordDecl());
+     if (ResolveTemplateArguments && Record) {
+         // Print the type trait with resolved template parameters.
+-        Record->printName(OS, Policy);
++        Record->printName(OS);
+         printTemplateArgumentList(
+             OS, Record->getTemplateArgs().asArray(), Policy,
+             Record->getSpecializedTemplate()->getTemplateParameters());
+diff --git a/clang/lib/AST/TemplateName.cpp b/clang/lib/AST/TemplateName.cpp
+index f301133eef80..88ab7b8f34a5 100644
+--- a/clang/lib/AST/TemplateName.cpp
++++ b/clang/lib/AST/TemplateName.cpp
+@@ -322,7 +322,7 @@ void TemplateName::print(raw_ostream &OS, const PrintingPolicy &Policy,
+   } else {
+     assert(getKind() == TemplateName::OverloadedTemplate);
+     OverloadedTemplateStorage *OTS = getAsOverloadedTemplate();
+-    (*OTS->begin())->printName(OS, Policy);
++    (*OTS->begin())->printName(OS);
+   }
+ }
+ 
+diff --git a/clang/lib/CodeGen/CodeGenTypes.cpp b/clang/lib/CodeGen/CodeGenTypes.cpp
+index 05956c2c1ec6..fcce424747f1 100644
+--- a/clang/lib/CodeGen/CodeGenTypes.cpp
++++ b/clang/lib/CodeGen/CodeGenTypes.cpp
+@@ -67,7 +67,7 @@ void CodeGenTypes::addRecordTypeName(const RecordDecl *RD,
+     if (RD->getDeclContext())
+       RD->printQualifiedName(OS, Policy);
+     else
+-      RD->printName(OS, Policy);
++      RD->printName(OS);
+   } else if (const TypedefNameDecl *TDD = RD->getTypedefNameForAnonDecl()) {
+     // FIXME: We should not have to check for a null decl context here.
+     // Right now we do it because the implicit Obj-C decls don't have one.
+diff --git a/clang/lib/Sema/SemaTemplateInstantiate.cpp b/clang/lib/Sema/SemaTemplateInstantiate.cpp
+index 1400693f664e..00d3e185c10f 100644
+--- a/clang/lib/Sema/SemaTemplateInstantiate.cpp
++++ b/clang/lib/Sema/SemaTemplateInstantiate.cpp
+@@ -723,7 +723,7 @@ void Sema::PrintInstantiationStack() {
+       TemplateDecl *Template = cast<TemplateDecl>(Active->Template);
+       SmallString<128> TemplateArgsStr;
+       llvm::raw_svector_ostream OS(TemplateArgsStr);
+-      Template->printName(OS, getPrintingPolicy());
++      Template->printName(OS);
+       printTemplateArgumentList(OS, Active->template_arguments(),
+                                 getPrintingPolicy());
+       Diags.Report(Active->PointOfInstantiation,
+@@ -789,7 +789,7 @@ void Sema::PrintInstantiationStack() {
+ 
+       SmallString<128> TemplateArgsStr;
+       llvm::raw_svector_ostream OS(TemplateArgsStr);
+-      FD->printName(OS, getPrintingPolicy());
++      FD->printName(OS);
+       printTemplateArgumentList(OS, Active->template_arguments(),
+                                 getPrintingPolicy());
+       Diags.Report(Active->PointOfInstantiation,
+@@ -954,7 +954,7 @@ void Sema::PrintInstantiationStack() {
+       }
+       SmallString<128> TemplateArgsStr;
+       llvm::raw_svector_ostream OS(TemplateArgsStr);
+-      cast<NamedDecl>(Active->Entity)->printName(OS, getPrintingPolicy());
++      cast<NamedDecl>(Active->Entity)->printName(OS);
+       if (!isa<FunctionDecl>(Active->Entity)) {
+         printTemplateArgumentList(OS, Active->template_arguments(),
+                                   getPrintingPolicy());
+diff --git a/clang/test/AST/ast-dump-record-definition-data-json.cpp b/clang/test/AST/ast-dump-record-definition-data-json.cpp
+index c102c436a2a4..6be3facf3815 100644
+--- a/clang/test/AST/ast-dump-record-definition-data-json.cpp
++++ b/clang/test/AST/ast-dump-record-definition-data-json.cpp
+@@ -323,7 +323,7 @@ struct DoesNotAllowConstDefaultInit {
+ // CHECK-NEXT:    },
+ // CHECK-NEXT:    "isImplicit": true,
+ // CHECK-NEXT:    "isReferenced": true,
+-// CHECK-NEXT:    "name": "~(lambda at {{.*}})",
++// CHECK-NEXT:    "name": "~",
+ // CHECK-NEXT:    "mangledName": "_ZZ1fvEN3$_0D1Ev",
+ // CHECK-NEXT:    "type": {
+ // CHECK-NEXT:     "qualType": "void () noexcept"
+@@ -708,7 +708,7 @@ struct DoesNotAllowConstDefaultInit {
+ // CHECK-NEXT:    },
+ // CHECK-NEXT:    "isImplicit": true,
+ // CHECK-NEXT:    "isReferenced": true,
+-// CHECK-NEXT:    "name": "~(lambda at {{.*}})",
++// CHECK-NEXT:    "name": "~",
+ // CHECK-NEXT:    "mangledName": "_ZZ1fvEN3$_1D1Ev",
+ // CHECK-NEXT:    "type": {
+ // CHECK-NEXT:     "qualType": "void () noexcept"
+diff --git a/clang/test/ExtractAPI/enum.c b/clang/test/ExtractAPI/enum.c
+index 07d848082981..8c06d850dbda 100644
+--- a/clang/test/ExtractAPI/enum.c
++++ b/clang/test/ExtractAPI/enum.c
+@@ -694,13 +694,13 @@ enum {
+         "navigator": [
+           {
+             "kind": "identifier",
+-            "spelling": "enum (unnamed)"
++            "spelling": "(anonymous)"
+           }
+         ],
+-        "title": "enum (unnamed)"
++        "title": "(anonymous)"
+       },
+       "pathComponents": [
+-        "enum (unnamed)"
++        "(anonymous)"
+       ]
+     },
+     {
+@@ -742,7 +742,7 @@ enum {
+         "title": "Constant"
+       },
+       "pathComponents": [
+-        "enum (unnamed)",
++        "(anonymous)",
+         "Constant"
+       ]
+     },
+@@ -782,13 +782,13 @@ enum {
+         "navigator": [
+           {
+             "kind": "identifier",
+-            "spelling": "enum (unnamed)"
++            "spelling": "(anonymous)"
+           }
+         ],
+-        "title": "enum (unnamed)"
++        "title": "(anonymous)"
+       },
+       "pathComponents": [
+-        "enum (unnamed)"
++        "(anonymous)"
+       ]
+     },
+     {
+@@ -830,7 +830,7 @@ enum {
+         "title": "OtherConstant"
+       },
+       "pathComponents": [
+-        "enum (unnamed)",
++        "(anonymous)",
+         "OtherConstant"
+       ]
+     }
+diff --git a/clang/test/Index/annotate-comments-typedef.m b/clang/test/Index/annotate-comments-typedef.m
+index 8447f44ae2c5..77c4d631850d 100644
+--- a/clang/test/Index/annotate-comments-typedef.m
++++ b/clang/test/Index/annotate-comments-typedef.m
+@@ -36,7 +36,7 @@ typedef struct {
+          int iii;
+         } Foo;
+ // CHECK: TypedefDecl=Foo:[[@LINE-1]]:11 (Definition) {{.*}} FullCommentAsHTML=[<p class="para-brief"> Comment about Foo </p>] FullCommentAsXML=[<Typedef file="{{[^"]+}}annotate-comments-typedef.m" line="[[@LINE-1]]" column="11"><Name>Foo</Name><USR>c:@T@Foo</USR><Declaration>typedef struct Foo Foo</Declaration><Abstract><Para> Comment about Foo </Para></Abstract></Typedef>]
+-// CHECK: StructDecl=Foo:[[@LINE-4]]:9 (Definition) {{.*}} BriefComment=[Comment about Foo] FullCommentAsHTML=[<p class="para-brief"> Comment about Foo </p>] FullCommentAsXML=[<Class file="{{[^"]+}}annotate-comments-typedef.m" line="[[@LINE-4]]" column="9"><Name>&lt;anonymous&gt;</Name><USR>c:@SA@Foo</USR><Declaration>struct {}</Declaration><Abstract><Para> Comment about Foo </Para></Abstract></Class>]
++// CHECK: StructDecl=:[[@LINE-4]]:9 (Definition) {{.*}} BriefComment=[Comment about Foo] FullCommentAsHTML=[<p class="para-brief"> Comment about Foo </p>] FullCommentAsXML=[<Class file="{{[^"]+}}annotate-comments-typedef.m" line="[[@LINE-4]]" column="9"><Name>&lt;anonymous&gt;</Name><USR>c:@SA@Foo</USR><Declaration>struct {}</Declaration><Abstract><Para> Comment about Foo </Para></Abstract></Class>]
+ 
+ 
+ struct Foo1 {
+diff --git a/clang/test/Index/c-index-api-loadTU-test.m b/clang/test/Index/c-index-api-loadTU-test.m
+index 1aca6b46c439..52f3a56d9800 100644
+--- a/clang/test/Index/c-index-api-loadTU-test.m
++++ b/clang/test/Index/c-index-api-loadTU-test.m
+@@ -105,7 +105,7 @@ struct X0  {};
+ // CHECK: c-index-api-loadTU-test.m:35:9: ObjCIvarDecl=_anIVar:35:9 (Definition) Extent=[35:5 - 35:16]
+ // CHECK: c-index-api-loadTU-test.m:38:11: ObjCInstanceMethodDecl=bazMethod:38:11 Extent=[38:1 - 38:21]
+ // CHECK: c-index-api-loadTU-test.m:38:4: ObjCClassRef=Foo:4:12 Extent=[38:4 - 38:7]
+-// CHECK: c-index-api-loadTU-test.m:42:1: EnumDecl=enum (unnamed at {{.*}}):42:1 (Definition) Extent=[42:1 - 44:2]
++// CHECK: c-index-api-loadTU-test.m:42:1: EnumDecl=:42:1 (Definition) Extent=[42:1 - 44:2]
+ // CHECK: c-index-api-loadTU-test.m:43:3: EnumConstantDecl=someEnum:43:3 (Definition) Extent=[43:3 - 43:11]
+ // CHECK: c-index-api-loadTU-test.m:46:5: FunctionDecl=main:46:5 (Definition) Extent=[46:1 - 55:2]
+ // CHECK: c-index-api-loadTU-test.m:46:15: ParmDecl=argc:46:15 (Definition) Extent=[46:11 - 46:19]
+diff --git a/clang/test/Index/c-index-getCursor-test.m b/clang/test/Index/c-index-getCursor-test.m
+index 0a9e1ab67b40..2361af62ab70 100644
+--- a/clang/test/Index/c-index-getCursor-test.m
++++ b/clang/test/Index/c-index-getCursor-test.m
+@@ -102,9 +102,9 @@ void f() {
+ // CHECK: [36:7 - 36:21] ObjCInstanceMethodDecl=bazMethod:36:1
+ // CHECK: [36:21 - 38:5] ObjCInterfaceDecl=Baz:31:12
+ // CHECK: [38:5 - 40:1] Invalid Cursor => NoDeclFound
+-// CHECK: [40:1 - 41:3] EnumDecl=enum (unnamed at {{.*}}):40:1 (Definition)
++// CHECK: [40:1 - 41:3] EnumDecl=:40:1 (Definition)
+ // CHECK: [41:3 - 41:11] EnumConstantDecl=someEnum:41:3 (Definition)
+-// CHECK: [41:11 - 42:2] EnumDecl=enum (unnamed at {{.*}}):40:1 (Definition)
++// CHECK: [41:11 - 42:2] EnumDecl=:40:1 (Definition)
+ // CHECK: [42:2 - 44:1] Invalid Cursor => NoDeclFound
+ // CHECK: [44:1 - 44:11] FunctionDecl=main:44:5 (Definition)
+ // CHECK: [44:11 - 44:19] ParmDecl=argc:44:15 (Definition)
+diff --git a/clang/test/Index/print-type.c b/clang/test/Index/print-type.c
+index 1e5a7248d89c..65cb80114767 100644
+--- a/clang/test/Index/print-type.c
++++ b/clang/test/Index/print-type.c
+@@ -69,10 +69,10 @@ _Atomic(unsigned long) aul;
+ // CHECK: StructDecl=Struct:16:8 (Definition) [type=struct Struct] [typekind=Record] [isPOD=1]
+ // CHECK: FunctionDecl=elaboratedStructType:16:32 [type=struct Struct ()] [typekind=FunctionNoProto] [canonicaltype=struct Struct ()] [canonicaltypekind=FunctionNoProto] [resulttype=struct Struct] [resulttypekind=Elaborated] [isPOD=0]
+ // CHECK: TypeRef=struct Struct:16:8 [type=struct Struct] [typekind=Record] [isPOD=1]
+-// CHECK: StructDecl=struct (unnamed at {{.*}}):18:1 (Definition) [type=struct (unnamed at {{.*}}print-type.c:18:1)] [typekind=Record] [isPOD=1] [nbFields=2] [isAnon=1] [isAnonRecDecl=0]
+-// CHECK: StructDecl=struct (unnamed at {{.*}}):23:1 (Definition) [type=struct (unnamed at {{.*}}print-type.c:23:1)] [typekind=Record] [isPOD=1] [nbFields=1] [isAnon=1] [isAnonRecDecl=0]
+-// CHECK: StructDecl=struct (anonymous at {{.*}}):24:3 (Definition) [type=struct (anonymous at {{.*}}print-type.c:24:3)] [typekind=Record] [isPOD=1] [nbFields=2] [isAnon=1] [isAnonRecDecl=1]
++// CHECK: StructDecl=:18:1 (Definition) [type=struct (unnamed at {{.*}}print-type.c:18:1)] [typekind=Record] [isPOD=1] [nbFields=2] [isAnon=1] [isAnonRecDecl=0]
++// CHECK: StructDecl=:23:1 (Definition) [type=struct (unnamed at {{.*}}print-type.c:23:1)] [typekind=Record] [isPOD=1] [nbFields=1] [isAnon=1] [isAnonRecDecl=0]
++// CHECK: StructDecl=:24:3 (Definition) [type=struct (anonymous at {{.*}}print-type.c:24:3)] [typekind=Record] [isPOD=1] [nbFields=2] [isAnon=1] [isAnonRecDecl=1]
+ // CHECK: FieldDecl=x:25:17 (Definition) [type=_Atomic(int)] [typekind=Atomic] [valuetype=int] [valuetypekind=Int] [isPOD=0] [isAnonRecDecl=0]
+ // CHECK: FieldDecl=y:26:9 (Definition) [type=int] [typekind=Int] [isPOD=1] [isAnonRecDecl=0]
+-// CHECK: StructDecl=struct (unnamed at {{.*}}):30:10 (Definition) [type=struct (unnamed at {{.*}}print-type.c:30:10)] [typekind=Record] [isPOD=1] [nbFields=2] [isAnon=1] [isAnonRecDecl=0]
++// CHECK: StructDecl=:30:10 (Definition) [type=struct (unnamed at {{.*}}print-type.c:30:10)] [typekind=Record] [isPOD=1] [nbFields=2] [isAnon=1] [isAnonRecDecl=0]
+ // CHECK: VarDecl=aul:32:24 [type=_Atomic(unsigned long)] [typekind=Atomic] [valuetype=unsigned long] [valuetypekind=ULong] [isPOD=0] [isAnonRecDecl=0]
+diff --git a/clang/test/Index/print-type.cpp b/clang/test/Index/print-type.cpp
+index ed298a7810ae..f049ce722741 100644
+--- a/clang/test/Index/print-type.cpp
++++ b/clang/test/Index/print-type.cpp
+@@ -201,9 +201,9 @@ inline namespace InlineNS {}
+ // CHECK: TypeAliasDecl=baz:76:7 (Definition) [type=baz] [typekind=Typedef] [templateargs/1= [type=A<void>] [typekind=Elaborated]] [canonicaltype=A<void>] [canonicaltypekind=Record] [canonicaltemplateargs/1= [type=void] [typekind=Void]] [isPOD=0]
+ // CHECK: VarDecl=autoTemplPointer:78:6 (Definition) [type=Specialization<Specialization<bool> &> *] [typekind=Auto] [canonicaltype=Specialization<Specialization<bool> &> *] [canonicaltypekind=Pointer] [isPOD=1] [pointeetype=Specialization<Specialization<bool> &>] [pointeekind=Auto]
+ // CHECK: CallExpr=Bar:17:3 [type=outer::inner::Bar] [typekind=Elaborated] [canonicaltype=outer::inner::Bar] [canonicaltypekind=Record] [args= [outer::Foo<bool> *] [Pointer]] [isPOD=0] [nbFields=3]
+-// CHECK: StructDecl=(anonymous struct at {{.*}}):84:3 (Definition) [type=X::(anonymous struct at {{.*}}print-type.cpp:84:3)] [typekind=Record] [isPOD=1] [nbFields=1] [isAnon=1]
+-// CHECK: ClassDecl=(anonymous class at {{.*}}:85:3 (Definition) [type=X::(anonymous class at {{.*}}print-type.cpp:85:3)] [typekind=Record] [isPOD=1] [nbFields=1] [isAnon=1]
+-// CHECK: UnionDecl=(anonymous union at {{.*}}:86:3 (Definition) [type=X::(anonymous union at {{.*}}print-type.cpp:86:3)] [typekind=Record] [isPOD=1] [nbFields=2] [isAnon=1]
+-// CHECK: EnumDecl=(unnamed enum at {{.*}}:87:3 (Definition) [type=X::(unnamed enum at {{.*}}print-type.cpp:87:3)] [typekind=Enum] [isPOD=1] [isAnon=1]
++// CHECK: StructDecl=:84:3 (Definition) [type=X::(anonymous struct at {{.*}}print-type.cpp:84:3)] [typekind=Record] [isPOD=1] [nbFields=1] [isAnon=1]
++// CHECK: ClassDecl=:85:3 (Definition) [type=X::(anonymous class at {{.*}}print-type.cpp:85:3)] [typekind=Record] [isPOD=1] [nbFields=1] [isAnon=1]
++// CHECK: UnionDecl=:86:3 (Definition) [type=X::(anonymous union at {{.*}}print-type.cpp:86:3)] [typekind=Record] [isPOD=1] [nbFields=2] [isAnon=1]
++// CHECK: EnumDecl=:87:3 (Definition) [type=X::(unnamed enum at {{.*}}print-type.cpp:87:3)] [typekind=Enum] [isPOD=1] [isAnon=1]
+ // CHECK: Namespace=:90:11 (Definition) [type=] [typekind=Invalid] [isPOD=0] [isAnon=1]
+ // CHECK: Namespace=InlineNS:94:18 (Definition) [type=] [typekind=Invalid] [isPOD=0] [isAnonRecDecl=0] [isInlineNamespace=1]
+diff --git a/clang/test/Index/targeted-annotation.c b/clang/test/Index/targeted-annotation.c
+index daf30986e948..022a139d36db 100644
+--- a/clang/test/Index/targeted-annotation.c
++++ b/clang/test/Index/targeted-annotation.c
+@@ -45,10 +45,10 @@ int LocalVar2;
+ 
+ // FIELD: Keyword: "int" [2:3 - 2:6] FieldDecl=z:2:7 (Definition)
+ // FIELD: Identifier: "z" [2:7 - 2:8] FieldDecl=z:2:7 (Definition)
+-// FIELD: Punctuation: ";" [2:8 - 2:9] StructDecl=Vector:13:9 (Definition)
++// FIELD: Punctuation: ";" [2:8 - 2:9] StructDecl=:13:9 (Definition)
+ // FIELD: Keyword: "int" [3:3 - 3:6] FieldDecl=w:3:7 (Definition)
+ // FIELD: Identifier: "w" [3:7 - 3:8] FieldDecl=w:3:7 (Definition)
+-// FIELD: Punctuation: ";" [3:8 - 3:9] StructDecl=Vector:13:9 (Definition)
++// FIELD: Punctuation: ";" [3:8 - 3:9] StructDecl=:13:9 (Definition)
+ 
+ // RUN: env CINDEXTEST_FAILONERROR=1 c-index-test -test-annotate-tokens=%S/targeted-nested1.h:1:1:3:1 %s -include %t.h \
+ // RUN:    -Xclang -error-on-deserialized-decl=TopVar  \
+@@ -86,12 +86,12 @@ int LocalVar2;
+ // TOP: Punctuation: "#" [5:1 - 5:2] inclusion directive=targeted-nested1.h
+ // TOP: Identifier: "include" [5:2 - 5:9] inclusion directive=targeted-nested1.h
+ // TOP: Literal: ""targeted-nested1.h"" [5:10 - 5:30] inclusion directive=targeted-nested1.h
+-// TOP: Keyword: "enum" [7:1 - 7:5] EnumDecl=enum (unnamed at {{.*}}):7:1 (Definition)
+-// TOP: Punctuation: "{" [7:6 - 7:7] EnumDecl=enum (unnamed at {{.*}}):7:1 (Definition)
++// TOP: Keyword: "enum" [7:1 - 7:5] EnumDecl=:7:1 (Definition)
++// TOP: Punctuation: "{" [7:6 - 7:7] EnumDecl=:7:1 (Definition)
+ // TOP: Identifier: "VALUE" [8:3 - 8:8] EnumConstantDecl=VALUE:8:3 (Definition)
+ // TOP: Punctuation: "=" [8:9 - 8:10] EnumConstantDecl=VALUE:8:3 (Definition)
+ // TOP: Literal: "3" [8:11 - 8:12] IntegerLiteral=
+-// TOP: Punctuation: "}" [9:1 - 9:2] EnumDecl=enum (unnamed at {{.*}}):7:1 (Definition)
++// TOP: Punctuation: "}" [9:1 - 9:2] EnumDecl=:7:1 (Definition)
+ // TOP: Punctuation: ";" [9:2 - 9:3]
+ // TOP: Keyword: "extern" [11:1 - 11:7]
+ // TOP: Keyword: "int" [11:8 - 11:11] VarDecl=TopVar:11:12
+diff --git a/clang/test/Index/targeted-cursor.c b/clang/test/Index/targeted-cursor.c
+index 1bb4a51e4959..7efc07fad798 100644
+--- a/clang/test/Index/targeted-cursor.c
++++ b/clang/test/Index/targeted-cursor.c
+@@ -62,4 +62,4 @@ int LocalVar2;
+ // PREAMBLE-CURSOR1: VarDecl=PreambleVar:2:12
+ 
+ // FIELD-CURSOR1: FieldDecl=z:2:7 (Definition)
+-// FIELD-CURSOR2: StructDecl=Vector:13:9 (Definition)
++// FIELD-CURSOR2: StructDecl=:13:9 (Definition)
+diff --git a/clang/test/Index/usrs.m b/clang/test/Index/usrs.m
+index 9a1407ce5189..d0a860e1afad 100644
+--- a/clang/test/Index/usrs.m
++++ b/clang/test/Index/usrs.m
+@@ -185,14 +185,14 @@ int test_multi_declaration(void) {
+ // CHECK-source: usrs.m:3:52: BinaryOperator= Extent=[3:52 - 3:57]
+ // CHECK-source: usrs.m:3:52: DeclRefExpr=x:3:33 Extent=[3:52 - 3:53]
+ // CHECK-source: usrs.m:3:56: DeclRefExpr=y:3:40 Extent=[3:56 - 3:57]
+-// CHECK-source: usrs.m:5:1: EnumDecl=enum (unnamed at {{.*}}):5:1 (Definition) Extent=[5:1 - 8:2]
++// CHECK-source: usrs.m:5:1: EnumDecl=:5:1 (Definition) Extent=[5:1 - 8:2]
+ // CHECK-source: usrs.m:6:3: EnumConstantDecl=ABA:6:3 (Definition) Extent=[6:3 - 6:6]
+ // CHECK-source: usrs.m:7:3: EnumConstantDecl=CADABA:7:3 (Definition) Extent=[7:3 - 7:9]
+-// CHECK-source: usrs.m:10:1: EnumDecl=enum (unnamed at {{.*}}):10:1 (Definition) Extent=[10:1 - 13:2]
++// CHECK-source: usrs.m:10:1: EnumDecl=:10:1 (Definition) Extent=[10:1 - 13:2]
+ // CHECK-source: usrs.m:11:3: EnumConstantDecl=FOO:11:3 (Definition) Extent=[11:3 - 11:6]
+ // CHECK-source: usrs.m:12:3: EnumConstantDecl=BAR:12:3 (Definition) Extent=[12:3 - 12:6]
+ // CHECK-source: usrs.m:18:3: TypedefDecl=MyStruct:18:3 (Definition) Extent=[15:1 - 18:11]
+-// CHECK-source: usrs.m:15:9: StructDecl=MyStruct:15:9 (Definition) Extent=[15:9 - 18:2]
++// CHECK-source: usrs.m:15:9: StructDecl=:15:9 (Definition) Extent=[15:9 - 18:2]
+ // CHECK-source: usrs.m:16:7: FieldDecl=wa:16:7 (Definition) Extent=[16:3 - 16:9]
+ // CHECK-source: usrs.m:17:7: FieldDecl=moo:17:7 (Definition) Extent=[17:3 - 17:10]
+ // CHECK-source: usrs.m:20:6: EnumDecl=Pizza:20:6 (Definition) Extent=[20:1 - 23:2]
+diff --git a/clang/test/Sema/address-packed.c b/clang/test/Sema/address-packed.c
+index 29f12490e9fa..e149a5340bee 100644
+--- a/clang/test/Sema/address-packed.c
++++ b/clang/test/Sema/address-packed.c
+@@ -136,7 +136,7 @@ struct S4 {
+ };
+ 
+ int *g4(struct S4 *s4) {
+-  return &s4->inner.i; // expected-warning {{packed member 'i' of class or structure 'S4::struct (unnamed at}}
++  return &s4->inner.i; // expected-warning {{packed member 'i' of class or structure 'S4::(anonymous)'}}
+ }
+ 
+ struct S5 {
+@@ -148,7 +148,7 @@ struct S5 {
+ };
+ 
+ int *g5(struct S5 *s5) {
+-  return &s5->inner.i; // expected-warning {{packed member 'i' of class or structure 'S5::struct (unnamed at}}
++  return &s5->inner.i; // expected-warning {{packed member 'i' of class or structure 'S5::(anonymous)'}}
+ }
+ 
+ struct __attribute__((packed, aligned(2))) AlignedTo2 {
+@@ -200,7 +200,7 @@ struct S6 {
+ };
+ 
+ int *anonymousInnerUnion(struct S6 *s) {
+-  return &s->x; // expected-warning {{packed member 'x' of class or structure 'S6::union (anonymous at}}
++  return &s->x; // expected-warning {{packed member 'x' of class or structure 'S6::(anonymous)'}}
+ }
+ 
+ struct S6a {
+@@ -212,7 +212,7 @@ struct S6a {
+ } __attribute__((packed, aligned(16))) s6;
+ 
+ void g8(void)
+-{
++{ 
+     f1(&s6.a); // no-warning
+     f1(&s6.c); // no-warning
+     f1(&s6.d); // expected-warning {{packed member 'd' of class or structure 'S6a'}}
+diff --git a/clang/test/Sema/attr-flag-enum.c b/clang/test/Sema/attr-flag-enum.c
+index e90f7b2e46e4..467afd950973 100644
+--- a/clang/test/Sema/attr-flag-enum.c
++++ b/clang/test/Sema/attr-flag-enum.c
+@@ -7,7 +7,7 @@ enum __attribute__((flag_enum)) flag {
+ };
+ 
+ enum __attribute__((flag_enum)) {
+-  g = 0x7,  // expected-warning {{enumeration value 'g' is out of range of flags in enumeration type 'enum (unnamed at}}
++  g = 0x7,  // expected-warning {{enumeration value 'g' is out of range of flags in enumeration type ''}}
+ };
+ 
+ enum __attribute__((flag_enum)) flag2 {
+diff --git a/clang/test/SemaCXX/attr-unused.cpp b/clang/test/SemaCXX/attr-unused.cpp
+index 292be7dcc711..5bca693864e3 100644
+--- a/clang/test/SemaCXX/attr-unused.cpp
++++ b/clang/test/SemaCXX/attr-unused.cpp
+@@ -10,7 +10,7 @@ void f() {
+   ns_not_unused::Int_not_unused i1; // expected-warning {{unused variable}}
+   ns_unused::Int_unused i0; // expected-warning {{'Int_unused' was marked unused but was used}}
+ 
+-  union __attribute__((unused)) { // expected-warning {{was marked unused but was used}}
++  union __attribute__((unused)) { // expected-warning {{'' was marked unused but was used}}
+     int i;
+   };
+   (void) i;
+diff --git a/clang/test/SemaCXX/lambda-expressions.cpp b/clang/test/SemaCXX/lambda-expressions.cpp
+index 4ad880835e6d..71a876f6f9b3 100644
+--- a/clang/test/SemaCXX/lambda-expressions.cpp
++++ b/clang/test/SemaCXX/lambda-expressions.cpp
+@@ -121,7 +121,7 @@ namespace SpecialMembers {
+   void g(P &p, Q &q, R &r) {
+     // FIXME: The note attached to the second error here is just amazingly bad.
+     auto pp = [p]{}; // expected-error {{deleted constructor}} expected-cxx14-error {{deleted copy constructor of '(lambda}}
+-    // expected-cxx14-note-re@-1 {{copy constructor of '(lambda at {{.*}})' is implicitly deleted because field '' has a deleted copy constructor}}
++    // expected-cxx14-note@-1 {{copy constructor of '' is implicitly deleted because field '' has a deleted copy constructor}}
+     auto qq = [q]{}; // expected-error {{deleted function}} expected-note {{because}}
+ 
+     auto a = [r]{}; // expected-note 2{{here}}
+@@ -306,16 +306,16 @@ namespace lambdas_in_NSDMIs {
+   template<class T>
+   struct L {
+       T t{};
+-      T t2 = ([](int a) { return [](int b) { return b; };})(t)(t);
++      T t2 = ([](int a) { return [](int b) { return b; };})(t)(t);    
+   };
+-  L<int> l;
+-
++  L<int> l; 
++  
+   namespace non_template {
+     struct L {
+       int t = 0;
+-      int t2 = ([](int a) { return [](int b) { return b; };})(t)(t);
++      int t2 = ([](int a) { return [](int b) { return b; };})(t)(t);    
+     };
+-    L l;
++    L l; 
+   }
+ }
+ 
+@@ -534,9 +534,9 @@ template <int N>
+ class S {};
+ 
+ void foo() {
+-  const int num = 18;
++  const int num = 18; 
+   auto outer = []() {
+-    auto inner = [](S<num> &X) {};
++    auto inner = [](S<num> &X) {};  
+   };
+ }
+ }
+@@ -584,9 +584,9 @@ void foo1() {
+ }
+ 
+ namespace PR25627_dont_odr_use_local_consts {
+-
++  
+   template<int> struct X {};
+-
++  
+   void foo() {
+     const int N = 10;
+     (void) [] { X<N> x; };
+diff --git a/clang/test/SemaCXX/ms-interface.cpp b/clang/test/SemaCXX/ms-interface.cpp
+index c6fc77712e25..67294f761d03 100644
+--- a/clang/test/SemaCXX/ms-interface.cpp
++++ b/clang/test/SemaCXX/ms-interface.cpp
+@@ -10,7 +10,7 @@ __interface I1 {
+   bool operator!();
+   // expected-error@+1 {{operator 'operator int' is not permitted within an interface type}}
+   operator int();
+-  // expected-error-re@+1 {{nested class I1::(unnamed struct at {{.*}}) is not permitted within an interface type}}
++  // expected-error@+1 {{nested class I1::(anonymous) is not permitted within an interface type}}
+   struct { int a; };
+   void fn2() {
+     struct A { }; // should be ignored: not a nested class
+diff --git a/clang/test/SemaObjCXX/arc-0x.mm b/clang/test/SemaObjCXX/arc-0x.mm
+index 743fabf667a1..b7f27e4e19db 100644
+--- a/clang/test/SemaObjCXX/arc-0x.mm
++++ b/clang/test/SemaObjCXX/arc-0x.mm
+@@ -154,7 +154,7 @@ namespace test_union {
+   // functions of the containing class.
+   struct S0 {
+     union {
+-      id f0; // expected-note-re 6 {{{{.*}} of '(anonymous union at {{.*}})' is implicitly deleted because variant field 'f0' is an ObjC pointer}}
++      id f0; // expected-note 6 {{'' is implicitly deleted because variant field 'f0' is an ObjC pointer}}
+       char f1;
+     };
+   };
+@@ -162,7 +162,7 @@ namespace test_union {
+   struct S1 {
+     union {
+       union { // expected-note {{copy constructor of 'S1' is implicitly deleted because field '' has a deleted copy constructor}} expected-note {{copy assignment operator of 'S1' is implicitly deleted because field '' has a deleted copy assignment operator}} expected-note 4 {{'S1' is implicitly deleted because field '' has a deleted}}
+-        id f0; // expected-note-re 2 {{{{.*}} of '(anonymous union at {{.*}}' is implicitly deleted because variant field 'f0' is an ObjC pointer}}
++        id f0; // expected-note 2 {{'' is implicitly deleted because variant field 'f0' is an ObjC pointer}}
+         char f1;
+       };
+       int f2;
+@@ -190,13 +190,13 @@ namespace test_union {
+   S2 *x6;
+ 
+   static union { // expected-error {{call to implicitly-deleted default constructor of}}
+-    id g0; // expected-note-re {{default constructor of '(unnamed union at {{.*}}' is implicitly deleted because variant field 'g0' is an ObjC pointer}}
++    id g0; // expected-note {{default constructor of '' is implicitly deleted because variant field 'g0' is an ObjC pointer}}
+   };
+ 
+   static union { // expected-error {{call to implicitly-deleted default constructor of}}
+-    union { // expected-note-re {{default constructor of '(unnamed union at {{.*}}' is implicitly deleted because field '' has a deleted default constructor}}
+-      union { // expected-note-re {{default constructor of '(anonymous union at {{.*}}' is implicitly deleted because field '' has a deleted default constructor}}
+-        __weak id g1; // expected-note-re {{default constructor of '(anonymous union at {{.*}}' is implicitly deleted because variant field 'g1' is an ObjC pointer}}
++    union { // expected-note {{default constructor of '' is implicitly deleted because field '' has a deleted default constructor}}
++      union { // expected-note {{default constructor of '' is implicitly deleted because field '' has a deleted default constructor}}
++        __weak id g1; // expected-note {{default constructor of '' is implicitly deleted because variant field 'g1' is an ObjC pointer}}
+         int g2;
+       };
+       int g3;
+diff --git a/clang/test/Templight/templight-empty-entries-fix.cpp b/clang/test/Templight/templight-empty-entries-fix.cpp
+index ad029d307075..9154e56fa24a 100644
+--- a/clang/test/Templight/templight-empty-entries-fix.cpp
++++ b/clang/test/Templight/templight-empty-entries-fix.cpp
+@@ -5,13 +5,13 @@ void a() {
+ }
+ 
+ // CHECK-LABEL: {{^---$}}
+-// CHECK: {{^name:[ ]+'\(lambda at .*templight-empty-entries-fix.cpp:4:3\)'$}}
++// CHECK: {{^name:[ ]+'lambda at .*templight-empty-entries-fix.cpp:4:3'$}}
+ // CHECK: {{^kind:[ ]+Memoization$}}
+ // CHECK: {{^event:[ ]+Begin$}}
+ // CHECK: {{^orig:[ ]+'.*templight-empty-entries-fix.cpp:4:3'$}}
+ // CHECK: {{^poi:[ ]+'.*templight-empty-entries-fix.cpp:4:3'$}}
+ // CHECK-LABEL: {{^---$}}
+-// CHECK: {{^name:[ ]+'\(lambda at .*templight-empty-entries-fix.cpp:4:3\)'$}}
++// CHECK: {{^name:[ ]+'lambda at .*templight-empty-entries-fix.cpp:4:3'$}}
+ // CHECK: {{^kind:[ ]+Memoization$}}
+ // CHECK: {{^event:[ ]+End$}}
+ // CHECK: {{^orig:[ ]+'.*templight-empty-entries-fix.cpp:4:3'$}}
+@@ -225,37 +225,37 @@ void e() {
+ }
+ 
+ // CHECK-LABEL: {{^---$}}
+-// CHECK: {{^name:[ ]+'\(unnamed struct at .*templight-empty-entries-fix.cpp:223:3\)'$}}
++// CHECK: {{^name:[ ]+unnamed struct$}}
+ // CHECK: {{^kind:[ ]+Memoization$}}
+ // CHECK: {{^event:[ ]+Begin$}}
+ // CHECK: {{^orig:[ ]+'.*templight-empty-entries-fix.cpp:223:3'$}}
+ // CHECK: {{^poi:[ ]+'.*templight-empty-entries-fix.cpp:224:5'$}}
+ // CHECK-LABEL: {{^---$}}
+-// CHECK: {{^name:[ ]+'\(unnamed struct at .*templight-empty-entries-fix.cpp:223:3\)'$}}
++// CHECK: {{^name:[ ]+unnamed struct$}}
+ // CHECK: {{^kind:[ ]+Memoization$}}
+ // CHECK: {{^event:[ ]+End$}}
+ // CHECK: {{^orig:[ ]+'.*templight-empty-entries-fix.cpp:223:3'$}}
+ // CHECK: {{^poi:[ ]+'.*templight-empty-entries-fix.cpp:224:5'$}}
+ // CHECK-LABEL: {{^---$}}
+-// CHECK: {{^name:[ ]+'\(unnamed struct at .*templight-empty-entries-fix.cpp:223:3\)'$}}
++// CHECK: {{^name:[ ]+unnamed struct$}}
+ // CHECK: {{^kind:[ ]+Memoization$}}
+ // CHECK: {{^event:[ ]+Begin$}}
+ // CHECK: {{^orig:[ ]+'.*templight-empty-entries-fix.cpp:223:3'$}}
+ // CHECK: {{^poi:[ ]+'.*templight-empty-entries-fix.cpp:224:5'$}}
+ // CHECK-LABEL: {{^---$}}
+-// CHECK: {{^name:[ ]+'\(unnamed struct at .*templight-empty-entries-fix.cpp:223:3\)'$}}
++// CHECK: {{^name:[ ]+unnamed struct$}}
+ // CHECK: {{^kind:[ ]+Memoization$}}
+ // CHECK: {{^event:[ ]+End$}}
+ // CHECK: {{^orig:[ ]+'.*templight-empty-entries-fix.cpp:223:3'$}}
+ // CHECK: {{^poi:[ ]+'.*templight-empty-entries-fix.cpp:224:5'$}}
+ // CHECK-LABEL: {{^---$}}
+-// CHECK: {{^name:[ ]+'\(unnamed struct at .*templight-empty-entries-fix.cpp:223:3\)'$}}
++// CHECK: {{^name:[ ]+unnamed struct$}}
+ // CHECK: {{^kind:[ ]+Memoization$}}
+ // CHECK: {{^event:[ ]+Begin$}}
+ // CHECK: {{^orig:[ ]+'.*templight-empty-entries-fix.cpp:223:3'$}}
+ // CHECK: {{^poi:[ ]+'.*templight-empty-entries-fix.cpp:223:3'$}}
+ // CHECK-LABEL: {{^---$}}
+-// CHECK: {{^name:[ ]+'\(unnamed struct at .*templight-empty-entries-fix.cpp:223:3\)'$}}
++// CHECK: {{^name:[ ]+unnamed struct$}}
+ // CHECK: {{^kind:[ ]+Memoization$}}
+ // CHECK: {{^event:[ ]+End$}}
+ // CHECK: {{^orig:[ ]+'.*templight-empty-entries-fix.cpp:223:3'$}}
+diff --git a/clang/unittests/AST/ASTTraverserTest.cpp b/clang/unittests/AST/ASTTraverserTest.cpp
+index 362f37655a0a..87fbcd852f49 100644
+--- a/clang/unittests/AST/ASTTraverserTest.cpp
++++ b/clang/unittests/AST/ASTTraverserTest.cpp
+@@ -1011,7 +1011,7 @@ LambdaExpr
+ | |-FieldDecl ''
+ | |-FieldDecl ''
+ | |-FieldDecl ''
+-| `-CXXDestructorDecl '~(lambda at input.cc:9:3)'
++| `-CXXDestructorDecl '~'
+ |-ImplicitCastExpr
+ | `-DeclRefExpr 'a'
+ |-DeclRefExpr 'b'
+diff --git a/llvm/utils/lit/lit/TestRunner.py b/llvm/utils/lit/lit/TestRunner.py
+index 664235beaae6..300c17bfea3a 100644
+--- a/llvm/utils/lit/lit/TestRunner.py
++++ b/llvm/utils/lit/lit/TestRunner.py
+@@ -1174,7 +1174,6 @@ def getDefaultSubstitutions(test, tmpDir, tmpBase, normalize_slashes=False):
+             ('%/p', sourcedir.replace('\\', '/')),
+             ('%/t', tmpBase.replace('\\', '/') + '.tmp'),
+             ('%/T', tmpDir.replace('\\', '/')),
+-            ('%/et',tmpName.replace('\\', '\\\\\\\\\\\\\\\\')),
+             ])
+ 
+     # "%{/[STpst]:regex_replacement}" should be normalized like "%/[STpst]" but we're
+-- 
+2.38.0.1.g45972b9c23
+
