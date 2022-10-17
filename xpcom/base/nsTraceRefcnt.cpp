@@ -66,28 +66,36 @@
 
 #include "prthread.h"
 
-// We use a spin lock instead of a regular mutex because this lock is usually
-// only held for a very short time, and gets grabbed at a very high frequency
-// (~100000 times per second). On Mac, the overhead of using a regular lock
-// is very high, see bug 1137963.
-static mozilla::Atomic<uintptr_t, mozilla::ReleaseAcquire> gTraceLogLocked;
+class MOZ_CAPABILITY TraceLogMutex : private mozilla::detail::MutexImpl {
+ public:
+  explicit TraceLogMutex() : ::mozilla::detail::MutexImpl(){};
 
-struct MOZ_STACK_CLASS AutoTraceLogLock final {
-  bool doRelease;
-  AutoTraceLogLock() : doRelease(true) {
-    uintptr_t currentThread =
-        reinterpret_cast<uintptr_t>(PR_GetCurrentThread());
-    if (gTraceLogLocked == currentThread) {
-      doRelease = false;
-    } else {
-      while (!gTraceLogLocked.compareExchange(0, currentThread)) {
-        PR_Sleep(PR_INTERVAL_NO_WAIT); /* yield */
-      }
-    }
+ private:
+  friend class AutoTraceLogLock;
+
+  void Lock() MOZ_CAPABILITY_ACQUIRE() { ::mozilla::detail::MutexImpl::lock(); }
+  void Unlock() MOZ_CAPABILITY_RELEASE() {
+    ::mozilla::detail::MutexImpl::unlock();
   }
-  ~AutoTraceLogLock() {
-    if (doRelease) gTraceLogLocked = 0;
+};
+
+static TraceLogMutex gTraceLog;
+
+class MOZ_RAII AutoTraceLogLock {
+ public:
+  explicit AutoTraceLogLock(TraceLogMutex& aMutex) : mMutex(aMutex) {
+    mMutex.Lock();
   }
+
+  AutoTraceLogLock(const AutoTraceLogLock&) = delete;
+  AutoTraceLogLock& operator=(const AutoTraceLogLock&) = delete;
+  AutoTraceLogLock(AutoTraceLogLock&&) = delete;
+  AutoTraceLogLock& operator=(AutoTraceLogLock&&) = delete;
+
+  ~AutoTraceLogLock() { mMutex.Unlock(); }
+
+ private:
+  TraceLogMutex& mMutex;
 };
 
 class BloatEntry;
@@ -390,7 +398,7 @@ nsresult nsTraceRefcnt::DumpStatistics() {
     return NS_ERROR_FAILURE;
   }
 
-  AutoTraceLogLock lock;
+  AutoTraceLogLock lock(gTraceLog);
 
   MOZ_ASSERT(!gDumpedStatistics,
              "Calling DumpStatistics more than once may result in "
@@ -451,7 +459,7 @@ nsresult nsTraceRefcnt::DumpStatistics() {
 }
 
 void nsTraceRefcnt::ResetStatistics() {
-  AutoTraceLogLock lock;
+  AutoTraceLogLock lock(gTraceLog);
   gBloatView = nullptr;
 }
 
@@ -889,7 +897,7 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt, const char* aClass,
     return;
   }
   if (aRefcnt == 1 || gLogging == FullLogging) {
-    AutoTraceLogLock lock;
+    AutoTraceLogLock lock(gTraceLog);
 
     if (aRefcnt == 1 && gBloatLog) {
       BloatEntry* entry = GetBloatEntry(aClass, aClassSize);
@@ -942,7 +950,7 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass) {
     return;
   }
   if (aRefcnt == 0 || gLogging == FullLogging) {
-    AutoTraceLogLock lock;
+    AutoTraceLogLock lock(gTraceLog);
 
     if (aRefcnt == 0 && gBloatLog) {
       BloatEntry* entry = GetBloatEntry(aClass, 0);
@@ -1000,7 +1008,7 @@ NS_LogCtor(void* aPtr, const char* aType, uint32_t aInstanceSize) {
     return;
   }
 
-  AutoTraceLogLock lock;
+  AutoTraceLogLock lock(gTraceLog);
 
   if (gBloatLog) {
     BloatEntry* entry = GetBloatEntry(aType, aInstanceSize);
@@ -1036,7 +1044,7 @@ NS_LogDtor(void* aPtr, const char* aType, uint32_t aInstanceSize) {
     return;
   }
 
-  AutoTraceLogLock lock;
+  AutoTraceLogLock lock(gTraceLog);
 
   if (gBloatLog) {
     BloatEntry* entry = GetBloatEntry(aType, aInstanceSize);
@@ -1082,7 +1090,7 @@ NS_LogCOMPtrAddRef(void* aCOMPtr, nsISupports* aObject) {
     InitTraceLog();
   }
   if (gLogging == FullLogging) {
-    AutoTraceLogLock lock;
+    AutoTraceLogLock lock(gTraceLog);
 
     intptr_t serialno = GetSerialNumber(object, false, CallerPC());
     if (serialno == 0) {
@@ -1118,7 +1126,7 @@ NS_LogCOMPtrRelease(void* aCOMPtr, nsISupports* aObject) {
     InitTraceLog();
   }
   if (gLogging == FullLogging) {
-    AutoTraceLogLock lock;
+    AutoTraceLogLock lock(gTraceLog);
 
     intptr_t serialno = GetSerialNumber(object, false, CallerPC());
     if (serialno == 0) {
