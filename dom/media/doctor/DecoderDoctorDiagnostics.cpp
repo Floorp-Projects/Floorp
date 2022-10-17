@@ -242,8 +242,8 @@ enum class ReportParam : uint8_t {
 };
 
 struct NotificationAndReportStringId {
-  // Notification type, handled by DecoderDoctorChild.jsm and
-  // DecoderDoctorParent.jsm.
+  // Notification type, handled by DecoderDoctorChild.sys.mjs and
+  // DecoderDoctorParent.sys.mjs.
   dom::DecoderDoctorNotificationType mNotificationType;
   // Console message id. Key in dom/locales/.../chrome/dom/dom.properties.
   const char* mReportStringId;
