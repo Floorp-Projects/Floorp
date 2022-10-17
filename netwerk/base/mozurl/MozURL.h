@@ -213,8 +213,8 @@ class MozURL final {
   Mutator Mutate() { return Mutator(this); }
 
   // AddRef and Release are non-virtual on this type, and always call into rust.
-  nsrefcnt AddRef() { return mozurl_addref(this); }
-  nsrefcnt Release() { return mozurl_release(this); }
+  void AddRef() { mozurl_addref(this); }
+  void Release() { mozurl_release(this); }
 
  private:
   // Make it a compile time error for C++ code to ever create, destruct, or copy

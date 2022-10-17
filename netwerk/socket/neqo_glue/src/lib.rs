@@ -34,7 +34,7 @@ use std::time::Instant;
 use thin_vec::ThinVec;
 #[cfg(windows)]
 use winapi::shared::ws2def::{AF_INET, AF_INET6};
-use xpcom::{interfaces::nsrefcnt, AtomicRefcnt, RefCounted, RefPtr};
+use xpcom::{AtomicRefcnt, RefCounted, RefPtr};
 
 #[repr(C)]
 pub struct NeqoHttp3Conn {
@@ -195,17 +195,16 @@ impl NeqoHttp3Conn {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn neqo_http3conn_addref(conn: &NeqoHttp3Conn) -> nsrefcnt {
-    conn.refcnt.inc()
+pub unsafe extern "C" fn neqo_http3conn_addref(conn: &NeqoHttp3Conn) {
+    conn.refcnt.inc();
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn neqo_http3conn_release(conn: &NeqoHttp3Conn) -> nsrefcnt {
+pub unsafe extern "C" fn neqo_http3conn_release(conn: &NeqoHttp3Conn) {
     let rc = conn.refcnt.dec();
     if rc == 0 {
         std::mem::drop(Box::from_raw(conn as *const _ as *mut NeqoHttp3Conn));
     }
-    rc
 }
 
 // xpcom::RefPtr support
