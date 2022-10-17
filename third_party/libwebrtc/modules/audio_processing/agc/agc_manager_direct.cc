@@ -722,6 +722,8 @@ void AgcManagerDirect::AggregateChannelLevels() {
       }
     }
   }
+  // TODO(crbug.com/1275566): Do not enforce minimum if the user has manually
+  // set the mic level to zero.
   if (min_mic_level_override_.has_value()) {
     stream_analog_level_ =
         std::max(stream_analog_level_, *min_mic_level_override_);
