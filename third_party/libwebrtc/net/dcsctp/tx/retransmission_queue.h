@@ -28,6 +28,7 @@
 #include "net/dcsctp/packet/data.h"
 #include "net/dcsctp/public/dcsctp_handover_state.h"
 #include "net/dcsctp/public/dcsctp_options.h"
+#include "net/dcsctp/public/dcsctp_socket.h"
 #include "net/dcsctp/timer/timer.h"
 #include "net/dcsctp/tx/outstanding_data.h"
 #include "net/dcsctp/tx/retransmission_timeout.h"
@@ -55,6 +56,7 @@ class RetransmissionQueue {
   // `on_clear_retransmission_counter` and will also use `t3_rtx`, which is the
   // SCTP retransmission timer to manage retransmissions.
   RetransmissionQueue(absl::string_view log_prefix,
+                      DcSctpSocketCallbacks* callbacks,
                       TSN my_initial_tsn,
                       size_t a_rwnd,
                       SendQueue& send_queue,
@@ -212,6 +214,7 @@ class RetransmissionQueue {
   // to the congestion control algorithm.
   size_t max_bytes_to_send() const;
 
+  DcSctpSocketCallbacks& callbacks_;
   const DcSctpOptions options_;
   // The minimum bytes required to be available in the congestion window to
   // allow packets to be sent - to avoid sending too small packets.

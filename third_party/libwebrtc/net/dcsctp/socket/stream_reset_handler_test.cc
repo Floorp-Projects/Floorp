@@ -107,6 +107,7 @@ class StreamResetHandlerTest : public testing::Test {
                                                  kArwnd)),
         retransmission_queue_(std::make_unique<RetransmissionQueue>(
             "",
+            &callbacks_,
             kMyInitialTsn,
             kArwnd,
             producer_,
@@ -199,8 +200,8 @@ class StreamResetHandlerTest : public testing::Test {
         std::make_unique<ReassemblyQueue>("log: ", kPeerInitialTsn, kArwnd);
     reasm_->RestoreFromState(state);
     retransmission_queue_ = std::make_unique<RetransmissionQueue>(
-        "", kMyInitialTsn, kArwnd, producer_, [](DurationMs rtt_ms) {}, []() {},
-        *t3_rtx_timer_, DcSctpOptions(),
+        "", &callbacks_, kMyInitialTsn, kArwnd, producer_,
+        [](DurationMs rtt_ms) {}, []() {}, *t3_rtx_timer_, DcSctpOptions(),
         /*supports_partial_reliability=*/true,
         /*use_message_interleaving=*/false);
     retransmission_queue_->RestoreFromState(state);
