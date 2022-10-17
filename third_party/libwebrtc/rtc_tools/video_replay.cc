@@ -355,7 +355,7 @@ class RtpReplayer final {
 
     // Creation of the streams must happen inside a task queue because it is
     // resued as a worker thread.
-    worker_thread->PostTask(ToQueuedTask([&]() {
+    worker_thread->PostTask([&]() {
       call.reset(Call::Create(call_config));
 
       // Attempt to load the configuration
@@ -375,7 +375,7 @@ class RtpReplayer final {
         receive_stream->Start();
       }
       sync_event.Set();
-    }));
+    });
 
     // Attempt to create an RtpReader from the input file.
     std::unique_ptr<test::RtpFileReader> rtp_reader =
@@ -392,7 +392,7 @@ class RtpReplayer final {
 
     // Destruction of streams and the call must happen on the same thread as
     // their creation.
-    worker_thread->PostTask(ToQueuedTask([&]() {
+    worker_thread->PostTask([&]() {
       for (const auto& receive_stream : stream_state->receive_streams) {
         call->DestroyVideoReceiveStream(receive_stream);
       }
@@ -401,7 +401,7 @@ class RtpReplayer final {
       }
       call.reset();
       sync_event.Set();
-    }));
+    });
     sync_event.Wait(/*give_up_after_ms=*/10000);
   }
 
@@ -606,12 +606,12 @@ class RtpReplayer final {
 
       ++num_packets;
       PacketReceiver::DeliveryStatus result = PacketReceiver::DELIVERY_OK;
-      worker_thread->PostTask(ToQueuedTask([&]() {
+      worker_thread->PostTask([&]() {
         result = call->Receiver()->DeliverPacket(webrtc::MediaType::VIDEO,
                                                  std::move(packet_buffer),
                                                  /* packet_time_us */ -1);
         event.Set();
-      }));
+      });
       event.Wait(/*give_up_after_ms=*/10000);
       switch (result) {
         case PacketReceiver::DELIVERY_OK:

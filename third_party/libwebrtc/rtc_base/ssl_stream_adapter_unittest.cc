@@ -18,7 +18,6 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "api/task_queue/pending_task_safety_flag.h"
-#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/buffer_queue.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/gunit.h"
@@ -36,6 +35,7 @@ using ::testing::Combine;
 using ::testing::tuple;
 using ::testing::Values;
 using ::testing::WithParamInterface;
+using ::webrtc::SafeTask;
 
 static const int kBlockSize = 4096;
 static const char kExporterLabel[] = "label";
@@ -220,7 +220,7 @@ class SSLDummyStreamBase : public rtc::StreamInterface,
 
  private:
   void PostEvent(int events, int err) {
-    thread_->PostTask(webrtc::ToQueuedTask(task_safety_, [this, events, err]() {
+    thread_->PostTask(SafeTask(task_safety_.flag(), [this, events, err]() {
       SignalEvent(this, events, err);
     }));
   }
@@ -292,7 +292,7 @@ class BufferQueueStream : public rtc::StreamInterface {
 
  private:
   void PostEvent(int events, int err) {
-    thread_->PostTask(webrtc::ToQueuedTask(task_safety_, [this, events, err]() {
+    thread_->PostTask(SafeTask(task_safety_.flag(), [this, events, err]() {
       SignalEvent(this, events, err);
     }));
   }

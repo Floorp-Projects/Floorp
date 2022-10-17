@@ -16,7 +16,6 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/location.h"
 #include "rtc_base/mdns_responder_interface.h"
@@ -41,8 +40,7 @@ class FakeMdnsResponder : public MdnsResponderInterface {
       name = std::to_string(next_available_id_++) + ".local";
       addr_name_map_[addr] = name;
     }
-    thread_->PostTask(
-        ToQueuedTask([callback, addr, name]() { callback(addr, name); }));
+    thread_->PostTask([callback, addr, name]() { callback(addr, name); });
   }
   void RemoveNameForAddress(const rtc::IPAddress& addr,
                             NameRemovedCallback callback) override {
@@ -51,7 +49,7 @@ class FakeMdnsResponder : public MdnsResponderInterface {
       addr_name_map_.erase(it);
     }
     bool result = it != addr_name_map_.end();
-    thread_->PostTask(ToQueuedTask([callback, result]() { callback(result); }));
+    thread_->PostTask([callback, result]() { callback(result); });
   }
 
   rtc::IPAddress GetMappedAddressForName(absl::string_view name) const {

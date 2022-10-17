@@ -14,8 +14,10 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/functional/any_invocable.h"
 #include "api/array_view.h"
 #include "api/task_queue/task_queue_base.h"
+#include "api/units/time_delta.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/helpers.h"
 #include "test/gmock.h"
@@ -31,9 +33,11 @@ class FakeTaskQueue : public webrtc::TaskQueueBase {
   FakeTaskQueue() : task_queue_setter_(this) {}
 
   void Delete() override {}
-  void PostTask(std::unique_ptr<webrtc::QueuedTask> task) override {}
-  void PostDelayedTask(std::unique_ptr<webrtc::QueuedTask> task,
-                       uint32_t milliseconds) override {}
+  void PostTask(absl::AnyInvocable<void() &&> task) override {}
+  void PostDelayedTask(absl::AnyInvocable<void() &&> task,
+                       webrtc::TimeDelta delay) override {}
+  void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
+                                    webrtc::TimeDelta delay) override {}
 
  private:
   CurrentTaskQueueSetter task_queue_setter_;

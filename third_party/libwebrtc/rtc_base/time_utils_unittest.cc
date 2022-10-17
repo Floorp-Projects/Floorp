@@ -12,7 +12,6 @@
 
 #include <memory>
 
-#include "api/task_queue/to_queued_task.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/event.h"
 #include "rtc_base/fake_clock.h"
@@ -23,6 +22,7 @@
 #include "test/gtest.h"
 
 namespace rtc {
+using ::webrtc::TimeDelta;
 
 TEST(TimeTest, TimeInMs) {
   int64_t ts_earlier = TimeMillis();
@@ -270,10 +270,9 @@ TEST(FakeClock, SettingTimeWakesThreads) {
 
   // Post an event that won't be executed for 10 seconds.
   Event message_handler_dispatched;
-  worker->PostDelayedTask(webrtc::ToQueuedTask([&message_handler_dispatched] {
-                            message_handler_dispatched.Set();
-                          }),
-                          /*milliseconds=*/60000);
+  worker->PostDelayedTask(
+      [&message_handler_dispatched] { message_handler_dispatched.Set(); },
+      TimeDelta::Seconds(60));
 
   // Wait for a bit for the worker thread to be started and enter its socket
   // select(). Otherwise this test would be trivial since the worker thread
