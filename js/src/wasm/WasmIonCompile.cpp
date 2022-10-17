@@ -7035,7 +7035,6 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
                                CompiledCode* code, UniqueChars* error) {
   MOZ_ASSERT(compilerEnv.tier() == Tier::Optimized);
   MOZ_ASSERT(compilerEnv.debug() == DebugEnabled::False);
-  MOZ_ASSERT(compilerEnv.optimizedBackend() == OptimizedBackend::Ion);
 
   TempAllocator alloc(&lifo);
   JitContext jitContext;

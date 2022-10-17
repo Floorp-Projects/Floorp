@@ -692,14 +692,9 @@ static bool ExecuteCompileTask(CompileTask* task, UniqueChars* error) {
 
   switch (task->compilerEnv.tier()) {
     case Tier::Optimized:
-      switch (task->compilerEnv.optimizedBackend()) {
-        case OptimizedBackend::Ion:
-          if (!IonCompileFunctions(task->moduleEnv, task->compilerEnv,
-                                   task->lifo, task->inputs, &task->output,
-                                   error)) {
-            return false;
-          }
-          break;
+      if (!IonCompileFunctions(task->moduleEnv, task->compilerEnv, task->lifo,
+                               task->inputs, &task->output, error)) {
+        return false;
       }
       break;
     case Tier::Baseline:
@@ -841,13 +836,7 @@ bool ModuleGenerator::compileFuncDef(uint32_t funcIndex,
       threshold = JitOptions.wasmBatchBaselineThreshold;
       break;
     case Tier::Optimized:
-      switch (compilerEnv_->optimizedBackend()) {
-        case OptimizedBackend::Ion:
-          threshold = JitOptions.wasmBatchIonThreshold;
-          break;
-        default:
-          MOZ_CRASH("Invalid optimizedBackend value");
-      }
+      threshold = JitOptions.wasmBatchIonThreshold;
       break;
     default:
       MOZ_CRASH("Invalid tier value");
