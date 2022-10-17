@@ -944,6 +944,11 @@ void RtpVideoStreamReceiver2::OnLocalSsrcChange(uint32_t local_ssrc) {
   rtp_rtcp_->SetLocalSsrc(local_ssrc);
 }
 
+void RtpVideoStreamReceiver2::SetRtcpMode(RtcpMode mode) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_rtcp_->SetRTCPStatus(mode);
+}
+
 absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedPacketMs() const {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   if (last_received_rtp_system_time_) {

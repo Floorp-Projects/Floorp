@@ -185,6 +185,9 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   // Called when the local_ssrc is changed to match with a sender.
   void OnLocalSsrcChange(uint32_t local_ssrc);
 
+  // Forwards the call to set rtcp_sender_ to the RTCP mode of the rtcp sender.
+  void SetRtcpMode(RtcpMode mode);
+
   absl::optional<int64_t> LastReceivedPacketMs() const;
   absl::optional<int64_t> LastReceivedKeyframePacketMs() const;
 

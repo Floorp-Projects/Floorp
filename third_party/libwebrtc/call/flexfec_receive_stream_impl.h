@@ -75,6 +75,11 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
     transport_cc_ = transport_cc;
   }
 
+  void SetRtcpMode(RtcpMode mode) override {
+    RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+    rtp_rtcp_->SetRTCPStatus(mode);
+  }
+
  private:
   RTC_NO_UNIQUE_ADDRESS SequenceChecker packet_sequence_checker_;
 

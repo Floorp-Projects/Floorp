@@ -280,6 +280,9 @@ class FakeVideoReceiveStream final
   void SetTransportCc(bool transport_cc) override {
     config_.rtp.transport_cc = transport_cc;
   }
+  void SetRtcpMode(webrtc::RtcpMode mode) override {
+    config_.rtp.rtcp_mode = mode;
+  }
 
   void Start() override;
   void Stop() override;
@@ -318,6 +321,7 @@ class FakeFlexfecReceiveStream final : public webrtc::FlexfecReceiveStream {
   void SetTransportCc(bool transport_cc) override {
     config_.rtp.transport_cc = transport_cc;
   }
+  void SetRtcpMode(webrtc::RtcpMode mode) override { config_.rtcp_mode = mode; }
 
   const webrtc::FlexfecReceiveStream::Config& GetConfig() const;
 

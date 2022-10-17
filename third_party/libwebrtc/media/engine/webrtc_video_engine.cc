@@ -2997,31 +2997,47 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetFeedbackParameters(
     bool transport_cc_enabled,
     webrtc::RtcpMode rtcp_mode,
     int rtx_time) {
+  RTC_DCHECK(stream_);
+
+  if (config_.rtp.rtcp_mode != rtcp_mode) {
+    config_.rtp.rtcp_mode = rtcp_mode;
+    stream_->SetRtcpMode(rtcp_mode);
+
+    flexfec_config_.rtcp_mode = rtcp_mode;
+    if (flexfec_stream_) {
+      flexfec_stream_->SetRtcpMode(rtcp_mode);
+    }
+  }
+
+  if (config_.rtp.transport_cc != transport_cc_enabled) {
+    config_.rtp.transport_cc = transport_cc_enabled;
+    stream_->SetTransportCc(transport_cc_enabled);
+    // TODO(brandtr): We should be spec-compliant and set `transport_cc` here
+    // based on the rtcp-fb for the FlexFEC codec, not the media codec.
+    flexfec_config_.rtp.transport_cc = transport_cc_enabled;
+    if (flexfec_stream_) {
+      flexfec_stream_->SetTransportCc(transport_cc_enabled);
+    }
+  }
+
   int nack_history_ms =
       nack_enabled ? rtx_time != -1 ? rtx_time : kNackHistoryMs : 0;
   if (config_.rtp.lntf.enabled == lntf_enabled &&
-      config_.rtp.nack.rtp_history_ms == nack_history_ms &&
-      config_.rtp.transport_cc == transport_cc_enabled &&
-      config_.rtp.rtcp_mode == rtcp_mode) {
+      config_.rtp.nack.rtp_history_ms == nack_history_ms) {
     RTC_LOG(LS_INFO)
         << "Ignoring call to SetFeedbackParameters because parameters are "
            "unchanged; lntf="
         << lntf_enabled << ", nack=" << nack_enabled
-        << ", transport_cc=" << transport_cc_enabled
         << ", rtx_time=" << rtx_time;
     return;
   }
+
   config_.rtp.lntf.enabled = lntf_enabled;
   config_.rtp.nack.rtp_history_ms = nack_history_ms;
-  config_.rtp.transport_cc = transport_cc_enabled;
-  config_.rtp.rtcp_mode = rtcp_mode;
-  // TODO(brandtr): We should be spec-compliant and set `transport_cc` here
-  // based on the rtcp-fb for the FlexFEC codec, not the media codec.
-  flexfec_config_.rtp.transport_cc = config_.rtp.transport_cc;
-  flexfec_config_.rtcp_mode = config_.rtp.rtcp_mode;
+
   RTC_LOG(LS_INFO) << "RecreateReceiveStream (recv) because of "
                       "SetFeedbackParameters; nack="
-                   << nack_enabled << ", transport_cc=" << transport_cc_enabled;
+                   << nack_enabled;
   RecreateReceiveStream();
 }
 
