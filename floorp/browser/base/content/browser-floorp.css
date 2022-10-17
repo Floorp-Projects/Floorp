@@ -8,10 +8,18 @@
   }
   
   .browser-sidebar2 {
-    -moz-box-ordinal-group: 0 !important;
+    -moz-box-ordinal-group: 1 !important;
     background: var(--toolbar-field-background-color);
     border: var(--win-sidebar-bgcolor) 0.1px solid;
   } 
+
+  #sidebar-splitter {
+    -moz-box-ordinal-group: 6 !important;
+  }
+
+  #sidebar-box {
+    -moz-box-ordinal-group: 5 !important;
+    }
   
   #sidebar-select-box {
     background: var(--toolbar-field-background-color);
