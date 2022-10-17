@@ -764,7 +764,7 @@ export class NetworkObserver {
    *        The HTTP activity object, or null if it is not found.
    */
   _findActivityObject(channel) {
-    return this.openRequests.getChannelById(channel.channelId);
+    return this.openRequests.getByChannelId(channel.channelId);
   }
 
   /**

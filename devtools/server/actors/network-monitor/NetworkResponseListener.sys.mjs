@@ -402,7 +402,7 @@ export class NetworkResponseListener {
     }
 
     const channel = this.httpActivity.channel;
-    const openResponse = this.owner.openResponses.getChannelById(
+    const openResponse = this.owner.openResponses.getByChannelId(
       channel.channelId
     );
 
