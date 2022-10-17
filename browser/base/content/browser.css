@@ -1002,10 +1002,6 @@ browser[tabmodalPromptShowing], browser[tabDialogShowing] {
   -moz-user-focus: none !important;
 }
 
-#browser {
-  -moz-box-layout: flex;
-}
-
 /* Status panel */
 
 #statuspanel:not([hidden]) {
