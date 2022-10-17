@@ -1223,7 +1223,16 @@
       "../packages/devtools-source-map/node_modules/tr46/lib/regexes.js": 1071,
       "../node_modules/json-loader/index.js!../packages/devtools-source-map/node_modules/tr46/lib/mappingTable.json": 1072,
       "../packages/devtools-source-map/node_modules/whatwg-url/lib/URLSearchParams-impl.js": 1073,
-      "../node_modules/lodash.sortby/index.js": 1074
+      "../node_modules/lodash.sortby/index.js": 1074,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-source-map/src/wasm-dwarf/wasmXScopes.js": 1075,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-source-map/src/wasm-dwarf/wasmDwarfExpressions.js": 1076,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-source-map/src/wasm-dwarf/wasmAsset.js": 1077,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-source-map/src/wasm-dwarf/convertToJSON.js": 1078,
+      "../node_modules/node-libs-browser/mock/empty.js": 1079,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-source-map/assets.js": 1080,
+      "../packages/devtools-source-map/node_modules/source-map/lib/mappings.wasm": 1081,
+      "../packages/devtools-source-map/wasm/dwarf_to_json.wasm": 1082,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-source-map/src/wasm-dwarf/wasmAssetBrowser.js": 1083
     },
     "usedIds": {
       "0": 0,
@@ -2300,7 +2309,16 @@
       "1071": 1071,
       "1072": 1072,
       "1073": 1073,
-      "1074": 1074
+      "1074": 1074,
+      "1075": 1075,
+      "1076": 1076,
+      "1077": 1077,
+      "1078": 1078,
+      "1079": 1079,
+      "1080": 1080,
+      "1081": 1081,
+      "1082": 1082,
+      "1083": 1083
     }
   },
   "chunks": {

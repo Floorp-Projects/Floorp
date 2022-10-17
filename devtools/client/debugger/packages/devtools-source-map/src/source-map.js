@@ -30,7 +30,7 @@ const {
   isOriginalId,
   getContentType,
 } = require("./utils");
-const { clearWasmXScopes } = require("devtools-wasm-dwarf");
+const { clearWasmXScopes } = require("./wasm-dwarf/wasmXScopes");
 
 async function getOriginalURLs(generatedSource) {
   await fetchSourceMap(generatedSource);
