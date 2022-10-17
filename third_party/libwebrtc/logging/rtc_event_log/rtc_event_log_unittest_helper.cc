@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/network_state_predictor.h"
@@ -81,7 +82,7 @@ void ShuffleInPlace(Random* prng, rtc::ArrayView<T> array) {
 }
 
 absl::optional<int> GetExtensionId(const std::vector<RtpExtension>& extensions,
-                                   const std::string& uri) {
+                                   absl::string_view uri) {
   for (const auto& extension : extensions) {
     if (extension.uri == uri)
       return extension.id;

@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "absl/base/attributes.h"
+#include "absl/strings/string_view.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "call/video_receive_stream.h"
 #include "call/video_send_stream.h"
@@ -379,13 +380,13 @@ class ParsedRtcEventLog {
   void Clear();
 
   // Reads an RtcEventLog file and returns success if parsing was successful.
-  ParseStatus ParseFile(const std::string& file_name);
+  ParseStatus ParseFile(absl::string_view file_name);
 
   // Reads an RtcEventLog from a string and returns success if successful.
-  ParseStatus ParseString(const std::string& s);
+  ParseStatus ParseString(absl::string_view s);
 
   // Reads an RtcEventLog from an string and returns success if successful.
-  ParseStatus ParseStream(const std::string& s);
+  ParseStatus ParseStream(absl::string_view s);
 
   MediaType GetMediaType(uint32_t ssrc, PacketDirection direction) const;
 

@@ -11,6 +11,7 @@
 
 #include <memory>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
@@ -19,7 +20,7 @@ namespace {
 class MemoryLogWriter final : public RtcEventLogOutput {
  public:
   explicit MemoryLogWriter(std::map<std::string, std::string>* target,
-                           std::string filename)
+                           absl::string_view filename)
       : target_(target), filename_(filename) {}
   ~MemoryLogWriter() final { target_->insert({filename_, std::move(buffer_)}); }
   bool IsActive() const override { return true; }
@@ -40,7 +41,8 @@ class MemoryLogWriterFactory final : public LogWriterFactoryInterface {
   explicit MemoryLogWriterFactory(std::map<std::string, std::string>* target)
       : target_(target) {}
   ~MemoryLogWriterFactory() override {}
-  std::unique_ptr<RtcEventLogOutput> Create(std::string filename) override {
+  std::unique_ptr<RtcEventLogOutput> Create(
+      absl::string_view filename) override {
     return std::make_unique<MemoryLogWriter>(target_, filename);
   }
 

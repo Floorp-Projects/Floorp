@@ -71,6 +71,7 @@ rtc_library("rtc_stream_config") {
     "../api:rtp_headers",
     "../api:rtp_parameters",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_library("rtc_event_pacing") {
@@ -376,7 +377,10 @@ if (rtc_enable_protobuf) {
       "../rtc_base:timeutils",
       "../rtc_base/system:no_unique_address",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 }
 
@@ -461,6 +465,7 @@ if (rtc_enable_protobuf) {
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/memory",
+      "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
     ]
   }
@@ -525,6 +530,7 @@ if (rtc_enable_protobuf) {
       ]
       absl_deps = [
         "//third_party/abseil-cpp/absl/memory",
+        "//third_party/abseil-cpp/absl/strings",
         "//third_party/abseil-cpp/absl/types:optional",
       ]
     }
@@ -547,6 +553,7 @@ if (rtc_enable_protobuf) {
           "//third_party/abseil-cpp/absl/flags:parse",
           "//third_party/abseil-cpp/absl/flags:usage",
           "//third_party/abseil-cpp/absl/memory",
+          "//third_party/abseil-cpp/absl/strings",
           "//third_party/abseil-cpp/absl/types:optional",
         ]
       }

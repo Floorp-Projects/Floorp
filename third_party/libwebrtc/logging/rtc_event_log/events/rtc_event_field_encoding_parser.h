@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "logging/rtc_event_log/events/rtc_event_field_encoding.h"
 
 // TODO(terelius): Compared to a generic 'Status' class, this
@@ -29,8 +30,8 @@ class RtcEventLogParseStatus {
 
  public:
   static RtcEventLogParseStatus Success() { return RtcEventLogParseStatus(); }
-  static RtcEventLogParseStatus Error(std::string error,
-                                      std::string file,
+  static RtcEventLogParseStatus Error(absl::string_view error,
+                                      absl::string_view file,
                                       int line) {
     return RtcEventLogParseStatus(error, file, line);
   }
@@ -44,8 +45,11 @@ class RtcEventLogParseStatus {
 
  private:
   RtcEventLogParseStatus() : error_() {}
-  RtcEventLogParseStatus(std::string error, std::string file, int line)
-      : error_(error + " (" + file + ": " + std::to_string(line) + ")") {}
+  RtcEventLogParseStatus(absl::string_view error,
+                         absl::string_view file,
+                         int line)
+      : error_(std::string(error) + " (" + std::string(file) + ": " +
+               std::to_string(line) + ")") {}
 
   std::string error_;
 };
@@ -74,15 +78,17 @@ class RtcEventLogParseStatusOr {
     return value_;
   }
 
-  static RtcEventLogParseStatusOr Error(std::string error,
-                                        std::string file,
+  static RtcEventLogParseStatusOr Error(absl::string_view error,
+                                        absl::string_view file,
                                         int line) {
     return RtcEventLogParseStatusOr(error, file, line);
   }
 
  private:
   RtcEventLogParseStatusOr() : status_() {}
-  RtcEventLogParseStatusOr(std::string error, std::string file, int line)
+  RtcEventLogParseStatusOr(absl::string_view error,
+                           absl::string_view file,
+                           int line)
       : status_(error, file, line), value_() {}
 
   RtcEventLogParseStatus status_;
