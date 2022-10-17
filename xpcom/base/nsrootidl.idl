@@ -45,7 +45,6 @@ typedef short               int16_t  ;
 typedef long                int32_t  ;
 typedef long long           int64_t  ;
 
-typedef unsigned long       nsrefcnt ;
 typedef unsigned long       nsresult ;
 
 // If we ever want to use `size_t` in scriptable interfaces, this will need to
