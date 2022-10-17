@@ -345,15 +345,6 @@ class RTC_EXPORT RTCMediaStreamTrackStats final : public RTCStats {
   RTCNonStandardStatsMember<uint64_t> jitter_buffer_flushes;
   RTCNonStandardStatsMember<uint64_t> delayed_packet_outage_samples;
   RTCNonStandardStatsMember<double> relative_packet_arrival_delay;
-  // Non-standard metric showing target delay of jitter buffer.
-  // This value is increased by the target jitter buffer delay every time a
-  // sample is emitted by the jitter buffer. The added target is the target
-  // delay, in seconds, at the time that the sample was emitted from the jitter
-  // buffer. (https://github.com/w3c/webrtc-provisional-stats/pull/20)
-  // Currently it is implemented only for audio.
-  // TODO(https://crbug.com/webrtc/14176): This should be moved to
-  // RTCInboundRtpStreamStats and it should be implemented for video as well.
-  RTCNonStandardStatsMember<double> jitter_buffer_target_delay;
   // TODO(henrik.lundin): Add description of the interruption metrics at
   // https://github.com/w3c/webrtc-provisional-stats/issues/17
   RTCNonStandardStatsMember<uint32_t> interruption_count;
@@ -461,6 +452,7 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   RTCStatsMember<uint64_t> header_bytes_received;
   RTCStatsMember<double> last_packet_received_timestamp;
   RTCStatsMember<double> jitter_buffer_delay;
+  RTCStatsMember<double> jitter_buffer_target_delay;
   RTCStatsMember<uint64_t> jitter_buffer_emitted_count;
   RTCStatsMember<uint64_t> total_samples_received;
   RTCStatsMember<uint64_t> concealed_samples;
