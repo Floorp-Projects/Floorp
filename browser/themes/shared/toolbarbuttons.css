@@ -259,8 +259,10 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   display: -moz-box !important;
 }
 
+#personal-bookmarks,
+#PlacesToolbar,
 #PlacesToolbarItems {
-  contain: inline-size;
+  min-width: 0;
 }
 
 #PlacesToolbarItems > .bookmark-item > .toolbarbutton-icon {
