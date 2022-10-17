@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <memory>
 #include <numeric>
