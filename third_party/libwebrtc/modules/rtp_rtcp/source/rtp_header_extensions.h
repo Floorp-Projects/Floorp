@@ -26,7 +26,6 @@
 #include "api/video/video_rotation.h"
 #include "api/video/video_timing.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "rtc_base/numerics/divide_round.h"
 
 namespace webrtc {
 
@@ -45,7 +44,7 @@ class AbsoluteSendTime {
 
   static constexpr uint32_t To24Bits(Timestamp time) {
     int64_t time_us = time.us() % (int64_t{1 << 6} * 1'000'000);
-    int64_t time6x18 = DivideRoundToNearest(time_us << 18, 1'000'000);
+    int64_t time6x18 = (time_us << 18) / 1'000'000;
     RTC_DCHECK_GE(time6x18, 0);
     RTC_DCHECK_LT(time6x18, 1 << 24);
     return static_cast<uint32_t>(time6x18);
