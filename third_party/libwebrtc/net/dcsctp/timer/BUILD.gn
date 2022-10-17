@@ -36,7 +36,7 @@ rtc_library("task_queue_timeout") {
     "../../../api:array_view",
     "../../../api/task_queue:pending_task_safety_flag",
     "../../../api/task_queue:task_queue",
-    "../../../api/task_queue:to_queued_task",
+    "../../../api/units:time_delta",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
     "../public:socket",
