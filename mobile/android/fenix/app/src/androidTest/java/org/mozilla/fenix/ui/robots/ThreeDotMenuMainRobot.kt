@@ -50,7 +50,7 @@ class ThreeDotMenuMainRobot {
     fun verifyAddOnsButton() = assertAddOnsButton()
     fun verifyHistoryButton() = assertHistoryButton()
     fun verifyBookmarksButton() = assertBookmarksButton()
-    fun verifySyncSignInButton() = assertSignInToSyncButton()
+    fun verifySyncSignInButton() = assertSyncSignInButton()
     fun verifyHelpButton() = assertHelpButton()
     fun verifyThreeDotMenuExists() = threeDotMenuRecyclerViewExists()
     fun verifyForwardButton() = assertForwardButton()
@@ -77,7 +77,6 @@ class ThreeDotMenuMainRobot {
     fun verifyDesktopSite() = assertDesktopSite()
     fun verifyDownloadsButton() = assertDownloadsButton()
     fun verifyShareTabsOverlay() = assertShareTabsOverlay()
-    fun verifySignInToSyncButton() = assertSignInToSyncButton()
     fun verifyNewTabButton() = assertNormalBrowsingNewTabButton()
     fun verifyReportSiteIssueButton() = assertReportSiteIssueButton()
 
@@ -97,7 +96,7 @@ class ThreeDotMenuMainRobot {
         verifyHistoryButton()
         verifyDownloadsButton()
         verifyAddOnsButton()
-        verifySignInToSyncButton()
+        verifySyncSignInButton()
         threeDotMenuRecyclerView().perform(swipeUp())
         verifyFindInPageButton()
         verifyDesktopSite()
@@ -174,7 +173,7 @@ class ThreeDotMenuMainRobot {
         fun openSyncSignIn(interact: SyncSignInRobot.() -> Unit): SyncSignInRobot.Transition {
             threeDotMenuRecyclerView().perform(swipeDown())
             mDevice.waitNotNull(Until.findObject(By.text("Sync and save data")), waitingTime)
-            signInToSyncButton().click()
+            syncSignInButton().click()
 
             SyncSignInRobot().interact()
             return SyncSignInRobot.Transition()
@@ -440,8 +439,8 @@ private fun bookmarksButton() = onView(allOf(withText(R.string.library_bookmarks
 private fun assertBookmarksButton() = bookmarksButton()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun signInToSyncButton() = onView(withText("Sync and save data"))
-private fun assertSignInToSyncButton() = signInToSyncButton().check(matches(isDisplayed()))
+private fun syncSignInButton() = onView(withText("Sync and save data"))
+private fun assertSyncSignInButton() = syncSignInButton().check(matches(isDisplayed()))
 
 private fun helpButton() = onView(allOf(withText(R.string.browser_menu_help)))
 private fun assertHelpButton() = helpButton()

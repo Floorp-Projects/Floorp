@@ -162,7 +162,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
                 .getString(R.string.preferences_credit_cards_sync_cards_across_devices),
             loggedInTitle = requireContext()
                 .getString(R.string.preferences_credit_cards_sync_cards),
-            onSignInToSyncClicked = {
+            onSyncSignInClicked = {
                 findNavController().navigate(
                     NavGraphDirections.actionGlobalTurnOnSync(),
                 )

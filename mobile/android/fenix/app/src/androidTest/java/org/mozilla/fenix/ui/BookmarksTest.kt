@@ -101,7 +101,7 @@ class BookmarksTest {
                 verifyFolderTitle("Bookmarks Menu")
                 verifyFolderTitle("Bookmarks Toolbar")
                 verifyFolderTitle("Other Bookmarks")
-                verifySignInToSyncButton()
+                verifySyncSignInButton()
             }
         }.clickSingInToSyncButton {
             verifyTurnOnSyncToolbarTitle()

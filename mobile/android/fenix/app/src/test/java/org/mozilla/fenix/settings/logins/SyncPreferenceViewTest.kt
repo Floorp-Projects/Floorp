@@ -182,7 +182,7 @@ class SyncPreferenceViewTest {
         syncEngine = SyncEngine.Passwords,
         loggedOffTitle = notLoggedInTitle,
         loggedInTitle = loggedInTitle,
-        onSignInToSyncClicked = {
+        onSyncSignInClicked = {
             val directions =
                 SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToTurnOnSyncFragment()
             navController.navigate(directions)

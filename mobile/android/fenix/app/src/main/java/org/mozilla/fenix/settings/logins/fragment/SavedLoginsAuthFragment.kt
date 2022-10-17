@@ -146,7 +146,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
                 .getString(R.string.preferences_passwords_sync_logins_across_devices),
             loggedInTitle = requireContext()
                 .getString(R.string.preferences_passwords_sync_logins),
-            onSignInToSyncClicked = {
+            onSyncSignInClicked = {
                 val directions =
                     SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToTurnOnSyncFragment()
                 findNavController().navigate(directions)

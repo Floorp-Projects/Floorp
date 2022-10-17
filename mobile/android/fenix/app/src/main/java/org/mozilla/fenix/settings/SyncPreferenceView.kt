@@ -26,8 +26,7 @@ import mozilla.components.service.fxa.manager.SyncEnginesStorage
  * @param syncEngine The sync engine that will be used for the sync status lookup.
  * @param loggedOffTitle Text label for the setting when user is not logged in.
  * @param loggedInTitle Text label for the setting when user is logged in.
- * @param onSignInToSyncClicked A callback executed when the [syncPreference] is clicked with a
- * preference status of "Sign in to Sync".
+ * @param onSyncSignInClicked A callback executed when the sync sign in [syncPreference] is clicked.
  * @param onReconnectClicked A callback executed when the [syncPreference] is clicked with a
  * preference status of "Reconnect".
  */
@@ -39,7 +38,7 @@ class SyncPreferenceView(
     private val syncEngine: SyncEngine,
     private val loggedOffTitle: String,
     private val loggedInTitle: String,
-    private val onSignInToSyncClicked: () -> Unit = {},
+    private val onSyncSignInClicked: () -> Unit = {},
     private val onReconnectClicked: () -> Unit = {},
 ) {
 
@@ -102,7 +101,7 @@ class SyncPreferenceView(
             title = loggedOffTitle
 
             setOnPreferenceChangeListener { _, _ ->
-                onSignInToSyncClicked()
+                onSyncSignInClicked()
                 false
             }
         }
