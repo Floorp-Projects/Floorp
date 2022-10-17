@@ -464,10 +464,9 @@ std::vector<std::pair<TSN, Data>> RetransmissionQueue::GetChunksToSend(
     rwnd_ -= chunk_size;
 
     absl::optional<UnwrappedTSN> tsn = outstanding_data_.Insert(
-        chunk_opt->data,
+        chunk_opt->data, now,
         partial_reliability_ ? chunk_opt->max_retransmissions
                              : MaxRetransmits::NoLimit(),
-        now,
         partial_reliability_ ? chunk_opt->expires_at
                              : TimeMs::InfiniteFuture());
 
