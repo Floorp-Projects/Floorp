@@ -1,0 +1,44 @@
+schema: 1
+
+bugzilla:
+  product: "Core"
+  component: "WebRTC: Networking"
+
+origin:
+  name: "libsrtp"
+  description: "Secure Real-time Transport Protocol (SRTP)"
+
+  url: "https://github.com/cisco/libsrtp/"
+  license: BSD-3-Clause
+  license-file: LICENSE
+
+  release: v2.4.2 (2021-09-20T16:10:47+02:00).
+  revision: v2.4.2
+
+
+updatebot:
+  maintainer-phab: jesup
+  maintainer-bz: rjesup@jesup.org
+  tasks:
+    - type: vendoring
+      enabled: True
+
+vendoring:
+  url: https://github.com/cisco/libsrtp
+  source-hosting: github
+  tracking: tag
+  vendor-directory: third_party/libsrtp/src
+
+  exclude:
+    - ".*"
+    - ".github"
+    - "**"
+
+  include:
+    - srtp
+    - crypto
+    - include
+    - test
+    - LICENSE
+    - CHANGES
+    - README.md
