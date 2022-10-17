@@ -112,6 +112,7 @@ interface TestInterfaceAsyncIterableSingle {
 dictionary TestInterfaceAsyncIteratorOptions {
   unsigned long multiplier = 1;
   sequence<Promise<any>> blockingPromises = [];
+  unsigned long failNextAfter = 4294967295;
 };
 
 [Pref="dom.expose_test_interfaces",

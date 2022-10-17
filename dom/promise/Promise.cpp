@@ -547,6 +547,38 @@ void Promise::HandleException(JSContext* aCx) {
 }
 
 // static
+already_AddRefed<Promise> Promise::RejectWithExceptionFromContext(
+    nsIGlobalObject* aGlobal, JSContext* aCx, ErrorResult& aError) {
+  JS::Rooted<JS::Value> exn(aCx);
+  if (!JS_GetPendingException(aCx, &exn)) {
+    // This is very important: if there is no pending exception here but we're
+    // ending up in this code, that means the callee threw an uncatchable
+    // exception.  Just propagate that out as-is.
+    aError.ThrowUncatchableException();
+    return nullptr;
+  }
+
+  JSAutoRealm ar(aCx, aGlobal->GetGlobalJSObject());
+  if (!JS_WrapValue(aCx, &exn)) {
+    // We just give up.
+    aError.StealExceptionFromJSContext(aCx);
+    return nullptr;
+  }
+
+  JS_ClearPendingException(aCx);
+
+  IgnoredErrorResult error;
+  RefPtr<Promise> promise = Promise::Reject(aGlobal, aCx, exn, error);
+  if (!promise) {
+    // We just give up, let's store the exception in the ErrorResult.
+    aError.ThrowJSException(aCx, exn);
+    return nullptr;
+  }
+
+  return promise.forget();
+}
+
+// static
 already_AddRefed<Promise> Promise::CreateFromExisting(
     nsIGlobalObject* aGlobal, JS::Handle<JSObject*> aPromiseObj,
     PropagateUserInteraction aPropagateUserInteraction) {

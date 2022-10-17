@@ -163,6 +163,25 @@ async function test_data_single() {
      `AsyncIterableSingleWithArgs: "return("efgh")" should return { done: true, value: "efgh" }`);
   is(itr.returnLastCalledWith, "abcd",
      `AsyncIterableSingleWithArgs: the asynchronous iterator return algorithm shouldn't be called if the iterator's 'is finished' flag is true already.`);
+
+  // eslint-disable-next-line no-undef
+  itr = new TestInterfaceAsyncIterableSingleWithArgs();
+  itrValues = itr.values({ failNextAfter: 1 });
+  itrValues.next().then(({ value, done }) => {
+    is(value, singleValues[0], "First value is correct");
+    ok(!done, "Expecting more values");
+    return itrValues.next();
+  }).then(() => {
+    ok(false, "Second call to next() should convert failure to a rejected promise.");
+    return itrValues.next();
+  }).catch(() => {
+    ok(true, "Second call to next() should convert failure to a rejected promise.");
+    return itrValues.next();
+  }).then(({ done }) => {
+    ok(done, "An earlier failure in next() should set the async iterator's 'is finished' flag to true.");
+  }).catch(() => {
+    ok(false, "An earlier failure in next() shouldn't cause subsequent calls to return a rejected promise.");
+  });
 }
 
 async function test_data_double() {

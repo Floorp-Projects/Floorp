@@ -109,7 +109,14 @@ already_AddRefed<Promise> AsyncIterableNextImpl::NextSteps(
 
   // 4. Let nextPromise be the result of getting the next iteration result with
   //    object’s target and object.
-  RefPtr<Promise> nextPromise = GetNextResult(aRv);
+  RefPtr<Promise> nextPromise;
+  {
+    ErrorResult error;
+    nextPromise = GetNextResult(error);
+    if (error.Failed()) {
+      nextPromise = Promise::Reject(aGlobalObject, std::move(error), aRv);
+    }
+  }
 
   // 5. Let fulfillSteps be the following steps, given next:
   auto fulfillSteps = [](JSContext* aCx, JS::Handle<JS::Value> aNext,
@@ -246,7 +253,13 @@ already_AddRefed<Promise> AsyncIterableReturnImpl::ReturnSteps(
 
   // 4. Return the result of running the asynchronous iterator return algorithm
   // for interface, given object’s target, object, and value.
-  return GetReturnPromise(aCx, aValue, aRv);
+  ErrorResult error;
+  RefPtr<Promise> returnPromise = GetReturnPromise(aCx, aValue, error);
+  if (error.Failed()) {
+    return Promise::Reject(aGlobalObject, std::move(error), aRv);
+  }
+
+  return returnPromise.forget();
 }
 
 already_AddRefed<Promise> AsyncIterableReturnImpl::Return(

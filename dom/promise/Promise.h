@@ -212,6 +212,27 @@ class Promise : public SupportsWeakPtr {
                                           JS::Handle<JS::Value> aValue,
                                           ErrorResult& aRv);
 
+  template <typename T>
+  static already_AddRefed<Promise> Reject(nsIGlobalObject* aGlobal, T&& aValue,
+                                          ErrorResult& aError) {
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(aGlobal)) {
+      aError.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    JSContext* cx = jsapi.cx();
+    JS::Rooted<JS::Value> val(cx);
+    if (!ToJSValue(cx, std::forward<T>(aValue), &val)) {
+      return Promise::RejectWithExceptionFromContext(aGlobal, cx, aError);
+    }
+
+    return Reject(aGlobal, cx, val, aError);
+  }
+
+  static already_AddRefed<Promise> RejectWithExceptionFromContext(
+      nsIGlobalObject* aGlobal, JSContext* aCx, ErrorResult& aError);
+
   // Do the equivalent of Promise.all in the current compartment of aCx.  Errors
   // are reported on the ErrorResult; if aRv comes back !Failed(), this function
   // MUST return a non-null value.
