@@ -2280,12 +2280,12 @@ std::vector<LoggedPacketInfo> ParsedRtcEventLog::GetPacketInfos(
       seq_num_unwrapper = SequenceNumberUnwrapper();
       indices.clear();
     }
-    RTC_DCHECK(new_log_time >= last_log_time);
+    RTC_DCHECK_GE(new_log_time, last_log_time);
     last_log_time = new_log_time;
   };
 
   auto rtp_handler = [&](const LoggedRtpPacket& rtp) {
-    advance_time(Timestamp::Millis(rtp.log_time_ms()));
+    advance_time(rtp.log_time());
     MediaStreamInfo* stream = &streams[rtp.header.ssrc];
     Timestamp capture_time = Timestamp::MinusInfinity();
     if (!stream->rtx) {
@@ -2328,7 +2328,7 @@ std::vector<LoggedPacketInfo> ParsedRtcEventLog::GetPacketInfos(
 
   auto feedback_handler =
       [&](const LoggedRtcpPacketTransportFeedback& logged_rtcp) {
-        auto log_feedback_time = Timestamp::Millis(logged_rtcp.log_time_ms());
+        auto log_feedback_time = logged_rtcp.log_time();
         advance_time(log_feedback_time);
         const auto& feedback = logged_rtcp.transport_feedback;
         // Add timestamp deltas to a local time base selected on first packet
