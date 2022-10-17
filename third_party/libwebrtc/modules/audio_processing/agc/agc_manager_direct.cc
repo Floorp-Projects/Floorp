@@ -448,10 +448,10 @@ AgcManagerDirect::AgcManagerDirect(
     float clipped_ratio_threshold,
     int clipped_wait_frames,
     const ClippingPredictorConfig& clipping_config)
-    : AgcManagerDirect(/*num_capture_channels*/ 1,
+    : AgcManagerDirect(/*num_capture_channels=*/1,
                        startup_min_level,
                        clipped_level_min,
-                       /*disable_digital_adaptive*/ false,
+                       /*disable_digital_adaptive=*/false,
                        clipped_level_step,
                        clipped_ratio_threshold,
                        clipped_wait_frames,
