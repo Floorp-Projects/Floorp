@@ -21,7 +21,7 @@ use std::{borrow::Cow, cell::RefCell};
 use thin_vec::ThinVec;
 use unic_langid::LanguageIdentifier;
 use xpcom::{
-    interfaces::{nsIRunnablePriority, nsrefcnt},
+    interfaces::{nsIRunnablePriority},
     RefCounted, RefPtr, Refcnt,
 };
 
@@ -458,17 +458,16 @@ pub extern "C" fn localization_new_with_locales(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn localization_addref(loc: &LocalizationRc) -> nsrefcnt {
-    loc.refcnt.inc()
+pub unsafe extern "C" fn localization_addref(loc: &LocalizationRc) {
+    loc.refcnt.inc();
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn localization_release(loc: *const LocalizationRc) -> nsrefcnt {
+pub unsafe extern "C" fn localization_release(loc: *const LocalizationRc) {
     let rc = (*loc).refcnt.dec();
     if rc == 0 {
         std::mem::drop(Box::from_raw(loc as *const _ as *mut LocalizationRc));
     }
-    rc
 }
 
 #[no_mangle]

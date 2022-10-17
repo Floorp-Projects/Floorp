@@ -100,8 +100,8 @@ class NeqoHttp3Conn final {
 
   bool IsZeroRtt() { return neqo_http3conn_is_zero_rtt(this); }
 
-  nsrefcnt AddRef() { return neqo_http3conn_addref(this); }
-  nsrefcnt Release() { return neqo_http3conn_release(this); }
+  void AddRef() { neqo_http3conn_addref(this); }
+  void Release() { neqo_http3conn_release(this); }
 
   void GetStats(Http3Stats* aStats) {
     return neqo_http3conn_get_stats(this, aStats);

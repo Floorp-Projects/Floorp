@@ -14,7 +14,7 @@ extern crate nserror;
 use nserror::*;
 
 extern crate xpcom;
-use xpcom::interfaces::{mozIThirdPartyUtil, nsrefcnt};
+use xpcom::interfaces::{mozIThirdPartyUtil};
 use xpcom::{AtomicRefcnt, RefCounted, RefPtr};
 
 extern crate uuid;
@@ -120,17 +120,16 @@ impl ops::DerefMut for MozURL {
 
 // Memory Management for MozURL
 #[no_mangle]
-pub unsafe extern "C" fn mozurl_addref(url: &MozURL) -> nsrefcnt {
-    url.refcnt.inc()
+pub unsafe extern "C" fn mozurl_addref(url: &MozURL) {
+    url.refcnt.inc();
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn mozurl_release(url: &MozURL) -> nsrefcnt {
+pub unsafe extern "C" fn mozurl_release(url: &MozURL) {
     let rc = url.refcnt.dec();
     if rc == 0 {
         mem::drop(Box::from_raw(url as *const MozURL as *mut MozURL));
     }
-    rc
 }
 
 // xpcom::RefPtr support
