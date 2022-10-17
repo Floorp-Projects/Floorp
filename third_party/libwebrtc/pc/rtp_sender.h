@@ -201,8 +201,8 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   RtpSenderBase(rtc::Thread* worker_thread,
                 const std::string& id,
                 SetStreamsObserver* set_streams_observer);
-  // TODO(nisse): Since SSRC == 0 is technically valid, figure out
-  // some other way to test if we have a valid SSRC.
+  // TODO(bugs.webrtc.org/8694): Since SSRC == 0 is technically valid, figure
+  // out some other way to test if we have a valid SSRC.
   bool can_send_track() const { return track_ && ssrc_; }
 
   virtual std::string track_kind() const = 0;
