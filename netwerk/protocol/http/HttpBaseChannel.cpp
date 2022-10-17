@@ -5745,6 +5745,24 @@ NS_IMETHODIMP HttpBaseChannel::ComputeCrossOriginOpenerPolicy(
     bool isCoepCredentiallessEnabled;
     rv = mLoadInfo->GetIsOriginTrialCoepCredentiallessEnabledForTopLevel(
         &isCoepCredentiallessEnabled);
+    if (!isCoepCredentiallessEnabled) {
+      nsAutoCString originTrialToken;
+      Unused << mResponseHead->GetHeader(nsHttp::OriginTrial, originTrialToken);
+      if (!originTrialToken.IsEmpty()) {
+        nsCOMPtr<nsIPrincipal> resultPrincipal;
+        rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+            this, getter_AddRefs(resultPrincipal));
+        if (!NS_WARN_IF(NS_FAILED(rv))) {
+          OriginTrials trials;
+          trials.UpdateFromToken(NS_ConvertASCIItoUTF16(originTrialToken),
+                                 resultPrincipal);
+          if (trials.IsEnabled(OriginTrial::CoepCredentialless)) {
+            isCoepCredentiallessEnabled = true;
+          }
+        }
+      }
+    }
+
     NS_ENSURE_SUCCESS(rv, rv);
     if (NS_SUCCEEDED(
             GetResponseEmbedderPolicy(isCoepCredentiallessEnabled, &coep)) &&

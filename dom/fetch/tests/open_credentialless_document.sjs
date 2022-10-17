@@ -10,11 +10,13 @@ function handleRequest(request, response) {
   let params = (request.queryString || "").split("&");
   if (params.includes("credentialless")) {
     response.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
+    // Enables the SharedArrayBuffer feature
+    response.setHeader("Cross-Origin-Opener-Policy", "same-origin");
   } else if (params.includes("requirecorp")) {
     response.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
   }
   let html = "<!doctype html>";
-  if (params.includes("meta")) {
+  if (!params.includes("meta")) {
     response.setHeader("Origin-Trial", TOKEN);
   } else {
     html += `<meta http-equiv="origin-trial" content="${TOKEN}">`;
