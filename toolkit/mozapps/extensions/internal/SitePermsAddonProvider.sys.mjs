@@ -25,8 +25,14 @@ const FIRST_CONTENT_PROCESS_TOPIC = "ipc:first-content-process-created";
 const SITEPERMS_ADDON_ID_SUFFIX = "@siteperms.mozilla.org";
 
 class SitePermsAddonWrapper {
-  // A <string, nsIPermission> Map, whose keys are permission types.
-  #permissionsByPermissionType = new Map();
+  // An array of nsIPermission granted for the siteOrigin.
+  // We can't use a Set as handlePermissionChange might be called with different
+  // nsIPermission instance for the same permission (in the generic sense)
+  #permissions = [];
+
+  // This will be set to true in the `uninstall` method to recognize when a perm-changed notification
+  // is actually triggered by the SitePermsAddonWrapper uninstall method itself.
+  isUninstalling = false;
 
   /**
    * @param {string} siteOriginNoSuffix: The origin this addon is installed for
@@ -47,8 +53,12 @@ class SitePermsAddonWrapper {
     )}${SITEPERMS_ADDON_ID_SUFFIX}`;
 
     for (const perm of permissions) {
-      this.#permissionsByPermissionType.set(perm.type, perm);
+      this.#permissions.push(perm);
     }
+  }
+
+  get isUninstalled() {
+    return this.#permissions.length === 0;
   }
 
   /**
@@ -57,11 +67,11 @@ class SitePermsAddonWrapper {
    * @return {Array<String>}
    */
   get sitePermissions() {
-    return Array.from(this.#permissionsByPermissionType.keys());
+    return Array.from(new Set(this.#permissions.map(perm => perm.type)));
   }
 
   /**
-   * Update #permissionsByPermissionType, and calls `uninstall` if there are no remaining gated permissions
+   * Update #permissions, and calls `uninstall` if there are no remaining gated permissions
    * granted. This is called by SitePermsAddonProvider when it gets a "perm-changed" notification for a gated
    * permission.
    *
@@ -70,11 +80,19 @@ class SitePermsAddonWrapper {
    */
   handlePermissionChange(permission, action) {
     if (action == "added") {
-      this.#permissionsByPermissionType.set(permission.type, permission);
+      this.#permissions.push(permission);
     } else if (action == "deleted") {
-      this.#permissionsByPermissionType.delete(permission.type);
+      // We want to remove the registered permission for the right principal (looking into originSuffix so we
+      // can unregister revoked permission on a specific context, private window, ...).
+      this.#permissions = this.#permissions.filter(
+        perm =>
+          !(
+            perm.type == permission.type &&
+            perm.principal.originSuffix === permission.principal.originSuffix
+          )
+      );
 
-      if (this.#permissionsByPermissionType.size === 0) {
+      if (this.#permissions.length === 0) {
         this.uninstall();
       }
     }
@@ -159,11 +177,33 @@ class SitePermsAddonWrapper {
    * @throws Services.perms.removeFromPrincipal could throw, see PermissionManager::AddInternal.
    */
   async uninstall() {
-    lazy.AddonManagerPrivate.callAddonListeners("onUninstalling", this, false);
-    for (const permission of this.#permissionsByPermissionType.values()) {
-      Services.perms.removeFromPrincipal(permission.principal, permission.type);
+    if (this.isUninstalling) {
+      return;
     }
-    lazy.AddonManagerPrivate.callAddonListeners("onUninstalled", this);
+    try {
+      this.isUninstalling = true;
+      lazy.AddonManagerPrivate.callAddonListeners(
+        "onUninstalling",
+        this,
+        false
+      );
+      const permissions = [...this.#permissions];
+      for (const permission of permissions) {
+        try {
+          Services.perms.removeFromPrincipal(
+            permission.principal,
+            permission.type
+          );
+          // Only remove the permission from the array if it was successfully removed from the principal
+          this.#permissions.splice(this.#permissions.indexOf(permission), 1);
+        } catch (err) {
+          Cu.reportError(err);
+        }
+      }
+      lazy.AddonManagerPrivate.callAddonListeners("onUninstalled", this);
+    } finally {
+      this.isUninstalling = false;
+    }
   }
 
   get isCompatible() {
@@ -413,9 +453,7 @@ const SitePermsAddonProvider = {
         return;
       }
       // Only remove the addon if it doesn't have any permissions left.
-      if (
-        this.wrappersMapByOrigin.get(siteOriginNoSuffix).sitePermissions.length
-      ) {
+      if (!this.wrappersMapByOrigin.get(siteOriginNoSuffix).isUninstalled) {
         return;
       }
       this.wrappersMapByOrigin.delete(siteOriginNoSuffix);
