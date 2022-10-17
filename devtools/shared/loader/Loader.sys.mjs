@@ -174,6 +174,7 @@ export function DevToolsLoader({
   // * access via module's `loader` global
   // loader.id
   globals.loader.id = this.id;
+  globals.loader.invisibleToDebugger = invisibleToDebugger;
 
   // Expose lazy helpers on `loader`
   // ie. when you use it like that from a JSM:
