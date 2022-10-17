@@ -12,7 +12,6 @@
 
 #include <memory>
 
-#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/event.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/task_queue_for_test.h"
@@ -20,13 +19,6 @@
 #include "test/gtest.h"
 
 namespace webrtc {
-namespace {
-using ::testing::AtLeast;
-using ::testing::Invoke;
-using ::testing::MockFunction;
-using ::testing::NiceMock;
-using ::testing::Return;
-}  // namespace
 
 TEST(PendingTaskSafetyFlagTest, Basic) {
   rtc::scoped_refptr<PendingTaskSafetyFlag> safety_flag;
@@ -75,11 +67,12 @@ TEST(PendingTaskSafetyFlagTest, PendingTaskSuccess) {
 
     void DoStuff() {
       RTC_DCHECK(!tq_main_->IsCurrent());
-      tq_main_->PostTask(ToQueuedTask([safe = flag_, this]() {
+      rtc::scoped_refptr<PendingTaskSafetyFlag> safe = flag_;
+      tq_main_->PostTask([safe = std::move(safe), this]() {
         if (!safe->alive())
           return;
         stuff_done_ = true;
-      }));
+      });
     }
 
     bool stuff_done() const { return stuff_done_; }
@@ -87,14 +80,14 @@ TEST(PendingTaskSafetyFlagTest, PendingTaskSuccess) {
    private:
     TaskQueueBase* const tq_main_;
     bool stuff_done_ = false;
-    rtc::scoped_refptr<PendingTaskSafetyFlag> flag_{
-        PendingTaskSafetyFlag::Create()};
+    rtc::scoped_refptr<PendingTaskSafetyFlag> flag_ =
+        PendingTaskSafetyFlag::Create();
   };
 
   std::unique_ptr<Owner> owner;
   tq1.SendTask(
       [&owner]() {
-        owner.reset(new Owner());
+        owner = std::make_unique<Owner>();
         EXPECT_FALSE(owner->stuff_done());
       },
       RTC_FROM_HERE);
@@ -125,7 +118,7 @@ TEST(PendingTaskSafetyFlagTest, PendingTaskDropped) {
     void DoStuff() {
       RTC_DCHECK(!tq_main_->IsCurrent());
       tq_main_->PostTask(
-          ToQueuedTask(safety_, [this]() { *stuff_done_ = true; }));
+          SafeTask(safety_.flag(), [this]() { *stuff_done_ = true; }));
     }
 
    private:
@@ -136,8 +129,9 @@ TEST(PendingTaskSafetyFlagTest, PendingTaskDropped) {
 
   std::unique_ptr<Owner> owner;
   bool stuff_done = false;
-  tq1.SendTask([&owner, &stuff_done]() { owner.reset(new Owner(&stuff_done)); },
-               RTC_FROM_HERE);
+  tq1.SendTask(
+      [&owner, &stuff_done]() { owner = std::make_unique<Owner>(&stuff_done); },
+      RTC_FROM_HERE);
   ASSERT_TRUE(owner);
   // Queue up a task on tq1 that will execute before the 'DoStuff' task
   // can, and delete the `owner` before the 'stuff' task can execute.
@@ -168,13 +162,31 @@ TEST(PendingTaskSafetyFlagTest, PendingTaskNotAliveInitialized) {
 
   bool task_1_ran = false;
   bool task_2_ran = false;
-  tq.PostTask(ToQueuedTask(flag, [&task_1_ran]() { task_1_ran = true; }));
+  tq.PostTask(SafeTask(flag, [&task_1_ran]() { task_1_ran = true; }));
   tq.PostTask([&flag]() { flag->SetAlive(); });
-  tq.PostTask(ToQueuedTask(flag, [&task_2_ran]() { task_2_ran = true; }));
+  tq.PostTask(SafeTask(flag, [&task_2_ran]() { task_2_ran = true; }));
 
   tq.WaitForPreviouslyPostedTasks();
   EXPECT_FALSE(task_1_ran);
   EXPECT_TRUE(task_2_ran);
+}
+
+TEST(PendingTaskSafetyFlagTest, SafeTask) {
+  rtc::scoped_refptr<PendingTaskSafetyFlag> flag =
+      PendingTaskSafetyFlag::Create();
+
+  int count = 0;
+  // Create two identical tasks that increment the `count`.
+  auto task1 = SafeTask(flag, [&count] { ++count; });
+  auto task2 = SafeTask(flag, [&count] { ++count; });
+
+  EXPECT_EQ(count, 0);
+  std::move(task1)();
+  EXPECT_EQ(count, 1);
+  flag->SetNotAlive();
+  // Now task2 should actually not run.
+  std::move(task2)();
+  EXPECT_EQ(count, 1);
 }
 
 }  // namespace webrtc
