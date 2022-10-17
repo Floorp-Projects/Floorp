@@ -560,6 +560,13 @@ export const TabsSetupFlowManager = new (class {
     Services.prefs.setBoolPref(SYNC_TABS_PREF, true);
   }
 
+  async syncOnPageReload() {
+    if (lazy.UIState.isReady() && this.fxaSignedIn) {
+      this.startWaitingForTabs();
+      await lazy.SyncedTabs.syncTabs(true);
+    }
+  }
+
   tryToClearError() {
     if (lazy.UIState.isReady() && this.fxaSignedIn) {
       this.startWaitingForTabs();
