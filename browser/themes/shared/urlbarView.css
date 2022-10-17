@@ -865,6 +865,9 @@
 
 #PopupSearchAutoComplete::part(content)  {
   --panel-padding: var(--panel-subview-body-padding);
+  /* NOTE(emilio): Once bug 1551637 is fixed we don't need to use block layout
+   * for this (though it doesn't really hurt) */
+  display: block;
 }
 
 @media not (prefers-contrast) {
