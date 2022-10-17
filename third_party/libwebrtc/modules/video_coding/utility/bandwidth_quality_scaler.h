@@ -27,7 +27,6 @@
 #include "rtc_base/rate_statistics.h"
 #include "rtc_base/ref_count.h"
 #include "rtc_base/system/no_unique_address.h"
-#include "rtc_base/task_queue.h"
 #include "rtc_base/weak_ptr.h"
 
 namespace webrtc {

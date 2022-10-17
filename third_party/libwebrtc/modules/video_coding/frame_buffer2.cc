@@ -83,7 +83,7 @@ FrameBuffer::~FrameBuffer() {
 
 void FrameBuffer::NextFrame(int64_t max_wait_time_ms,
                             bool keyframe_required,
-                            rtc::TaskQueue* callback_queue,
+                            TaskQueueBase* callback_queue,
                             NextFrameCallback handler) {
   RTC_DCHECK_RUN_ON(&callback_checker_);
   RTC_DCHECK(callback_queue->IsCurrent());
@@ -107,7 +107,7 @@ void FrameBuffer::StartWaitForNextFrameOnQueue() {
   RTC_DCHECK(!callback_task_.Running());
   int64_t wait_ms = FindNextFrame(clock_->CurrentTime());
   callback_task_ = RepeatingTaskHandle::DelayedStart(
-      callback_queue_->Get(), TimeDelta::Millis(wait_ms),
+      callback_queue_, TimeDelta::Millis(wait_ms),
       [this] {
         RTC_DCHECK_RUN_ON(&callback_checker_);
         // If this task has not been cancelled, we did not get any new frames

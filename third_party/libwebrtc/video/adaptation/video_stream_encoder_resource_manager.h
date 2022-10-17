@@ -40,7 +40,6 @@
 #include "rtc_base/ref_count.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
 #include "video/adaptation/balanced_constraint.h"
@@ -84,7 +83,7 @@ class VideoStreamEncoderResourceManager
       const FieldTrialsView& field_trials);
   ~VideoStreamEncoderResourceManager() override;
 
-  void Initialize(rtc::TaskQueue* encoder_queue);
+  void Initialize(TaskQueueBase* encoder_queue);
   void SetAdaptationProcessor(
       ResourceAdaptationProcessorInterface* adaptation_processor,
       VideoStreamAdapter* stream_adapter);
@@ -196,7 +195,7 @@ class VideoStreamEncoderResourceManager
   const rtc::scoped_refptr<BandwidthQualityScalerResource>
       bandwidth_quality_scaler_resource_;
 
-  rtc::TaskQueue* encoder_queue_;
+  TaskQueueBase* encoder_queue_;
   VideoStreamInputStateProvider* const input_state_provider_
       RTC_GUARDED_BY(encoder_queue_);
   ResourceAdaptationProcessorInterface* adaptation_processor_;

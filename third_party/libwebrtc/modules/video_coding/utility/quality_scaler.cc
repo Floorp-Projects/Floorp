@@ -19,7 +19,6 @@
 #include "rtc_base/experiments/quality_scaler_settings.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/exp_filter.h"
-#include "rtc_base/task_queue.h"
 #include "rtc_base/weak_ptr.h"
 
 // TODO(kthelgason): Some versions of Android have issues with log2.

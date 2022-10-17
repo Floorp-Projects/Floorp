@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 
+#include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "modules/video_coding/frame_object.h"
@@ -185,8 +186,9 @@ class TestFrameBuffer2 : public ::testing::Test {
   }
 
   void ExtractFrame(int64_t max_wait_time = 0, bool keyframe_required = false) {
-    time_task_queue_.PostTask([this, max_wait_time, keyframe_required]() {
-      buffer_->NextFrame(max_wait_time, keyframe_required, &time_task_queue_,
+    time_task_queue_->PostTask([this, max_wait_time, keyframe_required]() {
+      buffer_->NextFrame(max_wait_time, keyframe_required,
+                         time_task_queue_.get(),
                          [this](std::unique_ptr<EncodedFrame> frame) {
                            frames_.emplace_back(std::move(frame));
                          });
@@ -218,7 +220,7 @@ class TestFrameBuffer2 : public ::testing::Test {
 
   test::ScopedKeyValueConfig field_trials_;
   webrtc::GlobalSimulatedTimeController time_controller_;
-  rtc::TaskQueue time_task_queue_;
+  std::unique_ptr<TaskQueueBase, TaskQueueDeleter> time_task_queue_;
   VCMTimingFake timing_;
   std::unique_ptr<FrameBuffer> buffer_;
   std::vector<std::unique_ptr<EncodedFrame>> frames_;

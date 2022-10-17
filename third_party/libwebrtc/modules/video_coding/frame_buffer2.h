@@ -20,6 +20,7 @@
 #include "absl/container/inlined_vector.h"
 #include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/video/encoded_frame.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/timing/inter_frame_delay.h"
@@ -31,7 +32,6 @@
 #include "rtc_base/numerics/sequence_number_util.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/no_unique_address.h"
-#include "rtc_base/task_queue.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -66,7 +66,7 @@ class FrameBuffer {
   // or with nullptr if no frame is ready for decoding after `max_wait_time_ms`.
   void NextFrame(int64_t max_wait_time_ms,
                  bool keyframe_required,
-                 rtc::TaskQueue* callback_queue,
+                 TaskQueueBase* callback_queue,
                  NextFrameCallback handler);
 
   // Tells the FrameBuffer which protection mode that is in use. Affects
@@ -166,7 +166,7 @@ class FrameBuffer {
   Mutex mutex_;
   Clock* const clock_;
 
-  rtc::TaskQueue* callback_queue_ RTC_GUARDED_BY(mutex_);
+  TaskQueueBase* callback_queue_ RTC_GUARDED_BY(mutex_);
   RepeatingTaskHandle callback_task_ RTC_GUARDED_BY(mutex_);
   NextFrameCallback frame_handler_ RTC_GUARDED_BY(mutex_);
   int64_t latest_return_time_ms_ RTC_GUARDED_BY(mutex_);

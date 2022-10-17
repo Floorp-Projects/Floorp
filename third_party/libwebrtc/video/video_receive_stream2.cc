@@ -55,7 +55,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
@@ -269,7 +268,7 @@ VideoReceiveStream2::VideoReceiveStream2(
 
   frame_buffer_ = FrameBufferProxy::CreateFromFieldTrial(
       clock_, call_->worker_thread(), timing_.get(), &stats_proxy_,
-      &decode_queue_, this, max_wait_for_keyframe_, max_wait_for_frame_,
+      decode_queue_.Get(), this, max_wait_for_keyframe_, max_wait_for_frame_,
       decode_sync_, call_->trials());
 
   if (rtx_ssrc()) {
