@@ -65,11 +65,16 @@ void TestInterfaceAsyncIterableSingleWithArgs::InitAsyncIteratorData(
     const TestInterfaceAsyncIteratorOptions& aOptions, ErrorResult& aError) {
   aData.mMultiplier = aOptions.mMultiplier;
   aData.mBlockingPromises = aOptions.mBlockingPromises;
+  aData.mFailNextAfter = aOptions.mFailNextAfter;
 }
 
 already_AddRefed<Promise>
 TestInterfaceAsyncIterableSingleWithArgs::GetNextIterationResult(
     Iterator* aIterator, ErrorResult& aRv) {
+  if (aIterator->Data().mIndex == aIterator->Data().mFailNextAfter) {
+    aRv.ThrowTypeError("Failed because we of 'failNextAfter'.");
+    return nullptr;
+  }
   return TestInterfaceAsyncIterableSingle::GetNextIterationResult(
       aIterator, aIterator->Data(), aRv);
 }

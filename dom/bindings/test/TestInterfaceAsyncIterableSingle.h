@@ -52,6 +52,7 @@ class TestInterfaceAsyncIterableSingle : public nsISupports,
     uint32_t mMultiplier = 1;
     Sequence<OwningNonNull<Promise>> mBlockingPromises;
     size_t mBlockingPromisesIndex = 0;
+    uint32_t mFailNextAfter = 4294967295;
   };
 
   void InitAsyncIteratorData(IteratorData& aData, Iterator::IteratorType aType,
