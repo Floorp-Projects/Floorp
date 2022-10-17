@@ -271,8 +271,7 @@ bool RemoteBitrateEstimatorTest::GenerateAndProcessFrame(uint32_t ssrc,
     delete packet;
     packets.pop_front();
   }
-  if (bitrate_estimator_->TimeUntilNextProcess() <= 0)
-    bitrate_estimator_->Process();
+  bitrate_estimator_->Process();
   clock_.AdvanceTimeMicroseconds(next_time_us - clock_.TimeInMicroseconds());
   return overuse;
 }

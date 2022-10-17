@@ -353,11 +353,8 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
   }
 }
 
-void RemoteBitrateEstimatorAbsSendTime::Process() {}
-
-int64_t RemoteBitrateEstimatorAbsSendTime::TimeUntilNextProcess() {
-  const int64_t kDisabledModuleTime = 1000;
-  return kDisabledModuleTime;
+TimeDelta RemoteBitrateEstimatorAbsSendTime::Process() {
+  return TimeDelta::PlusInfinity();
 }
 
 void RemoteBitrateEstimatorAbsSendTime::TimeoutStreams(Timestamp now) {

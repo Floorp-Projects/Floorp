@@ -155,22 +155,17 @@ void RemoteBitrateEstimatorSingleStream::IncomingPacket(
   }
 }
 
-void RemoteBitrateEstimatorSingleStream::Process() {
-  {
-    MutexLock lock(&mutex_);
-    UpdateEstimate(clock_->TimeInMilliseconds());
+TimeDelta RemoteBitrateEstimatorSingleStream::Process() {
+  MutexLock lock(&mutex_);
+  int64_t now_ms = clock_->TimeInMilliseconds();
+  int64_t next_process_time_ms = last_process_time_ + process_interval_ms_;
+  if (last_process_time_ == -1 || now_ms >= next_process_time_ms) {
+    UpdateEstimate(now_ms);
+    last_process_time_ = now_ms;
+    return TimeDelta::Millis(process_interval_ms_);
   }
-  last_process_time_ = clock_->TimeInMilliseconds();
-}
 
-int64_t RemoteBitrateEstimatorSingleStream::TimeUntilNextProcess() {
-  if (last_process_time_ < 0) {
-    return 0;
-  }
-  MutexLock lock_(&mutex_);
-  RTC_DCHECK_GT(process_interval_ms_, 0);
-  return last_process_time_ + process_interval_ms_ -
-         clock_->TimeInMilliseconds();
+  return TimeDelta::Millis(next_process_time_ms - now_ms);
 }
 
 void RemoteBitrateEstimatorSingleStream::UpdateEstimate(int64_t now_ms) {

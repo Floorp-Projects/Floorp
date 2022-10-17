@@ -55,12 +55,7 @@ class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
   void IncomingPacket(int64_t arrival_time_ms,
                       size_t payload_size,
                       const RTPHeader& header) override;
-  // This class relies on Process() being called periodically (at least once
-  // every other second) for streams to be timed out properly. Therefore it
-  // shouldn't be detached from the ProcessThread except if it's about to be
-  // deleted.
-  void Process() override;
-  int64_t TimeUntilNextProcess() override;
+  TimeDelta Process() override;
   void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) override;
   void RemoveStream(uint32_t ssrc) override;
   bool LatestEstimate(std::vector<uint32_t>* ssrcs,
