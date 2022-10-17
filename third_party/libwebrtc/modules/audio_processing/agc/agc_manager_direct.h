@@ -91,7 +91,7 @@ class AgcManagerDirect final {
   FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
                            DisableDigitalDisablesDigital);
   FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
-                           AgcMinMicLevelExperiment);
+                           AgcMinMicLevelExperimentDefault);
   FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
                            AgcMinMicLevelExperimentDisabled);
   FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,

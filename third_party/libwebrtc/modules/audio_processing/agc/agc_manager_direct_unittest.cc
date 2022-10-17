@@ -128,15 +128,25 @@ void CallPreProcessAudioBuffer(int num_calls,
   }
 }
 
-std::string GetAgcMinMicLevelExperimentFieldTrial(
+constexpr char kMinMicLevelFieldTrial[] =
+    "WebRTC-Audio-2ndAgcMinMicLevelExperiment";
+
+std::string GetAgcMinMicLevelExperimentFieldTrial(const std::string& value) {
+  char field_trial_buffer[64];
+  rtc::SimpleStringBuilder builder(field_trial_buffer);
+  builder << kMinMicLevelFieldTrial << "/" << value << "/";
+  return builder.str();
+}
+
+std::string GetAgcMinMicLevelExperimentFieldTrialEnabled(
     int enabled_value,
     const std::string& suffix = "") {
   RTC_DCHECK_GE(enabled_value, 0);
   RTC_DCHECK_LE(enabled_value, 255);
   char field_trial_buffer[64];
   rtc::SimpleStringBuilder builder(field_trial_buffer);
-  builder << "WebRTC-Audio-AgcMinMicLevelExperiment/Enabled-" << enabled_value
-          << suffix << "/";
+  builder << kMinMicLevelFieldTrial << "/Enabled-" << enabled_value << suffix
+          << "/";
   return builder.str();
 }
 
@@ -282,6 +292,10 @@ class AgcManagerDirectTest : public ::testing::Test {
   std::vector<float*> audio;
   std::vector<float> audio_data;
 };
+
+// TODO(crbug.com/1275566): Switch to parametric test and run all the
+// AgcManagerDirectTest tests enabling and disabling
+// "WebRTC-Audio-2ndAgcMinMicLevelExperiment".
 
 TEST_F(AgcManagerDirectTest, StartupMinVolumeConfigurationIsRespected) {
   FirstProcess();
@@ -876,7 +890,7 @@ TEST(AgcManagerDirectStandaloneTest, DisableDigitalDisablesDigital) {
   manager->SetupDigitalGainControl(&gctrl);
 }
 
-TEST(AgcManagerDirectStandaloneTest, AgcMinMicLevelExperiment) {
+TEST(AgcManagerDirectStandaloneTest, AgcMinMicLevelExperimentDefault) {
   std::unique_ptr<AgcManagerDirect> manager =
       CreateAgcManagerDirect(kInitialVolume, kClippedLevelStep,
                              kClippedRatioThreshold, kClippedWaitFrames);
@@ -887,8 +901,7 @@ TEST(AgcManagerDirectStandaloneTest, AgcMinMicLevelExperiment) {
 TEST(AgcManagerDirectStandaloneTest, AgcMinMicLevelExperimentDisabled) {
   for (const std::string& field_trial_suffix : {"", "_20220210"}) {
     test::ScopedFieldTrials field_trial(
-        "WebRTC-Audio-AgcMinMicLevelExperiment/Disabled" + field_trial_suffix +
-        "/");
+        GetAgcMinMicLevelExperimentFieldTrial("Disabled" + field_trial_suffix));
     std::unique_ptr<AgcManagerDirect> manager =
         CreateAgcManagerDirect(kInitialVolume, kClippedLevelStep,
                                kClippedRatioThreshold, kClippedWaitFrames);
@@ -901,7 +914,7 @@ TEST(AgcManagerDirectStandaloneTest, AgcMinMicLevelExperimentDisabled) {
 // ignored.
 TEST(AgcManagerDirectStandaloneTest, AgcMinMicLevelExperimentOutOfRangeAbove) {
   test::ScopedFieldTrials field_trial(
-      "WebRTC-Audio-AgcMinMicLevelExperiment/Enabled-256/");
+      GetAgcMinMicLevelExperimentFieldTrial("Enabled-256"));
   std::unique_ptr<AgcManagerDirect> manager =
       CreateAgcManagerDirect(kInitialVolume, kClippedLevelStep,
                              kClippedRatioThreshold, kClippedWaitFrames);
@@ -913,7 +926,7 @@ TEST(AgcManagerDirectStandaloneTest, AgcMinMicLevelExperimentOutOfRangeAbove) {
 // ignored.
 TEST(AgcManagerDirectStandaloneTest, AgcMinMicLevelExperimentOutOfRangeBelow) {
   test::ScopedFieldTrials field_trial(
-      "WebRTC-Audio-AgcMinMicLevelExperiment/Enabled--1/");
+      GetAgcMinMicLevelExperimentFieldTrial("Enabled--1"));
   std::unique_ptr<AgcManagerDirect> manager =
       CreateAgcManagerDirect(kInitialVolume, kClippedLevelStep,
                              kClippedRatioThreshold, kClippedWaitFrames);
@@ -928,8 +941,9 @@ TEST(AgcManagerDirectStandaloneTest, AgcMinMicLevelExperimentEnabled50) {
   constexpr int kMinMicLevelOverride = 50;
   for (const std::string& field_trial_suffix : {"", "_20220210"}) {
     SCOPED_TRACE(field_trial_suffix);
-    test::ScopedFieldTrials field_trial(GetAgcMinMicLevelExperimentFieldTrial(
-        kMinMicLevelOverride, field_trial_suffix));
+    test::ScopedFieldTrials field_trial(
+        GetAgcMinMicLevelExperimentFieldTrialEnabled(kMinMicLevelOverride,
+                                                     field_trial_suffix));
     std::unique_ptr<AgcManagerDirect> manager =
         CreateAgcManagerDirect(kInitialVolume, kClippedLevelStep,
                                kClippedRatioThreshold, kClippedWaitFrames);
@@ -959,7 +973,7 @@ TEST(AgcManagerDirectStandaloneTest,
   std::unique_ptr<AgcManagerDirect> manager_with_override;
   {
     test::ScopedFieldTrials field_trial(
-        GetAgcMinMicLevelExperimentFieldTrial(kMinMicLevelOverride));
+        GetAgcMinMicLevelExperimentFieldTrialEnabled(kMinMicLevelOverride));
     manager_with_override = factory();
   }
 
@@ -1016,7 +1030,7 @@ TEST(AgcManagerDirectStandaloneTest,
         kDefaultAnalogConfig.clipped_level_min >= kMinMicLevelOverride,
         "Use a lower override value.");
     test::ScopedFieldTrials field_trial(
-        GetAgcMinMicLevelExperimentFieldTrial(kMinMicLevelOverride));
+        GetAgcMinMicLevelExperimentFieldTrialEnabled(kMinMicLevelOverride));
     manager_with_override = factory();
   }
 
