@@ -3,15 +3,6 @@
 
 "use strict";
 
-Object.defineProperty(this, "NetworkHelper", {
-  get() {
-    return require("resource://devtools/shared/webconsole/network-helper.js");
-  },
-  configurable: true,
-  writeable: false,
-  enumerable: true,
-});
-
 function run_test() {
   test_isTextMimeType();
   test_parseCookieHeader();

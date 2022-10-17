@@ -11,11 +11,12 @@ loader.lazyRequireGetter(
   true
 );
 
-loader.lazyRequireGetter(
-  this,
-  "NetworkUtils",
-  "resource://devtools/server/actors/network-monitor/utils/network-utils.js"
-);
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  NetworkUtils:
+    "resource://devtools/server/actors/network-monitor/utils/NetworkUtils.sys.mjs",
+});
 
 /**
  * Handles network events from the content process
@@ -72,12 +73,12 @@ class NetworkEventContentWatcher {
     // Ignore preload requests to avoid duplicity request entries in
     // the Network panel. If a preload fails (for whatever reason)
     // then the platform kicks off another 'real' request.
-    if (NetworkUtils.isPreloadRequest(channel)) {
+    if (lazy.NetworkUtils.isPreloadRequest(channel)) {
       return;
     }
 
     if (
-      !NetworkUtils.matchRequest(channel, {
+      !lazy.NetworkUtils.matchRequest(channel, {
         targetActor: this.targetActor,
       })
     ) {
@@ -104,7 +105,7 @@ class NetworkEventContentWatcher {
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
     if (
-      !NetworkUtils.matchRequest(channel, {
+      !lazy.NetworkUtils.matchRequest(channel, {
         targetActor: this.targetActor,
       })
     ) {
@@ -137,7 +138,10 @@ class NetworkEventContentWatcher {
     channel,
     { networkEventOptions, resourceOverrides, onNetworkEventUpdate }
   ) {
-    const event = NetworkUtils.createNetworkEvent(channel, networkEventOptions);
+    const event = lazy.NetworkUtils.createNetworkEvent(
+      channel,
+      networkEventOptions
+    );
 
     const actor = new NetworkEventActor(
       this.conn,
@@ -170,7 +174,7 @@ class NetworkEventContentWatcher {
     }
 
     this.onAvailable([resource]);
-    NetworkUtils.fetchRequestHeadersAndCookies(channel, actor, {});
+    lazy.NetworkUtils.fetchRequestHeadersAndCookies(channel, actor, {});
   }
 
   /*

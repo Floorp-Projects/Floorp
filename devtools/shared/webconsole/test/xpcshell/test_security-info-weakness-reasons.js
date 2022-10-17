@@ -5,15 +5,6 @@
 // Tests that NetworkHelper.getReasonsForWeakness returns correct reasons for
 // weak requests.
 
-Object.defineProperty(this, "NetworkHelper", {
-  get() {
-    return require("resource://devtools/shared/webconsole/network-helper.js");
-  },
-  configurable: true,
-  writeable: false,
-  enumerable: true,
-});
-
 const wpl = Ci.nsIWebProgressListener;
 const TEST_CASES = [
   {

@@ -15,11 +15,12 @@ loader.lazyRequireGetter(
   true
 );
 
-loader.lazyRequireGetter(
-  this,
-  "NetworkUtils",
-  "resource://devtools/server/actors/network-monitor/utils/network-utils.js"
-);
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  NetworkUtils:
+    "resource://devtools/server/actors/network-monitor/utils/NetworkUtils.sys.mjs",
+});
 
 class NetworkEventStackTracesWatcher {
   /**
@@ -110,7 +111,7 @@ class NetworkEventStackTracesWatcher {
     }
 
     if (
-      !NetworkUtils.matchRequest(channel, {
+      !lazy.NetworkUtils.matchRequest(channel, {
         targetActor: this.targetActor,
       })
     ) {

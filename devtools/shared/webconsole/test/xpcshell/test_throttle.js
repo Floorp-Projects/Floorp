@@ -5,9 +5,9 @@
 
 /* eslint-disable mozilla/use-chromeutils-generateqi */
 
-const {
-  NetworkThrottleManager,
-} = require("resource://devtools/shared/webconsole/throttle.js");
+const { NetworkThrottleManager } = ChromeUtils.importESModule(
+  "resource://devtools/shared/webconsole/Throttle.sys.mjs"
+);
 const nsIScriptableInputStream = Ci.nsIScriptableInputStream;
 
 function TestStreamListener() {

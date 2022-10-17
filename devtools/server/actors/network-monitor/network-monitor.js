@@ -12,12 +12,13 @@ const {
   networkMonitorSpec,
 } = require("resource://devtools/shared/specs/network-monitor.js");
 
-loader.lazyRequireGetter(
-  this,
-  "NetworkObserver",
-  "resource://devtools/server/actors/network-monitor/network-observer.js",
-  true
-);
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  NetworkObserver:
+    "resource://devtools/server/actors/network-monitor/NetworkObserver.sys.mjs",
+});
+
 loader.lazyRequireGetter(
   this,
   "NetworkEventActor",
@@ -59,7 +60,7 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
 
     // Immediately start watching for new request according to `filters`.
     // NetworkMonitor will call `onNetworkEvent` method.
-    this.observer = new NetworkObserver(filters, this);
+    this.observer = new lazy.NetworkObserver(filters, this);
     this.observer.init();
 
     this.stackTraces = new Set();

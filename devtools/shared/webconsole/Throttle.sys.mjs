@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const ArrayBufferInputStream = Components.Constructor(
   "@mozilla.org/io/arraybuffer-input-stream;1",
   "nsIArrayBufferInputStream"
@@ -14,14 +12,20 @@ const BinaryInputStream = Components.Constructor(
   "setInputStream"
 );
 
-loader.lazyServiceGetter(
-  this,
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+const lazy = {};
+
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
   "gActivityDistributor",
   "@mozilla.org/network/http-activity-distributor;1",
   "nsIHttpActivityDistributor"
 );
 
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  setTimeout: "resource://gre/modules/Timer.jsm",
+});
 
 /**
  * Construct a new nsIStreamListener that buffers data and provides a
@@ -188,7 +192,7 @@ NetworkThrottleListener.prototype = {
 
     if (
       activitySubtype ===
-      gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE
+      lazy.gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE
     ) {
       this.totalSize = extraSizeData;
     }
@@ -215,13 +219,19 @@ NetworkThrottleListener.prototype = {
    */
   maybeEmitEvents() {
     if (this.responseStarted) {
-      this.maybeEmit(gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_START);
-      this.maybeEmit(gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER);
+      this.maybeEmit(lazy.gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_START);
+      this.maybeEmit(
+        lazy.gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER
+      );
     }
 
     if (this.totalSize !== undefined && this.offset >= this.totalSize) {
-      this.maybeEmit(gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE);
-      this.maybeEmit(gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE);
+      this.maybeEmit(
+        lazy.gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE
+      );
+      this.maybeEmit(
+        lazy.gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
+      );
     }
   },
 
@@ -313,7 +323,7 @@ NetworkThrottleQueue.prototype = {
     this.pendingRequests.add(throttleListener);
     const delay = this.random(this.latencyMean, this.latencyMax);
     if (delay > 0) {
-      setTimeout(() => this.allowDataFrom(throttleListener), delay);
+      lazy.setTimeout(() => this.allowDataFrom(throttleListener), delay);
     } else {
       this.allowDataFrom(throttleListener);
     }
@@ -381,7 +391,7 @@ NetworkThrottleQueue.prototype = {
     // one second after the oldest previous read.
     if (this.downloadQueue.length) {
       const when = this.previousReads[0].when + 1000;
-      setTimeout(this.pump.bind(this), when - now);
+      lazy.setTimeout(this.pump.bind(this), when - now);
     }
 
     this.pumping = false;
@@ -404,36 +414,35 @@ NetworkThrottleQueue.prototype = {
  * downloadBPSMax are <= 0.  Upload throttling will not be done if
  * uploadBPSMean and uploadBPSMax are <= 0.
  */
-function NetworkThrottleManager({
-  latencyMean,
-  latencyMax,
-  downloadBPSMean,
-  downloadBPSMax,
-  uploadBPSMean,
-  uploadBPSMax,
-}) {
-  if (downloadBPSMax <= 0 && downloadBPSMean <= 0) {
-    this.downloadQueue = null;
-  } else {
-    this.downloadQueue = new NetworkThrottleQueue(
-      downloadBPSMean,
-      downloadBPSMax,
-      latencyMean,
-      latencyMax
-    );
+export class NetworkThrottleManager {
+  constructor({
+    latencyMean,
+    latencyMax,
+    downloadBPSMean,
+    downloadBPSMax,
+    uploadBPSMean,
+    uploadBPSMax,
+  }) {
+    if (downloadBPSMax <= 0 && downloadBPSMean <= 0) {
+      this.downloadQueue = null;
+    } else {
+      this.downloadQueue = new NetworkThrottleQueue(
+        downloadBPSMean,
+        downloadBPSMax,
+        latencyMean,
+        latencyMax
+      );
+    }
+    if (uploadBPSMax <= 0 && uploadBPSMean <= 0) {
+      this.uploadQueue = null;
+    } else {
+      this.uploadQueue = Cc[
+        "@mozilla.org/network/throttlequeue;1"
+      ].createInstance(Ci.nsIInputChannelThrottleQueue);
+      this.uploadQueue.init(uploadBPSMean, uploadBPSMax);
+    }
   }
-  if (uploadBPSMax <= 0 && uploadBPSMean <= 0) {
-    this.uploadQueue = null;
-  } else {
-    this.uploadQueue = Cc[
-      "@mozilla.org/network/throttlequeue;1"
-    ].createInstance(Ci.nsIInputChannelThrottleQueue);
-    this.uploadQueue.init(uploadBPSMean, uploadBPSMax);
-  }
-}
-exports.NetworkThrottleManager = NetworkThrottleManager;
 
-NetworkThrottleManager.prototype = {
   /**
    * Create a new NetworkThrottleListener for a given channel and
    * install it using |setNewListener|.
@@ -450,7 +459,7 @@ NetworkThrottleManager.prototype = {
       return listener;
     }
     return null;
-  },
+  }
 
   /**
    * Throttle uploads taking place on the given channel.
@@ -462,5 +471,5 @@ NetworkThrottleManager.prototype = {
       channel = channel.QueryInterface(Ci.nsIThrottledInputChannel);
       channel.throttleQueue = this.uploadQueue;
     }
-  },
-};
+  }
+}

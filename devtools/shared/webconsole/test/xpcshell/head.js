@@ -8,3 +8,7 @@
 var { require } = ChromeUtils.importESModule(
   "resource://devtools/shared/loader/Loader.sys.mjs"
 );
+
+ChromeUtils.defineESModuleGetters(this, {
+  NetworkHelper: "resource://devtools/shared/webconsole/NetworkHelper.sys.mjs",
+});

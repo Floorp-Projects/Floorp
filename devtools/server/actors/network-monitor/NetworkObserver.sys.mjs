@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * NetworkObserver is the main class in DevTools to observe network requests
  * out of many events fired by the platform code.
@@ -12,45 +10,25 @@
 // Enable logging all platform events this module listen to
 const DEBUG_PLATFORM_EVENTS = false;
 
-loader.lazyRequireGetter(
-  this,
-  "ChannelMap",
-  "resource://devtools/server/actors/network-monitor/utils/channel-map.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "NetworkUtils",
-  "resource://devtools/server/actors/network-monitor/utils/network-utils.js"
-);
-loader.lazyRequireGetter(
-  this,
-  "NetworkHelper",
-  "resource://devtools/shared/webconsole/network-helper.js"
-);
-loader.lazyRequireGetter(
-  this,
-  "DevToolsUtils",
-  "resource://devtools/shared/DevToolsUtils.js"
-);
-loader.lazyRequireGetter(
-  this,
-  "NetworkThrottleManager",
-  "resource://devtools/shared/webconsole/throttle.js",
-  true
-);
-loader.lazyServiceGetter(
-  this,
-  "gActivityDistributor",
-  "@mozilla.org/network/http-activity-distributor;1",
-  "nsIHttpActivityDistributor"
-);
-loader.lazyRequireGetter(
-  this,
-  "NetworkResponseListener",
-  "resource://devtools/server/actors/network-monitor/network-response-listener.js",
-  true
-);
+const lazy = {};
+
+import { DevToolsInfaillibleUtils } from "resource://devtools/shared/DevToolsInfaillibleUtils.sys.mjs";
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  ChannelMap:
+    "resource://devtools/server/actors/network-monitor/utils/ChannelMap.sys.mjs",
+  NetworkHelper: "resource://devtools/shared/webconsole/NetworkHelper.sys.mjs",
+  NetworkResponseListener:
+    "resource://devtools/server/actors/network-monitor/NetworkResponseListener.sys.mjs",
+  NetworkThrottleManager:
+    "resource://devtools/shared/webconsole/Throttle.sys.mjs",
+  NetworkUtils:
+    "resource://devtools/server/actors/network-monitor/utils/NetworkUtils.sys.mjs",
+});
+
+const gActivityDistributor = Cc[
+  "@mozilla.org/network/http-activity-distributor;1"
+].getService(Ci.nsIHttpActivityDistributor);
 
 function logPlatformEvent(eventName, channel, message = "") {
   if (!DEBUG_PLATFORM_EVENTS) {
@@ -94,45 +72,43 @@ const HTTP_TEMPORARY_REDIRECT = 307;
  *          onNetworkEvent() must return an object which holds several add*()
  *          methods which are used to add further network request/response information.
  *        - shouldIgnoreChannel(channel) [optional]
- *          In additional to `NetworkUtils.matchRequest`, allow to ignore even more
+ *          In additional to `lazy.NetworkUtils.matchRequest`, allow to ignore even more
  *          requests.
  */
-function NetworkObserver(filters, owner) {
-  this.filters = filters;
-  this.owner = owner;
+export class NetworkObserver {
+  constructor(filters, owner) {
+    this.filters = filters;
+    this.owner = owner;
 
-  this.openRequests = new ChannelMap();
-  this.openResponses = new ChannelMap();
+    this.openRequests = new lazy.ChannelMap();
+    this.openResponses = new lazy.ChannelMap();
 
-  this.blockedURLs = [];
+    this.blockedURLs = [];
 
-  this._httpResponseExaminer = DevToolsUtils.makeInfallible(
-    this._httpResponseExaminer
-  ).bind(this);
-  this._httpModifyExaminer = DevToolsUtils.makeInfallible(
-    this._httpModifyExaminer
-  ).bind(this);
-  this._httpFailedOpening = DevToolsUtils.makeInfallible(
-    this._httpFailedOpening
-  ).bind(this);
-  this._httpStopRequest = DevToolsUtils.makeInfallible(
-    this._httpStopRequest
-  ).bind(this);
-  this._serviceWorkerRequest = this._serviceWorkerRequest.bind(this);
+    this._httpResponseExaminer = DevToolsInfaillibleUtils.makeInfallible(
+      this._httpResponseExaminer
+    ).bind(this);
+    this._httpModifyExaminer = DevToolsInfaillibleUtils.makeInfallible(
+      this._httpModifyExaminer
+    ).bind(this);
+    this._httpFailedOpening = DevToolsInfaillibleUtils.makeInfallible(
+      this._httpFailedOpening
+    ).bind(this);
+    this._httpStopRequest = DevToolsInfaillibleUtils.makeInfallible(
+      this._httpStopRequest
+    ).bind(this);
+    this._serviceWorkerRequest = this._serviceWorkerRequest.bind(this);
 
-  this._throttleData = null;
-  this._throttler = null;
-  // This is ultimately used by NetworkHelper.parseSecurityInfo to avoid
-  // repeatedly decoding already-seen certificates.
-  this._decodedCertificateCache = new Map();
-}
+    this._throttleData = null;
+    this._throttler = null;
+    // This is ultimately used by NetworkHelper.parseSecurityInfo to avoid
+    // repeatedly decoding already-seen certificates.
+    this._decodedCertificateCache = new Map();
+  }
 
-exports.NetworkObserver = NetworkObserver;
+  filters = null;
 
-NetworkObserver.prototype = {
-  filters: null,
-
-  httpTransactionCodes: {
+  httpTransactionCodes = {
     0x5001: "REQUEST_HEADER",
     0x5002: "REQUEST_BODY_SENT",
     0x5003: "RESPONSE_START",
@@ -149,36 +125,36 @@ NetworkObserver.prototype = {
     0x804b0006: "STATUS_RECEIVING_FROM",
     0x804b000c: "STATUS_TLS_STARTING",
     0x804b000d: "STATUS_TLS_ENDING",
-  },
+  };
 
-  httpDownloadActivities: [
+  httpDownloadActivities = [
     gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_START,
     gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER,
     gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
     gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE,
-  ],
+  ];
 
   // Network response bodies are piped through a buffer of the given size (in
   // bytes).
-  responsePipeSegmentSize: null,
+  responsePipeSegmentSize = null;
 
-  owner: null,
+  owner = null;
 
   /**
    * Whether to save the bodies of network requests and responses.
    * @type boolean
    */
-  saveRequestAndResponseBodies: true,
+  saveRequestAndResponseBodies = true;
 
   /**
    * Object that holds the HTTP activity objects for ongoing requests.
    */
-  openRequests: null,
+  openRequests = null;
 
   /**
    * Object that holds response headers coming from this._httpResponseExaminer.
    */
-  openResponses: null,
+  openResponses = null;
 
   /**
    * The network monitor initializer.
@@ -216,24 +192,24 @@ NetworkObserver.prototype = {
       this._serviceWorkerRequest,
       "service-worker-synthesized-response"
     );
-  },
+  }
 
   get throttleData() {
     return this._throttleData;
-  },
+  }
 
   set throttleData(value) {
     this._throttleData = value;
     // Clear out any existing throttlers
     this._throttler = null;
-  },
+  }
 
   _getThrottler() {
     if (this.throttleData !== null && this._throttler === null) {
-      this._throttler = new NetworkThrottleManager(this.throttleData);
+      this._throttler = new lazy.NetworkThrottleManager(this.throttleData);
     }
     return this._throttler;
-  },
+  }
 
   /**
    * Given a network channel, should this observer ignore this request
@@ -251,10 +227,10 @@ NetworkObserver.prototype = {
     ) {
       return true;
     }
-    return !NetworkUtils.matchRequest(channel, this.filters);
-  },
+    return !lazy.NetworkUtils.matchRequest(channel, this.filters);
+  }
 
-  _decodedCertificateCache: null,
+  _decodedCertificateCache = null;
 
   _serviceWorkerRequest(subject, topic, data) {
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
@@ -269,7 +245,7 @@ NetworkObserver.prototype = {
 
     // Service workers never fire http-on-examine-cached-response, so fake one.
     this._httpResponseExaminer(channel, "http-on-examine-cached-response");
-  },
+  }
 
   /**
    * Observes for http-on-failed-opening-request notification to catch any
@@ -295,13 +271,13 @@ NetworkObserver.prototype = {
     // Ignore preload requests to avoid duplicity request entries in
     // the Network panel. If a preload fails (for whatever reason)
     // then the platform kicks off another 'real' request.
-    if (NetworkUtils.isPreloadRequest(channel)) {
+    if (lazy.NetworkUtils.isPreloadRequest(channel)) {
       return;
     }
 
     const blockedCode = channel.loadInfo.requestBlockingReason;
     this._httpResponseExaminer(subject, topic, blockedCode);
-  },
+  }
 
   _httpStopRequest(subject, topic) {
     if (
@@ -366,7 +342,7 @@ NetworkObserver.prototype = {
         });
       }
     }
-  },
+  }
 
   /**
    * Observe notifications for the http-on-examine-response topic, coming from
@@ -437,7 +413,7 @@ NetworkObserver.prototype = {
 
       if (setCookieHeaders.length) {
         response.cookies = setCookieHeaders.reduce((result, header) => {
-          const cookies = NetworkHelper.parseSetCookieHeader(header);
+          const cookies = lazy.NetworkHelper.parseSetCookieHeader(header);
           return result.concat(cookies);
         }, []);
       }
@@ -513,7 +489,7 @@ NetworkObserver.prototype = {
     } else if (topic === "http-on-failed-opening-request") {
       this._createNetworkEvent(channel, { blockedReason });
     }
-  },
+  }
 
   /**
    * Observe notifications for the http-on-modify-request topic, coming from
@@ -537,7 +513,7 @@ NetworkObserver.prototype = {
       this._onRequestBodySent(httpActivity);
       throttler.manageUpload(channel);
     }
-  },
+  }
 
   /**
    * A helper function for observeActivity.  This does whatever work
@@ -582,7 +558,7 @@ NetworkObserver.prototype = {
       default:
         break;
     }
-  },
+  }
 
   getActivityTypeString(activityType, activitySubtype) {
     if (
@@ -603,7 +579,7 @@ NetworkObserver.prototype = {
       }
     }
     return "unexpected-activity-types:" + activityType + ":" + activitySubtype;
-  },
+  }
 
   /**
    * Begin observing HTTP traffic that originates inside the current tab.
@@ -617,7 +593,7 @@ NetworkObserver.prototype = {
    * @param number extraSizeData
    * @param string extraStringData
    */
-  observeActivity: DevToolsUtils.makeInfallible(function(
+  observeActivity = DevToolsInfaillibleUtils.makeInfallible(function(
     channel,
     activityType,
     activitySubtype,
@@ -693,7 +669,7 @@ NetworkObserver.prototype = {
         extraStringData
       );
     }
-  }),
+  });
 
   /**
    * Craft the "event" object passed to the Watcher class in order
@@ -726,7 +702,7 @@ NetworkObserver.prototype = {
       };
     }
 
-    const event = NetworkUtils.createNetworkEvent(channel, {
+    const event = lazy.NetworkUtils.createNetworkEvent(channel, {
       timestamp,
       fromCache,
       fromServiceWorker,
@@ -749,11 +725,15 @@ NetworkObserver.prototype = {
       this._setupResponseListener(httpActivity, fromCache);
     }
 
-    NetworkUtils.fetchRequestHeadersAndCookies(channel, httpActivity.owner, {
-      extraStringData,
-    });
+    lazy.NetworkUtils.fetchRequestHeadersAndCookies(
+      channel,
+      httpActivity.owner,
+      {
+        extraStringData,
+      }
+    );
     return httpActivity;
-  },
+  }
 
   /**
    * Handler for ACTIVITY_SUBTYPE_REQUEST_HEADER. When a request starts the
@@ -773,7 +753,7 @@ NetworkObserver.prototype = {
     }
 
     this._createNetworkEvent(channel, { timestamp, extraStringData });
-  },
+  }
 
   /**
    * Find an HTTP activity object for the channel.
@@ -785,7 +765,7 @@ NetworkObserver.prototype = {
    */
   _findActivityObject(channel) {
     return this.openRequests.getChannelById(channel.channelId);
-  },
+  }
 
   /**
    * Find an existing HTTP activity object, or create a new one. This
@@ -804,7 +784,7 @@ NetworkObserver.prototype = {
   createOrGetActivityObject(channel) {
     let httpActivity = this._findActivityObject(channel);
     if (!httpActivity) {
-      const win = NetworkHelper.getWindowForRequest(channel);
+      const win = lazy.NetworkHelper.getWindowForRequest(channel);
       const charset = win ? win.document.characterSet : null;
 
       httpActivity = {
@@ -831,7 +811,7 @@ NetworkObserver.prototype = {
     }
 
     return httpActivity;
-  },
+  }
 
   /**
    * Block a request based on certain filtering options.
@@ -846,7 +826,7 @@ NetworkObserver.prototype = {
     }
 
     this.blockedURLs.push(filter.url);
-  },
+  }
 
   /**
    * Unblock a request based on certain filtering options.
@@ -861,7 +841,7 @@ NetworkObserver.prototype = {
     }
 
     this.blockedURLs = this.blockedURLs.filter(url => url != filter.url);
-  },
+  }
 
   /**
    * Updates the list of blocked request strings
@@ -870,7 +850,7 @@ NetworkObserver.prototype = {
    */
   setBlockedUrls(urls) {
     this.blockedURLs = urls || [];
-  },
+  }
 
   /**
    * Returns a list of blocked requests
@@ -878,7 +858,7 @@ NetworkObserver.prototype = {
    */
   getBlockedUrls() {
     return this.blockedURLs;
-  },
+  }
 
   /**
    * Setup the network response listener for the given HTTP activity. The
@@ -910,7 +890,7 @@ NetworkObserver.prototype = {
     sink.init(false, false, this.responsePipeSegmentSize, PR_UINT32_MAX, null);
 
     // Add listener for the response body.
-    const newListener = new NetworkResponseListener(
+    const newListener = new lazy.NetworkResponseListener(
       this,
       httpActivity,
       this._decodedCertificateCache
@@ -927,7 +907,7 @@ NetworkObserver.prototype = {
     const originalListener = channel.setNewListener(tee);
 
     tee.init(originalListener, sink.outputStream, newListener);
-  },
+  }
 
   /**
    * Handler for ACTIVITY_SUBTYPE_REQUEST_BODY_SENT. The request body is logged
@@ -944,7 +924,7 @@ NetworkObserver.prototype = {
       return;
     }
 
-    let sentBody = NetworkHelper.readPostTextFromRequest(
+    let sentBody = lazy.NetworkHelper.readPostTextFromRequest(
       httpActivity.channel,
       httpActivity.charset
     );
@@ -957,12 +937,12 @@ NetworkObserver.prototype = {
       // If the request URL is the same as the current page URL, then
       // we can try to get the posted text from the page directly.
       // This check is necessary as otherwise the
-      //   NetworkHelper.readPostTextFromPageViaWebNav()
+      //   lazy.NetworkHelper.readPostTextFromPageViaWebNav()
       // function is called for image requests as well but these
       // are not web pages and as such don't store the posted text
       // in the cache of the webpage.
       const webNav = this.window.docShell.QueryInterface(Ci.nsIWebNavigation);
-      sentBody = NetworkHelper.readPostTextFromPageViaWebNav(
+      sentBody = lazy.NetworkHelper.readPostTextFromPageViaWebNav(
         webNav,
         httpActivity.charset
       );
@@ -971,7 +951,7 @@ NetworkObserver.prototype = {
     if (sentBody !== null) {
       httpActivity.sentBody = sentBody;
     }
-  },
+  }
 
   /**
    * Handler for ACTIVITY_SUBTYPE_RESPONSE_HEADER. This method stores
@@ -1035,7 +1015,7 @@ NetworkObserver.prototype = {
     response.discardResponseBody = httpActivity.discardResponseBody;
 
     httpActivity.owner.addResponseStart(response, extraStringData);
-  },
+  }
 
   /**
    * Handler for ACTIVITY_SUBTYPE_TRANSACTION_CLOSE. This method updates the HAR
@@ -1058,7 +1038,7 @@ NetworkObserver.prototype = {
         serverTimings
       );
     }
-  },
+  }
 
   _getBlockedTiming(timings) {
     if (timings.STATUS_RESOLVING && timings.STATUS_CONNECTING_TO) {
@@ -1068,7 +1048,7 @@ NetworkObserver.prototype = {
     }
 
     return -1;
-  },
+  }
 
   _getDnsTiming(timings) {
     if (timings.STATUS_RESOLVING && timings.STATUS_RESOLVED) {
@@ -1076,7 +1056,7 @@ NetworkObserver.prototype = {
     }
 
     return -1;
-  },
+  }
 
   _getConnectTiming(timings) {
     if (timings.STATUS_CONNECTING_TO && timings.STATUS_CONNECTED_TO) {
@@ -1086,7 +1066,7 @@ NetworkObserver.prototype = {
     }
 
     return -1;
-  },
+  }
 
   _getReceiveTiming(timings) {
     if (timings.RESPONSE_START && timings.RESPONSE_COMPLETE) {
@@ -1094,7 +1074,7 @@ NetworkObserver.prototype = {
     }
 
     return -1;
-  },
+  }
 
   _getWaitTiming(timings) {
     if (timings.RESPONSE_START) {
@@ -1105,7 +1085,7 @@ NetworkObserver.prototype = {
     }
 
     return -1;
-  },
+  }
 
   _getSslTiming(timings) {
     if (timings.STATUS_TLS_STARTING && timings.STATUS_TLS_ENDING) {
@@ -1113,7 +1093,7 @@ NetworkObserver.prototype = {
     }
 
     return -1;
-  },
+  }
 
   _getSendTiming(timings) {
     if (timings.STATUS_SENDING_TO) {
@@ -1123,7 +1103,7 @@ NetworkObserver.prototype = {
     }
 
     return -1;
-  },
+  }
 
   _getDataFromTimedChannel(timedChannel) {
     const lookUpArr = [
@@ -1158,7 +1138,7 @@ NetworkObserver.prototype = {
         })(),
       };
     }, {});
-  },
+  }
 
   _getSecureConnectionStartTimeInfo(timings) {
     let secureConnectionStartTime = 0;
@@ -1181,7 +1161,7 @@ NetworkObserver.prototype = {
       secureConnectionStartTime,
       secureConnectionStartTimeRelative,
     };
-  },
+  }
 
   _getStartSendingTimeInfo(timings, connectStartTimeTc) {
     let startSendingTime = 0;
@@ -1202,7 +1182,7 @@ NetworkObserver.prototype = {
       }
     }
     return { startSendingTime, startSendingTimeRelative };
-  },
+  }
 
   /**
    * Update the HTTP activity object to include timing information as in the HAR
@@ -1353,7 +1333,7 @@ NetworkObserver.prototype = {
       timings: harTimings,
       offsets: ot.offsets,
     };
-  },
+  }
 
   _extractServerTimings(channel) {
     if (!channel || !channel.serverTiming) {
@@ -1372,11 +1352,11 @@ NetworkObserver.prototype = {
     }
 
     return serverTimings;
-  },
+  }
 
   _convertTimeToMs(timing) {
     return Math.max(Math.round(timing / 1000), -1);
-  },
+  }
 
   _calculateOffsetAndTotalTime(
     harTimings,
@@ -1426,7 +1406,7 @@ NetworkObserver.prototype = {
       total: totalTime,
       offsets,
     };
-  },
+  }
 
   _sendRequestBody(httpActivity) {
     if (httpActivity.sentBody !== null) {
@@ -1443,7 +1423,7 @@ NetworkObserver.prototype = {
       });
       httpActivity.sentBody = null;
     }
-  },
+  }
 
   /*
    * Clears all open requests and responses
@@ -1451,7 +1431,7 @@ NetworkObserver.prototype = {
   clear() {
     this.openRequests.clear();
     this.openResponses.clear();
-  },
+  }
 
   /**
    * Suspend observer activity. This is called when the Network monitor actor stops
@@ -1493,8 +1473,8 @@ NetworkObserver.prototype = {
     this._throttler = null;
     this._decodedCertificateCache.clear();
     this.clear();
-  },
-};
+  }
+}
 
 function gSequenceId() {
   return gSequenceId.n++;
