@@ -509,6 +509,21 @@ webrtc_fuzzer_test("audio_processing_fuzzer") {
   seed_corpus = "corpora/audio_processing-corpus"
 }
 
+webrtc_fuzzer_test("audio_processing_sample_rate_fuzzer") {
+  sources = [ "audio_processing_sample_rate_fuzzer.cc" ]
+  deps = [
+    "../../api:scoped_refptr",
+    "../../api/audio:audio_frame_api",
+    "../../modules/audio_processing",
+    "../../modules/audio_processing:api",
+    "../../modules/audio_processing:audio_frame_proxies",
+    "../../modules/audio_processing:audioproc_test_utils",
+    "../../rtc_base:checks",
+    "../../rtc_base:macromagic",
+    "../../rtc_base:safe_minmax",
+  ]
+}
+
 webrtc_fuzzer_test("agc_fuzzer") {
   sources = [ "agc_fuzzer.cc" ]
   deps = [
