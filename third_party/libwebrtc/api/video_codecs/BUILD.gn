@@ -34,6 +34,7 @@ rtc_library("video_codecs_api") {
     "h264_profile_level_id.h",
     "sdp_video_format.cc",
     "sdp_video_format.h",
+    "simulcast_stream.cc",
     "simulcast_stream.h",
     "spatial_layer.cc",
     "spatial_layer.h",
