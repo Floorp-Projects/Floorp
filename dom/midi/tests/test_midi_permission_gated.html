@@ -49,11 +49,19 @@
         "permission should also not be set for subdomain"
       );
 
-      // Gated permission should fail without addon installed.
+      // Explicitly set the permission as blocked, and expect the
+      // `requestMIDIAccess` call to be automatically rejected (not having any
+      // permission set would trigger the synthetic addon install provided by
+      // AddonManager and SitePermsAddonProvider).
+      await SpecialPowers.addPermission(
+        "midi-sysex",
+        SpecialPowers.Services.perms.DENY_ACTION,
+        document
+      );
       for (let sysex of [false, true]) {
         try {
           await navigator.requestMIDIAccess({ sysex });
-          ok(false, "MIDI Access Request gate failed");
+          ok(false, "MIDI Access Request gate allowed but expected to be denied");
         } catch (ex) {
           ok(true, "MIDI Access Request denied by default");
         }
