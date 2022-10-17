@@ -61,11 +61,12 @@ int32_t FakeDecoder::Decode(const EncodedImage& input,
   if (decode_delay_ms_ == 0 || !task_queue_) {
     callback_->Decoded(frame);
   } else {
-    task_queue_->PostDelayedHighPrecisionTask(ToQueuedTask([frame, this]() {
-                                                VideoFrame copy = frame;
-                                                callback_->Decoded(copy);
-                                              }),
-                                              decode_delay_ms_);
+    task_queue_->PostDelayedHighPrecisionTask(
+        [frame, this]() {
+          VideoFrame copy = frame;
+          callback_->Decoded(copy);
+        },
+        TimeDelta::Millis(decode_delay_ms_));
   }
 
   return WEBRTC_VIDEO_CODEC_OK;
@@ -74,9 +75,8 @@ int32_t FakeDecoder::Decode(const EncodedImage& input,
 void FakeDecoder::SetDelayedDecoding(int decode_delay_ms) {
   RTC_CHECK(task_queue_factory_);
   if (!task_queue_) {
-    task_queue_ =
-        std::make_unique<rtc::TaskQueue>(task_queue_factory_->CreateTaskQueue(
-            "fake_decoder", TaskQueueFactory::Priority::NORMAL));
+    task_queue_ = task_queue_factory_->CreateTaskQueue(
+        "fake_decoder", TaskQueueFactory::Priority::NORMAL);
   }
   decode_delay_ms_ = decode_delay_ms;
 }

@@ -88,6 +88,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../../api/audio_codecs:builtin_audio_encoder_factory",
       "../../api/rtc_event_log",
       "../../api/rtc_event_log:rtc_event_log_factory",
+      "../../api/task_queue",
       "../../api/test/video:function_video_factory",
       "../../api/transport:network_control",
       "../../api/units:data_rate",
@@ -133,7 +134,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../../rtc_base:rtc_event",
       "../../rtc_base:rtc_numerics",
       "../../rtc_base:rtc_stats_counters",
-      "../../rtc_base:rtc_task_queue",
       "../../rtc_base:safe_minmax",
       "../../rtc_base:socket_address",
       "../../rtc_base:task_queue_for_test",
@@ -150,6 +150,7 @@ if (rtc_include_tests && !build_with_chromium) {
     absl_deps = [
       "//third_party/abseil-cpp/absl/flags:flag",
       "//third_party/abseil-cpp/absl/flags:parse",
+      "//third_party/abseil-cpp/absl/functional:any_invocable",
       "//third_party/abseil-cpp/absl/memory",
       "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",

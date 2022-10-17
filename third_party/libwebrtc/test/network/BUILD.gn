@@ -48,7 +48,6 @@ rtc_library("emulated_network") {
     "../../api:time_controller",
     "../../api/numerics",
     "../../api/task_queue:pending_task_safety_flag",
-    "../../api/task_queue:to_queued_task",
     "../../api/test/network_emulation",
     "../../api/transport:stun_types",
     "../../api/units:data_rate",

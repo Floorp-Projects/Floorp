@@ -559,8 +559,8 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api:scoped_refptr",
       "../api:simulcast_test_fixture_api",
       "../api/task_queue:task_queue_test",
-      "../api/task_queue:to_queued_task",
       "../api/test/video:function_video_factory",
+      "../api/units:time_delta",
       "../api/video:encoded_image",
       "../api/video:video_frame",
       "../api/video_codecs:video_codecs_api",
@@ -874,10 +874,11 @@ rtc_library("run_loop") {
     "run_loop.h",
   ]
   deps = [
-    "../api/task_queue:to_queued_task",
+    "../api/task_queue",
     "../rtc_base:threading",
     "../rtc_base:timeutils",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
 }
 
 rtc_library("test_common") {
@@ -918,7 +919,6 @@ rtc_library("test_common") {
     "../api/rtc_event_log",
     "../api/task_queue",
     "../api/task_queue:default_task_queue_factory",
-    "../api/task_queue:to_queued_task",
     "../api/test/video:function_video_factory",
     "../api/transport:field_trial_based_config",
     "../api/video:builtin_video_bitrate_allocator_factory",

@@ -17,11 +17,12 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/task_queue_for_test.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
 
-void TestActivitiesExecutor::Start(TaskQueueForTest* task_queue) {
+void TestActivitiesExecutor::Start(TaskQueueBase* task_queue) {
   RTC_DCHECK(task_queue);
   task_queue_ = task_queue;
   MutexLock lock(&lock_);
@@ -37,14 +38,12 @@ void TestActivitiesExecutor::Stop() {
     // Already stopped or not started.
     return;
   }
-  task_queue_->SendTask(
-      [this]() {
-        MutexLock lock(&lock_);
-        for (auto& handle : repeating_task_handles_) {
-          handle.Stop();
-        }
-      },
-      RTC_FROM_HERE);
+  SendTask(RTC_FROM_HERE, task_queue_, [this]() {
+    MutexLock lock(&lock_);
+    for (auto& handle : repeating_task_handles_) {
+      handle.Stop();
+    }
+  });
   task_queue_ = nullptr;
 }
 
@@ -83,14 +82,14 @@ void TestActivitiesExecutor::PostActivity(ScheduledActivity activity) {
   if (activity.interval) {
     if (remaining_delay == TimeDelta::Zero()) {
       repeating_task_handles_.push_back(RepeatingTaskHandle::Start(
-          task_queue_->Get(), [activity, start_time, this]() {
+          task_queue_, [activity, start_time, this]() {
             activity.func(Now() - start_time);
             return *activity.interval;
           }));
       return;
     }
     repeating_task_handles_.push_back(RepeatingTaskHandle::DelayedStart(
-        task_queue_->Get(), remaining_delay, [activity, start_time, this]() {
+        task_queue_, remaining_delay, [activity, start_time, this]() {
           activity.func(Now() - start_time);
           return *activity.interval;
         }));
@@ -103,10 +102,9 @@ void TestActivitiesExecutor::PostActivity(ScheduledActivity activity) {
     return;
   }
 
-  task_queue_->PostDelayedTask(ToQueuedTask([activity, start_time, this]() {
-                                 activity.func(Now() - start_time);
-                               }),
-                               remaining_delay.ms());
+  task_queue_->PostDelayedTask(
+      [activity, start_time, this]() { activity.func(Now() - start_time); },
+      remaining_delay);
 }
 
 Timestamp TestActivitiesExecutor::Now() const {

@@ -11,7 +11,6 @@
 #include <memory>
 #include <vector>
 
-#include "api/task_queue/to_queued_task.h"
 #include "api/test/time_controller.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/event.h"
@@ -103,9 +102,9 @@ TEST_P(SimulatedRealTimeControllerConformanceTest, ThreadPostDelayedOrderTest) {
   std::unique_ptr<rtc::Thread> thread = time_controller->CreateThread("thread");
 
   ExecutionOrderKeeper execution_order;
-  thread->PostDelayedTask(ToQueuedTask([&]() { execution_order.Executed(2); }),
-                          /*milliseconds=*/500);
-  thread->PostTask(ToQueuedTask([&]() { execution_order.Executed(1); }));
+  thread->PostDelayedTask([&]() { execution_order.Executed(2); },
+                          TimeDelta::Millis(500));
+  thread->PostTask([&]() { execution_order.Executed(1); });
   time_controller->AdvanceTime(TimeDelta::Millis(600));
   EXPECT_THAT(execution_order.order(), ElementsAreArray({1, 2}));
   // Destroy `thread` before `execution_order` to be sure `execution_order`
@@ -161,11 +160,11 @@ TEST_P(SimulatedRealTimeControllerConformanceTest,
   // posted/invoked.
   ExecutionOrderKeeper execution_order;
   rtc::Event event;
-  task_queue->PostTask(ToQueuedTask([&]() { execution_order.Executed(1); }));
-  task_queue->PostTask(ToQueuedTask([&]() {
+  task_queue->PostTask([&]() { execution_order.Executed(1); });
+  task_queue->PostTask([&]() {
     execution_order.Executed(2);
     event.Set();
-  }));
+  });
   EXPECT_TRUE(event.Wait(/*give_up_after_ms=*/100,
                          /*warn_after_ms=*/10'000));
   time_controller->AdvanceTime(TimeDelta::Millis(100));
