@@ -812,5 +812,55 @@ TEST_F(RRSendQueueTest, WillSendMessagesByPrio) {
   EXPECT_FALSE(buf_.Produce(kNow, 1).has_value());
 }
 
+TEST_F(RRSendQueueTest, WillSendLifecycleExpireWhenExpiredInSendQueue) {
+  std::vector<uint8_t> payload(kOneFragmentPacketSize);
+  buf_.Add(kNow, DcSctpMessage(StreamID(2), kPPID, payload),
+           SendOptions{.lifetime = DurationMs(1000),
+                       .lifecycle_id = LifecycleId(1)});
+
+  EXPECT_CALL(callbacks_, OnLifecycleMessageExpired(LifecycleId(1),
+                                                    /*maybe_delivered=*/false));
+  EXPECT_CALL(callbacks_, OnLifecycleEnd(LifecycleId(1)));
+  EXPECT_FALSE(buf_.Produce(kNow + DurationMs(1001), kOneFragmentPacketSize)
+                   .has_value());
+}
+
+TEST_F(RRSendQueueTest, WillSendLifecycleExpireWhenDiscardingDuringPause) {
+  std::vector<uint8_t> payload(120);
+
+  buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload),
+           SendOptions{.lifecycle_id = LifecycleId(1)});
+  buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload),
+           SendOptions{.lifecycle_id = LifecycleId(2)});
+
+  absl::optional<SendQueue::DataToSend> chunk_one = buf_.Produce(kNow, 50);
+  ASSERT_TRUE(chunk_one.has_value());
+  EXPECT_EQ(chunk_one->data.stream_id, kStreamID);
+  EXPECT_EQ(buf_.total_buffered_amount(), 2 * payload.size() - 50);
+
+  EXPECT_CALL(callbacks_, OnLifecycleMessageExpired(LifecycleId(2),
+                                                    /*maybe_delivered=*/false));
+  EXPECT_CALL(callbacks_, OnLifecycleEnd(LifecycleId(2)));
+  buf_.PrepareResetStream(StreamID(1));
+  EXPECT_EQ(buf_.total_buffered_amount(), payload.size() - 50);
+}
+
+TEST_F(RRSendQueueTest, WillSendLifecycleExpireWhenDiscardingExplicitly) {
+  std::vector<uint8_t> payload(kOneFragmentPacketSize + 20);
+
+  buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload),
+           SendOptions{.lifecycle_id = LifecycleId(1)});
+
+  absl::optional<SendQueue::DataToSend> chunk_one =
+      buf_.Produce(kNow, kOneFragmentPacketSize);
+  ASSERT_TRUE(chunk_one.has_value());
+  EXPECT_FALSE(chunk_one->data.is_end);
+  EXPECT_EQ(chunk_one->data.stream_id, kStreamID);
+  EXPECT_CALL(callbacks_, OnLifecycleMessageExpired(LifecycleId(1),
+                                                    /*maybe_delivered=*/false));
+  EXPECT_CALL(callbacks_, OnLifecycleEnd(LifecycleId(1)));
+  buf_.Discard(IsUnordered(false), chunk_one->data.stream_id,
+               chunk_one->data.message_id);
+}
 }  // namespace
 }  // namespace dcsctp
