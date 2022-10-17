@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'a941a7d059688c085f22c69bf3c1a2c5fc0b44b3',
+  'chromium_revision': '52216a4d5db7fa7f5b8dd0693739605050066ec9',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -37,13 +37,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@20a8ce943b6a72b7c62c68db4f2013f5a9a18d0b',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@15cc36c6db5d34a20844cfd8314fcb82d77ced26',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@24f1a29f4e7196bd0d317fe521acfffb5b84839e',
+    'https://chromium.googlesource.com/chromium/src/testing@1399af12a111249b673f1e8de345af51f121d235',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@85406d6d9cd597cb5f0d6ee2181a8baf076d92e4',
+    'https://chromium.googlesource.com/chromium/src/third_party@9ed06f15cab8e914fbcaf786ae8e111aeb589f81',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -229,7 +229,7 @@ deps = {
   'src/third_party/libyuv':
     'https://chromium.googlesource.com/libyuv/libyuv.git@6900494d90ae095d44405cd4cc3f346971fa69c9',
   'src/third_party/lss': {
-    'url': 'https://chromium.googlesource.com/linux-syscall-support.git@1d387f43f3702818f7fc04d334539a2f05cafccd',
+    'url': 'https://chromium.googlesource.com/linux-syscall-support.git@880985fe92bb3fbeb8cb2bd3a8bbd912dc2843a9',
     'condition': 'checkout_android or checkout_linux',
   },
   'src/third_party/mockito/src': {
@@ -274,7 +274,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@29f31bffb2e483704e80ac8c62594a782f5416e3',
+    'https://chromium.googlesource.com/chromium/src/tools@272dc0e4ed6cef97b374568f0b097a96a5076e99',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -373,7 +373,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'hIxw66nyAM74HK6z6GErDelxqqlhFqYsf6MI0X8BRfsC',
+          'version': '4gPri5A_WLHmRIG0GHdvmd3LeWiNvBj1i5IP7kEXAgsC',
       },
     ],
     'condition': 'checkout_android',
