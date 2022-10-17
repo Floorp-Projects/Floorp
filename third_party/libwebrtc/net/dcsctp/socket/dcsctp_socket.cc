@@ -186,16 +186,12 @@ DcSctpSocket::DcSctpSocket(absl::string_view log_prefix,
                        options.max_retransmissions))),
       packet_sender_(callbacks_,
                      absl::bind_front(&DcSctpSocket::OnSentPacket, this)),
-      send_queue_(
-          log_prefix_,
-          options_.max_send_buffer_size,
-          options_.mtu,
-          options_.default_stream_priority,
-          [this](StreamID stream_id) {
-            callbacks_.OnBufferedAmountLow(stream_id);
-          },
-          options_.total_buffered_amount_low_threshold,
-          [this]() { callbacks_.OnTotalBufferedAmountLow(); }) {}
+      send_queue_(log_prefix_,
+                  &callbacks_,
+                  options_.max_send_buffer_size,
+                  options_.mtu,
+                  options_.default_stream_priority,
+                  options_.total_buffered_amount_low_threshold) {}
 
 std::string DcSctpSocket::log_prefix() const {
   return log_prefix_ + "[" + std::string(ToString(state_)) + "] ";
