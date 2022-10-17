@@ -20,6 +20,7 @@
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
 #include "api/set_remote_description_observer_interface.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/test/frame_generator_interface.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "pc/peer_connection_wrapper.h"
@@ -47,9 +48,7 @@ class TestPeer final : public StatsProvider {
   void SetVideoSubscription(
       PeerConnectionE2EQualityTestFixture::VideoSubscription subscription);
 
-  void GetStats(RTCStatsCollectorCallback* callback) override {
-    pc()->GetStats(callback);
-  }
+  void GetStats(RTCStatsCollectorCallback* callback) override;
 
   PeerConfigurerImpl::VideoSource ReleaseVideoSource(size_t i) {
     RTC_CHECK(wrapper_) << "TestPeer is already closed";
@@ -167,6 +166,11 @@ class TestPeer final : public StatsProvider {
 
   mutable Mutex mutex_;
   ConfigurableParams configurable_params_ RTC_GUARDED_BY(mutex_);
+
+  // Safety flag to protect all tasks posted on the signaling thread to not be
+  // executed after `wrapper_` object is destructed.
+  rtc::scoped_refptr<PendingTaskSafetyFlag> signaling_thread_task_safety_ =
+      nullptr;
 
   // Keeps ownership of worker thread. It has to be destroyed after `wrapper_`.
   std::unique_ptr<rtc::Thread> worker_thread_;
