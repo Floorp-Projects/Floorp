@@ -65,9 +65,6 @@ constexpr double kProbeUncertainty = 0.05;
 constexpr char kBweRapidRecoveryExperiment[] =
     "WebRTC-BweRapidRecoveryExperiment";
 
-// Never probe higher than configured by OnMaxTotalAllocatedBitrate().
-constexpr char kCappedProbingFieldTrialName[] = "WebRTC-BweCappedProbing";
-
 void MaybeLogProbeClusterCreated(RtcEventLog* event_log,
                                  const ProbeClusterConfig& probe) {
   RTC_DCHECK(event_log);
@@ -131,9 +128,6 @@ ProbeController::ProbeController(const FieldTrialsView* key_value_config,
       in_rapid_recovery_experiment_(absl::StartsWith(
           key_value_config->Lookup(kBweRapidRecoveryExperiment),
           "Enabled")),
-      limit_probes_with_allocateable_rate_(!absl::StartsWith(
-          key_value_config->Lookup(kCappedProbingFieldTrialName),
-          "Disabled")),
       event_log_(event_log),
       config_(ProbeControllerConfig(key_value_config)) {
   Reset(0);
@@ -407,8 +401,7 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     bool probe_further) {
   int64_t max_probe_bitrate_bps =
       max_bitrate_bps_ > 0 ? max_bitrate_bps_ : kDefaultMaxProbingBitrateBps;
-  if (limit_probes_with_allocateable_rate_ &&
-      max_total_allocated_bitrate_ > 0) {
+  if (max_total_allocated_bitrate_ > 0) {
     // If a max allocated bitrate has been configured, allow probing up to 2x
     // that rate. This allows some overhead to account for bursty streams,
     // which otherwise would have to ramp up when the overshoot is already in
