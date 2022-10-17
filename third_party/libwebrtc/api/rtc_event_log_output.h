@@ -33,12 +33,12 @@ class RtcEventLogOutput {
   // about how much data was written, if any. The output sink becomes inactive
   // after the first time `false` is returned. Write() may not be called on
   // an inactive output sink.
-  virtual bool Write(const std::string& output) = 0;
-  // TODO(bugs.webrtc.org/13579): Make pure virtual and remove the string ref
-  // once all classes implement the string_view version.
-  virtual bool Write(absl::string_view output) {
-    return Write(std::string(output));
+  virtual bool Write(const std::string& output) {
+    return Write(absl::string_view(output));
   }
+  // TODO(bugs.webrtc.org/13579): Remove the string ref once all classes
+  // implement the string_view version.
+  virtual bool Write(absl::string_view output) = 0;
 
   // Indicates that buffers should be written to disk if applicable.
   virtual void Flush() {}

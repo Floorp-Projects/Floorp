@@ -32,10 +32,6 @@ bool FileLogWriter::IsActive() const {
   return true;
 }
 
-bool FileLogWriter::Write(const std::string& value) {
-  return Write(absl::string_view(value));
-}
-
 bool FileLogWriter::Write(absl::string_view value) {
   // We don't expect the write to fail. If it does, we don't want to risk
   // silently ignoring it.

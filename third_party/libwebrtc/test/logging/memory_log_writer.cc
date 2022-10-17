@@ -23,10 +23,6 @@ class MemoryLogWriter final : public RtcEventLogOutput {
       : target_(target), filename_(filename) {}
   ~MemoryLogWriter() final { target_->insert({filename_, std::move(buffer_)}); }
   bool IsActive() const override { return true; }
-  bool Write(const std::string& value) override {
-    buffer_.append(value);
-    return true;
-  }
   bool Write(absl::string_view value) override {
     buffer_.append(value.data(), value.size());
     return true;
