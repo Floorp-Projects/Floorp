@@ -379,6 +379,9 @@ class PeerConnection : public PeerConnectionInternal,
   void ReportSdpBundleUsage(
       const SessionDescriptionInterface& remote_description) override;
 
+  // Report several UMA metrics on establishing the connection.
+  void ReportFirstConnectUsageMetrics() RTC_RUN_ON(signaling_thread());
+
   // Returns true if the PeerConnection is configured to use Unified Plan
   // semantics for creating offers/answers and setting local/remote
   // descriptions. If this is true the RtpTransceiver API will also be available

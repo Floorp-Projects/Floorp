@@ -1934,65 +1934,68 @@ void PeerConnection::SetConnectionState(
   connection_state_ = new_state;
   Observer()->OnConnectionChange(new_state);
 
+  // The first connection state change to connected happens once per
+  // connection which makes it a good point to report metrics.
   if (new_state == PeerConnectionState::kConnected && !was_ever_connected_) {
     was_ever_connected_ = true;
-
-    // The first connection state change to connected happens once per
-    // connection which makes it a good point to report metrics.
-    // Record bundle-policy from configuration. Done here from
-    // connectionStateChange to limit to actually established connections.
-    BundlePolicyUsage policy = kBundlePolicyUsageMax;
-    switch (configuration_.bundle_policy) {
-      case kBundlePolicyBalanced:
-        policy = kBundlePolicyUsageBalanced;
-        break;
-      case kBundlePolicyMaxBundle:
-        policy = kBundlePolicyUsageMaxBundle;
-        break;
-      case kBundlePolicyMaxCompat:
-        policy = kBundlePolicyUsageMaxCompat;
-        break;
-    }
-    RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.BundlePolicy", policy,
-                              kBundlePolicyUsageMax);
-
-    // Record configured ice candidate pool size depending on the
-    // BUNDLE policy. See
-    // https://w3c.github.io/webrtc-pc/#dom-rtcconfiguration-icecandidatepoolsize
-    // The ICE candidate pool size is an optimization and it may be desirable
-    // to restrict the maximum size of the pre-gathered candidates.
-    switch (configuration_.bundle_policy) {
-      case kBundlePolicyBalanced:
-        RTC_HISTOGRAM_COUNTS_LINEAR(
-            "WebRTC.PeerConnection.CandidatePoolUsage.Balanced",
-            configuration_.ice_candidate_pool_size, 0, 255, 256);
-        break;
-      case kBundlePolicyMaxBundle:
-        RTC_HISTOGRAM_COUNTS_LINEAR(
-            "WebRTC.PeerConnection.CandidatePoolUsage.MaxBundle",
-            configuration_.ice_candidate_pool_size, 0, 255, 256);
-        break;
-      case kBundlePolicyMaxCompat:
-        RTC_HISTOGRAM_COUNTS_LINEAR(
-            "WebRTC.PeerConnection.CandidatePoolUsage.MaxCompat",
-            configuration_.ice_candidate_pool_size, 0, 255, 256);
-        break;
-    }
-
-    // Record whether there was a local or remote provisional answer.
-    ProvisionalAnswerUsage pranswer = kProvisionalAnswerNotUsed;
-    if (local_description()->GetType() == SdpType::kPrAnswer) {
-      pranswer = kProvisionalAnswerLocal;
-    } else if (remote_description()->GetType() == SdpType::kPrAnswer) {
-      pranswer = kProvisionalAnswerRemote;
-    }
-    RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.ProvisionalAnswer",
-                              pranswer, kProvisionalAnswerMax);
-
-    // Record the number of configured ICE servers for connected connections.
-    RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.PeerConnection.IceServers.Connected",
-                                configuration_.servers.size(), 0, 31, 32);
+    ReportFirstConnectUsageMetrics();
   }
+}
+
+void PeerConnection::ReportFirstConnectUsageMetrics() {
+  // Record bundle-policy from configuration. Done here from
+  // connectionStateChange to limit to actually established connections.
+  BundlePolicyUsage policy = kBundlePolicyUsageMax;
+  switch (configuration_.bundle_policy) {
+    case kBundlePolicyBalanced:
+      policy = kBundlePolicyUsageBalanced;
+      break;
+    case kBundlePolicyMaxBundle:
+      policy = kBundlePolicyUsageMaxBundle;
+      break;
+    case kBundlePolicyMaxCompat:
+      policy = kBundlePolicyUsageMaxCompat;
+      break;
+  }
+  RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.BundlePolicy", policy,
+                            kBundlePolicyUsageMax);
+
+  // Record configured ice candidate pool size depending on the
+  // BUNDLE policy. See
+  // https://w3c.github.io/webrtc-pc/#dom-rtcconfiguration-icecandidatepoolsize
+  // The ICE candidate pool size is an optimization and it may be desirable
+  // to restrict the maximum size of the pre-gathered candidates.
+  switch (configuration_.bundle_policy) {
+    case kBundlePolicyBalanced:
+      RTC_HISTOGRAM_COUNTS_LINEAR(
+          "WebRTC.PeerConnection.CandidatePoolUsage.Balanced",
+          configuration_.ice_candidate_pool_size, 0, 255, 256);
+      break;
+    case kBundlePolicyMaxBundle:
+      RTC_HISTOGRAM_COUNTS_LINEAR(
+          "WebRTC.PeerConnection.CandidatePoolUsage.MaxBundle",
+          configuration_.ice_candidate_pool_size, 0, 255, 256);
+      break;
+    case kBundlePolicyMaxCompat:
+      RTC_HISTOGRAM_COUNTS_LINEAR(
+          "WebRTC.PeerConnection.CandidatePoolUsage.MaxCompat",
+          configuration_.ice_candidate_pool_size, 0, 255, 256);
+      break;
+  }
+
+  // Record whether there was a local or remote provisional answer.
+  ProvisionalAnswerUsage pranswer = kProvisionalAnswerNotUsed;
+  if (local_description()->GetType() == SdpType::kPrAnswer) {
+    pranswer = kProvisionalAnswerLocal;
+  } else if (remote_description()->GetType() == SdpType::kPrAnswer) {
+    pranswer = kProvisionalAnswerRemote;
+  }
+  RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.ProvisionalAnswer", pranswer,
+                            kProvisionalAnswerMax);
+
+  // Record the number of configured ICE servers for connected connections.
+  RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.PeerConnection.IceServers.Connected",
+                              configuration_.servers.size(), 0, 31, 32);
 }
 
 void PeerConnection::OnIceGatheringChange(
