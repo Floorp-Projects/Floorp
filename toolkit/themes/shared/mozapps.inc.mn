@@ -27,6 +27,7 @@
 #endif
   skin/classic/mozapps/aboutServiceWorkers.css               (../../shared/aboutServiceWorkers.css)
   skin/classic/mozapps/profileDowngrade.css                  (../../shared/profileDowngrade.css)
+  skin/classic/mozapps/profileSelection.css                  (../../shared/profileSelection.css)
 
 % override chrome://mozapps/skin/extensions/category-languages.svg        chrome://mozapps/skin/extensions/localeGeneric.svg
 % override chrome://mozapps/skin/extensions/category-themes.svg           chrome://mozapps/skin/extensions/themeGeneric.svg
