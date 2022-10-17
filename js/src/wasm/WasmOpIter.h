@@ -162,6 +162,11 @@ enum class OpKind {
   AtomicStore,
   AtomicBinOp,
   AtomicCompareExchange,
+  OldAtomicLoad,
+  OldAtomicStore,
+  OldAtomicBinOp,
+  OldAtomicCompareExchange,
+  OldAtomicExchange,
   MemOrTableCopy,
   DataOrElemDrop,
   MemFill,
@@ -307,8 +312,6 @@ class UnsetLocalsState {
   uint32_t firstNonDefaultLocal_;
 
  public:
-  UnsetLocalsState() : firstNonDefaultLocal_(UINT32_MAX) {}
-
   [[nodiscard]] bool init(const ValTypeVector& locals, size_t numParams);
 
   inline bool isUnset(uint32_t id) const {
@@ -1505,7 +1508,7 @@ inline bool OpIter<Policy>::checkBrTableEntryAndPush(
 
   *type = block->branchTargetType();
 
-  if (prevBranchType.valid()) {
+  if (prevBranchType != ResultType()) {
     if (prevBranchType.length() != type->length()) {
       return fail("br_table targets must all have the same arity");
     }
@@ -1557,7 +1560,7 @@ inline bool OpIter<Policy>::readBrTable(Uint32Vector* depths,
     return false;
   }
 
-  MOZ_ASSERT(defaultBranchType->valid());
+  MOZ_ASSERT(*defaultBranchType != ResultType());
 
   afterUnconditionalBranch();
   return true;
@@ -2381,7 +2384,7 @@ inline bool OpIter<Policy>::popCallArgs(const ValTypeVector& expectedTypes,
     return false;
   }
 
-  for (int32_t i = int32_t(expectedTypes.length()) - 1; i >= 0; i--) {
+  for (int32_t i = expectedTypes.length() - 1; i >= 0; i--) {
     if (!popWithType(expectedTypes[i], &(*values)[i])) {
       return false;
     }
@@ -2849,7 +2852,12 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
   }
 
   ValType ptrType = isMem ? ToValType(env_.memory->indexType()) : ValType::I32;
-  return popWithType(ptrType, dst);
+
+  if (!popWithType(ptrType, dst)) {
+    return false;
+  }
+
+  return true;
 }
 
 template <typename Policy>

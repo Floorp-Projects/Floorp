@@ -371,7 +371,7 @@ struct MetadataCacheablePod {
 
 WASM_DECLARE_CACHEABLE_POD(MetadataCacheablePod)
 
-using ModuleHash = uint8_t[8];
+typedef uint8_t ModuleHash[8];
 
 struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   TypeDefVector types;

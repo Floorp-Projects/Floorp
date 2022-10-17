@@ -1048,14 +1048,14 @@ static JSObject* TableTypeToObject(JSContext* cx, RefType type,
 
   if (maximum.isSome()) {
     if (!props.append(IdValuePair(NameToId(cx->names().maximum),
-                                  NumberValue(maximum.value())))) {
+                                  Int32Value(maximum.value())))) {
       ReportOutOfMemory(cx);
       return nullptr;
     }
   }
 
   if (!props.append(
-          IdValuePair(NameToId(cx->names().minimum), NumberValue(initial)))) {
+          IdValuePair(NameToId(cx->names().minimum), Int32Value(initial)))) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
@@ -1863,8 +1863,7 @@ void WasmInstanceObject::trace(JSTracer* trc, JSObject* obj) {
 
 /* static */
 WasmInstanceObject* WasmInstanceObject::create(
-    JSContext* cx, const SharedCode& code,
-    const DataSegmentVector& dataSegments,
+    JSContext* cx, SharedCode code, const DataSegmentVector& dataSegments,
     const ElemSegmentVector& elemSegments, uint32_t globalDataLength,
     Handle<WasmMemoryObject*> memory, SharedTableVector&& tables,
     const JSFunctionVector& funcImports, const GlobalDescVector& globals,
@@ -2655,7 +2654,7 @@ bool WasmMemoryObject::growImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  args.rval().setInt32(int32_t(ret));
+  args.rval().setInt32(ret);
   return true;
 }
 
@@ -3259,7 +3258,7 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
   }
 #endif
 
-  args.rval().setInt32(int32_t(oldLength));
+  args.rval().setInt32(oldLength);
   return true;
 }
 
@@ -4187,7 +4186,7 @@ JSFunction* WasmFunctionCreate(JSContext* cx, HandleFunction func,
 
   ModuleEnvironment moduleEnv(compileArgs->features);
   CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Optimized,
-                                  DebugEnabled::False);
+                                  OptimizedBackend::Ion, DebugEnabled::False);
   compilerEnv.computeParameters();
 
   // Initialize the type section
@@ -5391,7 +5390,10 @@ static bool WebAssemblyDefineConstructor(JSContext* cx,
   }
   id.set(AtomToId(className));
 
-  return DefineDataProperty(cx, wasm, id, ctorValue, 0);
+  if (!DefineDataProperty(cx, wasm, id, ctorValue, 0)) {
+    return false;
+  }
+  return true;
 }
 
 static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,

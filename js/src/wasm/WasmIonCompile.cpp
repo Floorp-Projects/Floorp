@@ -1012,7 +1012,7 @@ class FunctionCompiler {
 
     MOZ_ASSERT(src->type() == MIRType::Simd128);
     auto* ins =
-        MWasmReduceSimd128::New(alloc(), src, op, outType.toMIRType(), imm);
+        MWasmReduceSimd128::New(alloc(), src, op, ToMIRType(outType), imm);
     curBlock_->add(ins);
     return ins;
   }
@@ -1360,8 +1360,8 @@ class FunctionCompiler {
 #ifndef JS_64BIT
       MOZ_ASSERT(base->type() == MIRType::Int32);
 #endif
-      load = MWasmLoad::New(alloc(), memoryBase, base, *access,
-                            result.toMIRType());
+      load =
+          MWasmLoad::New(alloc(), memoryBase, base, *access, ToMIRType(result));
     }
     if (!load) {
       return nullptr;
@@ -1809,7 +1809,10 @@ class FunctionCompiler {
       return false;
     }
     finishCall(&args);
-    return builtinInstanceMethodCall(callee, lineOrBytecode, args);
+    if (!builtinInstanceMethodCall(callee, lineOrBytecode, args)) {
+      return false;
+    }
+    return true;
   }
 
   /***************************************************************** Calls */
@@ -1896,7 +1899,7 @@ class FunctionCompiler {
     if (inDeadCode()) {
       return true;
     }
-    return passArgWorker(argDef, type.toMIRType(), call);
+    return passArgWorker(argDef, ToMIRType(type), call);
   }
 
   // If the call returns results on the stack, prepare a stack area to receive
@@ -1925,7 +1928,7 @@ class FunctionCompiler {
     }
     for (uint32_t base = iter.index(); !iter.done(); iter.next()) {
       MWasmStackResultArea::StackResult loc(iter.cur().stackOffset(),
-                                            iter.cur().type().toMIRType());
+                                            ToMIRType(iter.cur().type()));
       stackResultArea->initResult(iter.index() - base, loc);
     }
     curBlock_->add(stackResultArea);
@@ -2087,7 +2090,10 @@ class FunctionCompiler {
     }
     curBlock_->add(ins);
 
-    return finishTryCall(&tryDesc);
+    if (!finishTryCall(&tryDesc)) {
+      return false;
+    }
+    return true;
   }
 
   bool callDirect(const FuncType& funcType, uint32_t funcIndex,
@@ -3096,7 +3102,7 @@ class FunctionCompiler {
     // Load each value from the data pointer
     for (size_t i = 0; i < params.length(); i++) {
       auto* load = MWasmLoadObjectDataField::New(
-          alloc(), exception, data, offsets[i], params[i].toMIRType());
+          alloc(), exception, data, offsets[i], ToMIRType(params[i]));
       if (!load || !values->append(load)) {
         return false;
       }
@@ -3238,7 +3244,7 @@ class FunctionCompiler {
 
       // Load the previous value
       auto* prevValue = MWasmLoadObjectDataField::New(alloc(), exception, data,
-                                                      offset, type.toMIRType());
+                                                      offset, ToMIRType(type));
       if (!prevValue) {
         return false;
       }
@@ -3983,12 +3989,12 @@ static bool EmitGetGlobal(FunctionCompiler& f) {
   if (!global.isConstant()) {
     f.iter().setResult(f.loadGlobalVar(global.offset(), !global.isMutable(),
                                        global.isIndirect(),
-                                       global.type().toMIRType()));
+                                       ToMIRType(global.type())));
     return true;
   }
 
   LitVal value = global.constantValue();
-  MIRType mirType = value.type().toMIRType();
+  MIRType mirType = ToMIRType(value.type());
 
   MDefinition* result;
   switch (value.type().kind()) {
@@ -4221,7 +4227,7 @@ static bool EmitRotate(FunctionCompiler& f, ValType type, bool isLeftRotation) {
     return false;
   }
 
-  MDefinition* result = f.rotate(lhs, rhs, type.toMIRType(), isLeftRotation);
+  MDefinition* result = f.rotate(lhs, rhs, ToMIRType(type), isLeftRotation);
   f.iter().setResult(result);
   return true;
 }
@@ -4330,7 +4336,7 @@ static bool EmitCopySign(FunctionCompiler& f, ValType operandType) {
     return false;
   }
 
-  f.iter().setResult(f.binary<MCopySign>(lhs, rhs, operandType.toMIRType()));
+  f.iter().setResult(f.binary<MCopySign>(lhs, rhs, ToMIRType(operandType)));
   return true;
 }
 
@@ -4462,7 +4468,7 @@ static bool EmitUnaryMathBuiltinCall(FunctionCompiler& f,
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   MDefinition* input;
-  if (!f.iter().readUnary(ValType::fromMIRType(callee.argTypes[0]), &input)) {
+  if (!f.iter().readUnary(ValType(callee.argTypes[0]), &input)) {
     return false;
   }
 
@@ -4499,8 +4505,7 @@ static bool EmitBinaryMathBuiltinCall(FunctionCompiler& f,
   MDefinition* lhs;
   MDefinition* rhs;
   // This call to readBinary assumes both operands have the same type.
-  if (!f.iter().readBinary(ValType::fromMIRType(callee.argTypes[0]), &lhs,
-                           &rhs)) {
+  if (!f.iter().readBinary(ValType(callee.argTypes[0]), &lhs, &rhs)) {
     return false;
   }
 
@@ -4656,7 +4661,7 @@ static bool EmitAtomicStore(FunctionCompiler& f, ValType type,
 
 static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
   MOZ_ASSERT(type == ValType::I32 || type == ValType::I64);
-  MOZ_ASSERT(type.size() == byteSize);
+  MOZ_ASSERT(SizeOf(type) == byteSize);
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
@@ -4687,7 +4692,7 @@ static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
     return false;
   }
 
-  MOZ_ASSERT(type.toMIRType() == callee.argTypes[2]);
+  MOZ_ASSERT(ToMIRType(type) == callee.argTypes[2]);
   if (!f.passArg(expected, callee.argTypes[2], &args)) {
     return false;
   }
@@ -7030,6 +7035,7 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
                                CompiledCode* code, UniqueChars* error) {
   MOZ_ASSERT(compilerEnv.tier() == Tier::Optimized);
   MOZ_ASSERT(compilerEnv.debug() == DebugEnabled::False);
+  MOZ_ASSERT(compilerEnv.optimizedBackend() == OptimizedBackend::Ion);
 
   TempAllocator alloc(&lifo);
   JitContext jitContext;

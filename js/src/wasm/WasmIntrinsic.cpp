@@ -105,7 +105,7 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
   }
   CompilerEnvironment compilerEnv(
       CompileMode::Once, IonAvailable(cx) ? Tier::Optimized : Tier::Baseline,
-      DebugEnabled::False);
+      OptimizedBackend::Ion, DebugEnabled::False);
   compilerEnv.computeParameters();
 
   // Build a module environment

@@ -478,18 +478,20 @@ void BaseCompiler::emitBinop(void (*op)(CompilerType1& compiler, RegType rs,
 template <typename R>
 bool BaseCompiler::emitInstanceCallOp(const SymbolicAddressSignature& fn,
                                       R reader) {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   if (!reader()) {
     return false;
   }
   if (deadCode_) {
     return true;
   }
-  return emitInstanceCall(fn);
+  return emitInstanceCall(lineOrBytecode, fn);
 }
 
 template <typename A1, typename R>
 bool BaseCompiler::emitInstanceCallOp(const SymbolicAddressSignature& fn,
                                       R reader) {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   A1 arg = 0;
   if (!reader(&arg)) {
     return false;
@@ -498,12 +500,13 @@ bool BaseCompiler::emitInstanceCallOp(const SymbolicAddressSignature& fn,
     return true;
   }
   push(arg);
-  return emitInstanceCall(fn);
+  return emitInstanceCall(lineOrBytecode, fn);
 }
 
 template <typename A1, typename A2, typename R>
 bool BaseCompiler::emitInstanceCallOp(const SymbolicAddressSignature& fn,
                                       R reader) {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   A1 arg1 = 0;
   A2 arg2 = 0;
   if (!reader(&arg1, &arg2)) {
@@ -515,7 +518,7 @@ bool BaseCompiler::emitInstanceCallOp(const SymbolicAddressSignature& fn,
   // Note order of arguments must be the same as for the reader.
   push(arg1);
   push(arg2);
-  return emitInstanceCall(fn);
+  return emitInstanceCall(lineOrBytecode, fn);
 }
 
 }  // namespace wasm

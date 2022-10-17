@@ -9525,7 +9525,7 @@ AttachDecision CallIRGenerator::tryAttachWasmCall(HandleFunction calleeFunc) {
 #endif
   ABIArgGenerator abi;
   for (const auto& valType : sig.args()) {
-    MIRType mirType = valType.toMIRType();
+    MIRType mirType = ToMIRType(valType);
     ABIArg abiArg = abi.next(mirType);
     if (mirType != MIRType::Int64) {
       continue;
