@@ -493,6 +493,11 @@ static bool ModuleGetExportedNames(JSContext* cx, Handle<ModuleObject*> module,
   return true;
 }
 
+static void ThrowUnexpectedModuleStatus(JSContext* cx, ModuleStatus status) {
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_BAD_MODULE_STATUS, ModuleStatusName(status));
+}
+
 static ModuleObject* HostResolveImportedModule(
     JSContext* cx, Handle<ModuleObject*> module,
     Handle<ModuleRequestObject*> moduleRequest,
@@ -506,9 +511,7 @@ static ModuleObject* HostResolveImportedModule(
   }
 
   if (requestedModule->status() < expectedMinimumStatus) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_BAD_MODULE_STATUS,
-                              ModuleStatusName(requestedModule->status()));
+    ThrowUnexpectedModuleStatus(cx, requestedModule->status());
     return nullptr;
   }
 
@@ -1073,9 +1076,7 @@ bool js::ModuleLink(JSContext* cx, Handle<ModuleObject*> module) {
   // Step 1. Assert: module.[[Status]] is not linking or evaluating.
   ModuleStatus status = module->status();
   if (status == ModuleStatus::Linking || status == ModuleStatus::Evaluating) {
-    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                               JSMSG_BAD_MODULE_STATUS,
-                               ModuleStatusName(status));
+    ThrowUnexpectedModuleStatus(cx, status);
     return false;
   }
 
@@ -1135,9 +1136,7 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
 
   // Step 3. Assert: module.[[Status]] is unlinked.
   if (module->status() != ModuleStatus::Unlinked) {
-    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                               JSMSG_BAD_MODULE_STATUS,
-                               ModuleStatusName(module->status()));
+    ThrowUnexpectedModuleStatus(cx, module->status());
     return false;
   }
 
@@ -1256,8 +1255,7 @@ bool js::ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
   if (status != ModuleStatus::Linked &&
       status != ModuleStatus::EvaluatingAsync &&
       status != ModuleStatus::Evaluated) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_BAD_MODULE_STATUS, ModuleStatusName(status));
+    ThrowUnexpectedModuleStatus(cx, status);
     return false;
   }
 
