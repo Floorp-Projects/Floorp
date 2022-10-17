@@ -882,9 +882,11 @@ void EventLogAnalyzer::CreateTotalIncomingBitrateGraph(Plot* plot) {
 }
 
 // Plot the total bandwidth used by all RTP streams.
-void EventLogAnalyzer::CreateTotalOutgoingBitrateGraph(Plot* plot,
-                                                       bool show_detector_state,
-                                                       bool show_alr_state) {
+void EventLogAnalyzer::CreateTotalOutgoingBitrateGraph(
+    Plot* plot,
+    bool show_detector_state,
+    bool show_alr_state,
+    bool show_link_capacity) {
   // TODO(terelius): This could be provided by the parser.
   std::multimap<Timestamp, size_t> packets_in_order;
   for (const auto& stream : parsed_log_.outgoing_rtp_packets_by_ssrc()) {
@@ -928,6 +930,24 @@ void EventLogAnalyzer::CreateTotalOutgoingBitrateGraph(Plot* plot,
     float x = config_.GetCallTimeSec(loss_update.log_time());
     float y = static_cast<float>(loss_update.bitrate_bps) / 1000;
     loss_series.points.emplace_back(x, y);
+  }
+
+  TimeSeries link_capacity_lower_series("Link-capacity-lower",
+                                        LineStyle::kStep);
+  TimeSeries link_capacity_upper_series("Link-capacity-upper",
+                                        LineStyle::kStep);
+  for (auto& remote_estimate_event : parsed_log_.remote_estimate_events()) {
+    float x = config_.GetCallTimeSec(remote_estimate_event.log_time());
+    if (remote_estimate_event.link_capacity_lower.has_value()) {
+      float link_capacity_lower = static_cast<float>(
+          remote_estimate_event.link_capacity_lower.value().kbps());
+      link_capacity_lower_series.points.emplace_back(x, link_capacity_lower);
+    }
+    if (remote_estimate_event.link_capacity_upper.has_value()) {
+      float link_capacity_upper = static_cast<float>(
+          remote_estimate_event.link_capacity_upper.value().kbps());
+      link_capacity_upper_series.points.emplace_back(x, link_capacity_upper);
+    }
   }
 
   TimeSeries delay_series("Delay-based estimate", LineStyle::kStep);
@@ -1026,6 +1046,12 @@ void EventLogAnalyzer::CreateTotalOutgoingBitrateGraph(Plot* plot,
   if (show_alr_state) {
     plot->AppendIntervalSeries(std::move(alr_state));
   }
+
+  if (show_link_capacity) {
+    plot->AppendTimeSeriesIfNotEmpty(std::move(link_capacity_lower_series));
+    plot->AppendTimeSeriesIfNotEmpty(std::move(link_capacity_upper_series));
+  }
+
   plot->AppendTimeSeries(std::move(loss_series));
   plot->AppendTimeSeriesIfNotEmpty(std::move(probe_failures_series));
   plot->AppendTimeSeries(std::move(delay_series));
