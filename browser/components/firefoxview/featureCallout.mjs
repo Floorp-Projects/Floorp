@@ -52,6 +52,7 @@ async function _handlePrefChange() {
     setTimeout(async () => {
       await _loadConfig();
       container?.remove();
+      _removePositionListeners();
       await _renderCallout();
     }, TRANSITION_MS);
   }
@@ -329,6 +330,8 @@ function _positionCallout() {
 function _addPositionListeners() {
   if (!LISTENERS_REGISTERED) {
     window.addEventListener("resize", _positionCallout);
+    const parentEl = document.querySelector(CURRENT_SCREEN?.parent_selector);
+    parentEl?.addEventListener("toggle", _positionCallout);
     LISTENERS_REGISTERED = true;
   }
 }
@@ -336,6 +339,8 @@ function _addPositionListeners() {
 function _removePositionListeners() {
   if (LISTENERS_REGISTERED) {
     window.removeEventListener("resize", _positionCallout);
+    const parentEl = document.querySelector(CURRENT_SCREEN?.parent_selector);
+    parentEl?.removeEventListener("toggle", _positionCallout);
     LISTENERS_REGISTERED = false;
   }
 }
@@ -377,7 +382,6 @@ function _endTour() {
   container?.classList.add("hidden");
   setTimeout(() => {
     container?.remove();
-    _removePositionListeners();
     RENDER_OBSERVER?.disconnect();
 
     // Put the focus back to the last place the user focused outside of the
@@ -452,6 +456,7 @@ async function _renderCallout() {
     // This results in rendering the Feature Callout
     await _addScriptsAndRender(container);
     _observeRender(container);
+    _addPositionListeners();
   }
 }
 /**
@@ -488,7 +493,6 @@ async function showFeatureCallout(messageId) {
 
   _addCalloutLinkElements();
   // Add handlers for repositioning callout
-  _addPositionListeners();
   _setupWindowFunctions();
 
   READY = false;
