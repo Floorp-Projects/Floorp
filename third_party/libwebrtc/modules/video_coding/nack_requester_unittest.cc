@@ -59,12 +59,12 @@ class TestNackRequester : public ::testing::Test,
     RTC_DCHECK(!waiting_for_send_nack_);
 
     waiting_for_send_nack_ = true;
-    loop_.PostDelayedTask(
+    loop_.task_queue()->PostDelayedTask(
         [this]() {
           timed_out_ = true;
           loop_.Quit();
         },
-        1000);
+        TimeDelta::Seconds(1));
 
     loop_.Run();
 

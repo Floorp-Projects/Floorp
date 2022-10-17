@@ -15,7 +15,6 @@
 #include <utility>
 #include <vector>
 
-#include "api/task_queue/to_queued_task.h"
 #include "api/video/video_adaptation_reason.h"
 #include "api/video_codecs/video_encoder.h"
 #include "rtc_base/checks.h"
@@ -58,7 +57,7 @@ BandwidthQualityScaler::~BandwidthQualityScaler() {
 void BandwidthQualityScaler::StartCheckForBitrate() {
   RTC_DCHECK_RUN_ON(&task_checker_);
   TaskQueueBase::Current()->PostDelayedTask(
-      ToQueuedTask([this_weak_ptr = weak_ptr_factory_.GetWeakPtr(), this] {
+      [this_weak_ptr = weak_ptr_factory_.GetWeakPtr(), this] {
         if (!this_weak_ptr) {
           // The caller BandwidthQualityScaler has been deleted.
           return;
@@ -84,8 +83,8 @@ void BandwidthQualityScaler::StartCheckForBitrate() {
           }
         }
         StartCheckForBitrate();
-      }),
-      kBitrateStateUpdateInterval.ms());
+      },
+      kBitrateStateUpdateInterval);
 }
 
 void BandwidthQualityScaler::ReportEncodeInfo(int frame_size_bytes,
