@@ -1996,6 +1996,26 @@ void PeerConnection::ReportFirstConnectUsageMetrics() {
   // Record the number of configured ICE servers for connected connections.
   RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.PeerConnection.IceServers.Connected",
                               configuration_.servers.size(), 0, 31, 32);
+
+  // Record the number of valid / invalid ice-ufrag. We do allow certain
+  // non-spec ice-char for backward-compat reasons. At this point we know
+  // that the ufrag/pwd consists of a valid ice-char or one of the four
+  // not allowed characters since we have passed the IsIceChar check done
+  // by the p2p transport description on setRemoteDescription calls.
+  auto transport_infos = remote_description()->description()->transport_infos();
+  if (transport_infos.size() > 0) {
+    auto ice_parameters = transport_infos[0].description.GetIceParameters();
+    auto is_invalid_char = [](char c) {
+      return c == '-' || c == '=' || c == '#' || c == '_';
+    };
+    bool isUsingInvalidIceCharInUfrag =
+        absl::c_any_of(ice_parameters.ufrag, is_invalid_char);
+    bool isUsingInvalidIceCharInPwd =
+        absl::c_any_of(ice_parameters.pwd, is_invalid_char);
+    RTC_HISTOGRAM_BOOLEAN(
+        "WebRTC.PeerConnection.ValidIceChars",
+        !(isUsingInvalidIceCharInUfrag || isUsingInvalidIceCharInPwd));
+  }
 }
 
 void PeerConnection::OnIceGatheringChange(
