@@ -17,28 +17,6 @@
 
 namespace webrtc {
 
-RawFile::RawFile(const std::string& filename)
-    : file_handle_(fopen(filename.c_str(), "wb")) {}
-
-RawFile::~RawFile() {
-  fclose(file_handle_);
-}
-
-void RawFile::WriteSamples(const int16_t* samples, size_t num_samples) {
-#ifndef WEBRTC_ARCH_LITTLE_ENDIAN
-  //convert to big-endian
-  int16_t* s = (int16_t*)samples;
-  for(size_t idx = 0; idx < num_samples; idx++) {
-    s[idx] = (samples[idx]<<8) | (samples[idx]>>8);
-  }
-#endif
-  fwrite(samples, sizeof(*samples), num_samples, file_handle_);
-}
-
-void RawFile::WriteSamples(const float* samples, size_t num_samples) {
-  fwrite(samples, sizeof(*samples), num_samples, file_handle_);
-}
-
 ChannelBufferWavReader::ChannelBufferWavReader(std::unique_ptr<WavReader> file)
     : file_(std::move(file)) {}
 
@@ -88,40 +66,6 @@ void ChannelBufferVectorWriter::Write(const ChannelBuffer<float>& buffer) {
   output_->resize(old_size + interleaved_buffer_.size());
   FloatToFloatS16(interleaved_buffer_.data(), interleaved_buffer_.size(),
                   output_->data() + old_size);
-}
-
-void WriteIntData(const int16_t* data,
-                  size_t length,
-                  WavWriter* wav_file,
-                  RawFile* raw_file) {
-  if (wav_file) {
-    wav_file->WriteSamples(data, length);
-  }
-  if (raw_file) {
-    raw_file->WriteSamples(data, length);
-  }
-}
-
-void WriteFloatData(const float* const* data,
-                    size_t samples_per_channel,
-                    size_t num_channels,
-                    WavWriter* wav_file,
-                    RawFile* raw_file) {
-  size_t length = num_channels * samples_per_channel;
-  std::unique_ptr<float[]> buffer(new float[length]);
-  Interleave(data, samples_per_channel, num_channels, buffer.get());
-  if (raw_file) {
-    raw_file->WriteSamples(buffer.get(), length);
-  }
-  // TODO(aluebs): Use ScaleToInt16Range() from audio_util
-  for (size_t i = 0; i < length; ++i) {
-    buffer[i] = buffer[i] > 0
-                    ? buffer[i] * std::numeric_limits<int16_t>::max()
-                    : -buffer[i] * std::numeric_limits<int16_t>::min();
-  }
-  if (wav_file) {
-    wav_file->WriteSamples(buffer.get(), length);
-  }
 }
 
 FILE* OpenFile(const std::string& filename, const char* mode) {

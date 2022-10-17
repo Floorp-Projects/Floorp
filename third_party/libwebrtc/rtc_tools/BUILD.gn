@@ -574,7 +574,6 @@ if (rtc_include_tests) {
 
       rtc_executable("unpack_aecdump") {
         visibility = [ "*" ]
-        testonly = true
         sources = [ "unpack_aecdump/unpack.cc" ]
 
         deps = [
@@ -584,11 +583,12 @@ if (rtc_include_tests) {
           "../modules/audio_processing:audioproc_debug_proto",
           "../modules/audio_processing:audioproc_debug_proto",
           "../modules/audio_processing:audioproc_protobuf_utils",
-          "../modules/audio_processing:audioproc_test_utils",
+          "../rtc_base:checks",
           "../rtc_base:ignore_wundef",
           "../rtc_base:macromagic",
           "../rtc_base:protobuf_utils",
           "../rtc_base:stringutils",
+          "../rtc_base/system:arch",
           "//third_party/abseil-cpp/absl/flags:flag",
           "//third_party/abseil-cpp/absl/flags:parse",
         ]
