@@ -2229,9 +2229,11 @@
   mirror: always
 
 # Whether the above pref has any effect at all.
+# Make sure cases like bug 1795380 work before trying to turn this off. See
+# bug 1680721 for some other context that might be relevant.
 - name: dom.delay.block_external_protocol_in_iframes.enabled
   type: bool
-  value: @IS_NOT_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # HTML <dialog> element
