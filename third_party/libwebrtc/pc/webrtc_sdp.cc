@@ -3636,9 +3636,9 @@ bool ParseRtpmapAttribute(absl::string_view line,
 
     AudioContentDescription* audio_desc = media_desc->as_audio();
     for (const cricket::AudioCodec& existing_codec : audio_desc->codecs()) {
+      // TODO(crbug.com/1338902) re-add check for clockrate.
       if (!existing_codec.name.empty() && payload_type == existing_codec.id &&
           (!absl::EqualsIgnoreCase(encoding_name, existing_codec.name) ||
-           clock_rate != existing_codec.clockrate ||
            channels != existing_codec.channels)) {
         rtc::StringBuilder description;
         description
