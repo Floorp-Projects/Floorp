@@ -1812,14 +1812,11 @@ TEST_F(PacingControllerTest, NextSendTimeAccountsForPadding) {
 }
 
 TEST_F(PacingControllerTest, PaddingTargetAccountsForPaddingRate) {
-  // Re-init pacer with an explicitly set padding target of 10ms;
-  const TimeDelta kPaddingTarget = TimeDelta::Millis(10);
-  ExplicitKeyValueConfig field_trials(
-      "WebRTC-Pacer-DynamicPaddingTarget/timedelta:10ms/");
+  // Target size for a padding packet is 5ms * padding rate.
+  const TimeDelta kPaddingTarget = TimeDelta::Millis(5);
   srand(0);
   // Need to initialize PacingController after we initialize clock.
-  auto pacer =
-      std::make_unique<PacingController>(&clock_, &callback_, field_trials);
+  auto pacer = std::make_unique<PacingController>(&clock_, &callback_, trials_);
 
   const uint32_t kSsrc = 12345;
   const DataRate kPacingDataRate = DataRate::KilobitsPerSec(125);
