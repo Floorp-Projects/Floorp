@@ -235,7 +235,6 @@ VideoReceiveStream2::VideoReceiveStream2(
                                  &stats_proxy_,
                                  nack_periodic_processor,
                                  &stats_proxy_,
-                                 this,  // NackSender
                                  this,  // OnCompleteFrameCallback
                                  std::move(config_.frame_decryptor),
                                  std::move(config_.frame_transformer),
@@ -661,14 +660,6 @@ void VideoReceiveStream2::SetDepacketizerToDecoderFrameTransformer(
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer) {
   rtp_video_stream_receiver_.SetDepacketizerToDecoderFrameTransformer(
       std::move(frame_transformer));
-}
-
-void VideoReceiveStream2::SendNack(
-    const std::vector<uint16_t>& sequence_numbers,
-    bool buffering_allowed) {
-  RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
-  RTC_DCHECK(buffering_allowed);
-  rtp_video_stream_receiver_.RequestPacketRetransmit(sequence_numbers);
 }
 
 void VideoReceiveStream2::RequestKeyFrame(Timestamp now) {
