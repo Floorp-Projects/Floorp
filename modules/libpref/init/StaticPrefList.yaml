@@ -3005,7 +3005,7 @@
 # Is support for import maps (<script type="importmap">) enabled for content?
 - name: dom.importMaps.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether we disable triggering mutation events for changes to style
