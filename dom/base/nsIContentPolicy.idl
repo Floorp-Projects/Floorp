@@ -427,6 +427,12 @@ interface nsIContentPolicy : nsISupports
      */
     TYPE_PROXIED_WEBRTC_MEDIA = 56,
 
+    /**
+     * Indicates the load of data via the Federated Credential Management API
+     * with data destined for a browser context.
+     */
+     TYPE_WEB_IDENTITY = 57,
+
     /* When adding new content types, please update
      * NS_CP_ContentTypeName, nsCSPContext, CSP_ContentTypeToDirective,
      * DoContentSecurityChecks, all nsIContentPolicy implementations, the

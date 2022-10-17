@@ -322,6 +322,7 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST:
     case nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE:
     case nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD:
+    case nsIContentPolicy::TYPE_WEB_IDENTITY:
       return nsIContentSecurityPolicy::CONNECT_SRC_DIRECTIVE;
 
     case nsIContentPolicy::TYPE_OBJECT:
