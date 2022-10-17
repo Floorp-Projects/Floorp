@@ -7900,7 +7900,7 @@ var gCSSProperties = {
     domProp: "textEmphasisPosition",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
-    initial_values: ["over right", "right over"],
+    initial_values: ["over right", "right over", "over"],
     other_values: [
       "over left",
       "left over",
@@ -7908,6 +7908,7 @@ var gCSSProperties = {
       "left under",
       "under right",
       "right under",
+      "under",
     ],
     invalid_values: [
       "over over",
