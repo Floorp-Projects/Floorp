@@ -650,6 +650,11 @@
   -moz-box-flex: 175;
 }
 
+#search-container[width] {
+  /* Take something closer to the explicit width when requested */
+  -moz-box-flex: 1;
+}
+
 #search-container[cui-areatype="menu-panel"] > #searchbar:-moz-lwtheme {
   /* Theme authors usually only consider contrast against the toolbar when
      picking a border color for the search bar. Since the search bar can be
