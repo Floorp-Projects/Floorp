@@ -2851,6 +2851,9 @@ void GCRuntime::finishCollection() {
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     zone->changeGCState(Zone::Finished, Zone::NoGC);
     zone->notifyObservingDebuggers();
+    for (RealmsInZoneIter realm(zone); !realm.done(); realm.next()) {
+      realm->clearAllocatedDuringGC();
+    }
   }
 
 #ifdef JS_GC_ZEAL
