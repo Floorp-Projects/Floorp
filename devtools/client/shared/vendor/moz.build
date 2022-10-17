@@ -15,7 +15,6 @@ DevToolsModules(
     'react-test-renderer.js',
     'redux.js',
     'reselect.js',
-    'seamless-immutable.js',
     'WasmDis.js',
     'WasmParser.js',
 )
