@@ -2608,8 +2608,6 @@ export class SearchService {
 
     let isCurrent = false;
 
-    // Special search engines (policy and user) are skipped for migration as
-    // there would never have been an OpenSearch engine associated with those.
     for (let engine of this._engines.values()) {
       if (
         !engine.extensionID &&
