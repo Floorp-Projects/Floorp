@@ -70,10 +70,16 @@ tasks:
                   #
                   # [1] https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#push
                   $if: 'tasks_for == "github-push" && event.base_ref'
-                  then: ${event.base_ref}
+                  then:
+                      $if: 'event.base_ref[:11] == "refs/heads/"'
+                      then: {$eval: 'event.base_ref[11:]'}
+                      else: ${event.base_ref}
                   else:
                       $if: 'tasks_for == "github-push"'
-                      then: ${event.ref}
+                      then:
+                          $if: 'event.ref[:11] == "refs/heads/"'
+                          then: {$eval: 'event.ref[11:]'}
+                          else: ${event.ref}
                       else:
                           $if: 'tasks_for in ["cron", "action"]'
                           then: '${push.branch}'
