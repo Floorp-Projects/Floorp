@@ -1,5 +1,3 @@
-var EXPORTED_SYMBOLS = ["FissionTestHelperChild"];
-
 // This code runs in the content process that holds the window to which
 // this actor is attached. There is one instance of this class for each
 // "inner window" (i.e. one per content document, including iframes/nested
@@ -9,7 +7,7 @@ var EXPORTED_SYMBOLS = ["FissionTestHelperChild"];
 // that they can communicate with each other regardless of which process
 // they live in.
 
-class FissionTestHelperChild extends JSWindowActorChild {
+export class FissionTestHelperChild extends JSWindowActorChild {
   constructor() {
     super();
     this._msgCounter = 0;
