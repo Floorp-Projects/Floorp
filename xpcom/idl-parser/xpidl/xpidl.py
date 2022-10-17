@@ -197,6 +197,12 @@ builtinNames = [
     Builtin("string", "char *", "*const libc::c_char", False, False),
     Builtin("wchar", "char16_t", "u16", False, False),
     Builtin("wstring", "char16_t *", "*const u16", False, False),
+    # As seen in mfbt/RefCountType.h, this type has special handling to
+    # maintain binary compatibility with MSCOM's IUnknown that cannot be
+    # expressed in XPIDL.
+    Builtin(
+        "MozExternalRefCountType", "MozExternalRefCountType", "MozExternalRefCountType"
+    ),
 ]
 
 builtinMap = {}

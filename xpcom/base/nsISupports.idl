@@ -26,8 +26,8 @@
 interface nsISupports {
   void QueryInterface(in nsIIDRef uuid,
                       [iid_is(uuid),retval] out nsQIResult result);
-  [noscript, notxpcom] nsrefcnt AddRef();
-  [noscript, notxpcom] nsrefcnt Release();
+  [noscript, notxpcom] MozExternalRefCountType AddRef();
+  [noscript, notxpcom] MozExternalRefCountType Release();
 };
 
 %{C++
