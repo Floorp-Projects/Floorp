@@ -164,7 +164,6 @@ class ResultType {
     }
   }
 
-  bool valid() const { return kind() != InvalidKind; }
   bool empty() const { return kind() == EmptyKind; }
 
   size_t length() const {

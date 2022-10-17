@@ -80,7 +80,7 @@ namespace wasm {
 struct OutOfMemory {};
 
 // The result of serialization, either OK or OOM
-using CoderResult = mozilla::Result<mozilla::Ok, OutOfMemory>;
+typedef mozilla::Result<mozilla::Ok, OutOfMemory> CoderResult;
 
 // CoderMode parameterizes the coding functions
 enum CoderMode {

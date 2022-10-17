@@ -105,7 +105,7 @@ class ArgTypeVector {
     if (isSyntheticStackResultPointerArg(i)) {
       return jit::MIRType::StackResults;
     }
-    return args_[naturalIndex(i)].toMIRType();
+    return ToMIRType(args_[naturalIndex(i)]);
   }
 };
 
@@ -426,11 +426,6 @@ class CallSiteDesc {
     MOZ_ASSERT(kind == Kind(kind_));
     MOZ_ASSERT(lineOrBytecode == lineOrBytecode_);
   }
-  CallSiteDesc(BytecodeOffset bytecodeOffset, Kind kind)
-      : lineOrBytecode_(bytecodeOffset.offset()), kind_(kind) {
-    MOZ_ASSERT(kind == Kind(kind_));
-    MOZ_ASSERT(bytecodeOffset.offset() == lineOrBytecode_);
-  }
   uint32_t lineOrBytecode() const { return lineOrBytecode_; }
   Kind kind() const { return Kind(kind_); }
   bool isImportCall() const { return kind() == CallSiteDesc::Import; }
@@ -457,7 +452,7 @@ class CallSite : public CallSiteDesc {
   CallSite(CallSiteDesc desc, uint32_t returnAddressOffset)
       : CallSiteDesc(desc), returnAddressOffset_(returnAddressOffset) {}
 
-  void offsetBy(uint32_t delta) { returnAddressOffset_ += delta; }
+  void offsetBy(int32_t delta) { returnAddressOffset_ += delta; }
   uint32_t returnAddressOffset() const { return returnAddressOffset_; }
 };
 

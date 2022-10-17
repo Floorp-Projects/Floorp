@@ -1544,13 +1544,13 @@ void BaseCompiler::passArg(ValType type, const Stk& arg, FunctionCall* call) {
 
 CodeOffset BaseCompiler::callDefinition(uint32_t funcIndex,
                                         const FunctionCall& call) {
-  CallSiteDesc desc(bytecodeOffset(), CallSiteDesc::Func);
+  CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Func);
   return masm.call(desc, funcIndex);
 }
 
 CodeOffset BaseCompiler::callSymbolic(SymbolicAddress callee,
                                       const FunctionCall& call) {
-  CallSiteDesc desc(bytecodeOffset(), CallSiteDesc::Symbolic);
+  CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Symbolic);
   return masm.call(desc, callee);
 }
 
@@ -1581,7 +1581,7 @@ bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
 
   loadI32(indexVal, RegI32(WasmTableCallIndexReg));
 
-  CallSiteDesc desc(bytecodeOffset(), CallSiteDesc::Indirect);
+  CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Indirect);
   CalleeDesc callee = CalleeDesc::wasmTable(table, funcTypeId);
   OutOfLineCode* oob = addOutOfLineCode(
       new (alloc_) OutOfLineAbortingTrap(Trap::OutOfBounds, bytecodeOffset()));
@@ -1606,7 +1606,7 @@ bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
 void BaseCompiler::callRef(const Stk& calleeRef, const FunctionCall& call,
                            CodeOffset* fastCallOffset,
                            CodeOffset* slowCallOffset) {
-  CallSiteDesc desc(bytecodeOffset(), CallSiteDesc::FuncRef);
+  CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::FuncRef);
   CalleeDesc callee = CalleeDesc::wasmFuncRef();
 
   loadRef(calleeRef, RegRef(WasmCallRefReg));
@@ -1619,7 +1619,7 @@ void BaseCompiler::callRef(const Stk& calleeRef, const FunctionCall& call,
 
 CodeOffset BaseCompiler::callImport(unsigned globalDataOffset,
                                     const FunctionCall& call) {
-  CallSiteDesc desc(bytecodeOffset(), CallSiteDesc::Import);
+  CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Import);
   CalleeDesc callee = CalleeDesc::import(globalDataOffset);
   return masm.wasmCallImport(desc, callee);
 }
@@ -1636,7 +1636,7 @@ CodeOffset BaseCompiler::builtinInstanceMethodCall(
   // Builtin method calls assume the instance register has been set.
   fr.loadInstancePtr(InstanceReg);
 #endif
-  CallSiteDesc desc(bytecodeOffset(), CallSiteDesc::Symbolic);
+  CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Symbolic);
   return masm.wasmCallBuiltinInstanceMethod(desc, instanceArg, builtin.identity,
                                             builtin.failureMode);
 }
@@ -1660,11 +1660,11 @@ bool BaseCompiler::pushCallResults(const FunctionCall& call, ResultType type,
 
 // Abstracted helper for throwing, used for throw, rethrow, and rethrowing
 // at the end of a series of catch blocks (if none matched the exception).
-bool BaseCompiler::throwFrom(RegRef exn) {
+bool BaseCompiler::throwFrom(RegRef exn, uint32_t lineOrBytecode) {
   pushRef(exn);
 
   // ThrowException invokes a trap, and the rest is dead code.
-  return emitInstanceCall(SASigThrowException);
+  return emitInstanceCall(lineOrBytecode, SASigThrowException);
 }
 
 void BaseCompiler::loadTag(RegPtr instance, uint32_t tagIndex, RegRef tagDst) {
@@ -4124,7 +4124,11 @@ bool BaseCompiler::emitCatchAll() {
   captureResultRegisters(exnResult);
   // This reference is pushed onto the stack because a potential rethrow
   // may need to access it. It is always popped at the end of the block.
-  return pushBlockResults(exnResult);
+  if (!pushBlockResults(exnResult)) {
+    return false;
+  }
+
+  return true;
 }
 
 bool BaseCompiler::emitBodyDelegateThrowPad() {
@@ -4132,6 +4136,7 @@ bool BaseCompiler::emitBodyDelegateThrowPad() {
 
   // Only emit a landing pad if a `delegate` has generated a jump to here.
   if (block.otherLabel.used()) {
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
     StackHeight savedHeight = fr.stackHeight();
     fr.setStackHeight(block.stackHeight);
     masm.bind(&block.otherLabel);
@@ -4142,7 +4147,7 @@ bool BaseCompiler::emitBodyDelegateThrowPad() {
     RegRef tag;
     consumePendingException(&exn, &tag);
     freeRef(tag);
-    if (!throwFrom(exn)) {
+    if (!throwFrom(exn, lineOrBytecode)) {
       return false;
     }
     fr.setStackHeight(savedHeight);
@@ -4228,6 +4233,8 @@ bool BaseCompiler::emitDelegate() {
 }
 
 bool BaseCompiler::endTryCatch(ResultType type) {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   Control& tryCatch = controlItem();
   LabelKind tryKind = controlKind(0);
 
@@ -4322,7 +4329,7 @@ bool BaseCompiler::endTryCatch(ResultType type) {
   // then we rethrow the exception.
   if (!hasCatchAll) {
     captureResultRegisters(exnResult);
-    if (!pushBlockResults(exnResult) || !throwFrom(popRef())) {
+    if (!pushBlockResults(exnResult) || !throwFrom(popRef(), lineOrBytecode)) {
       return false;
     }
   }
@@ -4343,6 +4350,7 @@ bool BaseCompiler::endTryCatch(ResultType type) {
 }
 
 bool BaseCompiler::emitThrow() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   uint32_t tagIndex;
   BaseNothingVector unused_argValues{};
 
@@ -4373,7 +4381,7 @@ bool BaseCompiler::emitThrow() {
 
   // Create the new exception object that we will throw.
   pushRef(tag);
-  if (!emitInstanceCall(SASigExceptionNew)) {
+  if (!emitInstanceCall(lineOrBytecode, SASigExceptionNew)) {
     return false;
   }
 
@@ -4443,10 +4451,12 @@ bool BaseCompiler::emitThrow() {
 
   deadCode_ = true;
 
-  return throwFrom(exn);
+  return throwFrom(exn, lineOrBytecode);
 }
 
 bool BaseCompiler::emitRethrow() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   uint32_t relativeDepth;
   if (!iter_.readRethrow(&relativeDepth)) {
     return false;
@@ -4462,7 +4472,7 @@ bool BaseCompiler::emitRethrow() {
 
   deadCode_ = true;
 
-  return throwFrom(exn);
+  return throwFrom(exn, lineOrBytecode);
 }
 
 bool BaseCompiler::emitDrop() {
@@ -4670,6 +4680,8 @@ void BaseCompiler::popStackResultsAfterCall(const StackResultsLoc& results,
 // simpler.
 
 bool BaseCompiler::emitCall() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   uint32_t funcIndex;
   BaseNothingVector args_{};
   if (!iter_.readCall(&funcIndex, &args_)) {
@@ -4694,7 +4706,7 @@ bool BaseCompiler::emitCall() {
     return false;
   }
 
-  FunctionCall baselineCall{};
+  FunctionCall baselineCall(lineOrBytecode);
   beginCall(baselineCall, UseABI::Wasm,
             import ? RestoreRegisterStateAndRealm::True
                    : RestoreRegisterStateAndRealm::False);
@@ -4727,6 +4739,8 @@ bool BaseCompiler::emitCall() {
 }
 
 bool BaseCompiler::emitCallIndirect() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   uint32_t funcTypeIndex;
   uint32_t tableIndex;
   Nothing callee_;
@@ -4754,7 +4768,7 @@ bool BaseCompiler::emitCallIndirect() {
     return false;
   }
 
-  FunctionCall baselineCall{};
+  FunctionCall baselineCall(lineOrBytecode);
   // State and realm are restored as needed by by callIndirect (really by
   // MacroAssembler::wasmCallIndirect).
   beginCall(baselineCall, UseABI::Wasm, RestoreRegisterStateAndRealm::False);
@@ -4790,6 +4804,8 @@ bool BaseCompiler::emitCallIndirect() {
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
 bool BaseCompiler::emitCallRef() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   const FuncType* funcType;
   Nothing unused_callee;
   BaseNothingVector unused_args{};
@@ -4814,7 +4830,7 @@ bool BaseCompiler::emitCallRef() {
     return false;
   }
 
-  FunctionCall baselineCall{};
+  FunctionCall baselineCall(lineOrBytecode);
   // State and realm are restored as needed by by callRef (really by
   // MacroAssembler::wasmCallRef).
   beginCall(baselineCall, UseABI::Wasm, RestoreRegisterStateAndRealm::False);
@@ -4862,6 +4878,8 @@ void BaseCompiler::emitRound(RoundingMode roundingMode, ValType operandType) {
 
 bool BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee,
                                             ValType operandType) {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   Nothing operand_;
   if (!iter_.readUnary(operandType, &operand_)) {
     return false;
@@ -4886,7 +4904,7 @@ bool BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee,
   size_t stackSpace = stackConsumed(numArgs);
   StackResultsLoc noStackResults;
 
-  FunctionCall baselineCall{};
+  FunctionCall baselineCall(lineOrBytecode);
   beginCall(baselineCall, UseABI::Builtin, RestoreRegisterStateAndRealm::False);
 
   if (!emitCallArgs(signature, noStackResults, &baselineCall,
@@ -4903,7 +4921,7 @@ bool BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee,
 
   popValueStackBy(numArgs);
 
-  pushReturnValueOfCall(baselineCall, retType.toMIRType());
+  pushReturnValueOfCall(baselineCall, ToMIRType(retType));
 
   return true;
 }
@@ -5623,7 +5641,8 @@ void BaseCompiler::emitCompareRef(Assembler::Condition compareOp,
   pushI32(rd);
 }
 
-bool BaseCompiler::emitInstanceCall(const SymbolicAddressSignature& builtin) {
+bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
+                                    const SymbolicAddressSignature& builtin) {
   // See declaration (WasmBCClass.h) for info on the relationship between the
   // compiler's value stack and the argument order for the to-be-called
   // function.
@@ -5635,7 +5654,7 @@ bool BaseCompiler::emitInstanceCall(const SymbolicAddressSignature& builtin) {
   uint32_t numNonInstanceArgs = builtin.numArgs - 1 /* instance */;
   size_t stackSpace = stackConsumed(numNonInstanceArgs);
 
-  FunctionCall baselineCall{};
+  FunctionCall baselineCall(lineOrBytecode);
   beginCall(baselineCall, UseABI::System, RestoreRegisterStateAndRealm::True);
 
   ABIArg instanceArg = reservePointerArgument(&baselineCall);
@@ -5842,6 +5861,7 @@ bool BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType) {
 }
 
 bool BaseCompiler::emitWait(ValType type, uint32_t byteSize) {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   Nothing nothing;
   LinearMemoryAddress<Nothing> addr;
   if (!iter_.readWait(&addr, type, byteSize, &nothing, &nothing)) {
@@ -5853,10 +5873,11 @@ bool BaseCompiler::emitWait(ValType type, uint32_t byteSize) {
   MemoryAccessDesc access(
       type.kind() == ValType::I32 ? Scalar::Int32 : Scalar::Int64, addr.align,
       addr.offset, bytecodeOffset());
-  return atomicWait(type, &access);
+  return atomicWait(type, &access, lineOrBytecode);
 }
 
 bool BaseCompiler::emitWake() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   Nothing nothing;
   LinearMemoryAddress<Nothing> addr;
   if (!iter_.readWake(&addr, &nothing)) {
@@ -5867,7 +5888,7 @@ bool BaseCompiler::emitWake() {
   }
   MemoryAccessDesc access(Scalar::Int32, addr.align, addr.offset,
                           bytecodeOffset());
-  return atomicWake(&access);
+  return atomicWake(&access, lineOrBytecode);
 }
 
 bool BaseCompiler::emitFence() {
@@ -5901,6 +5922,7 @@ bool BaseCompiler::emitMemorySize() {
 }
 
 bool BaseCompiler::emitMemCopy() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   uint32_t dstMemOrTableIndex = 0;
   uint32_t srcMemOrTableIndex = 0;
   Nothing nothing;
@@ -5921,18 +5943,20 @@ bool BaseCompiler::emitMemCopy() {
     }
   }
 
-  return memCopyCall();
+  return memCopyCall(lineOrBytecode);
 }
 
-bool BaseCompiler::memCopyCall() {
+bool BaseCompiler::memCopyCall(uint32_t lineOrBytecode) {
   pushHeapBase();
   return emitInstanceCall(
+      lineOrBytecode,
       usesSharedMemory()
           ? (isMem32() ? SASigMemCopySharedM32 : SASigMemCopySharedM64)
           : (isMem32() ? SASigMemCopyM32 : SASigMemCopyM64));
 }
 
 bool BaseCompiler::emitMemFill() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   Nothing nothing;
   if (!iter_.readMemFill(&nothing, &nothing, &nothing)) {
     return false;
@@ -5950,12 +5974,13 @@ bool BaseCompiler::emitMemFill() {
       return true;
     }
   }
-  return memFillCall();
+  return memFillCall(lineOrBytecode);
 }
 
-bool BaseCompiler::memFillCall() {
+bool BaseCompiler::memFillCall(uint32_t lineOrBytecode) {
   pushHeapBase();
   return emitInstanceCall(
+      lineOrBytecode,
       usesSharedMemory()
           ? (isMem32() ? SASigMemFillSharedM32 : SASigMemFillSharedM64)
           : (isMem32() ? SASigMemFillM32 : SASigMemFillM64));
@@ -5979,6 +6004,8 @@ bool BaseCompiler::emitMemInit() {
 // Bulk table operations.
 
 bool BaseCompiler::emitTableCopy() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   uint32_t dstMemOrTableIndex = 0;
   uint32_t srcMemOrTableIndex = 0;
   Nothing nothing;
@@ -5993,7 +6020,7 @@ bool BaseCompiler::emitTableCopy() {
 
   pushI32(dstMemOrTableIndex);
   pushI32(srcMemOrTableIndex);
-  return emitInstanceCall(SASigTableCopy);
+  return emitInstanceCall(lineOrBytecode, SASigTableCopy);
 }
 
 bool BaseCompiler::emitTableInit() {
@@ -6017,6 +6044,7 @@ bool BaseCompiler::emitTableFill() {
 }
 
 bool BaseCompiler::emitTableGet() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   uint32_t tableIndex;
   Nothing nothing;
   if (!iter_.readTableGet(&tableIndex, &nothing)) {
@@ -6030,7 +6058,7 @@ bool BaseCompiler::emitTableGet() {
   }
   pushI32(tableIndex);
   // get(index:u32, table:u32) -> AnyRef
-  return emitInstanceCall(SASigTableGet);
+  return emitInstanceCall(lineOrBytecode, SASigTableGet);
 }
 
 bool BaseCompiler::emitTableGrow() {
@@ -6043,6 +6071,7 @@ bool BaseCompiler::emitTableGrow() {
 }
 
 bool BaseCompiler::emitTableSet() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   uint32_t tableIndex;
   Nothing nothing;
   if (!iter_.readTableSet(&tableIndex, &nothing, &nothing)) {
@@ -6056,7 +6085,7 @@ bool BaseCompiler::emitTableSet() {
   }
   pushI32(tableIndex);
   // set(index:u32, value:ref, table:u32) -> void
-  return emitInstanceCall(SASigTableSet);
+  return emitInstanceCall(lineOrBytecode, SASigTableSet);
 }
 
 bool BaseCompiler::emitTableSize() {
@@ -6197,6 +6226,8 @@ void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
 
 bool BaseCompiler::emitPostBarrierImprecise(const Maybe<RegRef>& object,
                                             RegPtr valueAddr, RegRef value) {
+  uint32_t bytecodeOffset = iter_.lastOpcodeOffset();
+
   // We must force a sync before the guard so that locals are in a consistent
   // location for whether or not the post-barrier call is taken.
   sync();
@@ -6217,7 +6248,7 @@ bool BaseCompiler::emitPostBarrierImprecise(const Maybe<RegRef>& object,
   // instance area, and we are careful so that the GC will not run while the
   // post-barrier call is active, so push a uintptr_t value.
   pushPtr(valueAddr);
-  if (!emitInstanceCall(SASigPostBarrier)) {
+  if (!emitInstanceCall(bytecodeOffset, SASigPostBarrier)) {
     return false;
   }
 
@@ -6234,6 +6265,8 @@ bool BaseCompiler::emitPostBarrierImprecise(const Maybe<RegRef>& object,
 bool BaseCompiler::emitPostBarrierPrecise(const Maybe<RegRef>& object,
                                           RegPtr valueAddr, RegRef prevValue,
                                           RegRef value) {
+  uint32_t bytecodeOffset = iter_.lastOpcodeOffset();
+
   // Push `object` and `value` to preserve them across the call.
   if (object) {
     pushRef(*object);
@@ -6243,7 +6276,7 @@ bool BaseCompiler::emitPostBarrierPrecise(const Maybe<RegRef>& object,
   // Push the arguments and call the precise post-barrier
   pushPtr(valueAddr);
   pushRef(prevValue);
-  if (!emitInstanceCall(SASigPostBarrierPrecise)) {
+  if (!emitInstanceCall(bytecodeOffset, SASigPostBarrierPrecise)) {
     return false;
   }
 
@@ -6539,6 +6572,8 @@ bool BaseCompiler::emitGcArraySet(RegRef object, RegPtr data, RegI32 index,
 }
 
 bool BaseCompiler::emitStructNew() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   uint32_t typeIndex;
   BaseNothingVector args{};
   if (!iter_.readStructNew(&typeIndex, &args)) {
@@ -6554,7 +6589,7 @@ bool BaseCompiler::emitStructNew() {
   // Allocate a default initialized struct. This requires the rtt value for the
   // struct to be pushed on the stack. This will trap on OOM.
   emitGcCanon(typeIndex);
-  if (!emitInstanceCall(SASigStructNew)) {
+  if (!emitInstanceCall(lineOrBytecode, SASigStructNew)) {
     return false;
   }
 
@@ -6629,6 +6664,8 @@ bool BaseCompiler::emitStructNew() {
 }
 
 bool BaseCompiler::emitStructNewDefault() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   uint32_t typeIndex;
   if (!iter_.readStructNewDefault(&typeIndex)) {
     return false;
@@ -6640,7 +6677,7 @@ bool BaseCompiler::emitStructNewDefault() {
   // Allocate a default initialized struct. This requires the rtt value for the
   // struct to be pushed on the stack. This will trap on OOM.
   emitGcCanon(typeIndex);
-  return emitInstanceCall(SASigStructNew);
+  return emitInstanceCall(lineOrBytecode, SASigStructNew);
 }
 
 bool BaseCompiler::emitStructGet(FieldExtension extension) {
@@ -6751,6 +6788,8 @@ bool BaseCompiler::emitStructSet() {
 }
 
 bool BaseCompiler::emitArrayNew() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   uint32_t typeIndex;
   Nothing nothing;
   if (!iter_.readArrayNew(&typeIndex, &nothing, &nothing)) {
@@ -6766,7 +6805,7 @@ bool BaseCompiler::emitArrayNew() {
   // Allocate a default initialized array. This requires the rtt value for the
   // array to be pushed on the stack. This will trap on OOM.
   emitGcCanon(typeIndex);
-  if (!emitInstanceCall(SASigArrayNew)) {
+  if (!emitInstanceCall(lineOrBytecode, SASigArrayNew)) {
     return false;
   }
 
@@ -6819,6 +6858,8 @@ bool BaseCompiler::emitArrayNew() {
 }
 
 bool BaseCompiler::emitArrayNewFixed() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   uint32_t typeIndex, numElements;
   if (!iter_.readArrayNewFixed(&typeIndex, &numElements)) {
     return false;
@@ -6836,7 +6877,7 @@ bool BaseCompiler::emitArrayNewFixed() {
   // to SASigArrayNew will use them.
   pushI32(numElements);
   emitGcCanon(typeIndex);
-  if (!emitInstanceCall(SASigArrayNew)) {
+  if (!emitInstanceCall(lineOrBytecode, SASigArrayNew)) {
     return false;
   }
 
@@ -6885,6 +6926,8 @@ bool BaseCompiler::emitArrayNewFixed() {
 }
 
 bool BaseCompiler::emitArrayNewDefault() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   uint32_t typeIndex;
   Nothing nothing;
   if (!iter_.readArrayNewDefault(&typeIndex, &nothing)) {
@@ -6898,10 +6941,12 @@ bool BaseCompiler::emitArrayNewDefault() {
   // Allocate a default initialized array. This requires the rtt value for the
   // array to be pushed on the stack. This will trap on OOM.
   emitGcCanon(typeIndex);
-  return emitInstanceCall(SASigArrayNew);
+  return emitInstanceCall(lineOrBytecode, SASigArrayNew);
 }
 
 bool BaseCompiler::emitArrayNewData() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   uint32_t typeIndex, segIndex;
   Nothing nothing;
   if (!iter_.readArrayNewData(&typeIndex, &segIndex, &nothing, &nothing)) {
@@ -6918,10 +6963,12 @@ bool BaseCompiler::emitArrayNewData() {
   // The call removes 4 items from the stack: the segment byte offset and
   // number of elements (operands to array.new_data), and the type index and
   // seg index as pushed above.
-  return emitInstanceCall(SASigArrayNewData);
+  return emitInstanceCall(lineOrBytecode, SASigArrayNewData);
 }
 
 bool BaseCompiler::emitArrayNewElem() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   uint32_t typeIndex, segIndex;
   Nothing nothing;
   if (!iter_.readArrayNewElem(&typeIndex, &segIndex, &nothing, &nothing)) {
@@ -6938,7 +6985,7 @@ bool BaseCompiler::emitArrayNewElem() {
   // The call removes 4 items from the stack: the segment element offset and
   // number of elements (operands to array.new_elem), and the type index and
   // seg index as pushed above.
-  return emitInstanceCall(SASigArrayNewElem);
+  return emitInstanceCall(lineOrBytecode, SASigArrayNewElem);
 }
 
 bool BaseCompiler::emitArrayGet(FieldExtension extension) {
@@ -7070,6 +7117,8 @@ bool BaseCompiler::emitArrayLen() {
 }
 
 bool BaseCompiler::emitArrayCopy() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   int32_t elemSize;
   bool elemsAreRefTyped;
   Nothing nothing;
@@ -7116,10 +7165,12 @@ bool BaseCompiler::emitArrayCopy() {
     freePtr(RegPtr(PreBarrierReg));
   }
 
-  return emitInstanceCall(SASigArrayCopy);
+  return emitInstanceCall(lineOrBytecode, SASigArrayCopy);
 }
 
 bool BaseCompiler::emitRefTest() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   Nothing nothing;
   uint32_t typeIndex;
   if (!iter_.readRefTest(&typeIndex, &nothing)) {
@@ -7131,10 +7182,12 @@ bool BaseCompiler::emitRefTest() {
   }
 
   emitGcCanon(typeIndex);
-  return emitInstanceCall(SASigRefTest);
+  return emitInstanceCall(lineOrBytecode, SASigRefTest);
 }
 
 bool BaseCompiler::emitRefCast() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   Nothing nothing;
   uint32_t typeIndex;
   if (!iter_.readRefCast(&typeIndex, &nothing)) {
@@ -7155,7 +7208,7 @@ bool BaseCompiler::emitRefCast() {
   emitGcCanon(typeIndex);
 
   // 2. ref.test : [ref, rtt] -> [i32]
-  if (!emitInstanceCall(SASigRefTest)) {
+  if (!emitInstanceCall(lineOrBytecode, SASigRefTest)) {
     return false;
   }
 
@@ -7173,6 +7226,7 @@ bool BaseCompiler::emitRefCast() {
 bool BaseCompiler::emitBrOnCast() {
   MOZ_ASSERT(!hasLatentOp());
 
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   uint32_t relativeDepth;
   BaseNothingVector unused_values{};
   uint32_t typeIndex;
@@ -7199,7 +7253,7 @@ bool BaseCompiler::emitBrOnCast() {
   emitGcCanon(typeIndex);
 
   // 2. ref.test : [ref, rtt] -> [i32]
-  if (!emitInstanceCall(SASigRefTest)) {
+  if (!emitInstanceCall(lineOrBytecode, SASigRefTest)) {
     return false;
   }
 
@@ -8475,6 +8529,7 @@ bool BaseCompiler::emitVectorLaneSelect() {
 // "Intrinsics" - magically imported functions for internal use.
 
 bool BaseCompiler::emitIntrinsic() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   const Intrinsic* intrinsic;
 
   BaseNothingVector params;
@@ -8490,7 +8545,7 @@ bool BaseCompiler::emitIntrinsic() {
   pushHeapBase();
 
   // Call the intrinsic
-  return emitInstanceCall(intrinsic->signature);
+  return emitInstanceCall(lineOrBytecode, intrinsic->signature);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -10505,6 +10560,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& moduleEnv,
       stackMapGenerator_(stackMaps, trapExitLayout, trapExitLayoutNumWords,
                          *masm),
       deadCode_(false),
+      lastReadCallSite_(0),
       bceSafe_(0),
       latentOp_(LatentOp::None),
       latentType_(ValType::I32),
@@ -10534,10 +10590,6 @@ BaseCompiler::~BaseCompiler() {
 bool BaseCompiler::init() {
   // We may lift this restriction in the future.
   MOZ_ASSERT_IF(usesMemory() && isMem64(), !moduleEnv_.hugeMemoryEnabled());
-  // asm.js is not supported in baseline
-  MOZ_ASSERT(!moduleEnv_.isAsmJS());
-  // Only asm.js modules have call site line numbers
-  MOZ_ASSERT(func_.callSiteLineNums.empty());
 
   ra.init(this);
 
@@ -10555,6 +10607,8 @@ bool BaseCompiler::init() {
 
 FuncOffsets BaseCompiler::finish() {
   MOZ_ASSERT(iter_.done(), "all bytes must be consumed");
+  MOZ_ASSERT(func_.callSiteLineNums.length() == lastReadCallSite_);
+
   MOZ_ASSERT(stk_.empty());
   MOZ_ASSERT(stackMapGenerator_.memRefsOnStk == 0);
 
