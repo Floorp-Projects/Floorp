@@ -299,6 +299,10 @@ this.VideoControlsImplWidget = class {
       isPausedByDragging: false,
       _isAudioOnly: false,
 
+      get isAudioTag() {
+        return this.video.localName == "audio";
+      },
+
       get isAudioOnly() {
         return this._isAudioOnly;
       },
@@ -788,7 +792,7 @@ this.VideoControlsImplWidget = class {
             this.controlsSpacer.removeAttribute("aria-label");
             this.statusOverlay.removeAttribute("status");
             this.statusIcon.setAttribute("type", "throbber");
-            this.isAudioOnly = this.video.localName == "audio";
+            this.isAudioOnly = this.isAudioTag;
             this.setPlayButtonState(true);
             this.setupNewLoadState();
             this.setupStatusFader();
@@ -1706,7 +1710,7 @@ this.VideoControlsImplWidget = class {
 
       toggleFullscreen() {
         // audio tags cannot toggle fullscreen
-        if (!this.isAudioOnly) {
+        if (!this.isAudioTag) {
           this.isVideoInFullScreen
             ? this.document.exitFullscreen()
             : this.video.requestFullscreen();
@@ -2436,7 +2440,7 @@ this.VideoControlsImplWidget = class {
 
         // Since the size of videocontrols is expanded with controlBar in <audio>, we
         // should fix the dimensions in order not to recursively trigger reflow afterwards.
-        if (this.video.localName == "audio") {
+        if (this.isAudioTag) {
           if (givenHeight) {
             // The height of controlBar should be capped with the bounds between controlBarMinHeight
             // and controlBarMinVisibleHeight.
@@ -2596,7 +2600,7 @@ this.VideoControlsImplWidget = class {
           this.volumeStack,
         ];
 
-        this.isAudioOnly = this.video.localName == "audio";
+        this.isAudioOnly = this.isAudioTag;
         this.setupInitialState();
         this.setupNewLoadState();
         this.initTextTracks();

@@ -29,7 +29,7 @@
     let children =
       InspectorUtils.getChildrenForNode(element, true);
     for (let child of children) {
-      var result = findElementByAttribute(child, aName, aValue);
+      const result = findElementByAttribute(child, aName, aValue);
       if (result) {
         return result;
       }
@@ -38,36 +38,9 @@
   }
 
   function loadedmetadata(event) {
-    SimpleTest.requestCompleteLog();
-    SimpleTest.executeSoon(async function test_fullscreen_unavailable() {
-      const { x, y } = video.getBoundingClientRect();
+    SimpleTest.executeSoon(function() {
       const controlBar = findElementByAttribute(video, "class", "controlBar");
-      SimpleTest.requestFlakyTimeout("Waiting to ensure that fullscreen event does not fire");
-      const endedPromise = new Promise(resolve => {
-        video.addEventListener("ended", () => {
-          info('Video ended event fired!');
-          resolve();
-        }, { once: true });
-        setTimeout( () => {
-          info('Video ran out of time before ended event fired!');
-          resolve();
-        }, video.duration * 1000);
-      });
-      let noFullscreenEvent = true;
       is(controlBar.getAttribute("fullscreen-unavailable"), "true", "Fullscreen button is hidden");
-      document.addEventListener("mozfullscreenchange", () => {
-        noFullscreenEvent = false;
-      }, { once: true });
-      info("Simulate double click on media player.");
-      synthesizeMouse(video, x, y, { clickCount: 2 });
-      info("Waiting for video to end...");
-      await endedPromise;
-      // By this point, if the double click was going to trigger fullscreen then
-      // it should have happened by now.
-      ok(
-        noFullscreenEvent,
-        "Double clicking should not trigger fullscreen event"
-      );
       SimpleTest.finish();
     });
   }
