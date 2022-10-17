@@ -485,7 +485,7 @@ def try_rename_in(command_context, path, target, jsm_name, esm_name, jsm_path):
     if modified:
         info(f"  {str(target_path)}")
         info(f"    {jsm_name} => {esm_name}")
-        with open(target_path, "w") as f:
+        with open(target_path, "w", newline="\n") as f:
             f.write(content)
 
     return True
@@ -520,7 +520,7 @@ def try_rename_components_conf(command_context, path, jsm_name, esm_name):
     info(f"    {jsm_name} => {esm_name}")
 
     content = prop_re.sub(r"'esModule':\1" + esm_name, content)
-    with open(target_path, "w") as f:
+    with open(target_path, "w", newline="\n") as f:
         f.write(content)
 
     return True
@@ -538,7 +538,7 @@ def esmify_path(jsm_path):
 
 
 def rename_single_file(command_context, vcs_utils, jsm_path):
-    """Rename `jsm_path` to .sys.mjs, and fix refereces to the file in build and
+    """Rename `jsm_path` to .sys.mjs, and fix references to the file in build and
     test definitions."""
 
     def warn(text):
