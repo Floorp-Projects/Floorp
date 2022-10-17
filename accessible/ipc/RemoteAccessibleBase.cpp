@@ -772,7 +772,7 @@ nsTArray<bool> RemoteAccessibleBase<Derived>::PreProcessRelations(
         }
       }
       MOZ_ASSERT(
-          tag || IsTextLeaf(),
+          tag || IsTextLeaf() || IsDoc(),
           "Could not fetch tag via TagName() or from initial cache push!");
       if (tag != data.mValidTag) {
         // If this rel doesn't apply to us, do no pre-processing. Also,

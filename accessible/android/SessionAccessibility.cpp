@@ -1008,6 +1008,17 @@ Accessible* SessionAccessibility::GetAccessibleByID(int32_t aID) const {
   return accessible;
 }
 
+#ifdef DEBUG
+static bool IsDetachedDoc(Accessible* aAccessible) {
+  if (!aAccessible->IsRemote() || !aAccessible->AsRemote()->IsDoc()) {
+    return false;
+  }
+
+  return !aAccessible->Parent() ||
+         aAccessible->Parent()->FirstChild() != aAccessible;
+}
+#endif
+
 void SessionAccessibility::RegisterAccessible(Accessible* aAccessible) {
   if (IPCAccessibilityActive()) {
     // Don't register accessible in content process.
@@ -1044,8 +1055,15 @@ void SessionAccessibility::RegisterAccessible(Accessible* aAccessible) {
   }
   AccessibleWrap::SetVirtualViewID(aAccessible, virtualViewID);
 
-  MOZ_ASSERT(!sessionAcc->mIDToAccessibleMap.Contains(virtualViewID),
-             "ID already registered");
+  Accessible* oldAcc = sessionAcc->mIDToAccessibleMap.Get(virtualViewID);
+  if (oldAcc) {
+    // About to overwrite mapping of registered accessible. This should
+    // only happen when the registered accessible is a detached document.
+    MOZ_ASSERT(IsDetachedDoc(oldAcc),
+               "ID already registered to non-detached document");
+    AccessibleWrap::SetVirtualViewID(oldAcc, kUnsetID);
+  }
+
   sessionAcc->mIDToAccessibleMap.InsertOrUpdate(virtualViewID, aAccessible);
 }
 
@@ -1064,8 +1082,21 @@ void SessionAccessibility::UnregisterAccessible(Accessible* aAccessible) {
   RefPtr<SessionAccessibility> sessionAcc = GetInstanceFor(aAccessible);
   MOZ_ASSERT(sessionAcc, "Need SessionAccessibility to unregister Accessible!");
   if (sessionAcc) {
-    MOZ_ASSERT(sessionAcc->mIDToAccessibleMap.Contains(virtualViewID),
-               "Unregistering unregistered accessible");
+    Accessible* registeredAcc =
+        sessionAcc->mIDToAccessibleMap.Get(virtualViewID);
+    if (registeredAcc != aAccessible) {
+      // Attempting to unregister an accessible that is not mapped to
+      // its virtual view ID. This probably means it is a detached document
+      // and a more recent document overwrote its '-1' mapping.
+      // We set its own virtual view ID to `kUnsetID` and return early.
+      MOZ_ASSERT(!registeredAcc || IsDetachedDoc(aAccessible),
+                 "Accessible is detached document");
+      AccessibleWrap::SetVirtualViewID(aAccessible, kUnsetID);
+      return;
+    }
+
+    MOZ_ASSERT(registeredAcc, "Unregistering unregistered accessible");
+    MOZ_ASSERT(registeredAcc == aAccessible, "Unregistering wrong accessible");
     sessionAcc->mIDToAccessibleMap.Remove(virtualViewID);
   }
 
