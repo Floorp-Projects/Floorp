@@ -149,7 +149,6 @@ def docker_worker_run_task(config, job, taskdesc):
         command.append(
             "--comm-checkout={}/comm".format(taskdesc["worker"]["env"]["GECKO_PATH"])
         )
-    command.append("--fetch-hgfingerprint")
     if run["run-as-root"]:
         command.extend(("--user", "root", "--group", "root"))
     if run_cwd:
