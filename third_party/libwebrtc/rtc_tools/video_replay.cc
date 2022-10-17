@@ -64,6 +64,12 @@ ABSL_FLAG(int,
           webrtc::test::CallTest::kUlpfecPayloadType,
           "ULPFEC payload type");
 
+// Flag for FLEXFEC payload type.
+ABSL_FLAG(int,
+          flexfec_payload_type,
+          webrtc::test::CallTest::kFlexfecPayloadType,
+          "FLEXFEC payload type");
+
 ABSL_FLAG(int,
           media_payload_type_rtx,
           webrtc::test::CallTest::kSendRtxPayloadType,
@@ -83,6 +89,11 @@ ABSL_FLAG(uint32_t,
           ssrc_rtx,
           webrtc::test::CallTest::kSendRtxSsrcs[0],
           "Incoming RTX SSRC");
+
+ABSL_FLAG(uint32_t,
+          ssrc_flexfec,
+          webrtc::test::CallTest::kFlexfecSendSsrc,
+          "Incoming FLEXFEC SSRC");
 
 // Flag for abs-send-time id.
 ABSL_FLAG(int, abs_send_time_id, -1, "RTP extension ID for abs-send-time");
@@ -160,6 +171,10 @@ static int UlpfecPayloadType() {
   return absl::GetFlag(FLAGS_ulpfec_payload_type);
 }
 
+static int FlexfecPayloadType() {
+  return absl::GetFlag(FLAGS_flexfec_payload_type);
+}
+
 static int MediaPayloadTypeRtx() {
   return absl::GetFlag(FLAGS_media_payload_type_rtx);
 }
@@ -174,6 +189,10 @@ static uint32_t Ssrc() {
 
 static uint32_t SsrcRtx() {
   return absl::GetFlag(FLAGS_ssrc_rtx);
+}
+
+static uint32_t SsrcFlexfec() {
+  return absl::GetFlag(FLAGS_ssrc_flexfec);
 }
 
 static int AbsSendTimeId() {
@@ -377,6 +396,9 @@ class RtpReplayer final {
       for (const auto& receive_stream : stream_state->receive_streams) {
         call->DestroyVideoReceiveStream(receive_stream);
       }
+      for (const auto& flexfec_stream : stream_state->flexfec_streams) {
+        call->DestroyFlexfecReceiveStream(flexfec_stream);
+      }
       call.reset();
       sync_event.Set();
     }));
@@ -391,6 +413,7 @@ class RtpReplayer final {
     test::NullTransport transport;
     std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>> sinks;
     std::vector<VideoReceiveStreamInterface*> receive_streams;
+    std::vector<FlexfecReceiveStream*> flexfec_streams;
     std::unique_ptr<VideoDecoderFactory> decoder_factory;
   };
 
@@ -469,6 +492,20 @@ class RtpReplayer final {
     receive_config.rtp.ulpfec_payload_type = UlpfecPayloadType();
     receive_config.rtp.red_payload_type = RedPayloadType();
     receive_config.rtp.nack.rtp_history_ms = 1000;
+
+    if (FlexfecPayloadType() != -1) {
+      receive_config.rtp.protected_by_flexfec = true;
+      webrtc::FlexfecReceiveStream::Config flexfec_config(
+          &(stream_state->transport));
+      flexfec_config.payload_type = FlexfecPayloadType();
+      flexfec_config.protected_media_ssrcs.push_back(Ssrc());
+      flexfec_config.rtp.remote_ssrc = SsrcFlexfec();
+      FlexfecReceiveStream* flexfec_stream =
+          call->CreateFlexfecReceiveStream(flexfec_config);
+      receive_config.rtp.packet_sink_ = flexfec_stream;
+      stream_state->flexfec_streams.push_back(flexfec_stream);
+    }
+
     if (TransmissionOffsetId() != -1) {
       receive_config.rtp.extensions.push_back(RtpExtension(
           RtpExtension::kTimestampOffsetUri, TransmissionOffsetId()));
@@ -622,6 +659,8 @@ int main(int argc, char* argv[]) {
       ValidateOptionalPayloadType(absl::GetFlag(FLAGS_red_payload_type_rtx)));
   RTC_CHECK(
       ValidateOptionalPayloadType(absl::GetFlag(FLAGS_ulpfec_payload_type)));
+  RTC_CHECK(
+      ValidateOptionalPayloadType(absl::GetFlag(FLAGS_flexfec_payload_type)));
   RTC_CHECK(
       ValidateRtpHeaderExtensionId(absl::GetFlag(FLAGS_abs_send_time_id)));
   RTC_CHECK(ValidateRtpHeaderExtensionId(
