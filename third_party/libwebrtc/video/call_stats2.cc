@@ -15,7 +15,6 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
-#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
 #include "system_wrappers/include/metrics.h"
@@ -147,7 +146,7 @@ void CallStats::OnRttUpdate(int64_t rtt) {
   if (task_queue_->IsCurrent()) {
     update();
   } else {
-    task_queue_->PostTask(ToQueuedTask(task_safety_, std::move(update)));
+    task_queue_->PostTask(SafeTask(task_safety_.flag(), std::move(update)));
   }
 }
 

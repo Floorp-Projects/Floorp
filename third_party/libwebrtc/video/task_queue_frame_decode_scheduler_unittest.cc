@@ -15,6 +15,7 @@
 #include <memory>
 #include <utility>
 
+#include "absl/functional/any_invocable.h"
 #include "absl/functional/bind_front.h"
 #include "absl/types/optional.h"
 #include "api/units/time_delta.h"
@@ -55,9 +56,8 @@ class TaskQueueFrameDecodeSchedulerTest : public ::testing::Test {
   }
 
  protected:
-  template <class Task>
-  void OnQueue(Task&& t) {
-    task_queue_.PostTask(std::forward<Task>(t));
+  void OnQueue(absl::AnyInvocable<void() &&> t) {
+    task_queue_.PostTask(std::move(t));
     time_controller_.AdvanceTime(TimeDelta::Zero());
   }
 

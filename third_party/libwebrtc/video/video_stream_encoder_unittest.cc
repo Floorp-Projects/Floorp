@@ -133,11 +133,10 @@ void PassAFrame(
     TaskQueueBase* encoder_queue,
     FrameCadenceAdapterInterface::Callback* video_stream_encoder_callback,
     int64_t ntp_time_ms) {
-  encoder_queue->PostTask(
-      ToQueuedTask([video_stream_encoder_callback, ntp_time_ms] {
-        video_stream_encoder_callback->OnFrame(Timestamp::Millis(ntp_time_ms),
-                                               1, CreateSimpleNV12Frame());
-      }));
+  encoder_queue->PostTask([video_stream_encoder_callback, ntp_time_ms] {
+    video_stream_encoder_callback->OnFrame(Timestamp::Millis(ntp_time_ms), 1,
+                                           CreateSimpleNV12Frame());
+  });
 }
 
 class TestBuffer : public webrtc::I420Buffer {
@@ -9076,12 +9075,16 @@ TEST(VideoStreamEncoderSimpleTest, CreateDestroy) {
 
    private:
     void Delete() override { delete this; }
-    void PostTask(std::unique_ptr<QueuedTask> task) override {
+    void PostTask(absl::AnyInvocable<void() &&> task) override {
       // meh.
     }
-    void PostDelayedTask(std::unique_ptr<QueuedTask> task,
-                         uint32_t milliseconds) override {
+    void PostDelayedTask(absl::AnyInvocable<void() &&> task,
+                         TimeDelta delay) override {
       ASSERT_TRUE(false);
+    }
+    void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
+                                      TimeDelta delay) override {
+      ADD_FAILURE();
     }
   };
 

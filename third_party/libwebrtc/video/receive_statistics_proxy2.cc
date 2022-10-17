@@ -14,7 +14,6 @@
 #include <cmath>
 #include <utility>
 
-#include "api/task_queue/to_queued_task.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -643,7 +642,7 @@ VideoReceiveStreamInterface::Stats ReceiveStatisticsProxy::GetStats() const {
 
 void ReceiveStatisticsProxy::OnIncomingPayloadType(int payload_type) {
   RTC_DCHECK_RUN_ON(&decode_queue_);
-  worker_thread_->PostTask(ToQueuedTask(task_safety_, [payload_type, this]() {
+  worker_thread_->PostTask(SafeTask(task_safety_.flag(), [payload_type, this] {
     RTC_DCHECK_RUN_ON(&main_thread_);
     stats_.current_payload_type = payload_type;
   }));
@@ -652,8 +651,8 @@ void ReceiveStatisticsProxy::OnIncomingPayloadType(int payload_type) {
 void ReceiveStatisticsProxy::OnDecoderImplementationName(
     const char* implementation_name) {
   RTC_DCHECK_RUN_ON(&decode_queue_);
-  worker_thread_->PostTask(ToQueuedTask(
-      task_safety_, [name = std::string(implementation_name), this]() {
+  worker_thread_->PostTask(SafeTask(
+      task_safety_.flag(), [name = std::string(implementation_name), this]() {
         RTC_DCHECK_RUN_ON(&main_thread_);
         stats_.decoder_implementation_name = name;
       }));
@@ -669,8 +668,8 @@ void ReceiveStatisticsProxy::OnFrameBufferTimingsUpdated(
   // Only called on main_thread_ with FrameBuffer3
   if (!worker_thread_->IsCurrent()) {
     RTC_DCHECK_RUN_ON(&decode_queue_);
-    worker_thread_->PostTask(ToQueuedTask(
-        task_safety_,
+    worker_thread_->PostTask(SafeTask(
+        task_safety_.flag(),
         [max_decode_ms, current_delay_ms, target_delay_ms, jitter_buffer_ms,
          min_playout_delay_ms, render_delay_ms, this]() {
           OnFrameBufferTimingsUpdated(max_decode_ms, current_delay_ms,
@@ -705,8 +704,9 @@ void ReceiveStatisticsProxy::OnTimingFrameInfoUpdated(
   // Only called on main_thread_ with FrameBuffer3
   if (!worker_thread_->IsCurrent()) {
     RTC_DCHECK_RUN_ON(&decode_queue_);
-    worker_thread_->PostTask(ToQueuedTask(
-        task_safety_, [info, this]() { OnTimingFrameInfoUpdated(info); }));
+    worker_thread_->PostTask(SafeTask(task_safety_.flag(), [info, this]() {
+      OnTimingFrameInfoUpdated(info);
+    }));
     return;
   }
   RTC_DCHECK_RUN_ON(&main_thread_);
@@ -746,7 +746,7 @@ void ReceiveStatisticsProxy::RtcpPacketTypesCounterUpdated(
     // runs after the `ReceiveStatisticsProxy` has been deleted. In such a
     // case the packet_counter update won't be recorded.
     worker_thread_->PostTask(
-        ToQueuedTask(task_safety_, [ssrc, packet_counter, this]() {
+        SafeTask(task_safety_.flag(), [ssrc, packet_counter, this]() {
           RtcpPacketTypesCounterUpdated(ssrc, packet_counter);
         }));
     return;
@@ -793,8 +793,8 @@ void ReceiveStatisticsProxy::OnDecodedFrame(const VideoFrame& frame,
   // "com.apple.coremedia.decompressionsession.clientcallback"
   VideoFrameMetaData meta(frame, current_time);
   worker_thread_->PostTask(
-      ToQueuedTask(task_safety_, [meta, qp, decode_time, processing_delay,
-                                  assembly_time, content_type, this]() {
+      SafeTask(task_safety_.flag(), [meta, qp, decode_time, processing_delay,
+                                     assembly_time, content_type, this]() {
         OnDecodedFrame(meta, qp, decode_time, processing_delay, assembly_time,
                        content_type);
       }));
@@ -979,10 +979,11 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
   // See FrameBuffer2 for more details.
   TRACE_EVENT2("webrtc", "ReceiveStatisticsProxy::OnDroppedFrames",
                "remote_ssrc", remote_ssrc_, "frames_dropped", frames_dropped);
-  worker_thread_->PostTask(ToQueuedTask(task_safety_, [frames_dropped, this]() {
-    RTC_DCHECK_RUN_ON(&main_thread_);
-    stats_.frames_dropped += frames_dropped;
-  }));
+  worker_thread_->PostTask(
+      SafeTask(task_safety_.flag(), [frames_dropped, this]() {
+        RTC_DCHECK_RUN_ON(&main_thread_);
+        stats_.frames_dropped += frames_dropped;
+      }));
 }
 
 void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
@@ -1000,14 +1001,15 @@ void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
 
 void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
   RTC_DCHECK_RUN_ON(&decode_queue_);
-  worker_thread_->PostTask(ToQueuedTask(task_safety_, [codec_type, qp, this]() {
-    RTC_DCHECK_RUN_ON(&main_thread_);
-    last_codec_type_ = codec_type;
-    if (last_codec_type_ == kVideoCodecVP8 && qp != -1) {
-      qp_counters_.vp8.Add(qp);
-      qp_sample_.Add(qp);
-    }
-  }));
+  worker_thread_->PostTask(
+      SafeTask(task_safety_.flag(), [codec_type, qp, this]() {
+        RTC_DCHECK_RUN_ON(&main_thread_);
+        last_codec_type_ = codec_type;
+        if (last_codec_type_ == kVideoCodecVP8 && qp != -1) {
+          qp_counters_.vp8.Add(qp);
+          qp_sample_.Add(qp);
+        }
+      }));
 }
 
 void ReceiveStatisticsProxy::OnStreamInactive() {

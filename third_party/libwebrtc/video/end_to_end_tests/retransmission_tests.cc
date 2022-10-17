@@ -14,6 +14,7 @@
 #include "api/task_queue/task_queue_base.h"
 #include "api/test/simulated_network.h"
 #include "api/test/video/function_video_encoder_factory.h"
+#include "api/units/time_delta.h"
 #include "call/fake_network_pipe.h"
 #include "call/simulated_network.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
@@ -204,7 +205,7 @@ TEST_F(RetransmissionEndToEndTest, ReceivesNackAndRetransmitsAudio) {
 
 TEST_F(RetransmissionEndToEndTest,
        StopSendingKeyframeRequestsForInactiveStream) {
-  class KeyframeRequestObserver : public test::EndToEndTest, public QueuedTask {
+  class KeyframeRequestObserver : public test::EndToEndTest {
    public:
     explicit KeyframeRequestObserver(TaskQueueBase* task_queue)
         : clock_(Clock::GetRealTimeClock()), task_queue_(task_queue) {}
@@ -221,7 +222,7 @@ TEST_F(RetransmissionEndToEndTest,
       test::RtcpPacketParser parser;
       EXPECT_TRUE(parser.Parse(packet, length));
       if (parser.pli()->num_packets() > 0)
-        task_queue_->PostTask(std::unique_ptr<QueuedTask>(this));
+        task_queue_->PostTask([this] { Run(); });
       return SEND_PACKET;
     }
 
@@ -229,7 +230,7 @@ TEST_F(RetransmissionEndToEndTest,
       if (receive_stream_->GetStats().frames_decoded > 0) {
         frame_decoded_ = true;
       } else if (clock_->TimeInMilliseconds() - start_time_ < 5000) {
-        task_queue_->PostDelayedTask(std::unique_ptr<QueuedTask>(this), 100);
+        task_queue_->PostDelayedTask([this] { Run(); }, TimeDelta::Millis(100));
         return false;
       }
       return true;
@@ -237,11 +238,11 @@ TEST_F(RetransmissionEndToEndTest,
 
     void PerformTest() override {
       start_time_ = clock_->TimeInMilliseconds();
-      task_queue_->PostTask(std::unique_ptr<QueuedTask>(this));
+      task_queue_->PostTask([this] { Run(); });
       test_done_.Wait(rtc::Event::kForever);
     }
 
-    bool Run() override {
+    void Run() {
       if (!frame_decoded_) {
         if (PollStats()) {
           send_stream_->Stop();
@@ -259,7 +260,6 @@ TEST_F(RetransmissionEndToEndTest,
             receive_stream_->GetStats().rtcp_packet_type_counts.pli_packets);
         test_done_.Set();
       }
-      return false;
     }
 
    private:

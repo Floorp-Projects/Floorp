@@ -91,7 +91,7 @@ class FrameBuffer2Proxy : public FrameBufferProxy {
 
   void StartNextDecode(bool keyframe_required) override {
     if (!decode_queue_->IsCurrent()) {
-      decode_queue_->PostTask(ToQueuedTask(
+      decode_queue_->PostTask(SafeTask(
           decode_safety_,
           [this, keyframe_required] { StartNextDecode(keyframe_required); }));
       return;
@@ -272,8 +272,8 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
 
   void StartNextDecode(bool keyframe_required) override {
     if (!worker_queue_->IsCurrent()) {
-      worker_queue_->PostTask(ToQueuedTask(
-          worker_safety_,
+      worker_queue_->PostTask(SafeTask(
+          worker_safety_.flag(),
           [this, keyframe_required] { StartNextDecode(keyframe_required); }));
       return;
     }
@@ -361,8 +361,8 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
 
     decoder_ready_for_new_frame_ = false;
     // VideoReceiveStream2 wants frames on the decoder thread.
-    decode_queue_->PostTask(ToQueuedTask(
-        decode_safety_, [this, frame = std::move(frame)]() mutable {
+    decode_queue_->PostTask(
+        SafeTask(decode_safety_, [this, frame = std::move(frame)]() mutable {
           receiver_->OnEncodedFrame(std::move(frame));
         }));
   }
