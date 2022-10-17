@@ -668,10 +668,14 @@ if (is_mac || is_ios) {
       ":checks",
       ":logging",
       "../api/task_queue",
+      "../api/units:time_delta",
       "synchronization:mutex",
       "system:gcd_helpers",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/functional:any_invocable",
+      "//third_party/abseil-cpp/absl/strings",
+    ]
   }
 }
 
