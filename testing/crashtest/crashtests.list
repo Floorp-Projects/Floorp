@@ -18,7 +18,6 @@ include ../../dom/file/tests/crashtests/crashtests.list
 include ../../dom/html/crashtests/crashtests.list
 include ../../dom/indexedDB/crashtests/crashtests.list
 include ../../dom/jsurl/crashtests/crashtests.list
-include ../../dom/mathml/crashtests/crashtests.list
 include ../../dom/media/mediasource/test/crashtests/crashtests.list
 include ../../dom/media/test/crashtests/crashtests.list
 include ../../dom/media/webvtt/test/crashtests/crashtests.list
@@ -55,7 +54,6 @@ include ../../js/xpconnect/crashtests/crashtests.list
 include ../../layout/base/crashtests/crashtests.list
 include ../../layout/forms/crashtests/crashtests.list
 include ../../layout/generic/crashtests/crashtests.list
-include ../../layout/mathml/crashtests/crashtests.list
 include ../../layout/painting/crashtests/crashtests.list
 include ../../layout/printing/crashtests/crashtests.list
 include ../../layout/style/crashtests/crashtests.list
