@@ -68,8 +68,8 @@
 //!
 //! ```ignore
 //! // Automatic nsISupports implementation
-//! unsafe fn AddRef(&self) -> nsrefcnt;
-//! unsafe fn Release(&self) -> nsrefcnt;
+//! unsafe fn AddRef(&self) -> MozExternalRefCountType;
+//! unsafe fn Release(&self) -> MozExternalRefCountType;
 //! unsafe fn QueryInterface(&self, uuid: &nsIID, result: *mut *mut libc::c_void) -> nsresult;
 //!
 //! // Allocates and initializes a new instance of this type. The values will
@@ -442,7 +442,7 @@ fn gen_casts(
     let qi = quote! {
         #base_qi
         if *uuid == #base_name::IID {
-            // Implement QueryInterface in terms of coersions.
+            // Implement QueryInterface in terms of coercions.
             self.addref();
             *result = self.coerce::<#base_name>()
                 as *const #base_name
@@ -710,7 +710,7 @@ fn xpcom_impl(args: AttributeArgs, template: ItemStruct) -> Result<TokenStream, 
             }
 
             /// Automatically generated implementation of AddRef for nsISupports.
-            #vis unsafe fn AddRef(&self) -> ::xpcom::interfaces::nsrefcnt {
+            #vis unsafe fn AddRef(&self) -> ::xpcom::MozExternalRefCountType {
                 let new = self.__refcnt.inc();
                 ::xpcom::trace_refcnt::NS_LogAddRef(
                     self as *const _ as *mut ::xpcom::reexports::libc::c_void,
@@ -722,7 +722,7 @@ fn xpcom_impl(args: AttributeArgs, template: ItemStruct) -> Result<TokenStream, 
             }
 
             /// Automatically generated implementation of Release for nsISupports.
-            #vis unsafe fn Release(&self) -> ::xpcom::interfaces::nsrefcnt {
+            #vis unsafe fn Release(&self) -> ::xpcom::MozExternalRefCountType {
                 let new = self.__refcnt.dec();
                 ::xpcom::trace_refcnt::NS_LogRelease(
                     self as *const _ as *mut ::xpcom::reexports::libc::c_void,

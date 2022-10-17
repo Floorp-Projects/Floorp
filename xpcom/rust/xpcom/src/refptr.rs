@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::interfaces::{nsISupports, nsrefcnt};
+use crate::interfaces::{nsISupports};
 use libc;
 use nserror::{nsresult, NS_OK};
 use std::cell::Cell;
@@ -14,6 +14,10 @@ use std::ops::Deref;
 use std::ptr::{self, NonNull};
 use std::sync::atomic::{self, AtomicUsize, Ordering};
 use threadbound::ThreadBound;
+
+// This should match the definition in mfbt/RefCountType.h, modulo the delicate
+// effort at maintaining binary compatibility with Microsoft COM on Windows.
+pub type MozExternalRefCountType = u32;
 
 /// A trait representing a type which can be reference counted invasively.
 /// The object is responsible for freeing its backing memory when its
@@ -262,7 +266,7 @@ impl Refcnt {
 
     /// Increment the reference count. Returns the new reference count. This is
     /// unsafe as modifying this value can cause a use-after-free.
-    pub unsafe fn inc(&self) -> nsrefcnt {
+    pub unsafe fn inc(&self) -> MozExternalRefCountType {
         // XXX: Checked add?
         let new = self.0.get() + 1;
         self.0.set(new);
@@ -271,7 +275,7 @@ impl Refcnt {
 
     /// Decrement the reference count. Returns the new reference count. This is
     /// unsafe as modifying this value can cause a use-after-free.
-    pub unsafe fn dec(&self) -> nsrefcnt {
+    pub unsafe fn dec(&self) -> MozExternalRefCountType {
         // XXX: Checked sub?
         let new = self.0.get() - 1;
         self.0.set(new);
@@ -301,14 +305,14 @@ impl AtomicRefcnt {
 
     /// Increment the reference count. Returns the new reference count. This is
     /// unsafe as modifying this value can cause a use-after-free.
-    pub unsafe fn inc(&self) -> nsrefcnt {
+    pub unsafe fn inc(&self) -> MozExternalRefCountType {
         let result = self.0.fetch_add(1, Ordering::Relaxed) + 1;
         result.try_into().unwrap()
     }
 
     /// Decrement the reference count. Returns the new reference count. This is
     /// unsafe as modifying this value can cause a use-after-free.
-    pub unsafe fn dec(&self) -> nsrefcnt {
+    pub unsafe fn dec(&self) -> MozExternalRefCountType {
         let result = self.0.fetch_sub(1, Ordering::Release) - 1;
         if result == 0 {
             // We're going to destroy the object on this thread, so we need
