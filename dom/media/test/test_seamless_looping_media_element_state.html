@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Seamless looping media element state</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="text/javascript" src="manifest.js"></script>
+</head>
+<script type="application/javascript">
+
+/**
+ * This test aims to check if the media element would change its ready state
+ * under `HAVE_CURRENT_DATA` when the seamless looping is performed. Because
+ * during seamless looping, we should always have current frame.
+ */
+add_task(async function testSeamlessLoopingMediaElementState() {
+  info(`create video`);
+  let video = document.createElement('video');
+  video.loop = true;
+  video.src = "gizmo-short.mp4";
+  document.body.appendChild(video);
+  await video.play();
+
+  info(`test seamless looping multiples times`);
+  let MAX_LOOPING_COUNT = 10;
+  for (let count = 0; count < MAX_LOOPING_COUNT; count++) {
+    await once(video, "seeking");
+    // If the video looping is not seamless, when playback reaches to the end,
+    // MDSM would trigger a seek in order to get the new frame from the start
+    // position. That would notify the media element that the status of the next
+    // frame is not available now due to seeking (NEXT_FRAME_UNAVAILABLE_SEEKING)
+    // and causes the media element dispatching `waiting` event.
+    video.onwaiting = () => {
+      ok(false, "should not get waiting event");
+    }
+    await once(video, "seeked");
+    video.onwaiting = null;
+    ok(true, `the round ${count} of the seamless looping succeeds`);
+  }
+});
+
+</script>
+<body>
+</body>
+</html>
