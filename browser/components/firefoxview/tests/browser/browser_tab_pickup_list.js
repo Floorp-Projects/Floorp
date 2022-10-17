@@ -392,3 +392,50 @@ add_task(async function test_time_updates_correctly() {
     await SpecialPowers.popPrefEnv();
   });
 });
+
+/**
+ * Ensure that tabs sync when a user reloads Firefox View.
+ */
+add_task(async function test_tabs_sync_on_user_page_reload() {
+  await withFirefoxView({}, async browser => {
+    let reloadButton = browser.ownerDocument.getElementById("reload-button");
+
+    const sandbox = setupRecentDeviceListMocks();
+    sandbox.stub(SyncedTabs._internal, "syncTabs").resolves(true);
+    const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
+    let mockTabs1 = getMockTabData(syncedTabsData1);
+    let mockTabs2 = getMockTabData(syncedTabsData5);
+    syncedTabsMock.returns(mockTabs1);
+
+    await setupListState(browser);
+
+    let tabLoaded = BrowserTestUtils.browserLoaded(browser);
+    EventUtils.synthesizeMouseAtCenter(reloadButton, {}, browser.ownerGlobal);
+    await tabLoaded;
+    // Wait until the window is reloaded, then get the current instance
+    // of the contentWindow
+    const { document } = browser.contentWindow;
+    ok(true, "Firefox View has been reloaded");
+    ok(TabsSetupFlowManager.waitingForTabs, "waitingForTabs is true");
+
+    syncedTabsMock.returns(mockTabs2);
+    Services.obs.notifyObservers(null, "services.sync.tabs.changed");
+    ok(!TabsSetupFlowManager.waitingForTabs, "waitingForTabs is false");
+
+    const syncedTabsList = document.querySelector("ol.synced-tabs-list");
+    // The tab pickup list has been updated
+    await BrowserTestUtils.waitForMutationCondition(
+      syncedTabsList,
+      { childList: true },
+      () => syncedTabsList.firstChild.textContent.includes("Example2")
+    );
+    const timeLabel = document.querySelector("span.synced-tab-li-time");
+    await BrowserTestUtils.waitForMutationCondition(
+      timeLabel,
+      { childList: true },
+      () => timeLabel.textContent.includes("now")
+    );
+    sandbox.restore();
+    cleanup();
+  });
+});

@@ -294,6 +294,10 @@ class TabPickupContainer extends HTMLDetailsElement {
     tabsElem.hidden = false;
     tabsElem.classList.toggle("loading", isLoading);
   }
+
+  async onReload() {
+    await TabsSetupFlowManager.syncOnPageReload();
+  }
 }
 customElements.define("tab-pickup-container", TabPickupContainer, {
   extends: "details",
