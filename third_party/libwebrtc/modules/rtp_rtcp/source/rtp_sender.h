@@ -178,9 +178,6 @@ class RTPSender {
   const uint32_t ssrc_;
   const absl::optional<uint32_t> rtx_ssrc_;
   const absl::optional<uint32_t> flexfec_ssrc_;
-  // Limits GeneratePadding() outcome to <=
-  //  `max_padding_size_factor_` * `target_size_bytes`
-  const double max_padding_size_factor_;
 
   RtpPacketHistory* const packet_history_;
   RtpPacketSender* const paced_sender_;

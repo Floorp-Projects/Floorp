@@ -46,6 +46,10 @@ constexpr size_t kRtpHeaderLength = 12;
 // Min size needed to get payload padding from packet history.
 constexpr int kMinPayloadPaddingBytes = 50;
 
+// Determines how much larger a payload padding packet may be, compared to the
+// requested padding size.
+constexpr double kMaxPaddingSizeFactor = 3.0;
+
 template <typename Extension>
 constexpr RtpExtensionSize CreateExtensionSize() {
   return {Extension::kId, Extension::kValueSizeBytes};
@@ -147,21 +151,6 @@ bool HasBweExtension(const RtpHeaderExtensionMap& extensions_map) {
          extensions_map.IsRegistered(kRtpExtensionTransmissionTimeOffset);
 }
 
-double GetMaxPaddingSizeFactor(const FieldTrialsView* field_trials) {
-  // Too low factor means RTX payload padding is rarely used and ineffective.
-  // Too high means we risk interrupting regular media packets.
-  // In practice, 3x seems to yield reasonable results.
-  constexpr double kDefaultFactor = 3.0;
-  if (!field_trials) {
-    return kDefaultFactor;
-  }
-
-  FieldTrialOptional<double> factor("factor", kDefaultFactor);
-  ParseFieldTrial({&factor}, field_trials->Lookup("WebRTC-LimitPaddingSize"));
-  RTC_CHECK_GE(factor.Value(), 0.0);
-  return factor.Value();
-}
-
 }  // namespace
 
 RTPSender::RTPSender(const RtpRtcpInterface::Configuration& config,
@@ -174,7 +163,6 @@ RTPSender::RTPSender(const RtpRtcpInterface::Configuration& config,
       rtx_ssrc_(config.rtx_send_ssrc),
       flexfec_ssrc_(config.fec_generator ? config.fec_generator->FecSsrc()
                                          : absl::nullopt),
-      max_padding_size_factor_(GetMaxPaddingSizeFactor(config.field_trials)),
       packet_history_(packet_history),
       paced_sender_(packet_sender),
       sending_media_(true),                   // Default to sending media.
@@ -400,11 +388,10 @@ std::vector<std::unique_ptr<RtpPacketToSend>> RTPSender::GeneratePadding(
           packet_history_->GetPayloadPaddingPacket(
               [&](const RtpPacketToSend& packet)
                   -> std::unique_ptr<RtpPacketToSend> {
-                // Limit overshoot, generate <= `max_padding_size_factor_` *
-                // target_size_bytes.
+                // Limit overshoot, generate <= `kMaxPaddingSizeFactor` *
+                // `target_size_bytes`.
                 const size_t max_overshoot_bytes = static_cast<size_t>(
-                    ((max_padding_size_factor_ - 1.0) * target_size_bytes) +
-                    0.5);
+                    ((kMaxPaddingSizeFactor - 1.0) * target_size_bytes) + 0.5);
                 if (packet.payload_size() + kRtxHeaderSize >
                     max_overshoot_bytes + bytes_left) {
                   return nullptr;
