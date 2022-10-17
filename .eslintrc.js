@@ -338,7 +338,6 @@ module.exports = {
         "no-useless-call": "off",
         "no-useless-concat": "off",
         "no-useless-return": "off",
-        "no-with": "off",
       },
     },
     {

@@ -31,20 +31,18 @@ addLoadEvent(function() {
   is(compressor.channelInterpretation, "speakers", "Correct channelCountInterpretation for the compressor node");
 
   // Verify default values
-  with (compressor) {
-    ok(threshold instanceof AudioParam, "treshold is an AudioParam");
-    near(threshold.defaultValue, -24, "Correct default value for threshold");
-    ok(knee instanceof AudioParam, "knee is an AudioParam");
-    near(knee.defaultValue, 30, "Correct default value for knee");
-    ok(ratio instanceof AudioParam, "knee is an AudioParam");
-    near(ratio.defaultValue, 12, "Correct default value for ratio");
-    is(typeof reduction, "number", "reduction is a number");
-    near(reduction, 0, "Correct default value for reduction");
-    ok(attack instanceof AudioParam, "attack is an AudioParam");
-    near(attack.defaultValue, 0.003, "Correct default value for attack");
-    ok(release instanceof AudioParam, "release is an AudioParam");
-    near(release.defaultValue, 0.25, "Correct default value for release");
-  }
+  ok(compressor.threshold instanceof AudioParam, "treshold is an AudioParam");
+  near(compressor.threshold.defaultValue, -24, "Correct default value for threshold");
+  ok(compressor.knee instanceof AudioParam, "knee is an AudioParam");
+  near(compressor.knee.defaultValue, 30, "Correct default value for knee");
+  ok(compressor.ratio instanceof AudioParam, "knee is an AudioParam");
+  near(compressor.ratio.defaultValue, 12, "Correct default value for ratio");
+  is(typeof compressor.reduction, "number", "reduction is a number");
+  near(compressor.reduction, 0, "Correct default value for reduction");
+  ok(compressor.attack instanceof AudioParam, "attack is an AudioParam");
+  near(compressor.attack.defaultValue, 0.003, "Correct default value for attack");
+  ok(compressor.release instanceof AudioParam, "release is an AudioParam");
+  near(compressor.release.defaultValue, 0.25, "Correct default value for release");
 
   compressor.threshold.value = -80;
 

@@ -22,6 +22,8 @@ function testFunc() {
 }
 
 var c = $("content");
+// Intentionally testing the 'with' statement.
+/* eslint-disable-next-line no-with */
 with (c) {
   onmouseover = testFunc;
   fooExpando = testFunc;
