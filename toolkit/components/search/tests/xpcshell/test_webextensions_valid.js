@@ -160,37 +160,3 @@ add_task(async function test_missing_extension() {
 
   await oldRemoveEngineFunc(Services.search.getEngineByName("Example"));
 });
-
-add_task(async function test_user_engine() {
-  Services.telemetry.clearScalars();
-
-  await Services.search.addUserEngine("test", "https://example.com/", "fake");
-
-  await Services.search.runBackgroundChecks();
-  let scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
-
-  Assert.deepEqual(
-    scalars,
-    {},
-    "Should not have recorded any issues for a user-defined engine"
-  );
-});
-
-add_task(async function test_policy_engine() {
-  Services.telemetry.clearScalars();
-
-  await Services.search.addPolicyEngine({
-    description: "test policy engine",
-    name: "test_policy_engine",
-    search_url: "https://www.example.org/?search={searchTerms}",
-  });
-
-  await Services.search.runBackgroundChecks();
-  let scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
-
-  Assert.deepEqual(
-    scalars,
-    {},
-    "Should not have recorded any issues for a policy defined engine"
-  );
-});
