@@ -132,3 +132,21 @@ add_task(async function test_enterprise_policy_engine_hidden_persisted() {
   Assert.equal(engine.alias, "p1", "Should have retained the engine alias");
   Assert.ok(engine.hidden, "Should have kept the engine hidden");
 });
+
+add_task(async function test_enterprise_policy_engine_remove() {
+  // This will reset and re-initialise the search service.
+  await setupPolicyEngineWithJson({
+    policies: {},
+  });
+
+  Assert.ok(
+    !Services.search.getEngineByName("policy"),
+    "Should not have the policy engine installed"
+  );
+
+  let settings = await promiseSettingsData();
+  Assert.ok(
+    !settings.engines.find(e => e.name == "p1"),
+    "Should not have the engine settings stored"
+  );
+});

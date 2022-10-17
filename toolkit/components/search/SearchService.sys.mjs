@@ -521,9 +521,7 @@ export class SearchService {
    *   An object that simulates the manifest object from a WebExtension. See
    *   the idl for more details.
    */
-  async addPolicyEngine(details) {
-    await this.init();
-
+  async #addPolicyEngine(details) {
     let newEngine = new lazy.PolicySearchEngine({ details });
     let existingEngine = this._engines.get(newEngine.name);
     if (existingEngine) {
@@ -532,22 +530,8 @@ export class SearchService {
         Cr.NS_ERROR_FILE_ALREADY_EXISTS
       );
     }
-    lazy.logConsole.debug(`Adding ${newEngine.name}`);
+    lazy.logConsole.debug("Adding Policy Engine:", newEngine.name);
     this.#addEngineToStore(newEngine);
-  }
-
-  /**
-   * Updates a search engine that is specified from enterprise policies.
-   *
-   * @param {object} details
-   *   An object that simulates the manifest object from a WebExtension. See
-   *   the idl for more details.
-   */
-  async updatePolicyEngine(details) {
-    let engine = this.getEngineByName(details.name);
-    if (engine && !engine.isAppProvided) {
-      engine.update(details);
-    }
   }
 
   /**
@@ -718,7 +702,7 @@ export class SearchService {
       });
     }
 
-    if (engineToRemove.isAppProvided) {
+    if (engineToRemove.inMemory) {
       // Just hide it (the "hidden" setter will notify) and remove its alias to
       // avoid future conflicts with other engines.
       engineToRemove.hidden = true;
@@ -1559,13 +1543,15 @@ export class SearchService {
     }
     this.#startupExtensions.clear();
 
+    this.#loadEnginesFromPolicies();
+
     this.#loadEnginesFromSettings(settings.engines);
 
     this.#loadEnginesMetadataFromSettings(settings.engines);
 
     lazy.logConsole.debug("#loadEngines: done");
 
-    let newCurrentEngine = this._getEngineDefault(false)?.name;
+    let newCurrentEngine = this._getEngineDefault(false);
     this._settings.setMetaDataAttribute(
       "appDefaultEngine",
       this.appDefaultEngine?.name
@@ -1582,7 +1568,7 @@ export class SearchService {
     ) {
       this._showRemovalOfSearchEngineNotificationBox(
         prevCurrentEngine || prevAppDefaultEngine,
-        newCurrentEngine
+        newCurrentEngine.name
       );
     }
   }
@@ -1597,8 +1583,8 @@ export class SearchService {
    *   The user's previous search settings metadata.
    * @param { object } newCurrentEngine
    *   The user's new current default engine.
-   * @param { object } prevCurrentEngine
-   *   The user's previous default engine.
+   * @param { string } prevCurrentEngine
+   *   The name of the user's previous default engine.
    * @param { string } prevAppDefaultEngine
    *   The name of the user's previous app default engine.
    * @returns { boolean }
@@ -1643,15 +1629,26 @@ export class SearchService {
       }
     }
 
+    // Don't show the prompt if the previous engine was an enterprise engine -
+    // the text doesn't quite make sense.
+    if (prevCurrentEngine) {
+      let engineSettings = settings.engines.find(
+        e => e._name == prevCurrentEngine
+      );
+      if (engineSettings._loadPath.includes("set-via-policy")) {
+        return false;
+      }
+    }
+
     // If the user's previous engine is different than the new current engine,
     // or if the user was using the app default engine and the app default
     // engine is different than the new current engine, we check if the user's
     // settings metadata has been upddated.
     if (
-      (prevCurrentEngine && prevCurrentEngine !== newCurrentEngine) ||
+      (prevCurrentEngine && prevCurrentEngine !== newCurrentEngine.name) ||
       (!prevCurrentEngine &&
         prevAppDefaultEngine &&
-        prevAppDefaultEngine !== newCurrentEngine)
+        prevAppDefaultEngine !== newCurrentEngine.name)
     ) {
       // Check settings metadata to detect an update to locale. Sometimes when
       // the user changes their locale it causes a change in engines.
@@ -2118,6 +2115,33 @@ export class SearchService {
     }
   }
 
+  #loadEnginesFromPolicies() {
+    if (Services.policies.status != Ci.nsIEnterprisePolicies.ACTIVE) {
+      return;
+    }
+
+    let activePolicies = Services.policies.getActivePolicies();
+    if (!activePolicies.SearchEngines) {
+      return;
+    }
+    for (let engineDetails of activePolicies.SearchEngines.Add ?? []) {
+      let details = {
+        description: engineDetails.Description,
+        iconURL: engineDetails.IconURL ? engineDetails.IconURL.href : null,
+        name: engineDetails.Name,
+        // If the encoding is not specified or is falsy, we will fall back to
+        // the default encoding.
+        encoding: engineDetails.Encoding,
+        search_url: encodeURI(engineDetails.URLTemplate),
+        keyword: engineDetails.Alias,
+        search_url_post_params:
+          engineDetails.Method == "POST" ? engineDetails.PostData : undefined,
+        suggest_url: engineDetails.SuggestURLTemplate,
+      };
+      this.#addPolicyEngine(details);
+    }
+  }
+
   #loadEnginesFromSettings(enginesCache) {
     if (!enginesCache) {
       return;
@@ -2164,7 +2188,8 @@ export class SearchService {
       try {
         let engine;
         if (loadPath?.includes("set-via-policy")) {
-          engine = new lazy.PolicySearchEngine({ json: engineJSON });
+          skippedEngines++;
+          continue;
         } else if (loadPath?.includes("set-via-user")) {
           engine = new lazy.UserSearchEngine({ json: engineJSON });
         } else if (engineJSON.extensionID ?? engineJSON._extensionID) {
@@ -2193,7 +2218,7 @@ export class SearchService {
       lazy.logConsole.debug(
         "#loadEnginesFromSettings: skipped",
         skippedEngines,
-        "built-in engines."
+        "built-in/policy engines."
       );
     }
   }

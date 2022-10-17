@@ -11,6 +11,8 @@ const { TestUtils } = ChromeUtils.import(
 var { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
+
+Services.prefs.setBoolPref("browser.search.log", true);
 SearchTestUtils.init(this);
 
 AddonTestUtils.init(this, false);
@@ -41,7 +43,7 @@ add_task(async function test_install_and_set_default() {
     'Engine "Foo" should not be present when test starts'
   );
 
-  await setupPolicyEngineWithJson({
+  await setupPolicyEngineWithJsonWithSearch({
     policies: {
       SearchEngines: {
         Add: [
@@ -66,7 +68,7 @@ add_task(async function test_install_and_set_default() {
   );
 
   // Clean up
-  await Services.search.removeEngine(await Services.search.getDefault());
+  await setupPolicyEngineWithJsonWithSearch({});
   EnterprisePolicyTesting.resetRunOnceState();
 });
 
@@ -84,7 +86,7 @@ add_task(async function test_install_and_set_default_private() {
     'Engine "Foo" should not be present when test starts'
   );
 
-  await setupPolicyEngineWithJson({
+  await setupPolicyEngineWithJsonWithSearch({
     policies: {
       SearchEngines: {
         Add: [
@@ -109,7 +111,7 @@ add_task(async function test_install_and_set_default_private() {
   );
 
   // Clean up
-  await Services.search.removeEngine(await Services.search.getDefaultPrivate());
+  await setupPolicyEngineWithJsonWithSearch({});
   EnterprisePolicyTesting.resetRunOnceState();
 });
 
@@ -127,7 +129,7 @@ add_task(async function test_install_and_set_default_prevent_installs() {
     'Engine "Foo" should not be present when test starts'
   );
 
-  await setupPolicyEngineWithJson({
+  await setupPolicyEngineWithJsonWithSearch({
     policies: {
       SearchEngines: {
         Add: [
@@ -151,7 +153,7 @@ add_task(async function test_install_and_set_default_prevent_installs() {
   );
 
   // Clean up
-  await Services.search.removeEngine(await Services.search.getDefault());
+  await setupPolicyEngineWithJsonWithSearch({});
   EnterprisePolicyTesting.resetRunOnceState();
 });
 
@@ -165,7 +167,7 @@ add_task(async function test_install_and_remove() {
     'Engine "Foo" should not be present when test starts'
   );
 
-  await setupPolicyEngineWithJson({
+  await setupPolicyEngineWithJsonWithSearch({
     policies: {
       SearchEngines: {
         Add: [
@@ -197,7 +199,7 @@ add_task(async function test_install_and_remove() {
     "Should default to utf-8"
   );
 
-  await setupPolicyEngineWithJson({
+  await setupPolicyEngineWithJsonWithSearch({
     policies: {
       SearchEngines: {
         Remove: ["Foo"],
@@ -214,6 +216,7 @@ add_task(async function test_install_and_remove() {
     "Specified search engine should not be installed"
   );
 
+  await setupPolicyEngineWithJsonWithSearch({});
   EnterprisePolicyTesting.resetRunOnceState();
 });
 
@@ -224,7 +227,7 @@ add_task(async function test_install_post_method_engine() {
     'Engine "Post" should not be present when test starts'
   );
 
-  await setupPolicyEngineWithJson({
+  await setupPolicyEngineWithJsonWithSearch({
     policies: {
       SearchEngines: {
         Add: [
@@ -263,13 +266,7 @@ add_task(async function test_install_post_method_engine() {
     "Post data should be present"
   );
 
-  await setupPolicyEngineWithJson({
-    policies: {
-      SearchEngines: {
-        Remove: ["Post"],
-      },
-    },
-  });
+  await setupPolicyEngineWithJsonWithSearch({});
   EnterprisePolicyTesting.resetRunOnceState();
 });
 
@@ -282,7 +279,7 @@ add_task(async function test_install_with_encoding() {
     'Engine "Encoding" should not be present when test starts'
   );
 
-  await setupPolicyEngineWithJson({
+  await setupPolicyEngineWithJsonWithSearch({
     policies: {
       SearchEngines: {
         Add: [
@@ -306,12 +303,12 @@ add_task(async function test_install_with_encoding() {
   );
 
   // Clean up
-  await Services.search.removeEngine(engine);
+  await setupPolicyEngineWithJsonWithSearch({});
   EnterprisePolicyTesting.resetRunOnceState();
 });
 
 add_task(async function test_install_and_update() {
-  await setupPolicyEngineWithJson({
+  await setupPolicyEngineWithJsonWithSearch({
     policies: {
       SearchEngines: {
         Add: [
@@ -335,7 +332,7 @@ add_task(async function test_install_and_update() {
     "Initial submission URL should be correct."
   );
 
-  await setupPolicyEngineWithJson({
+  await setupPolicyEngineWithJsonWithSearch({
     policies: {
       SearchEngines: {
         Add: [
@@ -360,7 +357,7 @@ add_task(async function test_install_and_update() {
   );
 
   // Clean up
-  await Services.search.removeEngine(engine);
+  await setupPolicyEngineWithJsonWithSearch({});
   EnterprisePolicyTesting.resetRunOnceState();
 });
 
@@ -373,7 +370,7 @@ add_task(async function test_install_with_suggest() {
     'Engine "Suggest" should not be present when test starts'
   );
 
-  await setupPolicyEngineWithJson({
+  await setupPolicyEngineWithJsonWithSearch({
     policies: {
       SearchEngines: {
         Add: [
@@ -398,12 +395,71 @@ add_task(async function test_install_with_suggest() {
   );
 
   // Clean up
-  await Services.search.removeEngine(engine);
+  await setupPolicyEngineWithJsonWithSearch({});
+  EnterprisePolicyTesting.resetRunOnceState();
+});
+
+add_task(async function test_install_and_restart_keeps_settings() {
+  // Make sure we are starting in an expected state to avoid false positive
+  // test results.
+  Assert.equal(
+    Services.search.getEngineByName("Settings"),
+    null,
+    'Engine "Settings" should not be present when test starts'
+  );
+
+  await setupPolicyEngineWithJsonWithSearch({
+    policies: {
+      SearchEngines: {
+        Add: [
+          {
+            Name: "Settings",
+            URLTemplate: "http://example.com/?q={searchTerms}",
+          },
+        ],
+      },
+    },
+  });
+  // Get in line, because the Search policy callbacks are async.
+  await TestUtils.waitForTick();
+
+  let settingsWritten = SearchTestUtils.promiseSearchNotification(
+    "write-settings-to-disk-complete"
+  );
+  let engine = Services.search.getEngineByName("Settings");
+  engine.hidden = true;
+  engine.alias = "settings";
+  await settingsWritten;
+
+  await setupPolicyEngineWithJsonWithSearch({
+    policies: {
+      SearchEngines: {
+        Add: [
+          {
+            Name: "Settings",
+            URLTemplate: "http://example.com/?q={searchTerms}",
+          },
+        ],
+      },
+    },
+  });
+
+  engine = Services.search.getEngineByName("Settings");
+
+  Assert.ok(engine.hidden, "Should have kept the engine hidden after restart");
+  Assert.equal(
+    engine.alias,
+    "settings",
+    "Should have kept the engine alias after restart"
+  );
+
+  // Clean up
+  await setupPolicyEngineWithJsonWithSearch({});
   EnterprisePolicyTesting.resetRunOnceState();
 });
 
 add_task(async function test_reset_default() {
-  await setupPolicyEngineWithJson({
+  await setupPolicyEngineWithJsonWithSearch({
     policies: {
       SearchEngines: {
         Remove: ["DuckDuckGo"],
