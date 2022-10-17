@@ -17,7 +17,7 @@ To run all the things, here's the tl;dr:
 
 `./mach build && ./mach lint -Ww -o --fix
 && ./mach lint --linter clippy toolkit/components/glean/api/src
-&& ./mach rusttests && ./mach gtest FOG*
+&& ./mach rusttests && ./mach gtest "FOG*"
 && python3 ./mach python-test toolkit/components/glean/tests/pytest
 && ./mach test toolkit/components/glean/tests/xpcshell
 && ./mach telemetry-tests-client toolkit/components/telemetry/tests/marionette/tests/client/test_fog* --gecko-log "-"

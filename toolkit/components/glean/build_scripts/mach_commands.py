@@ -191,23 +191,39 @@ def update_glean(command_context, version):
     )
 
     instructions = f"""
-    Version in files modified. Please run the following commands:
+    We've edited the necessary files to require Glean SDK {version}.
+    To ensure it and Firefox's other Rust dependencies are appropriately vendored,
+    please run the following commands:
 
         cargo update -p glean
-        mach vendor rust
+        mach vendor rust --ignore-modified
 
-    Vendoring will require re-certification of crates.
-    To do that run
+    `mach vendor rust` may identify version mismatches.
+    Please consult the Updating the Glean SDK docs for assistance:
+    https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/updating_sdk.html
+
+    Once you resolve these issues and `mach vendor rust` completes successfully,
+    (or if there were no issues in the first place)
+    you will need to certify that the Glean SDK crates are okay to include in
+    Firefox using `mach cargo vet`.
+
+    Please run these commands, reading and following their instructions:
 
         mach cargo vet certify glean {version}
         mach cargo vet certify glean-core {version}
 
-    This will require you to rerun `mach vendor rust` afterwards.
+    You then get to again run:
 
-    Then run:
+      mach vendor rust --ignore-modified
+
+    Then, to update webrender which independently relies on the Glean SDK, run:
 
         cd gfx/wr
         cargo update -p glean
+
+    Then, to ensure all is well, build Firefox and run the FOG tests.
+    Instructions can be found here:
+    https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/testing.html
     """
 
     print(textwrap.dedent(instructions))
