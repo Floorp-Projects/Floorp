@@ -126,6 +126,19 @@ class MockDcSctpSocketCallbacks : public DcSctpSocketCallbacks {
               (override));
   MOCK_METHOD(void, OnBufferedAmountLow, (StreamID stream_id), (override));
   MOCK_METHOD(void, OnTotalBufferedAmountLow, (), (override));
+  MOCK_METHOD(void,
+              OnLifecycleMessageExpired,
+              (LifecycleId lifecycle_id, bool maybe_delivered),
+              (override));
+  MOCK_METHOD(void,
+              OnLifecycleMessageFullySent,
+              (LifecycleId lifecycle_id),
+              (override));
+  MOCK_METHOD(void,
+              OnLifecycleMessageDelivered,
+              (LifecycleId lifecycle_id),
+              (override));
+  MOCK_METHOD(void, OnLifecycleEnd, (LifecycleId lifecycle_id), (override));
 
   bool HasPacket() const { return !sent_packets_.empty(); }
 

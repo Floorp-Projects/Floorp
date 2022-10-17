@@ -81,6 +81,12 @@ class CallbackDeferrer : public DcSctpSocketCallbacks {
   void OnBufferedAmountLow(StreamID stream_id) override;
   void OnTotalBufferedAmountLow() override;
 
+  void OnLifecycleMessageExpired(LifecycleId lifecycle_id,
+                                 bool maybe_delivered) override;
+  void OnLifecycleMessageFullySent(LifecycleId lifecycle_id) override;
+  void OnLifecycleMessageDelivered(LifecycleId lifecycle_id) override;
+  void OnLifecycleEnd(LifecycleId lifecycle_id) override;
+
  private:
   void Prepare();
   void TriggerDeferred();

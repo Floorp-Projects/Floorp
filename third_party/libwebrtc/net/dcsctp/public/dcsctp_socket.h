@@ -54,6 +54,11 @@ struct SendOptions {
   // If set, limits the number of retransmissions. This is only available
   // if the peer supports Partial Reliability Extension (RFC3758).
   absl::optional<size_t> max_retransmissions = absl::nullopt;
+
+  // If set, will generate lifecycle events for this message. See e.g.
+  // `DcSctpSocketCallbacks::OnLifecycleMessageFullySent`. This value is decided
+  // by the client and the library will provide it to all lifecycle callbacks.
+  LifecycleId lifecycle_id = LifecycleId::NotSet();
 };
 
 enum class ErrorKind {
@@ -389,6 +394,91 @@ class DcSctpSocketCallbacks {
   // buffer, for all streams) falls to or below the threshold specified in
   // `DcSctpOptions::total_buffered_amount_low_threshold`.
   virtual void OnTotalBufferedAmountLow() {}
+
+  // == Lifecycle Events ==
+  //
+  // If a `lifecycle_id` is provided as `SendOptions`, lifecycle callbacks will
+  // be triggered as the message is processed by the library.
+  //
+  // The possible transitions are shown in the graph below:
+  //
+  //        DcSctpSocket::Send  ────────────────────────┐
+  //                │                                   │
+  //                │                                   │
+  //                v                                   v
+  //    OnLifecycleMessageFullySent ───────> OnLifecycleMessageExpired
+  //                │                                   │
+  //                │                                   │
+  //                v                                   v
+  //    OnLifeCycleMessageDelivered ────────────> OnLifecycleEnd
+
+  // OnLifecycleMessageFullySent will be called when a message has been fully
+  // sent, meaning that the last fragment has been produced from the send queue
+  // and sent on the network. Note that this will trigger at most once per
+  // message even if the message was retransmitted due to packet loss.
+  //
+  // This is a lifecycle event.
+  //
+  // Note that it's NOT ALLOWED to call into this library from within this
+  // callback.
+  virtual void OnLifecycleMessageFullySent(LifecycleId lifecycle_id) {}
+
+  // OnLifecycleMessageExpired will be called when a message has expired. If it
+  // was expired with data remaining in the send queue that had not been sent
+  // ever, `maybe_delivered` will be set to false. If `maybe_delivered` is true,
+  // the message has at least once been sent and may have been correctly
+  // received by the peer, but it has expired before the receiver managed to
+  // acknowledge it. This means that if `maybe_delivered` is true, it's unknown
+  // if the message was lost or was delivered, and if `maybe_delivered` is
+  // false, it's guaranteed to not be delivered.
+  //
+  // It's guaranteed that `OnLifecycleMessageDelivered` is not called if this
+  // callback has triggered.
+  //
+  // This is a lifecycle event.
+  //
+  // Note that it's NOT ALLOWED to call into this library from within this
+  // callback.
+  virtual void OnLifecycleMessageExpired(LifecycleId lifecycle_id,
+                                         bool maybe_delivered) {}
+
+  // OnLifecycleMessageDelivered will be called when a non-expired message has
+  // been acknowledged by the peer as delivered.
+  //
+  // Note that this will trigger only when the peer moves its cumulative TSN ack
+  // beyond this message, and will not fire for messages acked using
+  // gap-ack-blocks as those are renegable. This means that this may fire a bit
+  // later than the message was actually first "acked" by the peer, as -
+  // according to the protocol - those acks may be unacked later by the client.
+  //
+  // It's guaranteed that `OnLifecycleMessageExpired` is not called if this
+  // callback has triggered.
+  //
+  // This is a lifecycle event.
+  //
+  // Note that it's NOT ALLOWED to call into this library from within this
+  // callback.
+  virtual void OnLifecycleMessageDelivered(LifecycleId lifecycle_id) {}
+
+  // OnLifecycleEnd will be called when a lifecycle event has reached its end.
+  // It will be called when processing of a message is complete, no matter how
+  // it completed. It will be called after all other lifecycle events, if any.
+  //
+  // Note that it's possible that this callback triggers without any other
+  // lifecycle callbacks having been called before in case of errors, such as
+  // attempting to send an empty message or failing to enqueue a message if the
+  // send queue is full.
+  //
+  // NOTE: When the socket is deallocated, there will be no `OnLifecycleEnd`
+  // callbacks sent for messages that were enqueued. But as long as the socket
+  // is alive, `OnLifecycleEnd` callbacks are guaranteed to be sent as messages
+  // are either expired or successfully acknowledged.
+  //
+  // This is a lifecycle event.
+  //
+  // Note that it's NOT ALLOWED to call into this library from within this
+  // callback.
+  virtual void OnLifecycleEnd(LifecycleId lifecycle_id) {}
 };
 
 // The DcSctpSocket implementation implements the following interface.
@@ -444,7 +534,7 @@ class DcSctpSocketInterface {
   virtual StreamPriority GetStreamPriority(StreamID stream_id) const = 0;
 
   // Sends the message `message` using the provided send options.
-  // Sending a message is an asynchrous operation, and the `OnError` callback
+  // Sending a message is an asynchronous operation, and the `OnError` callback
   // may be invoked to indicate any errors in sending the message.
   //
   // The association does not have to be established before calling this method.
