@@ -70,6 +70,12 @@ ABSL_FLAG(bool,
           "Show the state ALR state on the total bitrate graph");
 
 ABSL_FLAG(bool,
+          show_link_capacity,
+          true,
+          "Show the lower and upper link capacity on the outgoing bitrate "
+          "graph");
+
+ABSL_FLAG(bool,
           parse_unconfigured_header_extensions,
           true,
           "Attempt to parse unconfigured header extensions using the default "
@@ -337,7 +343,8 @@ int main(int argc, char* argv[]) {
   plots.RegisterPlot("outgoing_bitrate", [&](Plot* plot) {
     analyzer.CreateTotalOutgoingBitrateGraph(
         plot, absl::GetFlag(FLAGS_show_detector_state),
-        absl::GetFlag(FLAGS_show_alr_state));
+        absl::GetFlag(FLAGS_show_alr_state),
+        absl::GetFlag(FLAGS_show_link_capacity));
   });
   plots.RegisterPlot("incoming_stream_bitrate", [&](Plot* plot) {
     analyzer.CreateStreamBitrateGraph(webrtc::kIncomingPacket, plot);
