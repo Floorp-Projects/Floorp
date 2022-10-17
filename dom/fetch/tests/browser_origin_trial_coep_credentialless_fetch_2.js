@@ -64,6 +64,7 @@ async function testOrigin(
   await SpecialPowers.spawn(
     noCredentiallessTab.linkedBrowser,
     [
+      !useMetaTag && isCredentialless,
       fetchRequestURL,
       fetchRequestMode,
       fetchRequestCrendentials,
@@ -71,12 +72,16 @@ async function testOrigin(
       expectedCookieResult,
     ],
     async function(
+      sharedArrayBufferEnabled,
       fetchRequestURL,
       fetchRequestMode,
       fetchRequestCrendentials,
       getStateURL,
       expectedCookieResult
     ) {
+      if (sharedArrayBufferEnabled) {
+        ok(content.crossOriginIsolated);
+      }
       // When store_header.sjs receives this request, it will store
       // whether it has received the cookie as a shared state.
       await content.fetch(fetchRequestURL, {
