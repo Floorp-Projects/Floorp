@@ -1412,12 +1412,16 @@ Maybe<TimeUnit> MediaFormatReader::ShouldSkip(TimeUnit aTimeThreshold,
 RefPtr<MediaFormatReader::VideoDataPromise> MediaFormatReader::RequestVideoData(
     const TimeUnit& aTimeThreshold, bool aRequestNextVideoKeyFrame) {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty(),
-                        "No sample requests allowed while seeking");
   MOZ_DIAGNOSTIC_ASSERT(!mVideo.HasPromise(), "No duplicate sample requests");
-  MOZ_DIAGNOSTIC_ASSERT(!mVideo.mSeekRequest.Exists() ||
-                        mVideo.mTimeThreshold.isSome());
-  MOZ_DIAGNOSTIC_ASSERT(!IsSeeking(), "called mid-seek");
+  // Requesting video can be done independently from audio, even during audio
+  // seeking. But it shouldn't happen if we're doing video seek.
+  if (!IsAudioOnlySeeking()) {
+    MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty(),
+                          "No sample requests allowed while seeking");
+    MOZ_DIAGNOSTIC_ASSERT(!mVideo.mSeekRequest.Exists() ||
+                          mVideo.mTimeThreshold.isSome());
+    MOZ_DIAGNOSTIC_ASSERT(!IsSeeking(), "called mid-seek");
+  }
   LOGV("RequestVideoData(%" PRId64 "), requestNextKeyFrame=%d",
        aTimeThreshold.ToMicroseconds(), aRequestNextVideoKeyFrame);
 
@@ -1566,11 +1570,15 @@ RefPtr<MediaFormatReader::AudioDataPromise>
 MediaFormatReader::RequestAudioData() {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_DIAGNOSTIC_ASSERT(!mAudio.HasPromise(), "No duplicate sample requests");
-  MOZ_DIAGNOSTIC_ASSERT(IsVideoSeeking() || mSeekPromise.IsEmpty(),
-                        "No sample requests allowed while seeking");
-  MOZ_DIAGNOSTIC_ASSERT(IsVideoSeeking() || !mAudio.mSeekRequest.Exists() ||
-                        mAudio.mTimeThreshold.isSome());
-  MOZ_DIAGNOSTIC_ASSERT(IsVideoSeeking() || !IsSeeking(), "called mid-seek");
+  // Requesting audio can be done independently from video, even during video
+  // seeking. But it shouldn't happen if we're doing audio seek.
+  if (!IsVideoOnlySeeking()) {
+    MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty(),
+                          "No sample requests allowed while seeking");
+    MOZ_DIAGNOSTIC_ASSERT(!mAudio.mSeekRequest.Exists() ||
+                          mAudio.mTimeThreshold.isSome());
+    MOZ_DIAGNOSTIC_ASSERT(!IsSeeking(), "called mid-seek");
+  }
   LOGV("");
 
   if (!HasAudio()) {
@@ -1859,17 +1867,18 @@ bool MediaFormatReader::UpdateReceivedNewData(TrackType aTrack) {
   }
 
   if (!mSeekPromise.IsEmpty() &&
-      (!IsVideoSeeking() || aTrack == TrackInfo::kVideoTrack)) {
+      (!IsVideoOnlySeeking() || aTrack == TrackInfo::kVideoTrack)) {
     MOZ_ASSERT(!decoder.HasPromise());
     MOZ_DIAGNOSTIC_ASSERT(
-        (IsVideoSeeking() || !mAudio.mTimeThreshold) && !mVideo.mTimeThreshold,
+        (IsVideoOnlySeeking() || !mAudio.mTimeThreshold) &&
+            !mVideo.mTimeThreshold,
         "InternalSeek must have been aborted when Seek was first called");
     MOZ_DIAGNOSTIC_ASSERT(
-        (IsVideoSeeking() || !mAudio.HasWaitingPromise()) &&
+        (IsVideoOnlySeeking() || !mAudio.HasWaitingPromise()) &&
             !mVideo.HasWaitingPromise(),
         "Waiting promises must have been rejected when Seek was first called");
     if (mVideo.mSeekRequest.Exists() ||
-        (!IsVideoSeeking() && mAudio.mSeekRequest.Exists())) {
+        (!IsVideoOnlySeeking() && mAudio.mSeekRequest.Exists())) {
       // Already waiting for a seek to complete. Nothing more to do.
       return true;
     }
