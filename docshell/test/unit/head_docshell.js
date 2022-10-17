@@ -13,6 +13,7 @@ ChromeUtils.defineESModuleGetters(this, {
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
+  HttpServer: "resource://testing-common/httpd.js",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });
@@ -47,7 +48,6 @@ const SEARCH_CONFIG = [
 async function setupSearchService() {
   SearchTestUtils.init(this);
 
-  Services.prefs.setBoolPref("browser.search.modernConfig", true);
   AddonTestUtils.init(this);
   AddonTestUtils.overrideCertDB();
   AddonTestUtils.createAppInfo(
@@ -62,24 +62,39 @@ async function setupSearchService() {
   await Services.search.init();
 }
 
+/**
+ * After useHttpServer() is called, this string contains the URL of the "data"
+ * directory, including the final slash.
+ */
+var gDataUrl;
+
+/**
+ * Initializes the HTTP server and ensures that it is terminated when tests end.
+ *
+ * @param {string} dir
+ *   The test sub-directory to use for the engines.
+ * @returns {HttpServer}
+ *   The HttpServer object in case further customization is needed.
+ */
+function useHttpServer(dir = "data") {
+  let httpServer = new HttpServer();
+  httpServer.start(-1);
+  httpServer.registerDirectory("/", do_get_cwd());
+  gDataUrl = `http://localhost:${httpServer.identity.primaryPort}/${dir}/`;
+  registerCleanupFunction(async function cleanup_httpServer() {
+    await new Promise(resolve => {
+      httpServer.stop(resolve);
+    });
+  });
+  return httpServer;
+}
+
 async function addTestEngines() {
+  useHttpServer();
   // This is a hack, ideally we should be setting up a configuration with
   // built-in engines, but the `chrome_settings_overrides` section that
   // WebExtensions need is only defined for browser/
-  await Services.search.addPolicyEngine({
-    description: "urifixup search engine",
-    name: kSearchEngineID,
-    search_url: kSearchEngineURL,
-  });
-  await Services.search.addPolicyEngine({
-    description: "urifixup private search engine",
-    name: kPrivateSearchEngineID,
-    search_url: kPrivateSearchEngineURL,
-  });
-  await Services.search.addPolicyEngine({
-    description: "urifixup POST search engine",
-    name: kPostSearchEngineID,
-    search_url: kPostSearchEngineURL,
-    search_url_post_params: kPostSearchEngineData,
-  });
+  await SearchTestUtils.promiseNewSearchEngine(`${gDataUrl}/engine.xml`);
+  await SearchTestUtils.promiseNewSearchEngine(`${gDataUrl}/enginePrivate.xml`);
+  await SearchTestUtils.promiseNewSearchEngine(`${gDataUrl}/enginePost.xml`);
 }
