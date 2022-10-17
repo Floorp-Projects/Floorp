@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/container/inlined_vector.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/field_trials_view.h"
@@ -152,6 +153,8 @@ struct AudioCodec : public Codec {
 
 struct RTC_EXPORT VideoCodec : public Codec {
   absl::optional<std::string> packetization;
+  absl::InlinedVector<webrtc::ScalabilityMode, webrtc::kScalabilityModeCount>
+      scalability_modes;
 
   // Creates a codec with the given parameters.
   VideoCodec(int id, const std::string& name);

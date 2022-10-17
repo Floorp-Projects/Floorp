@@ -17,11 +17,13 @@
 #include <string>
 #include <vector>
 
+#include "absl/container/inlined_vector.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/media_types.h"
 #include "api/priority.h"
 #include "api/rtp_transceiver_direction.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
@@ -186,6 +188,9 @@ struct RTC_EXPORT RtpCodecCapability {
   // TODO(deadbeef): Not implemented.
   bool svc_multi_stream_support = false;
 
+  // https://w3c.github.io/webrtc-svc/#dom-rtcrtpcodeccapability-scalabilitymodes
+  absl::InlinedVector<ScalabilityMode, kScalabilityModeCount> scalability_modes;
+
   bool operator==(const RtpCodecCapability& o) const {
     return name == o.name && kind == o.kind && clock_rate == o.clock_rate &&
            preferred_payload_type == o.preferred_payload_type &&
@@ -194,7 +199,8 @@ struct RTC_EXPORT RtpCodecCapability {
            parameters == o.parameters && options == o.options &&
            max_temporal_layer_extensions == o.max_temporal_layer_extensions &&
            max_spatial_layer_extensions == o.max_spatial_layer_extensions &&
-           svc_multi_stream_support == o.svc_multi_stream_support;
+           svc_multi_stream_support == o.svc_multi_stream_support &&
+           scalability_modes == o.scalability_modes;
   }
   bool operator!=(const RtpCodecCapability& o) const { return !(*this == o); }
 };

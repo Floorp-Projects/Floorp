@@ -61,6 +61,7 @@ using ::testing::AtLeast;
 using ::testing::InvokeWithoutArgs;
 using ::testing::NiceMock;
 using ::testing::Return;
+using ::testing::UnorderedElementsAre;
 
 namespace {
 
@@ -181,10 +182,49 @@ class PeerConnectionFactoryTest : public ::testing::Test {
     EXPECT_GT(codec.num_channels, 0);
   }
 
-  void VerifyVideoCodecCapability(const webrtc::RtpCodecCapability& codec) {
+  void VerifyVideoCodecCapability(const webrtc::RtpCodecCapability& codec,
+                                  bool sender) {
     EXPECT_EQ(codec.kind, cricket::MEDIA_TYPE_VIDEO);
     EXPECT_FALSE(codec.name.empty());
     EXPECT_GT(codec.clock_rate, 0);
+    if (sender) {
+      if (codec.name == "VP8" || codec.name == "H264") {
+        EXPECT_THAT(codec.scalability_modes,
+                    UnorderedElementsAre(webrtc::ScalabilityMode::kL1T1,
+                                         webrtc::ScalabilityMode::kL1T2,
+                                         webrtc::ScalabilityMode::kL1T3))
+            << "Codec: " << codec.name;
+      } else if (codec.name == "VP9" || codec.name == "AV1") {
+        EXPECT_THAT(
+            codec.scalability_modes,
+            UnorderedElementsAre(
+                // clang-format off
+                webrtc::ScalabilityMode::kL1T1,
+                webrtc::ScalabilityMode::kL1T2,
+                webrtc::ScalabilityMode::kL1T3,
+                webrtc::ScalabilityMode::kL2T1,
+                webrtc::ScalabilityMode::kL2T1h,
+                webrtc::ScalabilityMode::kL2T1_KEY,
+                webrtc::ScalabilityMode::kL2T2,
+                webrtc::ScalabilityMode::kL2T2_KEY,
+                webrtc::ScalabilityMode::kL2T2_KEY_SHIFT,
+                webrtc::ScalabilityMode::kL2T3,
+                webrtc::ScalabilityMode::kL2T3_KEY,
+                webrtc::ScalabilityMode::kL3T1,
+                webrtc::ScalabilityMode::kL3T3,
+                webrtc::ScalabilityMode::kL3T3_KEY,
+                webrtc::ScalabilityMode::kS2T1,
+                webrtc::ScalabilityMode::kS2T3,
+                webrtc::ScalabilityMode::kS3T3)
+            // clang-format on
+            )
+            << "Codec: " << codec.name;
+      } else {
+        EXPECT_TRUE(codec.scalability_modes.empty());
+      }
+    } else {
+      EXPECT_TRUE(codec.scalability_modes.empty());
+    }
   }
 
   std::unique_ptr<rtc::SocketServer> socket_server_;
@@ -251,7 +291,7 @@ TEST_F(PeerConnectionFactoryTest, CheckRtpSenderVideoCapabilities) {
       factory_->GetRtpSenderCapabilities(cricket::MEDIA_TYPE_VIDEO);
   EXPECT_FALSE(video_capabilities.codecs.empty());
   for (const auto& codec : video_capabilities.codecs) {
-    VerifyVideoCodecCapability(codec);
+    VerifyVideoCodecCapability(codec, true);
   }
   EXPECT_FALSE(video_capabilities.header_extensions.empty());
   for (const auto& header_extension : video_capabilities.header_extensions) {
@@ -284,7 +324,7 @@ TEST_F(PeerConnectionFactoryTest, CheckRtpReceiverVideoCapabilities) {
       factory_->GetRtpReceiverCapabilities(cricket::MEDIA_TYPE_VIDEO);
   EXPECT_FALSE(video_capabilities.codecs.empty());
   for (const auto& codec : video_capabilities.codecs) {
-    VerifyVideoCodecCapability(codec);
+    VerifyVideoCodecCapability(codec, false);
   }
   EXPECT_FALSE(video_capabilities.header_extensions.empty());
   for (const auto& header_extension : video_capabilities.header_extensions) {

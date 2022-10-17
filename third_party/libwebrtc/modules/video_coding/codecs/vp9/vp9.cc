@@ -12,6 +12,7 @@
 
 #include <memory>
 
+#include "absl/container/inlined_vector.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/sdp_video_format.h"
@@ -26,7 +27,7 @@
 
 namespace webrtc {
 
-std::vector<SdpVideoFormat> SupportedVP9Codecs() {
+std::vector<SdpVideoFormat> SupportedVP9Codecs(bool add_scalability_modes) {
 #ifdef RTC_ENABLE_VP9
   // Profile 2 might not be available on some platforms until
   // https://bugs.chromium.org/p/webm/issues/detail?id=1544 is solved.
@@ -36,13 +37,23 @@ std::vector<SdpVideoFormat> SupportedVP9Codecs() {
       (vpx_codec_get_caps(vpx_codec_vp9_dx()) & VPX_CODEC_CAP_HIGHBITDEPTH) !=
           0;
 
+  absl::InlinedVector<ScalabilityMode, kScalabilityModeCount> scalability_modes;
+  if (add_scalability_modes) {
+    for (const auto scalability_mode : kAllScalabilityModes) {
+      if (ScalabilityStructureConfig(scalability_mode).has_value()) {
+        scalability_modes.push_back(scalability_mode);
+      }
+    }
+  }
   std::vector<SdpVideoFormat> supported_formats{SdpVideoFormat(
       cricket::kVp9CodecName,
-      {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile0)}})};
+      {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile0)}},
+      scalability_modes)};
   if (vpx_supports_high_bit_depth) {
     supported_formats.push_back(SdpVideoFormat(
         cricket::kVp9CodecName,
-        {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile2)}}));
+        {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile2)}},
+        scalability_modes));
   }
 
   return supported_formats;

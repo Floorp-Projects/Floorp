@@ -14,13 +14,17 @@
 #include <memory>
 #include <vector>
 
+#include "absl/container/inlined_vector.h"
 #include "modules/video_coding/codecs/av1/av1_svc_config.h"
 #include "modules/video_coding/codecs/av1/libaom_av1_encoder.h"
 
 namespace webrtc {
 struct LibaomAv1EncoderTemplateAdapter {
   static std::vector<SdpVideoFormat> SupportedFormats() {
-    return {SdpVideoFormat("AV1")};
+    absl::InlinedVector<ScalabilityMode, kScalabilityModeCount>
+        scalability_modes = LibaomAv1EncoderSupportedScalabilityModes();
+    return {
+        SdpVideoFormat("AV1", SdpVideoFormat::Parameters(), scalability_modes)};
   }
 
   static std::unique_ptr<VideoEncoder> CreateEncoder(
