@@ -23,6 +23,8 @@ rtc_library("av1_svc_config") {
     "../../svc:scalability_structures",
     "../../svc:scalable_video_controller",
   ]
+
+  absl_deps = [ "//third_party/abseil-cpp/absl/container:inlined_vector" ]
 }
 
 rtc_library("dav1d_decoder") {

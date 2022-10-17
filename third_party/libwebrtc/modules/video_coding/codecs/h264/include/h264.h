@@ -30,7 +30,8 @@ struct SdpVideoFormat;
 RTC_EXPORT SdpVideoFormat
 CreateH264Format(H264Profile profile,
                  H264Level level,
-                 const std::string& packetization_mode);
+                 const std::string& packetization_mode,
+                 bool add_scalability_modes = false);
 
 // Set to disable the H.264 encoder/decoder implementations that are provided if
 // `rtc_use_h264` build flag is true (if false, this function does nothing).
@@ -40,7 +41,8 @@ RTC_EXPORT void DisableRtcUseH264();
 
 // Returns a vector with all supported internal H264 encode profiles that we can
 // negotiate in SDP, in order of preference.
-std::vector<SdpVideoFormat> SupportedH264Codecs();
+std::vector<SdpVideoFormat> SupportedH264Codecs(
+    bool add_scalability_modes = false);
 
 // Returns a vector with all supported internal H264 decode profiles that we can
 // negotiate in SDP, in order of preference. This will be available for receive

@@ -502,6 +502,7 @@ rtc_library("webrtc_h264") {
     #"//third_party/libyuv",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/container:inlined_vector",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
@@ -749,6 +750,7 @@ rtc_library("webrtc_vp9") {
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/container:inlined_vector",
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings:strings",
   ]

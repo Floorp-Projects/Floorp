@@ -36,6 +36,17 @@ absl::optional<ScalabilityMode> BuildScalabilityMode(int num_temporal_layers,
 }
 }  // namespace
 
+absl::InlinedVector<ScalabilityMode, kScalabilityModeCount>
+LibaomAv1EncoderSupportedScalabilityModes() {
+  absl::InlinedVector<ScalabilityMode, kScalabilityModeCount> scalability_modes;
+  for (ScalabilityMode scalability_mode : kAllScalabilityModes) {
+    if (ScalabilityStructureConfig(scalability_mode) != absl::nullopt) {
+      scalability_modes.push_back(scalability_mode);
+    }
+  }
+  return scalability_modes;
+}
+
 bool LibaomAv1EncoderSupportsScalabilityMode(ScalabilityMode scalability_mode) {
   // For libaom AV1, the scalability mode is supported if we can create the
   // scalability structure.

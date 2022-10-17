@@ -24,7 +24,8 @@ namespace webrtc {
 
 // Returns a vector with all supported internal VP9 profiles that we can
 // negotiate in SDP, in order of preference.
-std::vector<SdpVideoFormat> SupportedVP9Codecs();
+std::vector<SdpVideoFormat> SupportedVP9Codecs(
+    bool add_scalability_modes = false);
 
 // Returns a vector with all supported internal VP9 decode profiles in order of
 // preference. These will be availble for receive-only connections.

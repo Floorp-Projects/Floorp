@@ -14,13 +14,21 @@
 #include <memory>
 #include <vector>
 
+#include "absl/container/inlined_vector.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp8/vp8_scalability.h"
 
 namespace webrtc {
 struct LibvpxVp8EncoderTemplateAdapter {
   static std::vector<SdpVideoFormat> SupportedFormats() {
-    return {SdpVideoFormat("VP8")};
+    absl::InlinedVector<ScalabilityMode, kScalabilityModeCount>
+        scalability_modes;
+    for (const auto scalability_mode : kVP8SupportedScalabilityModes) {
+      scalability_modes.push_back(scalability_mode);
+    }
+
+    return {
+        SdpVideoFormat("VP8", SdpVideoFormat::Parameters(), scalability_modes)};
   }
 
   static std::unique_ptr<VideoEncoder> CreateEncoder(

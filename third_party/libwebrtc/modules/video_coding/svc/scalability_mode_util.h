@@ -21,8 +21,6 @@ namespace webrtc {
 absl::optional<ScalabilityMode> ScalabilityModeFromString(
     absl::string_view scalability_mode_string);
 
-absl::string_view ScalabilityModeToString(ScalabilityMode scalability_mode);
-
 InterLayerPredMode ScalabilityModeToInterLayerPredMode(
     ScalabilityMode scalability_mode);
 
