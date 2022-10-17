@@ -41,7 +41,7 @@ pref("floorp.material.effect.enable", false);//マテリアルモードの実装
 pref("floorp.chrome.theme.mode", -1);
 
 pref("floorp.browser.user.interface", 3);// Floorp 10 系以降のインターフェーステーマ設定
-pref("floorp.browser.tabbar.settings", 1);// タブの設定
+pref("floorp.browser.tabbar.settings", 0);// タブの設定
 
 pref("floorp.enable.auto.restart", false);
 
