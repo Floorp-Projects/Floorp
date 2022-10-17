@@ -52,7 +52,7 @@ UniqueCERTCertList FindClientCertificatesWithPrivateKeys();
 bool EnsureNSSInitializedChromeOrContent();
 bool HandleTLSPrefChange(const nsCString& aPref);
 void SetValidationOptionsCommon();
-void NSSShutdownForSocketProcess();
+void PrepareForShutdownInSocketProcess();
 
 // Implementation of the PSM component interface.
 class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
@@ -91,7 +91,7 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
 
  private:
   nsresult InitializeNSS();
-  void ShutdownNSS();
+  void PrepareForShutdown();
 
   void setValidationOptions(bool isInitialSetting,
                             const mozilla::MutexAutoLock& proofOfLock);
@@ -136,14 +136,6 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
 
   // The following members are accessed only on the main thread:
   static int mInstanceCount;
-  // If InitializeNSS succeeds, then we have dispatched an event to load the
-  // loadable roots module, enterprise certificates (if enabled), and the os
-  // client certs module (if enabled) on a background thread. We must wait for
-  // it to complete before attempting to unload the modules again in
-  // ShutdownNSS. If we never dispatched the event, then we can't wait for it
-  // to complete (because it will never complete) so we use this boolean to keep
-  // track of if we should wait.
-  bool mLoadLoadableCertsTaskDispatched;
   // If the intermediate preloading healer is enabled, the following timer
   // periodically dispatches events to the background task queue. Each of these
   // events scans the NSS certdb for preloaded intermediates that are in
