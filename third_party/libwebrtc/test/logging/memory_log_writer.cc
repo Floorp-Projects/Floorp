@@ -27,6 +27,10 @@ class MemoryLogWriter final : public RtcEventLogOutput {
     buffer_.append(value);
     return true;
   }
+  bool Write(absl::string_view value) override {
+    buffer_.append(value.data(), value.size());
+    return true;
+  }
   void Flush() override {}
 
  private:

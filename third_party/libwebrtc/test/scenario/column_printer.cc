@@ -48,12 +48,12 @@ StatesPrinter::~StatesPrinter() = default;
 void StatesPrinter::PrintHeaders() {
   if (!writer_)
     return;
-  writer_->Write(printers_[0].headers_);
+  writer_->Write(absl::string_view(printers_[0].headers_));
   for (size_t i = 1; i < printers_.size(); ++i) {
-    writer_->Write(" ");
-    writer_->Write(printers_[i].headers_);
+    writer_->Write(absl::string_view(" "));
+    writer_->Write(absl::string_view(printers_[i].headers_));
   }
-  writer_->Write("\n");
+  writer_->Write(absl::string_view("\n"));
 }
 
 void StatesPrinter::PrintRow() {
