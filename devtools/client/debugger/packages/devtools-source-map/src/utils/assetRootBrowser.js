@@ -5,7 +5,7 @@
 const { SourceMapConsumer } = require("source-map");
 const {
   setAssetRootURL: wasmDwarfSetAssetRootURL,
-} = require("devtools-wasm-dwarf");
+} = require("../wasm-dwarf/wasmAsset");
 
 function setAssetRootURL(assetRoot) {
   // Remove any trailing slash so we don't generate a double-slash below.

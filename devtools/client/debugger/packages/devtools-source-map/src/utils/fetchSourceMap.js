@@ -6,7 +6,7 @@ const { networkRequest } = require("./network-request");
 
 const { getSourceMap, setSourceMap } = require("./sourceMapRequests");
 const { WasmRemap } = require("./wasmRemap");
-const { convertToJSON } = require("devtools-wasm-dwarf");
+const { convertToJSON } = require("../wasm-dwarf/convertToJSON");
 const { createConsumer } = require("./createConsumer");
 
 // URLs which have been seen in a completed source map request.
