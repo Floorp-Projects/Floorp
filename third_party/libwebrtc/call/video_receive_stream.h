@@ -301,6 +301,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
   // Cause eventual generation of a key frame from the sender.
   virtual void GenerateKeyFrame() = 0;
 
+  virtual void SetRtcpMode(RtcpMode mode) = 0;
+
  protected:
   virtual ~VideoReceiveStreamInterface() {}
 };

@@ -59,6 +59,12 @@ class FlexfecReceiveStream : public RtpPacketSinkInterface,
     // Transport for outgoing RTCP packets.
     Transport* rtcp_send_transport = nullptr;
   };
+
+  // TODO(tommi): FlexfecReceiveStream inherits from ReceiveStreamInterface,
+  // not VideoReceiveStreamInterface where there's also a SetRtcpMode method.
+  // Perhaps this should be in ReceiveStreamInterface and apply to audio streams
+  // as well (although there's no logic that would use it at present).
+  virtual void SetRtcpMode(RtcpMode mode) = 0;
 };
 
 }  // namespace webrtc

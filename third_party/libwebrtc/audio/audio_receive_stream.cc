@@ -218,7 +218,7 @@ bool AudioReceiveStreamImpl::transport_cc() const {
 }
 
 void AudioReceiveStreamImpl::SetTransportCc(bool transport_cc) {
-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   config_.rtp.transport_cc = transport_cc;
 }
 

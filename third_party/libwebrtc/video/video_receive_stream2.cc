@@ -502,6 +502,13 @@ void VideoReceiveStream2::SetTransportCc(bool transport_cc) {
   const_cast<bool&>(config_.rtp.transport_cc) = transport_cc;
 }
 
+void VideoReceiveStream2::SetRtcpMode(RtcpMode mode) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  // TODO(tommi): Stop using the config struct for the internal state.
+  const_cast<RtcpMode&>(config_.rtp.rtcp_mode) = mode;
+  rtp_video_stream_receiver_.SetRtcpMode(mode);
+}
+
 void VideoReceiveStream2::CreateAndRegisterExternalDecoder(
     const Decoder& decoder) {
   TRACE_EVENT0("webrtc",
