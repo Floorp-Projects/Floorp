@@ -6,6 +6,8 @@ package mozilla.components.feature.readerview.internal
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.res.Configuration
+import android.content.res.Resources
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.readerview.ReaderViewFeature.Companion.COLOR_SCHEME_KEY
@@ -31,9 +33,17 @@ import org.mockito.MockitoAnnotations
 class ReaderViewConfigTest {
 
     @Mock private lateinit var context: Context
+
     @Mock private lateinit var prefs: SharedPreferences
+
     @Mock private lateinit var editor: SharedPreferences.Editor
+
     @Mock private lateinit var sendConfigMessage: (JSONObject) -> Unit
+
+    @Mock private lateinit var resources: Resources
+
+    @Mock private lateinit var configuration: Configuration
+
     private lateinit var config: ReaderViewConfig
 
     @Before
@@ -41,6 +51,9 @@ class ReaderViewConfigTest {
         MockitoAnnotations.openMocks(this)
         whenever(context.getSharedPreferences(anyString(), anyInt())).thenReturn(prefs)
         whenever(prefs.edit()).thenReturn(editor)
+        whenever(context.resources).thenReturn(resources)
+        whenever(resources.configuration).thenReturn(configuration)
+        configuration.uiMode = Configuration.UI_MODE_NIGHT_UNDEFINED
 
         config = ReaderViewConfig(context, sendConfigMessage)
     }
@@ -55,6 +68,21 @@ class ReaderViewConfigTest {
 
         assertEquals(ReaderViewFeature.ColorScheme.SEPIA, config.colorScheme)
         verify(prefs, times(1)).getString(eq(COLOR_SCHEME_KEY), anyString())
+    }
+
+    @Test
+    fun `color scheme default should respect active dark mode`() {
+        whenever(prefs.getString(COLOR_SCHEME_KEY, "LIGHT")).thenReturn("LIGHT")
+        whenever(prefs.getString(COLOR_SCHEME_KEY, "DARK")).thenReturn("DARK")
+        // reset config and test for a default of DARK for dark mode
+        configuration.uiMode = Configuration.UI_MODE_NIGHT_YES
+        config = ReaderViewConfig(context, sendConfigMessage)
+        assertEquals(ReaderViewFeature.ColorScheme.DARK, config.colorScheme)
+        // reset config and test for a default of LIGHT for explicit non-dark (light) mode
+        configuration.uiMode = Configuration.UI_MODE_NIGHT_NO
+        config = ReaderViewConfig(context, sendConfigMessage)
+        assertEquals(ReaderViewFeature.ColorScheme.LIGHT, config.colorScheme)
+        // test for UI_MODE_NIGHT_UNDEFINED was already done in the above test function
     }
 
     @Test

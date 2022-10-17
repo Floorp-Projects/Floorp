@@ -6,6 +6,7 @@ package mozilla.components.feature.readerview.internal
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import android.content.res.Configuration
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.readerview.ReaderViewFeature.Companion.ACTION_CHANGE_FONT_SIZE
 import mozilla.components.feature.readerview.ReaderViewFeature.Companion.ACTION_MESSAGE_KEY
@@ -21,17 +22,18 @@ import org.json.JSONObject
 /**
  * Stores the user configuration for reader view in shared prefs.
  * All values are initialized lazily and cached.
- * @param context Used to lazily obtain shared preferences.
+ * @param context Used to lazily obtain shared preferences and to check dark mode status.
  * @param sendConfigMessage If the config changes, this method will be invoked
  * with a JSON object which should be sent to the content script so the new
  * config can be applied.
  */
 internal class ReaderViewConfig(
     context: Context,
-    private val sendConfigMessage: (JSONObject) -> Unit
+    private val sendConfigMessage: (JSONObject) -> Unit,
 ) {
 
     private val prefs by lazy { context.getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE) }
+    private val resources = context.resources
     private var colorSchemeCache: ReaderViewFeature.ColorScheme? = null
     private var fontTypeCache: ReaderViewFeature.FontType? = null
     private var fontSizeCache: Int? = null
@@ -39,7 +41,13 @@ internal class ReaderViewConfig(
     var colorScheme: ReaderViewFeature.ColorScheme
         get() {
             if (colorSchemeCache == null) {
-                colorSchemeCache = getEnumFromPrefs(COLOR_SCHEME_KEY, ReaderViewFeature.ColorScheme.LIGHT)
+                // Default to a dark theme if either the system or local dark theme is active
+                val defaultColor = if (isNightMode()) {
+                    ReaderViewFeature.ColorScheme.DARK
+                } else {
+                    ReaderViewFeature.ColorScheme.LIGHT
+                }
+                colorSchemeCache = getEnumFromPrefs(COLOR_SCHEME_KEY, defaultColor)
             }
             return colorSchemeCache!!
         }
@@ -85,6 +93,11 @@ internal class ReaderViewConfig(
     private inline fun <reified T : Enum<T>> getEnumFromPrefs(key: String, default: T): T {
         val enumName = prefs.getString(key, default.name) ?: default.name
         return enumValueOf(enumName)
+    }
+
+    private fun isNightMode(): Boolean {
+        val darkFlag = resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
+        return darkFlag == Configuration.UI_MODE_NIGHT_YES
     }
 
     private inline fun sendMessage(action: String, crossinline builder: JSONObject.() -> Unit) {

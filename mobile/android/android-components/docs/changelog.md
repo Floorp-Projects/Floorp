@@ -32,6 +32,9 @@ permalink: /changelog/
 * **browser-engine-gecko**:
   * Canceling the "Open in app?" displays an empty page [#12894](https://github.com/mozilla-mobile/android-components/issues/12894)
 
+* **feature-readerview**:
+  * 🌟 Reader Mode now defers to the active dark mode for the default color scheme.
+
 # 106.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v105.0.0..v106.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/153?closed=1)
