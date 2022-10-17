@@ -140,7 +140,6 @@ class ProbeController {
   int64_t max_total_allocated_bitrate_;
 
   const bool in_rapid_recovery_experiment_;
-  const bool limit_probes_with_allocateable_rate_;
   // For WebRTC.BWE.MidCallProbing.* metric.
   bool mid_call_probing_waiting_for_result_;
   int64_t mid_call_probing_bitrate_bps_;
