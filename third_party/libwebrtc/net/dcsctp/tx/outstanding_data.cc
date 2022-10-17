@@ -31,7 +31,9 @@ size_t OutstandingData::GetSerializedChunkSize(const Data& data) const {
 }
 
 void OutstandingData::Item::Ack() {
-  lifecycle_ = Lifecycle::kActive;
+  if (lifecycle_ != Lifecycle::kAbandoned) {
+    lifecycle_ = Lifecycle::kActive;
+  }
   ack_state_ = AckState::kAcked;
 }
 
@@ -145,6 +147,14 @@ void OutstandingData::RemoveAcked(UnwrappedTSN cumulative_tsn_ack,
 
   for (auto iter = outstanding_data_.begin(); iter != first_unacked; ++iter) {
     AckChunk(ack_info, iter);
+    if (iter->second.lifecycle_id().IsSet()) {
+      RTC_DCHECK(iter->second.data().is_end);
+      if (iter->second.is_abandoned()) {
+        ack_info.abandoned_lifecycle_ids.push_back(iter->second.lifecycle_id());
+      } else {
+        ack_info.acked_lifecycle_ids.push_back(iter->second.lifecycle_id());
+      }
+    }
   }
 
   outstanding_data_.erase(outstanding_data_.begin(), first_unacked);
@@ -268,7 +278,8 @@ void OutstandingData::AbandonAllFor(const Item& item) {
             .emplace(std::piecewise_construct, std::forward_as_tuple(tsn),
                      std::forward_as_tuple(std::move(message_end), TimeMs(0),
                                            MaxRetransmits::NoLimit(),
-                                           TimeMs::InfiniteFuture()))
+                                           TimeMs::InfiniteFuture(),
+                                           LifecycleId::NotSet()))
             .first->second;
     // The added chunk shouldn't be included in `outstanding_bytes`, so set it
     // as acked.
@@ -384,7 +395,8 @@ absl::optional<UnwrappedTSN> OutstandingData::Insert(
     const Data& data,
     TimeMs time_sent,
     MaxRetransmits max_retransmissions,
-    TimeMs expires_at) {
+    TimeMs expires_at,
+    LifecycleId lifecycle_id) {
   UnwrappedTSN tsn = next_tsn_;
   next_tsn_.Increment();
 
@@ -395,7 +407,8 @@ absl::optional<UnwrappedTSN> OutstandingData::Insert(
   auto it = outstanding_data_
                 .emplace(std::piecewise_construct, std::forward_as_tuple(tsn),
                          std::forward_as_tuple(data.Clone(), time_sent,
-                                               max_retransmissions, expires_at))
+                                               max_retransmissions, expires_at,
+                                               lifecycle_id))
                 .first;
 
   if (it->second.has_expired(time_sent)) {

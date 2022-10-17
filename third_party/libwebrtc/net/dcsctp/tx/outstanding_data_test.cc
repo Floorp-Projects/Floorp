@@ -482,5 +482,110 @@ TEST_F(OutstandingDataTest, CanAbandonChunksMarkedForFastRetransmit) {
   EXPECT_THAT(buf_.GetChunksToBeFastRetransmitted(1000), IsEmpty());
   EXPECT_THAT(buf_.GetChunksToBeRetransmitted(1000), IsEmpty());
 }
+
+TEST_F(OutstandingDataTest, LifecyleReturnsAckedItemsInAckInfo) {
+  buf_.Insert(gen_.Ordered({1}, "BE"), kNow, MaxRetransmits::NoLimit(),
+              TimeMs::InfiniteFuture(), LifecycleId(42));
+  buf_.Insert(gen_.Ordered({1}, "BE"), kNow, MaxRetransmits::NoLimit(),
+              TimeMs::InfiniteFuture(), LifecycleId(43));
+  buf_.Insert(gen_.Ordered({1}, "BE"), kNow, MaxRetransmits::NoLimit(),
+              TimeMs::InfiniteFuture(), LifecycleId(44));
+
+  OutstandingData::AckInfo ack1 =
+      buf_.HandleSack(unwrapper_.Unwrap(TSN(11)), {}, false);
+
+  EXPECT_THAT(ack1.acked_lifecycle_ids,
+              ElementsAre(LifecycleId(42), LifecycleId(43)));
+
+  OutstandingData::AckInfo ack2 =
+      buf_.HandleSack(unwrapper_.Unwrap(TSN(12)), {}, false);
+
+  EXPECT_THAT(ack2.acked_lifecycle_ids, ElementsAre(LifecycleId(44)));
+}
+
+TEST_F(OutstandingDataTest, LifecycleReturnsAbandonedNackedThreeTimes) {
+  buf_.Insert(gen_.Ordered({1}, "B"), kNow, MaxRetransmits(0));
+  buf_.Insert(gen_.Ordered({1}, ""), kNow, MaxRetransmits(0));
+  buf_.Insert(gen_.Ordered({1}, ""), kNow, MaxRetransmits(0));
+  buf_.Insert(gen_.Ordered({1}, "E"), kNow, MaxRetransmits(0),
+              TimeMs::InfiniteFuture(), LifecycleId(42));
+
+  std::vector<SackChunk::GapAckBlock> gab1 = {SackChunk::GapAckBlock(2, 2)};
+  EXPECT_FALSE(
+      buf_.HandleSack(unwrapper_.Unwrap(TSN(9)), gab1, false).has_packet_loss);
+  EXPECT_FALSE(buf_.has_data_to_be_retransmitted());
+
+  std::vector<SackChunk::GapAckBlock> gab2 = {SackChunk::GapAckBlock(2, 3)};
+  EXPECT_FALSE(
+      buf_.HandleSack(unwrapper_.Unwrap(TSN(9)), gab2, false).has_packet_loss);
+  EXPECT_FALSE(buf_.has_data_to_be_retransmitted());
+
+  std::vector<SackChunk::GapAckBlock> gab3 = {SackChunk::GapAckBlock(2, 4)};
+  EXPECT_CALL(on_discard_, Call(IsUnordered(false), StreamID(1), MID(42)))
+      .WillOnce(Return(false));
+  OutstandingData::AckInfo ack1 =
+      buf_.HandleSack(unwrapper_.Unwrap(TSN(9)), gab3, false);
+  EXPECT_TRUE(ack1.has_packet_loss);
+  EXPECT_THAT(ack1.abandoned_lifecycle_ids, IsEmpty());
+
+  // This will generate a FORWARD-TSN, which is acked
+  EXPECT_TRUE(buf_.ShouldSendForwardTsn());
+  ForwardTsnChunk chunk = buf_.CreateForwardTsn();
+  EXPECT_EQ(chunk.new_cumulative_tsn(), TSN(13));
+
+  OutstandingData::AckInfo ack2 =
+      buf_.HandleSack(unwrapper_.Unwrap(TSN(13)), {}, false);
+  EXPECT_FALSE(ack2.has_packet_loss);
+  EXPECT_THAT(ack2.abandoned_lifecycle_ids, ElementsAre(LifecycleId(42)));
+}
+
+TEST_F(OutstandingDataTest, LifecycleReturnsAbandonedAfterT3rtxExpired) {
+  buf_.Insert(gen_.Ordered({1}, "B"), kNow, MaxRetransmits(0));
+  buf_.Insert(gen_.Ordered({1}, ""), kNow, MaxRetransmits(0));
+  buf_.Insert(gen_.Ordered({1}, ""), kNow, MaxRetransmits(0));
+  buf_.Insert(gen_.Ordered({1}, "E"), kNow, MaxRetransmits(0),
+              TimeMs::InfiniteFuture(), LifecycleId(42));
+
+  EXPECT_THAT(buf_.GetChunkStatesForTesting(),
+              testing::ElementsAre(Pair(TSN(9), State::kAcked),      //
+                                   Pair(TSN(10), State::kInFlight),  //
+                                   Pair(TSN(11), State::kInFlight),  //
+                                   Pair(TSN(12), State::kInFlight),  //
+                                   Pair(TSN(13), State::kInFlight)));
+
+  std::vector<SackChunk::GapAckBlock> gab1 = {SackChunk::GapAckBlock(2, 4)};
+  EXPECT_FALSE(
+      buf_.HandleSack(unwrapper_.Unwrap(TSN(9)), gab1, false).has_packet_loss);
+  EXPECT_FALSE(buf_.has_data_to_be_retransmitted());
+
+  EXPECT_THAT(buf_.GetChunkStatesForTesting(),
+              testing::ElementsAre(Pair(TSN(9), State::kAcked),    //
+                                   Pair(TSN(10), State::kNacked),  //
+                                   Pair(TSN(11), State::kAcked),   //
+                                   Pair(TSN(12), State::kAcked),   //
+                                   Pair(TSN(13), State::kAcked)));
+
+  // T3-rtx triggered.
+  EXPECT_CALL(on_discard_, Call(IsUnordered(false), StreamID(1), MID(42)))
+      .WillOnce(Return(false));
+  buf_.NackAll();
+
+  EXPECT_THAT(buf_.GetChunkStatesForTesting(),
+              testing::ElementsAre(Pair(TSN(9), State::kAcked),       //
+                                   Pair(TSN(10), State::kAbandoned),  //
+                                   Pair(TSN(11), State::kAbandoned),  //
+                                   Pair(TSN(12), State::kAbandoned),  //
+                                   Pair(TSN(13), State::kAbandoned)));
+
+  // This will generate a FORWARD-TSN, which is acked
+  EXPECT_TRUE(buf_.ShouldSendForwardTsn());
+  ForwardTsnChunk chunk = buf_.CreateForwardTsn();
+  EXPECT_EQ(chunk.new_cumulative_tsn(), TSN(13));
+
+  OutstandingData::AckInfo ack2 =
+      buf_.HandleSack(unwrapper_.Unwrap(TSN(13)), {}, false);
+  EXPECT_FALSE(ack2.has_packet_loss);
+  EXPECT_THAT(ack2.abandoned_lifecycle_ids, ElementsAre(LifecycleId(42)));
+}
 }  // namespace
 }  // namespace dcsctp
