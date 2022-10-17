@@ -22,7 +22,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/sequence_checker.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
@@ -52,13 +51,6 @@ RTCPSender::Configuration AddRtcpSendEvaluationCallback(
   return config;
 }
 
-int DelayMillisForDuration(TimeDelta duration) {
-  // TimeDelta::ms() rounds downwards sometimes which leads to too little time
-  // slept. Account for this, unless `duration` is exactly representable in
-  // millisecs.
-  return (duration.us() + rtc::kNumMillisecsPerSec - 1) /
-         rtc::kNumMicrosecsPerMillisec;
-}
 }  // namespace
 
 ModuleRtpRtcpImpl2::RtpSenderContext::RtpSenderContext(
@@ -812,7 +804,7 @@ void ModuleRtpRtcpImpl2::ScheduleRtcpSendEvaluation(TimeDelta duration) {
   // than the worker queue on which it's created on implies that external
   // synchronization is present and removes this activity before destruction.
   if (duration.IsZero()) {
-    worker_queue_->PostTask(ToQueuedTask(task_safety_, [this] {
+    worker_queue_->PostTask(SafeTask(task_safety_.flag(), [this] {
       RTC_DCHECK_RUN_ON(worker_queue_);
       MaybeSendRtcp();
     }));
@@ -830,12 +822,12 @@ void ModuleRtpRtcpImpl2::ScheduleMaybeSendRtcpAtOrAfterTimestamp(
   // See note in ScheduleRtcpSendEvaluation about why `worker_queue_` can be
   // accessed.
   worker_queue_->PostDelayedTask(
-      ToQueuedTask(task_safety_,
-                   [this, execution_time] {
-                     RTC_DCHECK_RUN_ON(worker_queue_);
-                     MaybeSendRtcpAtOrAfterTimestamp(execution_time);
-                   }),
-      DelayMillisForDuration(duration));
+      SafeTask(task_safety_.flag(),
+               [this, execution_time] {
+                 RTC_DCHECK_RUN_ON(worker_queue_);
+                 MaybeSendRtcpAtOrAfterTimestamp(execution_time);
+               }),
+      duration.RoundUpTo(TimeDelta::Millis(1)));
 }
 
 }  // namespace webrtc

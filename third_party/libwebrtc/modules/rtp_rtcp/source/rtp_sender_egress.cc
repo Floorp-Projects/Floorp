@@ -16,7 +16,6 @@
 #include <utility>
 
 #include "absl/strings/match.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/transport/field_trial_based_config.h"
 #include "logging/rtc_event_log/events/rtc_event_rtp_packet_outgoing.h"
 #include "rtc_base/logging.h"
@@ -159,15 +158,15 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
 
 #if BWE_TEST_LOGGING_COMPILE_TIME_ENABLE
   worker_queue_->PostTask(
-      ToQueuedTask(task_safety_, [this, now, packet_ssrc]() {
+      SafeTask(task_safety_.flag(), [this, now, packet_ssrc]() {
         BweTestLoggingPlot(now.ms(), packet_ssrc);
       }));
 #endif
 
   if (need_rtp_packet_infos_ &&
       packet->packet_type() == RtpPacketToSend::Type::kVideo) {
-    worker_queue_->PostTask(ToQueuedTask(
-        task_safety_,
+    worker_queue_->PostTask(SafeTask(
+        task_safety_.flag(),
         [this, packet_timestamp = packet->Timestamp(),
          is_first_packet_of_frame = packet->is_first_packet_of_frame(),
          is_last_packet_of_frame = packet->Marker(),
@@ -294,8 +293,8 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
     RtpPacketCounter counter(*packet);
     size_t size = packet->size();
     worker_queue_->PostTask(
-        ToQueuedTask(task_safety_, [this, now, packet_ssrc, packet_type,
-                                    counter = std::move(counter), size]() {
+        SafeTask(task_safety_.flag(), [this, now, packet_ssrc, packet_type,
+                                       counter = std::move(counter), size]() {
           RTC_DCHECK_RUN_ON(worker_queue_);
           UpdateRtpStats(now.ms(), packet_ssrc, packet_type, std::move(counter),
                          size);
