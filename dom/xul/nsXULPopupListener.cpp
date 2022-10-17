@@ -146,19 +146,9 @@ nsresult nsXULPopupListener::HandleEvent(Event* aEvent) {
     return NS_OK;
   }
 
-  if (mIsContext) {
-#ifndef NS_CONTEXT_MENU_IS_MOUSEUP
-    uint16_t inputSource = mouseEvent->MozInputSource();
-    bool isTouch = inputSource == MouseEvent_Binding::MOZ_SOURCE_TOUCH;
-    // If the context menu launches on mousedown,
-    // we have to fire focus on the content we clicked on
-    FireFocusOnTargetContent(targetContent, isTouch);
-#endif
-  } else {
+  if (!mIsContext && mouseEvent->Button() != 0) {
     // Only open popups when the left mouse button is down.
-    if (mouseEvent->Button() != 0) {
-      return NS_OK;
-    }
+    return NS_OK;
   }
 
   // Open the popup. LaunchPopup will call StopPropagation and PreventDefault
@@ -167,58 +157,6 @@ nsresult nsXULPopupListener::HandleEvent(Event* aEvent) {
 
   return NS_OK;
 }
-
-#ifndef NS_CONTEXT_MENU_IS_MOUSEUP
-nsresult nsXULPopupListener::FireFocusOnTargetContent(
-    nsIContent* aTargetContent, bool aIsTouch) {
-  nsCOMPtr<Document> doc = aTargetContent->OwnerDoc();
-
-  // strong reference to keep this from going away between events
-  // XXXbz between what events?  We don't use this local at all!
-  RefPtr<nsPresContext> context = doc->GetPresContext();
-  if (!context) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIFrame* targetFrame = aTargetContent->GetPrimaryFrame();
-  if (!targetFrame) return NS_ERROR_FAILURE;
-
-  const bool suppressBlur =
-      targetFrame->StyleUI()->UserFocus() == StyleUserFocus::Ignore;
-
-  RefPtr<Element> newFocusElement;
-
-  nsIFrame* currFrame = targetFrame;
-  // Look for the nearest enclosing focusable frame.
-  while (currFrame) {
-    if (currFrame->IsFocusable(/* aWithMouse = */ true) &&
-        currFrame->GetContent()->IsElement()) {
-      newFocusElement = currFrame->GetContent()->AsElement();
-      break;
-    }
-    currFrame = currFrame->GetParent();
-  }
-
-  if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
-    if (newFocusElement) {
-      uint32_t focusFlags =
-          nsIFocusManager::FLAG_BYMOUSE | nsIFocusManager::FLAG_NOSCROLL;
-      if (aIsTouch) {
-        focusFlags |= nsIFocusManager::FLAG_BYTOUCH;
-      }
-      fm->SetFocus(newFocusElement, focusFlags);
-    } else if (!suppressBlur) {
-      nsCOMPtr<nsPIDOMWindowOuter> window = doc->GetWindow();
-      fm->ClearFocus(window);
-    }
-  }
-
-  EventStateManager* esm = context->EventStateManager();
-  esm->SetContentState(newFocusElement, ElementState::ACTIVE);
-
-  return NS_OK;
-}
-#endif
 
 // ClosePopup
 //
