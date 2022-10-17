@@ -9,7 +9,7 @@
 
 #include <type_traits>
 #include "nsCOMPtr.h"
-#include "nsISupportsBase.h"
+#include "nsISupports.h"
 #include "ShutdownPhase.h"
 
 namespace mozilla {

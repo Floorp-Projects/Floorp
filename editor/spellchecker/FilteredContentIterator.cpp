@@ -19,7 +19,7 @@
 #include "nsError.h"
 #include "nsIContent.h"
 #include "nsINode.h"
-#include "nsISupportsBase.h"
+#include "nsISupports.h"
 #include "nsISupportsUtils.h"
 #include "nsRange.h"
 

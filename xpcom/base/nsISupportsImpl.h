@@ -9,7 +9,7 @@
 #define nsISupportsImpl_h__
 
 #include "nscore.h"
-#include "nsISupportsBase.h"
+#include "nsISupports.h"
 #include "nsISupportsUtils.h"
 
 #if !defined(XPCOM_GLUE_AVOID_NSPR)

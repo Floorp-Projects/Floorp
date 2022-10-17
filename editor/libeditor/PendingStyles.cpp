@@ -22,7 +22,7 @@
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsINode.h"
-#include "nsISupportsBase.h"
+#include "nsISupports.h"
 #include "nsISupportsImpl.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"

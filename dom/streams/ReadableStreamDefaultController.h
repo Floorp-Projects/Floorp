@@ -23,7 +23,6 @@
 #include "nsWrapperCache.h"
 #include "mozilla/dom/Nullable.h"
 #include "nsTArray.h"
-#include "nsISupportsBase.h"
 
 namespace mozilla::dom {
 

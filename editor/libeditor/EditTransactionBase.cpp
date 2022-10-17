@@ -23,7 +23,7 @@
 #include "SplitNodeTransaction.h"
 
 #include "nsError.h"
-#include "nsISupportsBase.h"
+#include "nsISupports.h"
 
 namespace mozilla {
 
