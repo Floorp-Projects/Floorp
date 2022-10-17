@@ -202,7 +202,7 @@ PacingConfig::~PacingConfig() = default;
 VideoSendStreamImpl::VideoSendStreamImpl(
     Clock* clock,
     SendStatisticsProxy* stats_proxy,
-    rtc::TaskQueue* rtp_transport_queue,
+    TaskQueueBase* rtp_transport_queue,
     RtpTransportControllerSendInterface* transport,
     BitrateAllocatorInterface* bitrate_allocator,
     VideoStreamEncoderInterface* video_stream_encoder,
@@ -341,7 +341,7 @@ void VideoSendStreamImpl::StartupVideoSendStream() {
     activity_ = false;
     timed_out_ = false;
     check_encoder_activity_task_ = RepeatingTaskHandle::DelayedStart(
-        rtp_transport_queue_->Get(), kEncoderTimeOut, [this] {
+        rtp_transport_queue_, kEncoderTimeOut, [this] {
           RTC_DCHECK_RUN_ON(rtp_transport_queue_);
           if (!activity_) {
             if (!timed_out_) {

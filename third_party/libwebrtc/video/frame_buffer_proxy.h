@@ -19,7 +19,6 @@
 #include "api/video/encoded_frame.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/timing/timing.h"
-#include "rtc_base/task_queue.h"
 #include "system_wrappers/include/clock.h"
 #include "video/decode_synchronizer.h"
 
@@ -44,7 +43,7 @@ class FrameBufferProxy {
       TaskQueueBase* worker_queue,
       VCMTiming* timing,
       VCMReceiveStatisticsCallback* stats_proxy,
-      rtc::TaskQueue* decode_queue,
+      TaskQueueBase* decode_queue,
       FrameSchedulingReceiver* receiver,
       TimeDelta max_wait_for_keyframe,
       TimeDelta max_wait_for_frame,

@@ -150,7 +150,7 @@ class VideoSendStreamImplTest : public ::testing::Test {
     std::map<uint32_t, RtpState> suspended_ssrcs;
     std::map<uint32_t, RtpPayloadState> suspended_payload_states;
     auto ret = std::make_unique<VideoSendStreamImpl>(
-        &clock_, &stats_proxy_, &test_queue_, &transport_controller_,
+        &clock_, &stats_proxy_, test_queue_.Get(), &transport_controller_,
         &bitrate_allocator_, &video_stream_encoder_, &config_,
         initial_encoder_max_bitrate, initial_encoder_bitrate_priority,
         content_type, &rtp_video_sender_, field_trials_);

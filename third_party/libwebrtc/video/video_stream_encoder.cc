@@ -702,7 +702,7 @@ VideoStreamEncoder::VideoStreamEncoder(
   RTC_DCHECK_GE(number_of_cores, 1);
 
   frame_cadence_adapter_->Initialize(&cadence_callback_);
-  stream_resource_manager_.Initialize(&encoder_queue_);
+  stream_resource_manager_.Initialize(encoder_queue_.Get());
 
   encoder_queue_.PostTask([this] {
     RTC_DCHECK_RUN_ON(&encoder_queue_);

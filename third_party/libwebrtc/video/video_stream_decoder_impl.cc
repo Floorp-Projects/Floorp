@@ -141,7 +141,7 @@ void VideoStreamDecoderImpl::StartNextDecode() {
   int64_t max_wait_time = keyframe_required_ ? 200 : 3000;
 
   frame_buffer_.NextFrame(max_wait_time, keyframe_required_,
-                          &bookkeeping_queue_,
+                          bookkeeping_queue_.Get(),
                           [this](std::unique_ptr<EncodedFrame> frame) {
                             RTC_DCHECK_RUN_ON(&bookkeeping_queue_);
                             OnNextFrameCallback(std::move(frame));

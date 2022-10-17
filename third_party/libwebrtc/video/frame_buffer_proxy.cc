@@ -17,6 +17,7 @@
 #include "absl/base/attributes.h"
 #include "absl/functional/bind_front.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/units/data_size.h"
 #include "api/video/encoded_frame.h"
 #include "api/video/frame_buffer.h"
@@ -41,7 +42,7 @@ class FrameBuffer2Proxy : public FrameBufferProxy {
   FrameBuffer2Proxy(Clock* clock,
                     VCMTiming* timing,
                     VCMReceiveStatisticsCallback* stats_proxy,
-                    rtc::TaskQueue* decode_queue,
+                    TaskQueueBase* decode_queue,
                     FrameSchedulingReceiver* receiver,
                     TimeDelta max_wait_for_keyframe,
                     TimeDelta max_wait_for_frame,
@@ -127,7 +128,7 @@ class FrameBuffer2Proxy : public FrameBufferProxy {
   const TimeDelta max_wait_for_keyframe_;
   const TimeDelta max_wait_for_frame_;
   video_coding::FrameBuffer frame_buffer_;
-  rtc::TaskQueue* const decode_queue_;
+  TaskQueueBase* const decode_queue_;
   VCMReceiveStatisticsCallback* const stats_proxy_;
   FrameSchedulingReceiver* const receiver_;
   rtc::scoped_refptr<PendingTaskSafetyFlag> decode_safety_ =
@@ -179,7 +180,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
       TaskQueueBase* worker_queue,
       VCMTiming* timing,
       VCMReceiveStatisticsCallback* stats_proxy,
-      rtc::TaskQueue* decode_queue,
+      TaskQueueBase* decode_queue,
       FrameSchedulingReceiver* receiver,
       TimeDelta max_wait_for_keyframe,
       TimeDelta max_wait_for_frame,
@@ -491,7 +492,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
       RttMultExperiment::GetRttMultValue();
   Clock* const clock_;
   TaskQueueBase* const worker_queue_;
-  rtc::TaskQueue* const decode_queue_;
+  TaskQueueBase* const decode_queue_;
   VCMReceiveStatisticsCallback* const stats_proxy_;
   FrameSchedulingReceiver* const receiver_;
   VCMTiming* const timing_;
@@ -562,7 +563,7 @@ std::unique_ptr<FrameBufferProxy> FrameBufferProxy::CreateFromFieldTrial(
     TaskQueueBase* worker_queue,
     VCMTiming* timing,
     VCMReceiveStatisticsCallback* stats_proxy,
-    rtc::TaskQueue* decode_queue,
+    TaskQueueBase* decode_queue,
     FrameSchedulingReceiver* receiver,
     TimeDelta max_wait_for_keyframe,
     TimeDelta max_wait_for_frame,

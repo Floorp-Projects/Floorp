@@ -24,7 +24,6 @@
 #include "rtc_base/numerics/moving_average.h"
 #include "rtc_base/ref_count.h"
 #include "rtc_base/system/no_unique_address.h"
-#include "rtc_base/task_queue.h"
 
 namespace webrtc {
 

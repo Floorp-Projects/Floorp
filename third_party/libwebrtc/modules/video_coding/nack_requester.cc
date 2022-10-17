@@ -19,7 +19,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/task_queue.h"
 
 namespace webrtc {
 

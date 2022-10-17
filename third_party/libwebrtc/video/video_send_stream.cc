@@ -149,7 +149,7 @@ VideoSendStream::VideoSendStream(
     const std::map<uint32_t, RtpPayloadState>& suspended_payload_states,
     std::unique_ptr<FecController> fec_controller,
     const FieldTrialsView& field_trials)
-    : rtp_transport_queue_(transport->GetWorkerQueue()),
+    : rtp_transport_queue_(transport->GetWorkerQueue()->Get()),
       transport_(transport),
       stats_proxy_(clock, config, encoder_config.content_type, field_trials),
       config_(std::move(config)),
