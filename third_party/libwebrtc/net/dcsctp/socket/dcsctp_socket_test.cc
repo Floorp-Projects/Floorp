@@ -2536,5 +2536,137 @@ TEST(DcSctpSocketTest, MessageWithHigherPrioWillInterruptLowerPrioMessage) {
   EXPECT_THAT(GetReceivedMessagePpids(z), ElementsAre(101, 102, 201));
 }
 
+TEST(DcSctpSocketTest, LifecycleEventsAreGeneratedForAckedMessages) {
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+  ConnectSockets(a, z);
+
+  a.socket.Send(DcSctpMessage(StreamID(2), PPID(101),
+                              std::vector<uint8_t>(kLargeMessageSize)),
+                {.lifecycle_id = LifecycleId(41)});
+
+  a.socket.Send(DcSctpMessage(StreamID(2), PPID(102),
+                              std::vector<uint8_t>(kLargeMessageSize)),
+                kSendOptions);
+
+  a.socket.Send(DcSctpMessage(StreamID(2), PPID(103),
+                              std::vector<uint8_t>(kLargeMessageSize)),
+                {.lifecycle_id = LifecycleId(42)});
+
+  EXPECT_CALL(a.cb, OnLifecycleMessageDelivered(LifecycleId(41)));
+  EXPECT_CALL(a.cb, OnLifecycleEnd(LifecycleId(41)));
+  EXPECT_CALL(a.cb, OnLifecycleMessageDelivered(LifecycleId(42)));
+  EXPECT_CALL(a.cb, OnLifecycleEnd(LifecycleId(42)));
+  ExchangeMessages(a, z);
+  // In case of delayed ack.
+  AdvanceTime(a, z, a.options.delayed_ack_max_timeout);
+  ExchangeMessages(a, z);
+
+  EXPECT_THAT(GetReceivedMessagePpids(z), ElementsAre(101, 102, 103));
+}
+
+TEST(DcSctpSocketTest, LifecycleEventsForFailMaxRetransmissions) {
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+  ConnectSockets(a, z);
+
+  std::vector<uint8_t> payload(a.options.mtu - 100);
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(51), payload),
+                {
+                    .max_retransmissions = 0,
+                    .lifecycle_id = LifecycleId(1),
+                });
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(52), payload),
+                {
+                    .max_retransmissions = 0,
+                    .lifecycle_id = LifecycleId(2),
+                });
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(53), payload),
+                {
+                    .max_retransmissions = 0,
+                    .lifecycle_id = LifecycleId(3),
+                });
+
+  // First DATA
+  z.socket.ReceivePacket(a.cb.ConsumeSentPacket());
+  // Second DATA (lost)
+  a.cb.ConsumeSentPacket();
+
+  EXPECT_CALL(a.cb, OnLifecycleMessageDelivered(LifecycleId(1)));
+  EXPECT_CALL(a.cb, OnLifecycleEnd(LifecycleId(1)));
+  EXPECT_CALL(a.cb, OnLifecycleMessageExpired(LifecycleId(2),
+                                              /*maybe_delivered=*/true));
+  EXPECT_CALL(a.cb, OnLifecycleEnd(LifecycleId(2)));
+  EXPECT_CALL(a.cb, OnLifecycleMessageDelivered(LifecycleId(3)));
+  EXPECT_CALL(a.cb, OnLifecycleEnd(LifecycleId(3)));
+  ExchangeMessages(a, z);
+
+  // Handle delayed SACK.
+  AdvanceTime(a, z, a.options.delayed_ack_max_timeout);
+  ExchangeMessages(a, z);
+
+  // The chunk is now NACKed. Let the RTO expire, to discard the message.
+  AdvanceTime(a, z, a.options.rto_initial);
+  ExchangeMessages(a, z);
+
+  // Handle delayed SACK.
+  AdvanceTime(a, z, a.options.delayed_ack_max_timeout);
+  ExchangeMessages(a, z);
+
+  EXPECT_THAT(GetReceivedMessagePpids(z), ElementsAre(51, 53));
+}
+
+TEST(DcSctpSocketTest, LifecycleEventsForExpiredMessageWithRetransmitLimit) {
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+  ConnectSockets(a, z);
+
+  // Will not be able to send it in full within the congestion window, but will
+  // need to wait for SACKs to be received for more fragments to be sent.
+  std::vector<uint8_t> payload(kLargeMessageSize);
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(51), payload),
+                {
+                    .max_retransmissions = 0,
+                    .lifecycle_id = LifecycleId(1),
+                });
+
+  // First DATA
+  z.socket.ReceivePacket(a.cb.ConsumeSentPacket());
+  // Second DATA (lost)
+  a.cb.ConsumeSentPacket();
+
+  EXPECT_CALL(a.cb, OnLifecycleMessageExpired(LifecycleId(1),
+                                              /*maybe_delivered=*/false));
+  EXPECT_CALL(a.cb, OnLifecycleEnd(LifecycleId(1)));
+  ExchangeMessages(a, z);
+
+  EXPECT_THAT(GetReceivedMessagePpids(z), IsEmpty());
+}
+
+TEST(DcSctpSocketTest, LifecycleEventsForExpiredMessageWithLifetimeLimit) {
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+
+  // Send it before the socket is connected, to prevent it from being sent too
+  // quickly. The idea is that it should be expired before even attempting to
+  // send it in full.
+  std::vector<uint8_t> payload(kSmallMessageSize);
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(51), payload),
+                {
+                    .lifetime = DurationMs(100),
+                    .lifecycle_id = LifecycleId(1),
+                });
+
+  AdvanceTime(a, z, DurationMs(200));
+
+  EXPECT_CALL(a.cb, OnLifecycleMessageExpired(LifecycleId(1),
+                                              /*maybe_delivered=*/false));
+  EXPECT_CALL(a.cb, OnLifecycleEnd(LifecycleId(1)));
+  ConnectSockets(a, z);
+  ExchangeMessages(a, z);
+
+  EXPECT_THAT(GetReceivedMessagePpids(z), IsEmpty());
+}
+
 }  // namespace
 }  // namespace dcsctp

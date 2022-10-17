@@ -190,6 +190,7 @@ if (rtc_include_tests) {
       "../public:socket",
       "../public:types",
       "../socket:mock_callbacks",
+      "../socket:mock_callbacks",
       "../testing:data_generator",
       "../testing:testing_macros",
       "../timer",

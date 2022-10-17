@@ -62,6 +62,7 @@
 #include "net/dcsctp/public/dcsctp_options.h"
 #include "net/dcsctp/public/dcsctp_socket.h"
 #include "net/dcsctp/public/packet_observer.h"
+#include "net/dcsctp/public/types.h"
 #include "net/dcsctp/rx/data_tracker.h"
 #include "net/dcsctp/rx/reassembly_queue.h"
 #include "net/dcsctp/socket/callback_deferrer.h"
@@ -447,13 +448,20 @@ SendStatus DcSctpSocket::Send(DcSctpMessage message,
                               const SendOptions& send_options) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
+  LifecycleId lifecycle_id = send_options.lifecycle_id;
 
   if (message.payload().empty()) {
+    if (lifecycle_id.IsSet()) {
+      callbacks_.OnLifecycleEnd(lifecycle_id);
+    }
     callbacks_.OnError(ErrorKind::kProtocolViolation,
                        "Unable to send empty message");
     return SendStatus::kErrorMessageEmpty;
   }
   if (message.payload().size() > options_.max_message_size) {
+    if (lifecycle_id.IsSet()) {
+      callbacks_.OnLifecycleEnd(lifecycle_id);
+    }
     callbacks_.OnError(ErrorKind::kProtocolViolation,
                        "Unable to send too large message");
     return SendStatus::kErrorMessageTooLarge;
@@ -464,11 +472,17 @@ SendStatus DcSctpSocket::Send(DcSctpMessage message,
     // "An endpoint should reject any new data request from its upper layer
     // if it is in the SHUTDOWN-PENDING, SHUTDOWN-SENT, SHUTDOWN-RECEIVED, or
     // SHUTDOWN-ACK-SENT state."
+    if (lifecycle_id.IsSet()) {
+      callbacks_.OnLifecycleEnd(lifecycle_id);
+    }
     callbacks_.OnError(ErrorKind::kWrongSequence,
                        "Unable to send message as the socket is shutting down");
     return SendStatus::kErrorShuttingDown;
   }
   if (send_queue_.IsFull()) {
+    if (lifecycle_id.IsSet()) {
+      callbacks_.OnLifecycleEnd(lifecycle_id);
+    }
     callbacks_.OnError(ErrorKind::kResourceExhaustion,
                        "Unable to send message as the send queue is full");
     return SendStatus::kErrorResourceExhaustion;
