@@ -10,7 +10,7 @@ This document is for users of
 ## Overview
 
 `DefaultVideoQualityAnalyzer` implements
-[`webrtc::webrtc_pc_e2e::VideoQualityAnalyzerInterface`][2] and is a main
+[`webrtc::VideoQualityAnalyzerInterface`][2] and is a main
 implementation of video quality analyzer for WebRTC. To operate correctly it
 requires to receive video frame on each step:
 
