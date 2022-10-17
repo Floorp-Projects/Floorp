@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "pc/stats_collector.h"
+#include "pc/legacy_stats_collector.h"
 
 #include <stdio.h>
 
@@ -583,10 +583,10 @@ void InitVoiceReceiverInfo(cricket::VoiceReceiverInfo* voice_receiver_info) {
   voice_receiver_info->decoding_codec_plc = 127;
 }
 
-class StatsCollectorForTest : public StatsCollector {
+class LegacyStatsCollectorForTest : public LegacyStatsCollector {
  public:
-  explicit StatsCollectorForTest(PeerConnectionInternal* pc)
-      : StatsCollector(pc), time_now_(19477) {}
+  explicit LegacyStatsCollectorForTest(PeerConnectionInternal* pc)
+      : LegacyStatsCollector(pc), time_now_(19477) {}
 
   double GetTimeNow() override { return time_now_; }
 
@@ -594,19 +594,19 @@ class StatsCollectorForTest : public StatsCollector {
   double time_now_;
 };
 
-class StatsCollectorTest : public ::testing::Test {
+class LegacyStatsCollectorTest : public ::testing::Test {
  protected:
   rtc::scoped_refptr<FakePeerConnectionForStats> CreatePeerConnection() {
     return rtc::make_ref_counted<FakePeerConnectionForStats>();
   }
 
-  std::unique_ptr<StatsCollectorForTest> CreateStatsCollector(
+  std::unique_ptr<LegacyStatsCollectorForTest> CreateStatsCollector(
       PeerConnectionInternal* pc) {
-    return std::make_unique<StatsCollectorForTest>(pc);
+    return std::make_unique<LegacyStatsCollectorForTest>(pc);
   }
 
   void VerifyAudioTrackStats(FakeAudioTrack* audio_track,
-                             StatsCollectorForTest* stats,
+                             LegacyStatsCollectorForTest* stats,
                              const VoiceMediaInfo& voice_info,
                              StatsReports* reports) {
     stats->UpdateStats(PeerConnectionInterface::kStatsOutputLevelStandard);
@@ -768,14 +768,14 @@ static rtc::scoped_refptr<MockRtpReceiverInternal> CreateMockReceiver(
   return receiver;
 }
 
-class StatsCollectorTrackTest : public StatsCollectorTest,
+class StatsCollectorTrackTest : public LegacyStatsCollectorTest,
                                 public ::testing::WithParamInterface<bool> {
  public:
   // Adds a outgoing video track with a given SSRC into the stats.
   // If GetParam() returns true, the track is also inserted into the local
   // stream, which is created if necessary.
   void AddOutgoingVideoTrack(FakePeerConnectionForStats* pc,
-                             StatsCollectorForTest* stats) {
+                             LegacyStatsCollectorForTest* stats) {
     video_track_ = VideoTrack::Create(
         kLocalTrackId, FakeVideoTrackSource::Create(), rtc::Thread::Current());
     if (GetParam()) {
@@ -791,7 +791,7 @@ class StatsCollectorTrackTest : public StatsCollectorTest,
 
   // Adds a incoming video track with a given SSRC into the stats.
   void AddIncomingVideoTrack(FakePeerConnectionForStats* pc,
-                             StatsCollectorForTest* stats) {
+                             LegacyStatsCollectorForTest* stats) {
     video_track_ = VideoTrack::Create(
         kRemoteTrackId, FakeVideoTrackSource::Create(), rtc::Thread::Current());
     if (GetParam()) {
@@ -810,7 +810,7 @@ class StatsCollectorTrackTest : public StatsCollectorTest,
   // stream, which is created if necessary.
   rtc::scoped_refptr<RtpSenderInterface> AddOutgoingAudioTrack(
       FakePeerConnectionForStats* pc,
-      StatsCollectorForTest* stats) {
+      LegacyStatsCollectorForTest* stats) {
     audio_track_ = rtc::make_ref_counted<FakeAudioTrack>(kLocalTrackId);
     if (GetParam()) {
       if (!stream_)
@@ -825,7 +825,7 @@ class StatsCollectorTrackTest : public StatsCollectorTest,
 
   // Adds a incoming audio track with a given SSRC into the stats.
   void AddIncomingAudioTrack(FakePeerConnectionForStats* pc,
-                             StatsCollectorForTest* stats) {
+                             LegacyStatsCollectorForTest* stats) {
     audio_track_ = rtc::make_ref_counted<FakeAudioTrack>(kRemoteTrackId);
     if (GetParam()) {
       if (stream_ == nullptr)
@@ -846,7 +846,7 @@ class StatsCollectorTrackTest : public StatsCollectorTest,
   rtc::scoped_refptr<FakeAudioTrack> audio_track_;
 };
 
-TEST_F(StatsCollectorTest, FilterOutNegativeDataChannelId) {
+TEST_F(LegacyStatsCollectorTest, FilterOutNegativeDataChannelId) {
   auto pc = CreatePeerConnection();
   auto stats = CreateStatsCollector(pc.get());
 
@@ -865,7 +865,7 @@ TEST_F(StatsCollectorTest, FilterOutNegativeDataChannelId) {
 }
 
 // Verify that ExtractDataInfo populates reports.
-TEST_F(StatsCollectorTest, ExtractDataInfo) {
+TEST_F(LegacyStatsCollectorTest, ExtractDataInfo) {
   const std::string kDataChannelLabel = "hacks";
   constexpr int kDataChannelId = 31337;
   const std::string kConnectingString = DataChannelInterface::DataStateString(
@@ -1033,7 +1033,7 @@ TEST_P(StatsCollectorTrackTest, VideoBandwidthEstimationInfoIsReported) {
 
 // This test verifies that an object of type "googSession" always
 // exists in the returned stats.
-TEST_F(StatsCollectorTest, SessionObjectExists) {
+TEST_F(LegacyStatsCollectorTest, SessionObjectExists) {
   auto pc = CreatePeerConnection();
   auto stats = CreateStatsCollector(pc.get());
 
@@ -1047,7 +1047,7 @@ TEST_F(StatsCollectorTest, SessionObjectExists) {
 
 // This test verifies that only one object of type "googSession" exists
 // in the returned stats.
-TEST_F(StatsCollectorTest, OnlyOneSessionObjectExists) {
+TEST_F(LegacyStatsCollectorTest, OnlyOneSessionObjectExists) {
   auto pc = CreatePeerConnection();
   auto stats = CreateStatsCollector(pc.get());
 
@@ -1270,7 +1270,7 @@ TEST_P(StatsCollectorTrackTest, ReportsFromRemoteTrack) {
 
 // This test verifies the Ice Candidate report should contain the correct
 // information from local/remote candidates.
-TEST_F(StatsCollectorTest, IceCandidateReport) {
+TEST_F(LegacyStatsCollectorTest, IceCandidateReport) {
   const std::string kTransportName = "transport";
   const rtc::AdapterType kNetworkType = rtc::ADAPTER_TYPE_ETHERNET;
   constexpr uint32_t kPriority = 1000;
@@ -1378,7 +1378,7 @@ TEST_F(StatsCollectorTest, IceCandidateReport) {
 
 // This test verifies that all chained certificates are correctly
 // reported
-TEST_F(StatsCollectorTest, ChainedCertificateReportsCreated) {
+TEST_F(LegacyStatsCollectorTest, ChainedCertificateReportsCreated) {
   // Build local certificate chain.
   std::vector<std::string> local_ders(5);
   local_ders[0] = "These";
@@ -1402,7 +1402,7 @@ TEST_F(StatsCollectorTest, ChainedCertificateReportsCreated) {
 
 // This test verifies that all certificates without chains are correctly
 // reported.
-TEST_F(StatsCollectorTest, ChainlessCertificateReportsCreated) {
+TEST_F(LegacyStatsCollectorTest, ChainlessCertificateReportsCreated) {
   // Build local certificate.
   std::string local_der = "This is the local der.";
   rtc::FakeSSLIdentity local_identity(DerToPem(local_der));
@@ -1418,7 +1418,7 @@ TEST_F(StatsCollectorTest, ChainlessCertificateReportsCreated) {
 
 // This test verifies that the stats are generated correctly when no
 // transport is present.
-TEST_F(StatsCollectorTest, NoTransport) {
+TEST_F(LegacyStatsCollectorTest, NoTransport) {
   auto pc = CreatePeerConnection();
   auto stats = CreateStatsCollector(pc.get());
 
@@ -1455,7 +1455,7 @@ TEST_F(StatsCollectorTest, NoTransport) {
 
 // This test verifies that a remote certificate with an unsupported digest
 // algorithm is correctly ignored.
-TEST_F(StatsCollectorTest, UnsupportedDigestIgnored) {
+TEST_F(LegacyStatsCollectorTest, UnsupportedDigestIgnored) {
   // Build a local certificate.
   std::string local_der = "This is the local der.";
   rtc::FakeSSLIdentity local_identity(DerToPem(local_der));

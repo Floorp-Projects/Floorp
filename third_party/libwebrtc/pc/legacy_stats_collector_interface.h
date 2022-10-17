@@ -12,8 +12,8 @@
 // is used by compilation units that do not wish to depend on the StatsCollector
 // implementation.
 
-#ifndef PC_STATS_COLLECTOR_INTERFACE_H_
-#define PC_STATS_COLLECTOR_INTERFACE_H_
+#ifndef PC_LEGACY_STATS_COLLECTOR_INTERFACE_H_
+#define PC_LEGACY_STATS_COLLECTOR_INTERFACE_H_
 
 #include <stdint.h>
 
@@ -22,9 +22,9 @@
 
 namespace webrtc {
 
-class StatsCollectorInterface {
+class LegacyStatsCollectorInterface {
  public:
-  virtual ~StatsCollectorInterface() {}
+  virtual ~LegacyStatsCollectorInterface() {}
 
   // Adds a local audio track that is used for getting some voice statistics.
   virtual void AddLocalAudioTrack(AudioTrackInterface* audio_track,
@@ -40,4 +40,4 @@ class StatsCollectorInterface {
 
 }  // namespace webrtc
 
-#endif  // PC_STATS_COLLECTOR_INTERFACE_H_
+#endif  // PC_LEGACY_STATS_COLLECTOR_INTERFACE_H_

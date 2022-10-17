@@ -11,8 +11,8 @@
 // This file contains a class used for gathering statistics from an ongoing
 // libjingle PeerConnection.
 
-#ifndef PC_STATS_COLLECTOR_H_
-#define PC_STATS_COLLECTOR_H_
+#ifndef PC_LEGACY_STATS_COLLECTOR_H_
+#define PC_LEGACY_STATS_COLLECTOR_H_
 
 #include <stdint.h>
 
@@ -33,9 +33,9 @@
 #include "api/stats_types.h"
 #include "p2p/base/connection_info.h"
 #include "p2p/base/port.h"
+#include "pc/legacy_stats_collector_interface.h"
 #include "pc/peer_connection_internal.h"
 #include "pc/rtp_transceiver.h"
-#include "pc/stats_collector_interface.h"
 #include "pc/transport_stats.h"
 #include "rtc_base/network_constants.h"
 #include "rtc_base/ssl_certificate.h"
@@ -55,12 +55,12 @@ const char* AdapterTypeToStatsType(rtc::AdapterType type);
 // A mapping between track ids and their StatsReport.
 typedef std::map<std::string, StatsReport*> TrackIdMap;
 
-class StatsCollector : public StatsCollectorInterface {
+class LegacyStatsCollector : public LegacyStatsCollectorInterface {
  public:
   // The caller is responsible for ensuring that the pc outlives the
-  // StatsCollector instance.
-  explicit StatsCollector(PeerConnectionInternal* pc);
-  virtual ~StatsCollector();
+  // LegacyStatsCollector instance.
+  explicit LegacyStatsCollector(PeerConnectionInternal* pc);
+  virtual ~LegacyStatsCollector();
 
   // Adds a MediaStream with tracks that can be used as a `selector` in a call
   // to GetStats.
@@ -112,7 +112,7 @@ class StatsCollector : public StatsCollectorInterface {
   bool UseStandardBytesStats() const { return use_standard_bytes_stats_; }
 
  private:
-  friend class StatsCollectorTest;
+  friend class LegacyStatsCollectorTest;
 
   // Struct that's populated on the network thread and carries the values to
   // the signaling thread where the stats are added to the stats reports.
@@ -206,11 +206,11 @@ class StatsCollector : public StatsCollectorInterface {
 
   // TODO(tommi): We appear to be holding on to raw pointers to reference
   // counted objects?  We should be using scoped_refptr here.
-  typedef std::vector<std::pair<AudioTrackInterface*, uint32_t> >
+  typedef std::vector<std::pair<AudioTrackInterface*, uint32_t>>
       LocalAudioTrackVector;
   LocalAudioTrackVector local_audio_tracks_;
 };
 
 }  // namespace webrtc
 
-#endif  // PC_STATS_COLLECTOR_H_
+#endif  // PC_LEGACY_STATS_COLLECTOR_H_

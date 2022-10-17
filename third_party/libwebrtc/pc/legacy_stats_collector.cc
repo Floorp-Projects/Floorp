@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "pc/stats_collector.h"
+#include "pc/legacy_stats_collector.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -467,7 +467,7 @@ template <typename T>
 void ExtractStatsFromList(
     const std::vector<T>& data,
     const StatsReport::Id& transport_id,
-    StatsCollector* collector,
+    LegacyStatsCollector* collector,
     StatsReport::Direction direction,
     const std::map<uint32_t, std::string>& track_id_by_ssrc) {
   for (const auto& d : data) {
@@ -534,7 +534,7 @@ const char* AdapterTypeToStatsType(rtc::AdapterType type) {
   }
 }
 
-StatsCollector::StatsCollector(PeerConnectionInternal* pc)
+LegacyStatsCollector::LegacyStatsCollector(PeerConnectionInternal* pc)
     : pc_(pc),
       stats_gathering_started_(0),
       use_standard_bytes_stats_(
@@ -542,18 +542,18 @@ StatsCollector::StatsCollector(PeerConnectionInternal* pc)
   RTC_DCHECK(pc_);
 }
 
-StatsCollector::~StatsCollector() {
+LegacyStatsCollector::~LegacyStatsCollector() {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
 }
 
 // Wallclock time in ms.
-double StatsCollector::GetTimeNow() {
+double LegacyStatsCollector::GetTimeNow() {
   return static_cast<double>(rtc::TimeUTCMillis());
 }
 
 // Adds a MediaStream with tracks that can be used as a `selector` in a call
 // to GetStats.
-void StatsCollector::AddStream(MediaStreamInterface* stream) {
+void LegacyStatsCollector::AddStream(MediaStreamInterface* stream) {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
   RTC_DCHECK(stream != NULL);
 
@@ -563,7 +563,7 @@ void StatsCollector::AddStream(MediaStreamInterface* stream) {
                                        &track_ids_);
 }
 
-void StatsCollector::AddTrack(MediaStreamTrackInterface* track) {
+void LegacyStatsCollector::AddTrack(MediaStreamTrackInterface* track) {
   if (track->kind() == MediaStreamTrackInterface::kAudioKind) {
     CreateTrackReport(static_cast<AudioTrackInterface*>(track), &reports_,
                       &track_ids_);
@@ -575,8 +575,8 @@ void StatsCollector::AddTrack(MediaStreamTrackInterface* track) {
   }
 }
 
-void StatsCollector::AddLocalAudioTrack(AudioTrackInterface* audio_track,
-                                        uint32_t ssrc) {
+void LegacyStatsCollector::AddLocalAudioTrack(AudioTrackInterface* audio_track,
+                                              uint32_t ssrc) {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
   RTC_DCHECK(audio_track != NULL);
 #if RTC_DCHECK_IS_ON
@@ -597,8 +597,9 @@ void StatsCollector::AddLocalAudioTrack(AudioTrackInterface* audio_track,
   }
 }
 
-void StatsCollector::RemoveLocalAudioTrack(AudioTrackInterface* audio_track,
-                                           uint32_t ssrc) {
+void LegacyStatsCollector::RemoveLocalAudioTrack(
+    AudioTrackInterface* audio_track,
+    uint32_t ssrc) {
   RTC_DCHECK(audio_track != NULL);
   local_audio_tracks_.erase(
       std::remove_if(
@@ -609,8 +610,8 @@ void StatsCollector::RemoveLocalAudioTrack(AudioTrackInterface* audio_track,
       local_audio_tracks_.end());
 }
 
-void StatsCollector::GetStats(MediaStreamTrackInterface* track,
-                              StatsReports* reports) {
+void LegacyStatsCollector::GetStats(MediaStreamTrackInterface* track,
+                                    StatsReports* reports) {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
   RTC_DCHECK(reports != NULL);
   RTC_DCHECK(reports->empty());
@@ -649,7 +650,7 @@ void StatsCollector::GetStats(MediaStreamTrackInterface* track,
   }
 }
 
-void StatsCollector::UpdateStats(
+void LegacyStatsCollector::UpdateStats(
     PeerConnectionInterface::StatsOutputLevel level) {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
   // Calls to UpdateStats() that occur less than kMinGatherStatsPeriodMs apart
@@ -683,11 +684,12 @@ void StatsCollector::UpdateStats(
   UpdateTrackReports();
 }
 
-StatsReport* StatsCollector::PrepareReport(bool local,
-                                           uint32_t ssrc,
-                                           const std::string& track_id,
-                                           const StatsReport::Id& transport_id,
-                                           StatsReport::Direction direction) {
+StatsReport* LegacyStatsCollector::PrepareReport(
+    bool local,
+    uint32_t ssrc,
+    const std::string& track_id,
+    const StatsReport::Id& transport_id,
+    StatsReport::Direction direction) {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
   StatsReport::Id id(StatsReport::NewIdWithDirection(
       local ? StatsReport::kStatsReportTypeSsrc
@@ -710,7 +712,7 @@ StatsReport* StatsCollector::PrepareReport(bool local,
   return report;
 }
 
-StatsReport* StatsCollector::PrepareADMReport() {
+StatsReport* LegacyStatsCollector::PrepareADMReport() {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
   StatsReport::Id id(StatsReport::NewTypedId(
       StatsReport::kStatsReportTypeSession, pc_->session_id()));
@@ -718,12 +720,12 @@ StatsReport* StatsCollector::PrepareADMReport() {
   return report;
 }
 
-bool StatsCollector::IsValidTrack(const std::string& track_id) {
+bool LegacyStatsCollector::IsValidTrack(const std::string& track_id) {
   return reports_.Find(StatsReport::NewTypedId(
              StatsReport::kStatsReportTypeTrack, track_id)) != nullptr;
 }
 
-StatsReport* StatsCollector::AddCertificateReports(
+StatsReport* LegacyStatsCollector::AddCertificateReports(
     std::unique_ptr<rtc::SSLCertificateStats> cert_stats) {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
 
@@ -751,7 +753,7 @@ StatsReport* StatsCollector::AddCertificateReports(
   return first_report;
 }
 
-StatsReport* StatsCollector::AddConnectionInfoReport(
+StatsReport* LegacyStatsCollector::AddConnectionInfoReport(
     const std::string& content_name,
     int component,
     int connection_id,
@@ -812,7 +814,7 @@ StatsReport* StatsCollector::AddConnectionInfoReport(
   return report;
 }
 
-StatsReport* StatsCollector::AddCandidateReport(
+StatsReport* LegacyStatsCollector::AddCandidateReport(
     const cricket::CandidateStats& candidate_stats,
     bool local) {
   const auto& candidate = candidate_stats.candidate();
@@ -853,8 +855,8 @@ StatsReport* StatsCollector::AddCandidateReport(
   return report;
 }
 
-std::map<std::string, std::string> StatsCollector::ExtractSessionInfo() {
-  TRACE_EVENT0("webrtc", "StatsCollector::ExtractSessionInfo");
+std::map<std::string, std::string> LegacyStatsCollector::ExtractSessionInfo() {
+  TRACE_EVENT0("webrtc", "LegacyStatsCollector::ExtractSessionInfo");
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
 
   SessionStats stats;
@@ -871,12 +873,12 @@ std::map<std::string, std::string> StatsCollector::ExtractSessionInfo() {
   return std::move(stats.transport_names_by_mid);
 }
 
-StatsCollector::SessionStats StatsCollector::ExtractSessionInfo_n(
+LegacyStatsCollector::SessionStats LegacyStatsCollector::ExtractSessionInfo_n(
     const std::vector<rtc::scoped_refptr<
         RtpTransceiverProxyWithInternal<RtpTransceiver>>>& transceivers,
     absl::optional<std::string> sctp_transport_name,
     absl::optional<std::string> sctp_mid) {
-  TRACE_EVENT0("webrtc", "StatsCollector::ExtractSessionInfo_n");
+  TRACE_EVENT0("webrtc", "LegacyStatsCollector::ExtractSessionInfo_n");
   RTC_DCHECK_RUN_ON(pc_->network_thread());
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
   SessionStats stats;
@@ -927,7 +929,7 @@ StatsCollector::SessionStats StatsCollector::ExtractSessionInfo_n(
   return stats;
 }
 
-void StatsCollector::ExtractSessionInfo_s(SessionStats& session_stats) {
+void LegacyStatsCollector::ExtractSessionInfo_s(SessionStats& session_stats) {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
@@ -1019,7 +1021,7 @@ void StatsCollector::ExtractSessionInfo_s(SessionStats& session_stats) {
   }
 }
 
-void StatsCollector::ExtractBweInfo() {
+void LegacyStatsCollector::ExtractBweInfo() {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
 
   if (pc_->signaling_state() == PeerConnectionInterface::kClosed)
@@ -1067,7 +1069,7 @@ class MediaChannelStatsGatherer {
 
   virtual bool GetStatsOnWorkerThread() = 0;
 
-  virtual void ExtractStats(StatsCollector* collector) const = 0;
+  virtual void ExtractStats(LegacyStatsCollector* collector) const = 0;
 
   virtual bool HasRemoteAudio() const = 0;
 
@@ -1079,7 +1081,7 @@ class MediaChannelStatsGatherer {
  protected:
   template <typename ReceiverT, typename SenderT>
   void ExtractSenderReceiverStats(
-      StatsCollector* collector,
+      LegacyStatsCollector* collector,
       const std::vector<ReceiverT>& receiver_data,
       const std::vector<SenderT>& sender_data) const {
     RTC_DCHECK(collector);
@@ -1105,7 +1107,7 @@ class VoiceMediaChannelStatsGatherer final : public MediaChannelStatsGatherer {
                                           /*get_and_clear_legacy_stats=*/true);
   }
 
-  void ExtractStats(StatsCollector* collector) const override {
+  void ExtractStats(LegacyStatsCollector* collector) const override {
     ExtractSenderReceiverStats(collector, voice_media_info.receivers,
                                voice_media_info.senders);
     if (voice_media_info.device_underrun_count == -2 ||
@@ -1137,7 +1139,7 @@ class VideoMediaChannelStatsGatherer final : public MediaChannelStatsGatherer {
     return video_media_channel_->GetStats(&video_media_info);
   }
 
-  void ExtractStats(StatsCollector* collector) const override {
+  void ExtractStats(LegacyStatsCollector* collector) const override {
     ExtractSenderReceiverStats(collector, video_media_info.receivers,
                                video_media_info.aggregated_senders);
   }
@@ -1164,7 +1166,7 @@ std::unique_ptr<MediaChannelStatsGatherer> CreateMediaChannelStatsGatherer(
 
 }  // namespace
 
-void StatsCollector::ExtractMediaInfo(
+void LegacyStatsCollector::ExtractMediaInfo(
     const std::map<std::string, std::string>& transport_names_by_mid) {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
 
@@ -1239,7 +1241,7 @@ void StatsCollector::ExtractMediaInfo(
   UpdateStatsFromExistingLocalAudioTracks(has_remote_audio);
 }
 
-void StatsCollector::ExtractSenderInfo() {
+void LegacyStatsCollector::ExtractSenderInfo() {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
 
   for (const auto& sender : pc_->GetSenders()) {
@@ -1272,7 +1274,7 @@ void StatsCollector::ExtractSenderInfo() {
   }
 }
 
-void StatsCollector::ExtractDataInfo() {
+void LegacyStatsCollector::ExtractDataInfo() {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
 
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
@@ -1294,16 +1296,16 @@ void StatsCollector::ExtractDataInfo() {
   }
 }
 
-StatsReport* StatsCollector::GetReport(const StatsReport::StatsType& type,
-                                       const std::string& id,
-                                       StatsReport::Direction direction) {
+StatsReport* LegacyStatsCollector::GetReport(const StatsReport::StatsType& type,
+                                             const std::string& id,
+                                             StatsReport::Direction direction) {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
   RTC_DCHECK(type == StatsReport::kStatsReportTypeSsrc ||
              type == StatsReport::kStatsReportTypeRemoteSsrc);
   return reports_.Find(StatsReport::NewIdWithDirection(type, id, direction));
 }
 
-void StatsCollector::UpdateStatsFromExistingLocalAudioTracks(
+void LegacyStatsCollector::UpdateStatsFromExistingLocalAudioTracks(
     bool has_remote_tracks) {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
   // Loop through the existing local audio tracks.
@@ -1330,9 +1332,10 @@ void StatsCollector::UpdateStatsFromExistingLocalAudioTracks(
   }
 }
 
-void StatsCollector::UpdateReportFromAudioTrack(AudioTrackInterface* track,
-                                                StatsReport* report,
-                                                bool has_remote_tracks) {
+void LegacyStatsCollector::UpdateReportFromAudioTrack(
+    AudioTrackInterface* track,
+    StatsReport* report,
+    bool has_remote_tracks) {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
   RTC_DCHECK(track != NULL);
 
@@ -1353,7 +1356,7 @@ void StatsCollector::UpdateReportFromAudioTrack(AudioTrackInterface* track,
   }
 }
 
-void StatsCollector::UpdateTrackReports() {
+void LegacyStatsCollector::UpdateTrackReports() {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
 
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
@@ -1364,7 +1367,7 @@ void StatsCollector::UpdateTrackReports() {
   }
 }
 
-void StatsCollector::InvalidateCache() {
+void LegacyStatsCollector::InvalidateCache() {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
   cache_timestamp_ms_ = 0;
 }
