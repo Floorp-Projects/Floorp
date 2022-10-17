@@ -1632,6 +1632,16 @@ export class SearchService {
     if (!prevCurrentEngine && this._engines.has(prevAppDefaultEngine)) {
       return false;
     }
+    // Don't show the notification if the previous engine was an enterprise
+    // engine - the text doesn't quite make sense.
+    if (prevCurrentEngine) {
+      let engineSettings = settings.engines.find(
+        e => e._name == prevCurrentEngine
+      );
+      if (engineSettings._loadPath.includes("set-via-policy")) {
+        return false;
+      }
+    }
 
     // If the user's previous engine is different than the new current engine,
     // or if the user was using the app default engine and the app default
