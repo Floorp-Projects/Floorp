@@ -83,9 +83,9 @@ tasks:
                       else:
                           $if: 'tasks_for in ["cron", "action"]'
                           then:
-                            $if: '${push.branch}[:11] == "refs/heads/"'
+                            $if: 'push.branch[:11] == "refs/heads/"'
                             then: {$eval: 'push.branch[11:]'}
-                            else: '${push.branch}'
+                            else: ${push.branch}
           base_sha:
               $if: 'tasks_for == "github-push"'
               then: '${event.before}'
