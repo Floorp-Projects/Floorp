@@ -204,6 +204,43 @@ add_task(async function feature_callout_top_end_positioning() {
   sandbox.restore();
 });
 
+add_task(
+  async function feature_callout_is_repositioned_if_parent_container_is_toggled() {
+    await SpecialPowers.pushPrefEnv({
+      set: [[featureTourPref, defaultPrefValue]],
+    });
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url: "about:firefoxview",
+      },
+      async browser => {
+        const { document } = browser.contentWindow;
+        await waitForCalloutScreen(document, 1);
+        const parentEl = document.querySelector("#tab-pickup-container");
+        const calloutStartingTopPosition = document.querySelector(
+          calloutSelector
+        ).style.top;
+
+        //container has been toggled/minimized
+        parentEl.removeAttribute("open", "");
+        await BrowserTestUtils.waitForMutationCondition(
+          document.querySelector(calloutSelector),
+          { attributes: true },
+          () =>
+            document.querySelector(calloutSelector).style.top !=
+            calloutStartingTopPosition
+        );
+        ok(
+          document.querySelector(calloutSelector).style.top !=
+            calloutStartingTopPosition,
+          "Feature Callout position is recalculated when parent element is toggled"
+        );
+      }
+    );
+  }
+);
+
 // This test should be moved into a surface agnostic test suite with bug 1793656.
 add_task(
   async function feature_callout_top_end_position_respects_RTL_layouts() {
