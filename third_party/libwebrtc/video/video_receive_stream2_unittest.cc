@@ -48,6 +48,7 @@
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/mock_transport.h"
+#include "test/rtcp_packet_parser.h"
 #include "test/run_loop.h"
 #include "test/time_controller/simulated_time_controller.h"
 #include "test/video_decoder_proxy_factory.h"
@@ -184,7 +185,7 @@ Timestamp ReceiveTimeForFrame(int id) {
 class VideoReceiveStream2Test : public ::testing::TestWithParam<bool> {
  public:
   auto DefaultDecodeAction() {
-    return testing::Invoke(&fake_decoder_, &test::FakeDecoder::Decode);
+    return Invoke(&fake_decoder_, &test::FakeDecoder::Decode);
   }
 
   bool UseMetronome() const { return GetParam(); }
@@ -207,22 +208,23 @@ class VideoReceiveStream2Test : public ::testing::TestWithParam<bool> {
 
     // By default, mock decoder factory is backed by VideoDecoderProxyFactory.
     ON_CALL(mock_h264_decoder_factory_, CreateVideoDecoder)
-        .WillByDefault(testing::Invoke(
-            &h264_decoder_factory_,
-            &test::VideoDecoderProxyFactory::CreateVideoDecoder));
+        .WillByDefault(
+            Invoke(&h264_decoder_factory_,
+                   &test::VideoDecoderProxyFactory::CreateVideoDecoder));
 
     // By default, mock decode will wrap the fake decoder.
     ON_CALL(mock_decoder_, Configure)
-        .WillByDefault(
-            testing::Invoke(&fake_decoder_, &test::FakeDecoder::Configure));
+        .WillByDefault(Invoke(&fake_decoder_, &test::FakeDecoder::Configure));
     ON_CALL(mock_decoder_, Decode).WillByDefault(DefaultDecodeAction());
     ON_CALL(mock_decoder_, RegisterDecodeCompleteCallback)
-        .WillByDefault(testing::Invoke(
-            &fake_decoder_,
-            &test::FakeDecoder::RegisterDecodeCompleteCallback));
-    ON_CALL(mock_decoder_, Release)
         .WillByDefault(
-            testing::Invoke(&fake_decoder_, &test::FakeDecoder::Release));
+            Invoke(&fake_decoder_,
+                   &test::FakeDecoder::RegisterDecodeCompleteCallback));
+    ON_CALL(mock_decoder_, Release)
+        .WillByDefault(Invoke(&fake_decoder_, &test::FakeDecoder::Release));
+    ON_CALL(mock_transport_, SendRtcp)
+        .WillByDefault(
+            Invoke(&rtcp_packet_parser_, &test::RtcpPacketParser::Parse));
   }
   ~VideoReceiveStream2Test() override {
     if (video_receive_stream_) {
@@ -284,6 +286,7 @@ class VideoReceiveStream2Test : public ::testing::TestWithParam<bool> {
   FakeVideoRenderer fake_renderer_;
   cricket::FakeCall fake_call_;
   MockTransport mock_transport_;
+  test::RtcpPacketParser rtcp_packet_parser_;
   PacketRouter packet_router_;
   RtpStreamReceiverController rtp_stream_receiver_controller_;
   std::unique_ptr<webrtc::internal::VideoReceiveStream2> video_receive_stream_;
@@ -664,8 +667,6 @@ std::unique_ptr<test::FakeEncodedFrame> MakeFrame(VideoFrameType frame_type,
 TEST_P(VideoReceiveStream2Test, PassesFrameWhenEncodedFramesCallbackSet) {
   testing::MockFunction<void(const RecordableEncodedFrame&)> callback;
   video_receive_stream_->Start();
-  // Expect a keyframe request to be generated
-  EXPECT_CALL(mock_transport_, SendRtcp);
   EXPECT_CALL(callback, Call);
   video_receive_stream_->SetAndGetRecordingState(
       VideoReceiveStreamInterface::RecordingState(callback.AsStdFunction()),
@@ -673,6 +674,9 @@ TEST_P(VideoReceiveStream2Test, PassesFrameWhenEncodedFramesCallbackSet) {
   video_receive_stream_->OnCompleteFrame(
       MakeFrame(VideoFrameType::kVideoFrameKey, 0));
   EXPECT_TRUE(fake_renderer_.WaitForFrame(kDefaultTimeOut));
+
+  EXPECT_THAT(rtcp_packet_parser_.pli()->num_packets(), Eq(1));
+
   video_receive_stream_->Stop();
 }
 
@@ -680,7 +684,6 @@ TEST_P(VideoReceiveStream2Test, MovesEncodedFrameDispatchStateWhenReCreating) {
   testing::MockFunction<void(const RecordableEncodedFrame&)> callback;
   video_receive_stream_->Start();
   // Expect a key frame request over RTCP.
-  EXPECT_CALL(mock_transport_, SendRtcp).Times(1);
   video_receive_stream_->SetAndGetRecordingState(
       VideoReceiveStreamInterface::RecordingState(callback.AsStdFunction()),
       true);
@@ -689,6 +692,9 @@ TEST_P(VideoReceiveStream2Test, MovesEncodedFrameDispatchStateWhenReCreating) {
       video_receive_stream_->SetAndGetRecordingState(
           VideoReceiveStreamInterface::RecordingState(), false);
   RecreateReceiveStream(std::move(old_state));
+
+  EXPECT_THAT(rtcp_packet_parser_.pli()->num_packets(), Eq(1));
+
   video_receive_stream_->Stop();
 }
 
@@ -700,7 +706,6 @@ TEST_P(VideoReceiveStream2Test, RequestsKeyFramesUntilKeyFrameReceived) {
   RecreateReceiveStream();
   video_receive_stream_->Start();
 
-  EXPECT_CALL(mock_transport_, SendRtcp).Times(1).WillOnce(testing::Return(0));
   video_receive_stream_->GenerateKeyFrame();
   video_receive_stream_->OnCompleteFrame(
       MakeFrame(VideoFrameType::kVideoFrameDelta, 0));
@@ -713,9 +718,10 @@ TEST_P(VideoReceiveStream2Test, RequestsKeyFramesUntilKeyFrameReceived) {
   time_controller_.AdvanceTime(TimeDelta::Zero());
   testing::Mock::VerifyAndClearExpectations(&mock_transport_);
 
+  EXPECT_THAT(rtcp_packet_parser_.pli()->num_packets(), Eq(1));
+
   // T+keyframetimeout: still no key frame received, expect key frame request
   // sent again.
-  EXPECT_CALL(mock_transport_, SendRtcp).Times(1).WillOnce(testing::Return(0));
   time_controller_.AdvanceTime(tick);
   video_receive_stream_->OnCompleteFrame(
       MakeFrame(VideoFrameType::kVideoFrameDelta, 2));
@@ -723,9 +729,10 @@ TEST_P(VideoReceiveStream2Test, RequestsKeyFramesUntilKeyFrameReceived) {
   loop_.Flush();
   testing::Mock::VerifyAndClearExpectations(&mock_transport_);
 
+  EXPECT_THAT(rtcp_packet_parser_.pli()->num_packets(), Eq(2));
+
   // T+keyframetimeout: now send a key frame - we should not observe new key
   // frame requests after this.
-  EXPECT_CALL(mock_transport_, SendRtcp).Times(0);
   video_receive_stream_->OnCompleteFrame(
       MakeFrame(VideoFrameType::kVideoFrameKey, 3));
   EXPECT_THAT(fake_renderer_.WaitForFrame(kDefaultTimeOut), RenderedFrame());
@@ -734,6 +741,8 @@ TEST_P(VideoReceiveStream2Test, RequestsKeyFramesUntilKeyFrameReceived) {
       MakeFrame(VideoFrameType::kVideoFrameDelta, 4));
   EXPECT_THAT(fake_renderer_.WaitForFrame(kDefaultTimeOut), RenderedFrame());
   loop_.Flush();
+
+  EXPECT_THAT(rtcp_packet_parser_.pli()->num_packets(), Eq(2));
 }
 
 TEST_P(VideoReceiveStream2Test,
@@ -943,7 +952,7 @@ TEST_P(VideoReceiveStream2Test, FramesFastForwardOnSystemHalt) {
   InSequence seq;
   EXPECT_CALL(mock_decoder_,
               Decode(test::RtpTimestamp(kFirstRtpTimestamp), _, _))
-      .WillOnce(testing::DoAll(testing::Invoke([&] {
+      .WillOnce(testing::DoAll(Invoke([&] {
                                  // System halt will be simulated in the decode.
                                  time_controller_.AdvanceTime(k30FpsDelay * 2);
                                }),

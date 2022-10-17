@@ -94,7 +94,6 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
       NackSender* nack_sender,
       // The KeyFrameRequestSender is optional; if not provided, key frame
       // requests are sent via the internal RtpRtcp module.
-      KeyFrameRequestSender* keyframe_request_sender,
       OnCompleteFrameCallback* complete_frame_callback,
       rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
@@ -332,7 +331,6 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   const std::unique_ptr<ModuleRtpRtcpImpl2> rtp_rtcp_;
 
   OnCompleteFrameCallback* complete_frame_callback_;
-  KeyFrameRequestSender* const keyframe_request_sender_;
   const KeyFrameReqMethod keyframe_request_method_;
 
   RtcpFeedbackBuffer rtcp_feedback_buffer_;
