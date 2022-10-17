@@ -96,8 +96,7 @@ void JitterEstimator::Reset() {
 
 // Updates the estimates with the new measurements.
 void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
-                                     DataSize frame_size,
-                                     bool incomplete_frame /* = false */) {
+                                     DataSize frame_size) {
   if (frame_size.IsZero()) {
     return;
   }
@@ -112,19 +111,17 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
     avg_frame_size_ = frame_size_sum_ / static_cast<double>(frame_size_count_);
     frame_size_count_++;
   }
-  if (!incomplete_frame || frame_size > avg_frame_size_) {
-    DataSize avg_frame_size = kPhi * avg_frame_size_ + (1 - kPhi) * frame_size;
-    DataSize deviation_size = DataSize::Bytes(2 * sqrt(var_frame_size_));
-    if (frame_size < avg_frame_size_ + deviation_size) {
-      // Only update the average frame size if this sample wasn't a key frame.
-      avg_frame_size_ = avg_frame_size;
-    }
-    // Update the variance anyway since we want to capture cases where we only
-    // get key frames.
-    double delta_bytes = frame_size.bytes() - avg_frame_size.bytes();
-    var_frame_size_ = std::max(
-        kPhi * var_frame_size_ + (1 - kPhi) * (delta_bytes * delta_bytes), 1.0);
+
+  DataSize avg_frame_size = kPhi * avg_frame_size_ + (1 - kPhi) * frame_size;
+  DataSize deviation_size = DataSize::Bytes(2 * sqrt(var_frame_size_));
+  if (frame_size < avg_frame_size_ + deviation_size) {
+    // Only update the average frame size if this sample wasn't a key frame.
+    avg_frame_size_ = avg_frame_size;
   }
+
+  double delta_bytes = frame_size.bytes() - avg_frame_size.bytes();
+  var_frame_size_ = std::max(
+      kPhi * var_frame_size_ + (1 - kPhi) * (delta_bytes * delta_bytes), 1.0);
 
   // Update max_frame_size_ estimate.
   max_frame_size_ = std::max(kPsi * max_frame_size_, frame_size);
@@ -152,22 +149,21 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
               kNumStdDevFrameSizeOutlier * sqrt(var_frame_size_)) {
     // Update the variance of the deviation from the line given by the Kalman
     // filter.
-    EstimateRandomJitter(deviation, incomplete_frame);
+    EstimateRandomJitter(deviation);
     // Prevent updating with frames which have been congested by a large frame,
     // and therefore arrives almost at the same time as that frame.
     // This can occur when we receive a large frame (key frame) which has been
     // delayed. The next frame is of normal size (delta frame), and thus deltaFS
     // will be << 0. This removes all frame samples which arrives after a key
     // frame.
-    if ((!incomplete_frame || deviation >= 0) &&
-        delta_frame_bytes > -0.25 * max_frame_size_.bytes()) {
+    if (delta_frame_bytes > -0.25 * max_frame_size_.bytes()) {
       // Update the Kalman filter with the new data
       KalmanEstimateChannel(frame_delay, delta_frame_bytes);
     }
   } else {
     int nStdDev =
         (deviation >= 0) ? kNumStdDevDelayOutlier : -kNumStdDevDelayOutlier;
-    EstimateRandomJitter(nStdDev * sqrt(var_noise_), incomplete_frame);
+    EstimateRandomJitter(nStdDev * sqrt(var_noise_));
   }
   // Post process the total estimated jitter
   if (startup_count_ >= kStartupDelaySamples) {
@@ -273,7 +269,7 @@ double JitterEstimator::DeviationFromExpectedDelay(
 
 // Estimates the random jitter by calculating the variance of the sample
 // distance from the line given by theta.
-void JitterEstimator::EstimateRandomJitter(double d_dT, bool incomplete_frame) {
+void JitterEstimator::EstimateRandomJitter(double d_dT) {
   Timestamp now = clock_->CurrentTime();
   if (last_update_time_.has_value()) {
     fps_counter_.AddSample((now - *last_update_time_).us());
@@ -310,10 +306,8 @@ void JitterEstimator::EstimateRandomJitter(double d_dT, bool incomplete_frame) {
   double avgNoise = alpha * avg_noise_ + (1 - alpha) * d_dT;
   double varNoise = alpha * var_noise_ +
                     (1 - alpha) * (d_dT - avg_noise_) * (d_dT - avg_noise_);
-  if (!incomplete_frame || varNoise > var_noise_) {
-    avg_noise_ = avgNoise;
-    var_noise_ = varNoise;
-  }
+  avg_noise_ = avgNoise;
+  var_noise_ = varNoise;
   if (var_noise_ < 1.0) {
     // The variance should never be zero, since we might get stuck and consider
     // all samples as outliers.

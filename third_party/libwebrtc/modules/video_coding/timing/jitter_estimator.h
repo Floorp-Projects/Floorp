@@ -39,12 +39,7 @@ class JitterEstimator {
   // Input:
   //          - frame_delay      : Delay-delta calculated by UTILDelayEstimate.
   //          - frame_size       : Frame size of the current frame.
-  //          - incomplete_frame : Flags if the frame is used to update the
-  //                              estimate before it was complete.
-  //                              Default is false.
-  void UpdateEstimate(TimeDelta frame_delay,
-                      DataSize frame_size,
-                      bool incomplete_frame = false);
+  void UpdateEstimate(TimeDelta frame_delay, DataSize frame_size);
 
   // Returns the current jitter estimate and adds an RTT dependent term in cases
   // of retransmission.
@@ -94,9 +89,7 @@ class JitterEstimator {
   //
   // Input:
   //          - d_dT              : The deviation from the kalman estimate.
-  //          - incomplete_frame   : True if the frame used to update the
-  //                                estimate with was incomplete.
-  void EstimateRandomJitter(double d_dT, bool incomplete_frame);
+  void EstimateRandomJitter(double d_dT);
 
   double NoiseThreshold() const;
 
