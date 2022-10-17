@@ -118,6 +118,7 @@ const SearchWidgetTracker = {
         win.document.getElementById(WIDGET_ID) ||
         win.gNavToolbox.palette.querySelector("#" + WIDGET_ID);
       searchbar.removeAttribute("width");
+      searchbar.style.removeProperty("width");
     }
   },
 
