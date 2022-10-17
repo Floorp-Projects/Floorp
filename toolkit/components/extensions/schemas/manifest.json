@@ -53,8 +53,7 @@
 
           "version": {
             "type": "string",
-            "optional": false,
-            "format": "versionString"
+            "optional": false
           },
 
           "homepage_url": {
