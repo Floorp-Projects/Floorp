@@ -1106,11 +1106,8 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
   // - SYNTAX_ERROR if parsing an ICE server URL failed.
   // - INVALID_PARAMETER if a TURN server is missing `username` or `password`.
   // - INTERNAL_ERROR if an unexpected error occurred.
-  //
-  // TODO(nisse): Make this pure virtual once all Chrome subclasses of
-  // PeerConnectionInterface implement it.
   virtual RTCError SetConfiguration(
-      const PeerConnectionInterface::RTCConfiguration& config);
+      const PeerConnectionInterface::RTCConfiguration& config) = 0;
 
   // Provides a remote candidate to the ICE Agent.
   // A copy of the `candidate` will be created and added to the remote
