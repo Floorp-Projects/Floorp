@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { AboutProtectionsParent } = ChromeUtils.import(
-  "resource:///actors/AboutProtectionsParent.jsm"
+const { AboutProtectionsParent } = ChromeUtils.importESModule(
+  "resource:///actors/AboutProtectionsParent.sys.mjs"
 );
 
 let { Region } = ChromeUtils.importESModule(

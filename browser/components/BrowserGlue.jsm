@@ -320,10 +320,10 @@ let JSWINDOWACTORS = {
 
   AboutProtections: {
     parent: {
-      moduleURI: "resource:///actors/AboutProtectionsParent.jsm",
+      esModuleURI: "resource:///actors/AboutProtectionsParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/AboutProtectionsChild.jsm",
+      esModuleURI: "resource:///actors/AboutProtectionsChild.sys.mjs",
 
       events: {
         DOMDocElementInserted: { capture: true },

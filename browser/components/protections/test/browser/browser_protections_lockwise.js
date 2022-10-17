@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { AboutProtectionsParent } = ChromeUtils.import(
-  "resource:///actors/AboutProtectionsParent.jsm"
+const { AboutProtectionsParent } = ChromeUtils.importESModule(
+  "resource:///actors/AboutProtectionsParent.sys.mjs"
 );
 const ABOUT_LOGINS_URL = "about:logins";
 
