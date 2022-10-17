@@ -31,8 +31,8 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
+#include "absl/cleanup/cleanup.h"
 #include "api/sequence_checker.h"
-#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/event.h"
@@ -72,21 +72,24 @@ class ScopedAutoReleasePool {
 namespace rtc {
 namespace {
 
-class MessageHandlerWithTask final : public MessageHandler {
+struct AnyInvocableMessage final : public MessageData {
+  explicit AnyInvocableMessage(absl::AnyInvocable<void() &&> task)
+      : task(std::move(task)) {}
+  absl::AnyInvocable<void() &&> task;
+};
+
+class AnyInvocableMessageHandler final : public MessageHandler {
  public:
-  MessageHandlerWithTask() {}
-
-  MessageHandlerWithTask(const MessageHandlerWithTask&) = delete;
-  MessageHandlerWithTask& operator=(const MessageHandlerWithTask&) = delete;
-
   void OnMessage(Message* msg) override {
-    static_cast<rtc_thread_internal::MessageLikeTask*>(msg->pdata)->Run();
+    std::move(static_cast<AnyInvocableMessage*>(msg->pdata)->task)();
     delete msg->pdata;
   }
-
- private:
-  ~MessageHandlerWithTask() override {}
 };
+
+MessageHandler* GetAnyInvocableMessageHandler() {
+  static MessageHandler* const handler = new AnyInvocableMessageHandler;
+  return handler;
+}
 
 class RTC_SCOPED_LOCKABLE MarkProcessingCritScope {
  public:
@@ -761,8 +764,7 @@ bool Thread::SetName(absl::string_view name, const void* obj) {
 
 void Thread::SetDispatchWarningMs(int deadline) {
   if (!IsCurrent()) {
-    PostTask(webrtc::ToQueuedTask(
-        [this, deadline]() { SetDispatchWarningMs(deadline); }));
+    PostTask([this, deadline]() { SetDispatchWarningMs(deadline); });
     return;
   }
   RTC_DCHECK_RUN_ON(this);
@@ -948,18 +950,19 @@ void Thread::Send(const Location& posted_from,
     done_event.reset(new rtc::Event());
 
   bool ready = false;
-  PostTask(webrtc::ToQueuedTask(
-      [&msg]() mutable { msg.phandler->OnMessage(&msg); },
-      [this, &ready, current_thread, done = done_event.get()] {
-        if (current_thread) {
-          CritScope cs(&crit_);
-          ready = true;
-          current_thread->socketserver()->WakeUp();
-        } else {
-          done->Set();
-        }
-      }));
-
+  absl::Cleanup cleanup = [this, &ready, current_thread,
+                           done = done_event.get()] {
+    if (current_thread) {
+      CritScope cs(&crit_);
+      ready = true;
+      current_thread->socketserver()->WakeUp();
+    } else {
+      done->Set();
+    }
+  };
+  PostTask([&msg, cleanup = std::move(cleanup)]() mutable {
+    msg.phandler->OnMessage(&msg);
+  });
   if (current_thread) {
     bool waited = false;
     crit_.Enter();
@@ -1115,6 +1118,28 @@ void Thread::Delete() {
   delete this;
 }
 
+void Thread::PostTask(absl::AnyInvocable<void() &&> task) {
+  // Though Post takes MessageData by raw pointer (last parameter), it still
+  // takes it with ownership.
+  Post(RTC_FROM_HERE, GetAnyInvocableMessageHandler(),
+       /*id=*/0, new AnyInvocableMessage(std::move(task)));
+}
+
+void Thread::PostDelayedTask(absl::AnyInvocable<void() &&> task,
+                             webrtc::TimeDelta delay) {
+  // This implementation does not support low precision yet.
+  PostDelayedHighPrecisionTask(std::move(task), delay);
+}
+
+void Thread::PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
+                                          webrtc::TimeDelta delay) {
+  int delay_ms = delay.RoundUpTo(webrtc::TimeDelta::Millis(1)).ms<int>();
+  // Though PostDelayed takes MessageData by raw pointer (last parameter),
+  // it still takes it with ownership.
+  PostDelayed(RTC_FROM_HERE, delay_ms, GetAnyInvocableMessageHandler(),
+              /*id=*/0, new AnyInvocableMessage(std::move(task)));
+}
+
 bool Thread::IsProcessingMessagesForTesting() {
   return (owned_ || IsCurrent()) && !IsQuitting();
 }
@@ -1181,13 +1206,6 @@ bool Thread::IsRunning() {
 #elif defined(WEBRTC_POSIX)
   return thread_ != 0;
 #endif
-}
-
-// static
-MessageHandler* Thread::GetPostTaskMessageHandler() {
-  // Allocate at first call, never deallocate.
-  static MessageHandler* handler = new MessageHandlerWithTask;
-  return handler;
 }
 
 AutoThread::AutoThread()

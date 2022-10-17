@@ -916,6 +916,8 @@ rtc_library("threading") {
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/cleanup",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
     "//third_party/abseil-cpp/absl/strings",
   ]
   deps = [
@@ -945,6 +947,7 @@ rtc_library("threading") {
     "../api/task_queue",
     "../api/task_queue:pending_task_safety_flag",
     "../api/task_queue:to_queued_task",
+    "../api/units:time_delta",
     "synchronization:mutex",
     "system:no_unique_address",
     "system:rtc_export",
@@ -1734,6 +1737,7 @@ if (rtc_include_tests) {
         "../api/task_queue:pending_task_safety_flag",
         "../api/task_queue:task_queue_test",
         "../api/task_queue:to_queued_task",
+        "../api/units:time_delta",
         "../test:field_trial",
         "../test:fileutils",
         "../test:rtc_expect_death",

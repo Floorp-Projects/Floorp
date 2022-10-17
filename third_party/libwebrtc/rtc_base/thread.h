@@ -28,10 +28,12 @@
 #include <pthread.h>
 #endif
 #include "absl/base/attributes.h"
+#include "absl/functional/any_invocable.h"
 #include "api/function_view.h"
 #include "api/task_queue/queued_task.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/to_queued_task.h"
+#include "api/units/time_delta.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/location.h"
@@ -78,32 +80,6 @@
 namespace rtc {
 
 class Thread;
-
-namespace rtc_thread_internal {
-
-class MessageLikeTask : public MessageData {
- public:
-  virtual void Run() = 0;
-};
-
-template <class FunctorT>
-class MessageWithFunctor final : public MessageLikeTask {
- public:
-  explicit MessageWithFunctor(FunctorT&& functor)
-      : functor_(std::forward<FunctorT>(functor)) {}
-
-  MessageWithFunctor(const MessageWithFunctor&) = delete;
-  MessageWithFunctor& operator=(const MessageWithFunctor&) = delete;
-
-  void Run() override { functor_(); }
-
- private:
-  ~MessageWithFunctor() override {}
-
-  typename std::remove_reference<FunctorT>::type functor_;
-};
-
-}  // namespace rtc_thread_internal
 
 class RTC_EXPORT ThreadManager {
  public:
@@ -418,36 +394,29 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   bool IsInvokeToThreadAllowed(rtc::Thread* target);
 
   // From TaskQueueBase
+  void Delete() override;
+  void PostTask(absl::AnyInvocable<void() &&> task) override;
+  void PostDelayedTask(absl::AnyInvocable<void() &&> task,
+                       webrtc::TimeDelta delay) override;
+  void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
+                                    webrtc::TimeDelta delay) override;
+
+  // Legacy TaskQueueBase methods, do not use in new code.
+  // TODO(bugs.webrtc.org/14245): Delete when all code that use rtc::Thread
+  // directly is updated to use PostTask methods above.
   void PostTask(std::unique_ptr<webrtc::QueuedTask> task) override;
   void PostDelayedTask(std::unique_ptr<webrtc::QueuedTask> task,
                        uint32_t milliseconds) override;
   void PostDelayedHighPrecisionTask(std::unique_ptr<webrtc::QueuedTask> task,
                                     uint32_t milliseconds) override;
-  void Delete() override;
 
-  // Helper methods to avoid having to do ToQueuedTask() at the calling places.
-  template <class Closure,
-            typename std::enable_if<!std::is_convertible<
-                Closure,
-                std::unique_ptr<webrtc::QueuedTask>>::value>::type* = nullptr>
-  void PostTask(Closure&& closure) {
-    PostTask(webrtc::ToQueuedTask(std::forward<Closure>(closure)));
-  }
-  template <class Closure,
-            typename std::enable_if<!std::is_convertible<
-                Closure,
-                std::unique_ptr<webrtc::QueuedTask>>::value>::type* = nullptr>
-  void PostDelayedTask(Closure&& closure, uint32_t milliseconds) {
-    PostDelayedTask(webrtc::ToQueuedTask(std::forward<Closure>(closure)),
-                    milliseconds);
-  }
-  template <class Closure,
-            typename std::enable_if<!std::is_convertible<
-                Closure,
-                std::unique_ptr<webrtc::QueuedTask>>::value>::type* = nullptr>
-  void PostDelayedHighPrecisionTask(Closure&& closure, uint32_t milliseconds) {
-    PostDelayedHighPrecisionTask(
-        webrtc::ToQueuedTask(std::forward<Closure>(closure)), milliseconds);
+  // Legacy helper method, do not use in new code.
+  // TODO(bugs.webrtc.org/14245): Delete when all code that use rtc::Thread
+  // directly is updated to use PostTask methods above.
+  ABSL_DEPRECATED("Pass delay as webrtc::TimeDelta type")
+  void PostDelayedTask(absl::AnyInvocable<void() &&> task,
+                       uint32_t milliseconds) {
+    PostDelayedTask(std::move(task), webrtc::TimeDelta::Millis(milliseconds));
   }
 
   // ProcessMessages will process I/O and dispatch messages until:
@@ -608,10 +577,6 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
 
   // Called by the ThreadManager when being unset as the current thread.
   void ClearCurrentTaskQueue();
-
-  // Returns a static-lifetime MessageHandler which runs message with
-  // MessageLikeTask payload data.
-  static MessageHandler* GetPostTaskMessageHandler();
 
   bool fPeekKeep_;
   Message msgPeek_;

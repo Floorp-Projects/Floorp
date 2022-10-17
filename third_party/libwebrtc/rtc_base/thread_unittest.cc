@@ -14,7 +14,7 @@
 
 #include "api/task_queue/task_queue_factory.h"
 #include "api/task_queue/task_queue_test.h"
-#include "api/task_queue/to_queued_task.h"
+#include "api/units/time_delta.h"
 #include "rtc_base/async_invoker.h"
 #include "rtc_base/async_udp_socket.h"
 #include "rtc_base/checks.h"
@@ -36,7 +36,7 @@
 namespace rtc {
 namespace {
 
-using ::webrtc::ToQueuedTask;
+using ::webrtc::TimeDelta;
 
 // Generates a sequence of numbers (collaboratively).
 class TestGenerator {
@@ -373,8 +373,8 @@ TEST(ThreadTest, InvokeToThreadAllowedReturnsTrueWithoutPolicies) {
   auto thread1 = Thread::CreateWithSocketServer();
   auto thread2 = Thread::CreateWithSocketServer();
 
-  thread1->PostTask(ToQueuedTask(
-      [&]() { EXPECT_TRUE(thread1->IsInvokeToThreadAllowed(thread2.get())); }));
+  thread1->PostTask(
+      [&]() { EXPECT_TRUE(thread1->IsInvokeToThreadAllowed(thread2.get())); });
   main_thread.ProcessMessages(100);
 }
 
@@ -389,11 +389,11 @@ TEST(ThreadTest, InvokeAllowedWhenThreadsAdded) {
   thread1->AllowInvokesToThread(thread2.get());
   thread1->AllowInvokesToThread(thread3.get());
 
-  thread1->PostTask(ToQueuedTask([&]() {
+  thread1->PostTask([&]() {
     EXPECT_TRUE(thread1->IsInvokeToThreadAllowed(thread2.get()));
     EXPECT_TRUE(thread1->IsInvokeToThreadAllowed(thread3.get()));
     EXPECT_FALSE(thread1->IsInvokeToThreadAllowed(thread4.get()));
-  }));
+  });
   main_thread.ProcessMessages(100);
 }
 
@@ -405,9 +405,8 @@ TEST(ThreadTest, InvokesDisallowedWhenDisallowAllInvokes) {
 
   thread1->DisallowAllInvokes();
 
-  thread1->PostTask(ToQueuedTask([&]() {
-    EXPECT_FALSE(thread1->IsInvokeToThreadAllowed(thread2.get()));
-  }));
+  thread1->PostTask(
+      [&]() { EXPECT_FALSE(thread1->IsInvokeToThreadAllowed(thread2.get())); });
   main_thread.ProcessMessages(100);
 }
 #endif  // (!defined(NDEBUG) || RTC_DCHECK_IS_ON)
@@ -418,8 +417,8 @@ TEST(ThreadTest, InvokesAllowedByDefault) {
   auto thread1 = Thread::CreateWithSocketServer();
   auto thread2 = Thread::CreateWithSocketServer();
 
-  thread1->PostTask(ToQueuedTask(
-      [&]() { EXPECT_TRUE(thread1->IsInvokeToThreadAllowed(thread2.get())); }));
+  thread1->PostTask(
+      [&]() { EXPECT_TRUE(thread1->IsInvokeToThreadAllowed(thread2.get())); });
   main_thread.ProcessMessages(100);
 }
 
@@ -672,11 +671,11 @@ TEST(ThreadManager, ProcessAllMessageQueues) {
   };
 
   // Post messages (both delayed and non delayed) to both threads.
-  a->PostTask(ToQueuedTask(incrementer));
-  b->PostTask(ToQueuedTask(incrementer));
-  a->PostDelayedTask(ToQueuedTask(incrementer), 0);
-  b->PostDelayedTask(ToQueuedTask(incrementer), 0);
-  main_thread.PostTask(ToQueuedTask(event_signaler));
+  a->PostTask(incrementer);
+  b->PostTask(incrementer);
+  a->PostDelayedTask(incrementer, TimeDelta::Zero());
+  b->PostDelayedTask(incrementer, TimeDelta::Zero());
+  main_thread.PostTask(event_signaler);
 
   ThreadManager::ProcessAllMessageQueuesForTesting();
   EXPECT_EQ(4, messages_processed.load(std::memory_order_acquire));
@@ -1083,7 +1082,7 @@ TEST(ThreadPostDelayedTaskTest, InvokesAsynchronously) {
         WaitAndSetEvent(&event_set_by_test_thread,
                         &event_set_by_background_thread);
       },
-      /*milliseconds=*/10);
+      TimeDelta::Millis(10));
   event_set_by_test_thread.Set();
   event_set_by_background_thread.Wait(Event::kForever);
 }
@@ -1100,18 +1099,18 @@ TEST(ThreadPostDelayedTaskTest, InvokesInDelayOrder) {
 
   background_thread->PostDelayedTask(
       [&third, &fourth] { WaitAndSetEvent(&third, &fourth); },
-      /*milliseconds=*/11);
+      TimeDelta::Millis(11));
   background_thread->PostDelayedTask(
       [&first, &second] { WaitAndSetEvent(&first, &second); },
-      /*milliseconds=*/9);
+      TimeDelta::Millis(9));
   background_thread->PostDelayedTask(
       [&second, &third] { WaitAndSetEvent(&second, &third); },
-      /*milliseconds=*/10);
+      TimeDelta::Millis(10));
 
   // All tasks have been posted before the first one is unblocked.
   first.Set();
   // Only if the chain is invoked in delay order will the last event be set.
-  clock.AdvanceTime(webrtc::TimeDelta::Millis(11));
+  clock.AdvanceTime(TimeDelta::Millis(11));
   EXPECT_TRUE(fourth.Wait(0));
 }
 
