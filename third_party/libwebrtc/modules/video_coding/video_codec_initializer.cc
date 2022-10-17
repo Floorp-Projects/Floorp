@@ -170,7 +170,9 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
   video_codec.spatialLayers[0].height = video_codec.height;
   video_codec.spatialLayers[0].maxFramerate = max_framerate;
   video_codec.spatialLayers[0].numberOfTemporalLayers =
-      streams[0].num_temporal_layers.value_or(1);
+      streams[0].scalability_mode.has_value()
+          ? ScalabilityModeToNumTemporalLayers(*streams[0].scalability_mode)
+          : streams[0].num_temporal_layers.value_or(1);
 
   // Set codec specific options
   if (config.encoder_specific_settings)
