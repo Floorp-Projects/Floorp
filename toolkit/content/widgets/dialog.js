@@ -193,13 +193,33 @@
       return this.shadowRoot.querySelector(".dialog-button-box");
     }
 
+    _sizeToPreferredSize() {
+      const docEl = document.documentElement;
+      const prefWidth = (() => {
+        if (docEl.hasAttribute("width")) {
+          return parseInt(docEl.getAttribute("width"));
+        }
+        let prefWidthProp = docEl.getAttribute("prefwidth");
+        if (prefWidthProp) {
+          let minWidth = parseFloat(
+            getComputedStyle(docEl).getPropertyValue(prefWidthProp)
+          );
+          if (isFinite(minWidth)) {
+            return minWidth;
+          }
+        }
+        return 0;
+      })();
+      window.sizeToContentConstrained(prefWidth, 0);
+    }
+
     moveToAlertPosition() {
       // hack. we need this so the window has something like its final size
       if (window.outerWidth == 1) {
         dump(
           "Trying to position a sizeless window; caller should have called sizeToContent() or sizeTo(). See bug 75649.\n"
         );
-        window.sizeToContent();
+        this._sizeToPreferredSize();
       }
 
       if (opener) {
@@ -317,7 +337,7 @@
 
       if (this._l10nButtons.length) {
         document.l10n.translateElements(this._l10nButtons).then(() => {
-          window.sizeToContent();
+          this._sizeToPreferredSize();
         });
       }
     }
