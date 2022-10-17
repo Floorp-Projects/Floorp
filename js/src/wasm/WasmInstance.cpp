@@ -352,7 +352,7 @@ static int32_t PerformWait(Instance* instance, PtrT byteOffset, ValT value,
   mozilla::Maybe<mozilla::TimeDuration> timeout;
   if (timeout_ns >= 0) {
     timeout = mozilla::Some(
-        mozilla::TimeDuration::FromMicroseconds(timeout_ns / 1000));
+        mozilla::TimeDuration::FromMicroseconds(double(timeout_ns) / 1000));
   }
 
   MOZ_ASSERT(byteOffset <= SIZE_MAX, "Bounds check is broken");
@@ -1564,7 +1564,7 @@ RttValue* Instance::rttCanon(uint32_t typeIndex) const {
 // Instance creation and related.
 
 Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
-                   SharedCode code, Handle<WasmMemoryObject*> memory,
+                   const SharedCode& code, Handle<WasmMemoryObject*> memory,
                    SharedTableVector&& tables, UniqueDebugState maybeDebug)
     : realm_(cx->realm()),
       jsJitArgsRectifier_(
@@ -1587,7 +1587,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
 }
 
 Instance* Instance::create(JSContext* cx, Handle<WasmInstanceObject*> object,
-                           SharedCode code, uint32_t globalDataLength,
+                           const SharedCode& code, uint32_t globalDataLength,
                            Handle<WasmMemoryObject*> memory,
                            SharedTableVector&& tables,
                            UniqueDebugState maybeDebug) {
@@ -2599,7 +2599,7 @@ JSString* Instance::createDisplayURL(JSContext* cx) {
 
     const ModuleHash& hash = metadata().debugHash;
     for (unsigned char byte : hash) {
-      char digit1 = byte / 16, digit2 = byte % 16;
+      unsigned char digit1 = byte / 16, digit2 = byte % 16;
       if (!result.append(
               (char)(digit1 < 10 ? digit1 + '0' : digit1 + 'a' - 10))) {
         return nullptr;
@@ -2679,5 +2679,4 @@ void wasm::ReportTrapError(JSContext* cx, unsigned errorNumber) {
 
   MOZ_ASSERT(exn.isObject() && exn.toObject().is<ErrorObject>());
   exn.toObject().as<ErrorObject>().setFromWasmTrap();
-  return;
 }

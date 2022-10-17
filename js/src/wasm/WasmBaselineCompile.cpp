@@ -4124,11 +4124,7 @@ bool BaseCompiler::emitCatchAll() {
   captureResultRegisters(exnResult);
   // This reference is pushed onto the stack because a potential rethrow
   // may need to access it. It is always popped at the end of the block.
-  if (!pushBlockResults(exnResult)) {
-    return false;
-  }
-
-  return true;
+  return pushBlockResults(exnResult);
 }
 
 bool BaseCompiler::emitBodyDelegateThrowPad() {

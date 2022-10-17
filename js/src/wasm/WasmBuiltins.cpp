@@ -887,7 +887,7 @@ static int64_t UDivI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi,
   uint64_t x = ((uint64_t)x_hi << 32) + x_lo;
   uint64_t y = ((uint64_t)y_hi << 32) + y_lo;
   MOZ_ASSERT(y != 0);
-  return x / y;
+  return int64_t(x / y);
 }
 
 static int64_t ModI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi,
@@ -904,14 +904,14 @@ static int64_t UModI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi,
   uint64_t x = ((uint64_t)x_hi << 32) + x_lo;
   uint64_t y = ((uint64_t)y_hi << 32) + y_lo;
   MOZ_ASSERT(y != 0);
-  return x % y;
+  return int64_t(x % y);
 }
 
 static int64_t TruncateDoubleToInt64(double input) {
   // Note: INT64_MAX is not representable in double. It is actually
   // INT64_MAX + 1.  Therefore also sending the failure value.
   if (input >= double(INT64_MAX) || input < double(INT64_MIN) || IsNaN(input)) {
-    return 0x8000000000000000;
+    return int64_t(0x8000000000000000);
   }
   return int64_t(input);
 }
@@ -920,7 +920,7 @@ static uint64_t TruncateDoubleToUint64(double input) {
   // Note: UINT64_MAX is not representable in double. It is actually
   // UINT64_MAX + 1.  Therefore also sending the failure value.
   if (input >= double(UINT64_MAX) || input <= -1.0 || IsNaN(input)) {
-    return 0x8000000000000000;
+    return int64_t(0x8000000000000000);
   }
   return uint64_t(input);
 }

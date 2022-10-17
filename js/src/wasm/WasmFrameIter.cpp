@@ -540,7 +540,7 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
     ClearExitFP(masm, ABINonArgReturnVolatileReg);
   }
 
-  DebugOnly<uint32_t> poppedFP;
+  DebugOnly<uint32_t> poppedFP{};
 
 #if defined(JS_CODEGEN_MIPS64)
 
@@ -869,7 +869,7 @@ void wasm::GenerateJitEntryPrologue(MacroAssembler& masm,
 
 void wasm::GenerateJitEntryEpilogue(MacroAssembler& masm,
                                     CallableOffsets* offsets) {
-  DebugOnly<uint32_t> poppedFP;
+  DebugOnly<uint32_t> poppedFP{};
 #ifdef JS_CODEGEN_ARM64
   RegisterOrSP sp = masm.getStackPointer();
   AutoForbidPoolsAndNops afp(&masm,
