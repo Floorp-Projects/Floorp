@@ -16,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/task_queue/queued_task.h"
 #include "api/task_queue/task_queue_base.h"
@@ -230,8 +231,8 @@ void RtcEventLogImpl::LogEventsFromMemoryToOutput() {
 }
 
 void RtcEventLogImpl::WriteConfigsAndHistoryToOutput(
-    const std::string& encoded_configs,
-    const std::string& encoded_history) {
+    absl::string_view encoded_configs,
+    absl::string_view encoded_history) {
   // This function is used to merge the strings instead of calling the output
   // object twice with small strings. The function also avoids copying any
   // strings in the typical case where there are no config events.
@@ -240,7 +241,11 @@ void RtcEventLogImpl::WriteConfigsAndHistoryToOutput(
   } else if (encoded_history.empty()) {
     WriteToOutput(encoded_configs);  // Very unusual case.
   } else {
-    WriteToOutput(encoded_configs + encoded_history);
+    std::string s;
+    s.reserve(encoded_configs.size() + encoded_history.size());
+    s.append(encoded_configs.data(), encoded_configs.size());
+    s.append(encoded_history.data(), encoded_history.size());
+    WriteToOutput(s);
   }
 }
 
@@ -257,7 +262,7 @@ void RtcEventLogImpl::StopLoggingInternal() {
   StopOutput();
 }
 
-void RtcEventLogImpl::WriteToOutput(const std::string& output_string) {
+void RtcEventLogImpl::WriteToOutput(absl::string_view output_string) {
   RTC_DCHECK(event_output_ && event_output_->IsActive());
   if (!event_output_->Write(output_string)) {
     RTC_LOG(LS_ERROR) << "Failed to write RTC event to output.";
