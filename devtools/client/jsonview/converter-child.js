@@ -4,12 +4,6 @@
 
 "use strict";
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  NetworkHelper: "resource://devtools/shared/webconsole/NetworkHelper.sys.mjs",
-});
-
 const {
   getTheme,
   addThemeObserver,
@@ -121,7 +115,7 @@ Converter.prototype = {
     this.listener.onStartRequest(request);
 
     // Initialize stuff.
-    const win = lazy.NetworkHelper.getWindowForRequest(request);
+    const win = getWindowForRequest(request);
     if (!win || !Components.isSuccessCode(request.status)) {
       return;
     }
@@ -227,6 +221,52 @@ function getAllStrings() {
     }
   }
   return jsonViewStringDict;
+}
+
+// The two following methods are duplicated from NetworkHelper.sys.mjs
+// to avoid pulling the whole NetworkHelper as a dependency during
+// initialization.
+
+/**
+ * Gets the nsIDOMWindow that is associated with request.
+ *
+ * @param nsIHttpChannel request
+ * @returns nsIDOMWindow or null
+ */
+function getWindowForRequest(request) {
+  try {
+    return getRequestLoadContext(request).associatedWindow;
+  } catch (ex) {
+    // On some request notificationCallbacks and loadGroup are both null,
+    // so that we can't retrieve any nsILoadContext interface.
+    // Fallback on nsILoadInfo to try to retrieve the request's window.
+    // (this is covered by test_network_get.html and its CSS request)
+    return request.loadInfo.loadingDocument?.defaultView;
+  }
+}
+
+/**
+ * Gets the nsILoadContext that is associated with request.
+ *
+ * @param nsIHttpChannel request
+ * @returns nsILoadContext or null
+ */
+function getRequestLoadContext(request) {
+  try {
+    return request.notificationCallbacks.getInterface(Ci.nsILoadContext);
+  } catch (ex) {
+    // Ignore.
+  }
+
+  try {
+    return request.loadGroup.notificationCallbacks.getInterface(
+      Ci.nsILoadContext
+    );
+  } catch (ex) {
+    // Ignore.
+  }
+
+  return null;
 }
 
 // Exports variables that will be accessed by the non-privileged scripts.
