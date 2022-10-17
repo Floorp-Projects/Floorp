@@ -48,6 +48,15 @@ static bool IsServiceWorkersTestingEnabledInWindow(JSObject* const aGlobal) {
   return false;
 }
 
+static bool IsInPrivateBrowsing(JSContext* const aCx) {
+  if (const nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx)) {
+    if (const nsCOMPtr<nsIPrincipal> principal = global->PrincipalOrNull()) {
+      return principal->GetPrivateBrowsingId() > 0;
+    }
+  }
+  return false;
+}
+
 bool ServiceWorkersEnabled(JSContext* aCx, JSObject* aGlobal) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -58,10 +67,8 @@ bool ServiceWorkersEnabled(JSContext* aCx, JSObject* aGlobal) {
   // xpc::CurrentNativeGlobal below requires rooting
   JS::Rooted<JSObject*> global(aCx, aGlobal);
 
-  if (const nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx)) {
-    if (global->GetStorageAccess() == StorageAccess::ePrivateBrowsing) {
-      return false;
-    }
+  if (IsInPrivateBrowsing(aCx)) {
+    return false;
   }
 
   // Allow a webextension principal to register a service worker script with
