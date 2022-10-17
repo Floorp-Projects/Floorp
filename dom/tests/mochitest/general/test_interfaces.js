@@ -762,25 +762,21 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "MessagePort", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIAccess", android: false, disabled: !isEarlyBetaOrEarlier },
+  { name: "MIDIAccess", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "MIDIConnectionEvent",
-    android: false,
-    disabled: !isEarlyBetaOrEarlier,
-  },
+  { name: "MIDIConnectionEvent", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIInputMap", android: false, disabled: !isEarlyBetaOrEarlier },
+  { name: "MIDIInputMap", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIInput", android: false, disabled: !isEarlyBetaOrEarlier },
+  { name: "MIDIInput", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIMessageEvent", android: false, disabled: !isEarlyBetaOrEarlier },
+  { name: "MIDIMessageEvent", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIOutputMap", android: false, disabled: !isEarlyBetaOrEarlier },
+  { name: "MIDIOutputMap", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIOutput", android: false, disabled: !isEarlyBetaOrEarlier },
+  { name: "MIDIOutput", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "MIDIPort", android: false, disabled: !isEarlyBetaOrEarlier },
+  { name: "MIDIPort", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "MimeType", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
