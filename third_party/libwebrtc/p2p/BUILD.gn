@@ -139,7 +139,6 @@ rtc_library("rtc_p2p") {
 
     # Needed by pseudo_tcp, which should move to a separate target.
     "../api/task_queue:pending_task_safety_flag",
-    "../api/task_queue:to_queued_task",
     "../rtc_base:safe_minmax",
     "../rtc_base:weak_ptr",
     "../rtc_base/network:sent_packet",
@@ -167,7 +166,7 @@ if (rtc_include_tests) {
       "../api:ice_transport_interface",
       "../api:libjingle_peerconnection_api",
       "../api/task_queue:pending_task_safety_flag",
-      "../api/task_queue:to_queued_task",
+      "../api/units:time_delta",
       "../rtc_base",
       "../rtc_base:copy_on_write_buffer",
     ]
@@ -322,7 +321,6 @@ rtc_library("p2p_server_utils") {
     "../api:array_view",
     "../api:packet_socket_factory",
     "../api:sequence_checker",
-    "../api/task_queue:to_queued_task",
     "../api/transport:stun_types",
     "../rtc_base",
     "../rtc_base:byte_buffer",
@@ -353,8 +351,8 @@ rtc_library("libstunprober") {
     "../api:packet_socket_factory",
     "../api:sequence_checker",
     "../api/task_queue:pending_task_safety_flag",
-    "../api/task_queue:to_queued_task",
     "../api/transport:stun_types",
+    "../api/units:time_delta",
     "../rtc_base",
     "../rtc_base:async_resolver_interface",
     "../rtc_base:byte_buffer",

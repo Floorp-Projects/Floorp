@@ -928,8 +928,7 @@ void Port::DestroyConnectionInternal(Connection* conn, bool async) {
     // so that the object will always be deleted, including if PostTask fails.
     // In such a case (only tests), deletion would happen inside of the call
     // to `DestroyConnection()`.
-    thread_->PostTask(
-        webrtc::ToQueuedTask([conn = absl::WrapUnique(conn)]() {}));
+    thread_->PostTask([conn = absl::WrapUnique(conn)]() {});
   } else {
     delete conn;
   }

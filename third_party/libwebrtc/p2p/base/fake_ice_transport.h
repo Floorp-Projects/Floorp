@@ -21,11 +21,13 @@
 #include "absl/types/optional.h"
 #include "api/ice_transport_interface.h"
 #include "api/task_queue/pending_task_safety_flag.h"
-#include "api/task_queue/to_queued_task.h"
+#include "api/units/time_delta.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "rtc_base/copy_on_write_buffer.h"
 
 namespace cricket {
+using ::webrtc::SafeTask;
+using ::webrtc::TimeDelta;
 
 // All methods must be called on the network thread (which is either the thread
 // calling the constructor, or the separate thread explicitly passed to the
@@ -310,12 +312,12 @@ class FakeIceTransport : public IceTransportInternal {
       rtc::CopyOnWriteBuffer packet(std::move(send_packet_));
       if (async_) {
         network_thread_->PostDelayedTask(
-            ToQueuedTask(task_safety_.flag(),
-                         [this, packet] {
-                           RTC_DCHECK_RUN_ON(network_thread_);
-                           FakeIceTransport::SendPacketInternal(packet);
-                         }),
-            async_delay_ms_);
+            SafeTask(task_safety_.flag(),
+                     [this, packet] {
+                       RTC_DCHECK_RUN_ON(network_thread_);
+                       FakeIceTransport::SendPacketInternal(packet);
+                     }),
+            TimeDelta::Millis(async_delay_ms_));
       } else {
         SendPacketInternal(packet);
       }

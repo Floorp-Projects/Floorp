@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
-#include "api/task_queue/to_queued_task.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
@@ -24,6 +24,7 @@
 #include "rtc_base/time_utils.h"  // For TimeMillis
 
 namespace cricket {
+using ::webrtc::SafeTask;
 
 // RFC 5389 says SHOULD be 500ms.
 // For years, this was 100ms, but for networks that
@@ -241,8 +242,7 @@ void StunRequest::SendInternal() {
 
 void StunRequest::SendDelayed(webrtc::TimeDelta delay) {
   network_thread()->PostDelayedTask(
-      webrtc::ToQueuedTask(task_safety_, [this]() { SendInternal(); }),
-      delay.ms());
+      SafeTask(task_safety_.flag(), [this]() { SendInternal(); }), delay);
 }
 
 void StunRequest::Send(webrtc::TimeDelta delay) {
