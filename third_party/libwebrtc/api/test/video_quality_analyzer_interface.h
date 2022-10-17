@@ -156,12 +156,6 @@ class VideoQualityAnalyzerInterface
   virtual std::string GetStreamLabel(uint16_t frame_id) = 0;
 };
 
-namespace webrtc_pc_e2e {
-
-// Temporary alias to make downstream projects able to migrate.
-using VideoQualityAnalyzerInterface = ::webrtc::VideoQualityAnalyzerInterface;
-
-}  // namespace webrtc_pc_e2e
 }  // namespace webrtc
 
 #endif  // API_TEST_VIDEO_QUALITY_ANALYZER_INTERFACE_H_
