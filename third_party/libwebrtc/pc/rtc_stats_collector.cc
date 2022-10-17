@@ -550,8 +550,8 @@ void SetInboundRTPStreamStatsFromVideoReceiverInfo(
     inbound_video->frame_height =
         static_cast<uint32_t>(video_receiver_info.frame_height);
   }
-  if (video_receiver_info.framerate_rcvd > 0) {
-    inbound_video->frames_per_second = video_receiver_info.framerate_rcvd;
+  if (video_receiver_info.framerate_decoded > 0) {
+    inbound_video->frames_per_second = video_receiver_info.framerate_decoded;
   }
   if (video_receiver_info.qp_sum)
     inbound_video->qp_sum = *video_receiver_info.qp_sum;

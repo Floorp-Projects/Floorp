@@ -2189,9 +2189,14 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   video_media_info.receivers[0].decoder_implementation_name = "";
   video_media_info.receivers[0].min_playout_delay_ms = 50;
 
+  // Note: these two values intentionally differ,
+  // only the decoded one should show up.
+  video_media_info.receivers[0].framerate_rcvd = 15;
+  video_media_info.receivers[0].framerate_decoded = 5;
+
   RtpCodecParameters codec_parameters;
   codec_parameters.payload_type = 42;
-  codec_parameters.kind = cricket::MEDIA_TYPE_AUDIO;
+  codec_parameters.kind = cricket::MEDIA_TYPE_VIDEO;
   codec_parameters.name = "dummy";
   codec_parameters.clock_rate = 0;
   video_media_info.receive_codecs.insert(
@@ -2239,6 +2244,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   // `expected_video.content_type` should be undefined.
   // `expected_video.decoder_implementation` should be undefined.
   expected_video.min_playout_delay = 0.05;
+  expected_video.frames_per_second = 5;
 
   ASSERT_TRUE(report->Get(expected_video.id()));
   EXPECT_EQ(
