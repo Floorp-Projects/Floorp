@@ -13,9 +13,6 @@
   appearance: none;
   border: 0;
   margin: 0;
-  /* We have an explicit width set by l10n, but we still want to fill our
-   * container if it's wider. */
-  min-width: 100%;
 }
 
 @media not (prefers-contrast) {
@@ -39,7 +36,7 @@
 #downloadsListBox > richlistitem {
   /* Leave space for the 32x32 icon with 16px vertical padding, and/or
    * the text in the item, with the same padding, whichever is bigger: */
-  min-height: max(48px, calc(16px + 2em));
+  height: max(48px, calc(16px + 2em));
   padding-inline-end: 4px;
   margin: 0 0 8px;
   border-radius: 4px;
@@ -118,7 +115,7 @@
 
 /*** List items and similar elements in the summary ***/
 #downloadsSummary {
-  min-height: var(--downloads-item-height);
+  height: var(--downloads-item-height);
 }
 
 #downloadsListBox > richlistitem {
