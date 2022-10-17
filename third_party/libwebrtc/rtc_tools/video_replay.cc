@@ -290,6 +290,8 @@ class DecoderIvfFileWriter : public test::FakeDecoder {
       video_codec_type_ = VideoCodecType::kVideoCodecVP9;
     } else if (codec == "H264") {
       video_codec_type_ = VideoCodecType::kVideoCodecH264;
+    } else if (codec == "AV1") {
+      video_codec_type_ = VideoCodecType::kVideoCodecAV1;
     } else {
       RTC_LOG(LS_ERROR) << "Unsupported video codec " << codec;
       RTC_DCHECK_NOTREACHED();
