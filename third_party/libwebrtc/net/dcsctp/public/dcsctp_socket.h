@@ -235,6 +235,10 @@ struct Metrics {
   // explicitly signalled during the connection establishment, heuristics is
   // used to analyze e.g. the state cookie in the INIT-ACK chunk.
   SctpImplementation peer_implementation = SctpImplementation::kUnknown;
+
+  // Indicates if RFC8260 User Message Interleaving has been negotiated by both
+  // peers.
+  bool uses_message_interleaving = false;
 };
 
 // Callbacks that the DcSctpSocket will call synchronously to the owning
