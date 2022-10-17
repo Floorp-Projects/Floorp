@@ -380,6 +380,17 @@ deps = {
     'dep_type': 'cipd',
   },
 
+  'src/third_party/android_build_tools/manifest_merger': {
+      'packages': [
+          {
+               'package': 'chromium/third_party/android_build_tools/manifest_merger',
+               'version': '0WkAedh1tJB8lzisWJRT80UjpacKLltuV7NqP-0tx9gC',
+          },
+      ],
+      'condition': 'checkout_android',
+      'dep_type': 'cipd',
+  },
+
   'src/third_party/android_sdk/public': {
       'packages': [
           {
