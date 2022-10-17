@@ -99,7 +99,7 @@ These are instructions for preparing a release branch for Android Components and
   - When the manual AC build is complete, trigger the [hook](https://firefox-ci-tc.services.mozilla.com/hooks/project-releng/cron-task-mozilla-mobile-fenix%2Fbump-android-components) to bump AC in Fenix.
 6. After an hour, follow up by checking if a new `[nightly_version]` AC build is available in [nightly.maven/components](https://nightly.maven.mozilla.org/?prefix=maven2/org/mozilla/components/). Fenix and Focus will automatically receive the Nightly AC bump.
 
-See [https://github.com/mozilla-mobile/android-components/pull/11519](https://github.com/mozilla-mobile/android-components/pull/11519) for an example.
+See [https://github.com/mozilla-mobile/android-components/pull/12956](https://github.com/mozilla-mobile/android-components/pull/12956) for an example.
 
 ## After the release
 
