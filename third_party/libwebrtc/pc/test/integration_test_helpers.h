@@ -28,6 +28,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/audio_options.h"
 #include "api/call/call_factory_interface.h"
@@ -1250,7 +1251,6 @@ class MockRtcEventLogOutput : public webrtc::RtcEventLogOutput {
  public:
   virtual ~MockRtcEventLogOutput() = default;
   MOCK_METHOD(bool, IsActive, (), (const, override));
-  MOCK_METHOD(bool, Write, (const std::string&), (override));
   MOCK_METHOD(bool, Write, (absl::string_view), (override));
 };
 

@@ -78,9 +78,9 @@ TEST_F(RtcEventLogOutputFileTest, LimitedOutputFileCappedToCapacity) {
   auto output_file =
       std::make_unique<RtcEventLogOutputFile>(output_file_name_, 2);
 
-  output_file->Write(absl::string_view("1"));
-  output_file->Write(absl::string_view("2"));
-  output_file->Write(absl::string_view("3"));
+  output_file->Write("1");
+  output_file->Write("2");
+  output_file->Write("3");
   // Unsuccessful writes close the file; no need to delete the output to flush.
 
   EXPECT_EQ(GetOutputFileContents(), "12");
@@ -108,20 +108,20 @@ TEST_F(RtcEventLogOutputFileTest, DoNotWritePartialLines) {
 TEST_F(RtcEventLogOutputFileTest, UnsuccessfulWriteReturnsFalse) {
   auto output_file =
       std::make_unique<RtcEventLogOutputFile>(output_file_name_, 2);
-  EXPECT_FALSE(output_file->Write(absl::string_view("abc")));
+  EXPECT_FALSE(output_file->Write("abc"));
 }
 
 TEST_F(RtcEventLogOutputFileTest, SuccessfulWriteReturnsTrue) {
   auto output_file =
       std::make_unique<RtcEventLogOutputFile>(output_file_name_, 3);
-  EXPECT_TRUE(output_file->Write(absl::string_view("abc")));
+  EXPECT_TRUE(output_file->Write("abc"));
 }
 
 // Even if capacity is reached, a successful write leaves the output active.
 TEST_F(RtcEventLogOutputFileTest, FileStillActiveAfterSuccessfulWrite) {
   auto output_file =
       std::make_unique<RtcEventLogOutputFile>(output_file_name_, 3);
-  ASSERT_TRUE(output_file->Write(absl::string_view("abc")));
+  ASSERT_TRUE(output_file->Write("abc"));
   EXPECT_TRUE(output_file->IsActive());
 }
 
@@ -130,7 +130,7 @@ TEST_F(RtcEventLogOutputFileTest, FileStillActiveAfterSuccessfulWrite) {
 TEST_F(RtcEventLogOutputFileTest, FileInactiveAfterUnsuccessfulWrite) {
   auto output_file =
       std::make_unique<RtcEventLogOutputFile>(output_file_name_, 2);
-  ASSERT_FALSE(output_file->Write(absl::string_view("abc")));
+  ASSERT_FALSE(output_file->Write("abc"));
   EXPECT_FALSE(output_file->IsActive());
 }
 
@@ -145,9 +145,9 @@ class RtcEventLogOutputFileDeathTest : public RtcEventLogOutputFileTest {};
 
 TEST_F(RtcEventLogOutputFileDeathTest, WritingToInactiveFileForbidden) {
   RtcEventLogOutputFile output_file(output_file_name_, 2);
-  ASSERT_FALSE(output_file.Write(absl::string_view("abc")));
+  ASSERT_FALSE(output_file.Write("abc"));
   ASSERT_FALSE(output_file.IsActive());
-  EXPECT_DEATH(output_file.Write(absl::string_view("abc")), "");
+  EXPECT_DEATH(output_file.Write("abc"), "");
 }
 
 TEST_F(RtcEventLogOutputFileDeathTest, DisallowUnreasonableFileSizeLimits) {

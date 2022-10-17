@@ -2810,9 +2810,9 @@ TEST_P(PeerConnectionIntegrationTest, RtcEventLogOutputWriteCalled) {
 
   auto output = std::make_unique<testing::NiceMock<MockRtcEventLogOutput>>();
   ON_CALL(*output, IsActive()).WillByDefault(::testing::Return(true));
-  ON_CALL(*output, Write(::testing::A<const std::string&>()))
+  ON_CALL(*output, Write(::testing::A<absl::string_view>()))
       .WillByDefault(::testing::Return(true));
-  EXPECT_CALL(*output, Write(::testing::A<const std::string&>()))
+  EXPECT_CALL(*output, Write(::testing::A<absl::string_view>()))
       .Times(::testing::AtLeast(1));
   EXPECT_TRUE(caller()->pc()->StartRtcEventLog(
       std::move(output), webrtc::RtcEventLog::kImmediateOutput));
