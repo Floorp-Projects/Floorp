@@ -15,24 +15,24 @@ import mozilla.components.support.utils.ColorUtils.isDark
  * Colors the status bar.
  * If the color is light enough, a light status bar with dark icons will be used.
  */
-fun Window.setStatusBarTheme(@ColorInt color: Int) {
+fun Window.setStatusBarTheme(@ColorInt toolbarColor: Int) {
     getWindowInsetsController().isAppearanceLightStatusBars =
-        isDark(color)
-    statusBarColor = color
+        !isDark(toolbarColor)
+    statusBarColor = toolbarColor
 }
 
 /**
  * Colors the navigation bar.
  * If the color is light enough, a light navigation bar with dark icons will be used.
  */
-fun Window.setNavigationBarTheme(@ColorInt color: Int) {
+fun Window.setNavigationBarTheme(@ColorInt toolbarColor: Int) {
     getWindowInsetsController().isAppearanceLightNavigationBars =
-        isDark(color)
+        !isDark(toolbarColor)
 
     if (SDK_INT >= Build.VERSION_CODES.P) {
         navigationBarDividerColor = 0
     }
-    navigationBarColor = color
+    navigationBarColor = toolbarColor
 }
 
 /**

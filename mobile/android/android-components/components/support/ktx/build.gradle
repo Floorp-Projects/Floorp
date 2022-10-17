@@ -52,6 +52,12 @@ dependencies {
     testImplementation Dependencies.testing_coroutines
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+
+    androidTestImplementation project(':support-android-test')
+    androidTestImplementation Dependencies.androidx_test_core
+    androidTestImplementation Dependencies.androidx_test_runner
+    androidTestImplementation Dependencies.androidx_test_rules
+    androidTestImplementation Dependencies.androidx_test_junit
 }
 
 apply from: '../../../publish.gradle'
