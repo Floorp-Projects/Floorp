@@ -16,7 +16,6 @@
 
 #include "absl/memory/memory.h"
 #include "api/rtp_headers.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/test/create_time_controller.h"
 #include "api/test/time_controller.h"
 #include "api/units/data_rate.h"
@@ -216,11 +215,11 @@ TEST_F(RtcpTransceiverImplTest, NeedToStopPeriodicTaskToDestroyOnTaskQueue) {
   EXPECT_TRUE(transport.WaitPacket());
 
   bool done = false;
-  queue->PostTask(ToQueuedTask([rtcp_transceiver, &done] {
+  queue->PostTask([rtcp_transceiver, &done] {
     rtcp_transceiver->StopPeriodicTask();
     delete rtcp_transceiver;
     done = true;
-  }));
+  });
   ASSERT_TRUE(time_controller().Wait([&] { return done; }, kAlmostForever));
 }
 
@@ -233,11 +232,11 @@ TEST_F(RtcpTransceiverImplTest, CanBeDestroyedRightAfterCreation) {
   config.outgoing_transport = &transport;
 
   bool done = false;
-  queue->PostTask(ToQueuedTask([&] {
+  queue->PostTask([&] {
     RtcpTransceiverImpl rtcp_transceiver(config);
     rtcp_transceiver.StopPeriodicTask();
     done = true;
-  }));
+  });
   ASSERT_TRUE(time_controller().Wait([&] { return done; }, kAlmostForever));
 }
 
@@ -268,18 +267,18 @@ TEST_F(RtcpTransceiverImplTest, DelaysSendingFirstCompondPacket) {
   absl::optional<RtcpTransceiverImpl> rtcp_transceiver;
 
   Timestamp started = CurrentTime();
-  queue->PostTask(ToQueuedTask([&] { rtcp_transceiver.emplace(config); }));
+  queue->PostTask([&] { rtcp_transceiver.emplace(config); });
   EXPECT_TRUE(transport.WaitPacket());
 
   EXPECT_GE(CurrentTime() - started, config.initial_report_delay);
 
   // Cleanup.
   bool done = false;
-  queue->PostTask(ToQueuedTask([&] {
+  queue->PostTask([&] {
     rtcp_transceiver->StopPeriodicTask();
     rtcp_transceiver.reset();
     done = true;
-  }));
+  });
   ASSERT_TRUE(time_controller().Wait([&] { return done; }, kAlmostForever));
 }
 
@@ -294,12 +293,12 @@ TEST_F(RtcpTransceiverImplTest, PeriodicallySendsPackets) {
   config.task_queue = queue.get();
   absl::optional<RtcpTransceiverImpl> rtcp_transceiver;
   Timestamp time_just_before_1st_packet = Timestamp::MinusInfinity();
-  queue->PostTask(ToQueuedTask([&] {
+  queue->PostTask([&] {
     // Because initial_report_delay_ms is set to 0, time_just_before_the_packet
     // should be very close to the time_of_the_packet.
     time_just_before_1st_packet = CurrentTime();
     rtcp_transceiver.emplace(config);
-  }));
+  });
 
   EXPECT_TRUE(transport.WaitPacket());
   EXPECT_TRUE(transport.WaitPacket());
@@ -310,11 +309,11 @@ TEST_F(RtcpTransceiverImplTest, PeriodicallySendsPackets) {
 
   // Cleanup.
   bool done = false;
-  queue->PostTask(ToQueuedTask([&] {
+  queue->PostTask([&] {
     rtcp_transceiver->StopPeriodicTask();
     rtcp_transceiver.reset();
     done = true;
-  }));
+  });
   ASSERT_TRUE(time_controller().Wait([&] { return done; }, kAlmostForever));
 }
 
@@ -328,19 +327,20 @@ TEST_F(RtcpTransceiverImplTest, SendCompoundPacketDelaysPeriodicSendPackets) {
   config.report_period = kReportPeriod;
   config.task_queue = queue.get();
   absl::optional<RtcpTransceiverImpl> rtcp_transceiver;
-  queue->PostTask(ToQueuedTask([&] { rtcp_transceiver.emplace(config); }));
+  queue->PostTask([&] { rtcp_transceiver.emplace(config); });
 
   // Wait for the first packet.
   EXPECT_TRUE(transport.WaitPacket());
   // Send non periodic one after half period.
   bool non_periodic = false;
   Timestamp time_of_non_periodic_packet = Timestamp::MinusInfinity();
-  queue->PostDelayedTask(ToQueuedTask([&] {
-                           time_of_non_periodic_packet = CurrentTime();
-                           rtcp_transceiver->SendCompoundPacket();
-                           non_periodic = true;
-                         }),
-                         (config.report_period / 2).ms());
+  queue->PostDelayedTask(
+      [&] {
+        time_of_non_periodic_packet = CurrentTime();
+        rtcp_transceiver->SendCompoundPacket();
+        non_periodic = true;
+      },
+      config.report_period / 2);
   // Though non-periodic packet is scheduled just in between periodic, due to
   // small period and task queue flakiness it migth end-up 1ms after next
   // periodic packet. To be sure duration after non-periodic packet is tested
@@ -356,11 +356,11 @@ TEST_F(RtcpTransceiverImplTest, SendCompoundPacketDelaysPeriodicSendPackets) {
 
   // Cleanup.
   bool done = false;
-  queue->PostTask(ToQueuedTask([&] {
+  queue->PostTask([&] {
     rtcp_transceiver->StopPeriodicTask();
     rtcp_transceiver.reset();
     done = true;
-  }));
+  });
   ASSERT_TRUE(time_controller().Wait([&] { return done; }, kAlmostForever));
 }
 
@@ -415,18 +415,17 @@ TEST_F(RtcpTransceiverImplTest, SendsPeriodicRtcpWhenNetworkStateIsUp) {
   absl::optional<RtcpTransceiverImpl> rtcp_transceiver;
   rtcp_transceiver.emplace(config);
 
-  queue->PostTask(
-      ToQueuedTask([&] { rtcp_transceiver->SetReadyToSend(true); }));
+  queue->PostTask([&] { rtcp_transceiver->SetReadyToSend(true); });
 
   EXPECT_TRUE(transport.WaitPacket());
 
   // Cleanup.
   bool done = false;
-  queue->PostTask(ToQueuedTask([&] {
+  queue->PostTask([&] {
     rtcp_transceiver->StopPeriodicTask();
     rtcp_transceiver.reset();
     done = true;
-  }));
+  });
   ASSERT_TRUE(time_controller().Wait([&] { return done; }, kAlmostForever));
 }
 

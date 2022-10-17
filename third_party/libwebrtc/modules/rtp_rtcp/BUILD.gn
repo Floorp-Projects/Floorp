@@ -275,7 +275,6 @@ rtc_library("rtp_rtcp") {
     "../../api/rtc_event_log",
     "../../api/task_queue:pending_task_safety_flag",
     "../../api/task_queue:task_queue",
-    "../../api/task_queue:to_queued_task",
     "../../api/transport:field_trial_based_config",
     "../../api/transport/rtp:dependency_descriptor",
     "../../api/transport/rtp:rtp_source",
@@ -394,7 +393,6 @@ rtc_library("rtcp_transceiver") {
     "../../api:rtp_headers",
     "../../api:transport_api",
     "../../api/task_queue",
-    "../../api/task_queue:to_queued_task",
     "../../api/units:data_rate",
     "../../api/units:time_delta",
     "../../api/units:timestamp",
@@ -412,6 +410,8 @@ rtc_library("rtcp_transceiver") {
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/cleanup",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
@@ -618,7 +618,6 @@ if (rtc_include_tests) {
       "../../api:time_controller",
       "../../api:transport_api",
       "../../api/rtc_event_log",
-      "../../api/task_queue:to_queued_task",
       "../../api/transport:field_trial_based_config",
       "../../api/transport/rtp:dependency_descriptor",
       "../../api/units:data_rate",
