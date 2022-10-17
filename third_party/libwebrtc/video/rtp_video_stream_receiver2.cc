@@ -218,7 +218,6 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
     NackPeriodicProcessor* nack_periodic_processor,
     VCMReceiveStatisticsCallback* vcm_receive_statistics,
     NackSender* nack_sender,
-    KeyFrameRequestSender* keyframe_request_sender,
     OnCompleteFrameCallback* complete_frame_callback,
     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
@@ -248,7 +247,6 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
           config_.rtp.local_ssrc,
           config_.rtp.rtcp_event_observer)),
       complete_frame_callback_(complete_frame_callback),
-      keyframe_request_sender_(keyframe_request_sender),
       keyframe_request_method_(config_.rtp.keyframe_method),
       // TODO(bugs.webrtc.org/10336): Let `rtcp_feedback_buffer_` communicate
       // directly with `rtp_rtcp_`.
@@ -688,17 +686,14 @@ void RtpVideoStreamReceiver2::RequestKeyFrame() {
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
   TRACE_EVENT2("webrtc", "RtpVideoStreamReceiver2::RequestKeyFrame",
                "remote_ssrc", config_.rtp.remote_ssrc, "method",
-               keyframe_request_sender_ ? "KFRSender"
-               : keyframe_request_method_ == KeyFrameReqMethod::kPliRtcp   ? "PLI"
+               keyframe_request_method_ == KeyFrameReqMethod::kPliRtcp   ? "PLI"
                : keyframe_request_method_ == KeyFrameReqMethod::kFirRtcp ? "FIR"
                : keyframe_request_method_ == KeyFrameReqMethod::kNone ? "None"
                                                                       : "Other");
   // TODO(bugs.webrtc.org/10336): Allow the sender to ignore key frame requests
   // issued by anything other than the LossNotificationController if it (the
   // sender) is relying on LNTF alone.
-  if (keyframe_request_sender_) {
-    keyframe_request_sender_->RequestKeyFrame();
-  } else if (keyframe_request_method_ == KeyFrameReqMethod::kPliRtcp) {
+  if (keyframe_request_method_ == KeyFrameReqMethod::kPliRtcp) {
     rtp_rtcp_->SendPictureLossIndication();
   } else if (keyframe_request_method_ == KeyFrameReqMethod::kFirRtcp) {
     rtp_rtcp_->SendFullIntraRequest();

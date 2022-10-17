@@ -236,9 +236,8 @@ VideoReceiveStream2::VideoReceiveStream2(
                                  &stats_proxy_,
                                  nack_periodic_processor,
                                  &stats_proxy_,
-                                 this,     // NackSender
-                                 nullptr,  // Use default KeyFrameRequestSender
-                                 this,     // OnCompleteFrameCallback
+                                 this,  // NackSender
+                                 this,  // OnCompleteFrameCallback
                                  std::move(config_.frame_decryptor),
                                  std::move(config_.frame_transformer),
                                  call->trials()),
