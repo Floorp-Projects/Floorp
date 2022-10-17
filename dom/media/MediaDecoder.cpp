@@ -963,7 +963,8 @@ MediaDecoder::PositionUpdate MediaDecoder::GetPositionUpdateReason(
     double aPrevPos, double aCurPos) const {
   MOZ_ASSERT(NS_IsMainThread());
   // If current position is earlier than previous position and we didn't do
-  // seek, that means we looped back to the start position.
+  // seek, that means we looped back to the start position, which currently
+  // happens on audio only.
   const bool notSeeking = !mSeekRequest.Exists();
   if (mLooping && notSeeking && aCurPos < aPrevPos) {
     return PositionUpdate::eSeamlessLoopingSeeking;
