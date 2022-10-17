@@ -485,6 +485,7 @@
   /* Set height back to equivalent of parent's 1em based
      on the .tab-icon-sound having a reduced font-size */
   height: 1.3333em;
+  white-space: nowrap;
   margin: 0;
 }
 
