@@ -305,6 +305,7 @@ rtc_library("rtc_audio_video") {
     "../modules/video_coding",
     "../modules/video_coding:video_codec_interface",
     "../modules/video_coding:video_coding_utility",
+    "../modules/video_coding:webrtc_vp9_helpers",
     "../modules/video_coding/svc:scalability_mode_util",
     "../rtc_base",
     "../rtc_base:audio_format_to_string",

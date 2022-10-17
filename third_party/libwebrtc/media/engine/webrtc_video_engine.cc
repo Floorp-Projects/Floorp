@@ -32,6 +32,7 @@
 #include "media/engine/webrtc_media_engine.h"
 #include "media/engine/webrtc_voice_engine.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
+#include "modules/video_coding/codecs/vp9/svc_config.h"
 #include "modules/video_coding/svc/scalability_mode_util.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/experiments/field_trial_parser.h"
@@ -3638,6 +3639,44 @@ EncoderStreamFactory::CreateDefaultVideoStreams(
         kMinLayerSize);
   }
 
+  if (absl::EqualsIgnoreCase(codec_name_, kVp9CodecName)) {
+    RTC_DCHECK(encoder_config.encoder_specific_settings);
+    // Use VP9 SVC layering from codec settings which might be initialized
+    // though field trial in ConfigureVideoEncoderSettings.
+    webrtc::VideoCodecVP9 vp9_settings;
+    encoder_config.encoder_specific_settings->FillVideoCodecVp9(&vp9_settings);
+    layer.num_temporal_layers = vp9_settings.numberOfTemporalLayers;
+
+    // Number of spatial layers is signalled differently from different call
+    // sites (sigh), pick the max as we are interested in the upper bound.
+    int num_spatial_layers =
+        std::max({encoder_config.simulcast_layers.size(),
+                  encoder_config.spatial_layers.size(),
+                  size_t{vp9_settings.numberOfSpatialLayers}});
+
+    if (width * height > 0 &&
+        (layer.num_temporal_layers > 1u || num_spatial_layers > 1)) {
+      // In SVC mode, the VP9 max bitrate is determined by SvcConfig, instead of
+      // GetMaxDefaultVideoBitrateKbps().
+      std::vector<webrtc::SpatialLayer> svc_layers =
+          webrtc::GetSvcConfig(width, height, max_framerate,
+                               /*first_active_layer=*/0, num_spatial_layers,
+                               *layer.num_temporal_layers, is_screenshare_);
+      int sum_max_bitrates_kbps = 0;
+      for (const webrtc::SpatialLayer& spatial_layer : svc_layers) {
+        sum_max_bitrates_kbps += spatial_layer.maxBitrate;
+      }
+      RTC_DCHECK_GE(sum_max_bitrates_kbps, 0);
+      if (encoder_config.max_bitrate_bps <= 0) {
+        max_bitrate_bps = sum_max_bitrates_kbps * 1000;
+      } else {
+        max_bitrate_bps =
+            std::min(max_bitrate_bps, sum_max_bitrates_kbps * 1000);
+      }
+      max_bitrate_bps = std::max(min_bitrate_bps, max_bitrate_bps);
+    }
+  }
+
   // In the case that the application sets a max bitrate that's lower than the
   // min bitrate, we adjust it down (see bugs.webrtc.org/9141).
   layer.min_bitrate_bps = std::min(min_bitrate_bps, max_bitrate_bps);
@@ -3650,15 +3689,6 @@ EncoderStreamFactory::CreateDefaultVideoStreams(
   layer.max_bitrate_bps = max_bitrate_bps;
   layer.max_qp = max_qp_;
   layer.bitrate_priority = encoder_config.bitrate_priority;
-
-  if (absl::EqualsIgnoreCase(codec_name_, kVp9CodecName)) {
-    RTC_DCHECK(encoder_config.encoder_specific_settings);
-    // Use VP9 SVC layering from codec settings which might be initialized
-    // though field trial in ConfigureVideoEncoderSettings.
-    webrtc::VideoCodecVP9 vp9_settings;
-    encoder_config.encoder_specific_settings->FillVideoCodecVp9(&vp9_settings);
-    layer.num_temporal_layers = vp9_settings.numberOfTemporalLayers;
-  }
 
   if (IsTemporalLayersSupported(codec_name_)) {
     // Use configured number of temporal layers if set.
