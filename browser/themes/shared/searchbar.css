@@ -113,7 +113,6 @@
 .search-panel-tree {
   background: transparent;
   color: inherit;
-  -moz-box-flex: 0;
 }
 
 .search-panel-tree > .autocomplete-richlistitem {
