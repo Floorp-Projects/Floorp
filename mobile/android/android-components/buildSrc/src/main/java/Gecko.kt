@@ -14,7 +14,7 @@ object Gecko {
     /**
      * GeckoView channel
      */
-    val channel = GeckoChannel.BETA
+    val channel = GeckoChannel.NIGHTLY
 }
 
 /**
