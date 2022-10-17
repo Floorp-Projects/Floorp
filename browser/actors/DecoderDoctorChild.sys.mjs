@@ -4,11 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DecoderDoctorChild"];
-
-class DecoderDoctorChild extends JSWindowActorChild {
+export class DecoderDoctorChild extends JSWindowActorChild {
   // Observes 'decoder-doctor-notification'. This actor handles most such notifications, but does not deal with notifications with the 'cannot-play' type, which is handled
   // @param aSubject the nsPIDOMWindowInner associated with the notification.
   // @param aTopic should be "decoder-doctor-notification".

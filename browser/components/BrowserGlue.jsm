@@ -487,11 +487,11 @@ let JSWINDOWACTORS = {
 
   DecoderDoctor: {
     parent: {
-      moduleURI: "resource:///actors/DecoderDoctorParent.jsm",
+      esModuleURI: "resource:///actors/DecoderDoctorParent.sys.mjs",
     },
 
     child: {
-      moduleURI: "resource:///actors/DecoderDoctorChild.jsm",
+      esModuleURI: "resource:///actors/DecoderDoctorChild.sys.mjs",
       observers: ["decoder-doctor-notification"],
     },
 
