@@ -265,9 +265,10 @@ void OutstandingData::AbandonAllFor(const Item& item) {
                      Data::IsEnd(true), item.data().is_unordered);
     Item& added_item =
         outstanding_data_
-            .emplace(tsn,
-                     Item(std::move(message_end), MaxRetransmits::NoLimit(),
-                          TimeMs(0), TimeMs::InfiniteFuture()))
+            .emplace(std::piecewise_construct, std::forward_as_tuple(tsn),
+                     std::forward_as_tuple(std::move(message_end), TimeMs(0),
+                                           MaxRetransmits::NoLimit(),
+                                           TimeMs::InfiniteFuture()))
             .first->second;
     // The added chunk shouldn't be included in `outstanding_bytes`, so set it
     // as acked.
@@ -381,8 +382,8 @@ UnwrappedTSN OutstandingData::highest_outstanding_tsn() const {
 
 absl::optional<UnwrappedTSN> OutstandingData::Insert(
     const Data& data,
-    MaxRetransmits max_retransmissions,
     TimeMs time_sent,
+    MaxRetransmits max_retransmissions,
     TimeMs expires_at) {
   UnwrappedTSN tsn = next_tsn_;
   next_tsn_.Increment();
@@ -392,8 +393,9 @@ absl::optional<UnwrappedTSN> OutstandingData::Insert(
   outstanding_bytes_ += chunk_size;
   ++outstanding_items_;
   auto it = outstanding_data_
-                .emplace(tsn, Item(data.Clone(), max_retransmissions, time_sent,
-                                   expires_at))
+                .emplace(std::piecewise_construct, std::forward_as_tuple(tsn),
+                         std::forward_as_tuple(data.Clone(), time_sent,
+                                               max_retransmissions, expires_at))
                 .first;
 
   if (it->second.has_expired(time_sent)) {
