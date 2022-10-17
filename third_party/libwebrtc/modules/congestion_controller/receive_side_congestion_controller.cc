@@ -62,11 +62,11 @@ void ReceiveSideCongestionController::WrappingBitrateEstimator::RemoveStream(
   rbe_->RemoveStream(ssrc);
 }
 
-bool ReceiveSideCongestionController::WrappingBitrateEstimator::LatestEstimate(
-    std::vector<unsigned int>* ssrcs,
-    unsigned int* bitrate_bps) const {
+DataRate
+ReceiveSideCongestionController::WrappingBitrateEstimator::LatestEstimate()
+    const {
   MutexLock lock(&mutex_);
-  return rbe_->LatestEstimate(ssrcs, bitrate_bps);
+  return rbe_->LatestEstimate();
 }
 
 void ReceiveSideCongestionController::WrappingBitrateEstimator::SetMinBitrate(
@@ -143,13 +143,7 @@ void ReceiveSideCongestionController::SetSendPeriodicFeedback(
 }
 
 DataRate ReceiveSideCongestionController::LatestReceiveSideEstimate() const {
-  std::vector<uint32_t> unused_ssrcs;
-  uint32_t bitrate_bps = 0;
-  if (remote_bitrate_estimator_.LatestEstimate(&unused_ssrcs, &bitrate_bps)) {
-    return DataRate::BitsPerSec(bitrate_bps);
-  } else {
-    return DataRate::Zero();
-  }
+  return remote_bitrate_estimator_.LatestEstimate();
 }
 
 void ReceiveSideCongestionController::RemoveStream(uint32_t ssrc) {
