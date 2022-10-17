@@ -59,8 +59,7 @@ DelayBasedBwe::Result::Result()
     : updated(false),
       probe(false),
       target_bitrate(DataRate::Zero()),
-      recovered_from_overuse(false),
-      backoff_in_alr(false) {}
+      recovered_from_overuse(false) {}
 
 DelayBasedBwe::DelayBasedBwe(const FieldTrialsView* key_value_config,
                              RtcEventLog* event_log,
@@ -80,15 +79,10 @@ DelayBasedBwe::DelayBasedBwe(const FieldTrialsView* key_value_config,
       uma_recorded_(false),
       rate_control_(key_value_config, /*send_side=*/true),
       prev_bitrate_(DataRate::Zero()),
-      has_once_detected_overuse_(false),
-      prev_state_(BandwidthUsage::kBwNormal),
-      alr_limited_backoff_enabled_(absl::StartsWith(
-          key_value_config->Lookup("WebRTC-Bwe-AlrLimitedBackoff"),
-          "Enabled")) {
+      prev_state_(BandwidthUsage::kBwNormal) {
   RTC_LOG(LS_INFO)
       << "Initialized DelayBasedBwe with separate audio overuse detection"
-      << separate_audio_.Parser()->Encode() << " and alr limited backoff "
-      << (alr_limited_backoff_enabled_ ? "enabled" : "disabled");
+      << separate_audio_.Parser()->Encode();
 }
 
 DelayBasedBwe::~DelayBasedBwe() {}
@@ -217,14 +211,8 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
 
   // Currently overusing the bandwidth.
   if (active_delay_detector_->State() == BandwidthUsage::kBwOverusing) {
-    if (has_once_detected_overuse_ && in_alr && alr_limited_backoff_enabled_) {
-      if (rate_control_.TimeToReduceFurther(at_time, prev_bitrate_)) {
-        result.updated =
-            UpdateEstimate(at_time, prev_bitrate_, &result.target_bitrate);
-        result.backoff_in_alr = true;
-      }
-    } else if (acked_bitrate &&
-               rate_control_.TimeToReduceFurther(at_time, *acked_bitrate)) {
+    if (acked_bitrate &&
+        rate_control_.TimeToReduceFurther(at_time, *acked_bitrate)) {
       result.updated =
           UpdateEstimate(at_time, acked_bitrate, &result.target_bitrate);
     } else if (!acked_bitrate && rate_control_.ValidEstimate() &&
@@ -238,7 +226,6 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
       result.probe = false;
       result.target_bitrate = rate_control_.LatestEstimate();
     }
-    has_once_detected_overuse_ = true;
   } else {
     if (probe_bitrate) {
       result.probe = true;
@@ -313,10 +300,6 @@ void DelayBasedBwe::SetMinBitrate(DataRate min_bitrate) {
 
 TimeDelta DelayBasedBwe::GetExpectedBwePeriod() const {
   return rate_control_.GetExpectedBandwidthPeriod();
-}
-
-void DelayBasedBwe::SetAlrLimitedBackoffExperiment(bool enabled) {
-  alr_limited_backoff_enabled_ = enabled;
 }
 
 }  // namespace webrtc

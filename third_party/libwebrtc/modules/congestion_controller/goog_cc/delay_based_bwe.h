@@ -55,7 +55,6 @@ class DelayBasedBwe {
     bool probe;
     DataRate target_bitrate = DataRate::Zero();
     bool recovered_from_overuse;
-    bool backoff_in_alr;
     BandwidthUsage delay_detector_state;
   };
 
@@ -80,7 +79,6 @@ class DelayBasedBwe {
   void SetStartBitrate(DataRate start_bitrate);
   void SetMinBitrate(DataRate min_bitrate);
   TimeDelta GetExpectedBwePeriod() const;
-  void SetAlrLimitedBackoffExperiment(bool enabled);
   DataRate TriggerOveruse(Timestamp at_time,
                           absl::optional<DataRate> link_capacity);
   DataRate last_estimate() const { return prev_bitrate_; }
@@ -126,9 +124,7 @@ class DelayBasedBwe {
   bool uma_recorded_;
   AimdRateControl rate_control_;
   DataRate prev_bitrate_;
-  bool has_once_detected_overuse_;
   BandwidthUsage prev_state_;
-  bool alr_limited_backoff_enabled_;
 };
 
 }  // namespace webrtc
