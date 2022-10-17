@@ -299,6 +299,10 @@ specific_include_rules = {
     "+modules/video_coding",
   ],
 
+  "video_decoder_factory_template.*\.h": [
+    "+modules/video_coding",
+  ],
+
   "field_trials\.h": [
     "+rtc_base/containers/flat_map.h",
   ],
