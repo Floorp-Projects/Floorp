@@ -74,8 +74,8 @@ class VideoStreamEncoderInterface {
   // or frame rate may be reduced. The VideoStreamEncoder registers itself with
   // `source`, and signals adaptation decisions to the source in the form of
   // VideoSinkWants.
-  // TODO(nisse): When adaptation logic is extracted from this class,
-  // it no longer needs to know the source.
+  // TODO(bugs.webrtc.org/14246): When adaptation logic is extracted from this
+  // class, it no longer needs to know the source.
   virtual void SetSource(
       rtc::VideoSourceInterface<VideoFrame>* source,
       const DegradationPreference& degradation_preference) = 0;

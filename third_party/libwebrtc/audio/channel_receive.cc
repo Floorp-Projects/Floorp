@@ -647,7 +647,8 @@ void ChannelReceive::OnRtpPacket(const RtpPacketReceived& packet) {
   const auto& it = payload_type_frequencies_.find(packet.PayloadType());
   if (it == payload_type_frequencies_.end())
     return;
-  // TODO(nisse): Set payload_type_frequency earlier, when packet is parsed.
+  // TODO(bugs.webrtc.org/7135): Set payload_type_frequency earlier, when packet
+  // is parsed.
   RtpPacketReceived packet_copy(packet);
   packet_copy.set_payload_type_frequency(it->second);
 

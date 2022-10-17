@@ -78,9 +78,8 @@ class RTC_EXPORT EncodedImage {
   EncodedImage& operator=(EncodedImage&&);
   EncodedImage& operator=(const EncodedImage&);
 
-  // TODO(nisse): Change style to timestamp(), set_timestamp(), for consistency
-  // with the VideoFrame class.
-  // Set frame timestamp (90kHz).
+  // TODO(bugs.webrtc.org/9378): Change style to timestamp(), set_timestamp(),
+  // for consistency with the VideoFrame class. Set frame timestamp (90kHz).
   void SetTimestamp(uint32_t timestamp) { timestamp_rtp_ = timestamp; }
 
   // Get frame timestamp (90kHz).
