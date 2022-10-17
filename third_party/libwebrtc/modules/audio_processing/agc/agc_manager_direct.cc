@@ -62,14 +62,14 @@ bool UseMaxAnalogChannelLevel() {
   return field_trial::IsEnabled("WebRTC-UseMaxAnalogAgcChannelLevel");
 }
 
-// If the "WebRTC-Audio-AgcMinMicLevelExperiment" field trial is specified,
+// If the "WebRTC-Audio-2ndAgcMinMicLevelExperiment" field trial is specified,
 // parses it and returns a value between 0 and 255 depending on the field-trial
 // string. Returns an unspecified value if the field trial is not specified, if
 // disabled or if it cannot be parsed. Example:
-// 'WebRTC-Audio-AgcMinMicLevelExperiment/Enabled-80' => returns 80.
+// 'WebRTC-Audio-2ndAgcMinMicLevelExperiment/Enabled-80' => returns 80.
 absl::optional<int> GetMinMicLevelOverride() {
   constexpr char kMinMicLevelFieldTrial[] =
-      "WebRTC-Audio-AgcMinMicLevelExperiment";
+      "WebRTC-Audio-2ndAgcMinMicLevelExperiment";
   if (!webrtc::field_trial::IsEnabled(kMinMicLevelFieldTrial)) {
     return absl::nullopt;
   }
@@ -722,9 +722,8 @@ void AgcManagerDirect::AggregateChannelLevels() {
       }
     }
   }
-  // TODO(crbug.com/1275566): Do not enforce minimum if the user has manually
-  // set the mic level to zero.
-  if (min_mic_level_override_.has_value()) {
+
+  if (min_mic_level_override_.has_value() && stream_analog_level_ > 0) {
     stream_analog_level_ =
         std::max(stream_analog_level_, *min_mic_level_override_);
   }
