@@ -78,7 +78,6 @@ rtc_source_set("channel") {
     "../api:sequence_checker",
     "../api/crypto:options",
     "../api/task_queue:pending_task_safety_flag",
-    "../api/task_queue:to_queued_task",
     "../api/units:timestamp",
     "../call:rtp_interfaces",
     "../call:rtp_receiver",
@@ -798,7 +797,6 @@ rtc_source_set("peerconnection") {
     "../api/rtc_event_log",
     "../api/task_queue",
     "../api/task_queue:pending_task_safety_flag",
-    "../api/task_queue:to_queued_task",
     "../api/transport:bitrate_settings",
     "../api/transport:datagram_transport_interface",
     "../api/transport:enums",
@@ -868,7 +866,6 @@ rtc_library("sctp_data_channel") {
     "../api:priority",
     "../api:rtc_error",
     "../api:scoped_refptr",
-    "../api/task_queue:to_queued_task",
     "../api/transport:datagram_transport_interface",
     "../media:rtc_data_sctp_transport_internal",
     "../media:rtc_media_base",
@@ -883,7 +880,10 @@ rtc_library("sctp_data_channel") {
     "../rtc_base/system:unused",
     "../rtc_base/third_party/sigslot:sigslot",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/cleanup",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("data_channel_utils") {
@@ -916,7 +916,6 @@ rtc_library("connection_context") {
     "../api:scoped_refptr",
     "../api:sequence_checker",
     "../api/neteq:neteq_api",
-    "../api/task_queue:to_queued_task",
     "../api/transport:field_trial_based_config",
     "../api/transport:sctp_transport_factory_interface",
     "../media:rtc_data_sctp_transport_factory",
@@ -948,7 +947,6 @@ rtc_source_set("data_channel_controller") {
     "../api:rtc_error",
     "../api:scoped_refptr",
     "../api:sequence_checker",
-    "../api/task_queue:to_queued_task",
     "../api/transport:datagram_transport_interface",
     "../media:rtc_media_base",
     "../rtc_base",
@@ -1053,6 +1051,7 @@ rtc_source_set("rtc_stats_collector") {
     "../rtc_base/third_party/sigslot:sigslot",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:bind_front",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
@@ -1213,7 +1212,6 @@ rtc_source_set("peer_connection") {
     "../api/crypto:options",
     "../api/rtc_event_log",
     "../api/task_queue:pending_task_safety_flag",
-    "../api/task_queue:to_queued_task",
     "../api/transport:bitrate_settings",
     "../api/transport:datagram_transport_interface",
     "../api/transport:enums",
@@ -1577,7 +1575,6 @@ rtc_library("rtp_transceiver") {
     "../api:sequence_checker",
     "../api/task_queue",
     "../api/task_queue:pending_task_safety_flag",
-    "../api/task_queue:to_queued_task",
     "../api/video:video_bitrate_allocator_factory",
     "../media:rtc_media_base",
     "../rtc_base:checks",
@@ -1709,7 +1706,6 @@ rtc_library("audio_rtp_receiver") {
     "../api:sequence_checker",
     "../api/crypto:frame_decryptor_interface",
     "../api/task_queue:pending_task_safety_flag",
-    "../api/task_queue:to_queued_task",
     "../api/transport/rtp:rtp_source",
     "../media:rtc_media_base",
     "../rtc_base",
@@ -1950,15 +1946,14 @@ rtc_library("dtmf_sender") {
     "../api:libjingle_peerconnection_api",
     "../api:scoped_refptr",
     "../api:sequence_checker",
+    "../api/task_queue",
     "../api/task_queue:pending_task_safety_flag",
-    "../api/task_queue:to_queued_task",
+    "../api/units:time_delta",
     "../rtc_base:checks",
     "../rtc_base:location",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
     "../rtc_base:refcount",
-    "../rtc_base:rtc_base",
-    "../rtc_base:threading",
     "../rtc_base/third_party/sigslot",
   ]
   absl_deps = [
@@ -2098,7 +2093,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api:sequence_checker",
       "../api/task_queue:pending_task_safety_flag",
       "../api/task_queue:task_queue",
-      "../api/task_queue:to_queued_task",
       "../api/transport:datagram_transport_interface",
       "../api/transport:enums",
       "../api/video:builtin_video_bitrate_allocator_factory",
@@ -2135,7 +2129,10 @@ if (rtc_include_tests && !build_with_chromium) {
       "../test:scoped_key_value_config",
       "../test:test_main",
       "../test:test_support",
+    ]
+    absl_deps = [
       "//third_party/abseil-cpp/absl/algorithm:container",
+      "//third_party/abseil-cpp/absl/functional:any_invocable",
       "//third_party/abseil-cpp/absl/memory",
       "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
@@ -2566,7 +2563,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api/task_queue",
       "../api/task_queue:default_task_queue_factory",
       "../api/task_queue:pending_task_safety_flag",
-      "../api/task_queue:to_queued_task",
       "../api/transport:field_trial_based_config",
       "../api/transport/rtp:rtp_source",
       "../api/units:time_delta",

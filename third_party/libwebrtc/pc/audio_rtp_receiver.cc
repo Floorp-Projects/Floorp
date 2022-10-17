@@ -17,7 +17,6 @@
 #include <vector>
 
 #include "api/sequence_checker.h"
-#include "api/task_queue/to_queued_task.h"
 #include "pc/audio_track.h"
 #include "pc/media_stream_track_proxy.h"
 #include "rtc_base/checks.h"
@@ -78,11 +77,10 @@ void AudioRtpReceiver::OnChanged() {
   if (cached_track_enabled_ == enabled)
     return;
   cached_track_enabled_ = enabled;
-  worker_thread_->PostTask(
-      ToQueuedTask(worker_thread_safety_, [this, enabled]() {
-        RTC_DCHECK_RUN_ON(worker_thread_);
-        Reconfigure(enabled);
-      }));
+  worker_thread_->PostTask(SafeTask(worker_thread_safety_, [this, enabled]() {
+    RTC_DCHECK_RUN_ON(worker_thread_);
+    Reconfigure(enabled);
+  }));
 }
 
 // RTC_RUN_ON(worker_thread_)
