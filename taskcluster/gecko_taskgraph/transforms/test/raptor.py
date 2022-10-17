@@ -248,6 +248,19 @@ def modify_extra_options(config, tests):
             if ind:
                 extra_options[ind] += "-youtube"
 
+        if "unity-webgl" in test_name:
+            # Disable the extra-profiler-run for unity-webgl tests.
+            extra_options = test.setdefault("mozharness", {}).setdefault(
+                "extra-options", []
+            )
+            ind = None
+            for i, opt in enumerate(extra_options):
+                if "extra-profiler-run" in opt:
+                    ind = i
+                    break
+            if ind:
+                extra_options.pop(ind)
+
         yield test
 
 
