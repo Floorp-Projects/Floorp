@@ -15,10 +15,8 @@ addLoadEvent(function() {
   ok("listener" in context, "AudioContext.listener should exist");
   // The values set by the following cannot be read from script, but the
   // implementation is simple enough, so we just make sure that nothing throws.
-  with (context.listener) {
-    setPosition(1.0, 1.0, 1.0);
-    setOrientation(1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
-  }
+  context.listener.setPosition(1.0, 1.0, 1.0);
+  context.listener.setOrientation(1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
   SimpleTest.finish();
 });
 
