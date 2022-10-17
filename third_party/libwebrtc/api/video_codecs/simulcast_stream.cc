@@ -17,6 +17,11 @@ namespace webrtc {
 unsigned char SimulcastStream::GetNumberOfTemporalLayers() const {
   return numberOfTemporalLayers;
 }
+void SimulcastStream::SetNumberOfTemporalLayers(unsigned char n) {
+  RTC_DCHECK_GE(n, 1);
+  RTC_DCHECK_LE(n, 3);
+  numberOfTemporalLayers = n;
+}
 
 ScalabilityMode SimulcastStream::GetScalabilityMode() const {
   RTC_CHECK_GE(numberOfTemporalLayers, 1);

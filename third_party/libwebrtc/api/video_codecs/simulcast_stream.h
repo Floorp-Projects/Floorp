@@ -22,6 +22,7 @@ struct SimulcastStream {
   // setting to ScalabilityMode.
   unsigned char GetNumberOfTemporalLayers() const;
   ScalabilityMode GetScalabilityMode() const;
+  void SetNumberOfTemporalLayers(unsigned char n);
 
   int width = 0;
   int height = 0;
