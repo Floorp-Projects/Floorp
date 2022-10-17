@@ -190,10 +190,6 @@ class ICUReporter final : public nsIMemoryReporter,
 
 NS_IMPL_ISUPPORTS(ICUReporter, nsIMemoryReporter)
 
-/* static */ template <>
-mozilla::CountingAllocatorBase<ICUReporter>::AmountType
-    mozilla::CountingAllocatorBase<ICUReporter>::sAmount(0);
-
 class OggReporter final : public nsIMemoryReporter,
                           public mozilla::CountingAllocatorBase<OggReporter> {
  public:
@@ -215,10 +211,6 @@ class OggReporter final : public nsIMemoryReporter,
 };
 
 NS_IMPL_ISUPPORTS(OggReporter, nsIMemoryReporter)
-
-/* static */ template <>
-mozilla::CountingAllocatorBase<OggReporter>::AmountType
-    mozilla::CountingAllocatorBase<OggReporter>::sAmount(0);
 
 static bool sInitializedJS = false;
 
