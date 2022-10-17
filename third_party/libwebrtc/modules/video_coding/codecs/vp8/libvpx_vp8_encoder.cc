@@ -1125,8 +1125,6 @@ int LibvpxVp8Encoder::GetEncodedPartitions(const VideoFrame& input_image,
       }
     }
 
-    // TODO(nisse): Introduce some buffer cache or buffer pool, to reduce
-    // allocations and/or copy operations.
     auto buffer = EncodedImageBuffer::Create(encoded_size);
 
     iter = NULL;

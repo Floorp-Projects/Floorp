@@ -31,7 +31,6 @@
 namespace webrtc {
 
 namespace {
-// TODO(nisse): Delete, delegate to encoders.
 // Threshold constant used until first downscale (to permit fast rampup).
 static const int kMeasureMs = 2000;
 static const float kSamplePeriodScaleFactor = 2.5;
