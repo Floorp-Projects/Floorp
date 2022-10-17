@@ -220,13 +220,11 @@
     },
     'win_video_capture_tests': {
       'video_capture_tests': {
-        'remove_mixins': ['win7'],
         'mixins': ['win', 'baremetal-pool'],
       }
     },
     'win_video_capture_tests_tryserver': {
       'video_capture_tests': {
-        'remove_mixins': ['win7'],
         'mixins': ['win', 'baremetal-try-pool'],
       }
     },
