@@ -1,18 +1,18 @@
 # Updating the Glean SDK
 
-Project FOG uses the published Glean SDK.
-It currently depends on [glean-core] from crates.io.
+Project FOG uses the Glean SDK published as the [`glean`][glean-crate]
+and [`glean-core`][glean-core] crates on crates.io.
 
+[glean-crate]: https://crates.io/crates/glean
 [glean-core]: https://crates.io/crates/glean-core
 
-To update the dependency:
+These two crates' versions are included in several places in mozilla-central.
+To update them all, you should use the command
+`mach update-glean <version, like "54.1.0">`.
 
-1. Bump the version of the `glean` and `glean-ffi` crates in
-   `toolkit/components/glean/Cargo.toml` and `toolkit/components/glean/api/Cargo.toml`.
-2. Run `mach vendor rust`.
-   This fetches all dependencies and adds them to `third_pary/rust`.
-3. Update the version of `gleanVersion` in `build.gradle` to the same version.
-4. Update the version of `glean-sdk` in `python/sites/mach.txt`.
+This is a semi-manual process.
+Please pay attention to the output of `mach update-glean` for instructions,
+and follow them closely.
 
 ## Version mismatches of Rust dependencies
 
@@ -28,9 +28,14 @@ The following strategy can be followed to decide on version mismatches:
   if it does, follow the next steps;
 * If the version of the **vendored dependency is newer** (greater major or minor version) than the version required by the Glean SDK,
   [file a bug in the Glean SDK component][glean-bug] to get Glean to require the same version;
+    * You will have to abandon updating the Glean SDK to this version.
+      You will have to wait for Glean SDK to update its dependency and for a new Glean SDK release.
+      Then you will have to update to that new Glean SDK version.
 * If the version of the **vendored dependency is older** (lower major or minor version), consider updating the vendored version to the newer one;
   seek review from the person who vendored that dependency in the first place;
-  if that is not possible or breaks mozilla-central build, then consider keeping both versions vendored in-tree; please note that this option will probably only be approved for small crates.
+  if that is not possible or breaks mozilla-central build, then consider keeping both versions vendored in-tree; please note that this option will probably only be approved for small crates,
+  and will require updating the `TOLERATED_DUPES` list in `mach vendor`
+  (instructions are provided as you go).
 
 ## Keeping versions in sync
 
