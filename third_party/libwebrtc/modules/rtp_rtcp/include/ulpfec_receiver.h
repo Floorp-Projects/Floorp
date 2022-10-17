@@ -49,7 +49,7 @@ class UlpfecReceiver {
 
   // Sends the received packets to the FEC and returns all packets
   // (both original media and recovered) through the callback.
-  virtual int32_t ProcessReceivedFec() = 0;
+  virtual void ProcessReceivedFec() = 0;
 
   // Returns a counter describing the added and recovered packets.
   virtual FecPacketCounter GetPacketCounter() const = 0;

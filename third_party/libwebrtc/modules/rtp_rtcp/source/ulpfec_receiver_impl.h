@@ -37,7 +37,7 @@ class UlpfecReceiverImpl : public UlpfecReceiver {
   bool AddReceivedRedPacket(const RtpPacketReceived& rtp_packet,
                             uint8_t ulpfec_payload_type) override;
 
-  int32_t ProcessReceivedFec() override;
+  void ProcessReceivedFec() override;
 
   FecPacketCounter GetPacketCounter() const override;
 
