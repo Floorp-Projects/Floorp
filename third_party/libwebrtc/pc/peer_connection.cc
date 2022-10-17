@@ -1241,6 +1241,7 @@ void PeerConnection::GetStats(RTCStatsCollectorCallback* callback) {
   RTC_LOG_THREAD_BLOCK_COUNT();
   stats_collector_->GetStatsReport(
       rtc::scoped_refptr<RTCStatsCollectorCallback>(callback));
+  RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(2);
 }
 
 void PeerConnection::GetStats(
@@ -1250,6 +1251,7 @@ void PeerConnection::GetStats(
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(callback);
   RTC_DCHECK(stats_collector_);
+  RTC_LOG_THREAD_BLOCK_COUNT();
   rtc::scoped_refptr<RtpSenderInternal> internal_sender;
   if (selector) {
     for (const auto& proxy_transceiver :
@@ -1271,6 +1273,7 @@ void PeerConnection::GetStats(
   // selector" is an empty set. Invoking GetStatsReport() with a null selector
   // produces an empty stats report.
   stats_collector_->GetStatsReport(internal_sender, callback);
+  RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(2);
 }
 
 void PeerConnection::GetStats(
@@ -1280,6 +1283,7 @@ void PeerConnection::GetStats(
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(callback);
   RTC_DCHECK(stats_collector_);
+  RTC_LOG_THREAD_BLOCK_COUNT();
   rtc::scoped_refptr<RtpReceiverInternal> internal_receiver;
   if (selector) {
     for (const auto& proxy_transceiver :
@@ -1301,6 +1305,7 @@ void PeerConnection::GetStats(
   // the selector" is an empty set. Invoking GetStatsReport() with a null
   // selector produces an empty stats report.
   stats_collector_->GetStatsReport(internal_receiver, callback);
+  RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(2);
 }
 
 PeerConnectionInterface::SignalingState PeerConnection::signaling_state() {
