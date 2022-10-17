@@ -134,11 +134,31 @@ void UpdateLog::Printf(const char* fmt, ...) {
     return;
   }
 
+  time_t rawtime = time(nullptr);
+  struct tm* timeinfo = localtime(&rawtime);
+
+  if (nullptr != timeinfo) {
+    // attempt to format the time similar to rfc-3339 so that it works with
+    // sort(1). xxxx-xx-xx xx:xx:xx+xxxx -> 24 chars + 1 NUL
+    const size_t buffer_size = 25;
+    char buffer[buffer_size] = {0};
+
+    if (0 == strftime(buffer, buffer_size, "%Y-%m-%d %H:%M:%S%z", timeinfo)) {
+      buffer[0] = '\0';  // reset buffer into a defined state and try posix ts
+      if (0 > snprintf(buffer, buffer_size, "%d", (int)mktime(timeinfo))) {
+        buffer[0] = '\0';  // reset and give up
+      }
+    }
+
+    fprintf(logFP, "%s: ", buffer);
+  }
+
   va_list ap;
   va_start(ap, fmt);
   vfprintf(logFP, fmt, ap);
-  fprintf(logFP, "\n");
   va_end(ap);
+
+  fprintf(logFP, "\n");
 #if defined(XP_WIN) && defined(MOZ_DEBUG)
   // When the updater crashes on Windows the log file won't be flushed and this
   // can make it easier to debug what is going on.
