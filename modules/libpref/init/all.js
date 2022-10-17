@@ -2073,19 +2073,6 @@ pref("dom.global_stop_script", true);
 // Support the input event queue on the main thread of content process
 pref("input_event_queue.supported", true);
 
-// The maximum and minimum time (milliseconds) we reserve for handling input
-// events in each frame.
-pref("input_event_queue.duration.max", 8);
-pref("input_event_queue.duration.min", 1);
-
-// The default amount of time (milliseconds) required for handling a input
-// event.
-pref("input_event_queue.default_duration_per_event", 1);
-
-// The number of processed input events we use to predict the amount of time
-// required to process the following input events.
-pref("input_event_queue.count_for_prediction", 9);
-
 // This only supports one hidden ctp plugin, edit nsPluginArray.cpp if adding a second
 pref("plugins.navigator.hidden_ctp_plugin", "");
 

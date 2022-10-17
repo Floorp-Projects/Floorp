@@ -96,7 +96,6 @@ UNIFIED_SOURCES += [
     "DelayedRunnable.cpp",
     "EventQueue.cpp",
     "IdlePeriodState.cpp",
-    "InputEventStatistics.cpp",
     "InputTaskManager.cpp",
     "LazyIdleThread.cpp",
     "MainThreadIdlePeriod.cpp",
