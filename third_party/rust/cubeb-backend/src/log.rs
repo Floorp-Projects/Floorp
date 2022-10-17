@@ -3,6 +3,8 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details.
 
+use std::os::raw::c_char;
+
 /// Maximum length in bytes for a log message.
 /// Longer messages are silently truncated.  See `write_str`.
 const LOG_LIMIT: usize = 1024;
@@ -55,7 +57,7 @@ impl<const N: usize> std::fmt::Write for StaticCString<N> {
 /// Formats `$file:line: $msg\n` into an on-stack buffer of size `LOG_LIMIT`,
 /// then calls `log_callback` with a pointer to the formatted message.
 pub fn cubeb_log_internal_buf_fmt(
-    log_callback: unsafe extern "C" fn(*const i8, ...),
+    log_callback: unsafe extern "C" fn(*const c_char, ...),
     file: &str,
     line: u32,
     msg: std::fmt::Arguments,
