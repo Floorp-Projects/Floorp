@@ -123,6 +123,7 @@ rtc_library("pending_task_safety_flag") {
     "../../rtc_base:checks",
     "../../rtc_base/system:no_unique_address",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
 }
 
 if (rtc_include_tests) {

@@ -604,7 +604,10 @@ rtc_library("rtc_task_queue") {
     "../api/task_queue:to_queued_task",
     "system:rtc_export",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/memory",
+  ]
 }
 
 rtc_source_set("rtc_operations_chain") {

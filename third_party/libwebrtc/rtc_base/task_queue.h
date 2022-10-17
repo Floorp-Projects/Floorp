@@ -16,6 +16,7 @@
 #include <memory>
 #include <utility>
 
+#include "absl/functional/any_invocable.h"
 #include "absl/memory/memory.h"
 #include "api/task_queue/queued_task.h"
 #include "api/task_queue/task_queue_base.h"
@@ -105,15 +106,8 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueue {
       std::unique_ptr<webrtc::QueuedTask> task,
       uint32_t milliseconds);
 
-  // std::enable_if is used here to make sure that calls to PostTask() with
-  // std::unique_ptr<SomeClassDerivedFromQueuedTask> would not end up being
-  // caught by this template.
-  template <class Closure,
-            typename std::enable_if<!std::is_convertible<
-                Closure,
-                std::unique_ptr<webrtc::QueuedTask>>::value>::type* = nullptr>
-  void PostTask(Closure&& closure) {
-    PostTask(webrtc::ToQueuedTask(std::forward<Closure>(closure)));
+  void PostTask(absl::AnyInvocable<void() &&> task) {
+    impl_->PostTask(std::move(task));
   }
 
  private:
