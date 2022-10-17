@@ -514,28 +514,26 @@
             oncommand="BookmarksEventHandler.onCommand(event);"
             tooltip="bhTooltip"
             popupsinherittooltip="true">
-        <hbox flex="1">
-          <hbox id="PlacesToolbarDropIndicatorHolder" align="center" collapsed="true">
-            <image id="PlacesToolbarDropIndicator"
-                   collapsed="true"/>
-          </hbox>
-          <scrollbox orient="horizontal"
-                     id="PlacesToolbarItems"
-                     flex="1"/>
-          <toolbarbutton type="menu"
-                         id="PlacesChevron"
-                         class="toolbarbutton-1"
-                         collapsed="true"
-                         data-l10n-id="bookmarks-toolbar-chevron"
-                         onpopupshowing="document.getElementById('PlacesToolbar')
-                                                 ._placesView._onChevronPopupShowing(event);">
-            <menupopup id="PlacesChevronPopup"
-                       is="places-popup"
-                       placespopup="true"
-                       tooltip="bhTooltip" popupsinherittooltip="true"
-                       context="placesContext"/>
-          </toolbarbutton>
+        <hbox id="PlacesToolbarDropIndicatorHolder" align="center" collapsed="true">
+          <image id="PlacesToolbarDropIndicator"
+                  collapsed="true"/>
         </hbox>
+        <scrollbox orient="horizontal"
+                    id="PlacesToolbarItems"
+                    flex="1"/>
+        <toolbarbutton type="menu"
+                        id="PlacesChevron"
+                        class="toolbarbutton-1"
+                        collapsed="true"
+                        data-l10n-id="bookmarks-toolbar-chevron"
+                        onpopupshowing="document.getElementById('PlacesToolbar')
+                                                ._placesView._onChevronPopupShowing(event);">
+          <menupopup id="PlacesChevronPopup"
+                      is="places-popup"
+                      placespopup="true"
+                      tooltip="bhTooltip" popupsinherittooltip="true"
+                      context="placesContext"/>
+        </toolbarbutton>
       </hbox>
     </toolbaritem>
   </toolbar>
