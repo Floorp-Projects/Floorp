@@ -253,7 +253,7 @@ export var NetworkHelper = {
     try {
       return this.getRequestLoadContext(request).topFrameElement;
     } catch (ex) {
-      // request loadContent is not always available.
+      // request loadContext is not always available.
     }
     return null;
   },
@@ -268,14 +268,12 @@ export var NetworkHelper = {
     try {
       return this.getRequestLoadContext(request).associatedWindow;
     } catch (ex) {
-      // TODO: bug 802246 - getWindowForRequest() throws on b2g: there is no
-      // associatedWindow property.
+      // On some request notificationCallbacks and loadGroup are both null,
+      // so that we can't retrieve any nsILoadContext interface.
+      // Fallback on nsILoadInfo to try to retrieve the request's window.
+      // (this is covered by test_network_get.html and its CSS request)
+      return request.loadInfo.loadingDocument?.defaultView;
     }
-    // On some request notificationCallbacks and loadGroup are both null,
-    // so that we can't retrieve any nsILoadContext interface.
-    // Fallback on nsILoadInfo to try to retrieve the request's window.
-    // (this is covered by test_network_get.html and its CSS request)
-    return request.loadInfo.loadingDocument?.defaultView;
   },
 
   /**
