@@ -70,9 +70,11 @@
 using ::testing::_;
 using ::testing::Contains;
 using ::testing::Each;
+using ::testing::ElementsAre;
 using ::testing::ElementsAreArray;
 using ::testing::Eq;
 using ::testing::Field;
+using ::testing::Gt;
 using ::testing::IsEmpty;
 using ::testing::Pair;
 using ::testing::Return;
@@ -3730,6 +3732,52 @@ TEST_F(Vp9SettingsTest, AllEncodingParametersCopied) {
   EXPECT_TRUE(encoder_config.simulcast_layers[0].active);
   EXPECT_FALSE(encoder_config.simulcast_layers[1].active);
   EXPECT_TRUE(encoder_config.simulcast_layers[2].active);
+}
+
+TEST_F(Vp9SettingsTest, MaxBitrateDeterminedBySvcResolutions) {
+  cricket::VideoSendParameters parameters;
+  parameters.codecs.push_back(GetEngineCodec("VP9"));
+  ASSERT_TRUE(channel_->SetSendParameters(parameters));
+
+  std::vector<uint32_t> ssrcs = MAKE_VECTOR(kSsrcs3);
+
+  FakeVideoSendStream* stream =
+      AddSendStream(CreateSimStreamParams("cname", ssrcs));
+
+  webrtc::VideoSendStream::Config config = stream->GetConfig().Copy();
+
+  webrtc::test::FrameForwarder frame_forwarder;
+  EXPECT_TRUE(channel_->SetVideoSend(ssrcs[0], nullptr, &frame_forwarder));
+  channel_->SetSend(true);
+
+  // Send frame at 1080p@30fps.
+  frame_forwarder.IncomingCapturedFrame(frame_source_.GetFrame(
+      1920, 1080, webrtc::VideoRotation::kVideoRotation_0,
+      /*duration_us=*/33000));
+
+  webrtc::VideoCodecVP9 vp9_settings;
+  ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
+
+  const size_t kNumSpatialLayers = ssrcs.size();
+  const size_t kNumTemporalLayers = 3;
+  EXPECT_EQ(vp9_settings.numberOfSpatialLayers, kNumSpatialLayers);
+  EXPECT_EQ(vp9_settings.numberOfTemporalLayers, kNumTemporalLayers);
+
+  EXPECT_TRUE(channel_->SetVideoSend(ssrcs[0], nullptr, nullptr));
+
+  // VideoStream max bitrate should be more than legacy 2.5Mbps default stream
+  // cap.
+  EXPECT_THAT(
+      stream->GetVideoStreams(),
+      ElementsAre(Field(&webrtc::VideoStream::max_bitrate_bps, Gt(2500000))));
+
+  // Update send parameters to 2Mbps, this should cap the max bitrate of the
+  // stream.
+  parameters.max_bandwidth_bps = 2000000;
+  channel_->SetSendParameters(parameters);
+  EXPECT_THAT(
+      stream->GetVideoStreams(),
+      ElementsAre(Field(&webrtc::VideoStream::max_bitrate_bps, Eq(2000000))));
 }
 
 class Vp9SettingsTestWithFieldTrial
