@@ -81,11 +81,6 @@ using MutableElemSegment = RefPtr<ElemSegment>;
 using SharedElemSegment = RefPtr<const ElemSegment>;
 using ElemSegmentVector = Vector<SharedElemSegment, 0, SystemAllocPolicy>;
 
-struct ExceptionTag;
-using SharedExceptionTag = RefPtr<ExceptionTag>;
-using SharedExceptionTagVector =
-    Vector<SharedExceptionTag, 0, SystemAllocPolicy>;
-
 class Val;
 using ValVector = GCVector<Val, 0, SystemAllocPolicy>;
 
@@ -95,8 +90,6 @@ using ValVector = GCVector<Val, 0, SystemAllocPolicy>;
 using Uint32Vector = Vector<uint32_t, 8, SystemAllocPolicy>;
 
 using Bytes = Vector<uint8_t, 0, SystemAllocPolicy>;
-using UniqueBytes = UniquePtr<Bytes>;
-using UniqueConstBytes = UniquePtr<const Bytes>;
 using UTF8Bytes = Vector<char, 0, SystemAllocPolicy>;
 using InstanceVector = Vector<Instance*, 0, SystemAllocPolicy>;
 using UniqueCharsVector = Vector<UniqueChars, 0, SystemAllocPolicy>;

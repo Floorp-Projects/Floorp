@@ -229,7 +229,6 @@ class StructType {
 };
 
 using StructTypeVector = Vector<StructType, 0, SystemAllocPolicy>;
-using StructTypePtrVector = Vector<const StructType*, 0, SystemAllocPolicy>;
 
 // Utility for computing field offset and alignments, and total size for
 // structs and tags.  This is complicated by fact that a WasmStructObject has
@@ -293,7 +292,6 @@ class ArrayType {
 WASM_DECLARE_CACHEABLE_POD(ArrayType);
 
 using ArrayTypeVector = Vector<ArrayType, 0, SystemAllocPolicy>;
-using ArrayTypePtrVector = Vector<const ArrayType*, 0, SystemAllocPolicy>;
 
 // A tagged container for the various types that can be present in a wasm
 // module's type section.

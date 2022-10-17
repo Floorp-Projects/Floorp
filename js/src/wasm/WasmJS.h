@@ -325,7 +325,7 @@ class WasmInstanceObject : public NativeObject {
   static bool construct(JSContext*, unsigned, Value*);
 
   static WasmInstanceObject* create(
-      JSContext* cx, RefPtr<const wasm::Code> code,
+      JSContext* cx, const RefPtr<const wasm::Code>& code,
       const wasm::DataSegmentVector& dataSegments,
       const wasm::ElemSegmentVector& elemSegments, uint32_t globalDataLength,
       Handle<WasmMemoryObject*> memory,

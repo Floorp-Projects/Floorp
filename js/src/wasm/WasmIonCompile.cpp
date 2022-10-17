@@ -1809,10 +1809,7 @@ class FunctionCompiler {
       return false;
     }
     finishCall(&args);
-    if (!builtinInstanceMethodCall(callee, lineOrBytecode, args)) {
-      return false;
-    }
-    return true;
+    return builtinInstanceMethodCall(callee, lineOrBytecode, args);
   }
 
   /***************************************************************** Calls */
@@ -2090,10 +2087,7 @@ class FunctionCompiler {
     }
     curBlock_->add(ins);
 
-    if (!finishTryCall(&tryDesc)) {
-      return false;
-    }
-    return true;
+    return finishTryCall(&tryDesc);
   }
 
   bool callDirect(const FuncType& funcType, uint32_t funcIndex,
