@@ -386,10 +386,10 @@ let JSWINDOWACTORS = {
 
   BlockedSite: {
     parent: {
-      moduleURI: "resource:///actors/BlockedSiteParent.jsm",
+      esModuleURI: "resource:///actors/BlockedSiteParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/BlockedSiteChild.jsm",
+      esModuleURI: "resource:///actors/BlockedSiteChild.sys.mjs",
       events: {
         AboutBlockedLoaded: { wantUntrusted: true },
         click: {},

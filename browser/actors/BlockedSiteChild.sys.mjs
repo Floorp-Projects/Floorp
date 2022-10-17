@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["BlockedSiteChild"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -48,7 +46,7 @@ function getSiteBlockedErrorDetails(docShell) {
   return blockedInfo;
 }
 
-class BlockedSiteChild extends JSWindowActorChild {
+export class BlockedSiteChild extends JSWindowActorChild {
   receiveMessage(msg) {
     if (msg.name == "DeceptiveBlockedDetails") {
       return getSiteBlockedErrorDetails(this.docShell);
