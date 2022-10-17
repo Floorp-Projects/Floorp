@@ -19,7 +19,6 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/task_queue/task_queue_base.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/test/create_network_emulation_manager.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/units/time_delta.h"
@@ -157,8 +156,7 @@ class SctpActor : public rtc::MessageHandlerAutoCleanup,
     emulated_socket.SetReceiver([this](rtc::CopyOnWriteBuffer buf) {
       // The receiver will be executed on the NetworkEmulation task queue, but
       // the dcSCTP socket is owned by `thread_` and is not thread-safe.
-      thread_->PostTask(webrtc::ToQueuedTask(
-          [this, buf] { this->sctp_socket_.ReceivePacket(buf); }));
+      thread_->PostTask([this, buf] { this->sctp_socket_.ReceivePacket(buf); });
     });
   }
 
