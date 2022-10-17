@@ -6,7 +6,7 @@ import {
   isOriginalId,
   isGeneratedId,
   originalToGeneratedId,
-} from "devtools-source-map";
+} from "devtools/client/shared/source-map/index";
 
 import {
   getSource,

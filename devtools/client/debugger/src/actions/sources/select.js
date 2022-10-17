@@ -7,7 +7,7 @@
  * @module actions/sources
  */
 
-import { isOriginalId } from "devtools-source-map";
+import { isOriginalId } from "devtools/client/shared/source-map/index";
 
 import { setSymbols } from "./symbols";
 import { setInScopeLines } from "../ast";
