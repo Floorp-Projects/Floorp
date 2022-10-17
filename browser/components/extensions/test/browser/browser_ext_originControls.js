@@ -12,22 +12,36 @@ add_setup(async () => {
   });
 });
 
-async function makeExtension({ id, permissions, host_permissions, granted }) {
+async function makeExtension({
+  manifest_version = 3,
+  id,
+  permissions,
+  host_permissions,
+  content_scripts,
+  granted,
+}) {
   info(
     `Loading extension ` +
       JSON.stringify({ id, permissions, host_permissions, granted })
   );
 
-  let ext = ExtensionTestUtils.loadExtension({
-    manifest: {
-      manifest_version: 3,
-      browser_specific_settings: { gecko: { id } },
-      permissions,
-      host_permissions,
-      action: {
-        default_popup: "popup.html",
-      },
+  let manifest = {
+    manifest_version,
+    browser_specific_settings: { gecko: { id } },
+    permissions,
+    host_permissions,
+    content_scripts,
+    action: {
+      default_popup: "popup.html",
     },
+  };
+  if (manifest_version < 3) {
+    manifest.browser_action = manifest.action;
+    delete manifest.action;
+  }
+
+  let ext = ExtensionTestUtils.loadExtension({
+    manifest,
 
     useAddonManager: "temporary",
 
@@ -98,12 +112,18 @@ async function testOriginControls(
     is(i === selected, checked, `Expected checked value for item ${i}.`);
   }
 
-  is(menu.children[items.length].nodeName, "menuseparator", "Found separator.");
-  is(
-    menu.children[items.length + 1].className,
-    manageExtensionClassName,
-    "All items accounted for."
-  );
+  if (items.length) {
+    is(
+      menu.children[items.length].nodeName,
+      "menuseparator",
+      "Found separator."
+    );
+    is(
+      menu.children[items.length + 1].className,
+      manageExtensionClassName,
+      "All items accounted for."
+    );
+  }
 
   is(
     button.getAttribute("attention"),
@@ -158,7 +178,20 @@ const originControlsInContextMenu = async options => {
     granted: ["<all_urls>"],
   });
 
-  let extensions = [ext1, ext2, ext3, ext4];
+  // MV2 extension with an <all_urls> content script and activeTab.
+  let ext5 = await makeExtension({
+    manifest_version: 2,
+    id: "ext5@test",
+    permissions: ["activeTab"],
+    content_scripts: [
+      {
+        matches: ["<all_urls>"],
+        css: [],
+      },
+    ],
+  });
+
+  let extensions = [ext1, ext2, ext3, ext4, ext5];
 
   const NO_ACCESS = { id: "origin-controls-no-access", args: null };
   const ACCESS_OPTIONS = { id: "origin-controls-options", args: null };
@@ -173,6 +206,7 @@ const originControlsInContextMenu = async options => {
     await testOriginControls(ext2, options, { items: [NO_ACCESS] });
     await testOriginControls(ext3, options, { items: [NO_ACCESS] });
     await testOriginControls(ext4, options, { items: [NO_ACCESS] });
+    await testOriginControls(ext5, options, { items: [] });
   });
 
   await BrowserTestUtils.withNewTab("http://mochi.test:8888/", async () => {
@@ -203,6 +237,9 @@ const originControlsInContextMenu = async options => {
       selected: 1,
       attention: false,
     });
+
+    // MV2 extension, has no origin controls, and never flags for attention.
+    await testOriginControls(ext5, options, { items: [], attention: false });
   });
 
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
@@ -232,6 +269,8 @@ const originControlsInContextMenu = async options => {
       click: 1,
       attention: false,
     });
+
+    await testOriginControls(ext5, options, { items: [], attention: false });
 
     // Click the other option, expect example.com permission granted/revoked.
     await testOriginControls(ext2, options, {
