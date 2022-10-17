@@ -33,6 +33,10 @@ bool FileLogWriter::IsActive() const {
 }
 
 bool FileLogWriter::Write(const std::string& value) {
+  return Write(absl::string_view(value));
+}
+
+bool FileLogWriter::Write(absl::string_view value) {
   // We don't expect the write to fail. If it does, we don't want to risk
   // silently ignoring it.
   RTC_CHECK_EQ(std::fwrite(value.data(), 1, value.size(), out_), value.size())

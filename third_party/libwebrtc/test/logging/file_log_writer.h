@@ -25,6 +25,7 @@ class FileLogWriter final : public RtcEventLogOutput {
   ~FileLogWriter() final;
   bool IsActive() const override;
   bool Write(const std::string& value) override;
+  bool Write(absl::string_view value) override;
   void Flush() override;
 
  private:

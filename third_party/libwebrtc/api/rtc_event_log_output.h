@@ -13,6 +13,8 @@
 
 #include <string>
 
+#include "absl/strings/string_view.h"
+
 namespace webrtc {
 
 // NOTE: This class is still under development and may change without notice.
@@ -32,6 +34,11 @@ class RtcEventLogOutput {
   // after the first time `false` is returned. Write() may not be called on
   // an inactive output sink.
   virtual bool Write(const std::string& output) = 0;
+  // TODO(bugs.webrtc.org/13579): Make pure virtual and remove the string ref
+  // once all classes implement the string_view version.
+  virtual bool Write(absl::string_view output) {
+    return Write(std::string(output));
+  }
 
   // Indicates that buffers should be written to disk if applicable.
   virtual void Flush() {}

@@ -1251,6 +1251,7 @@ class MockRtcEventLogOutput : public webrtc::RtcEventLogOutput {
   virtual ~MockRtcEventLogOutput() = default;
   MOCK_METHOD(bool, IsActive, (), (const, override));
   MOCK_METHOD(bool, Write, (const std::string&), (override));
+  MOCK_METHOD(bool, Write, (absl::string_view), (override));
 };
 
 // This helper object is used for both specifying how many audio/video frames

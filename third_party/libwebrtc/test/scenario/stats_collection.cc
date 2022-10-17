@@ -29,9 +29,9 @@ VideoQualityAnalyzer::VideoQualityAnalyzer(
 VideoQualityAnalyzer::~VideoQualityAnalyzer() = default;
 
 void VideoQualityAnalyzer::PrintHeaders() {
-  writer_->Write(
+  writer_->Write(absl::string_view(
       "capture_time render_time capture_width capture_height render_width "
-      "render_height psnr\n");
+      "render_height psnr\n"));
 }
 
 std::function<void(const VideoFramePair&)> VideoQualityAnalyzer::Handler() {

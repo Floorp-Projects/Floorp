@@ -437,7 +437,8 @@ static const char kDtlsSdesFallbackSdp[] =
 class RtcEventLogOutputNull final : public RtcEventLogOutput {
  public:
   bool IsActive() const override { return true; }
-  bool Write(const std::string& output) override { return true; }
+  bool Write(const std::string& /*output*/) override { return true; }
+  bool Write(const absl::string_view /*output*/) override { return true; }
 };
 
 using ::cricket::StreamParams;
