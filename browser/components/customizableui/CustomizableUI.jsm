@@ -5208,40 +5208,62 @@ OverflowableToolbar.prototype = {
    * maximum width items may occupy so we don't overflow.
    */
   async _getOverflowInfo() {
-    let win = this._target.ownerGlobal;
-    let totalAvailWidth;
-    let targetWidth;
-    await win.promiseDocumentFlushed(() => {
-      let style = win.getComputedStyle(this._toolbar);
-      totalAvailWidth =
-        this._toolbar.clientWidth -
-        parseFloat(style.paddingLeft) -
-        parseFloat(style.paddingRight);
-      for (let child of this._toolbar.children) {
-        if (child.nodeName == "panel") {
-          // Ugh. PanelUI.showSubView puts customizationui-widget-panel
-          // directly into the toolbar. (bug 1158583)
-          continue;
-        }
-        style = win.getComputedStyle(child);
+    function getInlineSize(aElement) {
+      return aElement.getBoundingClientRect().width;
+    }
+
+    function sumChildrenInlineSize(aParent, aExceptChild = null) {
+      let sum = 0;
+      for (let child of aParent.children) {
+        let style = win.getComputedStyle(child);
         if (
           style.display == "none" ||
+          style.display == "-moz-popup" ||
           (style.position != "static" && style.position != "relative")
         ) {
           continue;
         }
-        totalAvailWidth -=
-          parseFloat(style.marginLeft) + parseFloat(style.marginRight);
-        if (child != this._target) {
-          totalAvailWidth -= child.clientWidth;
+        sum += parseFloat(style.marginLeft) + parseFloat(style.marginRight);
+        if (child != aExceptChild) {
+          sum += getInlineSize(child);
         }
       }
-      targetWidth = this._target.clientWidth;
+      return sum;
+    }
+
+    let win = this._target.ownerGlobal;
+    let totalAvailWidth;
+    let targetWidth;
+    let targetChildrenWidth;
+
+    await win.promiseDocumentFlushed(() => {
+      let style = win.getComputedStyle(this._toolbar);
+      let toolbarChildrenWidth = sumChildrenInlineSize(
+        this._toolbar,
+        this._target
+      );
+      totalAvailWidth =
+        getInlineSize(this._toolbar) -
+        parseFloat(style.paddingLeft) -
+        parseFloat(style.paddingRight) -
+        toolbarChildrenWidth;
+      targetWidth = getInlineSize(this._target);
+      targetChildrenWidth =
+        this._target == this._toolbar
+          ? toolbarChildrenWidth
+          : sumChildrenInlineSize(this._target);
     });
+
     lazy.log.debug(
-      `Getting overflow info: target width: ${targetWidth}; available width: ${totalAvailWidth}`
+      `Getting overflow info: target width: ${targetWidth} (${targetChildrenWidth}); avail: ${totalAvailWidth}`
     );
-    return [targetWidth > totalAvailWidth, totalAvailWidth];
+
+    // If the target has min-width: 0, their children might actually overflow
+    // it, so check for both cases explicitly.
+    let isOverflowing =
+      Math.floor(targetWidth) > totalAvailWidth ||
+      Math.floor(targetChildrenWidth) > totalAvailWidth;
+    return [isOverflowing, totalAvailWidth];
   },
 
   /**
