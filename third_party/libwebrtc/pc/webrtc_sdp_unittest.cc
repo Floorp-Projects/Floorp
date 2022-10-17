@@ -4665,11 +4665,10 @@ TEST_F(WebRtcSdpTest, DuplicateAudioRtpmapWithConflict) {
       "s=-\r\n"
       "t=0 0\r\n"
       "m=audio 49232 RTP/AVP 108\r\n"
-      // Same name but different payload type.
       "a=rtpmap:108 ISAC/16000\r\n"
-      "a=rtpmap:108 ISAC/32000\r\n";
+      "a=rtpmap:108 G711/16000\r\n";
 
-  ExpectParseFailure(sdp, "a=rtpmap:108 ISAC/32000");
+  ExpectParseFailure(sdp, "a=rtpmap:108 G711/16000");
 }
 
 TEST_F(WebRtcSdpTest, DuplicateVideoRtpmapWithConflict) {
