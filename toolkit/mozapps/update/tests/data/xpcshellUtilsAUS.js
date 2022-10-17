@@ -1907,6 +1907,7 @@ function logUpdateLog(aLogLeafName) {
   if (updateLog.exists()) {
     // xpcshell tests won't display the entire contents so log each line.
     let updateLogContents = readFileBytes(updateLog).replace(/\r\n/g, "\n");
+    updateLogContents = removeTimeStamps(updateLogContents);
     updateLogContents = replaceLogPaths(updateLogContents);
     let aryLogContents = updateLogContents.split("\n");
     logTestInfo("contents of " + updateLog.path + ":");
@@ -1925,6 +1926,7 @@ function logUpdateLog(aLogLeafName) {
     if (updateLog.exists()) {
       // xpcshell tests won't display the entire contents so log each line.
       let updateLogContents = readFileBytes(updateLog).replace(/\r\n/g, "\n");
+      updateLogContents = removeTimeStamps(updateLogContents);
       updateLogContents = replaceLogPaths(updateLogContents);
       let aryLogContents = updateLogContents.split("\n");
       logTestInfo("contents of " + updateLog.path + ":");
@@ -3346,6 +3348,20 @@ function replaceLogPaths(aLogContents) {
 }
 
 /**
+ * Helper function that removes the timestamps in the update log
+ *
+ * @param   aLogContents
+ *          The update log file's contents.
+ * @return  the log contents without timestamps
+ */
+function removeTimeStamps(aLogContents) {
+  return aLogContents.replace(
+    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}: /gm,
+    ""
+  );
+}
+
+/**
  * Helper function for updater binary tests for verifying the contents of the
  * update log after a successful update.
  *
@@ -3373,6 +3389,9 @@ function checkUpdateLogContents(
 
   let updateLog = getUpdateDirFile(FILE_LAST_UPDATE_LOG);
   let updateLogContents = readFileBytes(updateLog);
+
+  // Remove leading timestamps
+  updateLogContents = removeTimeStamps(updateLogContents);
 
   // The channel-prefs.js is defined in gTestFilesCommon which will always be
   // located to the end of gTestFiles when it is present.
@@ -3476,6 +3495,9 @@ function checkUpdateLogContents(
     compareLogContents = PERFORMING_STAGED_UPDATE + "\n" + compareLogContents;
   }
 
+  // Remove leading timestamps
+  compareLogContents = removeTimeStamps(compareLogContents);
+
   // The channel-prefs.js is defined in gTestFilesCommon which will always be
   // located to the end of gTestFiles.
   if (
@@ -3527,8 +3549,9 @@ function checkUpdateLogContents(
           "the first incorrect line is line #" +
             i +
             " and the " +
-            "value is: " +
-            aryLog[i]
+            "value is: '" +
+            aryLog[i] +
+            "'"
         );
         Assert.equal(
           aryLog[i],
@@ -3551,11 +3574,16 @@ function checkUpdateLogContents(
 function checkUpdateLogContains(aCheckString) {
   let updateLog = getUpdateDirFile(FILE_LAST_UPDATE_LOG);
   let updateLogContents = readFileBytes(updateLog).replace(/\r\n/g, "\n");
+  updateLogContents = removeTimeStamps(updateLogContents);
   updateLogContents = replaceLogPaths(updateLogContents);
   Assert.notEqual(
     updateLogContents.indexOf(aCheckString),
     -1,
-    "the update log contents should contain value: " + aCheckString
+    "the update log '" +
+      updateLog +
+      "' contents should contain value: '" +
+      aCheckString +
+      "'"
   );
 }
 
