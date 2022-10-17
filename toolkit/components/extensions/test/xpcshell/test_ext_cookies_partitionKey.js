@@ -555,7 +555,12 @@ add_task(async function dfpi_invalid_partitionKey() {
       await browser.test.assertRejects(
         set({ partitionKey: { topLevelSite: "chrome://foo" } }),
         /Invalid value for 'partitionKey' attribute/,
-        "partitionKey cannot be the chrome:-scheme"
+        "partitionKey cannot be the chrome:-scheme (canonicalization fails)"
+      );
+      await browser.test.assertRejects(
+        set({ partitionKey: { topLevelSite: "chrome://foo/foo/foo" } }),
+        /Invalid value for 'partitionKey' attribute/,
+        "partitionKey cannot be the chrome:-scheme (canonicalization passes)"
       );
       await browser.test.assertRejects(
         set({ partitionKey: { topLevelSite: "http://[]:" } }),
