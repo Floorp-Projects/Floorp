@@ -37,7 +37,7 @@
 #include "media/base/audio_source.h"
 #include "media/base/media_channel.h"
 #include "pc/dtmf_sender.h"
-#include "pc/stats_collector_interface.h"
+#include "pc/legacy_stats_collector_interface.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
@@ -45,8 +45,6 @@
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
-
-class StatsCollectorInterface;
 
 bool UnimplementedRtpParameterHasValue(const RtpParameters& parameters);
 
@@ -309,7 +307,7 @@ class AudioRtpSender : public DtmfProviderInterface, public RtpSenderBase {
   static rtc::scoped_refptr<AudioRtpSender> Create(
       rtc::Thread* worker_thread,
       const std::string& id,
-      StatsCollectorInterface* stats,
+      LegacyStatsCollectorInterface* stats,
       SetStreamsObserver* set_streams_observer);
   virtual ~AudioRtpSender();
 
@@ -333,7 +331,7 @@ class AudioRtpSender : public DtmfProviderInterface, public RtpSenderBase {
  protected:
   AudioRtpSender(rtc::Thread* worker_thread,
                  const std::string& id,
-                 StatsCollectorInterface* stats,
+                 LegacyStatsCollectorInterface* legacy_stats,
                  SetStreamsObserver* set_streams_observer);
 
   void SetSend() override;
@@ -355,7 +353,7 @@ class AudioRtpSender : public DtmfProviderInterface, public RtpSenderBase {
   }
   sigslot::signal0<> SignalDestroyed;
 
-  StatsCollectorInterface* stats_ = nullptr;
+  LegacyStatsCollectorInterface* legacy_stats_ = nullptr;
   rtc::scoped_refptr<DtmfSenderInterface> dtmf_sender_proxy_;
   bool cached_track_enabled_ = false;
 

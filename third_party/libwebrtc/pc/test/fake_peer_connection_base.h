@@ -315,7 +315,7 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
   JsepTransportController* transport_controller_n() override { return nullptr; }
   DataChannelController* data_channel_controller() override { return nullptr; }
   cricket::PortAllocator* port_allocator() override { return nullptr; }
-  StatsCollector* stats() override { return nullptr; }
+  LegacyStatsCollector* legacy_stats() override { return nullptr; }
   PeerConnectionObserver* Observer() const override { return nullptr; }
   bool GetSctpSslRole(rtc::SSLRole* role) override { return false; }
   PeerConnectionInterface::IceConnectionState ice_connection_state_internal()

@@ -733,6 +733,8 @@ rtc_source_set("peerconnection") {
     ":jitter_buffer_delay",
     ":jsep_ice_candidate",
     ":jsep_session_description",
+    ":legacy_stats_collector",
+    ":legacy_stats_collector_interface",
     ":local_audio_source",
     ":media_protocol_names",
     ":media_stream",
@@ -757,8 +759,6 @@ rtc_source_set("peerconnection") {
     ":sdp_utils",
     ":session_description",
     ":simulcast_description",
-    ":stats_collector",
-    ":stats_collector_interface",
     ":stream_collection",
     ":track_media_info_map",
     ":transceiver_list",
@@ -1084,6 +1084,7 @@ rtc_source_set("sdp_offer_answer") {
     ":data_channel_controller",
     ":dtls_transport",
     ":jsep_transport_controller",
+    ":legacy_stats_collector",
     ":media_session",
     ":media_stream",
     ":media_stream_observer",
@@ -1100,7 +1101,6 @@ rtc_source_set("sdp_offer_answer") {
     ":sdp_state_provider",
     ":session_description",
     ":simulcast_description",
-    ":stats_collector",
     ":stream_collection",
     ":transceiver_list",
     ":usage_pattern",
@@ -1174,6 +1174,7 @@ rtc_source_set("peer_connection") {
     ":dtls_transport",
     ":ice_server_parsing",
     ":jsep_transport_controller",
+    ":legacy_stats_collector",
     ":peer_connection_internal",
     ":peer_connection_message_handler",
     ":rtc_stats_collector",
@@ -1189,7 +1190,6 @@ rtc_source_set("peer_connection") {
     ":sdp_offer_answer",
     ":session_description",
     ":simulcast_description",
-    ":stats_collector",
     ":transceiver_list",
     ":transport_stats",
     ":usage_pattern",
@@ -1280,22 +1280,22 @@ rtc_source_set("sdp_utils") {
     "../rtc_base/system:rtc_export",
   ]
 }
-rtc_source_set("stats_collector") {
+rtc_source_set("legacy_stats_collector") {
   visibility = [ ":*" ]
   sources = [
-    "stats_collector.cc",
-    "stats_collector.h",
+    "legacy_stats_collector.cc",
+    "legacy_stats_collector.h",
   ]
   deps = [
     ":channel",
     ":channel_interface",
     ":data_channel_utils",
+    ":legacy_stats_collector_interface",
     ":peer_connection_internal",
     ":rtp_receiver",
     ":rtp_receiver_proxy",
     ":rtp_sender_proxy",
     ":rtp_transceiver",
-    ":stats_collector_interface",
     ":transport_stats",
     "../api:candidate",
     "../api:field_trials_view",
@@ -1521,7 +1521,7 @@ rtc_library("peer_connection_message_handler") {
     "peer_connection_message_handler.h",
   ]
   deps = [
-    ":stats_collector_interface",
+    ":legacy_stats_collector_interface",
     "../api:libjingle_peerconnection_api",
     "../api:media_stream_interface",
     "../api:rtc_error",
@@ -1605,12 +1605,12 @@ rtc_library("rtp_transmission_manager") {
     ":audio_rtp_receiver",
     ":channel",
     ":channel_interface",
+    ":legacy_stats_collector_interface",
     ":rtp_receiver",
     ":rtp_receiver_proxy",
     ":rtp_sender",
     ":rtp_sender_proxy",
     ":rtp_transceiver",
-    ":stats_collector_interface",
     ":transceiver_list",
     ":usage_pattern",
     ":video_rtp_receiver",
@@ -1884,7 +1884,7 @@ rtc_library("rtp_sender") {
   ]
   deps = [
     ":dtmf_sender",
-    ":stats_collector_interface",
+    ":legacy_stats_collector_interface",
     "../api:audio_options_api",
     "../api:dtls_transport_interface",
     "../api:frame_transformer_interface",
@@ -2007,9 +2007,9 @@ rtc_library("video_track_source") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
-rtc_source_set("stats_collector_interface") {
+rtc_source_set("legacy_stats_collector_interface") {
   visibility = [ ":*" ]
-  sources = [ "stats_collector_interface.h" ]
+  sources = [ "legacy_stats_collector_interface.h" ]
   deps = [
     "../api:libjingle_peerconnection_api",
     "../api:media_stream_interface",
@@ -2255,6 +2255,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "ice_server_parsing_unittest.cc",
       "jitter_buffer_delay_unittest.cc",
       "jsep_session_description_unittest.cc",
+      "legacy_stats_collector_unittest.cc",
       "local_audio_source_unittest.cc",
       "media_stream_unittest.cc",
       "peer_connection_adaptation_integrationtest.cc",
@@ -2286,7 +2287,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "sctp_utils_unittest.cc",
       "sdp_offer_answer_unittest.cc",
       "sdp_serializer_unittest.cc",
-      "stats_collector_unittest.cc",
       "test/fake_audio_capture_module_unittest.cc",
       "test/test_sdp_strings.h",
       "track_media_info_map_unittest.cc",
@@ -2307,6 +2307,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":ice_server_parsing",
       ":integration_test_helpers",
       ":jitter_buffer_delay",
+      ":legacy_stats_collector",
       ":local_audio_source",
       ":media_protocol_names",
       ":media_session",
@@ -2331,7 +2332,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ":sdp_utils",
       ":session_description",
       ":simulcast_description",
-      ":stats_collector",
       ":stream_collection",
       ":track_media_info_map",
       ":transport_stats",

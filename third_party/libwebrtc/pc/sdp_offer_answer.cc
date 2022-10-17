@@ -42,6 +42,7 @@
 #include "p2p/base/transport_info.h"
 #include "pc/channel_interface.h"
 #include "pc/dtls_transport.h"
+#include "pc/legacy_stats_collector.h"
 #include "pc/media_stream.h"
 #include "pc/media_stream_proxy.h"
 #include "pc/peer_connection_internal.h"
@@ -51,7 +52,6 @@
 #include "pc/rtp_sender.h"
 #include "pc/rtp_sender_proxy.h"
 #include "pc/simulcast_description.h"
-#include "pc/stats_collector.h"
 #include "pc/usage_pattern.h"
 #include "pc/webrtc_session_description_factory.h"
 #include "rtc_base/helpers.h"
@@ -1488,10 +1488,10 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(desc);
 
-  // Invalidate the [legacy] stats cache to make sure that it gets updated next
+  // Invalidate the legacy stats cache to make sure that it gets updated next
   // time getStats() gets called, as updating the session description affects
   // the stats.
-  pc_->stats()->InvalidateCache();
+  pc_->legacy_stats()->InvalidateCache();
 
   // Take a reference to the old local description since it's used below to
   // compare against the new local description. When setting the new local
@@ -1826,7 +1826,7 @@ void SdpOfferAnswerHandler::ApplyRemoteDescription(
   // Invalidate the [legacy] stats cache to make sure that it gets updated next
   // time getStats() gets called, as updating the session description affects
   // the stats.
-  pc_->stats()->InvalidateCache();
+  pc_->legacy_stats()->InvalidateCache();
 
   if (!operation->ReplaceRemoteDescriptionAndCheckEror())
     return;
@@ -2045,7 +2045,7 @@ void SdpOfferAnswerHandler::ApplyRemoteDescriptionUpdateTransceiverState(
   // Once all processing has finished, fire off callbacks.
   auto observer = pc_->Observer();
   for (const auto& transceiver : now_receiving_transceivers) {
-    pc_->stats()->AddTrack(transceiver->receiver()->track().get());
+    pc_->legacy_stats()->AddTrack(transceiver->receiver()->track().get());
     observer->OnTrack(transceiver);
     observer->OnAddTrack(transceiver->receiver(),
                          transceiver->receiver()->streams());
@@ -2115,7 +2115,7 @@ void SdpOfferAnswerHandler::PlanBUpdateSendersAndReceivers(
   auto observer = pc_->Observer();
   for (size_t i = 0; i < new_streams->count(); ++i) {
     MediaStreamInterface* new_stream = new_streams->at(i);
-    pc_->stats()->AddStream(new_stream);
+    pc_->legacy_stats()->AddStream(new_stream);
     observer->OnAddStream(rtc::scoped_refptr<MediaStreamInterface>(new_stream));
   }
 
@@ -2834,7 +2834,7 @@ bool SdpOfferAnswerHandler::AddStream(MediaStreamInterface* local_stream) {
     rtp_manager()->AddVideoTrack(track.get(), local_stream);
   }
 
-  pc_->stats()->AddStream(local_stream);
+  pc_->legacy_stats()->AddStream(local_stream);
   UpdateNegotiationNeeded();
   return true;
 }
