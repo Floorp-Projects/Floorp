@@ -266,6 +266,7 @@ class VirtualenvMixin(object):
 
         pip install -r requirements1.txt -r requirements2.txt module_url
         """
+        import http.client
         import urllib.request
         import urllib.error
         import time
@@ -340,6 +341,7 @@ class VirtualenvMixin(object):
                     urllib.error.HTTPError,
                     urllib.error.URLError,
                     socket.timeout,
+                    http.client.RemoteDisconnected,
                 ) as e:
                     retry_counter += 1
                     self.warning(
