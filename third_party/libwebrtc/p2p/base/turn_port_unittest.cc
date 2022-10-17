@@ -1244,10 +1244,10 @@ TEST_F(TurnPortTest, TestRefreshRequestGetsErrorResponse) {
   // This sends out the first RefreshRequest with correct credentials.
   // When this succeeds, it will schedule a new RefreshRequest with the bad
   // credential.
-  turn_port_->FlushRequestsForTest(TURN_REFRESH_REQUEST);
+  turn_port_->request_manager().FlushForTest(TURN_REFRESH_REQUEST);
   EXPECT_TRUE_SIMULATED_WAIT(turn_refresh_success_, kSimulatedRtt, fake_clock_);
   // Flush it again, it will receive a bad response.
-  turn_port_->FlushRequestsForTest(TURN_REFRESH_REQUEST);
+  turn_port_->request_manager().FlushForTest(TURN_REFRESH_REQUEST);
   EXPECT_TRUE_SIMULATED_WAIT(!turn_refresh_success_, kSimulatedRtt,
                              fake_clock_);
   EXPECT_FALSE(turn_port_->connected());
@@ -1461,11 +1461,11 @@ TEST_F(TurnPortTest, TestRefreshCreatePermissionRequest) {
   // another request with bad_ufrag and bad_pwd.
   RelayCredentials bad_credentials("bad_user", "bad_pwd");
   turn_port_->set_credentials(bad_credentials);
-  turn_port_->FlushRequestsForTest(kAllRequests);
+  turn_port_->request_manager().FlushForTest(kAllRequestsForTest);
   EXPECT_TRUE_SIMULATED_WAIT(turn_create_permission_success_, kSimulatedRtt,
                              fake_clock_);
   // Flush the requests again; the create-permission-request will fail.
-  turn_port_->FlushRequestsForTest(kAllRequests);
+  turn_port_->request_manager().FlushForTest(kAllRequestsForTest);
   EXPECT_TRUE_SIMULATED_WAIT(!turn_create_permission_success_, kSimulatedRtt,
                              fake_clock_);
   EXPECT_TRUE(CheckConnectionFailedAndPruned(conn));

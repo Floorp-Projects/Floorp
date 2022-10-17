@@ -28,7 +28,7 @@ namespace cricket {
 
 class StunRequest;
 
-const int kAllRequests = 0;
+const int kAllRequestsForTest = 0;
 
 // Total max timeouts: 39.75 seconds
 // For years, this was 9.5 seconds, but for networks that experience moments of
@@ -48,9 +48,9 @@ class StunRequestManager {
   void Send(StunRequest* request);
   void SendDelayed(StunRequest* request, int delay);
 
-  // If `msg_type` is kAllRequests, sends all pending requests right away.
-  // Otherwise, sends those that have a matching type right away.
-  // Only for testing.
+  // If `msg_type` is kAllRequestsForTest, sends all pending requests right
+  // away. Otherwise, sends those that have a matching type right away. Only for
+  // testing.
   // TODO(tommi): Remove this method and update tests that use it to simulate
   // production code.
   void FlushForTest(int msg_type);

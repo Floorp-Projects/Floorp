@@ -64,6 +64,10 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
   bool done() const { return done_; }
   bool error() const { return error_; }
 
+  bool HasPendingRequest(int msg_type) {
+    return stun_port_->request_manager().HasRequestForTest(msg_type);
+  }
+
   void SetNetworkType(rtc::AdapterType adapter_type) {
     network_.set_type(adapter_type);
   }
@@ -392,9 +396,8 @@ TEST_F(StunPortTest, TestStunBindingRequestShortLifetime) {
   CreateStunPort(kStunAddr1);
   PrepareAddress();
   EXPECT_TRUE_SIMULATED_WAIT(done(), kTimeoutMs, fake_clock);
-  EXPECT_TRUE_SIMULATED_WAIT(
-      !port()->HasPendingRequestForTest(cricket::STUN_BINDING_REQUEST), 2000,
-      fake_clock);
+  EXPECT_TRUE_SIMULATED_WAIT(!HasPendingRequest(cricket::STUN_BINDING_REQUEST),
+                             2000, fake_clock);
 }
 
 // Test that by default, the STUN binding requests will last for a long time.
@@ -403,9 +406,8 @@ TEST_F(StunPortTest, TestStunBindingRequestLongLifetime) {
   CreateStunPort(kStunAddr1);
   PrepareAddress();
   EXPECT_TRUE_SIMULATED_WAIT(done(), kTimeoutMs, fake_clock);
-  EXPECT_TRUE_SIMULATED_WAIT(
-      port()->HasPendingRequestForTest(cricket::STUN_BINDING_REQUEST), 1000,
-      fake_clock);
+  EXPECT_TRUE_SIMULATED_WAIT(HasPendingRequest(cricket::STUN_BINDING_REQUEST),
+                             1000, fake_clock);
 }
 
 class MockAsyncPacketSocket : public rtc::AsyncPacketSocket {
