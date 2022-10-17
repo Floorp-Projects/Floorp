@@ -112,6 +112,7 @@ if (rtc_include_tests) {
       "../../../api/video:video_frame_type",
       "../../../api/video_codecs:scalability_mode",
       "../../../common_video/generic_frame_descriptor",
+      "../../../rtc_base:stringutils",
       "../../../test:test_support",
     ]
     absl_deps = [

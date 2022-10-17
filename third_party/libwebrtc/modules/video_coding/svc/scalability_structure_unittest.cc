@@ -22,6 +22,7 @@
 #include "modules/video_coding/svc/scalability_mode_util.h"
 #include "modules/video_coding/svc/scalability_structure_test_helpers.h"
 #include "modules/video_coding/svc/scalable_video_controller.h"
+#include "rtc_base/strings/string_builder.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -42,6 +43,41 @@ using ::testing::NotNull;
 using ::testing::SizeIs;
 using ::testing::TestWithParam;
 using ::testing::Values;
+
+std::string FrameDependencyTemplateToString(const FrameDependencyTemplate& t) {
+  rtc::StringBuilder sb;
+  sb << "S" << t.spatial_id << "T" << t.temporal_id;
+  sb << ": dtis = ";
+  for (const auto dtis : t.decode_target_indications) {
+    switch (dtis) {
+      case DecodeTargetIndication::kNotPresent:
+        sb << "-";
+        break;
+      case DecodeTargetIndication::kDiscardable:
+        sb << "D";
+        break;
+      case DecodeTargetIndication::kSwitch:
+        sb << "S";
+        break;
+      case DecodeTargetIndication::kRequired:
+        sb << "R";
+        break;
+      default:
+        sb << "?";
+        break;
+    }
+  }
+  sb << ", frame diffs = { ";
+  for (int d : t.frame_diffs) {
+    sb << d << ", ";
+  }
+  sb << "}, chain diffs = { ";
+  for (int d : t.chain_diffs) {
+    sb << d << ", ";
+  }
+  sb << "}";
+  return sb.Release();
+}
 
 struct SvcTestParam {
   friend std::ostream& operator<<(std::ostream& os, const SvcTestParam& param) {
@@ -176,7 +212,8 @@ TEST_P(ScalabilityStructureTest, ThereIsAPerfectTemplateForEachFrame) {
           .GenerateFrames(GetParam().num_temporal_units);
   for (size_t frame_id = 0; frame_id < frame_infos.size(); ++frame_id) {
     EXPECT_THAT(structure.templates, Contains(frame_infos[frame_id]))
-        << " for frame " << frame_id;
+        << " for frame " << frame_id << ", Expected "
+        << FrameDependencyTemplateToString(frame_infos[frame_id]);
   }
 }
 
@@ -336,10 +373,12 @@ INSTANTIATE_TEST_SUITE_P(
            SvcTestParam{"L3T1", /*num_temporal_units=*/3},
            SvcTestParam{"L3T3", /*num_temporal_units=*/8},
            SvcTestParam{"S2T1", /*num_temporal_units=*/3},
+           SvcTestParam{"S2T3", /*num_temporal_units=*/8},
            SvcTestParam{"S3T3", /*num_temporal_units=*/8},
            SvcTestParam{"L2T2", /*num_temporal_units=*/4},
            SvcTestParam{"L2T2_KEY", /*num_temporal_units=*/4},
            SvcTestParam{"L2T2_KEY_SHIFT", /*num_temporal_units=*/4},
+           SvcTestParam{"L2T3", /*num_temporal_units=*/8},
            SvcTestParam{"L2T3_KEY", /*num_temporal_units=*/8},
            SvcTestParam{"L3T3_KEY", /*num_temporal_units=*/8}),
     [](const testing::TestParamInfo<SvcTestParam>& info) {

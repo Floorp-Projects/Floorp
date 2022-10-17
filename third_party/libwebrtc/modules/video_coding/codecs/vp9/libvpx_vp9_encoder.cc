@@ -467,7 +467,7 @@ void LibvpxVp9Encoder::EnableSpatialLayer(int sid) {
   }
   for (int tid = 0; tid < num_temporal_layers_; ++tid) {
     config_->layer_target_bitrate[sid * num_temporal_layers_ + tid] =
-        current_bitrate_allocation_.GetBitrate(sid, tid) / 1000;
+        current_bitrate_allocation_.GetTemporalLayerSum(sid, tid) / 1000;
   }
   config_->ss_target_bitrate[sid] =
       current_bitrate_allocation_.GetSpatialLayerSum(sid) / 1000;

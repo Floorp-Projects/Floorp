@@ -295,6 +295,7 @@ INSTANTIATE_TEST_SUITE_P(
            SvcTestParameters{cricket::kVp9CodecName, "L2T2", 2, 2},
            SvcTestParameters{cricket::kVp9CodecName, "L2T2_KEY", 2, 2},
            SvcTestParameters{cricket::kVp9CodecName, "L2T2_KEY_SHIFT", 2, 2},
+           SvcTestParameters{cricket::kVp9CodecName, "L2T3", 2, 3},
            SvcTestParameters{cricket::kVp9CodecName, "L2T3_KEY", 2, 3},
            SvcTestParameters{cricket::kVp9CodecName, "L3T1", 3, 1},
            SvcTestParameters{cricket::kVp9CodecName, "L3T3", 3, 3}),
