@@ -62,11 +62,13 @@ in definitions for everything they declare.
 ### `TODO` comments
 
 Follow the [Google styleguide for `TODO` comments][goog-style-todo]. When
-referencing a WebRTC bug, prefer the url form, e.g.
+referencing a WebRTC bug, prefer using the URL form (excluding the scheme part):
 
 ```cpp
 // TODO(bugs.webrtc.org/12345): Delete the hack when blocking bugs are resolved.
 ```
+
+The short form used in commit messages, e.g. `webrtc:12345`, is discouraged.
 
 [goog-style-todo]: https://google.github.io/styleguide/cppguide.html#TODO_Comments
 
