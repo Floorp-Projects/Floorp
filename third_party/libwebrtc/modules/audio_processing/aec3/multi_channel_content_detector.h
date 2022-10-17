@@ -14,6 +14,7 @@
 #include <memory>
 #include <stddef.h>
 
+#include <memory>
 #include <vector>
 
 #include "absl/types/optional.h"
