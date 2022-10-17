@@ -189,6 +189,7 @@ if (rtc_include_tests) {
       "../packet:sctp_packet",
       "../public:socket",
       "../public:types",
+      "../socket:mock_callbacks",
       "../testing:data_generator",
       "../testing:testing_macros",
       "../timer",

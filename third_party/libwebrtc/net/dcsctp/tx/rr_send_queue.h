@@ -41,15 +41,18 @@ namespace dcsctp {
 //
 // As messages can be (requested to be) sent before the connection is properly
 // established, this send queue is always present - even for closed connections.
+//
+// The send queue may trigger callbacks:
+//  * `OnBufferedAmountLow`, `OnTotalBufferedAmountLow`
+//    These will be triggered as defined in their documentation.
 class RRSendQueue : public SendQueue {
  public:
   RRSendQueue(absl::string_view log_prefix,
+              DcSctpSocketCallbacks* callbacks,
               size_t buffer_size,
               size_t mtu,
               StreamPriority default_priority,
-              std::function<void(StreamID)> on_buffered_amount_low,
-              size_t total_buffered_amount_low_threshold,
-              std::function<void()> on_total_buffered_amount_low);
+              size_t total_buffered_amount_low_threshold);
 
   // Indicates if the buffer is full. Note that it's up to the caller to ensure
   // that the buffer is not full prior to adding new items to it.
@@ -255,17 +258,10 @@ class RRSendQueue : public SendQueue {
       size_t max_size);
 
   const std::string log_prefix_;
+  DcSctpSocketCallbacks& callbacks_;
   const size_t buffer_size_;
   const StreamPriority default_priority_;
   StreamScheduler scheduler_;
-
-  // Called when the buffered amount is below what has been set using
-  // `SetBufferedAmountLowThreshold`.
-  const std::function<void(StreamID)> on_buffered_amount_low_;
-
-  // Called when the total buffered amount is below what has been set using
-  // `SetTotalBufferedAmountLowThreshold`.
-  const std::function<void()> on_total_buffered_amount_low_;
 
   // The total amount of buffer data, for all streams.
   ThresholdWatcher total_buffered_amount_;

@@ -31,18 +31,18 @@
 namespace dcsctp {
 
 RRSendQueue::RRSendQueue(absl::string_view log_prefix,
+                         DcSctpSocketCallbacks* callbacks,
                          size_t buffer_size,
                          size_t mtu,
                          StreamPriority default_priority,
-                         std::function<void(StreamID)> on_buffered_amount_low,
-                         size_t total_buffered_amount_low_threshold,
-                         std::function<void()> on_total_buffered_amount_low)
+                         size_t total_buffered_amount_low_threshold)
     : log_prefix_(std::string(log_prefix) + "fcfs: "),
+      callbacks_(*callbacks),
       buffer_size_(buffer_size),
       default_priority_(default_priority),
       scheduler_(mtu),
-      on_buffered_amount_low_(std::move(on_buffered_amount_low)),
-      total_buffered_amount_(std::move(on_total_buffered_amount_low)) {
+      total_buffered_amount_(
+          [this]() { callbacks_.OnTotalBufferedAmountLow(); }) {
   total_buffered_amount_.SetLowThreshold(total_buffered_amount_low_threshold);
 }
 
@@ -472,10 +472,12 @@ RRSendQueue::OutgoingStream& RRSendQueue::GetOrCreateStreamInfo(
   }
 
   return streams_
-      .emplace(std::piecewise_construct, std::forward_as_tuple(stream_id),
-               std::forward_as_tuple(
-                   this, &scheduler_, stream_id, default_priority_,
-                   [this, stream_id]() { on_buffered_amount_low_(stream_id); }))
+      .emplace(
+          std::piecewise_construct, std::forward_as_tuple(stream_id),
+          std::forward_as_tuple(this, &scheduler_, stream_id, default_priority_,
+                                [this, stream_id]() {
+                                  callbacks_.OnBufferedAmountLow(stream_id);
+                                }))
       .first->second;
 }
 
@@ -520,7 +522,7 @@ void RRSendQueue::RestoreFromState(const DcSctpSocketHandoverState& state) {
         std::piecewise_construct, std::forward_as_tuple(stream_id),
         std::forward_as_tuple(
             this, &scheduler_, stream_id, StreamPriority(state_stream.priority),
-            [this, stream_id]() { on_buffered_amount_low_(stream_id); },
+            [this, stream_id]() { callbacks_.OnBufferedAmountLow(stream_id); },
             &state_stream));
   }
 }
