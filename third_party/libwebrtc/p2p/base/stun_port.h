@@ -114,10 +114,6 @@ class UDPPort : public Port {
   void set_stun_keepalive_lifetime(int lifetime) {
     stun_keepalive_lifetime_ = lifetime;
   }
-  // Returns true if there is a pending request with type `msg_type`.
-  bool HasPendingRequestForTest(int msg_type) {
-    return request_manager_.HasRequestForTest(msg_type);
-  }
 
   StunRequestManager& request_manager() { return request_manager_; }
 

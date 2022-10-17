@@ -191,10 +191,6 @@ class TurnPort : public Port {
   sigslot::signal3<TurnPort*, const rtc::SocketAddress&, int>
       SignalCreatePermissionResult;
 
-  void FlushRequestsForTest(int msg_type) {
-    request_manager_.FlushForTest(msg_type);
-  }
-
   bool HasRequests() { return !request_manager_.empty(); }
   void set_credentials(const RelayCredentials& credentials) {
     credentials_ = credentials;

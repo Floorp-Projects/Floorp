@@ -65,7 +65,7 @@ void StunRequestManager::SendDelayed(StunRequest* request, int delay) {
 void StunRequestManager::FlushForTest(int msg_type) {
   RTC_DCHECK_RUN_ON(thread_);
   for (const auto& [unused, request] : requests_) {
-    if (msg_type == kAllRequests || msg_type == request->type()) {
+    if (msg_type == kAllRequestsForTest || msg_type == request->type()) {
       // Calling `Send` implies starting the send operation which may be posted
       // on a timer and be repeated on a timer until timeout. To make sure that
       // a call to `Send` doesn't conflict with a previously started `Send`
@@ -80,8 +80,9 @@ void StunRequestManager::FlushForTest(int msg_type) {
 
 bool StunRequestManager::HasRequestForTest(int msg_type) {
   RTC_DCHECK_RUN_ON(thread_);
+  RTC_DCHECK_NE(msg_type, kAllRequestsForTest);
   for (const auto& [unused, request] : requests_) {
-    if (msg_type == kAllRequests || msg_type == request->type()) {
+    if (msg_type == request->type()) {
       return true;
     }
   }
