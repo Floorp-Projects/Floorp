@@ -2813,7 +2813,8 @@ RefPtr<MediaFormatReader::SeekPromise> MediaFormatReader::Seek(
   AUTO_PROFILER_LABEL("MediaFormatReader::Seek", MEDIA_PLAYBACK);
   MOZ_ASSERT(OnTaskQueue());
 
-  LOG("aTarget=(%" PRId64 ")", aTarget.GetTime().ToMicroseconds());
+  LOG("aTarget=(%" PRId64 "), track=%s", aTarget.GetTime().ToMicroseconds(),
+      SeekTarget::TrackToStr(aTarget.GetTrack()));
 
   MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty());
   MOZ_DIAGNOSTIC_ASSERT(mPendingSeekTime.isNothing());
@@ -2874,6 +2875,7 @@ void MediaFormatReader::AttemptSeek() {
   mSeekScheduled = false;
 
   if (mPendingSeekTime.isNothing()) {
+    LOGV("AttemptSeek, no pending seek time?");
     return;
   }
 
@@ -2881,6 +2883,8 @@ void MediaFormatReader::AttemptSeek() {
   // issues.
   const bool isSeekingAudio = HasAudio() && !mOriginalSeekTarget.IsVideoOnly();
   const bool isSeekingVideo = HasVideo() && !mOriginalSeekTarget.IsAudioOnly();
+  LOG("AttemptSeek, seekingAudio=%d, seekingVideo=%d", isSeekingAudio,
+      isSeekingVideo);
   if (isSeekingVideo) {
     mVideo.ResetDemuxer();
     mVideo.ResetState();
