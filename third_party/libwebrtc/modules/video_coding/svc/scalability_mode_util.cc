@@ -75,6 +75,8 @@ absl::optional<ScalabilityMode> ScalabilityModeFromString(
 
   if (mode_string == "S2T1")
     return ScalabilityMode::kS2T1;
+  if (mode_string == "S2T3")
+    return ScalabilityMode::kS2T3;
   if (mode_string == "S3T3")
     return ScalabilityMode::kS3T3;
 
@@ -133,6 +135,8 @@ absl::string_view ScalabilityModeToString(ScalabilityMode scalability_mode) {
       return "L3T3_KEY";
     case ScalabilityMode::kS2T1:
       return "S2T1";
+    case ScalabilityMode::kS2T3:
+      return "S2T3";
     case ScalabilityMode::kS3T3:
       return "S3T3";
   }
@@ -179,6 +183,7 @@ InterLayerPredMode ScalabilityModeToInterLayerPredMode(
     case ScalabilityMode::kL3T3_KEY:
       return InterLayerPredMode::kOnKeyPic;
     case ScalabilityMode::kS2T1:
+    case ScalabilityMode::kS2T3:
     case ScalabilityMode::kS3T3:
       return InterLayerPredMode::kOff;
   }
@@ -215,6 +220,7 @@ int ScalabilityModeToNumSpatialLayers(ScalabilityMode scalability_mode) {
     case ScalabilityMode::kL3T3_KEY:
       return 3;
     case ScalabilityMode::kS2T1:
+    case ScalabilityMode::kS2T3:
       return 2;
     case ScalabilityMode::kS3T3:
       return 3;
@@ -259,6 +265,7 @@ int ScalabilityModeToNumTemporalLayers(ScalabilityMode scalability_mode) {
       return 3;
     case ScalabilityMode::kS2T1:
       return 1;
+    case ScalabilityMode::kS2T3:
     case ScalabilityMode::kS3T3:
       return 3;
   }
