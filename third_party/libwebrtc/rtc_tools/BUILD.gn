@@ -464,14 +464,12 @@ if (rtc_include_tests) {
 
     if (rtc_enable_protobuf) {
       rtc_executable("event_log_visualizer") {
-        testonly = true
-        sources = [ "rtc_event_log_visualizer/main.cc" ]
-        data = [
-          # If --wav_filename is not provided, event_log_visualizer uses
-          # EN_script2_F_sp2_B1.wav by default. This is a good default to use
-          # for example with flags --plot=all when there is no need to use a
-          # specific .wav file.
-          "../resources/audio_processing/conversational_speech/EN_script2_F_sp2_B1.wav",
+        # TODO(bugs.webrtc.org/14248): Remove once usage of std::tmpnam
+        # is removed (in favor of in memory InputAudioFile.
+        cflags_cc = [ "-Wno-deprecated-declarations" ]
+        sources = [
+          "rtc_event_log_visualizer/conversational_speech_en.h",
+          "rtc_event_log_visualizer/main.cc",
         ]
         deps = [
           ":event_log_visualizer_utils",
@@ -484,7 +482,6 @@ if (rtc_include_tests) {
           "../rtc_base:logging",
           "../rtc_base:protobuf_utils",
           "../system_wrappers:field_trial",
-          "../test:fileutils",
           "//third_party/abseil-cpp/absl/algorithm:container",
           "//third_party/abseil-cpp/absl/flags:config",
           "//third_party/abseil-cpp/absl/flags:flag",
