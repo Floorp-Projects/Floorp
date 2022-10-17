@@ -28,6 +28,7 @@ rtc_library("av1_svc_config") {
 }
 
 rtc_library("dav1d_decoder") {
+  visibility = [ "*" ]
   poisonous = [ "software_video_codecs" ]
   public = [ "dav1d_decoder.h" ]
   sources = [ "dav1d_decoder.cc" ]
