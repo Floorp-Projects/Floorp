@@ -24,17 +24,17 @@ namespace cricket {
 RelayServerConfig::RelayServerConfig() {}
 
 RelayServerConfig::RelayServerConfig(const rtc::SocketAddress& address,
-                                     const std::string& username,
-                                     const std::string& password,
+                                     absl::string_view username,
+                                     absl::string_view password,
                                      ProtocolType proto)
     : credentials(username, password) {
   ports.push_back(ProtocolAddress(address, proto));
 }
 
-RelayServerConfig::RelayServerConfig(const std::string& address,
+RelayServerConfig::RelayServerConfig(absl::string_view address,
                                      int port,
-                                     const std::string& username,
-                                     const std::string& password,
+                                     absl::string_view username,
+                                     absl::string_view password,
                                      ProtocolType proto)
     : RelayServerConfig(rtc::SocketAddress(address, port),
                         username,
@@ -42,10 +42,10 @@ RelayServerConfig::RelayServerConfig(const std::string& address,
                         proto) {}
 
 // Legacy constructor where "secure" and PROTO_TCP implies PROTO_TLS.
-RelayServerConfig::RelayServerConfig(const std::string& address,
+RelayServerConfig::RelayServerConfig(absl::string_view address,
                                      int port,
-                                     const std::string& username,
-                                     const std::string& password,
+                                     absl::string_view username,
+                                     absl::string_view password,
                                      ProtocolType proto,
                                      bool secure)
     : RelayServerConfig(address,
@@ -58,10 +58,10 @@ RelayServerConfig::RelayServerConfig(const RelayServerConfig&) = default;
 
 RelayServerConfig::~RelayServerConfig() = default;
 
-PortAllocatorSession::PortAllocatorSession(const std::string& content_name,
+PortAllocatorSession::PortAllocatorSession(absl::string_view content_name,
                                            int component,
-                                           const std::string& ice_ufrag,
-                                           const std::string& ice_pwd,
+                                           absl::string_view ice_ufrag,
+                                           absl::string_view ice_pwd,
                                            uint32_t flags)
     : flags_(flags),
       generation_(0),
@@ -207,10 +207,10 @@ bool PortAllocator::SetConfiguration(
 }
 
 std::unique_ptr<PortAllocatorSession> PortAllocator::CreateSession(
-    const std::string& content_name,
+    absl::string_view content_name,
     int component,
-    const std::string& ice_ufrag,
-    const std::string& ice_pwd) {
+    absl::string_view ice_ufrag,
+    absl::string_view ice_pwd) {
   CheckRunOnValidThreadAndInitialized();
   auto session = std::unique_ptr<PortAllocatorSession>(
       CreateSessionInternal(content_name, component, ice_ufrag, ice_pwd));
@@ -219,10 +219,10 @@ std::unique_ptr<PortAllocatorSession> PortAllocator::CreateSession(
 }
 
 std::unique_ptr<PortAllocatorSession> PortAllocator::TakePooledSession(
-    const std::string& content_name,
+    absl::string_view content_name,
     int component,
-    const std::string& ice_ufrag,
-    const std::string& ice_pwd) {
+    absl::string_view ice_ufrag,
+    absl::string_view ice_pwd) {
   CheckRunOnValidThreadAndInitialized();
   RTC_DCHECK(!ice_ufrag.empty());
   RTC_DCHECK(!ice_pwd.empty());

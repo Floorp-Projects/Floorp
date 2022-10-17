@@ -111,7 +111,7 @@ class PortInterface {
   virtual void SendBindingErrorResponse(StunMessage* message,
                                         const rtc::SocketAddress& addr,
                                         int error_code,
-                                        const std::string& reason) = 0;
+                                        absl::string_view reason) = 0;
 
   // Signaled when this port decides to delete itself because it no longer has
   // any usefulness.

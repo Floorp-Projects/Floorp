@@ -10,8 +10,10 @@
 
 #include "p2p/base/stun_server.h"
 
+#include <string>
 #include <utility>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/byte_buffer.h"
 #include "rtc_base/logging.h"
 
@@ -61,13 +63,13 @@ void StunServer::OnBindingRequest(StunMessage* msg,
 void StunServer::SendErrorResponse(const StunMessage& msg,
                                    const rtc::SocketAddress& addr,
                                    int error_code,
-                                   const char* error_desc) {
+                                   absl::string_view error_desc) {
   StunMessage err_msg(GetStunErrorResponseType(msg.type()),
                       msg.transaction_id());
 
   auto err_code = StunAttribute::CreateErrorCode();
   err_code->SetCode(error_code);
-  err_code->SetReason(error_desc);
+  err_code->SetReason(std::string(error_desc));
   err_msg.AddAttribute(std::move(err_code));
 
   SendResponse(err_msg, addr);

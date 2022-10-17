@@ -19,6 +19,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
 #include "p2p/base/port_allocator.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/crc32.h"
@@ -68,7 +69,7 @@ inline bool TooLongWithoutResponse(
 
 // Helper methods for converting string values of log description fields to
 // enum.
-webrtc::IceCandidateType GetCandidateTypeByString(const std::string& type) {
+webrtc::IceCandidateType GetCandidateTypeByString(absl::string_view type) {
   if (type == LOCAL_PORT_TYPE) {
     return webrtc::IceCandidateType::kLocal;
   } else if (type == STUN_PORT_TYPE) {
@@ -82,7 +83,7 @@ webrtc::IceCandidateType GetCandidateTypeByString(const std::string& type) {
 }
 
 webrtc::IceCandidatePairProtocol GetProtocolByString(
-    const std::string& protocol) {
+    absl::string_view protocol) {
   if (protocol == UDP_PROTOCOL_NAME) {
     return webrtc::IceCandidatePairProtocol::kUdp;
   } else if (protocol == TCP_PROTOCOL_NAME) {

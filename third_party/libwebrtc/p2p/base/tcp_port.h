@@ -41,8 +41,8 @@ class TCPPort : public Port {
       const rtc::Network* network,
       uint16_t min_port,
       uint16_t max_port,
-      const std::string& username,
-      const std::string& password,
+      absl::string_view username,
+      absl::string_view password,
       bool allow_listen,
       const webrtc::FieldTrialsView* field_trials = nullptr) {
     // Using `new` to access a non-public constructor.
@@ -72,8 +72,8 @@ class TCPPort : public Port {
           const rtc::Network* network,
           uint16_t min_port,
           uint16_t max_port,
-          const std::string& username,
-          const std::string& password,
+          absl::string_view username,
+          absl::string_view password,
           bool allow_listen,
           const webrtc::FieldTrialsView* field_trials);
 

@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/sequence_checker.h"
 #include "p2p/base/port_interface.h"
 #include "rtc_base/async_packet_socket.h"
@@ -73,7 +74,7 @@ class TurnServerAllocation : public rtc::MessageHandlerAutoCleanup,
                        rtc::Thread* thread,
                        const TurnServerConnection& conn,
                        rtc::AsyncPacketSocket* server_socket,
-                       const std::string& key);
+                       absl::string_view key);
   ~TurnServerAllocation() override;
 
   TurnServerConnection* conn() { return &conn_; }
@@ -121,7 +122,7 @@ class TurnServerAllocation : public rtc::MessageHandlerAutoCleanup,
   void SendBadRequestResponse(const TurnMessage* req);
   void SendErrorResponse(const TurnMessage* req,
                          int code,
-                         const std::string& reason);
+                         absl::string_view reason);
   void SendExternal(const void* data,
                     size_t size,
                     const rtc::SocketAddress& peer);
@@ -148,8 +149,8 @@ class TurnAuthInterface {
   // Gets HA1 for the specified user and realm.
   // HA1 = MD5(A1) = MD5(username:realm:password).
   // Return true if the given username and realm are valid, or false if not.
-  virtual bool GetKey(const std::string& username,
-                      const std::string& realm,
+  virtual bool GetKey(absl::string_view username,
+                      absl::string_view realm,
                       std::string* key) = 0;
   virtual ~TurnAuthInterface() = default;
 };
@@ -186,9 +187,9 @@ class TurnServer : public sigslot::has_slots<> {
     RTC_DCHECK_RUN_ON(thread_);
     return realm_;
   }
-  void set_realm(const std::string& realm) {
+  void set_realm(absl::string_view realm) {
     RTC_DCHECK_RUN_ON(thread_);
-    realm_ = realm;
+    realm_ = std::string(realm);
   }
 
   // Gets/sets the value for the SOFTWARE attribute for TURN messages.
@@ -196,9 +197,9 @@ class TurnServer : public sigslot::has_slots<> {
     RTC_DCHECK_RUN_ON(thread_);
     return software_;
   }
-  void set_software(const std::string& software) {
+  void set_software(absl::string_view software) {
     RTC_DCHECK_RUN_ON(thread_);
-    software_ = software;
+    software_ = std::string(software);
   }
 
   const AllocationMap& allocations() const {
@@ -282,32 +283,32 @@ class TurnServer : public sigslot::has_slots<> {
       RTC_RUN_ON(thread_);
   void HandleAllocateRequest(TurnServerConnection* conn,
                              const TurnMessage* msg,
-                             const std::string& key) RTC_RUN_ON(thread_);
+                             absl::string_view key) RTC_RUN_ON(thread_);
 
   bool GetKey(const StunMessage* msg, std::string* key) RTC_RUN_ON(thread_);
   bool CheckAuthorization(TurnServerConnection* conn,
                           StunMessage* msg,
                           const char* data,
                           size_t size,
-                          const std::string& key) RTC_RUN_ON(thread_);
+                          absl::string_view key) RTC_RUN_ON(thread_);
   bool ValidateNonce(absl::string_view nonce) const RTC_RUN_ON(thread_);
 
   TurnServerAllocation* FindAllocation(TurnServerConnection* conn)
       RTC_RUN_ON(thread_);
   TurnServerAllocation* CreateAllocation(TurnServerConnection* conn,
                                          int proto,
-                                         const std::string& key)
+                                         absl::string_view key)
       RTC_RUN_ON(thread_);
 
   void SendErrorResponse(TurnServerConnection* conn,
                          const StunMessage* req,
                          int code,
-                         const std::string& reason);
+                         absl::string_view reason);
 
   void SendErrorResponseWithRealmAndNonce(TurnServerConnection* conn,
                                           const StunMessage* req,
                                           int code,
-                                          const std::string& reason)
+                                          absl::string_view reason)
       RTC_RUN_ON(thread_);
 
   void SendErrorResponseWithAlternateServer(TurnServerConnection* conn,

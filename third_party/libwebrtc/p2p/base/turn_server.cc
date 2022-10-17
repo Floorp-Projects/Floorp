@@ -16,6 +16,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/packet_socket_factory.h"
 #include "api/task_queue/to_queued_task.h"
@@ -111,10 +112,10 @@ int GetStunErrorResponseTypeOrZero(const StunMessage& req) {
 }
 
 static void InitErrorResponse(int code,
-                              const std::string& reason,
+                              absl::string_view reason,
                               StunMessage* resp) {
   resp->AddAttribute(std::make_unique<cricket::StunErrorCodeAttribute>(
-      STUN_ATTR_ERROR_CODE, code, reason));
+      STUN_ATTR_ERROR_CODE, code, std::string(reason)));
 }
 
 TurnServer::TurnServer(rtc::Thread* thread)
@@ -316,7 +317,7 @@ bool TurnServer::CheckAuthorization(TurnServerConnection* conn,
                                     StunMessage* msg,
                                     const char* data,
                                     size_t size,
-                                    const std::string& key) {
+                                    absl::string_view key) {
   // RFC 5389, 10.2.2.
   RTC_DCHECK(IsStunRequestType(msg->type()));
   const StunByteStringAttribute* mi_attr =
@@ -350,7 +351,7 @@ bool TurnServer::CheckAuthorization(TurnServerConnection* conn,
   }
 
   // Fail if bad MESSAGE_INTEGRITY.
-  if (key.empty() || msg->ValidateMessageIntegrity(key) !=
+  if (key.empty() || msg->ValidateMessageIntegrity(std::string(key)) !=
                          StunMessage::IntegrityStatus::kIntegrityOk) {
     SendErrorResponseWithRealmAndNonce(conn, msg, STUN_ERROR_UNAUTHORIZED,
                                        STUN_ERROR_REASON_UNAUTHORIZED);
@@ -387,7 +388,7 @@ void TurnServer::HandleBindingRequest(TurnServerConnection* conn,
 
 void TurnServer::HandleAllocateRequest(TurnServerConnection* conn,
                                        const TurnMessage* msg,
-                                       const std::string& key) {
+                                       absl::string_view key) {
   // Check the parameters in the request.
   const StunUInt32Attribute* transport_attr =
       msg->GetUInt32(STUN_ATTR_REQUESTED_TRANSPORT);
@@ -459,7 +460,7 @@ TurnServerAllocation* TurnServer::FindAllocation(TurnServerConnection* conn) {
 
 TurnServerAllocation* TurnServer::CreateAllocation(TurnServerConnection* conn,
                                                    int proto,
-                                                   const std::string& key) {
+                                                   absl::string_view key) {
   rtc::AsyncPacketSocket* external_socket =
       (external_socket_factory_)
           ? external_socket_factory_->CreateUdpSocket(external_addr_, 0, 0)
@@ -479,7 +480,7 @@ TurnServerAllocation* TurnServer::CreateAllocation(TurnServerConnection* conn,
 void TurnServer::SendErrorResponse(TurnServerConnection* conn,
                                    const StunMessage* req,
                                    int code,
-                                   const std::string& reason) {
+                                   absl::string_view reason) {
   RTC_DCHECK_RUN_ON(thread_);
   TurnMessage resp(GetStunErrorResponseTypeOrZero(*req), req->transaction_id());
   InitErrorResponse(code, reason, &resp);
@@ -492,7 +493,7 @@ void TurnServer::SendErrorResponse(TurnServerConnection* conn,
 void TurnServer::SendErrorResponseWithRealmAndNonce(TurnServerConnection* conn,
                                                     const StunMessage* msg,
                                                     int code,
-                                                    const std::string& reason) {
+                                                    absl::string_view reason) {
   TurnMessage resp(GetStunErrorResponseTypeOrZero(*msg), msg->transaction_id());
   InitErrorResponse(code, reason, &resp);
 
@@ -603,7 +604,7 @@ TurnServerAllocation::TurnServerAllocation(TurnServer* server,
                                            rtc::Thread* thread,
                                            const TurnServerConnection& conn,
                                            rtc::AsyncPacketSocket* socket,
-                                           const std::string& key)
+                                           absl::string_view key)
     : server_(server),
       thread_(thread),
       conn_(conn),
@@ -926,7 +927,7 @@ void TurnServerAllocation::SendBadRequestResponse(const TurnMessage* req) {
 
 void TurnServerAllocation::SendErrorResponse(const TurnMessage* req,
                                              int code,
-                                             const std::string& reason) {
+                                             absl::string_view reason) {
   server_->SendErrorResponse(&conn_, req, code, reason);
 }
 

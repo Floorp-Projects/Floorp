@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/crypto/crypto_options.h"
 #include "api/dtls_transport_interface.h"
 #include "api/sequence_checker.h"
@@ -135,7 +136,7 @@ class DtlsTransport : public DtlsTransportInternal {
   // SetRemoteFingerprint must be called after SetLocalCertificate, and any
   // other methods like SetDtlsRole. It's what triggers the actual DTLS setup.
   // TODO(deadbeef): Rename to "Start" like in ORTC?
-  bool SetRemoteFingerprint(const std::string& digest_alg,
+  bool SetRemoteFingerprint(absl::string_view digest_alg,
                             const uint8_t* digest,
                             size_t digest_len) override;
 
@@ -167,7 +168,7 @@ class DtlsTransport : public DtlsTransportInternal {
   // method extracts the keys negotiated during the DTLS handshake, for use in
   // external encryption. DTLS-SRTP uses this to extract the needed SRTP keys.
   // See the SSLStreamAdapter documentation for info on the specific parameters.
-  bool ExportKeyingMaterial(const std::string& label,
+  bool ExportKeyingMaterial(absl::string_view label,
                             const uint8_t* context,
                             size_t context_len,
                             bool use_context,

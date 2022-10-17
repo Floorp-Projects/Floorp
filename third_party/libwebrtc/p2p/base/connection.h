@@ -60,7 +60,7 @@ struct CandidatePair final : public CandidatePairInterface {
 class Connection : public CandidatePairInterface {
  public:
   struct SentPing {
-    SentPing(const std::string id, int64_t sent_time, uint32_t nomination)
+    SentPing(absl::string_view id, int64_t sent_time, uint32_t nomination)
         : id(id), sent_time(sent_time), nomination(nomination) {}
 
     std::string id;

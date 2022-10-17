@@ -38,8 +38,8 @@ class UDPPort : public Port {
       rtc::PacketSocketFactory* factory,
       const rtc::Network* network,
       rtc::AsyncPacketSocket* socket,
-      const std::string& username,
-      const std::string& password,
+      absl::string_view username,
+      absl::string_view password,
       bool emit_local_for_anyaddress,
       absl::optional<int> stun_keepalive_interval,
       const webrtc::FieldTrialsView* field_trials = nullptr) {
@@ -60,8 +60,8 @@ class UDPPort : public Port {
       const rtc::Network* network,
       uint16_t min_port,
       uint16_t max_port,
-      const std::string& username,
-      const std::string& password,
+      absl::string_view username,
+      absl::string_view password,
       bool emit_local_for_anyaddress,
       absl::optional<int> stun_keepalive_interval,
       const webrtc::FieldTrialsView* field_trials = nullptr) {
@@ -127,8 +127,8 @@ class UDPPort : public Port {
           const rtc::Network* network,
           uint16_t min_port,
           uint16_t max_port,
-          const std::string& username,
-          const std::string& password,
+          absl::string_view username,
+          absl::string_view password,
           bool emit_local_for_anyaddress,
           const webrtc::FieldTrialsView* field_trials);
 
@@ -136,8 +136,8 @@ class UDPPort : public Port {
           rtc::PacketSocketFactory* factory,
           const rtc::Network* network,
           rtc::AsyncPacketSocket* socket,
-          const std::string& username,
-          const std::string& password,
+          absl::string_view username,
+          absl::string_view password,
           bool emit_local_for_anyaddress,
           const webrtc::FieldTrialsView* field_trials);
 
@@ -224,7 +224,7 @@ class UDPPort : public Port {
   void OnStunBindingOrResolveRequestFailed(
       const rtc::SocketAddress& stun_server_addr,
       int error_code,
-      const std::string& reason);
+      absl::string_view reason);
 
   // Sends STUN requests to the server.
   void OnSendPacket(const void* data, size_t size, StunRequest* req);
@@ -274,8 +274,8 @@ class StunPort : public UDPPort {
       const rtc::Network* network,
       uint16_t min_port,
       uint16_t max_port,
-      const std::string& username,
-      const std::string& password,
+      absl::string_view username,
+      absl::string_view password,
       const ServerAddresses& servers,
       absl::optional<int> stun_keepalive_interval,
       const webrtc::FieldTrialsView* field_trials);
@@ -288,8 +288,8 @@ class StunPort : public UDPPort {
            const rtc::Network* network,
            uint16_t min_port,
            uint16_t max_port,
-           const std::string& username,
-           const std::string& password,
+           absl::string_view username,
+           absl::string_view password,
            const ServerAddresses& servers,
            const webrtc::FieldTrialsView* field_trials);
 };

@@ -106,7 +106,7 @@ class TurnCreatePermissionRequest : public StunRequest,
   TurnCreatePermissionRequest(TurnPort* port,
                               TurnEntry* entry,
                               const rtc::SocketAddress& ext_addr,
-                              const std::string& remote_ufrag);
+                              absl::string_view remote_ufrag);
   void OnSent() override;
   void OnResponse(StunMessage* response) override;
   void OnErrorResponse(StunMessage* response) override;
@@ -149,7 +149,7 @@ class TurnEntry : public sigslot::has_slots<> {
   TurnEntry(TurnPort* port,
             int channel_id,
             const rtc::SocketAddress& ext_addr,
-            const std::string remote_ufrag);
+            absl::string_view remote_ufrag);
 
   TurnPort* port() { return port_; }
 
@@ -190,8 +190,8 @@ class TurnEntry : public sigslot::has_slots<> {
   sigslot::signal1<TurnEntry*> SignalDestroyed;
 
   const std::string& get_remote_ufrag() const { return remote_ufrag_; }
-  void set_remote_ufrag(const std::string& remote_ufrag) {
-    remote_ufrag_ = remote_ufrag;
+  void set_remote_ufrag(absl::string_view remote_ufrag) {
+    remote_ufrag_ = std::string(remote_ufrag);
   }
 
  private:
@@ -212,8 +212,8 @@ TurnPort::TurnPort(rtc::Thread* thread,
                    rtc::PacketSocketFactory* factory,
                    const rtc::Network* network,
                    rtc::AsyncPacketSocket* socket,
-                   const std::string& username,
-                   const std::string& password,
+                   absl::string_view username,
+                   absl::string_view password,
                    const ProtocolAddress& server_address,
                    const RelayCredentials& credentials,
                    int server_priority,
@@ -254,8 +254,8 @@ TurnPort::TurnPort(rtc::Thread* thread,
                    const rtc::Network* network,
                    uint16_t min_port,
                    uint16_t max_port,
-                   const std::string& username,
-                   const std::string& password,
+                   absl::string_view username,
+                   absl::string_view password,
                    const ProtocolAddress& server_address,
                    const RelayCredentials& credentials,
                    int server_priority,
@@ -330,8 +330,8 @@ void TurnPort::SetTlsCertPolicy(TlsCertPolicy tls_cert_policy) {
   tls_cert_policy_ = tls_cert_policy;
 }
 
-void TurnPort::SetTurnLoggingId(const std::string& turn_logging_id) {
-  turn_logging_id_ = turn_logging_id;
+void TurnPort::SetTurnLoggingId(absl::string_view turn_logging_id) {
+  turn_logging_id_ = std::string(turn_logging_id);
 }
 
 std::vector<std::string> TurnPort::GetTlsAlpnProtocols() const {
@@ -890,7 +890,7 @@ void TurnPort::OnAllocateSuccess(const rtc::SocketAddress& address,
              server_priority_, ReconstructedServerUrl(), true);
 }
 
-void TurnPort::OnAllocateError(int error_code, const std::string& reason) {
+void TurnPort::OnAllocateError(int error_code, absl::string_view reason) {
   // We will send SignalPortError asynchronously as this can be sent during
   // port initialization. This way it will not be blocking other port
   // creation.
@@ -1228,7 +1228,7 @@ bool TurnPort::CreateOrRefreshEntry(const rtc::SocketAddress& addr,
 
 bool TurnPort::CreateOrRefreshEntry(const rtc::SocketAddress& addr,
                                     int channel_number,
-                                    const std::string& remote_ufrag) {
+                                    absl::string_view remote_ufrag) {
   TurnEntry* entry = FindEntry(addr);
   if (entry == nullptr) {
     entry = new TurnEntry(this, channel_number, addr, remote_ufrag);
@@ -1638,7 +1638,7 @@ TurnCreatePermissionRequest::TurnCreatePermissionRequest(
     TurnPort* port,
     TurnEntry* entry,
     const rtc::SocketAddress& ext_addr,
-    const std::string& remote_ufrag)
+    absl::string_view remote_ufrag)
     : StunRequest(
           port->request_manager(),
           std::make_unique<TurnMessage>(TURN_CREATE_PERMISSION_REQUEST)),
@@ -1786,7 +1786,7 @@ void TurnChannelBindRequest::OnEntryDestroyed(TurnEntry* entry) {
 TurnEntry::TurnEntry(TurnPort* port,
                      int channel_id,
                      const rtc::SocketAddress& ext_addr,
-                     const std::string remote_ufrag)
+                     absl::string_view remote_ufrag)
     : port_(port),
       channel_id_(channel_id),
       ext_addr_(ext_addr),
