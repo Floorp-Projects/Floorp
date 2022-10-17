@@ -1039,8 +1039,7 @@ void Thread::QueuedTaskHandler::OnMessage(Message* msg) {
 void Thread::AllowInvokesToThread(Thread* thread) {
 #if (!defined(NDEBUG) || RTC_DCHECK_IS_ON)
   if (!IsCurrent()) {
-    PostTask(webrtc::ToQueuedTask(
-        [thread, this]() { AllowInvokesToThread(thread); }));
+    PostTask([thread, this]() { AllowInvokesToThread(thread); });
     return;
   }
   RTC_DCHECK_RUN_ON(this);
@@ -1052,7 +1051,7 @@ void Thread::AllowInvokesToThread(Thread* thread) {
 void Thread::DisallowAllInvokes() {
 #if (!defined(NDEBUG) || RTC_DCHECK_IS_ON)
   if (!IsCurrent()) {
-    PostTask(webrtc::ToQueuedTask([this]() { DisallowAllInvokes(); }));
+    PostTask([this]() { DisallowAllInvokes(); });
     return;
   }
   RTC_DCHECK_RUN_ON(this);

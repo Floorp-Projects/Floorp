@@ -30,8 +30,9 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
-#include "api/task_queue/to_queued_task.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/field_trial_based_config.h"
+#include "api/units/time_delta.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/memory/always_valid_pointer.h"
@@ -44,6 +45,8 @@
 
 namespace rtc {
 namespace {
+using ::webrtc::SafeTask;
+using ::webrtc::TimeDelta;
 
 // List of MAC addresses of known VPN (for windows).
 constexpr uint8_t kVpns[2][6] = {
@@ -906,14 +909,14 @@ void BasicNetworkManager::StartUpdating() {
     // we should trigger network signal immediately for the new clients
     // to start allocating ports.
     if (sent_first_update_)
-      thread_->PostTask(ToQueuedTask(task_safety_flag_, [this] {
+      thread_->PostTask(SafeTask(task_safety_flag_, [this] {
         RTC_DCHECK_RUN_ON(thread_);
         SignalNetworksChanged();
       }));
   } else {
     RTC_DCHECK(task_safety_flag_ == nullptr);
     task_safety_flag_ = webrtc::PendingTaskSafetyFlag::Create();
-    thread_->PostTask(ToQueuedTask(task_safety_flag_, [this] {
+    thread_->PostTask(SafeTask(task_safety_flag_, [this] {
       RTC_DCHECK_RUN_ON(thread_);
       UpdateNetworksContinually();
     }));
@@ -1029,12 +1032,12 @@ void BasicNetworkManager::UpdateNetworksOnce() {
 
 void BasicNetworkManager::UpdateNetworksContinually() {
   UpdateNetworksOnce();
-  thread_->PostDelayedTask(ToQueuedTask(task_safety_flag_,
-                                        [this] {
-                                          RTC_DCHECK_RUN_ON(thread_);
-                                          UpdateNetworksContinually();
-                                        }),
-                           kNetworksUpdateIntervalMs);
+  thread_->PostDelayedTask(SafeTask(task_safety_flag_,
+                                    [this] {
+                                      RTC_DCHECK_RUN_ON(thread_);
+                                      UpdateNetworksContinually();
+                                    }),
+                           TimeDelta::Millis(kNetworksUpdateIntervalMs));
 }
 
 void BasicNetworkManager::DumpNetworks() {

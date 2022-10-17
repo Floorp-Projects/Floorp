@@ -15,10 +15,10 @@
 #include <string>
 
 #include "api/sequence_checker.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "rtc_base/ignore_wundef.h"
 #include "rtc_base/system/no_unique_address.h"
-#include "rtc_base/task_queue.h"
 
 #ifdef WEBRTC_NETWORK_TESTER_PROTO
 RTC_PUSH_IGNORING_WUNDEF()

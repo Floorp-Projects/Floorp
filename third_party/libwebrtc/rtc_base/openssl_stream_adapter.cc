@@ -39,7 +39,6 @@
 #else
 #include "rtc_base/openssl_identity.h"
 #endif
-#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/openssl_utility.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/stream.h"
@@ -60,6 +59,7 @@
 
 namespace rtc {
 namespace {
+using ::webrtc::SafeTask;
 // SRTP cipher suite table. `internal_name` is used to construct a
 // colon-separated profile strings which is needed by
 // SSL_CTX_set_tlsext_use_srtp().
@@ -821,8 +821,9 @@ void OpenSSLStreamAdapter::OnEvent(StreamInterface* stream,
 }
 
 void OpenSSLStreamAdapter::PostEvent(int events, int err) {
-  owner_->PostTask(webrtc::ToQueuedTask(
-      task_safety_, [this, events, err]() { SignalEvent(this, events, err); }));
+  owner_->PostTask(SafeTask(task_safety_.flag(), [this, events, err]() {
+    SignalEvent(this, events, err);
+  }));
 }
 
 void OpenSSLStreamAdapter::SetTimeout(int delay_ms) {
