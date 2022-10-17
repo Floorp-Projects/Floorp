@@ -285,6 +285,8 @@ IdentityCredential::CheckRootManifest(nsIPrincipal* aPrincipal,
   internalRequest->SetMode(RequestMode::Cors);
   internalRequest->SetCacheMode(RequestCache::No_cache);
   internalRequest->SetHeaders(new InternalHeaders(HeadersGuardEnum::Request));
+  internalRequest->OverrideContentPolicyType(
+      nsContentPolicyType::TYPE_WEB_IDENTITY);
   RefPtr<Request> request =
       new Request(global, std::move(internalRequest), nullptr);
 
@@ -349,6 +351,8 @@ IdentityCredential::FetchInternalManifest(nsIPrincipal* aPrincipal,
   internalRequest->SetMode(RequestMode::Cors);
   internalRequest->SetCacheMode(RequestCache::No_cache);
   internalRequest->SetHeaders(new InternalHeaders(HeadersGuardEnum::Request));
+  internalRequest->OverrideContentPolicyType(
+      nsContentPolicyType::TYPE_WEB_IDENTITY);
   RefPtr<Request> request =
       new Request(global, std::move(internalRequest), nullptr);
   return FetchJSONStructure<IdentityInternalManifest>(request);
@@ -414,6 +418,8 @@ IdentityCredential::FetchAccountList(
   internalRequest->SetMode(RequestMode::Cors);
   internalRequest->SetCacheMode(RequestCache::No_cache);
   internalRequest->SetHeaders(new InternalHeaders(HeadersGuardEnum::Request));
+  internalRequest->OverrideContentPolicyType(
+      nsContentPolicyType::TYPE_WEB_IDENTITY);
   RefPtr<Request> request =
       new Request(global, std::move(internalRequest), nullptr);
 
@@ -495,6 +501,8 @@ RefPtr<IdentityCredential::GetTokenPromise> IdentityCredential::FetchToken(
   internalRequest->SetReferrerPolicy(ReferrerPolicy::Strict_origin);
   internalRequest->SetMode(RequestMode::Cors);
   internalRequest->SetCacheMode(RequestCache::No_cache);
+  internalRequest->OverrideContentPolicyType(
+      nsContentPolicyType::TYPE_WEB_IDENTITY);
   RefPtr<Request> request =
       new Request(global, std::move(internalRequest), nullptr);
   return FetchJSONStructure<IdentityToken>(request)->Then(

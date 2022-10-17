@@ -30,6 +30,13 @@ function handleRequest(request, response) {
     return;
   }
   if (
+    !request.hasHeader("Sec-Fetch-Dest") ||
+    request.getHeader("Sec-Fetch-Dest") != "webidentity"
+  ) {
+    response.setStatusLine(request.httpVersion, 400, "Bad Request");
+    return;
+  }
+  if (
     !request.hasHeader("Referer") ||
     request.getHeader("Referer") != "https://example.com/"
   ) {

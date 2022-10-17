@@ -10,6 +10,13 @@ function handleRequest(request, response) {
     response.setStatusLine(request.httpVersion, 400, "Bad Request");
     return;
   }
+  if (
+    !request.hasHeader("Sec-Fetch-Dest") ||
+    request.getHeader("Sec-Fetch-Dest") != "webidentity"
+  ) {
+    response.setStatusLine(request.httpVersion, 400, "Bad Request");
+    return;
+  }
   if (request.hasHeader("Origin") && request.getHeader("Origin") != "null") {
     response.setStatusLine(request.httpVersion, 400, "Bad Request");
     return;
