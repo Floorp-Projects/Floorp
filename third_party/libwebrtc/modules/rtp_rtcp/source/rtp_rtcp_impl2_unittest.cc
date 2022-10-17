@@ -165,19 +165,13 @@ class FieldTrialConfig : public FieldTrialsView {
     return trials;
   }
 
-  FieldTrialConfig() : overhead_enabled_(false), max_padding_factor_(1200) {}
+  FieldTrialConfig() : overhead_enabled_(false) {}
   ~FieldTrialConfig() override {}
 
   void SetOverHeadEnabled(bool enabled) { overhead_enabled_ = enabled; }
-  void SetMaxPaddingFactor(double factor) { max_padding_factor_ = factor; }
 
   std::string Lookup(absl::string_view key) const override {
-    if (key == "WebRTC-LimitPaddingSize") {
-      char string_buf[32];
-      rtc::SimpleStringBuilder ssb(string_buf);
-      ssb << "factor:" << max_padding_factor_;
-      return ssb.str();
-    } else if (key == "WebRTC-SendSideBwe-WithOverhead") {
+    if (key == "WebRTC-SendSideBwe-WithOverhead") {
       return overhead_enabled_ ? "Enabled" : "Disabled";
     }
     return "";
@@ -185,7 +179,6 @@ class FieldTrialConfig : public FieldTrialsView {
 
  private:
   bool overhead_enabled_;
-  double max_padding_factor_;
 };
 
 class RtpRtcpModule : public RtcpPacketTypeCounterObserver,
