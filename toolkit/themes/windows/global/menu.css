@@ -41,6 +41,7 @@ menucaption {
   menuitem > .menu-iconic-text {
     appearance: none;
     margin-inline-start: 0 !important; /* need !important to override the other !important below... */
+    padding-inline-end: 0;
   }
 }
 
@@ -231,6 +232,12 @@ menulist > menupopup > menuitem,
 menulist > menupopup > menucaption,
 menulist > menupopup > menu {
   max-width: none;
+}
+
+@media (-moz-windows-non-native-menus) {
+  menulist > menupopup > menuitem {
+    padding-inline-end: 1em;
+  }
 }
 
 @media not (-moz-windows-non-native-menus) {
