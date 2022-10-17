@@ -22,6 +22,14 @@
 // We expect new sideloads to fail elsewhere.
 // We expect to be able to change/uninstall legacy sideloads.
 
+// This test uses add-on versions that follow the toolkit version but we
+// started to encourage the use of a simpler format in Bug 1793925. We disable
+// the pref below to avoid install errors.
+Services.prefs.setBoolPref(
+  "extensions.webextensions.warnings-as-errors",
+  false
+);
+
 // IDs for scopes that should sideload when sideloading
 // is not disabled.
 let legacyIDs = [

@@ -6,6 +6,13 @@
 
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
+// This test uses add-on versions that follow the toolkit version but we
+// started to encourage the use of a simpler format in Bug 1793925. We disable
+// the pref below to avoid install errors.
+Services.prefs.setBoolPref(
+  "extensions.webextensions.warnings-as-errors",
+  false
+);
 
 const updateFile = "test_update.json";
 
