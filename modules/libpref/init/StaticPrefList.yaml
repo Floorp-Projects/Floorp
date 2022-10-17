@@ -2680,10 +2680,11 @@
   value: false
   mirror: always
 
-# Whether we perform a more strict alignment with vsync for input events
-- name: dom.input_events.strict_input_vsync_alignment
-  type: bool
-  value: true
+# The maximum time (milliseconds) we reserve for handling input events in each
+# frame.
+- name: dom.input_event_queue.duration.max
+  type: uint32_t
+  value: 8
   mirror: always
 
 # Enable not moving the cursor to end when a text input or textarea has .value

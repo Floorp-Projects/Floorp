@@ -35,7 +35,6 @@
 #endif
 
 #include "MainThreadIdlePeriod.h"
-#include "InputEventStatistics.h"
 
 using namespace mozilla;
 
@@ -731,7 +730,6 @@ nsThreadManager::DispatchToMainThreadWithMicroTask(nsIRunnable* aEvent,
 
 void nsThreadManager::EnableMainThreadEventPrioritization() {
   MOZ_ASSERT(NS_IsMainThread());
-  InputEventStatistics::Get().SetEnable(true);
   InputTaskManager::Get()->EnableInputEventPrioritization();
 }
 

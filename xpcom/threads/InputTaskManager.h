@@ -20,7 +20,6 @@ class InputTaskManager : public TaskManager {
   int32_t GetPriorityModifierForEventLoopTurn(
       const MutexAutoLock& aProofOfLock) final;
   void WillRunTask() final;
-  void DidRunTask() final;
 
   enum InputEventQueueState {
     STATE_DISABLED,
@@ -37,12 +36,6 @@ class InputTaskManager : public TaskManager {
   InputEventQueueState State() { return mInputQueueState; }
 
   void SetState(InputEventQueueState aState) { mInputQueueState = aState; }
-
-  TimeStamp InputHandlingStartTime() { return mInputHandlingStartTime; }
-
-  void SetInputHandlingStartTime(TimeStamp aStartTime) {
-    mInputHandlingStartTime = aStartTime;
-  }
 
   static InputTaskManager* Get() { return gInputTaskManager.get(); }
   static void Cleanup() { gInputTaskManager = nullptr; }
@@ -81,10 +74,7 @@ class InputTaskManager : public TaskManager {
                InputEventQueueState::STATE_DISABLED;
   }
 
-  void NotifyVsync() {
-    MOZ_ASSERT(StaticPrefs::dom_input_events_strict_input_vsync_alignment());
-    mInputPriorityController.WillRunVsync();
-  }
+  void NotifyVsync() { mInputPriorityController.WillRunVsync(); }
 
  private:
   InputTaskManager() : mInputQueueState(STATE_DISABLED) {}
@@ -129,18 +119,14 @@ class InputTaskManager : public TaskManager {
     // InputVsyncState::HasPendingVsync state.
     uint32_t mMaxInputTasksToRun = 0;
 
-    bool mIsInitialized;
     InputVsyncState mInputVsyncState;
 
     TimeStamp mRunInputStartTime;
-    TimeDuration mMaxInputHandlingDuration;
   };
 
   int32_t GetPriorityModifierForEventLoopTurnForStrictVsyncAlignment();
 
-  TimeStamp mInputHandlingStartTime;
   Atomic<InputEventQueueState> mInputQueueState;
-  AutoTArray<TimeStamp, 4> mStartTimes;
 
   static StaticRefPtr<InputTaskManager> gInputTaskManager;
 

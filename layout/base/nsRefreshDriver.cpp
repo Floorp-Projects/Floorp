@@ -676,9 +676,6 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
   void NotifyVsyncOnMainThread(const VsyncEvent& aVsyncEvent) {
     MOZ_ASSERT(NS_IsMainThread());
 
-    // This clears the input handling start time.
-    InputTaskManager::Get()->SetInputHandlingStartTime(TimeStamp());
-
     mRecentVsync = aVsyncEvent.mTime;
     mRecentVsyncId = aVsyncEvent.mId;
     if (!mSuspendVsyncPriorityTicksUntil.IsNull() &&
