@@ -55,6 +55,8 @@ Realm::Realm(Compartment* comp, const JS::RealmOptions& options)
       objects_(zone_),
       randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
       debuggers_(zone_),
+      allocatedDuringIncrementalGC_(zone_->isGCMarkingOrSweeping() ||
+                                    zone_->isGCFinished()),
       wasm(runtime_) {
   runtime_->numRealms++;
 }

@@ -406,6 +406,7 @@ class JS::Realm : public JS::shadow::Realm {
   friend class js::AutoRestoreRealmDebugMode;
 
   bool isSystem_ = false;
+  bool allocatedDuringIncrementalGC_;
 
   js::UniquePtr<js::coverage::LCovRealm> lcovRealm_ = nullptr;
 
@@ -615,6 +616,7 @@ class JS::Realm : public JS::shadow::Realm {
   }
 
   inline bool marked() const;
+  void clearAllocatedDuringGC() { allocatedDuringIncrementalGC_ = false; }
 
   /*
    * The principals associated with this realm. Note that the same several
