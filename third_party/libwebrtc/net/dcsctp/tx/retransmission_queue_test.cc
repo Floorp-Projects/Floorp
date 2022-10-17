@@ -103,16 +103,19 @@ class RetransmissionQueueTest : public testing::Test {
         supports_partial_reliability, use_message_interleaving);
   }
 
-  RetransmissionQueue CreateQueueByHandover(RetransmissionQueue& queue) {
+  std::unique_ptr<RetransmissionQueue> CreateQueueByHandover(
+      RetransmissionQueue& queue) {
     EXPECT_EQ(queue.GetHandoverReadiness(), HandoverReadinessStatus());
     DcSctpSocketHandoverState state;
     queue.AddHandoverState(state);
     g_handover_state_transformer_for_test(&state);
-    return RetransmissionQueue(
+    auto queue2 = std::make_unique<RetransmissionQueue>(
         "", TSN(10), kArwnd, producer_, on_rtt_.AsStdFunction(),
         on_clear_retransmission_counter_.AsStdFunction(), *timer_, options_,
         /*supports_partial_reliability=*/true,
-        /*use_message_interleaving=*/false, &state);
+        /*use_message_interleaving=*/false);
+    queue2->RestoreFromState(state);
+    return queue2;
   }
 
   DcSctpOptions options_;
@@ -1488,18 +1491,19 @@ TEST_F(RetransmissionQueueTest, HandoverTest) {
   EXPECT_THAT(GetSentPacketTSNs(queue), SizeIs(2));
   queue.HandleSack(now_, SackChunk(TSN(11), kArwnd, {}, {}));
 
-  RetransmissionQueue handedover_queue = CreateQueueByHandover(queue);
+  std::unique_ptr<RetransmissionQueue> handedover_queue =
+      CreateQueueByHandover(queue);
 
   EXPECT_CALL(producer_, Produce)
       .WillOnce(CreateChunk())
       .WillOnce(CreateChunk())
       .WillOnce(CreateChunk())
       .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
-  EXPECT_THAT(GetSentPacketTSNs(handedover_queue),
+  EXPECT_THAT(GetSentPacketTSNs(*handedover_queue),
               testing::ElementsAre(TSN(12), TSN(13), TSN(14)));
 
-  handedover_queue.HandleSack(now_, SackChunk(TSN(13), kArwnd, {}, {}));
-  EXPECT_THAT(handedover_queue.GetChunkStatesForTesting(),
+  handedover_queue->HandleSack(now_, SackChunk(TSN(13), kArwnd, {}, {}));
+  EXPECT_THAT(handedover_queue->GetChunkStatesForTesting(),
               ElementsAre(Pair(TSN(13), State::kAcked),  //
                           Pair(TSN(14), State::kInFlight)));
 }

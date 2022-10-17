@@ -193,14 +193,17 @@ class StreamResetHandlerTest : public testing::Test {
     g_handover_state_transformer_for_test(&state);
 
     data_tracker_ = std::make_unique<DataTracker>(
-        "log: ", delayed_ack_timer_.get(), kPeerInitialTsn, &state);
-    reasm_ = std::make_unique<ReassemblyQueue>("log: ", kPeerInitialTsn, kArwnd,
-                                               &state);
+        "log: ", delayed_ack_timer_.get(), kPeerInitialTsn);
+    data_tracker_->RestoreFromState(state);
+    reasm_ =
+        std::make_unique<ReassemblyQueue>("log: ", kPeerInitialTsn, kArwnd);
+    reasm_->RestoreFromState(state);
     retransmission_queue_ = std::make_unique<RetransmissionQueue>(
         "", kMyInitialTsn, kArwnd, producer_, [](DurationMs rtt_ms) {}, []() {},
         *t3_rtx_timer_, DcSctpOptions(),
         /*supports_partial_reliability=*/true,
-        /*use_message_interleaving=*/false, &state);
+        /*use_message_interleaving=*/false);
+    retransmission_queue_->RestoreFromState(state);
     handler_ = std::make_unique<StreamResetHandler>(
         "log: ", &ctx_, &timer_manager_, data_tracker_.get(), reasm_.get(),
         retransmission_queue_.get(), &state);

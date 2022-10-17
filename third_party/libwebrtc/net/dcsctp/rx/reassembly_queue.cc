@@ -39,53 +39,43 @@ namespace {
 std::unique_ptr<ReassemblyStreams> CreateStreams(
     absl::string_view log_prefix,
     ReassemblyStreams::OnAssembledMessage on_assembled_message,
-    bool use_message_interleaving,
-    const DcSctpSocketHandoverState* handover_state) {
+    bool use_message_interleaving) {
   if (use_message_interleaving) {
     return std::make_unique<InterleavedReassemblyStreams>(
-        log_prefix, std::move(on_assembled_message), handover_state);
+        log_prefix, std::move(on_assembled_message));
   }
   return std::make_unique<TraditionalReassemblyStreams>(
-      log_prefix, std::move(on_assembled_message), handover_state);
+      log_prefix, std::move(on_assembled_message));
 }
 }  // namespace
 
-ReassemblyQueue::ReassemblyQueue(
-    absl::string_view log_prefix,
-    TSN peer_initial_tsn,
-    size_t max_size_bytes,
-    bool use_message_interleaving,
-    const DcSctpSocketHandoverState* handover_state)
+ReassemblyQueue::ReassemblyQueue(absl::string_view log_prefix,
+                                 TSN peer_initial_tsn,
+                                 size_t max_size_bytes,
+                                 bool use_message_interleaving)
     : log_prefix_(std::string(log_prefix) + "reasm: "),
       max_size_bytes_(max_size_bytes),
       watermark_bytes_(max_size_bytes * kHighWatermarkLimit),
-      last_assembled_tsn_watermark_(tsn_unwrapper_.Unwrap(
-          handover_state ? TSN(handover_state->rx.last_assembled_tsn)
-                         : TSN(*peer_initial_tsn - 1))),
-      last_completed_reset_req_seq_nbr_(
-          handover_state
-              ? ReconfigRequestSN(
-                    handover_state->rx.last_completed_deferred_reset_req_sn)
-              : ReconfigRequestSN(0)),
+      last_assembled_tsn_watermark_(
+          tsn_unwrapper_.Unwrap(TSN(*peer_initial_tsn - 1))),
+      last_completed_reset_req_seq_nbr_(ReconfigRequestSN(0)),
       streams_(CreateStreams(
           log_prefix_,
           [this](rtc::ArrayView<const UnwrappedTSN> tsns,
                  DcSctpMessage message) {
             AddReassembledMessage(tsns, std::move(message));
           },
-          use_message_interleaving,
-          handover_state)) {}
+          use_message_interleaving)) {}
 
 void ReassemblyQueue::Add(TSN tsn, Data data) {
   RTC_DCHECK(IsConsistent());
   RTC_DLOG(LS_VERBOSE) << log_prefix_ << "added tsn=" << *tsn
                        << ", stream=" << *data.stream_id << ":"
                        << *data.message_id << ":" << *data.fsn << ", type="
-                       << (data.is_beginning && data.is_end
-                               ? "complete"
-                               : data.is_beginning
-                                     ? "first"
-                                     : data.is_end ? "last" : "middle");
+                       << (data.is_beginning && data.is_end ? "complete"
+                           : data.is_beginning              ? "first"
+                           : data.is_end                    ? "last"
+                                                            : "middle");
 
   UnwrappedTSN unwrapped_tsn = tsn_unwrapper_.Unwrap(tsn);
 
@@ -309,4 +299,14 @@ void ReassemblyQueue::AddHandoverState(DcSctpSocketHandoverState& state) {
   streams_->AddHandoverState(state);
 }
 
+void ReassemblyQueue::RestoreFromState(const DcSctpSocketHandoverState& state) {
+  // Validate that the component is in pristine state.
+  RTC_DCHECK(last_completed_reset_req_seq_nbr_ == ReconfigRequestSN(0));
+
+  last_assembled_tsn_watermark_ =
+      tsn_unwrapper_.Unwrap(TSN(state.rx.last_assembled_tsn));
+  last_completed_reset_req_seq_nbr_ =
+      ReconfigRequestSN(state.rx.last_completed_deferred_reset_req_sn);
+  streams_->RestoreFromState(state);
+}
 }  // namespace dcsctp

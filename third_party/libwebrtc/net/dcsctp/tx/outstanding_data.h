@@ -147,6 +147,10 @@ class OutstandingData {
   // abandoned, which means that a FORWARD-TSN should be sent.
   bool ShouldSendForwardTsn() const;
 
+  // Sets the next TSN to be used. This is used in handover.
+  void ResetSequenceNumbers(UnwrappedTSN next_tsn,
+                            UnwrappedTSN last_cumulative_tsn);
+
  private:
   // A fragmented message's DATA chunk while in the retransmission queue, and
   // its associated metadata.

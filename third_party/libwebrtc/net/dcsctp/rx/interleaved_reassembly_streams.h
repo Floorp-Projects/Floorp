@@ -28,10 +28,8 @@ namespace dcsctp {
 // enabled on the association, i.e. when RFC8260 is in use.
 class InterleavedReassemblyStreams : public ReassemblyStreams {
  public:
-  InterleavedReassemblyStreams(
-      absl::string_view log_prefix,
-      OnAssembledMessage on_assembled_message,
-      const DcSctpSocketHandoverState* handover_state = nullptr);
+  InterleavedReassemblyStreams(absl::string_view log_prefix,
+                               OnAssembledMessage on_assembled_message);
 
   int Add(UnwrappedTSN tsn, Data data) override;
 
@@ -44,6 +42,7 @@ class InterleavedReassemblyStreams : public ReassemblyStreams {
 
   HandoverReadinessStatus GetHandoverReadiness() const override;
   void AddHandoverState(DcSctpSocketHandoverState& state) override;
+  void RestoreFromState(const DcSctpSocketHandoverState& state) override;
 
  private:
   struct FullStreamId {
