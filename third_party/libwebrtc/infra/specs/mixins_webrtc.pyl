@@ -259,12 +259,5 @@
         'os': 'Windows'
       }
     }
-  },
-  'win10-1703': {
-    'swarming': {
-      'dimensions': {
-        'os': 'Windows-10-15063',
-      },
-    },
-  },
+  }
 }

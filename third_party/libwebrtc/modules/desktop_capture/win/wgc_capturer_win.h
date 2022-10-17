@@ -11,6 +11,7 @@
 #ifndef MODULES_DESKTOP_CAPTURE_WIN_WGC_CAPTURER_WIN_H_
 #define MODULES_DESKTOP_CAPTURE_WIN_WGC_CAPTURER_WIN_H_
 
+#include <DispatcherQueue.h>
 #include <d3d11.h>
 #include <wrl/client.h>
 
@@ -109,6 +110,23 @@ class WgcCapturerWin : public DesktopCapturer {
   bool IsSourceBeingCaptured(SourceId id);
 
  private:
+  typedef HRESULT(WINAPI* CreateDispatcherQueueControllerFunc)(
+      DispatcherQueueOptions,
+      ABI::Windows::System::IDispatcherQueueController**);
+
+  // We need to either create or ensure that someone else created a
+  // `DispatcherQueue` on the current thread so that events will be delivered
+  // on the current thread rather than an arbitrary thread. A
+  // `DispatcherQueue`'s lifetime is tied to the thread's, and we don't post
+  // any work to it, so we don't need to hold a reference.
+  bool dispatcher_queue_created_ = false;
+
+  // Statically linking to CoreMessaging.lib is disallowed in Chromium, so we
+  // load it at runtime.
+  HMODULE core_messaging_library_ = NULL;
+  CreateDispatcherQueueControllerFunc create_dispatcher_queue_controller_func_ =
+      nullptr;
+
   // Factory to create a WgcCaptureSource for us whenever SelectSource is
   // called. Initialized at construction with a source-specific implementation.
   std::unique_ptr<WgcCaptureSourceFactory> source_factory_;

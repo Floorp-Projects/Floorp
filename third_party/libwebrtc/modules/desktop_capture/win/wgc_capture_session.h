@@ -21,6 +21,7 @@
 #include "api/sequence_checker.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/win/wgc_capture_source.h"
+#include "rtc_base/event.h"
 
 namespace webrtc {
 
@@ -48,6 +49,12 @@ class WgcCaptureSession final {
     return is_capture_started_;
   }
 
+  // We keep 2 buffers in the frame pool to balance the staleness of the frame
+  // with having to wait for frames to arrive too frequently. Too many buffers
+  // will lead to a high latency, and too few will lead to poor performance.
+  // We make this public for tests.
+  static constexpr int kNumBuffers = 2;
+
  private:
   // Initializes `mapped_texture_` with the properties of the `src_texture`,
   // overrides the values of some necessary properties like the
@@ -63,6 +70,24 @@ class WgcCaptureSession final {
   HRESULT OnItemClosed(
       ABI::Windows::Graphics::Capture::IGraphicsCaptureItem* sender,
       IInspectable* event_args);
+
+  // Event handler for `frame_pool_`'s FrameArrived event.
+  HRESULT OnFrameArrived(
+      ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePool* sender,
+      IInspectable* event_args);
+
+  void RemoveEventHandlers();
+
+  // We wait on this event in `GetFrame` if there are no frames in the pool.
+  // `OnFrameArrived` will set the event so we can proceed.
+  rtc::Event wait_for_frame_event_;
+  int frames_in_pool_;
+
+  // We're willing to wait for a frame a little longer if it's the first one.
+  bool first_frame_ = true;
+
+  std::unique_ptr<EventRegistrationToken> frame_arrived_token_;
+  std::unique_ptr<EventRegistrationToken> item_closed_token_;
 
   // A Direct3D11 Device provided by the caller. We use this to create an
   // IDirect3DDevice, and also to create textures that will hold the image data.
