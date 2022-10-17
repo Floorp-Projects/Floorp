@@ -385,7 +385,7 @@ LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
 }
 
 LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
-    SessionHistoryEntry* aEntry, LoadingSessionHistoryInfo* aInfo)
+    SessionHistoryEntry* aEntry, const LoadingSessionHistoryInfo* aInfo)
     : mInfo(aEntry->Info()),
       mLoadId(aInfo->mLoadId),
       mLoadIsFromSessionHistory(aInfo->mLoadIsFromSessionHistory),

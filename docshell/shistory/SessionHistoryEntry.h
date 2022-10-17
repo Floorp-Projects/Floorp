@@ -222,7 +222,7 @@ struct LoadingSessionHistoryInfo {
   explicit LoadingSessionHistoryInfo(SessionHistoryEntry* aEntry);
   // Initializes mInfo using aEntry and otherwise copies the values from aInfo.
   LoadingSessionHistoryInfo(SessionHistoryEntry* aEntry,
-                            LoadingSessionHistoryInfo* aInfo);
+                            const LoadingSessionHistoryInfo* aInfo);
   // For about:blank only.
   explicit LoadingSessionHistoryInfo(const SessionHistoryInfo& aInfo);
 
