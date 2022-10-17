@@ -572,6 +572,12 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     if (!entry) {
       return nullptr;
     }
+
+    // If the entry was updated, update also the LoadingSessionHistoryInfo.
+    UniquePtr<LoadingSessionHistoryInfo> lshi =
+        MakeUnique<LoadingSessionHistoryInfo>(entry, existingLoadingInfo);
+    aLoadState->SetLoadingSessionHistoryInfo(std::move(lshi));
+    existingLoadingInfo = aLoadState->GetLoadingSessionHistoryInfo();
     Unused << SetHistoryEntryCount(entry->BCHistoryLength());
   } else if (aLoadState->LoadType() == LOAD_REFRESH &&
              !ShouldAddEntryForRefresh(aLoadState->URI(),
