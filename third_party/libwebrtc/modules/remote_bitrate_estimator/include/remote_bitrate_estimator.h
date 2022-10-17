@@ -17,6 +17,7 @@
 #include <memory>
 #include <vector>
 
+#include "api/units/data_rate.h"
 #include "api/units/time_delta.h"
 #include "modules/include/module_common_types.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -54,11 +55,8 @@ class RemoteBitrateEstimator : public CallStatsObserver {
   // Removes all data for `ssrc`.
   virtual void RemoveStream(uint32_t ssrc) = 0;
 
-  // Returns true if a valid estimate exists and sets `bitrate_bps` to the
-  // estimated payload bitrate in bits per second. `ssrcs` is the list of ssrcs
-  // currently being received and of which the bitrate estimate is based upon.
-  virtual bool LatestEstimate(std::vector<uint32_t>* ssrcs,
-                              uint32_t* bitrate_bps) const = 0;
+  // Returns latest estimate or DataRate::Zero() if estimation is unavailable.
+  virtual DataRate LatestEstimate() const = 0;
 
   virtual void SetMinBitrate(int min_bitrate_bps) = 0;
 

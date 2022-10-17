@@ -224,20 +224,12 @@ void RemoteBitrateEstimatorSingleStream::RemoveStream(unsigned int ssrc) {
   }
 }
 
-bool RemoteBitrateEstimatorSingleStream::LatestEstimate(
-    std::vector<uint32_t>* ssrcs,
-    uint32_t* bitrate_bps) const {
+DataRate RemoteBitrateEstimatorSingleStream::LatestEstimate() const {
   MutexLock lock(&mutex_);
-  RTC_DCHECK(bitrate_bps);
-  if (!remote_rate_->ValidEstimate()) {
-    return false;
+  if (!remote_rate_->ValidEstimate() || overuse_detectors_.empty()) {
+    return DataRate::Zero();
   }
-  GetSsrcs(ssrcs);
-  if (ssrcs->empty())
-    *bitrate_bps = 0;
-  else
-    *bitrate_bps = remote_rate_->LatestEstimate().bps<uint32_t>();
-  return true;
+  return remote_rate_->LatestEstimate();
 }
 
 void RemoteBitrateEstimatorSingleStream::GetSsrcs(
