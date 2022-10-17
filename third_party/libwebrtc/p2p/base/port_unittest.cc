@@ -136,13 +136,13 @@ bool WriteStunMessage(const StunMessage& msg, ByteBufferWriter* buf) {
 class TestPort : public Port {
  public:
   TestPort(rtc::Thread* thread,
-           const std::string& type,
+           absl::string_view type,
            rtc::PacketSocketFactory* factory,
            const rtc::Network* network,
            uint16_t min_port,
            uint16_t max_port,
-           const std::string& username_fragment,
-           const std::string& password)
+           absl::string_view username_fragment,
+           absl::string_view password)
       : Port(thread,
              type,
              factory,
@@ -192,7 +192,7 @@ class TestPort : public Port {
   }
   void AddCandidateAddress(const rtc::SocketAddress& addr,
                            const rtc::SocketAddress& base_address,
-                           const std::string& type,
+                           absl::string_view type,
                            int type_preference,
                            bool final) {
     AddAddress(addr, base_address, rtc::SocketAddress(), "udp", "", "", type,
@@ -616,9 +616,9 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   void ExpectPortsCanConnect(bool can_connect, Port* p1, Port* p2);
 
   // This does all the work and then deletes `port1` and `port2`.
-  void TestConnectivity(const char* name1,
+  void TestConnectivity(absl::string_view name1,
                         std::unique_ptr<Port> port1,
-                        const char* name2,
+                        absl::string_view name2,
                         std::unique_ptr<Port> port2,
                         bool accept,
                         bool same_addr1,
@@ -764,15 +764,15 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   }
   std::unique_ptr<IceMessage> CreateStunMessageWithUsername(
       StunMessageType type,
-      const std::string& username) {
+      absl::string_view username) {
     std::unique_ptr<IceMessage> msg = CreateStunMessage(type);
     msg->AddAttribute(std::make_unique<StunByteStringAttribute>(
-        STUN_ATTR_USERNAME, username));
+        STUN_ATTR_USERNAME, std::string(username)));
     return msg;
   }
   std::unique_ptr<TestPort> CreateTestPort(const rtc::SocketAddress& addr,
-                                           const std::string& username,
-                                           const std::string& password) {
+                                           absl::string_view username,
+                                           absl::string_view password) {
     auto port =
         std::make_unique<TestPort>(&main_, "test", &socket_factory_,
                                    MakeNetwork(addr), 0, 0, username, password);
@@ -780,8 +780,8 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
     return port;
   }
   std::unique_ptr<TestPort> CreateTestPort(const rtc::SocketAddress& addr,
-                                           const std::string& username,
-                                           const std::string& password,
+                                           absl::string_view username,
+                                           absl::string_view password,
                                            cricket::IceRole role,
                                            int tiebreaker) {
     auto port = CreateTestPort(addr, username, password);
@@ -791,8 +791,8 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   }
   // Overload to create a test port given an rtc::Network directly.
   std::unique_ptr<TestPort> CreateTestPort(const rtc::Network* network,
-                                           const std::string& username,
-                                           const std::string& password) {
+                                           absl::string_view username,
+                                           absl::string_view password) {
     auto port = std::make_unique<TestPort>(&main_, "test", &socket_factory_,
                                            network, 0, 0, username, password);
     port->SignalRoleConflict.connect(this, &PortTest::OnRoleConflict);
@@ -839,9 +839,9 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   webrtc::test::ScopedKeyValueConfig field_trials_;
 };
 
-void PortTest::TestConnectivity(const char* name1,
+void PortTest::TestConnectivity(absl::string_view name1,
                                 std::unique_ptr<Port> port1,
-                                const char* name2,
+                                absl::string_view name2,
                                 std::unique_ptr<Port> port2,
                                 bool accept,
                                 bool same_addr1,

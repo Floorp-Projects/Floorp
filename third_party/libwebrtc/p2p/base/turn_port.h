@@ -122,7 +122,7 @@ class TurnPort : public Port {
   virtual TlsCertPolicy GetTlsCertPolicy() const;
   virtual void SetTlsCertPolicy(TlsCertPolicy tls_cert_policy);
 
-  void SetTurnLoggingId(const std::string& turn_logging_id);
+  void SetTurnLoggingId(absl::string_view turn_logging_id);
 
   virtual std::vector<std::string> GetTlsAlpnProtocols() const;
   virtual std::vector<std::string> GetTlsEllipticCurves() const;
@@ -212,8 +212,8 @@ class TurnPort : public Port {
            rtc::PacketSocketFactory* factory,
            const rtc::Network* network,
            rtc::AsyncPacketSocket* socket,
-           const std::string& username,
-           const std::string& password,
+           absl::string_view username,
+           absl::string_view password,
            const ProtocolAddress& server_address,
            const RelayCredentials& credentials,
            int server_priority,
@@ -228,8 +228,8 @@ class TurnPort : public Port {
            const rtc::Network* network,
            uint16_t min_port,
            uint16_t max_port,
-           const std::string& username,
-           const std::string& password,
+           absl::string_view username,
+           absl::string_view password,
            const ProtocolAddress& server_address,
            const RelayCredentials& credentials,
            int server_priority,
@@ -245,7 +245,7 @@ class TurnPort : public Port {
 
   bool CreateOrRefreshEntry(const rtc::SocketAddress& addr,
                             int channel_number,
-                            const std::string& remote_ufrag);
+                            absl::string_view remote_ufrag);
 
   rtc::DiffServCodePoint StunDscpValue() const override;
 
@@ -292,7 +292,7 @@ class TurnPort : public Port {
   void OnStunAddress(const rtc::SocketAddress& address);
   void OnAllocateSuccess(const rtc::SocketAddress& address,
                          const rtc::SocketAddress& stun_address);
-  void OnAllocateError(int error_code, const std::string& reason);
+  void OnAllocateError(int error_code, absl::string_view reason);
   void OnAllocateRequestTimeout();
 
   void HandleDataIndication(const char* data,

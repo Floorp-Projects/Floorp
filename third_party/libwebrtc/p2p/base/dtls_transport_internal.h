@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "absl/base/attributes.h"
+#include "absl/strings/string_view.h"
 #include "api/crypto/crypto_options.h"
 #include "api/dtls_transport_interface.h"
 #include "api/scoped_refptr.h"
@@ -81,7 +82,7 @@ class DtlsTransportInternal : public rtc::PacketTransportInternal {
   virtual std::unique_ptr<rtc::SSLCertChain> GetRemoteSSLCertChain() const = 0;
 
   // Allows key material to be extracted for external encryption.
-  virtual bool ExportKeyingMaterial(const std::string& label,
+  virtual bool ExportKeyingMaterial(absl::string_view label,
                                     const uint8_t* context,
                                     size_t context_len,
                                     bool use_context,
@@ -89,7 +90,7 @@ class DtlsTransportInternal : public rtc::PacketTransportInternal {
                                     size_t result_len) = 0;
 
   // Set DTLS remote fingerprint. Must be after local identity set.
-  virtual bool SetRemoteFingerprint(const std::string& digest_alg,
+  virtual bool SetRemoteFingerprint(absl::string_view digest_alg,
                                     const uint8_t* digest,
                                     size_t digest_len) = 0;
 

@@ -156,8 +156,8 @@ UDPPort::UDPPort(rtc::Thread* thread,
                  rtc::PacketSocketFactory* factory,
                  const rtc::Network* network,
                  rtc::AsyncPacketSocket* socket,
-                 const std::string& username,
-                 const std::string& password,
+                 absl::string_view username,
+                 absl::string_view password,
                  bool emit_local_for_anyaddress,
                  const webrtc::FieldTrialsView* field_trials)
     : Port(thread,
@@ -184,8 +184,8 @@ UDPPort::UDPPort(rtc::Thread* thread,
                  const rtc::Network* network,
                  uint16_t min_port,
                  uint16_t max_port,
-                 const std::string& username,
-                 const std::string& password,
+                 absl::string_view username,
+                 absl::string_view password,
                  bool emit_local_for_anyaddress,
                  const webrtc::FieldTrialsView* field_trials)
     : Port(thread,
@@ -541,7 +541,7 @@ void UDPPort::OnStunBindingRequestSucceeded(
 void UDPPort::OnStunBindingOrResolveRequestFailed(
     const rtc::SocketAddress& stun_server_addr,
     int error_code,
-    const std::string& reason) {
+    absl::string_view reason) {
   rtc::StringBuilder url;
   url << "stun:" << stun_server_addr.ToString();
   SignalCandidateError(
@@ -619,8 +619,8 @@ std::unique_ptr<StunPort> StunPort::Create(
     const rtc::Network* network,
     uint16_t min_port,
     uint16_t max_port,
-    const std::string& username,
-    const std::string& password,
+    absl::string_view username,
+    absl::string_view password,
     const ServerAddresses& servers,
     absl::optional<int> stun_keepalive_interval,
     const webrtc::FieldTrialsView* field_trials) {
@@ -640,8 +640,8 @@ StunPort::StunPort(rtc::Thread* thread,
                    const rtc::Network* network,
                    uint16_t min_port,
                    uint16_t max_port,
-                   const std::string& username,
-                   const std::string& password,
+                   absl::string_view username,
+                   absl::string_view password,
                    const ServerAddresses& servers,
                    const webrtc::FieldTrialsView* field_trials)
     : UDPPort(thread,

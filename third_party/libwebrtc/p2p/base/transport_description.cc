@@ -12,6 +12,7 @@
 
 #include "absl/strings/ascii.h"
 #include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
 #include "p2p/base/p2p_constants.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/logging.h"
@@ -147,8 +148,8 @@ TransportDescription::TransportDescription()
 
 TransportDescription::TransportDescription(
     const std::vector<std::string>& transport_options,
-    const std::string& ice_ufrag,
-    const std::string& ice_pwd,
+    absl::string_view ice_ufrag,
+    absl::string_view ice_pwd,
     IceMode ice_mode,
     ConnectionRole role,
     const rtc::SSLFingerprint* identity_fingerprint)
@@ -159,8 +160,8 @@ TransportDescription::TransportDescription(
       connection_role(role),
       identity_fingerprint(CopyFingerprint(identity_fingerprint)) {}
 
-TransportDescription::TransportDescription(const std::string& ice_ufrag,
-                                           const std::string& ice_pwd)
+TransportDescription::TransportDescription(absl::string_view ice_ufrag,
+                                           absl::string_view ice_pwd)
     : ice_ufrag(ice_ufrag),
       ice_pwd(ice_pwd),
       ice_mode(ICEMODE_FULL),

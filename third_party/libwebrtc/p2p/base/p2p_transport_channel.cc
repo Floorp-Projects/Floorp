@@ -22,6 +22,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
 #include "api/async_dns_resolver.h"
 #include "api/candidate.h"
 #include "api/field_trials_view.h"
@@ -101,10 +102,10 @@ using webrtc::RTCError;
 using webrtc::RTCErrorType;
 using webrtc::ToQueuedTask;
 
-bool IceCredentialsChanged(const std::string& old_ufrag,
-                           const std::string& old_pwd,
-                           const std::string& new_ufrag,
-                           const std::string& new_pwd) {
+bool IceCredentialsChanged(absl::string_view old_ufrag,
+                           absl::string_view old_pwd,
+                           absl::string_view new_ufrag,
+                           absl::string_view new_pwd) {
   // The standard (RFC 5245 Section 9.1.1.1) says that ICE restarts MUST change
   // both the ufrag and password. However, section 9.2.1.1 says changing the
   // ufrag OR password indicates an ICE restart. So, to keep compatibility with
@@ -113,7 +114,7 @@ bool IceCredentialsChanged(const std::string& old_ufrag,
 }
 
 std::unique_ptr<P2PTransportChannel> P2PTransportChannel::Create(
-    const std::string& transport_name,
+    absl::string_view transport_name,
     int component,
     webrtc::IceTransportInit init) {
   if (init.async_resolver_factory()) {
@@ -131,7 +132,7 @@ std::unique_ptr<P2PTransportChannel> P2PTransportChannel::Create(
 }
 
 P2PTransportChannel::P2PTransportChannel(
-    const std::string& transport_name,
+    absl::string_view transport_name,
     int component,
     PortAllocator* allocator,
     const webrtc::FieldTrialsView* field_trials)
@@ -146,7 +147,7 @@ P2PTransportChannel::P2PTransportChannel(
 
 // Private constructor, called from Create()
 P2PTransportChannel::P2PTransportChannel(
-    const std::string& transport_name,
+    absl::string_view transport_name,
     int component,
     PortAllocator* allocator,
     webrtc::AsyncDnsResolverFactoryInterface* async_dns_resolver_factory,
@@ -1180,7 +1181,7 @@ void P2PTransportChannel::OnRoleConflict(PortInterface* port) {
 }
 
 const IceParameters* P2PTransportChannel::FindRemoteIceFromUfrag(
-    const std::string& ufrag,
+    absl::string_view ufrag,
     uint32_t* generation) {
   RTC_DCHECK_RUN_ON(network_thread_);
   const auto& params = remote_ice_parameters_;

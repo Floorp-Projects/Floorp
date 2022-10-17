@@ -12,6 +12,7 @@
 
 #include <memory>
 
+#include "absl/strings/string_view.h"
 #include "p2p/base/fake_port_allocator.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/virtual_socket_server.h"
@@ -50,10 +51,10 @@ class PortAllocatorTest : public ::testing::Test, public sigslot::has_slots<> {
   }
 
   std::unique_ptr<cricket::FakePortAllocatorSession> CreateSession(
-      const std::string& content_name,
+      absl::string_view content_name,
       int component,
-      const std::string& ice_ufrag,
-      const std::string& ice_pwd) {
+      absl::string_view ice_ufrag,
+      absl::string_view ice_pwd) {
     return std::unique_ptr<cricket::FakePortAllocatorSession>(
         static_cast<cricket::FakePortAllocatorSession*>(
             allocator_

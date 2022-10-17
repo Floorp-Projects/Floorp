@@ -38,8 +38,8 @@ class TestUDPPort : public UDPPort {
                              const rtc::Network* network,
                              uint16_t min_port,
                              uint16_t max_port,
-                             const std::string& username,
-                             const std::string& password,
+                             absl::string_view username,
+                             absl::string_view password,
                              bool emit_localhost_for_anyaddress,
                              const webrtc::FieldTrialsView* field_trials) {
     TestUDPPort* port =
@@ -58,8 +58,8 @@ class TestUDPPort : public UDPPort {
               const rtc::Network* network,
               uint16_t min_port,
               uint16_t max_port,
-              const std::string& username,
-              const std::string& password,
+              absl::string_view username,
+              absl::string_view password,
               bool emit_localhost_for_anyaddress,
               const webrtc::FieldTrialsView* field_trials)
       : UDPPort(thread,
@@ -81,10 +81,10 @@ class FakePortAllocatorSession : public PortAllocatorSession {
   FakePortAllocatorSession(PortAllocator* allocator,
                            rtc::Thread* network_thread,
                            rtc::PacketSocketFactory* factory,
-                           const std::string& content_name,
+                           absl::string_view content_name,
                            int component,
-                           const std::string& ice_ufrag,
-                           const std::string& ice_pwd,
+                           absl::string_view ice_ufrag,
+                           absl::string_view ice_pwd,
                            const webrtc::FieldTrialsView& field_trials)
       : PortAllocatorSession(content_name,
                              component,

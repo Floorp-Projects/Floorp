@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/candidate.h"
 #include "api/rtc_error.h"
@@ -259,11 +260,11 @@ class RTC_EXPORT IceTransportInternal : public rtc::PacketTransportInternal {
   // remoting/protocol/libjingle_transport_factory.cc
   virtual void SetIceProtocolType(IceProtocolType type) {}
 
-  virtual void SetIceCredentials(const std::string& ice_ufrag,
-                                 const std::string& ice_pwd);
+  virtual void SetIceCredentials(absl::string_view ice_ufrag,
+                                 absl::string_view ice_pwd);
 
-  virtual void SetRemoteIceCredentials(const std::string& ice_ufrag,
-                                       const std::string& ice_pwd);
+  virtual void SetRemoteIceCredentials(absl::string_view ice_ufrag,
+                                       absl::string_view ice_pwd);
 
   // The ufrag and pwd in `ice_params` must be set
   // before candidate gathering can start.
