@@ -42,7 +42,7 @@ import {
   waitForState,
 } from "../../utils/test-head";
 
-import sourceMaps from "devtools-source-map";
+import sourceMaps from "devtools/client/shared/source-map/index";
 
 import { makePendingLocationId } from "../../utils/breakpoint";
 function mockClient(bpPos = {}) {

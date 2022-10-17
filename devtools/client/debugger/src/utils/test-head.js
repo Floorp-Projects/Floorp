@@ -8,7 +8,7 @@
  */
 
 import { combineReducers } from "redux";
-import sourceMaps from "devtools-source-map";
+import sourceMaps from "devtools/client/shared/source-map/index";
 import reducers from "../reducers";
 import actions from "../actions";
 import * as selectors from "../selectors";

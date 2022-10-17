@@ -7,7 +7,10 @@
  * @module actions/sources
  */
 
-import { isOriginalId, originalToGeneratedId } from "devtools-source-map";
+import {
+  isOriginalId,
+  originalToGeneratedId,
+} from "devtools/client/shared/source-map/index";
 import { recordEvent } from "../../utils/telemetry";
 import { getSourceActorsForSource, isSourceBlackBoxed } from "../../selectors";
 

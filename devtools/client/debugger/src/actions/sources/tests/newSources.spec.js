@@ -18,7 +18,7 @@ const {
   getSourceByURL,
 } = selectors;
 import sourceQueue from "../../../utils/source-queue";
-import { generatedToOriginalId } from "devtools-source-map";
+import { generatedToOriginalId } from "devtools/client/shared/source-map/index";
 
 import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
 

@@ -10,7 +10,10 @@ import Adapter from "enzyme-adapter-react-16";
 import { setupHelper } from "../utils/dbg";
 import { prefs } from "../utils/prefs";
 
-import { startSourceMapWorker, stopSourceMapWorker } from "devtools-source-map";
+import {
+  startSourceMapWorker,
+  stopSourceMapWorker,
+} from "devtools/client/shared/source-map/index";
 
 import {
   start as startPrettyPrintWorker,

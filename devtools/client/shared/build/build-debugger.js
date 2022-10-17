@@ -26,10 +26,6 @@ const mappings = {
 
 const mappingValues = Object.values(mappings);
 
-// Add two additional mappings that cannot be reused when creating the
-// webpack bundles.
-mappings["devtools-source-map"] = "devtools/client/shared/source-map/index.js";
-
 function isRequire(t, node) {
   return node && t.isCallExpression(node) && node.callee.name == "require";
 }
