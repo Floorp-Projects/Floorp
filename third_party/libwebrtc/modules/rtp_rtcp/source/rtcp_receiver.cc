@@ -682,13 +682,6 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   // If no SR has been received yet, the field is set to zero.
   // Receiver rtp_rtcp module is not expected to calculate rtt using
   // Sender Reports even if it accidentally can.
-
-  // TODO(nisse): Use this way to determine the RTT only when `receiver_only_`
-  // is false. However, that currently breaks the tests of the
-  // googCaptureStartNtpTimeMs stat for audio receive streams. To fix, either
-  // delete all dependencies on RTT measurements for audio receive streams, or
-  // ensure that audio receive streams that need RTT and stats that depend on it
-  // are configured with an associated audio send stream.
   if (send_time_ntp != 0) {
     uint32_t delay_ntp = report_block.delay_since_last_sr();
     // Local NTP time.
