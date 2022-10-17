@@ -11,6 +11,8 @@
 
 #include "absl/base/attributes.h"
 #include "absl/base/config.h"
+#include "absl/functional/any_invocable.h"
+#include "api/units/time_delta.h"
 #include "rtc_base/checks.h"
 
 #if defined(ABSL_HAVE_THREAD_LOCAL)
@@ -77,3 +79,69 @@ TaskQueueBase::CurrentTaskQueueSetter::~CurrentTaskQueueSetter() {
 #else
 #error Unsupported platform
 #endif
+
+// Functions to support transition from std::unique_ptr<QueuedTask>
+// representation of a task to absl::AnyInvocable<void() &&> representation. In
+// the base interface older and newer functions call each other. This way
+// TaskQueue would work when classes derived from TaskQueueBase implements
+// either old set of Post functions (before the transition) or new set of Post
+// functions. Thus callers of the interface can be updated independently of all
+// of the implementations of that TaskQueueBase interface.
+
+// TODO(bugs.webrtc.org/14245): Delete these functions when transition is
+// complete.
+namespace webrtc {
+namespace {
+class Task : public QueuedTask {
+ public:
+  explicit Task(absl::AnyInvocable<void() &&> task) : task_(std::move(task)) {}
+  ~Task() override = default;
+
+  bool Run() override {
+    std::move(task_)();
+    return true;
+  }
+
+ private:
+  absl::AnyInvocable<void() &&> task_;
+};
+
+std::unique_ptr<QueuedTask> ToLegacy(absl::AnyInvocable<void() &&> task) {
+  return std::make_unique<Task>(std::move(task));
+}
+
+absl::AnyInvocable<void() &&> FromLegacy(std::unique_ptr<QueuedTask> task) {
+  return [task = std::move(task)]() mutable {
+    if (!task->Run()) {
+      task.release();
+    }
+  };
+}
+
+}  // namespace
+
+void TaskQueueBase::PostTask(std::unique_ptr<QueuedTask> task) {
+  PostTask(FromLegacy(std::move(task)));
+}
+
+void TaskQueueBase::PostTask(absl::AnyInvocable<void() &&> task) {
+  PostTask(ToLegacy(std::move(task)));
+}
+
+void TaskQueueBase::PostDelayedTask(std::unique_ptr<QueuedTask> task,
+                                    uint32_t milliseconds) {
+  PostDelayedTask(FromLegacy(std::move(task)), TimeDelta::Millis(milliseconds));
+}
+
+void TaskQueueBase::PostDelayedTask(absl::AnyInvocable<void() &&> task,
+                                    TimeDelta delay) {
+  PostDelayedTask(ToLegacy(std::move(task)), delay.ms());
+}
+
+void TaskQueueBase::PostDelayedHighPrecisionTask(
+    absl::AnyInvocable<void() &&> task,
+    TimeDelta delay) {
+  PostDelayedHighPrecisionTask(ToLegacy(std::move(task)), delay.ms());
+}
+
+}  // namespace webrtc
