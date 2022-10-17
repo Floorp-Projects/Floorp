@@ -236,12 +236,13 @@ class BaseProxyCode {
             proxyresp.statusMessage,
             proxyresp.headers
           );
-          let rawData = "";
           proxyresp.on("data", chunk => {
-            rawData += chunk;
+            if (!res.writableEnded) {
+              res.write(chunk);
+            }
           });
           proxyresp.on("end", () => {
-            res.end(rawData);
+            res.end();
           });
         }
       )
@@ -251,7 +252,11 @@ class BaseProxyCode {
     if (req.method != "POST") {
       preq.end();
     } else {
-      req.on("data", chunk => preq.write(chunk));
+      req.on("data", chunk => {
+        if (!preq.writableEnded) {
+          preq.write(chunk);
+        }
+      });
       req.on("end", () => preq.end());
     }
   }
@@ -479,11 +484,23 @@ class HTTP2ProxyCode {
                   delete proxyheaders[prop];
                 }
               );
-              stream.respond(
-                Object.assign({ ":status": proxyresp.statusCode }, proxyheaders)
-              );
+              try {
+                stream.respond(
+                  Object.assign(
+                    { ":status": proxyresp.statusCode },
+                    proxyheaders
+                  )
+                );
+              } catch (e) {
+                // The channel may have been closed already.
+                if (e.message != "The stream has been destroyed") {
+                  throw e;
+                }
+              }
               proxyresp.on("data", chunk => {
-                stream.write(chunk);
+                if (stream.writable) {
+                  stream.write(chunk);
+                }
               });
               proxyresp.on("end", () => {
                 stream.end();
@@ -497,7 +514,11 @@ class HTTP2ProxyCode {
         if (headers[":method"] != "POST") {
           req.end();
         } else {
-          stream.on("data", chunk => req.write(chunk));
+          stream.on("data", chunk => {
+            if (!req.writableEnded) {
+              req.write(chunk);
+            }
+          });
           stream.on("end", () => req.end());
         }
         return;
