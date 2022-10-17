@@ -302,6 +302,8 @@ RequestDestination InternalRequest::MapContentPolicyTypeToRequestDestination(
       return RequestDestination::Paintworklet;
     case nsIContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA:
       return RequestDestination::_empty;
+    case nsIContentPolicy::TYPE_WEB_IDENTITY:
+      return RequestDestination::_empty;
     case nsIContentPolicy::TYPE_INVALID:
       break;
       // Do not add default: so that compilers can catch the missing case.

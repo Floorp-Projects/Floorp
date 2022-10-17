@@ -28,6 +28,7 @@ const LOAD_CAUSE_STRINGS = {
   [Ci.nsIContentPolicy.TYPE_FETCH]: "Fetch",
   [Ci.nsIContentPolicy.TYPE_IMAGESET]: "Imageset",
   [Ci.nsIContentPolicy.TYPE_WEB_MANIFEST]: "WebManifest",
+  [Ci.nsIContentPolicy.TYPE_WEB_IDENTITY]: "Webidentity",
 };
 
 export class Network extends Domain {

@@ -106,6 +106,8 @@ nsCString MapInternalContentPolicyTypeToDest(nsContentPolicyType aType) {
       return "empty"_ns;
     case nsIContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA:
       return "empty"_ns;
+    case nsIContentPolicy::TYPE_WEB_IDENTITY:
+      return "webidentity"_ns;
     case nsIContentPolicy::TYPE_INVALID:
       break;
       // Do not add default: so that compilers can catch the missing case.
