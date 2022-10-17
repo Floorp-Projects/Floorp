@@ -114,8 +114,8 @@ int H264DecoderImpl::AVGetBuffer2(AVCodecContext* context,
 
   // FFmpeg expects the initial allocation to be zero-initialized according to
   // http://crbug.com/390941. Our pool is set up to zero-initialize new buffers.
-  // TODO(nisse): Delete that feature from the video pool, instead add
-  // an explicit call to InitializeData here.
+  // TODO(https://crbug.com/390941): Delete that feature from the video pool,
+  // instead add an explicit call to InitializeData here.
   rtc::scoped_refptr<PlanarYuvBuffer> frame_buffer;
   rtc::scoped_refptr<I444Buffer> i444_buffer;
   rtc::scoped_refptr<I420Buffer> i420_buffer;

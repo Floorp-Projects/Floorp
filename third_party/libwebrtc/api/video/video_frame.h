@@ -166,19 +166,15 @@ class RTC_EXPORT VideoFrame {
   int64_t timestamp_us() const { return timestamp_us_; }
   void set_timestamp_us(int64_t timestamp_us) { timestamp_us_ = timestamp_us; }
 
-  // TODO(nisse): After the cricket::VideoFrame and webrtc::VideoFrame
-  // merge, timestamps other than timestamp_us will likely be
-  // deprecated.
-
   // Set frame timestamp (90kHz).
   void set_timestamp(uint32_t timestamp) { timestamp_rtp_ = timestamp; }
 
   // Get frame timestamp (90kHz).
   uint32_t timestamp() const { return timestamp_rtp_; }
 
-  // For now, transport_frame_id and rtp timestamp are the same.
-  // TODO(nisse): Must be handled differently for QUIC.
-  uint32_t transport_frame_id() const { return timestamp(); }
+  [[deprecated("Use timestamp()")]] uint32_t transport_frame_id() const {
+    return timestamp();
+  }
 
   // Set capture ntp time in milliseconds.
   void set_ntp_time_ms(int64_t ntp_time_ms) { ntp_time_ms_ = ntp_time_ms; }
@@ -219,7 +215,6 @@ class RTC_EXPORT VideoFrame {
   }
 
   // Get render time in milliseconds.
-  // TODO(nisse): Deprecated. Migrate all users to timestamp_us().
   int64_t render_time_ms() const;
 
   // Return the underlying buffer. Never nullptr for a properly
@@ -229,7 +224,6 @@ class RTC_EXPORT VideoFrame {
   void set_video_frame_buffer(
       const rtc::scoped_refptr<VideoFrameBuffer>& buffer);
 
-  // TODO(nisse): Deprecated.
   // Return true if the frame is stored in a texture.
   bool is_texture() const {
     return video_frame_buffer()->type() == VideoFrameBuffer::Type::kNative;

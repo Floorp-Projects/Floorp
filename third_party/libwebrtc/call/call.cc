@@ -400,8 +400,8 @@ class Call final : public webrtc::Call,
       RTC_GUARDED_BY(worker_thread_);
   std::set<VideoReceiveStream2*> video_receive_streams_
       RTC_GUARDED_BY(worker_thread_);
-  // TODO(nisse): Should eventually be injected at creation,
-  // with a single object in the bundled case.
+  // TODO(bugs.webrtc.org/7135, bugs.webrtc.org/9719): Should eventually be
+  // injected at creation, with a single object in the bundled case.
   RtpStreamReceiverController audio_receiver_controller_
       RTC_GUARDED_BY(worker_thread_);
   RtpStreamReceiverController video_receiver_controller_
@@ -1541,12 +1541,6 @@ void Call::NotifyBweOfReceivedPacket(const RtpPacketReceived& packet,
 
   if (!use_send_side_bwe && header.extension.hasTransportSequenceNumber) {
     // Inconsistent configuration of send side BWE. Do nothing.
-    // TODO(nisse): Without this check, we may produce RTCP feedback
-    // packets even when not negotiated. But it would be cleaner to
-    // move the check down to RTCPSender::SendFeedbackPacket, which
-    // would also help the PacketRouter to select an appropriate rtp
-    // module in the case that some, but not all, have RTCP feedback
-    // enabled.
     return;
   }
   // For audio, we only support send side BWE.

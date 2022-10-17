@@ -87,7 +87,7 @@ class ChannelSend : public ChannelSendInterface,
                     public RtcpPacketTypeCounterObserver {
  public:
   // TODO(nisse): Make OnUplinkPacketLossRate public, and delete friend
-  // declaration.
+  // declaration. Or delete indirection via VoERtcpObserver.
   friend class VoERtcpObserver;
 
   ChannelSend(Clock* clock,
