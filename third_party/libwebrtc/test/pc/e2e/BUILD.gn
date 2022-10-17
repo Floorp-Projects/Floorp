@@ -236,6 +236,7 @@ if (!build_with_chromium) {
         "../../../api:peer_connection_quality_test_fixture_api",
         "../../../api:scoped_refptr",
         "../../../api:sequence_checker",
+        "../../../api/task_queue:pending_task_safety_flag",
         "../../../modules/audio_processing:api",
         "../../../pc:peerconnection_wrapper",
         "../../../rtc_base:logging",
