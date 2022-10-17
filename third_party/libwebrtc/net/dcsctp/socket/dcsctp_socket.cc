@@ -314,6 +314,7 @@ void DcSctpSocket::CreateTransmissionControlBlock(
     TSN peer_initial_tsn,
     size_t a_rwnd,
     TieTag tie_tag) {
+  metrics_.uses_message_interleaving = capabilities.message_interleaving;
   tcb_ = std::make_unique<TransmissionControlBlock>(
       timer_manager_, log_prefix_, options_, capabilities, callbacks_,
       send_queue_, my_verification_tag, my_initial_tsn, peer_verification_tag,

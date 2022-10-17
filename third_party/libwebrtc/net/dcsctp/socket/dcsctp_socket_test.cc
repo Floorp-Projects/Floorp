@@ -1892,6 +1892,22 @@ TEST(DcSctpSocketTest, InitialMetricsAreUnset) {
   EXPECT_FALSE(a.socket.GetMetrics().has_value());
 }
 
+TEST(DcSctpSocketTest, MessageInterleavingMetricsAreSet) {
+  std::vector<std::pair<bool, bool>> combinations = {
+      {false, false}, {false, true}, {true, false}, {true, true}};
+  for (const auto& [a_enable, z_enable] : combinations) {
+    DcSctpOptions a_options = {.enable_message_interleaving = a_enable};
+    DcSctpOptions z_options = {.enable_message_interleaving = z_enable};
+
+    SocketUnderTest a("A", a_options);
+    SocketUnderTest z("Z", z_options);
+    ConnectSockets(a, z);
+
+    EXPECT_EQ(a.socket.GetMetrics()->uses_message_interleaving,
+              a_enable && z_enable);
+  }
+}
+
 TEST(DcSctpSocketTest, RxAndTxPacketMetricsIncrease) {
   SocketUnderTest a("A");
   SocketUnderTest z("Z");
