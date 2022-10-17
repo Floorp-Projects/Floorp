@@ -17,6 +17,7 @@
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "rtc_base/strings/string_builder.h"
+#include "system_wrappers/include/clock.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_decoder.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_encoder.h"
 #include "test/pc/e2e/analyzer/video/simulcast_dummy_buffer_helper.h"
@@ -86,10 +87,25 @@ class AnalyzingFramePreprocessor
 }  // namespace
 
 VideoQualityAnalyzerInjectionHelper::VideoQualityAnalyzerInjectionHelper(
+    Clock* clock,
     std::unique_ptr<VideoQualityAnalyzerInterface> analyzer,
     EncodedImageDataInjector* injector,
     EncodedImageDataExtractor* extractor)
-    : analyzer_(std::move(analyzer)),
+    : clock_(clock),
+      analyzer_(std::move(analyzer)),
+      injector_(injector),
+      extractor_(extractor) {
+  RTC_DCHECK(clock_);
+  RTC_DCHECK(injector_);
+  RTC_DCHECK(extractor_);
+}
+
+VideoQualityAnalyzerInjectionHelper::VideoQualityAnalyzerInjectionHelper(
+    std::unique_ptr<VideoQualityAnalyzerInterface> analyzer,
+    EncodedImageDataInjector* injector,
+    EncodedImageDataExtractor* extractor)
+    : clock_(nullptr),
+      analyzer_(std::move(analyzer)),
       injector_(injector),
       extractor_(extractor) {
   RTC_DCHECK(injector_);

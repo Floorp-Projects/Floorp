@@ -196,6 +196,7 @@ if (!build_with_chromium) {
         "../../../rtc_base:criticalsection",
         "../../../rtc_base:stringutils",
         "../../../rtc_base/synchronization:mutex",
+        "../../../system_wrappers",
         "../../../test:video_test_common",
         "../../../test:video_test_support",
       ]
