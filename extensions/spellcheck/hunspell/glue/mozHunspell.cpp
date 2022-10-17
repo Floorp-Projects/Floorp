@@ -101,10 +101,6 @@ NS_IMPL_COMPONENT_FACTORY(mozHunspell) {
   return nullptr;
 }
 
-template <>
-mozilla::CountingAllocatorBase<HunspellAllocator>::AmountType
-    mozilla::CountingAllocatorBase<HunspellAllocator>::sAmount(0);
-
 mozHunspell::mozHunspell() {
 #ifdef DEBUG
   // There must be only one instance of this class: it reports memory based on
