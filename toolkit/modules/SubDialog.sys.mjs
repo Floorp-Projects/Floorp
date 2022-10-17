@@ -879,7 +879,7 @@ SubDialog.prototype = {
     if (!focusedElement) {
       // Ensure the focus is pulled out of the content document even if there's
       // nothing focusable in the dialog.
-      this._frame.contentWindow.focus();
+      this._frame.focus();
     }
   },
 
