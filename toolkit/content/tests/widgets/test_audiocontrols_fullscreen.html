@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Audio controls test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <audio id="audio" controls preload="auto"></audio>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  const audio = document.getElementById("audio");
+  const controlBar = getElementWithinVideo(audio, "controlBar");
+
+  add_setup(async function setup() {
+    await new Promise(resolve => {
+      audio.addEventListener("loadedmetadata", resolve, {once: true});
+      audio.src = "audio.wav";
+    });
+  });
+
+  add_task(async function test_double_click_does_not_fullscreen() {
+    SimpleTest.requestCompleteLog();
+    SimpleTest.requestFlakyTimeout("Waiting to ensure that fullscreen event does not fire");
+    const { x, y } = audio.getBoundingClientRect();
+    const endedPromise = new Promise(resolve => {
+      audio.addEventListener("ended", () => {
+        info('Audio ended event fired!');
+        resolve();
+      }, { once: true });
+      setTimeout( () => {
+        info('Audio ran out of time before ended event fired!');
+        resolve();
+      }, audio.duration * 1000);
+    });
+    let noFullscreenEvent = true;
+    document.addEventListener("mozfullscreenchange", () => {
+      noFullscreenEvent = false;
+    }, { once: true });
+    info("Simulate double click on media player.");
+    synthesizeMouse(audio, x, y, { clickCount: 2 });
+    info("Waiting for video to end...");
+    await endedPromise;
+    // By this point, if the double click was going to trigger fullscreen then
+    // it should have happened by now.
+    ok(
+      noFullscreenEvent,
+      "Double clicking should not trigger fullscreen event"
+    );
+  });
+</script>
+</pre>
+</body>
+</html>
