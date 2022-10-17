@@ -1,5 +1,3 @@
-var EXPORTED_SYMBOLS = ["FissionTestHelperParent"];
-
 // This code always runs in the parent process. There is one instance of
 // this class for each "inner window" (should be one per content document,
 // including iframes/nested iframes).
@@ -8,7 +6,7 @@ var EXPORTED_SYMBOLS = ["FissionTestHelperParent"];
 // that they can communicate with each other regardless of which process
 // they live in.
 
-class FissionTestHelperParent extends JSWindowActorParent {
+export class FissionTestHelperParent extends JSWindowActorParent {
   constructor() {
     super();
     this._testCompletePromise = new Promise(resolve => {
