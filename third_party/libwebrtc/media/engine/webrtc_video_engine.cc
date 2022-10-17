@@ -2268,7 +2268,7 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::SetCodec(
 
   parameters_.codec_settings = codec_settings;
 
-  // TODO(nisse): Avoid recreation, it should be enough to call
+  // TODO(bugs.webrtc.org/8830): Avoid recreation, it should be enough to call
   // ReconfigureEncoder.
   RTC_LOG(LS_INFO) << "RecreateWebRtcStream (send) because of SetCodec.";
   RecreateWebRtcStream();

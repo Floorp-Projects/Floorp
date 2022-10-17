@@ -986,7 +986,6 @@ TEST_F(TestSimulcastEncoderAdapterFake,
   EXPECT_FALSE(adapter_->GetEncoderInfo().supports_native_handle);
 }
 
-// TODO(nisse): Reuse definition in webrtc/test/fake_texture_handle.h.
 class FakeNativeBufferI420 : public VideoFrameBuffer {
  public:
   FakeNativeBufferI420(int width, int height, bool allow_to_i420)

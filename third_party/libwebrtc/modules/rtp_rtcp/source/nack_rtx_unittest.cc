@@ -151,8 +151,6 @@ class RtpRtcpRtxNackTest : public ::testing::Test {
     rtp_rtcp_module_->SetStartTimestamp(111111);
 
     // Used for NACK processing.
-    // TODO(nisse): Unclear on which side? It's confusing to use a
-    // single rtp_rtcp module for both send and receive side.
     rtp_rtcp_module_->SetRemoteSSRC(kTestSsrc);
 
     rtp_rtcp_module_->SetRtxSendPayloadType(kRtxPayloadType, kPayloadType);
