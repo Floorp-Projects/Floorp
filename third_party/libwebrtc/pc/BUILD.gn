@@ -2463,7 +2463,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../media:rtc_media_tests_utils",
       "../modules/audio_processing",
       "../modules/audio_processing:api",
-      "../modules/utility",
       "../p2p:p2p_test_utils",
       "../p2p:rtc_p2p",
       "../rtc_base",

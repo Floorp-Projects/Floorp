@@ -32,7 +32,6 @@ rtc_library("pacing") {
 
   deps = [
     ":interval_budget",
-    "..:module_api",
     "../../api:field_trials_view",
     "../../api:field_trials_view",
     "../../api:function_view",
@@ -63,7 +62,6 @@ rtc_library("pacing") {
     "../../system_wrappers:metrics",
     "../rtp_rtcp",
     "../rtp_rtcp:rtp_rtcp_format",
-    "../utility",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/memory",
@@ -106,7 +104,6 @@ if (rtc_include_tests) {
       "../../api/units:data_rate",
       "../../api/units:time_delta",
       "../../api/units:timestamp",
-      "../../modules/utility:mock_process_thread",
       "../../rtc_base:checks",
       "../../rtc_base:rtc_base_tests_utils",
       "../../rtc_base/experiments:alr_experiment",

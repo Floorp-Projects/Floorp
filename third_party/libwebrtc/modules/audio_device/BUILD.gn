@@ -435,7 +435,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../../system_wrappers",
       "../../test:fileutils",
       "../../test:test_support",
-      "../utility",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
     if (is_linux || is_chromeos || is_mac || is_win) {
@@ -462,6 +461,7 @@ if (rtc_include_tests && !build_with_chromium) {
         "../../sdk/android:libjingle_peerconnection_java",
         "../../sdk/android:native_api_jni",
         "../../sdk/android:native_test_jni_onload",
+        "../utility",
       ]
     }
     if (!rtc_include_internal_audio_device) {

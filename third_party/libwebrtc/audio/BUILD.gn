@@ -186,7 +186,6 @@ if (rtc_include_tests) {
       "../modules/pacing",
       "../modules/rtp_rtcp:mock_rtp_rtcp",
       "../modules/rtp_rtcp:rtp_rtcp_format",
-      "../modules/utility",
       "../rtc_base:checks",
       "../rtc_base:macromagic",
       "../rtc_base:refcount",
