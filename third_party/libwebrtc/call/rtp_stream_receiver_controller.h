@@ -35,10 +35,6 @@ class RtpStreamReceiverController
       uint32_t ssrc,
       RtpPacketSinkInterface* sink) override;
 
-  // Thread-safe wrappers for the corresponding RtpDemuxer methods.
-  bool AddSink(uint32_t ssrc, RtpPacketSinkInterface* sink) override;
-  size_t RemoveSink(const RtpPacketSinkInterface* sink) override;
-
   // TODO(bugs.webrtc.org/7135): Not yet responsible for parsing.
   bool OnRtpPacket(const RtpPacketReceived& packet);
 
@@ -55,6 +51,10 @@ class RtpStreamReceiverController
     RtpStreamReceiverController* const controller_;
     RtpPacketSinkInterface* const sink_;
   };
+
+  // Thread-safe wrappers for the corresponding RtpDemuxer methods.
+  bool AddSink(uint32_t ssrc, RtpPacketSinkInterface* sink);
+  bool RemoveSink(const RtpPacketSinkInterface* sink);
 
   // TODO(bugs.webrtc.org/11993): We expect construction and all methods to be
   // called on the same thread/tq. Currently this is the worker thread

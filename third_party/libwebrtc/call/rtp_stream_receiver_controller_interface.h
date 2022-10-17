@@ -36,9 +36,6 @@ class RtpStreamReceiverControllerInterface {
   virtual std::unique_ptr<RtpStreamReceiverInterface> CreateReceiver(
       uint32_t ssrc,
       RtpPacketSinkInterface* sink) = 0;
-  // For registering additional sinks, needed for FlexFEC.
-  virtual bool AddSink(uint32_t ssrc, RtpPacketSinkInterface* sink) = 0;
-  virtual size_t RemoveSink(const RtpPacketSinkInterface* sink) = 0;
 };
 
 }  // namespace webrtc
