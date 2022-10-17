@@ -708,18 +708,18 @@ bool ModuleObject::isInstance(HandleValue value) {
 
 // Declared as static function instead of ModuleObject method in order to
 // avoid recursive #include dependency between frontend and VM.
-static frontend::FunctionDeclarationVector* GetFunctionDeclarations(
+static FunctionDeclarationVector* GetFunctionDeclarations(
     ModuleObject* module) {
   Value value = module->getReservedSlot(ModuleObject::FunctionDeclarationsSlot);
   if (value.isUndefined()) {
     return nullptr;
   }
 
-  return static_cast<frontend::FunctionDeclarationVector*>(value.toPrivate());
+  return static_cast<FunctionDeclarationVector*>(value.toPrivate());
 }
 
-static void InitFunctionDeclarations(
-    ModuleObject* module, frontend::FunctionDeclarationVector&& decls) {
+static void InitFunctionDeclarations(ModuleObject* module,
+                                     FunctionDeclarationVector&& decls) {
   *GetFunctionDeclarations(module) = std::move(decls);
 }
 
@@ -739,8 +739,7 @@ ModuleObject* ModuleObject::create(JSContext* cx) {
   InitReservedSlot(self, ImportBindingsSlot, bindings,
                    MemoryUse::ModuleBindingMap);
 
-  frontend::FunctionDeclarationVector* funDecls =
-      cx->new_<frontend::FunctionDeclarationVector>();
+  FunctionDeclarationVector* funDecls = cx->new_<FunctionDeclarationVector>();
   if (!funDecls) {
     return nullptr;
   }
@@ -755,8 +754,7 @@ void ModuleObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   if (self->hasImportBindings()) {
     gcx->delete_(obj, &self->importBindings(), MemoryUse::ModuleBindingMap);
   }
-  if (frontend::FunctionDeclarationVector* funDecls =
-          GetFunctionDeclarations(self)) {
+  if (FunctionDeclarationVector* funDecls = GetFunctionDeclarations(self)) {
     // Not tracked as these may move between zones on merge.
     gcx->deleteUntracked(funDecls);
   }
@@ -1178,8 +1176,7 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
   }
 #endif
   // |self| initially manages this vector.
-  frontend::FunctionDeclarationVector* funDecls =
-      GetFunctionDeclarations(self.get());
+  FunctionDeclarationVector* funDecls = GetFunctionDeclarations(self.get());
   if (!funDecls) {
     JS_ReportErrorASCII(
         cx, "Module function declarations have already been instantiated");

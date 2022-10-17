@@ -441,11 +441,6 @@ class ScopeStencil {
   }
 };
 
-// See JSOp::Lambda for interepretation of this index.
-using FunctionDeclaration = GCThingIndex;
-using FunctionDeclarationVector =
-    Vector<FunctionDeclaration, 0, js::SystemAllocPolicy>;
-
 class StencilModuleAssertion {
  public:
   TaggedParserAtomIndex key;

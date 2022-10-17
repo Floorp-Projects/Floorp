@@ -25,6 +25,7 @@
 #include "js/AllocPolicy.h"            // js::SystemAllocPolicy
 #include "js/TypeDecls.h"              // JSContext,jsbytecode
 #include "js/UniquePtr.h"              // js::UniquePtr
+#include "js/Vector.h"                 // js::Vector
 #include "util/EnumFlags.h"            // js::EnumFlags
 #include "util/TrailingArray.h"        // js::TrailingArray
 #include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
@@ -794,6 +795,12 @@ struct MemberInitializers {
         numMemberInitializers(0) {
   }
 };
+
+// See JSOp::Lambda for interepretation of this index.
+using FunctionDeclaration = GCThingIndex;
+// Defined here to avoid #include cycle with Stencil.h.
+using FunctionDeclarationVector =
+    Vector<FunctionDeclaration, 0, js::SystemAllocPolicy>;
 
 }  // namespace js
 
