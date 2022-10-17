@@ -1071,7 +1071,12 @@
           statusL10nId = "";
           break;
       }
-      document.l10n.setAttributes(this._findStatusDesc, statusL10nId);
+      if (statusL10nId) {
+        document.l10n.setAttributes(this._findStatusDesc, statusL10nId);
+      } else {
+        delete this._findStatusDesc.dataset.l10nId;
+        this._findStatusDesc.textContent = "";
+      }
     }
 
     updateControlState(result, findPrevious) {
