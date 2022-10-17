@@ -176,7 +176,6 @@ void StreamStatisticianImpl::EnableRetransmitDetection(bool enable) {
 RtpReceiveStats StreamStatisticianImpl::GetStats() const {
   RtpReceiveStats stats;
   stats.packets_lost = cumulative_loss_;
-  // TODO(nisse): Can we return a float instead?
   // Note: internal jitter value is in Q4 and needs to be scaled by 1/16.
   stats.jitter = jitter_q4_ >> 4;
   if (receive_counters_.last_packet_received_timestamp_ms.has_value()) {

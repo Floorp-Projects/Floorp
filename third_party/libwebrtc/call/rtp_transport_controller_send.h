@@ -41,9 +41,6 @@ class Clock;
 class FrameEncryptorInterface;
 class RtcEventLog;
 
-// TODO(nisse): When we get the underlying transports here, we should
-// have one object implementing RtpTransportControllerSendInterface
-// per transport, sharing the same congestion controller.
 class RtpTransportControllerSend final
     : public RtpTransportControllerSendInterface,
       public RtcpBandwidthObserver,

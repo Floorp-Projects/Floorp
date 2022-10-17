@@ -22,10 +22,8 @@ class RtpPacketReceived;
 
 // This class represents the RTP receive parsing and demuxing, for a
 // single RTP session.
-// TODO(nisse): Add RTCP processing, we should aim to terminate RTCP
-// and not leave any RTCP processing to individual receive streams.
-// TODO(nisse): Extract per-packet processing, including parsing and
-// demuxing, into a separate class.
+// TODO(bugs.webrtc.org/7135): Add RTCP processing, we should aim to terminate
+// RTCP and not leave any RTCP processing to individual receive streams.
 class RtpStreamReceiverController
     : public RtpStreamReceiverControllerInterface {
  public:
@@ -41,7 +39,7 @@ class RtpStreamReceiverController
   bool AddSink(uint32_t ssrc, RtpPacketSinkInterface* sink) override;
   size_t RemoveSink(const RtpPacketSinkInterface* sink) override;
 
-  // TODO(nisse): Not yet responsible for parsing.
+  // TODO(bugs.webrtc.org/7135): Not yet responsible for parsing.
   bool OnRtpPacket(const RtpPacketReceived& packet);
 
  private:

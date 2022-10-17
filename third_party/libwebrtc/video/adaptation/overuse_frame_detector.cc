@@ -526,7 +526,7 @@ OveruseFrameDetector::OveruseFrameDetector(
     : options_(field_trials),
       metrics_observer_(metrics_observer),
       num_process_times_(0),
-      // TODO(nisse): Use absl::optional
+      // TODO(bugs.webrtc.org/9078): Use absl::optional
       last_capture_time_us_(-1),
       num_pixels_(0),
       max_framerate_(kDefaultFrameRate),

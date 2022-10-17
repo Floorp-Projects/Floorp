@@ -308,9 +308,6 @@ RTCPSender::FeedbackState ModuleRtpRtcpImpl::GetFeedbackState() {
   return state;
 }
 
-// TODO(nisse): This method shouldn't be called for a receive-only
-// stream. Delete rtp_sender_ check as soon as all applications are
-// updated.
 int32_t ModuleRtpRtcpImpl::SetSendingStatus(const bool sending) {
   if (rtcp_sender_.Sending() != sending) {
     // Sends RTCP BYE when going from true to false

@@ -110,7 +110,6 @@ static void RtpFragmentize(EncodedImage* encoded_image, SFrameBSInfo* info) {
       required_capacity += layerInfo.pNalLengthInByte[nal];
     }
   }
-  // TODO(nisse): Use a cache or buffer pool to avoid allocation?
   auto buffer = EncodedImageBuffer::Create(required_capacity);
   encoded_image->SetEncodedData(buffer);
 
