@@ -254,6 +254,13 @@ panelview[mainview] > .panel-header {
   pointer-events: none;
 }
 
+#nav-bar-customization-target {
+  /* Don't grow if potentially-user-sized elements (like the searchbar or the
+   * bookmarks toolbar item list) are too wide. This forces them to flex to the
+   * available space as much as possible, see bug 1795260. */
+  min-width: 0;
+}
+
 /* Allow dropping a tab on buttons with associated drop actions. */
 #navigator-toolbox[movingtab] > #nav-bar > #nav-bar-customization-target > #personal-bookmarks,
 #navigator-toolbox[movingtab] > #nav-bar > #nav-bar-customization-target > #home-button,
