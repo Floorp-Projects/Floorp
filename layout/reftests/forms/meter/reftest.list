@@ -25,6 +25,7 @@ include default-style/reftest.list
 == block-invalidate.html block-invalidate-ref.html
 == in-cells.html in-cells-ref.html
 == max-height.html max-height-ref.html
+== rounded-corner-clipping.html rounded-corner-clipping-ref.html
 
 # Tests for block and inline orientation in combination with writing-mode
 != meter-orient-vertical.html meter-orient-horizontal.html
