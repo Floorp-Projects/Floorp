@@ -29,7 +29,6 @@
 #include "api/units/time_delta.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "modules/include/module_fec_types.h"
-#include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"  // RTCPPacketType
 #include "modules/rtp_rtcp/source/packet_sequencer.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/tmmb_item.h"
@@ -326,8 +325,6 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
   // Send side
   int64_t nack_last_time_sent_full_ms_;
   uint16_t nack_last_seq_number_sent_;
-
-  RemoteBitrateEstimator* const remote_bitrate_;
 
   RtcpRttStats* const rtt_stats_;
   RepeatingTaskHandle rtt_update_task_ RTC_GUARDED_BY(worker_queue_);
