@@ -13,7 +13,6 @@ use nsstring::{nsCString, nsString};
 use selectors::{NthIndexCache, SelectorList};
 use servo_arc::{Arc, ArcBorrow, RawOffsetArc};
 use smallvec::SmallVec;
-use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::fmt::Write;
 use std::iter;
@@ -5916,16 +5915,12 @@ fn create_context_for_animation<'a>(
     for_smil_animation: bool,
     rule_cache_conditions: &'a mut RuleCacheConditions,
 ) -> Context<'a> {
-    Context {
-        builder: StyleBuilder::for_animation(per_doc_data.stylist.device(), style, parent_style),
-        cached_system_font: None,
-        in_media_query: false,
-        quirks_mode: per_doc_data.stylist.quirks_mode(),
+    Context::new_for_animation(
+        StyleBuilder::for_animation(per_doc_data.stylist.device(), style, parent_style),
         for_smil_animation,
-        for_non_inherited_property: None,
-        container_info: None,
-        rule_cache_conditions: RefCell::new(rule_cache_conditions),
-    }
+        per_doc_data.stylist.quirks_mode(),
+        rule_cache_conditions,
+    )
 }
 
 struct PropertyAndIndex {
