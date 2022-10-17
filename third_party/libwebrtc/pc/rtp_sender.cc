@@ -74,8 +74,8 @@ RtpParameters RestoreEncodingLayers(
     const RtpParameters& parameters,
     const std::vector<std::string>& removed_rids,
     const std::vector<RtpEncodingParameters>& all_layers) {
-  RTC_DCHECK_EQ(parameters.encodings.size() + removed_rids.size(),
-                all_layers.size());
+  RTC_CHECK_EQ(parameters.encodings.size() + removed_rids.size(),
+               all_layers.size());
   RtpParameters result(parameters);
   result.encodings.clear();
   size_t index = 0;
