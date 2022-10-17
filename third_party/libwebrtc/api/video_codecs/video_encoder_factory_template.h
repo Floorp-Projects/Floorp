@@ -46,9 +46,7 @@ template <typename... Ts>
 class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
  public:
   std::vector<SdpVideoFormat> GetSupportedFormats() const override {
-    std::vector<SdpVideoFormat> formats;
-    GetSupportedFormatsInternal<Ts...>(formats);
-    return formats;
+    return GetSupportedFormatsInternal<Ts...>();
   }
 
   std::unique_ptr<VideoEncoder> CreateVideoEncoder(
@@ -86,17 +84,20 @@ class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
   }
 
   template <typename V, typename... Vs>
-  void GetSupportedFormatsInternal(std::vector<SdpVideoFormat>& formats) const {
+  std::vector<SdpVideoFormat> GetSupportedFormatsInternal() const {
     auto supported_formats = V::SupportedFormats();
-    for (const auto& format : supported_formats) {
-      if (!IsFormatInList(format, formats)) {
-        formats.push_back(format);
+
+    if constexpr (sizeof...(Vs) > 0) {
+      // Supported formats may overlap between implementations, so duplicates
+      // should be filtered out.
+      for (const auto& other_format : GetSupportedFormatsInternal<Vs...>()) {
+        if (!IsFormatInList(other_format, supported_formats)) {
+          supported_formats.push_back(other_format);
+        }
       }
     }
 
-    if constexpr (sizeof...(Vs) > 0) {
-      return GetSupportedFormatsInternal<Vs...>(formats);
-    }
+    return supported_formats;
   }
 
   template <typename V, typename... Vs>
