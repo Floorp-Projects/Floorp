@@ -426,33 +426,26 @@ function URLbarrecalculation() {
 /*---------------------------------------------------------------- Tabbar ----------------------------------------------------------------*/
 function setTabbarMode() {
   const tabbarPref = Services.prefs.getIntPref("floorp.browser.tabbar.settings");
-  //hide tabbrowser
-  switch (tabbarPref) {
+  var Tag = document.createElement("style");
+  Tag.setAttribute("id", "tabbardesgin");
+  switch (tabbarPref) { //hide tabbrowser
     case 2:
-      var Tag = document.createElement("style");
-      Tag.setAttribute("id", "tabbardesgin");
       Tag.innerText = `@import url(chrome://browser/skin/tabbar/hide-tabbrowser.css);`
       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
       break;
     // vertical tab CSS
     case 3:
-      var Tag = document.createElement("style");
-      Tag.setAttribute("id", "tabbardesgin");
       Tag.innerText = `@import url(chrome://browser/skin/tabbar/verticaltab.css);`
       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
       window.setTimeout(function () { document.getElementById("titlebar").before(document.getElementById("toolbar-menubar")); }, 2000);
       break;
     //tabs_on_bottom
     case 4:
-      var Tag = document.createElement("style");
-      Tag.setAttribute("id", "tabbardesgin");
       Tag.innerText = `@import url(chrome://browser/skin/tabbar/tabs_on_bottom.css);`
       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
       break;
     // 5 has been removed. v10.3.0
     case 6:
-      var Tag = document.createElement("style");
-      Tag.setAttribute("id", "tabbardesgin");
       Tag.innerText = `@import url(chrome://browser/skin/tabbar/tabbar_on_window_bottom.css);`
       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
       var script = document.createElement("script");
