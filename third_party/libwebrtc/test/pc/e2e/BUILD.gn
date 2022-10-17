@@ -185,6 +185,7 @@ if (!build_with_chromium) {
         ":quality_analyzing_video_decoder",
         ":quality_analyzing_video_encoder",
         ":simulcast_dummy_buffer_helper",
+        "../..:fixed_fps_video_frame_writer_adapter",
         "../..:test_renderer",
         "../../../api:array_view",
         "../../../api:peer_connection_quality_test_fixture_api",

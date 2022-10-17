@@ -21,6 +21,7 @@
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_decoder.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_encoder.h"
 #include "test/pc/e2e/analyzer/video/simulcast_dummy_buffer_helper.h"
+#include "test/testsupport/fixed_fps_video_frame_writer_adapter.h"
 #include "test/video_renderer.h"
 
 namespace webrtc {
@@ -203,8 +204,13 @@ VideoQualityAnalyzerInjectionHelper::MaybeCreateVideoWriter(
   // TODO(titovartem) create only one file writer for simulcast video track.
   // For now this code will be invoked for each simulcast stream separately, but
   // only one file will be used.
-  auto video_writer = std::make_unique<test::Y4mVideoFrameWriterImpl>(
-      file_name.value(), config.width, config.height, config.fps);
+  std::unique_ptr<test::VideoFrameWriter> video_writer =
+      std::make_unique<test::Y4mVideoFrameWriterImpl>(
+          file_name.value(), config.width, config.height, config.fps);
+  if (config.output_dump_use_fixed_framerate) {
+    video_writer = std::make_unique<test::FixedFpsVideoFrameWriterAdapter>(
+        config.fps, clock_, std::move(video_writer));
+  }
   test::VideoFrameWriter* out = video_writer.get();
   video_writers_.push_back(std::move(video_writer));
   return out;

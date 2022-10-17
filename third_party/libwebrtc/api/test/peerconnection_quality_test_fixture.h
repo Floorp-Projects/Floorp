@@ -307,6 +307,9 @@ class PeerConnectionE2EQualityTestFixture {
     // video frames to be dumped. Modulo equals X means every Xth frame will be
     // written to the dump file. The value must be greater than 0.
     int output_dump_sampling_modulo = 1;
+    // If set to true uses fixed frame rate while dumping output video to the
+    // file. `fps` will be used as frame rate.
+    bool output_dump_use_fixed_framerate = false;
     // If true will display input and output video on the user's screen.
     bool show_on_screen = false;
     // If specified, determines a sync group to which this video stream belongs.
