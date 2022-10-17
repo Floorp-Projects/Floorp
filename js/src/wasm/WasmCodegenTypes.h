@@ -105,7 +105,7 @@ class ArgTypeVector {
     if (isSyntheticStackResultPointerArg(i)) {
       return jit::MIRType::StackResults;
     }
-    return ToMIRType(args_[naturalIndex(i)]);
+    return args_[naturalIndex(i)].toMIRType();
   }
 };
 
