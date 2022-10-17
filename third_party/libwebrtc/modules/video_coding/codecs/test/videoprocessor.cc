@@ -19,7 +19,6 @@
 #include <utility>
 
 #include "api/scoped_refptr.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_bitrate_allocator_factory.h"
@@ -340,9 +339,9 @@ int32_t VideoProcessor::VideoProcessorDecodeCompleteCallback::Decoded(
                           .build();
     copy.set_timestamp(image.timestamp());
 
-    task_queue_->PostTask(ToQueuedTask([this, copy]() {
+    task_queue_->PostTask([this, copy]() {
       video_processor_->FrameDecoded(copy, simulcast_svc_idx_);
-    }));
+    });
     return 0;
   }
   video_processor_->FrameDecoded(image, simulcast_svc_idx_);

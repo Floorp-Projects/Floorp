@@ -221,7 +221,7 @@ int NackRequester::OnReceivedPacket(uint16_t seq_num,
 
 void NackRequester::ClearUpTo(uint16_t seq_num) {
   // Called via RtpVideoStreamReceiver2::FrameContinuous on the network thread.
-  worker_thread_->PostTask(ToQueuedTask(task_safety_, [seq_num, this]() {
+  worker_thread_->PostTask(SafeTask(task_safety_.flag(), [seq_num, this]() {
     RTC_DCHECK_RUN_ON(worker_thread_);
     nack_list_.erase(nack_list_.begin(), nack_list_.lower_bound(seq_num));
     keyframe_list_.erase(keyframe_list_.begin(),

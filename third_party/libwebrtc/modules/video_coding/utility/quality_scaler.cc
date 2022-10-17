@@ -13,7 +13,7 @@
 #include <memory>
 #include <utility>
 
-#include "api/task_queue/to_queued_task.h"
+#include "api/units/time_delta.h"
 #include "api/video/video_adaptation_reason.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/quality_scaler_settings.h"
@@ -97,7 +97,7 @@ class QualityScaler::CheckQpTask {
     RTC_DCHECK_EQ(state_, State::kNotStarted);
     state_ = State::kCheckingQp;
     TaskQueueBase::Current()->PostDelayedTask(
-        ToQueuedTask([this_weak_ptr = weak_ptr_factory_.GetWeakPtr(), this] {
+        [this_weak_ptr = weak_ptr_factory_.GetWeakPtr(), this] {
           if (!this_weak_ptr) {
             // The task has been cancelled through destruction.
             return;
@@ -134,8 +134,8 @@ class QualityScaler::CheckQpTask {
           // Starting the next task deletes the pending task. After this line,
           // `this` has been deleted.
           quality_scaler_->StartNextCheckQpTask();
-        }),
-        GetCheckingQpDelayMs());
+        },
+        TimeDelta::Millis(GetCheckingQpDelayMs()));
   }
 
   bool HasCompletedTask() const { return state_ == State::kCompleted; }

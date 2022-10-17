@@ -38,7 +38,6 @@ rtc_library("pacing") {
     "../../api:sequence_checker",
     "../../api/rtc_event_log",
     "../../api/task_queue:task_queue",
-    "../../api/task_queue:to_queued_task",
     "../../api/transport:field_trial_based_config",
     "../../api/transport:network_control",
     "../../api/units:data_rate",
@@ -99,7 +98,6 @@ if (rtc_include_tests) {
       ":interval_budget",
       ":pacing",
       "../../api/task_queue:task_queue",
-      "../../api/task_queue:to_queued_task",
       "../../api/transport:network_control",
       "../../api/units:data_rate",
       "../../api/units:time_delta",
@@ -116,5 +114,6 @@ if (rtc_include_tests) {
       "../rtp_rtcp:mock_rtp_rtcp",
       "../rtp_rtcp:rtp_rtcp_format",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
   }
 }
