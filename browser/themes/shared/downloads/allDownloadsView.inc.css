@@ -14,7 +14,7 @@
 /*** List items ***/
 
 #downloadsListBox > richlistitem {
-  height: 4.5em;
+  min-height: 4.5em;
 }
 
 .downloadTypeIcon {
