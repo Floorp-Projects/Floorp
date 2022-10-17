@@ -714,7 +714,7 @@ fn xpcom_impl(args: AttributeArgs, template: ItemStruct) -> Result<TokenStream, 
                 let new = self.__refcnt.inc();
                 ::xpcom::trace_refcnt::NS_LogAddRef(
                     self as *const _ as *mut ::xpcom::reexports::libc::c_void,
-                    new,
+                    new as usize,
                     #name_for_logs,
                     #size_for_logs,
                 );
@@ -726,7 +726,7 @@ fn xpcom_impl(args: AttributeArgs, template: ItemStruct) -> Result<TokenStream, 
                 let new = self.__refcnt.dec();
                 ::xpcom::trace_refcnt::NS_LogRelease(
                     self as *const _ as *mut ::xpcom::reexports::libc::c_void,
-                    new,
+                    new as usize,
                     #name_for_logs,
                     #size_for_logs,
                 );

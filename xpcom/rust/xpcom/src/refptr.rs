@@ -335,20 +335,18 @@ impl AtomicRefcnt {
 
 #[cfg(feature = "gecko_refcount_logging")]
 pub mod trace_refcnt {
-    use crate::interfaces::nsrefcnt;
-
     extern "C" {
         pub fn NS_LogCtor(aPtr: *mut libc::c_void, aTypeName: *const libc::c_char, aSize: u32);
         pub fn NS_LogDtor(aPtr: *mut libc::c_void, aTypeName: *const libc::c_char, aSize: u32);
         pub fn NS_LogAddRef(
             aPtr: *mut libc::c_void,
-            aRefcnt: nsrefcnt,
+            aRefcnt: usize,
             aClass: *const libc::c_char,
             aClassSize: u32,
         );
         pub fn NS_LogRelease(
             aPtr: *mut libc::c_void,
-            aRefcnt: nsrefcnt,
+            aRefcnt: usize,
             aClass: *const libc::c_char,
             aClassSize: u32,
         );
@@ -359,8 +357,6 @@ pub mod trace_refcnt {
 // is disabled.
 #[cfg(not(feature = "gecko_refcount_logging"))]
 pub mod trace_refcnt {
-    use crate::interfaces::nsrefcnt;
-
     #[inline]
     #[allow(non_snake_case)]
     pub unsafe extern "C" fn NS_LogCtor(_: *mut libc::c_void, _: *const libc::c_char, _: u32) {}
@@ -371,7 +367,7 @@ pub mod trace_refcnt {
     #[allow(non_snake_case)]
     pub unsafe extern "C" fn NS_LogAddRef(
         _: *mut libc::c_void,
-        _: nsrefcnt,
+        _: usize,
         _: *const libc::c_char,
         _: u32,
     ) {
@@ -380,7 +376,7 @@ pub mod trace_refcnt {
     #[allow(non_snake_case)]
     pub unsafe extern "C" fn NS_LogRelease(
         _: *mut libc::c_void,
-        _: nsrefcnt,
+        _: usize,
         _: *const libc::c_char,
         _: u32,
     ) {
