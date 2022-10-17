@@ -99,18 +99,6 @@ VideoQualityAnalyzerInjectionHelper::VideoQualityAnalyzerInjectionHelper(
   RTC_DCHECK(injector_);
   RTC_DCHECK(extractor_);
 }
-
-VideoQualityAnalyzerInjectionHelper::VideoQualityAnalyzerInjectionHelper(
-    std::unique_ptr<VideoQualityAnalyzerInterface> analyzer,
-    EncodedImageDataInjector* injector,
-    EncodedImageDataExtractor* extractor)
-    : clock_(nullptr),
-      analyzer_(std::move(analyzer)),
-      injector_(injector),
-      extractor_(extractor) {
-  RTC_DCHECK(injector_);
-  RTC_DCHECK(extractor_);
-}
 VideoQualityAnalyzerInjectionHelper::~VideoQualityAnalyzerInjectionHelper() =
     default;
 

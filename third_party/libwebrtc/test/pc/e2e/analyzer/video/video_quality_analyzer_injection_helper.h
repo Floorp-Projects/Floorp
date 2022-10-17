@@ -45,11 +45,6 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
       std::unique_ptr<VideoQualityAnalyzerInterface> analyzer,
       EncodedImageDataInjector* injector,
       EncodedImageDataExtractor* extractor);
-  // TODO(titovartem): remove after migrating downstreams.
-  VideoQualityAnalyzerInjectionHelper(
-      std::unique_ptr<VideoQualityAnalyzerInterface> analyzer,
-      EncodedImageDataInjector* injector,
-      EncodedImageDataExtractor* extractor);
   ~VideoQualityAnalyzerInjectionHelper() override;
 
   // Wraps video encoder factory to give video quality analyzer access to frames
