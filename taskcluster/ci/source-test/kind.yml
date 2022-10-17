@@ -18,7 +18,6 @@ kind-dependencies:
 
 jobs-from:
     - clang.yml
-    - codeql.yml
     - cram.yml
     - doc.yml
     - file-metadata.yml
