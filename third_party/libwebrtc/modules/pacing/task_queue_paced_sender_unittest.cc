@@ -23,7 +23,6 @@
 #include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
 #include "modules/pacing/packet_router.h"
-#include "modules/utility/include/mock/mock_process_thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/scoped_key_value_config.h"
