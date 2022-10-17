@@ -581,7 +581,6 @@ ChannelReceive::ChannelReceive(
     InitFrameTransformerDelegate(std::move(frame_transformer));
 
   rtp_rtcp_ = ModuleRtpRtcpImpl2::Create(configuration);
-  rtp_rtcp_->SetSendingMediaStatus(false);
   rtp_rtcp_->SetRemoteSSRC(remote_ssrc_);
 
   // Ensure that RTCP is enabled for the created channel.
