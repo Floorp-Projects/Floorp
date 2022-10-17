@@ -164,8 +164,6 @@ class MultithreadedFakeH264Encoder : public test::FakeH264Encoder {
   int32_t Release() override;
 
  protected:
-  class EncodeTask;
-
   TaskQueueFactory* const task_queue_factory_;
   int current_queue_ RTC_GUARDED_BY(sequence_checker_);
   std::unique_ptr<TaskQueueBase, TaskQueueDeleter> queue1_

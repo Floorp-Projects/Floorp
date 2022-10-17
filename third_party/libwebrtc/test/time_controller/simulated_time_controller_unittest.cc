@@ -106,22 +106,18 @@ TEST(SimulatedTimeControllerTest, Example) {
   task_queue.PostTask(
       [handle = std::move(handle)]() mutable { handle.Stop(); });
 
-  struct Destructor {
-    void operator()() { object.reset(); }
-    std::unique_ptr<ObjectOnTaskQueue> object;
-  };
-  task_queue.PostTask(Destructor{std::move(object)});
+  task_queue.PostTask([object = std::move(object)] {});
 }
 
 TEST(SimulatedTimeControllerTest, DelayTaskRunOnTime) {
   GlobalSimulatedTimeController time_simulation(kStartTime);
-  rtc::TaskQueue task_queue(
+  std::unique_ptr<TaskQueueBase, TaskQueueDeleter> task_queue =
       time_simulation.GetTaskQueueFactory()->CreateTaskQueue(
-          "TestQueue", TaskQueueFactory::Priority::NORMAL));
+          "TestQueue", TaskQueueFactory::Priority::NORMAL);
 
   bool delay_task_executed = false;
-  task_queue.PostDelayedTask(ToQueuedTask([&] { delay_task_executed = true; }),
-                             10);
+  task_queue->PostDelayedTask([&] { delay_task_executed = true; },
+                              TimeDelta::Millis(10));
 
   time_simulation.AdvanceTime(TimeDelta::Millis(10));
   EXPECT_TRUE(delay_task_executed);

@@ -17,7 +17,6 @@
 #include <memory>
 #include <string>
 
-#include "api/task_queue/queued_task.h"
 #include "api/video/video_content_type.h"
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
 #include "modules/video_coding/include/video_codec_interface.h"
@@ -403,26 +402,6 @@ int32_t MultithreadedFakeH264Encoder::InitEncode(const VideoCodec* config,
   return FakeH264Encoder::InitEncode(config, settings);
 }
 
-class MultithreadedFakeH264Encoder::EncodeTask : public QueuedTask {
- public:
-  EncodeTask(MultithreadedFakeH264Encoder* encoder,
-             const VideoFrame& input_image,
-             const std::vector<VideoFrameType>* frame_types)
-      : encoder_(encoder),
-        input_image_(input_image),
-        frame_types_(*frame_types) {}
-
- private:
-  bool Run() override {
-    encoder_->EncodeCallback(input_image_, &frame_types_);
-    return true;
-  }
-
-  MultithreadedFakeH264Encoder* const encoder_;
-  VideoFrame input_image_;
-  std::vector<VideoFrameType> frame_types_;
-};
-
 int32_t MultithreadedFakeH264Encoder::Encode(
     const VideoFrame& input_image,
     const std::vector<VideoFrameType>* frame_types) {
@@ -435,7 +414,9 @@ int32_t MultithreadedFakeH264Encoder::Encode(
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
 
-  queue->PostTask(std::make_unique<EncodeTask>(this, input_image, frame_types));
+  queue->PostTask([this, input_image, frame_types = *frame_types] {
+    EncodeCallback(input_image, &frame_types);
+  });
 
   return WEBRTC_VIDEO_CODEC_OK;
 }

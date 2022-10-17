@@ -348,6 +348,7 @@ if (!build_with_chromium) {
         "test_activities_executor.h",
       ]
       deps = [
+        "../../../api/task_queue",
         "../../../api/units:time_delta",
         "../../../api/units:timestamp",
         "../../../rtc_base:checks",
