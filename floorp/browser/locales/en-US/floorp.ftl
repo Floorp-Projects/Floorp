@@ -79,7 +79,7 @@ allow-auto-restart =
  .label = Automatic restart when settings are changed that require a restart
 
 browser-rest-mode =
- .label = Enable Rest-mode Shortcut key
+ .label = Enable Rest-mode hotkey (F9)
 
 floorp-updater = { -brand-short-name } Updater Settings
 enable-floorp-updater = 
@@ -261,7 +261,7 @@ newtab-background-not-background =
 ################################################################### browser ###############################################################
 
 rest-mode = Taking a break...
-rest-mode-description = Browser is stopped. press OK or press a key to resume.
+rest-mode-description = Browser is stopped. Press ENTER or OK to continue.
 
 Sidebar2 =
   .label = Browser Manager Sidebar
