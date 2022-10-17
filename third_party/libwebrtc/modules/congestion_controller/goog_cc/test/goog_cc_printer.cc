@@ -136,10 +136,10 @@ void GoogCcStatePrinter::PrintHeaders(RtcEventLogOutput* log) {
   int ix = 0;
   for (const auto& logger : loggers_) {
     if (ix++)
-      log->Write(absl::string_view(" "));
+      log->Write(" ");
     log->Write(logger->name());
   }
-  log->Write(absl::string_view("\n"));
+  log->Write("\n");
   log->Flush();
 }
 
@@ -160,11 +160,11 @@ void GoogCcStatePrinter::PrintState(RtcEventLogOutput* log,
   int ix = 0;
   for (const auto& logger : loggers_) {
     if (ix++)
-      log->Write(absl::string_view(" "));
+      log->Write(" ");
     logger->WriteValue(log);
   }
 
-  log->Write(absl::string_view("\n"));
+  log->Write("\n");
   log->Flush();
 }
 
