@@ -1486,6 +1486,8 @@ public class GeckoAppShell {
     try {
       if (on) {
         Log.e(LOGTAG, "Setting communication mode ON");
+        // This shouldn't throw, but does throw NullPointerException on a very
+        // small number of devices.
         am.startBluetoothSco();
         am.setBluetoothScoOn(true);
       } else {
@@ -1493,7 +1495,7 @@ public class GeckoAppShell {
         am.stopBluetoothSco();
         am.setBluetoothScoOn(false);
       }
-    } catch (final SecurityException e) {
+    } catch (final SecurityException | NullPointerException e) {
       Log.e(LOGTAG, "could not set communication mode", e);
     }
   }
