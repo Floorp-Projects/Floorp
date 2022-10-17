@@ -10,10 +10,6 @@ ifdef CROSS_COMPILE
 SKIP = 1
 endif
 
-ifdef CODEQL_DIST
-SKIP = 1
-endif
-
 ifneq ($(SKIP),1)
 
 ifeq ($(OS_TARGET),WINNT)
