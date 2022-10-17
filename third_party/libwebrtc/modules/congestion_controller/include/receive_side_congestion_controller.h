@@ -17,8 +17,8 @@
 #include "api/transport/field_trial_based_config.h"
 #include "api/transport/network_control.h"
 #include "api/units/data_rate.h"
+#include "api/units/time_delta.h"
 #include "modules/congestion_controller/remb_throttler.h"
-#include "modules/include/module.h"
 #include "modules/pacing/packet_router.h"
 #include "modules/remote_bitrate_estimator/remote_estimator_proxy.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -68,15 +68,12 @@ class ReceiveSideCongestionController : public CallStatsObserver {
   // Noop if receive side bwe is not used or stream doesn't participate in it.
   void RemoveStream(uint32_t ssrc);
 
-  [[deprecated]] int64_t TimeUntilNextProcess();
-  [[deprecated]] void Process();
-
   // Runs periodic tasks if it is time to run them, returns time until next
   // call to `MaybeProcess` should be non idle.
   TimeDelta MaybeProcess();
 
  private:
-  class WrappingBitrateEstimator : public RemoteBitrateEstimator {
+  class WrappingBitrateEstimator {
    public:
     WrappingBitrateEstimator(RemoteBitrateObserver* observer, Clock* clock);
 
@@ -85,24 +82,22 @@ class ReceiveSideCongestionController : public CallStatsObserver {
     WrappingBitrateEstimator& operator=(const WrappingBitrateEstimator&) =
         delete;
 
-    ~WrappingBitrateEstimator() override;
+    ~WrappingBitrateEstimator();
 
     void IncomingPacket(int64_t arrival_time_ms,
                         size_t payload_size,
-                        const RTPHeader& header) override;
+                        const RTPHeader& header);
 
-    void Process() override;
+    TimeDelta Process();
 
-    int64_t TimeUntilNextProcess() override;
+    void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms);
 
-    void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) override;
-
-    void RemoveStream(unsigned int ssrc) override;
+    void RemoveStream(unsigned int ssrc);
 
     bool LatestEstimate(std::vector<unsigned int>* ssrcs,
-                        unsigned int* bitrate_bps) const override;
+                        unsigned int* bitrate_bps) const;
 
-    void SetMinBitrate(int min_bitrate_bps) override;
+    void SetMinBitrate(int min_bitrate_bps);
 
    private:
     void PickEstimatorFromHeader(const RTPHeader& header)

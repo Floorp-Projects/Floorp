@@ -44,15 +44,9 @@ void ReceiveSideCongestionController::WrappingBitrateEstimator::IncomingPacket(
   rbe_->IncomingPacket(arrival_time_ms, payload_size, header);
 }
 
-void ReceiveSideCongestionController::WrappingBitrateEstimator::Process() {
+TimeDelta ReceiveSideCongestionController::WrappingBitrateEstimator::Process() {
   MutexLock lock(&mutex_);
-  rbe_->Process();
-}
-
-int64_t ReceiveSideCongestionController::WrappingBitrateEstimator::
-    TimeUntilNextProcess() {
-  MutexLock lock(&mutex_);
-  return rbe_->TimeUntilNextProcess();
+  return rbe_->Process();
 }
 
 void ReceiveSideCongestionController::WrappingBitrateEstimator::OnRttUpdate(
@@ -171,22 +165,9 @@ void ReceiveSideCongestionController::OnBitrateChanged(int bitrate_bps) {
   remote_estimator_proxy_.OnBitrateChanged(bitrate_bps);
 }
 
-int64_t ReceiveSideCongestionController::TimeUntilNextProcess() {
-  return remote_bitrate_estimator_.TimeUntilNextProcess();
-}
-
-void ReceiveSideCongestionController::Process() {
-  remote_bitrate_estimator_.Process();
-}
-
 TimeDelta ReceiveSideCongestionController::MaybeProcess() {
   Timestamp now = clock_.CurrentTime();
-  int64_t time_until_rbe_ms = remote_bitrate_estimator_.TimeUntilNextProcess();
-  if (time_until_rbe_ms <= 0) {
-    remote_bitrate_estimator_.Process();
-    time_until_rbe_ms = remote_bitrate_estimator_.TimeUntilNextProcess();
-  }
-  TimeDelta time_until_rbe = TimeDelta::Millis(time_until_rbe_ms);
+  TimeDelta time_until_rbe = remote_bitrate_estimator_.Process();
   TimeDelta time_until_rep = remote_estimator_proxy_.Process(now);
   TimeDelta time_until = std::min(time_until_rbe, time_until_rep);
   return std::max(time_until, TimeDelta::Zero());

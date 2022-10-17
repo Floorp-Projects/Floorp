@@ -27,7 +27,6 @@ rtc_library("congestion_controller") {
   ]
 
   deps = [
-    "..:module_api",
     "../../api/transport:field_trial_based_config",
     "../../api/transport:network_control",
     "../../api/units:data_rate",
