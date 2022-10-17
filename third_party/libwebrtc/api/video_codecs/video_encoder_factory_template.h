@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "api/array_view.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "modules/video_coding/svc/scalability_mode_util.h"
@@ -62,9 +63,14 @@ class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
   }
 
  private:
-  template <typename V>
-  bool IsFormatSupported(const SdpVideoFormat& format) const {
-    return absl::c_count(V::SupportedFormats(), format) > 0;
+  bool IsFormatInList(
+      const SdpVideoFormat& format,
+      rtc::ArrayView<const SdpVideoFormat> supported_formats) const {
+    return absl::c_any_of(
+        supported_formats, [&](const SdpVideoFormat& supported_format) {
+          return supported_format.name == format.name &&
+                 supported_format.parameters == format.parameters;
+        });
   }
 
   template <typename V>
@@ -83,7 +89,7 @@ class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
   void GetSupportedFormatsInternal(std::vector<SdpVideoFormat>& formats) const {
     auto supported_formats = V::SupportedFormats();
     for (const auto& format : supported_formats) {
-      if (absl::c_count(formats, format) == 0) {
+      if (!IsFormatInList(format, formats)) {
         formats.push_back(format);
       }
     }
@@ -96,7 +102,7 @@ class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
   template <typename V, typename... Vs>
   std::unique_ptr<VideoEncoder> CreateVideoEncoderInternal(
       const SdpVideoFormat& format) {
-    if (IsFormatSupported<V>(format)) {
+    if (IsFormatInList(format, V::SupportedFormats())) {
       return V::CreateEncoder(format);
     }
 
@@ -111,7 +117,7 @@ class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
   CodecSupport QueryCodecSupportInternal(
       const SdpVideoFormat& format,
       const absl::optional<std::string>& scalability_mode) const {
-    if (IsFormatSupported<V>(format)) {
+    if (IsFormatInList(format, V::SupportedFormats())) {
       return {.is_supported = IsScalabilityModeSupported<V>(scalability_mode)};
     }
 
