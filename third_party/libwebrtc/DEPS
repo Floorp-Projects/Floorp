@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '40b11309e80fb7d5bb828767c3ad0f4c0bfc32be',
+  'chromium_revision': 'af0b70c101a8fde7159aacab9a9aa97167353f4a',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -20,15 +20,15 @@ vars = {
 
   # By default, download the fuchsia sdk from the public sdk directory.
   'fuchsia_sdk_cipd_prefix': 'fuchsia/sdk/gn/',
-  'fuchsia_version': 'version:8.20220705.2.1',
+  'fuchsia_version': 'version:8.20220705.3.1',
 }
 
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@f09da4077a44897412a4ff2cfeee8e314b95a490',
+    'https://chromium.googlesource.com/chromium/src/base@a5bb8487105609ad37b31756b248704400421c83',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@8e2dfba5dcfe22609f32f3f96f5fcfa1db7af9d4',
+    'https://chromium.googlesource.com/chromium/src/build@f855a2b23028d7a155ded0e81916f2a053be9f6f',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@34f9ff8fd5f494bf2b886337e6ef6fcea414cb11',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -37,13 +37,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@12088252a0d469f7a8509d19cf1fbe92f63aa7b6',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@b59d3b3950b564f1cee830b55fc5b9461ac294ca',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@b1bb36f4d71767160215be6aa669c71e1571a9b4',
+    'https://chromium.googlesource.com/chromium/src/testing@ffe4aea6f0a7bfea83f551cbd8df6b297a2b420d',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@15e59d20ef41e62e3428346e060dae19c2256257',
+    'https://chromium.googlesource.com/chromium/src/third_party@f84ab38ac7358e4f84d18ee597830b58f9e05196',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -223,7 +223,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@28934fcd20d1fa20ea8d21ac6f93391b4b7e348d',
+    'https://android.googlesource.com/platform/external/perfetto.git@b1989b0ff009c79d1d9e3f6b13b2e017ba2e5c9d',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@711bef67400f096416cb1ba7f6560e533871490f',
   'src/third_party/libyuv':
@@ -248,7 +248,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/r8',
-              'version': 'YYmB-DSqgEMUFtrSQw6plpnZygVruQmxrc3Qqeac8ZEC',
+              'version': 'HmHfvTcsLzsBa_zD-K3mzWcLgCCjj2q2C0G7yLng82wC',
           },
       ],
       'condition': 'checkout_android',
@@ -274,7 +274,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@4a2fdd6648114a1a36011add5208d573ce132217',
+    'https://chromium.googlesource.com/chromium/src/tools@1d1f9f153705bec027837aed6a6de04040637b94',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -373,7 +373,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'g9HIhocBsCFlSh1b6fzvSBJB8WIKPqyWsauldtRS4DIC',
+          'version': 'b_tAKDL0dC5K8jiRRvQK5XNLJbu5xNUQqGkvSI-hFIMC',
       },
     ],
     'condition': 'checkout_android',
@@ -419,7 +419,7 @@ deps = {
           },
           {
               'package': 'chromium/third_party/android_sdk/public/cmdline-tools',
-              'version': 'PGPmqJtSIQ84If155ba7iTU846h5WJ-bL5d_OoUWEWYC',
+              'version': 'IPzAG-uU5zVMxohpg9-7-N0tQC1TCSW1VbrBFw7Ld04C',
           },
       ],
       'condition': 'checkout_android',
