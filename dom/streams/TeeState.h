@@ -12,7 +12,6 @@
 #include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/ReadableStreamDefaultReader.h"
 #include "mozilla/dom/Promise.h"
-#include "nsISupportsBase.h"
 
 namespace mozilla::dom {
 

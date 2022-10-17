@@ -13,7 +13,7 @@
 #include "nsID.h"
 #include "nsIFrame.h"  // only for LayoutFrameType
 #include "nsIMutationObserver.h"
-#include "nsISupportsBase.h"
+#include "nsISupports.h"
 #include "nsISupportsImpl.h"
 #include "nsIReferrerInfo.h"
 #include "nsStringFwd.h"

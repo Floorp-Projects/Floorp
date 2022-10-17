@@ -34,7 +34,7 @@
 #include "nsIContent.h"
 #include "nsIHTMLCollection.h"
 #include "nsINode.h"
-#include "nsISupportsBase.h"
+#include "nsISupports.h"
 #include "nsLiteralString.h"
 #include "nsNameSpaceManager.h"
 #include "nsPrintfCString.h"

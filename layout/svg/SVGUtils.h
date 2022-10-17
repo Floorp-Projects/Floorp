@@ -23,7 +23,7 @@
 #include "nsCOMPtr.h"
 #include "nsID.h"
 #include "nsIFrame.h"
-#include "nsISupportsBase.h"
+#include "nsISupports.h"
 #include "nsMathUtils.h"
 #include "nsStyleStruct.h"
 #include <algorithm>

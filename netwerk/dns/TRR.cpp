@@ -14,7 +14,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIIOService.h"
 #include "nsIInputStream.h"
-#include "nsISupportsBase.h"
+#include "nsISupports.h"
 #include "nsISupportsUtils.h"
 #include "nsITimedChannel.h"
 #include "nsIUploadChannel2.h"

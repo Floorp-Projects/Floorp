@@ -16,7 +16,7 @@
 #include <ctime>
 #include "nsHostResolver.h"
 #include "nsError.h"
-#include "nsISupportsBase.h"
+#include "nsISupports.h"
 #include "nsISupportsUtils.h"
 #include "nsIThreadManager.h"
 #include "nsComponentManagerUtils.h"
