@@ -86,29 +86,27 @@ class AgcManagerDirect final {
   }
 
  private:
-  friend class AgcManagerDirectTest;
+  friend class AgcManagerDirectTestHelper;
 
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
-                           DisableDigitalDisablesDigital);
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest, DisableDigitalDisablesDigital);
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest,
                            AgcMinMicLevelExperimentDefault);
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest,
                            AgcMinMicLevelExperimentDisabled);
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest,
                            AgcMinMicLevelExperimentOutOfRangeAbove);
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest,
                            AgcMinMicLevelExperimentOutOfRangeBelow);
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest,
                            AgcMinMicLevelExperimentEnabled50);
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest,
                            AgcMinMicLevelExperimentEnabledAboveStartupLevel);
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
-                           ClippingParametersVerified);
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest, ClippingParametersVerified);
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest,
                            DisableClippingPredictorDoesNotLowerVolume);
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest,
                            UsedClippingPredictionsProduceLowerAnalogLevels);
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest,
                            UnusedClippingPredictionsProduceEqualAnalogLevels);
 
   // Dependency injection for testing. Don't delete `agc` as the memory is owned
