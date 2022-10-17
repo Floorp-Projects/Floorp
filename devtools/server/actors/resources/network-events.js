@@ -15,11 +15,24 @@ const Targets = require("resource://devtools/server/actors/targets/index.js");
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  NetworkObserver:
+loader.lazyGetter(lazy, "NetworkObserver", () => {
+  const {
+    NetworkObserver,
+  } = ChromeUtils.importESModule(
     "resource://devtools/server/actors/network-monitor/NetworkObserver.sys.mjs",
-  NetworkUtils:
+    { loadInDevToolsLoader: loader.invisibleToDebugger }
+  );
+  return NetworkObserver;
+});
+
+loader.lazyGetter(lazy, "NetworkUtils", () => {
+  const {
+    NetworkUtils,
+  } = ChromeUtils.importESModule(
     "resource://devtools/server/actors/network-monitor/utils/NetworkUtils.sys.mjs",
+    { loadInDevToolsLoader: loader.invisibleToDebugger }
+  );
+  return NetworkUtils;
 });
 
 loader.lazyRequireGetter(
