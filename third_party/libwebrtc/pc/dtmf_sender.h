@@ -19,11 +19,11 @@
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
+#include "api/task_queue/task_queue_base.h"
 #include "pc/proxy.h"
 #include "rtc_base/location.h"
 #include "rtc_base/ref_count.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
-#include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 
 // DtmfSender is the native implementation of the RTCDTMFSender defined by
@@ -53,7 +53,7 @@ class DtmfProviderInterface {
 
 class DtmfSender : public DtmfSenderInterface, public sigslot::has_slots<> {
  public:
-  static rtc::scoped_refptr<DtmfSender> Create(rtc::Thread* signaling_thread,
+  static rtc::scoped_refptr<DtmfSender> Create(TaskQueueBase* signaling_thread,
                                                DtmfProviderInterface* provider);
 
   // Implements DtmfSenderInterface.
@@ -70,7 +70,7 @@ class DtmfSender : public DtmfSenderInterface, public sigslot::has_slots<> {
   int comma_delay() const override;
 
  protected:
-  DtmfSender(rtc::Thread* signaling_thread, DtmfProviderInterface* provider);
+  DtmfSender(TaskQueueBase* signaling_thread, DtmfProviderInterface* provider);
   virtual ~DtmfSender();
 
   DtmfSender(const DtmfSender&) = delete;
@@ -90,7 +90,7 @@ class DtmfSender : public DtmfSenderInterface, public sigslot::has_slots<> {
   void StopSending() RTC_RUN_ON(signaling_thread_);
 
   DtmfSenderObserverInterface* observer_ RTC_GUARDED_BY(signaling_thread_);
-  rtc::Thread* signaling_thread_;
+  TaskQueueBase* const signaling_thread_;
   DtmfProviderInterface* provider_ RTC_GUARDED_BY(signaling_thread_);
   std::string tones_ RTC_GUARDED_BY(signaling_thread_);
   int duration_ RTC_GUARDED_BY(signaling_thread_);

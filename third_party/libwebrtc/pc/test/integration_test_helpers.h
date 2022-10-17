@@ -54,9 +54,9 @@
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_factory.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/uma_metrics.h"
+#include "api/units/time_delta.h"
 #include "api/video/video_rotation.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_decoder_factory.h"
@@ -1007,11 +1007,11 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
       RelaySdpMessageIfReceiverExists(type, msg);
     } else {
       rtc::Thread::Current()->PostDelayedTask(
-          ToQueuedTask(task_safety_.flag(),
-                       [this, type, msg] {
-                         RelaySdpMessageIfReceiverExists(type, msg);
-                       }),
-          signaling_delay_ms_);
+          SafeTask(task_safety_.flag(),
+                   [this, type, msg] {
+                     RelaySdpMessageIfReceiverExists(type, msg);
+                   }),
+          TimeDelta::Millis(signaling_delay_ms_));
     }
   }
 
@@ -1030,12 +1030,12 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
       RelayIceMessageIfReceiverExists(sdp_mid, sdp_mline_index, msg);
     } else {
       rtc::Thread::Current()->PostDelayedTask(
-          ToQueuedTask(task_safety_.flag(),
-                       [this, sdp_mid, sdp_mline_index, msg] {
-                         RelayIceMessageIfReceiverExists(sdp_mid,
-                                                         sdp_mline_index, msg);
-                       }),
-          signaling_delay_ms_);
+          SafeTask(task_safety_.flag(),
+                   [this, sdp_mid, sdp_mline_index, msg] {
+                     RelayIceMessageIfReceiverExists(sdp_mid, sdp_mline_index,
+                                                     msg);
+                   }),
+          TimeDelta::Millis(signaling_delay_ms_));
     }
   }
 

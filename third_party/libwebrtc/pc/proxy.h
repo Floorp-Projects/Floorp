@@ -123,7 +123,7 @@ class ReturnType<void> {
 };
 
 template <typename C, typename R, typename... Args>
-class MethodCall : public QueuedTask {
+class MethodCall {
  public:
   typedef R (C::*Method)(Args...);
   MethodCall(C* c, Method m, Args&&... args)
@@ -135,19 +135,16 @@ class MethodCall : public QueuedTask {
     if (t->IsCurrent()) {
       Invoke(std::index_sequence_for<Args...>());
     } else {
-      t->PostTask(std::unique_ptr<QueuedTask>(this));
+      t->PostTask([this] {
+        Invoke(std::index_sequence_for<Args...>());
+        event_.Set();
+      });
       event_.Wait(rtc::Event::kForever);
     }
     return r_.moved_result();
   }
 
  private:
-  bool Run() override {
-    Invoke(std::index_sequence_for<Args...>());
-    event_.Set();
-    return false;
-  }
-
   template <size_t... Is>
   void Invoke(std::index_sequence<Is...>) {
     r_.Invoke(c_, m_, std::move(std::get<Is>(args_))...);
@@ -161,7 +158,7 @@ class MethodCall : public QueuedTask {
 };
 
 template <typename C, typename R, typename... Args>
-class ConstMethodCall : public QueuedTask {
+class ConstMethodCall {
  public:
   typedef R (C::*Method)(Args...) const;
   ConstMethodCall(const C* c, Method m, Args&&... args)
@@ -173,19 +170,16 @@ class ConstMethodCall : public QueuedTask {
     if (t->IsCurrent()) {
       Invoke(std::index_sequence_for<Args...>());
     } else {
-      t->PostTask(std::unique_ptr<QueuedTask>(this));
+      t->PostTask([this] {
+        Invoke(std::index_sequence_for<Args...>());
+        event_.Set();
+      });
       event_.Wait(rtc::Event::kForever);
     }
     return r_.moved_result();
   }
 
  private:
-  bool Run() override {
-    Invoke(std::index_sequence_for<Args...>());
-    event_.Set();
-    return false;
-  }
-
   template <size_t... Is>
   void Invoke(std::index_sequence<Is...>) {
     r_.Invoke(c_, m_, std::move(std::get<Is>(args_))...);

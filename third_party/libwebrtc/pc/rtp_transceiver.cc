@@ -21,7 +21,6 @@
 #include "api/peer_connection_interface.h"
 #include "api/rtp_parameters.h"
 #include "api/sequence_checker.h"
-#include "api/task_queue/to_queued_task.h"
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
 #include "media/base/media_engine.h"
@@ -287,8 +286,8 @@ void RtpTransceiver::SetChannel(
     channel_->SetRtpTransport(transport_lookup(channel_->mid()));
     channel_->SetFirstPacketReceivedCallback(
         [thread = thread_, flag = signaling_thread_safety_, this]() mutable {
-          thread->PostTask(ToQueuedTask(std::move(flag),
-                                        [this]() { OnFirstPacketReceived(); }));
+          thread->PostTask(
+              SafeTask(std::move(flag), [this]() { OnFirstPacketReceived(); }));
         });
   });
   PushNewMediaChannelAndDeleteChannel(nullptr);

@@ -15,7 +15,7 @@
 #include <string>
 #include <utility>
 
-#include "api/task_queue/to_queued_task.h"
+#include "absl/cleanup/cleanup.h"
 #include "media/sctp/sctp_transport_internal.h"
 #include "pc/proxy.h"
 #include "pc/sctp_utils.h"
@@ -221,13 +221,12 @@ bool SctpDataChannel::Init() {
   RTC_DCHECK(!controller_detached_);
   if (controller_->ReadyToSendData()) {
     AddRef();
-    rtc::Thread::Current()->PostTask(ToQueuedTask(
-        [this] {
-          RTC_DCHECK_RUN_ON(signaling_thread_);
-          if (state_ != kClosed)
-            OnTransportReady(true);
-        },
-        [this] { Release(); }));
+    absl::Cleanup release = [this] { Release(); };
+    rtc::Thread::Current()->PostTask([this, release = std::move(release)] {
+      RTC_DCHECK_RUN_ON(signaling_thread_);
+      if (state_ != kClosed)
+        OnTransportReady(true);
+    });
   }
 
   return true;
