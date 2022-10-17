@@ -120,18 +120,18 @@ class RRSendQueue : public SendQueue {
   class OutgoingStream : public StreamScheduler::StreamProducer {
    public:
     OutgoingStream(
+        RRSendQueue* parent,
         StreamScheduler* scheduler,
         StreamID stream_id,
         StreamPriority priority,
         std::function<void()> on_buffered_amount_low,
-        ThresholdWatcher& total_buffered_amount,
         const DcSctpSocketHandoverState::OutgoingStream* state = nullptr)
-        : scheduler_stream_(scheduler->CreateStream(this, stream_id, priority)),
+        : parent_(*parent),
+          scheduler_stream_(scheduler->CreateStream(this, stream_id, priority)),
           next_unordered_mid_(MID(state ? state->next_unordered_mid : 0)),
           next_ordered_mid_(MID(state ? state->next_ordered_mid : 0)),
           next_ssn_(SSN(state ? state->next_ssn : 0)),
-          buffered_amount_(std::move(on_buffered_amount_low)),
-          total_buffered_amount_(total_buffered_amount) {}
+          buffered_amount_(std::move(on_buffered_amount_low)) {}
 
     StreamID stream_id() const { return scheduler_stream_->stream_id(); }
 
@@ -230,6 +230,8 @@ class RRSendQueue : public SendQueue {
 
     bool IsConsistent() const;
 
+    RRSendQueue& parent_;
+
     const std::unique_ptr<StreamScheduler::Stream> scheduler_stream_;
 
     PauseState pause_state_ = PauseState::kNotPaused;
@@ -243,10 +245,6 @@ class RRSendQueue : public SendQueue {
 
     // The current amount of buffered data.
     ThresholdWatcher buffered_amount_;
-
-    // Reference to the total buffered amount, which is updated directly by each
-    // stream.
-    ThresholdWatcher& total_buffered_amount_;
   };
 
   bool IsConsistent() const;
