@@ -17,8 +17,9 @@
 #include <utility>
 
 #include "api/packet_socket_factory.h"
-#include "api/task_queue/to_queued_task.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/stun.h"
+#include "api/units/time_delta.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/async_resolver_interface.h"
 #include "rtc_base/checks.h"
@@ -30,6 +31,8 @@
 namespace stunprober {
 
 namespace {
+using ::webrtc::SafeTask;
+using ::webrtc::TimeDelta;
 
 const int THREAD_WAKE_UP_INTERVAL_MS = 5;
 
@@ -355,8 +358,7 @@ void StunProber::OnServerResolved(rtc::AsyncResolverInterface* resolver) {
 
   // Deletion of AsyncResolverInterface can't be done in OnResolveResult which
   // handles SignalDone.
-  thread_->PostTask(
-      webrtc::ToQueuedTask([resolver] { resolver->Destroy(false); }));
+  thread_->PostTask([resolver] { resolver->Destroy(false); });
   servers_.pop_back();
 
   if (servers_.size()) {
@@ -454,9 +456,8 @@ void StunProber::MaybeScheduleStunRequests() {
 
   if (Done()) {
     thread_->PostDelayedTask(
-        webrtc::ToQueuedTask(task_safety_.flag(),
-                             [this] { ReportOnFinished(SUCCESS); }),
-        timeout_ms_);
+        SafeTask(task_safety_.flag(), [this] { ReportOnFinished(SUCCESS); }),
+        TimeDelta::Millis(timeout_ms_));
     return;
   }
   if (should_send_next_request(now)) {
@@ -467,9 +468,8 @@ void StunProber::MaybeScheduleStunRequests() {
     next_request_time_ms_ = now + interval_ms_;
   }
   thread_->PostDelayedTask(
-      webrtc::ToQueuedTask(task_safety_.flag(),
-                           [this] { MaybeScheduleStunRequests(); }),
-      get_wake_up_interval_ms());
+      SafeTask(task_safety_.flag(), [this] { MaybeScheduleStunRequests(); }),
+      TimeDelta::Millis(get_wake_up_interval_ms()));
 }
 
 bool StunProber::GetStats(StunProber::Stats* prob_stats) const {

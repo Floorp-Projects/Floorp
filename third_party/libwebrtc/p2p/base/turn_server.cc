@@ -19,7 +19,6 @@
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/packet_socket_factory.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/transport/stun.h"
 #include "p2p/base/async_stun_tcp_socket.h"
 #include "rtc_base/byte_buffer.h"
@@ -571,8 +570,7 @@ void TurnServer::DestroyInternalSocket(rtc::AsyncPacketSocket* socket) {
     // We must destroy the socket async to avoid invalidating the sigslot
     // callback list iterator inside a sigslot callback. (In other words,
     // deleting an object from within a callback from that object).
-    thread_->PostTask(webrtc::ToQueuedTask(
-        [socket_to_delete = std::move(socket_to_delete)] {}));
+    thread_->PostTask([socket_to_delete = std::move(socket_to_delete)] {});
   }
 }
 

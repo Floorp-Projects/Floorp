@@ -19,7 +19,6 @@
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/transport/stun.h"
 #include "p2p/base/connection.h"
 #include "p2p/base/p2p_constants.h"
@@ -32,6 +31,8 @@
 #include "rtc_base/strings/string_builder.h"
 
 namespace cricket {
+using ::webrtc::SafeTask;
+using ::webrtc::TimeDelta;
 
 // TODO(juberti): Move to stun.h when relay messages have been renamed.
 static const int TURN_ALLOCATE_REQUEST = STUN_ALLOCATE_REQUEST;
@@ -45,7 +46,8 @@ const int STUN_ATTR_TURN_LOGGING_ID = 0xff05;
 // TODO(juberti): Extract to turnmessage.h
 static const int TURN_DEFAULT_PORT = 3478;
 static const int TURN_CHANNEL_NUMBER_START = 0x4000;
-static const int TURN_PERMISSION_TIMEOUT = 5 * 60 * 1000;  // 5 minutes
+
+static constexpr TimeDelta kTurnPermissionTimeout = TimeDelta::Minutes(5);
 
 static const size_t TURN_CHANNEL_HEADER_SIZE = 4U;
 
@@ -161,7 +163,7 @@ class TurnEntry : public sigslot::has_slots<> {
   BindState state() const { return state_; }
 
   // If the destruction timestamp is set, that means destruction has been
-  // scheduled (will occur TURN_PERMISSION_TIMEOUT after it's scheduled).
+  // scheduled (will occur kTurnPermissionTimeout after it's scheduled).
   absl::optional<int64_t> destruction_timestamp() {
     return destruction_timestamp_;
   }
@@ -1295,12 +1297,12 @@ void TurnPort::HandleConnectionDestroyed(Connection* conn) {
   RTC_DCHECK(!entry->destruction_timestamp().has_value());
   int64_t timestamp = rtc::TimeMillis();
   entry->set_destruction_timestamp(timestamp);
-  thread()->PostDelayedTask(ToQueuedTask(task_safety_.flag(),
-                                         [this, entry, timestamp] {
-                                           DestroyEntryIfNotCancelled(
-                                               entry, timestamp);
-                                         }),
-                            TURN_PERMISSION_TIMEOUT);
+  thread()->PostDelayedTask(SafeTask(task_safety_.flag(),
+                                     [this, entry, timestamp] {
+                                       DestroyEntryIfNotCancelled(entry,
+                                                                  timestamp);
+                                     }),
+                            kTurnPermissionTimeout);
 }
 
 bool TurnPort::SetEntryChannelId(const rtc::SocketAddress& address,
@@ -1752,10 +1754,10 @@ void TurnChannelBindRequest::OnResponse(StunMessage* response) {
     // threshold. The channel binding has a longer lifetime, but
     // this is the easiest way to keep both the channel and the
     // permission from expiring.
-    int delay = TURN_PERMISSION_TIMEOUT - 60000;
-    entry_->SendChannelBindRequest(delay);
+    TimeDelta delay = kTurnPermissionTimeout - TimeDelta::Minutes(1);
+    entry_->SendChannelBindRequest(delay.ms());
     RTC_LOG(LS_INFO) << port_->ToString() << ": Scheduled channel bind in "
-                     << delay << "ms.";
+                     << delay.ms() << "ms.";
   }
 }
 
@@ -1855,11 +1857,11 @@ void TurnEntry::OnCreatePermissionSuccess() {
   if (state_ != STATE_BOUND) {
     // Refresh the permission request about 1 minute before the permission
     // times out.
-    int delay = TURN_PERMISSION_TIMEOUT - 60000;
-    SendCreatePermissionRequest(delay);
+    TimeDelta delay = kTurnPermissionTimeout - TimeDelta::Minutes(1);
+    SendCreatePermissionRequest(delay.ms());
     RTC_LOG(LS_INFO) << port_->ToString()
-                     << ": Scheduled create-permission-request in " << delay
-                     << "ms.";
+                     << ": Scheduled create-permission-request in "
+                     << delay.ms() << "ms.";
   }
 }
 
