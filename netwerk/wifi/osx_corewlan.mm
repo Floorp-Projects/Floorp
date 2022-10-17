@@ -37,7 +37,7 @@ nsresult GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint>& accessPoints) {
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    id scanResult = [[CWI_class interface] scanForNetworksWithParameters:nil error:nil];
+    id scanResult = [[CWI_class interface] scanForNetworksWithSSID:nil error:nil];
     if (!scanResult) {
       [pool release];
       return NS_ERROR_NOT_AVAILABLE;
@@ -57,7 +57,10 @@ nsresult GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint>& accessPoints) {
       // is a pain, so we'll use it for as long as it's available.
       unsigned char macData[6] = {0};
       if ([anObject respondsToSelector:@selector(bssidData)]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wobjc-method-access"
         NSData* data = [anObject bssidData];
+#pragma clang diagnostic pop
         if (data) {
           memcpy(macData, [data bytes], 6);
         }
@@ -77,15 +80,7 @@ nsresult GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint>& accessPoints) {
         }
       }
 
-      // [CWInterface rssiValue] is available on OS X 10.7 and up (and
-      // [CWInterface rssi] is deprecated).
-      int signal = 0;
-      if ([anObject respondsToSelector:@selector(rssiValue)]) {
-        signal = (int)((NSInteger)[anObject rssiValue]);
-      } else {
-        signal = [[anObject rssi] intValue];
-      }
-
+      int signal = (int)((NSInteger)[anObject rssiValue]);
       ap->setMac(macData);
       ap->setSignal(signal);
       ap->setSSID([[anObject ssid] UTF8String], 32);
