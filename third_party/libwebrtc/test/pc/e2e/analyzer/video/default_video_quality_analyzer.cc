@@ -36,7 +36,6 @@
 namespace webrtc {
 namespace {
 
-constexpr int kMicrosPerSecond = 1000000;
 constexpr int kBitsInByte = 8;
 constexpr absl::string_view kSkipRenderedFrameReasonProcessed = "processed";
 constexpr absl::string_view kSkipRenderedFrameReasonRendered = "rendered";
@@ -896,9 +895,8 @@ void DefaultVideoQualityAnalyzer::ReportResults(
   double harmonic_framerate_fps = 0;
   TimeDelta video_duration = video_end_time - video_start_time;
   if (sum_squared_interframe_delays_secs > 0.0 && video_duration.IsFinite()) {
-    harmonic_framerate_fps = static_cast<double>(video_duration.us()) /
-                             static_cast<double>(kMicrosPerSecond) /
-                             sum_squared_interframe_delays_secs;
+    harmonic_framerate_fps =
+        video_duration.seconds<double>() / sum_squared_interframe_delays_secs;
   }
 
   ReportResult("psnr", test_case_name, stats.psnr, "dB",
@@ -956,11 +954,11 @@ void DefaultVideoQualityAnalyzer::ReportResults(
   ReportResult("target_encode_bitrate", test_case_name,
                stats.target_encode_bitrate / kBitsInByte, "bytesPerSecond",
                ImproveDirection::kNone);
-  test::PrintResult(
-      "actual_encode_bitrate", "", test_case_name,
-      static_cast<double>(stats.total_encoded_images_payload) /
-          static_cast<double>(test_duration.us()) * kMicrosPerSecond,
-      "bytesPerSecond", /*important=*/false, ImproveDirection::kNone);
+  test::PrintResult("actual_encode_bitrate", "", test_case_name,
+                    static_cast<double>(stats.total_encoded_images_payload) /
+                        test_duration.seconds<double>(),
+                    "bytesPerSecond", /*important=*/false,
+                    ImproveDirection::kNone);
 
   if (options_.report_detailed_frame_stats) {
     test::PrintResult("num_encoded_frames", "", test_case_name,
