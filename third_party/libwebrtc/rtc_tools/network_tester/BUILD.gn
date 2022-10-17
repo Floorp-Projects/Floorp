@@ -47,6 +47,7 @@ if (rtc_enable_protobuf) {
       "../../rtc_base:checks",
       "../../rtc_base:ignore_wundef",
       "../../rtc_base:ip_address",
+      "../../rtc_base:logging",
       "../../rtc_base:macromagic",
       "../../rtc_base:protobuf_utils",
       "../../rtc_base:rtc_task_queue",
@@ -81,6 +82,7 @@ if (rtc_enable_protobuf) {
     deps = [
       ":network_tester",
       "../../rtc_base:gunit_helpers",
+      "../../rtc_base:threading",
       "../../test:fileutils",
       "../../test:test_support",
       "//testing/gtest",
@@ -98,7 +100,11 @@ if (rtc_enable_protobuf) {
   rtc_executable("network_tester_server") {
     sources = [ "server.cc" ]
 
-    deps = [ ":network_tester" ]
+    deps = [
+      ":network_tester",
+      "../../rtc_base:null_socket_server",
+      "../../rtc_base:threading",
+    ]
   }
 }
 
@@ -158,9 +164,13 @@ if (is_android) {
   }
 
   rtc_shared_library("network_tester_so") {
-    sources = [ "jni.cpp" ]
+    sources = [ "jni.cc" ]
 
-    deps = [ ":network_tester" ]
+    deps = [
+      ":network_tester",
+      "../../rtc_base:logging",
+      "../../rtc_base:threading",
+    ]
 
     suppressed_configs += [ "//build/config/android:hide_all_but_jni_onload" ]
     configs += [ "//build/config/android:hide_all_but_jni" ]
