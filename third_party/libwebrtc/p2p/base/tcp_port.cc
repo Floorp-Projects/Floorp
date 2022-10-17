@@ -282,7 +282,7 @@ ProtocolType TCPPort::GetProtocol() const {
 
 void TCPPort::OnNewConnection(rtc::AsyncListenSocket* socket,
                               rtc::AsyncPacketSocket* new_socket) {
-  RTC_DCHECK(socket == listen_socket_.get());
+  RTC_DCHECK_EQ(socket, listen_socket_.get());
 
   for (const auto& option : socket_options_) {
     new_socket->SetOption(option.first, option.second);
@@ -439,7 +439,13 @@ void TCPConnection::OnConnectionRequestResponse(StunRequest* req,
 }
 
 void TCPConnection::OnConnect(rtc::AsyncPacketSocket* socket) {
-  RTC_DCHECK(socket == socket_.get());
+  RTC_DCHECK_EQ(socket, socket_.get());
+
+  if (!port_) {
+    RTC_LOG(LS_ERROR) << "TCPConnection: Port has been deleted.";
+    return;
+  }
+
   // Do not use this port if the socket bound to an address not associated with
   // the desired network interface. This is seen in Chrome, where TCP sockets
   // cannot be given a binding address, and the platform is expected to pick
@@ -492,10 +498,13 @@ void TCPConnection::OnConnect(rtc::AsyncPacketSocket* socket) {
 }
 
 void TCPConnection::OnClose(rtc::AsyncPacketSocket* socket, int error) {
-  RTC_DCHECK(socket == socket_.get());
+  RTC_DCHECK_EQ(socket, socket_.get());
   RTC_LOG(LS_INFO) << ToString() << ": Connection closed with error " << error;
 
-  RTC_DCHECK(port());
+  if (!port_) {
+    RTC_LOG(LS_ERROR) << "TCPConnection: Port has been deleted.";
+    return;
+  }
 
   // Guard against the condition where IPC socket will call OnClose for every
   // packet it can't send.
@@ -550,12 +559,12 @@ void TCPConnection::OnReadPacket(rtc::AsyncPacketSocket* socket,
                                  size_t size,
                                  const rtc::SocketAddress& remote_addr,
                                  const int64_t& packet_time_us) {
-  RTC_DCHECK(socket == socket_.get());
+  RTC_DCHECK_EQ(socket, socket_.get());
   Connection::OnReadPacket(data, size, packet_time_us);
 }
 
 void TCPConnection::OnReadyToSend(rtc::AsyncPacketSocket* socket) {
-  RTC_DCHECK(socket == socket_.get());
+  RTC_DCHECK_EQ(socket, socket_.get());
   Connection::OnReadyToSend();
 }
 
