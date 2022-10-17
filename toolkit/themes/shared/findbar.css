@@ -158,10 +158,6 @@ html|input.findbar-textbox[flash="true"] {
   margin-inline-start: 12px;
 }
 
-.findbar-find-status[status="notfound"] {
-  color: var(--error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
-}
-
 .find-status-icon {
   display: none;
 }
