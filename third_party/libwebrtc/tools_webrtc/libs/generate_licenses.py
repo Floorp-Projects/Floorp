@@ -83,7 +83,6 @@ LIB_TO_LICENSES_DICT = {
     'androidx': [],
 
     # Compile time dependencies, no license needed:
-    'yasm': [],
     'ow2_asm': [],
     'jdk': [],
 }

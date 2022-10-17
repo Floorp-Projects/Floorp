@@ -144,10 +144,6 @@ deps = {
     'https://chromium.googlesource.com/chromium/tools/depot_tools.git@78c53d11a01f8439b37010289e8bbdb139942d57',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@880df5ede50a8534c8116d0d50e4bc4f3ef08a06',
-  'src/third_party/findbugs': {
-    'url': 'https://chromium.googlesource.com/chromium/deps/findbugs.git@4275d9ac8610db6b1bc9a5e887f97e41b33fac67',
-    'condition': 'checkout_android',
-  },
   'src/third_party/grpc/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/grpc/grpc.git@1be6e2c9ebfb4a26bebe6b3f3c45cffc70e71b68',
   },
@@ -267,11 +263,6 @@ deps = {
   'src/third_party/requests/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/kennethreitz/requests.git@refs/tags/v2.23.0',
     'condition': 'checkout_android',
-  },
-  # Dependency used by libjpeg-turbo.
-  'src/third_party/yasm/binaries': {
-    'url': 'https://chromium.googlesource.com/chromium/deps/yasm/binaries.git@52f9b3f4b0aa06da24ef8b123058bb61ee468881',
-    'condition': 'checkout_win',
   },
   'src/tools':
     'https://chromium.googlesource.com/chromium/src/tools@30047f5465d40a8b018fd75c84a5cc409b8d5c34',
