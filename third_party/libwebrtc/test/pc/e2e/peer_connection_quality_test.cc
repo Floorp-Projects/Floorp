@@ -148,7 +148,7 @@ PeerConnectionE2EQualityTest::PeerConnectionE2EQualityTest(
   }
   video_quality_analyzer_injection_helper_ =
       std::make_unique<VideoQualityAnalyzerInjectionHelper>(
-          std::move(video_quality_analyzer),
+          time_controller_.GetClock(), std::move(video_quality_analyzer),
           encoded_image_data_propagator_.get(),
           encoded_image_data_propagator_.get());
 

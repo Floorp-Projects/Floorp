@@ -26,6 +26,7 @@
 #include "api/video_codecs/video_decoder_factory.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "system_wrappers/include/clock.h"
 #include "test/pc/e2e/analyzer/video/encoded_image_data_injector.h"
 #include "test/test_video_capturer.h"
 #include "test/testsupport/video_frame_writer.h"
@@ -39,6 +40,12 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
  public:
   using VideoConfig = PeerConnectionE2EQualityTestFixture::VideoConfig;
 
+  VideoQualityAnalyzerInjectionHelper(
+      Clock* clock,
+      std::unique_ptr<VideoQualityAnalyzerInterface> analyzer,
+      EncodedImageDataInjector* injector,
+      EncodedImageDataExtractor* extractor);
+  // TODO(titovartem): remove after migrating downstreams.
   VideoQualityAnalyzerInjectionHelper(
       std::unique_ptr<VideoQualityAnalyzerInterface> analyzer,
       EncodedImageDataInjector* injector,
@@ -138,6 +145,7 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>>*
   PopulateSinks(const ReceiverStream& receiver_stream);
 
+  Clock* const clock_;
   std::unique_ptr<VideoQualityAnalyzerInterface> analyzer_;
   EncodedImageDataInjector* injector_;
   EncodedImageDataExtractor* extractor_;
