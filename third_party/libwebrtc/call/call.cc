@@ -1198,14 +1198,14 @@ void Call::SignalChannelNetworkState(MediaType media, NetworkState state) {
   } else {
     // TODO(bugs.webrtc.org/11993): Remove workaround when we no longer need to
     // post to the worker thread.
-    worker_thread_->PostTask(ToQueuedTask(task_safety_, std::move(closure)));
+    worker_thread_->PostTask(SafeTask(task_safety_.flag(), std::move(closure)));
   }
 }
 
 void Call::OnAudioTransportOverheadChanged(int transport_overhead_per_packet) {
   RTC_DCHECK_RUN_ON(network_thread_);
   worker_thread_->PostTask(
-      ToQueuedTask(task_safety_, [this, transport_overhead_per_packet]() {
+      SafeTask(task_safety_.flag(), [this, transport_overhead_per_packet]() {
         // TODO(bugs.webrtc.org/11993): Move this over to the network thread.
         RTC_DCHECK_RUN_ON(worker_thread_);
         for (auto& kv : audio_send_ssrcs_) {
@@ -1399,7 +1399,7 @@ void Call::DeliverRtcp(MediaType media_type, rtc::CopyOnWriteBuffer packet) {
   // TODO(bugs.webrtc.org/11993): This should execute directly on the network
   // thread.
   worker_thread_->PostTask(
-      ToQueuedTask(task_safety_, [this, packet = std::move(packet)]() {
+      SafeTask(task_safety_.flag(), [this, packet = std::move(packet)]() {
         RTC_DCHECK_RUN_ON(worker_thread_);
 
         receive_stats_.AddReceivedRtcpBytes(static_cast<int>(packet.size()));

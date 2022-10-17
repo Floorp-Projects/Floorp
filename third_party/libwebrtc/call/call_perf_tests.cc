@@ -113,7 +113,7 @@ class VideoRtcpAndSyncObserver : public test::RtpRtcpObserver,
         task_queue_(task_queue) {}
 
   void OnFrame(const VideoFrame& video_frame) override {
-    task_queue_->PostTask(ToQueuedTask([this]() { CheckStats(); }));
+    task_queue_->PostTask([this]() { CheckStats(); });
   }
 
   void CheckStats() {
@@ -343,7 +343,7 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
   }
 
   task_queue()->PostTask(
-      ToQueuedTask([to_delete = observer.release()]() { delete to_delete; }));
+      [to_delete = observer.release()]() { delete to_delete; });
 }
 
 TEST_F(CallPerfTest, Synchronization_PlaysOutAudioAndVideoWithoutClockDrift) {
@@ -680,7 +680,7 @@ void CallPerfTest::TestMinTransmitBitrate(bool pad_to_min_bitrate) {
    private:
     // TODO(holmer): Run this with a timer instead of once per packet.
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
-      task_queue_->PostTask(ToQueuedTask(task_safety_flag_, [this]() {
+      task_queue_->PostTask(SafeTask(task_safety_flag_, [this]() {
         VideoSendStream::Stats stats = send_stream_->GetStats();
 
         if (!stats.substreams.empty()) {
@@ -1146,7 +1146,7 @@ void CallPerfTest::TestEncodeFramerate(VideoEncoderFactory* encoder_factory,
       const Timestamp now = clock_->CurrentTime();
       if (now - last_getstats_time_ > kMinGetStatsInterval) {
         last_getstats_time_ = now;
-        task_queue_->PostTask(ToQueuedTask([this, now]() {
+        task_queue_->PostTask([this, now]() {
           VideoSendStream::Stats stats = send_stream_->GetStats();
           for (const auto& stat : stats.substreams) {
             encode_frame_rate_lists_[stat.first].push_back(
@@ -1156,7 +1156,7 @@ void CallPerfTest::TestEncodeFramerate(VideoEncoderFactory* encoder_factory,
             VerifyStats();
             observation_complete_.Set();
           }
-        }));
+        });
       }
       return SEND_PACKET;
     }
