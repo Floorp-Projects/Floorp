@@ -268,7 +268,7 @@ class RelativeUnit : public UnitBase<Unit_T> {
   }
   template <typename T,
             typename std::enable_if_t<std::is_floating_point_v<T>>* = nullptr>
-  Unit_T operator/(T scalar) const {
+  constexpr Unit_T operator/(T scalar) const {
     return UnitBase<Unit_T>::FromValue(std::llround(this->ToValue() / scalar));
   }
   template <typename T,
@@ -276,7 +276,7 @@ class RelativeUnit : public UnitBase<Unit_T> {
   constexpr Unit_T operator/(T scalar) const {
     return UnitBase<Unit_T>::FromValue(this->ToValue() / scalar);
   }
-  Unit_T operator*(double scalar) const {
+  constexpr Unit_T operator*(double scalar) const {
     return UnitBase<Unit_T>::FromValue(std::llround(this->ToValue() * scalar));
   }
   constexpr Unit_T operator*(int64_t scalar) const {
