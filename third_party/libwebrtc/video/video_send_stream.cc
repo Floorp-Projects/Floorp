@@ -13,7 +13,6 @@
 
 #include "api/array_view.h"
 #include "api/task_queue/task_queue_base.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/video/video_stream_encoder_settings.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "modules/rtp_rtcp/source/rtp_header_extension_size.h"
@@ -238,7 +237,7 @@ void VideoSendStream::UpdateActiveSimulcastLayers(
                    << active_layers_string.str();
 
   rtp_transport_queue_->PostTask(
-      ToQueuedTask(transport_queue_safety_, [this, active_layers] {
+      SafeTask(transport_queue_safety_, [this, active_layers] {
         send_stream_.UpdateActiveSimulcastLayers(active_layers);
       }));
 
@@ -253,11 +252,11 @@ void VideoSendStream::Start() {
 
   running_ = true;
 
-  rtp_transport_queue_->PostTask(ToQueuedTask([this] {
+  rtp_transport_queue_->PostTask([this] {
     transport_queue_safety_->SetAlive();
     send_stream_.Start();
     thread_sync_event_.Set();
-  }));
+  });
 
   // It is expected that after VideoSendStream::Start has been called, incoming
   // frames are not dropped in VideoStreamEncoder. To ensure this, Start has to
@@ -272,7 +271,7 @@ void VideoSendStream::Stop() {
     return;
   RTC_DLOG(LS_INFO) << "VideoSendStream::Stop";
   running_ = false;
-  rtp_transport_queue_->PostTask(ToQueuedTask(transport_queue_safety_, [this] {
+  rtp_transport_queue_->PostTask(SafeTask(transport_queue_safety_, [this] {
     // As the stream can get re-used and implicitly restarted via changing
     // the state of the active layers, we do not mark the
     // `transport_queue_safety_` flag with `SetNotAlive()` here. That's only

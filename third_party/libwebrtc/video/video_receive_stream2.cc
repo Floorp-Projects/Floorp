@@ -29,7 +29,6 @@
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/units/frequency.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
@@ -619,7 +618,7 @@ void VideoReceiveStream2::OnFrame(const VideoFrame& video_frame) {
   // `video_frame.packet_infos`. But VideoFrame is const qualified here.
 
   call_->worker_thread()->PostTask(
-      ToQueuedTask(task_safety_, [frame_meta, this]() {
+      SafeTask(task_safety_.flag(), [frame_meta, this]() {
         RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
         int64_t video_playout_ntp_ms;
         int64_t sync_offset_ms;
@@ -781,9 +780,9 @@ void VideoReceiveStream2::OnEncodedFrame(std::unique_ptr<EncodedFrame> frame) {
 
 void VideoReceiveStream2::OnDecodableFrameTimeout(TimeDelta wait_time) {
   if (!call_->worker_thread()->IsCurrent()) {
-    call_->worker_thread()->PostTask(ToQueuedTask(
-        task_safety_,
-        [this, wait_time] { OnDecodableFrameTimeout(wait_time); }));
+    call_->worker_thread()->PostTask(
+        SafeTask(task_safety_.flag(),
+                 [this, wait_time] { OnDecodableFrameTimeout(wait_time); }));
     return;
   }
 
@@ -851,8 +850,8 @@ void VideoReceiveStream2::HandleEncodedFrame(
 
   {
     // TODO(bugs.webrtc.org/11993): Make this PostTask to the network thread.
-    call_->worker_thread()->PostTask(ToQueuedTask(
-        task_safety_,
+    call_->worker_thread()->PostTask(SafeTask(
+        task_safety_.flag(),
         [this, now, received_frame_is_keyframe, force_request_key_frame,
          decoded_frame_picture_id, keyframe_request_is_due]() {
           RTC_DCHECK_RUN_ON(&packet_sequence_checker_);

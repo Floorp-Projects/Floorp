@@ -21,7 +21,6 @@
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "api/video/video_frame.h"
@@ -378,12 +377,12 @@ void ZeroHertzAdapterMode::OnFrame(Timestamp post_time,
   current_frame_id_++;
   scheduled_repeat_ = absl::nullopt;
   queue_->PostDelayedHighPrecisionTask(
-      ToQueuedTask(safety_,
-                   [this] {
-                     RTC_DCHECK_RUN_ON(&sequence_checker_);
-                     ProcessOnDelayedCadence();
-                   }),
-      frame_delay_.ms());
+      SafeTask(safety_.flag(),
+               [this] {
+                 RTC_DCHECK_RUN_ON(&sequence_checker_);
+                 ProcessOnDelayedCadence();
+               }),
+      frame_delay_);
 }
 
 void ZeroHertzAdapterMode::OnDiscardedFrame() {
@@ -500,12 +499,12 @@ void ZeroHertzAdapterMode::ScheduleRepeat(int frame_id, bool idle_repeat) {
 
   TimeDelta repeat_delay = RepeatDuration(idle_repeat);
   queue_->PostDelayedHighPrecisionTask(
-      ToQueuedTask(safety_,
-                   [this, frame_id] {
-                     RTC_DCHECK_RUN_ON(&sequence_checker_);
-                     ProcessRepeatedFrameOnDelayedCadence(frame_id);
-                   }),
-      repeat_delay.ms());
+      SafeTask(safety_.flag(),
+               [this, frame_id] {
+                 RTC_DCHECK_RUN_ON(&sequence_checker_);
+                 ProcessRepeatedFrameOnDelayedCadence(frame_id);
+               }),
+      repeat_delay);
 }
 
 // RTC_RUN_ON(&sequence_checker_)
@@ -654,7 +653,7 @@ void FrameCadenceAdapterImpl::OnFrame(const VideoFrame& frame) {
   // Local time in webrtc time base.
   Timestamp post_time = clock_->CurrentTime();
   frames_scheduled_for_processing_.fetch_add(1, std::memory_order_relaxed);
-  queue_->PostTask(ToQueuedTask(safety_.flag(), [this, post_time, frame] {
+  queue_->PostTask(SafeTask(safety_.flag(), [this, post_time, frame] {
     RTC_DCHECK_RUN_ON(queue_);
     if (zero_hertz_adapter_created_timestamp_.has_value()) {
       TimeDelta time_until_first_frame =
@@ -676,7 +675,7 @@ void FrameCadenceAdapterImpl::OnFrame(const VideoFrame& frame) {
 
 void FrameCadenceAdapterImpl::OnDiscardedFrame() {
   callback_->OnDiscardedFrame();
-  queue_->PostTask(ToQueuedTask(safety_.flag(), [this] {
+  queue_->PostTask(SafeTask(safety_.flag(), [this] {
     RTC_DCHECK_RUN_ON(queue_);
     if (zero_hertz_adapter_) {
       zero_hertz_adapter_->OnDiscardedFrame();
@@ -689,7 +688,7 @@ void FrameCadenceAdapterImpl::OnConstraintsChanged(
   RTC_LOG(LS_INFO) << __func__ << " this " << this << " min_fps "
                    << constraints.min_fps.value_or(-1) << " max_fps "
                    << constraints.max_fps.value_or(-1);
-  queue_->PostTask(ToQueuedTask(safety_.flag(), [this, constraints] {
+  queue_->PostTask(SafeTask(safety_.flag(), [this, constraints] {
     RTC_DCHECK_RUN_ON(queue_);
     bool was_zero_hertz_enabled = IsZeroHertzScreenshareEnabled();
     source_constraints_ = constraints;

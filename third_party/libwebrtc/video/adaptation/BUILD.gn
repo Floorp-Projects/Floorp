@@ -39,7 +39,6 @@ rtc_library("video_adaptation") {
     "../../api:sequence_checker",
     "../../api/adaptation:resource_adaptation_api",
     "../../api/task_queue:task_queue",
-    "../../api/task_queue:to_queued_task",
     "../../api/units:data_rate",
     "../../api/units:time_delta",
     "../../api/video:video_adaptation",
@@ -93,7 +92,6 @@ if (rtc_include_tests) {
       "../../api:field_trials_view",
       "../../api:scoped_refptr",
       "../../api/task_queue:task_queue",
-      "../../api/task_queue:to_queued_task",
       "../../api/units:time_delta",
       "../../api/units:timestamp",
       "../../api/video:encoded_image",
@@ -119,6 +117,9 @@ if (rtc_include_tests) {
       "../../test:test_support",
       "../../test/time_controller:time_controller",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/functional:any_invocable",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 }

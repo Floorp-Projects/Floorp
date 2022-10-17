@@ -13,10 +13,11 @@
 #include <utility>
 #include <vector>
 
+#include "absl/functional/any_invocable.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
-#include "api/task_queue/to_queued_task.h"
+#include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "api/video/nv12_buffer.h"
 #include "api/video/video_frame.h"
@@ -643,10 +644,8 @@ class ZeroHertzLayerQualityConvergenceTest : public ::testing::Test {
     }
   }
 
-  void ScheduleDelayed(TimeDelta delay, std::function<void()> function) {
-    TaskQueueBase::Current()->PostDelayedTask(
-        ToQueuedTask([function = std::move(function)] { function(); }),
-        delay.ms());
+  void ScheduleDelayed(TimeDelta delay, absl::AnyInvocable<void() &&> task) {
+    TaskQueueBase::Current()->PostDelayedTask(std::move(task), delay);
   }
 
  protected:
@@ -1042,7 +1041,7 @@ TEST(FrameCadenceAdapterRealTimeTest, TimestampsDoNotDrift) {
   int64_t original_ntp_time_ms;
   int64_t original_timestamp_us;
   rtc::Event event;
-  queue->PostTask(ToQueuedTask([&] {
+  queue->PostTask([&] {
     adapter = CreateAdapter(enabler, clock);
     adapter->Initialize(&callback);
     adapter->SetZeroHertzModeEnabled(
@@ -1070,13 +1069,13 @@ TEST(FrameCadenceAdapterRealTimeTest, TimestampsDoNotDrift) {
               }
             }));
     adapter->OnFrame(frame);
-  }));
+  });
   event.Wait(rtc::Event::kForever);
   rtc::Event finalized;
-  queue->PostTask(ToQueuedTask([&] {
+  queue->PostTask([&] {
     adapter = nullptr;
     finalized.Set();
-  }));
+  });
   finalized.Wait(rtc::Event::kForever);
 }
 

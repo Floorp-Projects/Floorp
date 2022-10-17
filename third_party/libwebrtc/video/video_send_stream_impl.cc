@@ -21,7 +21,6 @@
 #include "api/rtp_parameters.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/video_codecs/video_codec.h"
 #include "call/rtp_transport_controller_send_interface.h"
 #include "call/video_send_stream.h"
@@ -284,7 +283,7 @@ VideoSendStreamImpl::VideoSendStreamImpl(
     transport->EnablePeriodicAlrProbing(*enable_alr_bw_probing);
   }
 
-  rtp_transport_queue_->PostTask(ToQueuedTask(transport_queue_safety_, [this] {
+  rtp_transport_queue_->PostTask(SafeTask(transport_queue_safety_, [this] {
     if (configured_pacing_factor_)
       transport_->SetPacingFactor(*configured_pacing_factor_);
 
@@ -398,7 +397,7 @@ void VideoSendStreamImpl::SignalEncoderTimedOut() {
 void VideoSendStreamImpl::OnBitrateAllocationUpdated(
     const VideoBitrateAllocation& allocation) {
   if (!rtp_transport_queue_->IsCurrent()) {
-    rtp_transport_queue_->PostTask(ToQueuedTask(transport_queue_safety_, [=] {
+    rtp_transport_queue_->PostTask(SafeTask(transport_queue_safety_, [=] {
       OnBitrateAllocationUpdated(allocation);
     }));
     return;
@@ -472,7 +471,7 @@ void VideoSendStreamImpl::OnEncoderConfigurationChanged(
     VideoEncoderConfig::ContentType content_type,
     int min_transmit_bitrate_bps) {
   if (!rtp_transport_queue_->IsCurrent()) {
-    rtp_transport_queue_->PostTask(ToQueuedTask(
+    rtp_transport_queue_->PostTask(SafeTask(
         transport_queue_safety_,
         [this, streams = std::move(streams), is_svc, content_type,
          min_transmit_bitrate_bps]() mutable {
@@ -555,7 +554,7 @@ EncodedImageCallback::Result VideoSendStreamImpl::OnEncodedImage(
   };
   if (!rtp_transport_queue_->IsCurrent()) {
     rtp_transport_queue_->PostTask(
-        ToQueuedTask(transport_queue_safety_, std::move(enable_padding_task)));
+        SafeTask(transport_queue_safety_, std::move(enable_padding_task)));
   } else {
     enable_padding_task();
   }
@@ -574,7 +573,7 @@ EncodedImageCallback::Result VideoSendStreamImpl::OnEncodedImage(
   };
   if (!rtp_transport_queue_->IsCurrent()) {
     rtp_transport_queue_->PostTask(
-        ToQueuedTask(transport_queue_safety_, std::move(update_task)));
+        SafeTask(transport_queue_safety_, std::move(update_task)));
   } else {
     update_task();
   }

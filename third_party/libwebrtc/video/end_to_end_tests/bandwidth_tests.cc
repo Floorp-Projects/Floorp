@@ -11,8 +11,8 @@
 #include <memory>
 
 #include "api/task_queue/task_queue_base.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/test/simulated_network.h"
+#include "api/units/time_delta.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "call/fake_network_pipe.h"
@@ -130,7 +130,7 @@ class BandwidthStatsTest : public test::EndToEndTest {
   Action OnSendRtp(const uint8_t* packet, size_t length) override {
     // Stats need to be fetched on the thread where the caller objects were
     // constructed.
-    task_queue_->PostTask(ToQueuedTask([this]() {
+    task_queue_->PostTask([this]() {
       if (!sender_call_ || !receiver_call_) {
         return;
       }
@@ -146,7 +146,7 @@ class BandwidthStatsTest : public test::EndToEndTest {
           observation_complete_.Set();
         }
       }
-    }));
+    });
 
     return SEND_PACKET;
   }
@@ -248,7 +248,7 @@ TEST_F(BandwidthEndToEndTest, RembWithSendSideBwe) {
     void OnCallsCreated(Call* sender_call, Call* receiver_call) override {
       RTC_DCHECK(sender_call);
       sender_call_ = sender_call;
-      task_queue_->PostTask(ToQueuedTask([this]() { PollStats(); }));
+      task_queue_->PostTask([this]() { PollStats(); });
     }
 
     void PollStats() {
@@ -284,7 +284,8 @@ TEST_F(BandwidthEndToEndTest, RembWithSendSideBwe) {
           break;
       }
 
-      task_queue_->PostDelayedTask(ToQueuedTask([this] { PollStats(); }), 1000);
+      task_queue_->PostDelayedTask([this] { PollStats(); },
+                                   TimeDelta::Seconds(1));
     }
 
     void PerformTest() override {

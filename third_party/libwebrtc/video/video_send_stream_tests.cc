@@ -16,7 +16,6 @@
 #include "api/sequence_checker.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_base.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/test/simulated_network.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "api/video/encoded_image.h"
@@ -1503,7 +1502,7 @@ TEST_F(VideoSendStreamTest, MinTransmitBitrateRespectsRemb) {
       const uint32_t ssrc = rtp_packet.Ssrc();
       RTC_DCHECK(stream_);
 
-      task_queue_->PostTask(ToQueuedTask(task_safety_flag_, [this, ssrc]() {
+      task_queue_->PostTask(SafeTask(task_safety_flag_, [this, ssrc]() {
         VideoSendStream::Stats stats = stream_->GetStats();
         if (!stats.substreams.empty()) {
           EXPECT_EQ(1u, stats.substreams.size());
@@ -1620,14 +1619,14 @@ TEST_F(VideoSendStreamTest, ChangingNetworkRoute) {
 
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
       RTC_DCHECK_RUN_ON(&module_process_thread_);
-      task_queue_->PostTask(ToQueuedTask([this]() {
+      task_queue_->PostTask([this]() {
         RTC_DCHECK_RUN_ON(&task_queue_thread_);
         if (!call_)
           return;
         Call::Stats stats = call_->GetStats();
         if (stats.send_bandwidth_bps > kStartBitrateBps)
           observation_complete_.Set();
-      }));
+      });
       return SEND_PACKET;
     }
 
@@ -1722,7 +1721,7 @@ TEST_F(VideoSendStreamTest, DISABLED_RelayToDirectRoute) {
 
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
       RTC_DCHECK_RUN_ON(&module_process_thread_);
-      task_queue_->PostTask(ToQueuedTask([this]() {
+      task_queue_->PostTask([this]() {
         RTC_DCHECK_RUN_ON(&task_queue_thread_);
         if (!call_)
           return;
@@ -1732,7 +1731,7 @@ TEST_F(VideoSendStreamTest, DISABLED_RelayToDirectRoute) {
             call_->GetStats().send_bandwidth_bps > kRelayBandwidthCapBps;
         if (did_exceed_cap || had_time_to_exceed_cap_in_relayed_phase)
           observation_complete_.Set();
-      }));
+      });
       return SEND_PACKET;
     }
 
@@ -1918,7 +1917,7 @@ class MaxPaddingSetTest : public test::SendTest {
     // Check the stats on the correct thread and signal the 'complete' flag
     // once we detect that we're done.
 
-    task_queue_->PostTask(ToQueuedTask([this]() {
+    task_queue_->PostTask([this]() {
       RTC_DCHECK_RUN_ON(&task_queue_thread_);
       // In case we get a callback during teardown.
       // When this happens, OnStreamsStopped() has been called already,
@@ -1953,7 +1952,7 @@ class MaxPaddingSetTest : public test::SendTest {
           observation_complete_.Set();
         }
       }
-    }));
+    });
 
     return SEND_PACKET;
   }
@@ -3865,7 +3864,7 @@ class ContentSwitchTest : public test::SendTest {
   }
 
   Action OnSendRtp(const uint8_t* packet, size_t length) override {
-    task_queue_->PostTask(ToQueuedTask([this]() {
+    task_queue_->PostTask([this]() {
       MutexLock lock(&mutex_);
       if (done_)
         return;
@@ -3914,7 +3913,7 @@ class ContentSwitchTest : public test::SendTest {
         return;
       }
       observation_complete_.Set();
-    }));
+    });
 
     return SEND_PACKET;
   }
