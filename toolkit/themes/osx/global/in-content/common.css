@@ -12,8 +12,8 @@ xul|tabs {
   position: static;
 }
 
-xul|menulist > xul|menupopup > xul|menuitem[checked="true"]::before,
-xul|menulist > xul|menupopup > xul|menuitem[selected="true"]::before {
+xul|menulist > xul|menupopup > xul|menuitem::after,
+xul|menulist > xul|menupopup > xul|menuitem::before {
   display: none;
 }
 
