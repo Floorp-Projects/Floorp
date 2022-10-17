@@ -309,8 +309,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
       continue;
     }
 
-    uint32_t width =
-        global.isIndirect() ? sizeof(void*) : SizeOf(global.type());
+    uint32_t width = global.isIndirect() ? sizeof(void*) : global.type().size();
 
     uint32_t globalDataOffset;
     if (!allocateGlobalBytes(width, width, &globalDataOffset)) {

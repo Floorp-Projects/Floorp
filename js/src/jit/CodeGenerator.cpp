@@ -17300,7 +17300,7 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
       case wasm::ValType::I64:
       case wasm::ValType::F32:
       case wasm::ValType::F64:
-        argMir = ToMIRType(sig.args()[i]);
+        argMir = sig.args()[i].toMIRType();
         break;
       case wasm::ValType::V128:
         MOZ_CRASH("unexpected argument type when calling from ion to wasm");
@@ -17308,7 +17308,7 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
         switch (sig.args()[i].refTypeKind()) {
           case wasm::RefType::Extern:
             // AnyRef is boxed on the JS side, so passed as a pointer here.
-            argMir = ToMIRType(sig.args()[i]);
+            argMir = sig.args()[i].toMIRType();
             break;
           case wasm::RefType::Func:
           case wasm::RefType::Eq:
