@@ -97,7 +97,7 @@ add_task(async function test_found() {
   // Search for a string that WILL be found, with 'Highlight All' on
   await promiseFindFinished(gBrowser, "S", true);
   ok(
-    !gBrowser.getCachedFindBar()._findStatusDesc.dataset.l10nId,
+    gBrowser.getCachedFindBar()._findStatusDesc.dataset.l10nId === undefined,
     "Findbar status should be empty"
   );
 
@@ -137,7 +137,7 @@ add_task(async function test_tabwise_case_sensitive() {
   // But it didn't affect the second findbar.
   await promiseFindFinished(gBrowser, "S", true);
   ok(
-    !findbar2._findStatusDesc.dataset.l10nId,
+    findbar2._findStatusDesc.dataset.l10nId === undefined,
     "Findbar status should be empty"
   );
 
@@ -178,7 +178,10 @@ add_task(async function test_reinitialization_at_remoteness_change() {
   );
 
   await promiseFindFinished(gBrowser, "s", false);
-  ok(!findbar._findStatusDesc.dataset.l10nId, "Findbar status should be empty");
+  ok(
+    findbar._findStatusDesc.dataset.l10nId === undefined,
+    "Findbar status should be empty"
+  );
 
   // Moving browser into the parent process and reloading sample data.
   ok(browser.isRemoteBrowser, "Browser should be remote now.");
@@ -203,7 +206,10 @@ add_task(async function test_reinitialization_at_remoteness_change() {
   );
 
   await promiseFindFinished(gBrowser, "s", false);
-  ok(!findbar._findStatusDesc.dataset.l10nId, "Findbar status should be empty");
+  ok(
+    findbar._findStatusDesc.dataset.l10nId === undefined,
+    "Findbar status should be empty"
+  );
 
   BrowserTestUtils.removeTab(tab);
 });
