@@ -376,7 +376,8 @@ TEST_F(ReassemblyQueueTest, HandoverInInitialState) {
   reasm1.AddHandoverState(state);
   g_handover_state_transformer_for_test(&state);
   ReassemblyQueue reasm2("log: ", TSN(100), kBufferSize,
-                         /*use_message_interleaving=*/false, &state);
+                         /*use_message_interleaving=*/false);
+  reasm2.RestoreFromState(state);
 
   reasm2.Add(TSN(10), gen_.Ordered({1, 2, 3, 4}, "BE"));
   EXPECT_THAT(reasm2.FlushMessages(), SizeIs(1));
@@ -392,7 +393,8 @@ TEST_F(ReassemblyQueueTest, HandoverAfterHavingAssembedOneMessage) {
   reasm1.AddHandoverState(state);
   g_handover_state_transformer_for_test(&state);
   ReassemblyQueue reasm2("log: ", TSN(100), kBufferSize,
-                         /*use_message_interleaving=*/false, &state);
+                         /*use_message_interleaving=*/false);
+  reasm2.RestoreFromState(state);
 
   reasm2.Add(TSN(11), gen_.Ordered({1, 2, 3, 4}, "BE"));
   EXPECT_THAT(reasm2.FlushMessages(), SizeIs(1));

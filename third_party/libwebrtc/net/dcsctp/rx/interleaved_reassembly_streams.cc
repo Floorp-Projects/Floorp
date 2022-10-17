@@ -32,26 +32,8 @@ namespace dcsctp {
 
 InterleavedReassemblyStreams::InterleavedReassemblyStreams(
     absl::string_view log_prefix,
-    OnAssembledMessage on_assembled_message,
-    const DcSctpSocketHandoverState* handover_state)
-    : log_prefix_(log_prefix), on_assembled_message_(on_assembled_message) {
-  if (handover_state) {
-    for (const DcSctpSocketHandoverState::OrderedStream& state :
-         handover_state->rx.ordered_streams) {
-      FullStreamId stream_id(IsUnordered(false), StreamID(state.id));
-      streams_.emplace(
-          std::piecewise_construct, std::forward_as_tuple(stream_id),
-          std::forward_as_tuple(stream_id, this, MID(state.next_ssn)));
-    }
-    for (const DcSctpSocketHandoverState::UnorderedStream& state :
-         handover_state->rx.unordered_streams) {
-      FullStreamId stream_id(IsUnordered(true), StreamID(state.id));
-      streams_.emplace(std::piecewise_construct,
-                       std::forward_as_tuple(stream_id),
-                       std::forward_as_tuple(stream_id, this));
-    }
-  }
-}
+    OnAssembledMessage on_assembled_message)
+    : log_prefix_(log_prefix), on_assembled_message_(on_assembled_message) {}
 
 size_t InterleavedReassemblyStreams::Stream::TryToAssembleMessage(
     UnwrappedMID mid) {
@@ -264,6 +246,26 @@ void InterleavedReassemblyStreams::AddHandoverState(
     DcSctpSocketHandoverState& state) {
   for (const auto& [unused, stream] : streams_) {
     stream.AddHandoverState(state);
+  }
+}
+
+void InterleavedReassemblyStreams::RestoreFromState(
+    const DcSctpSocketHandoverState& state) {
+  // Validate that the component is in pristine state.
+  RTC_DCHECK(streams_.empty());
+
+  for (const DcSctpSocketHandoverState::OrderedStream& state :
+       state.rx.ordered_streams) {
+    FullStreamId stream_id(IsUnordered(false), StreamID(state.id));
+    streams_.emplace(
+        std::piecewise_construct, std::forward_as_tuple(stream_id),
+        std::forward_as_tuple(stream_id, this, MID(state.next_ssn)));
+  }
+  for (const DcSctpSocketHandoverState::UnorderedStream& state :
+       state.rx.unordered_streams) {
+    FullStreamId stream_id(IsUnordered(true), StreamID(state.id));
+    streams_.emplace(std::piecewise_construct, std::forward_as_tuple(stream_id),
+                     std::forward_as_tuple(stream_id, this));
   }
 }
 

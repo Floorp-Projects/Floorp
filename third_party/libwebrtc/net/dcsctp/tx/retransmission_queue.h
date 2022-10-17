@@ -54,18 +54,16 @@ class RetransmissionQueue {
   // outstanding chunk has been ACKed, it will call
   // `on_clear_retransmission_counter` and will also use `t3_rtx`, which is the
   // SCTP retransmission timer to manage retransmissions.
-  RetransmissionQueue(
-      absl::string_view log_prefix,
-      TSN my_initial_tsn,
-      size_t a_rwnd,
-      SendQueue& send_queue,
-      std::function<void(DurationMs rtt)> on_new_rtt,
-      std::function<void()> on_clear_retransmission_counter,
-      Timer& t3_rtx,
-      const DcSctpOptions& options,
-      bool supports_partial_reliability = true,
-      bool use_message_interleaving = false,
-      const DcSctpSocketHandoverState* handover_state = nullptr);
+  RetransmissionQueue(absl::string_view log_prefix,
+                      TSN my_initial_tsn,
+                      size_t a_rwnd,
+                      SendQueue& send_queue,
+                      std::function<void(DurationMs rtt)> on_new_rtt,
+                      std::function<void()> on_clear_retransmission_counter,
+                      Timer& t3_rtx,
+                      const DcSctpOptions& options,
+                      bool supports_partial_reliability = true,
+                      bool use_message_interleaving = false);
 
   // Handles a received SACK. Returns true if the `sack` was processed and
   // false if it was discarded due to received out-of-order and not relevant.
@@ -154,6 +152,7 @@ class RetransmissionQueue {
   HandoverReadinessStatus GetHandoverReadiness() const;
 
   void AddHandoverState(DcSctpSocketHandoverState& state);
+  void RestoreFromState(const DcSctpSocketHandoverState& state);
 
  private:
   enum class CongestionAlgorithmPhase {

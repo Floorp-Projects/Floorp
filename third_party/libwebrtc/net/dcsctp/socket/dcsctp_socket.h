@@ -138,6 +138,14 @@ class DcSctpSocket : public DcSctpSocketInterface {
   bool IsConsistent() const;
   static constexpr absl::string_view ToString(DcSctpSocket::State state);
 
+  void CreateTransmissionControlBlock(const Capabilities& capabilities,
+                                      VerificationTag my_verification_tag,
+                                      TSN my_initial_tsn,
+                                      VerificationTag peer_verification_tag,
+                                      TSN peer_initial_tsn,
+                                      size_t a_rwnd,
+                                      TieTag tie_tag);
+
   // Changes the socket state, given a `reason` (for debugging/logging).
   void SetState(State state, absl::string_view reason);
   // Fills in `connect_params` with random verification tag and initial TSN.

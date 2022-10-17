@@ -160,8 +160,8 @@ TEST_F(TraditionalReassemblyStreamsTest, NoStreamsCanBeHandedOver) {
   DcSctpSocketHandoverState state;
   streams1.AddHandoverState(state);
   g_handover_state_transformer_for_test(&state);
-  TraditionalReassemblyStreams streams2("", on_assembled.AsStdFunction(),
-                                        &state);
+  TraditionalReassemblyStreams streams2("", on_assembled.AsStdFunction());
+  streams2.RestoreFromState(state);
 
   EXPECT_EQ(streams2.Add(tsn(1), gen_.Ordered({1}, "B")), 1);
   EXPECT_EQ(streams2.Add(tsn(2), gen_.Ordered({2, 3, 4})), 3);
@@ -196,8 +196,8 @@ TEST_F(TraditionalReassemblyStreamsTest,
   DcSctpSocketHandoverState state;
   streams1.AddHandoverState(state);
   g_handover_state_transformer_for_test(&state);
-  TraditionalReassemblyStreams streams2("", on_assembled.AsStdFunction(),
-                                        &state);
+  TraditionalReassemblyStreams streams2("", on_assembled.AsStdFunction());
+  streams2.RestoreFromState(state);
   EXPECT_EQ(streams2.Add(tsn(4), gen_.Ordered({7})), 1);
 }
 
@@ -229,8 +229,8 @@ TEST_F(TraditionalReassemblyStreamsTest,
   DcSctpSocketHandoverState state;
   streams1.AddHandoverState(state);
   g_handover_state_transformer_for_test(&state);
-  TraditionalReassemblyStreams streams2("", on_assembled.AsStdFunction(),
-                                        &state);
+  TraditionalReassemblyStreams streams2("", on_assembled.AsStdFunction());
+  streams2.RestoreFromState(state);
   EXPECT_EQ(streams2.Add(tsn(4), gen_.Unordered({7})), 1);
 }
 

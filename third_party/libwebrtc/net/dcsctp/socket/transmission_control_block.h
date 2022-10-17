@@ -45,92 +45,20 @@ namespace dcsctp {
 // closed or restarted, this object will be deleted and/or replaced.
 class TransmissionControlBlock : public Context {
  public:
-  TransmissionControlBlock(
-      TimerManager& timer_manager,
-      absl::string_view log_prefix,
-      const DcSctpOptions& options,
-      const Capabilities& capabilities,
-      DcSctpSocketCallbacks& callbacks,
-      SendQueue& send_queue,
-      VerificationTag my_verification_tag,
-      TSN my_initial_tsn,
-      VerificationTag peer_verification_tag,
-      TSN peer_initial_tsn,
-      size_t a_rwnd,
-      TieTag tie_tag,
-      PacketSender& packet_sender,
-      std::function<bool()> is_connection_established,
-      const DcSctpSocketHandoverState* handover_state = nullptr)
-      : log_prefix_(log_prefix),
-        options_(options),
-        timer_manager_(timer_manager),
-        capabilities_(capabilities),
-        callbacks_(callbacks),
-        t3_rtx_(timer_manager_.CreateTimer(
-            "t3-rtx",
-            absl::bind_front(&TransmissionControlBlock::OnRtxTimerExpiry, this),
-            TimerOptions(options.rto_initial,
-                         TimerBackoffAlgorithm::kExponential,
-                         /*max_restarts=*/absl::nullopt,
-                         options.max_timer_backoff_duration))),
-        delayed_ack_timer_(timer_manager_.CreateTimer(
-            "delayed-ack",
-            absl::bind_front(&TransmissionControlBlock::OnDelayedAckTimerExpiry,
-                             this),
-            TimerOptions(options.delayed_ack_max_timeout,
-                         TimerBackoffAlgorithm::kExponential,
-                         /*max_restarts=*/0,
-                         /*max_backoff_duration=*/absl::nullopt,
-                         webrtc::TaskQueueBase::DelayPrecision::kHigh))),
-        my_verification_tag_(my_verification_tag),
-        my_initial_tsn_(my_initial_tsn),
-        peer_verification_tag_(peer_verification_tag),
-        peer_initial_tsn_(peer_initial_tsn),
-        tie_tag_(tie_tag),
-        is_connection_established_(std::move(is_connection_established)),
-        packet_sender_(packet_sender),
-        rto_(options),
-        tx_error_counter_(log_prefix, options),
-        data_tracker_(log_prefix,
-                      delayed_ack_timer_.get(),
-                      peer_initial_tsn,
-                      handover_state),
-        reassembly_queue_(log_prefix,
-                          peer_initial_tsn,
-                          options.max_receiver_window_buffer_size,
-                          capabilities.message_interleaving,
-                          handover_state),
-        retransmission_queue_(
-            log_prefix,
-            my_initial_tsn,
-            a_rwnd,
-            send_queue,
-            absl::bind_front(&TransmissionControlBlock::ObserveRTT, this),
-            [this]() { tx_error_counter_.Clear(); },
-            *t3_rtx_,
-            options,
-            capabilities.partial_reliability,
-            capabilities.message_interleaving,
-            handover_state),
-        stream_reset_handler_(log_prefix,
-                              this,
-                              &timer_manager,
-                              &data_tracker_,
-                              &reassembly_queue_,
-                              &retransmission_queue_,
-                              handover_state),
-        heartbeat_handler_(log_prefix, options, this, &timer_manager_) {
-    // If the connection is re-established (peer restarted, but re-used old
-    // connection), make sure that all message identifiers are reset and any
-    // partly sent message is re-sent in full. The same is true when the socket
-    // is closed and later re-opened, which never happens in WebRTC, but is a
-    // valid operation on the SCTP level. Note that in case of handover, the
-    // send queue is already re-configured, and shouldn't be reset.
-    if (handover_state == nullptr) {
-      send_queue.Reset();
-    }
-    send_queue.EnableMessageInterleaving(capabilities.message_interleaving);
-  }
+  TransmissionControlBlock(TimerManager& timer_manager,
+                           absl::string_view log_prefix,
+                           const DcSctpOptions& options,
+                           const Capabilities& capabilities,
+                           DcSctpSocketCallbacks& callbacks,
+                           SendQueue& send_queue,
+                           VerificationTag my_verification_tag,
+                           TSN my_initial_tsn,
+                           VerificationTag peer_verification_tag,
+                           TSN peer_initial_tsn,
+                           size_t a_rwnd,
+                           TieTag tie_tag,
+                           PacketSender& packet_sender,
+                           std::function<bool()> is_connection_established);
 
   // Implementation of `Context`.
   bool is_connection_established() const override {
@@ -216,6 +144,7 @@ class TransmissionControlBlock : public Context {
   HandoverReadinessStatus GetHandoverReadiness() const;
 
   void AddHandoverState(DcSctpSocketHandoverState& state);
+  void RestoreFromState(const DcSctpSocketHandoverState& handover_state);
 
  private:
   // Will be called when the retransmission timer (t3-rtx) expires.

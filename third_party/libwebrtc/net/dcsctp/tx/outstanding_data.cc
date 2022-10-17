@@ -517,4 +517,12 @@ IForwardTsnChunk OutstandingData::CreateIForwardTsn() const {
                           std::move(skipped_streams));
 }
 
+void OutstandingData::ResetSequenceNumbers(UnwrappedTSN next_tsn,
+                                           UnwrappedTSN last_cumulative_tsn) {
+  RTC_DCHECK(outstanding_data_.empty());
+  RTC_DCHECK(next_tsn_ == last_cumulative_tsn_ack_.next_value());
+  RTC_DCHECK(next_tsn == last_cumulative_tsn.next_value());
+  next_tsn_ = next_tsn;
+  last_cumulative_tsn_ack_ = last_cumulative_tsn;
+}
 }  // namespace dcsctp
