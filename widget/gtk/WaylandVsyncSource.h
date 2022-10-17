@@ -60,32 +60,35 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
 
   TimeDuration GetVsyncRate() override;
 
-  virtual void EnableVsync() override;
+  void EnableVsync() override;
 
-  virtual void DisableVsync() override;
+  void DisableVsync() override;
 
-  virtual bool IsVsyncEnabled() override;
+  bool IsVsyncEnabled() override;
 
-  virtual void Shutdown() override;
+  void Shutdown() override;
 
  private:
+  Maybe<TimeDuration> GetVsyncRateIfEnabled();
+
   void Refresh(const MutexAutoLock& aProofOfLock);
   void SetupFrameCallback(const MutexAutoLock& aProofOfLock);
   void CalculateVsyncRate(const MutexAutoLock& aProofOfLock,
                           TimeStamp aVsyncTimestamp);
-  void* GetWindow() { return mWindow; };
+  void* GetWindowForLogging() { return mWindow; };
 
-  Mutex mMutex MOZ_UNANNOTATED;
-  bool mIsShutdown;
-  bool mVsyncEnabled;
-  bool mMonitorEnabled;
-  bool mCallbackRequested;
-  MozContainer* mContainer;
-  nsWindow* mWindow;
-  RefPtr<NativeLayerRootWayland> mNativeLayerRoot;
-  TimeDuration mVsyncRate;
-  TimeStamp mLastVsyncTimeStamp;
-  guint mIdleTimerID;
+  Mutex mMutex;
+  bool mIsShutdown MOZ_GUARDED_BY(mMutex) = false;
+  bool mVsyncEnabled MOZ_GUARDED_BY(mMutex) = false;
+  bool mMonitorEnabled MOZ_GUARDED_BY(mMutex) = false;
+  bool mCallbackRequested MOZ_GUARDED_BY(mMutex) = false;
+  MozContainer* mContainer MOZ_GUARDED_BY(mMutex) = nullptr;
+  RefPtr<NativeLayerRootWayland> mNativeLayerRoot MOZ_GUARDED_BY(mMutex);
+  TimeDuration mVsyncRate MOZ_GUARDED_BY(mMutex);
+  TimeStamp mLastVsyncTimeStamp MOZ_GUARDED_BY(mMutex);
+  guint mIdleTimerID MOZ_GUARDED_BY(mMutex) = 0;
+
+  nsWindow* const mWindow;  // Main thread only, except for logging.
   const guint mIdleTimeout;
 };
 

@@ -26,7 +26,7 @@ extern mozilla::LazyLogModule gWidgetVsync;
 #    undef LOG
 #    define LOG(str, ...)                             \
       MOZ_LOG(gWidgetVsync, mozilla::LogLevel::Debug, \
-              ("[nsWindow %p]: " str, GetWindow(), ##__VA_ARGS__))
+              ("[nsWindow %p]: " str, GetWindowForLogging(), ##__VA_ARGS__))
 #  else
 #    define LOG(...)
 #  endif /* MOZ_LOGGING */
@@ -60,13 +60,14 @@ static nsTArray<WaylandVsyncSource*> gWaylandVsyncSources;
 Maybe<TimeDuration> WaylandVsyncSource::GetFastestVsyncRate() {
   Maybe<TimeDuration> retVal;
   for (auto* source : gWaylandVsyncSources) {
-    if (source->IsVsyncEnabled()) {
-      TimeDuration rate = source->GetVsyncRate();
-      if (!retVal.isSome()) {
-        retVal.emplace(rate);
-      } else if (rate < *retVal) {
-        retVal.ref() = rate;
-      }
+    auto rate = source->GetVsyncRateIfEnabled();
+    if (!rate) {
+      continue;
+    }
+    if (!retVal.isSome()) {
+      retVal.emplace(*rate);
+    } else if (*rate < *retVal) {
+      retVal.ref() = *rate;
     }
   }
 
@@ -75,18 +76,11 @@ Maybe<TimeDuration> WaylandVsyncSource::GetFastestVsyncRate() {
 
 WaylandVsyncSource::WaylandVsyncSource(nsWindow* aWindow)
     : mMutex("WaylandVsyncSource"),
-      mIsShutdown(false),
-      mVsyncEnabled(false),
-      mMonitorEnabled(false),
-      mCallbackRequested(false),
-      mContainer(nullptr),
-      mWindow(aWindow),
       mVsyncRate(TimeDuration::FromMilliseconds(1000.0 / 60.0)),
       mLastVsyncTimeStamp(TimeStamp::Now()),
-      mIdleTimerID(0),
+      mWindow(aWindow),
       mIdleTimeout(1000 / StaticPrefs::layout_throttled_frame_rate()) {
   MOZ_ASSERT(NS_IsMainThread());
-
   gWaylandVsyncSources.AppendElement(this);
 }
 
@@ -137,8 +131,9 @@ void WaylandVsyncSource::MaybeUpdateSource(
 }
 
 void WaylandVsyncSource::Refresh(const MutexAutoLock& aProofOfLock) {
-  LOG("WaylandVsyncSource::Refresh fps %f\n", GetFPS(mVsyncRate));
   mMutex.AssertCurrentThreadOwns();
+
+  LOG("WaylandVsyncSource::Refresh fps %f\n", GetFPS(mVsyncRate));
 
   if (!(mContainer || mNativeLayerRoot) || !mMonitorEnabled || !mVsyncEnabled ||
       mCallbackRequested) {
@@ -174,12 +169,13 @@ void WaylandVsyncSource::Refresh(const MutexAutoLock& aProofOfLock) {
   // Vsync is enabled, but we don't have a callback configured. Set one up so
   // we can get to work.
   SetupFrameCallback(aProofOfLock);
-  mLastVsyncTimeStamp = TimeStamp::Now();
-  TimeStamp outputTimestamp = mLastVsyncTimeStamp + GetVsyncRate();
+  const TimeStamp lastVSync = TimeStamp::Now();
+  mLastVsyncTimeStamp = lastVSync;
+  TimeStamp outputTimestamp = mLastVsyncTimeStamp + mVsyncRate;
 
   {
     MutexAutoUnlock unlock(mMutex);
-    NotifyVsync(mLastVsyncTimeStamp, outputTimestamp);
+    NotifyVsync(lastVSync, outputTimestamp);
   }
 }
 
@@ -204,6 +200,7 @@ void WaylandVsyncSource::DisableMonitor() {
 }
 
 void WaylandVsyncSource::SetupFrameCallback(const MutexAutoLock& aProofOfLock) {
+  mMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(!mCallbackRequested);
 
   LOG("WaylandVsyncSource::SetupFrameCallback");
@@ -235,7 +232,7 @@ void WaylandVsyncSource::SetupFrameCallback(const MutexAutoLock& aProofOfLock) {
       mIdleTimerID = (int)g_timeout_add(
           mIdleTimeout,
           [](void* data) -> gint {
-            WaylandVsyncSource* vsync = static_cast<WaylandVsyncSource*>(data);
+            auto* vsync = static_cast<WaylandVsyncSource*>(data);
             vsync->IdleCallback();
             return true;
           },
@@ -248,33 +245,41 @@ void WaylandVsyncSource::SetupFrameCallback(const MutexAutoLock& aProofOfLock) {
 
 void WaylandVsyncSource::IdleCallback() {
   LOG("WaylandVsyncSource::IdleCallback");
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
-  MutexAutoLock lock(mMutex);
+  RefPtr<nsWindow> window;
+  {
+    MutexAutoLock lock(mMutex);
 
-  if (!mVsyncEnabled || !mMonitorEnabled) {
-    // We are unwanted by either our creator or our consumer, so we just stop
-    // here without setting up a new frame callback.
-    LOG("  quit, mVsyncEnabled %d mMonitorEnabled %d", mVsyncEnabled,
-        mMonitorEnabled);
-    return;
-  }
+    if (!mVsyncEnabled || !mMonitorEnabled) {
+      // We are unwanted by either our creator or our consumer, so we just stop
+      // here without setting up a new frame callback.
+      LOG("  quit, mVsyncEnabled %d mMonitorEnabled %d", mVsyncEnabled,
+          mMonitorEnabled);
+      return;
+    }
 
-  guint duration = static_cast<guint>(
-      (TimeStamp::Now() - mLastVsyncTimeStamp).ToMilliseconds());
-  if (duration >= mIdleTimeout) {
-    mWindow->NotifyOcclusionState(mozilla::widget::OcclusionState::OCCLUDED);
+    guint duration = static_cast<guint>(
+        (TimeStamp::Now() - mLastVsyncTimeStamp).ToMilliseconds());
+    if (duration < mIdleTimeout) {
+      return;
+    }
 
     LOG("  fire idle vsync");
     CalculateVsyncRate(lock, TimeStamp::Now());
     mLastVsyncTimeStamp = TimeStamp::Now();
-
-    MutexAutoUnlock unlock(mMutex);
-    NotifyVsync(mLastVsyncTimeStamp, mLastVsyncTimeStamp + GetVsyncRate());
+    window = mWindow;
   }
+  // This could disable vsync.
+  window->NotifyOcclusionState(OcclusionState::OCCLUDED);
 }
 
 void WaylandVsyncSource::FrameCallback(uint32_t aTime) {
   LOG("WaylandVsyncSource::FrameCallback");
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+
+  // This might enable vsync.
+  RefPtr(mWindow)->NotifyOcclusionState(OcclusionState::VISIBLE);
 
   MutexAutoLock lock(mMutex);
   mCallbackRequested = false;
@@ -290,8 +295,6 @@ void WaylandVsyncSource::FrameCallback(uint32_t aTime) {
   // Configure our next frame callback.
   SetupFrameCallback(lock);
 
-  mWindow->NotifyOcclusionState(mozilla::widget::OcclusionState::VISIBLE);
-
   int64_t tick = BaseTimeDurationPlatformUtils::TicksFromMilliseconds(aTime);
   TimeStamp callbackTimeStamp = TimeStamp::FromSystemTime(tick);
   double duration = (TimeStamp::Now() - callbackTimeStamp).ToMilliseconds();
@@ -305,18 +308,31 @@ void WaylandVsyncSource::FrameCallback(uint32_t aTime) {
 
   CalculateVsyncRate(lock, vsyncTimestamp);
   mLastVsyncTimeStamp = vsyncTimestamp;
-  TimeStamp outputTimestamp = vsyncTimestamp + GetVsyncRate();
+  TimeStamp outputTimestamp = vsyncTimestamp + mVsyncRate;
 
   {
     MutexAutoUnlock unlock(mMutex);
-    NotifyVsync(mLastVsyncTimeStamp, outputTimestamp);
+    NotifyVsync(vsyncTimestamp, outputTimestamp);
   }
 }
 
-TimeDuration WaylandVsyncSource::GetVsyncRate() { return mVsyncRate; }
+TimeDuration WaylandVsyncSource::GetVsyncRate() {
+  MutexAutoLock lock(mMutex);
+  return mVsyncRate;
+}
+
+Maybe<TimeDuration> WaylandVsyncSource::GetVsyncRateIfEnabled() {
+  MutexAutoLock lock(mMutex);
+  if (!mVsyncEnabled) {
+    return Nothing();
+  }
+  return Some(mVsyncRate);
+}
 
 void WaylandVsyncSource::CalculateVsyncRate(const MutexAutoLock& aProofOfLock,
                                             TimeStamp aVsyncTimestamp) {
+  mMutex.AssertCurrentThreadOwns();
+
   double duration = (aVsyncTimestamp - mLastVsyncTimeStamp).ToMilliseconds();
   double curVsyncRate = mVsyncRate.ToMilliseconds();
 
@@ -338,8 +354,9 @@ void WaylandVsyncSource::CalculateVsyncRate(const MutexAutoLock& aProofOfLock,
 void WaylandVsyncSource::EnableVsync() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  LOG("WaylandVsyncSource::EnableVsync fps %f\n", GetFPS(mVsyncRate));
   MutexAutoLock lock(mMutex);
+
+  LOG("WaylandVsyncSource::EnableVsync fps %f\n", GetFPS(mVsyncRate));
   if (mVsyncEnabled || mIsShutdown) {
     LOG("  early quit");
     return;
@@ -349,8 +366,9 @@ void WaylandVsyncSource::EnableVsync() {
 }
 
 void WaylandVsyncSource::DisableVsync() {
-  LOG("WaylandVsyncSource::DisableVsync fps %f\n", GetFPS(mVsyncRate));
   MutexAutoLock lock(mMutex);
+
+  LOG("WaylandVsyncSource::DisableVsync fps %f\n", GetFPS(mVsyncRate));
   mVsyncEnabled = false;
   mCallbackRequested = false;
 }
@@ -362,8 +380,9 @@ bool WaylandVsyncSource::IsVsyncEnabled() {
 
 void WaylandVsyncSource::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
-  LOG("WaylandVsyncSource::Shutdown fps %f\n", GetFPS(mVsyncRate));
   MutexAutoLock lock(mMutex);
+
+  LOG("WaylandVsyncSource::Shutdown fps %f\n", GetFPS(mVsyncRate));
   mContainer = nullptr;
   mNativeLayerRoot = nullptr;
   mIsShutdown = true;
