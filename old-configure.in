@@ -214,18 +214,6 @@ if test "$COMPILE_ENVIRONMENT"; then
     MOZ_ANDROID_STLPORT
 fi # COMPILE_ENVIRONMENT
 
-dnl ========================================================
-dnl Suppress Clang Argument Warnings
-dnl ========================================================
-WARNINGS_CFLAGS="$_WARNINGS_CFLAGS"
-if test -n "${CLANG_CC}${CLANG_CL}"; then
-    WARNINGS_CFLAGS="-Qunused-arguments $WARNINGS_CFLAGS"
-    CPPFLAGS="-Qunused-arguments ${CPPFLAGS}"
-fi
-if test -n "${CLANG_CXX}${CLANG_CL}"; then
-    _WARNINGS_CXXFLAGS="-Qunused-arguments ${_WARNINGS_CXXFLAGS}"
-fi
-
 if test -n "$COMPILE_ENVIRONMENT"; then
    MOZ_CONFIG_SANITIZE
 fi
@@ -1163,7 +1151,6 @@ dnl ========================================================
 
 AC_SUBST_LIST(ASFLAGS)
 AC_SUBST_LIST(MOZ_DEBUG_LDFLAGS)
-AC_SUBST_LIST(WARNINGS_CFLAGS)
 
 AC_SUBST(MOZ_STUB_INSTALLER)
 
@@ -1315,7 +1302,6 @@ CFLAGS=`echo \
     $CFLAGS`
 
 CXXFLAGS=`echo \
-    $_WARNINGS_CXXFLAGS \
     $_COMPILATION_CXXFLAGS \
     $CXXFLAGS`
 
@@ -1328,12 +1314,10 @@ COMPILE_CXXFLAGS=`echo \
     $COMPILE_CXXFLAGS`
 
 HOST_CFLAGS=`echo \
-    $_WARNINGS_HOST_CFLAGS \
     $_COMPILATION_HOST_CFLAGS \
     $HOST_CFLAGS`
 
 HOST_CXXFLAGS=`echo \
-    $_WARNINGS_HOST_CXXFLAGS \
     $_COMPILATION_HOST_CXXFLAGS \
     $HOST_CXXFLAGS`
 

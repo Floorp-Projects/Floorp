@@ -494,14 +494,14 @@ class LinuxToolchainTest(BaseToolchainTest):
         "Only clang/llvm 5.0 or newer is supported (found version 4.0.2)."
     )
     CLANG_5_0_RESULT = CompilerResult(
-        flags=["-std=gnu99"],
+        flags=["-Qunused-arguments", "-std=gnu99"],
         version="5.0.1",
         type="clang",
         compiler="/usr/bin/clang-5.0",
         language="C",
     )
     CLANGXX_5_0_RESULT = CompilerResult(
-        flags=["-std=gnu++17"],
+        flags=["-Qunused-arguments", "-std=gnu++17"],
         version="5.0.1",
         type="clang",
         compiler="/usr/bin/clang++-5.0",
@@ -867,14 +867,14 @@ class OSXToolchainTest(BaseToolchainTest):
         "Only clang/llvm 5.0 or newer is supported (found version 4.0.0.or.less)."
     )
     DEFAULT_CLANG_RESULT = CompilerResult(
-        flags=["-std=gnu99"],
+        flags=["-Qunused-arguments", "-std=gnu99"],
         version="5.0.2",
         type="clang",
         compiler="/usr/bin/clang",
         language="C",
     )
     DEFAULT_CLANGXX_RESULT = CompilerResult(
-        flags=["-stdlib=libc++", "-std=gnu++17"],
+        flags=["-stdlib=libc++", "-Qunused-arguments", "-std=gnu++17"],
         version="5.0.2",
         type="clang",
         compiler="/usr/bin/clang++",
@@ -987,7 +987,7 @@ class WindowsToolchainTest(BaseToolchainTest):
     )
     CLANG_CL_8_0_RESULT = CompilerResult(
         version="8.0.0",
-        flags=["-Xclang", "-std=gnu99"],
+        flags=["-Qunused-arguments", "-Xclang", "-std=gnu99"],
         type="clang-cl",
         compiler="/usr/bin/clang-cl",
         language="C",
@@ -997,7 +997,7 @@ class WindowsToolchainTest(BaseToolchainTest):
     )
     CLANGXX_CL_8_0_RESULT = CompilerResult(
         version="8.0.0",
-        flags=["-Xclang", "-std=c++17"],
+        flags=["-Qunused-arguments", "-Xclang", "-std=c++17"],
         type="clang-cl",
         compiler="/usr/bin/clang-cl",
         language="C++",
@@ -1433,14 +1433,14 @@ class OSXCrossToolchainTest(BaseToolchainTest):
         }
     )
     DEFAULT_CLANG_RESULT = CompilerResult(
-        flags=["-std=gnu99"],
+        flags=["-Qunused-arguments", "-std=gnu99"],
         version="5.0.1",
         type="clang",
         compiler="/usr/bin/clang",
         language="C",
     )
     DEFAULT_CLANGXX_RESULT = CompilerResult(
-        flags=["-std=gnu++17"],
+        flags=["-Qunused-arguments", "-std=gnu++17"],
         version="5.0.1",
         type="clang",
         compiler="/usr/bin/clang++",

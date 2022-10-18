@@ -61,6 +61,9 @@ def AllowCompilerWarnings():
 @template
 def DisableCompilerWarnings():
     COMPILE_FLAGS['WARNINGS_CFLAGS'] = []
+    COMPILE_FLAGS['WARNINGS_CXXFLAGS'] = []
+    HOST_COMPILE_FLAGS['WARNINGS_CFLAGS'] = []
+    HOST_COMPILE_FLAGS['WARNINGS_CXXFLAGS'] = []
 
 @template
 def RustLibrary(name, features=None, output_category=None, is_gkrust=False):
