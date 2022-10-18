@@ -2121,8 +2121,7 @@ void BaseCompiler::atomicCmpXchg64(MemoryAccessDesc* access, ValType type) {
 //
 // Synchronization.
 
-bool BaseCompiler::atomicWait(ValType type, MemoryAccessDesc* access,
-                              uint32_t lineOrBytecode) {
+bool BaseCompiler::atomicWait(ValType type, MemoryAccessDesc* access) {
   switch (type.kind()) {
     case ValType::I32: {
       RegI64 timeout = popI64();
@@ -2141,8 +2140,7 @@ bool BaseCompiler::atomicWait(ValType type, MemoryAccessDesc* access,
       pushI32(val);
       pushI64(timeout);
 
-      if (!emitInstanceCall(lineOrBytecode,
-                            isMem32() ? SASigWaitI32M32 : SASigWaitI32M64)) {
+      if (!emitInstanceCall(isMem32() ? SASigWaitI32M32 : SASigWaitI32M64)) {
         return false;
       }
       break;
@@ -2178,8 +2176,7 @@ bool BaseCompiler::atomicWait(ValType type, MemoryAccessDesc* access,
       pushI64(val);
       pushI64(timeout);
 
-      if (!emitInstanceCall(lineOrBytecode,
-                            isMem32() ? SASigWaitI64M32 : SASigWaitI64M64)) {
+      if (!emitInstanceCall(isMem32() ? SASigWaitI64M32 : SASigWaitI64M64)) {
         return false;
       }
       break;
@@ -2191,8 +2188,7 @@ bool BaseCompiler::atomicWait(ValType type, MemoryAccessDesc* access,
   return true;
 }
 
-bool BaseCompiler::atomicWake(MemoryAccessDesc* access,
-                              uint32_t lineOrBytecode) {
+bool BaseCompiler::atomicWake(MemoryAccessDesc* access) {
   RegI32 count = popI32();
 
   if (isMem32()) {
@@ -2206,8 +2202,7 @@ bool BaseCompiler::atomicWake(MemoryAccessDesc* access,
   }
 
   pushI32(count);
-  return emitInstanceCall(lineOrBytecode,
-                          isMem32() ? SASigWakeM32 : SASigWakeM64);
+  return emitInstanceCall(isMem32() ? SASigWakeM32 : SASigWakeM64);
 }
 
 //////////////////////////////////////////////////////////////////////////////
