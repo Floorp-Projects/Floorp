@@ -215,7 +215,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
       moduleEnv_->codeSection ? moduleEnv_->codeSection->size : 0;
 
   size_t estimatedCodeSize =
-      1.2 * EstimateCompiledCodeSize(tier(), codeSectionSize);
+      size_t(1.2 * EstimateCompiledCodeSize(tier(), codeSectionSize));
   (void)masm_.reserve(std::min(estimatedCodeSize, MaxCodeBytesPerProcess));
 
   (void)metadataTier_->codeRanges.reserve(2 * moduleEnv_->numFuncDefs());
@@ -256,7 +256,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
   }
 
   for (TagDesc& tag : moduleEnv_->tags) {
-    if (!allocateGlobalBytes(sizeof(WasmTagObject*), sizeof(void*),
+    if (!allocateGlobalBytes(sizeof(void*), sizeof(void*),
                              &tag.globalDataOffset)) {
       return false;
     }
@@ -677,12 +677,8 @@ bool ModuleGenerator::linkCompiledCode(CompiledCode& code) {
     return tn->hasTryBody();
   };
   auto tryNoteOp = [=](uint32_t, TryNote* tn) { tn->offsetBy(offsetInModule); };
-  if (!AppendForEach(&metadataTier_->tryNotes, code.tryNotes, tryNoteFilter,
-                     tryNoteOp)) {
-    return false;
-  }
-
-  return true;
+  return AppendForEach(&metadataTier_->tryNotes, code.tryNotes, tryNoteFilter,
+                       tryNoteOp);
 }
 
 static bool ExecuteCompileTask(CompileTask* task, UniqueChars* error) {

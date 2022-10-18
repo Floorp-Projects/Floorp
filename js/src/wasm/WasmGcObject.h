@@ -28,7 +28,7 @@ class WasmGcObject;
 
 class RttValue : public NativeObject {
  private:
-  static RttValue* create(JSContext* cx, wasm::TypeHandle handle);
+  static RttValue* create(JSContext* cx, const wasm::TypeHandle& handle);
 
  public:
   static const JSClass class_;
@@ -42,7 +42,7 @@ class RttValue : public NativeObject {
     SlotCount = 4,
   };
 
-  static RttValue* rttCanon(JSContext* cx, wasm::TypeHandle handle);
+  static RttValue* rttCanon(JSContext* cx, const wasm::TypeHandle& handle);
   static RttValue* rttSub(JSContext* cx, js::Handle<RttValue*> parent,
                           js::Handle<RttValue*> subCanon);
 

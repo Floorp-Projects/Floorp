@@ -267,8 +267,8 @@ Value UnboxFuncRef(FuncRef val);
 class LitVal {
  public:
   union Cell {
-    int32_t i32_;
-    int64_t i64_;
+    uint32_t i32_;
+    uint64_t i64_;
     float f32_;
     double f64_;
     wasm::V128 v128_;

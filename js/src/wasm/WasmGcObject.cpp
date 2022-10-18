@@ -63,7 +63,7 @@ static const JSClassOps RttValueClassOps = {
     RttValue::trace,     // trace
 };
 
-RttValue* RttValue::create(JSContext* cx, TypeHandle handle) {
+RttValue* RttValue::create(JSContext* cx, const TypeHandle& handle) {
   Rooted<RttValue*> rtt(cx,
                         NewTenuredObjectWithGivenProto<RttValue>(cx, nullptr));
   if (!rtt) {
@@ -96,7 +96,7 @@ const JSClass js::RttValue::class_ = {
         JSCLASS_HAS_RESERVED_SLOTS(RttValue::SlotCount),
     &RttValueClassOps};
 
-RttValue* RttValue::rttCanon(JSContext* cx, TypeHandle handle) {
+RttValue* RttValue::rttCanon(JSContext* cx, const TypeHandle& handle) {
   return RttValue::create(cx, handle);
 }
 
@@ -412,11 +412,13 @@ bool WasmGcObject::loadValue(JSContext* cx, const RttValue::PropOffset& offset,
   if (type.isTypeIndex()) {
     type = RefType::fromTypeCode(TypeCode::EqRef, true);
   }
+
   if (!type.isExposable()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_VAL_TYPE);
     return false;
   }
+
   if (is<WasmStructObject>()) {
     // `offset` is the field offset, without regard to the in/out-line split.
     // That is handled by the call to `fieldOffsetToAddress`.
@@ -428,20 +430,20 @@ bool WasmGcObject::loadValue(JSContext* cx, const RttValue::PropOffset& offset,
                        rtt.typeDef().structType().size_);
     return ToJSValue(cx, structObj.fieldOffsetToAddress(type, offset.get()),
                      type, vp);
-  } else {
-    MOZ_ASSERT(is<WasmArrayObject>());
-    WasmArrayObject& arrayObj = as<WasmArrayObject>();
-    if (offset.get() == UINT32_MAX) {
-      // This denotes "length"
-      uint32_t numElements = arrayObj.numElements_;
-      // We can't use `ToJSValue(.., ValType::I32, ..)` here since it will
-      // treat the integer as signed, which it isn't.  `vp.set(..)` will
-      // coerce correctly to a JS::Value, though.
-      vp.set(NumberValue(numElements));
-      return true;
-    }
-    return ToJSValue(cx, arrayObj.data_ + offset.get(), type, vp);
   }
+
+  MOZ_ASSERT(is<WasmArrayObject>());
+  WasmArrayObject& arrayObj = as<WasmArrayObject>();
+  if (offset.get() == UINT32_MAX) {
+    // This denotes "length"
+    uint32_t numElements = arrayObj.numElements_;
+    // We can't use `ToJSValue(.., ValType::I32, ..)` here since it will
+    // treat the integer as signed, which it isn't.  `vp.set(..)` will
+    // coerce correctly to a JS::Value, though.
+    vp.set(NumberValue(numElements));
+    return true;
+  }
+  return ToJSValue(cx, arrayObj.data_ + offset.get(), type, vp);
 }
 
 bool WasmGcObject::isRuntimeSubtype(Handle<RttValue*> rtt) const {
@@ -485,7 +487,7 @@ bool WasmGcObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
   }
   RootedId id(cx);
   for (size_t index = 0; index < indexCount; index++) {
-    id = PropertyKey::Int(index);
+    id = PropertyKey::Int(int32_t(index));
     properties.infallibleAppend(id);
   }
 

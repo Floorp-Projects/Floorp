@@ -1159,8 +1159,6 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     uint32_t mask_;
     bool defined_;
 
-    Table(Table&& rhs) = delete;
-
    public:
     Table(uint32_t sigIndex, TaggedParserAtomIndex name, uint32_t firstUse,
           uint32_t mask)
@@ -1169,6 +1167,8 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
           firstUse_(firstUse),
           mask_(mask),
           defined_(false) {}
+
+    Table(Table&& rhs) = delete;
 
     uint32_t sigIndex() const { return sigIndex_; }
     TaggedParserAtomIndex name() const { return name_; }
@@ -6951,7 +6951,7 @@ static bool TryInstantiate(JSContext* cx, CallArgs args, const Module& module,
     }
 
     imports.get().memory =
-        WasmMemoryObject::create(cx, buffer, /* hugeMemory= */ false, nullptr);
+        WasmMemoryObject::create(cx, buffer, /* isHuge= */ false, nullptr);
     if (!imports.get().memory) {
       return false;
     }

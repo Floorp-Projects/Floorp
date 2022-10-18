@@ -199,14 +199,14 @@ class alignas(16) Instance {
   bool callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc,
                   uint64_t* argv);
 
-  Instance(JSContext* cx, Handle<WasmInstanceObject*> object, SharedCode code,
-           Handle<WasmMemoryObject*> memory, SharedTableVector&& tables,
-           UniqueDebugState maybeDebug);
+  Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
+           const SharedCode& code, Handle<WasmMemoryObject*> memory,
+           SharedTableVector&& tables, UniqueDebugState maybeDebug);
   ~Instance();
 
  public:
   static Instance* create(JSContext* cx, Handle<WasmInstanceObject*> object,
-                          SharedCode code, uint32_t globalDataLength,
+                          const SharedCode& code, uint32_t globalDataLength,
                           Handle<WasmMemoryObject*> memory,
                           SharedTableVector&& tables,
                           UniqueDebugState maybeDebug);
@@ -460,7 +460,8 @@ class alignas(16) Instance {
                             uint32_t numElements, void* arrayDescr,
                             uint32_t segIndex);
   static void* arrayNewElem(Instance* instance, uint32_t segElemIndex,
-                            uint32_t size, void* arrayDescr, uint32_t segIndex);
+                            uint32_t numElements, void* arrayDescr,
+                            uint32_t segIndex);
   static int32_t arrayCopy(Instance* instance, void* dstArray,
                            uint32_t dstIndex, void* srcArray, uint32_t srcIndex,
                            uint32_t numElements, uint32_t elementSize);
