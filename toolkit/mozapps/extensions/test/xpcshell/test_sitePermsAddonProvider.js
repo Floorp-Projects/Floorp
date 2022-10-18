@@ -42,6 +42,7 @@ const PRINCIPAL_USERCONTEXT = ssm.createContentPrincipal(
   Services.io.newURI("https://example.withusercontext.com"),
   { userContextId: 2 }
 );
+const PRINCIPAL_NULL = ssm.createNullPrincipal({});
 
 const URI_USED_IN_MULTIPLE_CONTEXTS = Services.io.newURI(
   "https://multiplecontexts.com"
@@ -356,6 +357,19 @@ add_task(
       ),
       /SitePermsAddon can\'t be installed from public eTLDs/,
       "installSitePermsAddonFromWebpage rejected when called with public principal"
+    );
+
+    info(
+      "Call installSitePermsAddonFromWebpage for a NullPrincipal as installingPrincipal"
+    );
+    await Assert.rejects(
+      AddonManager.installSitePermsAddonFromWebpage(
+        null,
+        PRINCIPAL_NULL,
+        GATED_SITE_PERM1
+      ),
+      /SitePermsAddons can\'t be installed from sandboxed subframes/,
+      "installSitePermsAddonFromWebpage rejected when called with a NullPrincipal as installing principal"
     );
 
     addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
