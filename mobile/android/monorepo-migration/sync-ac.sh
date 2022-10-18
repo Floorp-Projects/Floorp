@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 CURRENT_REPO_PATH="$(dirname -- "$SCRIPT_DIR")"
 
 REPO_NAME_TO_SYNC='android-components'
+MAIN_BRANCH_NAME='main'
 TMP_REPO_PATH="/tmp/git/$REPO_NAME_TO_SYNC"
 TMP_REPO_BRANCH_NAME='firefox-android'
 TAG_PREFIX='components-'
@@ -57,8 +58,13 @@ function _update_repo_branch() {
 }
 
 function _update_repo_numbers() {
+    cd "$CURRENT_REPO_PATH"
     "$SCRIPT_DIR/generate-repo-numbers.py"
     "$SCRIPT_DIR/generate-replace-message-expressions.py"
+    git switch "$MAIN_BRANCH_NAME"
+    git add 'monorepo-migration/data'
+    git commit -m "monorepo-migration: Fetch latest repo numbers and regexes"
+    git switch -
 }
 
 function _rewrite_git_history() {
