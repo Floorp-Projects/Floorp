@@ -107,10 +107,10 @@ static constexpr TypeCode LowestPrimitiveTypeCode = TypeCode::I16;
 
 static constexpr TypeCode AbstractReferenceTypeCode = TypeCode::ExternRef;
 
-// A type code used to represent (ref null? typeindex) whether or not the type
+// A type code used to represent (ref null? T) whether or not the type
 // is encoded with 'Ref' or 'NullableRef'.
 
-static constexpr TypeCode AbstractReferenceTypeIndexCode = TypeCode::Ref;
+static constexpr TypeCode AbstractTypeRefCode = TypeCode::Ref;
 
 // A wasm::Trap represents a wasm-defined trap that can occur during execution
 // which triggers a WebAssembly.RuntimeError. Generated code may jump to a Trap

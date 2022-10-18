@@ -56,7 +56,7 @@ static bool IsImmediateValType(ValType vt) {
         case RefType::Extern:
         case RefType::Eq:
           return true;
-        case RefType::TypeIndex:
+        case RefType::TypeRef:
           return false;
       }
       break;
@@ -85,7 +85,7 @@ static unsigned EncodeImmediateValType(ValType vt) {
           return 6;
         case RefType::Eq:
           return 7;
-        case RefType::TypeIndex:
+        case RefType::TypeRef:
           break;
       }
       break;
@@ -284,21 +284,20 @@ TypeResult TypeContext::isRefEquivalent(RefType first, RefType second,
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
   if (features_.functionReferences) {
-    // second references must have the same nullability to be equal
+    // References must have the same nullability to be equal
     if (first.isNullable() != second.isNullable()) {
       return TypeResult::False;
     }
 
     // Non type-index references are equal if they have the same kind
-    if (!first.isTypeIndex() && !second.isTypeIndex() &&
+    if (!first.isTypeRef() && !second.isTypeRef() &&
         first.kind() == second.kind()) {
       return TypeResult::True;
     }
 
     // Type-index references can be equal
-    if (first.isTypeIndex() && second.isTypeIndex()) {
-      return isTypeIndexEquivalent(first.typeIndex(), second.typeIndex(),
-                                   cache);
+    if (first.isTypeRef() && second.isTypeRef()) {
+      return isTypeDefEquivalent(first.typeDef(), second.typeDef(), cache);
     }
   }
 #endif
@@ -306,26 +305,26 @@ TypeResult TypeContext::isRefEquivalent(RefType first, RefType second,
 }
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-TypeResult TypeContext::isTypeIndexEquivalent(uint32_t firstIndex,
-                                              uint32_t secondIndex,
-                                              TypeCache* cache) const {
+TypeResult TypeContext::isTypeDefEquivalent(const TypeDef* first,
+                                            const TypeDef* second,
+                                            TypeCache* cache) const {
   MOZ_ASSERT(features_.functionReferences);
 
   // Anything's equal to itself.
-  if (firstIndex == secondIndex) {
+  if (first == second) {
     return TypeResult::True;
   }
 
 #  ifdef ENABLE_WASM_GC
   if (features_.gc) {
     // A struct may be equal to a struct
-    if (isStructType(firstIndex) && isStructType(secondIndex)) {
-      return isStructEquivalent(firstIndex, secondIndex, cache);
+    if (first->isStructType() && second->isStructType()) {
+      return isStructEquivalent(first, second, cache);
     }
 
     // An array may be equal to an array
-    if (isArrayType(firstIndex) && isArrayType(secondIndex)) {
-      return isArrayEquivalent(firstIndex, secondIndex, cache);
+    if (first->isArrayType() && second->isArrayType()) {
+      return isArrayEquivalent(first, second, cache);
     }
   }
 #  endif
@@ -335,32 +334,32 @@ TypeResult TypeContext::isTypeIndexEquivalent(uint32_t firstIndex,
 #endif
 
 #ifdef ENABLE_WASM_GC
-TypeResult TypeContext::isStructEquivalent(uint32_t firstIndex,
-                                           uint32_t secondIndex,
+TypeResult TypeContext::isStructEquivalent(const TypeDef* first,
+                                           const TypeDef* second,
                                            TypeCache* cache) const {
-  if (cache->isEquivalent(firstIndex, secondIndex)) {
+  if (cache->isEquivalent(first, second)) {
     return TypeResult::True;
   }
 
-  const StructType& subType = structType(firstIndex);
-  const StructType& superType = structType(secondIndex);
+  const StructType& firstStruct = first->structType();
+  const StructType& secondStruct = second->structType();
 
   // Structs must have the same number of fields to be equal
-  if (subType.fields_.length() != superType.fields_.length()) {
+  if (firstStruct.fields_.length() != secondStruct.fields_.length()) {
     return TypeResult::False;
   }
 
   // Assume these structs are equal while checking fields. If any field is
   // not equal then we remove the assumption.
-  if (!cache->markEquivalent(firstIndex, secondIndex)) {
+  if (!cache->markEquivalent(first, second)) {
     return TypeResult::OOM;
   }
 
-  for (uint32_t i = 0; i < superType.fields_.length(); i++) {
-    TypeResult result = isStructFieldEquivalent(subType.fields_[i],
-                                                superType.fields_[i], cache);
+  for (uint32_t i = 0; i < secondStruct.fields_.length(); i++) {
+    TypeResult result = isStructFieldEquivalent(firstStruct.fields_[i],
+                                                secondStruct.fields_[i], cache);
     if (result != TypeResult::True) {
-      cache->unmarkEquivalent(firstIndex, secondIndex);
+      cache->unmarkEquivalent(first, second);
       return result;
     }
   }
@@ -378,25 +377,25 @@ TypeResult TypeContext::isStructFieldEquivalent(const StructField first,
   return isEquivalent(first.type, second.type, cache);
 }
 
-TypeResult TypeContext::isArrayEquivalent(uint32_t firstIndex,
-                                          uint32_t secondIndex,
+TypeResult TypeContext::isArrayEquivalent(const TypeDef* firstDef,
+                                          const TypeDef* secondDef,
                                           TypeCache* cache) const {
-  if (cache->isEquivalent(firstIndex, secondIndex)) {
+  if (cache->isEquivalent(firstDef, secondDef)) {
     return TypeResult::True;
   }
 
-  const ArrayType& subType = arrayType(firstIndex);
-  const ArrayType& superType = arrayType(secondIndex);
+  const ArrayType& firstArray = firstDef->arrayType();
+  const ArrayType& secondArray = secondDef->arrayType();
 
   // Assume these arrays are equal while checking fields. If the array
   // element is not equal then we remove the assumption.
-  if (!cache->markEquivalent(firstIndex, secondIndex)) {
+  if (!cache->markEquivalent(firstDef, secondDef)) {
     return TypeResult::OOM;
   }
 
-  TypeResult result = isArrayElementEquivalent(subType, superType, cache);
+  TypeResult result = isArrayElementEquivalent(firstArray, secondArray, cache);
   if (result != TypeResult::True) {
-    cache->unmarkEquivalent(firstIndex, secondIndex);
+    cache->unmarkEquivalent(firstDef, secondDef);
   }
   return result;
 }
@@ -430,31 +429,32 @@ TypeResult TypeContext::isRefSubtypeOf(RefType subType, RefType superType,
     }
 
     // Non type-index references are subtypes if they have the same kind
-    if (!subType.isTypeIndex() && !superType.isTypeIndex() &&
+    if (!subType.isTypeRef() && !superType.isTypeRef() &&
         subType.kind() == superType.kind()) {
       return TypeResult::True;
     }
 
     // Structs are subtypes of eqref
-    if (isStructType(subType) && superType.isEq()) {
+    if (subType.isTypeRef() && subType.typeDef()->isStructType() &&
+        superType.isEq()) {
       return TypeResult::True;
     }
 
     // Arrays are subtypes of eqref
-    if (isArrayType(subType) && superType.isEq()) {
+    if (subType.isTypeRef() && subType.typeDef()->isArrayType() &&
+        superType.isEq()) {
       return TypeResult::True;
     }
 
-    // The ref T <: funcref when T = func-type rule
-    if (subType.isTypeIndex() && types_[subType.typeIndex()].isFuncType() &&
+    // Funcs are subtypes of funcref
+    if (subType.isTypeRef() && subType.typeDef()->isFuncType() &&
         superType.isFunc()) {
       return TypeResult::True;
     }
 
     // Type-index references can be subtypes
-    if (subType.isTypeIndex() && superType.isTypeIndex()) {
-      return isTypeIndexSubtypeOf(subType.typeIndex(), superType.typeIndex(),
-                                  cache);
+    if (subType.isTypeRef() && superType.isTypeRef()) {
+      return isTypeDefSubtypeOf(subType.typeDef(), superType.typeDef(), cache);
     }
   }
 #endif
@@ -462,9 +462,9 @@ TypeResult TypeContext::isRefSubtypeOf(RefType subType, RefType superType,
 }
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-TypeResult TypeContext::isTypeIndexSubtypeOf(uint32_t subType,
-                                             uint32_t superType,
-                                             TypeCache* cache) const {
+TypeResult TypeContext::isTypeDefSubtypeOf(const TypeDef* subType,
+                                           const TypeDef* superType,
+                                           TypeCache* cache) const {
   MOZ_ASSERT(features_.functionReferences);
 
   // Anything's a subtype of itself.
@@ -475,12 +475,12 @@ TypeResult TypeContext::isTypeIndexSubtypeOf(uint32_t subType,
 #  ifdef ENABLE_WASM_GC
   if (features_.gc) {
     // Structs may be subtypes of structs
-    if (isStructType(subType) && isStructType(superType)) {
+    if (subType->isStructType() && superType->isStructType()) {
       return isStructSubtypeOf(subType, superType, cache);
     }
 
     // Arrays may be subtypes of arrays
-    if (isArrayType(subType) && isArrayType(superType)) {
+    if (subType->isArrayType() && superType->isArrayType()) {
       return isArraySubtypeOf(subType, superType, cache);
     }
   }
@@ -490,32 +490,32 @@ TypeResult TypeContext::isTypeIndexSubtypeOf(uint32_t subType,
 #endif
 
 #ifdef ENABLE_WASM_GC
-TypeResult TypeContext::isStructSubtypeOf(uint32_t subTypeIndex,
-                                          uint32_t superTypeIndex,
+TypeResult TypeContext::isStructSubtypeOf(const TypeDef* subType,
+                                          const TypeDef* superType,
                                           TypeCache* cache) const {
-  if (cache->isSubtypeOf(subTypeIndex, superTypeIndex)) {
+  if (cache->isSubtypeOf(subType, superType)) {
     return TypeResult::True;
   }
 
-  const StructType& subType = structType(subTypeIndex);
-  const StructType& superType = structType(superTypeIndex);
+  const StructType& subStruct = subType->structType();
+  const StructType& superStruct = superType->structType();
 
   // A subtype must have at least as many fields as its supertype
-  if (subType.fields_.length() < superType.fields_.length()) {
+  if (subStruct.fields_.length() < superStruct.fields_.length()) {
     return TypeResult::False;
   }
 
   // Assume these structs are subtypes while checking fields. If any field
   // fails a check then we remove the assumption.
-  if (!cache->markSubtypeOf(subTypeIndex, superTypeIndex)) {
+  if (!cache->markSubtypeOf(subType, superType)) {
     return TypeResult::OOM;
   }
 
-  for (uint32_t i = 0; i < superType.fields_.length(); i++) {
-    TypeResult result =
-        isStructFieldSubtypeOf(subType.fields_[i], superType.fields_[i], cache);
+  for (uint32_t i = 0; i < superStruct.fields_.length(); i++) {
+    TypeResult result = isStructFieldSubtypeOf(subStruct.fields_[i],
+                                               superStruct.fields_[i], cache);
     if (result != TypeResult::True) {
-      cache->unmarkSubtypeOf(subTypeIndex, superTypeIndex);
+      cache->unmarkSubtypeOf(subType, superType);
       return result;
     }
   }
@@ -536,25 +536,25 @@ TypeResult TypeContext::isStructFieldSubtypeOf(const StructField subType,
   return TypeResult::False;
 }
 
-TypeResult TypeContext::isArraySubtypeOf(uint32_t subTypeIndex,
-                                         uint32_t superTypeIndex,
+TypeResult TypeContext::isArraySubtypeOf(const TypeDef* subType,
+                                         const TypeDef* superType,
                                          TypeCache* cache) const {
-  if (cache->isSubtypeOf(subTypeIndex, superTypeIndex)) {
+  if (cache->isSubtypeOf(subType, superType)) {
     return TypeResult::True;
   }
 
-  const ArrayType& subType = arrayType(subTypeIndex);
-  const ArrayType& superType = arrayType(superTypeIndex);
+  const ArrayType& subArray = subType->arrayType();
+  const ArrayType& superArray = superType->arrayType();
 
   // Assume these arrays are subtypes while checking elements. If the elements
   // fail the check then we remove the assumption.
-  if (!cache->markSubtypeOf(subTypeIndex, superTypeIndex)) {
+  if (!cache->markSubtypeOf(subType, superType)) {
     return TypeResult::OOM;
   }
 
-  TypeResult result = isArrayElementSubtypeOf(subType, superType, cache);
+  TypeResult result = isArrayElementSubtypeOf(subArray, superArray, cache);
   if (result != TypeResult::True) {
-    cache->unmarkSubtypeOf(subTypeIndex, superTypeIndex);
+    cache->unmarkSubtypeOf(subType, superType);
   }
   return result;
 }

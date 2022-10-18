@@ -36,8 +36,8 @@ class TaggedValue {
     PointerKind1 = 2,
     PointerKind2 = 3
   };
-  using PackedRepr = uintptr_t;
-  static_assert(std::is_same<PackedTypeCode::PackedRepr, uint32_t>(),
+  using PackedRepr = uint64_t;
+  static_assert(std::is_same<PackedTypeCode::PackedRepr, uint64_t>(),
                 "can use pointer tagging with PackedTypeCode");
 
  private:

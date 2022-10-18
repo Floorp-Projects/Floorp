@@ -409,7 +409,7 @@ bool WasmGcObject::loadValue(JSContext* cx, const RttValue::PropOffset& offset,
   // like to access it so we erase (ref T) with eqref when loading. This is
   // safe as (ref T) <: eqref and we're not in the writing case where we
   // would need to perform a type check.
-  if (type.isTypeIndex()) {
+  if (type.isTypeRef()) {
     type = RefType::fromTypeCode(TypeCode::EqRef, true);
   }
 

@@ -1941,13 +1941,18 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
     }
 
     *sigIndex = moduleEnv_.types->length();
-    return moduleEnv_.types->append(std::move(sig));
+    MutableTypeDef typeDef = moduleEnv_.types->addType();
+    if (!typeDef) {
+      return false;
+    }
+    *typeDef = std::move(sig);
+    return true;
   }
   bool declareSig(FuncType&& sig, uint32_t* sigIndex) {
     SigSet::AddPtr p = sigSet_.lookupForAdd(sig);
     if (p) {
       *sigIndex = p->sigIndex();
-      MOZ_ASSERT(moduleEnv_.types->funcType(*sigIndex) == sig);
+      MOZ_ASSERT(moduleEnv_.types->type(*sigIndex).funcType() == sig);
       return true;
     }
 
@@ -2128,15 +2133,15 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
       uint32_t funcIndex = r.front().value();
       uint32_t funcTypeIndex = r.front().key().sigIndex();
       MOZ_ASSERT(!moduleEnv_.funcs[funcIndex].type);
-      moduleEnv_.funcs[funcIndex] =
-          FuncDesc(&moduleEnv_.types->funcType(funcTypeIndex), funcTypeIndex);
+      moduleEnv_.funcs[funcIndex] = FuncDesc(
+          &moduleEnv_.types->type(funcTypeIndex).funcType(), funcTypeIndex);
     }
     for (const Func& func : funcDefs_) {
       uint32_t funcIndex = funcImportMap_.count() + func.funcDefIndex();
       uint32_t funcTypeIndex = func.sigIndex();
       MOZ_ASSERT(!moduleEnv_.funcs[funcIndex].type);
-      moduleEnv_.funcs[funcIndex] =
-          FuncDesc(&moduleEnv_.types->funcType(funcTypeIndex), funcTypeIndex);
+      moduleEnv_.funcs[funcIndex] = FuncDesc(
+          &moduleEnv_.types->type(funcTypeIndex).funcType(), funcTypeIndex);
     }
     for (const Export& exp : moduleEnv_.exports) {
       if (exp.kind() != DefinitionKind::Function) {
@@ -4036,7 +4041,8 @@ static bool CheckFunctionSignature(ModuleValidator<Unit>& m, ParseNode* usepn,
     return m.addFuncDef(name, usepn->pn_pos.begin, std::move(sig), func);
   }
 
-  const FuncType& existingSig = m.env().types->funcType(existing->sigIndex());
+  const FuncType& existingSig =
+      m.env().types->type(existing->sigIndex()).funcType();
 
   if (!CheckSignatureAgainstExisting(m, usepn, sig, existingSig)) {
     return false;
@@ -4110,7 +4116,7 @@ static bool CheckFuncPtrTableAgainstExisting(ModuleValidator<Unit>& m,
     }
 
     if (!CheckSignatureAgainstExisting(
-            m, usepn, sig, m.env().types->funcType(table.sigIndex()))) {
+            m, usepn, sig, m.env().types->type(table.sigIndex()).funcType())) {
       return false;
     }
 
@@ -5948,7 +5954,8 @@ static bool CheckReturnType(FunctionValidatorShared& f, ParseNode* usepn,
 
   if (f.returnedType() != type) {
     return f.failf(usepn, "%s incompatible with previous return of type %s",
-                   ToString(type).get(), ToString(f.returnedType()).get());
+                   ToString(type, nullptr).get(),
+                   ToString(f.returnedType(), nullptr).get());
   }
 
   return true;
@@ -6274,7 +6281,7 @@ static bool CheckFuncPtrTable(ModuleValidator<Unit>& m, ParseNode* decl) {
           elem, "function-pointer table's elements must be names of functions");
     }
 
-    const FuncType& funcSig = m.env().types->funcType(func->sigIndex());
+    const FuncType& funcSig = m.env().types->type(func->sigIndex()).funcType();
     if (sig) {
       if (*sig != funcSig) {
         return m.fail(elem, "all functions in table must have same signature");

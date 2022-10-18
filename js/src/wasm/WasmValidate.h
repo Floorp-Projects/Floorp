@@ -121,11 +121,8 @@ struct ModuleEnvironment {
   }
 
   bool initTypes(uint32_t numTypes) {
-    types = js_new<TypeContext>(features, TypeDefVector());
-    if (!types) {
-      return false;
-    }
-    return types->resize(numTypes);
+    types = js_new<TypeContext>(features);
+    return types && types->addTypes(numTypes);
   }
 
   void declareFuncExported(uint32_t funcIndex, bool eager, bool canRefFunc) {
@@ -234,7 +231,8 @@ using ValidatingOpIter = OpIter<ValidatingPolicy>;
 // This performs no validation; the local entries must already have been
 // validated by an earlier pass.
 
-[[nodiscard]] bool DecodeValidatedLocalEntries(Decoder& d,
+[[nodiscard]] bool DecodeValidatedLocalEntries(const TypeContext& types,
+                                               Decoder& d,
                                                ValTypeVector* locals);
 
 // This validates the entries.
