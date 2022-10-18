@@ -3845,7 +3845,7 @@ nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(
     if (value < 0) {
       value = 0;
     }
-    if (value > imgDimension) {
+    if (value > imgDimension && imgDimension > 0) {
       value = imgDimension;
     }
     mSlice.Side(s) = value;
