@@ -159,7 +159,8 @@ vendoring:
   source-hosting: gitlab
 
   # Type of Vendoring
-  # This is either 'rust' or 'regular'
+  # This is either 'regular', 'individual-files', or 'rust'
+  # If omitted, will default to 'regular'
   flavor: rust
 
   # Type of git reference (commit, tag) to track updates from.
@@ -423,7 +424,7 @@ def _schema_1():
                     In(VALID_SOURCE_HOSTS, msg="Unsupported Source Hosting"),
                 ),
                 "tracking": All(str, Length(min=1)),
-                "flavor": Match(r"^(regular|rust)$"),
+                "flavor": Match(r"^(regular|rust|individual-files)$"),
                 "skip-vendoring-steps": Unique([str]),
                 "vendor-directory": All(str, Length(min=1)),
                 "patches": Unique([str]),
@@ -431,6 +432,12 @@ def _schema_1():
                 "exclude": Unique([str]),
                 "include": Unique([str]),
                 "generated": Unique([str]),
+                "individual-files": [
+                    {
+                        Required("upstream"): All(str, Length(min=1)),
+                        Required("destination"): All(str, Length(min=1)),
+                    }
+                ],
                 "update-actions": All(
                     UpdateActions(),
                     [
@@ -528,6 +535,39 @@ def _schema_1_additional(filename, manifest, require_license_file=True):
         if "vendoring" not in manifest or "url" not in manifest["vendoring"]:
             raise ValueError(
                 "If Updatebot tasks are specified, a vendoring url must be included."
+            )
+
+    # The Rust and Individual Flavor type precludes a lot of options
+    # individual-files could, in theory, use several of these, but until we have a use case let's
+    # disallow them so we're not worrying about whether they work. When we need them we can make
+    # sure they do.
+    if (
+        "vendoring" in manifest
+        and manifest["vendoring"].get("flavor", "regular") != "regular"
+    ):
+        for i in [
+            "skip-vendoring-steps",
+            "keep",
+            "exclude",
+            "include",
+            "generated",
+            "update-actions",
+        ]:
+            if i in manifest["vendoring"]:
+                raise ValueError("A non-regular flavor of update cannot use '%s'" % i)
+
+    if (
+        "vendoring" in manifest
+        and manifest["vendoring"].get("flavor", "regular") != "individual-files"
+    ):
+        if "individual-files" in manifest["vendoring"]:
+            raise ValueError(
+                "Only individual-files flavor of update can use 'individual-files'"
+            )
+    elif "vendoring" in manifest:
+        if "individual-files" not in manifest["vendoring"]:
+            raise ValueError(
+                "The individual-files flavor of update must include 'individual-files'"
             )
 
     # Check for a simple YAML file
