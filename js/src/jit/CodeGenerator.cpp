@@ -4326,18 +4326,7 @@ void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
   ValueOperand idVal = ToValue(lir, LMegamorphicHasProp::IdIndex);
   Register temp0 = ToRegister(lir->temp0());
   Register temp1 = ToRegister(lir->temp1());
-  Register temp2 = ToRegister(lir->temp2());
-  Register temp3 = ToRegister(lir->temp3());
   Register output = ToRegister(lir->output());
-
-  Label bail, cacheHit;
-  if (JitOptions.enableWatchtowerMegamorphic) {
-    masm.emitMegamorphicCacheLookupExists(idVal, obj, temp0, temp1, temp2,
-                                          temp3, output, &bail, &cacheHit,
-                                          lir->mir()->hasOwn());
-  }
-
-  masm.branchIfNonNativeObj(obj, temp0, &bail);
 
   // idVal will be in vp[0], result will be stored in vp[1].
   masm.reserveStack(sizeof(Value));
@@ -4364,15 +4353,12 @@ void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
   Label ok;
   masm.branchIfTrueBool(temp0, &ok);
   masm.freeStack(sizeof(Value));  // Discard result Value.
-  masm.jump(&bail);
+  bailout(lir->snapshot());
 
   masm.bind(&ok);
   masm.setFramePushed(framePushed);
   masm.unboxBoolean(Address(masm.getStackPointer(), 0), output);
   masm.freeStack(sizeof(Value));
-  masm.bind(&cacheHit);
-
-  bailoutFrom(&bail, lir->snapshot());
 }
 
 void CodeGenerator::visitGuardIsNotArrayBufferMaybeShared(
