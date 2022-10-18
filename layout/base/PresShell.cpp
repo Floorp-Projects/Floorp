@@ -3707,17 +3707,16 @@ nsresult PresShell::ScrollContentIntoView(nsIContent* aContent,
   return NS_OK;
 }
 
-static nsMargin GetScrollMargin(const nsIContent* aContentToScrollTo,
-                                const nsIFrame* aFrame) {
-  MOZ_ASSERT(aContentToScrollTo->GetPrimaryFrame() == aFrame);
+static nsMargin GetScrollMargin(const nsIFrame* aFrame) {
+  MOZ_ASSERT(aFrame);
   // If we're focusing something that can't be targeted by content, allow
   // content to customize the margin.
   //
   // TODO: This is also a bit of an issue for delegated focus, see
   // https://github.com/whatwg/html/issues/7033.
-  if (aContentToScrollTo->ChromeOnlyAccess()) {
+  if (aFrame->GetContent() && aFrame->GetContent()->ChromeOnlyAccess()) {
     if (const nsIContent* userContent =
-            aContentToScrollTo->GetChromeOnlyAccessSubtreeRootParent()) {
+            aFrame->GetContent()->GetChromeOnlyAccessSubtreeRootParent()) {
       if (const nsIFrame* frame = userContent->GetPrimaryFrame()) {
         return frame->StyleMargin()->GetScrollMargin();
       }
@@ -3743,20 +3742,6 @@ void PresShell::DoScrollContentIntoView() {
     return;
   }
 
-  // We really just need a non-fragmented frame so that we can accumulate the
-  // bounds of all our continuations relative to it. We shouldn't jump out of
-  // our nearest scrollable frame, and that's an ok reference frame, so try to
-  // use that, or the root frame if there's nothing to scroll in this document.
-  nsIFrame* container = nsLayoutUtils::GetClosestFrameOfType(
-      frame->GetParent(), LayoutFrameType::Scroll);
-  if (!container) {
-    container = frame->PresShell()->GetRootFrame();
-    MOZ_DIAGNOSTIC_ASSERT(container);
-    if (!container) {
-      return;
-    }
-  }
-
   auto* data = static_cast<ScrollIntoViewData*>(
       mContentToScrollTo->GetProperty(nsGkAtoms::scrolling));
   if (MOZ_UNLIKELY(!data)) {
@@ -3764,65 +3749,70 @@ void PresShell::DoScrollContentIntoView() {
     return;
   }
 
-  // Get the scroll-margin here since |frame| is going to be changed to iterate
-  // over all continuation frames below.
-  const nsMargin scrollMargin = GetScrollMargin(mContentToScrollTo, frame);
-
-  const nsIFrame* target = frame;
-  // This is a two-step process.
-  // Step 1: Find the bounds of the rect we want to scroll into view.  For
-  //         example, for an inline frame we may want to scroll in the whole
-  //         line, or we may want to scroll multiple lines into view.
-  // Step 2: Walk container frame and its ancestors and scroll them
-  //         appropriately.
-  // frameBounds is relative to container. We're assuming
-  // that scrollframes don't split so every continuation of frame will
-  // be a descendant of container. (Things would still mostly work
-  // even if that assumption was false.)
-  nsRect frameBounds;
-  bool haveRect = false;
-  bool useWholeLineHeightForInlines = data->mContentScrollVAxis.mWhenToScroll !=
-                                      WhenToScroll::IfNotFullyVisible;
-  {
-    AutoAssertNoDomMutations guard;  // Ensure use of nsILineIterators is safe.
-    nsIFrame* prevBlock = nullptr;
-    // Reuse the same line iterator across calls to AccumulateFrameBounds.
-    // We set it every time we detect a new block (stored in prevBlock).
-    nsILineIterator* lines = nullptr;
-    // The last line we found a continuation on in |lines|.  We assume that
-    // later continuations cannot come on earlier lines.
-    int32_t curLine = 0;
-    do {
-      AccumulateFrameBounds(container, frame, useWholeLineHeightForInlines,
-                            frameBounds, haveRect, prevBlock, lines, curLine);
-    } while ((frame = frame->GetNextContinuation()));
-  }
-
-  ScrollFrameRectIntoView(container, frameBounds, scrollMargin,
-                          data->mContentScrollVAxis, data->mContentScrollHAxis,
-                          data->mContentToScrollToFlags, target);
+  ScrollFrameIntoView(frame, Nothing(), data->mContentScrollVAxis,
+                      data->mContentScrollHAxis, data->mContentToScrollToFlags);
 }
 
-bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
-                                        const nsMargin& aMargin,
-                                        ScrollAxis aVertical,
-                                        ScrollAxis aHorizontal,
-                                        ScrollFlags aScrollFlags,
-                                        const nsIFrame* aTarget) {
-  if (aFrame->IsHiddenByContentVisibilityOnAnyAncestor()) {
+bool PresShell::ScrollFrameIntoView(
+    nsIFrame* aTargetFrame, const Maybe<nsRect>& aKnownRectRelativeToTarget,
+    ScrollAxis aVertical, ScrollAxis aHorizontal, ScrollFlags aScrollFlags) {
+  if (aTargetFrame->IsHiddenByContentVisibilityOnAnyAncestor()) {
     return false;
   }
 
-  bool didScroll = false;
+  // The scroll margin only applies to the whole bounds of the element, so don't
+  // apply it if we get an arbitrary rect / point to scroll to.
+  const nsMargin scrollMargin =
+      aKnownRectRelativeToTarget ? nsMargin() : GetScrollMargin(aTargetFrame);
+
+  nsIFrame* container = aTargetFrame;
+
   // This function needs to work even if rect has a width or height of 0.
-  nsRect rect = aRect;
-  nsIFrame* container = aFrame;
-  const nsIFrame* target = aTarget ? aTarget : aFrame;
+  nsRect rect = [&] {
+    if (aKnownRectRelativeToTarget) {
+      return *aKnownRectRelativeToTarget;
+    }
+    // We really just need a non-fragmented frame so that we can accumulate the
+    // bounds of all our continuations relative to it. We shouldn't jump out of
+    // our nearest scrollable frame, and that's an ok reference frame, so try to
+    // use that, or the root frame if there's nothing to scroll in this document.
+    nsIFrame* container = nsLayoutUtils::GetClosestFrameOfType(
+        aTargetFrame->GetParent(), LayoutFrameType::Scroll);
+    if (!container) {
+      container = aTargetFrame->PresShell()->GetRootFrame();
+      MOZ_DIAGNOSTIC_ASSERT(container);
+    }
+    nsRect targetFrameBounds;
+    {
+      bool haveRect = false;
+      const bool useWholeLineHeightForInlines =
+          aVertical.mWhenToScroll != WhenToScroll::IfNotFullyVisible;
+      AutoAssertNoDomMutations
+          guard;  // Ensure use of nsILineIterators is safe.
+      nsIFrame* prevBlock = nullptr;
+      // Reuse the same line iterator across calls to AccumulateFrameBounds.
+      // We set it every time we detect a new block (stored in prevBlock).
+      nsILineIterator* lines = nullptr;
+      // The last line we found a continuation on in |lines|.  We assume that
+      // later continuations cannot come on earlier lines.
+      int32_t curLine = 0;
+      nsIFrame* frame = aTargetFrame;
+      do {
+        AccumulateFrameBounds(container, frame, useWholeLineHeightForInlines,
+                              targetFrameBounds, haveRect, prevBlock, lines,
+                              curLine);
+      } while ((frame = frame->GetNextContinuation()));
+    }
+
+    return targetFrameBounds;
+  }();
+
+  bool didScroll = false;
+  const nsIFrame* target = aTargetFrame;
   // Walk up the frame hierarchy scrolling the rect into view and
   // keeping rect relative to container
   do {
-    nsIScrollableFrame* sf = do_QueryFrame(container);
-    if (sf) {
+    if (nsIScrollableFrame* sf = do_QueryFrame(container)) {
       nsPoint oldPosition = sf->GetScrollPosition();
       nsRect targetRect = rect;
       // Inflate the scrolled rect by the container's padding in each dimension,
@@ -3851,8 +3841,8 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
 
       {
         AutoWeakFrame wf(container);
-        ScrollToShowRect(sf, container, target, targetRect, aMargin, aVertical,
-                         aHorizontal, aScrollFlags);
+        ScrollToShowRect(sf, container, target, targetRect,
+                         scrollMargin, aVertical, aHorizontal, aScrollFlags);
         if (!wf.IsAlive()) {
           return didScroll;
         }

@@ -1881,9 +1881,9 @@ nsresult AutoScroller::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   bool done = false;
   bool didScroll;
   while (true) {
-    didScroll = presShell->ScrollFrameRectIntoView(
-        aFrame, nsRect(aPoint, nsSize(0, 0)), nsMargin(), ScrollAxis(),
-        ScrollAxis(), ScrollFlags::None);
+    didScroll = presShell->ScrollFrameIntoView(
+        aFrame, Some(nsRect(aPoint, nsSize())), ScrollAxis(), ScrollAxis(),
+        ScrollFlags::None);
     if (!weakFrame || !weakRootFrame) {
       return NS_OK;
     }
@@ -3064,8 +3064,8 @@ nsresult Selection::ScrollIntoView(SelectionRegion aRegion,
     scrollFlags |= ScrollFlags::ScrollOverflowHidden;
   }
 
-  presShell->ScrollFrameRectIntoView(frame, rect, nsMargin(), aVertical,
-                                     aHorizontal, scrollFlags);
+  presShell->ScrollFrameIntoView(frame, Some(rect), aVertical, aHorizontal,
+                                 scrollFlags);
   return NS_OK;
 }
 

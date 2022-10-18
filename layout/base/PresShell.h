@@ -605,8 +605,9 @@ class PresShell final : public nsStubDocumentObserver,
    * Scrolls the view of the document so that the given area of a frame
    * is visible, if possible. Layout is not flushed before scrolling.
    *
-   * @param aRect Relative to aFrame. The rect edges will be respected even if
-   * the rect is empty.
+   * @param aRect Relative to aTargetFrame. If none, the bounding box of
+   * aTargetFrame will be used. The rect edges will be respected even if the
+   * rect is empty.
    * @param aVertical see ScrollContentIntoView and ScrollAxis
    * @param aHorizontal see ScrollContentIntoView and ScrollAxis
    * @param aScrollFlags if ScrollFirstAncestorOnly is set, only the
@@ -619,15 +620,13 @@ class PresShell final : public nsStubDocumentObserver,
    * If ScrollNoParentFrames is set then we only scroll
    * nodes in this document, not in any parent documents which
    * contain this document in a iframe or the like.
-   * @param aTarget optional, specifying the targe frame where we want to scroll
-   * if it's different from aFrame.
    * @return true if any scrolling happened, false if no scrolling happened
    */
   MOZ_CAN_RUN_SCRIPT
-  bool ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
-                               const nsMargin& aMargin, ScrollAxis aVertical,
-                               ScrollAxis aHorizontal, ScrollFlags aScrollFlags,
-                               const nsIFrame* aTarget = nullptr);
+  bool ScrollFrameIntoView(nsIFrame* aTargetFrame,
+                           const Maybe<nsRect>& aKnownRectRelativeToTarget,
+                           ScrollAxis aVertical, ScrollAxis aHorizontal,
+                           ScrollFlags aScrollFlags);
 
   /**
    * Suppress notification of the frame manager that frames are
