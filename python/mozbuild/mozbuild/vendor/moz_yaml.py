@@ -179,7 +179,6 @@ vendoring:
     - include
     - exclude
     - move-contents
-    - update-actions
     - hg-add
     - spurious-check
     - update-moz-yaml

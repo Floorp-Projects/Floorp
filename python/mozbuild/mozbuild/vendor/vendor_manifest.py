@@ -161,11 +161,8 @@ class VendorManifest(MozbuildObject):
         else:
             self.logInfo({}, "Skipping fetching upstream source.")
 
-        if self.should_perform_step("update-actions"):
-            self.logInfo({}, "Updating files")
-            self.update_files(new_revision)
-        else:
-            self.logInfo({}, "Skipping running the update actions.")
+        self.logInfo({}, "Checking for update actions")
+        self.update_files(new_revision)
 
         if self.should_perform_step("hg-add"):
             self.logInfo({}, "Registering changes with version control.")
