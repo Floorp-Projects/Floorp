@@ -16,6 +16,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/ipc/TransportSecurityInfoUtils.h"
 #include "mozpkix/pkixtypes.h"
+#include "nsIClassInfo.h"
 #include "nsIObjectInputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsITransportSecurityInfo.h"
@@ -26,7 +27,9 @@ namespace mozilla {
 namespace psm {
 
 class TransportSecurityInfo : public nsITransportSecurityInfo,
-                              public nsIInterfaceRequestor {
+                              public nsIInterfaceRequestor,
+                              public nsISerializable,
+                              public nsIClassInfo {
  protected:
   virtual ~TransportSecurityInfo() = default;
 
@@ -36,11 +39,8 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITRANSPORTSECURITYINFO
   NS_DECL_NSIINTERFACEREQUESTOR
-
-  static bool DeserializeFromIPC(IPC::MessageReader* aReader,
-                                 RefPtr<nsITransportSecurityInfo>* aResult);
-  static nsresult Read(const nsCString& aSerializedSecurityInfo,
-                       nsITransportSecurityInfo** aResult);
+  NS_DECL_NSISERIALIZABLE
+  NS_DECL_NSICLASSINFO
 
   void SetPreliminaryHandshakeInfo(const SSLChannelInfo& channelInfo,
                                    const SSLCipherSuiteInfo& cipherInfo);
@@ -202,28 +202,31 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   /* Peer cert chain for failed connections (for error reporting) */
   nsTArray<RefPtr<nsIX509Cert>> mFailedCertChain MOZ_GUARDED_BY(mMutex);
 
-  static nsresult ReadOldOverridableErrorBits(
-      nsIObjectInputStream* aStream,
-      OverridableErrorCategory& aOverridableErrorCategory);
-  static nsresult ReadSSLStatus(
-      nsIObjectInputStream* aStream, nsCOMPtr<nsIX509Cert>& aServerCert,
-      uint16_t& aCipherSuite, uint16_t& aProtocolVersion,
-      OverridableErrorCategory& aOverridableErrorCategory, bool& aIsEV,
-      bool& aHasIsEVStatus, bool& aHaveCipherSuiteAndProtocol,
-      bool& aHaveCertErrorBits, uint16_t& aCertificateTransparencyStatus,
-      nsCString& aKeaGroup, nsCString& aSignatureSchemeName,
-      nsTArray<RefPtr<nsIX509Cert>>& aSucceededCertChain);
+  nsresult ReadOldOverridableErrorBits(nsIObjectInputStream* aStream,
+                                       MutexAutoLock& aProofOfLock);
+  nsresult ReadSSLStatus(nsIObjectInputStream* aStream,
+                         MutexAutoLock& aProofOfLock);
 
   // This function is used to read the binary that are serialized
   // by using nsIX509CertList
-  static nsresult ReadCertList(nsIObjectInputStream* aStream,
-                               nsTArray<RefPtr<nsIX509Cert>>& aCertList);
-  static nsresult ReadCertificatesFromStream(
-      nsIObjectInputStream* aStream, uint32_t aSize,
-      nsTArray<RefPtr<nsIX509Cert>>& aCertList);
+  nsresult ReadCertList(nsIObjectInputStream* aStream,
+                        nsTArray<RefPtr<nsIX509Cert>>& aCertList,
+                        MutexAutoLock& aProofOfLock);
+  nsresult ReadCertificatesFromStream(nsIObjectInputStream* aStream,
+                                      uint32_t aSize,
+                                      nsTArray<RefPtr<nsIX509Cert>>& aCertList,
+                                      MutexAutoLock& aProofOfLock);
 };
 
 }  // namespace psm
 }  // namespace mozilla
+
+// 16786594-0296-4471-8096-8f84497ca428
+#define TRANSPORTSECURITYINFO_CID                    \
+  {                                                  \
+    0x16786594, 0x0296, 0x4471, {                    \
+      0x80, 0x96, 0x8f, 0x84, 0x49, 0x7c, 0xa4, 0x28 \
+    }                                                \
+  }
 
 #endif  // TransportSecurityInfo_h

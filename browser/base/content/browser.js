@@ -294,6 +294,10 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   ],
   Favicons: ["@mozilla.org/browser/favicon-service;1", "nsIFaviconService"],
   gDNSService: ["@mozilla.org/network/dns-service;1", "nsIDNSService"],
+  gSerializationHelper: [
+    "@mozilla.org/network/serialization-helper;1",
+    "nsISerializationHelper",
+  ],
   WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
   BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
 });
@@ -3637,6 +3641,19 @@ function BrowserReloadWithFlags(reloadFlags) {
       "BrowserTab"
     );
   }
+}
+
+function getSecurityInfo(securityInfoAsString) {
+  if (!securityInfoAsString) {
+    return null;
+  }
+
+  let securityInfo = gSerializationHelper.deserializeObject(
+    securityInfoAsString
+  );
+  securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+
+  return securityInfo;
 }
 
 // TODO: can we pull getPEMString in from pippki.js instead of
