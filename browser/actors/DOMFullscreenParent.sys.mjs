@@ -194,12 +194,6 @@ export class DOMFullscreenParent extends JSWindowActorParent {
           window.gXPInstallObserver.removeAllNotifications(browser);
         }
 
-        if (!this.hasBeenDestroyed() && this.requestOrigin) {
-          window.PointerlockFsWarning.showFullScreen(
-            this.requestOrigin.manager.documentPrincipal.originNoSuffix
-          );
-        }
-
         TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");
         window.FullScreen.enterDomFullscreen(browser, this);
         this.updateFullscreenWindowReference(window);
