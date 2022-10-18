@@ -5,7 +5,7 @@
     "raptor": ["base", "common", "perf", "raptor"],
     "reftest": ["base", "common", "reftest"],
     "talos": ["base", "common", "perf"],
-    "valgrind": ["base", "common", "unittest-required", "unittest-features"],
+    "valgrind": ["base", "common", "unittest-required", "unittest-features", "valgrind"],
     "xpcshell": ["base", "xpcshell"],
     "web-platform-tests": ["base", "common", "unittest-required", "unittest-features", "web-platform"]
 }
