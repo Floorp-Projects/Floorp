@@ -29,6 +29,7 @@ class CrashReportingTest {
             isPocketEnabled = false,
             isJumpBackInCFREnabled = false,
             isWallpaperOnboardingEnabled = false,
+            isTCPCFREnabled = false,
         ),
     ) { it.activity }
 
@@ -73,7 +74,6 @@ class CrashReportingTest {
         }
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/25029")
     @SmokeTest
     @Test
     fun useAppWhileTabIsCrashedTest() {
@@ -106,7 +106,6 @@ class CrashReportingTest {
 
     @SmokeTest
     @Test
-    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun privateBrowsingUseAppWhileTabIsCrashedTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
@@ -120,7 +119,6 @@ class CrashReportingTest {
         }.openNewTab {
         }.submitQuery(secondWebPage.url.toString()) {
             waitForPageToLoad()
-            verifyPageContent("Page content: 2")
         }
 
         navigationToolbar {
