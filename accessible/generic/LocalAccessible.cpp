@@ -3747,6 +3747,10 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
       // send a DeleteEntry() instead. See BundleFieldsForCache for
       // more information.
       mDoc->QueueCacheUpdate(this, CacheDomain::TransformMatrix);
+      // If our transform matrix has changed, it's possible our
+      // viewport cache has also changed. Queue an update for
+      // that too.
+      mDoc->QueueCacheUpdate(this, CacheDomain::Viewport);
     }
 
     mOldComputedStyle = newStyle;
