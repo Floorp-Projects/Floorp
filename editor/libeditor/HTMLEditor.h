@@ -4261,10 +4261,10 @@ class HTMLEditor final : public EditorBase,
    * operation is finished.
    *
    * @param aBlob       The input blob
-   * @param aGlobal     The global object under which the read should happen.
+   * @param aWindow     The global object under which the read should happen.
    * @param aBlobReader The blob reader object to be notified when finished.
    */
-  static nsresult SlurpBlob(dom::Blob* aBlob, nsIGlobalObject* aGlobal,
+  static nsresult SlurpBlob(dom::Blob* aBlob, nsPIDOMWindowOuter* aWindow,
                             BlobReader* aBlobReader);
 
   /**
