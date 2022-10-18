@@ -8,10 +8,7 @@
 
 #include "PSMRunnable.h"
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
-#include "mozpkix/pkixtypes.h"
-#include "nsBase64Encoder.h"
 #include "nsComponentManagerUtils.h"
 #include "nsICertOverrideService.h"
 #include "nsIObjectInputStream.h"
@@ -23,8 +20,8 @@
 #include "nsNSSHelper.h"
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsStringStream.h"
 #include "nsXULAppAPI.h"
+#include "mozpkix/pkixtypes.h"
 #include "secerr.h"
 #include "ssl.h"
 
@@ -67,7 +64,7 @@ TransportSecurityInfo::TransportSecurityInfo()
       mPort(0) {}
 
 NS_IMPL_ISUPPORTS(TransportSecurityInfo, nsITransportSecurityInfo,
-                  nsIInterfaceRequestor)
+                  nsIInterfaceRequestor, nsISerializable, nsIClassInfo)
 
 void TransportSecurityInfo::SetPreliminaryHandshakeInfo(
     const SSLChannelInfo& channelInfo, const SSLCipherSuiteInfo& cipherInfo) {
@@ -165,15 +162,6 @@ TransportSecurityInfo::GetInterface(const nsIID& uuid, void** result) {
   return rv;
 }
 
-// 16786594-0296-4471-8096-8f84497ca428
-#define TRANSPORTSECURITYINFO_CID                    \
-  {                                                  \
-    0x16786594, 0x0296, 0x4471, {                    \
-      0x80, 0x96, 0x8f, 0x84, 0x49, 0x7c, 0xa4, 0x28 \
-    }                                                \
-  }
-static NS_DEFINE_CID(kTransportSecurityInfoCID, TRANSPORTSECURITYINFO_CID);
-
 // This is a new magic value. However, it re-uses the first 4 bytes
 // of the previous value. This is so when older versions attempt to
 // read a newer serialized TransportSecurityInfo, they will actually
@@ -189,40 +177,29 @@ static NS_DEFINE_CID(kTransportSecurityInfoMagic, TRANSPORTSECURITYINFOMAGIC);
 // NB: Any updates (except disk-only fields) must be kept in sync with
 //     |SerializeToIPC|.
 NS_IMETHODIMP
-TransportSecurityInfo::ToString(nsACString& aResult) {
-  RefPtr<nsBase64Encoder> stream(new nsBase64Encoder());
-  nsCOMPtr<nsIObjectOutputStream> objStream(NS_NewObjectOutputStream(stream));
-  nsresult rv = objStream->WriteID(kTransportSecurityInfoCID);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = objStream->WriteID(NS_ISUPPORTS_IID);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = objStream->WriteID(kTransportSecurityInfoMagic);
+TransportSecurityInfo::Write(nsIObjectOutputStream* aStream) {
+  nsresult rv = aStream->WriteID(kTransportSecurityInfoMagic);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   MutexAutoLock lock(mMutex);
 
-  rv = objStream->Write32(mSecurityState);
+  rv = aStream->Write32(mSecurityState);
   if (NS_FAILED(rv)) {
     return rv;
   }
   // mSubRequestsBrokenSecurity was removed in bug 748809
-  rv = objStream->Write32(0);
+  rv = aStream->Write32(0);
   if (NS_FAILED(rv)) {
     return rv;
   }
   // mSubRequestsNoSecurity was removed in bug 748809
-  rv = objStream->Write32(0);
+  rv = aStream->Write32(0);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = objStream->Write32(static_cast<uint32_t>(mErrorCode));
+  rv = aStream->Write32(static_cast<uint32_t>(mErrorCode));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -230,104 +207,99 @@ TransportSecurityInfo::ToString(nsACString& aResult) {
   // Re-purpose mErrorMessageCached to represent serialization version
   // If string doesn't match exact version it will be treated as older
   // serialization.
-  rv = objStream->WriteWStringZ(NS_ConvertUTF8toUTF16("9").get());
+  rv = aStream->WriteWStringZ(NS_ConvertUTF8toUTF16("9").get());
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   // moved from nsISSLStatus
-  rv = NS_WriteOptionalCompoundObject(objStream, mServerCert,
+  rv = NS_WriteOptionalCompoundObject(aStream, mServerCert,
                                       NS_GET_IID(nsIX509Cert), true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = objStream->Write16(mCipherSuite);
+  rv = aStream->Write16(mCipherSuite);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = objStream->Write16(mProtocolVersion);
+  rv = aStream->Write16(mProtocolVersion);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = objStream->Write32(mOverridableErrorCategory);
+  rv = aStream->Write32(mOverridableErrorCategory);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = objStream->WriteBoolean(mIsEV);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = objStream->WriteBoolean(mHasIsEVStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = objStream->WriteBoolean(mHaveCipherSuiteAndProtocol);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = objStream->WriteBoolean(mHaveCertErrorBits);
+  rv = aStream->WriteBoolean(mIsEV);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = objStream->Write16(mCertificateTransparencyStatus);
+  rv = aStream->WriteBoolean(mHasIsEVStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->WriteBoolean(mHaveCipherSuiteAndProtocol);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->WriteBoolean(mHaveCertErrorBits);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = objStream->WriteStringZ(mKeaGroup.get());
+  rv = aStream->Write16(mCertificateTransparencyStatus);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = objStream->WriteStringZ(mSignatureSchemeName.get());
+  rv = aStream->WriteStringZ(mKeaGroup.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = objStream->Write16(mSucceededCertChain.Length());
+  rv = aStream->WriteStringZ(mSignatureSchemeName.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aStream->Write16(mSucceededCertChain.Length());
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (const auto& cert : mSucceededCertChain) {
-    rv = objStream->WriteCompoundObject(cert, NS_GET_IID(nsIX509Cert), true);
+    rv = aStream->WriteCompoundObject(cert, NS_GET_IID(nsIX509Cert), true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   // END moved from nsISSLStatus
-  rv = objStream->Write16(mFailedCertChain.Length());
+  rv = aStream->Write16(mFailedCertChain.Length());
   NS_ENSURE_SUCCESS(rv, rv);
   for (const auto& cert : mFailedCertChain) {
-    rv = objStream->WriteCompoundObject(cert, NS_GET_IID(nsIX509Cert), true);
+    rv = aStream->WriteCompoundObject(cert, NS_GET_IID(nsIX509Cert), true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = objStream->WriteBoolean(mIsDelegatedCredential);
+  rv = aStream->WriteBoolean(mIsDelegatedCredential);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = objStream->WriteBoolean(mNPNCompleted);
+  rv = aStream->WriteBoolean(mNPNCompleted);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = objStream->WriteStringZ(mNegotiatedNPN.get());
+  rv = aStream->WriteStringZ(mNegotiatedNPN.get());
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = objStream->WriteBoolean(mResumed);
+  rv = aStream->WriteBoolean(mResumed);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = objStream->WriteBoolean(mIsBuiltCertChainRootBuiltInRoot);
+  rv = aStream->WriteBoolean(mIsBuiltCertChainRootBuiltInRoot);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = objStream->WriteBoolean(mIsAcceptedEch);
+  rv = aStream->WriteBoolean(mIsAcceptedEch);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = objStream->WriteStringZ(mPeerId.get());
+  rv = aStream->WriteStringZ(mPeerId.get());
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = objStream->WriteBoolean(mMadeOCSPRequests);
+  rv = aStream->WriteBoolean(mMadeOCSPRequests);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = objStream->WriteBoolean(mUsedPrivateDNS);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = stream->Finish(aResult);
+  rv = aStream->WriteBoolean(mUsedPrivateDNS);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -341,8 +313,9 @@ TransportSecurityInfo::ToString(nsACString& aResult) {
   }
 
 nsresult TransportSecurityInfo::ReadOldOverridableErrorBits(
-    nsIObjectInputStream* aStream,
-    OverridableErrorCategory& aOverridableErrorCategory) {
+    nsIObjectInputStream* aStream, MutexAutoLock& aProofOfLock) {
+  mMutex.AssertCurrentThreadOwns();
+
   bool isDomainMismatch;
   nsresult rv = aStream->ReadBoolean(&isDomainMismatch);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
@@ -356,16 +329,16 @@ nsresult TransportSecurityInfo::ReadOldOverridableErrorBits(
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
   if (isUntrusted) {
-    aOverridableErrorCategory =
+    mOverridableErrorCategory =
         nsITransportSecurityInfo::OverridableErrorCategory::ERROR_TRUST;
   } else if (isDomainMismatch) {
-    aOverridableErrorCategory =
+    mOverridableErrorCategory =
         nsITransportSecurityInfo::OverridableErrorCategory::ERROR_DOMAIN;
   } else if (isNotValidAtThisTime) {
-    aOverridableErrorCategory =
+    mOverridableErrorCategory =
         nsITransportSecurityInfo::OverridableErrorCategory::ERROR_TIME;
   } else {
-    aOverridableErrorCategory =
+    mOverridableErrorCategory =
         nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET;
   }
 
@@ -374,14 +347,10 @@ nsresult TransportSecurityInfo::ReadOldOverridableErrorBits(
 
 // This is for backward compatibility to be able to read nsISSLStatus
 // serialized object.
-nsresult TransportSecurityInfo::ReadSSLStatus(
-    nsIObjectInputStream* aStream, nsCOMPtr<nsIX509Cert>& aServerCert,
-    uint16_t& aCipherSuite, uint16_t& aProtocolVersion,
-    OverridableErrorCategory& aOverridableErrorCategory, bool& aIsEV,
-    bool& aHasIsEVStatus, bool& aHaveCipherSuiteAndProtocol,
-    bool& aHaveCertErrorBits, uint16_t& aCertificateTransparencyStatus,
-    nsCString& aKeaGroup, nsCString& aSignatureSchemeName,
-    nsTArray<RefPtr<nsIX509Cert>>& aSucceededCertChain) {
+nsresult TransportSecurityInfo::ReadSSLStatus(nsIObjectInputStream* aStream,
+                                              MutexAutoLock& aProofOfLock) {
+  mMutex.AssertCurrentThreadOwns();
+
   bool nsISSLStatusPresent;
   nsresult rv = aStream->ReadBoolean(&nsISSLStatusPresent);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
@@ -416,14 +385,14 @@ nsresult TransportSecurityInfo::ReadSSLStatus(
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (cert) {
-    aServerCert = do_QueryInterface(cert);
-    if (!aServerCert) {
+    mServerCert = do_QueryInterface(cert);
+    if (!mServerCert) {
       CHILD_DIAGNOSTIC_ASSERT(false, "Deserialization should not fail");
       return NS_NOINTERFACE;
     }
   }
 
-  rv = aStream->Read16(&aCipherSuite);
+  rv = aStream->Read16(&mCipherSuite);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -437,29 +406,29 @@ nsresult TransportSecurityInfo::ReadSSLStatus(
   rv = aStream->Read16(&protocolVersionAndStreamFormatVersion);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
-  aProtocolVersion = protocolVersionAndStreamFormatVersion & 0xFF;
+  mProtocolVersion = protocolVersionAndStreamFormatVersion & 0xFF;
   const uint8_t streamFormatVersion =
       (protocolVersionAndStreamFormatVersion >> 8) & 0xFF;
 
-  rv = ReadOldOverridableErrorBits(aStream, aOverridableErrorCategory);
+  rv = ReadOldOverridableErrorBits(aStream, aProofOfLock);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aStream->ReadBoolean(&aIsEV);
+  rv = ReadBoolAndSetAtomicFieldHelper(aStream, mIsEV);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aStream->ReadBoolean(&aHasIsEVStatus);
+  rv = ReadBoolAndSetAtomicFieldHelper(aStream, mHasIsEVStatus);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aStream->ReadBoolean(&aHaveCipherSuiteAndProtocol);
+  rv = ReadBoolAndSetAtomicFieldHelper(aStream, mHaveCipherSuiteAndProtocol);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aStream->ReadBoolean(&aHaveCertErrorBits);
+  rv = ReadBoolAndSetAtomicFieldHelper(aStream, mHaveCertErrorBits);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Added in version 1 (see bug 1305289).
   if (streamFormatVersion >= 1) {
-    rv = aStream->Read16(&aCertificateTransparencyStatus);
+    rv = aStream->Read16(&mCertificateTransparencyStatus);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
@@ -467,12 +436,12 @@ nsresult TransportSecurityInfo::ReadSSLStatus(
 
   // Added in version 2 (see bug 1304923).
   if (streamFormatVersion >= 2) {
-    rv = aStream->ReadCString(aKeaGroup);
+    rv = aStream->ReadCString(mKeaGroup);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aStream->ReadCString(aSignatureSchemeName);
+    rv = aStream->ReadCString(mSignatureSchemeName);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
@@ -480,7 +449,7 @@ nsresult TransportSecurityInfo::ReadSSLStatus(
 
   // Added in version 3 (see bug 1406856).
   if (streamFormatVersion >= 3) {
-    rv = ReadCertList(aStream, aSucceededCertChain);
+    rv = ReadCertList(aStream, mSucceededCertChain, aProofOfLock);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     if (NS_FAILED(rv)) {
@@ -489,7 +458,7 @@ nsresult TransportSecurityInfo::ReadSSLStatus(
 
     // Read only to consume bytes from the stream.
     nsTArray<RefPtr<nsIX509Cert>> failedCertChain;
-    rv = ReadCertList(aStream, failedCertChain);
+    rv = ReadCertList(aStream, failedCertChain, aProofOfLock);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     if (NS_FAILED(rv)) {
@@ -502,7 +471,8 @@ nsresult TransportSecurityInfo::ReadSSLStatus(
 // This is for backward compatability to be able to read nsIX509CertList
 // serialized object.
 nsresult TransportSecurityInfo::ReadCertList(
-    nsIObjectInputStream* aStream, nsTArray<RefPtr<nsIX509Cert>>& aCertList) {
+    nsIObjectInputStream* aStream, nsTArray<RefPtr<nsIX509Cert>>& aCertList,
+    MutexAutoLock& aProofOfLock) {
   bool nsIX509CertListPresent;
 
   nsresult rv = aStream->ReadBoolean(&nsIX509CertListPresent);
@@ -538,12 +508,13 @@ nsresult TransportSecurityInfo::ReadCertList(
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return ReadCertificatesFromStream(aStream, certListSize, aCertList);
+  return ReadCertificatesFromStream(aStream, certListSize, aCertList,
+                                    aProofOfLock);
 }
 
 nsresult TransportSecurityInfo::ReadCertificatesFromStream(
     nsIObjectInputStream* aStream, uint32_t aSize,
-    nsTArray<RefPtr<nsIX509Cert>>& aCertList) {
+    nsTArray<RefPtr<nsIX509Cert>>& aCertList, MutexAutoLock& aProofOfLock) {
   nsresult rv;
   for (uint32_t i = 0; i < aSize; ++i) {
     nsCOMPtr<nsISupports> support;
@@ -581,46 +552,10 @@ IntToOverridableErrorCategory(uint32_t intVal) {
 
 // NB: Any updates (except disk-only fields) must be kept in sync with
 //     |DeserializeFromIPC|.
-nsresult TransportSecurityInfo::Read(const nsCString& aSerializedSecurityInfo,
-                                     nsITransportSecurityInfo** aResult) {
-  *aResult = nullptr;
-
-  nsCString decodedSecurityInfo;
-  nsresult rv = Base64Decode(aSerializedSecurityInfo, decodedSecurityInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  nsCOMPtr<nsIInputStream> inputStream;
-  rv = NS_NewCStringInputStream(getter_AddRefs(inputStream),
-                                std::move(decodedSecurityInfo));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  nsCOMPtr<nsIObjectInputStream> objStream(
-      NS_NewObjectInputStream(inputStream));
-  if (!objStream) {
-    return rv;
-  }
-
-  nsCID cid;
-  rv = objStream->ReadID(&cid);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!cid.Equals(kTransportSecurityInfoCID)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  nsIID iid;
-  rv = objStream->ReadID(&iid);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!iid.Equals(NS_ISUPPORTS_IID)) {
-    return rv;
-  }
-
+NS_IMETHODIMP
+TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
   nsID id;
-  rv = objStream->ReadID(&id);
+  nsresult rv = aStream->ReadID(&id);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   if (NS_FAILED(rv)) {
     return rv;
@@ -630,47 +565,46 @@ nsresult TransportSecurityInfo::Read(const nsCString& aSerializedSecurityInfo,
     return NS_ERROR_UNEXPECTED;
   }
 
-  RefPtr<TransportSecurityInfo> securityInfo(new TransportSecurityInfo());
-  MutexAutoLock guard(securityInfo->mMutex);
-  rv = ReadUint32AndSetAtomicFieldHelper(objStream,
-                                         securityInfo->mSecurityState);
+  MutexAutoLock lock(mMutex);
+
+  rv = ReadUint32AndSetAtomicFieldHelper(aStream, mSecurityState);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   if (NS_FAILED(rv)) {
     return rv;
   }
   // mSubRequestsBrokenSecurity was removed in bug 748809
   uint32_t unusedSubRequestsBrokenSecurity;
-  rv = objStream->Read32(&unusedSubRequestsBrokenSecurity);
+  rv = aStream->Read32(&unusedSubRequestsBrokenSecurity);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   if (NS_FAILED(rv)) {
     return rv;
   }
   // mSubRequestsNoSecurity was removed in bug 748809
   uint32_t unusedSubRequestsNoSecurity;
-  rv = objStream->Read32(&unusedSubRequestsNoSecurity);
+  rv = aStream->Read32(&unusedSubRequestsNoSecurity);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   if (NS_FAILED(rv)) {
     return rv;
   }
   uint32_t errorCode;
-  rv = objStream->Read32(&errorCode);
+  rv = aStream->Read32(&errorCode);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   if (NS_FAILED(rv)) {
     return rv;
   }
   // PRErrorCode will be a negative value
-  securityInfo->mErrorCode = static_cast<PRErrorCode>(errorCode);
+  mErrorCode = static_cast<PRErrorCode>(errorCode);
   // If mErrorCode is non-zero, SetCanceled was called on the
   // TransportSecurityInfo that was serialized.
-  if (securityInfo->mErrorCode != 0) {
-    securityInfo->mCanceled = true;
+  if (mErrorCode != 0) {
+    mCanceled = true;
   }
 
   // Re-purpose mErrorMessageCached to represent serialization version
   // If string doesn't match exact version it will be treated as older
   // serialization.
   nsAutoString serVersion;
-  rv = objStream->ReadString(serVersion);
+  rv = aStream->ReadString(serVersion);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
   if (NS_FAILED(rv)) {
     return rv;
@@ -694,140 +628,119 @@ nsresult TransportSecurityInfo::Read(const nsCString& aSerializedSecurityInfo,
   // moved from nsISSLStatus
   if (serVersionParsedToInt < 1) {
     // nsISSLStatus may be present
-    OverridableErrorCategory overridableErrorCategory;
-    bool isEV;
-    bool hasIsEVStatus;
-    bool haveCipherSuiteAndProtocol;
-    bool haveCertErrorBits;
-    rv = ReadSSLStatus(
-        objStream, securityInfo->mServerCert, securityInfo->mCipherSuite,
-        securityInfo->mProtocolVersion, overridableErrorCategory, isEV,
-        hasIsEVStatus, haveCipherSuiteAndProtocol, haveCertErrorBits,
-        securityInfo->mCertificateTransparencyStatus, securityInfo->mKeaGroup,
-        securityInfo->mSignatureSchemeName, securityInfo->mSucceededCertChain);
+    rv = ReadSSLStatus(aStream, lock);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
-    securityInfo->mOverridableErrorCategory = overridableErrorCategory;
-    securityInfo->mIsEV = isEV;
-    securityInfo->mHasIsEVStatus = hasIsEVStatus;
-    securityInfo->mHaveCipherSuiteAndProtocol = haveCipherSuiteAndProtocol;
-    securityInfo->mHaveCertErrorBits = haveCertErrorBits;
   } else {
     nsCOMPtr<nsISupports> cert;
-    rv = NS_ReadOptionalObject(objStream, true, getter_AddRefs(cert));
+    rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(cert));
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (cert != nullptr) {
-      securityInfo->mServerCert = do_QueryInterface(cert);
-      if (!securityInfo->mServerCert) {
+      mServerCert = do_QueryInterface(cert);
+      if (!mServerCert) {
         CHILD_DIAGNOSTIC_ASSERT(false, "Deserialization should not fail");
         return NS_NOINTERFACE;
       }
     }
 
-    rv = objStream->Read16(&securityInfo->mCipherSuite);
+    rv = aStream->Read16(&mCipherSuite);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = objStream->Read16(&securityInfo->mProtocolVersion);
+    rv = aStream->Read16(&mProtocolVersion);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (serVersionParsedToInt < 8) {
-      OverridableErrorCategory overridableErrorCategory;
-      rv = ReadOldOverridableErrorBits(objStream, overridableErrorCategory);
+      rv = ReadOldOverridableErrorBits(aStream, lock);
       NS_ENSURE_SUCCESS(rv, rv);
-      securityInfo->mOverridableErrorCategory = overridableErrorCategory;
     } else {
       uint32_t overridableErrorCategory;
-      rv = objStream->Read32(&overridableErrorCategory);
+      rv = aStream->Read32(&overridableErrorCategory);
       CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                               "Deserialization should not fail");
       NS_ENSURE_SUCCESS(rv, rv);
-      securityInfo->mOverridableErrorCategory =
+      mOverridableErrorCategory =
           IntToOverridableErrorCategory(overridableErrorCategory);
     }
-    rv = ReadBoolAndSetAtomicFieldHelper(objStream, securityInfo->mIsEV);
+    rv = ReadBoolAndSetAtomicFieldHelper(aStream, mIsEV);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = ReadBoolAndSetAtomicFieldHelper(objStream,
-                                         securityInfo->mHasIsEVStatus);
+    rv = ReadBoolAndSetAtomicFieldHelper(aStream, mHasIsEVStatus);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = ReadBoolAndSetAtomicFieldHelper(
-        objStream, securityInfo->mHaveCipherSuiteAndProtocol);
+    rv = ReadBoolAndSetAtomicFieldHelper(aStream, mHaveCipherSuiteAndProtocol);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = ReadBoolAndSetAtomicFieldHelper(objStream,
-                                         securityInfo->mHaveCertErrorBits);
-    CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
-                            "Deserialization should not fail");
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = objStream->Read16(&securityInfo->mCertificateTransparencyStatus);
+    rv = ReadBoolAndSetAtomicFieldHelper(aStream, mHaveCertErrorBits);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = objStream->ReadCString(securityInfo->mKeaGroup);
+    rv = aStream->Read16(&mCertificateTransparencyStatus);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = objStream->ReadCString(securityInfo->mSignatureSchemeName);
+    rv = aStream->ReadCString(mKeaGroup);
+    CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
+                            "Deserialization should not fail");
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aStream->ReadCString(mSignatureSchemeName);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (serVersionParsedToInt < 3) {
       // The old data structure of certList(nsIX509CertList) presents
-      rv = ReadCertList(objStream, securityInfo->mSucceededCertChain);
+      rv = ReadCertList(aStream, mSucceededCertChain, lock);
       CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                               "Deserialization should not fail");
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       uint16_t certCount;
-      rv = objStream->Read16(&certCount);
+      rv = aStream->Read16(&certCount);
       CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                               "Deserialization should not fail");
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = ReadCertificatesFromStream(objStream, certCount,
-                                      securityInfo->mSucceededCertChain);
+      rv = ReadCertificatesFromStream(aStream, certCount, mSucceededCertChain,
+                                      lock);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
   // END moved from nsISSLStatus
   if (serVersionParsedToInt < 3) {
     // The old data structure of certList(nsIX509CertList) presents
-    rv = ReadCertList(objStream, securityInfo->mFailedCertChain);
+    rv = ReadCertList(aStream, mFailedCertChain, lock);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     uint16_t certCount;
-    rv = objStream->Read16(&certCount);
+    rv = aStream->Read16(&certCount);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = ReadCertificatesFromStream(objStream, certCount,
-                                    securityInfo->mFailedCertChain);
+    rv = ReadCertificatesFromStream(aStream, certCount, mFailedCertChain, lock);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // mIsDelegatedCredential added in bug 1562773
   if (serVersionParsedToInt >= 2) {
-    rv = objStream->ReadBoolean(&securityInfo->mIsDelegatedCredential);
+    rv = aStream->ReadBoolean(&mIsDelegatedCredential);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     if (NS_FAILED(rv)) {
@@ -837,21 +750,21 @@ nsresult TransportSecurityInfo::Read(const nsCString& aSerializedSecurityInfo,
 
   // mNPNCompleted, mNegotiatedNPN, mResumed added in bug 1584104
   if (serVersionParsedToInt >= 4) {
-    rv = objStream->ReadBoolean(&securityInfo->mNPNCompleted);
+    rv = aStream->ReadBoolean(&mNPNCompleted);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     if (NS_FAILED(rv)) {
       return rv;
     }
 
-    rv = objStream->ReadCString(securityInfo->mNegotiatedNPN);
+    rv = aStream->ReadCString(mNegotiatedNPN);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     if (NS_FAILED(rv)) {
       return rv;
     }
 
-    rv = objStream->ReadBoolean(&securityInfo->mResumed);
+    rv = aStream->ReadBoolean(&mResumed);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     if (NS_FAILED(rv)) {
@@ -861,8 +774,7 @@ nsresult TransportSecurityInfo::Read(const nsCString& aSerializedSecurityInfo,
 
   // mIsBuiltCertChainRootBuiltInRoot added in bug 1485652
   if (serVersionParsedToInt >= 5) {
-    rv =
-        objStream->ReadBoolean(&securityInfo->mIsBuiltCertChainRootBuiltInRoot);
+    rv = aStream->ReadBoolean(&mIsBuiltCertChainRootBuiltInRoot);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     if (NS_FAILED(rv)) {
@@ -872,7 +784,7 @@ nsresult TransportSecurityInfo::Read(const nsCString& aSerializedSecurityInfo,
 
   // mIsAcceptedEch added in bug 1678079
   if (serVersionParsedToInt >= 6) {
-    rv = objStream->ReadBoolean(&securityInfo->mIsAcceptedEch);
+    rv = aStream->ReadBoolean(&mIsAcceptedEch);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     if (NS_FAILED(rv)) {
@@ -882,7 +794,7 @@ nsresult TransportSecurityInfo::Read(const nsCString& aSerializedSecurityInfo,
 
   // mPeerId added in bug 1738664
   if (serVersionParsedToInt >= 7) {
-    rv = objStream->ReadCString(securityInfo->mPeerId);
+    rv = aStream->ReadCString(mPeerId);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     if (NS_FAILED(rv)) {
@@ -891,14 +803,14 @@ nsresult TransportSecurityInfo::Read(const nsCString& aSerializedSecurityInfo,
   }
 
   if (serVersionParsedToInt >= 9) {
-    rv = objStream->ReadBoolean(&securityInfo->mMadeOCSPRequests);
+    rv = aStream->ReadBoolean(&mMadeOCSPRequests);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     if (NS_FAILED(rv)) {
       return rv;
     }
 
-    rv = objStream->ReadBoolean(&securityInfo->mUsedPrivateDNS);
+    rv = aStream->ReadBoolean(&mUsedPrivateDNS);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
     if (NS_FAILED(rv)) {
@@ -906,7 +818,6 @@ nsresult TransportSecurityInfo::Read(const nsCString& aSerializedSecurityInfo,
     };
   }
 
-  securityInfo.forget(aResult);
   return NS_OK;
 }
 
@@ -943,51 +854,88 @@ void TransportSecurityInfo::SerializeToIPC(IPC::MessageWriter* aWriter) {
   WriteParam(aWriter, mUsedPrivateDNS);
 }
 
-bool TransportSecurityInfo::DeserializeFromIPC(
-    IPC::MessageReader* aReader, RefPtr<nsITransportSecurityInfo>* aResult) {
-  RefPtr<TransportSecurityInfo> securityInfo(new TransportSecurityInfo());
-  MutexAutoLock guard(securityInfo->mMutex);
+bool TransportSecurityInfo::DeserializeFromIPC(IPC::MessageReader* aReader) {
+  MutexAutoLock guard(mMutex);
 
   int32_t errorCode = 0;
   uint32_t overridableErrorCategory;
 
-  if (!ReadParamAtomicHelper(aReader, securityInfo->mSecurityState) ||
-      !ReadParam(aReader, &errorCode) ||
-      !ReadParam(aReader, &securityInfo->mServerCert) ||
-      !ReadParam(aReader, &securityInfo->mCipherSuite) ||
-      !ReadParam(aReader, &securityInfo->mProtocolVersion) ||
+  if (!ReadParamAtomicHelper(aReader, mSecurityState) ||
+      !ReadParam(aReader, &errorCode) || !ReadParam(aReader, &mServerCert) ||
+      !ReadParam(aReader, &mCipherSuite) ||
+      !ReadParam(aReader, &mProtocolVersion) ||
       !ReadParam(aReader, &overridableErrorCategory) ||
-      !ReadParamAtomicHelper(aReader, securityInfo->mIsEV) ||
-      !ReadParamAtomicHelper(aReader, securityInfo->mHasIsEVStatus) ||
-      !ReadParamAtomicHelper(aReader,
-                             securityInfo->mHaveCipherSuiteAndProtocol) ||
-      !ReadParamAtomicHelper(aReader, securityInfo->mHaveCertErrorBits) ||
-      !ReadParam(aReader, &securityInfo->mCertificateTransparencyStatus) ||
-      !ReadParam(aReader, &securityInfo->mKeaGroup) ||
-      !ReadParam(aReader, &securityInfo->mSignatureSchemeName) ||
-      !ReadParam(aReader, &securityInfo->mSucceededCertChain) ||
-      !ReadParam(aReader, &securityInfo->mFailedCertChain) ||
-      !ReadParam(aReader, &securityInfo->mIsDelegatedCredential) ||
-      !ReadParam(aReader, &securityInfo->mNPNCompleted) ||
-      !ReadParam(aReader, &securityInfo->mNegotiatedNPN) ||
-      !ReadParam(aReader, &securityInfo->mResumed) ||
-      !ReadParam(aReader, &securityInfo->mIsBuiltCertChainRootBuiltInRoot) ||
-      !ReadParam(aReader, &securityInfo->mIsAcceptedEch) ||
-      !ReadParam(aReader, &securityInfo->mPeerId) ||
-      !ReadParam(aReader, &securityInfo->mMadeOCSPRequests) ||
-      !ReadParam(aReader, &securityInfo->mUsedPrivateDNS)) {
+      !ReadParamAtomicHelper(aReader, mIsEV) ||
+      !ReadParamAtomicHelper(aReader, mHasIsEVStatus) ||
+      !ReadParamAtomicHelper(aReader, mHaveCipherSuiteAndProtocol) ||
+      !ReadParamAtomicHelper(aReader, mHaveCertErrorBits) ||
+      !ReadParam(aReader, &mCertificateTransparencyStatus) ||
+      !ReadParam(aReader, &mKeaGroup) ||
+      !ReadParam(aReader, &mSignatureSchemeName) ||
+      !ReadParam(aReader, &mSucceededCertChain) ||
+      !ReadParam(aReader, &mFailedCertChain) ||
+      !ReadParam(aReader, &mIsDelegatedCredential) ||
+      !ReadParam(aReader, &mNPNCompleted) ||
+      !ReadParam(aReader, &mNegotiatedNPN) || !ReadParam(aReader, &mResumed) ||
+      !ReadParam(aReader, &mIsBuiltCertChainRootBuiltInRoot) ||
+      !ReadParam(aReader, &mIsAcceptedEch) || !ReadParam(aReader, &mPeerId) ||
+      !ReadParam(aReader, &mMadeOCSPRequests) ||
+      !ReadParam(aReader, &mUsedPrivateDNS)) {
     return false;
   }
 
-  securityInfo->mErrorCode = static_cast<PRErrorCode>(errorCode);
-  if (securityInfo->mErrorCode != 0) {
-    securityInfo->mCanceled = true;
+  mErrorCode = static_cast<PRErrorCode>(errorCode);
+  if (mErrorCode != 0) {
+    mCanceled = true;
   }
-  securityInfo->mOverridableErrorCategory =
+  mOverridableErrorCategory =
       IntToOverridableErrorCategory(overridableErrorCategory);
 
-  *aResult = std::move(securityInfo);
   return true;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetInterfaces(nsTArray<nsIID>& array) {
+  array.Clear();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetScriptableHelper(nsIXPCScriptable** _retval) {
+  *_retval = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetContractID(nsACString& aContractID) {
+  aContractID.SetIsVoid(true);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetClassDescription(nsACString& aClassDescription) {
+  aClassDescription.SetIsVoid(true);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetClassID(nsCID** aClassID) {
+  *aClassID = (nsCID*)moz_xmalloc(sizeof(nsCID));
+  return GetClassIDNoAlloc(*aClassID);
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetFlags(uint32_t* aFlags) {
+  *aFlags = 0;
+  return NS_OK;
+}
+
+static NS_DEFINE_CID(kNSSSocketInfoCID, TRANSPORTSECURITYINFO_CID);
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
+  *aClassIDNoAlloc = kNSSSocketInfoCID;
+  return NS_OK;
 }
 
 void TransportSecurityInfo::SetStatusErrorBits(

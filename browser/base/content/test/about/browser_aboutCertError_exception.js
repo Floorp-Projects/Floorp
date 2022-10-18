@@ -52,14 +52,20 @@ add_task(async function checkPermanentExceptionPref() {
     let browser = tab.linkedBrowser;
     let loaded = BrowserTestUtils.browserLoaded(browser, false, BAD_CERT);
     info("Clicking the exceptionDialogButton in advanced panel");
-    let serverCertBytes = await SpecialPowers.spawn(
+    let securityInfoAsString = await SpecialPowers.spawn(
       browser,
       [],
       async function() {
         let doc = content.document;
         let exceptionButton = doc.getElementById("exceptionDialogButton");
         exceptionButton.click();
-        return content.docShell.failedChannel.securityInfo.serverCert.getRawDER();
+        let serhelper = Cc[
+          "@mozilla.org/network/serialization-helper;1"
+        ].getService(Ci.nsISerializationHelper);
+        let serializable = content.docShell.failedChannel.securityInfo.QueryInterface(
+          Ci.nsISerializable
+        );
+        return serhelper.serializeToString(serializable);
       }
     );
 
@@ -79,10 +85,7 @@ add_task(async function checkPermanentExceptionPref() {
     ].getService(Ci.nsICertOverrideService);
 
     let isTemporary = {};
-    let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-      Ci.nsIX509CertDB
-    );
-    let cert = certdb.constructX509(serverCertBytes);
+    let cert = getSecurityInfo(securityInfoAsString).serverCert;
     let hasException = certOverrideService.hasMatchingOverride(
       "expired.example.com",
       -1,

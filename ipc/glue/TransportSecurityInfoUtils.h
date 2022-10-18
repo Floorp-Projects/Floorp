@@ -5,12 +5,8 @@
 #ifndef mozilla_ipc_TransportSecurityInfoUtils_h
 #define mozilla_ipc_TransportSecurityInfoUtils_h
 
-#include "mozilla/RefPtr.h"
+#include "nsCOMPtr.h"
 #include "nsITransportSecurityInfo.h"
-#include "nsIX509Cert.h"
-
-class MessageReader;
-class MessageWriter;
 
 namespace IPC {
 
