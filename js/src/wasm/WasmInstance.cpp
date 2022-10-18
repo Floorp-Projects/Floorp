@@ -120,7 +120,7 @@ class FuncTypeIdSet {
     }
 
     *funcTypeId = clone.release();
-    MOZ_ASSERT(!(uintptr_t(*funcTypeId) & TypeIdDesc::ImmediateBit));
+    MOZ_ASSERT(!(uintptr_t(*funcTypeId) & FuncType::ImmediateBit));
     return true;
   }
 
@@ -138,8 +138,8 @@ class FuncTypeIdSet {
 
 ExclusiveData<FuncTypeIdSet> funcTypeIdSet(mutexid::WasmFuncTypeIdSet);
 
-const void** Instance::addressOfTypeId(const TypeIdDesc& typeId) const {
-  return (const void**)(globalData() + typeId.globalDataOffset());
+const void** Instance::addressOfTypeId(const uint32_t typeIndex) const {
+  return (const void**)(globalData() + typeIndex * sizeof(void*));
 }
 
 FuncImportInstanceData& Instance::funcImportInstanceData(const FuncImport& fi) {
@@ -1725,9 +1725,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
       for (uint32_t typeIndex = 0; typeIndex < metadata().types.length();
            typeIndex++) {
         const TypeDef& typeDef = metadata().types[typeIndex];
-        const TypeIdDesc& typeId = metadata().typeIds[typeIndex];
-        if (!typeId.isGlobal() ||
-            (!typeDef.isStructType() && !typeDef.isArrayType())) {
+        if ((!typeDef.isStructType() && !typeDef.isArrayType())) {
           continue;
         }
 
@@ -1739,7 +1737,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
         // We do not need to use a barrier here because RttValue is always
         // tenured
         MOZ_ASSERT(rttValue.get()->isTenured());
-        *((GCPtr<JSObject*>*)addressOfTypeId(typeId)) = rttValue;
+        *((GCPtr<JSObject*>*)addressOfTypeId(typeIndex)) = rttValue;
         hasGcTypes_ = true;
       }
     }
@@ -1753,10 +1751,6 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     for (uint32_t typeIndex = 0; typeIndex < metadata().types.length();
          typeIndex++) {
       const TypeDef& typeDef = metadata().types[typeIndex];
-      const TypeIdDesc& typeId = metadata().typeIds[typeIndex];
-      if (!typeId.isGlobal()) {
-        continue;
-      }
       switch (typeDef.kind()) {
         case TypeDefKind::Func: {
           const FuncType& funcType = typeDef.funcType();
@@ -1765,7 +1759,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
                                                        &funcTypeId)) {
             return false;
           }
-          *addressOfTypeId(typeId) = funcTypeId;
+          *addressOfTypeId(typeIndex) = funcTypeId;
           break;
         }
         case TypeDefKind::Struct:
@@ -1860,12 +1854,11 @@ Instance::~Instance() {
     for (uint32_t typeIndex = 0; typeIndex < metadata().types.length();
          typeIndex++) {
       const TypeDef& typeDef = metadata().types[typeIndex];
-      const TypeIdDesc& typeId = metadata().typeIds[typeIndex];
-      if (!typeDef.isFuncType() || !typeId.isGlobal()) {
+      if (!typeDef.isFuncType()) {
         continue;
       }
       const FuncType& funcType = typeDef.funcType();
-      if (const void* funcTypeId = *addressOfTypeId(typeId)) {
+      if (const void* funcTypeId = *addressOfTypeId(typeIndex)) {
         lockedFuncTypeIdSet->deallocateFuncTypeId(funcType, funcTypeId);
       }
     }
@@ -1964,12 +1957,10 @@ void Instance::tracePrivate(JSTracer* trc) {
     for (uint32_t typeIndex = 0; typeIndex < metadata().types.length();
          typeIndex++) {
       const TypeDef& typeDef = metadata().types[typeIndex];
-      const TypeIdDesc& typeId = metadata().typeIds[typeIndex];
-      if (!typeId.isGlobal() ||
-          (!typeDef.isStructType() && !typeDef.isArrayType())) {
+      if (!typeDef.isStructType() && !typeDef.isArrayType()) {
         continue;
       }
-      TraceNullableEdge(trc, ((GCPtr<JSObject*>*)addressOfTypeId(typeId)),
+      TraceNullableEdge(trc, ((GCPtr<JSObject*>*)addressOfTypeId(typeIndex)),
                         "wasm rtt value");
     }
   }

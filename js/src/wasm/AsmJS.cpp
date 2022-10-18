@@ -1941,8 +1941,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
     }
 
     *sigIndex = moduleEnv_.types->length();
-    return moduleEnv_.types->append(std::move(sig)) &&
-           moduleEnv_.typeIds.append(TypeIdDesc());
+    return moduleEnv_.types->append(std::move(sig));
   }
   bool declareSig(FuncType&& sig, uint32_t* sigIndex) {
     SigSet::AddPtr p = sigSet_.lookupForAdd(sig);
@@ -2130,16 +2129,14 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
       uint32_t funcTypeIndex = r.front().key().sigIndex();
       MOZ_ASSERT(!moduleEnv_.funcs[funcIndex].type);
       moduleEnv_.funcs[funcIndex] =
-          FuncDesc(&moduleEnv_.types->funcType(funcTypeIndex),
-                   &moduleEnv_.typeIds[funcTypeIndex], funcTypeIndex);
+          FuncDesc(&moduleEnv_.types->funcType(funcTypeIndex), funcTypeIndex);
     }
     for (const Func& func : funcDefs_) {
       uint32_t funcIndex = funcImportMap_.count() + func.funcDefIndex();
       uint32_t funcTypeIndex = func.sigIndex();
       MOZ_ASSERT(!moduleEnv_.funcs[funcIndex].type);
       moduleEnv_.funcs[funcIndex] =
-          FuncDesc(&moduleEnv_.types->funcType(funcTypeIndex),
-                   &moduleEnv_.typeIds[funcTypeIndex], funcTypeIndex);
+          FuncDesc(&moduleEnv_.types->funcType(funcTypeIndex), funcTypeIndex);
     }
     for (const Export& exp : moduleEnv_.exports) {
       if (exp.kind() != DefinitionKind::Function) {
@@ -2150,10 +2147,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
                                      /* canRefFunc */ false);
     }
 
-    if (!moduleEnv_.funcImportGlobalDataOffsets.resize(
-            funcImportMap_.count())) {
-      return nullptr;
-    }
+    moduleEnv_.numFuncImports = funcImportMap_.count();
 
     MOZ_ASSERT(asmJSMetadata_->asmJSFuncNames.empty());
     if (!asmJSMetadata_->asmJSFuncNames.resize(funcImportMap_.count())) {
@@ -6185,10 +6179,11 @@ static bool CheckFunction(ModuleValidator<Unit>& m) {
     }
   }
 
+  FuncType sig(std::move(args), std::move(results));
+
   ModuleValidatorShared::Func* func = nullptr;
-  if (!CheckFunctionSignature(m, funNode,
-                              FuncType(std::move(args), std::move(results)),
-                              FunctionName(funNode), &func)) {
+  if (!CheckFunctionSignature(m, funNode, std::move(sig), FunctionName(funNode),
+                              &func)) {
     return false;
   }
 

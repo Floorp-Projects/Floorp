@@ -615,7 +615,7 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
 }
 
 void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
-                                    const TypeIdDesc& funcTypeId,
+                                    const CallIndirectId& callIndirectId,
                                     const Maybe<uint32_t>& tier1FuncIndex,
                                     FuncOffsets* offsets) {
   AutoCreatedBy acb(masm, "wasm::GenerateFunctionPrologue");
@@ -682,22 +682,22 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
   // Signature check starts at WasmCheckedTailEntryOffset.
   MOZ_ASSERT_IF(!masm.oom(), masm.currentOffset() - offsets->begin ==
                                  WasmCheckedTailEntryOffset);
-  switch (funcTypeId.kind()) {
-    case TypeIdDescKind::Global: {
+  switch (callIndirectId.kind()) {
+    case CallIndirectIdKind::Global: {
       Register scratch = WasmTableCallScratchReg0;
-      masm.loadWasmGlobalPtr(funcTypeId.globalDataOffset(), scratch);
+      masm.loadWasmGlobalPtr(callIndirectId.globalDataOffset(), scratch);
       masm.branchPtr(Assembler::Condition::Equal, WasmTableCallSigReg, scratch,
                      &functionBody);
       masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
       break;
     }
-    case TypeIdDescKind::Immediate: {
+    case CallIndirectIdKind::Immediate: {
       masm.branch32(Assembler::Condition::Equal, WasmTableCallSigReg,
-                    Imm32(funcTypeId.immediate()), &functionBody);
+                    Imm32(callIndirectId.immediate()), &functionBody);
       masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
       break;
     }
-    case TypeIdDescKind::None:
+    case CallIndirectIdKind::None:
       masm.jump(&functionBody);
       break;
   }

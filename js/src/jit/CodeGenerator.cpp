@@ -12814,7 +12814,7 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
 }
 
 bool CodeGenerator::generateWasm(
-    wasm::TypeIdDesc funcTypeId, wasm::BytecodeOffset trapOffset,
+    wasm::CallIndirectId callIndirectId, wasm::BytecodeOffset trapOffset,
     const wasm::ArgTypeVector& argTypes, const RegisterOffsets& trapExitLayout,
     size_t trapExitLayoutNumWords, wasm::FuncOffsets* offsets,
     wasm::StackMaps* stackMaps, wasm::Decoder* decoder) {
@@ -12824,7 +12824,8 @@ bool CodeGenerator::generateWasm(
 
   size_t nInboundStackArgBytes = StackArgAreaSizeUnaligned(argTypes);
 
-  wasm::GenerateFunctionPrologue(masm, funcTypeId, mozilla::Nothing(), offsets);
+  wasm::GenerateFunctionPrologue(masm, callIndirectId, mozilla::Nothing(),
+                                 offsets);
 
   MOZ_ASSERT(masm.framePushed() == 0);
 

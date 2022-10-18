@@ -375,7 +375,7 @@ using ModuleHash = uint8_t[8];
 
 struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   TypeDefVector types;
-  TypeIdDescVector typeIds;
+  uint32_t typeIdsOffsetStart;
   GlobalDescVector globals;
   TableDescVector tables;
   TagDescVector tags;

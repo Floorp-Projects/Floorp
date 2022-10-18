@@ -57,10 +57,8 @@ struct ModuleEnvironment {
   Maybe<uint32_t> dataCount;
   Maybe<MemoryDesc> memory;
   MutableTypeContext types;
-  TypeIdDescVector typeIds;
   FuncDescVector funcs;
-  Uint32Vector funcImportGlobalDataOffsets;
-
+  uint32_t numFuncImports;
   GlobalDescVector globals;
   TagDescVector tags;
   TableDescVector tables;
@@ -71,6 +69,13 @@ struct ModuleEnvironment {
   ElemSegmentVector elemSegments;
   MaybeSectionRange codeSection;
 
+  // The start offset of the FuncImportInstanceData[] section of the instance
+  // global data. There is one entry for every imported function.
+  uint32_t funcImportsOffsetStart;
+  // The start offset of the type id section of the instance
+  // global data. There is one entry for every type.
+  uint32_t typeIdsOffsetStart;
+
   // Fields decoded as part of the wasm module tail:
   DataSegmentEnvVector dataSegments;
   CustomSectionEnvVector customSections;
@@ -80,14 +85,20 @@ struct ModuleEnvironment {
 
   explicit ModuleEnvironment(FeatureArgs features,
                              ModuleKind kind = ModuleKind::Wasm)
-      : kind(kind), features(features), memory(Nothing()) {}
+      : kind(kind),
+        features(features),
+        memory(Nothing()),
+        numFuncImports(0),
+        funcImportsOffsetStart(0),
+        typeIdsOffsetStart(0) {}
 
   size_t numTables() const { return tables.length(); }
   size_t numTypes() const { return types->length(); }
   size_t numFuncs() const { return funcs.length(); }
-  size_t numFuncImports() const { return funcImportGlobalDataOffsets.length(); }
-  size_t numFuncDefs() const {
-    return funcs.length() - funcImportGlobalDataOffsets.length();
+  size_t numFuncDefs() const { return funcs.length() - numFuncImports; }
+
+  bool funcIsImport(uint32_t funcIndex) const {
+    return funcIndex < numFuncImports;
   }
 
 #define WASM_FEATURE(NAME, SHORT_NAME, ...) \
@@ -104,10 +115,6 @@ struct ModuleEnvironment {
 
   bool isAsmJS() const { return kind == ModuleKind::AsmJS; }
 
-  bool funcIsImport(uint32_t funcIndex) const {
-    return funcIndex < funcImportGlobalDataOffsets.length();
-  }
-
   bool usesMemory() const { return memory.isSome(); }
   bool usesSharedMemory() const {
     return memory.isSome() && memory->isShared();
@@ -118,7 +125,7 @@ struct ModuleEnvironment {
     if (!types) {
       return false;
     }
-    return types->resize(numTypes) && typeIds.resize(numTypes);
+    return types->resize(numTypes);
   }
 
   void declareFuncExported(uint32_t funcIndex, bool eager, bool canRefFunc) {
@@ -137,6 +144,16 @@ struct ModuleEnvironment {
     }
 
     funcs[funcIndex].flags = flags;
+  }
+
+  uint32_t offsetOfFuncImportInstanceData(uint32_t funcIndex) const {
+    MOZ_ASSERT(funcIndex < numFuncImports);
+    return funcImportsOffsetStart + funcIndex * sizeof(FuncImportInstanceData);
+  }
+
+  uint32_t offsetOfTypeId(uint32_t typeIndex) const {
+    MOZ_ASSERT(typeIndex < types->length());
+    return typeIdsOffsetStart + typeIndex * sizeof(void*);
   }
 };
 
