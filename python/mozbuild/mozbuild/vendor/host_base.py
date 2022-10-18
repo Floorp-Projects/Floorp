@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import urllib
 import tempfile
 import subprocess
 
@@ -12,6 +13,7 @@ import subprocess
 class BaseHost:
     def __init__(self, manifest):
         self.manifest = manifest
+        self.repo_url = urllib.parse.urlparse(self.manifest["vendoring"]["url"])
 
     def upstream_tag(self, revision):
         """Temporarily clone the repo to get the latest tag and timestamp"""
@@ -58,4 +60,7 @@ class BaseHost:
             return (latest_tag, latest_tag_timestamp)
 
     def upstream_snapshot(self, revision):
-        raise Exception("Should not be called")
+        raise Exception("Unimplemented for this subclass...")
+
+    def upstream_path_to_file(self, revision, filepath):
+        raise Exception("Unimplemented for this subclass...")

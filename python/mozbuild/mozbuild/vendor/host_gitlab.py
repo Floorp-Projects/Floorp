@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import urllib
 import requests
 
 from mozbuild.vendor.host_base import BaseHost
@@ -13,9 +12,10 @@ from mozbuild.vendor.host_base import BaseHost
 class GitLabHost(BaseHost):
     def upstream_commit(self, revision):
         """Query the gitlab api for a git commit id and timestamp."""
-        repo_url = urllib.parse.urlparse(self.manifest["vendoring"]["url"])
-        gitlab_api = repo_url.scheme + "://" + repo_url.netloc + "/api/v4/projects/"
-        gitlab_api += repo_url.path[1:].replace("/", "%2F")
+        gitlab_api = (
+            self.repo_url.scheme + "://" + self.repo_url.netloc + "/api/v4/projects/"
+        )
+        gitlab_api += self.repo_url.path[1:].replace("/", "%2F")
         gitlab_api += "/repository/commits"
         req = requests.get("/".join([gitlab_api, revision]))
         req.raise_for_status()
