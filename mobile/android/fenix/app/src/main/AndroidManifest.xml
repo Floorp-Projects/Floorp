@@ -19,6 +19,9 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
+    <!-- Needed for Google Play policy https://support.google.com/googleplay/android-developer/answer/6048248 -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
+
     <!-- Needed to prompt the user to give permission to install a downloaded apk -->
     <uses-permission-sdk-23 android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
