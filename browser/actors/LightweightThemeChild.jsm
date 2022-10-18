@@ -8,9 +8,6 @@ var EXPORTED_SYMBOLS = ["LightweightThemeChild"];
 
 /**
  * LightweightThemeChild forwards theme data to in-content pages.
- * It is both instantiated by the traditional Actor mechanism,
- * and also manually within the sidebar JS global (which has no message manager).
- * The manual instantiation is necessary due to Bug 1596852.
  */
 class LightweightThemeChild extends JSWindowActorChild {
   constructor() {
