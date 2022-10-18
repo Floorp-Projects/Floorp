@@ -32,6 +32,9 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!-- Needed for Google Play policy https://support.google.com/googleplay/android-developer/answer/6048248 -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
+
     <application
         android:allowBackup="false"
         android:extractNativeLibs="true"
