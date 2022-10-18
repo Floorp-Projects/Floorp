@@ -62,26 +62,6 @@ gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t* csurf,
   Init(csurf, true);
 }
 
-gfxQuartzSurface::gfxQuartzSurface(unsigned char* data,
-                                   const mozilla::gfx::IntSize& aSize,
-                                   long stride, gfxImageFormat format)
-    : mCGContext(nullptr), mSize(aSize.width, aSize.height) {
-  if (!mozilla::gfx::Factory::CheckSurfaceSize(aSize)) MakeInvalid();
-
-  cairo_format_t cformat = GfxFormatToCairoFormat(format);
-  cairo_surface_t* surf = cairo_quartz_surface_create_for_data(
-      data, cformat, aSize.width, aSize.height, stride);
-
-  mCGContext = cairo_quartz_surface_get_cg_context(surf);
-
-  CGContextRetain(mCGContext);
-
-  Init(surf);
-  if (mSurfaceValid) {
-    RecordMemoryUsed(mSize.height * stride + sizeof(gfxQuartzSurface));
-  }
-}
-
 already_AddRefed<gfxImageSurface> gfxQuartzSurface::GetAsImageSurface() {
   cairo_surface_t* surface = cairo_quartz_surface_get_image(mSurface);
   if (!surface || cairo_surface_status(surface)) return nullptr;
