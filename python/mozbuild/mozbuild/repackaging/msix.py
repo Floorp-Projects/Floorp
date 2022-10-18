@@ -185,7 +185,7 @@ def get_embedded_version(version, buildid):
     return version
 
 
-def get_appconstants_jsm_values(finder, *args):
+def get_appconstants_sys_mjs_values(finder, *args):
     r"""Extract values, such as the display version like `MOZ_APP_VERSION_DISPLAY:
     "...";`, from the omnijar.  This allows to determine the beta number, like
     `X.YbW`, where the regular beta version is only `X.Y`.  Takes a list of
@@ -194,7 +194,7 @@ def get_appconstants_jsm_values(finder, *args):
     """
 
     lines = defaultdict(list)
-    for _, f in finder.find("**/modules/AppConstants.jsm"):
+    for _, f in finder.find("**/modules/AppConstants.sys.mjs"):
         for line in f.open().read().decode("utf-8").splitlines():
             for arg in args:
                 if arg in line:
@@ -365,12 +365,12 @@ def repackage_msix(
     second = next(values)
     vendor = vendor or second
 
-    # For `AppConstants.jsm` and `brand.properties`, which are in the omnijar in packaged builds.
-    # The nested langpack XPI files can't be read by `mozjar.py`.
+    # For `AppConstants.sys.mjs` and `brand.properties`, which are in the omnijar in packaged
+    # builds. The nested langpack XPI files can't be read by `mozjar.py`.
     unpack_finder = UnpackFinder(finder, unpack_xpi=False)
 
     if not version:
-        values = get_appconstants_jsm_values(
+        values = get_appconstants_sys_mjs_values(
             unpack_finder, "MOZ_APP_VERSION_DISPLAY", "MOZ_BUILDID"
         )
         display_version = next(values)
@@ -384,8 +384,8 @@ def repackage_msix(
                 "display_version": display_version,
                 "buildid": buildid,
             },
-            "AppConstants.jsm display version is '{display_version}' and build ID is '{buildid}':"
-            + " embedded version will be '{version}'",
+            "AppConstants.sys.mjs display version is '{display_version}' and build ID is"
+            + " '{buildid}': embedded version will be '{version}'",
         )
 
     # TODO: Bug 1721922: localize this description via Fluent.

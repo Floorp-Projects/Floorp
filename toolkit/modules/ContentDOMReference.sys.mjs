@@ -14,11 +14,7 @@
  * between processes during runtime.
  */
 
-var EXPORTED_SYMBOLS = ["ContentDOMReference"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -55,7 +51,7 @@ const finalizerRoots = new WeakMap();
  */
 var gRegistry = new WeakMap();
 
-var ContentDOMReference = {
+export var ContentDOMReference = {
   _init() {
     Services.obs.addObserver(this, FINALIZATION_TOPIC);
   },

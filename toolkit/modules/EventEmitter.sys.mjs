@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -12,9 +10,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Console.jsm"
 );
 
-var EXPORTED_SYMBOLS = ["EventEmitter"];
-
-function EventEmitter() {}
+export function EventEmitter() {}
 
 let loggingEnabled = Services.prefs.getBoolPref("toolkit.dump.emit");
 Services.prefs.addObserver("toolkit.dump.emit", {

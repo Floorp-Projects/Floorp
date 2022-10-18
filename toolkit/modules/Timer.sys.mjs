@@ -2,22 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * JS module implementation of setTimeout and clearTimeout.
  */
-
-var EXPORTED_SYMBOLS = [
-  "setTimeout",
-  "setTimeoutWithTarget",
-  "clearTimeout",
-  "setInterval",
-  "setIntervalWithTarget",
-  "clearInterval",
-  "requestIdleCallback",
-  "cancelIdleCallback",
-];
 
 // This gives us >=2^30 unique timer IDs, enough for 1 per ms for 12.4 days.
 var gNextId = 1; // setTimeout and setInterval must return a positive integer
@@ -78,11 +65,16 @@ function _setTimeoutOrIsInterval(
   return id;
 }
 
-function setTimeout(aCallback, aMilliseconds, ...aArgs) {
+export function setTimeout(aCallback, aMilliseconds, ...aArgs) {
   return _setTimeoutOrIsInterval(aCallback, aMilliseconds, false, null, aArgs);
 }
 
-function setTimeoutWithTarget(aCallback, aMilliseconds, aTarget, ...aArgs) {
+export function setTimeoutWithTarget(
+  aCallback,
+  aMilliseconds,
+  aTarget,
+  ...aArgs
+) {
   return _setTimeoutOrIsInterval(
     aCallback,
     aMilliseconds,
@@ -92,11 +84,16 @@ function setTimeoutWithTarget(aCallback, aMilliseconds, aTarget, ...aArgs) {
   );
 }
 
-function setInterval(aCallback, aMilliseconds, ...aArgs) {
+export function setInterval(aCallback, aMilliseconds, ...aArgs) {
   return _setTimeoutOrIsInterval(aCallback, aMilliseconds, true, null, aArgs);
 }
 
-function setIntervalWithTarget(aCallback, aMilliseconds, aTarget, ...aArgs) {
+export function setIntervalWithTarget(
+  aCallback,
+  aMilliseconds,
+  aTarget,
+  ...aArgs
+) {
   return _setTimeoutOrIsInterval(
     aCallback,
     aMilliseconds,
@@ -112,10 +109,10 @@ function clear(aId) {
     gTimerTable.delete(aId);
   }
 }
-var clearInterval = clear;
-var clearTimeout = clear;
+export var clearInterval = clear;
+export var clearTimeout = clear;
 
-function requestIdleCallback(aCallback, aOptions) {
+export function requestIdleCallback(aCallback, aOptions) {
   if (typeof aCallback !== "function") {
     throw new Error("callback is not a function in requestIdleCallback");
   }
@@ -133,7 +130,7 @@ function requestIdleCallback(aCallback, aOptions) {
   return id;
 }
 
-function cancelIdleCallback(aId) {
+export function cancelIdleCallback(aId) {
   if (gTimerTable.has(aId)) {
     gTimerTable.delete(aId);
   }
