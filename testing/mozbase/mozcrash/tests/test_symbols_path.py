@@ -33,11 +33,11 @@ def test_symbols_path_url(check_for_crashes, minidump_files):
     data = {"retrieved": False}
 
     def make_zipfile():
-        data = BytesIO()
-        z = zipfile.ZipFile(data, "w")
+        zdata = BytesIO()
+        z = zipfile.ZipFile(zdata, "w")
         z.writestr("symbols.txt", "abc/xyz")
         z.close()
-        return data.getvalue()
+        return zdata.getvalue()
 
     def get_symbols(req):
         data["retrieved"] = True
@@ -56,6 +56,44 @@ def test_symbols_path_url(check_for_crashes, minidump_files):
 
     assert 1 == check_for_crashes(symbols_path=symbol_url)
     assert data["retrieved"]
+
+
+def test_symbols_retry(check_for_crashes, minidump_files):
+    """Test that passing a URL as symbols_path succeeds on retry after temporary HTTP failure."""
+    data = {"retrieved": False}
+    get_symbols_calls = 0
+
+    def make_zipfile():
+        zdata = BytesIO()
+        z = zipfile.ZipFile(zdata, "w")
+        z.writestr("symbols.txt", "abc/xyz")
+        z.close()
+        return zdata.getvalue()
+
+    def get_symbols(req):
+        nonlocal get_symbols_calls
+        data["retrieved"] = True
+        if get_symbols_calls > 0:
+            ret = 200
+        else:
+            ret = 504
+        get_symbols_calls += 1
+
+        headers = {}
+        return (ret, headers, make_zipfile())
+
+    httpd = mozhttpd.MozHttpd(
+        port=0,
+        urlhandlers=[{"method": "GET", "path": "/symbols", "function": get_symbols}],
+    )
+    httpd.start()
+    symbol_url = urlunsplit(
+        ("http", "%s:%d" % httpd.httpd.server_address, "/symbols", "", "")
+    )
+
+    assert 1 == check_for_crashes(symbols_path=symbol_url)
+    assert data["retrieved"]
+    assert 2 == get_symbols_calls
 
 
 if __name__ == "__main__":
