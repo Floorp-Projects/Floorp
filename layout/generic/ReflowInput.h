@@ -341,10 +341,18 @@ struct ReflowInput : public SizeComputationInput {
     mAvailableSize.BSize(mWritingMode) = aAvailableBSize;
   }
 
-  nscoord& ComputedMinISize() { return mComputedMinSize.ISize(mWritingMode); }
-  nscoord& ComputedMaxISize() { return mComputedMaxSize.ISize(mWritingMode); }
-  nscoord& ComputedMinBSize() { return mComputedMinSize.BSize(mWritingMode); }
-  nscoord& ComputedMaxBSize() { return mComputedMaxSize.BSize(mWritingMode); }
+  void SetComputedMinISize(nscoord aMinISize) {
+    mComputedMinSize.ISize(mWritingMode) = aMinISize;
+  }
+  void SetComputedMaxISize(nscoord aMaxISize) {
+    mComputedMaxSize.ISize(mWritingMode) = aMaxISize;
+  }
+  void SetComputedMinBSize(nscoord aMinBSize) {
+    mComputedMinSize.BSize(mWritingMode) = aMinBSize;
+  }
+  void SetComputedMaxBSize(nscoord aMaxBSize) {
+    mComputedMaxSize.BSize(mWritingMode) = aMaxBSize;
+  }
 
   mozilla::LogicalSize AvailableSize() const { return mAvailableSize; }
   mozilla::LogicalSize ComputedSize() const { return mComputedSize; }

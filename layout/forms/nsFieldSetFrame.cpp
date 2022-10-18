@@ -585,13 +585,13 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
     }
 
     if (aReflowInput.ComputedMinBSize() > 0) {
-      kidReflowInput.ComputedMinBSize() =
-          std::max(0, aReflowInput.ComputedMinBSize() - mLegendSpace);
+      kidReflowInput.SetComputedMinBSize(
+          std::max(0, aReflowInput.ComputedMinBSize() - mLegendSpace));
     }
 
     if (aReflowInput.ComputedMaxBSize() != NS_UNCONSTRAINEDSIZE) {
-      kidReflowInput.ComputedMaxBSize() =
-          std::max(0, aReflowInput.ComputedMaxBSize() - mLegendSpace);
+      kidReflowInput.SetComputedMaxBSize(
+          std::max(0, aReflowInput.ComputedMaxBSize() - mLegendSpace));
     }
 
     ReflowOutput kidDesiredSize(kidReflowInput);
