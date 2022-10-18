@@ -441,25 +441,27 @@ class PackedType : public T {
 
   explicit PackedType(PackedTypeCode ptc) : tc_(ptc) { MOZ_ASSERT(isValid()); }
 
-  explicit PackedType(jit::MIRType mty) {
+  static PackedType fromMIRType(jit::MIRType mty) {
     switch (mty) {
       case jit::MIRType::Int32:
-        tc_ = PackedTypeCode::pack(TypeCode::I32);
+        return PackedType::I32;
         break;
       case jit::MIRType::Int64:
-        tc_ = PackedTypeCode::pack(TypeCode::I64);
+        return PackedType::I64;
         break;
       case jit::MIRType::Float32:
-        tc_ = PackedTypeCode::pack(TypeCode::F32);
+        return PackedType::F32;
         break;
       case jit::MIRType::Double:
-        tc_ = PackedTypeCode::pack(TypeCode::F64);
+        return PackedType::F64;
         break;
       case jit::MIRType::Simd128:
-        tc_ = PackedTypeCode::pack(TypeCode::V128);
+        return PackedType::V128;
         break;
+      case jit::MIRType::RefOrNull:
+        return PackedType::Ref;
       default:
-        MOZ_CRASH("PackedType(MIRType): unexpected type");
+        MOZ_CRASH("fromMIRType: unexpected type");
     }
   }
 
@@ -665,6 +667,29 @@ class PackedType : public T {
     return PackedType<ValTypeTraits>(tc_);
   }
 
+  // Note, ToMIRType is only correct within Wasm, where an AnyRef is represented
+  // as a pointer.  At the JS/wasm boundary, an AnyRef can be represented as a
+  // JS::Value, and the type translation may have to be handled specially and on
+  // a case-by-case basis.
+  jit::MIRType toMIRType() const {
+    switch (tc_.typeCodeAbstracted()) {
+      case TypeCode::I32:
+        return jit::MIRType::Int32;
+      case TypeCode::I64:
+        return jit::MIRType::Int64;
+      case TypeCode::F32:
+        return jit::MIRType::Float32;
+      case TypeCode::F64:
+        return jit::MIRType::Double;
+      case TypeCode::V128:
+        return jit::MIRType::Simd128;
+      case AbstractReferenceTypeCode:
+        return jit::MIRType::RefOrNull;
+      default:
+        MOZ_CRASH("bad type");
+    }
+  }
+
   bool isValType() const {
     switch (tc_.typeCode()) {
       case TypeCode::I8:
@@ -711,51 +736,6 @@ WASM_DECLARE_CACHEABLE_POD(FieldType);
 using ValTypeVector = Vector<ValType, 16, SystemAllocPolicy>;
 
 // ValType utilities
-
-static inline unsigned SizeOf(ValType vt) {
-  switch (vt.kind()) {
-    case ValType::I32:
-    case ValType::F32:
-      return 4;
-    case ValType::I64:
-    case ValType::F64:
-      return 8;
-    case ValType::V128:
-      return 16;
-    case ValType::Ref:
-      return sizeof(intptr_t);
-  }
-  MOZ_CRASH("Invalid ValType");
-}
-
-// Note, ToMIRType is only correct within Wasm, where an AnyRef is represented
-// as a pointer.  At the JS/wasm boundary, an AnyRef can be represented as a
-// JS::Value, and the type translation may have to be handled specially and on a
-// case-by-case basis.
-
-static inline jit::MIRType ToMIRType(ValType vt) {
-  switch (vt.kind()) {
-    case ValType::I32:
-      return jit::MIRType::Int32;
-    case ValType::I64:
-      return jit::MIRType::Int64;
-    case ValType::F32:
-      return jit::MIRType::Float32;
-    case ValType::F64:
-      return jit::MIRType::Double;
-    case ValType::V128:
-      return jit::MIRType::Simd128;
-    case ValType::Ref:
-      return jit::MIRType::RefOrNull;
-  }
-  MOZ_CRASH("bad type");
-}
-
-static inline bool IsNumberType(ValType vt) { return !vt.isRefType(); }
-
-static inline jit::MIRType ToMIRType(const Maybe<ValType>& t) {
-  return t ? ToMIRType(ValType(t.ref())) : jit::MIRType::None;
-}
 
 extern bool ToValType(JSContext* cx, HandleValue v, ValType* out);
 extern bool ToRefType(JSContext* cx, JSLinearString* typeLinearStr,

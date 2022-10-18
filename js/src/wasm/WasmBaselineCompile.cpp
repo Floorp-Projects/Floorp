@@ -4921,7 +4921,7 @@ bool BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee,
 
   popValueStackBy(numArgs);
 
-  pushReturnValueOfCall(baselineCall, ToMIRType(retType));
+  pushReturnValueOfCall(baselineCall, retType.toMIRType());
 
   return true;
 }
