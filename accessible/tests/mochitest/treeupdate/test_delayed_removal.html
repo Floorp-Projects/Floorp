@@ -30,8 +30,10 @@
     async function hideDivFromInsideSpan() {
       let msg = "hideDivFromInsideSpan";
       info(msg);
-      let events = waitForOrderedEvents(
-        [[EVENT_HIDE, "div1"], [EVENT_REORDER, "span1"]], msg);
+      let events = waitForOrderedEvents([
+        [EVENT_HIDE, "div1"], [EVENT_TEXT_REMOVED, "span1"],
+        [EVENT_REORDER, "span1"]
+      ], msg);
       document.body.offsetTop; // Flush layout.
       getNode("div1").style.display = "none";
       await events;
@@ -55,8 +57,10 @@
     async function removeDivFromInsideSpan() {
       let msg = "removeDivFromInsideSpan";
       info(msg);
-      let events = waitForOrderedEvents(
-        [[EVENT_HIDE, getNode("div3")], [EVENT_REORDER, "span3"]], msg);
+      let events = waitForOrderedEvents([
+        [EVENT_HIDE, getNode("div3")], [EVENT_TEXT_REMOVED, "span3"],
+        [EVENT_REORDER, "span3"]
+      ], msg);
       document.body.offsetTop; // Flush layout.
       getNode("div3").remove();
       await events;
