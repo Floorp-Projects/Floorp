@@ -90,17 +90,6 @@
 #define SIZEMODE_MINIMIZED u"minimized"_ns
 #define SIZEMODE_FULLSCREEN u"fullscreen"_ns
 
-#define WINDOWTYPE_ATTRIBUTE u"windowtype"_ns
-
-#define PERSIST_ATTRIBUTE u"persist"_ns
-#define SCREENX_ATTRIBUTE u"screenX"_ns
-#define SCREENY_ATTRIBUTE u"screenY"_ns
-#define WIDTH_ATTRIBUTE u"width"_ns
-#define HEIGHT_ATTRIBUTE u"height"_ns
-#define MODE_ATTRIBUTE u"sizemode"_ns
-#define TILED_ATTRIBUTE u"gtktiledwindow"_ns
-#define ZLEVEL_ATTRIBUTE u"zlevel"_ns
-
 #define SIZE_PERSISTENCE_TIMEOUT 500  // msec
 
 //*****************************************************************************
@@ -1248,13 +1237,13 @@ bool AppWindow::LoadPositionFromXUL(int32_t aSpecWidth, int32_t aSpecHeight) {
   nsAutoString posString;
   DesktopIntPoint specPoint = curPoint;
   nsresult errorCode;
-  windowElement->GetAttribute(SCREENX_ATTRIBUTE, posString);
+  windowElement->GetAttr(nsGkAtoms::screenX, posString);
   int32_t temp = posString.ToInteger(&errorCode);
   if (NS_SUCCEEDED(errorCode)) {
     specPoint.x = temp;
     gotPosition = true;
   }
-  windowElement->GetAttribute(SCREENY_ATTRIBUTE, posString);
+  windowElement->GetAttr(nsGkAtoms::screenY, posString);
   temp = posString.ToInteger(&errorCode);
   if (NS_SUCCEEDED(errorCode)) {
     specPoint.y = temp;
@@ -1389,12 +1378,12 @@ bool AppWindow::UpdateWindowStateFromMiscXULAttributes() {
   // If we are told to ignore the size mode attribute, force
   // normal sizemode.
   if (mIgnoreXULSizeMode) {
-    windowElement->SetAttribute(MODE_ATTRIBUTE, SIZEMODE_NORMAL,
-                                IgnoreErrors());
+    windowElement->SetAttr(nsGkAtoms::sizemode, SIZEMODE_NORMAL,
+                           IgnoreErrors());
   } else {
     // Otherwise, read sizemode from DOM and, if the window is resizable,
     // set it later.
-    windowElement->GetAttribute(MODE_ATTRIBUTE, stateString);
+    windowElement->GetAttr(nsGkAtoms::sizemode, stateString);
     if ((stateString.Equals(SIZEMODE_MAXIMIZED) ||
          stateString.Equals(SIZEMODE_FULLSCREEN))) {
       /* Honor request to maximize only if the window is sizable.
@@ -1428,7 +1417,7 @@ bool AppWindow::UpdateWindowStateFromMiscXULAttributes() {
   gotState = true;
 
   // zlevel
-  windowElement->GetAttribute(ZLEVEL_ATTRIBUTE, stateString);
+  windowElement->GetAttr(nsGkAtoms::zlevel, stateString);
   if (!stateString.IsEmpty()) {
     nsresult errorCode;
     int32_t zLevel = stateString.ToInteger(&errorCode);
@@ -1468,7 +1457,7 @@ void AppWindow::StaggerPosition(int32_t& aRequestedX, int32_t& aRequestedY,
   nsCOMPtr<nsIAppWindow> ourAppWindow(this);
 
   nsAutoString windowType;
-  windowElement->GetAttribute(WINDOWTYPE_ATTRIBUTE, windowType);
+  windowElement->GetAttr(nsGkAtoms::windowtype, windowType);
 
   DesktopIntRect screenRect;
   bool gotScreen = false;
@@ -1598,7 +1587,7 @@ void AppWindow::SyncAttributesToWidget() {
   NS_ENSURE_TRUE_VOID(mWindow);
 
   // "windowtype" attribute
-  windowElement->GetAttribute(WINDOWTYPE_ATTRIBUTE, attr);
+  windowElement->GetAttr(nsGkAtoms::windowtype, attr);
   if (!attr.IsEmpty()) {
     mWindow->SetWindowClass(attr);
   }
@@ -1954,7 +1943,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
   if (!docShellElement) return NS_ERROR_FAILURE;
 
   nsAutoString persistString;
-  docShellElement->GetAttribute(PERSIST_ATTRIBUTE, persistString);
+  docShellElement->GetAttr(nsGkAtoms::persist, persistString);
   if (persistString.IsEmpty()) {  // quick check which sometimes helps
     mPersistentAttributesDirty = 0;
     return NS_OK;
@@ -1984,13 +1973,12 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
 
   nsAutoString sizeString;
   bool shouldPersist = !isFullscreen;
-  ErrorResult rv;
   // (only for size elements which are persisted)
   if ((mPersistentAttributesDirty & PAD_POSITION) && gotRestoredBounds) {
     if (persistString.Find(u"screenX") >= 0) {
       sizeString.Truncate();
       sizeString.AppendInt(NSToIntRound(rect.X() / posScale.scale));
-      docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString, rv);
+      docShellElement->SetAttr(nsGkAtoms::screenX, sizeString, IgnoreErrors());
       if (shouldPersist) {
         Unused << SetPersistentValue(nsGkAtoms::screenX, sizeString);
       }
@@ -1998,7 +1986,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
     if (persistString.Find(u"screenY") >= 0) {
       sizeString.Truncate();
       sizeString.AppendInt(NSToIntRound(rect.Y() / posScale.scale));
-      docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString, rv);
+      docShellElement->SetAttr(nsGkAtoms::screenY, sizeString, IgnoreErrors());
       if (shouldPersist) {
         Unused << SetPersistentValue(nsGkAtoms::screenY, sizeString);
       }
@@ -2011,7 +1999,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
     if (persistString.Find(u"width") >= 0) {
       sizeString.Truncate();
       sizeString.AppendInt(NSToIntRound(innerRect.Width() / sizeScale.scale));
-      docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString, rv);
+      docShellElement->SetAttr(nsGkAtoms::width, sizeString, IgnoreErrors());
       if (shouldPersist) {
         Unused << SetPersistentValue(nsGkAtoms::width, sizeString);
       }
@@ -2019,7 +2007,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
     if (persistString.Find(u"height") >= 0) {
       sizeString.Truncate();
       sizeString.AppendInt(NSToIntRound(innerRect.Height() / sizeScale.scale));
-      docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString, rv);
+      docShellElement->SetAttr(nsGkAtoms::height, sizeString, IgnoreErrors());
       if (shouldPersist) {
         Unused << SetPersistentValue(nsGkAtoms::height, sizeString);
       }
@@ -2038,18 +2026,14 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
         sizeString.Assign(SIZEMODE_FULLSCREEN);
       else
         sizeString.Assign(SIZEMODE_NORMAL);
-      docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString, rv);
+      docShellElement->SetAttr(nsGkAtoms::sizemode, sizeString, IgnoreErrors());
       if (shouldPersist && persistString.Find(u"sizemode") >= 0) {
         Unused << SetPersistentValue(nsGkAtoms::sizemode, sizeString);
       }
     }
-    bool tiled = mWindow->IsTiled();
-    if (tiled) {
-      sizeString.Assign(u"true"_ns);
-    } else {
-      sizeString.Assign(u"false"_ns);
-    }
-    docShellElement->SetAttribute(TILED_ATTRIBUTE, sizeString, rv);
+    docShellElement->SetAttribute(u"gtktiledwindow"_ns,
+                                  mWindow->IsTiled() ? u"true"_ns : u"false"_ns,
+                                  IgnoreErrors());
     if (persistString.Find(u"zlevel") >= 0) {
       uint32_t zLevel;
       nsCOMPtr<nsIWindowMediator> mediator(
@@ -2058,7 +2042,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
         mediator->GetZLevel(this, &zLevel);
         sizeString.Truncate();
         sizeString.AppendInt(zLevel);
-        docShellElement->SetAttribute(ZLEVEL_ATTRIBUTE, sizeString, rv);
+        docShellElement->SetAttr(nsGkAtoms::zlevel, sizeString, IgnoreErrors());
         if (shouldPersist) {
           Unused << SetPersistentValue(nsGkAtoms::zlevel, sizeString);
         }
@@ -2588,10 +2572,9 @@ void AppWindow::SizeShell() {
   int32_t specWidth = -1, specHeight = -1;
   bool gotSize = false;
 
-  nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement();
   nsAutoString windowType;
-  if (windowElement) {
-    windowElement->GetAttribute(WINDOWTYPE_ATTRIBUTE, windowType);
+  if (nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement()) {
+    windowElement->GetAttr(nsGkAtoms::windowtype, windowType);
   }
 
   CSSIntSize windowDiff = GetOuterToInnerSizeDifferenceInCSSPixels(
