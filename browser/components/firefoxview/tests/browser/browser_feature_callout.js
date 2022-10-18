@@ -7,8 +7,16 @@ const { ASRouter, MessageLoaderUtils } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
 
+const { AboutWelcomeParent } = ChromeUtils.import(
+  "resource:///actors/AboutWelcomeParent.jsm"
+);
+
 const { BuiltInThemes } = ChromeUtils.importESModule(
   "resource:///modules/BuiltInThemes.sys.mjs"
+);
+
+const { FeatureCalloutMessages } = ChromeUtils.import(
+  "resource://activity-stream/lib/FeatureCalloutMessages.jsm"
 );
 
 const calloutId = "root";
@@ -403,6 +411,141 @@ add_task(
     ASRouter.resetMessageState();
   }
 );
+
+add_task(async function feature_callout_dismiss_on_page_click() {
+  let sandbox = sinon.createSandbox();
+  await SpecialPowers.pushPrefEnv({
+    set: [[featureTourPref, `{"message":"","screen":"","complete":true}`]],
+  });
+  Services.prefs.setIntPref("browser.firefox-view.view-count", 4);
+  Services.prefs.setBoolPref("identity.fxaccounts.enabled", false);
+  ASRouter.resetMessageState();
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.firefox-view.view-count");
+    Services.prefs.clearUserPref("identity.fxaccounts.enabled");
+  });
+  const spy = sandbox
+    .spy(AboutWelcomeParent.prototype, "onContentMessage")
+    .withArgs("AWPage:TELEMETRY_EVENT");
+  const screenId = "FIREFOX_VIEW_COLORWAYS_REMINDER";
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      info("Waiting for callout to render");
+      await waitForCalloutScreen(document, screenId);
+
+      info("Clicking page button");
+      document.querySelector("#colorways-button").click();
+      await waitForCalloutRemoved(document);
+
+      // Test that appropriate telemetry is sent
+      let calledWith = spy.calledWith(
+        "AWPage:TELEMETRY_EVENT",
+        {
+          event: "PAGE_EVENT",
+          event_context: {
+            action: "DISMISS",
+            reason: "CLICK",
+            source: sinon.match("#colorways-button"),
+            page: document.location.href,
+          },
+          message_id: screenId,
+        },
+        document
+      );
+      if (calledWith) {
+        ok(true, "Expected telemetry sent");
+      } else if (spy.called) {
+        ok(false, "Wrong telemetry sent: " + JSON.stringify(spy.lastCall.args));
+      } else {
+        ok(false, "No telemetry sent");
+      }
+    }
+  );
+  Services.prefs.clearUserPref("browser.firefox-view.view-count");
+  Services.prefs.clearUserPref("identity.fxaccounts.enabled");
+  sandbox.restore();
+  ASRouter.resetMessageState();
+});
+
+add_task(async function feature_callout_advance_tour_on_page_click() {
+  let sandbox = sinon.createSandbox();
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        featureTourPref,
+        JSON.stringify({
+          message: "FIREFOX_VIEW_FEATURE_TOUR",
+          screen: "FEATURE_CALLOUT_2",
+          complete: false,
+        }),
+      ],
+    ],
+  });
+
+  // Add page action listeners to the built-in messages.
+  const TEST_MESSAGES = FeatureCalloutMessages.getMessages().filter(msg =>
+    ["FIREFOX_VIEW_FEATURE_TOUR_2", "FIREFOX_VIEW_FEATURE_TOUR_3"].includes(
+      msg.id
+    )
+  );
+  TEST_MESSAGES.forEach(msg => {
+    let { content } = msg.content.screens[msg.content.startScreen ?? 0];
+    content.page_event_listeners = [
+      {
+        params: {
+          type: "click",
+          selectors: ".brand-logo",
+        },
+        action: JSON.parse(JSON.stringify(content.primary_button.action)),
+      },
+    ];
+  });
+  const getMessagesStub = sandbox.stub(FeatureCalloutMessages, "getMessages");
+  getMessagesStub.returns(TEST_MESSAGES);
+  await ASRouter._updateMessageProviders();
+  await ASRouter.loadMessagesFromAllProviders(
+    ASRouter.state.providers.filter(p => p.id === "onboarding")
+  );
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      await waitForCalloutScreen(document, 2);
+      info("Clicking page button");
+      document.querySelector(".brand-logo").click();
+
+      await waitForCalloutScreen(document, 3);
+      info("Clicking page button");
+      document.querySelector(".brand-logo").click();
+
+      await waitForCalloutRemoved(document);
+      let tourComplete = JSON.parse(
+        Services.prefs.getStringPref(featureTourPref)
+      ).complete;
+      ok(
+        tourComplete,
+        `Tour is recorded as complete in ${featureTourPref} preference value`
+      );
+    }
+  );
+
+  sandbox.restore();
+  await ASRouter._updateMessageProviders();
+  await ASRouter.loadMessagesFromAllProviders(
+    ASRouter.state.providers.filter(p => p.id === "onboarding")
+  );
+});
 
 add_task(async function test_firefox_view_spotlight_promo() {
   // Prevent attempts to fetch CFR messages remotely.

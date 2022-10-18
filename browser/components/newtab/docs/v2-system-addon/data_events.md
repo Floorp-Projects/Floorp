@@ -881,7 +881,7 @@ This reports a failure in the Remote Settings loader to load messages for Activi
 }
 ```
 
-## Feature Callouts interaction pings
+## Toolbar Badge interaction pings
 
 This reports when a user has seen or clicked a badge/notification in the browser toolbar in a non-PBM window
 
@@ -1208,6 +1208,34 @@ These record the telemetry metrics during the Firefox onboarding experience.
     "variation": "chrome",
     "ua": "firefox"
   }
+}
+```
+
+## Feature Callout pings
+
+Most interactions and impressions in Feature Callouts are handled by the Onboarding pings above, but there is one interaction unique to Feature Callouts.
+
+### Page event ping for Feature Callouts
+
+Feature Callout messages can include properties to listen for specific events on the host page and perform an action when fired. For example, Feature Callouts pointing to a button can be dismissed when that button is clicked. This metric records the event type, event target, and action.
+
+```js
+{
+  "experiments": {},
+  "locale": "en-US",
+  "version": "107.0a1",
+  "release_channel": "default",
+  "event": "PAGE_EVENT",
+  "event_context": {
+    "action": "DISMISS",
+    "reason": "CLICK",
+    "source": "button.primary#colorways-button",
+    "page": "about:firefoxview"
+  },
+  "message_id": "FIREFOX_VIEW_COLORWAYS_REMINDER",
+  "addon_version": "20221013100028",
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
 }
 ```
 
