@@ -3,9 +3,10 @@
 set -ex
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+CURRENT_REPO_PATH="$(dirname -- "$SCRIPT_DIR")"
 
 REPO_NAME_TO_SYNC='android-components'
-REPO_PATH="/tmp/git/$REPO_NAME_TO_SYNC"
+TMP_REPO_PATH="/tmp/git/$REPO_NAME_TO_SYNC"
 REPO_BRANCH_NAME='firefox-android'
 TAG_PREFIX='components-'
 MONOREPO_URL='git@github.com:mozilla-mobile/firefox-android.git'
@@ -41,11 +42,11 @@ function _test_prerequisites() {
 }
 
 function _setup_temporary_repo() {
-    rm -rf "$REPO_PATH"
-    mkdir -p "$REPO_PATH"
+    rm -rf "$TMP_REPO_PATH"
+    mkdir -p "$TMP_REPO_PATH"
 
-    git clone "git@github.com:mozilla-mobile/$REPO_NAME_TO_SYNC.git" "$REPO_PATH"
-    cd "$REPO_PATH"
+    git clone "git@github.com:mozilla-mobile/$REPO_NAME_TO_SYNC.git" "$TMP_REPO_PATH"
+    cd "$TMP_REPO_PATH"
     git fetch origin "$REPO_BRANCH_NAME"
 }
 
@@ -77,12 +78,18 @@ function _remove_old_tags() {
 
 function _merge_histories() {
     cd "$SCRIPT_DIR"
-    git pull --no-edit --tags --allow-unrelated-histories --no-rebase --force "$REPO_PATH"
+    git pull --no-edit --tags --allow-unrelated-histories --no-rebase --force "$TMP_REPO_PATH"
     git commit --amend --message "$MERGE_COMMIT_MESSAGE"
 }
 
+function _move_files_into_subfolder() {
+    cd "$CURRENT_REPO_PATH"
+    git mv --force 'l10n.toml' "$REPO_NAME_TO_SYNC/l10n.toml"
+    git commit --message 'Move l10n.toml into android-components subfolder'
+}
+
 function _clean_up_temporary_repo() {
-    rm -rf "$REPO_PATH"
+    rm -rf "$TMP_REPO_PATH"
 }
 
 
@@ -93,6 +100,7 @@ _update_repo_numbers
 _rewrite_git_history
 _remove_old_tags
 _merge_histories
+_move_files_into_subfolder
 _clean_up_temporary_repo
 
 
