@@ -752,6 +752,14 @@ details[open] > .page-section-header > .twisty {
       "second"
       "third";
   }
+
+  body {
+    flex-flow: column;
+  }
+
+  #logo-container .brand-logo {
+    justify-content: center;
+  }
 }
 
 .synced-tab-a,
