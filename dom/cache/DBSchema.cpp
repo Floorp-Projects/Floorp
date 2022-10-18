@@ -26,6 +26,7 @@
 #include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/net/MozURL.h"
+#include "mozilla/psm/TransportSecurityInfo.h"
 #include "nsCOMPtr.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsComponentManagerUtils.h"
@@ -34,7 +35,6 @@
 #include "nsICryptoHash.h"
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
-#include "nsSerializationHelper.h"
 #include "nsTArray.h"
 
 namespace mozilla::dom::cache::db {
@@ -1456,13 +1456,11 @@ Result<int32_t, nsresult> InsertSecurityInfo(
     mozIStorageConnection& aConn, nsICryptoHash& aCrypto,
     nsITransportSecurityInfo* aSecurityInfo) {
   MOZ_DIAGNOSTIC_ASSERT(aSecurityInfo);
-  nsCOMPtr<nsISerializable> serializableSecurityInfo(
-      do_QueryInterface(aSecurityInfo));
-  if (!serializableSecurityInfo) {
+  if (!aSecurityInfo) {
     return Err(NS_ERROR_FAILURE);
   }
   nsCString data;
-  nsresult rv = NS_SerializeToString(serializableSecurityInfo, data);
+  nsresult rv = aSecurityInfo->ToString(data);
   if (NS_FAILED(rv)) {
     return Err(rv);
   }
@@ -2001,14 +1999,12 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
   nsCString data;
   QM_TRY(MOZ_TO_RESULT(state->GetBlobAsUTF8String(7, data)));
   if (!data.IsEmpty()) {
-    nsCOMPtr<nsISupports> securityInfoSupports;
-    nsresult rv =
-        NS_DeserializeObject(data, getter_AddRefs(securityInfoSupports));
+    nsCOMPtr<nsITransportSecurityInfo> securityInfo;
+    nsresult rv = mozilla::psm::TransportSecurityInfo::Read(
+        data, getter_AddRefs(securityInfo));
     if (NS_FAILED(rv)) {
       return Err(rv);
     }
-    nsCOMPtr<nsITransportSecurityInfo> securityInfo(
-        do_QueryInterface(securityInfoSupports));
     if (!securityInfo) {
       return Err(NS_ERROR_FAILURE);
     }
