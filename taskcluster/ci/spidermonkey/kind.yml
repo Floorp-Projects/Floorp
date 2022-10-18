@@ -22,7 +22,7 @@ job-defaults:
         tier: 1
     index:
         product: firefox
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     run:
         using: spidermonkey
     when:
