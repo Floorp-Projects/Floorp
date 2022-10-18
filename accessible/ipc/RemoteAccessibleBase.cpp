@@ -1003,17 +1003,61 @@ uint64_t RemoteAccessibleBase<Derived>::State() {
       state &= ~states::OPAQUE1;
     }
 
+    auto* browser = static_cast<dom::BrowserParent*>(Document()->Manager());
+    if (browser == dom::BrowserParent::GetFocused()) {
+      if (this == Document()->GetFocusedAcc()) {
+        state |= states::FOCUSED;
+      }
+    }
+
     auto* cbc = mDoc->GetBrowsingContext();
     if (cbc && !cbc->IsActive()) {
+      // If our browsing context is _not_ active, we're in a background tab
+      // and inherently offscreen.
       state |= states::OFFSCREEN;
+    } else {
+      // If we're in an active browsing context, there are a few scenarios we
+      // need to address:
+      // - We are an iframe document in the visual viewport
+      // - We are an iframe document out of the visual viewport
+      // - We are non-iframe content in the visual viewport
+      // - We are non-iframe content out of the visual viewport
+      // We assume top level tab docs are on screen if their BC is active, so
+      // we don't need additional handling for them here.
+      if (!mDoc->IsTopLevel()) {
+        // Here we handle iframes and iframe content.
+        // We use an iframe's outer doc's position in the embedding document's
+        // viewport to determine if the iframe has been scrolled offscreen.
+        Accessible* docParent = mDoc->Parent();
+        // In rare cases, we might not have an outer doc yet. Return if that's
+        // the case.
+        if (NS_WARN_IF(!docParent || !docParent->IsRemote())) {
+          return state;
+        }
+
+        RemoteAccessible* outerDoc = docParent->AsRemote();
+        DocAccessibleParent* embeddingDocument = outerDoc->Document();
+        if (embeddingDocument &&
+            !embeddingDocument->mOnScreenAccessibles.Contains(outerDoc->ID())) {
+          // Our embedding document's viewport cache doesn't contain the ID of
+          // our outer doc, so this iframe (and any of its content) is
+          // offscreen.
+          state |= states::OFFSCREEN;
+        } else if (this != mDoc && !mDoc->mOnScreenAccessibles.Contains(ID())) {
+          // Our embedding document's viewport cache contains the ID of our
+          // outer doc, but the iframe's viewport cache doesn't contain our ID.
+          // We are offscreen.
+          state |= states::OFFSCREEN;
+        }
+      } else if (this != mDoc && !mDoc->mOnScreenAccessibles.Contains(ID())) {
+        // We are top level tab content (but not a top level tab doc).
+        // If our tab doc's viewport cache doesn't contain our ID, we're
+        // offscreen.
+        state |= states::OFFSCREEN;
+      }
     }
   }
-  auto* browser = static_cast<dom::BrowserParent*>(Document()->Manager());
-  if (browser == dom::BrowserParent::GetFocused()) {
-    if (this == Document()->GetFocusedAcc()) {
-      state |= states::FOCUSED;
-    }
-  }
+
   return state;
 }
 

@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* exported waitForIFrameA11yReady, waitForIFrameUpdates, spawnTestStates */
+/* exported waitForIFrameA11yReady, waitForIFrameUpdates, spawnTestStates, testVisibility */
 
 // Load the shared-head file first.
 /* import-globals-from ../shared-head.js */
@@ -15,9 +15,13 @@ Services.scriptloader.loadSubScript(
 
 // Loading and common.js from accessible/tests/mochitest/ for all tests, as
 // well as promisified-events.js.
+/* import-globals-from ../../mochitest/states.js */
+/* import-globals-from ../../mochitest/role.js */
 loadScripts(
   { name: "common.js", dir: MOCHITESTS_DIR },
-  { name: "promisified-events.js", dir: MOCHITESTS_DIR }
+  { name: "promisified-events.js", dir: MOCHITESTS_DIR },
+  { name: "role.js", dir: MOCHITESTS_DIR },
+  { name: "states.js", dir: MOCHITESTS_DIR }
 );
 
 // This is another version of addA11yLoadEvent for fission.
@@ -78,4 +82,11 @@ async function spawnTestStates(browsingContext, elementId, expectedStates) {
     [elementId, expectedStates],
     testStates
   );
+}
+
+function testVisibility(acc, shouldBeOffscreen, shouldBeInvisible) {
+  const [states] = getStates(acc);
+  let looksGood = shouldBeOffscreen == ((states & STATE_OFFSCREEN) != 0);
+  looksGood &= shouldBeInvisible == ((states & STATE_INVISIBLE) != 0);
+  return looksGood;
 }
