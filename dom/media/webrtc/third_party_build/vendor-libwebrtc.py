@@ -36,6 +36,7 @@ LIBWEBRTC_UNUSED_IN_FIREFOX = [
 
 THIRDPARTY_USED_IN_FIREFOX = [
     "abseil-cpp",
+    "google_benchmark",
     "pffft",
     "rnnoise",
 ]
