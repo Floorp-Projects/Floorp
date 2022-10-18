@@ -303,8 +303,12 @@ check_and_add_warning(
 # Warn if APIs are used without available() checks on macOS.
 check_and_add_warning("-Werror=unguarded-availability-new", when=target_is_osx)
 
-# Please keep these last in this file
-add_old_configure_assignment("_WARNINGS_CFLAGS", warnings_flags.cflags)
-add_old_configure_assignment("_WARNINGS_CXXFLAGS", warnings_flags.cxxflags)
-add_old_configure_assignment("_WARNINGS_HOST_CFLAGS", warnings_flags.host_cflags)
-add_old_configure_assignment("_WARNINGS_HOST_CXXFLAGS", warnings_flags.host_cxxflags)
+# Please keep the following last in this file
+
+# Avoid requiring complicated logic for extra warning flags in moz.build files.
+check_and_add_warning("-Wno-unknown-warning-option")
+
+set_config("WARNINGS_CFLAGS", warnings_flags.cflags)
+set_config("WARNINGS_CXXFLAGS", warnings_flags.cxxflags)
+set_config("WARNINGS_HOST_CFLAGS", warnings_flags.host_cflags)
+set_config("WARNINGS_HOST_CXXFLAGS", warnings_flags.host_cxxflags)

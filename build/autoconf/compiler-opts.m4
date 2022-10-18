@@ -60,9 +60,6 @@ AC_DEFUN([MOZ_COMPILER_OPTS],
 [
   MOZ_DEBUGGING_OPTS
   MOZ_RTTI
-if test "$CLANG_CXX"; then
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-unknown-warning-option"
-fi
 
 if test "$GNU_CC"; then
     if test -z "$DEVELOPER_OPTIONS"; then

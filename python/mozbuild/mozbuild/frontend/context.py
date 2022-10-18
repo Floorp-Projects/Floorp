@@ -380,6 +380,16 @@ class HostCompileFlags(BaseCompileFlags):
                 ["-I%s/dist/include" % context.config.topobjdir],
                 ("HOST_CFLAGS", "HOST_CXXFLAGS"),
             ),
+            (
+                "WARNINGS_CFLAGS",
+                context.config.substs.get("WARNINGS_HOST_CFLAGS"),
+                ("HOST_CFLAGS",),
+            ),
+            (
+                "WARNINGS_CXXFLAGS",
+                context.config.substs.get("WARNINGS_HOST_CXXFLAGS"),
+                ("HOST_CXXFLAGS",),
+            ),
         )
         BaseCompileFlags.__init__(self, context)
 
@@ -645,7 +655,12 @@ class CompileFlags(TargetCompileFlags):
             (
                 "WARNINGS_CFLAGS",
                 context.config.substs.get("WARNINGS_CFLAGS"),
-                ("CFLAGS", "C_LDFLAGS"),
+                ("CFLAGS",),
+            ),
+            (
+                "WARNINGS_CXXFLAGS",
+                context.config.substs.get("WARNINGS_CXXFLAGS"),
+                ("CXXFLAGS",),
             ),
             ("MOZBUILD_CFLAGS", None, ("CFLAGS",)),
             ("MOZBUILD_CXXFLAGS", None, ("CXXFLAGS",)),
