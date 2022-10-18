@@ -262,19 +262,18 @@ class SingleAccIterator : public AccIterable {
  */
 class ItemIterator : public AccIterable {
  public:
-  explicit ItemIterator(const LocalAccessible* aItemContainer)
+  explicit ItemIterator(const Accessible* aItemContainer)
       : mContainer(aItemContainer), mAnchor(nullptr) {}
-  virtual ~ItemIterator() {}
 
-  virtual LocalAccessible* Next() override;
+  virtual Accessible* Next() override;
 
  private:
   ItemIterator() = delete;
   ItemIterator(const ItemIterator&) = delete;
   ItemIterator& operator=(const ItemIterator&) = delete;
 
-  const LocalAccessible* mContainer;
-  LocalAccessible* mAnchor;
+  const Accessible* mContainer;
+  Accessible* mAnchor;
 };
 
 /**

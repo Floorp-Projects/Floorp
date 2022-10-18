@@ -382,3 +382,66 @@ addAccessibleTask(
   },
   { chrome: true, iframe: true, remoteIframe: true }
 );
+
+/*
+ * Test relation caching for NODE_CHILD_OF and NODE_PARENT_OF with aria trees.
+ */
+addAccessibleTask(
+  `
+  <div role="tree" id="tree">
+    <div role="treeitem" id="treeitem">test</div>
+    <div role="treeitem" id="treeitem2">test</div>
+  </div>`,
+  async function(browser, accDoc) {
+    const tree = findAccessibleChildByID(accDoc, "tree");
+    const treeItem = findAccessibleChildByID(accDoc, "treeitem");
+    const treeItem2 = findAccessibleChildByID(accDoc, "treeitem2");
+
+    await testCachedRelation(tree, RELATION_NODE_PARENT_OF, [
+      treeItem,
+      treeItem2,
+    ]);
+    await testCachedRelation(treeItem, RELATION_NODE_CHILD_OF, tree);
+  },
+  { chrome: true, iframe: true, remoteIframe: true }
+);
+
+/*
+ * Test relation caching for NODE_CHILD_OF and NODE_PARENT_OF with aria lists.
+ */
+addAccessibleTask(
+  `
+  <div id="l1" role="list">
+    <div id="l1i1" role="listitem" aria-level="1">a</div>
+    <div id="l1i2" role="listitem" aria-level="2">b</div>
+    <div id="l1i3" role="listitem" aria-level="1">c</div>
+  </div>`,
+  async function(browser, accDoc) {
+    const list = findAccessibleChildByID(accDoc, "l1");
+    const listItem1 = findAccessibleChildByID(accDoc, "l1i1");
+    const listItem2 = findAccessibleChildByID(accDoc, "l1i2");
+    const listItem3 = findAccessibleChildByID(accDoc, "l1i3");
+
+    await testCachedRelation(list, RELATION_NODE_PARENT_OF, [
+      listItem1,
+      listItem3,
+    ]);
+    await testCachedRelation(listItem1, RELATION_NODE_CHILD_OF, list);
+    await testCachedRelation(listItem3, RELATION_NODE_CHILD_OF, list);
+
+    await testCachedRelation(listItem1, RELATION_NODE_PARENT_OF, listItem2);
+    await testCachedRelation(listItem2, RELATION_NODE_CHILD_OF, listItem1);
+  },
+  { chrome: true, iframe: true, remoteIframe: true }
+);
+
+/*
+ * Test NODE_CHILD_OF relation caching for JAWS window emulation special case.
+ */
+addAccessibleTask(
+  ``,
+  async function(browser, accDoc) {
+    await testCachedRelation(accDoc, RELATION_NODE_CHILD_OF, accDoc.parent);
+  },
+  { topLevel: isCacheEnabled, chrome: true }
+);
