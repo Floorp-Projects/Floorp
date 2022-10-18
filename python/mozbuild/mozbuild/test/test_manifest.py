@@ -181,7 +181,6 @@ updatebot:
                         "vendoring": {
                             "url": "https://example.com",
                             "source-hosting": "gitlab",
-                            "tracking": "commit",
                         },
                         "updatebot": {
                             "maintainer-phab": "tjr",
@@ -232,7 +231,6 @@ updatebot:
                         "vendoring": {
                             "url": "https://example.com",
                             "source-hosting": "gitlab",
-                            "tracking": "commit",
                         },
                         "updatebot": {
                             "maintainer-phab": "tjr",
@@ -285,7 +283,6 @@ updatebot:
                         "vendoring": {
                             "url": "https://example.com",
                             "source-hosting": "gitlab",
-                            "tracking": "commit",
                         },
                         "updatebot": {
                             "maintainer-phab": "tjr",
@@ -405,7 +402,7 @@ updatebot:
                         "vendoring": {
                             "url": "https://example.com",
                             "source-hosting": "gitlab",
-                            "tracking": "commit",
+                            "tracking": "tag",
                             "flavor": "rust",
                         },
                         "updatebot": {
@@ -438,7 +435,7 @@ origin:
   revision: AA001122334455
 vendoring:
   url: https://example.com
-  tracking: commit
+  tracking: tag
   source-hosting: gitlab
   flavor: rust
 bugzilla:
@@ -473,7 +470,6 @@ updatebot:
                         "bugzilla": {"component": "Graphics", "product": "Core"},
                         "vendoring": {
                             "url": "https://example.com",
-                            "tracking": "commit",
                             "source-hosting": "gitlab",
                         },
                         "updatebot": {
@@ -552,7 +548,6 @@ updatebot:
                         "bugzilla": {"component": "Graphics", "product": "Core"},
                         "vendoring": {
                             "url": "https://example.com",
-                            "tracking": "commit",
                             "source-hosting": "gitlab",
                         },
                         "updatebot": {
@@ -631,7 +626,6 @@ updatebot:
                         "bugzilla": {"component": "Graphics", "product": "Core"},
                         "vendoring": {
                             "url": "https://example.com",
-                            "tracking": "commit",
                             "source-hosting": "gitlab",
                         },
                         "updatebot": {
@@ -757,7 +751,6 @@ updatebot:
                         "bugzilla": {"component": "Graphics", "product": "Core"},
                         "vendoring": {
                             "url": "https://example.com",
-                            "tracking": "commit",
                             "source-hosting": "gitlab",
                             "flavor": "individual-files",
                             "individual-files": [

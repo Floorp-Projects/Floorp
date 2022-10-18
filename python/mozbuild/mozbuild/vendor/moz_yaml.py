@@ -124,6 +124,7 @@ vendoring:
   flavor: rust
 
   # Type of git reference (commit, tag) to track updates from.
+  # You cannot use tag tracking with the individual-files flavor
   # If omitted, will default to tracking commits.
   tracking: commit
 
@@ -424,7 +425,7 @@ def _schema_1():
                     Length(min=1),
                     In(VALID_SOURCE_HOSTS, msg="Unsupported Source Hosting"),
                 ),
-                "tracking": All(str, Length(min=1)),
+                "tracking": Match(r"^(commit|tag)$"),
                 "flavor": Match(r"^(regular|rust|individual-files)$"),
                 "skip-vendoring-steps": Unique([str]),
                 "vendor-directory": All(str, Length(min=1)),
@@ -516,19 +517,6 @@ def _schema_1_additional(filename, manifest, require_license_file=True):
         raise ValueError(
             'If "vendoring" is present, "revision" must be present in "origin"'
         )
-
-    # Only commit and tag are allowed for tracking
-    if "vendoring" in manifest:
-        if "tracking" not in manifest["vendoring"]:
-            manifest["vendoring"]["tracking"] = "commit"
-        if (
-            manifest["vendoring"]["tracking"] != "commit"
-            and manifest["vendoring"]["tracking"] != "tag"
-        ):
-            raise ValueError(
-                "Only commit or tag is supported for git references to track, %s was given."
-                % manifest["vendoring"]["tracking"]
-            )
 
     # If there are Updatebot tasks, then certain fields must be present and
     # defaults need to be set.
