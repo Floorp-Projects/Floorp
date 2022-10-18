@@ -19,7 +19,7 @@ function boom()
 }
 
 function remove(n)
-{ 
+{
   n.parentNode.removeChild(n);
 }
 

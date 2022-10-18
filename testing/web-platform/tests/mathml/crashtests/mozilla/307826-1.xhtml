@@ -1,4 +1,4 @@
-﻿<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+﻿<html xmlns="http://www.w3.org/1999/xhtml" class="test-wait">
 
 <head>
 
@@ -7,11 +7,11 @@
 <script><![CDATA[
 
 function boom() {
-  var div = document.getElementById("div"); 
-  var mi = document.getElementById("mi"); 
+  var div = document.getElementById("div");
+  var mi = document.getElementById("mi");
   mi.appendChild(div);
   mi.removeChild(div);
-  
+
   document.documentElement.removeAttribute("class");
 }
 
