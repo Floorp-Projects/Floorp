@@ -18,8 +18,8 @@ const { ExtensionUtils } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { DeferredTask } = ChromeUtils.import(
-  "resource://gre/modules/DeferredTask.jsm"
+const { DeferredTask } = ChromeUtils.importESModule(
+  "resource://gre/modules/DeferredTask.sys.mjs"
 );
 
 const { DefaultMap } = ExtensionUtils;

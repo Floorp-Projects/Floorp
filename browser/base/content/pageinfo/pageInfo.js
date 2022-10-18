@@ -9,8 +9,8 @@
 /* import-globals-from permissions.js */
 /* import-globals-from security.js */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
 });
 
 // Inherit color scheme overrides from parent window. This is to inherit the

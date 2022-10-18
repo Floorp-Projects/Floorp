@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -571,6 +571,31 @@ class Context {
       );
     } else {
       Cu.reportError(error);
+    }
+  }
+
+  /**
+   * Logs a warning. An error might be thrown when we treat warnings as errors.
+   *
+   * @param {string} warningMessage
+   */
+  logWarning(warningMessage) {
+    let error = this.makeError(warningMessage, { warning: true });
+    this.logError(error);
+
+    if (lazy.treatWarningsAsErrors) {
+      // This pref is false by default, and true by default in tests to
+      // discourage the use of deprecated APIs in our unit tests.
+      // If a warning is an expected part of a test, temporarily set the pref
+      // to false, e.g. with the ExtensionTestUtils.failOnSchemaWarnings helper.
+      Services.console.logStringMessage(
+        "Treating warning as error because the preference " +
+          "extensions.webextensions.warnings-as-errors is set to true"
+      );
+      if (typeof error === "string") {
+        error = new Error(error);
+      }
+      throw error;
     }
   }
 
@@ -1200,6 +1225,27 @@ const FORMATS = {
   manifestShortcutKeyOrEmpty(string, context) {
     return string === "" ? "" : FORMATS.manifestShortcutKey(string, context);
   },
+
+  versionString(string, context) {
+    const parts = string.split(".");
+
+    if (
+      // We accept up to 4 numbers.
+      parts.length > 4 ||
+      // Non-zero values cannot start with 0 and we allow numbers up to 9 digits.
+      parts.some(part => !/^(0|[1-9][0-9]{0,8})$/.test(part))
+    ) {
+      context.logWarning(
+        `version must be a version string consisting of at most 4 integers ` +
+          `of at most 9 digits without leading zeros, and separated with dots`
+      );
+    }
+
+    // The idea is to only emit a warning when the version string does not
+    // match the simple format we want to encourage developers to use. Given
+    // the version is required, we always accept the value as is.
+    return string;
+  },
 };
 
 // Schema files contain namespaces, and each namespace contains types,
@@ -1310,31 +1356,7 @@ class Entry {
       }
     }
 
-    this.logWarning(context, message);
-  }
-
-  /**
-   * @param {Context} context
-   * @param {string} warningMessage
-   */
-  logWarning(context, warningMessage) {
-    let error = context.makeError(warningMessage, { warning: true });
-    context.logError(error);
-
-    if (lazy.treatWarningsAsErrors) {
-      // This pref is false by default, and true by default in tests to
-      // discourage the use of deprecated APIs in our unit tests.
-      // If a warning is an expected part of a test, temporarily set the pref
-      // to false, e.g. with the ExtensionTestUtils.failOnSchemaWarnings helper.
-      Services.console.logStringMessage(
-        "Treating warning as error because the preference " +
-          "extensions.webextensions.warnings-as-errors is set to true"
-      );
-      if (typeof error === "string") {
-        error = new Error(error);
-      }
-      throw error;
-    }
+    context.logWarning(message);
   }
 
   /**
@@ -2023,7 +2045,7 @@ class ObjectType extends Type {
           `not contain an unsupported "${prop}" property`
         );
 
-        this.logWarning(context, forceString(error.error));
+        context.logWarning(forceString(error.error));
         if (this.additionalProperties) {
           // When `additionalProperties` is set to UnrecognizedProperty, the
           // caller (i.e. ObjectType's normalize method) assigns the original
@@ -2074,7 +2096,7 @@ class ObjectType extends Type {
 
     if (error) {
       if (onError == "warn") {
-        this.logWarning(context, forceString(error.error));
+        context.logWarning(forceString(error.error));
       } else if (onError != "ignore") {
         throw error;
       }
@@ -2375,7 +2397,7 @@ class ArrayType extends Type {
       );
       if (element.error) {
         if (this.onError == "warn") {
-          this.logWarning(context, forceString(element.error));
+          context.logWarning(forceString(element.error));
         } else if (this.onError != "ignore") {
           return element;
         }

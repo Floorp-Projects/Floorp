@@ -14,11 +14,9 @@ ChromeUtils.defineModuleGetter(
   "AsyncShutdown",
   "resource://gre/modules/AsyncShutdown.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "setTimeout",
-  "resource://gre/modules/Timer.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
 
 var obj = {};
 Services.scriptloader.loadSubScript(

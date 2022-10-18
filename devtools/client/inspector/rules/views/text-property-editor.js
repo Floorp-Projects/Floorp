@@ -39,11 +39,9 @@ loader.lazyRequireGetter(
   true
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AppConstants",
-  "resource://gre/modules/AppConstants.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
+});
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const INLINE_COMPATIBILITY_WARNING_PREF =

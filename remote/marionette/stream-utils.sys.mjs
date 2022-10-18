@@ -6,8 +6,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

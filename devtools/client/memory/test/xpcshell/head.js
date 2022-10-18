@@ -13,7 +13,9 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
-var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+var { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
+);
 var { expectState } = require("resource://devtools/server/actors/common.js");
 var HeapSnapshotFileUtils = require("resource://devtools/shared/heapsnapshot/HeapSnapshotFileUtils.js");
 var HeapAnalysesClient = require("resource://devtools/shared/heapsnapshot/HeapAnalysesClient.js");

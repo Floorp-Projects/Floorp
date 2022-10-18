@@ -9,8 +9,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"
 );
-const { clearTimeout, setTimeout } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
+const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
 );
 
 const lazy = {};

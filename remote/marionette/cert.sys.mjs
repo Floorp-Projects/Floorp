@@ -6,8 +6,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Preferences: "resource://gre/modules/Preferences.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

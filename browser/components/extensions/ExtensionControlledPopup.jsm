@@ -48,11 +48,9 @@ ChromeUtils.defineModuleGetter(
   "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
 
 let { makeWidgetId } = ExtensionCommon;
 

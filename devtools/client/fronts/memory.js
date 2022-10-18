@@ -11,11 +11,9 @@ const {
 } = require("resource://devtools/shared/protocol.js");
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+});
 loader.lazyRequireGetter(
   this,
   "HeapSnapshotFileUtils",

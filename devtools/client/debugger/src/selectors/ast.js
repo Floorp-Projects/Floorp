@@ -12,6 +12,14 @@ export function getSymbols(state, source) {
   return state.ast.symbols[source.id] || null;
 }
 
+export function getSourceActorForSymbols(state, source) {
+  if (!source) {
+    return null;
+  }
+
+  return state.ast.actors[source.id] || null;
+}
+
 export function getInScopeLines(state, location) {
   return state.ast.inScopeLines[makeBreakpointId(location)];
 }

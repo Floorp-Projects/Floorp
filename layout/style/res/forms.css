@@ -708,6 +708,7 @@ progress {
   border-bottom-color: ThreeDHighlight;
   /* #e6e6e6 is a light gray. */
   background-color: #e6e6e6;
+  overflow: clip;
 }
 
 ::-moz-progress-bar {
@@ -733,6 +734,7 @@ meter {
   display: inline-block;
   vertical-align: -0.2em;
   background: linear-gradient(#e6e6e6, #e6e6e6, #eeeeee 20%, #cccccc 45%, #cccccc 55%);
+  overflow: clip;
 }
 
 ::-moz-meter-bar {

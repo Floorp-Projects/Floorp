@@ -10,8 +10,8 @@ var EXPORTED_SYMBOLS = ["WebChannelChild"];
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { ContentDOMReference } = ChromeUtils.import(
-  "resource://gre/modules/ContentDOMReference.jsm"
+const { ContentDOMReference } = ChromeUtils.importESModule(
+  "resource://gre/modules/ContentDOMReference.sys.mjs"
 );
 
 // Preference containing the list (space separated) of origins that are

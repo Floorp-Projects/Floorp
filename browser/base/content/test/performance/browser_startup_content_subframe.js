@@ -37,8 +37,8 @@ const known_scripts = {
     actorModuleURI,
 
     // General utilities
-    "resource://gre/modules/AppConstants.jsm",
-    "resource://gre/modules/DeferredTask.jsm",
+    "resource://gre/modules/AppConstants.sys.mjs",
+    "resource://gre/modules/DeferredTask.sys.mjs",
     "resource://gre/modules/XPCOMUtils.sys.mjs",
 
     // Logging related

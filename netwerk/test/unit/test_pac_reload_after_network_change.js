@@ -7,7 +7,9 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/network/protocol-proxy-service;1",
   "nsIProtocolProxyService"
 );
-var { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+var { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 let pacServer;
 const proxyPort = 4433;

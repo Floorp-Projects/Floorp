@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+var { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -11,15 +11,15 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 
 ChromeUtils.defineESModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  Deprecated: "resource://gre/modules/Deprecated.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.jsm",
   DownloadPaths: "resource://gre/modules/DownloadPaths.jsm",
   DownloadLastDir: "resource://gre/modules/DownloadLastDir.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  Deprecated: "resource://gre/modules/Deprecated.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 

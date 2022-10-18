@@ -4,7 +4,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const lazy = {};
 

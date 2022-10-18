@@ -7,7 +7,9 @@
 const { BasePromiseWorker } = ChromeUtils.import(
   "resource://gre/modules/PromiseWorker.jsm"
 );
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 // Worker must be loaded from a chrome:// uri, not a file://
 // uri, so we first need to load it.

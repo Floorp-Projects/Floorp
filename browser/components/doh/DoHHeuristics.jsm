@@ -44,11 +44,9 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/DoHConfig.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Preferences",
-  "resource://gre/modules/Preferences.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+});
 
 const GLOBAL_CANARY = "use-application-dns.net.";
 

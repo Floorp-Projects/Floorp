@@ -481,6 +481,7 @@ class Field extends _pdf_object.PDFObject {
     this._fillColor = data.fillColor || ["T"];
     this._isChoice = Array.isArray(data.items);
     this._items = data.items || [];
+    this._hasValue = data.hasOwnProperty("value");
     this._page = data.page || 0;
     this._strokeColor = data.strokeColor || ["G", 0];
     this._textColor = data.textColor || ["G", 0];
@@ -815,11 +816,32 @@ class Field extends _pdf_object.PDFObject {
 
   getArray() {
     if (this._kidIds) {
-      return this._kidIds.map(id => this._appObjects[id].wrapped);
+      const array = [];
+
+      const fillArrayWithKids = kidIds => {
+        for (const id of kidIds) {
+          const obj = this._appObjects[id];
+
+          if (!obj) {
+            continue;
+          }
+
+          if (obj.obj._hasValue) {
+            array.push(obj.wrapped);
+          }
+
+          if (obj.obj._kidIds) {
+            fillArrayWithKids(obj.obj._kidIds);
+          }
+        }
+      };
+
+      fillArrayWithKids(this._kidIds);
+      return array;
     }
 
     if (this._children === null) {
-      this._children = this._document.obj._getChildren(this._fieldPath).map(child => child.wrapped);
+      this._children = this._document.obj._getTerminalChildren(this._fieldPath);
     }
 
     return this._children;
@@ -1887,6 +1909,7 @@ class AForm {
 
     const event = globalThis.event;
     const values = [];
+    cFields = this.AFMakeArrayFromList(cFields);
 
     for (const cField of cFields) {
       const field = this._document.getField(cField);
@@ -1895,10 +1918,12 @@ class AForm {
         continue;
       }
 
-      const number = this.AFMakeNumber(field.value);
+      for (const child of field.getArray()) {
+        const number = this.AFMakeNumber(child.value);
 
-      if (number !== null) {
-        values.push(number);
+        if (number !== null) {
+          values.push(number);
+        }
       }
     }
 
@@ -4056,6 +4081,23 @@ class Doc extends _pdf_object.PDFObject {
     return children;
   }
 
+  _getTerminalChildren(fieldName) {
+    const children = [];
+    const len = fieldName.length;
+
+    for (const [name, field] of this._fields.entries()) {
+      if (name.startsWith(fieldName)) {
+        const finalPart = name.slice(len);
+
+        if (field.obj._hasValue && (finalPart === "" || finalPart.startsWith("."))) {
+          children.push(field.wrapped);
+        }
+      }
+    }
+
+    return children;
+  }
+
   getIcon() {}
 
   getLegalWarnings() {}
@@ -5175,8 +5217,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '3.0.200';
-const pdfjsBuild = '348665934';
+const pdfjsVersion = '3.0.229';
+const pdfjsBuild = '9355b7293';
 })();
 
 /******/ 	return __webpack_exports__;

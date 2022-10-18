@@ -12,17 +12,20 @@ var EXPORTED_SYMBOLS = [
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ActorManagerParent: "resource://gre/modules/ActorManagerParent.sys.mjs",
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
   BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.sys.mjs",
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   Integration: "resource://gre/modules/Integration.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   Interactions: "resource:///modules/Interactions.sys.mjs",
@@ -34,18 +37,19 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
   SnapshotMonitor: "resource:///modules/SnapshotMonitor.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
+  WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
-  ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   ASRouterDefaultConfig:
     "resource://activity-stream/lib/ASRouterDefaultConfig.jsm",
@@ -59,12 +63,10 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",
   Corroborate: "resource://gre/modules/Corroborate.jsm",
-  DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   Discovery: "resource:///modules/Discovery.jsm",
   DoHController: "resource:///modules/DoHController.jsm",
   DownloadsViewableInternally:
     "resource:///modules/DownloadsViewableInternally.jsm",
-  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   FeatureGate: "resource://featuregates/FeatureGate.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
@@ -80,7 +82,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   PdfJs: "resource://pdf.js/PdfJs.jsm",
   PermissionUI: "resource:///modules/PermissionUI.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
   PublicSuffixList: "resource://gre/modules/netwerk-dns/PublicSuffixList.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
@@ -100,7 +101,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   TRRRacer: "resource:///modules/TRRPerformance.jsm",
   UIState: "resource://services-sync/UIState.jsm",
-  WebChannel: "resource://gre/modules/WebChannel.jsm",
 });
 
 if (AppConstants.MOZ_UPDATER) {
@@ -2658,8 +2658,8 @@ BrowserGlue.prototype = {
 
       {
         task: () => {
-          let { setTimeout } = ChromeUtils.import(
-            "resource://gre/modules/Timer.jsm"
+          let { setTimeout } = ChromeUtils.importESModule(
+            "resource://gre/modules/Timer.sys.mjs"
           );
           setTimeout(function() {
             Services.tm.idleDispatchToMainThread(
@@ -5839,8 +5839,8 @@ var AboutHomeStartupCache = {
 
       // To avoid hanging shutdowns, we'll ensure that we wait a maximum of
       // SHUTDOWN_CACHE_WRITE_TIMEOUT_MS millseconds before giving up.
-      let { setTimeout, clearTimeout } = ChromeUtils.import(
-        "resource://gre/modules/Timer.jsm"
+      let { setTimeout, clearTimeout } = ChromeUtils.importESModule(
+        "resource://gre/modules/Timer.sys.mjs"
       );
 
       const TIMED_OUT = Symbol();

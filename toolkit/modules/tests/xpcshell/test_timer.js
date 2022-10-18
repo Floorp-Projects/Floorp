@@ -5,7 +5,9 @@
 
 // Tests exports from Timer.jsm
 
-var imported = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+var imported = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 add_task(async function test_setTimeout() {
   let timeout1 = imported.setTimeout(

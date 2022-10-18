@@ -33,6 +33,7 @@ add_task(async function() {
   info("Click an item in outline panel");
   const item = getNthItem(dbg, 3);
   item.click();
+  await waitForLoadedSource(dbg, "simple1.js");
   assertHighlightLocation(dbg, "simple1.js", 15);
   ok(
     item.parentNode.classList.contains("focused"),

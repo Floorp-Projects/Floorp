@@ -38,6 +38,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -46,7 +47,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   DownloadHistory: "resource://gre/modules/DownloadHistory.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
   DownloadUtils: "resource://gre/modules/DownloadUtils.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
@@ -58,7 +58,9 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "DownloadsLogger", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  let { ConsoleAPI } = ChromeUtils.importESModule(
+    "resource://gre/modules/Console.sys.mjs"
+  );
   let consoleOptions = {
     maxLogLevelPref: "browser.download.loglevel",
     prefix: "Downloads",

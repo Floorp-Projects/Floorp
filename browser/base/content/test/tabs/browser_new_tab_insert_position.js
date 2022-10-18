@@ -12,11 +12,9 @@ ChromeUtils.defineModuleGetter(
   "TabStateFlusher",
   "resource:///modules/sessionstore/TabStateFlusher.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+});
 
 const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
 

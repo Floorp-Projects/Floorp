@@ -8,16 +8,14 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
-
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SearchSuggestionController:
     "resource://gre/modules/SearchSuggestionController.sys.mjs",
-
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   FormHistory: "resource://gre/modules/FormHistory.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
 const MAX_LOCAL_SUGGESTIONS = 3;

@@ -1027,7 +1027,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
 #endif
       generatingError(this, false),
       cycleDetectorVector_(this, this),
-      watchtowerTestingCallback_(this),
       data(nullptr),
       asyncStackForNewActivations_(this),
       asyncCauseForNewActivations(this, nullptr),

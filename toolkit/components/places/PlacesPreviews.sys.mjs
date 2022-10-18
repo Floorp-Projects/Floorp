@@ -2,22 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm"
-);
+import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
+
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  clearTimeout: "resource://gre/modules/Timer.jsm",
   BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
   PageThumbsStorage: "resource://gre/modules/PageThumbs.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {

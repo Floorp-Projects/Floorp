@@ -5,11 +5,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Deprecated",
-  "resource://gre/modules/Deprecated.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Deprecated: "resource://gre/modules/Deprecated.sys.mjs",
+});
 
 export var FileUtils = {
   MODE_RDONLY: 0x01,

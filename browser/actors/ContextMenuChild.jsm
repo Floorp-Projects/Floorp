@@ -15,18 +15,18 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ContentDOMReference: "resource://gre/modules/ContentDOMReference.sys.mjs",
+  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   InlineSpellCheckerContent:
     "resource://gre/modules/InlineSpellCheckerContent.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SelectionUtils: "resource://gre/modules/SelectionUtils.sys.mjs",
   SpellCheckHelper: "resource://gre/modules/InlineSpellChecker.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
 });
 
 let contextMenus = new WeakMap();

@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["E10SUtils"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -269,7 +263,7 @@ const SYSTEM_WORKERS_REMOTE_TYPES_ALLOWED = [
   PRIVILEGEDABOUT_REMOTE_TYPE,
 ];
 
-var E10SUtils = {
+export var E10SUtils = {
   DEFAULT_REMOTE_TYPE,
   NOT_REMOTE,
   WEB_REMOTE_TYPE,

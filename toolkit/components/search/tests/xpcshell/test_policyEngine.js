@@ -7,26 +7,60 @@
 
 "use strict";
 
+const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
+  "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
+);
+
+SearchSettings.SETTINGS_INVALIDATION_DELAY = 100;
+
+/**
+ * Loads a new enterprise policy, and re-initialise the search service
+ * with the new policy. Also waits for the search service to write the settings
+ * file to disk.
+ *
+ * @param {object} policy
+ *   The enterprise policy to use.
+ */
+async function setupPolicyEngineWithJson(policy) {
+  Services.search.wrappedJSObject.reset();
+
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson(policy);
+
+  let settingsWritten = SearchTestUtils.promiseSearchNotification(
+    "write-settings-to-disk-complete"
+  );
+  await Services.search.init();
+  await settingsWritten;
+}
+
 add_task(async function setup() {
+  // This initializes the policy engine for xpcshell tests
+  let policies = Cc["@mozilla.org/enterprisepolicies;1"].getService(
+    Ci.nsIObserver
+  );
+  policies.observe(null, "policies-startup", null);
+
   Services.fog.initializeFOG();
   await AddonTestUtils.promiseStartupManager();
-  await Services.search.init();
 });
 
 add_task(async function test_enterprise_policy_engine() {
-  let promiseEngineAdded = SearchTestUtils.promiseSearchNotification(
-    SearchUtils.MODIFIED_TYPE.ADDED,
-    SearchUtils.TOPIC_ENGINE_MODIFIED
-  );
-  await Services.search.addPolicyEngine({
-    name: "policy",
-    description: "Test policy engine",
-    iconURL: "data:image/gif;base64,R0lGODl",
-    keyword: "p",
-    search_url: "https://example.com?q={searchTerms}",
-    suggest_url: "https://example.com/suggest/?q={searchTerms}",
+  await setupPolicyEngineWithJson({
+    policies: {
+      SearchEngines: {
+        Add: [
+          {
+            Name: "policy",
+            Description: "Test policy engine",
+            IconURL: "data:image/gif;base64,R0lGODl",
+            Alias: "p",
+            URLTemplate: "https://example.com?q={searchTerms}",
+            SuggestURLTemplate: "https://example.com/suggest/?q={searchTerms}",
+          },
+        ],
+      },
+    },
   });
-  await promiseEngineAdded;
 
   let engine = Services.search.getEngineByName("policy");
   Assert.ok(engine, "Should have installed the engine.");
@@ -64,4 +98,55 @@ add_task(async function test_enterprise_policy_engine() {
       verified: "verified",
     },
   });
+});
+
+add_task(async function test_enterprise_policy_engine_hidden_persisted() {
+  // Set the engine alias, and wait for the settings to be written.
+  let settingsWritten = SearchTestUtils.promiseSearchNotification(
+    "write-settings-to-disk-complete"
+  );
+  let engine = Services.search.getEngineByName("policy");
+  engine.hidden = "p1";
+  engine.alias = "p1";
+  await settingsWritten;
+
+  // This will reset and re-initialise the search service.
+  await setupPolicyEngineWithJson({
+    policies: {
+      SearchEngines: {
+        Add: [
+          {
+            Name: "policy",
+            Description: "Test policy engine",
+            IconURL: "data:image/gif;base64,R0lGODl",
+            Alias: "p",
+            URLTemplate: "https://example.com?q={searchTerms}",
+            SuggestURLTemplate: "https://example.com/suggest/?q={searchTerms}",
+          },
+        ],
+      },
+    },
+  });
+
+  engine = Services.search.getEngineByName("policy");
+  Assert.equal(engine.alias, "p1", "Should have retained the engine alias");
+  Assert.ok(engine.hidden, "Should have kept the engine hidden");
+});
+
+add_task(async function test_enterprise_policy_engine_remove() {
+  // This will reset and re-initialise the search service.
+  await setupPolicyEngineWithJson({
+    policies: {},
+  });
+
+  Assert.ok(
+    !Services.search.getEngineByName("policy"),
+    "Should not have the policy engine installed"
+  );
+
+  let settings = await promiseSettingsData();
+  Assert.ok(
+    !settings.engines.find(e => e.name == "p1"),
+    "Should not have the engine settings stored"
+  );
 });

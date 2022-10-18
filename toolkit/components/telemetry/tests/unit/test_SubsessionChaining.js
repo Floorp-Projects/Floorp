@@ -2,8 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 const { TelemetryArchive } = ChromeUtils.import(
   "resource://gre/modules/TelemetryArchive.jsm"

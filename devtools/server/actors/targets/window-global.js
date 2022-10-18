@@ -35,8 +35,8 @@ const Targets = require("resource://devtools/server/actors/targets/index.js");
 const { TargetActorRegistry } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs"
 );
-const { PrivateBrowsingUtils } = ChromeUtils.import(
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
 );
 
 const EXTENSION_CONTENT_JSM = "resource://gre/modules/ExtensionContent.jsm";

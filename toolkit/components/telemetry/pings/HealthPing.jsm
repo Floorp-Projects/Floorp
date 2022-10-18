@@ -24,18 +24,10 @@ ChromeUtils.defineModuleGetter(
   "TelemetryController",
   "resource://gre/modules/TelemetryController.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "setTimeout",
-  "resource://gre/modules/Timer.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "clearTimeout",
-  "resource://gre/modules/Timer.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.sys.mjs",
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 const Utils = TelemetryUtils;

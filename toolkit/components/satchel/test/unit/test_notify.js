@@ -5,16 +5,10 @@
  *
  */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "setTimeout",
-  "resource://gre/modules/Timer.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Preferences",
-  "resource://gre/modules/Preferences.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
 
 const TestObserver = {
   observed: [],

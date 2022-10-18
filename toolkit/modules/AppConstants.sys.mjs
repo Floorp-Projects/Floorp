@@ -5,15 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const lazy = {};
 ChromeUtils.defineModuleGetter(lazy, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
-var EXPORTED_SYMBOLS = ["AppConstants"];
-
 // Immutable for export.
-var AppConstants = Object.freeze({
+export var AppConstants = Object.freeze({
   // See this wiki page for more details about channel specific build
   // defines: https://wiki.mozilla.org/Platform/Channel-specific_build_defines
   NIGHTLY_BUILD:

@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"
@@ -16,11 +16,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Preferences",
-  "resource://gre/modules/Preferences.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "TelemetryController",

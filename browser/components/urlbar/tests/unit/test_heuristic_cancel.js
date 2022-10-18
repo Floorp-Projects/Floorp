@@ -8,7 +8,9 @@
  * cancelled. See bug 1653436.
  */
 
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.sys.mjs",

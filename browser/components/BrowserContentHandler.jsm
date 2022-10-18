@@ -10,14 +10,15 @@ var EXPORTED_SYMBOLS = [
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FirstStartup: "resource://gre/modules/FirstStartup.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -26,7 +27,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   HomePage: "resource:///modules/HomePage.jsm",
   LaterRun: "resource:///modules/LaterRun.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   UpdatePing: "resource://gre/modules/UpdatePing.jsm",

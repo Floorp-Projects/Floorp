@@ -7,11 +7,9 @@
 var EXPORTED_SYMBOLS = ["BrowserTestUtilsChild"];
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+});
 
 class BrowserTestUtilsChildObserver {
   constructor() {
@@ -249,8 +247,8 @@ class BrowserTestUtilsChild extends JSWindowActorChild {
         };
 
         if (aMessage.data.asyncCrash) {
-          let { setTimeout } = ChromeUtils.import(
-            "resource://gre/modules/Timer.jsm"
+          let { setTimeout } = ChromeUtils.importESModule(
+            "resource://gre/modules/Timer.sys.mjs"
           );
           // Get out of the stack.
           setTimeout(dies, 0);

@@ -7,8 +7,8 @@ const TOPIC_BROWSERGLUE_TEST = "browser-glue-test";
 const TOPICDATA_BROWSERGLUE_TEST = "force-ui-migration";
 const UI_VERSION = 120;
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { PlacesUIUtils } = ChromeUtils.importESModule(
   "resource:///modules/PlacesUIUtils.sys.mjs"

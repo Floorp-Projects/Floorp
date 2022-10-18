@@ -8,9 +8,8 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
@@ -371,7 +370,9 @@ export var OSKeyStore = {
 };
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  let { ConsoleAPI } = ChromeUtils.importESModule(
+    "resource://gre/modules/Console.sys.mjs"
+  );
   return new ConsoleAPI({
     maxLogLevelPref: "toolkit.osKeyStore.loglevel",
     prefix: "OSKeyStore",

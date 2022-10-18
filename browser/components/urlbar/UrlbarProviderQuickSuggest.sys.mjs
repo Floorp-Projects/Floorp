@@ -17,16 +17,16 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
+  clearInterval: "resource://gre/modules/Timer.sys.mjs",
+  setInterval: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  clearInterval: "resource://gre/modules/Timer.jsm",
   CONTEXTUAL_SERVICES_PING_TYPES:
     "resource:///modules/PartnerLinkAttribution.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
-  setInterval: "resource://gre/modules/Timer.jsm",
 });
 
 const TIMESTAMP_TEMPLATE = "%YYYYMMDDHH%";

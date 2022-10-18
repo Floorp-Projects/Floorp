@@ -21,12 +21,8 @@ ChromeUtils.defineModuleGetter(
   "ExtensionControlledPopup",
   "resource:///modules/ExtensionControlledPopup.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(

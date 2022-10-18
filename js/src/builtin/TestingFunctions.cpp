@@ -3012,18 +3012,31 @@ static bool CheckObjectWithManyReservedSlots(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool SetWatchtowerCallback(JSContext* cx, unsigned argc, Value* vp) {
+static bool GetWatchtowerLog(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  JSFunction* fun = nullptr;
-  if (args.length() != 1 || !IsFunctionObject(args[0], &fun)) {
-    JS_ReportErrorASCII(cx, "Expected a single function argument.");
+  Rooted<GCVector<Value>> values(cx, GCVector<Value>(cx));
+
+  if (auto* log = cx->runtime()->watchtowerTestingLog.ref().get()) {
+    Rooted<JSObject*> elem(cx);
+    for (PlainObject* obj : *log) {
+      elem = obj;
+      if (!cx->compartment()->wrap(cx, &elem)) {
+        return false;
+      }
+      if (!values.append(ObjectValue(*elem))) {
+        return false;
+      }
+    }
+    log->clearAndFree();
+  }
+
+  ArrayObject* arr = NewDenseCopiedArray(cx, values.length(), values.begin());
+  if (!arr) {
     return false;
   }
 
-  cx->watchtowerTestingCallbackRef() = fun;
-
-  args.rval().setUndefined();
+  args.rval().setObject(*arr);
   return true;
 }
 
@@ -3035,8 +3048,16 @@ static bool AddWatchtowerTarget(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  if (!cx->runtime()->watchtowerTestingLog.ref()) {
+    auto vec = cx->make_unique<JSRuntime::RootedPlainObjVec>(cx);
+    if (!vec) {
+      return false;
+    }
+    cx->runtime()->watchtowerTestingLog = std::move(vec);
+  }
+
   RootedObject obj(cx, &args[0].toObject());
-  if (!JSObject::setUseWatchtowerTestingCallback(cx, obj)) {
+  if (!JSObject::setUseWatchtowerTestingLog(cx, obj)) {
     return false;
   }
 
@@ -8176,10 +8197,11 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Checks the reserved slots set by newObjectWithManyReservedSlots still hold the expected\n"
 "  values."),
 
-    JS_FN_HELP("setWatchtowerCallback", SetWatchtowerCallback, 1, 0,
-"setWatchtowerCallback(function)",
-"  Use the given function as callback for objects added to Watchtower by\n"
-"  addWatchtowerTarget. The callback is called with the following arguments:\n"
+    JS_FN_HELP("getWatchtowerLog", GetWatchtowerLog, 0, 0,
+"getWatchtowerLog()",
+"  Returns the Watchtower log recording object changes for objects for which\n"
+"  addWatchtowerTarget was called. The internal log is cleared. The return\n"
+"  value is an array of plain objects with the following properties:\n"
 "  - kind: a string describing the kind of mutation, for example \"add-prop\"\n"
 "  - object: the object being mutated\n"
 "  - extra: an extra value, for example the name of the property being added"),

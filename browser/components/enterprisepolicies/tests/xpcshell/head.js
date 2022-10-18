@@ -4,8 +4,13 @@
 
 "use strict";
 
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+const lazy = {};
+
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
+);
+const { SearchSettings } = ChromeUtils.importESModule(
+  "resource://gre/modules/SearchSettings.sys.mjs"
 );
 const { updateAppInfo, getAppInfo } = ChromeUtils.import(
   "resource://testing-common/AppInfo.jsm"
@@ -16,6 +21,9 @@ const { FileTestUtils } = ChromeUtils.import(
 const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"
 );
+ChromeUtils.defineESModuleGetters(lazy, {
+  SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
+});
 const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
   "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
 );
@@ -33,6 +41,8 @@ let policies = Cc["@mozilla.org/enterprisepolicies;1"].getService(
 );
 policies.observe(null, "policies-startup", null);
 
+SearchSettings.SETTINGS_INVALIDATION_DELAY = 100;
+
 async function setupPolicyEngineWithJson(json, customSchema) {
   if (typeof json != "object") {
     let filePath = do_get_file(json ? json : "non-existing-file.json").path;
@@ -42,6 +52,34 @@ async function setupPolicyEngineWithJson(json, customSchema) {
     );
   }
   return EnterprisePolicyTesting.setupPolicyEngineWithJson(json, customSchema);
+}
+
+/**
+ * Loads a new enterprise policy, and re-initialise the search service
+ * with the new policy. Also waits for the search service to write the settings
+ * file to disk.
+ *
+ * @param {object} policy
+ *   The enterprise policy to use.
+ * @param {object} customSchema
+ *   A custom schema to use to validate the enterprise policy.
+ */
+async function setupPolicyEngineWithJsonWithSearch(json, customSchema) {
+  Services.search.wrappedJSObject.reset();
+  if (typeof json != "object") {
+    let filePath = do_get_file(json ? json : "non-existing-file.json").path;
+    await EnterprisePolicyTesting.setupPolicyEngineWithJson(
+      filePath,
+      customSchema
+    );
+  } else {
+    await EnterprisePolicyTesting.setupPolicyEngineWithJson(json, customSchema);
+  }
+  let settingsWritten = lazy.SearchTestUtils.promiseSearchNotification(
+    "write-settings-to-disk-complete"
+  );
+  await Services.search.init();
+  return settingsWritten;
 }
 
 function checkLockedPref(prefName, prefValue) {

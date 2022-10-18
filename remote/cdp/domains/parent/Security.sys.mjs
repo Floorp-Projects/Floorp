@@ -8,8 +8,8 @@ import { Domain } from "chrome://remote/content/cdp/domains/Domain.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Preferences: "resource://gre/modules/Preferences.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {

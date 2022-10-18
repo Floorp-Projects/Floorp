@@ -46,11 +46,10 @@ const {
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "WebChannel",
-  "resource://gre/modules/WebChannel.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
+});
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.import(
     "resource://gre/modules/FxAccounts.jsm"
@@ -60,11 +59,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "FxAccountsStorageManagerCanStoreField",
   "resource://gre/modules/FxAccountsStorage.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   lazy,

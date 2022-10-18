@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["Authentication"];
 const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"
 );
-const { clearTimeout, setTimeout } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
+const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
 );
 const { getFxAccountsSingleton } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"

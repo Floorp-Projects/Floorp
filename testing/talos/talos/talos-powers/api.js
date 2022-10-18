@@ -7,6 +7,11 @@
 const { ComponentUtils } = ChromeUtils.import(
   "resource://gre/modules/ComponentUtils.jsm"
 );
+
+ChromeUtils.defineESModuleGetters(this, {
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutHomeStartupCache: "resource:///modules/BrowserGlue.jsm",
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
@@ -14,7 +19,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
   PerTestCoverageUtils: "resource://testing-common/PerTestCoverageUtils.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

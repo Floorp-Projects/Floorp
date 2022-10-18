@@ -420,7 +420,9 @@ addDebuggerToGlobal(globalThis);
       subScriptLoader.loadSubScript(url, sandbox);
     };
 
-    const Timer = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+    const Timer = ChromeUtils.importESModule(
+      "resource://gre/modules/Timer.sys.mjs"
+    );
 
     const setImmediate = function(callback) {
       Timer.setTimeout(callback, 0);

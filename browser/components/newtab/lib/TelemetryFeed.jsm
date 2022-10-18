@@ -44,6 +44,7 @@ ChromeUtils.defineModuleGetter(
   "resource://activity-stream/lib/UTEventReporting.jsm"
 );
 ChromeUtils.defineESModuleGetters(lazy, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
@@ -55,11 +56,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   lazy,

@@ -11,11 +11,9 @@
  * This file silently depends on contentAreaUtils.js for getDefaultFileName
  */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
 
 var gViewSourceUtils = {
   mnsIWebBrowserPersist: Ci.nsIWebBrowserPersist,

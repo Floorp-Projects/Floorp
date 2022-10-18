@@ -10,8 +10,8 @@ const EDIT_ADDRESS_URL = "chrome://formautofill/content/editAddress.xhtml";
 const EDIT_CREDIT_CARD_URL =
   "chrome://formautofill/content/editCreditCard.xhtml";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"

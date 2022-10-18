@@ -13,13 +13,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   LayoutUtils: "resource://gre/modules/LayoutUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm"
-);
 
 const kStateActive = 0x00000001; // ElementState::ACTIVE
 const kStateHover = 0x00000004; // ElementState::HOVER

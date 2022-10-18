@@ -14,6 +14,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   IgnoreLists: "resource://gre/modules/IgnoreLists.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -21,7 +22,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   ExtensionPreferencesManager:
     "resource://gre/modules/ExtensionPreferencesManager.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
 const kPrefName = "browser.startup.homepage";

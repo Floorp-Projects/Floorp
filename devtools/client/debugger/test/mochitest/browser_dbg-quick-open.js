@@ -90,6 +90,7 @@ add_task(async function() {
   await quickOpen(dbg, ":7:12");
   await waitForResults(dbg, [undefined, undefined]);
   pressKey(dbg, "Enter");
+  await waitForSelectedSource(dbg, "script-switching-02.js");
   assertLine(dbg, 7);
   assertColumn(dbg, 12);
 

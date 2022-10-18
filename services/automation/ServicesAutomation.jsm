@@ -33,6 +33,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.sys.mjs",
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -41,8 +43,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   FxAccountsClient: "resource://gre/modules/FxAccountsClient.jsm",
   FxAccountsConfig: "resource://gre/modules/FxAccountsConfig.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
-  clearTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {

@@ -8,8 +8,8 @@
 // certificates are valid for or what errors prevented the certificates from
 // being verified.
 
-var { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+var { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 add_task(async function testCAandTitle() {

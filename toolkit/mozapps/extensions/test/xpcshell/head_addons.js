@@ -33,8 +33,8 @@ const MAKE_FILE_OLD_DIFFERENCE = 10 * 3600 * 1000;
 const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
-var { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+var { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 var { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
@@ -102,11 +102,9 @@ ChromeUtils.defineModuleGetter(
   "TestUtils",
   "resource://testing-common/TestUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "setTimeout",
-  "resource://gre/modules/Timer.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   this,

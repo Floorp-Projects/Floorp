@@ -10,8 +10,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { PushRecord } = ChromeUtils.import(
   "resource://gre/modules/PushRecord.jsm"
 );
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 
 const lazy = {};
@@ -41,7 +41,9 @@ XPCOMUtils.defineLazyGetter(lazy, "Log", () => {
 const EXPORTED_SYMBOLS = ["PushServiceAndroidGCM"];
 
 XPCOMUtils.defineLazyGetter(lazy, "console", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  let { ConsoleAPI } = ChromeUtils.importESModule(
+    "resource://gre/modules/Console.sys.mjs"
+  );
   return new ConsoleAPI({
     dump: lazy.Log.i,
     maxLogLevelPref: "dom.push.loglevel",

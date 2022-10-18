@@ -2,8 +2,8 @@ var { OS, require } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { makeFakeAppDir } = ChromeUtils.import(
   "resource://testing-common/AppData.jsm"
 );
-var { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+var { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 function getEventDir() {

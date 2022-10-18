@@ -11,8 +11,8 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/SharedPromptUtils.jsm"
 );
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 function CommonDialog(args, ui) {

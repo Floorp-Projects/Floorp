@@ -14,8 +14,8 @@ const {
   snapshotState: states,
   viewState,
 } = require("resource://devtools/client/memory/constants.js");
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 
 add_task(async function() {

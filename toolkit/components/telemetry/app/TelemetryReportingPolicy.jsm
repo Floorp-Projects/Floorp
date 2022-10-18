@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["TelemetryReportingPolicy", "Policy"];
 const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"
 );
-const { clearTimeout, setTimeout } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
+const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
 );
 const { Observers } = ChromeUtils.import(
   "resource://services-common/observers.js"

@@ -13,8 +13,8 @@ const { AddonsEngine } = ChromeUtils.import(
   "resource://services-sync/engines/addons.js"
 );
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 
 const prefs = new Preferences();

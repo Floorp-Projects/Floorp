@@ -18,7 +18,11 @@ describe("sources - pretty print", () => {
 
     const url = "base.js";
     const source = await dispatch(actions.newGeneratedSource(makeSource(url)));
-    await dispatch(actions.loadSourceText({ cx, source }));
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      source.id
+    );
+    await dispatch(actions.loadSourceText({ cx, source, sourceActor }));
 
     await dispatch(createPrettySource(cx, source.id));
 
@@ -45,7 +49,12 @@ describe("sources - pretty print", () => {
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("foobar.js"))
     );
-    await dispatch(actions.loadSourceText({ cx, source }));
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      source.id
+    );
+
+    await dispatch(actions.loadSourceText({ cx, source, sourceActor }));
 
     await dispatch(actions.togglePrettyPrint(cx, source.id));
     expect(selectors.getSourceCount(getState())).toEqual(2);

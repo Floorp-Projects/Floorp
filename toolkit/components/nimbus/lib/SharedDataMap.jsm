@@ -6,8 +6,8 @@
 
 const EXPORTED_SYMBOLS = ["SharedDataMap"];
 
-const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm"
+const { EventEmitter } = ChromeUtils.importESModule(
+  "resource://gre/modules/EventEmitter.sys.mjs"
 );
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {

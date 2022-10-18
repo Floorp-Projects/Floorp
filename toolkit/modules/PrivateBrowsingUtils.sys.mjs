@@ -2,15 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["PrivateBrowsingUtils"];
-
 const kAutoStartPref = "browser.privatebrowsing.autostart";
 
 // This will be set to true when the PB mode is autostarted from the command
 // line for the current session.
 var gTemporaryAutoStartMode = false;
 
-var PrivateBrowsingUtils = {
+export var PrivateBrowsingUtils = {
   get enabled() {
     return Services.policies.isAllowed("privatebrowsing");
   },

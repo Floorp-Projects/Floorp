@@ -12,8 +12,8 @@ const TOPIC_DID_IMPORT_BOOKMARKS =
   "initial-migration-did-import-default-bookmarks";
 const TOPIC_PLACES_DEFAULTS_FINISHED = "places-browser-init-complete";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 const lazy = {};
@@ -24,17 +24,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   ResponsivenessMonitor: "resource://gre/modules/ResponsivenessMonitor.sys.mjs",
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "setTimeout",
-  "resource://gre/modules/Timer.jsm"
 );
 
 var gMigrators = null;

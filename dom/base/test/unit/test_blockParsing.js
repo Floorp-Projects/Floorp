@@ -6,7 +6,9 @@ const { TestUtils } = ChromeUtils.import(
 const { XPCShellContentUtils } = ChromeUtils.import(
   "resource://testing-common/XPCShellContentUtils.jsm"
 );
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 XPCShellContentUtils.init(this);
 

@@ -7,13 +7,14 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
+
   ChannelEventSinkFactory:
     "chrome://remote/content/cdp/observers/ChannelEventSink.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   CommonUtils: "resource://services-common/utils.js",
-  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 

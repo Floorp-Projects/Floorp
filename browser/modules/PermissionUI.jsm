@@ -75,11 +75,9 @@ ChromeUtils.defineModuleGetter(
   "SitePermissions",
   "resource:///modules/SitePermissions.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,

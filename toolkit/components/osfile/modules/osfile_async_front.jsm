@@ -25,8 +25,8 @@ var EXPORTED_SYMBOLS = ["OS", "Scheduler"];
 var SharedAll = ChromeUtils.import(
   "resource://gre/modules/osfile/osfile_shared_allthreads.jsm"
 );
-const { clearInterval, setInterval } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
+const { clearInterval, setInterval } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
 );
 
 // Boilerplate, to simplify the transition to require()

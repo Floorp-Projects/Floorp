@@ -4,9 +4,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -52,7 +50,9 @@ const PREF_DISALLOW_ENTERPRISE = "browser.policies.testing.disallowEnterprise";
 const PREF_POLICIES_APPLIED = "browser.policies.applied";
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  let { ConsoleAPI } = ChromeUtils.importESModule(
+    "resource://gre/modules/Console.sys.mjs"
+  );
   return new ConsoleAPI({
     prefix: "Enterprise Policies",
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed

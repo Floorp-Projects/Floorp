@@ -221,7 +221,7 @@ toolkit/components/translation/cld2/
 
 # Uses preprocessing
 toolkit/mozapps/update/tests/data/xpcshellConstantsPP.js
-toolkit/modules/AppConstants.jsm
+toolkit/modules/AppConstants.sys.mjs
 
 # Tests of ESLint command.
 tools/lint/test/files

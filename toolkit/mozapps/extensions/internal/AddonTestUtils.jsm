@@ -24,8 +24,8 @@ const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm"
+const { EventEmitter } = ChromeUtils.importESModule(
+  "resource://gre/modules/EventEmitter.sys.mjs"
 );
 
 const lazy = {};

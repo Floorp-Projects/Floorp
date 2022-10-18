@@ -18,14 +18,9 @@ const lazy = {};
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   NetworkHelper: "resource://devtools/shared/webconsole/NetworkHelper.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
 
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -424,8 +419,9 @@ DevToolsUtils.defineLazyGetter(this, "AppConstants", () => {
   if (isWorker) {
     return {};
   }
-  return ChromeUtils.import("resource://gre/modules/AppConstants.jsm")
-    .AppConstants;
+  return ChromeUtils.importESModule(
+    "resource://gre/modules/AppConstants.sys.mjs"
+  ).AppConstants;
 });
 
 /**

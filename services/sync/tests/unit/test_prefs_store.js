@@ -11,8 +11,8 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(
   /IOUtils\.profileBeforeChange getter: IOUtils: profileBeforeChange phase has already finished/
 );
 
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 const { PrefRec, getPrefsGUIDForTest } = ChromeUtils.import(
   "resource://services-sync/engines/prefs.js"

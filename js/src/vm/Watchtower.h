@@ -46,28 +46,28 @@ class Watchtower {
 
  public:
   static bool watchesPropertyAdd(NativeObject* obj) {
-    return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
-                            ObjectFlag::UseWatchtowerTestingCallback});
+    return obj->hasAnyFlag(
+        {ObjectFlag::IsUsedAsPrototype, ObjectFlag::UseWatchtowerTestingLog});
   }
   static bool watchesPropertyRemove(NativeObject* obj) {
-    return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
-                            ObjectFlag::UseWatchtowerTestingCallback});
+    return obj->hasAnyFlag(
+        {ObjectFlag::IsUsedAsPrototype, ObjectFlag::UseWatchtowerTestingLog});
   }
   static bool watchesPropertyChange(NativeObject* obj) {
-    return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
-                            ObjectFlag::UseWatchtowerTestingCallback});
+    return obj->hasAnyFlag(
+        {ObjectFlag::IsUsedAsPrototype, ObjectFlag::UseWatchtowerTestingLog});
   }
   static bool watchesFreezeOrSeal(NativeObject* obj) {
-    return obj->hasAnyFlag({ObjectFlag::UseWatchtowerTestingCallback});
+    return obj->hasAnyFlag({ObjectFlag::UseWatchtowerTestingLog});
   }
   static bool watchesProtoChange(JSObject* obj) {
-    return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
-                            ObjectFlag::UseWatchtowerTestingCallback});
+    return obj->hasAnyFlag(
+        {ObjectFlag::IsUsedAsPrototype, ObjectFlag::UseWatchtowerTestingLog});
   }
   static bool watchesObjectSwap(JSObject* a, JSObject* b) {
     auto watches = [](JSObject* obj) {
-      return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
-                              ObjectFlag::UseWatchtowerTestingCallback});
+      return obj->hasAnyFlag(
+          {ObjectFlag::IsUsedAsPrototype, ObjectFlag::UseWatchtowerTestingLog});
     };
     return watches(a) || watches(b);
   }

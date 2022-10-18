@@ -8,7 +8,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  let { ConsoleAPI } = ChromeUtils.importESModule(
+    "resource://gre/modules/Console.sys.mjs"
+  );
   let consoleOptions = {
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
     // messages during development. See LOG_LEVELS in Console.jsm for details.

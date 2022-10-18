@@ -13,16 +13,10 @@ ChromeUtils.defineModuleGetter(
   "Downloads",
   "resource://gre/modules/Downloads.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
 
 const STRINGS_URI = "devtools/shared/locales/screenshot.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);

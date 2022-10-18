@@ -1,8 +1,6 @@
 /* globals ProcessHangMonitor */
 
-const { WebExtensionPolicy } = Cu.getGlobalForObject(
-  ChromeUtils.import("resource://gre/modules/AppConstants.jsm")
-);
+const { WebExtensionPolicy } = Cu.getGlobalForObject(Services);
 
 const { UpdateUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/UpdateUtils.sys.mjs"

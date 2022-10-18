@@ -8,12 +8,8 @@ const EXPORTED_SYMBOLS = ["FaviconLoader"];
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 

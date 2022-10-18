@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { clearTimeout, setTimeout } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
-);
+import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const lazy = {};
 

@@ -93,8 +93,8 @@ let invalidAttrCodes = [
  */
 async function setupStubs() {
   // Local imports to avoid polluting the global namespace.
-  const { AppConstants } = ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm"
+  const { AppConstants } = ChromeUtils.importESModule(
+    "resource://gre/modules/AppConstants.sys.mjs"
   );
   const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 

@@ -8,11 +8,9 @@ var EXPORTED_SYMBOLS = ["SessionHistory"];
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+});
 
 function debug(msg) {
   Services.console.logStringMessage("SessionHistory: " + msg);
