@@ -887,12 +887,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
     );
     this._merinoSequenceNumber++;
 
-    let clientVariants = lazy.UrlbarPrefs.get("merino.clientVariants");
+    let clientVariants = lazy.UrlbarPrefs.get("merinoClientVariants");
     if (clientVariants) {
       url.searchParams.set(MERINO_PARAMS.CLIENT_VARIANTS, clientVariants);
     }
 
-    let providers = lazy.UrlbarPrefs.get("merino.providers");
+    let providers = lazy.UrlbarPrefs.get("merinoProviders");
     if (providers) {
       url.searchParams.set(MERINO_PARAMS.PROVIDERS, providers);
     } else if (
