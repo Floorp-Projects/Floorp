@@ -6,11 +6,9 @@
 
 const ToolkitModules = {};
 
-ChromeUtils.defineModuleGetter(
-  ToolkitModules,
-  "EventEmitter",
-  "resource://gre/modules/EventEmitter.jsm"
-);
+ChromeUtils.defineESModuleGetters(ToolkitModules, {
+  EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
+});
 
 var { ignoreEvent } = ExtensionCommon;
 

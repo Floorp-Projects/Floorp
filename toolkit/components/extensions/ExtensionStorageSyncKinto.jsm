@@ -16,8 +16,8 @@ var EXPORTED_SYMBOLS = [
   "extensionStorageSyncKinto",
 ];
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const KINTO_PROD_SERVER_URL =
   "https://webextensions.settings.services.mozilla.com/v1";

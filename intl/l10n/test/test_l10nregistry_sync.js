@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {setTimeout} = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
 
 const l10nReg = new L10nRegistry();
 

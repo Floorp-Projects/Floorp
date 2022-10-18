@@ -11,8 +11,8 @@ const {
 } = require("resource://devtools/server/devtools-server.js");
 const { getSystemInfo } = require("resource://devtools/shared/system.js");
 const { deviceSpec } = require("resource://devtools/shared/specs/device.js");
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {

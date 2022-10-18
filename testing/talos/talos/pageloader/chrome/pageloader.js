@@ -4,10 +4,12 @@
 
 /* import-globals-from report.js */
 
-var { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+var { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
-var { E10SUtils } = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
+var { E10SUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/E10SUtils.sys.mjs"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "TalosParentProfiler",

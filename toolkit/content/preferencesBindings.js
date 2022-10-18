@@ -7,16 +7,14 @@
 // We attach Preferences to the window object so other contexts (tests, JSMs)
 // have access to it.
 const Preferences = (window.Preferences = (function() {
-  const { EventEmitter } = ChromeUtils.import(
-    "resource://gre/modules/EventEmitter.jsm"
+  const { EventEmitter } = ChromeUtils.importESModule(
+    "resource://gre/modules/EventEmitter.sys.mjs"
   );
 
   const lazy = {};
-  ChromeUtils.defineModuleGetter(
-    lazy,
-    "DeferredTask",
-    "resource://gre/modules/DeferredTask.jsm"
-  );
+  ChromeUtils.defineESModuleGetters(lazy, {
+    DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+  });
 
   function getElementsByAttribute(name, value) {
     // If we needed to defend against arbitrary values, we would escape

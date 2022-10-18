@@ -6,8 +6,8 @@
 
 const EXPORTED_SYMBOLS = ["DampLoadParent", "EventDispatcher"];
 
-const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm"
+const { EventEmitter } = ChromeUtils.importESModule(
+  "resource://gre/modules/EventEmitter.sys.mjs"
 );
 
 // Global event emitter to avoid listening to individual JSWindowActor instances.

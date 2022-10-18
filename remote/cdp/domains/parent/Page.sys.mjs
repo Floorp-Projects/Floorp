@@ -9,6 +9,9 @@ import { Domain } from "chrome://remote/content/cdp/domains/Domain.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  clearInterval: "resource://gre/modules/Timer.sys.mjs",
+  setInterval: "resource://gre/modules/Timer.sys.mjs",
+
   DialogHandler:
     "chrome://remote/content/cdp/domains/parent/page/DialogHandler.sys.mjs",
   PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
@@ -19,10 +22,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  clearInterval: "resource://gre/modules/Timer.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
-  setInterval: "resource://gre/modules/Timer.jsm",
 });
 
 const MAX_CANVAS_DIMENSION = 32767;

@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["AddonSettings"];
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"

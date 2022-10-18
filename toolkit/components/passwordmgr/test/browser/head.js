@@ -6,7 +6,7 @@ const { LoginHelper } = ChromeUtils.import(
 const { LoginManagerParent } = ChromeUtils.import(
   "resource://gre/modules/LoginManagerParent.jsm"
 );
-const { LoginTestUtils } = ChromeUtils.import(
+var { LoginTestUtils } = ChromeUtils.import(
   "resource://testing-common/LoginTestUtils.jsm"
 );
 const { ContentTaskUtils } = ChromeUtils.import(

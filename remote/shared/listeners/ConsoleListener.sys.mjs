@@ -7,12 +7,10 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
+
   getFramesFromStack: "chrome://remote/content/shared/Stack.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());

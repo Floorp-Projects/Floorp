@@ -22,11 +22,9 @@ const { PREFS } = require("resource://devtools/client/webconsole/constants.js");
 const FirefoxDataProvider = require("resource://devtools/client/netmonitor/src/connector/firefox-data-provider.js");
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AppConstants",
-  "resource://gre/modules/AppConstants.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
+});
 loader.lazyRequireGetter(
   this,
   "constants",

@@ -5,7 +5,9 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-var { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+var { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 let trrServer;
 let h3Port;

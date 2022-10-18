@@ -13,8 +13,8 @@ const {
   registerStoreObserver,
 } = require("devtools/client/shared/redux/subscriber");
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 import * as search from "../workers/search";

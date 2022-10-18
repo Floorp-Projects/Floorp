@@ -7,13 +7,11 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  clearInterval: "resource://gre/modules/Timer.sys.mjs",
+  setInterval: "resource://gre/modules/Timer.sys.mjs",
+
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  clearInterval: "resource://gre/modules/Timer.jsm",
-  setInterval: "resource://gre/modules/Timer.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());

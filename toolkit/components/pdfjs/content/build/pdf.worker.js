@@ -120,7 +120,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.0.200';
+    const workerVersion = '3.0.229';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -605,9 +605,6 @@ class WorkerMessageHandler {
             return;
           }
 
-          handler.send("UnsupportedFeature", {
-            featureId: _util.UNSUPPORTED_FEATURES.errorOperatorList
-          });
           sink.error(reason);
         });
       });
@@ -2116,7 +2113,7 @@ function clearPrimitiveCaches() {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.XRefParseException = exports.XRefEntryException = exports.ParserEOFException = exports.MissingDataException = exports.DocStats = void 0;
+exports.XRefParseException = exports.XRefEntryException = exports.ParserEOFException = exports.PDF_VERSION_REGEXP = exports.MissingDataException = exports.DocStats = void 0;
 exports.collectActions = collectActions;
 exports.encodeToXmlString = encodeToXmlString;
 exports.escapePDFName = escapePDFName;
@@ -2140,6 +2137,9 @@ var _util = __w_pdfjs_require__(2);
 var _primitives = __w_pdfjs_require__(3);
 
 var _base_stream = __w_pdfjs_require__(5);
+
+const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
+exports.PDF_VERSION_REGEXP = PDF_VERSION_REGEXP;
 
 function getLookupTableFactory(initializer) {
   let lookup;
@@ -4248,7 +4248,6 @@ const STARTXREF_SIGNATURE = new Uint8Array([0x73, 0x74, 0x61, 0x72, 0x74, 0x78, 
 const ENDOBJ_SIGNATURE = new Uint8Array([0x65, 0x6e, 0x64, 0x6f, 0x62, 0x6a]);
 const FINGERPRINT_FIRST_BYTES = 1024;
 const EMPTY_FINGERPRINT = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-const PDF_HEADER_VERSION_REGEXP = /^[1-9]\.\d$/;
 
 function find(stream, signature, limit = 1024, backwards = false) {
   const signatureLength = signature.length;
@@ -4336,10 +4335,6 @@ class PDFDocument {
   parse(recoveryMode) {
     this.xref.parse(recoveryMode);
     this.catalog = new _catalog.Catalog(this.pdfManager, this.xref);
-
-    if (this.catalog.version) {
-      this._version = this.catalog.version;
-    }
   }
 
   get linearization() {
@@ -4420,20 +4415,18 @@ class PDFDocument {
     }
 
     stream.moveStart();
-    const MAX_PDF_VERSION_LENGTH = 12;
+    stream.skip(PDF_HEADER_SIGNATURE.length);
     let version = "",
         ch;
 
-    while ((ch = stream.getByte()) > 0x20) {
-      if (version.length >= MAX_PDF_VERSION_LENGTH) {
-        break;
-      }
-
+    while ((ch = stream.getByte()) > 0x20 && version.length < 7) {
       version += String.fromCharCode(ch);
     }
 
-    if (!this._version) {
-      this._version = version.substring(5);
+    if (_core_utils.PDF_VERSION_REGEXP.test(version)) {
+      this._version = version;
+    } else {
+      (0, _util.warn)(`Invalid PDF header version: ${version}`);
     }
   }
 
@@ -4784,6 +4777,10 @@ class PDFDocument {
     return this.xfaFactory ? this.xfaFactory.serializeData(annotationStorage) : null;
   }
 
+  get version() {
+    return this.catalog.version || this._version;
+  }
+
   get formInfo() {
     const formInfo = {
       hasFields: false,
@@ -4822,15 +4819,8 @@ class PDFDocument {
   }
 
   get documentInfo() {
-    let version = this._version;
-
-    if (typeof version !== "string" || !PDF_HEADER_VERSION_REGEXP.test(version)) {
-      (0, _util.warn)(`Invalid PDF header version number: ${version}`);
-      version = null;
-    }
-
     const docInfo = {
-      PDFFormatVersion: version,
+      PDFFormatVersion: this.version,
       Language: this.catalog.lang,
       EncryptFilterName: this.xref.encrypt ? this.xref.encrypt.filterName : null,
       IsLinearized: !!this.linearization,
@@ -12835,69 +12825,73 @@ class PartialEvaluator {
 
       if (glyphName === "") {
         continue;
-      } else if (glyphsUnicodeMap[glyphName] === undefined) {
-        let code = 0;
+      }
 
-        switch (glyphName[0]) {
-          case "G":
-            if (glyphName.length === 3) {
-              code = parseInt(glyphName.substring(1), 16);
-            }
+      let unicode = glyphsUnicodeMap[glyphName];
 
-            break;
-
-          case "g":
-            if (glyphName.length === 5) {
-              code = parseInt(glyphName.substring(1), 16);
-            }
-
-            break;
-
-          case "C":
-          case "c":
-            if (glyphName.length >= 3 && glyphName.length <= 4) {
-              const codeStr = glyphName.substring(1);
-
-              if (forceGlyphs) {
-                code = parseInt(codeStr, 16);
-                break;
-              }
-
-              code = +codeStr;
-
-              if (Number.isNaN(code) && Number.isInteger(parseInt(codeStr, 16))) {
-                return this._simpleFontToUnicode(properties, true);
-              }
-            }
-
-            break;
-
-          default:
-            const unicode = (0, _unicode.getUnicodeForGlyph)(glyphName, glyphsUnicodeMap);
-
-            if (unicode !== -1) {
-              code = unicode;
-            }
-
-        }
-
-        if (code > 0 && code <= 0x10ffff && Number.isInteger(code)) {
-          if (baseEncodingName && code === +charcode) {
-            const baseEncoding = (0, _encodings.getEncoding)(baseEncodingName);
-
-            if (baseEncoding && (glyphName = baseEncoding[charcode])) {
-              toUnicode[charcode] = String.fromCharCode(glyphsUnicodeMap[glyphName]);
-              continue;
-            }
-          }
-
-          toUnicode[charcode] = String.fromCodePoint(code);
-        }
-
+      if (unicode !== undefined) {
+        toUnicode[charcode] = String.fromCharCode(unicode);
         continue;
       }
 
-      toUnicode[charcode] = String.fromCharCode(glyphsUnicodeMap[glyphName]);
+      let code = 0;
+
+      switch (glyphName[0]) {
+        case "G":
+          if (glyphName.length === 3) {
+            code = parseInt(glyphName.substring(1), 16);
+          }
+
+          break;
+
+        case "g":
+          if (glyphName.length === 5) {
+            code = parseInt(glyphName.substring(1), 16);
+          }
+
+          break;
+
+        case "C":
+        case "c":
+          if (glyphName.length >= 3 && glyphName.length <= 4) {
+            const codeStr = glyphName.substring(1);
+
+            if (forceGlyphs) {
+              code = parseInt(codeStr, 16);
+              break;
+            }
+
+            code = +codeStr;
+
+            if (Number.isNaN(code) && Number.isInteger(parseInt(codeStr, 16))) {
+              return this._simpleFontToUnicode(properties, true);
+            }
+          }
+
+          break;
+
+        case "u":
+          unicode = (0, _unicode.getUnicodeForGlyph)(glyphName, glyphsUnicodeMap);
+
+          if (unicode !== -1) {
+            code = unicode;
+          }
+
+          break;
+      }
+
+      if (code > 0 && code <= 0x10ffff && Number.isInteger(code)) {
+        if (baseEncodingName && code === +charcode) {
+          const baseEncoding = (0, _encodings.getEncoding)(baseEncodingName);
+
+          if (baseEncoding && (glyphName = baseEncoding[charcode])) {
+            toUnicode[charcode] = String.fromCharCode(glyphsUnicodeMap[glyphName]);
+            continue;
+          }
+        }
+
+        toUnicode[charcode] = String.fromCodePoint(code);
+      }
     }
 
     return toUnicode;
@@ -31528,23 +31522,46 @@ class CFFFont {
   getGlyphMapping() {
     const cff = this.cff;
     const properties = this.properties;
+    const {
+      cidToGidMap,
+      cMap
+    } = properties;
     const charsets = cff.charset.charset;
     let charCodeToGlyphId;
     let glyphId;
 
     if (properties.composite) {
+      let invCidToGidMap;
+
+      if (cidToGidMap && cidToGidMap.length > 0) {
+        invCidToGidMap = Object.create(null);
+
+        for (let i = 0, ii = cidToGidMap.length; i < ii; i++) {
+          const gid = cidToGidMap[i];
+
+          if (gid !== undefined) {
+            invCidToGidMap[gid] = i;
+          }
+        }
+      }
+
       charCodeToGlyphId = Object.create(null);
       let charCode;
 
       if (cff.isCIDFont) {
         for (glyphId = 0; glyphId < charsets.length; glyphId++) {
           const cid = charsets[glyphId];
-          charCode = properties.cMap.charCodeOf(cid);
+          charCode = cMap.charCodeOf(cid);
+
+          if (invCidToGidMap && invCidToGidMap[charCode] !== undefined) {
+            charCode = invCidToGidMap[charCode];
+          }
+
           charCodeToGlyphId[charCode] = glyphId;
         }
       } else {
         for (glyphId = 0; glyphId < cff.charStrings.count; glyphId++) {
-          charCode = properties.cMap.charCodeOf(glyphId);
+          charCode = cMap.charCodeOf(glyphId);
           charCodeToGlyphId[charCode] = glyphId;
         }
       }
@@ -45293,7 +45310,15 @@ class Catalog {
   get version() {
     const version = this._catDict.get("Version");
 
-    return (0, _util.shadow)(this, "version", version instanceof _primitives.Name ? version.name : null);
+    if (version instanceof _primitives.Name) {
+      if (_core_utils.PDF_VERSION_REGEXP.test(version.name)) {
+        return (0, _util.shadow)(this, "version", version.name);
+      }
+
+      (0, _util.warn)(`Invalid PDF catalog version: ${version.name}`);
+    }
+
+    return (0, _util.shadow)(this, "version", null);
   }
 
   get lang() {
@@ -63478,8 +63503,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '3.0.200';
-const pdfjsBuild = '348665934';
+const pdfjsVersion = '3.0.229';
+const pdfjsBuild = '9355b7293';
 })();
 
 /******/ 	return __webpack_exports__;

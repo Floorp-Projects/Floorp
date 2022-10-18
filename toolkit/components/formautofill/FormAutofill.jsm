@@ -175,8 +175,8 @@ var FormAutofill = {
   defineLogGetter(scope, logPrefix) {
     scope.debug = debug;
 
-    let { ConsoleAPI } = ChromeUtils.import(
-      "resource://gre/modules/Console.jsm"
+    let { ConsoleAPI } = ChromeUtils.importESModule(
+      "resource://gre/modules/Console.sys.mjs"
     );
     return new ConsoleAPI({
       maxLogLevelPref: "extensions.formautofill.loglevel",

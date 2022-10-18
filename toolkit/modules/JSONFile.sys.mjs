@@ -32,12 +32,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(

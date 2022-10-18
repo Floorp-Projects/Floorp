@@ -11,8 +11,8 @@ var gChecking;
 var gBroken;
 var gNeedReset;
 
-const { PrivateBrowsingUtils } = ChromeUtils.import(
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
 );
 
 function initExceptionDialog() {

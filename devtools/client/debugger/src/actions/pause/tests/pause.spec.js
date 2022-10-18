@@ -168,7 +168,12 @@ describe("pause", () => {
         {
           generatedLocation: { column: 0, line: 1, sourceId: "foo" },
           id: mockFrameId,
-          location: { column: 0, line: 1, sourceId: "foo" },
+          location: {
+            column: 0,
+            line: 1,
+            sourceId: "foo",
+            sourceActorId: "foo-1-actor",
+          },
           originalDisplayName: "foo",
           scope: {
             bindings: {
@@ -240,7 +245,12 @@ describe("pause", () => {
         {
           generatedLocation: { column: 0, line: 1, sourceId: "foo" },
           id: mockFrameId,
-          location: { column: 0, line: 3, sourceId: "foo-original" },
+          location: {
+            column: 0,
+            line: 3,
+            sourceActorId: "foo-original-1-actor",
+            sourceId: "foo-original",
+          },
           originalDisplayName: "fooOriginal",
           scope: { bindings: { arguments: [], variables: {} } },
           thread: "FakeThread",
@@ -312,7 +322,12 @@ describe("pause", () => {
           id: "1",
           index: undefined,
           isOriginal: true,
-          location: { column: 1, line: 1, sourceId: "foo-wasm/originalSource" },
+          location: {
+            column: 1,
+            line: 1,
+            sourceActorId: null,
+            sourceId: "foo-wasm/originalSource",
+          },
           originalDisplayName: "fooBar",
           originalVariables: undefined,
           scope: { bindings: { arguments: [], variables: {} } },

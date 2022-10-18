@@ -23,6 +23,11 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIUpdateTimerManager"
 );
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
   Storage: "resource://normandy/lib/Storage.jsm",
@@ -37,8 +42,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ActionsManager: "resource://normandy/lib/ActionsManager.jsm",
   BaseAction: "resource://normandy/actions/BaseAction.jsm",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
-  clearTimeout: "resource://gre/modules/Timer.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["RecipeRunner"];

@@ -15,8 +15,8 @@
 // Reads the chrome.manifest from a legacy non-restartless extension and loads
 // its overlays into the appropriate top-level windows.
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 

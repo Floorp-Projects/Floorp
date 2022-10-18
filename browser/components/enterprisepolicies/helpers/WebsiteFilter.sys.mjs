@@ -33,7 +33,9 @@ const PREF_LOGLEVEL = "browser.policies.loglevel";
 const lazy = {};
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  let { ConsoleAPI } = ChromeUtils.importESModule(
+    "resource://gre/modules/Console.sys.mjs"
+  );
   return new ConsoleAPI({
     prefix: "WebsiteFilter Policy",
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed

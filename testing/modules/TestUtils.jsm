@@ -20,8 +20,8 @@
 
 var EXPORTED_SYMBOLS = ["TestUtils"];
 
-const { clearTimeout, setTimeout } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
+const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
 );
 const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
   Ci.nsIConsoleAPIStorage

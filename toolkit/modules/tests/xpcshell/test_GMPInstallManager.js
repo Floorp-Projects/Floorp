@@ -8,13 +8,15 @@ const PR_USEC_PER_MSEC = 1000;
 const { GMPExtractor, GMPInstallManager } = ChromeUtils.importESModule(
   "resource://gre/modules/GMPInstallManager.sys.mjs"
 );
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
@@ -28,8 +30,8 @@ const { GMPPrefs, OPEN_H264_ID } = ChromeUtils.importESModule(
 const { ProductAddonCheckerTestUtils } = ChromeUtils.import(
   "resource://gre/modules/addons/ProductAddonChecker.jsm"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);

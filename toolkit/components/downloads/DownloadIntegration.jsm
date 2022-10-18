@@ -11,8 +11,8 @@
 
 var EXPORTED_SYMBOLS = ["DownloadIntegration"];
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { Downloads } = ChromeUtils.import(
   "resource://gre/modules/Downloads.jsm"
@@ -31,11 +31,10 @@ ChromeUtils.defineModuleGetter(
   "AsyncShutdown",
   "resource://gre/modules/AsyncShutdown.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "DownloadStore",
@@ -46,9 +45,6 @@ ChromeUtils.defineModuleGetter(
   "DownloadUIHelper",
   "resource://gre/modules/DownloadUIHelper.jsm"
 );
-ChromeUtils.defineESModuleGetters(lazy, {
-  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
-});
 ChromeUtils.defineModuleGetter(
   lazy,
   "NetUtil",

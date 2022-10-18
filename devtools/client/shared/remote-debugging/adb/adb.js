@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { clearInterval, setInterval } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
+const { clearInterval, setInterval } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
 );
 
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");

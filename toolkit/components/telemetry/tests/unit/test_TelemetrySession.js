@@ -21,8 +21,8 @@ const { TelemetryEnvironment } = ChromeUtils.import(
 const { TelemetryReportingPolicy } = ChromeUtils.import(
   "resource://gre/modules/TelemetryReportingPolicy.jsm"
 );
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 
 const PING_FORMAT_VERSION = 4;

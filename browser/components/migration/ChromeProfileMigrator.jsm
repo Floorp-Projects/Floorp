@@ -15,8 +15,8 @@ const AUTH_TYPE = {
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { MigratorPrototype, MigrationUtils } = ChromeUtils.import(
   "resource:///modules/MigrationUtils.jsm"

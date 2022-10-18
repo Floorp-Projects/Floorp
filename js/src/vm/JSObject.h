@@ -186,12 +186,11 @@ class JSObject
     return setFlag(cx, obj, js::ObjectFlag::IsUsedAsPrototype);
   }
 
-  bool useWatchtowerTestingCallback() const {
-    return hasFlag(js::ObjectFlag::UseWatchtowerTestingCallback);
+  bool useWatchtowerTestingLog() const {
+    return hasFlag(js::ObjectFlag::UseWatchtowerTestingLog);
   }
-  static bool setUseWatchtowerTestingCallback(JSContext* cx,
-                                              JS::HandleObject obj) {
-    return setFlag(cx, obj, js::ObjectFlag::UseWatchtowerTestingCallback);
+  static bool setUseWatchtowerTestingLog(JSContext* cx, JS::HandleObject obj) {
+    return setFlag(cx, obj, js::ObjectFlag::UseWatchtowerTestingLog);
   }
 
   // A "qualified" varobj is the object on which "qualified" variable

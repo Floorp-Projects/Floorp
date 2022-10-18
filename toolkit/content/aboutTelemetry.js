@@ -20,14 +20,12 @@ const { TelemetrySend } = ChromeUtils.import(
   "resource://gre/modules/TelemetrySend.jsm"
 );
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "Preferences",
-  "resource://gre/modules/Preferences.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   this,
   "ObjectUtils",

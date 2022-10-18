@@ -1,10 +1,8 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "setTimeout",
-  "resource://gre/modules/Timer.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
 
 const kFixtureBaseURL =
   "https://example.com/browser/toolkit/modules/tests/browser/";

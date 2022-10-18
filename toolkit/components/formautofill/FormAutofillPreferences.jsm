@@ -24,8 +24,8 @@ const { FormAutofill } = ChromeUtils.import(
 const { FormAutofillUtils } = ChromeUtils.import(
   "resource://autofill/FormAutofillUtils.jsm"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {

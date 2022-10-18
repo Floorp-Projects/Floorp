@@ -11,22 +11,25 @@ const {
   clearTimeout,
   requestIdleCallback,
   setTimeout,
-} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+} = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   RunState: "resource:///modules/sessionstore/RunState.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   SessionFile: "resource:///modules/sessionstore/SessionFile.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
 /*

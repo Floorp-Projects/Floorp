@@ -14,10 +14,13 @@ const { GeckoViewUtils } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  ActorManagerParent: "resource://gre/modules/ActorManagerParent.sys.mjs",
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
-  Preferences: "resource://gre/modules/Preferences.jsm",
 });
 
 const { debug, warn } = GeckoViewUtils.initLogging("Startup");

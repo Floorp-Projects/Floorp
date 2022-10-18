@@ -17,8 +17,8 @@ const AttributionIOUtils = {
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const lazy = {};
 ChromeUtils.defineModuleGetter(
@@ -27,7 +27,9 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/MacAttribution.jsm"
 );
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  let { ConsoleAPI } = ChromeUtils.importESModule(
+    "resource://gre/modules/Console.sys.mjs"
+  );
   let consoleOptions = {
     // tip: set maxLogLevel to "debug" and use lazy.log.debug() to create
     // detailed messages during development. See LOG_LEVELS in Console.jsm for

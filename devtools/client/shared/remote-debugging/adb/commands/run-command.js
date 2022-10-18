@@ -7,7 +7,9 @@
 "use strict";
 
 const { dumpn } = require("resource://devtools/shared/DevToolsUtils.js");
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 const {
   adbProcess,
 } = require("resource://devtools/client/shared/remote-debugging/adb/adb-process.js");

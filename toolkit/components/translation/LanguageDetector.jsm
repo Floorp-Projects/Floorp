@@ -7,8 +7,8 @@
 // workerManager is exported for tests.
 var EXPORTED_SYMBOLS = ["LanguageDetector", "workerManager"];
 
-const { clearTimeout, setTimeout } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
+const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
 );
 
 const WORKER_URL = "resource://gre/modules/translation/cld-worker.js";

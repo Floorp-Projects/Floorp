@@ -2,6 +2,8 @@
 <html>
   <link rel='stylesheet' type='text/css' href='style.css'>
   <style>
+    /* override the default clipping of the meter bar from forms.css */
+    meter { overflow: visible; }
     body > meter:nth-child(1)::-moz-meter-bar { margin: 10px; padding: 0px; }
     body > meter:nth-child(2)::-moz-meter-bar { margin: 0px; padding: 10px; }
     body > meter:nth-child(3)::-moz-meter-bar { margin: 10px; padding: 10px; }

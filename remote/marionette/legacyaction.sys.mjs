@@ -9,6 +9,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+
   accessibility: "chrome://remote/content/marionette/accessibility.sys.mjs",
   element: "chrome://remote/content/marionette/element.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
@@ -16,10 +18,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   event: "chrome://remote/content/marionette/event.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   WebReference: "chrome://remote/content/marionette/element.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Preferences: "resource://gre/modules/Preferences.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>

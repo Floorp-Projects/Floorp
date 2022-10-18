@@ -7,11 +7,9 @@
 
 // Globals
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+});
 
 /**
  * Due to the nature of this module, most of the tests are time-dependent.  All

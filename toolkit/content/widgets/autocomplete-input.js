@@ -7,8 +7,8 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-  const { AppConstants } = ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm"
+  const { AppConstants } = ChromeUtils.importESModule(
+    "resource://gre/modules/AppConstants.sys.mjs"
   );
   const { XPCOMUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -20,11 +20,10 @@
 
       this.popupSelectedIndex = -1;
 
-      ChromeUtils.defineModuleGetter(
-        this,
-        "PrivateBrowsingUtils",
-        "resource://gre/modules/PrivateBrowsingUtils.jsm"
-      );
+      ChromeUtils.defineESModuleGetters(this, {
+        PrivateBrowsingUtils:
+          "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+      });
 
       XPCOMUtils.defineLazyPreferenceGetter(
         this,

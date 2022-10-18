@@ -10,20 +10,16 @@
 // modules. All of the code is installed on |global|, which is a scope
 // shared among the different ext-*.js scripts.
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   this,
   "BrowserWindowTracker",
   "resource:///modules/BrowserWindowTracker.jsm"
 );
-ChromeUtils.defineESModuleGetters(this, {
-  AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
-});
 
 var { ExtensionError } = ExtensionUtils;
 

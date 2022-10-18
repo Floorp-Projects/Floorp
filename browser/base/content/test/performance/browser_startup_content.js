@@ -23,9 +23,9 @@ const known_scripts = {
     "chrome://mochikit/content/ShutdownLeaksCollector.jsm",
 
     // General utilities
-    "resource://gre/modules/AppConstants.jsm",
-    "resource://gre/modules/DeferredTask.jsm",
-    "resource://gre/modules/Timer.jsm",
+    "resource://gre/modules/AppConstants.sys.mjs",
+    "resource://gre/modules/DeferredTask.sys.mjs",
+    "resource://gre/modules/Timer.sys.mjs",
     "resource://gre/modules/XPCOMUtils.sys.mjs",
 
     // Logging related
@@ -129,8 +129,8 @@ add_task(async function() {
         /* eslint-env mozilla/frame-script */
         const Cm = Components.manager;
         Cm.QueryInterface(Ci.nsIServiceManager);
-        const { AppConstants } = ChromeUtils.import(
-          "resource://gre/modules/AppConstants.jsm"
+        const { AppConstants } = ChromeUtils.importESModule(
+          "resource://gre/modules/AppConstants.sys.mjs"
         );
         let collectStacks = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG;
         let modules = {};

@@ -10,14 +10,9 @@ var EXPORTED_SYMBOLS = ["AutoCompleteChild"];
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ContentDOMReference: "resource://gre/modules/ContentDOMReference.sys.mjs",
   LayoutUtils: "resource://gre/modules/LayoutUtils.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ContentDOMReference",
-  "resource://gre/modules/ContentDOMReference.jsm"
-);
 
 ChromeUtils.defineModuleGetter(
   lazy,

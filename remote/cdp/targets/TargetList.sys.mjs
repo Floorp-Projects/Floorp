@@ -2,20 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
+
   MainProcessTarget:
     "chrome://remote/content/cdp/targets/MainProcessTarget.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   TabObserver: "chrome://remote/content/cdp/observers/TargetObserver.sys.mjs",
   TabTarget: "chrome://remote/content/cdp/targets/TabTarget.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 });
 
 export class TargetList {

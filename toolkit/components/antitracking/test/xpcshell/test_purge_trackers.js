@@ -18,7 +18,9 @@ const { SiteDataTestUtils } = ChromeUtils.import(
 const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"
 );
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,

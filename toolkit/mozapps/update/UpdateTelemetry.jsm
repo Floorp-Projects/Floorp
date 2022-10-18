@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["AUSTLMY"];
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { BitsError, BitsUnknownError } = ChromeUtils.import(
   "resource://gre/modules/Bits.jsm"

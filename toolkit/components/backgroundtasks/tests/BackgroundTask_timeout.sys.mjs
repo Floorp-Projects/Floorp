@@ -4,8 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { EXIT_CODE } from "resource://gre/modules/BackgroundTasksManager.sys.mjs";
-
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 // Time out in just a single second. The task is set up to run for 5 minutes,
 // so it should always time out.

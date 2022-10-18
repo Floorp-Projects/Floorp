@@ -17,13 +17,9 @@
  * browser/base/content/test/sanitize/browser_sanitize-timespans.js.
  */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Timer",
-  "resource://gre/modules/Timer.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+  Timer: "resource://gre/modules/Timer.sys.mjs",
 });
 
 const kMsecPerMin = 60 * 1000;

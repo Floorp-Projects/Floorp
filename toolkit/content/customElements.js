@@ -21,8 +21,8 @@
   const MozElements = {};
   window.MozElements = MozElements;
 
-  const { AppConstants } = ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm"
+  const { AppConstants } = ChromeUtils.importESModule(
+    "resource://gre/modules/AppConstants.sys.mjs"
   );
   const env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment

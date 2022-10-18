@@ -1,5 +1,5 @@
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 const kForceDNSLookup = "browser.fixup.dns_first_for_single_words";

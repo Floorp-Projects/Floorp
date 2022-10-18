@@ -7,11 +7,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  Log: "chrome://remote/content/shared/Log.sys.mjs",
-});
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Preferences: "resource://gre/modules/Preferences.jsm",
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

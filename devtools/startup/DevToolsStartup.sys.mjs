@@ -31,9 +31,8 @@ const DEVTOOLS_POLICY_DISABLED_PREF = "devtools.policy.disabled";
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -45,20 +44,14 @@ ChromeUtils.defineModuleGetter(
   "CustomizableWidgets",
   "resource:///modules/CustomizableWidgets.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "ProfilerMenuButton",
   "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "WebChannel",
-  "resource://gre/modules/WebChannel.jsm"
 );
 ChromeUtils.defineModuleGetter(
   lazy,

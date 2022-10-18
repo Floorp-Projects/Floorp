@@ -12,8 +12,8 @@ const { GeckoViewUtils } = ChromeUtils.import(
 const { PrincipalsCollector } = ChromeUtils.import(
   "resource://gre/modules/PrincipalsCollector.jsm"
 );
-const { E10SUtils } = ChromeUtils.import(
-  "resource://gre/modules/E10SUtils.jsm"
+const { E10SUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/E10SUtils.sys.mjs"
 );
 
 const { debug, warn } = GeckoViewUtils.initLogging(

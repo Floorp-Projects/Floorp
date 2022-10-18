@@ -4,9 +4,12 @@
 
 /* globals ExtensionAPI, Services, XPCOMUtils */
 
+ChromeUtils.defineESModuleGetters(this, {
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
   TalosParentProfiler: "resource://talos-powers/TalosParentProfiler.jsm",
 });
 

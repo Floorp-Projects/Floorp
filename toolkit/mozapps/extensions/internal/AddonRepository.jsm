@@ -11,6 +11,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
   ServiceRequest: "resource://gre/modules/ServiceRequest.sys.mjs",
 });
 
@@ -18,9 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  Preferences: "resource://gre/modules/Preferences.jsm",
 });
 
 // The current platform as specified in the AMO API:

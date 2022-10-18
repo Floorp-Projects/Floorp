@@ -5,8 +5,8 @@
 
 var EXPORTED_SYMBOLS = ["WebChannelParent"];
 
-const { WebChannelBroker } = ChromeUtils.import(
-  "resource://gre/modules/WebChannel.jsm"
+const { WebChannelBroker } = ChromeUtils.importESModule(
+  "resource://gre/modules/WebChannel.sys.mjs"
 );
 
 const ERRNO_MISSING_PRINCIPAL = 1;

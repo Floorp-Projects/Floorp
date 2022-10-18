@@ -110,6 +110,21 @@ export class AddonSearchEngine extends SearchEngine {
   }
 
   /**
+   * Whether or not this engine is an in-memory only search engine.
+   * These engines are typically application provided or policy engines,
+   * where they are loaded every time on SearchService initialization
+   * using the policy JSON or the extension manifest. Minimal details of the
+   * in-memory engines are saved to disk, but they are never loaded
+   * from the user's saved settings file.
+   *
+   * @returns {boolean}
+   *   Only returns true for application provided engines.
+   */
+  get inMemory() {
+    return this.#isAppProvided;
+  }
+
+  /**
    * Creates a JavaScript object that represents this engine.
    *
    * @returns {object}

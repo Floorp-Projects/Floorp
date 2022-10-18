@@ -84,8 +84,8 @@ add_task(async function testTempPermissionSubframes() {
       let frame = content.document.getElementById("frame");
 
       await content.SpecialPowers.spawn(frame, [host0], async function(host) {
-        const { E10SUtils } = ChromeUtils.import(
-          "resource://gre/modules/E10SUtils.jsm"
+        const { E10SUtils } = ChromeUtils.importESModule(
+          "resource://gre/modules/E10SUtils.sys.mjs"
         );
 
         E10SUtils.wrapHandlingUserInput(this.content, true, function() {

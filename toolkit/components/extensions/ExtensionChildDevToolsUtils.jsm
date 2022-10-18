@@ -13,8 +13,8 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionChildDevToolsUtils"];
 
-const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm"
+const { EventEmitter } = ChromeUtils.importESModule(
+  "resource://gre/modules/EventEmitter.sys.mjs"
 );
 
 // Create a variable to hold the cached ThemeChangeObserver which does not

@@ -11,9 +11,12 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
+ChromeUtils.defineESModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   Blocklist: "resource://gre/modules/Blocklist.jsm",
-  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   GeckoViewActorManager: "resource://gre/modules/GeckoViewActorManager.jsm",
   GeckoViewSettings: "resource://gre/modules/GeckoViewSettings.jsm",

@@ -25,8 +25,8 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Preferences: "resource://gre/modules/Preferences.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
 const SCHEMA_BASENAME = "schema.json";
