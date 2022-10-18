@@ -103,6 +103,8 @@
 
       this._inPermitUnload = new WeakSet();
 
+      this._originalURI = null;
+
       /**
        * These are managed by the tabbrowser:
        */
@@ -228,6 +230,8 @@
       };
 
       this._documentURI = null;
+
+      this._originalURI = null;
 
       this._documentContentType = null;
 
@@ -712,6 +716,16 @@
 
     get dontPromptAndUnload() {
       return 2;
+    }
+
+    set originalURI(aURI) {
+      if (aURI instanceof Ci.nsIURI) {
+        this._originalURI = aURI;
+      }
+    }
+
+    get originalURI() {
+      return this._originalURI;
     }
 
     _wrapURIChangeCall(fn) {
