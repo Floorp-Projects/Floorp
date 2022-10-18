@@ -10,11 +10,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DomainGroupBuilder: "resource:///modules/DomainGroupBuilder.sys.mjs",
   PinnedGroupBuilder: "resource:///modules/PinnedGroupBuilder.sys.mjs",
   Snapshots: "resource:///modules/Snapshots.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  clearTimeout: "resource://gre/modules/Timer.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

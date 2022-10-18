@@ -14,8 +14,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 
 var EXPORTED_SYMBOLS = ["LogManager"];

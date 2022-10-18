@@ -4,7 +4,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { Log: StdLog } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+import { Log as StdLog } from "resource://gre/modules/Log.sys.mjs";
 
 const PREF_REMOTE_LOG_LEVEL = "remote.log.level";
 

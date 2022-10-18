@@ -19,8 +19,11 @@ XPCOMUtils.defineLazyGetter(lazy, "makeRange", () => {
   return ExtensionParent.apiManager.global.makeRange;
 });
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Preferences: "resource://gre/modules/Preferences.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
 });
 

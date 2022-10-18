@@ -5,11 +5,9 @@
 "use strict";
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ContentDOMReference",
-  "resource://gre/modules/ContentDOMReference.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  ContentDOMReference: "resource://gre/modules/ContentDOMReference.sys.mjs",
+});
 loader.lazyRequireGetter(
   this,
   ["isFrameWithChildTarget", "isWindowIncluded"],

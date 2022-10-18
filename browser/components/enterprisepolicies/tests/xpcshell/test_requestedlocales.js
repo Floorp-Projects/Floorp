@@ -3,7 +3,9 @@
 
 "use strict";
 
-var { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+var { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 const REQ_LOC_CHANGE_EVENT = "intl:requested-locales-changed";
 

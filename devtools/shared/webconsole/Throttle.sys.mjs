@@ -23,8 +23,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIHttpActivityDistributor"
 );
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  setTimeout: "resource://gre/modules/Timer.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 /**

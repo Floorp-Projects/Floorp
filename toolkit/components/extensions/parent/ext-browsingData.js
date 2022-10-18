@@ -4,9 +4,12 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
   // This helper contains the platform-specific bits of browsingData.
   BrowsingDataDelegate: "resource:///modules/ExtensionBrowsingData.jsm",

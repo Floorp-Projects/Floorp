@@ -19,7 +19,9 @@ const EXPORTED_SYMBOLS = ["pushBroadcastService", "BroadcastService"];
 const DUMMY_VERSION_STRING = "____NOP____";
 
 XPCOMUtils.defineLazyGetter(lazy, "console", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  let { ConsoleAPI } = ChromeUtils.importESModule(
+    "resource://gre/modules/Console.sys.mjs"
+  );
   return new ConsoleAPI({
     maxLogLevelPref: "dom.push.loglevel",
     prefix: "BroadcastService",

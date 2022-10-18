@@ -2592,10 +2592,12 @@ var EXPORTED_SYMBOLS = ["Kinto"];
    * See the License for the specific language governing permissions and
    * limitations under the License.
    */
-  const { setTimeout, clearTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+  const { setTimeout, clearTimeout } = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
   const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs");
   XPCOMUtils.defineLazyGlobalGetters(global, ["fetch", "indexedDB"]);
-  ChromeUtils.defineModuleGetter(global, "EventEmitter", "resource://gre/modules/EventEmitter.jsm");
+  ChromeUtils.defineESModuleGetters(global, {
+      EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs"
+  });
   // Use standalone kinto-http module landed in FFx.
   ChromeUtils.defineModuleGetter(global, "KintoHttpClient", "resource://services-common/kinto-http-client.js");
   XPCOMUtils.defineLazyGetter(global, "generateUUID", () => {

@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["ContentSessionStore"];
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { clearTimeout, setTimeoutWithTarget } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
+const { clearTimeout, setTimeoutWithTarget } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
 );
 
 function debug(msg) {

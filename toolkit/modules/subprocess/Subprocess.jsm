@@ -16,8 +16,8 @@ var EXPORTED_SYMBOLS = ["Subprocess", "getSubprocessImplForTest"];
 
 /* exported Subprocess */
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { SubprocessConstants } = ChromeUtils.import(
   "resource://gre/modules/subprocess/subprocess_common.jsm"

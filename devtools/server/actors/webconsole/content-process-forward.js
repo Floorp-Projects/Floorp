@@ -11,11 +11,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(this, "ConsoleAPIStorage", () => {
   return Cc["@mozilla.org/consoleAPI-storage;1"].getService(

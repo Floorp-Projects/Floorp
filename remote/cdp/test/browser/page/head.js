@@ -15,7 +15,7 @@ const {
   clearTimeout,
   setInterval,
   setTimeout,
-} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+} = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
 
 const { PollPromise } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/Sync.sys.mjs"

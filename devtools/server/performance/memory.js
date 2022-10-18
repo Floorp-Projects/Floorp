@@ -15,11 +15,9 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/event-emitter.js"
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+});
 loader.lazyRequireGetter(
   this,
   "StackFrameCache",

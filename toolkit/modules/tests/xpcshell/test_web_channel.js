@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { WebChannel } = ChromeUtils.import(
-  "resource://gre/modules/WebChannel.jsm"
+const { WebChannel } = ChromeUtils.importESModule(
+  "resource://gre/modules/WebChannel.sys.mjs"
 );
 const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"

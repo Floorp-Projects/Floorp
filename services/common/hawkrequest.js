@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = [
   "deriveHawkCredentials",
 ];
 
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"

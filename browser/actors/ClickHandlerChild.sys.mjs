@@ -7,25 +7,16 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "WebNavigationFrames",
   "resource://gre/modules/WebNavigationFrames.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm"
-);
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
-});
 
 export class MiddleMousePasteHandlerChild extends JSWindowActorChild {
   handleEvent(clickEvent) {

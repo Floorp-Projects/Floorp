@@ -7,8 +7,8 @@ const EXPORTED_SYMBOLS = ["AbuseReporter", "AbuseReportError"];
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 const PREF_ABUSE_REPORT_URL = "extensions.abuseReport.url";

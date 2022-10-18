@@ -27,8 +27,8 @@ const {
 const {
   generateCssProperties,
 } = require("resource://devtools/server/actors/css-properties.js");
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 const InspectorUtils = require("InspectorUtils");
 

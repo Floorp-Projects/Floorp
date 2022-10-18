@@ -7,12 +7,11 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ActorManagerParent: "resource://gre/modules/ActorManagerParent.sys.mjs",
+
   Log: "chrome://remote/content/shared/Log.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
-});
 XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 const FRAME_ACTOR_CONFIG = {

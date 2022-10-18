@@ -22,23 +22,14 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.sys.mjs",
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "setTimeout",
-  "resource://gre/modules/Timer.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "clearTimeout",
-  "resource://gre/modules/Timer.jsm"
-);
 
 const Utils = TelemetryUtils;
 

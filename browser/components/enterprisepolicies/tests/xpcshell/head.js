@@ -6,8 +6,8 @@
 
 const lazy = {};
 
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 const { SearchSettings } = ChromeUtils.importESModule(
   "resource://gre/modules/SearchSettings.sys.mjs"

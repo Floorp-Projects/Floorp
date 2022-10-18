@@ -17,8 +17,8 @@ const { getFxAccountsSingleton, FxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
 const fxAccounts = getFxAccountsSingleton();
-const { setTimeout, clearTimeout } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
+const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
 );
 ChromeUtils.import("resource://services-common/utils.js");
 const lazy = {};

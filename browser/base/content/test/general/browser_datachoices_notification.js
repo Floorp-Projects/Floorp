@@ -4,10 +4,8 @@
 
 "use strict";
 
-// Pass an empty scope object to the import to prevent "leaked window property"
-// errors in tests.
-var { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+var { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 var { TelemetryReportingPolicy } = ChromeUtils.import(
   "resource://gre/modules/TelemetryReportingPolicy.jsm"

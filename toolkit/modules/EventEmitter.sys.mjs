@@ -4,11 +4,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "console",
-  "resource://gre/modules/Console.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  console: "resource://gre/modules/Console.sys.mjs",
+});
 
 export function EventEmitter() {}
 

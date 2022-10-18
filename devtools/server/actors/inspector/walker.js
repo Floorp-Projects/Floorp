@@ -108,11 +108,9 @@ loader.lazyRequireGetter(
 // ContentDOMReference requires ChromeUtils, which isn't available in worker context.
 const lazy = {};
 if (!isWorker) {
-  ChromeUtils.defineModuleGetter(
-    lazy,
-    "ContentDOMReference",
-    "resource://gre/modules/ContentDOMReference.jsm"
-  );
+  ChromeUtils.defineESModuleGetters(lazy, {
+    ContentDOMReference: "resource://gre/modules/ContentDOMReference.sys.mjs",
+  });
 }
 
 loader.lazyServiceGetter(

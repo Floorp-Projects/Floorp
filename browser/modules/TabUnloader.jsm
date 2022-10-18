@@ -20,11 +20,9 @@ ChromeUtils.defineModuleGetter(
   "webrtcUI",
   "resource:///modules/webrtcUI.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
 
 // If there are only this many or fewer tabs open, just sort by weight, and close
 // the lowest tab. Otherwise, do a more intensive compuation that determines the

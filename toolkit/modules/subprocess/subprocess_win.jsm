@@ -11,8 +11,8 @@
 // down, from the shared scripts loaded via loadSubScript.
 var EXPORTED_SYMBOLS = ["SubprocessImpl", "libc", "win32"];
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 const { XPCOMUtils } = ChromeUtils.importESModule(
