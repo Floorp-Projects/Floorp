@@ -412,16 +412,56 @@ CoderResult CodeShareableBytes(Coder<mode>& coder,
   return CodePodVector(coder, &item->bytes);
 }
 
+// WasmValType.h
+
+template <CoderMode mode>
+CoderResult CodeValType(Coder<mode>& coder, CoderArg<mode, ValType> item) {
+  if constexpr (mode == MODE_DECODE) {
+    return coder.readBytes((void*)item, sizeof(ValType));
+  } else {
+    return coder.writeBytes((const void*)item, sizeof(ValType));
+  }
+}
+
+CoderResult CodeFieldType(Coder<MODE_DECODE>& coder, FieldType* item) {
+  return coder.readBytes((void*)item, sizeof(FieldType));
+}
+
+template <CoderMode mode>
+CoderResult CodeFieldType(Coder<mode>& coder, const FieldType* item) {
+  STATIC_ASSERT_ENCODING_OR_SIZING;
+  return coder.writeBytes((const void*)item, sizeof(FieldType));
+}
+
+CoderResult CodeRefType(Coder<MODE_DECODE>& coder, RefType* item) {
+  return coder.readBytes((void*)item, sizeof(RefType));
+}
+
+template <CoderMode mode>
+CoderResult CodeRefType(Coder<mode>& coder, const RefType* item) {
+  STATIC_ASSERT_ENCODING_OR_SIZING;
+  return coder.writeBytes((const void*)item, sizeof(RefType));
+}
+
+// WasmValue.h
+
+template <CoderMode mode>
+CoderResult CodeLitVal(Coder<mode>& coder, CoderArg<mode, LitVal> item) {
+  MOZ_TRY(CodeValType(coder, &item->type_));
+  MOZ_TRY(CodePod(coder, &item->cell_));
+  return Ok();
+}
+
 // WasmInitExpr.h
 
 template <CoderMode mode>
 CoderResult CodeInitExpr(Coder<mode>& coder, CoderArg<mode, InitExpr> item) {
   WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::InitExpr, 80);
   MOZ_TRY(CodePod(coder, &item->kind_));
-  MOZ_TRY(CodePod(coder, &item->type_));
+  MOZ_TRY(CodeValType(coder, &item->type_));
   switch (item->kind_) {
     case InitExprKind::Literal:
-      MOZ_TRY(CodePod(coder, &item->literal_));
+      MOZ_TRY(CodeLitVal(coder, &item->literal_));
       break;
     case InitExprKind::Variable:
       MOZ_TRY(CodePodVector(coder, &item->bytecode_));
@@ -437,9 +477,19 @@ CoderResult CodeInitExpr(Coder<mode>& coder, CoderArg<mode, InitExpr> item) {
 template <CoderMode mode>
 CoderResult CodeFuncType(Coder<mode>& coder, CoderArg<mode, FuncType> item) {
   WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::FuncType, 208);
-  MOZ_TRY(CodePodVector(coder, &item->results_));
-  MOZ_TRY(CodePodVector(coder, &item->args_));
+  MOZ_TRY((CodeVector<mode, ValType, &CodeValType<mode>>(coder, &item->args_)));
+  MOZ_TRY(
+      (CodeVector<mode, ValType, &CodeValType<mode>>(coder, &item->results_)));
   MOZ_TRY(CodePod(coder, &item->immediateTypeId_));
+  return Ok();
+}
+
+template <CoderMode mode>
+CoderResult CodeStructField(Coder<mode>& coder,
+                            CoderArg<mode, StructField> item) {
+  MOZ_TRY(CodeFieldType(coder, &item->type));
+  MOZ_TRY(CodePod(coder, &item->offset));
+  MOZ_TRY(CodePod(coder, &item->isMutable));
   return Ok();
 }
 
@@ -447,8 +497,17 @@ template <CoderMode mode>
 CoderResult CodeStructType(Coder<mode>& coder,
                            CoderArg<mode, StructType> item) {
   WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::StructType, 48);
-  MOZ_TRY(CodePodVector(coder, &item->fields_));
+  MOZ_TRY((CodeVector<mode, StructField, &CodeStructField<mode>>(
+      coder, &item->fields_)));
   MOZ_TRY(CodePod(coder, &item->size_));
+  return Ok();
+}
+
+template <CoderMode mode>
+CoderResult CodeArrayType(Coder<mode>& coder, CoderArg<mode, ArrayType> item) {
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::ArrayType, 48);
+  MOZ_TRY(CodeFieldType(coder, &item->elementType_));
+  MOZ_TRY(CodePod(coder, &item->isMutable_));
   return Ok();
 }
 
@@ -477,7 +536,10 @@ CoderResult CodeTypeDef(Coder<mode>& coder, CoderArg<mode, TypeDef> item) {
       break;
     }
     case TypeDefKind::Array: {
-      MOZ_TRY(CodePod(coder, &item->arrayType_));
+      if constexpr (mode == MODE_DECODE) {
+        new (&item->arrayType_) ArrayType();
+      }
+      MOZ_TRY(CodeArrayType(coder, &item->arrayType_));
       break;
     }
     case TypeDefKind::None: {
@@ -525,7 +587,8 @@ CoderResult CodeGlobalDesc(Coder<mode>& coder,
 template <CoderMode mode>
 CoderResult CodeTagType(Coder<mode>& coder, CoderArg<mode, TagType> item) {
   WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TagType, 168);
-  MOZ_TRY(CodePodVector(coder, &item->argTypes_));
+  MOZ_TRY(
+      (CodeVector<mode, ValType, &CodeValType<mode>>(coder, &item->argTypes_)));
   MOZ_TRY(CodePodVector(coder, &item->argOffsets_));
   MOZ_TRY(CodePod(coder, &item->size_));
   return Ok();
@@ -548,7 +611,7 @@ CoderResult CodeElemSegment(Coder<mode>& coder,
   WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::ElemSegment, 184);
   MOZ_TRY(CodePod(coder, &item->kind));
   MOZ_TRY(CodePod(coder, &item->tableIndex));
-  MOZ_TRY(CodePod(coder, &item->elemType));
+  MOZ_TRY(CodeRefType(coder, &item->elemType));
   MOZ_TRY((CodeMaybe<mode, InitExpr, &CodeInitExpr<mode>>(
       coder, &item->offsetIfActive)));
   MOZ_TRY(CodePodVector(coder, &item->elemFuncIndices));
@@ -572,6 +635,18 @@ CoderResult CodeCustomSection(Coder<mode>& coder,
   MOZ_TRY(CodePodVector(coder, &item->name));
   MOZ_TRY((CodeRefPtr<mode, const ShareableBytes, &CodeShareableBytes<mode>>(
       coder, &item->payload)));
+  return Ok();
+}
+
+template <CoderMode mode>
+CoderResult CodeTableDesc(Coder<mode>& coder, CoderArg<mode, TableDesc> item) {
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TableDesc, 48);
+  MOZ_TRY(CodeRefType(coder, &item->elemType));
+  MOZ_TRY(CodePod(coder, &item->isImportedOrExported));
+  MOZ_TRY(CodePod(coder, &item->isAsmJS));
+  MOZ_TRY(CodePod(coder, &item->globalDataOffset));
+  MOZ_TRY(CodePod(coder, &item->initialLength));
+  MOZ_TRY(CodePod(coder, &item->maximumLength));
   return Ok();
 }
 
@@ -805,7 +880,8 @@ CoderResult CodeMetadata(Coder<mode>& coder,
   MOZ_TRY((CodePod(coder, &item->typeIdsOffsetStart)));
   MOZ_TRY((CodeVector<mode, GlobalDesc, &CodeGlobalDesc<mode>>(
       coder, &item->globals)));
-  MOZ_TRY(CodePodVector(coder, &item->tables));
+  MOZ_TRY((
+      CodeVector<mode, TableDesc, &CodeTableDesc<mode>>(coder, &item->tables)));
   MOZ_TRY((CodeVector<mode, TagDesc, &CodeTagDesc<mode>>(coder, &item->tags)));
   MOZ_TRY(CodePod(coder, &item->moduleName));
   MOZ_TRY(CodePodVector(coder, &item->funcNames));
