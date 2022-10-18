@@ -11,6 +11,7 @@ There is also documentation for the `HTTP server we use for unit tests`_.
    cache2/doc
    http/lifecycle
    http/logging
+   http/http3.md
    dns/dns-over-https-trr
    submitting_networking_bugs.md
    new_to_necko_resources
