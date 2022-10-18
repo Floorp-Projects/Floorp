@@ -708,8 +708,9 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
   return NS_OK;
 }
 
-Result<EditActionResult, nsresult> HTMLEditor::CanHandleHTMLEditSubAction()
-    const {
+Result<EditActionResult, nsresult> HTMLEditor::CanHandleHTMLEditSubAction(
+    CheckSelectionInReplacedElement aCheckSelectionInReplacedElement
+    /* = CheckSelectionInReplacedElement::Yes */) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (NS_WARN_IF(Destroyed())) {
@@ -727,8 +728,7 @@ Result<EditActionResult, nsresult> HTMLEditor::CanHandleHTMLEditSubAction()
     return Err(NS_ERROR_FAILURE);
   }
 
-  if (!HTMLEditUtils::IsSimplyEditableNode(*selStartNode) ||
-      HTMLEditUtils::IsNonEditableReplacedContent(*selStartNode->AsContent())) {
+  if (!HTMLEditUtils::IsSimplyEditableNode(*selStartNode)) {
     return EditActionResult::CanceledResult();
   }
 
@@ -738,11 +738,21 @@ Result<EditActionResult, nsresult> HTMLEditor::CanHandleHTMLEditSubAction()
   }
 
   if (selStartNode == selEndNode) {
+    if (aCheckSelectionInReplacedElement ==
+            CheckSelectionInReplacedElement::Yes &&
+        HTMLEditUtils::IsNonEditableReplacedContent(
+            *selStartNode->AsContent())) {
+      return EditActionResult::CanceledResult();
+    }
     return EditActionResult::IgnoredResult();
   }
 
-  if (!HTMLEditUtils::IsSimplyEditableNode(*selEndNode) ||
+  if (HTMLEditUtils::IsNonEditableReplacedContent(*selStartNode->AsContent()) ||
       HTMLEditUtils::IsNonEditableReplacedContent(*selEndNode->AsContent())) {
+    return EditActionResult::CanceledResult();
+  }
+
+  if (!HTMLEditUtils::IsSimplyEditableNode(*selEndNode)) {
     return EditActionResult::CanceledResult();
   }
 
@@ -1531,7 +1541,8 @@ HTMLEditor::InsertParagraphSeparatorAsSubAction(const Element& aEditingHost) {
   }
 
   {
-    Result<EditActionResult, nsresult> result = CanHandleHTMLEditSubAction();
+    Result<EditActionResult, nsresult> result = CanHandleHTMLEditSubAction(
+        CheckSelectionInReplacedElement::OnlyWhenNotInSameNode);
     if (MOZ_UNLIKELY(result.isErr())) {
       NS_WARNING("HTMLEditor::CanHandleHTMLEditSubAction() failed");
       return result;
@@ -1622,6 +1633,20 @@ HTMLEditor::InsertParagraphSeparatorAsSubAction(const Element& aEditingHost) {
   if (NS_WARN_IF(!pointToInsert.IsInContentNode())) {
     return Err(NS_ERROR_FAILURE);
   }
+  while (true) {
+    Element* element = pointToInsert.GetContainerOrContainerParentElement();
+    if (MOZ_UNLIKELY(!element)) {
+      return Err(NS_ERROR_FAILURE);
+    }
+    // If the element can have a <br> element (it means that the element or its
+    // container must be able to have <div> or <p> too), we can handle
+    // insertParagraph at the point.
+    if (HTMLEditUtils::CanNodeContain(*element, *nsGkAtoms::br)) {
+      break;
+    }
+    // Otherwise, try to insert paragraph at the parent.
+    pointToInsert = pointToInsert.ParentPoint();
+  }
 
   if (IsMailEditor()) {
     if (RefPtr<Element> mailCiteElement = GetMostDistantAncestorMailCiteElement(
@@ -1703,7 +1728,7 @@ HTMLEditor::InsertParagraphSeparatorAsSubAction(const Element& aEditingHost) {
              editableBlockAncestor;
              editableBlockAncestor = HTMLEditUtils::GetAncestorElement(
                  *editableBlockAncestor,
-                 HTMLEditUtils::ClosestEditableBlockElement)) {
+                 HTMLEditUtils::ClosestEditableBlockElementOrButtonElement)) {
           if (HTMLEditUtils::CanElementContainParagraph(
                   *editableBlockAncestor)) {
             return false;
@@ -1718,7 +1743,7 @@ HTMLEditor::InsertParagraphSeparatorAsSubAction(const Element& aEditingHost) {
   RefPtr<Element> editableBlockElement =
       HTMLEditUtils::GetInclusiveAncestorElement(
           *pointToInsert.ContainerAs<nsIContent>(),
-          HTMLEditUtils::ClosestEditableBlockElement);
+          HTMLEditUtils::ClosestEditableBlockElementOrButtonElement);
 
   // If we cannot insert a <p>/<div> element at the selection, we should insert
   // a <br> element or a linefeed instead.
@@ -1826,7 +1851,7 @@ HTMLEditor::InsertParagraphSeparatorAsSubAction(const Element& aEditingHost) {
 
     editableBlockElement = HTMLEditUtils::GetInclusiveAncestorElement(
         *pointToInsert.ContainerAs<nsIContent>(),
-        HTMLEditUtils::ClosestEditableBlockElement);
+        HTMLEditUtils::ClosestEditableBlockElementOrButtonElement);
     if (NS_WARN_IF(!editableBlockElement)) {
       return Err(NS_ERROR_UNEXPECTED);
     }

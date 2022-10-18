@@ -310,8 +310,12 @@ class HTMLEditUtils final {
       //     information in the DB.  E.g., `<template>`, `<script>` elements
       //     can have children, but shouldn't be split.
       return HTMLEditUtils::IsContainerNode(aContent) &&
-             !aContent.IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::head,
-                                           nsGkAtoms::html);
+             !aContent.IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::button,
+                                           nsGkAtoms::caption, nsGkAtoms::table,
+                                           nsGkAtoms::tbody, nsGkAtoms::tfoot,
+                                           nsGkAtoms::thead, nsGkAtoms::tr) &&
+             !HTMLEditUtils::IsNeverElementContentsEditableByUser(aContent) &&
+             !HTMLEditUtils::IsNonEditableReplacedContent(aContent);
     }
     return aContent.IsText() && aContent.Length() > 0;
   }
@@ -1266,6 +1270,7 @@ class HTMLEditUtils final {
     MostDistantInlineElementInBlock,
     EditableElement,
     IgnoreHRElement,  // Ignore ancestor <hr> element since invalid structure
+    ButtonElement,
   };
   using AncestorTypes = EnumSet<AncestorType>;
   constexpr static AncestorTypes
@@ -1280,6 +1285,9 @@ class HTMLEditUtils final {
   constexpr static AncestorTypes ClosestEditableBlockElementExceptHRElement = {
       AncestorType::ClosestBlockElement, AncestorType::IgnoreHRElement,
       AncestorType::EditableElement};
+  constexpr static AncestorTypes ClosestEditableBlockElementOrButtonElement = {
+      AncestorType::ClosestBlockElement, AncestorType::EditableElement,
+      AncestorType::ButtonElement};
   static Element* GetAncestorElement(const nsIContent& aContent,
                                      const AncestorTypes& aAncestorTypes,
                                      const Element* aAncestorLimiter = nullptr);
