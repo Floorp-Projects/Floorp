@@ -26,8 +26,8 @@ browser.jar:
   skin/classic/browser/tabbar/tabbar_on_window_bottom.js                 (designs/tabbar/tabbar_on_window_bottom.js)
 
 # Lepton
-  skin/classic/browser/photon/photonChrome-multitab.css                     (designs/lepton/photonChrome-multitab.css)
-  skin/classic/browser/photon/photonContent-multitab.css                    (designs/lepton/photonContent-multitab.css)
+  skin/classic/browser/lepton/photonChrome-multitab.css                     (designs/lepton/photonChrome-multitab.css)
+  skin/classic/browser/lepton/photonContent-multitab.css                    (designs/lepton/photonContent-multitab.css)
   skin/classic/browser/lepton/userChrome.css                                (designs/lepton/userChrome.css)
   skin/classic/browser/lepton/userContent.css                               (designs/lepton/userContent.css)
   skin/classic/browser/lepton/photon.svg                                    (designs/lepton/photon.svg)

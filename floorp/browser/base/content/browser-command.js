@@ -368,17 +368,15 @@ function setBrowserDesign() {
   let floorpinterfacenum = Services.prefs.getIntPref("floorp.browser.user.interface")
   const ThemeCSS = {
     ProtonfixUI: `@import url(chrome://browser/skin/protonfix/protonfix.css);`,
-    PhotonUI:    `@import url(chrome://browser/skin/photon/photonChrome.css);
-                   @import url(chrome://browser/skin/photon/photonContent.css);`,
-    PhotonUIMultitab: `@import url(chrome://browser/skin/photon/photonChrome-multitab.css);
-                    @import url(chrome://browser/skin/photon/photonContent-multitab.css);`,
+    LeptonUI:    `@import url(chrome://browser/skin/lepton/userChrome.css);
+                   @import url(chrome://browser/skin/lepton/userChrome.css);`,
+    LeptonUIMultitab: `@import url(chrome://browser/skin/lepton/photonChrome-multitab.css);
+                    @import url(chrome://browser/skin/lepton/photonContent-multitab.css);`,
     MaterialUI: `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);`,
     MaterialUIMultitab: `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);
     .tabbrowser-tab { margin-top: 0.7em !important;  position: relative !important;  top: -0.34em !important; }`,
     fluentUI: `@import url(chrome://browser/skin/fluentUI/fluentUI.css);`,
     gnomeUI: `@import url(chrome://browser/skin/gnomeUI/gnomeUI.css);`,
-    leptonUI: `@import url(chrome://browser/skin/lepton/userChrome.css);
-                  @import url(chrome://browser/skin/lepton/userContent.css);`,
     FluerialUI: `@import url(chrome://browser/skin/floorplegacy/test_legacy.css);`,
   }
   var Tag = document.createElement('style');
@@ -391,7 +389,7 @@ function setBrowserDesign() {
       Tag.innerText = ThemeCSS.ProtonfixUI;
       break;
     case 3:
-      Tag.innerText = Services.prefs.getBoolPref("floorp.enable.multitab", false) ? ThemeCSS.PhotonUIMultitab : ThemeCSS.PhotonUI ;
+      Tag.innerText = Services.prefs.getBoolPref("floorp.enable.multitab", false) ? ThemeCSS.LeptonUIMultitab : ThemeCSS.LeptonUI; ;
       break;
     case 4:
       Tag.innerText = Services.prefs.getBoolPref("floorp.enable.multitab", false) ? ThemeCSS.MaterialUIMultitab : ThemeCSS.MaterialUI;
@@ -401,9 +399,6 @@ function setBrowserDesign() {
       break;
     case 6:
       if (AppConstants.platform == "linux") Tag.innerText = ThemeCSS.gnomeUI;
-      break;
-    case 7:
-      Tag.innerText = ThemeCSS.leptonUI;
       break;
     case 8: 
       Tag.innerText = ThemeCSS.FluerialUI;

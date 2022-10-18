@@ -118,7 +118,7 @@
     border-radius: 4px;
     box-shadow: 0 0 2px 0 rgba(0,0,0,0.2);
     transform: scaleX(1);
-    content: url("chrome://browser/skin/photon/photon.svg");
+    content: url("chrome://browser/skin/lepton/photon.svg");
   }
   
   #sub-preference{
