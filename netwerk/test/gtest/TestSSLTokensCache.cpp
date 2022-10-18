@@ -3,7 +3,6 @@
 #include <numeric>
 #include "mozilla/Preferences.h"
 #include "nsITransportSecurityInfo.h"
-#include "nsSerializationHelper.h"
 #include "SSLTokensCache.h"
 
 static already_AddRefed<nsITransportSecurityInfo> createDummySecInfo() {
@@ -32,10 +31,9 @@ static already_AddRefed<nsITransportSecurityInfo> createDummySecInfo() {
   "HZmFBVHMcUN/87HsQo20PdOekeEvkjrrMIxW+gxw22Yb67yF/qKgwrWr+43bLN709iyw+LWiU7sQcHL2xk9SYiWQDj2tYz2soObV"
   "QYTJm0VUZMEVFhtALq46cx92Zu4vFwC8AAwAAAAABAQAA");
   // clang-format on
-  nsCOMPtr<nsISupports> secInfo;
-  NS_DeserializeObject(base64Serialization, getter_AddRefs(secInfo));
-
-  nsCOMPtr<nsITransportSecurityInfo> securityInfo = do_QueryInterface(secInfo);
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo;
+  EXPECT_TRUE(NS_SUCCEEDED(mozilla::psm::TransportSecurityInfo::Read(
+      base64Serialization, getter_AddRefs(securityInfo))));
   return securityInfo.forget();
 }
 
