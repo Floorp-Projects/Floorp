@@ -4607,7 +4607,8 @@ void LIRGenerator::visitMegamorphicHasProp(MMegamorphicHasProp* ins) {
   MOZ_ASSERT(ins->idVal()->type() == MIRType::Value);
   auto* lir = new (alloc()) LMegamorphicHasProp(
       useRegisterAtStart(ins->object()), useBoxAtStart(ins->idVal()),
-      tempFixed(CallTempReg0), tempFixed(CallTempReg1));
+      tempFixed(CallTempReg0), tempFixed(CallTempReg1), tempFixed(CallTempReg2),
+      tempFixed(CallTempReg3));
   assignSnapshot(lir, ins->bailoutKind());
   defineReturn(lir, ins);
 }
