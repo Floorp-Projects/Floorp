@@ -104,46 +104,6 @@ origin:
   # optional
   license-file: COPYING
 
-# Configuration for automatic updating system.
-# optional
-updatebot:
-
-  # TODO: allow multiple users to be specified
-  # Phabricator username for a maintainer of the library, used for assigning
-  # reviewers
-  maintainer-phab: tjr
-
-  # Bugzilla email address for a maintainer of the library, used for needinfos
-  maintainer-bz: tom@mozilla.com
-
-  # Optional: A query string for ./mach try fuzzy. If it and fuzzy-paths are omitted then
-  # ./mach try auto will be used
-  fuzzy-query: media
-
-  # Optional: An array of test paths for ./mach try fuzzy. If it and fuzzy-query are omitted then
-  # ./mach try auto will be used
-  fuzzy-paths: ['media']
-
-  # The tasks that Updatebot can run. Only one of each task is currently permitted
-  # optional
-  tasks:
-    - type: commit-alert
-      branch: upstream-branch-name
-      cc: ["bugzilla@email.address", "another@example.com"]
-      needinfo: ["bugzilla@email.address", "another@example.com"]
-      enabled: True
-      filter: security
-      frequency: every
-      platform: windows
-      blocking: 1234
-    - type: vendoring
-      branch: master
-      enabled: False
-
-      # frequency can be 'every', 'release', 'N weeks', 'N commits'
-      # or 'N weeks, M commits' requiring satisfying both constraints.
-      frequency: 2 weeks
-
 # Configuration for the automated vendoring system.
 # optional
 vendoring:
@@ -309,6 +269,47 @@ vendoring:
     - action: run-script
       script: '{cwd}/generate_sources.sh'
       cwd: '{yaml_dir}'
+
+
+# Configuration for automatic updating system.
+# optional
+updatebot:
+
+  # TODO: allow multiple users to be specified
+  # Phabricator username for a maintainer of the library, used for assigning
+  # reviewers
+  maintainer-phab: tjr
+
+  # Bugzilla email address for a maintainer of the library, used for needinfos
+  maintainer-bz: tom@mozilla.com
+
+  # Optional: A query string for ./mach try fuzzy. If it and fuzzy-paths are omitted then
+  # ./mach try auto will be used
+  fuzzy-query: media
+
+  # Optional: An array of test paths for ./mach try fuzzy. If it and fuzzy-query are omitted then
+  # ./mach try auto will be used
+  fuzzy-paths: ['media']
+
+  # The tasks that Updatebot can run. Only one of each task is currently permitted
+  # optional
+  tasks:
+    - type: commit-alert
+      branch: upstream-branch-name
+      cc: ["bugzilla@email.address", "another@example.com"]
+      needinfo: ["bugzilla@email.address", "another@example.com"]
+      enabled: True
+      filter: security
+      frequency: every
+      platform: windows
+      blocking: 1234
+    - type: vendoring
+      branch: master
+      enabled: False
+
+      # frequency can be 'every', 'release', 'N weeks', 'N commits'
+      # or 'N weeks, M commits' requiring satisfying both constraints.
+      frequency: 2 weeks
 """
 
 RE_SECTION = re.compile(r"^(\S[^:]*):").search
