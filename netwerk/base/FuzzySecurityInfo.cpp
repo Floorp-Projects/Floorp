@@ -231,6 +231,12 @@ FuzzySecurityInfo::GetFailedVerification(bool* arg) {
 }
 
 NS_IMETHODIMP
+FuzzySecurityInfo::ToString(nsACString& aResult) {
+  MOZ_CRASH("Unused");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 FuzzySecurityInfo::GetNegotiatedNPN(nsACString& aNegotiatedNPN) {
   aNegotiatedNPN = "h2";
   return NS_OK;
@@ -315,11 +321,6 @@ FuzzySecurityInfo::GetRetryEchConfig(nsACString& aEchConfig) { return NS_OK; }
 
 void FuzzySecurityInfo::SerializeToIPC(IPC::MessageWriter* aWriter) {
   MOZ_CRASH("Unused");
-}
-
-bool FuzzySecurityInfo::DeserializeFromIPC(IPC::MessageReader* aReader) {
-  MOZ_CRASH("Unused");
-  return false;
 }
 
 NS_IMETHODIMP
