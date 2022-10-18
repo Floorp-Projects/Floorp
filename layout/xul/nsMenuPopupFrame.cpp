@@ -1949,11 +1949,10 @@ nsIScrollableFrame* nsMenuPopupFrame::GetScrollFrame(nsIFrame* aStart) {
 void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsMenuFrame* aMenuItem) {
   if (aMenuItem) {
     RefPtr<mozilla::PresShell> presShell = aMenuItem->PresShell();
-    presShell->ScrollFrameRectIntoView(
-        aMenuItem, nsRect(nsPoint(0, 0), aMenuItem->GetRect().Size()),
-        nsMargin(), ScrollAxis(), ScrollAxis(),
-        ScrollFlags::ScrollOverflowHidden |
-            ScrollFlags::ScrollFirstAncestorOnly);
+    presShell->ScrollFrameIntoView(aMenuItem, Nothing(), ScrollAxis(),
+                                   ScrollAxis(),
+                                   ScrollFlags::ScrollOverflowHidden |
+                                       ScrollFlags::ScrollFirstAncestorOnly);
   }
 }
 
