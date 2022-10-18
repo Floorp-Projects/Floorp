@@ -61,8 +61,8 @@ enum class ObjectFlag : uint16_t {
   // objects. See also the SMDOC comment in vm/GetterSetter.h.
   HadGetterSetterChange = 1 << 10,
 
-  // If set, invoke the watchtower testing callback for changes to this object.
-  UseWatchtowerTestingCallback = 1 << 11,
+  // If set, use the watchtower testing mechanism to log changes to this object.
+  UseWatchtowerTestingLog = 1 << 11,
 };
 
 using ObjectFlags = EnumFlags<ObjectFlag>;

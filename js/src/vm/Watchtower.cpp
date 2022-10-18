@@ -11,6 +11,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/NativeObject.h"
+#include "vm/PlainObject.h"
 #include "vm/Realm.h"
 
 #include "vm/Compartment-inl.h"
@@ -19,38 +20,38 @@
 
 using namespace js;
 
-static bool InvokeWatchtowerCallback(JSContext* cx, const char* kind,
-                                     HandleObject obj, HandleValue extra) {
-  // Invoke the callback set by the setWatchtowerCallback testing function with
-  // arguments (kind, obj, extra).
+static bool AddToWatchtowerLog(JSContext* cx, const char* kind,
+                               HandleObject obj, HandleValue extra) {
+  // Add an object storing {kind, object, extra} to the log for testing
+  // purposes.
 
-  if (!cx->watchtowerTestingCallbackRef()) {
-    return true;
-  }
+  MOZ_ASSERT(obj->useWatchtowerTestingLog());
 
   RootedString kindString(cx, NewStringCopyZ<CanGC>(cx, kind));
   if (!kindString) {
     return false;
   }
 
-  constexpr size_t NumArgs = 3;
-  JS::RootedValueArray<NumArgs> argv(cx);
-  argv[0].setString(kindString);
-  argv[1].setObject(*obj);
-  argv[2].set(extra);
-
-  RootedValue funVal(cx, ObjectValue(*cx->watchtowerTestingCallbackRef()));
-  AutoRealm ar(cx, &funVal.toObject());
-
-  for (size_t i = 0; i < NumArgs; i++) {
-    if (!cx->compartment()->wrap(cx, argv[i])) {
-      return false;
-    }
+  Rooted<PlainObject*> logObj(cx, NewPlainObjectWithProto(cx, nullptr));
+  if (!logObj) {
+    return false;
+  }
+  if (!JS_DefineProperty(cx, logObj, "kind", kindString, JSPROP_ENUMERATE)) {
+    return false;
+  }
+  if (!JS_DefineProperty(cx, logObj, "object", obj, JSPROP_ENUMERATE)) {
+    return false;
+  }
+  if (!JS_DefineProperty(cx, logObj, "extra", extra, JSPROP_ENUMERATE)) {
+    return false;
   }
 
-  RootedValue rval(cx);
-  return JS_CallFunctionValue(cx, nullptr, funVal, HandleValueArray(argv),
-                              &rval);
+  if (!cx->runtime()->watchtowerTestingLog->append(logObj)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  return true;
 }
 
 static bool ReshapeForShadowedProp(JSContext* cx, Handle<NativeObject*> obj,
@@ -111,9 +112,9 @@ bool Watchtower::watchPropertyAddSlow(JSContext* cx, Handle<NativeObject*> obj,
     }
   }
 
-  if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
+  if (MOZ_UNLIKELY(obj->useWatchtowerTestingLog())) {
     RootedValue val(cx, IdToValue(id));
-    if (!InvokeWatchtowerCallback(cx, "add-prop", obj, val)) {
+    if (!AddToWatchtowerLog(cx, "add-prop", obj, val)) {
       return false;
     }
   }
@@ -179,9 +180,9 @@ bool Watchtower::watchProtoChangeSlow(JSContext* cx, HandleObject obj) {
     }
   }
 
-  if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
-    if (!InvokeWatchtowerCallback(cx, "proto-change", obj,
-                                  JS::UndefinedHandleValue)) {
+  if (MOZ_UNLIKELY(obj->useWatchtowerTestingLog())) {
+    if (!AddToWatchtowerLog(cx, "proto-change", obj,
+                            JS::UndefinedHandleValue)) {
       return false;
     }
   }
@@ -199,9 +200,9 @@ bool Watchtower::watchPropertyRemoveSlow(JSContext* cx,
     InvalidateMegamorphicCache(cx, obj);
   }
 
-  if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
+  if (MOZ_UNLIKELY(obj->useWatchtowerTestingLog())) {
     RootedValue val(cx, IdToValue(id));
-    if (!InvokeWatchtowerCallback(cx, "remove-prop", obj, val)) {
+    if (!AddToWatchtowerLog(cx, "remove-prop", obj, val)) {
       return false;
     }
   }
@@ -219,9 +220,9 @@ bool Watchtower::watchPropertyChangeSlow(JSContext* cx,
     InvalidateMegamorphicCache(cx, obj);
   }
 
-  if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
+  if (MOZ_UNLIKELY(obj->useWatchtowerTestingLog())) {
     RootedValue val(cx, IdToValue(id));
-    if (!InvokeWatchtowerCallback(cx, "change-prop", obj, val)) {
+    if (!AddToWatchtowerLog(cx, "change-prop", obj, val)) {
       return false;
     }
   }
@@ -234,9 +235,9 @@ bool Watchtower::watchFreezeOrSealSlow(JSContext* cx,
                                        Handle<NativeObject*> obj) {
   MOZ_ASSERT(watchesFreezeOrSeal(obj));
 
-  if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
-    if (!InvokeWatchtowerCallback(cx, "freeze-or-seal", obj,
-                                  JS::UndefinedHandleValue)) {
+  if (MOZ_UNLIKELY(obj->useWatchtowerTestingLog())) {
+    if (!AddToWatchtowerLog(cx, "freeze-or-seal", obj,
+                            JS::UndefinedHandleValue)) {
       return false;
     }
   }
