@@ -1728,6 +1728,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
   overflow: hidden;
   transition: margin-bottom .25s;
   border-top: 1px solid var(--panel-separator-color);
+  box-sizing: border-box;
 }
 
 #protections-popup #messaging-system-message-container[disabled] {
