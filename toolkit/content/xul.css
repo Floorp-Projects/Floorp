@@ -644,6 +644,9 @@ wizardpage {
 
 richlistbox {
   -moz-box-orient: vertical;
+  overflow: auto;
+  min-width: 0;
+  min-height: 0;
 }
 
 /*********** findbar ************/

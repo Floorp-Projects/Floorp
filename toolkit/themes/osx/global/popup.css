@@ -48,6 +48,8 @@ panel[type="arrow"] {
   box-shadow: 0 0 0 1px var(--panel-border-color);
   padding: var(--panel-padding);
   width: var(--panel-width);
+  min-width: 0;
+  min-height: 0;
   border: none;
 }
 

@@ -44,6 +44,8 @@ panel[type="arrow"] {
   border-radius: var(--panel-border-radius);
   border: 1px solid var(--panel-border-color);
   width: var(--panel-width);
+  min-width: 0;
+  min-height: 0;
 
   box-shadow: 0 0 4px hsla(0,0%,0%,.2);
   margin: 4px;
