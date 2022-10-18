@@ -1284,6 +1284,7 @@ function maybeAddPrefixAndSuffix(oldHost) {
  * @throws If a non-NS_ERROR_MALFORMED_URI error occurs.
  */
 function updateHostAndScheme(info, newHost) {
+  let oldHost = info.fixedURI.host;
   let oldScheme = info.fixedURI.scheme;
   try {
     info.fixedURI = info.fixedURI
@@ -1300,6 +1301,8 @@ function updateHostAndScheme(info, newHost) {
   if (oldScheme != info.fixedURI.scheme) {
     info.fixupChangedProtocol = true;
   }
-  info.fixupCreatedAlternateURI = true;
+  if (oldHost != info.fixedURI.host) {
+    info.fixupCreatedAlternateURI = true;
+  }
   return true;
 }
