@@ -35,7 +35,7 @@ rev = "e1b4dcb767f9e69afe95a860374aaa9635d81e3d"
 [source."https://github.com/mozilla/cubeb-pulse-rs"]
 git = "https://github.com/mozilla/cubeb-pulse-rs"
 replace-with = "vendored-sources"
-rev = "79096eb59b0bfcedb660716a67c0de34a25ea29e"
+rev = "cf48897be5cbe147d051ebbbe1eaf5fd8fb6bbc9"
 
 [source."https://github.com/mozilla/cubeb-coreaudio-rs"]
 git = "https://github.com/mozilla/cubeb-coreaudio-rs"
