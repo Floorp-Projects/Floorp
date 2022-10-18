@@ -3499,7 +3499,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 131;
+    const UI_VERSION = 130;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
@@ -4298,10 +4298,6 @@ BrowserGlue.prototype = {
     // Bug 1793366: migrate sidebar persisted attribute from width to style.
     if (currentUIVersion < 130) {
       migrateXULAttributeToStyle("sidebar-box", "width");
-    }
-
-    if (currentUIVersion < 131) {
-      xulStore.removeValue(BROWSER_DOCURL, "urlbar-container", "width");
     }
 
     // Update the migration version.
