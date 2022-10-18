@@ -98,6 +98,7 @@ rtc_library("video_test_common") {
   sources = [
     "fake_texture_frame.cc",
     "fake_texture_frame.h",
+    "fake_videorenderer.h",
     "frame_forwarder.cc",
     "frame_forwarder.h",
     "frame_generator_capturer.cc",
@@ -107,6 +108,9 @@ rtc_library("video_test_common") {
     "test_video_capturer.cc",
     "test_video_capturer.h",
     "video_codec_settings.h",
+    "video_decoder_proxy_factory.h",
+    "video_encoder_nullable_proxy_factory.h",
+    "video_encoder_proxy_factory.h",
   ]
 
   deps = [
@@ -138,6 +142,20 @@ rtc_library("video_test_common") {
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/strings",
   ]
+}
+
+rtc_library("audio_test_common") {
+  visibility = [ "*" ]
+  testonly = true
+  sources = [
+    "audio_decoder_proxy_factory.h",
+    "function_audio_decoder_factory.h",
+  ]
+  deps = [
+    "../api/audio_codecs:audio_codecs_api",
+    "../rtc_base:checks",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
 }
 
 if (!build_with_chromium) {
@@ -922,13 +940,9 @@ rtc_library("test_common") {
     "call_test.h",
     "drifting_clock.cc",
     "drifting_clock.h",
-    "fake_videorenderer.h",
     "layer_filtering_transport.cc",
     "layer_filtering_transport.h",
     "rtp_rtcp_observer.h",
-    "video_decoder_proxy_factory.h",
-    "video_encoder_nullable_proxy_factory.h",
-    "video_encoder_proxy_factory.h",
   ]
 
   deps = [
@@ -1103,10 +1117,6 @@ rtc_library("test_renderer_generic") {
 rtc_library("audio_codec_mocks") {
   testonly = true
   sources = [
-    # TODO(nisse): Move these factories to their own target, to avoid
-    # unnecessary dependencies on gmock and gtest.
-    "audio_decoder_proxy_factory.h",
-    "function_audio_decoder_factory.h",
     "mock_audio_decoder.cc",
     "mock_audio_decoder.h",
     "mock_audio_decoder_factory.h",
@@ -1122,9 +1132,7 @@ rtc_library("audio_codec_mocks") {
     "../api:scoped_refptr",
     "../api/audio_codecs:audio_codecs_api",
     "../api/audio_codecs:builtin_audio_decoder_factory",
-    "../rtc_base:checks",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
 }
 
 rtc_library("copy_to_file_audio_capturer") {

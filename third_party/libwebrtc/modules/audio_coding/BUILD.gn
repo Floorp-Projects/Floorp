@@ -1567,7 +1567,7 @@ if (rtc_include_tests) {
         ":neteq_test_tools",
         "../../api/audio_codecs:builtin_audio_decoder_factory",
         "../../api/neteq:neteq_api",
-        "../../test:audio_codec_mocks",
+        "../../test:audio_test_common",
         "../../test:field_trial",
         "../../test:test_support",
       ]
@@ -2121,6 +2121,7 @@ if (rtc_include_tests) {
         "../../rtc_base/system:arch",
         "../../system_wrappers",
         "../../test:audio_codec_mocks",
+        "../../test:audio_test_common",
         "../../test:field_trial",
         "../../test:fileutils",
         "../../test:rtc_expect_death",
