@@ -521,6 +521,17 @@ const MESSAGES = () => {
                   navigate: true,
                 },
               },
+              page_event_listeners: [
+                {
+                  params: {
+                    type: "click",
+                    selectors: "#colorways-button",
+                  },
+                  action: {
+                    dismiss: true,
+                  },
+                },
+              ],
             },
           },
         ],
