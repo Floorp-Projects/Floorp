@@ -2294,18 +2294,15 @@ void LocalAccessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
   // accessible. Text accessible overrides this method to return enclosed text.
   if (aStartOffset != 0 || aLength == 0) return;
 
-  nsIFrame* frame = GetFrame();
-  if (!frame) {
-    if (nsCoreUtils::IsDisplayContents(mContent)) {
-      aText += kEmbeddedObjectChar;
-    }
-    return;
-  }
-
   MOZ_ASSERT(mParent,
              "Called on accessible unbound from tree. Result can be wrong.");
-
-  if (frame->IsBrFrame()) {
+  nsIFrame* frame = GetFrame();
+  // We handle something becoming display: none async, which means we won't have
+  // a frame when we're queuing text removed events. Thus, it's important that
+  // we produce text here even if there's no frame. Otherwise, we won't fire a
+  // text removed event at all, which might leave client caches (e.g. NVDA
+  // virtual buffers) with dead nodes.
+  if (IsHTMLBr() || (frame && frame->IsBrFrame())) {
     aText += kForcedNewLineChar;
   } else if (mParent && nsAccUtils::MustPrune(mParent)) {
     // Expose the embedded object accessible as imaginary embedded object
