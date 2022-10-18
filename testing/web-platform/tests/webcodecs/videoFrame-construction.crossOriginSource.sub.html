@@ -4,12 +4,12 @@
 <head>
   <script src='/resources/testharness.js'></script>
   <script src='/resources/testharnessreport.js'></script>
+  <script src="/common/get-host-info.sub.js"></script>
 </head>
 <body>
 <script>
-const SAMEORIGIN_BASE = '{{location[scheme]}}://{{location[host]}}';
-const CROSSORIGIN_BASE = 'http://{{hosts[][www]}}:{{ports[http][0]}}';
-const NO_CORS = undefined;
+const SAMEORIGIN_BASE = get_host_info().HTTP_ORIGIN;
+const CROSSORIGIN_BASE = get_host_info().HTTP_NOTSAMESITE_ORIGIN;
 
 const TESTS = [
   // HTMLImageElement
