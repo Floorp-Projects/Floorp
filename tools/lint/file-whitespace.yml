@@ -87,7 +87,6 @@ file-whitespace:
         - layout/generic/test
         - layout/inspector/tests
         - layout/mathml/tests
-        - layout/mathml/crashtests
         - layout/painting/crashtests/1405881-1.html
         - layout/painting/crashtests/1407470-1.html
         - layout/reftests
