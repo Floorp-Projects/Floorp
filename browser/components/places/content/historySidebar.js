@@ -62,16 +62,6 @@ function HistorySidebarInit() {
   }
 
   searchHistory("");
-
-  // Needed due to Bug 1596852.
-  // Should be removed once this bug is resolved.
-  window.addEventListener(
-    "pageshow",
-    e => {
-      window.windowGlobalChild.getActor("LightweightTheme").handleEvent(e);
-    },
-    { once: true }
-  );
 }
 
 function GroupBy(groupingType) {

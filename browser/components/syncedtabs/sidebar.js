@@ -29,16 +29,6 @@ let onLoaded = () => {
   document
     .getElementById("template-container")
     .appendChild(syncedTabsDeckComponent.container);
-
-  // Needed due to Bug 1596852.
-  // Should be removed once this bug is resolved.
-  window.addEventListener(
-    "pageshow",
-    e => {
-      window.windowGlobalChild.getActor("LightweightTheme").handleEvent(e);
-    },
-    { once: true }
-  );
 };
 
 let onUnloaded = () => {
