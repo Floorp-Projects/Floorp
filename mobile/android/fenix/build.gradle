@@ -34,10 +34,8 @@ buildscript {
                 content {
                     // Improve performance: only check google maven for google deps.
                     includeGroupByRegex RepoMatching.androidx
-                    includeGroupByRegex RepoMatching.comGoogleAndroid
-                    includeGroupByRegex RepoMatching.comGoogleFirebase
-                    includeGroupByRegex RepoMatching.comGoogleTesting
                     includeGroupByRegex RepoMatching.comAndroid
+                    includeGroupByRegex RepoMatching.comGoogle
                 }
             }
         }
@@ -54,10 +52,8 @@ buildscript {
                     // Improve security: don't search deps with known repos.
                     excludeGroupByRegex RepoMatching.mozilla
                     excludeGroupByRegex RepoMatching.androidx
-                    excludeGroupByRegex RepoMatching.comGoogleAndroid
-                    excludeGroupByRegex RepoMatching.comGoogleFirebase
-                    excludeGroupByRegex RepoMatching.comGoogleTesting
                     excludeGroupByRegex RepoMatching.comAndroid
+                    excludeGroupByRegex RepoMatching.comGoogle
                 }
             }
         }
@@ -114,10 +110,8 @@ allprojects {
                 content {
                     // Improve performance: only check google maven for google deps.
                     includeGroupByRegex RepoMatching.androidx
-                    includeGroupByRegex RepoMatching.comGoogleAndroid
-                    includeGroupByRegex RepoMatching.comGoogleFirebase
-                    includeGroupByRegex RepoMatching.comGoogleTesting
                     includeGroupByRegex RepoMatching.comAndroid
+                    includeGroupByRegex RepoMatching.comGoogle
                 }
             }
         }
@@ -134,10 +128,8 @@ allprojects {
                     // Improve security: don't search deps with known repos.
                     excludeGroupByRegex RepoMatching.mozilla
                     excludeGroupByRegex RepoMatching.androidx
-                    excludeGroupByRegex RepoMatching.comGoogleAndroid
-                    excludeGroupByRegex RepoMatching.comGoogleFirebase
-                    excludeGroupByRegex RepoMatching.comGoogleTesting
                     excludeGroupByRegex RepoMatching.comAndroid
+                    excludeGroupByRegex RepoMatching.comGoogle
                 }
             }
         }
