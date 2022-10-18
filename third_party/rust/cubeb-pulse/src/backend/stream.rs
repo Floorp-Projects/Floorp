@@ -299,7 +299,7 @@ impl<'ctx> PulseStream<'ctx> {
         fn check_error(s: &pulse::Stream, u: *mut c_void) {
             let stm = unsafe { &mut *(u as *mut PulseStream) };
             if !s.get_state().is_good() {
-                cubeb_log!("Calling error callback");
+                cubeb_alog!("Calling error callback");
                 stm.state_change_callback(ffi::CUBEB_STATE_ERROR);
             }
             stm.context.mainloop.signal();
@@ -552,7 +552,7 @@ impl<'ctx> PulseStream<'ctx> {
             if log_enabled() {
                 if let Some(ref output_stream) = stm.output_stream {
                     let output_att = output_stream.get_buffer_attr();
-                    cubeb_alog!(
+                    cubeb_log!(
                         "Output buffer attributes maxlength {}, tlength {}, \
                          prebuf {}, minreq {}, fragsize {}",
                         output_att.maxlength,
@@ -565,7 +565,7 @@ impl<'ctx> PulseStream<'ctx> {
 
                 if let Some(ref input_stream) = stm.input_stream {
                     let input_att = input_stream.get_buffer_attr();
-                    cubeb_alog!(
+                    cubeb_log!(
                         "Input buffer attributes maxlength {}, tlength {}, \
                          prebuf {}, minreq {}, fragsize {}",
                         input_att.maxlength,
@@ -650,11 +650,11 @@ impl<'ctx> StreamOps for PulseStream<'ctx> {
             self.context.mainloop.lock();
             self.shutdown = true;
             // If draining is taking place wait to finish
-            cubeb_alog!("Stream stop: waiting for drain");
+            cubeb_log!("Stream stop: waiting for drain");
             while !self.drain_timer.load(Ordering::Acquire).is_null() {
                 self.context.mainloop.wait();
             }
-            cubeb_alog!("Stream stop: waited for drain");
+            cubeb_log!("Stream stop: waited for drain");
             self.context.mainloop.unlock();
         }
         self.cork(CorkState::cork() | CorkState::notify());
@@ -1033,7 +1033,7 @@ impl<'ctx> PulseStream<'ctx> {
             _tv: &pulse::TimeVal,
             u: *mut c_void,
         ) {
-            cubeb_alogv!("Drain finished callback.");
+            cubeb_logv!("Drain finished callback.");
             let stm = unsafe { &mut *(u as *mut PulseStream) };
             let drain_timer = stm.drain_timer.load(Ordering::Acquire);
             debug_assert_eq!(drain_timer, e);
@@ -1060,12 +1060,13 @@ impl<'ctx> PulseStream<'ctx> {
                         debug_assert!(size > 0);
                         debug_assert_eq!(size % frame_size, 0);
 
-                        cubeb_alogv!(
+                        cubeb_logv!(
                             "Trigger user callback with output buffer size={}, read_offset={}",
                             size,
                             read_offset
                         );
                         let read_ptr = unsafe { (input_data as *const u8).add(read_offset) };
+                        #[cfg_attr(feature = "cargo-clippy", allow(clippy::unnecessary_cast))]
                         let mut got = unsafe {
                             self.data_callback.unwrap()(
                                 self as *const _ as *mut _,
@@ -1135,7 +1136,7 @@ impl<'ctx> PulseStream<'ctx> {
                                     got += (padding_bytes / frame_size) as i64;
                                 }
                             } else {
-                                cubeb_alogv!(
+                                cubeb_logv!(
                                     "Not enough room to pad up to prebuf when prebuffering."
                                 )
                             }
@@ -1149,7 +1150,7 @@ impl<'ctx> PulseStream<'ctx> {
                         );
 
                         if should_drain {
-                            cubeb_alogv!("Draining {} < {}", got, size / frame_size);
+                            cubeb_logv!("Draining {} < {}", got, size / frame_size);
                             let latency = match stm.get_latency() {
                                 Ok(StreamLatency::Positive(l)) => l,
                                 Ok(_) => {
