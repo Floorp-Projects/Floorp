@@ -7826,58 +7826,6 @@ void nsContentUtils::TransferablesToIPCTransferables(
   }
 }
 
-nsresult nsContentUtils::SlurpFileToString(nsIFile* aFile,
-                                           nsACString& aString) {
-  aString.Truncate();
-
-  nsCOMPtr<nsIURI> fileURI;
-  nsresult rv = NS_NewFileURI(getter_AddRefs(fileURI), aFile);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), fileURI,
-                     nsContentUtils::GetSystemPrincipal(),
-                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
-                     nsIContentPolicy::TYPE_OTHER);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIInputStream> stream;
-  rv = channel->Open(getter_AddRefs(stream));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = NS_ConsumeStream(stream, UINT32_MAX, aString);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = stream->Close();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-bool nsContentUtils::IsFileImage(nsIFile* aFile, nsACString& aType) {
-  nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1");
-  if (!mime) {
-    return false;
-  }
-
-  nsresult rv = mime->GetTypeFromFile(aFile, aType);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  return StringBeginsWith(aType, "image/"_ns);
-}
-
 nsresult nsContentUtils::CalculateBufferSizeForImage(
     const uint32_t& aStride, const IntSize& aImageSize,
     const SurfaceFormat& aFormat, size_t* aMaxBufferSize,
