@@ -2116,13 +2116,12 @@ class FunctionCompiler {
     }
 
     const FuncType& funcType = (*moduleEnv_.types)[funcTypeIndex].funcType();
-    CallIndirectId callIndirectId =
-        CallIndirectId::forFuncType(moduleEnv_, funcTypeIndex);
+    const TypeIdDesc& funcTypeId = moduleEnv_.typeIds[funcTypeIndex];
 
     CalleeDesc callee;
     if (moduleEnv_.isAsmJS()) {
       MOZ_ASSERT(tableIndex == 0);
-      MOZ_ASSERT(callIndirectId.kind() == CallIndirectIdKind::None);
+      MOZ_ASSERT(funcTypeId.kind() == TypeIdDescKind::None);
       const TableDesc& table =
           moduleEnv_.tables[moduleEnv_.asmJSSigToTableIndex[funcTypeIndex]];
       MOZ_ASSERT(IsPowerOfTwo(table.initialLength));
@@ -2136,9 +2135,9 @@ class FunctionCompiler {
       index = maskedIndex;
       callee = CalleeDesc::asmJSTable(table);
     } else {
-      MOZ_ASSERT(callIndirectId.kind() != CallIndirectIdKind::None);
+      MOZ_ASSERT(funcTypeId.kind() != TypeIdDescKind::None);
       const TableDesc& table = moduleEnv_.tables[tableIndex];
-      callee = CalleeDesc::wasmTable(table, callIndirectId);
+      callee = CalleeDesc::wasmTable(table, funcTypeId);
     }
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Indirect);
@@ -3863,7 +3862,7 @@ static bool EmitCall(FunctionCompiler& f, bool asmJSFuncDef) {
   uint32_t funcIndex;
   DefVector args;
   if (asmJSFuncDef) {
-    if (!f.iter().readOldCallDirect(f.moduleEnv().numFuncImports, &funcIndex,
+    if (!f.iter().readOldCallDirect(f.moduleEnv().numFuncImports(), &funcIndex,
                                     &args)) {
       return false;
     }
@@ -3887,7 +3886,7 @@ static bool EmitCall(FunctionCompiler& f, bool asmJSFuncDef) {
   DefVector results;
   if (f.moduleEnv().funcIsImport(funcIndex)) {
     uint32_t globalDataOffset =
-        f.moduleEnv().offsetOfFuncImportInstanceData(funcIndex);
+        f.moduleEnv().funcImportGlobalDataOffsets[funcIndex];
     if (!f.callImport(globalDataOffset, lineOrBytecode, call, funcType,
                       &results)) {
       return false;
@@ -4020,7 +4019,7 @@ static bool EmitGetGlobal(FunctionCompiler& f) {
           MOZ_ASSERT(value.ref().isNull());
           result = f.nullRefConstant();
           break;
-        case RefType::TypeRef:
+        case RefType::TypeIndex:
           MOZ_CRASH("unexpected reference type in EmitGetGlobal");
       }
       break;
@@ -7066,6 +7065,7 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
     // Build the local types vector.
 
     const FuncType& funcType = *moduleEnv.funcs[func.index].type;
+    const TypeIdDesc& funcTypeId = *moduleEnv.funcs[func.index].typeId;
     ValTypeVector locals;
     if (!locals.appendAll(funcType.args())) {
       return false;
@@ -7126,10 +7126,9 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
       BytecodeOffset prologueTrapOffset(func.lineOrBytecode);
       FuncOffsets offsets;
       ArgTypeVector args(funcType);
-      if (!codegen.generateWasm(CallIndirectId::forFunc(moduleEnv, func.index),
-                                prologueTrapOffset, args, trapExitLayout,
-                                trapExitLayoutNumWords, &offsets,
-                                &code->stackMaps, &d)) {
+      if (!codegen.generateWasm(funcTypeId, prologueTrapOffset, args,
+                                trapExitLayout, trapExitLayoutNumWords,
+                                &offsets, &code->stackMaps, &d)) {
         return false;
       }
 

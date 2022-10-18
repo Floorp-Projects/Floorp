@@ -29,6 +29,10 @@ const FuncType& BaseCompiler::funcType() const {
   return *moduleEnv_.funcs[func_.index].type;
 }
 
+const TypeIdDesc& BaseCompiler::funcTypeId() const {
+  return *moduleEnv_.funcs[func_.index].typeId;
+}
+
 bool BaseCompiler::usesMemory() const { return moduleEnv_.usesMemory(); }
 
 bool BaseCompiler::usesSharedMemory() const {

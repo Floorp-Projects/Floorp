@@ -12814,7 +12814,7 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
 }
 
 bool CodeGenerator::generateWasm(
-    wasm::CallIndirectId callIndirectId, wasm::BytecodeOffset trapOffset,
+    wasm::TypeIdDesc funcTypeId, wasm::BytecodeOffset trapOffset,
     const wasm::ArgTypeVector& argTypes, const RegisterOffsets& trapExitLayout,
     size_t trapExitLayoutNumWords, wasm::FuncOffsets* offsets,
     wasm::StackMaps* stackMaps, wasm::Decoder* decoder) {
@@ -12824,8 +12824,7 @@ bool CodeGenerator::generateWasm(
 
   size_t nInboundStackArgBytes = StackArgAreaSizeUnaligned(argTypes);
 
-  wasm::GenerateFunctionPrologue(masm, callIndirectId, mozilla::Nothing(),
-                                 offsets);
+  wasm::GenerateFunctionPrologue(masm, funcTypeId, mozilla::Nothing(), offsets);
 
   MOZ_ASSERT(masm.framePushed() == 0);
 
@@ -17313,7 +17312,7 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
             break;
           case wasm::RefType::Func:
           case wasm::RefType::Eq:
-          case wasm::RefType::TypeRef:
+          case wasm::RefType::TypeIndex:
             MOZ_CRASH("unexpected argument type when calling from ion to wasm");
         }
         break;
@@ -17390,7 +17389,7 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
             // API to do so.
             MOZ_ASSERT(lir->mir()->type() == MIRType::Value);
             break;
-          case wasm::RefType::TypeRef:
+          case wasm::RefType::TypeIndex:
             MOZ_CRASH("unexpected return type when calling from ion to wasm");
         }
         break;

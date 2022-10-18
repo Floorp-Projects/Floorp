@@ -242,8 +242,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
       : features(FeatureArgs::build(cx, FeatureOptions())),
         stack(cx),
         globalImportValues(globalImportValues),
-        instanceObj(cx, instanceObj),
-        types(instanceObj->instance().metadata().types) {}
+        instanceObj(cx, instanceObj) {}
 
   bool evaluate(JSContext* cx, Decoder& d);
 
@@ -257,7 +256,6 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   RootedValVector stack;
   const ValVector& globalImportValues;
   Rooted<WasmInstanceObject*> instanceObj;
-  SharedTypeContext types;
 
   Instance& instance() { return instanceObj->instance(); }
 
@@ -352,8 +350,8 @@ class MOZ_STACK_CLASS InitExprInterpreter {
       return false;
     }
 
-    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
-    const StructType& structType = typeDef.structType();
+    const StructType& structType =
+        instance().metadata().types[typeIndex].structType();
 
     uint32_t fieldIndex = structType.fields_.length();
     while (fieldIndex-- > 0) {
@@ -362,7 +360,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
       stack.popBack();
     }
 
-    return pushRef(RefType::fromTypeDef(&typeDef, false),
+    return pushRef(RefType::fromTypeIndex(typeIndex, false),
                    AnyRef::fromJSObject(structObj));
   }
 
@@ -372,8 +370,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
       return false;
     }
 
-    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
-    return pushRef(RefType::fromTypeDef(&typeDef, false),
+    return pushRef(RefType::fromTypeIndex(typeIndex, false),
                    AnyRef::fromJSObject(structObj));
   }
 
@@ -394,8 +391,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     arrayObj->fillVal(val, 0, len);
     stack.popBack();
 
-    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
-    return pushRef(RefType::fromTypeDef(&typeDef, false),
+    return pushRef(RefType::fromTypeIndex(typeIndex, false),
                    AnyRef::fromJSObject(arrayObj));
   }
 
@@ -406,8 +402,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
       return false;
     }
 
-    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
-    return pushRef(RefType::fromTypeDef(&typeDef, false),
+    return pushRef(RefType::fromTypeIndex(typeIndex, false),
                    AnyRef::fromJSObject(arrayObj));
   }
 
@@ -423,8 +418,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
       stack.popBack();
     }
 
-    const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
-    return pushRef(RefType::fromTypeDef(&typeDef, false),
+    return pushRef(RefType::fromTypeIndex(typeIndex, false),
                    AnyRef::fromJSObject(arrayObj));
   }
 #endif  // ENABLE_WASM_GC
@@ -499,7 +493,7 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
       }
       case uint16_t(Op::RefNull): {
         RefType type;
-        if (!d.readRefNull(*types, features, &type)) {
+        if (!d.readRefNull(features, &type)) {
           return false;
         }
         CHECK(evalRefNull(type));
