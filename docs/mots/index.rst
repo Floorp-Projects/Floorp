@@ -759,7 +759,7 @@ Gecko's built-in profiler
         | `Markus Stange (mstange) <https://people.mozilla.org/s?query=mstange>`__
     * - Peer(s)
       -
-        | `Gerald Squelart (gerald) <https://people.mozilla.org/s?query=gerald>`__
+        | `Gerald Squelart (mozbugz) <https://people.mozilla.org/s?query=mozbugz>`__
         | `Greg Tatum (gregtatum) <https://people.mozilla.org/s?query=gregtatum>`__
         | `Nazım Can Altınova (canova) <https://people.mozilla.org/s?query=canova>`__
         | `Julian Seward (jseward) <https://people.mozilla.org/s?query=jseward>`__
@@ -3152,7 +3152,7 @@ Code relating to Screenshots functionality
         | `Sam Foster (sfoster) <https://people.mozilla.org/s?query=sfoster>`__
     * - Peer(s)
       -
-        | `jhirsch <https://people.mozilla.org/s?query=jhirsch>`__
+        | `Jared Hirsch (jhirsch) <https://people.mozilla.org/s?query=jhirsch>`__
         | `Niklas Baumgardner (niklas) <https://people.mozilla.org/s?query=niklas>`__
     * - Owner(s) Emeritus
       - Emma Malysz, Ian Bicking
