@@ -1219,23 +1219,6 @@ bool TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(
   return true;
 }
 
-template <typename Unit, class AnyCharsAccess>
-bool TokenStreamSpecific<Unit, AnyCharsAccess>::getCodePoint() {
-  int32_t unit = getCodeUnit();
-  if (unit == EOF) {
-    MOZ_ASSERT(anyCharsAccess().flags.isEOF,
-               "flags.isEOF should have been set by getCodeUnit()");
-    return true;
-  }
-
-  if (isAsciiCodePoint(unit)) {
-    return getFullAsciiCodePoint(unit);
-  }
-
-  char32_t cp;
-  return getNonAsciiCodePoint(unit, &cp);
-}
-
 template <class AnyCharsAccess>
 bool TokenStreamChars<Utf8Unit, AnyCharsAccess>::getNonAsciiCodePoint(
     int32_t unit, char32_t* codePoint) {
