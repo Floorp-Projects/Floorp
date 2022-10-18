@@ -14,22 +14,26 @@ var data = [
     // upgrade protocol.
     wrong: "http://www.example.com/",
     fixed: "https://www.example.com/",
+    noAlternateURI: true,
   },
   {
     // no difference.
     wrong: "https://www.example.com/",
     fixed: "https://www.example.com/",
     noProtocolFixup: true,
+    noAlternateURI: true,
   },
   {
     // don't add prefix when there's more than one dot.
     wrong: "http://www.example.abc.def/",
     fixed: "https://www.example.abc.def/",
+    noAlternateURI: true,
   },
   {
     // http -> https.
     wrong: "http://www.example/",
     fixed: "https://www.example/",
+    noAlternateURI: true,
   },
   {
     // domain.com -> https://www.domain.com.

@@ -89,7 +89,7 @@ class NetErrorChild extends RemotePageChild {
       this.contentWindow.location.href
     );
 
-    if (!info.fixupCreatedAlternateURI) {
+    if (!info.fixupCreatedAlternateURI && !info.fixupChangedProtocol) {
       return;
     }
 
