@@ -310,7 +310,7 @@ export class UrlbarController {
           if (this.view.isOpen) {
             this.view.close();
           } else {
-            this.input.handleRevert();
+            this.input.handleRevert(true);
           }
         }
         event.preventDefault();
