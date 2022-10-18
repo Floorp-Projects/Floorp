@@ -96,5 +96,10 @@
 }
 
 .ctrlTab-label {
+  -moz-box-flex: 1;
   text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  contain: inline-size;
 }
