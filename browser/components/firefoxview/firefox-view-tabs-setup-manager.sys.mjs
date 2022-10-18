@@ -536,7 +536,7 @@ export const TabsSetupFlowManager = new (class {
       return;
     }
     const url = await lazy.fxAccounts.constructor.config.promiseConnectAccountURI(
-      "firefoxview"
+      "fx-view"
     );
     this.didFxaTabOpen = true;
     openTabInWindow(window, url, true);
