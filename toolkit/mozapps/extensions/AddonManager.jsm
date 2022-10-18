@@ -1830,6 +1830,16 @@ var AddonManagerInternal = {
       );
     }
 
+    // Block install from null principal.
+    // /!\ We need to do this check before checking if this is a remote origin iframe,
+    // otherwise isThirdPartyPrincipal might throw.
+    if (aInstallingPrincipal.isNullPrincipal) {
+      throw Components.Exception(
+        `SitePermsAddons can't be installed from sandboxed subframes`,
+        Cr.NS_ERROR_INVALID_ARG
+      );
+    }
+
     // Block install from remote origin iframe
     if (
       aBrowser &&
