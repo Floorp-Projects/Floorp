@@ -2567,6 +2567,8 @@ The cross-platform object model and core data structures.
         | `Barret Rennie (barret) <https://people.mozilla.org/s?query=barret>`__
         | `Jens Stutte (jstutte) <https://people.mozilla.org/s?query=jstutte>`__
         | `Kris Wright (KrisWright) <https://people.mozilla.org/s?query=KrisWright>`__
+        | `Andrew McCreight (mccr8) <https://people.mozilla.org/s?query=mccr8>`__
+        | `Emilio Cobos Álvarez (emilio) <https://people.mozilla.org/s?query=emilio>`__
     * - Owner(s) Emeritus
       - Benjamin Smedberg
     * - Peer(s) Emeritus
@@ -2578,14 +2580,14 @@ The cross-platform object model and core data structures.
         | `xpcom/base/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/base/\*\*/\*>`__
         | `xpcom/build/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/build/\*\*/\*>`__
         | `xpcom/components/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/components/\*\*/\*>`__
+        | `xpcom/docs/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/docs/\*\*/\*>`__
         | `xpcom/ds/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/ds/\*\*/\*>`__
         | `xpcom/glue/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/glue/\*\*/\*>`__
-        | `xpcom/proxy/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/proxy/\*\*/\*>`__
-        | `xpcom/sample/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/sample/\*\*/\*>`__
-        | `xpcom/stub/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/stub/\*\*/\*>`__
+        | `xpcom/reflect/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/reflect/\*\*/\*>`__
+        | `xpcom/rust/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/rust/\*\*/\*>`__
+        | `xpcom/system/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/system/\*\*/\*>`__
         | `xpcom/tests/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/tests/\*\*/\*>`__
         | `xpcom/threads/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/threads/\*\*/\*>`__
-        | `xpcom/tools/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/tools/\*\*/\*>`__
         | `xpcom/windbgdlg/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/windbgdlg/\*\*/\*>`__
     * - Group
       - dev-platform
@@ -2643,7 +2645,8 @@ Cross-platform IDL compiler; produces .h C++ header files and .xpt runtime type 
       - Mike Shaver, Josh 'timeless' Soref
     * - Includes
       -
-        | `xpcom/typelib/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/typelib/\*\*/\*>`__
+        | `xpcom/idl-parser/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/idl-parser/\*\*/\*>`__
+        | `xpcom/xpidl/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/xpidl/\*\*/\*>`__
     * - Group
       - dev-tech-xpcom
     * - URL
