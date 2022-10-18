@@ -2258,6 +2258,7 @@ void WebSocketChannel::CleanupConnection() {
         NewRunnableMethod("net::WebSocketChannel::CleanupConnection", this,
                           &WebSocketChannel::CleanupConnection),
         NS_DISPATCH_NORMAL);
+    return;
   }
 
   if (mLingeringCloseTimer) {
