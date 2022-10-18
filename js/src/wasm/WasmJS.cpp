@@ -1048,14 +1048,14 @@ static JSObject* TableTypeToObject(JSContext* cx, RefType type,
 
   if (maximum.isSome()) {
     if (!props.append(IdValuePair(NameToId(cx->names().maximum),
-                                  Int32Value(maximum.value())))) {
+                                  NumberValue(maximum.value())))) {
       ReportOutOfMemory(cx);
       return nullptr;
     }
   }
 
   if (!props.append(
-          IdValuePair(NameToId(cx->names().minimum), Int32Value(initial)))) {
+          IdValuePair(NameToId(cx->names().minimum), NumberValue(initial)))) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
@@ -1863,7 +1863,8 @@ void WasmInstanceObject::trace(JSTracer* trc, JSObject* obj) {
 
 /* static */
 WasmInstanceObject* WasmInstanceObject::create(
-    JSContext* cx, SharedCode code, const DataSegmentVector& dataSegments,
+    JSContext* cx, const SharedCode& code,
+    const DataSegmentVector& dataSegments,
     const ElemSegmentVector& elemSegments, uint32_t globalDataLength,
     Handle<WasmMemoryObject*> memory, SharedTableVector&& tables,
     const JSFunctionVector& funcImports, const GlobalDescVector& globals,
@@ -2654,7 +2655,7 @@ bool WasmMemoryObject::growImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  args.rval().setInt32(ret);
+  args.rval().setInt32(int32_t(ret));
   return true;
 }
 
@@ -3258,7 +3259,7 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
   }
 #endif
 
-  args.rval().setInt32(oldLength);
+  args.rval().setInt32(int32_t(oldLength));
   return true;
 }
 
@@ -5390,10 +5391,7 @@ static bool WebAssemblyDefineConstructor(JSContext* cx,
   }
   id.set(AtomToId(className));
 
-  if (!DefineDataProperty(cx, wasm, id, ctorValue, 0)) {
-    return false;
-  }
-  return true;
+  return DefineDataProperty(cx, wasm, id, ctorValue, 0);
 }
 
 static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,

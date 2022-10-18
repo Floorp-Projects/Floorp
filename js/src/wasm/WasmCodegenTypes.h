@@ -452,7 +452,7 @@ class CallSite : public CallSiteDesc {
   CallSite(CallSiteDesc desc, uint32_t returnAddressOffset)
       : CallSiteDesc(desc), returnAddressOffset_(returnAddressOffset) {}
 
-  void offsetBy(int32_t delta) { returnAddressOffset_ += delta; }
+  void offsetBy(uint32_t delta) { returnAddressOffset_ += delta; }
   uint32_t returnAddressOffset() const { return returnAddressOffset_; }
 };
 

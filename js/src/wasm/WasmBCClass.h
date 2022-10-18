@@ -1196,7 +1196,7 @@ struct BaseCompiler final {
   template <typename RegIndexType>
   void atomicRMW64(MemoryAccessDesc* access, ValType type, AtomicOp op);
 
-  void atomicXchg(MemoryAccessDesc* desc, ValType type);
+  void atomicXchg(MemoryAccessDesc* access, ValType type);
   template <typename RegIndexType>
   void atomicXchg64(MemoryAccessDesc* access, WantResult wantResult);
   template <typename RegIndexType>
@@ -1646,7 +1646,7 @@ struct BaseCompiler final {
   void emitGcNullCheck(RegRef rp);
   RegPtr emitGcArrayGetData(RegRef rp);
   RegI32 emitGcArrayGetNumElements(RegRef rp);
-  void emitGcArrayBoundsCheck(RegI32 index, RegI32 length);
+  void emitGcArrayBoundsCheck(RegI32 index, RegI32 numElements);
   template <typename T>
   void emitGcGet(FieldType type, FieldExtension extension, const T& src);
   template <typename T>
