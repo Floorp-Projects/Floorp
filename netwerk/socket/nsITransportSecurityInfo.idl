@@ -6,17 +6,16 @@
 
 #include "nsISupports.idl"
 
+interface nsIObjectOutputStream;
 interface nsIX509Cert;
 
 %{ C++
 namespace IPC {
 class MessageWriter;
-class MessageReader;
 }
 %}
 
 [ptr] native IpcMessageWriterPtr(IPC::MessageWriter);
-[ptr] native IpcMessageReaderPtr(IPC::MessageReader);
 
 [builtinclass, scriptable, uuid(216112d3-28bc-4671-b057-f98cc09ba1ea)]
 interface nsITransportSecurityInfo : nsISupports {
@@ -103,8 +102,12 @@ interface nsITransportSecurityInfo : nsISupports {
     [notxpcom, noscript]
     void SerializeToIPC(in IpcMessageWriterPtr aWriter);
 
-    [notxpcom, noscript]
-    bool DeserializeFromIPC(in IpcMessageReaderPtr aReader);
+    /**
+     * Serializes the data represented in this interface to a base64-encoded
+     * string that can be deserialized using TransportSecurityInfo::Read.
+     */
+    [must_use]
+    ACString toString();
 
     /* negotiatedNPN is '' if no NPN list was provided by the client,
      * or if the server did not select any protocol choice from that

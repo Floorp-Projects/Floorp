@@ -33,13 +33,11 @@ bool ParamTraits<nsITransportSecurityInfo*>::Read(
     return true;
   }
 
-  RefPtr<nsITransportSecurityInfo> info =
-      new mozilla::psm::TransportSecurityInfo();
-  if (!info->DeserializeFromIPC(aReader)) {
+  if (!mozilla::psm::TransportSecurityInfo::DeserializeFromIPC(aReader,
+                                                               aResult)) {
     return false;
   }
 
-  *aResult = std::move(info);
   return true;
 }
 

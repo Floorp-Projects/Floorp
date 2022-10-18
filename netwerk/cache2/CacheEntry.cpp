@@ -2,33 +2,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CacheLog.h"
+#include <algorithm>
+#include <math.h>
+
 #include "CacheEntry.h"
-#include "CacheStorageService.h"
-#include "CacheObserver.h"
+
 #include "CacheFileUtils.h"
 #include "CacheIndex.h"
-
+#include "CacheLog.h"
+#include "CacheObserver.h"
+#include "CacheStorageService.h"
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/psm/TransportSecurityInfo.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIAsyncOutputStream.h"
+#include "nsICacheEntryOpenCallback.h"
+#include "nsICacheStorage.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsISeekableStream.h"
-#include "nsIURI.h"
-#include "nsICacheEntryOpenCallback.h"
-#include "nsICacheStorage.h"
-#include "nsISerializable.h"
 #include "nsISizeOf.h"
-
-#include "nsComponentManagerUtils.h"
+#include "nsIURI.h"
+#include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
-#include "nsProxyRelease.h"
-#include "nsSerializationHelper.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Telemetry.h"
-#include "mozilla/IntegerPrintfMacros.h"
-#include <math.h>
-#include <algorithm>
 
 namespace mozilla::net {
 
@@ -1343,27 +1342,22 @@ nsresult CacheEntry::GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) {
   NS_ENSURE_SUCCESS(mFileStatus, NS_ERROR_NOT_AVAILABLE);
 
   nsCString info;
-  nsCOMPtr<nsISupports> secInfoSupports;
-  nsresult rv;
-
-  rv = mFile->GetElement("security-info", getter_Copies(info));
+  nsresult rv = mFile->GetElement("security-info", getter_Copies(info));
   NS_ENSURE_SUCCESS(rv, rv);
-
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo;
   if (!info.IsVoid()) {
-    rv = NS_DeserializeObject(info, getter_AddRefs(secInfoSupports));
+    rv = mozilla::psm::TransportSecurityInfo::Read(
+        info, getter_AddRefs(securityInfo));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  nsCOMPtr<nsITransportSecurityInfo> secInfo =
-      do_QueryInterface(secInfoSupports);
-  if (!secInfo) {
+  if (!securityInfo) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   {
     mozilla::MutexAutoLock lock(mLock);
 
-    mSecurityInfo.swap(secInfo);
+    mSecurityInfo.swap(securityInfo);
     mSecurityInfoLoaded = true;
 
     *aSecurityInfo = do_AddRef(mSecurityInfo).take();
@@ -1384,12 +1378,9 @@ nsresult CacheEntry::SetSecurityInfo(nsITransportSecurityInfo* aSecurityInfo) {
     mSecurityInfoLoaded = true;
   }
 
-  nsCOMPtr<nsISerializable> serializable = do_QueryInterface(aSecurityInfo);
-  if (aSecurityInfo && !serializable) return NS_ERROR_UNEXPECTED;
-
   nsCString info;
-  if (serializable) {
-    rv = NS_SerializeToString(serializable, info);
+  if (aSecurityInfo) {
+    rv = aSecurityInfo->ToString(info);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
