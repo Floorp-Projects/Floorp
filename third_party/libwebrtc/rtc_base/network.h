@@ -262,16 +262,6 @@ class RTC_EXPORT BasicNetworkManager : public NetworkManagerBase,
                                        public NetworkBinderInterface,
                                        public sigslot::has_slots<> {
  public:
-  // This version is used by chromium.
-  ABSL_DEPRECATED(
-      "Use the version with socket_factory, see bugs.webrtc.org/13145")
-  explicit BasicNetworkManager(
-      const webrtc::FieldTrialsView* field_trials = nullptr)
-      : BasicNetworkManager(
-            /* network_monitor_factory= */ nullptr,
-            /* socket_factory= */ nullptr,
-            field_trials) {}
-
   // This is used by lots of downstream code.
   BasicNetworkManager(SocketFactory* socket_factory,
                       const webrtc::FieldTrialsView* field_trials = nullptr)
