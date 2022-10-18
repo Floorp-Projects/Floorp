@@ -259,8 +259,8 @@ class DocAccessibleChild : public DocAccessibleChildBase {
                                                 uint32_t* aExtent) override;
 
   virtual mozilla::ipc::IPCResult RecvGetPosition(const uint64_t& aID,
-                                                  uint32_t* aColIdx,
-                                                  uint32_t* aRowIdx) override;
+                                                  uint32_t* aRowIdx,
+                                                  uint32_t* aColIdx) override;
 
   virtual mozilla::ipc::IPCResult RecvGetColRowExtents(
       const uint64_t& aID, uint32_t* aColIdx, uint32_t* aRowIdx,

@@ -744,8 +744,8 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvRowIdx(const uint64_t& aID,
 }
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvGetPosition(const uint64_t& aID,
-                                                            uint32_t* aColIdx,
-                                                            uint32_t* aRowIdx) {
+                                                            uint32_t* aRowIdx,
+                                                            uint32_t* aColIdx) {
   *aColIdx = 0;
   *aRowIdx = 0;
   TableCellAccessible* acc = IdToTableCellAccessible(aID);
