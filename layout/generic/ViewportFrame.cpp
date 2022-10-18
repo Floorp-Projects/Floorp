@@ -310,8 +310,9 @@ nsPoint ViewportFrame::AdjustReflowInputForScrollbars(
                                    scrollbars.IStartEnd(wm));
     aReflowInput->SetAvailableISize(aReflowInput->AvailableISize() -
                                     scrollbars.IStartEnd(wm));
-    aReflowInput->SetComputedBSizeWithoutResettingResizeFlags(
-        aReflowInput->ComputedBSize() - scrollbars.BStartEnd(wm));
+    aReflowInput->SetComputedBSize(
+        aReflowInput->ComputedBSize() - scrollbars.BStartEnd(wm),
+        ReflowInput::ResetResizeFlags::No);
     return nsPoint(scrollbars.Left(wm), scrollbars.Top(wm));
   }
   return nsPoint(0, 0);
