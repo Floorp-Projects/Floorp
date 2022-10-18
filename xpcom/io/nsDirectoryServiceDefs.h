@@ -93,4 +93,8 @@
 #  define NS_UNIX_HOME_DIR NS_OS_HOME_DIR
 #endif
 
+#if defined(MOZ_WIDGET_GTK)
+#  define NS_OS_SYSTEM_CONFIG_DIR "SysConfD"
+#endif  // defined(MOZ_WIDGET_GTK)
+
 #endif

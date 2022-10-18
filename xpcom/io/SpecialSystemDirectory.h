@@ -50,7 +50,8 @@ enum SystemDirectories {
 
   Unix_HomeDirectory = 303,
   Unix_XDG_Desktop = 304,
-  Unix_XDG_Download = 306
+  Unix_XDG_Download = 306,
+  Unix_SystemConfigDirectory = 307
 };
 
 nsresult GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
