@@ -5218,10 +5218,9 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleOutdentAtSelection(
   // at restoring Selection.
   Result<SplitRangeOffFromNodeResult, nsresult> outdentResult =
       HandleOutdentAtSelectionInternal(aEditingHost);
+  MOZ_ASSERT_IF(outdentResult.isOk(),
+                !outdentResult.inspect().HasCaretPointSuggestion());
   if (NS_WARN_IF(Destroyed())) {
-    if (outdentResult.isOk()) {
-      outdentResult.inspect().IgnoreCaretPointSuggestion();
-    }
     return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   if (MOZ_UNLIKELY(outdentResult.isErr())) {
@@ -5732,9 +5731,15 @@ HTMLEditor::HandleOutdentAtSelectionInternal(const Element& aEditingHost) {
       OutdentPartOfBlock(*indentedParentElement, *firstContentToBeOutdented,
                          *lastContentToBeOutdented, indentedParentIndentedWith,
                          aEditingHost);
-  NS_WARNING_ASSERTION(outdentResult.isOk(),
-                       "HTMLEditor::OutdentPartOfBlock() failed");
-  return outdentResult;
+  if (MOZ_UNLIKELY(outdentResult.isErr())) {
+    NS_WARNING("HTMLEditor::OutdentPartOfBlock() failed");
+    return outdentResult;
+  }
+  // We will restore selection soon.  Therefore, callers do not need to restore
+  // the selection.
+  SplitRangeOffFromNodeResult unwrappedOutdentResult = outdentResult.unwrap();
+  unwrappedOutdentResult.ForgetCaretPointSuggestion();
+  return unwrappedOutdentResult;
 }
 
 Result<SplitRangeOffFromNodeResult, nsresult>

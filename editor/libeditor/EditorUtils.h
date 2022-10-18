@@ -74,6 +74,13 @@ class MOZ_STACK_CLASS CaretPoint {
    */
   void IgnoreCaretPointSuggestion() const { mHandledCaretPoint = true; }
 
+  /**
+   * When propagating the result, it may not want to the caller modify
+   * selection.  In such case, this can clear the caret point.  Use
+   * IgnoreCaretPointSuggestion() in the caller side instead.
+   */
+  void ForgetCaretPointSuggestion() { mCaretPoint.Clear(); }
+
   bool HasCaretPointSuggestion() const { return mCaretPoint.IsSet(); }
   constexpr const EditorDOMPoint& CaretPointRef() const { return mCaretPoint; }
   constexpr EditorDOMPoint&& UnwrapCaretPoint() {
