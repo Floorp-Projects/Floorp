@@ -106,7 +106,7 @@ class Downloader {
 
   constructor(...folders) {
     this.folders = ["settings", ...folders];
-    this._cdnURL = null;
+    this._cdnURLs = {};
   }
 
   /**
@@ -414,7 +414,7 @@ class Downloader {
   }
 
   async _baseAttachmentsURL() {
-    if (!this._cdnURL) {
+    if (!this._cdnURLs[lazy.Utils.SERVER_URL]) {
       const resp = await lazy.Utils.fetch(`${lazy.Utils.SERVER_URL}/`);
       let serverInfo;
       try {
@@ -429,9 +429,10 @@ class Downloader {
         },
       } = serverInfo;
       // Make sure the URL always has a trailing slash.
-      this._cdnURL = base_url + (base_url.endsWith("/") ? "" : "/");
+      this._cdnURLs[lazy.Utils.SERVER_URL] =
+        base_url + (base_url.endsWith("/") ? "" : "/");
     }
-    return this._cdnURL;
+    return this._cdnURLs[lazy.Utils.SERVER_URL];
   }
 
   async _fetchAttachment(url) {
