@@ -44,13 +44,6 @@ const Local& BaseCompiler::localFromSlot(uint32_t slot, MIRType type) {
   return localInfo_[slot];
 }
 
-uint32_t BaseCompiler::readCallSiteLineOrBytecode() {
-  if (!func_.callSiteLineNums.empty()) {
-    return func_.callSiteLineNums[lastReadCallSite_++];
-  }
-  return iter_.lastOpcodeOffset();
-}
-
 BytecodeOffset BaseCompiler::bytecodeOffset() const {
   return iter_.bytecodeOffset();
 }

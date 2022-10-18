@@ -426,6 +426,11 @@ class CallSiteDesc {
     MOZ_ASSERT(kind == Kind(kind_));
     MOZ_ASSERT(lineOrBytecode == lineOrBytecode_);
   }
+  CallSiteDesc(BytecodeOffset bytecodeOffset, Kind kind)
+      : lineOrBytecode_(bytecodeOffset.offset()), kind_(kind) {
+    MOZ_ASSERT(kind == Kind(kind_));
+    MOZ_ASSERT(bytecodeOffset.offset() == lineOrBytecode_);
+  }
   uint32_t lineOrBytecode() const { return lineOrBytecode_; }
   Kind kind() const { return Kind(kind_); }
   bool isImportCall() const { return kind() == CallSiteDesc::Import; }
