@@ -8086,28 +8086,6 @@ void nsContentUtils::TransferableToIPCTransferable(
       // Otherwise, handle this as a file.
       nsCOMPtr<BlobImpl> blobImpl;
       if (nsCOMPtr<nsIFile> file = do_QueryInterface(data)) {
-        // FIXME(bug 1778565): Historically, attempting to send a Blob over IPC
-        // in response to a sync message would lead to a crash, however this
-        // isn't an issue anymore. Unfortunately, code in HTMLEditor depends on
-        // the old behaviour, so we need to preserve this oddity, and hope that
-        // the caller is HTMLEditor and can handle a nsIInputStream.
-        if (aInSyncMessage) {
-          nsAutoCString type;
-          if (IsFileImage(file, type)) {
-            IPCDataTransferItem* item =
-                aIPCDataTransfer->items().AppendElement();
-            item->flavor() = type;
-            nsCString data;
-            SlurpFileToString(file, data);
-            // FIXME: This can probably be simplified once bug 1783240 lands, as
-            // `nsCString` will be implicitly serialized in shmem when sent over
-            // IPDL directly.
-            item->data() =
-                IPCDataTransferInputStream(BigBuffer(AsBytes(Span(data))));
-          }
-          continue;
-        }
-
         if (aParent) {
           bool isDir = false;
           if (NS_SUCCEEDED(file->IsDirectory(&isDir)) && isDir) {
