@@ -10,7 +10,6 @@ richlistbox {
   margin: 2px 4px;
   background-color: Field;
   color: FieldText;
-  overflow: auto;
 }
 
 richlistbox[disabled="true"] {
