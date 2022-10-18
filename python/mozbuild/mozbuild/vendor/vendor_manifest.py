@@ -454,7 +454,10 @@ class VendorManifest(MozbuildObject):
 
     def spurious_check(self, revision, ignore_modified):
         changed_files = set(
-            [os.path.abspath(f) for f in self.repository.get_changed_files()]
+            [
+                os.path.abspath(f)
+                for f in self.repository.get_changed_files(mode="staged")
+            ]
         )
         generated_files = set(
             [
