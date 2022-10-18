@@ -681,7 +681,20 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     if (!mSuspendVsyncPriorityTicksUntil.IsNull() &&
         mSuspendVsyncPriorityTicksUntil > aVsyncEvent.mTime) {
       if (ShouldGiveNonVsyncTasksMoreTime()) {
-        // Wait for the next tick.
+        if (!IsAnyToplevelContentPageLoading()) {
+          // If pages aren't loading and there aren't other tasks to run,
+          // trigger the pending vsync notification.
+          NS_DispatchToMainThread(NS_NewRunnableFunction(
+              "NotifyVsyncOnMainThread[normal priority]",
+              [self = RefPtr{this}, event = aVsyncEvent]() {
+                if (self->mRecentVsync == event.mTime &&
+                    self->mRecentVsyncId == event.mId &&
+                    !self->ShouldGiveNonVsyncTasksMoreTime()) {
+                  self->mSuspendVsyncPriorityTicksUntil = TimeStamp();
+                  self->NotifyVsyncOnMainThread(event);
+                }
+              }));
+        }
         return;
       }
 
@@ -2873,6 +2886,19 @@ void nsRefreshDriver::Thaw() {
 }
 
 void nsRefreshDriver::FinishedWaitingForTransaction() {
+  if (mSkippedPaints && !IsInRefresh() &&
+      (HasObservers() || HasImageRequests()) && CanDoCatchUpTick()) {
+    NS_DispatchToCurrentThreadQueue(
+        NS_NewRunnableFunction(
+            "nsRefreshDriver::FinishedWaitingForTransaction",
+            [self = RefPtr{this}]() {
+              if (self->CanDoCatchUpTick()) {
+                self->Tick(self->mActiveTimer->MostRecentRefreshVsyncId(),
+                           self->mActiveTimer->MostRecentRefresh());
+              }
+            }),
+        EventQueuePriority::Vsync);
+  }
   mWaitingForTransaction = false;
   mSkippedPaints = false;
 }
