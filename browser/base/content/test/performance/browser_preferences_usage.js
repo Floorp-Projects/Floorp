@@ -112,17 +112,9 @@ add_task(async function startup() {
     "network.loadinfo.skip_type_assertion": {
       // This is accessed in debug only.
     },
-    "extensions.getAddons.cache.enabled": {
-      min: 4,
-      max: 55,
-    },
     "chrome.override_package.global": {
       min: 0,
       max: 50,
-    },
-    "media.gmp-provider.enabled": {
-      min: 0,
-      max: 46,
     },
   };
 

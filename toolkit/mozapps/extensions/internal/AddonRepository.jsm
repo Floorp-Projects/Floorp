@@ -46,6 +46,13 @@ XPCOMUtils.defineLazyGetter(lazy, "PLATFORM", () => {
 var EXPORTED_SYMBOLS = ["AddonRepository"];
 
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "getAddonsCacheEnabled",
+  PREF_GETADDONS_CACHE_ENABLED
+);
+
 const PREF_GETADDONS_CACHE_TYPES = "extensions.getAddons.cache.types";
 const PREF_GETADDONS_CACHE_ID_ENABLED =
   "extensions.%ID%.getAddons.cache.enabled";
@@ -338,7 +345,7 @@ var AddonRepository = {
    * Whether caching is currently enabled
    */
   get cacheEnabled() {
-    return Services.prefs.getBoolPref(PREF_GETADDONS_CACHE_ENABLED, false);
+    return lazy.getAddonsCacheEnabled;
   },
 
   /**
