@@ -39,7 +39,7 @@ class TopSiteItemViewHolder(
     private val binding = TopSiteItemBinding.bind(view)
 
     init {
-        binding.topSiteItem.setOnLongClickListener {
+        itemView.setOnLongClickListener {
             interactor.onTopSiteMenuOpened()
             TopSites.longPress.record(TopSites.LongPressExtra(topSite.name()))
 
@@ -72,7 +72,7 @@ class TopSiteItemViewHolder(
     }
 
     fun bind(topSite: TopSite, position: Int) {
-        binding.topSiteItem.setOnClickListener {
+        itemView.setOnClickListener {
             interactor.onSelectTopSite(topSite, position)
         }
 

@@ -58,7 +58,7 @@ class TopSiteItemViewHolderTest {
     fun `calls interactor on click`() {
         TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(pocket, position = 0)
 
-        binding.topSiteItem.performClick()
+        binding.root.performClick()
         verify { interactor.onSelectTopSite(pocket, position = 0) }
     }
 
@@ -67,7 +67,7 @@ class TopSiteItemViewHolderTest {
         every { testContext.components.analytics } returns mockk(relaxed = true)
         TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(pocket, position = 0)
 
-        binding.topSiteItem.performLongClick()
+        binding.root.performLongClick()
         verify { interactor.onTopSiteMenuOpened() }
     }
 
