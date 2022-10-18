@@ -526,6 +526,18 @@ def _schema_1_additional(filename, manifest, require_license_file=True):
                 "If Updatebot tasks are specified, a vendoring url must be included."
             )
 
+    # Because the only way we can determine the latest tag is by doing a local clone,
+    # we don't want to do that for individual-files flavors because those flavors are
+    # usually on gigantic repos we don't want to clone for such a simple thing.
+    if (
+        "vendoring" in manifest
+        and manifest["vendoring"].get("flavor", "regular") == "individual-files"
+        and manifest["vendoring"].get("tracking", "commit") == "tag"
+    ):
+        raise ValueError(
+            "You cannot use tag tracking with the individual-files flavor. (Sorry.)"
+        )
+
     # The Rust and Individual Flavor type precludes a lot of options
     # individual-files could, in theory, use several of these, but until we have a use case let's
     # disallow them so we're not worrying about whether they work. When we need them we can make
