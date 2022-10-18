@@ -274,7 +274,13 @@ bool KillProcess(ProcessHandle process, int exit_code);
 // In various error cases (e.g., the process doesn't exist or isn't a
 // child of this process) it will also return true to indicate that
 // the caller should give up and not try again.
-bool IsProcessDead(ProcessHandle handle);
+//
+// If the `blocking` parameter is set to true, this function will try
+// to block the calling thread indefinitely until the process exits.
+// This may not be possible (if the child is also being debugged by
+// the parent process, e.g. due to the crash reporter), in which case
+// it will return false and the caller will need to wait and retry.
+bool IsProcessDead(ProcessHandle handle, bool blocking = false);
 #endif
 
 }  // namespace base

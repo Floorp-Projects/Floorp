@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include "base/eintr_wrapper.h"
 #include "base/message_loop.h"
@@ -46,8 +47,14 @@ class ChildReaper : public base::MessagePumpLibevent::SignalEvent,
 
  protected:
   void WaitForChildExit() {
-    DCHECK(process_);
-    HANDLE_EINTR(waitpid(process_, NULL, 0));
+    CHECK(process_);
+    while (!base::IsProcessDead(process_, true)) {
+      // It doesn't matter if this is interrupted; we just need to
+      // wait for some amount of time while the other process status
+      // event is (hopefully) handled.  This is used only during an
+      // error case at shutdown, so a 1s wait won't be too noticeable.
+      sleep(1);
+    }
   }
 
   pid_t process_;
