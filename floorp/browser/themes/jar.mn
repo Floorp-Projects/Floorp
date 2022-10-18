@@ -25,13 +25,20 @@ browser.jar:
   skin/classic/browser/tabbar/tabbar_on_window_bottom.css                (designs/tabbar/tabbar_on_window_bottom.css)
   skin/classic/browser/tabbar/tabbar_on_window_bottom.js                 (designs/tabbar/tabbar_on_window_bottom.js)
 
-# Lepton (Waterfox)
-# please see "browser\themes\shared\theme\lepton\CREDITS"
+# Lepton
+  skin/classic/browser/photon/photonChrome-multitab.css                     (designs/lepton/photonChrome-multitab.css)
+  skin/classic/browser/photon/photonContent-multitab.css                    (designs/lepton/photonContent-multitab.css)
   skin/classic/browser/lepton/userChrome.css                                (designs/lepton/userChrome.css)
   skin/classic/browser/lepton/userContent.css                               (designs/lepton/userContent.css)
+  skin/classic/browser/lepton/photon.svg                                    (designs/lepton/photon.svg)
+
+  skin/classic/browser/lepton/addons-logo.svg                               (designs/lepton/icons/addons-logo.svg)
+  skin/classic/browser/lepton/arrow-between-down.svg                        (designs/lepton/icons/arrow-between-down.svg)
   skin/classic/browser/lepton/arrow-repeat-all.svg                          (designs/lepton/icons/arrow-repeat-all.svg)
   skin/classic/browser/lepton/arrow-sort-down-lines.svg                     (designs/lepton/icons/arrow-sort-down-lines.svg)
   skin/classic/browser/lepton/arrow-swap.svg                                (designs/lepton/icons/arrow-swap.svg)
+  skin/classic/browser/lepton/auto-fit-width.svg                            (designs/lepton/icons/auto-fit-width.svg)
+  skin/classic/browser/lepton/blank.svg                                     (designs/lepton/icons/blank.svg)
   skin/classic/browser/lepton/blue-berror.svg                               (designs/lepton/icons/blue-berror.svg)
   skin/classic/browser/lepton/book-add.svg                                  (designs/lepton/icons/book-add.svg)
   skin/classic/browser/lepton/book.svg                                      (designs/lepton/icons/book.svg)
@@ -56,6 +63,7 @@ browser.jar:
   skin/classic/browser/lepton/document-endnote.svg                          (designs/lepton/icons/document-endnote.svg)
   skin/classic/browser/lepton/document-landscape-split-hint.svg             (designs/lepton/icons/document-landscape-split-hint.svg)
   skin/classic/browser/lepton/document-search.svg                           (designs/lepton/icons/document-search.svg)
+  skin/classic/browser/lepton/drawer-arrow-download.svg                     (designs/lepton/icons/drawer-arrow-download.svg)
   skin/classic/browser/lepton/edit-copy.svg                                 (designs/lepton/icons/edit-copy.svg)
   skin/classic/browser/lepton/enter-fullscreen.svg                          (designs/lepton/icons/enter-fullscreen.svg)
   skin/classic/browser/lepton/eraser.svg                                    (designs/lepton/icons/eraser.svg)
@@ -67,6 +75,9 @@ browser.jar:
   skin/classic/browser/lepton/eye-hide.svg                                  (designs/lepton/icons/eye-hide.svg)
   skin/classic/browser/lepton/eye-show.svg                                  (designs/lepton/icons/eye-show.svg)
   skin/classic/browser/lepton/folder-open.svg                               (designs/lepton/icons/folder-open.svg)
+  skin/classic/browser/lepton/eye-tracking-off.svg                          (designs/lepton/icons/eye-tracking-off.svg)
+  skin/classic/browser/lepton/fluid.svg                                     (designs/lepton/icons/fluid.svg)
+  skin/classic/browser/lepton/folder-globe.svg                              (designs/lepton/icons/folder-globe.svg)
   skin/classic/browser/lepton/folder.svg                                    (designs/lepton/icons/folder.svg)
   skin/classic/browser/lepton/history-reverse.svg                           (designs/lepton/icons/history-reverse.svg)
   skin/classic/browser/lepton/identity-icons-brand.svg                      (designs/lepton/icons/identity-icons-brand.svg)
@@ -89,9 +100,11 @@ browser.jar:
   skin/classic/browser/lepton/performance.svg                               (designs/lepton/icons/performance.svg)
   skin/classic/browser/lepton/pin-tab.svg                                   (designs/lepton/icons/pin-tab.svg)
   skin/classic/browser/lepton/play.svg                                      (designs/lepton/icons/play.svg)
+  skin/classic/browser/lepton/plug-disconnected.svg                         (designs/lepton/icons/plug-disconnected.svg)
   skin/classic/browser/lepton/pocket-outline.svg                            (designs/lepton/icons/pocket-outline.svg)
   skin/classic/browser/lepton/private-favicon.svg                           (designs/lepton/icons/private-favicon.svg)
   skin/classic/browser/lepton/quit.svg                                      (designs/lepton/icons/quit.svg)
+  skin/classic/browser/lepton/redo.svg                                      (designs/lepton/icons/redo.svg)
   skin/classic/browser/lepton/refresh-cw.svg                                (designs/lepton/icons/refresh-cw.svg)
   skin/classic/browser/lepton/reload.svg                                    (designs/lepton/icons/reload.svg)
   skin/classic/browser/lepton/resize-image.svg                              (designs/lepton/icons/resize-image.svg)
@@ -101,7 +114,7 @@ browser.jar:
   skin/classic/browser/lepton/select-all-on.svg                             (designs/lepton/icons/select-all-on.svg)
   skin/classic/browser/lepton/send-to-device.svg                            (designs/lepton/icons/send-to-device.svg)
   skin/classic/browser/lepton/send.svg                                      (designs/lepton/icons/send.svg)
-  skin/classic/browser/lepton/share.svg              　　　　　　　　　　　     (designs/lepton/icons/share.svg)
+  skin/classic/browser/lepton/share.svg                                     (designs/lepton/icons/share.svg)
   skin/classic/browser/lepton/sign-out.svg                                  (designs/lepton/icons/sign-out.svg)
   skin/classic/browser/lepton/sort.svg                                      (designs/lepton/icons/sort.svg)
   skin/classic/browser/lepton/star-line-horizontal.svg                      (designs/lepton/icons/star-line-horizontal.svg)
@@ -117,6 +130,7 @@ browser.jar:
   skin/classic/browser/lepton/time-picker.svg                               (designs/lepton/icons/time-picker.svg)
   skin/classic/browser/lepton/toolbar.svg                                   (designs/lepton/icons/toolbar.svg)
   skin/classic/browser/lepton/toolbox.svg                                   (designs/lepton/icons/toolbox.svg)
+  skin/classic/browser/lepton/undo.svg                                      (designs/lepton/icons/undo.svg)
   skin/classic/browser/lepton/unpin-tab.svg                                 (designs/lepton/icons/unpin-tab.svg)
   skin/classic/browser/lepton/vertical-line.svg                             (designs/lepton/icons/vertical-line.svg)
   skin/classic/browser/lepton/video-clip.svg                                (designs/lepton/icons/video-clip.svg)
@@ -130,6 +144,11 @@ browser.jar:
 
 # gnomeUI
  skin/classic/browser/gnomeUI/gnomeUI.css                                                      (designs/gnomeUI/gnomeUI.css)
+
+ skin/classic/browser/gnomeUI/bullet-symbolic.svg                                              (designs/gnomeUI/bullet-symbolic.svg)
+ skin/classic/browser/gnomeUI/edit-clear-symbolic.svg                                          (designs/gnomeUI/edit-clear-symbolic.svg)
+ skin/classic/browser/gnomeUI/process-working-symbolic-black.svg                               (designs/gnomeUI/process-working-symbolic-black.svg)
+ skin/classic/browser/gnomeUI/select-symbolic.svg                                              (designs/gnomeUI/select-symbolic.svg)
  skin/classic/browser/gnomeUI/icon.svg                                                         (designs/gnomeUI/icon.svg)
  skin/classic/browser/gnomeUI/window-maximize-symbolic.svg                                     (designs/gnomeUI/window-maximize-symbolic.svg)
  skin/classic/browser/gnomeUI/window-minimize-symbolic.svg                                     (designs/gnomeUI/window-minimize-symbolic.svg)
@@ -193,7 +212,6 @@ browser.jar:
 
 
 # fluentUI
-
   skin/classic/browser/fluentUI/sidebars-right.svg                   (designs/fluentUI/sidebars-right.svg)
   skin/classic/browser/fluentUI/source-code.svg                      (designs/fluentUI/source-code.svg)
   skin/classic/browser/fluentUI/stop-to-reload.svg                   (designs/fluentUI/stop-to-reload.svg)
@@ -319,23 +337,12 @@ browser.jar:
   skin/classic/browser/fluentUI/sidebars.svg                         (designs/fluentUI/sidebars.svg)
   skin/classic/browser/fluentUI/fluentUI.css                         (designs/fluentUI/fluentUI.css)
 
-# photon
-  skin/classic/browser/photon/photonChrome.css                (designs/photon/photonChrome.css)
-  skin/classic/browser/photon/photonContent.css               (designs/photon/photonContent.css)
-
-  skin/classic/browser/photon/photonChrome-multitab.css       (designs/photon/photonChrome-multitab.css)
-  skin/classic/browser/photon/photonContent-multitab.css      (designs/photon/photonContent-multitab.css)
-  skin/classic/browser/photon/photon.svg                      (designs/photon/photon.svg)
-  skin/classic/browser/photon/photon-folder.svg               (designs/photon/photon-folder.svg)
-  skin/classic/browser/photon/photon-folder-open.svg          (designs/photon/photon-folder-open.svg)
-  
 # protonfix
   skin/classic/browser/protonfix/protonfix.css                (designs/protonfix/protonfix.css)
   skin/classic/browser/protonfix/proton-fix.svg               (designs/protonfix/proton-fix.svg)
 
 # Floorp Legacy by materialfox
   skin/classic/browser/floorplegacy/floorplegacy.css           (designs/floorp-legacy/floorplegacy.css)
-  skin/classic/browser/floorplegacy/test_legacy.css            (designs/floorp-legacy/test_legacy.css)
   skin/classic/browser/floorplegacy/material.svg               (designs/floorp-legacy/material.svg)
   skin/classic/browser/ablaze.png                              (icons/ablaze.png)
   skin/classic/browser/support-m.svg                           (icons/support-m.svg)
