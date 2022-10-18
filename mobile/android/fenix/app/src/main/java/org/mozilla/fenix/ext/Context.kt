@@ -7,6 +7,7 @@ package org.mozilla.fenix.ext
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Build
 import android.provider.Settings
 import android.view.ContextThemeWrapper
@@ -103,3 +104,11 @@ fun Context.navigateToNotificationsSettings() {
     }
     startActivity(intent)
 }
+
+/**
+ * Helper function used to determine if the user's device is set to dark mode.
+ *
+ * @return true if the system is considered to be in dark theme.
+ */
+fun Context.isSystemInDarkTheme(): Boolean =
+    resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES

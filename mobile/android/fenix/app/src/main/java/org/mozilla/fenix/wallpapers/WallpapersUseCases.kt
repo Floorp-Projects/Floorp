@@ -16,6 +16,7 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.ext.isSystemInDarkTheme
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
 import java.io.File
@@ -355,17 +356,12 @@ class WallpapersUseCases(
          */
         private fun Wallpaper.getLocalPathFromContext(context: Context): String {
             val orientation = if (context.isLandscape()) "landscape" else "portrait"
-            val theme = if (context.isDark()) "dark" else "light"
+            val theme = if (context.isSystemInDarkTheme()) "dark" else "light"
             return Wallpaper.legacyGetLocalPath(orientation, theme, name)
         }
 
         private fun Context.isLandscape(): Boolean {
             return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        }
-
-        private fun Context.isDark(): Boolean {
-            return resources.configuration.uiMode and
-                Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
         }
     }
 
