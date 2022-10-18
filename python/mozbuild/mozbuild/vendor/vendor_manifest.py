@@ -78,27 +78,7 @@ class VendorManifest(MozbuildObject):
                 self.yaml_file
             )
 
-        self.source_host = self.get_source_host()
-
-        # Check that updatebot key is available for libraries with existing
-        # moz.yaml files but missing updatebot information
-        if "vendoring" in self.manifest:
-            ref_type = self.manifest["vendoring"]["tracking"]
-            if revision == "tip":
-                new_revision, timestamp = self.source_host.upstream_commit("HEAD")
-            elif ref_type == "tag":
-                new_revision, timestamp = self.source_host.upstream_tag(revision)
-            else:
-                new_revision, timestamp = self.source_host.upstream_commit(revision)
-        else:
-            ref_type = "commit"
-            new_revision, timestamp = self.source_host.upstream_commit(revision)
-
-        self.logInfo(
-            {"ref_type": ref_type, "ref": new_revision, "timestamp": timestamp},
-            "Latest {ref_type} is {ref} from {timestamp}",
-        )
-
+        # ==========================================================
         # If we're only patching; do that
         if "patches" in self.manifest["vendoring"] and patch_mode == "only":
             self.import_local_patches(
@@ -108,6 +88,26 @@ class VendorManifest(MozbuildObject):
             )
             return
 
+        # ==========================================================
+        self.source_host = self.get_source_host()
+
+        ref_type = self.manifest["vendoring"]["tracking"]
+        flavor = self.manifest["vendoring"].get("flavor", "regular")
+
+        if revision == "tip":
+            # This case allows us to force-update a tag-tracking library to master
+            new_revision, timestamp = self.source_host.upstream_commit("HEAD")
+        elif ref_type == "tag":
+            new_revision, timestamp = self.source_host.upstream_tag(revision)
+        else:
+            new_revision, timestamp = self.source_host.upstream_commit(revision)
+
+        self.logInfo(
+            {"ref_type": ref_type, "ref": new_revision, "timestamp": timestamp},
+            "Latest {ref_type} is {ref} from {timestamp}",
+        )
+
+        # ==========================================================
         if not force and self.manifest["origin"]["revision"] == new_revision:
             # We're up to date, don't do anything
             self.logInfo({}, "Latest upstream matches in-tree.")
@@ -117,11 +117,13 @@ class VendorManifest(MozbuildObject):
             print("%s %s" % (new_revision, timestamp))
             return
 
-        flavor = self.manifest["vendoring"].get("flavor", "regular")
+        # ==========================================================
         if flavor == "regular":
             self.process_regular(
                 new_revision, timestamp, ignore_modified, add_to_exports
             )
+        elif flavor == "individual-files":
+            self.process_individual(new_revision, timestamp, ignore_modified)
         elif flavor == "rust":
             self.process_rust(
                 command_context,
@@ -153,6 +155,24 @@ class VendorManifest(MozbuildObject):
         )
 
         self.update_yaml(new_revision, timestamp)
+
+    def process_individual(self, new_revision, timestamp, ignore_modified):
+
+        # TBD
+
+        self.update_yaml(new_revision, timestamp)
+
+        self.logInfo({"rev": new_revision}, "Updated to '{rev}'.")
+
+        if "patches" in self.manifest["vendoring"]:
+            # Remind the user
+            self.log(
+                logging.CRITICAL,
+                "vendor",
+                {},
+                "Patches present in manifest!!! Please run "
+                "'./mach vendor --patch-mode only' after commiting changes.",
+            )
 
     def process_regular(self, new_revision, timestamp, ignore_modified, add_to_exports):
 

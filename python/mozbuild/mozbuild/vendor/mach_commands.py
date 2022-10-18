@@ -89,6 +89,11 @@ def vendor(
         print(e)
         sys.exit(1)
 
+    if "vendoring" not in manifest:
+        raise Exception(
+            "Cannot perform update actions if we don't have a 'vendoring' section in the moz.yaml"
+        )
+
     if patch_mode and patch_mode not in ["none", "only"]:
         print(
             "Unknown patch mode given '%s'. Please use one of: 'none' or 'only'."
