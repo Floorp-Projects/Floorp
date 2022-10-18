@@ -712,6 +712,7 @@ rtc_library("rtc_task_queue_stdlib") {
   ]
   deps = [
     ":checks",
+    ":divide_round",
     ":logging",
     ":macromagic",
     ":platform_thread",
@@ -719,9 +720,13 @@ rtc_library("rtc_task_queue_stdlib") {
     ":safe_conversions",
     ":timeutils",
     "../api/task_queue",
+    "../api/units:time_delta",
     "synchronization:mutex",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/strings",
+  ]
 }
 
 rtc_library("weak_ptr") {
