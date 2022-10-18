@@ -1889,8 +1889,8 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
         return false;
       }
       if (!popup->WaylandPopupIsFirst() &&
-          !mWaylandPopupPrev->WaylandPopupIsFirst() &&
-          !mWaylandPopupPrev->mPopupUseMoveToRect) {
+          !popup->mWaylandPopupPrev->WaylandPopupIsFirst() &&
+          !popup->mWaylandPopupPrev->mPopupUseMoveToRect) {
         // We can't use move-to-rect if there are more parents of
         // wl_subsurface popups types.
         //
