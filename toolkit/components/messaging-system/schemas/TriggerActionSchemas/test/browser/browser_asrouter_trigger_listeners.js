@@ -8,11 +8,9 @@ ChromeUtils.defineModuleGetter(
   "TestUtils",
   "resource://testing-common/TestUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
 
 async function openURLInWindow(window, url) {
   const { selectedBrowser } = window.gBrowser;

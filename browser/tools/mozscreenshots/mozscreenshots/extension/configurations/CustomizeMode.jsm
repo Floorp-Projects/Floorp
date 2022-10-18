@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["CustomizeMode"];
 
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 var CustomizeMode = {
   init(libDir) {},

@@ -28,8 +28,8 @@ const {
 const {
   tabDescriptorSpec,
 } = require("resource://devtools/shared/specs/descriptors/tab.js");
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const {
   createBrowserElementSessionContext,

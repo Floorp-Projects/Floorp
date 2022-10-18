@@ -19,8 +19,8 @@ const PREF_REPORT_BREAKAGE_URL = "browser.contentblocking.reportBreakage.url";
 
 let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 let { CommonUtils } = ChromeUtils.import("resource://services-common/utils.js");
-let { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+let { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 
 add_setup(async function() {

@@ -17,8 +17,8 @@
 
 "use strict";
 
-var { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+var { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 var { Downloads } = ChromeUtils.import("resource://gre/modules/Downloads.jsm");
@@ -32,8 +32,8 @@ Integration.downloads.defineModuleGetter(
   "resource://gre/modules/DownloadIntegration.jsm"
 );
 
-var { PrivateBrowsingUtils } = ChromeUtils.import(
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+var { PrivateBrowsingUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
 );
 
 var { Weave } = ChromeUtils.import("resource://services-sync/main.js");

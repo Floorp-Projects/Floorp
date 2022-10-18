@@ -16,11 +16,11 @@ ChromeUtils.defineESModuleGetters(this, {
   SnapshotScorer: "resource:///modules/SnapshotScorer.sys.mjs",
   SnapshotSelector: "resource:///modules/SnapshotSelector.sys.mjs",
   Snapshots: "resource:///modules/Snapshots.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 

@@ -8,22 +8,15 @@ var EXPORTED_SYMBOLS = ["PrintingChild"];
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "setTimeout",
-  "resource://gre/modules/Timer.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
 
 ChromeUtils.defineModuleGetter(
   lazy,
   "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm"
 );
 
 let gPendingPreviewsMap = new Map();

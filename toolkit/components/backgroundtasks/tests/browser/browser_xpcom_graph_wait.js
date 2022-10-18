@@ -29,7 +29,7 @@ const backgroundtaskPhases = {
   AfterRunBackgroundTaskNamed: {
     allowlist: {
       modules: [
-        "resource://gre/modules/AppConstants.jsm",
+        "resource://gre/modules/AppConstants.sys.mjs",
         "resource://gre/modules/AsyncShutdown.jsm",
         "resource://gre/modules/BackgroundTasksManager.sys.mjs",
         "resource://gre/modules/Console.sys.mjs",

@@ -24,9 +24,8 @@
  * while from the content process, we will read `sharedData` directly.
  */
 
-const { ActorManagerParent } = ChromeUtils.import(
-  "resource://gre/modules/ActorManagerParent.jsm"
-);
+import { ActorManagerParent } from "resource://gre/modules/ActorManagerParent.sys.mjs";
+
 const { SessionDataHelpers } = ChromeUtils.import(
   "resource://devtools/server/actors/watcher/SessionDataHelpers.jsm"
 );

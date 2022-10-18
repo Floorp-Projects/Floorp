@@ -5,28 +5,18 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  ContentDOMReference: "resource://gre/modules/ContentDOMReference.sys.mjs",
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   KEYBOARD_CONTROLS: "resource://gre/modules/PictureInPictureControls.sys.mjs",
   Rect: "resource://gre/modules/Geometry.sys.mjs",
   TOGGLE_POLICIES: "resource://gre/modules/PictureInPictureControls.sys.mjs",
   TOGGLE_POLICY_STRINGS:
     "resource://gre/modules/PictureInPictureControls.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ContentDOMReference",
-  "resource://gre/modules/ContentDOMReference.jsm"
-);
 
 const { WebVTT } = ChromeUtils.import("resource://gre/modules/vtt.jsm");
-const { setTimeout, clearTimeout } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
-);
+import { setTimeout, clearTimeout } from "resource://gre/modules/Timer.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {

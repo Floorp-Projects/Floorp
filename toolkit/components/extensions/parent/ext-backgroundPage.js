@@ -18,11 +18,9 @@ ChromeUtils.defineModuleGetter(
   "ExtensionTelemetry",
   "resource://gre/modules/ExtensionTelemetry.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(this, "serviceWorkerManager", () => {
   return Cc["@mozilla.org/serviceworkers/manager;1"].getService(

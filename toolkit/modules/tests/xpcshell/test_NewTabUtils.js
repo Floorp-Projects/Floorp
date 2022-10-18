@@ -3,8 +3,8 @@
 
 // See also browser/base/content/test/newtab/.
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 // A small 1x1 test png

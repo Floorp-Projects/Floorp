@@ -4,13 +4,14 @@
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 ChromeUtils.defineESModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
@@ -22,7 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   HttpServer: "resource://testing-common/httpd.js",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  Preferences: "resource://gre/modules/Preferences.jsm",
   TelemetrySend: "resource://gre/modules/TelemetrySend.jsm",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
 });

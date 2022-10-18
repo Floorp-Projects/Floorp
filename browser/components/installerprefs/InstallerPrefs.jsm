@@ -32,8 +32,8 @@ const INSTALLER_PREFS_BRANCH = "installer.";
 // any others will be ignored.
 const INSTALLER_PREFS_LIST = ["installer.taskbarpin.win10.enabled"];
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"

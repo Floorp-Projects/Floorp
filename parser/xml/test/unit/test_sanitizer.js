@@ -1,5 +1,5 @@
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 if (AppConstants.platform != "android") {
   // We load HTML documents, which try to track link state, which requires

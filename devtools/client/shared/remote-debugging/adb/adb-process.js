@@ -9,7 +9,9 @@ const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const {
   getFileForBinary,
 } = require("resource://devtools/client/shared/remote-debugging/adb/adb-binary.js");
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 loader.lazyRequireGetter(
   this,

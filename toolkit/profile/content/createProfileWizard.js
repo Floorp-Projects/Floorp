@@ -5,8 +5,8 @@
 const C = Cc;
 const I = Ci;
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 const ToolkitProfileService = "@mozilla.org/toolkit/profile-service;1";

@@ -3,10 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { loader } from "resource://devtools/shared/loader/Loader.sys.mjs";
-
-const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm"
-);
+import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
 import { WatcherRegistry } from "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs";
 
 const lazy = {};

@@ -39,18 +39,16 @@ ChromeUtils.defineModuleGetter(
   "WrapPrivileged",
   "resource://specialpowers/WrapPrivileged.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 ChromeUtils.defineModuleGetter(
   lazy,

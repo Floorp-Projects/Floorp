@@ -17,9 +17,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 // Windowless browsers can create documents that rely on XUL Custom Elements:
 ChromeUtils.import("resource://gre/modules/CustomElementsListener.jsm");
 
-// Need to import ActorManagerParent.jsm so that the actors are initialized before
-// running extension XPCShell tests.
-ChromeUtils.import("resource://gre/modules/ActorManagerParent.jsm");
+// Need to import ActorManagerParent.sys.mjs so that the actors are initialized
+// before running extension XPCShell tests.
+ChromeUtils.importESModule("resource://gre/modules/ActorManagerParent.sys.mjs");
 
 const lazy = {};
 

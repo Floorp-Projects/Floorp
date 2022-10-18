@@ -59,9 +59,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   24 * 60 * 60 * 1000
 );
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  DeferredTask: "resource://gre/modules/DeferredTask.jsm",
 });
 
 /**

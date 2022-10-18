@@ -29,9 +29,6 @@
           "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
         PictureInPicture: "resource://gre/modules/PictureInPicture.sys.mjs",
       });
-      XPCOMUtils.defineLazyModuleGetters(this, {
-        E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-      });
       XPCOMUtils.defineLazyServiceGetters(this, {
         MacSharingService: [
           "@mozilla.org/widget/macsharingservice;1",

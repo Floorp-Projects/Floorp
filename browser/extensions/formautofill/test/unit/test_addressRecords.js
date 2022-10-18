@@ -348,11 +348,9 @@ const MERGE_TESTCASES = [
   },
 ];
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Preferences",
-  "resource://gre/modules/Preferences.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+});
 
 let do_check_record_matches = (recordWithMeta, record) => {
   for (let key in record) {

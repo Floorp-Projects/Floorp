@@ -17,8 +17,8 @@ if ("@mozilla.org/xre/app-info;1" in Cc) {
   }
 }
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 const MOZ_COMPATIBILITY_NIGHTLY = ![

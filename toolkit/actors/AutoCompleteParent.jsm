@@ -23,11 +23,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "setTimeout",
-  "resource://gre/modules/Timer.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
 
 const PREF_SECURITY_DELAY = "security.notification_enable_delay";
 

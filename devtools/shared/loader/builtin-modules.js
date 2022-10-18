@@ -181,19 +181,23 @@ function lazyGlobal(name, getter) {
   });
 }
 
-// Lazily define a few things so that the corresponding jsms are only loaded
+// Lazily define a few things so that the corresponding modules are only loaded
 // when used.
 lazyGlobal("clearTimeout", () => {
-  return ChromeUtils.import("resource://gre/modules/Timer.jsm").clearTimeout;
+  return ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs")
+    .clearTimeout;
 });
 lazyGlobal("setTimeout", () => {
-  return ChromeUtils.import("resource://gre/modules/Timer.jsm").setTimeout;
+  return ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs")
+    .setTimeout;
 });
 lazyGlobal("clearInterval", () => {
-  return ChromeUtils.import("resource://gre/modules/Timer.jsm").clearInterval;
+  return ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs")
+    .clearInterval;
 });
 lazyGlobal("setInterval", () => {
-  return ChromeUtils.import("resource://gre/modules/Timer.jsm").setInterval;
+  return ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs")
+    .setInterval;
 });
 lazyGlobal("WebSocket", () => {
   return Services.appShell.hiddenDOMWindow.WebSocket;

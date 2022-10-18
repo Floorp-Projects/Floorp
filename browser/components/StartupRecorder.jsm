@@ -7,8 +7,8 @@ var EXPORTED_SYMBOLS = ["StartupRecorder"];
 const Cm = Components.manager;
 Cm.QueryInterface(Ci.nsIServiceManager);
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 let firstPaintNotification = "widget-first-paint";

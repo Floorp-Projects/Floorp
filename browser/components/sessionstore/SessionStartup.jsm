@@ -50,11 +50,9 @@ ChromeUtils.defineModuleGetter(
   "CrashMonitor",
   "resource://gre/modules/CrashMonitor.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
 
 const STATE_RUNNING_STR = "running";
 

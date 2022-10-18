@@ -13,7 +13,9 @@ try {
   );
 } catch (ex) {}
 
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 /*
  * A lightweight blocklist proxy for testing purposes.

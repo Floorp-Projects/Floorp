@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");

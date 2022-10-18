@@ -6,11 +6,9 @@ XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
   return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 });
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "WebChannel",
-  "resource://gre/modules/WebChannel.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
+});
 
 var { FxAccountsWebChannel } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsWebChannel.jsm"

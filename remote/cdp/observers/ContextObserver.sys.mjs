@@ -21,16 +21,12 @@
  * being destroyed and the document navigated.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  executeSoon: "chrome://remote/content/shared/Sync.sys.mjs",
-});
+  EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
+  executeSoon: "chrome://remote/content/shared/Sync.sys.mjs",
 });
 
 export class ContextObserver {

@@ -59,8 +59,8 @@ async function getContentDOMReference(selector, tab) {
     });
 
     const contentMethod = function(_selector) {
-      const { ContentDOMReference } = ChromeUtils.import(
-        "resource://gre/modules/ContentDOMReference.jsm"
+      const { ContentDOMReference } = ChromeUtils.importESModule(
+        "resource://gre/modules/ContentDOMReference.sys.mjs"
       );
       const iframe = content.document.querySelector("iframe");
       const win = iframe.contentWindow;

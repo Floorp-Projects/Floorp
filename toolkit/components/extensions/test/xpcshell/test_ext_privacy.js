@@ -7,11 +7,9 @@ ChromeUtils.defineModuleGetter(
   "ExtensionPreferencesManager",
   "resource://gre/modules/ExtensionPreferencesManager.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "Preferences",
-  "resource://gre/modules/Preferences.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+});
 
 const {
   createAppInfo,

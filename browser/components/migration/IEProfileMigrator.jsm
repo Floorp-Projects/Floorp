@@ -7,8 +7,8 @@
 const kLoginsKey =
   "Software\\Microsoft\\Internet Explorer\\IntelliForms\\Storage2";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(

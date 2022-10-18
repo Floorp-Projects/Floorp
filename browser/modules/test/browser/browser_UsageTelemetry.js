@@ -599,8 +599,8 @@ add_task(async function test_restored_max_pinned_count() {
   // Following pinned tab testing example from
   // https://searchfox.org/mozilla-central/rev/1843375acbbca68127713e402be222350ac99301/browser/components/sessionstore/test/browser_pinned_tabs.js
   Services.telemetry.clearScalars();
-  const { E10SUtils } = ChromeUtils.import(
-    "resource://gre/modules/E10SUtils.jsm"
+  const { E10SUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/E10SUtils.sys.mjs"
   );
   const BACKUP_STATE = SessionStore.getBrowserState();
   const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;

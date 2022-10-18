@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { console, ConsoleAPI } = ChromeUtils.import(
-  "resource://gre/modules/Console.jsm"
+const { console, ConsoleAPI } = ChromeUtils.importESModule(
+  "resource://gre/modules/Console.sys.mjs"
 );
 const {
   ConsoleAPIListener,

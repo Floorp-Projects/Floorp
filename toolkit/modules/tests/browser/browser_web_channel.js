@@ -2,11 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "WebChannel",
-  "resource://gre/modules/WebChannel.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
+});
 
 const HTTP_PATH = "http://example.com";
 const HTTP_ENDPOINT =

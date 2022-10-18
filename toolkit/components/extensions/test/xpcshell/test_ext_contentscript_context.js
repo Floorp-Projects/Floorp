@@ -208,8 +208,8 @@ add_task(async function test_contentscript_context_unload_while_in_bfcache() {
         () => {
           // Yield to the event loop once more to ensure that all pageshow event
           // handlers have been dispatched before fulfilling the promise.
-          let { setTimeout } = ChromeUtils.import(
-            "resource://gre/modules/Timer.jsm"
+          let { setTimeout } = ChromeUtils.importESModule(
+            "resource://gre/modules/Timer.sys.mjs"
           );
           setTimeout(resolve, 0);
         },

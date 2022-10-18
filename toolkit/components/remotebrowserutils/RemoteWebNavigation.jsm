@@ -4,11 +4,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
 
 // This object implements the JS parts of nsIWebNavigation.
 class RemoteWebNavigation {

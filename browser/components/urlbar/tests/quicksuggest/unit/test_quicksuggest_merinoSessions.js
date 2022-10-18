@@ -6,7 +6,9 @@
 
 "use strict";
 
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 // We set the Merino timeout to a large value to avoid intermittent failures in
 // CI, especially TV tests, where the Merino fetch unexpectedly doesn't finish

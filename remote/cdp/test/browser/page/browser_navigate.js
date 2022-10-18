@@ -198,8 +198,8 @@ add_task(async function testDataURL({ client }) {
 });
 
 add_task(async function testFileURL({ client }) {
-  const { AppConstants } = ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm"
+  const { AppConstants } = ChromeUtils.importESModule(
+    "resource://gre/modules/AppConstants.sys.mjs"
   );
 
   if (AppConstants.DEBUG) {

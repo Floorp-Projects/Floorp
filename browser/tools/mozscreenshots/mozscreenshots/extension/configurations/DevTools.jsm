@@ -10,7 +10,9 @@ const { require } = ChromeUtils.importESModule(
   "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 const { gDevTools } = require("devtools/client/framework/devtools");
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 async function showToolboxForSelectedTab(toolId, hostType) {
   const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");

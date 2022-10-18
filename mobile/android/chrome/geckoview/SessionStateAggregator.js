@@ -14,9 +14,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
+ChromeUtils.defineESModuleGetters(this, {
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
+  setTimeoutWithTarget: "resource://gre/modules/Timer.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
-  clearTimeout: "resource://gre/modules/Timer.jsm",
-  setTimeoutWithTarget: "resource://gre/modules/Timer.jsm",
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
 });
 

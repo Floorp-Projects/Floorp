@@ -15,11 +15,12 @@ var { Integration } = ChromeUtils.importESModule(
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
@@ -28,7 +29,6 @@ ChromeUtils.defineESModuleGetters(this, {
 XPCOMUtils.defineLazyModuleGetters(this, {
   DownloadPaths: "resource://gre/modules/DownloadPaths.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
-  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
   HttpServer: "resource://testing-common/httpd.js",
   MockRegistrar: "resource://testing-common/MockRegistrar.jsm",

@@ -21,11 +21,9 @@ ChromeUtils.defineModuleGetter(
   "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
 
 const GREY_10 = "#F9F9FA";
 
