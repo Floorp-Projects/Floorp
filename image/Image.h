@@ -387,10 +387,9 @@ class ImageResource : public Image {
 
   class MOZ_RAII AutoProfilerImagePaintMarker {
    public:
-    explicit AutoProfilerImagePaintMarker(ImageResource* self)
-        : mStartTime(TimeStamp::Now()) {
-      nsAutoCString spec;
+    explicit AutoProfilerImagePaintMarker(ImageResource* self) {
       if (self->mURI && profiler_thread_is_being_profiled_for_markers()) {
+        mStartTime = TimeStamp::Now();
         static const size_t sMaxTruncatedLength = 1024;
         self->mURI->GetSpec(mSpec);
         if (mSpec.Length() >= sMaxTruncatedLength) {
