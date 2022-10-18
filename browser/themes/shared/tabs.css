@@ -623,6 +623,7 @@ toolbar[brighttext] {
 .tabbrowser-tab:is([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]),
 #firefox-view-button[attention],
+#unified-extensions-button[attention="true"],
 .webextension-browser-action[attention="true"] {
   background-image: radial-gradient(circle, var(--tab-attention-icon-color), var(--tab-attention-icon-color) 2px, transparent 2px);
   background-position: center bottom calc(6.5px + var(--tabs-navbar-shadow-size));
@@ -630,7 +631,7 @@ toolbar[brighttext] {
   background-repeat: no-repeat;
 }
 
-:root[uidensity="compact"] .webextension-browser-action[attention="true"] {
+:root[uidensity="compact"] :is(#unified-extensions-button, .webextension-browser-action)[attention="true"] {
   background-position-y: bottom 4.5px;
 }
 

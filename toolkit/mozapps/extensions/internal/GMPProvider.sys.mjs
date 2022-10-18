@@ -74,6 +74,12 @@ XPCOMUtils.defineLazyGetter(lazy, "gmpService", () =>
   )
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "gmpProviderEnabled",
+  GMPPrefs.KEY_PROVIDER_ENABLED
+);
+
 var gLogger;
 var gLogAppenderDump = null;
 
@@ -829,7 +835,7 @@ var GMPProvider = {
   },
 
   get isEnabled() {
-    return GMPPrefs.getBool(GMPPrefs.KEY_PROVIDER_ENABLED, false);
+    return lazy.gmpProviderEnabled;
   },
 
   buildPluginList() {
