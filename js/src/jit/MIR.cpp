@@ -6772,7 +6772,7 @@ MIonToWasmCall* MIonToWasmCall::New(TempAllocator& alloc,
   if (results.length() > 0 && !results[0].isEncodedAsJSValueOnEscape()) {
     MOZ_ASSERT(results.length() == 1,
                "multiple returns not implemented for inlined Wasm calls");
-    resultType = ToMIRType(results[0]);
+    resultType = results[0].toMIRType();
   }
 
   auto* ins = new (alloc) MIonToWasmCall(instanceObj, resultType, funcExport);
