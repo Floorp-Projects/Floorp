@@ -22,7 +22,7 @@ declare namespace MockedExports {
    */
   interface KnownModules {
     Services: typeof import("Services");
-    "resource://gre/modules/AppConstants.jsm": typeof import("resource://gre/modules/AppConstants.jsm");
+    "resource://gre/modules/AppConstants.sys.mjs": typeof import("resource://gre/modules/AppConstants.sys.mjs");
     "resource:///modules/CustomizableUI.jsm": typeof import("resource:///modules/CustomizableUI.jsm");
     "resource:///modules/CustomizableWidgets.jsm": typeof import("resource:///modules/CustomizableWidgets.jsm");
     "resource://devtools/shared/loader/Loader.sys.mjs": typeof import("resource://devtools/shared/loader/Loader.sys.mjs");
@@ -200,7 +200,7 @@ declare namespace MockedExports {
     decorate: (target: object) => void;
   };
 
-  const AppConstantsJSM: {
+  const AppConstantsSYSMJS: {
     AppConstants: {
       platform: string;
     };
@@ -334,8 +334,8 @@ declare module "ChromeUtils" {
   export = ChromeUtils;
 }
 
-declare module "resource://gre/modules/AppConstants.jsm" {
-  export = MockedExports.AppConstantsJSM;
+declare module "resource://gre/modules/AppConstants.sys.mjs" {
+  export = MockedExports.AppConstantsSYSMJS;
 }
 
 declare module "resource://gre/modules/WebChannel.jsm" {

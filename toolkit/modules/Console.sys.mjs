@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * Define a 'console' API to roughly match the implementation provided by
  * Firebug.
@@ -19,8 +17,6 @@
  * - The primary use of this API is debugging and error logging so the perfect
  *   implementation isn't always required (or even well defined)
  */
-
-var EXPORTED_SYMBOLS = ["console", "ConsoleAPI"];
 
 var gTimerRegistry = new Map();
 
@@ -610,7 +606,7 @@ function sendConsoleAPIMessage(aConsole, aLevel, aFrame, aArgs, aOptions = {}) {
  * @return {object}
  *        A console API instance object
  */
-function ConsoleAPI(aConsoleOptions = {}) {
+export function ConsoleAPI(aConsoleOptions = {}) {
   // Normalize console options to set default values
   // in order to avoid runtime checks on each console method call.
   this.dump = aConsoleOptions.dump || dump;
@@ -756,4 +752,4 @@ ConsoleAPI.prototype = {
   },
 };
 
-var console = new ConsoleAPI();
+export var console = new ConsoleAPI();

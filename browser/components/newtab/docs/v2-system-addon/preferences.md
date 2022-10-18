@@ -74,7 +74,7 @@ prefs.observe("foo", aCallback);
 prefs.ignore("foo", aCallback);
 ```
 
-See [toolkit/modules/Preferences.jsm](https://searchfox.mozilla.org/mozilla-central/source/toolkit/modules/Preferences.jsm)
+See :searchfox:`toolkit/modules/Preferences.sys.mjs <source/toolkit/modules/Preferences.sys.mjs>`
 for more information about what methods are available.
 
 ## Discovery Stream Preferences

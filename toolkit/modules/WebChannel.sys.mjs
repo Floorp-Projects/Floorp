@@ -7,8 +7,6 @@
  * to create a two-way communication channel between chrome and content code.
  */
 
-var EXPORTED_SYMBOLS = ["WebChannel", "WebChannelBroker"];
-
 const ERRNO_UNKNOWN_ERROR = 999;
 const ERROR_UNKNOWN = "UNKNOWN_ERROR";
 
@@ -17,7 +15,7 @@ const ERROR_UNKNOWN = "UNKNOWN_ERROR";
  * This object handles channel registration, origin validation and message multiplexing.
  */
 
-var WebChannelBroker = Object.create({
+export var WebChannelBroker = Object.create({
   /**
    * Register a new channel that callbacks messages
    * based on proper origin and channel name
@@ -86,7 +84,7 @@ var WebChannelBroker = Object.create({
  *        permission manager.
  * @constructor
  */
-var WebChannel = function(id, originOrPermission) {
+export var WebChannel = function(id, originOrPermission) {
   if (!id || !originOrPermission) {
     throw new Error("WebChannel id and originOrPermission are required.");
   }

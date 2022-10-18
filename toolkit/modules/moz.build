@@ -54,16 +54,16 @@ with Files("AsanReporter.sys.mjs"):
 with Files("Color.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Find Toolbar")
 
-with Files("Console.jsm"):
+with Files("Console.sys.mjs"):
     BUG_COMPONENT = ("DevTools", "Console")
 
 with Files("DateTimePicker*.jsm"):
     BUG_COMPONENT = ("Core", "Layout: Form Controls")
 
-with Files("DeferredTask.jsm"):
+with Files("DeferredTask.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Async Tooling")
 
-with Files("E10SUtils.jsm"):
+with Files("E10SUtils.sys.mjs"):
     BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
 
 with Files("nsIE10SUtils.idl"):
@@ -105,7 +105,7 @@ with Files("PermissionsUtils.sys.mjs"):
 with Files("PopupNotifications.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 
-with Files("PrivateBrowsingUtils.jsm"):
+with Files("PrivateBrowsingUtils.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Private Browsing")
 
 with Files("Promise*.jsm"):
@@ -149,7 +149,7 @@ with Files("docs/**"):
 
 EXTRA_JS_MODULES += [
     "AboutPagesUtils.sys.mjs",
-    "ActorManagerParent.jsm",
+    "ActorManagerParent.sys.mjs",
     "AppMenuNotifications.sys.mjs",
     "AsyncPrefs.sys.mjs",
     "BinarySearch.sys.mjs",
@@ -158,14 +158,14 @@ EXTRA_JS_MODULES += [
     "CanonicalJSON.jsm",
     "CertUtils.sys.mjs",
     "Color.sys.mjs",
-    "Console.jsm",
-    "ContentDOMReference.jsm",
+    "Console.sys.mjs",
+    "ContentDOMReference.sys.mjs",
     "CreditCard.sys.mjs",
     "DateTimePickerPanel.sys.mjs",
-    "DeferredTask.jsm",
-    "Deprecated.jsm",
-    "E10SUtils.jsm",
-    "EventEmitter.jsm",
+    "DeferredTask.sys.mjs",
+    "Deprecated.sys.mjs",
+    "E10SUtils.sys.mjs",
+    "EventEmitter.sys.mjs",
     "FileUtils.sys.mjs",
     "FindBarContent.sys.mjs",
     "Finder.sys.mjs",
@@ -194,8 +194,8 @@ EXTRA_JS_MODULES += [
     "OSKeyStore.sys.mjs",
     "PermissionsUtils.sys.mjs",
     "PopupNotifications.sys.mjs",
-    "Preferences.jsm",
-    "PrivateBrowsingUtils.jsm",
+    "Preferences.sys.mjs",
+    "PrivateBrowsingUtils.sys.mjs",
     "ProcessType.sys.mjs",
     "ProfileAge.sys.mjs",
     "PromiseUtils.sys.mjs",
@@ -209,10 +209,10 @@ EXTRA_JS_MODULES += [
     "ShortcutUtils.sys.mjs",
     "Sqlite.sys.mjs",
     "SubDialog.sys.mjs",
-    "Timer.jsm",
+    "Timer.sys.mjs",
     "Troubleshoot.sys.mjs",
     "UpdateUtils.sys.mjs",
-    "WebChannel.jsm",
+    "WebChannel.sys.mjs",
 ]
 
 if CONFIG["MOZ_ASAN_REPORTER"]:
@@ -242,7 +242,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("windows", "gtk", "cocoa"):
     DEFINES["HAVE_SHELL_SERVICE"] = 1
 
 EXTRA_PP_JS_MODULES += [
-    "AppConstants.jsm",
+    "AppConstants.sys.mjs",
 ]
 
 if "Android" != CONFIG["OS_TARGET"]:

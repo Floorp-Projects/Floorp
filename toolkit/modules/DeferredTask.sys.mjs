@@ -4,10 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DeferredTask"];
-
 const lazy = {};
 
 /**
@@ -114,7 +110,7 @@ const Timer = Components.Constructor(
  *        aDelayMs have elapsed. If omitted, waits indefinitely for an idle
  *        callback.
  */
-var DeferredTask = function(aTaskFn, aDelayMs, aIdleTimeoutMs) {
+export var DeferredTask = function(aTaskFn, aDelayMs, aIdleTimeoutMs) {
   this._taskFn = aTaskFn;
   this._delayMs = aDelayMs;
   this._timeoutMs = aIdleTimeoutMs;

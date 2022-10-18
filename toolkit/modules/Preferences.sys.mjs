@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["Preferences"];
-
 // The minimum and maximum integers that can be set as preferences.
 // The range of valid values is narrower than the range of valid JS values
 // because the native preferences code treats integers as NSPR PRInt32s,
@@ -11,7 +9,7 @@ var EXPORTED_SYMBOLS = ["Preferences"];
 const MAX_INT = 0x7fffffff; // Math.pow(2, 31) - 1
 const MIN_INT = -0x80000000;
 
-function Preferences(args) {
+export function Preferences(args) {
   this._cachedPrefBranch = null;
   if (isObject(args)) {
     if (args.branch) {

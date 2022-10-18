@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["Deprecated"];
-
 const PREF_DEPRECATION_WARNINGS = "devtools.errorconsole.deprecation_warnings";
 
 // A flag that indicates whether deprecation warnings should be logged.
@@ -43,7 +39,7 @@ function stringifyCallstack(aStack) {
   return msg;
 }
 
-var Deprecated = {
+export var Deprecated = {
   /**
    * Log a deprecation warning.
    *
