@@ -21,13 +21,6 @@ static const int kMaxWaitMs = 2000;
 
 namespace {
 
-bool IsProcessDead(pid_t process) {
-  bool exited = false;
-  // don't care if the process crashed, just if it exited
-  base::DidProcessCrash(&exited, process);
-  return exited;
-}
-
 class ChildReaper : public base::MessagePumpLibevent::SignalEvent,
                     public base::MessagePumpLibevent::SignalWatcher {
  public:
@@ -45,7 +38,7 @@ class ChildReaper : public base::MessagePumpLibevent::SignalEvent,
     DCHECK(process_);
 
     // this may be the SIGCHLD for a process other than |process_|
-    if (IsProcessDead(process_)) {
+    if (base::IsProcessDead(process_)) {
       process_ = 0;
       StopCatching();
     }
@@ -86,7 +79,7 @@ class ChildGrimReaper : public ChildReaper, public mozilla::Runnable {
   void KillProcess() {
     DCHECK(process_);
 
-    if (IsProcessDead(process_)) {
+    if (base::IsProcessDead(process_)) {
       process_ = 0;
       return;
     }
@@ -173,7 +166,7 @@ void ProcessWatcher::EnsureProcessTerminated(base::ProcessHandle process,
   DCHECK(process != base::GetCurrentProcId());
   DCHECK(process > 0);
 
-  if (IsProcessDead(process)) return;
+  if (base::IsProcessDead(process)) return;
 
   MessageLoopForIO* loop = MessageLoopForIO::current();
   if (force) {
