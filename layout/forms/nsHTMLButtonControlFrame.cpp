@@ -214,10 +214,10 @@ void nsHTMLButtonControlFrame::ReflowButtonContents(
     // XXX: Should we use ResetResizeFlags::Yes?
     contentsReflowInput.SetComputedBSize(aButtonReflowInput.ComputedBSize(),
                                          ReflowInput::ResetResizeFlags::No);
-    contentsReflowInput.ComputedMinBSize() =
-        aButtonReflowInput.ComputedMinBSize();
-    contentsReflowInput.ComputedMaxBSize() =
-        aButtonReflowInput.ComputedMaxBSize();
+    contentsReflowInput.SetComputedMinBSize(
+        aButtonReflowInput.ComputedMinBSize());
+    contentsReflowInput.SetComputedMaxBSize(
+        aButtonReflowInput.ComputedMaxBSize());
   }
 
   // We just pass a dummy containerSize here, as the child will be

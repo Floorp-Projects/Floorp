@@ -2039,8 +2039,8 @@ nscoord nsFlexContainerFrame::MeasureFlexItemContentBSize(
   // min-block-size and max-block-size by resetting both to to their
   // unconstraining (extreme) values. The flexbox layout algorithm does still
   // explicitly clamp both sizes when resolving the target main size.
-  childRIForMeasuringBSize.ComputedMinBSize() = 0;
-  childRIForMeasuringBSize.ComputedMaxBSize() = NS_UNCONSTRAINEDSIZE;
+  childRIForMeasuringBSize.SetComputedMinBSize(0);
+  childRIForMeasuringBSize.SetComputedMaxBSize(NS_UNCONSTRAINEDSIZE);
 
   if (aForceBResizeForMeasuringReflow) {
     childRIForMeasuringBSize.SetBResize(true);

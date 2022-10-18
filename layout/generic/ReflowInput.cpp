@@ -2179,8 +2179,9 @@ void ReflowInput::InitConstraints(
             : NS_UNCONSTRAINEDSIZE,
         ResetResizeFlags::No);
 
-    ComputedMinISize() = ComputedMinBSize() = 0;
-    ComputedMaxBSize() = ComputedMaxBSize() = NS_UNCONSTRAINEDSIZE;
+    mComputedMinSize.SizeTo(mWritingMode, 0, 0);
+    mComputedMaxSize.SizeTo(mWritingMode, NS_UNCONSTRAINEDSIZE,
+                            NS_UNCONSTRAINEDSIZE);
   } else {
     // Get the containing block's reflow input
     const ReflowInput* cbri = mCBReflowInput;
@@ -2332,9 +2333,9 @@ void ReflowInput::InitConstraints(
       }
 
       // Doesn't apply to internal table elements
-      ComputedMinISize() = ComputedMinBSize() = 0;
-      ComputedMaxISize() = ComputedMaxBSize() = NS_UNCONSTRAINEDSIZE;
-
+      mComputedMinSize.SizeTo(mWritingMode, 0, 0);
+      mComputedMaxSize.SizeTo(mWritingMode, NS_UNCONSTRAINEDSIZE,
+                              NS_UNCONSTRAINEDSIZE);
     } else if (mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
                mStyleDisplay->IsAbsolutelyPositionedStyle() &&
                // XXXfr hack for making frames behave properly when in overflow
@@ -2953,28 +2954,28 @@ void ReflowInput::ComputeMinMaxValues(const LogicalSize& aCBSize) {
   // even there, it's supposed to be ignored (i.e. treated as 0) until
   // the flex container explicitly resolves & considers it.)
   if (minISize.IsAuto()) {
-    ComputedMinISize() = 0;
+    SetComputedMinISize(0);
   } else {
-    ComputedMinISize() =
-        ComputeISizeValue(aCBSize, mStylePosition->mBoxSizing, minISize);
+    SetComputedMinISize(
+        ComputeISizeValue(aCBSize, mStylePosition->mBoxSizing, minISize));
   }
 
   if (mIsThemed) {
-    ComputedMinISize() = std::max(ComputedMinISize(), minWidgetSize.ISize(wm));
+    SetComputedMinISize(std::max(ComputedMinISize(), minWidgetSize.ISize(wm)));
   }
 
   if (maxISize.IsNone()) {
     // Specified value of 'none'
-    ComputedMaxISize() = NS_UNCONSTRAINEDSIZE;  // no limit
+    SetComputedMaxISize(NS_UNCONSTRAINEDSIZE);
   } else {
-    ComputedMaxISize() =
-        ComputeISizeValue(aCBSize, mStylePosition->mBoxSizing, maxISize);
+    SetComputedMaxISize(
+        ComputeISizeValue(aCBSize, mStylePosition->mBoxSizing, maxISize));
   }
 
   // If the computed value of 'min-width' is greater than the value of
   // 'max-width', 'max-width' is set to the value of 'min-width'
   if (ComputedMinISize() > ComputedMaxISize()) {
-    ComputedMaxISize() = ComputedMinISize();
+    SetComputedMaxISize(ComputedMinISize());
   }
 
   // Check for percentage based values and a containing block height that
@@ -2997,30 +2998,30 @@ void ReflowInput::ComputeMinMaxValues(const LogicalSize& aCBSize) {
   // even there, it's supposed to be ignored (i.e. treated as 0) until
   // the flex container explicitly resolves & considers it.)
   if (BSizeBehavesAsInitialValue(minBSize)) {
-    ComputedMinBSize() = 0;
+    SetComputedMinBSize(0);
   } else {
-    ComputedMinBSize() =
-        ComputeBSizeValue(bPercentageBasis, mStylePosition->mBoxSizing,
-                          minBSize.AsLengthPercentage());
+    SetComputedMinBSize(ComputeBSizeValue(bPercentageBasis,
+                                          mStylePosition->mBoxSizing,
+                                          minBSize.AsLengthPercentage()));
   }
 
   if (mIsThemed) {
-    ComputedMinBSize() = std::max(ComputedMinBSize(), minWidgetSize.BSize(wm));
+    SetComputedMinBSize(std::max(ComputedMinBSize(), minWidgetSize.BSize(wm)));
   }
 
   if (BSizeBehavesAsInitialValue(maxBSize)) {
     // Specified value of 'none'
-    ComputedMaxBSize() = NS_UNCONSTRAINEDSIZE;  // no limit
+    SetComputedMaxBSize(NS_UNCONSTRAINEDSIZE);
   } else {
-    ComputedMaxBSize() =
-        ComputeBSizeValue(bPercentageBasis, mStylePosition->mBoxSizing,
-                          maxBSize.AsLengthPercentage());
+    SetComputedMaxBSize(ComputeBSizeValue(bPercentageBasis,
+                                          mStylePosition->mBoxSizing,
+                                          maxBSize.AsLengthPercentage()));
   }
 
   // If the computed value of 'min-height' is greater than the value of
   // 'max-height', 'max-height' is set to the value of 'min-height'
   if (ComputedMinBSize() > ComputedMaxBSize()) {
-    ComputedMaxBSize() = ComputedMinBSize();
+    SetComputedMaxBSize(ComputedMinBSize());
   }
 }
 
