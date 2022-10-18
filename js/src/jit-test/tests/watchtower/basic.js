@@ -1,17 +1,16 @@
-setWatchtowerCallback(function(kind, object, extra) {
-    assertEq(object, o);
-    if (typeof extra === "symbol") {
-        extra = "<symbol>";
-    }
-    log.push(kind + (extra ? ": " + extra : ""));
-});
-
-let log;
-let o;
+function getLogString(obj) {
+    let log = getWatchtowerLog();
+    return log.map(item => {
+        assertEq(item.object, obj);
+        if (typeof item.extra === "symbol") {
+            item.extra = "<symbol>";
+        }
+        return item.kind + (item.extra ? ": " + item.extra : "");
+    }).join("\n");
+}
 
 function testBasic() {
-    log = [];
-    o = {};
+    let o = {};
     addWatchtowerTarget(o);
 
     o.x = 1;
@@ -28,7 +27,8 @@ function testBasic() {
     Object.seal(o);
     Object.freeze(o);
 
-    assertEq(log.join("\n"),
+    let log = getLogString(o);
+    assertEq(log,
 `add-prop: x
 add-prop: y
 add-prop: <symbol>
@@ -49,38 +49,38 @@ for (var i = 0; i < 20; i++) {
 
 // Object.assign edge case.
 function testAssign() {
-    o = {};
+    let o = {};
     o.x = 1;
     delete o.x;
     let from = {x: 1, y: 2, z: 3, a: 4};
-    log = [];
     addWatchtowerTarget(o);
     addWatchtowerTarget(from);
     Object.assign(o, from);
-    assertEq(log.join("\n"), "add-prop: x\nadd-prop: y\nadd-prop: z\nadd-prop: a");
+    let log = getLogString(o);
+    assertEq(log, "add-prop: x\nadd-prop: y\nadd-prop: z\nadd-prop: a");
 }
 testAssign();
 
 function testJit() {
     for (var i = 0; i < 20; i++) {
-        o = {};
+        let o = {};
         addWatchtowerTarget(o);
-        log = [];
         o.x = 1;
         o.y = 2;
-        assertEq(log.join("\n"), "add-prop: x\nadd-prop: y");
+        let log = getLogString(o);
+        assertEq(log, "add-prop: x\nadd-prop: y");
     }
 }
 testJit();
 
 // array.length is a custom data property.
 function testCustomDataProp() {
-    o = [];
-    log = [];
+    let o = [];
     addWatchtowerTarget(o);
 
     Object.defineProperty(o, "length", {writable: false});
-    assertEq(log.join("\n"), "change-prop: length");
+    let log = getLogString(o);
+    assertEq(log, "change-prop: length");
 }
 for (var i = 0; i < 20; i++) {
     testCustomDataProp();

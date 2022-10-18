@@ -121,6 +121,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       defaultLocale(nullptr),
       profilingScripts(false),
       scriptAndCountsVector(nullptr),
+      watchtowerTestingLog(nullptr),
       lcovOutput_(),
       jitRuntime_(nullptr),
       gc(thisFromCtor()),
@@ -219,6 +220,8 @@ void JSRuntime::destroyRuntime() {
 #ifdef JS_HAS_INTL_API
   sharedIntlData.ref().destroyInstance();
 #endif
+
+  watchtowerTestingLog.ref().reset();
 
   // Caches might hold on ScriptData which are saved in the ScriptDataTable.
   // Clear all stencils from caches to remove ScriptDataTable entries.

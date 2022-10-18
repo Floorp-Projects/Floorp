@@ -678,6 +678,10 @@ struct JSRuntime {
   js::MainThreadData<JS::PersistentRooted<js::ScriptAndCountsVector>*>
       scriptAndCountsVector;
 
+  using RootedPlainObjVec = JS::PersistentRooted<
+      JS::GCVector<js::PlainObject*, 0, js::SystemAllocPolicy>>;
+  js::MainThreadData<js::UniquePtr<RootedPlainObjVec>> watchtowerTestingLog;
+
  private:
   /* Code coverage output. */
   js::UnprotectedData<js::coverage::LCovRuntime> lcovOutput_;
