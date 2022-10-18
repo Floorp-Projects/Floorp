@@ -20,8 +20,6 @@ class gfxQuartzSurface : public gfxASurface {
   gfxQuartzSurface(const mozilla::gfx::IntSize&, gfxImageFormat format);
   gfxQuartzSurface(CGContextRef context, const mozilla::gfx::IntSize& size);
   gfxQuartzSurface(cairo_surface_t* csurf, const mozilla::gfx::IntSize& aSize);
-  gfxQuartzSurface(unsigned char* data, const mozilla::gfx::IntSize& size,
-                   long stride, gfxImageFormat format);
 
   virtual ~gfxQuartzSurface();
 

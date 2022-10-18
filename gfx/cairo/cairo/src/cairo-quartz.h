@@ -54,13 +54,6 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
                                             unsigned int width,
                                             unsigned int height);
 
-cairo_surface_t *
-cairo_quartz_surface_create_for_data (unsigned char *data,
-                                      cairo_format_t format,
-                                      unsigned int width,
-                                      unsigned int height,
-                                      unsigned int stride);
-
 cairo_public cairo_surface_t *
 cairo_quartz_surface_create_cg_layer (cairo_surface_t *surface,
                                       cairo_content_t content,
