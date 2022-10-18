@@ -1565,7 +1565,6 @@ if (is_ios || is_mac) {
           "../api:field_trials_view",
           "../api:sequence_checker",
           "../api/task_queue:pending_task_safety_flag",
-          "../api/task_queue:to_queued_task",
           "../rtc_base",
           "../rtc_base:logging",
           "../rtc_base:macromagic",

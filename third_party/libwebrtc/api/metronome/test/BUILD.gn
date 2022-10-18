@@ -18,7 +18,6 @@ rtc_library("fake_metronome") {
     "..:metronome",
     "../..:priority",
     "../..:sequence_checker",
-    "../../../api/task_queue:to_queued_task",
     "../../../rtc_base:macromagic",
     "../../../rtc_base:rtc_event",
     "../../../rtc_base:rtc_task_queue",

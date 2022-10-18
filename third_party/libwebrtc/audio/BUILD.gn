@@ -62,7 +62,6 @@ rtc_library("audio") {
     "../api/rtc_event_log",
     "../api/task_queue",
     "../api/task_queue:pending_task_safety_flag",
-    "../api/task_queue:to_queued_task",
     "../api/transport/rtp:rtp_source",
     "../call:audio_sender_interface",
     "../call:bitrate_allocator",
@@ -168,6 +167,7 @@ if (rtc_include_tests) {
       "../api/crypto:frame_decryptor_interface",
       "../api/rtc_event_log",
       "../api/task_queue:default_task_queue_factory",
+      "../api/task_queue/test:mock_task_queue_base",
       "../api/units:time_delta",
       "../call:mock_bitrate_allocator",
       "../call:mock_call_interfaces",
@@ -324,7 +324,7 @@ if (rtc_include_tests) {
         "../test:test_support",
         "//testing/gtest",
       ]
-
+      absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
       data = [ "//resources/voice_engine/audio_dtx16.wav" ]
     }
   }

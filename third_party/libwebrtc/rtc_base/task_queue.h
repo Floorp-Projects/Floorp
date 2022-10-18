@@ -21,7 +21,6 @@
 #include "api/task_queue/queued_task.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
-#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -93,21 +92,16 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueue {
   webrtc::TaskQueueBase* Get() { return impl_; }
 
   // TODO(tommi): For better debuggability, implement RTC_FROM_HERE.
-
-  // Ownership of the task is passed to PostTask.
-  void PostTask(std::unique_ptr<webrtc::QueuedTask> task);
-  // See webrtc::TaskQueueBase for precision expectations.
-  void PostDelayedTask(std::unique_ptr<webrtc::QueuedTask> task,
-                       uint32_t milliseconds);
-  void PostDelayedHighPrecisionTask(std::unique_ptr<webrtc::QueuedTask> task,
-                                    uint32_t milliseconds);
-  void PostDelayedTaskWithPrecision(
-      webrtc::TaskQueueBase::DelayPrecision precision,
-      std::unique_ptr<webrtc::QueuedTask> task,
-      uint32_t milliseconds);
-
   void PostTask(absl::AnyInvocable<void() &&> task) {
     impl_->PostTask(std::move(task));
+  }
+  void PostDelayedTask(absl::AnyInvocable<void() &&> task,
+                       webrtc::TimeDelta delay) {
+    impl_->PostDelayedTask(std::move(task), delay);
+  }
+  void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
+                                    webrtc::TimeDelta delay) {
+    impl_->PostDelayedHighPrecisionTask(std::move(task), delay);
   }
 
  private:

@@ -13,7 +13,6 @@
 #include "api/priority.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_factory.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/event.h"
 #include "rtc_base/task_utils/repeating_task.h"
@@ -41,8 +40,7 @@ size_t ForcedTickMetronome::NumListeners() {
 
 void ForcedTickMetronome::Tick() {
   for (auto* listener : listeners_) {
-    listener->OnTickTaskQueue()->PostTask(
-        ToQueuedTask([listener] { listener->OnTick(); }));
+    listener->OnTickTaskQueue()->PostTask([listener] { listener->OnTick(); });
   }
 }
 
@@ -66,7 +64,7 @@ void FakeMetronome::AddListener(TickListener* listener) {
         return TimeDelta::PlusInfinity();
       for (auto* listener : listeners_) {
         listener->OnTickTaskQueue()->PostTask(
-            ToQueuedTask([listener] { listener->OnTick(); }));
+            [listener] { listener->OnTick(); });
       }
       return tick_period_;
     });

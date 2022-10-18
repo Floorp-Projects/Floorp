@@ -19,7 +19,6 @@
 #endif
 
 #include "api/sequence_checker.h"
-#include "api/task_queue/to_queued_task.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
@@ -631,7 +630,7 @@ AndroidNetworkMonitorFactory::CreateNetworkMonitor(
 void AndroidNetworkMonitor::NotifyConnectionTypeChanged(
     JNIEnv* env,
     const JavaRef<jobject>& j_caller) {
-  network_thread_->PostTask(ToQueuedTask(safety_flag_, [this] {
+  network_thread_->PostTask(SafeTask(safety_flag_, [this] {
     RTC_LOG(LS_INFO)
         << "Android network monitor detected connection type change.";
     InvokeNetworksChangedCallback();
@@ -654,8 +653,8 @@ void AndroidNetworkMonitor::NotifyOfNetworkConnect(
     const JavaRef<jobject>& j_network_info) {
   NetworkInformation network_info =
       GetNetworkInformationFromJava(env, j_network_info);
-  network_thread_->PostTask(ToQueuedTask(
-      safety_flag_, [this, network_info = std::move(network_info)] {
+  network_thread_->PostTask(
+      SafeTask(safety_flag_, [this, network_info = std::move(network_info)] {
         OnNetworkConnected_n(network_info);
       }));
 }
@@ -664,7 +663,7 @@ void AndroidNetworkMonitor::NotifyOfNetworkDisconnect(
     JNIEnv* env,
     const JavaRef<jobject>& j_caller,
     jlong network_handle) {
-  network_thread_->PostTask(ToQueuedTask(safety_flag_, [this, network_handle] {
+  network_thread_->PostTask(SafeTask(safety_flag_, [this, network_handle] {
     OnNetworkDisconnected_n(static_cast<NetworkHandle>(network_handle));
   }));
 }
@@ -678,9 +677,9 @@ void AndroidNetworkMonitor::NotifyOfNetworkPreference(
   rtc::NetworkPreference preference =
       static_cast<rtc::NetworkPreference>(jpreference);
 
-  network_thread_->PostTask(ToQueuedTask(
-      safety_flag_,
-      [this, type, preference] { OnNetworkPreference_n(type, preference); }));
+  network_thread_->PostTask(SafeTask(safety_flag_, [this, type, preference] {
+    OnNetworkPreference_n(type, preference);
+  }));
 }
 
 }  // namespace jni

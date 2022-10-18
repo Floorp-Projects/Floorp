@@ -229,7 +229,6 @@ if (rtc_include_tests) {
       "../../../api:create_network_emulation_manager",
       "../../../api:network_emulation_manager_api",
       "../../../api/task_queue:task_queue",
-      "../../../api/task_queue:to_queued_task",
       "../../../api/units:time_delta",
       "../../../call:simulated_network",
       "../../../rtc_base:checks",

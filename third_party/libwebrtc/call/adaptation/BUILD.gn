@@ -39,7 +39,6 @@ rtc_library("resource_adaptation") {
     "../../api:sequence_checker",
     "../../api/adaptation:resource_adaptation_api",
     "../../api/task_queue:task_queue",
-    "../../api/task_queue:to_queued_task",
     "../../api/video:video_adaptation",
     "../../api/video:video_frame",
     "../../api/video:video_stream_encoder",
@@ -121,7 +120,6 @@ if (rtc_include_tests) {
       "../../api:sequence_checker",
       "../../api/adaptation:resource_adaptation_api",
       "../../api/task_queue:task_queue",
-      "../../api/task_queue:to_queued_task",
       "../../api/video:video_stream_encoder",
       "../../test:test_support",
     ]
