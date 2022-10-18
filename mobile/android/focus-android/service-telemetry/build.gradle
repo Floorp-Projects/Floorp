@@ -33,15 +33,4 @@ dependencies {
     implementation "org.mozilla.components:concept-fetch:${AndroidComponents.VERSION}"
 
     implementation Dependencies.androidx_annotation
-
-    implementation Dependencies.kotlin_stdlib
-
-    testImplementation "junit:junit:4.12"
-    testImplementation Dependencies.testing_robolectric
-    testImplementation Dependencies.testing_mockito
-
-    testImplementation 'com.squareup.okhttp3:mockwebserver:3.11.0'
-
-    testImplementation "org.mozilla.components:lib-fetch-httpurlconnection:${AndroidComponents.VERSION}"
-    testImplementation "org.mozilla.components:lib-fetch-okhttp:${AndroidComponents.VERSION}"
 }

@@ -3,12 +3,6 @@
 import org.mozilla.focus.gradle.tasks.GithubDetailsTask
 
 buildscript {
-    ext.espresso_version = '3.4.0'
-    ext.jna_version = "5.12.1"
-    // Pinning the last working version of the service-telemetry component until we decide
-    // what we want to do with telemetry in the app.
-    ext.mozilla_components_version_telemetry = '57.0.9'
-
     repositories {
         google()
         mavenCentral()
@@ -33,16 +27,10 @@ buildscript {
 }
 
 plugins {
-    // The version number is duplicated in the detekt block. We are unable to use constants due to
-    // limitations of the gradle plugin. We've decided to stick with duplication for now since the
-    // other methods involve using undocumented APIs
-    // https://docs.gradle.org/current/userguide/plugins.html#plugins_dsl_limitations
-    id("io.gitlab.arturbosch.detekt").version("1.18.0")
+    id "io.gitlab.arturbosch.detekt" version "1.18.0" // Variables in plugins {} aren't supported
 }
 
 detekt {
-    // The version number is duplicated, please refer to plugins block for more details
-    version = "1.18.0"
     buildUponDefaultConfig = true
     input = files("$projectDir/app")
     config = files("$projectDir/quality/detekt.yml")
@@ -79,7 +67,7 @@ configurations {
 }
 
 dependencies {
-    ktlint("com.pinterest:ktlint:0.47.0") {
+    ktlint("com.pinterest:ktlint:${Versions.ktlint_version}") {
         attributes {
             attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
         }

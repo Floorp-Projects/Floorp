@@ -93,7 +93,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = Versions.compose_compiler
+        kotlinCompilerExtensionVersion = Versions.google_compose_compiler
     }
 
     flavorDimensions "product"
@@ -217,18 +217,18 @@ dependencies {
     implementation Dependencies.androidx_compose_ui_tooling
     implementation Dependencies.androidx_compose_foundation
     implementation Dependencies.androidx_compose_material
-    implementation Dependencies.androidx_compose_constraint_layout
     implementation Dependencies.androidx_compose_runtime_livedata
     implementation Dependencies.androidx_constraint_layout
+    implementation Dependencies.androidx_constraint_layout_compose
     implementation Dependencies.androidx_core_ktx
     implementation Dependencies.androidx_fragment
     implementation Dependencies.androidx_lifecycle_process
     implementation Dependencies.androidx_lifecycle_viewmodel
     implementation Dependencies.androidx_palette
-    implementation Dependencies.androidx_preferences
+    implementation Dependencies.androidx_preference
     implementation Dependencies.androidx_recyclerview
     implementation Dependencies.androidx_savedstate
-    implementation Dependencies.androidx_splash_screen
+    implementation Dependencies.androidx_splashscreen
     implementation Dependencies.androidx_transition
 
     implementation Dependencies.google_accompanist_insets_ui
@@ -295,14 +295,13 @@ dependencies {
 
     implementation project(':service-telemetry')
 
-    implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
     debugImplementation Dependencies.leakcanary
 
     focusImplementation Dependencies.adjust
     focusImplementation Dependencies.install_referrer // Required by Adjust
 
-    jnaForTest "net.java.dev.jna:jna:${jna_version}@jar"
+    jnaForTest Dependencies.jna
     testImplementation files(configurations.jnaForTest.copyRecursive().files)
     testImplementation "org.mozilla.telemetry:glean-native-forUnitTests:${project.ext.glean_version}"
 
@@ -316,38 +315,37 @@ dependencies {
     testImplementation Dependencies.androidx_arch_core_testing
     testImplementation "org.mozilla.components:support-test:${AndroidComponents.VERSION}"
     testImplementation "org.mozilla.components:support-test-libstate:${AndroidComponents.VERSION}"
-    androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version", {
+    androidTestImplementation Dependencies.espresso_core, {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
-    androidTestImplementation "androidx.test.espresso:espresso-idling-resource:$espresso_version"
-    androidTestImplementation "androidx.test.espresso:espresso-web:$espresso_version", {
+    androidTestImplementation Dependencies.espresso_idling_resource
+    androidTestImplementation Dependencies.espresso_web, {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
-    androidTestImplementation "androidx.test.espresso:espresso-intents:$espresso_version"
+    androidTestImplementation Dependencies.espresso_intents
 
-    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
-    testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
+    androidTestImplementation Dependencies.testing_mockwebserver
+    testImplementation Dependencies.testing_mockwebserver
     testImplementation "org.mozilla.components:lib-fetch-okhttp:${AndroidComponents.VERSION}"
 
-    androidTestImplementation "tools.fastlane:screengrab:2.0.0"
-    // This Falcon version is added to maven central now required for Screengrab
-    implementation 'com.jraska:falcon:2.2.0'
+    androidTestImplementation Dependencies.fastlane
+    implementation Dependencies.falcon // Required by fastlane
 
-    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.1.0-alpha4', {
+    androidTestImplementation Dependencies.espresso_contrib, {
         exclude group: 'com.android.support', module: 'support-annotations'
         exclude group: 'com.android.support', module: 'support-v4'
         exclude group: 'com.android.support', module: 'design'
         exclude group: 'com.android.support', module: 'recyclerview-v7'
     }
-    testImplementation 'androidx.test:core:1.4.0'
-    testImplementation 'androidx.test:runner:1.4.0'
-    testImplementation 'androidx.test:rules:1.4.0'
+    testImplementation Dependencies.androidx_test_core
+    testImplementation Dependencies.androidx_test_runner
+    testImplementation Dependencies.androidx_test_rules
 
-    androidTestImplementation 'androidx.test:core-ktx:1.4.0'
-    androidTestImplementation 'androidx.test.ext:junit-ktx:1.1.3'
-    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
-    androidTestImplementation 'androidx.test:runner:1.4.0'
-    androidTestUtil 'androidx.test:orchestrator:1.4.1'
+    androidTestImplementation Dependencies.androidx_test_core_ktx
+    androidTestImplementation Dependencies.androidx_junit_ktx
+    androidTestImplementation Dependencies.androidx_uiautomator
+    androidTestImplementation Dependencies.androidx_test_runner
+    androidTestUtil Dependencies.androidx_orchestrator
 
 }
 // -------------------------------------------------------------------------------------------------
