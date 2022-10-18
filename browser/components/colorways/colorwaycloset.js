@@ -284,6 +284,14 @@ const ColorwayCloset = {
             extraKeys: { colorway_id: this.selectedColorway.id },
           });
         }
+
+        // `onClosed` is an additional callback passed upon opening the modal.
+        // Here, `onClosed` is passed by about:addons and is called after the
+        // the modal closes. This is to defer re-rendering the about:addons page
+        // until the user has closed the dialog by setting a new colorways theme
+        // or pressing cancel to revert to the previous theme.
+        const { onClosed } = window?.arguments?.[0] || {};
+        onClosed?.({ colorwayChanged: !this.revertToPreviousTheme });
         break;
     }
   },

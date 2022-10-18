@@ -8,6 +8,263 @@ loadTestSubscript(
 
 AddonTestUtils.initMochitest(this);
 
+/**
+ * This function behaves similarily to testInColorwayClosetModal, except it is customized for
+ * thoroughly testing about:addons callbacks passed to the Colorway Closet modal.
+ * @param {Boolean} isCancel true if modal is to be closed using the Cancel button, or false if setting a colorway
+ */
+async function testOpenModal(isCancel) {
+  const sinonSandbox = sinon.createSandbox();
+  let win = await loadInitialView("theme");
+  let pageDocument = win.document;
+  let ColorwayClosetCard = win.customElements.get("colorways-card");
+
+  const colorwayOpenModalSpy = sinonSandbox.spy(
+    ColorwayClosetOpener,
+    "openModal"
+  );
+
+  // Set up mock themes
+  const clearBuiltInThemesStubs = initBuiltInThemesStubs();
+  const mockThemes = [
+    SOFT_COLORWAY_THEME_ID,
+    BALANCED_COLORWAY_THEME_ID,
+    BOLD_COLORWAY_THEME_ID,
+  ];
+  const mockThemesAddons = [];
+  const mockThemesUninstall = async () => {
+    for (const addon of mockThemesAddons) {
+      await addon.uninstall();
+    }
+  };
+  registerCleanupFunction(mockThemesUninstall);
+  for (const theme of mockThemes) {
+    const { addon } = await installTestTheme(theme);
+    await addon.disable();
+    mockThemesAddons.push(addon);
+  }
+
+  // Verify that active theme is not tested colorway and not listed as enabled in about:addons.
+  const activeThemeId = Services.prefs.getStringPref(
+    "extensions.activeThemeID"
+  );
+  let enabledSection = getSection(pageDocument, "theme-enabled-section");
+  isnot(
+    activeThemeId,
+    BALANCED_COLORWAY_THEME_ID,
+    "Current Active theme should not be a colorway test theme"
+  );
+  ok(
+    !enabledSection.querySelector(
+      `addon-card[addon-id='${BALANCED_COLORWAY_THEME_ID}']`
+    ),
+    "Soon to be tested colorway should not be in enabled section in about:addons"
+  );
+
+  // Set up Colorway Closet Card spies
+  const callOnModalClosedSpy = sinonSandbox.spy(
+    ColorwayClosetCard,
+    "callOnModalClosed"
+  );
+  const runPendingCallbacksSpy = sinonSandbox.spy(
+    ColorwayClosetCard,
+    "runPendingModalClosedCallbacks"
+  );
+
+  const waitForAddonDisabled = addonId =>
+    AddonTestUtils.promiseAddonEvent("onDisabled", addon => {
+      // Log the onDisabled events to make it easier to investigate unexpected test failures.
+      info(
+        `Seen addon onDisabled addon event for ${addon.id} (waiting for ${addonId})`
+      );
+      return addon.id === addonId;
+    });
+
+  // onDisabled is triggered as a side-effect of enabling a different theme and should
+  // always be called after onEnabled for that theme.
+  const promiseDisabledAfterOpenModal = waitForAddonDisabled(activeThemeId);
+
+  // Open modal
+  info("Open the colorway closet dialog by clicking colorways CTA button");
+  is(
+    ColorwayClosetCard.hasModalOpen,
+    false,
+    "ColorwayClosetCard.hasModalOpen should be false"
+  );
+  const colorwaysButton = pageDocument.querySelector(
+    "[action='open-colorways']"
+  );
+  colorwaysButton.click();
+
+  // Verify callbacks after opening modal
+  is(
+    colorwayOpenModalSpy.callCount,
+    1,
+    "Expect 1 ColorwayClosetOpener.openModal call"
+  );
+  is(
+    ColorwayClosetCard.hasModalOpen,
+    true,
+    "ColorwayClosetCard.hasModalOpen has been updated"
+  );
+
+  // Wait for modal to load
+  const { dialog, closedPromise } = colorwayOpenModalSpy.getCall(0).returnValue;
+  ok(closedPromise instanceof Promise, "Got closedPromise as expected");
+  await dialog._dialogReady;
+  let modalDocument = dialog._frame.contentDocument;
+  let modalWindow = dialog._frame.contentWindow;
+
+  const {
+    cancelButton,
+    colorwayIntensities,
+    setColorwayButton,
+  } = getColorwayClosetTestElements(modalDocument);
+
+  info("Wait for theme update");
+  await promiseDisabledAfterOpenModal;
+
+  const activeColorwayThemeId = Services.prefs.getStringPref(
+    "extensions.activeThemeID"
+  );
+
+  ok(
+    BuiltInThemes.isColorwayFromCurrentCollection(activeColorwayThemeId),
+    `Expect ${activeColorwayThemeId} to be in the active colorway collection`
+  );
+  isnot(
+    activeColorwayThemeId,
+    SOFT_COLORWAY_THEME_ID,
+    "Automatically selected colorway theme should not be the same as the one to be manually selected"
+  );
+
+  // Ensure that about:addons UI is not updated after loading a colorway from the modal.
+  enabledSection = getSection(pageDocument, "theme-enabled-section");
+  ok(
+    !enabledSection.querySelector(
+      `addon-card[addon-id='${activeColorwayThemeId}']`
+    ),
+    "Selected colorway in modal should not be visible in enabled section in about:addons"
+  );
+
+  is(
+    callOnModalClosedSpy.callCount,
+    2,
+    "Expected callOnModalClosed to be called twice"
+  );
+  // Expected number of closedModalCallbacks:
+  // 1. Enabled balanced colorway
+  // 2. Disabled default theme
+  is(
+    ColorwayClosetCard.closedModalCallbacks.size,
+    2,
+    "There should be 2 closedModalCallbacks in total"
+  );
+
+  const promiseDisabledAfterChange = waitForAddonDisabled(
+    activeColorwayThemeId
+  );
+
+  // Wait for intensity button to be initialized
+  await BrowserTestUtils.waitForMutationCondition(
+    colorwayIntensities,
+    { subtree: true, attributeFilter: ["value"] },
+    () =>
+      colorwayIntensities.querySelector(
+        `input[value="${SOFT_COLORWAY_THEME_ID}"]`
+      ),
+    "Waiting for intensity button to be available"
+  );
+
+  info("Changing intensity");
+  colorwayIntensities
+    .querySelector(`input[value="${SOFT_COLORWAY_THEME_ID}"]`)
+    .click();
+  await promiseDisabledAfterChange;
+
+  // Expected number of closedModalCallbacks:
+  // 1. Enabled colorway (automatically selected on modal opened)
+  // 2. Disabled default theme
+  // 3. Enabled soft colorway (manually selected in the modal)
+  // 4. Disabled colorway (automatically selected on modal opened)
+  is(
+    ColorwayClosetCard.closedModalCallbacks.size,
+    4,
+    "There should be 4 closedModalCallbacks in total"
+  );
+
+  // Add a sentinelCallbackSpy to the closedModalCallbacks set to
+  // verify that callbacks are tracked after setting a colorway and
+  // closing the modal.
+  let sentinelCallbackSpy = sinonSandbox.spy();
+  ColorwayClosetCard.closedModalCallbacks.add(sentinelCallbackSpy);
+
+  let modalClosedPromise = BrowserTestUtils.waitForEvent(
+    modalWindow,
+    "unload",
+    "Waiting for modal to close"
+  );
+
+  if (isCancel) {
+    info("Selecting cancel button");
+    cancelButton.click();
+  } else {
+    info("Selecting set colorway button");
+    setColorwayButton.click();
+  }
+  info("Closing modal");
+  await modalClosedPromise;
+  is(
+    ColorwayClosetCard.hasModalOpen,
+    false,
+    "ColorwayClosetCard.hasModalOpen should be false"
+  );
+
+  // ColorwayClosetCard should track remaining pending callbacks.
+  ok(
+    runPendingCallbacksSpy.calledOnce,
+    "Expect ColorwayClosetCard.runPendingModalClosedCallbacks to have been called once"
+  );
+  if (isCancel) {
+    ok(
+      sentinelCallbackSpy.notCalled,
+      "Expect sentinel callback to not be called"
+    );
+  } else {
+    ok(sentinelCallbackSpy.called, "Expect sentinel callback to be called");
+  }
+
+  is(
+    ColorwayClosetCard.closedModalCallbacks.size,
+    0,
+    "There should be 0 closedModalCallbacks in total"
+  );
+
+  // Verify UI again after closing the modal
+  enabledSection = getSection(pageDocument, "theme-enabled-section");
+  if (isCancel) {
+    ok(
+      !enabledSection.querySelector(
+        `addon-card[addon-id='${SOFT_COLORWAY_THEME_ID}']`
+      ),
+      "Selected colorway should not be in enabled section in about:addons"
+    );
+  } else {
+    ok(
+      enabledSection.querySelector(
+        `addon-card[addon-id='${SOFT_COLORWAY_THEME_ID}']`
+      ),
+      "Selected colorway should be in enabled section in about:addons"
+    );
+  }
+
+  await closeView(win);
+  await clearBuiltInThemesStubs();
+  await mockThemesUninstall();
+  sinonSandbox.restore();
+  Services.telemetry.clearEvents();
+}
+
 add_setup(async function() {
   registerMockCollectionL10nIds();
 });
@@ -114,7 +371,7 @@ add_task(async function testColorwayClosetPrefEnabled() {
   );
 
   await closeView(win);
-  await addon.uninstall(true);
+  await addon.uninstall();
   await SpecialPowers.popPrefEnv();
   clearBuiltInThemesStubs();
 });
@@ -138,7 +395,7 @@ add_task(async function testColorwayClosetSectionPrefDisabled() {
   ok(!colorwaySection, "colorway section should not be found");
 
   await closeView(win);
-  await addon.uninstall(true);
+  await addon.uninstall();
   await SpecialPowers.popPrefEnv();
   clearBuiltInThemesStubs();
 });
@@ -174,7 +431,7 @@ add_task(async function testButtonOpenModal() {
   ok(ColorwayClosetOpener.openModal.calledOnce, "Got expected openModal call");
 
   await closeView(win);
-  await addon.uninstall(true);
+  await addon.uninstall();
   await SpecialPowers.popPrefEnv();
   clearBuiltInThemesStubs();
   clearColorwayClosetOpenerStubs();
@@ -269,8 +526,8 @@ add_task(async function testColorwayClosetSectionOneRetainedOneUnexpired() {
   );
 
   await closeView(win);
-  await expiredAddon.uninstall(true);
-  await validAddon.uninstall(true);
+  await expiredAddon.uninstall();
+  await validAddon.uninstall();
   await SpecialPowers.popPrefEnv();
   await SpecialPowers.popPrefEnv();
   clearBuiltInThemesStubs();
@@ -332,7 +589,7 @@ add_task(async function testColorwayNoActiveCollection() {
   );
 
   await closeView(win);
-  await expiredAddon.uninstall(true);
+  await expiredAddon.uninstall();
   await SpecialPowers.popPrefEnv();
   await SpecialPowers.popPrefEnv();
   clearBuiltInThemesStubs();
@@ -406,8 +663,8 @@ add_task(async function testColorwayButtonTextWithColorwayEnabled() {
   await doc.l10n.translateFragment(colorwaySection);
 
   await closeView(win);
-  await validColorway.uninstall(true);
-  await expiredColorway.uninstall(true);
+  await validColorway.uninstall();
+  await expiredColorway.uninstall();
   await SpecialPowers.popPrefEnv();
   clearBuiltInThemesStubs();
 });
@@ -450,7 +707,7 @@ add_task(async function test_telemetry_trycolorways_button() {
   );
 
   await closeView(win);
-  await addon.uninstall(true);
+  await addon.uninstall();
   await SpecialPowers.popPrefEnv();
   clearBuiltInThemesStubs();
   Services.telemetry.clearEvents();
@@ -494,8 +751,36 @@ add_task(async function test_telemetry_changecolorway_button() {
   );
 
   await closeView(win);
-  await addon.uninstall(true);
+  await addon.uninstall();
   await SpecialPowers.popPrefEnv();
   clearBuiltInThemesStubs();
   Services.telemetry.clearEvents();
 });
+
+/**
+ * Tests that:
+ * - the about:addons page does not visually update when a colorway selection is made in the modal
+ * - the about:addons page does not visually update if the Cancel button is selected and the modal closes
+ */
+add_task(async function test_aboutaddons_modal_callbacks_onclosed_cancel() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.theme.colorway-closet", true]],
+  });
+  await testOpenModal(true);
+  await SpecialPowers.popPrefEnv();
+});
+
+/**
+ * Tests that:
+ * - the about:addons page does not visually update when a colorway selection is made in the modal
+ * - the about:addons page is visually updated if the Set Colorway button is selected and the modal closes
+ */
+add_task(
+  async function test_aboutaddons_modal_callbacks_onclosed_set_colorway() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.theme.colorway-closet", true]],
+    });
+    await testOpenModal(false);
+    await SpecialPowers.popPrefEnv();
+  }
+);

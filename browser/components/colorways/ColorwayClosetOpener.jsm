@@ -12,12 +12,15 @@ const { BrowserWindowTracker } = ChromeUtils.import(
 
 let ColorwayClosetOpener = {
   /**
-   * Opens the colorway closet modal. "source" indicates from where the modal was opened,
-   * and it is used for existing telemetry probes.
-   * Valid "source" types include: "aboutaddons", "firefoxview" and "unknown" (default).
+   * Opens the colorway closet modal.
+   * @param {String} source
+   *        Indicates from where the modal was opened, and it is used for existing telemetry probes.
+   *        Valid "source" types include: "aboutaddons", "firefoxview" and "unknown" (default).
+   * @param {Function} onClosed
+   *        Function that is called after the modal is closed.
    * @See Events.yaml for existing colorway closet probes
    */
-  openModal: ({ source = "unknown" } = {}) => {
+  openModal: ({ source = "unknown", onClosed = null } = {}) => {
     let { gBrowser } = BrowserWindowTracker.getTopWindow();
     let dialogBox = gBrowser.getTabDialogBox(gBrowser.selectedBrowser);
     return dialogBox.open(
@@ -26,7 +29,7 @@ let ColorwayClosetOpener = {
         features: "resizable=no",
         sizeTo: "available",
       },
-      { source }
+      { source, onClosed }
     );
   },
 };
