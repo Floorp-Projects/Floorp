@@ -1305,6 +1305,22 @@ export class SearchEngine {
     return false;
   }
 
+  /**
+   * Whether or not this engine is an in-memory only search engine.
+   * These engines are typically application provided or policy engines,
+   * where they are loaded every time on SearchService initialization
+   * using the policy JSON or the extension manifest. Minimal details of the
+   * in-memory engines are saved to disk, but they are never loaded
+   * from the user's saved settings file.
+   *
+   * @returns {boolean}
+   *   This results false for most engines, but may be overridden by particular
+   *   engine types, such as add-on engines and policy engines.
+   */
+  get inMemory() {
+    return false;
+  }
+
   get isGeneralPurposeEngine() {
     return !!(
       this._extensionID &&

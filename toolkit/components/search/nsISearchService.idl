@@ -172,6 +172,16 @@ interface nsISearchEngine : nsISupports
   readonly attribute boolean isAppProvided;
 
   /**
+   * Whether or not this engine is an in-memory only search engine.
+   * These engines are typically application provided or policy engines,
+   * where they are loaded every time on SearchService initialization
+   * using the policy JSON or the extension manifest. Minimal details of the
+   * in-memory engines are saved to disk, but they are never loaded
+   * from the user's saved settings file.
+   */
+  readonly attribute boolean inMemory;
+
+  /**
    * Whether or not this engine is a "general" search engine, e.g. is it for
    * generally searching the web, or does it have a specific purpose like
    * shopping.
@@ -299,42 +309,6 @@ interface nsISearchService : nsISupports
    *         loaded.
    */
   Promise addOpenSearchEngine(in AString engineURL, in AString iconURL);
-
-  /**
-   * Adds a new search engine for enterprises.
-   *
-   * @param details
-   *        An object with the following details:
-   *
-   *        {iconURL} Optional. The icon to use for the engine.
-   *        {description} Optional. The description of the engine.
-   *        {name} The name of the engine
-   *        {encoding} Optional. The encoding of the engine.
-   *        {search_url} The search url for the engine.
-   *        {keyword} Optional. The keyword for the engine.
-   *        {search_url_post_params} Optional. Post parameters for the search
-   *          engine submission.
-   *        {suggest_url} The suggestion url for the engine.
-   */
-  Promise addPolicyEngine(in jsval details);
-
-  /**
-   * Updates an existing engine for enterprises.
-   *
-   * @param details
-   *        An object with the following details:
-   *
-   *        {iconURL} Optional. The icon to use for the engine.
-   *        {description} Optional. The description of the engine.
-   *        {name} The name of the engine
-   *        {encoding} Optional. The encoding of the engine.
-   *        {search_url} The search url for the engine.
-   *        {keyword} Optional. The keyword for the engine.
-   *        {search_url_post_params} Optional. Post parameters for the search
-   *          engine submission.
-   *        {suggest_url} The suggestion url for the engine.
-   */
-  Promise updatePolicyEngine(in jsval details);
 
   /**
    * Adds a new search engine defined by the user.
