@@ -143,14 +143,15 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
       ReportOutOfMemory(cx);
       return false;
     }
-    (*moduleEnv.types)[funcIndex] = std::move(type);
+    (*moduleEnv.types)[funcIndex] = TypeDef(std::move(type));
   }
 
   // Add (func (type $i)) declarations. Do this after all types have been added
   // as the function declaration metadata uses pointers into the type vectors
   // that must be stable.
   for (uint32_t funcIndex = 0; funcIndex < ids.size(); funcIndex++) {
-    FuncDesc decl(&(*moduleEnv.types)[funcIndex].funcType(), funcIndex);
+    FuncDesc decl(&(*moduleEnv.types)[funcIndex].funcType(),
+                  &moduleEnv.typeIds[funcIndex], funcIndex);
     if (!moduleEnv.funcs.append(decl)) {
       ReportOutOfMemory(cx);
       return false;

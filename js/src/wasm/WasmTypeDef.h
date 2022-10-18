@@ -20,9 +20,6 @@
 #define wasm_type_def_h
 
 #include "mozilla/CheckedInt.h"
-#include "mozilla/HashTable.h"
-
-#include "js/RefCounted.h"
 
 #include "wasm/WasmCodegenConstants.h"
 #include "wasm/WasmCompileArgs.h"
@@ -50,14 +47,6 @@ using mozilla::MallocSizeOf;
 class FuncType {
   ValTypeVector args_;
   ValTypeVector results_;
-  // A packed structural type identifier for use in the call_indirect type
-  // check in the prologue of functions. If this function type cannot fit in
-  // this immediate, it will be NO_IMMEDIATE_TYPE_ID.
-  uint32_t immediateTypeId_;
-
-  // This function type cannot be packed into an immediate for call_indirect
-  // signature checks.
-  static const uint32_t NO_IMMEDIATE_TYPE_ID = UINT32_MAX;
 
   // Entry from JS to wasm via the JIT is currently unimplemented for
   // functions that return multiple values.
@@ -81,7 +70,7 @@ class FuncType {
       }
     }
     for (ValType result : results()) {
-      if (result.isTypeRef()) {
+      if (result.isTypeIndex()) {
         return true;
       }
     }
@@ -101,27 +90,14 @@ class FuncType {
     return false;
   }
 
-  void initImmediateTypeId();
-
  public:
-  FuncType()
-      : args_(), results_() {
-    initImmediateTypeId();
-  }
-
+  FuncType() : args_(), results_() {}
   FuncType(ValTypeVector&& args, ValTypeVector&& results)
-      : args_(std::move(args)),
-        results_(std::move(results)) {
-    initImmediateTypeId();
-  }
-
-  FuncType(FuncType&&) = default;
-  FuncType& operator=(FuncType&&) = default;
+      : args_(std::move(args)), results_(std::move(results)) {}
 
   [[nodiscard]] bool clone(const FuncType& src) {
     MOZ_ASSERT(args_.empty());
     MOZ_ASSERT(results_.empty());
-    immediateTypeId_ = src.immediateTypeId_;
     return args_.appendAll(src.args_) && results_.appendAll(src.results_);
   }
 
@@ -129,18 +105,6 @@ class FuncType {
   const ValTypeVector& args() const { return args_; }
   ValType result(unsigned i) const { return results_[i]; }
   const ValTypeVector& results() const { return results_; }
-
-  bool hasImmediateTypeId() const {
-    return immediateTypeId_ != NO_IMMEDIATE_TYPE_ID;
-  }
-  uint32_t immediateTypeId() const {
-    MOZ_ASSERT(hasImmediateTypeId());
-    return immediateTypeId_;
-  }
-
-  // The lsb for every immediate type id is set to distinguish an immediate type
-  // id from a type id represented by a pointer to the global hash type set.
-  static const uint32_t ImmediateBit = 0x1;
 
   HashNumber hash() const {
     HashNumber hn = 0;
@@ -187,12 +151,12 @@ class FuncType {
 #ifdef WASM_PRIVATE_REFTYPES
   bool exposesTypeIndex() const {
     for (const ValType& arg : args()) {
-      if (arg.isTypeRef()) {
+      if (arg.isTypeIndex()) {
         return true;
       }
     }
     for (const ValType& result : results()) {
-      if (result.isTypeRef()) {
+      if (result.isTypeIndex()) {
         return true;
       }
     }
@@ -220,7 +184,11 @@ struct StructField {
   FieldType type;
   uint32_t offset;
   bool isMutable;
+
+  WASM_CHECK_CACHEABLE_POD(type, offset, isMutable);
 };
+
+WASM_DECLARE_CACHEABLE_POD(StructField);
 
 using StructFieldVector = Vector<StructField, 0, SystemAllocPolicy>;
 
@@ -246,8 +214,6 @@ class StructType {
     return true;
   }
 
-  [[nodiscard]] bool init();
-
   bool isDefaultable() const {
     for (auto& field : fields_) {
       if (!field.type.isDefaultable()) {
@@ -256,6 +222,7 @@ class StructType {
     }
     return true;
   }
+  [[nodiscard]] bool computeLayout();
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   WASM_DECLARE_FRIEND_SERIALIZE(StructType);
@@ -299,8 +266,9 @@ class ArrayType {
   FieldType elementType_;  // field type
   bool isMutable_;         // mutability
 
+  WASM_CHECK_CACHEABLE_POD(elementType_, isMutable_);
+
  public:
-  ArrayType() : isMutable_(false) {}
   ArrayType(FieldType elementType, bool isMutable)
       : elementType_(elementType), isMutable_(isMutable) {}
 
@@ -335,7 +303,7 @@ enum class TypeDefKind : uint8_t {
   Array,
 };
 
-class TypeDef : public AtomicRefCounted<TypeDef> {
+class TypeDef {
   TypeDefKind kind_;
   union {
     FuncType funcType_;
@@ -387,25 +355,43 @@ class TypeDef : public AtomicRefCounted<TypeDef> {
     }
   }
 
-  TypeDef& operator=(FuncType&& that) noexcept {
+  TypeDef& operator=(TypeDef&& that) noexcept {
     MOZ_ASSERT(isNone());
-    kind_ = TypeDefKind::Func;
-    new (&funcType_) FuncType(std::move(that));
+    switch (that.kind_) {
+      case TypeDefKind::Func:
+        new (&funcType_) FuncType(std::move(that.funcType_));
+        break;
+      case TypeDefKind::Struct:
+        new (&structType_) StructType(std::move(that.structType_));
+        break;
+      case TypeDefKind::Array:
+        new (&arrayType_) ArrayType(std::move(that.arrayType_));
+        break;
+      case TypeDefKind::None:
+        break;
+    }
+    kind_ = that.kind_;
     return *this;
   }
 
-  TypeDef& operator=(StructType&& that) noexcept {
+  [[nodiscard]] bool clone(const TypeDef& src) {
     MOZ_ASSERT(isNone());
-    kind_ = TypeDefKind::Struct;
-    new (&structType_) StructType(std::move(that));
-    return *this;
-  }
-
-  TypeDef& operator=(ArrayType&& that) noexcept {
-    MOZ_ASSERT(isNone());
-    kind_ = TypeDefKind::Array;
-    new (&arrayType_) ArrayType(std::move(that));
-    return *this;
+    kind_ = src.kind_;
+    switch (src.kind_) {
+      case TypeDefKind::Func:
+        new (&funcType_) FuncType();
+        return funcType_.clone(src.funcType());
+      case TypeDefKind::Struct:
+        new (&structType_) StructType();
+        return structType_.clone(src.structType());
+      case TypeDefKind::Array:
+        new (&arrayType_) ArrayType(src.arrayType());
+        return true;
+      case TypeDefKind::None:
+        break;
+    }
+    MOZ_ASSERT_UNREACHABLE();
+    return false;
   }
 
   TypeDefKind kind() const { return kind_; }
@@ -452,15 +438,7 @@ class TypeDef : public AtomicRefCounted<TypeDef> {
   WASM_DECLARE_FRIEND_SERIALIZE(TypeDef);
 };
 
-using SharedTypeDef = RefPtr<const TypeDef>;
-using MutableTypeDef = RefPtr<TypeDef>;
-
 using TypeDefVector = Vector<TypeDef, 0, SystemAllocPolicy>;
-using MutableTypeDefVector = Vector<MutableTypeDef, 0, SystemAllocPolicy>;
-
-using TypeDefToModuleIndexMap =
-    HashMap<const TypeDef*, uint32_t, PointerHasher<const TypeDef*>,
-            SystemAllocPolicy>;
 
 // A type cache maintains a cache of equivalence and subtype relations between
 // wasm types. This is required for the computation of equivalence and subtyping
@@ -470,42 +448,22 @@ using TypeDefToModuleIndexMap =
 // which may be shared between multiple threads.
 
 class TypeCache {
-  struct TypePair {
-    const TypeDef* first;
-    const TypeDef* second;
+  using TypeIndex = uint32_t;
+  using TypePair = uint64_t;
+  using TypeSet = HashSet<TypePair, DefaultHasher<TypePair>, SystemAllocPolicy>;
 
-    constexpr TypePair(const TypeDef* first, const TypeDef* second)
-        : first(first), second(second) {}
+  // Generates a hash key for the ordered pair (a, b).
+  static constexpr TypePair makeOrderedPair(TypeIndex a, TypeIndex b) {
+    return (TypePair(a) << 32) | TypePair(b);
+  }
 
-    // Generates a hash key for the ordered pair (a, b).
-    static constexpr TypePair ordered(const TypeDef* a, const TypeDef* b) {
-      return TypePair(a, b);
+  // Generates a hash key for the unordered pair (a, b).
+  static constexpr TypePair makeUnorderedPair(TypeIndex a, TypeIndex b) {
+    if (a < b) {
+      return (TypePair(a) << 32) | TypePair(b);
     }
-
-    // Generates a hash key for the unordered pair (a, b).
-    static constexpr TypePair unordered(const TypeDef* a, const TypeDef* b) {
-      if (a < b) {
-        return TypePair(a, b);
-      }
-      return TypePair(b, a);
-    }
-
-    HashNumber hash() const {
-      HashNumber hn = 0;
-      hn = mozilla::AddToHash(hn, first);
-      hn = mozilla::AddToHash(hn, second);
-      return hn;
-    }
-    bool operator==(const TypePair& rhs) const {
-      return first == rhs.first && second == rhs.second;
-    }
-  };
-  struct TypePairHashPolicy {
-    using Lookup = const TypePair&;
-    static HashNumber hash(Lookup pair) { return pair.hash(); }
-    static bool match(const TypePair& lhs, Lookup rhs) { return lhs == rhs; }
-  };
-  using TypeSet = HashSet<TypePair, TypePairHashPolicy, SystemAllocPolicy>;
+    return (TypePair(b) << 32) | TypePair(a);
+  }
 
   TypeSet equivalence_;
   TypeSet subtype_;
@@ -514,30 +472,30 @@ class TypeCache {
   TypeCache() = default;
 
   // Mark `a` as equivalent to `b` in the equivalence cache.
-  [[nodiscard]] bool markEquivalent(const TypeDef* a, const TypeDef* b) {
-    return equivalence_.put(TypePair::unordered(a, b));
+  [[nodiscard]] bool markEquivalent(TypeIndex a, TypeIndex b) {
+    return equivalence_.put(makeUnorderedPair(a, b));
   }
   // Unmark `a` as equivalent to `b` in the equivalence cache
-  void unmarkEquivalent(const TypeDef* a, const TypeDef* b) {
-    equivalence_.remove(TypePair::unordered(a, b));
+  void unmarkEquivalent(TypeIndex a, TypeIndex b) {
+    equivalence_.remove(makeUnorderedPair(a, b));
   }
 
   // Check if `a` is equivalent to `b` in the equivalence cache
-  bool isEquivalent(const TypeDef* a, const TypeDef* b) {
-    return equivalence_.has(TypePair::unordered(a, b));
+  bool isEquivalent(TypeIndex a, TypeIndex b) {
+    return equivalence_.has(makeUnorderedPair(a, b));
   }
 
   // Mark `a` as a subtype of `b` in the subtype cache
-  [[nodiscard]] bool markSubtypeOf(const TypeDef* a, const TypeDef* b) {
-    return subtype_.put(TypePair::ordered(a, b));
+  [[nodiscard]] bool markSubtypeOf(TypeIndex a, TypeIndex b) {
+    return subtype_.put(makeOrderedPair(a, b));
   }
   // Unmark `a` as a subtype of `b` in the subtype cache
-  void unmarkSubtypeOf(const TypeDef* a, const TypeDef* b) {
-    subtype_.remove(TypePair::ordered(a, b));
+  void unmarkSubtypeOf(TypeIndex a, TypeIndex b) {
+    subtype_.remove(makeOrderedPair(a, b));
   }
   // Check if `a` is a subtype of `b` in the subtype cache
-  bool isSubtypeOf(const TypeDef* a, const TypeDef* b) {
-    return subtype_.has(TypePair::ordered(a, b));
+  bool isSubtypeOf(TypeIndex a, TypeIndex b) {
+    return subtype_.has(makeOrderedPair(a, b));
   }
 };
 
@@ -554,16 +512,28 @@ enum class TypeResult {
 
 class TypeContext : public AtomicRefCounted<TypeContext> {
   FeatureArgs features_;
-  MutableTypeDefVector types_;
-  TypeDefToModuleIndexMap moduleIndices_;
+  TypeDefVector types_;
 
  public:
   TypeContext() = default;
-  explicit TypeContext(const FeatureArgs& features) : features_(features) {}
+  TypeContext(const FeatureArgs& features, TypeDefVector&& types)
+      : features_(features), types_(std::move(types)) {}
+
+  [[nodiscard]] bool clone(const TypeDefVector& source) {
+    MOZ_ASSERT(types_.length() == 0);
+    if (!types_.resize(source.length())) {
+      return false;
+    }
+    for (uint32_t i = 0; i < source.length(); i++) {
+      if (!types_[i].clone(source[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   size_t sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
-    return types_.sizeOfExcludingThis(mallocSizeOf) +
-           moduleIndices_.shallowSizeOfExcludingThis(mallocSizeOf);
+    return types_.sizeOfExcludingThis(mallocSizeOf);
   }
 
   // Disallow copy, allow move initialization
@@ -572,39 +542,74 @@ class TypeContext : public AtomicRefCounted<TypeContext> {
   TypeContext(TypeContext&&) = delete;
   TypeContext& operator=(TypeContext&&) = delete;
 
-  [[nodiscard]] MutableTypeDef addType() {
-    MutableTypeDef typeDef = js_new<TypeDef>();
-    if (!typeDef || !types_.append(typeDef) ||
-        !moduleIndices_.put(typeDef.get(), types_.length())) {
-      return nullptr;
-    }
-    return typeDef;
-  }
+  TypeDef& type(uint32_t index) { return types_[index]; }
+  const TypeDef& type(uint32_t index) const { return types_[index]; }
 
-  [[nodiscard]] bool addTypes(uint32_t length) {
-    for (uint32_t typeIndex = 0; typeIndex < length; typeIndex++) {
-      if (!addType()) {
-        return false;
-      }
-    }
-    return true;
-  }
+  TypeDef& operator[](uint32_t index) { return types_[index]; }
+  const TypeDef& operator[](uint32_t index) const { return types_[index]; }
 
-  TypeDef& type(uint32_t index) { return *types_[index]; }
-  const TypeDef& type(uint32_t index) const { return *types_[index]; }
-
-  TypeDef& operator[](uint32_t index) { return *types_[index]; }
-  const TypeDef& operator[](uint32_t index) const { return *types_[index]; }
-
-  bool empty() const { return types_.empty(); }
   uint32_t length() const { return types_.length(); }
 
-  // // Map from type definition to index
+  template <typename U>
+  [[nodiscard]] bool append(U&& typeDef) {
+    return types_.append(std::forward<U>(typeDef));
+  }
+  [[nodiscard]] bool resize(uint32_t length) { return types_.resize(length); }
+
+  // Map from type definition to index
 
   uint32_t indexOf(const TypeDef& typeDef) const {
-    auto moduleIndex = moduleIndices_.readonlyThreadsafeLookup(&typeDef);
-    MOZ_RELEASE_ASSERT(moduleIndex.found());
-    return moduleIndex->value();
+    const TypeDef* elem = &typeDef;
+    MOZ_ASSERT(elem >= types_.begin() && elem < types_.end());
+    return elem - types_.begin();
+  }
+
+  // FuncType accessors
+
+  bool isFuncType(uint32_t index) const { return types_[index].isFuncType(); }
+  bool isFuncType(RefType t) const {
+    return t.isTypeIndex() && isFuncType(t.typeIndex());
+  }
+
+  FuncType& funcType(uint32_t index) { return types_[index].funcType(); }
+  const FuncType& funcType(uint32_t index) const {
+    return types_[index].funcType();
+  }
+  FuncType& funcType(RefType t) { return funcType(t.typeIndex()); }
+  const FuncType& funcType(RefType t) const { return funcType(t.typeIndex()); }
+
+  // StructType accessors
+
+  bool isStructType(uint32_t index) const {
+    return types_[index].isStructType();
+  }
+  bool isStructType(RefType t) const {
+    return t.isTypeIndex() && isStructType(t.typeIndex());
+  }
+
+  StructType& structType(uint32_t index) { return types_[index].structType(); }
+  const StructType& structType(uint32_t index) const {
+    return types_[index].structType();
+  }
+  StructType& structType(RefType t) { return structType(t.typeIndex()); }
+  const StructType& structType(RefType t) const {
+    return structType(t.typeIndex());
+  }
+
+  // StructType accessors
+
+  bool isArrayType(uint32_t index) const { return types_[index].isArrayType(); }
+  bool isArrayType(RefType t) const {
+    return t.isTypeIndex() && isArrayType(t.typeIndex());
+  }
+
+  ArrayType& arrayType(uint32_t index) { return types_[index].arrayType(); }
+  const ArrayType& arrayType(uint32_t index) const {
+    return types_[index].arrayType();
+  }
+  ArrayType& arrayType(RefType t) { return arrayType(t.typeIndex()); }
+  const ArrayType& arrayType(RefType t) const {
+    return arrayType(t.typeIndex());
   }
 
   // Type equivalence
@@ -627,16 +632,16 @@ class TypeContext : public AtomicRefCounted<TypeContext> {
   TypeResult isRefEquivalent(RefType first, RefType second,
                              TypeCache* cache) const;
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  TypeResult isTypeDefEquivalent(const TypeDef* first, const TypeDef* second,
-                                 TypeCache* cache) const;
+  TypeResult isTypeIndexEquivalent(uint32_t firstIndex, uint32_t secondIndex,
+                                   TypeCache* cache) const;
 #endif
 #ifdef ENABLE_WASM_GC
-  TypeResult isStructEquivalent(const TypeDef* first, const TypeDef* second,
+  TypeResult isStructEquivalent(uint32_t firstIndex, uint32_t secondIndex,
                                 TypeCache* cache) const;
   TypeResult isStructFieldEquivalent(const StructField first,
                                      const StructField second,
                                      TypeCache* cache) const;
-  TypeResult isArrayEquivalent(const TypeDef* first, const TypeDef* second,
+  TypeResult isArrayEquivalent(uint32_t firstIndex, uint32_t secondIndex,
                                TypeCache* cache) const;
   TypeResult isArrayElementEquivalent(const ArrayType& first,
                                       const ArrayType& second,
@@ -663,18 +668,18 @@ class TypeContext : public AtomicRefCounted<TypeContext> {
   TypeResult isRefSubtypeOf(RefType subType, RefType superType,
                             TypeCache* cache) const;
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  TypeResult isTypeDefSubtypeOf(const TypeDef* subType,
-                                const TypeDef* superType,
-                                TypeCache* cache) const;
+  TypeResult isTypeIndexSubtypeOf(uint32_t subTypeIndex,
+                                  uint32_t superTypeIndex,
+                                  TypeCache* cache) const;
 #endif
 
 #ifdef ENABLE_WASM_GC
-  TypeResult isStructSubtypeOf(const TypeDef* subType, const TypeDef* superType,
+  TypeResult isStructSubtypeOf(uint32_t subTypeIndex, uint32_t superTypeIndex,
                                TypeCache* cache) const;
   TypeResult isStructFieldSubtypeOf(const StructField subType,
                                     const StructField superType,
                                     TypeCache* cache) const;
-  TypeResult isArraySubtypeOf(const TypeDef* subType, const TypeDef* superType,
+  TypeResult isArraySubtypeOf(uint32_t subTypeIndex, uint32_t superTypeIndex,
                               TypeCache* cache) const;
   TypeResult isArrayElementSubtypeOf(const ArrayType& subType,
                                      const ArrayType& superType,
@@ -749,6 +754,62 @@ class TypeHandle {
 // 'global type context' that RTTValues refer to by type index. Types are never
 // freed from the global type context as that would shift the index space. In
 // the future, this will be fixed.
+
+class TypeIdDesc {
+ public:
+  static const uintptr_t ImmediateBit = 0x1;
+
+ private:
+  TypeIdDescKind kind_;
+  size_t bits_;
+
+  WASM_CHECK_CACHEABLE_POD(kind_, bits_);
+
+  TypeIdDesc(TypeIdDescKind kind, size_t bits) : kind_(kind), bits_(bits) {}
+
+ public:
+  TypeIdDescKind kind() const { return kind_; }
+  static bool isGlobal(const TypeDef& type);
+
+  TypeIdDesc() : kind_(TypeIdDescKind::None), bits_(0) {}
+  static TypeIdDesc global(const TypeDef& type, uint32_t globalDataOffset);
+  static TypeIdDesc immediate(const TypeDef& type);
+
+  bool isGlobal() const { return kind_ == TypeIdDescKind::Global; }
+
+  uint32_t immediate() const {
+    MOZ_ASSERT(kind_ == TypeIdDescKind::Immediate);
+    return bits_;
+  }
+  uint32_t globalDataOffset() const {
+    MOZ_ASSERT(kind_ == TypeIdDescKind::Global);
+    return bits_;
+  }
+};
+
+WASM_DECLARE_CACHEABLE_POD(TypeIdDesc);
+
+using TypeIdDescVector = Vector<TypeIdDesc, 0, SystemAllocPolicy>;
+
+// TypeDefWithId pairs a FuncType with TypeIdDesc, describing either how to
+// compile code that compares this signature's id or, at instantiation what
+// signature ids to allocate in the global hash and where to put them.
+
+struct TypeDefWithId : public TypeDef {
+  TypeIdDesc id;
+
+  TypeDefWithId() = default;
+  explicit TypeDefWithId(TypeDef&& typeDef)
+      : TypeDef(std::move(typeDef)), id() {}
+  TypeDefWithId(TypeDef&& typeDef, TypeIdDesc id)
+      : TypeDef(std::move(typeDef)), id(id) {}
+
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+};
+
+using TypeDefWithIdVector = Vector<TypeDefWithId, 0, SystemAllocPolicy>;
+using TypeDefWithIdPtrVector =
+    Vector<const TypeDefWithId*, 0, SystemAllocPolicy>;
 
 }  // namespace wasm
 }  // namespace js

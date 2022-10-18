@@ -87,9 +87,9 @@ bool wasm::ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
   return true;
 }
 
-UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
+UniqueChars wasm::ToString(RefType type) {
   // Try to emit a shorthand version first
-  if (type.isNullable() && !type.isTypeRef()) {
+  if (type.isNullable() && !type.isTypeIndex()) {
     const char* literal = nullptr;
     switch (type.kind()) {
       case RefType::Func:
@@ -101,11 +101,8 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
       case RefType::Eq:
         literal = "eqref";
         break;
-      case RefType::TypeRef: {
-        uint32_t typeIndex = types->indexOf(*type.typeDef());
-        return JS_smprintf("(ref %s%d)", type.isNullable() ? "null " : "",
-                           typeIndex);
-      }
+      case RefType::TypeIndex:
+        MOZ_ASSERT_UNREACHABLE();
     }
     return DuplicateString(literal);
   }
@@ -122,20 +119,16 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
     case RefType::Eq:
       heapType = "eq";
       break;
-    case RefType::TypeRef: {
-      uint32_t typeIndex = types->indexOf(*type.typeDef());
+    case RefType::TypeIndex:
       return JS_smprintf("(ref %s%d)", type.isNullable() ? "null " : "",
-                         typeIndex);
-    }
+                         type.typeIndex());
   }
   return JS_smprintf("(ref %s%s)", type.isNullable() ? "null " : "", heapType);
 }
 
-UniqueChars wasm::ToString(ValType type, const TypeContext* types) {
-  return ToString(type.fieldType(), types);
-}
+UniqueChars wasm::ToString(ValType type) { return ToString(type.fieldType()); }
 
-UniqueChars wasm::ToString(FieldType type, const TypeContext* types) {
+UniqueChars wasm::ToString(FieldType type) {
   const char* literal = nullptr;
   switch (type.kind()) {
     case FieldType::I8:
@@ -160,12 +153,11 @@ UniqueChars wasm::ToString(FieldType type, const TypeContext* types) {
       literal = "f64";
       break;
     case FieldType::Ref:
-      return ToString(type.refType(), types);
+      return ToString(type.refType());
   }
   return DuplicateString(literal);
 }
 
-UniqueChars wasm::ToString(const Maybe<ValType>& type,
-                           const TypeContext* types) {
-  return type ? ToString(type.ref(), types) : JS_smprintf("%s", "void");
+UniqueChars wasm::ToString(const Maybe<ValType>& type) {
+  return type ? ToString(type.ref()) : JS_smprintf("%s", "void");
 }
