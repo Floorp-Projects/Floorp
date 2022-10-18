@@ -695,10 +695,11 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
           return Err(NS_ERROR_EDITOR_DESTROYED);
         }
         NS_WARNING("HTMLEditor::ChangeListElementType() failed, but ignored");
+      } else {
+        // There is AutoTransactionConserveSelection above, therefore, we don't
+        // need to update selection here.
+        convertListTypeResult.inspect().IgnoreCaretPointSuggestion();
       }
-      // There is AutoTransactionConserveSelection above, therefore, we don't
-      // need to update selection here.
-      convertListTypeResult.inspect().IgnoreCaretPointSuggestion();
     }
     ret.MarkAsHandled();
   } else {
