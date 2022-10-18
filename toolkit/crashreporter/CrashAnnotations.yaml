@@ -990,7 +990,7 @@ UtilityProcessStatus:
 UtilityActorsName:
   description: >
     Comma-separated list of IPC actors name running on this Utility process instance
-  type: integer
+  type: string
   ping: true
 
 Vendor:
