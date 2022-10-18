@@ -4,13 +4,6 @@
 
 "use strict";
 
-/* import-globals-from ../../mochitest/role.js */
-/* import-globals-from ../../mochitest/states.js */
-loadScripts(
-  { name: "role.js", dir: MOCHITESTS_DIR },
-  { name: "states.js", dir: MOCHITESTS_DIR }
-);
-
 async function runTests(browser, accDoc) {
   let getAcc = id => findAccessibleChildByID(accDoc, id);
 
