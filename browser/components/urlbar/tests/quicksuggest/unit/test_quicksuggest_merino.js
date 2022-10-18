@@ -1272,8 +1272,8 @@ add_task(async function bestMatch() {
   UrlbarPrefs.clear("suggest.bestmatch");
 });
 
-// Tests setting the endpoint URL via Nimbus.
-add_task(async function endpointSetByNimbus() {
+// Tests setting the endpoint URL and query parameters via Nimbus.
+add_task(async function nimbus() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
   UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
@@ -1294,9 +1294,46 @@ add_task(async function endpointSetByNimbus() {
     matches: [],
   });
 
-  // Now install an experiment that sets the endpoint and make sure a result is
-  // returned.
-  await withEndpointExperiment(async () => {
+  // Now install an experiment that sets the endpoint and other Merino-related
+  // variables. Make sure a result is returned and the request includes the
+  // correct query params.
+
+  // `param`: The param name in the request URL
+  // `value`: The value to use for the param
+  // `variable`: The name of the Nimbus variable corresponding to the param
+  let expectedParams = [
+    {
+      param: "client_variants",
+      value: "test-client-variants",
+      variable: "merinoClientVariants",
+    },
+    {
+      param: "providers",
+      value: "test-providers",
+      variable: "merinoProviders",
+    },
+  ];
+
+  // Set up the Nimbus variable values to create the experiment with.
+  let experimentValues = expectedParams.reduce(
+    (memo, { variable, value }) => {
+      memo[variable] = value;
+      return memo;
+    },
+    {
+      merinoEndpointURL: gMerinoEndpointURL.toString(),
+    }
+  );
+
+  await withExperiment(experimentValues, async () => {
+    // Save the actual params when the request is received.
+    let actualParams;
+    setMerinoResponse().checkRequest = req => {
+      info("Got request query string: " + req.queryString);
+      actualParams = new URLSearchParams(req.queryString);
+    };
+
+    // Do a search.
     await check_results({
       context: createContext(SEARCH_STRING, {
         providers: [UrlbarProviderQuickSuggest.name],
@@ -1304,12 +1341,22 @@ add_task(async function endpointSetByNimbus() {
       }),
       matches: [EXPECTED_MERINO_RESULT],
     });
+
+    // Check the actual params.
+    Assert.ok(actualParams, "Mock Merino server received the request");
+    for (let { param, value } of expectedParams) {
+      Assert.deepEqual(
+        actualParams.getAll(param),
+        [value],
+        "Param value is correct: " + param
+      );
+    }
   });
 
   UrlbarPrefs.set(PREF_MERINO_ENDPOINT_URL, gMerinoEndpointURL.toString());
 });
 
-async function withEndpointExperiment(callback) {
+async function withExperiment(values, callback) {
   let {
     enrollmentPromise,
     doExperimentCleanup,
@@ -1324,7 +1371,7 @@ async function withEndpointExperiment(callback) {
               featureId: NimbusFeatures.urlbar.featureId,
               value: {
                 enabled: true,
-                merinoEndpointURL: gMerinoEndpointURL.toString(),
+                ...values,
               },
             },
           ],

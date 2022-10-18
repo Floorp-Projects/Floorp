@@ -105,6 +105,12 @@ urlbar:
       type: string
       fallbackPref: browser.urlbar.merino.endpointURL
       description: The Merino endpoint URL, not including parameters.
+    merinoProviders:
+      type: string
+      fallbackPref: browser.urlbar.merino.providers
+      description: >-
+        Comma-separated list of providers to request from the Merino server.
+        Merino will return suggestions only for these providers.
     merinoTimeoutMs:
       type: int
       fallbackPref: browser.urlbar.merino.timeoutMs
