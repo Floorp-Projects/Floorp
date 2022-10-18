@@ -91,7 +91,7 @@ class VendorManifest(MozbuildObject):
         # ==========================================================
         self.source_host = self.get_source_host()
 
-        ref_type = self.manifest["vendoring"]["tracking"]
+        ref_type = self.manifest["vendoring"].get("tracking", "commit")
         flavor = self.manifest["vendoring"].get("flavor", "regular")
 
         if revision == "tip":
