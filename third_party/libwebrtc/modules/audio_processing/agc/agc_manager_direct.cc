@@ -53,8 +53,8 @@ constexpr int kSurplusCompressionGain = 6;
 // frames).
 constexpr int kClippingPredictorEvaluatorHistorySize = 500;
 
-using ClippingPredictorConfig = AudioProcessing::Config::GainController1::
-    AnalogGainController::ClippingPredictor;
+using AnalogAgcConfig =
+    AudioProcessing::Config::GainController1::AnalogGainController;
 
 // Returns whether a fall-back solution to choose the maximum level should be
 // chosen.
@@ -441,51 +441,35 @@ void MonoAgc::UpdateCompressor() {
 std::atomic<int> AgcManagerDirect::instance_counter_(0);
 
 AgcManagerDirect::AgcManagerDirect(
-    Agc* agc,
-    int startup_min_level,
-    int clipped_level_min,
-    int clipped_level_step,
-    float clipped_ratio_threshold,
-    int clipped_wait_frames,
-    const ClippingPredictorConfig& clipping_config)
-    : AgcManagerDirect(/*num_capture_channels=*/1,
-                       startup_min_level,
-                       clipped_level_min,
-                       /*disable_digital_adaptive=*/false,
-                       clipped_level_step,
-                       clipped_ratio_threshold,
-                       clipped_wait_frames,
-                       clipping_config) {
+    const AudioProcessing::Config::GainController1::AnalogGainController&
+        analog_config,
+    Agc* agc)
+    : AgcManagerDirect(/*num_capture_channels=*/1, analog_config) {
   RTC_DCHECK(channel_agcs_[0]);
   RTC_DCHECK(agc);
   channel_agcs_[0]->set_agc(agc);
 }
 
-AgcManagerDirect::AgcManagerDirect(
-    int num_capture_channels,
-    int startup_min_level,
-    int clipped_level_min,
-    bool disable_digital_adaptive,
-    int clipped_level_step,
-    float clipped_ratio_threshold,
-    int clipped_wait_frames,
-    const ClippingPredictorConfig& clipping_config)
+AgcManagerDirect::AgcManagerDirect(int num_capture_channels,
+                                   const AnalogAgcConfig& analog_config)
     : min_mic_level_override_(GetMinMicLevelOverride()),
       data_dumper_(new ApmDataDumper(instance_counter_.fetch_add(1) + 1)),
       use_min_channel_level_(!UseMaxAnalogChannelLevel()),
       num_capture_channels_(num_capture_channels),
-      disable_digital_adaptive_(disable_digital_adaptive),
-      frames_since_clipped_(clipped_wait_frames),
+      disable_digital_adaptive_(!analog_config.enable_digital_adaptive),
+      frames_since_clipped_(analog_config.clipped_wait_frames),
       capture_output_used_(true),
-      clipped_level_step_(clipped_level_step),
-      clipped_ratio_threshold_(clipped_ratio_threshold),
-      clipped_wait_frames_(clipped_wait_frames),
+      clipped_level_step_(analog_config.clipped_level_step),
+      clipped_ratio_threshold_(analog_config.clipped_ratio_threshold),
+      clipped_wait_frames_(analog_config.clipped_wait_frames),
       channel_agcs_(num_capture_channels),
       new_compressions_to_set_(num_capture_channels),
       clipping_predictor_(
-          CreateClippingPredictor(num_capture_channels, clipping_config)),
-      use_clipping_predictor_step_(!!clipping_predictor_ &&
-                                   clipping_config.use_predicted_step),
+          CreateClippingPredictor(num_capture_channels,
+                                  analog_config.clipping_predictor)),
+      use_clipping_predictor_step_(
+          !!clipping_predictor_ &&
+          analog_config.clipping_predictor.use_predicted_step),
       clipping_predictor_evaluator_(kClippingPredictorEvaluatorHistorySize),
       clipping_predictor_log_counter_(0),
       clipping_rate_log_(0.0f),
@@ -499,15 +483,16 @@ AgcManagerDirect::AgcManagerDirect(
     ApmDataDumper* data_dumper_ch = ch == 0 ? data_dumper_.get() : nullptr;
 
     channel_agcs_[ch] = std::make_unique<MonoAgc>(
-        data_dumper_ch, startup_min_level, clipped_level_min,
-        disable_digital_adaptive_, min_mic_level);
+        data_dumper_ch, analog_config.startup_min_volume,
+        analog_config.clipped_level_min, disable_digital_adaptive_,
+        min_mic_level);
   }
   RTC_DCHECK(!channel_agcs_.empty());
-  RTC_DCHECK_GT(clipped_level_step, 0);
-  RTC_DCHECK_LE(clipped_level_step, 255);
-  RTC_DCHECK_GT(clipped_ratio_threshold, 0.f);
-  RTC_DCHECK_LT(clipped_ratio_threshold, 1.f);
-  RTC_DCHECK_GT(clipped_wait_frames, 0);
+  RTC_DCHECK_GT(clipped_level_step_, 0);
+  RTC_DCHECK_LE(clipped_level_step_, 255);
+  RTC_DCHECK_GT(clipped_ratio_threshold_, 0.0f);
+  RTC_DCHECK_LT(clipped_ratio_threshold_, 1.0f);
+  RTC_DCHECK_GT(clipped_wait_frames_, 0);
   channel_agcs_[0]->ActivateLogging();
 }
 
@@ -529,22 +514,21 @@ void AgcManagerDirect::Initialize() {
 }
 
 void AgcManagerDirect::SetupDigitalGainControl(
-    GainControl* gain_control) const {
-  RTC_DCHECK(gain_control);
-  if (gain_control->set_mode(GainControl::kFixedDigital) != 0) {
+    GainControl& gain_control) const {
+  if (gain_control.set_mode(GainControl::kFixedDigital) != 0) {
     RTC_LOG(LS_ERROR) << "set_mode(GainControl::kFixedDigital) failed.";
   }
   const int target_level_dbfs = disable_digital_adaptive_ ? 0 : 2;
-  if (gain_control->set_target_level_dbfs(target_level_dbfs) != 0) {
+  if (gain_control.set_target_level_dbfs(target_level_dbfs) != 0) {
     RTC_LOG(LS_ERROR) << "set_target_level_dbfs() failed.";
   }
   const int compression_gain_db =
       disable_digital_adaptive_ ? 0 : kDefaultCompressionGain;
-  if (gain_control->set_compression_gain_db(compression_gain_db) != 0) {
+  if (gain_control.set_compression_gain_db(compression_gain_db) != 0) {
     RTC_LOG(LS_ERROR) << "set_compression_gain_db() failed.";
   }
   const bool enable_limiter = !disable_digital_adaptive_;
-  if (gain_control->enable_limiter(enable_limiter) != 0) {
+  if (gain_control.enable_limiter(enable_limiter) != 0) {
     RTC_LOG(LS_ERROR) << "enable_limiter() failed.";
   }
 }

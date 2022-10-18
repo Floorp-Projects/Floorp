@@ -24,6 +24,7 @@ rtc_library("agc") {
     ":gain_control_interface",
     ":gain_map",
     ":level_estimation",
+    "..:api",
     "..:apm_logging",
     "..:audio_buffer",
     "..:audio_frame_view",
