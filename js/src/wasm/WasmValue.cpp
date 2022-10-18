@@ -137,7 +137,7 @@ bool wasm::CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
         return false;
       }
       break;
-    case RefType::TypeIndex:
+    case RefType::TypeRef:
       MOZ_CRASH("temporarily unsupported Ref type");
   }
   return true;
@@ -399,7 +399,7 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
         case RefType::Eq:
           return ToWebAssemblyValue_eqref<Debug>(cx, val, (void**)loc,
                                                  mustWrite64);
-        case RefType::TypeIndex:
+        case RefType::TypeRef:
           break;
       }
   }
@@ -525,7 +525,7 @@ bool wasm::ToJSValue(JSContext* cx, const void* src, FieldType type,
         case RefType::Eq:
           return ToJSValue_anyref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
-        case RefType::TypeIndex:
+        case RefType::TypeRef:
           break;
       }
   }
