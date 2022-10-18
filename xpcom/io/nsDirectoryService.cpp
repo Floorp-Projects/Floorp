@@ -442,6 +442,9 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
     rv =
         GetSpecialSystemDirectory(Unix_XDG_Download, getter_AddRefs(localFile));
     *aPersistent = false;
+  } else if (inAtom == nsGkAtoms::DirectoryService_OS_SystemConfigDir) {
+    rv = GetSpecialSystemDirectory(Unix_SystemConfigDirectory,
+                                   getter_AddRefs(localFile));
   }
 #endif
 

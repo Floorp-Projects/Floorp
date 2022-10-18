@@ -7,6 +7,7 @@
 #include "SpecialSystemDirectory.h"
 #include "nsString.h"
 #include "nsDependentString.h"
+#include "nsIXULAppInfo.h"
 
 #if defined(XP_WIN)
 
@@ -182,6 +183,37 @@ static nsresult GetUnixHomeDir(nsIFile** aFile) {
 #  else
   return NS_NewNativeLocalFile(nsDependentCString(PR_GetEnv("HOME")), true,
                                aFile);
+#  endif
+}
+
+static nsresult GetUnixSystemConfigDir(nsIFile** aFile) {
+#  if defined(ANDROID)
+  return NS_ERROR_FAILURE;
+#  else
+  nsCOMPtr<nsIXULAppInfo> appInfo =
+      do_GetService("@mozilla.org/xre/app-info;1");
+  if (!appInfo) {
+    MOZ_CRASH("No appInfo");
+  }
+
+  nsAutoCString appName;
+  nsresult rv = appInfo->GetName(appName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  ToLowerCase(appName);
+
+  const char* mozSystemConfigDir = PR_GetEnv("MOZ_SYSTEM_CONFIG_DIR");
+  const char* defaultSystemConfigDir = "/etc";
+  nsDependentCString sysConfigDir = nsDependentCString(
+      mozSystemConfigDir ? mozSystemConfigDir : defaultSystemConfigDir);
+
+  rv = NS_NewNativeLocalFile(sysConfigDir, true, aFile);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  (*aFile)->AppendNative(appName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return rv;
 #  endif
 }
 
@@ -634,6 +666,9 @@ nsresult GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
     case Unix_XDG_Desktop:
     case Unix_XDG_Download:
       return GetUnixXDGUserDirectory(aSystemSystemDirectory, aFile);
+
+    case Unix_SystemConfigDirectory:
+      return GetUnixSystemConfigDir(aFile);
 #endif
 
     default:

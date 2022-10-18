@@ -1,0 +1,23 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+const { updateAppInfo } = ChromeUtils.import(
+  "resource://testing-common/AppInfo.jsm"
+);
+
+function run_test() {
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+
+  let testDirName = do_get_cwd().clone();
+  env.set("MOZ_SYSTEM_CONFIG_DIR", testDirName.path);
+
+  updateAppInfo();
+
+  let customSysConfD = Services.dirsvc.get("SysConfD", Ci.nsIFile);
+  let parent = customSysConfD.parent;
+  let child = customSysConfD.leafName;
+  notEqual("/etc", parent.path, "SysConfD is not in /etc");
+  equal("xpcshell", child, "SysConfD is xpcshell");
+}

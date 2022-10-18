@@ -6,6 +6,6 @@
 
 DIRS += ["src"]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini", "test/unit/xpcshell_snap.ini"]
 
 MARIONETTE_UNIT_MANIFESTS += ["test/marionette/manifest.ini"]

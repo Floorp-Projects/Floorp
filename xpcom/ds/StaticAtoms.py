@@ -2447,6 +2447,7 @@ STATIC_ATOMS = [
     Atom("DirectoryService_OS_TemporaryDirectory", "TmpD"),
     Atom("DirectoryService_OS_CurrentProcessDirectory", "CurProcD"),
     Atom("DirectoryService_OS_CurrentWorkingDirectory", "CurWorkD"),
+    Atom("DirectoryService_OS_SystemConfigDir", "SysConfD"),
     # Atom("DirectoryService_OS_HomeDirectory", "Home"),  # "Home" is present above
     Atom("DirectoryService_OS_DesktopDirectory", "Desk"),
     Atom("DirectoryService_InitCurrentProcess_dummy", "MozBinD"),

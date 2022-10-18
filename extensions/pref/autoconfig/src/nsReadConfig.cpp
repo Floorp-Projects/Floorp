@@ -26,6 +26,10 @@
 #include "nspr.h"
 #include "nsXULAppAPI.h"
 
+#if defined(MOZ_WIDGET_GTK)
+#  include "mozilla/WidgetUtilsGtk.h"
+#endif  // defined(MOZ_WIDGET_GTK)
+
 using namespace mozilla;
 
 extern bool sandboxEnabled;
@@ -243,7 +247,16 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char* aFileName,
   nsCOMPtr<nsIInputStream> inStr;
   if (isBinDir) {
     nsCOMPtr<nsIFile> jsFile;
-    rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(jsFile));
+#if defined(MOZ_WIDGET_GTK)
+    if (!mozilla::widget::IsRunningUnderFlatpakOrSnap()) {
+#endif  // defined(MOZ_WIDGET_GTK)
+      rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(jsFile));
+#if defined(MOZ_WIDGET_GTK)
+    } else {
+      rv = NS_GetSpecialDirectory(NS_OS_SYSTEM_CONFIG_DIR,
+                                  getter_AddRefs(jsFile));
+    }
+#endif  // defined(MOZ_WIDGET_GTK)
     if (NS_FAILED(rv)) return rv;
 
     rv = jsFile->AppendNative(nsDependentCString(aFileName));
