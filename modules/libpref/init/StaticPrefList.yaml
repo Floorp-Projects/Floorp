@@ -9404,7 +9404,7 @@
 # using the IPC actor within the Utility process rather than the RDD process.
 # When it is set to true, then the utility process will take precedence over RDD
 # to perform audio decoding.
-# TODO: Android: Bug 1767930
+# TODO: Enabling for Isolated Processes builds on Android
 - name: media.utility-process.enabled
   type: RelaxedAtomicBool
 #if defined(XP_WIN)
@@ -9412,6 +9412,8 @@
 #elif defined(XP_MACOSX)
   value: true
 #elif defined(XP_LINUX) && !defined(ANDROID)
+  value: true
+#elif defined(ANDROID) && !defined(MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS)
   value: true
 #elif defined(XP_OPENBSD)
   value: true

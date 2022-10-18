@@ -397,6 +397,9 @@ def emit_code(fd, pref_list_filename):
     if buildconfig.substs.get("CPU_ARCH") == "aarch64":
         pp.context["MOZ_AARCH64"] = True
 
+    if buildconfig.substs.get("MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS"):
+        pp.context["MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS"] = True
+
     pp.out = StringIO()
     pp.do_filter("substitution")
     pp.do_include(pref_list_filename)
