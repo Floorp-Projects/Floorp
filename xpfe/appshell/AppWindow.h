@@ -182,11 +182,17 @@ class AppWindow final : public nsIBaseWindow,
   explicit AppWindow(uint32_t aChromeFlags);
 
  protected:
-  enum persistentAttributes {
-    PAD_MISC = 0x1,
-    PAD_POSITION = 0x2,
-    PAD_SIZE = 0x4
+  enum class PersistentAttribute : uint8_t {
+    Position,
+    Size,
+    Misc,
   };
+  using PersistentAttributes = EnumSet<PersistentAttribute>;
+
+  static PersistentAttributes AllPersistentAttributes() {
+    return {PersistentAttribute::Position, PersistentAttribute::Size,
+            PersistentAttribute::Misc};
+  }
 
   virtual ~AppWindow();
 
@@ -251,7 +257,10 @@ class AppWindow final : public nsIBaseWindow,
   void PlaceWindowLayersBehind(uint32_t aLowLevel, uint32_t aHighLevel,
                                nsIAppWindow* aBehind);
   void SetContentScrollbarVisibility(bool aVisible);
-  void PersistentAttributesDirty(uint32_t aDirtyFlags);
+
+  enum PersistentAttributeUpdate { Sync, Async };
+  void PersistentAttributesDirty(PersistentAttributes,
+                                 PersistentAttributeUpdate);
   nsresult GetTabCount(uint32_t* aResult);
 
   void LoadPersistentWindowState();
@@ -339,8 +348,8 @@ class AppWindow final : public nsIBaseWindow,
   // otherwise happen due to script running as we tear down various things.
   bool mDestroying;
   bool mRegistered;
-  uint32_t mPersistentAttributesDirty;  // persistentAttributes
-  uint32_t mPersistentAttributesMask;
+  PersistentAttributes mPersistentAttributesDirty;
+  PersistentAttributes mPersistentAttributesMask;
   uint32_t mChromeFlags;
   nsCOMPtr<nsIOpenWindowInfo> mInitialOpenWindowInfo;
   nsString mTitle;

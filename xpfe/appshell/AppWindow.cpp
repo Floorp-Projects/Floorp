@@ -129,8 +129,6 @@ AppWindow::AppWindow(uint32_t aChromeFlags)
       mIgnoreXULSizeMode(false),
       mDestroying(false),
       mRegistered(false),
-      mPersistentAttributesDirty(0),
-      mPersistentAttributesMask(0),
       mChromeFlags(aChromeFlags),
       mWidgetListenerDelegate(this) {}
 
@@ -337,8 +335,7 @@ NS_IMETHODIMP AppWindow::SetZLevel(uint32_t aLevel) {
 
   // do it
   mediator->SetZLevel(this, aLevel);
-  PersistentAttributesDirty(PAD_MISC);
-  SavePersistentAttributes();
+  PersistentAttributesDirty(PersistentAttribute::Misc, Sync);
 
   nsCOMPtr<nsIContentViewer> cv;
   mDocShell->GetContentViewer(getter_AddRefs(cv));
@@ -683,8 +680,7 @@ NS_IMETHODIMP AppWindow::SetPositionDesktopPix(int32_t aX, int32_t aY) {
     mIgnoreXULPosition = true;
     return NS_OK;
   }
-  PersistentAttributesDirty(PAD_POSITION);
-  SavePersistentAttributes();
+  PersistentAttributesDirty(PersistentAttribute::Position, Sync);
   return NS_OK;
 }
 
@@ -727,8 +723,7 @@ NS_IMETHODIMP AppWindow::SetSize(int32_t aCX, int32_t aCY, bool aRepaint) {
     mIgnoreXULSizeMode = true;
     return NS_OK;
   }
-  PersistentAttributesDirty(PAD_SIZE);
-  SavePersistentAttributes();
+  PersistentAttributesDirty(PersistentAttribute::Size, Sync);
   return NS_OK;
 }
 
@@ -762,8 +757,8 @@ NS_IMETHODIMP AppWindow::SetPositionAndSize(int32_t aX, int32_t aY, int32_t aCX,
     mIgnoreXULSizeMode = true;
     return NS_OK;
   }
-  PersistentAttributesDirty(PAD_POSITION | PAD_SIZE);
-  SavePersistentAttributes();
+  PersistentAttributesDirty(
+      {PersistentAttribute::Size, PersistentAttribute::Position}, Sync);
   return NS_OK;
 }
 
@@ -1159,7 +1154,7 @@ void AppWindow::OnChromeLoaded() {
     // SyncAttributesToWidget(), so AppWindow::Destroy may already have been
     // called. Take care!
   }
-  mPersistentAttributesMask |= PAD_POSITION | PAD_SIZE | PAD_MISC;
+  mPersistentAttributesMask += AllPersistentAttributes();
 }
 
 bool AppWindow::NeedsTooltipListener() {
@@ -1945,7 +1940,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
   nsAutoString persistString;
   docShellElement->GetAttr(nsGkAtoms::persist, persistString);
   if (persistString.IsEmpty()) {  // quick check which sometimes helps
-    mPersistentAttributesDirty = 0;
+    mPersistentAttributesDirty.clear();
     return NS_OK;
   }
 
@@ -1974,7 +1969,8 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
   nsAutoString sizeString;
   bool shouldPersist = !isFullscreen;
   // (only for size elements which are persisted)
-  if ((mPersistentAttributesDirty & PAD_POSITION) && gotRestoredBounds) {
+  if (mPersistentAttributesDirty.contains(PersistentAttribute::Position) &&
+      gotRestoredBounds) {
     if (persistString.Find(u"screenX") >= 0) {
       sizeString.Truncate();
       sizeString.AppendInt(NSToIntRound(rect.X() / posScale.scale));
@@ -1993,7 +1989,8 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
     }
   }
 
-  if ((mPersistentAttributesDirty & PAD_SIZE) && gotRestoredBounds) {
+  if (mPersistentAttributesDirty.contains(PersistentAttribute::Size) &&
+      gotRestoredBounds) {
     LayoutDeviceIntRect innerRect =
         rect - GetOuterToInnerSizeDifference(mWindow);
     if (persistString.Find(u"width") >= 0) {
@@ -2016,7 +2013,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
 
   Unused << MaybeSaveEarlyWindowPersistentValues(rect);
 
-  if (mPersistentAttributesDirty & PAD_MISC) {
+  if (mPersistentAttributesDirty.contains(PersistentAttribute::Misc)) {
     nsSizeMode sizeMode = mWindow->SizeMode();
 
     if (sizeMode != nsSizeMode_Minimized) {
@@ -2050,7 +2047,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
     }
   }
 
-  mPersistentAttributesDirty = 0;
+  mPersistentAttributesDirty.clear();
   return NS_OK;
 }
 
@@ -2454,11 +2451,6 @@ void AppWindow::SetContentScrollbarVisibility(bool aVisible) {
   nsContentUtils::SetScrollbarsVisibility(contentWin->GetDocShell(), aVisible);
 }
 
-// during spinup, attributes that haven't been loaded yet can't be dirty
-void AppWindow::PersistentAttributesDirty(uint32_t aDirtyFlags) {
-  mPersistentAttributesDirty |= aDirtyFlags & mPersistentAttributesMask;
-}
-
 void AppWindow::ApplyChromeFlags() {
   nsCOMPtr<dom::Element> window = GetWindowDOMElement();
   if (!window) {
@@ -2733,7 +2725,7 @@ bool AppWindow::WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) {
 
   // Persist position, but not immediately, in case this OS is firing
   // repeated move events as the user drags the window
-  SetPersistenceTimer(PAD_POSITION);
+  PersistentAttributesDirty(PersistentAttribute::Position, Async);
   return false;
 }
 
@@ -2744,7 +2736,9 @@ bool AppWindow::WindowResized(nsIWidget* aWidget, int32_t aWidth,
   }
   // Persist size, but not immediately, in case this OS is firing
   // repeated size events as the user drags the sizing handle
-  if (!IsLocked()) SetPersistenceTimer(PAD_POSITION | PAD_SIZE | PAD_MISC);
+  if (!IsLocked()) {
+    PersistentAttributesDirty(AllPersistentAttributes(), Async);
+  }
   // Check if we need to continue a fullscreen change.
   switch (mFullscreenChangeState) {
     case FullscreenChangeState::WillChange:
@@ -2809,7 +2803,7 @@ void AppWindow::SizeModeChanged(nsSizeMode aSizeMode) {
   // Persist mode, but not immediately, because in many (all?)
   // cases this will merge with the similar call in NS_SIZE and
   // write the attribute values only once.
-  SetPersistenceTimer(PAD_MISC);
+  PersistentAttributesDirty(PersistentAttribute::Misc, Async);
   nsCOMPtr<nsPIDOMWindowOuter> ourWindow =
       mDocShell ? mDocShell->GetWindow() : nullptr;
   if (ourWindow) {
@@ -2987,8 +2981,7 @@ void AppWindow::WindowActivated() {
   }
 
   if (mChromeLoaded) {
-    PersistentAttributesDirty(PAD_POSITION | PAD_SIZE | PAD_MISC);
-    SavePersistentAttributes();
+    PersistentAttributesDirty(AllPersistentAttributes(), Sync);
   }
 }
 
@@ -3130,11 +3123,17 @@ class AppWindowTimerCallback final : public nsITimerCallback, public nsINamed {
 
 NS_IMPL_ISUPPORTS(AppWindowTimerCallback, nsITimerCallback, nsINamed)
 
-void AppWindow::SetPersistenceTimer(uint32_t aDirtyFlags) {
+void AppWindow::PersistentAttributesDirty(PersistentAttributes aAttributes,
+                                          PersistentAttributeUpdate aUpdate) {
+  mPersistentAttributesDirty += (aAttributes & mPersistentAttributesMask);
+  if (aUpdate == Sync) {
+    SavePersistentAttributes();
+    return;
+  }
   if (!mSPTimer) {
     mSPTimer = NS_NewTimer();
     if (!mSPTimer) {
-      NS_WARNING("Couldn't create @mozilla.org/timer;1 instance?");
+      NS_WARNING("Couldn't create timer instance?");
       return;
     }
   }
@@ -3142,8 +3141,6 @@ void AppWindow::SetPersistenceTimer(uint32_t aDirtyFlags) {
   RefPtr<AppWindowTimerCallback> callback = new AppWindowTimerCallback(this);
   mSPTimer->InitWithCallback(callback, SIZE_PERSISTENCE_TIMEOUT,
                              nsITimer::TYPE_ONE_SHOT);
-
-  PersistentAttributesDirty(aDirtyFlags);
 }
 
 void AppWindow::FirePersistenceTimer() { SavePersistentAttributes(); }
