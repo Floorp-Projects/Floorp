@@ -2368,6 +2368,8 @@ bool WebRtcVoiceMediaChannel::GetStats(VoiceMediaInfo* info,
     rinfo.jitter_buffer_emitted_count = stats.jitter_buffer_emitted_count;
     rinfo.jitter_buffer_target_delay_seconds =
         stats.jitter_buffer_target_delay_seconds;
+    rinfo.jitter_buffer_minimum_delay_seconds =
+        stats.jitter_buffer_minimum_delay_seconds;
     rinfo.inserted_samples_for_deceleration =
         stats.inserted_samples_for_deceleration;
     rinfo.removed_samples_for_acceleration =

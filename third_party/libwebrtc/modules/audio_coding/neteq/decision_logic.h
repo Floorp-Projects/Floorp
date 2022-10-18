@@ -72,6 +72,8 @@ class DecisionLogic : public NetEqController {
 
   int TargetLevelMs() const override;
 
+  int UnlimitedTargetLevelMs() const override;
+
   absl::optional<int> PacketArrived(int fs_hz,
                                     bool should_update_stats,
                                     const PacketArrivedInfo& info) override;

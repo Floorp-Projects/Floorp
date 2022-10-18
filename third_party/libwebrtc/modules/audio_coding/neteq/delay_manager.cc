@@ -101,6 +101,7 @@ void DelayManager::Update(int arrival_delay_ms, bool reordered) {
     target_level_ms_ = std::max(
         target_level_ms_, reorder_optimizer_->GetOptimalDelayMs().value_or(0));
   }
+  unlimited_target_level_ms_ = target_level_ms_;
   target_level_ms_ = std::max(target_level_ms_, effective_minimum_delay_ms_);
   if (maximum_delay_ms_ > 0) {
     target_level_ms_ = std::min(target_level_ms_, maximum_delay_ms_);
@@ -132,6 +133,10 @@ void DelayManager::Reset() {
 
 int DelayManager::TargetDelayMs() const {
   return target_level_ms_;
+}
+
+int DelayManager::UnlimitedTargetLevelMs() const {
+  return unlimited_target_level_ms_;
 }
 
 bool DelayManager::IsValidMinimumDelay(int delay_ms) const {

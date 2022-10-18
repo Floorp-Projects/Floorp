@@ -61,8 +61,14 @@ class DelayManager {
   // Resets all state.
   virtual void Reset();
 
-  // Gets the target buffer level in milliseconds.
+  // Gets the target buffer level in milliseconds. If a minimum or maximum delay
+  // has been set, the target delay reported here also respects the configured
+  // min/max delay.
   virtual int TargetDelayMs() const;
+
+  // Reports the target delay that would be used if no minimum/maximum delay
+  // would be set.
+  virtual int UnlimitedTargetLevelMs() const;
 
   // Notifies the DelayManager of how much audio data is carried in each packet.
   virtual int SetPacketAudioLength(int length_ms);
@@ -107,7 +113,8 @@ class DelayManager {
   int maximum_delay_ms_;            // Externally set maximum allowed delay.
 
   int packet_len_ms_ = 0;
-  int target_level_ms_;  // Currently preferred buffer level.
+  int target_level_ms_ = 0;  // Currently preferred buffer level.
+  int unlimited_target_level_ms_ = 0;
 };
 
 }  // namespace webrtc

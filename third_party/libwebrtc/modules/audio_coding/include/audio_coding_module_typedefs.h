@@ -88,6 +88,7 @@ struct NetworkStatistics {
   uint64_t concealmentEvents;
   uint64_t jitterBufferDelayMs;
   uint64_t jitterBufferTargetDelayMs;
+  uint64_t jitterBufferMinimumDelayMs;
   uint64_t jitterBufferEmittedCount;
   uint64_t insertedSamplesForDeceleration;
   uint64_t removedSamplesForAcceleration;

@@ -289,6 +289,8 @@ void AcmReceiver::GetNetworkStatistics(
   acm_stat->jitterBufferDelayMs = neteq_lifetime_stat.jitter_buffer_delay_ms;
   acm_stat->jitterBufferTargetDelayMs =
       neteq_lifetime_stat.jitter_buffer_target_delay_ms;
+  acm_stat->jitterBufferMinimumDelayMs =
+      neteq_lifetime_stat.jitter_buffer_minimum_delay_ms;
   acm_stat->jitterBufferEmittedCount =
       neteq_lifetime_stat.jitter_buffer_emitted_count;
   acm_stat->delayedPacketOutageSamples =

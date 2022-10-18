@@ -2060,6 +2060,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
   voice_media_info.receivers[0].jitter_ms = 4500;
   voice_media_info.receivers[0].jitter_buffer_delay_seconds = 1.0;
   voice_media_info.receivers[0].jitter_buffer_target_delay_seconds = 1.1;
+  voice_media_info.receivers[0].jitter_buffer_minimum_delay_seconds = 0.999;
   voice_media_info.receivers[0].jitter_buffer_emitted_count = 2;
   voice_media_info.receivers[0].total_samples_received = 3;
   voice_media_info.receivers[0].concealed_samples = 4;
@@ -2114,6 +2115,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
   expected_audio.jitter = 4.5;
   expected_audio.jitter_buffer_delay = 1.0;
   expected_audio.jitter_buffer_target_delay = 1.1;
+  expected_audio.jitter_buffer_minimum_delay = 0.999;
   expected_audio.jitter_buffer_emitted_count = 2;
   expected_audio.total_samples_received = 3;
   expected_audio.concealed_samples = 4;
@@ -2180,6 +2182,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   video_media_info.receivers[0].jitter_ms = 1199;
   video_media_info.receivers[0].jitter_buffer_delay_seconds = 3.456;
   video_media_info.receivers[0].jitter_buffer_target_delay_seconds = 1.1;
+  video_media_info.receivers[0].jitter_buffer_minimum_delay_seconds = 0.999;
   video_media_info.receivers[0].jitter_buffer_emitted_count = 13;
 
   video_media_info.receivers[0].last_packet_received_timestamp_ms =
@@ -2241,6 +2244,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   expected_video.jitter = 1.199;
   expected_video.jitter_buffer_delay = 3.456;
   expected_video.jitter_buffer_target_delay = 1.1;
+  expected_video.jitter_buffer_minimum_delay = 0.999;
   expected_video.jitter_buffer_emitted_count = 13;
   // `expected_video.last_packet_received_timestamp` should be undefined.
   // `expected_video.content_type` should be undefined.

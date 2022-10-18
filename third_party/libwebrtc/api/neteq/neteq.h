@@ -67,6 +67,7 @@ struct NetEqLifetimeStatistics {
   uint64_t jitter_buffer_delay_ms = 0;
   uint64_t jitter_buffer_emitted_count = 0;
   uint64_t jitter_buffer_target_delay_ms = 0;
+  uint64_t jitter_buffer_minimum_delay_ms = 0;
   uint64_t inserted_samples_for_deceleration = 0;
   uint64_t removed_samples_for_acceleration = 0;
   uint64_t silent_concealed_samples = 0;

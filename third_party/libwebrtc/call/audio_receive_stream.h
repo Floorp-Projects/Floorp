@@ -60,6 +60,7 @@ class AudioReceiveStreamInterface : public MediaReceiveStreamInterface {
     double jitter_buffer_delay_seconds = 0.0;
     uint64_t jitter_buffer_emitted_count = 0;
     double jitter_buffer_target_delay_seconds = 0.0;
+    double jitter_buffer_minimum_delay_seconds = 0.0;
     uint64_t inserted_samples_for_deceleration = 0;
     uint64_t removed_samples_for_acceleration = 0;
     // Stats below DO NOT correspond directly to anything in the WebRTC stats
