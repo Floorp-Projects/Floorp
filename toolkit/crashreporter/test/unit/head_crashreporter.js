@@ -185,10 +185,7 @@ async function do_content_crash(setup, callback) {
 
   // Setting the minidump path won't work in the child, so we need to do
   // that here.
-  let crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
-    Ci.nsICrashReporter
-  );
-  crashReporter.minidumpPath = do_get_tempdir();
+  Services.appinfo.minidumpPath = do_get_tempdir();
 
   /* import-globals-from ../unit/crasher_subprocess_head.js */
   /* import-globals-from ../unit/crasher_subprocess_tail.js */
@@ -232,10 +229,7 @@ async function do_triggered_content_crash(trigger, callback) {
 
   // Setting the minidump path won't work in the child, so we need to do
   // that here.
-  let crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
-    Ci.nsICrashReporter
-  );
-  crashReporter.minidumpPath = do_get_tempdir();
+  Services.appinfo.minidumpPath = do_get_tempdir();
 
   /* import-globals-from ../unit/crasher_subprocess_head.js */
 

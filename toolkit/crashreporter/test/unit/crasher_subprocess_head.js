@@ -8,17 +8,16 @@ var env = Cc["@mozilla.org/process/environment;1"].getService(
 var _tmpd = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
 _tmpd.initWithPath(env.get("XPCSHELL_TEST_TEMP_DIR"));
 
-var crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
-  Ci.nsICrashReporter
-);
+// Allow `crashReporter` to be used as an alias in the tests.
+var crashReporter = Services.appinfo;
 
 // We need to call this or crash events go in an undefined location.
-crashReporter.UpdateCrashEventsDir();
+Services.appinfo.UpdateCrashEventsDir();
 
 // Setting the minidump path is not allowed in content processes
 var processType = Services.appinfo.processType;
 if (processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
-  crashReporter.minidumpPath = _tmpd;
+  Services.appinfo.minidumpPath = _tmpd;
 }
 
 var protocolHandler = Services.io

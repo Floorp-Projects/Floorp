@@ -696,13 +696,10 @@ CrashManager.prototype = Object.freeze({
 
   _filterAnnotations(annotations) {
     let filteredAnnotations = {};
-    let crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
-      Ci.nsICrashReporter
-    );
 
     for (let line in annotations) {
       try {
-        if (crashReporter.isAnnotationAllowlistedForPing(line)) {
+        if (Services.appinfo.isAnnotationAllowlistedForPing(line)) {
           filteredAnnotations[line] = annotations[line];
         }
       } catch (e) {

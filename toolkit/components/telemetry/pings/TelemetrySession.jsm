@@ -101,13 +101,7 @@ function getPingType(aPayload) {
  */
 function annotateCrashReport(sessionId) {
   try {
-    const cr = Cc["@mozilla.org/toolkit/crash-reporter;1"];
-    if (cr) {
-      cr.getService(Ci.nsICrashReporter).annotateCrashReport(
-        "TelemetrySessionId",
-        sessionId
-      );
-    }
+    Services.appinfo.annotateCrashReport("TelemetrySessionId", sessionId);
   } catch (e) {
     // Ignore errors when crash reporting is disabled
   }

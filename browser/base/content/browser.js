@@ -294,15 +294,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
 });
 
-if (AppConstants.MOZ_CRASHREPORTER) {
-  XPCOMUtils.defineLazyServiceGetter(
-    this,
-    "gCrashReporter",
-    "@mozilla.org/xre/app-info;1",
-    "nsICrashReporter"
-  );
-}
-
 if (AppConstants.ENABLE_WEBDRIVER) {
   XPCOMUtils.defineLazyServiceGetter(
     this,
@@ -5565,7 +5556,7 @@ var XULBrowserWindow = {
       }
 
       try {
-        gCrashReporter.annotateCrashReport("URL", uri.spec);
+        Services.appinfo.annotateCrashReport("URL", uri.spec);
       } catch (ex) {
         // Don't make noise when the crash reporter is built but not enabled.
         if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {

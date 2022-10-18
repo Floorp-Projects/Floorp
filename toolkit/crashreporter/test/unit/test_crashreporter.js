@@ -1,11 +1,7 @@
 function run_test() {
   dump("INFO | test_crashreporter.js | Get crashreporter service.\n");
-  var cr = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
-    Ci.nsICrashReporter
-  );
-  Assert.notEqual(cr, null);
-
-  Assert.ok(cr.enabled);
+  var cr = Services.appinfo;
+  Assert.ok(Services.appinfo.crashReporterEnabled);
 
   try {
     cr.serverURL;

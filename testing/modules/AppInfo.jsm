@@ -72,19 +72,25 @@ var newAppInfo = function(options = {}) {
   appInfo.lastAppBuildID = options.lastAppBuildID ?? appInfo.appBuildID;
   appInfo.lastAppVersion = options.lastAppVersion ?? appInfo.version;
 
-  let interfaces = [Ci.nsIXULAppInfo, Ci.nsIPlatformInfo, Ci.nsIXULRuntime];
+  let interfaces = [
+    Ci.nsIXULAppInfo,
+    Ci.nsIPlatformInfo,
+    Ci.nsIXULRuntime,
+    Ci.nsICrashReporter,
+  ];
   if ("nsIWinAppHelper" in Ci) {
     interfaces.push(Ci.nsIWinAppHelper);
   }
 
-  if (options.crashReporter) {
-    // nsICrashReporter
-    appInfo.annotations = {};
-    appInfo.annotateCrashReport = function(key, data) {
+  // nsICrashReporter
+  appInfo.annotations = {};
+  appInfo.annotateCrashReport = function(key, data) {
+    if (options.crashReporter) {
       this.annotations[key] = data;
-    };
-    interfaces.push(Ci.nsICrashReporter);
-  }
+    } else {
+      throw Components.Exception("", Cr.NS_ERROR_NOT_INITIALIZED);
+    }
+  };
 
   appInfo.QueryInterface = ChromeUtils.generateQI(interfaces);
 

@@ -13,10 +13,7 @@ add_task(async function run_test() {
 
   // Setting the minidump path won't work in the child, so we need to do
   // that here.
-  let crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
-    Ci.nsICrashReporter
-  );
-  crashReporter.minidumpPath = do_get_tempdir();
+  Services.appinfo.minidumpPath = do_get_tempdir();
   let headfile = do_get_file("../unit/crasher_subprocess_head.js");
   const CRASH_THEN_WAIT =
     "const ProcessTools = Cc['@mozilla.org/processtools-service;1'].getService(Ci.nsIProcessToolsService);\
