@@ -670,10 +670,11 @@ class UpdatebotTasks(object):
             seenTaskTypes.add(v["type"])
 
             if v["type"] == "vendoring":
-                if "filter" in v or "source-extensions" in v:
-                    raise Invalid(
-                        "'filter' and 'source-extensions' only valid for commit-alert task types"
-                    )
+                for i in ["filter", "branch", "source-extensions"]:
+                    if i in v:
+                        raise Invalid(
+                            "'%s' is only valid for commit-alert task types" % i
+                        )
             elif v["type"] == "commit-alert":
                 pass
             else:
