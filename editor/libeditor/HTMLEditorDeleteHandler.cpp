@@ -5457,6 +5457,7 @@ Result<MoveNodeResult, nsresult> HTMLEditor::MoveChildrenWithTransaction(
             aPreserveWhiteSpaceStyle);
     if (MOZ_UNLIKELY(moveNodeOrChildrenResult.isErr())) {
       NS_WARNING("HTMLEditor::MoveNodeOrChildrenWithTransaction() failed");
+      moveChildrenResult.IgnoreCaretPointSuggestion();
       return moveNodeOrChildrenResult;
     }
     moveChildrenResult |= moveNodeOrChildrenResult.inspect();
