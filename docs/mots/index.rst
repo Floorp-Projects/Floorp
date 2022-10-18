@@ -512,7 +512,7 @@ Code to break and collect objects within reference cycles
         | `Andrew McCreight (mccr8) <https://people.mozilla.org/s?query=mccr8>`__
     * - Peer(s)
       -
-        | `André Bargull (anba) <https://people.mozilla.org/s?query=anba>`__
+        | `Peter Van der Beken (peterv) <https://people.mozilla.org/s?query=peterv>`__
         | `Olli Pettay (smaug) <https://people.mozilla.org/s?query=smaug>`__
     * - Peer(s) Emeritus
       - David Baron

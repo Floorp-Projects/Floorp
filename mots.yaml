@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-10-14T14:32:06.545921'
+updated_at: '2022-10-14T14:34:20.942943'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1261,7 +1261,7 @@ modules:
     owners:
       - *mccr8
     peers:
-      - *anba
+      - *peterv
       - *smaug
     machine_name: core_cycle_collector
 
@@ -3629,5 +3629,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 32498aa80620b6b091c4aaad9d35f961047f9cc1
-  export: ac1428a7315dc4767fc0230091fe50aba19d18e6
+  config: 5dfff5acf2d0933872d6ceea86d28d48fee033d0
+  export: 613b42414a26740700fae44607da5b0926e97a28
