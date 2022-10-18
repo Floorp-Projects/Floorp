@@ -1502,10 +1502,26 @@ already_AddRefed<nsIPrincipal> CreateTruncatedPrincipal(
     return NullPrincipal::CreateWithInheritedAttributes(truncatedPrecursor);
   }
 
+  // Expanded Principals shouldn't contain sensitive information but their
+  // allowlists might so we truncate that information here.
+  if (aPrincipal->GetIsExpandedPrincipal()) {
+    nsTArray<nsCOMPtr<nsIPrincipal>> truncatedAllowList;
+
+    for (const auto& allowedPrincipal : BasePrincipal::Cast(aPrincipal)
+                                            ->As<ExpandedPrincipal>()
+                                            ->AllowList()) {
+      nsCOMPtr<nsIPrincipal> truncatedPrincipal =
+          CreateTruncatedPrincipal(allowedPrincipal);
+
+      truncatedAllowList.AppendElement(truncatedPrincipal);
+    }
+
+    return ExpandedPrincipal::Create(truncatedAllowList,
+                                     aPrincipal->OriginAttributesRef());
+  }
+
   // If we hit this assertion we need to update this function to add the
   // Principals and URIs seen as new corner cases to handle.
-  // For example we may need to do this for Expanded Principals and moz-icon
-  // URIs.
   MOZ_ASSERT(false, "Unhandled Principal or URI type encountered.");
 
   truncatedPrincipal = aPrincipal;

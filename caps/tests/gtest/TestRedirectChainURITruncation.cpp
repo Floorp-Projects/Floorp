@@ -6,13 +6,15 @@
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/SystemPrincipal.h"
+#include "mozilla/ExpandedPrincipal.h"
 #include "nsContentUtils.h"
 #include "mozilla/LoadInfo.h"
 
 namespace mozilla {
 
 void checkPrincipalTruncation(nsIPrincipal* aPrincipal,
-                              const nsACString& aExpectedSpec) {
+                              const nsACString& aExpectedSpec = ""_ns,
+                              const nsTArray<nsCString>& aExpectedSpecs = {}) {
   nsCOMPtr<nsIPrincipal> truncatedPrincipal =
       net::CreateTruncatedPrincipal(aPrincipal);
   ASSERT_TRUE(truncatedPrincipal);
@@ -51,6 +53,20 @@ void checkPrincipalTruncation(nsIPrincipal* aPrincipal,
     return;
   }
 
+  if (aPrincipal->GetIsExpandedPrincipal()) {
+    const nsTArray<nsCOMPtr<nsIPrincipal>>& truncatedAllowList =
+        BasePrincipal::Cast(truncatedPrincipal)
+            ->As<ExpandedPrincipal>()
+            ->AllowList();
+
+    for (size_t i = 0; i < aExpectedSpecs.Length(); ++i) {
+      nsAutoCString principalSpec;
+      truncatedAllowList[i]->GetAsciiSpec(principalSpec);
+      ASSERT_TRUE(principalSpec.Equals(aExpectedSpecs[i]));
+    }
+    return;
+  }
+
   if (aPrincipal->GetIsContentPrincipal()) {
     nsAutoCString principalSpec;
     truncatedPrincipal->GetAsciiSpec(principalSpec);
@@ -60,6 +76,11 @@ void checkPrincipalTruncation(nsIPrincipal* aPrincipal,
 
   // Tests should not reach this point
   ADD_FAILURE();
+}
+
+void checkPrincipalTruncation(nsIPrincipal* aPrincipal,
+                              const nsTArray<nsCString>& aExpectedSpecs = {}) {
+  checkPrincipalTruncation(aPrincipal, ""_ns, aExpectedSpecs);
 }
 
 TEST(RedirectChainURITruncation, ContentPrincipal)
@@ -167,6 +188,44 @@ TEST(RedirectChainURITruncation, SystemPrincipal)
   ASSERT_TRUE(principal);
 
   checkPrincipalTruncation(principal, ""_ns);
+}
+
+TEST(RedirectChainURITruncation, ExtendedPrincipal)
+{
+  // ======================= HTTP Scheme =======================
+  nsAutoCString httpSpec(
+      "http://root:toor@www.example.com:200/foo/bar/baz.html?qux#thud");
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), httpSpec);
+  ASSERT_EQ(rv, NS_OK);
+
+  nsCOMPtr<nsIPrincipal> firstContentPrincipal;
+  OriginAttributes attrs;
+  firstContentPrincipal = BasePrincipal::CreateContentPrincipal(uri, attrs);
+  ASSERT_TRUE(firstContentPrincipal);
+
+  // ======================= HTTPS Scheme =======================
+  nsCOMPtr<nsIPrincipal> secondContentPrincipal;
+  nsAutoCString httpsSpec(
+      "https://root:toor@www.example.com:200/foo/bar/baz.html?qux#thud");
+  rv = NS_NewURI(getter_AddRefs(uri), httpsSpec);
+  ASSERT_EQ(rv, NS_OK);
+
+  secondContentPrincipal = BasePrincipal::CreateContentPrincipal(uri, attrs);
+  ASSERT_TRUE(secondContentPrincipal);
+
+  // ======================= ExpandedPrincipal =======================
+  const nsTArray<nsCString>& expectedSpecs = {
+      "http://www.example.com:200/foo/bar/baz.html"_ns,
+      "https://www.example.com:200/foo/bar/baz.html"_ns,
+  };
+  nsTArray<nsCOMPtr<nsIPrincipal>> allowList = {firstContentPrincipal,
+                                                secondContentPrincipal};
+  nsCOMPtr<nsIPrincipal> principal =
+      ExpandedPrincipal::Create(allowList, attrs);
+  ASSERT_TRUE(principal);
+
+  checkPrincipalTruncation(principal, expectedSpecs);
 }
 
 }  // namespace mozilla
