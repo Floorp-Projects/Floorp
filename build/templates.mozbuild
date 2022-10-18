@@ -60,10 +60,13 @@ def AllowCompilerWarnings():
 
 @template
 def DisableCompilerWarnings():
-    COMPILE_FLAGS['WARNINGS_CFLAGS'] = []
-    COMPILE_FLAGS['WARNINGS_CXXFLAGS'] = []
-    HOST_COMPILE_FLAGS['WARNINGS_CFLAGS'] = []
-    HOST_COMPILE_FLAGS['WARNINGS_CXXFLAGS'] = []
+    # Keep the -Wno-* flags to disable warnings that may be enabled through other means.
+    def filter(flags):
+        return [f for f in flags or [] if f.startswith('-Wno-')]
+    COMPILE_FLAGS['WARNINGS_CFLAGS'] = filter(CONFIG['WARNINGS_CFLAGS'])
+    COMPILE_FLAGS['WARNINGS_CXXFLAGS'] = filter(CONFIG['WARNINGS_CXXFLAGS'])
+    HOST_COMPILE_FLAGS['WARNINGS_CFLAGS'] = filter(CONFIG['WARNINGS_HOST_CFLAGS'])
+    HOST_COMPILE_FLAGS['WARNINGS_CXXFLAGS'] = filter(CONFIG['WARNINGS_HOST_CXXFLAGS'])
 
 @template
 def RustLibrary(name, features=None, output_category=None, is_gkrust=False):
