@@ -3776,7 +3776,7 @@ bool PresShell::ScrollFrameIntoView(
     // bounds of all our continuations relative to it. We shouldn't jump out of
     // our nearest scrollable frame, and that's an ok reference frame, so try to
     // use that, or the root frame if there's nothing to scroll in this document.
-    nsIFrame* container = nsLayoutUtils::GetClosestFrameOfType(
+    container = nsLayoutUtils::GetClosestFrameOfType(
         aTargetFrame->GetParent(), LayoutFrameType::Scroll);
     if (!container) {
       container = aTargetFrame->PresShell()->GetRootFrame();
