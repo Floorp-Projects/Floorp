@@ -16,6 +16,8 @@ import sys
 import tempfile
 import zipfile
 from collections import namedtuple
+from redo import retriable
+
 
 import mozfile
 import mozinfo
@@ -281,6 +283,7 @@ class CrashInfo(object):
         self.logger = get_logger()
         self._dump_files = None
 
+    @retriable(attempts=5, sleeptime=5, sleepscale=2)
     def _get_symbols(self):
         if not self.symbols_path:
             self.logger.warning(
