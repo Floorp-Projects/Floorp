@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-10-14T14:34:20.942943'
+updated_at: '2022-10-14T14:38:51.324618'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -2849,14 +2849,14 @@ modules:
       - xpcom/base/**/*
       - xpcom/build/**/*
       - xpcom/components/**/*
+      - xpcom/docs/**/*
       - xpcom/ds/**/*
       - xpcom/glue/**/*
-      - xpcom/proxy/**/*
-      - xpcom/sample/**/*
-      - xpcom/stub/**/*
+      - xpcom/reflect/**/*
+      - xpcom/rust/**/*
+      - xpcom/system/**/*
       - xpcom/tests/**/*
       - xpcom/threads/**/*
-      - xpcom/tools/**/*
       - xpcom/windbgdlg/**/*
     meta:
       owners_emeritus:
@@ -2876,6 +2876,8 @@ modules:
       - *barret
       - *jstutte
       - *KrisWright
+      - *mccr8
+      - *emilio
     machine_name: core_xpcom
 
   - name: 'Core: XPConnect'
@@ -2904,7 +2906,8 @@ modules:
     description: Cross-platform IDL compiler; produces .h C++ header files and .xpt
       runtime type description files from .idl interface description files.
     includes:
-      - xpcom/typelib/**/*
+      - xpcom/idl-parser/**/*
+      - xpcom/xpidl/**/*
     meta:
       owners_emeritus:
         - Kyle Huey
@@ -3629,5 +3632,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 5dfff5acf2d0933872d6ceea86d28d48fee033d0
-  export: 613b42414a26740700fae44607da5b0926e97a28
+  config: 2e54cf47b7ed94bb234599c439480f9cb6248c9d
+  export: ae3fe1e936c4449470e7dc5736b9105a9a185256
