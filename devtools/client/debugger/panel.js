@@ -233,7 +233,12 @@ class DebuggerPanel {
 
     // select worker's source
     const source = this.getSourceByURL(workerDescriptorFront._url);
-    await this.selectSource(source.id, 1, 1);
+    const sourceActor = this._selectors.getFirstSourceActorForGeneratedSource(
+      this._getState(),
+      source.id,
+      threadActorID
+    );
+    await this.selectSource(source.id, sourceActor.actor, 1, 1);
   }
 
   selectThread(threadActorID) {
@@ -241,11 +246,11 @@ class DebuggerPanel {
     this._actions.selectThread(cx, threadActorID);
   }
 
-  async selectSource(sourceId, line, column) {
+  async selectSource(sourceId, sourceActorId, line, column) {
     const cx = this._selectors.getContext(this._getState());
     const location = { sourceId, line, column };
 
-    await this._actions.selectSource(cx, sourceId, location);
+    await this._actions.selectSource(cx, sourceId, sourceActorId, location);
     if (this._selectors.hasLogpoint(this._getState(), location)) {
       this._actions.openConditionalPanel(location, true);
     }

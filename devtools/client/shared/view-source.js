@@ -133,7 +133,7 @@ exports.viewSourceInDebugger = async function(
 
     const dbg = await toolbox.selectTool("jsdebugger", reason);
     try {
-      await dbg.selectSource(id, line, column);
+      await dbg.selectSource(id, sourceActorId, line, column);
       return true;
     } catch (err) {
       console.error("Failed to view source in debugger", err);

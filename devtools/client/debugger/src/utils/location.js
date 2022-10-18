@@ -14,12 +14,14 @@ export function createLocation({
   line = 0,
   column,
   sourceUrl = "",
+  sourceActorId = null,
 }) {
   return {
     sourceId,
     line,
     column,
     sourceUrl,
+    sourceActorId,
   };
 }
 

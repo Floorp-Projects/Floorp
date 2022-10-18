@@ -159,6 +159,38 @@ export function getSelectedSourceId(state) {
   const source = getSelectedSource(state);
   return source?.id;
 }
+
+/**
+ * Gets the first source actor for the source and/or thread
+ * provided.
+ *
+ * @param {Object} state
+ * @param {String} sourceId
+ *         The source used
+ * @param {String} [threadId]
+ *         The thread to check, this is optional.
+ * @param {Object} sourceActor
+ *
+ */
+export function getFirstSourceActorForGeneratedSource(
+  state,
+  sourceId,
+  threadId
+) {
+  const source = getSource(state, sourceId);
+  if (source.isOriginal) {
+    return null;
+  }
+  let actorsInfo = state.sources.actors[sourceId];
+  if (!actorsInfo.length) {
+    return null;
+  }
+  if (threadId) {
+    actorsInfo = actorsInfo.filter(actorInfo => actorInfo.thread == threadId);
+  }
+  return actorsInfo.length ? getSourceActor(state, actorsInfo[0].id) : null;
+}
+
 /**
  * Get the source actor of the source
  *

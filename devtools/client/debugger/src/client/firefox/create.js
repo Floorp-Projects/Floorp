@@ -244,7 +244,7 @@ function createSourceObject({
     // True if WASM is enabled *and* the generated source is a WASM source
     isWasm,
 
-    // True is this source is an HTML and relates to many sources actors,
+    // True if this source is an HTML and relates to many sources actors,
     // one for each of its inline <script>
     isHTML,
 

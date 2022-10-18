@@ -14,7 +14,7 @@ add_task(async function() {
   const originalSource = getItems(dbg);
 
   clickElement(dbg, "prettyPrintButton");
-  await waitForSource(dbg, "simple1.js:formatted");
+  await waitForLoadedSource(dbg, "simple1.js:formatted");
   await waitForElementWithSelector(dbg, ".outline-list");
   const prettySource = getItems(dbg);
 
