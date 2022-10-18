@@ -7,6 +7,7 @@ CURRENT_REPO_PATH="$(dirname -- "$SCRIPT_DIR")"
 
 REPO_NAME_TO_SYNC='android-components'
 MAIN_BRANCH_NAME='main'
+PREP_BRANCH_NAME='ac-prep'
 TMP_REPO_PATH="/tmp/git/$REPO_NAME_TO_SYNC"
 TMP_REPO_BRANCH_NAME='firefox-android'
 TAG_PREFIX='components-'
@@ -23,6 +24,7 @@ EOF
 )
 
 EXPRESSIONS_FILE_PATH="$SCRIPT_DIR/data/message-expressions.txt"
+UTC_NOW="$(date -u '+%Y%m%d%H%M%S')"
 
 
 function _is_github_authenticated() {
@@ -68,6 +70,7 @@ function _update_repo_numbers() {
 }
 
 function _rewrite_git_history() {
+    cd "$TMP_REPO_PATH"
     git filter-repo \
         --to-subdirectory-filter "$REPO_NAME_TO_SYNC/" \
         --replace-message "$EXPRESSIONS_FILE_PATH" \
@@ -76,14 +79,29 @@ function _rewrite_git_history() {
 }
 
 function _remove_old_tags() {
-    cd "$SCRIPT_DIR"
+    cd "$CURRENT_REPO_PATH"
     set +e
     git tag | grep "$TAG_PREFIX" | xargs -L 1 | xargs git push "$MONOREPO_URL" --delete
     set -e
 }
 
+function _back_up_prep_branch() {
+    cd "$CURRENT_REPO_PATH"
+    if git rev-parse --quiet --verify "$PREP_BRANCH_NAME" > /dev/null; then
+        git branch --move "$PREP_BRANCH_NAME" "$PREP_BRANCH_NAME-backup-$UTC_NOW"
+    fi
+}
+
+function _reset_prep_branch() {
+    _back_up_prep_branch
+    cd "$CURRENT_REPO_PATH"
+    git checkout "$MAIN_BRANCH_NAME"
+    git pull
+    git checkout -b "$PREP_BRANCH_NAME"
+}
+
 function _merge_histories() {
-    cd "$SCRIPT_DIR"
+    cd "$CURRENT_REPO_PATH"
     git pull --no-edit --tags --allow-unrelated-histories --no-rebase --force "$TMP_REPO_PATH"
     git commit --amend --message "$MERGE_COMMIT_MESSAGE"
 }
@@ -105,6 +123,7 @@ _update_repo_branch
 _update_repo_numbers
 _rewrite_git_history
 _remove_old_tags
+_reset_prep_branch
 _merge_histories
 _move_files_into_subfolder
 _clean_up_temporary_repo
