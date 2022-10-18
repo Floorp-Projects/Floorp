@@ -1889,22 +1889,13 @@ void AudioProcessingImpl::InitializeGainController1() {
       stream_analog_level = submodules_.agc_manager->stream_analog_level();
     }
     submodules_.agc_manager.reset(new AgcManagerDirect(
-        num_proc_channels(),
-        config_.gain_controller1.analog_gain_controller.startup_min_volume,
-        config_.gain_controller1.analog_gain_controller.clipped_level_min,
-        !config_.gain_controller1.analog_gain_controller
-             .enable_digital_adaptive,
-        config_.gain_controller1.analog_gain_controller.clipped_level_step,
-        config_.gain_controller1.analog_gain_controller.clipped_ratio_threshold,
-        config_.gain_controller1.analog_gain_controller.clipped_wait_frames,
-        config_.gain_controller1.analog_gain_controller.clipping_predictor));
+        num_proc_channels(), config_.gain_controller1.analog_gain_controller));
     if (re_creation) {
       submodules_.agc_manager->set_stream_analog_level(stream_analog_level);
     }
   }
   submodules_.agc_manager->Initialize();
-  submodules_.agc_manager->SetupDigitalGainControl(
-      submodules_.gain_control.get());
+  submodules_.agc_manager->SetupDigitalGainControl(*submodules_.gain_control);
   submodules_.agc_manager->HandleCaptureOutputUsedChange(
       capture_.capture_output_used);
 }

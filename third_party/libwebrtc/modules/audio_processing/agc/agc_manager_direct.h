@@ -20,6 +20,7 @@
 #include "modules/audio_processing/agc/clipping_predictor.h"
 #include "modules/audio_processing/agc/clipping_predictor_evaluator.h"
 #include "modules/audio_processing/audio_buffer.h"
+#include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/gtest_prod_util.h"
 
@@ -28,53 +29,60 @@ namespace webrtc {
 class MonoAgc;
 class GainControl;
 
-// Direct interface to use AGC to set volume and compression values.
-// AudioProcessing uses this interface directly to integrate the callback-less
-// AGC.
-//
-// This class is not thread-safe.
+// Adaptive Gain Controller (AGC) that combines an analog and digital gain
+// controller. The digital controller determines and applies the digital
+// compression gain. The analog controller recommends what input volume (a.k.a.,
+// analog level) to use, handles input volume changes and input clipping. In
+// particular, it handles input volume changes triggered by the user (e.g.,
+// input volume set to zero by a HW mute button). This class is not thread-safe.
 class AgcManagerDirect final {
  public:
-  // AgcManagerDirect will configure GainControl internally. The user is
-  // responsible for processing the audio using it after the call to Process.
-  // The operating range of startup_min_level is [12, 255] and any input value
-  // outside that range will be clamped. `clipped_level_step` is the amount
-  // the microphone level is lowered with every clipping event, limited to
-  // (0, 255]. `clipped_ratio_threshold` is the proportion of clipped
-  // samples required to declare a clipping event, limited to (0.f, 1.f).
-  // `clipped_wait_frames` is the time in frames to wait after a clipping event
-  // before checking again, limited to values higher than 0.
+  // Ctor. `num_capture_channels` specifies the number of channels for the audio
+  // passed to `AnalyzePreProcess()` and `Process()`. Clamps
+  // `analog_config.startup_min_level` in the [12, 255] range.
   AgcManagerDirect(
       int num_capture_channels,
-      int startup_min_level,
-      int clipped_level_min,
-      bool disable_digital_adaptive,
-      int clipped_level_step,
-      float clipped_ratio_threshold,
-      int clipped_wait_frames,
-      const AudioProcessing::Config::GainController1::AnalogGainController::
-          ClippingPredictor& clipping_config);
+      const AudioProcessing::Config::GainController1::AnalogGainController&
+          analog_config);
 
   ~AgcManagerDirect();
   AgcManagerDirect(const AgcManagerDirect&) = delete;
   AgcManagerDirect& operator=(const AgcManagerDirect&) = delete;
 
   void Initialize();
-  void SetupDigitalGainControl(GainControl* gain_control) const;
 
+  // Configures `gain_control` to work as a fixed digital controller so that the
+  // adaptive part is only handled by this gain controller. Must be called if
+  // `gain_control` is also used to avoid the side-effects of running two AGCs.
+  void SetupDigitalGainControl(GainControl& gain_control) const;
+
+  // Analyzes `audio` before `Process()` is called so that the analysis can be
+  // performed before external digital processing operations take place (e.g.,
+  // echo cancellation). The analysis consists of input clipping detection and
+  // prediction (if enabled).
   void AnalyzePreProcess(const AudioBuffer* audio);
+
+  // Processes `audio`. Chooses and applies a digital compression gain on each
+  // channel and chooses the new input volume to recommend. Undefined behavior
+  // if `AnalyzePreProcess()` is not called beforehand.
   void Process(const AudioBuffer* audio);
 
   // Call when the capture stream output has been flagged to be used/not-used.
   // If unused, the manager  disregards all incoming audio.
   void HandleCaptureOutputUsedChange(bool capture_output_used);
+
   float voice_probability() const;
 
+  // Returns the recommended input volume.
   int stream_analog_level() const { return stream_analog_level_; }
+
+  // Sets the current input volume.
   void set_stream_analog_level(int level);
+
   int num_channels() const { return num_capture_channels_; }
 
-  // If available, returns a new compression gain for the digital gain control.
+  // If available, returns the latest digital compression gain that has been
+  // applied.
   absl::optional<int> GetDigitalComressionGain();
 
   // Returns true if clipping prediction is enabled.
@@ -109,17 +117,12 @@ class AgcManagerDirect final {
   FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest,
                            UnusedClippingPredictionsProduceEqualAnalogLevels);
 
-  // Dependency injection for testing. Don't delete `agc` as the memory is owned
-  // by the manager.
+  // Ctor that creates a single channel AGC and by injecting `agc`.
+  // `agc` will be owned by this class; hence, do not delete it.
   AgcManagerDirect(
-      Agc* agc,
-      int startup_min_level,
-      int clipped_level_min,
-      int clipped_level_step,
-      float clipped_ratio_threshold,
-      int clipped_wait_frames,
-      const AudioProcessing::Config::GainController1::AnalogGainController::
-          ClippingPredictor& clipping_config);
+      const AudioProcessing::Config::GainController1::AnalogGainController&
+          analog_config,
+      Agc* agc);
 
   void AnalyzePreProcess(const float* const* audio, size_t samples_per_channel);
 
