@@ -145,7 +145,7 @@ static GPtrArray* GetColumnHeaderCellsCB(AtkTableCell* aCell) {
 
     GPtrArray* atkHeaders = g_ptr_array_sized_new(headers.Length());
     for (Accessible* header : headers) {
-      AtkObject* atkHeader = AccessibleWrap::GetAtkObject(header->AsLocal());
+      AtkObject* atkHeader = GetWrapperFor(header);
       g_object_ref(atkHeader);
       g_ptr_array_add(atkHeaders, atkHeader);
     }
@@ -187,7 +187,7 @@ static GPtrArray* GetRowHeaderCellsCB(AtkTableCell* aCell) {
 
     GPtrArray* atkHeaders = g_ptr_array_sized_new(headers.Length());
     for (Accessible* header : headers) {
-      AtkObject* atkHeader = AccessibleWrap::GetAtkObject(header->AsLocal());
+      AtkObject* atkHeader = GetWrapperFor(header);
       g_object_ref(atkHeader);
       g_ptr_array_add(atkHeaders, atkHeader);
     }
