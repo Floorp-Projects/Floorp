@@ -684,16 +684,23 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         if (!IsAnyToplevelContentPageLoading()) {
           // If pages aren't loading and there aren't other tasks to run,
           // trigger the pending vsync notification.
-          NS_DispatchToMainThread(NS_NewRunnableFunction(
-              "NotifyVsyncOnMainThread[normal priority]",
-              [self = RefPtr{this}, event = aVsyncEvent]() {
-                if (self->mRecentVsync == event.mTime &&
-                    self->mRecentVsyncId == event.mId &&
-                    !self->ShouldGiveNonVsyncTasksMoreTime()) {
-                  self->mSuspendVsyncPriorityTicksUntil = TimeStamp();
-                  self->NotifyVsyncOnMainThread(event);
-                }
-              }));
+          static bool sHasPendingLowPrioTask = false;
+          if (!sHasPendingLowPrioTask) {
+            sHasPendingLowPrioTask = true;
+            NS_DispatchToMainThreadQueue(
+                NS_NewRunnableFunction(
+                    "NotifyVsyncOnMainThread[low priority]",
+                    [self = RefPtr{this}, event = aVsyncEvent]() {
+                      sHasPendingLowPrioTask = false;
+                      if (self->mRecentVsync == event.mTime &&
+                          self->mRecentVsyncId == event.mId &&
+                          !self->ShouldGiveNonVsyncTasksMoreTime()) {
+                        self->mSuspendVsyncPriorityTicksUntil = TimeStamp();
+                        self->NotifyVsyncOnMainThread(event);
+                      }
+                    }),
+                EventQueuePriority::Low);
+          }
         }
         return;
       }

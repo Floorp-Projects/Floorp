@@ -23,16 +23,17 @@ interface nsIRunnablePriority : nsISupports
 {
     const unsigned long PRIORITY_IDLE = 0;
     const unsigned long PRIORITY_DEFERRED_TIMERS = 1;
+    const unsigned long PRIORITY_LOW = 2;
     // INPUT_LOW isn't supposed to be used directly.
-    // const unsigned long PRIORITY_INPUT_LOW = 2;
-    const unsigned long PRIORITY_NORMAL = 3;
-    const unsigned long PRIORITY_MEDIUMHIGH = 4;
-    const unsigned long PRIORITY_INPUT_HIGH = 5;
-    const unsigned long PRIORITY_VSYNC = 6;
+    // const unsigned long PRIORITY_INPUT_LOW = 3;
+    const unsigned long PRIORITY_NORMAL = 4;
+    const unsigned long PRIORITY_MEDIUMHIGH = 5;
+    const unsigned long PRIORITY_INPUT_HIGH = 6;
+    const unsigned long PRIORITY_VSYNC = 7;
     // INPUT_HIGHEST is InputTaskManager's internal priority
-    //const unsigned long PRIORITY_INPUT_HIGHEST = 7;
-    const unsigned long PRIORITY_RENDER_BLOCKING = 8;
-    const unsigned long PRIORITY_CONTROL = 9;
+    //const unsigned long PRIORITY_INPUT_HIGHEST = 8;
+    const unsigned long PRIORITY_RENDER_BLOCKING = 9;
+    const unsigned long PRIORITY_CONTROL = 10;
 
     readonly attribute unsigned long priority;
 };

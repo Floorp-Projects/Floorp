@@ -104,6 +104,8 @@ bool ThreadEventQueue::PutEventInternal(already_AddRefed<nsIRunnable>&& aEvent,
           aPriority = EventQueuePriority::DeferredTimers;
         } else if (prio == nsIRunnablePriority::PRIORITY_IDLE) {
           aPriority = EventQueuePriority::Idle;
+        } else if (prio == nsIRunnablePriority::PRIORITY_LOW) {
+          aPriority = EventQueuePriority::Low;
         }
       }
 
