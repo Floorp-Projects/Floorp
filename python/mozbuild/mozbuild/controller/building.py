@@ -1517,6 +1517,13 @@ class BuildDriver(MozbuildObject):
 
             suppressed_by_dir = Counter()
 
+            THIRD_PARTY_CODE = "third-party code"
+            suppressed = set(
+                w.replace("-Wno-error=", "-W")
+                for w in substs.get("WARNINGS_CFLAGS", [])
+                + substs.get("WARNINGS_CXXFLAGS", [])
+                if w.startswith("-Wno-error=")
+            )
             warnings = []
             for warning in sorted(monitor.instance_warnings):
                 path = mozpath.normsep(warning["filename"])
@@ -1525,20 +1532,26 @@ class BuildDriver(MozbuildObject):
 
                 warning["normpath"] = path
 
-                if (
-                    path.startswith(LOCAL_SUPPRESS_DIRS)
-                    and "MOZ_AUTOMATION" not in os.environ
-                ):
-                    for d in LOCAL_SUPPRESS_DIRS:
-                        if path.startswith(d):
-                            suppressed_by_dir[d] += 1
-                            break
+                if "MOZ_AUTOMATION" not in os.environ:
+                    if path.startswith(LOCAL_SUPPRESS_DIRS):
+                        suppressed_by_dir[THIRD_PARTY_CODE] += 1
+                        continue
 
-                    continue
+                    if warning["flag"] in suppressed:
+                        suppressed_by_dir[os.path.dirname(path)] += 1
+                        continue
 
                 warnings.append(warning)
 
-            for d, count in sorted(suppressed_by_dir.items()):
+            if THIRD_PARTY_CODE in suppressed_by_dir:
+                suppressed_third_party_code = [
+                    (THIRD_PARTY_CODE, suppressed_by_dir.pop(THIRD_PARTY_CODE))
+                ]
+            else:
+                suppressed_third_party_code = []
+            for d, count in suppressed_third_party_code + sorted(
+                suppressed_by_dir.items()
+            ):
                 self.log(
                     logging.WARNING,
                     "suppressed_warning",
