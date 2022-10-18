@@ -520,7 +520,9 @@ BasicNetworkManager::BasicNetworkManager(
       allow_mac_based_ipv6_(
           field_trials_->IsEnabled("WebRTC-AllowMACBasedIPv6")),
       bind_using_ifname_(
-          !field_trials_->IsDisabled("WebRTC-BindUsingInterfaceName")) {}
+          !field_trials_->IsDisabled("WebRTC-BindUsingInterfaceName")) {
+  RTC_DCHECK(socket_factory_);
+}
 
 BasicNetworkManager::~BasicNetworkManager() {
   if (task_safety_flag_) {
@@ -981,16 +983,8 @@ void BasicNetworkManager::StopNetworkMonitor() {
 IPAddress BasicNetworkManager::QueryDefaultLocalAddress(int family) const {
   RTC_DCHECK(family == AF_INET || family == AF_INET6);
 
-  // TODO(bugs.webrtc.org/13145): Delete support for null `socket_factory_`,
-  // require socket factory to be provided to constructor.
-  SocketFactory* socket_factory = socket_factory_;
-  if (!socket_factory) {
-    socket_factory = thread_->socketserver();
-  }
-  RTC_DCHECK(socket_factory);
-
   std::unique_ptr<Socket> socket(
-      socket_factory->CreateSocket(family, SOCK_DGRAM));
+      socket_factory_->CreateSocket(family, SOCK_DGRAM));
   if (!socket) {
     RTC_LOG_ERR(LS_ERROR) << "Socket creation failed";
     return IPAddress();
