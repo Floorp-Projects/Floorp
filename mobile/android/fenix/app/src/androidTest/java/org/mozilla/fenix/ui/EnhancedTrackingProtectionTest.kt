@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.core.net.toUri
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -13,7 +14,6 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.ETPPolicy
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.appContext
@@ -227,6 +227,38 @@ class EnhancedTrackingProtectionTest {
             verifyFingerprintersBlocked()
             verifyTrackingContentBlocked()
             viewTrackingContentBlockList()
+        }
+    }
+
+    @Test
+    fun blockCookiesStorageAccessTest() {
+        // With Standard TrackingProtection settings
+        val page = mockWebServer.url("pages/cross-site-cookies.html").toString().toUri()
+        val originSite = "https://mozilla-mobile.github.io"
+        val currentSite = "http://localhost:${mockWebServer.port}"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(page) {
+        }.clickRequestStorageAccessButton {
+            verifyCrossOriginCookiesPermissionPrompt(originSite, currentSite)
+        }.clickPagePermissionButton(allow = false) {
+            verifyPageContent("access denied")
+        }
+    }
+
+    @Test
+    fun allowCookiesStorageAccessTest() {
+        // With Standard TrackingProtection settings
+        val page = mockWebServer.url("pages/cross-site-cookies.html").toString().toUri()
+        val originSite = "https://mozilla-mobile.github.io"
+        val currentSite = "http://localhost:${mockWebServer.port}"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(page) {
+        }.clickRequestStorageAccessButton {
+            verifyCrossOriginCookiesPermissionPrompt(originSite, currentSite)
+        }.clickPagePermissionButton(allow = true) {
+            verifyPageContent("access granted")
         }
     }
 }

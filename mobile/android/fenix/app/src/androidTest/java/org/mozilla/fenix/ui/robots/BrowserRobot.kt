@@ -821,6 +821,14 @@ class BrowserRobot {
             return SitePermissionsRobot.Transition()
         }
 
+        fun clickRequestStorageAccessButton(interact: SitePermissionsRobot.() -> Unit): SitePermissionsRobot.Transition {
+            mDevice.findObject(UiSelector().text("requestStorageAccess()")).waitForExists(waitingTime)
+            mDevice.findObject(UiSelector().text("requestStorageAccess()")).click()
+
+            SitePermissionsRobot().interact()
+            return SitePermissionsRobot.Transition()
+        }
+
         fun openSiteSecuritySheet(interact: SiteSecurityRobot.() -> Unit): SiteSecurityRobot.Transition {
             siteSecurityToolbarButton().waitForExists(waitingTime)
             siteSecurityToolbarButton().clickAndWaitForNewWindow(waitingTime)

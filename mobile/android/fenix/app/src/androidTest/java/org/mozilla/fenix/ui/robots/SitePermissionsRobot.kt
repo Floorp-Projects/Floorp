@@ -6,6 +6,7 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.uiautomator.UiSelector
@@ -80,6 +81,16 @@ class SitePermissionsRobot {
                     .exists(),
             )
         }
+    }
+
+    fun verifyCrossOriginCookiesPermissionPrompt(originSite: String, currentSite: String) {
+        mDevice.findObject(UiSelector().text("Allow $originSite to use its cookies on $currentSite?"))
+            .waitForExists(waitingTime)
+        onView(ViewMatchers.withText("Allow $originSite to use its cookies on $currentSite?")).check(matches(isDisplayed()))
+        onView(ViewMatchers.withText("You may want to block access if it's not clear why $originSite needs this data.")).check(matches(isDisplayed()))
+        onView(ViewMatchers.withText("Learn more")).check(matches(isDisplayed()))
+        onView(ViewMatchers.withText("Block")).check(matches(isDisplayed()))
+        onView(ViewMatchers.withText("Allow")).check(matches(isDisplayed()))
     }
 
     fun selectRememberPermissionDecision() {
