@@ -3195,12 +3195,6 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
 
       nsTHashSet<LocalAccessible*> inViewAccs;
       nsTArray<uint64_t> viewportCache;
-      // Layout considers table rows fully occluded by their containing cells.
-      // This means they don't have their own display list items, and they won't
-      // show up in the list returned from GetFramesForArea. To prevent table
-      // rows from appearing offscreen, we manually add any rows for which we
-      // have on-screen cells.
-      LocalAccessible* prevParentRow = nullptr;
       for (nsIFrame* frame : frames) {
         nsIContent* content = frame->GetContent();
         if (!content) {
@@ -3219,28 +3213,8 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         if (acc->IsTextLeaf() && nsAccUtils::MustPrune(acc->LocalParent())) {
           acc = acc->LocalParent();
         }
-        if (acc->IsTableCell()) {
-          LocalAccessible* parent = acc->LocalParent();
-          if (parent && parent->IsTableRow() && parent != prevParentRow) {
-            // If we've entered a new row since the last cell we saw, add the
-            // previous parent row to our viewport cache here to maintain
-            // hittesting order. Keep track of the current parent row.
-            if (prevParentRow && inViewAccs.EnsureInserted(prevParentRow)) {
-              viewportCache.AppendElement(prevParentRow->ID());
-            }
-            prevParentRow = parent;
-          }
-        } else if (acc->IsTable()) {
-          // If we've encountered a table, we know we've already
-          // handled all of this table's content (because we're traversing
-          // in hittesting order). Add our table's final row to the viewport
-          // cache before adding the table itself. Reset our marker for the next
-          // table.
-          if (prevParentRow && inViewAccs.EnsureInserted(prevParentRow)) {
-            viewportCache.AppendElement(prevParentRow->ID());
-          }
-          prevParentRow = nullptr;
-        } else if (acc->IsImageMap()) {
+
+        if (acc->IsImageMap()) {
           // Layout doesn't walk image maps, so we do that
           // manually here. We do this before adding the map itself
           // so the children come earlier in the hittesting order.
@@ -3747,10 +3721,6 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
       // send a DeleteEntry() instead. See BundleFieldsForCache for
       // more information.
       mDoc->QueueCacheUpdate(this, CacheDomain::TransformMatrix);
-      // If our transform matrix has changed, it's possible our
-      // viewport cache has also changed. Queue an update for
-      // that too.
-      mDoc->QueueCacheUpdate(this, CacheDomain::Viewport);
     }
 
     mOldComputedStyle = newStyle;

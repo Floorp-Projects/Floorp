@@ -78,13 +78,6 @@ async function runTests(browser, accDoc) {
     container2Input,
     container2Input
   );
-
-  info("hittesting table, row, cells -- rows are not in the layout tree");
-  const table = findAccessibleChildByID(accDoc, "table");
-  const row = findAccessibleChildByID(accDoc, "row");
-  const cell1 = findAccessibleChildByID(accDoc, "cell1");
-
-  await hitTest(browser, table, row, cell1);
 }
 
 addAccessibleTask(
@@ -113,13 +106,6 @@ addAccessibleTask(
   <div id="container2" style="width: 0px">
     <input id="container2_input">
   </div>
-
-  <table id="table" border>
-    <tr id="row">
-      <td id="cell1">hello</td>
-      <td id="cell2">world</td>
-    </tr>
-  </table>
   `,
   runTests,
   {
