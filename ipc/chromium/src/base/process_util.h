@@ -266,14 +266,16 @@ bool LaunchApp(const CommandLine& cl, const LaunchOptions&,
 // Returns true if this is successful, false otherwise.
 bool KillProcess(ProcessHandle process, int exit_code);
 
-// Get the termination status (exit code) of the process and return true if the
-// status indicates the process crashed. |child_exited| is set to true iff the
-// child process has terminated. (|child_exited| may be NULL.)
+#ifdef OS_POSIX
+// Returns whether the given process has exited.  If it returns true,
+// the process status has been consumed and `IsProcessDead` should not
+// be called again on the same process (like `waitpid`).
 //
-// On Windows, it is an error to call this if the process hasn't terminated
-// yet. On POSIX, |child_exited| is set correctly since we detect terminate in
-// a different manner on POSIX.
-bool DidProcessCrash(bool* child_exited, ProcessHandle handle);
+// In various error cases (e.g., the process doesn't exist or isn't a
+// child of this process) it will also return true to indicate that
+// the caller should give up and not try again.
+bool IsProcessDead(ProcessHandle handle);
+#endif
 
 }  // namespace base
 

@@ -413,37 +413,6 @@ bool KillProcess(ProcessHandle process, int exit_code) {
   return result;
 }
 
-bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
-  DWORD exitcode = 0;
-
-  if (child_exited)
-    *child_exited = true;  // On Windows it an error to call this function if
-                           // the child hasn't already exited.
-  if (!::GetExitCodeProcess(handle, &exitcode)) {
-    NOTREACHED();
-    return false;
-  }
-  if (exitcode == STILL_ACTIVE) {
-    // The process is likely not dead or it used 0x103 as exit code.
-    NOTREACHED();
-    return false;
-  }
-
-  // Warning, this is not generic code; it heavily depends on the way
-  // the rest of the code kills a process.
-
-  if (exitcode == PROCESS_END_NORMAL_TERMINATON ||
-      exitcode == PROCESS_END_KILLED_BY_USER ||
-      exitcode == PROCESS_END_PROCESS_WAS_HUNG ||
-      exitcode == 0xC0000354 ||  // STATUS_DEBUGGER_INACTIVE.
-      exitcode == 0xC000013A ||  // Control-C/end session.
-      exitcode == 0x40010004) {  // Debugger terminated process/end session.
-    return false;
-  }
-
-  return true;
-}
-
 }  // namespace base
 
 namespace mozilla {
