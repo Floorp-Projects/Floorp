@@ -330,6 +330,8 @@ class DocAccessibleParent : public RemoteAccessible,
 
   void URL(nsAString& aURL) const;
 
+  virtual Relation RelationByType(RelationType aType) const override;
+
   // Tracks cached reverse relations (ie. those not set explicitly by an
   // attribute like aria-labelledby) for accessibles in this doc. This map is of
   // the form: {accID, {relationType, [targetAccID, targetAccID, ...]}}

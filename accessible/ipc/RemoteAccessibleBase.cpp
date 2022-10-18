@@ -693,6 +693,37 @@ Relation RemoteAccessibleBase<Derived>::RelationByType(
     return Relation();
   }
 
+  // Handle ARIA tree, treegrid parent/child relations. Each of these cases
+  // relies on cached group info. To find the parent of an accessible, use the
+  // unified conceptual parent.
+  if (aType == RelationType::NODE_CHILD_OF) {
+    const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+    if (roleMapEntry && (roleMapEntry->role == roles::OUTLINEITEM ||
+                         roleMapEntry->role == roles::LISTITEM ||
+                         roleMapEntry->role == roles::ROW)) {
+      if (const AccGroupInfo* groupInfo =
+              const_cast<RemoteAccessibleBase<Derived>*>(this)
+                  ->GetOrCreateGroupInfo()) {
+        return Relation(groupInfo->ConceptualParent());
+      }
+    }
+    return Relation();
+  }
+
+  // To find the children of a parent, provide an iterator through its items.
+  if (aType == RelationType::NODE_PARENT_OF) {
+    const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+    if (roleMapEntry && (roleMapEntry->role == roles::OUTLINEITEM ||
+                         roleMapEntry->role == roles::LISTITEM ||
+                         roleMapEntry->role == roles::ROW ||
+                         roleMapEntry->role == roles::OUTLINE ||
+                         roleMapEntry->role == roles::LIST ||
+                         roleMapEntry->role == roles::TREE_TABLE)) {
+      return Relation(new ItemIterator(this));
+    }
+    return Relation();
+  }
+
   Relation rel;
   if (!mCachedFields) {
     return rel;

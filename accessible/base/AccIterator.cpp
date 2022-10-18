@@ -296,17 +296,15 @@ Accessible* SingleAccIterator::Next() {
 // ItemIterator
 ////////////////////////////////////////////////////////////////////////////////
 
-LocalAccessible* ItemIterator::Next() {
+Accessible* ItemIterator::Next() {
   if (mContainer) {
-    Accessible* first = AccGroupInfo::FirstItemOf(mContainer);
-    mAnchor = first ? first->AsLocal() : nullptr;
+    mAnchor = AccGroupInfo::FirstItemOf(mContainer);
     mContainer = nullptr;
     return mAnchor;
   }
 
   if (mAnchor) {
-    Accessible* next = AccGroupInfo::NextItemTo(mAnchor);
-    mAnchor = next ? next->AsLocal() : nullptr;
+    mAnchor = AccGroupInfo::NextItemTo(mAnchor);
   }
 
   return mAnchor;
