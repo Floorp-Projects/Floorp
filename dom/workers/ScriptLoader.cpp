@@ -350,11 +350,11 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
 namespace loader {
 
 class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
-  WorkerScriptLoader& mScriptLoader;
+  RefPtr<WorkerScriptLoader> mScriptLoader;
   ScriptLoadRequest* mRequest;
 
  public:
-  ScriptExecutorRunnable(WorkerScriptLoader& aScriptLoader,
+  ScriptExecutorRunnable(WorkerScriptLoader* aScriptLoader,
                          nsIEventTarget* aSyncLoopTarget,
                          ScriptLoadRequest* aRequest);
 
@@ -372,10 +372,10 @@ class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
 };
 
 class AbruptCancellationRunnable final : public MainThreadWorkerSyncRunnable {
-  WorkerScriptLoader& mScriptLoader;
+  RefPtr<WorkerScriptLoader> mScriptLoader;
 
  public:
-  AbruptCancellationRunnable(WorkerScriptLoader& aScriptLoader,
+  AbruptCancellationRunnable(WorkerScriptLoader* aScriptLoader,
                              nsIEventTarget* aSyncLoopTarget);
  private:
   ~AbruptCancellationRunnable() = default;
@@ -606,8 +606,13 @@ void WorkerScriptLoader::MaybeMoveToLoadedList(ScriptLoadRequest* aRequest) {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
   aRequest->SetReady();
 
+  // If the request is not in a list, we are in an illegal state.
+  MOZ_RELEASE_ASSERT(aRequest->isInList());
+
   while (!mLoadingRequests.isEmpty()) {
     ScriptLoadRequest* request = mLoadingRequests.getFirst();
+    // We need to move requests in post order. If prior requests have not
+    // completed, delay execution.
     if (!request->IsReadyToRun()) {
       break;
     }
@@ -969,7 +974,7 @@ void WorkerScriptLoader::DispatchMaybeMoveToLoadedList(
   }
 
   RefPtr<ScriptExecutorRunnable> runnable =
-      new ScriptExecutorRunnable(*this, mSyncLoopTarget, aRequest);
+      new ScriptExecutorRunnable(this, mSyncLoopTarget, aRequest);
   if (!runnable->Dispatch()) {
     MOZ_ASSERT(false, "This should never fail!");
   }
@@ -996,7 +1001,7 @@ void WorkerScriptLoader::DispatchAbruptShutdown() {
   AssertIsOnMainThread();
 
   RefPtr<AbruptCancellationRunnable> runnable =
-      new AbruptCancellationRunnable(*this, mSyncLoopTarget);
+      new AbruptCancellationRunnable(this, mSyncLoopTarget);
   if (!runnable->Dispatch()) {
     MOZ_ASSERT(false, "This should never fail!");
   }
@@ -1183,8 +1188,8 @@ void WorkerScriptLoader::LogExceptionToConsole(JSContext* aCx,
 NS_IMPL_ISUPPORTS(WorkerScriptLoader, nsINamed)
 
 AbruptCancellationRunnable::AbruptCancellationRunnable(
-    WorkerScriptLoader& aScriptLoader, nsIEventTarget* aSyncLoopTarget)
-    : MainThreadWorkerSyncRunnable(aScriptLoader.mWorkerRef->Private(),
+    WorkerScriptLoader* aScriptLoader, nsIEventTarget* aSyncLoopTarget)
+    : MainThreadWorkerSyncRunnable(aScriptLoader->mWorkerRef->Private(),
                                    aSyncLoopTarget),
       mScriptLoader(aScriptLoader) {}
 
@@ -1194,17 +1199,17 @@ bool AbruptCancellationRunnable::WorkerRun(JSContext* aCx,
 
   // We must be on the same worker as we started on.
   MOZ_ASSERT(
-      mScriptLoader.mSyncLoopTarget == mSyncLoopTarget,
+      mScriptLoader->mSyncLoopTarget == mSyncLoopTarget,
       "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
 
-  mScriptLoader.AbruptShutdown();
+  mScriptLoader->AbruptShutdown();
   return true;
 }
 
 ScriptExecutorRunnable::ScriptExecutorRunnable(
-    WorkerScriptLoader& aScriptLoader, nsIEventTarget* aSyncLoopTarget,
+    WorkerScriptLoader* aScriptLoader, nsIEventTarget* aSyncLoopTarget,
     ScriptLoadRequest* aRequest)
-    : MainThreadWorkerSyncRunnable(aScriptLoader.mWorkerRef->Private(),
+    : MainThreadWorkerSyncRunnable(aScriptLoader->mWorkerRef->Private(),
                                    aSyncLoopTarget),
       mScriptLoader(aScriptLoader),
       mRequest(aRequest) {}
@@ -1213,7 +1218,7 @@ bool ScriptExecutorRunnable::IsDebuggerRunnable() const {
   // ScriptExecutorRunnable is used to execute both worker and debugger scripts.
   // In the latter case, the runnable needs to be dispatched to the debugger
   // queue.
-  return mScriptLoader.IsDebuggerScript();
+  return mScriptLoader->IsDebuggerScript();
 }
 
 bool ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate) {
@@ -1221,27 +1226,36 @@ bool ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate) {
 
   // We must be on the same worker as we started on.
   MOZ_ASSERT(
-      mScriptLoader.mSyncLoopTarget == mSyncLoopTarget,
+      mScriptLoader->mSyncLoopTarget == mSyncLoopTarget,
       "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
 
   if (!mRequest->GetWorkerLoadContext()->IsTopLevel()) {
     return true;
   }
 
-  return mScriptLoader.StoreCSP();
+  return mScriptLoader->StoreCSP();
 }
 
 bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
                                        WorkerPrivate* aWorkerPrivate) {
   aWorkerPrivate->AssertIsOnWorkerThread();
 
+  // There is a possibility that we cleaned up while this task was waiting to
+  // run. If this has happened, return and exit.
+  {
+    MutexAutoLock lock(mScriptLoader->CleanUpLock());
+    if (mScriptLoader->CleanedUp()) {
+      return true;
+    }
+  }
+
   // We must be on the same worker as we started on.
   MOZ_ASSERT(
-      mScriptLoader.mSyncLoopTarget == mSyncLoopTarget,
+      mScriptLoader->mSyncLoopTarget == mSyncLoopTarget,
       "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
 
-  mScriptLoader.MaybeMoveToLoadedList(mRequest);
-  return mScriptLoader.ProcessPendingRequests(aCx);
+  mScriptLoader->MaybeMoveToLoadedList(mRequest);
+  return mScriptLoader->ProcessPendingRequests(aCx);
 }
 
 nsresult ScriptExecutorRunnable::Cancel() {
@@ -1249,8 +1263,8 @@ nsresult ScriptExecutorRunnable::Cancel() {
   nsresult rv = MainThreadWorkerSyncRunnable::Cancel();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mScriptLoader.AllScriptsExecuted()) {
-    mScriptLoader.ShutdownScriptLoader(false, false);
+  if (mScriptLoader->AllScriptsExecuted()) {
+    mScriptLoader->ShutdownScriptLoader(false, false);
   }
   return NS_OK;
 }
