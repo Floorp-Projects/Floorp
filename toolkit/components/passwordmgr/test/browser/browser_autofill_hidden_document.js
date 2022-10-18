@@ -1,3 +1,10 @@
+/* import-globals-from ../../../../../browser/components/aboutlogins/tests/browser/head.js */
+
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/browser/components/aboutlogins/tests/browser/head.js",
+  this
+);
+
 const TEST_URL_PATH = "/browser/toolkit/components/passwordmgr/test/browser/";
 const INITIAL_URL = `about:blank`;
 const FORM_URL = `https://example.org${TEST_URL_PATH}form_basic.html`;
@@ -15,37 +22,6 @@ async function getDocumentVisibilityState(browser) {
     return content.document.visibilityState;
   });
   return visibility;
-}
-
-// Waits for the primary password prompt and cancels it.
-function observePrimaryPasswordDialog(window, result) {
-  let closedPromise;
-  function topicObserver(subject) {
-    let expected = "Password Required - " + BRAND_FULL_NAME;
-    if (subject.Dialog.args.title == expected) {
-      result.wasShown = true;
-      subject.Dialog.ui.button1.click();
-      closedPromise = BrowserTestUtils.waitForEvent(
-        window,
-        "DOMModalDialogClosed"
-      );
-    }
-  }
-  Services.obs.addObserver(topicObserver, "common-dialog-loaded");
-
-  let waited = TestUtils.waitForCondition(() => {
-    return result.wasShown;
-  }, "Wait for primary password dialog");
-
-  return Promise.all([waited, closedPromise])
-    .catch(ex => {
-      info(
-        `observePrimaryPasswordDialog, caught exception from topicObserved: ${ex}`
-      );
-    })
-    .finally(() => {
-      Services.obs.removeObserver(topicObserver, "common-dialog-loaded");
-    });
 }
 
 add_setup(async function() {
@@ -75,7 +51,7 @@ testUrlsWithForm.forEach(testUrl => {
     is(tab1Visibility, "visible", "The first tab should be foreground");
 
     let formProcessedPromise = listenForTestNotification("FormProcessed");
-    BrowserTestUtils.loadURI(tab1.linkedBrowser, FORM_URL);
+    BrowserTestUtils.loadURI(tab1.linkedBrowser, testUrl);
     await formProcessedPromise;
     gBrowser.removeTab(tab1);
   });
@@ -158,12 +134,6 @@ testUrls.forEach(testUrl => {
 
 testUrlsWithForm.forEach(testUrl => {
   add_task(async function test_immediate_autofill_with_primarypassword() {
-    // Set primary password prompt timeout to 3s.
-    // If this test goes intermittent, you likely have to increase this value.
-    await SpecialPowers.pushPrefEnv({
-      set: [["signon.masterPasswordReprompt.timeout_ms", 3000]],
-    });
-
     LoginTestUtils.primaryPassword.enable();
     await LoginTestUtils.reloadData();
     info(
@@ -174,8 +144,6 @@ testUrlsWithForm.forEach(testUrl => {
       LoginTestUtils.primaryPassword.disable();
       await LoginTestUtils.reloadData();
     });
-
-    let dialogResult, tab1Visibility, dialogObserved;
 
     // open 2 tabs
     const tab1 = await BrowserTestUtils.openNewForegroundTab(
@@ -197,28 +165,23 @@ testUrlsWithForm.forEach(testUrl => {
       "The second tab should be visible"
     );
 
-    tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
+    const tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
     is(tab1Visibility, "hidden", "The first tab should be backgrounded");
 
-    dialogResult = { wasShown: false };
-    dialogObserved = observePrimaryPasswordDialog(
-      tab1.ownerGlobal,
-      dialogResult
-    );
+    const dialogObserved = waitForMPDialog("authenticate", tab1.ownerGlobal);
 
     // In this case we will try to autofill while hidden, so look for the passwordmgr-processed-form
     // to be observed
     let formProcessedPromise = listenForTestNotification("FormProcessed");
-    BrowserTestUtils.loadURI(tab1.linkedBrowser, FORM_URL);
+    BrowserTestUtils.loadURI(tab1.linkedBrowser, testUrl);
     await Promise.all([formProcessedPromise, dialogObserved]);
 
-    let wasProcessed = await formProcessedPromise;
     ok(
-      wasProcessed,
+      formProcessedPromise,
       "Observer should be notified when form is loaded into a hidden document"
     );
     ok(
-      dialogResult && dialogResult.wasShown,
+      dialogObserved,
       "MP Dialog should be shown when form is loaded into a hidden document"
     );
 
