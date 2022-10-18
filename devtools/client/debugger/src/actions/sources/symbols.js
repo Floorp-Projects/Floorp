@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getSymbols } from "../../selectors";
+import { getSymbols, getSourceActorForSymbols } from "../../selectors";
 
 import { PROMISE } from "../utils/middleware/promise";
 import { loadSourceText } from "./loadSourceText";
@@ -10,21 +10,27 @@ import { loadSourceText } from "./loadSourceText";
 import { memoizeableAction } from "../../utils/memoizableAction";
 import { fulfilled } from "../../utils/async-value";
 
-async function doSetSymbols(cx, source, { dispatch, getState, parser }) {
+async function doSetSymbols(
+  cx,
+  source,
+  sourceActor,
+  { dispatch, getState, parser }
+) {
   const sourceId = source.id;
 
-  await dispatch(loadSourceText({ cx, source }));
-
+  await dispatch(loadSourceText({ cx, source, sourceActor }));
   await dispatch({
     type: "SET_SYMBOLS",
     cx,
     sourceId,
+    // sourceActor can be null for original and pretty-printed sources
+    sourceActorId: sourceActor ? sourceActor.actor : null,
     [PROMISE]: parser.getSymbols(sourceId),
   });
 }
 
 export const setSymbols = memoizeableAction("setSymbols", {
-  getValue: ({ source }, { getState }) => {
+  getValue: ({ source, sourceActor }, { getState }) => {
     if (source.isWasm) {
       return fulfilled(null);
     }
@@ -34,8 +40,17 @@ export const setSymbols = memoizeableAction("setSymbols", {
       return null;
     }
 
+    // Also check the spcific actor for the cached symbols
+    if (
+      sourceActor &&
+      getSourceActorForSymbols(getState(), source) !== sourceActor.actor
+    ) {
+      return null;
+    }
+
     return fulfilled(symbols);
   },
   createKey: ({ source }) => source.id,
-  action: ({ cx, source }, thunkArgs) => doSetSymbols(cx, source, thunkArgs),
+  action: ({ cx, source, sourceActor }, thunkArgs) =>
+    doSetSymbols(cx, source, sourceActor, thunkArgs),
 });

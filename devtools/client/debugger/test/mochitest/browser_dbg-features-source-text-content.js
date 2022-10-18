@@ -357,7 +357,13 @@ add_task(async function testFailingHtmlSource() {
     { sourceId: source.id },
     { keepContext: false }
   );
-  is(getCM(dbg).getValue(), `Error loading this URI: Unknown source`);
+
+  ok(
+    getCM(dbg)
+      .getValue()
+      .includes("Could not load the source"),
+    "Display failure error"
+  );
 });
 
 /**
