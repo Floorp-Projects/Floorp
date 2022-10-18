@@ -1040,12 +1040,6 @@ static const unsigned MaxFrameSize = 512 * 1024;
 
 static const unsigned MaxVarU32DecodedBytes = 5;
 
-// Which backend to use in the case of the optimized tier.
-
-enum class OptimizedBackend {
-  Ion,
-};
-
 // The CompileMode controls how compilation of a module is performed (notably,
 // how many times we compile it).
 

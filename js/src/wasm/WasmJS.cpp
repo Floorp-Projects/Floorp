@@ -4186,7 +4186,7 @@ JSFunction* WasmFunctionCreate(JSContext* cx, HandleFunction func,
 
   ModuleEnvironment moduleEnv(compileArgs->features);
   CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Optimized,
-                                  OptimizedBackend::Ion, DebugEnabled::False);
+                                  DebugEnabled::False);
   compilerEnv.computeParameters();
 
   // Initialize the type section
