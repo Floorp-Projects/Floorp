@@ -485,8 +485,8 @@ void RemoteAccessible::GetColRowExtents(uint32_t* aColIdx, uint32_t* aRowIdx,
                                        aRowExtent);
 }
 
-void RemoteAccessible::GetPosition(uint32_t* aColIdx, uint32_t* aRowIdx) {
-  Unused << mDoc->SendGetPosition(mID, aColIdx, aRowIdx);
+void RemoteAccessible::GetPosition(uint32_t* aRowIdx, uint32_t* aColIdx) {
+  Unused << mDoc->SendGetPosition(mID, aRowIdx, aColIdx);
 }
 
 uint32_t RemoteAccessible::ColExtent() {
