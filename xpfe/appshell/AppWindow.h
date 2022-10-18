@@ -350,8 +350,7 @@ class AppWindow final : public nsIBaseWindow,
 
   nsCOMPtr<nsIRemoteTab> mPrimaryBrowserParent;
 
-  nsCOMPtr<nsITimer> mSPTimer MOZ_GUARDED_BY(mSPTimerLock);
-  mozilla::Mutex mSPTimerLock;
+  nsCOMPtr<nsITimer> mSPTimer;
   WidgetListenerDelegate mWidgetListenerDelegate;
 
  private:

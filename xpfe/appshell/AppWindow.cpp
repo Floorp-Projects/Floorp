@@ -143,13 +143,12 @@ AppWindow::AppWindow(uint32_t aChromeFlags)
       mPersistentAttributesDirty(0),
       mPersistentAttributesMask(0),
       mChromeFlags(aChromeFlags),
-      mSPTimerLock("AppWindow.mSPTimerLock"),
       mWidgetListenerDelegate(this) {}
 
 AppWindow::~AppWindow() {
-  {
-    MutexAutoLock lock(mSPTimerLock);
-    if (mSPTimer) mSPTimer->Cancel();
+  if (mSPTimer) {
+    mSPTimer->Cancel();
+    mSPTimer = nullptr;
   }
   Destroy();
 }
@@ -558,13 +557,10 @@ NS_IMETHODIMP AppWindow::Destroy() {
     mDocShell->RemoveProgressListener(this);
   }
 
-  {
-    MutexAutoLock lock(mSPTimerLock);
-    if (mSPTimer) {
-      mSPTimer->Cancel();
-      SavePersistentAttributes();
-      mSPTimer = nullptr;
-    }
+  if (mSPTimer) {
+    mSPTimer->Cancel();
+    SavePersistentAttributes();
+    mSPTimer = nullptr;
   }
 
   if (!mWindow) return NS_OK;
@@ -3152,7 +3148,6 @@ class AppWindowTimerCallback final : public nsITimerCallback, public nsINamed {
 NS_IMPL_ISUPPORTS(AppWindowTimerCallback, nsITimerCallback, nsINamed)
 
 void AppWindow::SetPersistenceTimer(uint32_t aDirtyFlags) {
-  MutexAutoLock lock(mSPTimerLock);
   if (!mSPTimer) {
     mSPTimer = NS_NewTimer();
     if (!mSPTimer) {
@@ -3168,10 +3163,7 @@ void AppWindow::SetPersistenceTimer(uint32_t aDirtyFlags) {
   PersistentAttributesDirty(aDirtyFlags);
 }
 
-void AppWindow::FirePersistenceTimer() {
-  MutexAutoLock lock(mSPTimerLock);
-  SavePersistentAttributes();
-}
+void AppWindow::FirePersistenceTimer() { SavePersistentAttributes(); }
 
 //----------------------------------------
 // nsIWebProgessListener implementation
