@@ -17,7 +17,6 @@
 #include "absl/algorithm/container.h"
 #include "absl/strings/string_view.h"
 #include "api/sequence_checker.h"
-#include "api/task_queue/to_queued_task.h"
 #include "api/video/video_adaptation_counters.h"
 #include "call/adaptation/video_stream_adapter.h"
 #include "rtc_base/logging.h"

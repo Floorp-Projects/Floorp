@@ -18,8 +18,8 @@
 
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "api/task_queue/queued_task.h"
 #include "api/task_queue/task_queue_base.h"
+#include "api/units/time_delta.h"
 #include "logging/rtc_event_log/encoder/rtc_event_log_encoder_legacy.h"
 #include "logging/rtc_event_log/encoder/rtc_event_log_encoder_new_format.h"
 #include "rtc_base/checks.h"
@@ -182,7 +182,8 @@ void RtcEventLogImpl::ScheduleOutput() {
     const int64_t time_since_output_ms = now_ms - last_output_ms_;
     const uint32_t delay = rtc::SafeClamp(
         *output_period_ms_ - time_since_output_ms, 0, *output_period_ms_);
-    task_queue_->PostDelayedTask(ToQueuedTask(std::move(output_task)), delay);
+    task_queue_->PostDelayedTask(std::move(output_task),
+                                 TimeDelta::Millis(delay));
   }
 }
 

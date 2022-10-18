@@ -12,7 +12,6 @@
 
 #include <memory>
 
-#include "api/task_queue/queued_task.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/mod_ops.h"
 #include "rtc_base/time_utils.h"

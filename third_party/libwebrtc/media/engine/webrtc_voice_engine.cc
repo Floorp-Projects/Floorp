@@ -25,7 +25,6 @@
 #include "api/call/audio_sink.h"
 #include "api/field_trials_view.h"
 #include "api/task_queue/pending_task_safety_flag.h"
-#include "api/task_queue/to_queued_task.h"
 #include "media/base/audio_source.h"
 #include "media/base/media_constants.h"
 #include "media/base/stream_params.h"
@@ -2152,8 +2151,8 @@ void WebRtcVoiceMediaChannel::OnPacketReceived(rtc::CopyOnWriteBuffer packet,
   // consistency it would be good to move the interaction with call_->Receiver()
   // to a common implementation and provide a callback on the worker thread
   // for the exception case (DELIVERY_UNKNOWN_SSRC) and how retry is attempted.
-  worker_thread_->PostTask(ToQueuedTask(task_safety_, [this, packet,
-                                                       packet_time_us] {
+  worker_thread_->PostTask(SafeTask(task_safety_.flag(), [this, packet,
+                                                          packet_time_us] {
     RTC_DCHECK_RUN_ON(worker_thread_);
 
     webrtc::PacketReceiver::DeliveryStatus delivery_result =
@@ -2232,8 +2231,8 @@ void WebRtcVoiceMediaChannel::OnNetworkRouteChanged(
 
   call_->OnAudioTransportOverheadChanged(network_route.packet_overhead);
 
-  worker_thread_->PostTask(ToQueuedTask(
-      task_safety_,
+  worker_thread_->PostTask(SafeTask(
+      task_safety_.flag(),
       [this, name = std::string(transport_name), route = network_route] {
         RTC_DCHECK_RUN_ON(worker_thread_);
         call_->GetTransportControllerSend()->OnNetworkRouteChanged(name, route);

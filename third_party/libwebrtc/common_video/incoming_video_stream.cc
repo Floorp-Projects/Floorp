@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "absl/types/optional.h"
+#include "api/units/time_delta.h"
 #include "common_video/video_render_frames.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/trace_event.h"
@@ -58,7 +59,7 @@ void IncomingVideoStream::Dequeue() {
   if (render_buffers_.HasPendingFrames()) {
     uint32_t wait_time = render_buffers_.TimeToNextFrameRelease();
     incoming_render_queue_.PostDelayedHighPrecisionTask(
-        ToQueuedTask([this]() { Dequeue(); }), wait_time);
+        [this]() { Dequeue(); }, TimeDelta::Millis(wait_time));
   }
 }
 

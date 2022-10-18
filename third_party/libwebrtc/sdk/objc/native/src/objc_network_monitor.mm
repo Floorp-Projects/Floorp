@@ -11,8 +11,6 @@
 #include "sdk/objc/native/src/objc_network_monitor.h"
 #include "absl/strings/string_view.h"
 
-#include "api/task_queue/to_queued_task.h"
-
 #include <algorithm>
 
 #include "rtc_base/logging.h"
@@ -87,7 +85,7 @@ rtc::NetworkMonitorInterface::InterfaceInfo ObjCNetworkMonitor::GetInterfaceInfo
 void ObjCNetworkMonitor::OnPathUpdate(
     std::map<std::string, rtc::AdapterType, rtc::AbslStringViewCmp> adapter_type_by_name) {
   RTC_DCHECK(network_monitor_ != nil);
-  thread_->PostTask(ToQueuedTask(safety_flag_, [this, adapter_type_by_name] {
+  thread_->PostTask(SafeTask(safety_flag_, [this, adapter_type_by_name] {
     RTC_DCHECK_RUN_ON(thread_);
     adapter_type_by_name_ = adapter_type_by_name;
     InvokeNetworksChangedCallback();

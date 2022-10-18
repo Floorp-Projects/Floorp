@@ -31,7 +31,6 @@
 #include "api/sequence_checker.h"
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtcstats_objects.h"
-#include "api/task_queue/queued_task.h"
 #include "api/units/time_delta.h"
 #include "api/video/video_content_type.h"
 #include "common_video/include/quality_limitation_reason.h"

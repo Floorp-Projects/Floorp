@@ -993,7 +993,7 @@ void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
                "remote_ssrc", remote_ssrc_, "packets_discarded",
                packets_discarded);
   worker_thread_->PostTask(
-      ToQueuedTask(task_safety_, [packets_discarded, this]() {
+      SafeTask(task_safety_.flag(), [packets_discarded, this]() {
         RTC_DCHECK_RUN_ON(&main_thread_);
         stats_.packets_discarded += packets_discarded;
       }));
