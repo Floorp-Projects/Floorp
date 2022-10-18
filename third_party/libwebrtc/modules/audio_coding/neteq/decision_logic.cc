@@ -227,6 +227,10 @@ int DecisionLogic::TargetLevelMs() const {
   return target_delay_ms;
 }
 
+int DecisionLogic::UnlimitedTargetLevelMs() const {
+  return delay_manager_->UnlimitedTargetLevelMs();
+}
+
 int DecisionLogic::GetFilteredBufferLevel() const {
   if (config_.enable_stable_playout_delay) {
     return last_playout_delay_ms_ * sample_rate_khz_;

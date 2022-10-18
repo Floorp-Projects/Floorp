@@ -261,12 +261,16 @@ void StatisticsCalculator::IncreaseCounter(size_t num_samples, int fs_hz) {
   lifetime_stats_.total_samples_received += num_samples;
 }
 
-void StatisticsCalculator::JitterBufferDelay(size_t num_samples,
-                                             uint64_t waiting_time_ms,
-                                             uint64_t target_delay_ms) {
+void StatisticsCalculator::JitterBufferDelay(
+    size_t num_samples,
+    uint64_t waiting_time_ms,
+    uint64_t target_delay_ms,
+    uint64_t unlimited_target_delay_ms) {
   lifetime_stats_.jitter_buffer_delay_ms += waiting_time_ms * num_samples;
   lifetime_stats_.jitter_buffer_target_delay_ms +=
       target_delay_ms * num_samples;
+  lifetime_stats_.jitter_buffer_minimum_delay_ms +=
+      unlimited_target_delay_ms * num_samples;
   lifetime_stats_.jitter_buffer_emitted_count += num_samples;
 }
 

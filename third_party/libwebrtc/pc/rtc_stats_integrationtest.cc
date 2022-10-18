@@ -845,6 +845,8 @@ class RTCStatsReportVerifier {
       verifier.TestMemberIsUndefined(
           inbound_stream.removed_samples_for_acceleration);
       verifier.TestMemberIsUndefined(inbound_stream.jitter_buffer_target_delay);
+      verifier.TestMemberIsUndefined(
+          inbound_stream.jitter_buffer_minimum_delay);
       verifier.TestMemberIsUndefined(inbound_stream.audio_level);
       verifier.TestMemberIsUndefined(inbound_stream.total_audio_energy);
       verifier.TestMemberIsUndefined(inbound_stream.total_samples_duration);
@@ -870,6 +872,8 @@ class RTCStatsReportVerifier {
           inbound_stream.removed_samples_for_acceleration);
       verifier.TestMemberIsNonNegative<double>(
           inbound_stream.jitter_buffer_target_delay);
+      verifier.TestMemberIsNonNegative<double>(
+          inbound_stream.jitter_buffer_minimum_delay);
       verifier.TestMemberIsPositive<double>(inbound_stream.audio_level);
       verifier.TestMemberIsPositive<double>(inbound_stream.total_audio_energy);
       verifier.TestMemberIsPositive<double>(
