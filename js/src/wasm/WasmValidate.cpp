@@ -1554,8 +1554,9 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
     return d.fail("function type entry referenced as gc");
   }
 
-  (*env->types)[typeIndex] =
-      TypeDef(FuncType(std::move(args), std::move(results)));
+  FuncType funcType = FuncType(std::move(args), std::move(results));
+
+  (*env->types)[typeIndex] = TypeDef(std::move(funcType));
   (*typeState)[typeIndex] = TypeState::Func;
 
   return true;
@@ -1608,8 +1609,9 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
 
   StructType structType = StructType(std::move(fields));
 
-  if (!structType.computeLayout()) {
-    return d.fail("Struct type too large");
+  // Compute the struct layout, and fail if the struct is too large
+  if (!structType.init()) {
+    return d.fail("too many fields in struct");
   }
 
   (*env->types)[typeIndex] = TypeDef(std::move(structType));
@@ -2021,9 +2023,8 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
         return false;
       }
 #endif
-      if (!env->funcs.append(FuncDesc(&env->types->funcType(funcTypeIndex),
-                                      &env->typeIds[funcTypeIndex],
-                                      funcTypeIndex))) {
+      if (!env->funcs.append(
+              FuncDesc(&env->types->funcType(funcTypeIndex), funcTypeIndex))) {
         return false;
       }
       if (env->funcs.length() > MaxFuncs) {
@@ -2126,11 +2127,7 @@ static bool DecodeImportSection(Decoder& d, ModuleEnvironment* env) {
     return false;
   }
 
-  // The global data offsets will be filled in by ModuleGenerator::init.
-  if (!env->funcImportGlobalDataOffsets.resize(env->funcs.length())) {
-    return false;
-  }
-
+  env->numFuncImports = env->funcs.length();
   return true;
 }
 
@@ -2163,9 +2160,8 @@ static bool DecodeFunctionSection(Decoder& d, ModuleEnvironment* env) {
     if (!DecodeFuncTypeIndex(d, env->types, &funcTypeIndex)) {
       return false;
     }
-    env->funcs.infallibleAppend(FuncDesc(&env->types->funcType(funcTypeIndex),
-                                         &env->typeIds[funcTypeIndex],
-                                         funcTypeIndex));
+    env->funcs.infallibleAppend(
+        FuncDesc(&env->types->funcType(funcTypeIndex), funcTypeIndex));
   }
 
   return d.finishSection(*range, "function");
@@ -2877,7 +2873,7 @@ static bool DecodeCodeSection(Decoder& d, ModuleEnvironment* env) {
   }
 
   for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
-    if (!DecodeFunctionBody(d, *env, env->numFuncImports() + funcDefIndex)) {
+    if (!DecodeFunctionBody(d, *env, env->numFuncImports + funcDefIndex)) {
       return false;
     }
   }

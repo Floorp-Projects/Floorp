@@ -33,11 +33,11 @@ enum class FrameType;
 
 namespace wasm {
 
+class CallIndirectId;
 class Code;
 class CodeRange;
 class DebugFrame;
 class Instance;
-class TypeIdDesc;
 class Instance;
 
 struct CallableOffsets;
@@ -235,7 +235,7 @@ void GenerateJitEntryEpilogue(jit::MacroAssembler& masm,
                               CallableOffsets* offsets);
 
 void GenerateFunctionPrologue(jit::MacroAssembler& masm,
-                              const TypeIdDesc& funcTypeId,
+                              const CallIndirectId& callIndirectId,
                               const mozilla::Maybe<uint32_t>& tier1FuncIndex,
                               FuncOffsets* offsets);
 void GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed,

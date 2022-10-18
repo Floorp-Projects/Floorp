@@ -44,6 +44,7 @@ namespace wasm {
 
 using mozilla::EnumeratedArray;
 
+struct ModuleEnvironment;
 struct TableDesc;
 struct V128;
 
@@ -614,6 +615,42 @@ struct TryNote {
 WASM_DECLARE_CACHEABLE_POD(TryNote);
 WASM_DECLARE_POD_VECTOR(TryNote, TryNoteVector)
 
+// CallIndirectId describes how to compile a call_indirect and matching
+// signature check in the function prologue for a given function type.
+
+enum class CallIndirectIdKind { None, Immediate, Global };
+
+class CallIndirectId {
+  CallIndirectIdKind kind_;
+  size_t bits_;
+
+  CallIndirectId(CallIndirectIdKind kind, size_t bits)
+      : kind_(kind), bits_(bits) {}
+
+ public:
+  CallIndirectId() : kind_(CallIndirectIdKind::None), bits_(0) {}
+
+  // Get the CallIndirectId for a function in a specific module.
+  static CallIndirectId forFunc(const ModuleEnvironment& moduleEnv,
+                                uint32_t funcIndex);
+
+  // Get the CallIndirectId for a function type in a specific module.
+  static CallIndirectId forFuncType(const ModuleEnvironment& moduleEnv,
+                                    uint32_t funcTypeIndex);
+
+  CallIndirectIdKind kind() const { return kind_; }
+  bool isGlobal() const { return kind_ == CallIndirectIdKind::Global; }
+
+  uint32_t immediate() const {
+    MOZ_ASSERT(kind_ == CallIndirectIdKind::Immediate);
+    return bits_;
+  }
+  uint32_t globalDataOffset() const {
+    MOZ_ASSERT(kind_ == CallIndirectIdKind::Global);
+    return bits_;
+  }
+};
+
 // CalleeDesc describes how to compile one of the variety of asm.js/wasm calls.
 // This is hoisted into WasmCodegenTypes.h for sharing between Ion and Baseline.
 
@@ -658,20 +695,17 @@ class CalleeDesc {
       uint32_t globalDataOffset_;
       uint32_t minLength_;
       Maybe<uint32_t> maxLength_;
-      TypeIdDesc funcTypeId_;
+      CallIndirectId callIndirectId_;
     } table;
     SymbolicAddress builtin_;
   } u;
-
-  WASM_CHECK_CACHEABLE_POD(which_, u.funcIndex_, u.import.globalDataOffset_,
-                           u.table.globalDataOffset_, u.table.minLength_,
-                           u.table.maxLength_, u.table.funcTypeId_, u.builtin_);
 
  public:
   CalleeDesc() = default;
   static CalleeDesc function(uint32_t funcIndex);
   static CalleeDesc import(uint32_t globalDataOffset);
-  static CalleeDesc wasmTable(const TableDesc& desc, TypeIdDesc funcTypeId);
+  static CalleeDesc wasmTable(const TableDesc& desc,
+                              CallIndirectId callIndirectId);
   static CalleeDesc asmJSTable(const TableDesc& desc);
   static CalleeDesc builtin(SymbolicAddress callee);
   static CalleeDesc builtinInstanceMethod(SymbolicAddress callee);
@@ -694,9 +728,9 @@ class CalleeDesc {
     MOZ_ASSERT(isTable());
     return u.table.globalDataOffset_ + offsetof(TableInstanceData, elements);
   }
-  TypeIdDesc wasmTableSigId() const {
+  CallIndirectId wasmTableSigId() const {
     MOZ_ASSERT(which_ == WasmTable);
-    return u.table.funcTypeId_;
+    return u.table.callIndirectId_;
   }
   uint32_t wasmTableMinLength() const {
     MOZ_ASSERT(which_ == WasmTable);
@@ -712,8 +746,6 @@ class CalleeDesc {
   }
   bool isFuncRef() const { return which_ == FuncRef; }
 };
-
-WASM_DECLARE_CACHEABLE_POD(CalleeDesc);
 
 }  // namespace wasm
 }  // namespace js

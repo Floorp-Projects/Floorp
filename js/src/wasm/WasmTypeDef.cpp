@@ -33,6 +33,133 @@ using namespace js::wasm;
 
 using mozilla::IsPowerOfTwo;
 
+using ImmediateType = uint32_t;  // for 32/64 consistency
+static const unsigned sTotalBits = sizeof(ImmediateType) * 8;
+static const unsigned sTagBits = 1;
+static const unsigned sReturnBit = 1;
+static const unsigned sLengthBits = 4;
+static const unsigned sTypeBits = 3;
+static const unsigned sMaxTypes =
+    (sTotalBits - sTagBits - sReturnBit - sLengthBits) / sTypeBits;
+
+static bool IsImmediateValType(ValType vt) {
+  switch (vt.kind()) {
+    case ValType::I32:
+    case ValType::I64:
+    case ValType::F32:
+    case ValType::F64:
+    case ValType::V128:
+      return true;
+    case ValType::Ref:
+      switch (vt.refTypeKind()) {
+        case RefType::Func:
+        case RefType::Extern:
+        case RefType::Eq:
+          return true;
+        case RefType::TypeIndex:
+          return false;
+      }
+      break;
+  }
+  MOZ_CRASH("bad ValType");
+}
+
+static unsigned EncodeImmediateValType(ValType vt) {
+  static_assert(7 < (1 << sTypeBits), "fits");
+  switch (vt.kind()) {
+    case ValType::I32:
+      return 0;
+    case ValType::I64:
+      return 1;
+    case ValType::F32:
+      return 2;
+    case ValType::F64:
+      return 3;
+    case ValType::V128:
+      return 4;
+    case ValType::Ref:
+      switch (vt.refTypeKind()) {
+        case RefType::Func:
+          return 5;
+        case RefType::Extern:
+          return 6;
+        case RefType::Eq:
+          return 7;
+        case RefType::TypeIndex:
+          break;
+      }
+      break;
+  }
+  MOZ_CRASH("bad ValType");
+}
+
+static bool IsImmediateFuncType(const FuncType& funcType) {
+  const ValTypeVector& results = funcType.results();
+  const ValTypeVector& args = funcType.args();
+  if (results.length() + args.length() > sMaxTypes) {
+    return false;
+  }
+
+  if (results.length() > 1) {
+    return false;
+  }
+
+  for (ValType v : results) {
+    if (!IsImmediateValType(v)) {
+      return false;
+    }
+  }
+
+  for (ValType v : args) {
+    if (!IsImmediateValType(v)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static ImmediateType LengthToBits(uint32_t length) {
+  static_assert(sMaxTypes <= ((1 << sLengthBits) - 1), "fits");
+  MOZ_ASSERT(length <= sMaxTypes);
+  return length;
+}
+
+static ImmediateType EncodeImmediateFuncType(const FuncType& funcType) {
+  ImmediateType immediate = FuncType::ImmediateBit;
+  uint32_t shift = sTagBits;
+
+  if (funcType.results().length() > 0) {
+    MOZ_ASSERT(funcType.results().length() == 1);
+    immediate |= (1 << shift);
+    shift += sReturnBit;
+
+    immediate |= EncodeImmediateValType(funcType.results()[0]) << shift;
+    shift += sTypeBits;
+  } else {
+    shift += sReturnBit;
+  }
+
+  immediate |= LengthToBits(funcType.args().length()) << shift;
+  shift += sLengthBits;
+
+  for (ValType argType : funcType.args()) {
+    immediate |= EncodeImmediateValType(argType) << shift;
+    shift += sTypeBits;
+  }
+
+  MOZ_ASSERT(shift <= sTotalBits);
+  return immediate;
+}
+
+void FuncType::initImmediateTypeId() {
+  if (!IsImmediateFuncType(*this)) {
+    immediateTypeId_ = NO_IMMEDIATE_TYPE_ID;
+    return;
+  }
+  immediateTypeId_ = EncodeImmediateFuncType(*this);
+}
+
 bool FuncType::canHaveJitEntry() const {
   return !hasUnexposableArgOrRet() &&
          !temporarilyUnsupportedReftypeForEntry() &&
@@ -100,7 +227,7 @@ CheckedInt32 StructLayout::close() {
   return RoundUpToAlignment(sizeSoFar, structAlignment);
 }
 
-bool StructType::computeLayout() {
+bool StructType::init() {
   StructLayout layout;
   for (StructField& field : fields_) {
     CheckedInt32 offset = layout.addField(field.type);
@@ -446,140 +573,3 @@ TypeResult TypeContext::isArrayElementSubtypeOf(const ArrayType& subType,
   return TypeResult::False;
 }
 #endif
-
-using ImmediateType = uint32_t;  // for 32/64 consistency
-static const unsigned sTotalBits = sizeof(ImmediateType) * 8;
-static const unsigned sTagBits = 1;
-static const unsigned sReturnBit = 1;
-static const unsigned sLengthBits = 4;
-static const unsigned sTypeBits = 3;
-static const unsigned sMaxTypes =
-    (sTotalBits - sTagBits - sReturnBit - sLengthBits) / sTypeBits;
-
-static bool IsImmediateType(ValType vt) {
-  switch (vt.kind()) {
-    case ValType::I32:
-    case ValType::I64:
-    case ValType::F32:
-    case ValType::F64:
-    case ValType::V128:
-      return true;
-    case ValType::Ref:
-      switch (vt.refTypeKind()) {
-        case RefType::Func:
-        case RefType::Extern:
-        case RefType::Eq:
-          return true;
-        case RefType::TypeIndex:
-          return false;
-      }
-      break;
-  }
-  MOZ_CRASH("bad ValType");
-}
-
-static unsigned EncodeImmediateType(ValType vt) {
-  static_assert(4 < (1 << sTypeBits), "fits");
-  switch (vt.kind()) {
-    case ValType::I32:
-      return 0;
-    case ValType::I64:
-      return 1;
-    case ValType::F32:
-      return 2;
-    case ValType::F64:
-      return 3;
-    case ValType::V128:
-      return 4;
-    case ValType::Ref:
-      switch (vt.refTypeKind()) {
-        case RefType::Func:
-          return 5;
-        case RefType::Extern:
-          return 6;
-        case RefType::Eq:
-          return 7;
-        case RefType::TypeIndex:
-          break;
-      }
-      break;
-  }
-  MOZ_CRASH("bad ValType");
-}
-
-/* static */
-bool TypeIdDesc::isGlobal(const TypeDef& type) {
-  if (!type.isFuncType()) {
-    return true;
-  }
-  const FuncType& funcType = type.funcType();
-  const ValTypeVector& results = funcType.results();
-  const ValTypeVector& args = funcType.args();
-  if (results.length() + args.length() > sMaxTypes) {
-    return true;
-  }
-
-  if (results.length() > 1) {
-    return true;
-  }
-
-  for (ValType v : results) {
-    if (!IsImmediateType(v)) {
-      return true;
-    }
-  }
-
-  for (ValType v : args) {
-    if (!IsImmediateType(v)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-/* static */
-TypeIdDesc TypeIdDesc::global(const TypeDef& type, uint32_t globalDataOffset) {
-  MOZ_ASSERT(isGlobal(type));
-  return TypeIdDesc(TypeIdDescKind::Global, globalDataOffset);
-}
-
-static ImmediateType LengthToBits(uint32_t length) {
-  static_assert(sMaxTypes <= ((1 << sLengthBits) - 1), "fits");
-  MOZ_ASSERT(length <= sMaxTypes);
-  return length;
-}
-
-/* static */
-TypeIdDesc TypeIdDesc::immediate(const TypeDef& type) {
-  const FuncType& funcType = type.funcType();
-
-  ImmediateType immediate = ImmediateBit;
-  uint32_t shift = sTagBits;
-
-  if (funcType.results().length() > 0) {
-    MOZ_ASSERT(funcType.results().length() == 1);
-    immediate |= (1 << shift);
-    shift += sReturnBit;
-
-    immediate |= EncodeImmediateType(funcType.results()[0]) << shift;
-    shift += sTypeBits;
-  } else {
-    shift += sReturnBit;
-  }
-
-  immediate |= LengthToBits(funcType.args().length()) << shift;
-  shift += sLengthBits;
-
-  for (ValType argType : funcType.args()) {
-    immediate |= EncodeImmediateType(argType) << shift;
-    shift += sTypeBits;
-  }
-
-  MOZ_ASSERT(shift <= sTotalBits);
-  return TypeIdDesc(TypeIdDescKind::Immediate, immediate);
-}
-
-size_t TypeDefWithId::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
-  return TypeDef::sizeOfExcludingThis(mallocSizeOf);
-}
