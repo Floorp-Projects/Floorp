@@ -1,0 +1,16 @@
+<script>
+function go() {
+  b.src = "x:"
+  b.requestFullscreen()
+}
+function fuzz() {
+  a.close("")
+  b.src = "x"
+  a.showModal()
+  a.appendChild(document.createElement("b"))
+}
+</script>
+<body onload=go()>
+<dialog id="a">
+<nav>x</nav>
+<video id="b" onerror="fuzz()"></video>
