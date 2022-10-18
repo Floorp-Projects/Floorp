@@ -523,7 +523,7 @@ CoderResult CodeGlobalDesc(Coder<mode>& coder,
 
 template <CoderMode mode>
 CoderResult CodeTagType(Coder<mode>& coder, CoderArg<mode, TagType> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TagType, 160);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TagType, 168);
   MOZ_TRY(CodePodVector(coder, &item->argTypes_));
   MOZ_TRY(CodePodVector(coder, &item->argOffsets_));
   MOZ_TRY(CodePod(coder, &item->size_));
