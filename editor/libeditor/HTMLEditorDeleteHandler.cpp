@@ -5055,6 +5055,7 @@ HTMLEditor::MoveOneHardLineContentsWithTransaction(
                                         pointToInsert, preserveWhiteSpaceStyle);
         if (MOZ_UNLIKELY(moveChildrenResult.isErr())) {
           NS_WARNING("HTMLEditor::MoveChildrenWithTransaction() failed");
+          moveContentsInLineResult.IgnoreCaretPointSuggestion();
           return moveChildrenResult;
         }
         moveContentsInLineResult |= moveChildrenResult.inspect();
@@ -5084,6 +5085,7 @@ HTMLEditor::MoveOneHardLineContentsWithTransaction(
         nsresult rv = DeleteNodeWithTransaction(*emptyContent);
         if (NS_FAILED(rv)) {
           NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+          moveContentsInLineResult.IgnoreCaretPointSuggestion();
           return Err(rv);
         }
       } else {
@@ -5093,6 +5095,7 @@ HTMLEditor::MoveOneHardLineContentsWithTransaction(
                 MOZ_KnownLive(content), pointToInsert, preserveWhiteSpaceStyle);
         if (MOZ_UNLIKELY(moveNodeOrChildrenResult.isErr())) {
           NS_WARNING("HTMLEditor::MoveNodeOrChildrenWithTransaction() failed");
+          moveContentsInLineResult.IgnoreCaretPointSuggestion();
           return moveNodeOrChildrenResult;
         }
         moveContentsInLineResult |= moveNodeOrChildrenResult.inspect();
@@ -5171,6 +5174,7 @@ HTMLEditor::MoveOneHardLineContentsWithTransaction(
                                 *textNodeEndingWithUnnecessaryLineBreak));
         if (NS_FAILED(rv)) {
           NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+          moveContentsInLineResult.IgnoreCaretPointSuggestion();
           return Err(rv);
         }
       } else {
@@ -5179,6 +5183,7 @@ HTMLEditor::MoveOneHardLineContentsWithTransaction(
             textNodeEndingWithUnnecessaryLineBreak->TextDataLength() - 1u, 1u);
         if (NS_FAILED(rv)) {
           NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+          moveContentsInLineResult.IgnoreCaretPointSuggestion();
           return Err(rv);
         }
       }
@@ -5196,6 +5201,7 @@ HTMLEditor::MoveOneHardLineContentsWithTransaction(
   }
   EditorRawDOMPoint atUnnecessaryLineBreak(lastLineBreakContent);
   if (NS_WARN_IF(!atUnnecessaryLineBreak.IsSet())) {
+    moveContentsInLineResult.IgnoreCaretPointSuggestion();
     return Err(NS_ERROR_FAILURE);
   }
   // If the found unnecessary line break is not what we moved above, we
@@ -5214,6 +5220,7 @@ HTMLEditor::MoveOneHardLineContentsWithTransaction(
           MOZ_KnownLive(*textNode), textNode->TextDataLength() - 1u, 1u);
       if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+        moveContentsInLineResult.IgnoreCaretPointSuggestion();
         return Err(rv);
       }
       return moveContentsInLineResult;
@@ -5229,6 +5236,7 @@ HTMLEditor::MoveOneHardLineContentsWithTransaction(
     nsresult rv = DeleteNodeWithTransaction(*inlineElement);
     if (NS_FAILED(rv)) {
       NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+      moveContentsInLineResult.IgnoreCaretPointSuggestion();
       return Err(rv);
     }
     return moveContentsInLineResult;
@@ -5238,6 +5246,7 @@ HTMLEditor::MoveOneHardLineContentsWithTransaction(
   nsresult rv = DeleteNodeWithTransaction(*lastLineBreakContent);
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+    moveContentsInLineResult.IgnoreCaretPointSuggestion();
     return Err(rv);
   }
   return moveContentsInLineResult;
