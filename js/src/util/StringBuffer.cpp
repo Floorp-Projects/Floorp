@@ -32,9 +32,15 @@ static CharT* ExtractWellSized(Buffer& cb) {
     return nullptr;
   }
 
-  /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
+  // For medium/big buffers, avoid wasting more than 1/4 of the memory. Very
+  // small strings will not reach here because they will have been stored in a
+  // JSInlineString. Don't bother shrinking the allocation unless at least 80
+  // bytes will be saved, which is a somewhat arbitrary number (though it does
+  // correspond to a mozjemalloc size class.)
   MOZ_ASSERT(capacity >= length);
-  if (length > Buffer::sMaxInlineStorage && capacity - length > length / 4) {
+  constexpr size_t minCharsToReclaim = 80 / sizeof(CharT);
+  if (capacity - length >= minCharsToReclaim &&
+      capacity - length > capacity / 4) {
     CharT* tmp = allocPolicy.pod_realloc<CharT>(buf, capacity, length);
     if (!tmp) {
       allocPolicy.free_(buf);
