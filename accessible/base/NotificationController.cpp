@@ -889,6 +889,18 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
 
   CoalesceMutationEvents();
   ProcessMutationEvents();
+
+  // When firing mutation events, mObservingState is set to
+  // eRefreshProcessing. Any calls to ScheduleProcessing() that
+  // occur before mObservingState is reset will be dropped because we only
+  // schedule a tick if mObservingState == eNotObservingRefresh.
+  // This sometimes results in our viewport cache being out-of-date after
+  // processing mutation events. Call ProcessQueuedCacheUpdates again to
+  // ensure it is updated.
+  if (IPCAccessibilityActive() && mDocument) {
+    mDocument->ProcessQueuedCacheUpdates();
+  }
+
   mEventGeneration = 0;
 
   // Now that we are done with them get rid of the events we fired.
