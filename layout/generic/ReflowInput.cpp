@@ -289,10 +289,8 @@ void ReflowInput::SetComputedISize(nscoord aComputedISize,
   NS_WARNING_ASSERTION(aComputedISize >= 0, "Invalid computed inline-size!");
   if (ComputedISize() != aComputedISize) {
     mComputedSize.ISize(mWritingMode) = std::max(0, aComputedISize);
-    const LayoutFrameType frameType = mFrame->Type();
-    if (aFlags == ResetResizeFlags::Yes &&
-        frameType != LayoutFrameType::Viewport) {
-      InitResizeFlags(mFrame->PresContext(), frameType);
+    if (aFlags == ResetResizeFlags::Yes) {
+      InitResizeFlags(mFrame->PresContext(), mFrame->Type());
     }
   }
 }
