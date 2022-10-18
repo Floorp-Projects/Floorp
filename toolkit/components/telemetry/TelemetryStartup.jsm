@@ -44,14 +44,8 @@ TelemetryStartup.prototype.observe = function(aSubject, aTopic, aData) {
 
 function annotateEnvironment() {
   try {
-    let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"];
-    if (cr) {
-      let env = JSON.stringify(lazy.TelemetryEnvironment.currentEnvironment);
-      cr.getService(Ci.nsICrashReporter).annotateCrashReport(
-        "TelemetryEnvironment",
-        env
-      );
-    }
+    let env = JSON.stringify(lazy.TelemetryEnvironment.currentEnvironment);
+    Services.appinfo.annotateCrashReport("TelemetryEnvironment", env);
   } catch (e) {
     // crash reporting not built or disabled? Ignore errors
   }

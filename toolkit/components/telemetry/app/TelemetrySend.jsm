@@ -849,6 +849,10 @@ var TelemetrySendImpl = {
     try {
       const cr = Cc["@mozilla.org/toolkit/crash-reporter;1"];
       if (cr) {
+        // This needs to use nsICrashReporter because test_TelemetrySend.js
+        // replaces the crash reporter service, which we can't access here
+        // as Services caches it.
+        // eslint-disable-next-line mozilla/use-services
         const crs = cr.getService(Ci.nsICrashReporter);
 
         let clientId = ClientID.getCachedClientID();

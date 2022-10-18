@@ -70,19 +70,13 @@ function reportTestReason(val) {
 
 function annotateCrashReport() {
   try {
-    var crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
-      Ci.nsICrashReporter
-    );
-    crashReporter.annotateCrashReport("TestKey", "1");
+    Services.appinfo.annotateCrashReport("TestKey", "1");
   } catch (e) {}
 }
 
-function removeCrashReportAnnotation(value) {
+function removeCrashReportAnnotation() {
   try {
-    var crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
-      Ci.nsICrashReporter
-    );
-    crashReporter.removeCrashReportAnnotation("TestKey");
+    Services.appinfo.removeCrashReportAnnotation("TestKey");
   } catch (e) {}
 }
 

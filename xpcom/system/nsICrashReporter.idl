@@ -20,7 +20,7 @@ interface nsICrashReporter : nsISupports
   /**
    * Get the enabled status of the crash reporter.
    */
-  readonly attribute boolean enabled;
+  readonly attribute boolean crashReporterEnabled;
 
   /**
    * Enable or disable crash reporting at runtime. Not available to script

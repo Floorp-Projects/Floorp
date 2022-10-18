@@ -189,11 +189,8 @@ CrashService.prototype = Object.freeze({
         throw new Error("Unrecognized CRASH_TYPE: " + crashType);
     }
 
-    let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
-      Ci.nsICrashReporter
-    );
-    let minidumpPath = cr.getMinidumpForID(id).path;
-    let extraPath = cr.getExtraFileForID(id).path;
+    let minidumpPath = Services.appinfo.getMinidumpForID(id).path;
+    let extraPath = Services.appinfo.getExtraFileForID(id).path;
     let metadata = {};
     let hash = null;
 
