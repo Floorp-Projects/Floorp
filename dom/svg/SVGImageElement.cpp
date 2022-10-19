@@ -292,12 +292,16 @@ already_AddRefed<Path> SVGImageElement::BuildPath(PathBuilder* aBuilder) {
 bool SVGImageElement::HasValidDimensions() const {
   float width, height;
 
-  DebugOnly<bool> ok =
-      SVGGeometryProperty::ResolveAll<SVGT::Width, SVGT::Height>(this, &width,
-                                                                 &height);
-  MOZ_ASSERT(ok, "SVGGeometryProperty::ResolveAll failed");
-
-  return width > 0 && height > 0;
+  if (SVGGeometryProperty::ResolveAll<SVGT::Width, SVGT::Height>(this, &width,
+                                                                 &height)) {
+    return width > 0 && height > 0;
+  }
+  // This function might be called for an element in display:none subtree
+  // (e.g. SMIL animateMotion), we fall back to use SVG attributes.
+  return (!mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() ||
+          mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
+         (!mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() ||
+          mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0);
 }
 
 SVGElement::LengthAttributesInfo SVGImageElement::GetLengthInfo() {
