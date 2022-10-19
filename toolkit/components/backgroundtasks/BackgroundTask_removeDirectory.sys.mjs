@@ -23,18 +23,18 @@ function tryRemoveDir(aFile) {
 
 const FILE_CHECK_ITERATION_TIMEOUT_MS = 1000;
 
-async function deleteCacheDirectory(
-  profileDirPath,
-  cacheDirName,
+async function deleteChildDirectory(
+  parentDirPath,
+  childDirName,
   secondsToWait
 ) {
-  if (!cacheDirName || !cacheDirName.length) {
+  if (!childDirName || !childDirName.length) {
     return;
   }
 
   let targetFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-  targetFile.initWithPath(profileDirPath);
-  targetFile.append(cacheDirName);
+  targetFile.initWithPath(parentDirPath);
+  targetFile.append(childDirName);
 
   // We create the lock before the file is actually there so this task
   // is the first one to acquire the lock. Otherwise a different task
@@ -47,7 +47,7 @@ async function deleteCacheDirectory(
   let wasFirst = false;
   let locked = false;
   try {
-    dirLock.lock(cacheDirName);
+    dirLock.lock(childDirName);
     locked = true;
     wasFirst = !dirLock.isOtherInstanceRunning();
   } catch (e) {
@@ -106,16 +106,13 @@ async function deleteCacheDirectory(
   }
 }
 
-async function cleanupOtherCacheDirectories(
-  profileDirPath,
-  otherFoldersSuffix
-) {
+async function cleanupOtherDirectories(parentDirPath, otherFoldersSuffix) {
   if (!otherFoldersSuffix || !otherFoldersSuffix.length) {
     return;
   }
 
   let targetFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-  targetFile.initWithPath(profileDirPath);
+  targetFile.initWithPath(parentDirPath);
 
   let entries = targetFile.directoryEntries;
   while (entries.hasMoreElements()) {
@@ -169,22 +166,22 @@ async function cleanupOtherCacheDirectories(
 }
 
 // Usage:
-// purgeHTTPCache profileDirPath cacheDirName secondsToWait [otherFoldersSuffix]
+// removeDirectory parentDirPath childDirName secondsToWait [otherFoldersSuffix]
 //                  arg0           arg1     arg2            arg3
-// profileDirPath - The path to the "profile directory" containing the moved cache dir
-// cacheDirName - The "leaf name" of the moved cache directory
+// parentDirPath - The path to the parent directory that includes the target directory
+// childDirName - The "leaf name" of the moved cache directory
 //                If empty, the background task will only purge folders that have the "otherFoldersSuffix".
 // secondsToWait - String representing the number of seconds to wait for the cacheDir to be moved
-// otherFoldersSuffix - [optional] The suffix of moved purged cache directories
+// otherFoldersSuffix - [optional] The suffix of directories that should be removed
 //                      When not empty, this task will also attempt to remove all directories in
-//                      the profile dir that end with this suffix
+//                      the parent dir that end with this suffix
 export async function runBackgroundTask(commandLine) {
   if (commandLine.length < 3) {
     throw new Error("Insufficient arguments");
   }
 
-  let profileDirPath = commandLine.getArgument(0);
-  let cacheDirName = commandLine.getArgument(1);
+  const parentDirPath = commandLine.getArgument(0);
+  const childDirName = commandLine.getArgument(1);
   let secondsToWait = parseInt(commandLine.getArgument(2));
   if (isNaN(secondsToWait)) {
     secondsToWait = 10;
@@ -194,15 +191,10 @@ export async function runBackgroundTask(commandLine) {
     otherFoldersSuffix = commandLine.getArgument(3);
   }
 
-  console.error(
-    profileDirPath,
-    cacheDirName,
-    secondsToWait,
-    otherFoldersSuffix
-  );
+  console.error(parentDirPath, childDirName, secondsToWait, otherFoldersSuffix);
 
-  await deleteCacheDirectory(profileDirPath, cacheDirName, secondsToWait);
-  await cleanupOtherCacheDirectories(profileDirPath, otherFoldersSuffix);
+  await deleteChildDirectory(parentDirPath, childDirName, secondsToWait);
+  await cleanupOtherDirectories(parentDirPath, otherFoldersSuffix);
 
   // TODO: event telemetry with timings, and how often we have left over cache folders from previous runs.
 

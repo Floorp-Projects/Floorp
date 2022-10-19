@@ -4088,7 +4088,7 @@ nsresult CacheFileIOManager::DispatchPurgeTask(
   NS_ENSURE_SUCCESS(rv, rv);
 
   const char* const argv[] = {exePath.get(),         "--backgroundtask",
-                              "purgeHTTPCache",      path.get(),
+                              "removeDirectory",     path.get(),
                               aCacheDirName.get(),   aSecondsToWait.get(),
                               aPurgeExtension.get(), nullptr};
   if (NS_WARN_IF(PR_FAILURE == PR_CreateProcessDetached(exePath.get(),
