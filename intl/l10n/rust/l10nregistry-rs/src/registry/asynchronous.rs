@@ -37,6 +37,7 @@ where
         GenerateBundles::new(self.clone(), lang_ids.into_iter(), resource_ids)
     }
 
+    // Asynchronously generate the bundles.
     pub fn generate_bundles(
         &self,
         locales: std::vec::IntoIter<LanguageIdentifier>,
@@ -46,6 +47,8 @@ where
     }
 }
 
+/// This enum contains the various states the [GenerateBundles] can be in during the
+/// asynchronous generation step.
 enum State<P, B> {
     Empty,
     Locale(LanguageIdentifier),
@@ -150,23 +153,7 @@ impl<P, B> BundleStream for GenerateBundles<P, B> {
     }
 }
 
-macro_rules! try_next_metasource {
-    ( $self:ident ) => {{
-        if $self.current_metasource > 0 {
-            $self.current_metasource -= 1;
-            let solver = ParallelProblemSolver::new(
-                $self.resource_ids.len(),
-                $self.reg.lock().metasource_len($self.current_metasource),
-            );
-            $self.state = State::Solver {
-                locale: $self.state.get_locale().clone(),
-                solver,
-            };
-            continue;
-        }
-    }};
-}
-
+/// Generate [FluentBundles](FluentBundle) asynchronously.
 impl<P, B> Stream for GenerateBundles<P, B>
 where
     P: ErrorReporter,
@@ -174,68 +161,114 @@ where
 {
     type Item = Result<FluentBundle, (FluentBundle, Vec<FluentError>)>;
 
+    /// Asynchronously try and get a solver, and then with the solver generate a bundle.
+    /// If the solver is not ready yet, then this function will return as `Pending`, and
+    /// the Future runner will need to re-enter at a later point to try again.
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        if self.reg.lock().number_of_metasources() == 0 {
+            // There are no metasources available, so no bundles can be generated.
+            return None.into();
+        }
         loop {
             if let State::Solver { .. } = self.state {
+                // A solver has already been set up, continue iterating through the
+                // resources and generating a bundle.
+
+                // Pin the solver so that the async try_poll_next can be called.
                 let mut solver = self.state.take_solver();
                 let pinned_solver = Pin::new(&mut solver);
-                match pinned_solver.try_poll_next(cx, &self, false) {
-                    std::task::Poll::Ready(order) => match order {
-                        Ok(Some(order)) => {
-                            let locale = self.state.get_locale();
-                            let bundle = self.reg.lock().bundle_from_order(
-                                self.current_metasource,
-                                locale.clone(),
-                                &order,
-                                &self.resource_ids,
-                                &self.reg.shared.provider,
-                                self.reg.shared.bundle_adapter.as_ref(),
-                            );
-                            self.state.put_back_solver(solver);
-                            if bundle.is_some() {
-                                return bundle.into();
-                            } else {
-                                continue;
-                            }
-                        }
-                        Ok(None) => {
-                            try_next_metasource!(self);
-                            self.state = State::Empty;
-                            continue;
-                        }
-                        Err(idx) => {
-                            try_next_metasource!(self);
-                            // Only signal an error if we run out of metasources
-                            // to try.
-                            self.reg.shared.provider.report_errors(vec![
-                                L10nRegistryError::MissingResource {
-                                    locale: self.state.get_locale().clone(),
-                                    resource_id: self.resource_ids[idx].clone(),
-                                },
-                            ]);
-                            self.state = State::Empty;
-                            continue;
-                        }
-                    },
-                    std::task::Poll::Pending => {
+
+                if let std::task::Poll::Ready(solver_result) =
+                    pinned_solver.try_poll_next(cx, &self, false)
+                {
+                    // The solver is ready, but may not have generated an ordering.
+
+                    if let Ok(Some(order)) = solver_result {
+                        // The solver resolved an ordering, and a bundle may be able
+                        // to be generated.
+
+                        let bundle = self.reg.lock().bundle_from_order(
+                            self.current_metasource,
+                            self.state.get_locale().clone(),
+                            &order,
+                            &self.resource_ids,
+                            &self.reg.shared.provider,
+                            self.reg.shared.bundle_adapter.as_ref(),
+                        );
+
                         self.state.put_back_solver(solver);
-                        return std::task::Poll::Pending;
+
+                        if bundle.is_some() {
+                            // The bundle was successfully generated.
+                            return bundle.into();
+                        }
+
+                        // No bundle was generated, continue on.
+                        continue;
                     }
+
+                    // There is no bundle ordering available.
+
+                    if self.current_metasource > 0 {
+                        // There are more metasources, create a new solver and try the
+                        // next metasource. If there is an error in the solver_result
+                        // ignore it for now, since there are more metasources.
+                        self.current_metasource -= 1;
+                        let solver = ParallelProblemSolver::new(
+                            self.resource_ids.len(),
+                            self.reg.lock().metasource_len(self.current_metasource),
+                        );
+                        self.state = State::Solver {
+                            locale: self.state.get_locale().clone(),
+                            solver,
+                        };
+                        continue;
+                    }
+
+                    if let Err(idx) = solver_result {
+                        // Since there are no more metasources, and there is an error,
+                        // report it instead of ignoring it.
+                        self.reg.shared.provider.report_errors(vec![
+                            L10nRegistryError::MissingResource {
+                                locale: self.state.get_locale().clone(),
+                                resource_id: self.resource_ids[idx].clone(),
+                            },
+                        ]);
+                    }
+
+                    // There are no more metasources.
+                    self.state = State::Empty;
+                    continue;
                 }
-            } else if let Some(locale) = self.locales.next() {
-                if self.reg.lock().number_of_metasources() == 0 {
-                    return None.into();
-                }
-                let number_of_metasources = self.reg.lock().number_of_metasources() - 1;
-                self.current_metasource = number_of_metasources;
+
+                // The solver is not ready yet, so exit out of this async task
+                // and mark it as pending. It can be tried again later.
+                self.state.put_back_solver(solver);
+                return std::task::Poll::Pending;
+            }
+
+            // There are no more metasources to search.
+
+            // Try the next locale.
+            if let Some(locale) = self.locales.next() {
+                // Restart at the end of the metasources for this locale, and iterate
+                // backwards.
+                let last_metasource_idx = self.reg.lock().number_of_metasources() - 1;
+                self.current_metasource = last_metasource_idx;
+
                 let solver = ParallelProblemSolver::new(
                     self.resource_ids.len(),
                     self.reg.lock().metasource_len(self.current_metasource),
                 );
                 self.state = State::Solver { locale, solver };
-            } else {
-                return None.into();
+
+                // Continue iterating on the next solver.
+                continue;
             }
+
+            // There are no more locales or metasources to search. This iterator
+            // is done.
+            return None.into();
         }
     }
 }
