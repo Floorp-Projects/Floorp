@@ -9,6 +9,7 @@
 #include "HTMLEditHelpers.h"         // for SplitNodeResult
 #include "JoinSplitNodeDirection.h"  // JoinNodesDirection
 #include "HTMLEditor.h"              // for HTMLEditor
+#include "HTMLEditorInlines.h"
 #include "HTMLEditUtils.h"
 
 #include "mozilla/Logging.h"

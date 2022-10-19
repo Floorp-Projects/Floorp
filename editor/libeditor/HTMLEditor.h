@@ -11,7 +11,6 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorForwards.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/JoinSplitNodeDirection.h"
 #include "mozilla/ManualNAC.h"
 #include "mozilla/Result.h"
 #include "mozilla/dom/BlobImpl.h"
@@ -604,20 +603,6 @@ class HTMLEditor final : public EditorBase,
         MOZ_ASSERT_UNREACHABLE("New paragraph separator isn't handled here");
         return *nsGkAtoms::div;
     }
-  }
-
-  /**
-   * Get split/join node(s) direction for **this** instance.
-   */
-  [[nodiscard]] SplitNodeDirection GetSplitNodeDirection() const {
-    return MOZ_LIKELY(mUseGeckoTraditionalJoinSplitBehavior)
-               ? SplitNodeDirection::LeftNodeIsNewOne
-               : SplitNodeDirection::RightNodeIsNewOne;
-  }
-  [[nodiscard]] JoinNodesDirection GetJoinNodesDirection() const {
-    return MOZ_LIKELY(mUseGeckoTraditionalJoinSplitBehavior)
-               ? JoinNodesDirection::LeftNodeIntoRightNode
-               : JoinNodesDirection::RightNodeIntoLeftNode;
   }
 
   /**
@@ -2654,6 +2639,12 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult OnDocumentModified();
 
  protected:  // Called by helper classes.
+  /**
+   * Get split/join node(s) direction for **this** instance.
+   */
+  [[nodiscard]] inline SplitNodeDirection GetSplitNodeDirection() const;
+  [[nodiscard]] inline JoinNodesDirection GetJoinNodesDirection() const;
+
   MOZ_CAN_RUN_SCRIPT void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aTopLevelEditSubAction,
       nsIEditor::EDirection aDirectionOfTopLevelEditSubAction,
@@ -4552,7 +4543,8 @@ class HTMLEditor final : public EditorBase,
                             // RemoveEmptyInclusiveAncestorInlineElements,
                             // mComposerUpdater, mHasBeforeInputBeenCanceled
   friend class JoinNodesTransaction;  // DidJoinNodesTransaction, DoJoinNodes,
-                                      // DoSplitNode, RangeUpdaterRef
+                                      // DoSplitNode, GetJoinNodesDirection,
+                                      // RangeUpdaterRef
   friend class ListElementSelectionState;      // CollectEditTargetNodes,
                                                // CollectNonEditableNodes
   friend class ListItemElementSelectionState;  // CollectEditTargetNodes,
@@ -4566,7 +4558,8 @@ class HTMLEditor final : public EditorBase,
                                            // CollectNonEditableNodes,
                                            // CollectTableChildren
   friend class SlurpBlobEventListener;     // BlobReader
-  friend class SplitNodeTransaction;       // DoJoinNodes, DoSplitNode
+  friend class SplitNodeTransaction;       // DoJoinNodes, DoSplitNode,
+                                           // GetSplitNodeDirection
   friend class TransactionManager;  // DidDoTransaction, DidRedoTransaction,
                                     // DidUndoTransaction
   friend class
