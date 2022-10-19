@@ -600,7 +600,7 @@ function initFileInfo(
     aFI.fileName = mimeService.validateFileNameForSaving(
       fileName,
       aContentType,
-      mimeService.VALIDATE_DEFAULT
+      mimeService.VALIDATE_FORCE_APPEND_EXTENSION
     );
 
     // If uriExt is blank, consider: aFI.suggestedFileName is supplied if

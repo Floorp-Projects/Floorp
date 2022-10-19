@@ -226,6 +226,7 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
     ModifyExtension_Ignore = 2
   };
   ModifyExtensionType ShouldModifyExtension(nsIMIMEInfo* aMimeInfo,
+                                            bool aForceAppend,
                                             const nsCString& aFileExt);
 
   /**
