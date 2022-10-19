@@ -889,6 +889,10 @@ void HttpTransactionParent::HandleAsyncAbort() {
 
 bool HttpTransactionParent::GetSupportsHTTP3() { return mSupportsHTTP3; }
 
+void HttpTransactionParent::SetIsForWebTransport(bool SetIsForWebTransport) {
+  // TODO: bug 1791727
+}
+
 // We will need to support this in the socket process (See Bug 1791027)
 mozilla::TimeStamp HttpTransactionParent::GetPendingTime() {
   return TimeStamp::Now();
