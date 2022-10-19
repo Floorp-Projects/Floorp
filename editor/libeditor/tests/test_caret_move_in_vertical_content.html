@@ -50,22 +50,26 @@ SimpleTest.waitForFocus(async () => {
       editor.focus();
       const firstLine = editor.querySelector("p").firstChild;
       const secondLine = firstLine.nextSibling.nextSibling;
-      selection.collapse(firstLine, firstLine.length / 2);
       await new Promise(resolve => requestAnimationFrame(
         () => requestAnimationFrame(resolve)) // guarantee sending focus notification to the widget
       );
+      selection.collapse(firstLine, firstLine.length / 2);
       synthesizeKey("KEY_ArrowUp");
       is(selectionStr(), rangeStr(firstLine, firstLine.length / 2 - 1),
         "contenteditable: ArrowUp should move caret to previous character in vertical-rl content");
+      selection.collapse(firstLine, firstLine.length / 2 - 1);
       synthesizeKey("KEY_ArrowDown");
       is(selectionStr(), rangeStr(firstLine, firstLine.length / 2),
         "contenteditable: ArrowDown should move caret to next character in vertical-rl content");
+      selection.collapse(firstLine, firstLine.length / 2);
       synthesizeKey("KEY_ArrowLeft");
       is(selectionStr(), rangeStr(secondLine, secondLine.length / 2),
         "contenteditable: ArrowLeft should move caret to next line in vertical-rl content");
+      selection.collapse(secondLine, secondLine.length / 2);
       synthesizeKey("KEY_ArrowRight");
       is(selectionStr(), rangeStr(firstLine, firstLine.length / 2),
         "contenteditable: ArrowRight should move caret to previous line in vertical-rl content");
+      selection.removeAllRanges();
       editor.blur();
     })();
     await (async function testVerticalLR() {
@@ -73,22 +77,26 @@ SimpleTest.waitForFocus(async () => {
       editor.focus();
       const firstLine = editor.querySelector("p").firstChild;
       const secondLine = firstLine.nextSibling.nextSibling;
-      selection.collapse(firstLine, firstLine.length / 2);
       await new Promise(resolve => requestAnimationFrame(
         () => requestAnimationFrame(resolve)) // guarantee sending focus notification to the widget
       );
+      selection.collapse(firstLine, firstLine.length / 2);
       synthesizeKey("KEY_ArrowUp");
       is(selectionStr(), rangeStr(firstLine, firstLine.length / 2 - 1),
         "contenteditable: ArrowUp should move caret to previous character in vertical-lr content");
+      selection.collapse(firstLine, firstLine.length / 2 - 1);
       synthesizeKey("KEY_ArrowDown");
       is(selectionStr(), rangeStr(firstLine, firstLine.length / 2),
         "contenteditable: ArrowDown should move caret to next character in vertical-lr content");
+      selection.collapse(firstLine, firstLine.length / 2);
       synthesizeKey("KEY_ArrowRight");
       is(selectionStr(), rangeStr(secondLine, secondLine.length / 2),
         "contenteditable: ArrowRight should move caret to next line in vertical-lr content");
+      selection.collapse(secondLine, secondLine.length / 2);
       synthesizeKey("KEY_ArrowLeft");
       is(selectionStr(), rangeStr(firstLine, firstLine.length / 2),
         "contenteditable: ArrowLeft should move caret to previous line in vertical-lr content");
+      selection.removeAllRanges();
       editor.blur();
     })();
   })();
@@ -97,10 +105,10 @@ SimpleTest.waitForFocus(async () => {
     await (async function testVerticalRL() {
       editor.style.writingMode = "vertical-rl";
       editor.focus();
-      editor.selectionStart = editor.selectionEnd = editor.value.length / 2;
       await new Promise(resolve => requestAnimationFrame(
         () => requestAnimationFrame(resolve)) // guarantee sending focus notification to the widget
       );
+      editor.selectionStart = editor.selectionEnd = editor.value.length / 2;
       synthesizeKey("KEY_ArrowRight");
       is(editor.selectionStart, 0,
         "<input>: ArrowRight should move caret to beginning of the input element if vertical-rl");
@@ -121,10 +129,10 @@ SimpleTest.waitForFocus(async () => {
     await (async function testVerticalLR() {
       editor.style.writingMode = "vertical-lr";
       editor.focus();
-      editor.selectionStart = editor.selectionEnd = editor.value.length / 2;
       await new Promise(resolve => requestAnimationFrame(
         () => requestAnimationFrame(resolve)) // guarantee sending focus notification to the widget
       );
+      editor.selectionStart = editor.selectionEnd = editor.value.length / 2;
       synthesizeKey("KEY_ArrowLeft");
       is(editor.selectionStart, 0,
         "<input>: ArrowLeft should move caret to beginning of the input element if vertical-lr");
@@ -148,10 +156,10 @@ SimpleTest.waitForFocus(async () => {
     await (async function testVerticalRL() {
       editor.style.writingMode = "vertical-rl";
       editor.focus();
-      editor.selectionStart = editor.selectionEnd = "ABCD\nEF".length;
       await new Promise(resolve => requestAnimationFrame(
         () => requestAnimationFrame(resolve)) // guarantee sending focus notification to the widget
       );
+      editor.selectionStart = editor.selectionEnd = "ABCD\nEF".length;
       synthesizeKey("KEY_ArrowRight");
       isfuzzy(editor.selectionStart, "AB".length, 1,
         "<textarea>: ArrowRight should move caret to previous line of textarea element if vertical-rl");
@@ -172,10 +180,10 @@ SimpleTest.waitForFocus(async () => {
     await (async function testVerticalLR() {
       editor.style.writingMode = "vertical-lr";
       editor.focus();
-      editor.selectionStart = editor.selectionEnd = "ABCD\nEF".length;
       await new Promise(resolve => requestAnimationFrame(
         () => requestAnimationFrame(resolve)) // guarantee sending focus notification to the widget
       );
+      editor.selectionStart = editor.selectionEnd = "ABCD\nEF".length;
       synthesizeKey("KEY_ArrowLeft");
       isfuzzy(editor.selectionStart, "AB".length, 1,
         "<textarea>: ArrowLeft should move caret to previous line of textarea element if vertical-rl");
