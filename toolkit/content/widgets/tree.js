@@ -1340,11 +1340,14 @@
       // The leftside of the textbox is aligned to the left side of the text
       // in LTR mode, and left side of the cell in RTL mode.
       let left = style.direction == "rtl" ? cellRect.x : textRect.x;
+      let scrollbarWidth = window.windowUtils.getBoundsWithoutFlushing(
+        this.shadowRoot.querySelector("scrollbar[orient='vertical']")
+      ).width;
       // Note: this won't be quite right in RTL for trees using twisties
       // or indentation. bug 1708159 tracks fixing the implementation
       // of getCoordsForCellItem which we called above so it provides
       // better numbers in those cases.
-      let widthdiff = Math.abs(textRect.x - cellRect.x);
+      let widthdiff = Math.abs(textRect.x - cellRect.x) - scrollbarWidth;
 
       input.style.left = `${left}px`;
       input.style.height = `${textRect.height +
