@@ -650,7 +650,7 @@
       --in-content-link-color-hover: var(--blue-70);
       --in-content-link-color-active: var(--blue-80);
       --in-content-link-color-visited: var(--blue-60);
-      /* button background states are also used for checkboxes and radiobuttons */
+      /* button background states are also used for checkboxes and radio buttons */
       --in-content-button-text-color: var(--in-content-text-color);
       --in-content-button-text-color-hover: var(--in-content-text-color);
       --in-content-button-background: rgba(207, 207, 216, 0.33);
@@ -1160,7 +1160,7 @@
         /* .developer-hub */
         /* Background */
         /* Border */
-        /* Othres */
+        /* Others */
       }
       body:is(.developer-hub, .statistics) #main-wrapper,
       body:is(.developer-hub, .statistics) .menu-nav > ul > li > ul::after,
@@ -2014,7 +2014,7 @@
       border-color: transparent !important;
       outline: 2px solid var(--in-content-focus-outline-color) !important;
       outline-offset: -1px !important;
-      /* Prevents antialising around the corners */
+      /* Prevents antialiasing around the corners */
     }
 
     input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):-moz-ui-invalid,
@@ -2022,7 +2022,7 @@
       border-color: transparent !important;
       outline: 2px solid var(--in-content-border-invalid) !important;
       outline-offset: -1px !important;
-      /* Prevents antialising around the corners */
+      /* Prevents antialiasing around the corners */
     }
 
     input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):disabled,
@@ -2282,7 +2282,7 @@
         list-style-image: url("chrome://browser/skin/places/tag.svg") !important;
       }
 
-      /* Boomark */
+      /* Bookmark */
       :-moz-any(#placesList, #placeContent) treechildren::-moz-tree-image(query, OrganizerQuery_allbms_____v) {
         list-style-image: url("chrome://browser/skin/bookmark.svg") !important;
       }
@@ -2326,7 +2326,7 @@
         list-style-image: url("chrome://browser/skin/lepton/tag-open.svg") !important;
       }
 
-      /* Boomark */
+      /* Bookmark */
       :-moz-any(#placesList, #placeContent) treechildren::-moz-tree-image(query, open, OrganizerQuery_allbms_____v) {
         list-style-image: url("chrome://browser/skin/bookmark-hollow.svg") !important;
       }
@@ -2770,7 +2770,7 @@
           color: var(--organizer-selected-color) !important;
         }
 
-        /*- Radio Button ---------------------------------------------------------*/
+        /*- Radio Button -------------------------------------------------------------*/
         menuitem[type="radio"] {
           /* margin-inline-start: 0 !important; */
           appearance: none !important;
@@ -2828,7 +2828,7 @@
           opacity: 0.5 !important;
         }
 
-        /*- Check Box ------------------------------------------------------------*/
+        /*- Check Box ----------------------------------------------------------------*/
         /* From checkbox.css */
         menuitem[type="checkbox"] {
           appearance: none !important;
@@ -2985,7 +2985,7 @@
           opacity: 0.4 !important;
         }
 
-        /*- Menu Separtor --------------------------------------------------------*/
+        /*- Menu Separator -----------------------------------------------------------*/
         menuseparator {
           appearance: none !important;
           min-width: 2px;
@@ -3011,96 +3011,14 @@
   }
 }
 /** Menu - Icons Layout *******************************************************/
-@supports -moz-bool-pref("userChrome.icon.menu") {
-  @-moz-document url("chrome://browser/content/places/places.xhtml"),
+@supports not -moz-bool-pref("userChrome.icon.disabled") {
+  @supports -moz-bool-pref("userChrome.icon.menu") {
+    @-moz-document url("chrome://browser/content/places/places.xhtml"),
                url("about:downloads") {
-    menupopup menuitem:not([type="checkbox"][checked="true"], [type="radio"]),
-    menupopup menu:not([type="checkbox"][checked="true"], [type="radio"]) {
-      -moz-appearance: none !important;
-      /* Linux: menulist */
-    }
-
-    menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-      menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
-    menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-      menu:not(.menu-iconic, .in-menulist, [checked="true"]),
-    menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
-      > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
-    menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
-      /* Color */
-      -moz-context-properties: fill, fill-opacity !important;
-      fill: currentColor !important;
-      /* Layout */
-      background-size: 16px !important;
-      background-repeat: no-repeat !important;
-      background-image: var(--menuitem-image);
-    }
-
-    /* For native context menus */
-    @supports -moz-bool-pref("widget.macos.native-context-menus") or -moz-bool-pref("widget.gtk.native-context-menus") {
-      :not(menu, #ContentSelectDropdown)
-        > menupopup
-        > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
-      :not(menu, #ContentSelectDropdown) > menupopup > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
-        list-style-image: var(--menuitem-image, url("chrome://browser/skin/lepton/blank.svg")) !important;
-      }
-    }
-
-    /* Padding */
-    :root {
-      --uc-menu-background-position: left;
-      --context-menu-background-padding-default: 5px;
-      --context-menu-background-padding: var(--context-menu-background-padding-default);
-    }
-    :root:-moz-locale-dir(rtl) {
-      --uc-menu-background-position: right;
-    }
-
-    menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-      menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
-    menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-      menu:not(.menu-iconic, .in-menulist, [checked="true"]),
-    menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
-      > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
-    menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
-      background-position: var(--uc-menu-background-position) var(--context-menu-background-padding) center !important;
-      padding-inline-start: var(--context-menu-background-padding) !important;
-    }
-
-    /* Padding - Windows */
-    @media (-moz-os-version: windows-win7), (-moz-platform: windows-win7) {
-      :root {
-        --context-menu-background-padding-default: 2px;
-      }
-    }
-    @media (-moz-os-version: windows-win8), (-moz-platform: windows-win8) {
-      :root {
-        --context-menu-background-padding-default: 3px;
-      }
-    }
-    @media (-moz-os-version: windows-win7),
-      (-moz-platform: windows-win7),
-      (-moz-os-version: windows-win8),
-      (-moz-platform: windows-win8) {
-      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-        menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
-      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-        menu:not(.menu-iconic, .in-menulist, [checked="true"]),
-      menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
-        > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
-      menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
-        background-position: left var(--context-menu-background-padding) center !important;
-        padding-inline-start: 0 !important;
-      }
-    }
-    @media (-moz-os-version: windows-win10), (-moz-platform: windows-win10) {
-      :root {
-        --context-menu-background-padding: 1em;
-        --context-menu-text-padding: 24px;
-        /* 16px + 8px */
-        --menu-background-padding-default: calc(
-          var(--context-menu-background-padding) + var(--context-menu-text-padding)
-        );
+      menupopup menuitem:not([type="checkbox"][checked="true"], [type="radio"]),
+      menupopup menu:not([type="checkbox"][checked="true"], [type="radio"]) {
+        -moz-appearance: none !important;
+        /* Linux: menulist */
       }
 
       menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
@@ -3110,297 +3028,383 @@
       menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
         > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
       menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
-        padding-inline-start: var(--menu-background-padding-default) !important;
-        margin-left: 0 !important;
-      }
-    }
-    /* Padding - Linux */
-    @media (-moz-gtk-csd-available) {
-      :root {
-        --context-menu-background-padding-default: 6px;
-      }
-
-      /* Contextmenu Checkbox Unset */
-      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu) menuitem[type="checkbox"] {
-        margin-inline: 0 !important;
-      }
-      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-        menuitem[type="checkbox"]
-        > .menu-iconic-left
-        > .menu-iconic-icon {
-        margin-inline-end: 0 !important;
-      }
-      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-        menuitem[type="checkbox"]:not([checked="true"])
-        > .menu-iconic-left
-        > .menu-iconic-icon {
-        border: none !important;
-        background-color: unset !important;
-      }
-    }
-    /* Padding - Mac */
-    @supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled") {
-      :root {
-        --context-menu-background-padding-default: 10px;
-        --context-menu-mac-padding: 21px;
+        /* Color */
+        -moz-context-properties: fill, fill-opacity !important;
+        fill: currentColor !important;
+        /* Layout */
+        background-size: 16px !important;
+        background-repeat: no-repeat !important;
+        background-image: var(--menuitem-image);
       }
 
-      /* context menu width */
-      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-        menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
-      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-        menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
-        padding-inline-end: var(--context-menu-background-padding) !important;
-      }
-      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-        menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"])
-        > .menu-text,
-      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-        menu:not(.menu-iconic, .in-menulist, [checked="true"])
-        > .menu-text {
-        /* text position */
-        padding-inline-start: var(--context-menu-mac-padding) !important;
-      }
-
-      /* Checkbox menuitem, None iconic menu */
-      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu) menuitem[checked="true"],
-      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu) menu:not(.menu-iconic) {
-        padding-inline-start: calc(var(--context-menu-background-padding) + var(--context-menu-mac-padding)) !important;
-      }
-    }
-    /*= Context Menu ===========================================================*/
-    @supports -moz-bool-pref("userChrome.icon.context_menu") {
-      /* Icon lists */
-      /*= downloadsContextMenu =====================================================*/
-      .downloadPauseMenuItem {
-        --menuitem-image: url("chrome://global/skin/media/pause-fill.svg");
-      }
-
-      .downloadResumeMenuItem {
-        --menuitem-image: url("chrome://global/skin/media/play-fill.svg");
-      }
-
-      .downloadUnblockMenuItem {
-        --menuitem-image: url("chrome://browser/skin/lepton/checkmark-circle.svg");
-      }
-
-      .downloadUseSystemDefaultMenuItem {
-        --menuitem-image: url("chrome://browser/skin/open.svg");
-      }
-
-      .downloadAlwaysUseSystemDefaultMenuItem {
-        /* checkbox */
-        --menuitem-image: url("chrome://browser/skin/lepton/folder-globe.svg");
-      }
-
-      .downloadAlwaysOpenSimilarFilesMenuItem {
-        /* checkbox */
-        --menuitem-image: url("chrome://browser/skin/lepton/fluid.svg");
-      }
-
-      .downloadShowMenuItem {
-        --menuitem-image: url("chrome://global/skin/icons/folder.svg");
-      }
-      @supports -moz-bool-pref("userChrome.icon.library") {
-        .downloadShowMenuItem {
-          --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+      /* For native context menus */
+      @supports -moz-bool-pref("widget.macos.native-context-menus") or -moz-bool-pref("widget.gtk.native-context-menus") {
+        :not(menu, #ContentSelectDropdown)
+          > menupopup
+          > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        :not(menu, #ContentSelectDropdown) > menupopup > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+          list-style-image: var(--menuitem-image, url("chrome://browser/skin/lepton/blank.svg")) !important;
         }
       }
 
-      #downloadsContextMenu > menuitem.downloadOpenReferrerMenuItem,
-      #downloadsContextMenu > menuitem[command="downloadsCmd_openReferrer"] {
-        --menuitem-image: url("chrome://browser/skin/lepton/link-square.svg");
+      /* Padding */
+      :root {
+        --uc-menu-background-position: left;
+        --context-menu-background-padding-default: 5px;
+        --context-menu-background-padding: var(--context-menu-background-padding-default);
       }
-      #downloadsContextMenu > menuitem.downloadCopyLocationMenuItem,
-      #downloadsContextMenu > menuitem[command="downloadsCmd_copyLocation"] {
-        --menuitem-image: url("chrome://browser/skin/lepton/link.svg");
-      }
-
-      .downloadDeleteFileMenuItem {
-        --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+      :root:-moz-locale-dir(rtl) {
+        --uc-menu-background-position: right;
       }
 
-      .downloadRemoveFromHistoryMenuItem {
-        --menuitem-image: url("chrome://browser/skin/lepton/eraser.svg");
+      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+        menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+        menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+      menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
+        > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+      menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+        background-position: var(--uc-menu-background-position) var(--context-menu-background-padding) center !important;
+        padding-inline-start: var(--context-menu-background-padding) !important;
       }
 
-      #downloadsContextMenu > menuitem[command="downloadsCmd_clearList"],
-      #downloadsContextMenu > menuitem[command="downloadsCmd_clearDownloads"] {
-        --menuitem-image: url("chrome://browser/skin/lepton/broom.svg");
+      /* Padding - Windows */
+      @media (-moz-os-version: windows-win7), (-moz-platform: windows-win7) {
+        :root {
+          --context-menu-background-padding-default: 2px;
+        }
       }
+      @media (-moz-os-version: windows-win8), (-moz-platform: windows-win8) {
+        :root {
+          --context-menu-background-padding-default: 3px;
+        }
+      }
+      @media (-moz-os-version: windows-win7),
+        (-moz-platform: windows-win7),
+        (-moz-os-version: windows-win8),
+        (-moz-platform: windows-win8) {
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+        menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
+          > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+          background-position: left var(--context-menu-background-padding) center !important;
+          padding-inline-start: 0 !important;
+        }
+      }
+      @media (-moz-os-version: windows-win10), (-moz-platform: windows-win10) {
+        :root {
+          --context-menu-background-padding: 1em;
+          --context-menu-text-padding: 24px;
+          /* 16px + 8px */
+          --menu-background-padding-default: calc(
+            var(--context-menu-background-padding) + var(--context-menu-text-padding)
+          );
+        }
 
-      /*= placeContext =============================================================*/
-      #placesContext_open {
-        --menuitem-image: url("chrome://browser/skin/lepton/link-square.svg");
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+        menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
+          > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+          padding-inline-start: var(--menu-background-padding-default) !important;
+          margin-left: 0 !important;
+        }
       }
+      /* Padding - Linux */
+      @media (-moz-gtk-csd-available) {
+        :root {
+          --context-menu-background-padding-default: 6px;
+        }
 
-      #placesContext_openBookmarkContainer\:tabs,
-      #placesContext_openBookmarkLinks\:tabs {
-        --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
+        /* Contextmenu Checkbox Unset */
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu) menuitem[type="checkbox"] {
+          margin-inline: 0 !important;
+        }
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menuitem[type="checkbox"]
+          > .menu-iconic-left
+          > .menu-iconic-icon {
+          margin-inline-end: 0 !important;
+        }
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menuitem[type="checkbox"]:not([checked="true"])
+          > .menu-iconic-left
+          > .menu-iconic-icon {
+          border: none !important;
+          background-color: unset !important;
+        }
       }
+      /* Padding - Mac */
+      @supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled") {
+        :root {
+          --context-menu-background-padding-default: 10px;
+          --context-menu-mac-padding: 21px;
+        }
 
-      #placesContext_open\:newtab,
-      #placesContext_openContainer\:tabs,
-      #placesContext_openLinks\:tabs {
-        --menuitem-image: url("chrome://browser/skin/new-tab.svg");
-      }
+        /* context menu width */
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+          padding-inline-end: var(--context-menu-background-padding) !important;
+        }
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"])
+          > .menu-text,
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menu:not(.menu-iconic, .in-menulist, [checked="true"])
+          > .menu-text {
+          /* text position */
+          padding-inline-start: var(--context-menu-mac-padding) !important;
+        }
 
-      #placesContext_open\:newcontainertab {
-        --menuitem-image: url("chrome://browser/skin/lepton/container-openin-16.svg");
+        /* Checkbox menuitem, None iconic menu */
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu) menuitem[checked="true"],
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu) menu:not(.menu-iconic) {
+          padding-inline-start: calc(
+            var(--context-menu-background-padding) + var(--context-menu-mac-padding)
+          ) !important;
+        }
       }
+      /*= Context Menu ===========================================================*/
+      @supports -moz-bool-pref("userChrome.icon.context_menu") {
+        /* Icon lists */
+        /*= downloadsContextMenu =====================================================*/
+        .downloadPauseMenuItem {
+          --menuitem-image: url("chrome://global/skin/media/pause-fill.svg");
+        }
 
-      #placesContext_open\:newwindow {
-        --menuitem-image: url("chrome://browser/skin/window.svg");
-      }
+        .downloadResumeMenuItem {
+          --menuitem-image: url("chrome://global/skin/media/play-fill.svg");
+        }
 
-      #placesContext_open\:newprivatewindow {
-        --menuitem-image: url("chrome://browser/skin/privateBrowsing.svg");
-      }
+        .downloadUnblockMenuItem {
+          --menuitem-image: url("chrome://browser/skin/lepton/checkmark-circle.svg");
+        }
 
-      #placesContext_show_bookmark\:info,
-      #placesContext_show\:info,
-      #placesContext_show_folder\:info {
-        --menuitem-image: url("chrome://global/skin/icons/edit.svg");
-      }
+        .downloadUseSystemDefaultMenuItem {
+          --menuitem-image: url("chrome://browser/skin/open.svg");
+        }
 
-      #placesContext_deleteBookmark,
-      #placesContext_deleteFolder,
-      #placesContext_delete,
-      #placesContext_delete_history {
-        --menuitem-image: url("chrome://global/skin/icons/delete.svg");
-      }
+        .downloadAlwaysUseSystemDefaultMenuItem {
+          /* checkbox */
+          --menuitem-image: url("chrome://browser/skin/lepton/folder-globe.svg");
+        }
 
-      #placesContext_deleteHost {
-        --menuitem-image: url("chrome://browser/skin/lepton/eye-hide.svg");
-      }
+        .downloadAlwaysOpenSimilarFilesMenuItem {
+          /* checkbox */
+          --menuitem-image: url("chrome://browser/skin/lepton/fluid.svg");
+        }
 
-      #placesContext_sortBy\:name {
-        --menuitem-image: url("chrome://browser/skin/lepton/text-sort-ascending.svg");
-      }
+        .downloadShowMenuItem {
+          --menuitem-image: url("chrome://global/skin/icons/folder.svg");
+        }
+        @supports -moz-bool-pref("userChrome.icon.library") {
+          .downloadShowMenuItem {
+            --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+          }
+        }
 
-      #placesContext_cut {
-        --menuitem-image: url("chrome://browser/skin/edit-cut.svg");
-      }
+        #downloadsContextMenu > menuitem.downloadOpenReferrerMenuItem,
+        #downloadsContextMenu > menuitem[command="downloadsCmd_openReferrer"] {
+          --menuitem-image: url("chrome://browser/skin/lepton/link-square.svg");
+        }
+        #downloadsContextMenu > menuitem.downloadCopyLocationMenuItem,
+        #downloadsContextMenu > menuitem[command="downloadsCmd_copyLocation"] {
+          --menuitem-image: url("chrome://browser/skin/lepton/link.svg");
+        }
 
-      #placesContext_copy {
-        --menuitem-image: url("chrome://browser/skin/lepton/edit-copy.svg");
-      }
+        .downloadDeleteFileMenuItem {
+          --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+        }
 
-      #placesContext_paste_group {
-        --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
-      }
+        .downloadRemoveFromHistoryMenuItem {
+          --menuitem-image: url("chrome://browser/skin/lepton/eraser.svg");
+        }
 
-      #placesContext_new\:bookmark {
-        --menuitem-image: url("chrome://browser/skin/bookmark.svg");
-      }
+        #downloadsContextMenu > menuitem[command="downloadsCmd_clearList"],
+        #downloadsContextMenu > menuitem[command="downloadsCmd_clearDownloads"] {
+          --menuitem-image: url("chrome://browser/skin/lepton/broom.svg");
+        }
 
-      #placesContext_showInFolder,
-      #placesContext_new\:folder {
-        --menuitem-image: url("chrome://global/skin/icons/folder.svg");
-      }
-      @supports -moz-bool-pref("userChrome.icon.library") {
+        /*= placeContext =============================================================*/
+        #placesContext_open {
+          --menuitem-image: url("chrome://browser/skin/lepton/link-square.svg");
+        }
+
+        #placesContext_openBookmarkContainer\:tabs,
+        #placesContext_openBookmarkLinks\:tabs {
+          --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
+        }
+
+        #placesContext_open\:newtab,
+        #placesContext_openContainer\:tabs,
+        #placesContext_openLinks\:tabs {
+          --menuitem-image: url("chrome://browser/skin/new-tab.svg");
+        }
+
+        #placesContext_open\:newcontainertab {
+          --menuitem-image: url("chrome://browser/skin/lepton/container-openin-16.svg");
+        }
+
+        #placesContext_open\:newwindow {
+          --menuitem-image: url("chrome://browser/skin/window.svg");
+        }
+
+        #placesContext_open\:newprivatewindow {
+          --menuitem-image: url("chrome://browser/skin/privateBrowsing.svg");
+        }
+
+        #placesContext_show_bookmark\:info,
+        #placesContext_show\:info,
+        #placesContext_show_folder\:info {
+          --menuitem-image: url("chrome://global/skin/icons/edit.svg");
+        }
+
+        #placesContext_deleteBookmark,
+        #placesContext_deleteFolder,
+        #placesContext_delete,
+        #placesContext_delete_history {
+          --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+        }
+
+        #placesContext_deleteHost {
+          --menuitem-image: url("chrome://browser/skin/lepton/eye-hide.svg");
+        }
+
+        #placesContext_sortBy\:name {
+          --menuitem-image: url("chrome://browser/skin/lepton/text-sort-ascending.svg");
+        }
+
+        #placesContext_cut {
+          --menuitem-image: url("chrome://browser/skin/edit-cut.svg");
+        }
+
+        #placesContext_copy {
+          --menuitem-image: url("chrome://browser/skin/lepton/edit-copy.svg");
+        }
+
+        #placesContext_paste_group {
+          --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
+        }
+
+        #placesContext_new\:bookmark {
+          --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+        }
+
         #placesContext_showInFolder,
         #placesContext_new\:folder {
-          --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+          --menuitem-image: url("chrome://global/skin/icons/folder.svg");
+        }
+        @supports -moz-bool-pref("userChrome.icon.library") {
+          #placesContext_showInFolder,
+          #placesContext_new\:folder {
+            --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+          }
+        }
+
+        #placesContext_new\:separator {
+          --menuitem-image: url("chrome://browser/skin/lepton/vertical-line.svg");
+        }
+
+        #placesContext_paste {
+          --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
+        }
+
+        #placesContext_createBookmark {
+          --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+        }
+
+        #show-other-bookmarks_PersonalToolbar {
+          /* checkbox */
+          --menuitem-image: url("chrome://browser/skin/lepton/star-line-horizontal.svg");
+        }
+
+        #placesContext_showAllBookmarks {
+          --menuitem-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
+        }
+
+        .openintabs-menuitem {
+          --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
         }
       }
+      @supports -moz-bool-pref("userChrome.icon.global_menu") {
+        /*= organizeButtonPopup ======================================================*/
+        #newbookmark {
+          --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+        }
 
-      #placesContext_new\:separator {
-        --menuitem-image: url("chrome://browser/skin/lepton/vertical-line.svg");
-      }
-
-      #placesContext_paste {
-        --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
-      }
-
-      #placesContext_createBookmark {
-        --menuitem-image: url("chrome://browser/skin/bookmark.svg");
-      }
-
-      #show-other-bookmarks_PersonalToolbar {
-        /* checkbox */
-        --menuitem-image: url("chrome://browser/skin/lepton/star-line-horizontal.svg");
-      }
-
-      #placesContext_showAllBookmarks {
-        --menuitem-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
-      }
-
-      .openintabs-menuitem {
-        --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
-      }
-    }
-    @supports -moz-bool-pref("userChrome.icon.global_menu") {
-      /*= organizeButtonPopup ======================================================*/
-      #newbookmark {
-        --menuitem-image: url("chrome://browser/skin/bookmark.svg");
-      }
-
-      #newfolder {
-        --menuitem-image: url("chrome://global/skin/icons/folder.svg");
-      }
-      @supports -moz-bool-pref("userChrome.icon.library") {
         #newfolder {
-          --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+          --menuitem-image: url("chrome://global/skin/icons/folder.svg");
         }
-      }
+        @supports -moz-bool-pref("userChrome.icon.library") {
+          #newfolder {
+            --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+          }
+        }
 
-      #newseparator {
-        --menuitem-image: url("chrome://browser/skin/lepton/vertical-line.svg");
-      }
+        #newseparator {
+          --menuitem-image: url("chrome://browser/skin/lepton/vertical-line.svg");
+        }
 
-      #orgUndo {
-        --menuitem-image: url("chrome://browser/skin/lepton/undo.svg");
-      }
+        #orgUndo {
+          --menuitem-image: url("chrome://browser/skin/lepton/undo.svg");
+        }
 
-      #orgCut {
-        --menuitem-image: url("chrome://browser/skin/edit-cut.svg");
-      }
+        #orgCut {
+          --menuitem-image: url("chrome://browser/skin/edit-cut.svg");
+        }
 
-      #orgCopy {
-        --menuitem-image: url("chrome://browser/skin/lepton/edit-copy.svg");
-      }
+        #orgCopy {
+          --menuitem-image: url("chrome://browser/skin/lepton/edit-copy.svg");
+        }
 
-      #orgPaste {
-        --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
-      }
+        #orgPaste {
+          --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
+        }
 
-      #orgDelete {
-        --menuitem-image: url("chrome://global/skin/icons/delete.svg");
-      }
+        #orgDelete {
+          --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+        }
 
-      #orgSelectAll {
-        --menuitem-image: url("chrome://browser/skin/lepton/select-all-on.svg");
-      }
+        #orgSelectAll {
+          --menuitem-image: url("chrome://browser/skin/lepton/select-all-on.svg");
+        }
 
-      #orgClose {
-        --menuitem-image: url("chrome://global/skin/icons/close.svg");
-      }
+        #orgClose {
+          --menuitem-image: url("chrome://global/skin/icons/close.svg");
+        }
 
-      /*= viewMenuPopup ============================================================*/
-      #viewColumns {
-        --menuitem-image: url("chrome://global/skin/icons/columnpicker.svg");
-      }
+        /*= viewMenuPopup ============================================================*/
+        #viewColumns {
+          --menuitem-image: url("chrome://global/skin/icons/columnpicker.svg");
+        }
 
-      #viewSort {
-        --menuitem-image: url("chrome://browser/skin/lepton/text-sort-ascending.svg");
-      }
+        #viewSort {
+          --menuitem-image: url("chrome://browser/skin/lepton/text-sort-ascending.svg");
+        }
 
-      /*= maintenanceButtonPopup ===================================================*/
-      #backupBookmarks {
-        --menuitem-image: url("chrome://devtools/skin/images/datastore.svg");
-      }
+        /*= maintenanceButtonPopup ===================================================*/
+        #backupBookmarks {
+          --menuitem-image: url("chrome://devtools/skin/images/datastore.svg");
+        }
 
-      #fileImport {
-        --menuitem-image: url("chrome://browser/skin/save.svg");
-      }
+        #fileImport {
+          --menuitem-image: url("chrome://browser/skin/save.svg");
+        }
 
-      #fileExport {
-        --menuitem-image: url("chrome://browser/skin/open.svg");
-      }
+        #fileExport {
+          --menuitem-image: url("chrome://browser/skin/open.svg");
+        }
 
-      #browserImport {
-        --menuitem-image: url("chrome://browser/skin/import.svg");
+        #browserImport {
+          --menuitem-image: url("chrome://browser/skin/import.svg");
+        }
       }
     }
   }

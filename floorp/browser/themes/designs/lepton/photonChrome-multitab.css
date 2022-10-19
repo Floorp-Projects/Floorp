@@ -7109,3 +7109,12 @@
     .tabbrowser-tab, .tab-stack {
       min-height: 2.54em !important;
     }
+
+    #rebootappmenu {
+      list-style-image: url("chrome://browser/skin/lepton/refresh-cw.svg");
+    }
+
+    #usercssloader-menu {
+      --menuitem-image: url("chrome://browser/skin/lepton/developer.svg");
+    }
+  }
