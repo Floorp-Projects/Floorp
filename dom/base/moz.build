@@ -530,7 +530,7 @@ if CONFIG["CPU_ARCH"].startswith("ppc"):
 EXTRA_JS_MODULES += [
     "ContentAreaDropListener.jsm",
     "DOMRequestHelper.jsm",
-    "IndexedDBHelper.jsm",
+    "IndexedDBHelper.sys.mjs",
     "LocationHelper.jsm",
     "ProcessSelector.jsm",
     "SlowScriptDebug.jsm",

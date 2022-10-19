@@ -2,11 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { DOMRequestIpcHelper } = ChromeUtils.import(
   "resource://gre/modules/DOMRequestHelper.jsm"
 );
@@ -37,7 +34,7 @@ const PUSH_CID = Components.ID("{cde1d019-fad8-4044-b141-65fb4fb7a245}");
  * to the web application. The PushService running in the parent process is the
  * one actually performing all operations.
  */
-function Push() {
+export function Push() {
   lazy.console.debug("Push()");
 }
 
@@ -326,5 +323,3 @@ PushSubscriptionCallback.prototype = {
     this.reject(error);
   },
 };
-
-const EXPORTED_SYMBOLS = ["Push"];
