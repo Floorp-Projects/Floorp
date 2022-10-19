@@ -9,8 +9,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/uriloader/external-protocol-service;1",
   "nsIExternalProtocolService"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
-  kHandlerList: "resource://gre/modules/handlers/HandlerList.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  kHandlerList: "resource://gre/modules/handlers/HandlerList.sys.mjs",
 });
 
 add_task(async function test_check_defaults_get_added() {

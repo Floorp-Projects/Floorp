@@ -8,7 +8,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
-function nsWebHandlerApp() {}
+export function nsWebHandlerApp() {}
 
 nsWebHandlerApp.prototype = {
   classDescription: "A web handler for protocols and content",
@@ -153,5 +153,3 @@ nsWebHandlerApp.prototype = {
     this._uriTemplate = aURITemplate;
   },
 };
-
-var EXPORTED_SYMBOLS = ["nsWebHandlerApp"];

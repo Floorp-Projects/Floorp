@@ -104,12 +104,12 @@ if CONFIG["MOZ_ENABLE_DBUS"]:
     ]
 
 EXTRA_JS_MODULES += [
-    "ExtHandlerService.jsm",
-    "WebHandlerApp.jsm",
+    "ExtHandlerService.sys.mjs",
+    "WebHandlerApp.sys.mjs",
 ]
 
 EXTRA_JS_MODULES.handlers += [
-    "HandlerList.jsm",
+    "HandlerList.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

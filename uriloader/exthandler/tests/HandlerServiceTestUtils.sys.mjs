@@ -5,16 +5,9 @@
  * Shared functions for tests related to invoking external handler applications.
  */
 
-"use strict";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["HandlerServiceTestUtils"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
 const lazy = {};
@@ -38,7 +31,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIHandlerService"
 );
 
-var HandlerServiceTestUtils = {
+export var HandlerServiceTestUtils = {
   /**
    * Retrieves the names of all the MIME types and protocols configured in the
    * handler service instance currently under testing.
