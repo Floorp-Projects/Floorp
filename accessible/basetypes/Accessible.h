@@ -447,17 +447,17 @@ class Accessible {
 
   bool IsDoc() const { return HasGenericType(eDocument); }
 
-  bool IsTableRow() const { return HasGenericType(eTableRow); }
-
   /**
    * Note: The eTable* types defined in the ARIA map are used in
    * nsAccessibilityService::CreateAccessible to determine which ARIAGrid*
    * classes to use for accessible object creation. However, an invalid table
    * structure might cause these classes not to be used after all.
    *
-   * To make sure we're really dealing with a table/cell, only check the
+   * To make sure we're really dealing with a table/row/cell, only check the
    * generic type defined by the class, not the type defined in the ARIA map.
    */
+  bool IsTableRow() const { return mGenericTypes & eTableRow; }
+
   bool IsTableCell() const { return mGenericTypes & eTableCell; }
 
   bool IsTable() const { return mGenericTypes & eTable; }
