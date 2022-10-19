@@ -5,6 +5,7 @@
 import { PROMISE } from "../utils/middleware/promise";
 import {
   getSource,
+  getSourceFromId,
   getSourceTextContent,
   getSourceContent,
   getGeneratedSource,
@@ -62,19 +63,27 @@ async function loadSource(
     return result;
   }
 
-  // If no source actor can be found then the text for the
-  // source cannot be loaded.
-  if (!sourceActor) {
-    throw new Error("Unknown source");
-  }
-
   let response;
-  try {
-    telemetry.start(loadSourceHistogram, source);
-    response = await client.sourceContents(sourceActor);
-    telemetry.finish(loadSourceHistogram, source);
-  } catch (e) {
-    throw new Error(`sourceContents failed: ${e}`);
+  if (!sourceActor) {
+    // We only need the source text from one actor, but messages sent to retrieve
+    // the source might fail if the actor has or is about to shut down. Keep
+    // trying with different actors until one request succeeds.
+    const handledActors = new Set();
+    while (true) {
+      const actors = getSourceActorsForSource(state, source.id);
+      sourceActor = actors.find(({ actor: a }) => !handledActors.has(a));
+      if (!sourceActor) {
+        throw new Error("Unknown source");
+      }
+      handledActors.add(sourceActor.actor);
+
+      response = await fetchTextContent(client, source, sourceActor);
+      if (response) {
+        break;
+      }
+    }
+  } else {
+    response = await fetchTextContent(client, source, sourceActor);
   }
 
   return {
@@ -82,6 +91,18 @@ async function loadSource(
     text: response.source,
     contentType: response.contentType || "text/javascript",
   };
+}
+
+async function fetchTextContent(client, source, sourceActor) {
+  let response;
+  try {
+    telemetry.start(loadSourceHistogram, source);
+    response = await client.sourceContents(sourceActor);
+    telemetry.finish(loadSourceHistogram, source);
+  } catch (e) {
+    console.warn(`sourceContents failed: ${e}`);
+  }
+  return response;
 }
 
 async function loadSourceTextPromise(
@@ -126,16 +147,13 @@ async function loadSourceTextPromise(
   }
 }
 
-/**
- * Loads the source text for a source and source actor
- * @param {Object} source
- *                 The source to load the source text
- * @param {Object|null} sourceActor
- *                 There can be more than one source actor per source
- *                 so the source actor needs to be specified. This is
- *                 required for generated sources but will be null for
- *                 original/pretty printed sources.
- */
+export function loadSourceById(cx, sourceId) {
+  return ({ getState, dispatch }) => {
+    const source = getSourceFromId(getState(), sourceId);
+    return dispatch(loadSourceText({ cx, source }));
+  };
+}
+
 export const loadSourceText = memoizeableAction("loadSourceText", {
   getValue: ({ source, sourceActor }, { getState }) => {
     if (!source) {
@@ -147,7 +165,7 @@ export const loadSourceText = memoizeableAction("loadSourceText", {
       return sourceTextContent;
     }
 
-    // if a source actor is specified,lets also check that the source actor for the
+    // if a source actor is specified,lets check the source actor for the
     // currently loaded text.
     if (sourceActor && sourceTextContent && isFulfilled(sourceTextContent)) {
       if (
