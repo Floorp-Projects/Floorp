@@ -500,11 +500,14 @@
       let newMarginTop = 0;
       if (scrollDir == 0) {
         let elt = this.firstElementChild;
-        while (
-          elt &&
-          event.screenY > elt.screenY + elt.getBoundingClientRect().height / 2
-        ) {
-          elt = elt.nextElementSibling;
+        for (; elt; elt = elt.nextElementSibling) {
+          let height = elt.getBoundingClientRect().height;
+          if (height == 0) {
+            continue;
+          }
+          if (event.screenY <= elt.screenY + height / 2) {
+            break;
+          }
         }
         newMarginTop = elt
           ? elt.screenY - this.scrollBox.screenY
