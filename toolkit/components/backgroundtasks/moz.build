@@ -47,6 +47,7 @@ EXTRA_JS_MODULES.backgroundtasks += [
     "BackgroundTask_exception.sys.mjs",
     "BackgroundTask_failure.sys.mjs",
     "BackgroundTask_message.sys.mjs",
+    "BackgroundTask_removeDirectory.sys.mjs",
     "BackgroundTask_success.sys.mjs",
 ]
 

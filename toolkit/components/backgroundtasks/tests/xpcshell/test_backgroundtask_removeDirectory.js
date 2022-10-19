@@ -5,14 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { BackgroundTasksTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BackgroundTasksTestUtils.jsm"
-);
-BackgroundTasksTestUtils.init(this);
-const do_backgroundtask = BackgroundTasksTestUtils.do_backgroundtask.bind(
-  BackgroundTasksTestUtils
-);
-
 // This test exercises functionality and also ensures the exit codes,
 // which are a public API, do not change over time.
 const { EXIT_CODE } = ChromeUtils.import(
@@ -35,7 +27,7 @@ add_task(async function test_simple() {
   extraDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
   equal(extraDir.exists(), true);
 
-  let exitCode = await do_backgroundtask("purgeHTTPCache", {
+  let exitCode = await do_backgroundtask("removeDirectory", {
     extraArgs: [do_get_profile().path, LEAF_NAME, "10", ".abc"],
   });
   equal(exitCode, EXIT_CODE.SUCCESS);
@@ -51,7 +43,7 @@ add_task(async function test_no_extension() {
   dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
   equal(dir.exists(), true);
 
-  let exitCode = await do_backgroundtask("purgeHTTPCache", {
+  let exitCode = await do_backgroundtask("removeDirectory", {
     extraArgs: [do_get_profile().path, LEAF_NAME, "10"],
   });
   equal(exitCode, EXIT_CODE.SUCCESS);
@@ -64,7 +56,7 @@ add_task(async function test_createAfter() {
   let dir = do_get_profile();
   dir.append(LEAF_NAME);
 
-  let task = do_backgroundtask("purgeHTTPCache", {
+  let task = do_backgroundtask("removeDirectory", {
     extraArgs: [do_get_profile().path, LEAF_NAME, "10", ""],
   });
 
@@ -82,7 +74,7 @@ add_task(async function test_folderNameWithSpaces() {
   let leafNameWithSpaces = `${LEAF_NAME} space`;
   dir.append(leafNameWithSpaces);
 
-  let task = do_backgroundtask("purgeHTTPCache", {
+  let task = do_backgroundtask("removeDirectory", {
     extraArgs: [do_get_profile().path, leafNameWithSpaces, "10", ""],
   });
 
@@ -99,7 +91,7 @@ add_task(async function test_missing_folder() {
 
   let dir = do_get_profile();
   dir.append(LEAF_NAME);
-  let exitCode = await do_backgroundtask("purgeHTTPCache", {
+  let exitCode = await do_backgroundtask("removeDirectory", {
     extraArgs: [do_get_profile().path, LEAF_NAME, "1", ""],
   });
 
@@ -124,7 +116,7 @@ add_task(
     dir.moveTo(null, "newName");
 
     // This will fail because of the readonly file.
-    let exitCode = await do_backgroundtask("purgeHTTPCache", {
+    let exitCode = await do_backgroundtask("removeDirectory", {
       extraArgs: [do_get_profile().path, "newName", "1", ""],
     });
 
@@ -152,7 +144,7 @@ add_task(async function test_purgeFile() {
   file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
   equal(file.exists(), true);
 
-  let exitCode = await do_backgroundtask("purgeHTTPCache", {
+  let exitCode = await do_backgroundtask("removeDirectory", {
     extraArgs: [do_get_profile().path, LEAF_NAME, "2", ""],
   });
   equal(exitCode, EXIT_CODE.EXCEPTION);
@@ -171,7 +163,7 @@ add_task(async function test_purgeFile() {
   dir2.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
   equal(dir2.exists(), true);
 
-  exitCode = await do_backgroundtask("purgeHTTPCache", {
+  exitCode = await do_backgroundtask("removeDirectory", {
     extraArgs: [do_get_profile().path, LEAF_NAME, "2", ".abc"],
   });
 
@@ -191,13 +183,13 @@ add_task(async function test_two_tasks() {
 
   let tasks = [];
   tasks.push(
-    do_backgroundtask("purgeHTTPCache", {
+    do_backgroundtask("removeDirectory", {
       extraArgs: [do_get_profile().path, dir1.leafName, "5", ".abc"],
     })
   );
   dir1.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
   tasks.push(
-    do_backgroundtask("purgeHTTPCache", {
+    do_backgroundtask("removeDirectory", {
       extraArgs: [do_get_profile().path, dir2.leafName, "5", ".abc"],
     })
   );
@@ -224,7 +216,7 @@ add_task(async function test_aLotOfTasks() {
     dir.append(`leaf${i}.abc`);
 
     tasks.push(
-      do_backgroundtask("purgeHTTPCache", {
+      do_backgroundtask("removeDirectory", {
         extraArgs: [do_get_profile().path, dir.leafName, "5", ".abc"],
         extraEnv: { MOZ_LOG: "BackgroundTasks:5" },
       })

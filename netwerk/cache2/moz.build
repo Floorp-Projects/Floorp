@@ -63,8 +63,3 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = "xul"
-
-if CONFIG["MOZ_BACKGROUNDTASKS"]:
-    EXTRA_JS_MODULES.backgroundtasks += [
-        "BackgroundTask_purgeHTTPCache.sys.mjs",
-    ]
