@@ -197,6 +197,12 @@ export class DOMFullscreenParent extends JSWindowActorParent {
         TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");
         window.FullScreen.enterDomFullscreen(browser, this);
         this.updateFullscreenWindowReference(window);
+
+        if (!this.hasBeenDestroyed() && this.requestOrigin) {
+          window.PointerlockFsWarning.showFullScreen(
+            this.requestOrigin.manager.documentPrincipal.originNoSuffix
+          );
+        }
         break;
       }
       case "MozDOMFullscreen:Exited": {
