@@ -515,7 +515,7 @@ export const TabsSetupFlowManager = new (class {
 
   async openFxASignup(window) {
     const url = await lazy.fxAccounts.constructor.config.promiseConnectAccountURI(
-      "firefoxview"
+      "fx-view"
     );
     openTabInWindow(window, url, true);
     Services.telemetry.recordEvent("firefoxview", "fxa_continue", "sync", null);

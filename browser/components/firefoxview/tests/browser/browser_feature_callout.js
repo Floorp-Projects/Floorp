@@ -357,7 +357,7 @@ add_task(
     });
 
     const expectedUrl = await fxAccounts.constructor.config.promiseConnectAccountURI(
-      "firefoxview"
+      "fx-view"
     );
     info(`Expected FxA URL: ${expectedUrl}`);
 
