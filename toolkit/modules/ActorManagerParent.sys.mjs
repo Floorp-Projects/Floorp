@@ -204,6 +204,7 @@ let JSWINDOWACTORS = {
       moduleURI: "resource://gre/actors/CookieBannerChild.jsm",
       events: {
         DOMContentLoaded: {},
+        load: { capture: true },
       },
     },
     // We only handle cookie banners for HTTP/S scheme. Avoid initializing
