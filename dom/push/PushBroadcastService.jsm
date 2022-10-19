@@ -2,15 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+"use strict";
 
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
-  PushService: "resource://gre/modules/PushService.sys.mjs",
 });
 
 // BroadcastService is exported for test purposes.
+const EXPORTED_SYMBOLS = ["pushBroadcastService", "BroadcastService"];
+
 // We are supposed to ignore any updates with this version.
 const DUMMY_VERSION_STRING = "____NOP____";
 
@@ -23,6 +27,11 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
     prefix: "BroadcastService",
   });
 });
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PushService",
+  "resource://gre/modules/PushService.jsm"
+);
 
 class InvalidSourceInfo extends Error {
   constructor(message) {
@@ -33,7 +42,7 @@ class InvalidSourceInfo extends Error {
 
 const BROADCAST_SERVICE_VERSION = 1;
 
-export var BroadcastService = class {
+var BroadcastService = class {
   constructor(pushService, path) {
     this.PHASES = {
       HELLO: "hello",
@@ -296,4 +305,4 @@ function initializeBroadcastService() {
   return new BroadcastService(lazy.PushService, path);
 }
 
-export var pushBroadcastService = initializeBroadcastService();
+var pushBroadcastService = initializeBroadcastService();

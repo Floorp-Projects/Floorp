@@ -2,16 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { PushDB } from "resource://gre/modules/PushDB.sys.mjs";
-import { PushRecord } from "resource://gre/modules/PushRecord.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+"use strict";
 
+const { PushDB } = ChromeUtils.import("resource://gre/modules/PushDB.jsm");
+const { PushRecord } = ChromeUtils.import(
+  "resource://gre/modules/PushRecord.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
 
-import { PushCrypto } from "resource://gre/modules/PushCrypto.sys.mjs";
+const { PushCrypto } = ChromeUtils.import(
+  "resource://gre/modules/PushCrypto.jsm"
+);
+
+var EXPORTED_SYMBOLS = ["PushServiceHttp2"];
 
 const lazy = {};
 
@@ -396,7 +405,7 @@ function linkParser(linkHeader, serverURI) {
 /**
  * The implementation of the WebPush.
  */
-export var PushServiceHttp2 = {
+var PushServiceHttp2 = {
   _mainPushService: null,
   _serverURI: null,
 

@@ -3,8 +3,8 @@
 
 Cu.importGlobalProperties(["crypto"]);
 
-const { PushCrypto } = ChromeUtils.importESModule(
-  "resource://gre/modules/PushCrypto.sys.mjs"
+const { PushCrypto } = ChromeUtils.import(
+  "resource://gre/modules/PushCrypto.jsm"
 );
 
 let from64 = v => {
