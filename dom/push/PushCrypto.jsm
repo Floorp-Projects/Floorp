@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+"use strict";
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const lazy = {};
 
@@ -11,6 +15,8 @@ XPCOMUtils.defineLazyGetter(lazy, "gDOMBundle", () =>
 );
 
 // getCryptoParamsFromHeaders is exported for test purposes.
+const EXPORTED_SYMBOLS = ["PushCrypto", "getCryptoParamsFromHeaders"];
+
 const UTF8 = new TextEncoder("utf-8");
 
 const ECDH_KEY = { name: "ECDH", namedCurve: "P-256" };
@@ -133,7 +139,7 @@ function getCryptoParamsFromPayload(payload) {
 // Extracts the sender public key, salt, and record size from the `Crypto-Key`,
 // `Encryption-Key`, and `Encryption` headers for the aesgcm and aesgcm128
 // schemes.
-export function getCryptoParamsFromHeaders(headers) {
+function getCryptoParamsFromHeaders(headers) {
   if (!headers) {
     return null;
   }
@@ -592,7 +598,7 @@ class aesgcm128Decoder extends OldSchemeDecoder {
   }
 }
 
-export var PushCrypto = {
+var PushCrypto = {
   concatArray,
 
   generateAuthenticationSecret() {

@@ -1224,6 +1224,7 @@
   "resource://gre/modules/ImageObjectProcessor.jsm":
     "dom/manifest/ImageObjectProcessor.jsm",
   "resource://gre/modules/IndexedDB.jsm": "toolkit/modules/IndexedDB.jsm",
+  "resource://gre/modules/IndexedDBHelper.jsm": "dom/base/IndexedDBHelper.jsm",
   "resource://gre/modules/InlineSpellChecker.jsm":
     "toolkit/modules/InlineSpellChecker.jsm",
   "resource://gre/modules/InlineSpellCheckerContent.jsm":
@@ -1390,6 +1391,20 @@
     "toolkit/components/extensions/ProxyChannelFilter.jsm",
   "resource://gre/modules/PurgeTrackerService.jsm":
     "toolkit/components/antitracking/PurgeTrackerService.jsm",
+  "resource://gre/modules/Push.jsm": "dom/push/Push.jsm",
+  "resource://gre/modules/PushBroadcastService.jsm":
+    "dom/push/PushBroadcastService.jsm",
+  "resource://gre/modules/PushComponents.jsm": "dom/push/PushComponents.jsm",
+  "resource://gre/modules/PushCrypto.jsm": "dom/push/PushCrypto.jsm",
+  "resource://gre/modules/PushDB.jsm": "dom/push/PushDB.jsm",
+  "resource://gre/modules/PushRecord.jsm": "dom/push/PushRecord.jsm",
+  "resource://gre/modules/PushService.jsm": "dom/push/PushService.jsm",
+  "resource://gre/modules/PushServiceAndroidGCM.jsm":
+    "dom/push/PushServiceAndroidGCM.jsm",
+  "resource://gre/modules/PushServiceHttp2.jsm":
+    "dom/push/PushServiceHttp2.jsm",
+  "resource://gre/modules/PushServiceWebSocket.jsm":
+    "dom/push/PushServiceWebSocket.jsm",
   "resource://gre/modules/RFPHelper.jsm":
     "toolkit/components/resistfingerprinting/RFPHelper.jsm",
   "resource://gre/modules/ReaderMode.jsm":
