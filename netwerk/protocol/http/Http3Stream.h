@@ -24,7 +24,7 @@ class Http3Stream final : public nsAHttpSegmentReader,
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
   // for RefPtr
-  NS_INLINE_DECL_REFCOUNTING(Http3Stream, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Http3Stream, override)
 
   Http3Stream(nsAHttpTransaction*, Http3Session*, const ClassOfService&,
               uint64_t);
