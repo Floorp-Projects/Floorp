@@ -1929,19 +1929,24 @@ nsresult AppWindow::SetPersistentValue(const nsAtom* aAttr,
 #endif
 }
 
-NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
+void AppWindow::SavePersistentAttributes(
+    const PersistentAttributes aAttributes) {
   // can happen when the persistence timer fires at an inopportune time
   // during window shutdown
-  if (!mDocShell) return NS_ERROR_FAILURE;
+  if (!mDocShell) {
+    return;
+  }
 
   nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
-  if (!docShellElement) return NS_ERROR_FAILURE;
+  if (!docShellElement) {
+    return;
+  }
 
   nsAutoString persistString;
   docShellElement->GetAttr(nsGkAtoms::persist, persistString);
   if (persistString.IsEmpty()) {  // quick check which sometimes helps
     mPersistentAttributesDirty.clear();
-    return NS_OK;
+    return;
   }
 
   bool isFullscreen = false;
@@ -1969,7 +1974,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
   nsAutoString sizeString;
   bool shouldPersist = !isFullscreen;
   // (only for size elements which are persisted)
-  if (mPersistentAttributesDirty.contains(PersistentAttribute::Position) &&
+  if (aAttributes.contains(PersistentAttribute::Position) &&
       gotRestoredBounds) {
     if (persistString.Find(u"screenX") >= 0) {
       sizeString.Truncate();
@@ -1989,8 +1994,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
     }
   }
 
-  if (mPersistentAttributesDirty.contains(PersistentAttribute::Size) &&
-      gotRestoredBounds) {
+  if (aAttributes.contains(PersistentAttribute::Size) && gotRestoredBounds) {
     LayoutDeviceIntRect innerRect =
         rect - GetOuterToInnerSizeDifference(mWindow);
     if (persistString.Find(u"width") >= 0) {
@@ -2013,7 +2017,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
 
   Unused << MaybeSaveEarlyWindowPersistentValues(rect);
 
-  if (mPersistentAttributesDirty.contains(PersistentAttribute::Misc)) {
+  if (aAttributes.contains(PersistentAttribute::Misc)) {
     nsSizeMode sizeMode = mWindow->SizeMode();
 
     if (sizeMode != nsSizeMode_Minimized) {
@@ -2047,8 +2051,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
     }
   }
 
-  mPersistentAttributesDirty.clear();
-  return NS_OK;
+  mPersistentAttributesDirty -= aAttributes;
 }
 
 NS_IMETHODIMP AppWindow::GetWindowDOMWindow(mozIDOMWindowProxy** aDOMWindow) {
@@ -3125,9 +3128,16 @@ NS_IMPL_ISUPPORTS(AppWindowTimerCallback, nsITimerCallback, nsINamed)
 
 void AppWindow::PersistentAttributesDirty(PersistentAttributes aAttributes,
                                           PersistentAttributeUpdate aUpdate) {
-  mPersistentAttributesDirty += (aAttributes & mPersistentAttributesMask);
+  aAttributes = aAttributes & mPersistentAttributesMask;
+  if (aAttributes.isEmpty()) {
+    return;
+  }
+
+  mPersistentAttributesDirty += aAttributes;
   if (aUpdate == Sync) {
-    SavePersistentAttributes();
+    // Only apply the attributes we've been requested to apply sync, not other
+    // potentially dirty attributes that have been requested asynchronously.
+    SavePersistentAttributes(aAttributes);
     return;
   }
   if (!mSPTimer) {
