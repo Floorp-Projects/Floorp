@@ -481,8 +481,18 @@ var gConnectionsDialog = {
   writeDnsOverHttpsMode() {
     // called to update pref with user change
     let trrModeCheckbox = document.getElementById("networkDnsOverHttps");
-    // we treat checked/enabled as mode 2
-    return trrModeCheckbox.checked ? 2 : 5;
+
+    let trrModeCurrent = Preferences.get("network.trr.mode").value;
+    if (trrModeCheckbox.checked) {
+      //Check if the user has set the value themself through about:config.
+      if (trrModeCurrent == Ci.nsIDNSService.MODE_TRRONLY) {
+        return Ci.nsIDNSService.MODE_TRRONLY;
+      }
+      // we treat checked/enabled as mode 2
+      return Ci.nsIDNSService.MODE_TRRFIRST;
+    }
+
+    return Ci.nsIDNSService.MODE_TRROFF;
   },
 
   updateDnsOverHttpsUI() {
