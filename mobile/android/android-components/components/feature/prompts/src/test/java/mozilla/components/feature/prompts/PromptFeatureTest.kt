@@ -2365,6 +2365,34 @@ class PromptFeatureTest {
     }
 
     @Test
+    fun `WHEN choice promptRequest is dismissed by the engine THEN the active prompt will be cleared`() {
+        val feature = spy(
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                shareDelegate = mock(),
+            ) { },
+        )
+        feature.start()
+
+        val singleChoicePrompt = SingleChoice(
+            choices = arrayOf(),
+            onConfirm = {},
+            onDismiss = {},
+        )
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, singleChoicePrompt))
+            .joinBlocking()
+        val fragment = mock<ChoiceDialogFragment>()
+        whenever(fragment.isAdded).thenReturn(false)
+
+        store.dispatch(ContentAction.ConsumePromptRequestAction(tabId, singleChoicePrompt))
+            .joinBlocking()
+        assertEquals(null, feature.activePrompt?.get())
+        assertTrue(feature.activePromptsToDismiss.isEmpty())
+    }
+
+    @Test
     fun `WHEN promptRequest is updated THEN the replaced active prompt will be dismissed`() {
         val feature = spy(
             PromptFeature(
@@ -2390,6 +2418,7 @@ class PromptFeatureTest {
 
         val fragment = mock<ChoiceDialogFragment>()
         whenever(fragment.shouldDismissOnLoad).thenReturn(true)
+        whenever(fragment.isAdded).thenReturn(true)
         feature.activePrompt = WeakReference(fragment)
 
         store.dispatch(ContentAction.ReplacePromptRequestAction(tabId, previousPrompt.uid, updatedPrompt)).joinBlocking()

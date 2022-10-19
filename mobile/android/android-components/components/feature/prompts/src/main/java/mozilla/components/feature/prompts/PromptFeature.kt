@@ -171,7 +171,8 @@ class PromptFeature private constructor(
 
     // This set of weak references of fragments is only used for dismissing all prompts on navigation.
     // For all other code only `activePrompt` is tracked for now.
-    private val activePromptsToDismiss = Collections.newSetFromMap(WeakHashMap<PromptDialogFragment, Boolean>())
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal val activePromptsToDismiss = Collections.newSetFromMap(WeakHashMap<PromptDialogFragment, Boolean>())
 
     constructor(
         activity: Activity,
@@ -285,7 +286,7 @@ class PromptFeature private constructor(
      * Starts observing the selected session to listen for prompt requests
      * and displays a dialog when needed.
      */
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "LongMethod")
     override fun start() {
         promptAbuserDetector.resetJSAlertAbuseState()
 
@@ -323,7 +324,14 @@ class PromptFeature private constructor(
                                 is MultipleChoice,
                                 is MenuChoice,
                                 -> {
-                                    (activePrompt?.get() as? ChoiceDialogFragment)?.dismissAllowingStateLoss()
+                                    (activePrompt?.get() as? ChoiceDialogFragment)?.let { dialog ->
+                                        if (dialog.isAdded) {
+                                            dialog.dismissAllowingStateLoss()
+                                        } else {
+                                            activePromptsToDismiss.remove(dialog)
+                                            activePrompt?.clear()
+                                        }
+                                    }
                                 }
                                 else -> {
                                     // no-op
