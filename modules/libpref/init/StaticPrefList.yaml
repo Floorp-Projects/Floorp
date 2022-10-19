@@ -3163,7 +3163,7 @@
 # element's style.
 - name: dom.picture_source_dimension_attributes.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Is support for Element.requestPointerLock enabled?
