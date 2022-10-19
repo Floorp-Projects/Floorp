@@ -1,3 +1,15 @@
+commit d308751948807f08b36d06b0e8c835a1ffe078ae
+Author: Kelsey Gilbert <jdashg@gmail.com>
+Date:   Tue Oct 18 15:21:32 2022 -0700
+
+    Add conformance/textures/misc/texture-srgb-upload.html.
+    
+    Test for both webgl1+ext and webgl2.
+    Test uploads from ArrayBuffer and (inlined) video.
+    Ensure that srgb textures fetch/decode 0x7f as 0.21 not 0.5.
+    
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1696693
+
 commit 50024c70fc8c8f1613275cffe90dea02a20297f3
 Author: Kelsey Gilbert <jdashg@gmail.com>
 Date:   Wed Aug 17 15:01:24 2022 -0700

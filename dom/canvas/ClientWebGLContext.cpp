@@ -4272,6 +4272,18 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
         }
       }
 
+      switch (respecFormat) {
+        case LOCAL_GL_SRGB:
+        case LOCAL_GL_SRGB8:
+        case LOCAL_GL_SRGB_ALPHA:
+        case LOCAL_GL_SRGB8_ALPHA8: {
+          const nsPrintfCString msg(
+              "srgb-encoded formats (like %s) are not supported.",
+              EnumString(respecFormat).c_str());
+          return Some(ToString(msg));
+        }
+      }
+
       if (StaticPrefs::webgl_disable_DOM_blit_uploads()) {
         return Some(std::string{"DOM blit uploads are disabled."});
       }
