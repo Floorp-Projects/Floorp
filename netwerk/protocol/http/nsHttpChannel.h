@@ -267,8 +267,6 @@ class nsHttpChannel final : public HttpBaseChannel,
                  true>;
   [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter();
 
-  WebTransportSessionEventListener* GetWebTransportSessionEventListener();
-
  private:  // used for alternate service validation
   RefPtr<TransactionObserver> mTransactionObserver;
 
@@ -846,8 +844,6 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   RefPtr<nsIEarlyHintObserver> mEarlyHintObserver;
   Maybe<nsCString> mOpenerCallingScriptLocation;
-
-  bool mIsForWebTransport{false};
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpChannel, NS_HTTPCHANNEL_IID)
