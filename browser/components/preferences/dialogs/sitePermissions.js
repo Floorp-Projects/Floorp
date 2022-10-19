@@ -128,6 +128,7 @@ var gSitePermissionsManager = {
 
     let permissionsText = document.getElementById("permissionsText");
 
+    document.l10n.pauseObserving();
     let l10n = sitePermissionsL10n[this._type];
     document.l10n.setAttributes(permissionsText, l10n.description);
     if (l10n.disableLabel) {
@@ -147,6 +148,7 @@ var gSitePermissionsManager = {
       this._permissionsDisableDescription,
       document.documentElement,
     ]);
+    document.l10n.resumeObserving();
 
     // Initialize the checkbox state and handle showing notification permission UI
     // when it is disabled by an extension.
@@ -157,7 +159,7 @@ var gSitePermissionsManager = {
     this.buildPermissionsList();
 
     if (params.permissionType == "autoplay-media") {
-      this.buildAutoplayMenulist();
+      await this.buildAutoplayMenulist();
       this._setAutoplayPref.hidden = false;
     }
 
@@ -525,9 +527,10 @@ var gSitePermissionsManager = {
     this._setRemoveButtonState();
   },
 
-  buildAutoplayMenulist() {
+  async buildAutoplayMenulist() {
     let menulist = document.createXULElement("menulist");
     let states = SitePermissions.getAvailableStates("autoplay-media");
+    document.l10n.pauseObserving();
     for (let state of states) {
       let m = menulist.appendItem(undefined, state);
       document.l10n.setAttributes(
@@ -547,6 +550,8 @@ var gSitePermissionsManager = {
     menulist.disabled = Services.prefs.prefIsLocked(AUTOPLAY_PREF);
 
     document.getElementById("setAutoplayPref").appendChild(menulist);
+    await document.l10n.translateFragment(menulist);
+    document.l10n.resumeObserving();
   },
 
   _sortPermissions(list, frag, column) {
