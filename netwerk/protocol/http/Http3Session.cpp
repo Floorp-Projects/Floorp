@@ -585,6 +585,38 @@ nsresult Http3Session::ProcessEvents() {
           CallCertVerification(Some(echPublicName));
         }
       } break;
+      case Http3Event::Tag::WebTransport: {
+        switch (event.web_transport._0.tag) {
+          case WebTransportEventExternal::Tag::Negotiated:
+            LOG(("Http3Session::ProcessEvents - WebTransport %d",
+                 event.web_transport._0.negotiated._0));
+            break;
+          case WebTransportEventExternal::Tag::Session: {
+            MOZ_ASSERT(mState == CONNECTED);
+
+            uint64_t id = event.web_transport._0.session.stream_id;
+            uint16_t status = event.web_transport._0.session.status;
+
+            LOG(
+                ("Http3Session::ProcessEvents - WebTransport Session "
+                 " sessionId=0x%" PRIx64 " status=%d",
+                 id, status));
+          } break;
+          case WebTransportEventExternal::Tag::SessionClosed:
+            LOG(
+                ("Http3Session::ProcessEvents - WebTransport SessionClosed "
+                 " sessionId=0x%" PRIx64,
+                 event.web_transport._0.session_closed.stream_id));
+            break;
+          case WebTransportEventExternal::Tag::NewStream:
+            LOG(
+                ("Http3Session::ProcessEvents - WebTransport NewStream "
+                 "streamId=0x%" PRIx64 " sessionId=0x%" PRIx64,
+                 event.web_transport._0.new_stream.stream_id,
+                 event.web_transport._0.new_stream.session_id));
+            break;
+        }
+      } break;
       default:
         break;
     }
