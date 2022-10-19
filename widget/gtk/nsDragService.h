@@ -132,6 +132,9 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   guint mTaskSource;
   bool mScheduledTaskIsRunning;
 
+  // Where the drag begins. We need to keep it open on Wayland.
+  RefPtr<nsWindow> mSourceWindow;
+
   // target/destination side vars
   // These variables keep track of the state of the current drag.
 

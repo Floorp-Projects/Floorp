@@ -168,13 +168,13 @@ nsDragService::nsDragService()
   }
 
   // set up our logging module
-  LOGDRAGSERVICE("nsDragService::nsDragService");
   mCanDrop = false;
   mTargetDragDataReceived = false;
   mTargetDragData = 0;
   mTargetDragDataLen = 0;
   mTempFileTimerID = 0;
   mEventLoopDepth = 0;
+  LOGDRAGSERVICE("nsDragService::nsDragService");
 }
 
 nsDragService::~nsDragService() {
@@ -388,8 +388,19 @@ nsresult nsDragService::InvokeDragSessionImpl(
       mHiddenWidget, sourceList, action, 1,
       existingEvent ? existingEvent : &fakeEvent, -1, -1);
 
-  LOGDRAGSERVICE("nsDragService::InvokeDragSessionImpl GdkDragContext %p",
-                 context);
+  if (widget::GdkIsWaylandDisplay() || widget::IsXWaylandProtocol()) {
+    GdkDevice* device = gdk_drag_context_get_device(context);
+    GdkWindow* gdkWindow =
+        gdk_device_get_window_at_position(device, nullptr, nullptr);
+    mSourceWindow = nsWindow::GetWindow(gdkWindow);
+    if (mSourceWindow) {
+      mSourceWindow->SetDragSource(context);
+    }
+  }
+
+  LOGDRAGSERVICE(
+      "nsDragService::InvokeDragSessionImpl GdkDragContext [%p] nsWindow [%p]",
+      context, mSourceWindow.get());
 
   nsresult rv;
   if (context) {
@@ -531,6 +542,10 @@ nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
   }
 
   // We're done with the drag context.
+  if (mSourceWindow) {
+    mSourceWindow->SetDragSource(nullptr);
+    mSourceWindow = nullptr;
+  }
   mTargetDragContextForRemote = nullptr;
   mTargetWindow = nullptr;
   mPendingWindow = nullptr;

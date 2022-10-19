@@ -462,8 +462,7 @@ void GfxInfo::GetData() {
   // layer. For all intents and purposes, we should otherwise believe we are
   // using X11.
   mIsWayland = GdkIsWaylandDisplay();
-  const char* waylandDisplay = getenv("WAYLAND_DISPLAY");
-  mIsXWayland = !mIsWayland && waylandDisplay;
+  mIsXWayland = IsXWaylandProtocol();
 
   // Make a best effort guess at the desktop environment in use. Sadly there
   // does not appear to be a standard way to do this, so we check a few

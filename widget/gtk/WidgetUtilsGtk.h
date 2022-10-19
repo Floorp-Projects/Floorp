@@ -31,6 +31,8 @@ bool GdkIsX11Display(GdkDisplay* display);
 bool GdkIsWaylandDisplay();
 bool GdkIsX11Display();
 
+bool IsXWaylandProtocol();
+
 GdkDevice* GdkGetPointer();
 
 // Sets / returns the last mouse press event we processed.
