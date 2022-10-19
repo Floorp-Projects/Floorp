@@ -17,6 +17,8 @@ pub use synchronous::GenerateBundlesSync;
 
 pub type FluentResourceSet = Vec<Rc<FluentResource>>;
 
+/// The shared information that makes up the configuration the L10nRegistry. It is
+/// broken out into a separate struct so that it can be shared via an Rc pointer.
 #[derive(Default)]
 struct Shared<P, B> {
     sources: Mutex<Vec<Vec<FileSource>>>,
@@ -78,16 +80,24 @@ impl<'a> L10nRegistryLocked<'a> {
     }
 }
 
+/// The [BundleAdapter] can adapt the bundle to the environment with such actions as
+/// setting the platform, and hooking up functions such as Fluent's DATETIME and
+/// NUMBER formatting functions.
 pub trait BundleAdapter {
     fn adapt_bundle(&self, bundle: &mut FluentBundle);
 }
 
+/// The L10nRegistry is the main struct for owning the registry information.
+///
+/// `P` - A provider
+/// `B` - A bundle adapter
 #[derive(Clone)]
 pub struct L10nRegistry<P, B> {
     shared: Rc<Shared<P, B>>,
 }
 
 impl<P, B> L10nRegistry<P, B> {
+    /// Create a new [L10nRegistry] from a provider.
     pub fn with_provider(provider: P) -> Self {
         Self {
             shared: Rc::new(Shared {
@@ -98,6 +108,7 @@ impl<P, B> L10nRegistry<P, B> {
         }
     }
 
+    /// Set the bundle adapter. See [BundleAdapter] for more information.
     pub fn set_bundle_adapter(&mut self, bundle_adapter: B) -> Result<(), L10nRegistrySetupError>
     where
         B: BundleAdapter,
@@ -247,6 +258,7 @@ impl<P, B> L10nRegistry<P, B> {
     }
 }
 
+/// Defines how to generate bundles synchronously and asynchronously.
 impl<P, B> BundleGenerator for L10nRegistry<P, B>
 where
     P: ErrorReporter + Clone,
@@ -257,6 +269,8 @@ where
     type Stream = GenerateBundles<P, B>;
     type LocalesIter = std::vec::IntoIter<LanguageIdentifier>;
 
+    /// The synchronous version of the bundle generator. This is hooked into Gecko
+    /// code via the `l10nregistry_generate_bundles_sync` function.
     fn bundles_iter(
         &self,
         locales: Self::LocalesIter,
@@ -266,6 +280,8 @@ where
         self.generate_bundles_sync(locales, resource_ids)
     }
 
+    /// The asynchronous version of the bundle generator. This is hooked into Gecko
+    /// code via the `l10nregistry_generate_bundles` function.
     fn bundles_stream(
         &self,
         locales: Self::LocalesIter,
