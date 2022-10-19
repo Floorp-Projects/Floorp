@@ -1109,9 +1109,11 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Copié dans le presse-papiers</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Se connecter pour synchroniser</string>
+    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Se connecter pour synchroniser</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Se connecter à Sync</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Synchroniser et enregistrer les données</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Envoyer à tous les appareils</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -1984,4 +1986,6 @@
     <string name="a11y_action_label_collapse">réduire</string>
     <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
     <string name="a11y_action_label_expand">développer</string>
-    </resources>
+    <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
+    <string name="a11y_action_label_wallpaper_collection_learn_more">ouvrir le lien pour en savoir plus sur cette collection</string>
+</resources>
