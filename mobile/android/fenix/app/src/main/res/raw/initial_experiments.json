@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "schemaVersion": "1.9.0",
+      "schemaVersion": "1.10.0",
       "slug": "firefox-android-mr-2022-new-user-onboarding",
       "id": "firefox-android-mr-2022-new-user-onboarding",
       "arguments": {},
