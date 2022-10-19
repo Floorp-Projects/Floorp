@@ -3,7 +3,7 @@ use std::{
     task::{Context, Poll},
 };
 
-use super::{BundleAdapter, L10nRegistry, L10nRegistryLocked};
+use super::{BundleAdapter, L10nRegistry};
 use crate::solver::{AsyncTester, ParallelProblemSolver};
 use crate::{
     env::ErrorReporter,
@@ -19,8 +19,6 @@ use futures::{
 };
 use std::future::Future;
 use unic_langid::LanguageIdentifier;
-
-impl<'a, B> L10nRegistryLocked<'a, B> {}
 
 impl<P, B> L10nRegistry<P, B>
 where
@@ -191,6 +189,7 @@ where
                                 &order,
                                 &self.resource_ids,
                                 &self.reg.shared.provider,
+                                self.reg.shared.bundle_adapter.as_ref(),
                             );
                             self.state.put_back_solver(solver);
                             if bundle.is_some() {
