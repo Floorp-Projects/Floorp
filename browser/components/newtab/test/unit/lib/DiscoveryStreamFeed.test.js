@@ -585,6 +585,25 @@ describe("DiscoveryStreamFeed", () => {
         7890,
       ]);
     });
+    it("should create a layout with proper spoc url with a site id", async () => {
+      feed.config.hardcoded_layout = true;
+      feed.store = createStore(combineReducers(reducers), {
+        Prefs: {
+          values: {
+            pocketConfig: {
+              spocSiteId: "1234",
+            },
+          },
+        },
+      });
+
+      await feed.loadLayout(feed.store.dispatch);
+      const { spocs } = feed.store.getState().DiscoveryStream;
+      assert.deepEqual(
+        spocs.spocs_endpoint,
+        "https://spocs.getpocket.com/spocs?site=1234"
+      );
+    });
   });
 
   describe("#updatePlacements", () => {
@@ -2299,25 +2318,25 @@ describe("DiscoveryStreamFeed", () => {
 
       assert.calledOnce(feed.loadSpocs);
     });
-    it("should fire onPocketConfigChanged when pocketConfig pref changes", async () => {
-      sandbox.stub(feed, "onPocketConfigChanged").returns(Promise.resolve());
+    it("should fire onPrefChange when pocketConfig pref changes", async () => {
+      sandbox.stub(feed, "onPrefChange").returns(Promise.resolve());
 
       await feed.onAction({
         type: at.PREF_CHANGED,
         data: { name: "pocketConfig", value: false },
       });
 
-      assert.calledOnce(feed.onPocketConfigChanged);
+      assert.calledOnce(feed.onPrefChange);
     });
-    it("should fire onPocketConfigChanged when collections pref changes", async () => {
-      sandbox.stub(feed, "onPocketConfigChanged").returns(Promise.resolve());
+    it("should fire onCollectionsChanged when collections pref changes", async () => {
+      sandbox.stub(feed, "onCollectionsChanged").returns(Promise.resolve());
 
       await feed.onAction({
         type: at.PREF_CHANGED,
         data: { name: "discoverystream.sponsored-collections.enabled" },
       });
 
-      assert.calledOnce(feed.onPocketConfigChanged);
+      assert.calledOnce(feed.onCollectionsChanged);
     });
     it("should call clearSpocs when sponsored content is turned off", async () => {
       sandbox.stub(feed, "clearSpocs").returns(Promise.resolve());
@@ -2404,13 +2423,24 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
-  describe("#onPocketConfigChanged", () => {
+  describe("#onCollectionsChanged", () => {
     it("should call loadLayout when Pocket config changes", async () => {
       sandbox.stub(feed, "loadLayout").callsFake(dispatch => dispatch("foo"));
       sandbox.stub(feed.store, "dispatch");
-      await feed.onPocketConfigChanged();
+      await feed.onCollectionsChanged();
       assert.calledOnce(feed.loadLayout);
       assert.calledWith(feed.store.dispatch, ac.AlsoToPreloaded("foo"));
+    });
+  });
+
+  describe("#onPrefChange", () => {
+    it("should call loadLayout when Pocket config changes", async () => {
+      sandbox.stub(feed, "loadLayout");
+      feed._prefCache.config = {
+        enabled: true,
+      };
+      await feed.onPrefChange();
+      assert.calledOnce(feed.loadLayout);
     });
   });
 
