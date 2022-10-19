@@ -211,38 +211,6 @@ linux64-wine:
         fetch:
             - wine
 
-win32-pdbstr:
-    description: "pdbstr for 32-bits Windows"
-    treeherder:
-        symbol: TW32(pdbstr)
-    worker-type: b-win2012
-    worker:
-        artifacts:
-            - name: project/gecko/pdbstr/pdbstr.tar.zst
-              path: pdbstr.tar.zst
-              type: file
-    run:
-        script: exfiltrate-pdbstr.sh
-        arguments: ['x86']
-        toolchain-artifact: project/gecko/pdbstr/pdbstr.tar.zst
-
-win64-pdbstr:
-    description: "pdbstr for 64-bits Windows"
-    attributes:
-        local-toolchain: true
-    treeherder:
-        symbol: TW64(pdbstr)
-    worker-type: b-win2012
-    worker:
-        artifacts:
-            - name: project/gecko/pdbstr/pdbstr.tar.zst
-              path: pdbstr.tar.zst
-              type: file
-    run:
-        script: exfiltrate-pdbstr.sh
-        arguments: ['x64']
-        toolchain-artifact: project/gecko/pdbstr/pdbstr.tar.zst
-
 linux64-winchecksec:
     description: "winchecksec"
     attributes:

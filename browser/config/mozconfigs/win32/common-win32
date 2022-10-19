@@ -17,8 +17,3 @@ mk_add_options "export PATH=${VC_PATH}/bin/hostx64/x86:${PATH}"
 unset VC_PATH
 
 fi
-
-pdbstr="${MOZ_FETCHES_DIR}/pdbstr/pdbstr.exe"
-if [ -f "${pdbstr}" ]; then
-    chmod +x "${pdbstr}"
-fi
