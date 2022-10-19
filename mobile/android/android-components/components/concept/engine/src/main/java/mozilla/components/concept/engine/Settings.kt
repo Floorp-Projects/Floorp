@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.engine
 
+import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode
 import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
@@ -48,6 +49,16 @@ abstract class Settings {
      * Setting to control tracking protection.
      */
     open var trackingProtectionPolicy: TrackingProtectionPolicy? by UnsupportedSetting()
+
+    /**
+     * Setting to control the cookie banner handling feature.
+     */
+    open var cookieBannerHandlingMode: CookieBannerHandlingMode by UnsupportedSetting()
+
+    /**
+     * Setting to control the cookie banner handling feature in the private browsing mode.
+     */
+    open var cookieBannerHandlingModePrivateBrowsing: CookieBannerHandlingMode by UnsupportedSetting()
 
     /**
      * Setting to control tracking protection.
@@ -227,6 +238,9 @@ data class DefaultSettings(
     override var clearColor: Int? = null,
     override var enterpriseRootsEnabled: Boolean = false,
     override var httpsOnlyMode: Engine.HttpsOnlyMode = Engine.HttpsOnlyMode.DISABLED,
+    override var cookieBannerHandlingMode: CookieBannerHandlingMode = CookieBannerHandlingMode.DISABLED,
+    override var cookieBannerHandlingModePrivateBrowsing: CookieBannerHandlingMode =
+        CookieBannerHandlingMode.REJECT_ALL,
 ) : Settings()
 
 class UnsupportedSetting<T> {

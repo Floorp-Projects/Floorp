@@ -128,6 +128,8 @@ class SettingsTest {
         assertFalse(settings.loginAutofillEnabled)
         assertNull(settings.clearColor)
         assertFalse(settings.enterpriseRootsEnabled)
+        assertEquals(EngineSession.CookieBannerHandlingMode.DISABLED, settings.cookieBannerHandlingMode)
+        assertEquals(EngineSession.CookieBannerHandlingMode.REJECT_ALL, settings.cookieBannerHandlingModePrivateBrowsing)
 
         val interceptor: RequestInterceptor = mock()
         val historyTrackingDelegate: HistoryTrackingDelegate = mock()
@@ -164,6 +166,8 @@ class SettingsTest {
             loginAutofillEnabled = true,
             clearColor = Color.BLUE,
             enterpriseRootsEnabled = true,
+            cookieBannerHandlingMode = EngineSession.CookieBannerHandlingMode.DISABLED,
+            cookieBannerHandlingModePrivateBrowsing = EngineSession.CookieBannerHandlingMode.REJECT_ALL,
         )
 
         assertFalse(defaultSettings.domStorageEnabled)
@@ -197,5 +201,7 @@ class SettingsTest {
         assertTrue(defaultSettings.loginAutofillEnabled)
         assertEquals(Color.BLUE, defaultSettings.clearColor)
         assertTrue(defaultSettings.enterpriseRootsEnabled)
+        assertEquals(EngineSession.CookieBannerHandlingMode.DISABLED, defaultSettings.cookieBannerHandlingMode)
+        assertEquals(EngineSession.CookieBannerHandlingMode.REJECT_ALL, defaultSettings.cookieBannerHandlingModePrivateBrowsing)
     }
 }

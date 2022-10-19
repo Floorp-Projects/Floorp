@@ -486,6 +486,26 @@ abstract class EngineSession(
     }
 
     /**
+     * Represents settings options for cookie banner handling.
+     */
+    enum class CookieBannerHandlingMode(val mode: Int) {
+        /**
+         * The feature is turned off and cookie banners are not handled
+         */
+        DISABLED(0),
+
+        /**
+         * Reject cookies if possible
+         */
+        REJECT_ALL(1),
+
+        /**
+         * Reject cookies if possible. If rejecting is not possible, accept cookies
+         */
+        REJECT_OR_ACCEPT_ALL(2),
+    }
+
+    /**
      * Subtype of [TrackingProtectionPolicy] to control the type of session this policy
      * should be applied to. By default, a policy will be applied to all sessions.
      *  @param trackingCategory a list of tracking categories to apply.

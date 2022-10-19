@@ -28,6 +28,7 @@ import mozilla.components.browser.engine.gecko.webpush.GeckoWebPushHandler
 import mozilla.components.concept.engine.CancellableOperation
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode
 import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
@@ -644,6 +645,27 @@ class GeckoEngine(
                 }
             }
 
+        override var cookieBannerHandlingMode: CookieBannerHandlingMode = CookieBannerHandlingMode.DISABLED
+            set(value) {
+                with(runtime.settings.contentBlocking) {
+                    if (this.cookieBannerMode != value.mode) {
+                        this.cookieBannerMode = value.mode
+                    }
+                }
+                field = value
+            }
+
+        override var cookieBannerHandlingModePrivateBrowsing: CookieBannerHandlingMode =
+            CookieBannerHandlingMode.REJECT_ALL
+            set(value) {
+                with(runtime.settings.contentBlocking) {
+                    if (this.cookieBannerModePrivateBrowsing != value.mode) {
+                        this.cookieBannerModePrivateBrowsing = value.mode
+                    }
+                }
+                field = value
+            }
+
         override var remoteDebuggingEnabled: Boolean
             get() = runtime.settings.remoteDebuggingEnabled
             set(value) { runtime.settings.remoteDebuggingEnabled = value }
@@ -744,6 +766,8 @@ class GeckoEngine(
             this.loginAutofillEnabled = it.loginAutofillEnabled
             this.enterpriseRootsEnabled = it.enterpriseRootsEnabled
             this.httpsOnlyMode = it.httpsOnlyMode
+            this.cookieBannerHandlingMode = it.cookieBannerHandlingMode
+            this.cookieBannerHandlingModePrivateBrowsing = it.cookieBannerHandlingModePrivateBrowsing
         }
     }
 

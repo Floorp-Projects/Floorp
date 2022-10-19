@@ -12,9 +12,13 @@ import org.mozilla.geckoview.GeckoRuntimeSettings
 
 /**
  * Converts a [TrackingProtectionPolicy] into a GeckoView setting that can be used with [GeckoRuntimeSettings.Builder].
+ * Also contains the cookie banner handling settings for regular and private browsing.
  */
 fun TrackingProtectionPolicy.toContentBlockingSetting(
     safeBrowsingPolicy: Array<EngineSession.SafeBrowsingPolicy> = arrayOf(EngineSession.SafeBrowsingPolicy.RECOMMENDED),
+    cookieBannerHandlingMode: EngineSession.CookieBannerHandlingMode = EngineSession.CookieBannerHandlingMode.DISABLED,
+    cookieBannerHandlingModePrivateBrowsing: EngineSession.CookieBannerHandlingMode =
+        EngineSession.CookieBannerHandlingMode.REJECT_ALL,
 ) = ContentBlocking.Settings.Builder().apply {
     enhancedTrackingProtectionLevel(getEtpLevel())
     antiTracking(getAntiTrackingPolicy())
@@ -23,6 +27,8 @@ fun TrackingProtectionPolicy.toContentBlockingSetting(
     cookiePurging(cookiePurging)
     safeBrowsing(safeBrowsingPolicy.sumOf { it.id })
     strictSocialTrackingProtection(getStrictSocialTrackingProtection())
+    cookieBannerHandlingMode(cookieBannerHandlingMode.mode)
+    cookieBannerHandlingModePrivateBrowsing(cookieBannerHandlingModePrivateBrowsing.mode)
 }.build()
 
 /**

@@ -18,6 +18,7 @@ import mozilla.components.browser.engine.gecko.webextension.mockNativeWebExtensi
 import mozilla.components.browser.engine.gecko.webextension.mockNativeWebExtensionMetaData
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
@@ -304,6 +305,9 @@ class GeckoEngineTest {
         assertEquals(contentBlockingSettings.cookieBehavior, CookiePolicy.ACCEPT_NON_TRACKERS.id)
         assertEquals(contentBlockingSettings.cookieBehaviorPrivateMode, CookiePolicy.ACCEPT_NON_TRACKERS.id)
 
+        assertEquals(contentBlockingSettings.cookieBannerMode, EngineSession.CookieBannerHandlingMode.DISABLED.mode)
+        assertEquals(contentBlockingSettings.cookieBannerModePrivateBrowsing, EngineSession.CookieBannerHandlingMode.REJECT_ALL.mode)
+
         try {
             engine.settings.domStorageEnabled
             fail("Expected UnsupportedOperationException")
@@ -490,6 +494,55 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `setCookieBannerMode is only invoked when the value is changed`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        val settings = spy(ContentBlocking.Settings.Builder().build())
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(settings)
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+        val policy = EngineSession.CookieBannerHandlingMode.REJECT_ALL
+
+        engine.settings.cookieBannerHandlingMode = policy
+
+        verify(mockRuntime.settings.contentBlocking).setCookieBannerMode(policy.mode)
+
+        reset(settings)
+
+        engine.settings.cookieBannerHandlingMode = policy
+
+        verify(mockRuntime.settings.contentBlocking, never()).setCookieBannerMode(policy.mode)
+    }
+
+    @Test
+    fun `setCookieBannerModePrivateBrowsing is only invoked when the value is changed`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        val settings = spy(ContentBlocking.Settings.Builder().build())
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(settings)
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+        val policy = EngineSession.CookieBannerHandlingMode.REJECT_OR_ACCEPT_ALL
+
+        engine.settings.cookieBannerHandlingModePrivateBrowsing = policy
+
+        verify(mockRuntime.settings.contentBlocking).setCookieBannerModePrivateBrowsing(policy.mode)
+
+        reset(settings)
+
+        engine.settings.cookieBannerHandlingModePrivateBrowsing = policy
+
+        verify(mockRuntime.settings.contentBlocking, never()).setCookieBannerModePrivateBrowsing(policy.mode)
+    }
+
+    @Test
+    fun `Cookie banner handling settings are aligned`() {
+        assertEquals(ContentBlocking.CookieBannerMode.COOKIE_BANNER_MODE_DISABLED, EngineSession.CookieBannerHandlingMode.DISABLED.mode)
+        assertEquals(ContentBlocking.CookieBannerMode.COOKIE_BANNER_MODE_REJECT, EngineSession.CookieBannerHandlingMode.REJECT_ALL.mode)
+        assertEquals(ContentBlocking.CookieBannerMode.COOKIE_BANNER_MODE_REJECT_OR_ACCEPT, EngineSession.CookieBannerHandlingMode.REJECT_OR_ACCEPT_ALL.mode)
+    }
+
+    @Test
     fun `setEnhancedTrackingProtectionLevel MUST always be set to STRICT unless the tracking protection policy is none`() {
         val mockRuntime = mock<GeckoRuntime>()
         val settings = spy(ContentBlocking.Settings.Builder().build())
@@ -667,6 +720,9 @@ class GeckoEngineTest {
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.none()
 
         assertEquals(CookiePolicy.ACCEPT_ALL.id, contentBlockingSettings.cookieBehavior)
+
+        assertEquals(EngineSession.CookieBannerHandlingMode.DISABLED.mode, contentBlockingSettings.cookieBannerMode)
+        assertEquals(EngineSession.CookieBannerHandlingMode.REJECT_ALL.mode, contentBlockingSettings.cookieBannerModePrivateBrowsing)
     }
 
     @Test

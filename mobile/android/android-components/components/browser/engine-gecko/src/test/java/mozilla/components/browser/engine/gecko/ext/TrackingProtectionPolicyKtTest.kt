@@ -22,6 +22,8 @@ class TrackingProtectionPolicyKtTest {
     fun `transform the policy to a GeckoView ContentBlockingSetting`() {
         val policy = TrackingProtectionPolicy.recommended()
         val setting = policy.toContentBlockingSetting()
+        val cookieBannerSetting = EngineSession.CookieBannerHandlingMode.REJECT_OR_ACCEPT_ALL
+        val cookieBannerSettingPrivateBrowsing = EngineSession.CookieBannerHandlingMode.DISABLED
 
         assertEquals(policy.getEtpLevel(), setting.enhancedTrackingProtectionLevel)
         assertEquals(policy.getAntiTrackingPolicy(), setting.antiTrackingCategories)
@@ -30,9 +32,13 @@ class TrackingProtectionPolicyKtTest {
         assertEquals(defaultSafeBrowsing.sumOf { it.id }, setting.safeBrowsingCategories)
         assertEquals(setting.strictSocialTrackingProtection, policy.strictSocialTrackingProtection)
         assertEquals(setting.cookiePurging, policy.cookiePurging)
+        assertEquals(EngineSession.CookieBannerHandlingMode.DISABLED.mode, setting.cookieBannerMode)
+        assertEquals(EngineSession.CookieBannerHandlingMode.REJECT_ALL.mode, setting.cookieBannerModePrivateBrowsing)
 
-        val policyWithSafeBrowsing = TrackingProtectionPolicy.recommended().toContentBlockingSetting(emptyArray())
+        val policyWithSafeBrowsing = TrackingProtectionPolicy.recommended().toContentBlockingSetting(emptyArray(), cookieBannerSetting, cookieBannerSettingPrivateBrowsing)
         assertEquals(0, policyWithSafeBrowsing.safeBrowsingCategories)
+        assertEquals(cookieBannerSetting.mode, policyWithSafeBrowsing.cookieBannerMode)
+        assertEquals(cookieBannerSettingPrivateBrowsing.mode, policyWithSafeBrowsing.cookieBannerModePrivateBrowsing)
     }
 
     @Test
