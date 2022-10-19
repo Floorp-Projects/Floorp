@@ -2803,7 +2803,10 @@ void AppWindow::SizeModeChanged(nsSizeMode aSizeMode) {
 
   RecomputeBrowsingContextVisibility();
 
-  PersistentAttributesDirty(PersistentAttribute::Misc, Sync);
+  // Persist mode, but not immediately, because in many (all?)
+  // cases this will merge with the similar call in NS_SIZE and
+  // write the attribute values only once.
+  PersistentAttributesDirty(PersistentAttribute::Misc, Async);
   nsCOMPtr<nsPIDOMWindowOuter> ourWindow =
       mDocShell ? mDocShell->GetWindow() : nullptr;
   if (ourWindow) {
