@@ -153,6 +153,7 @@ elif [ $MOZ_CHANGED -ne $GIT_CHANGED ]; then
   echo "$FILE_CNT_MISMATCH_MSG"
   exit 1
 fi
+HANDLE_NOOP_COMMIT=""
 
 MODIFIED_BUILD_RELATED_FILE_CNT=`hg diff -c tip --stat \
     --include 'third_party/libwebrtc/**BUILD.gn' \
