@@ -82,7 +82,7 @@ nsChromeProtocolHandler::GetProtocolFlags(uint32_t* result) {
   // and "chrome://navigator/content/navigator.xul".
 
   rv = nsChromeRegistry::Canonify(surl);
-  if (NS_FAILED(rv)) return rv;
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
   surl.forget(result);
   return NS_OK;
@@ -98,21 +98,9 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
 
   MOZ_ASSERT(aResult, "Null out param");
 
-#ifdef DEBUG
-  // Check that the uri we got is already canonified
-  nsresult debug_rv;
   nsCOMPtr<nsIURI> debugURL = aURI;
-  debug_rv = nsChromeRegistry::Canonify(debugURL);
-  if (NS_SUCCEEDED(debug_rv)) {
-    bool same;
-    debug_rv = aURI->Equals(debugURL, &same);
-    if (NS_SUCCEEDED(debug_rv)) {
-      NS_ASSERTION(same,
-                   "Non-canonified chrome uri passed to "
-                   "nsChromeProtocolHandler::NewChannel!");
-    }
-  }
-#endif
+  rv = nsChromeRegistry::Canonify(debugURL);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> result;
 
