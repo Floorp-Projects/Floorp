@@ -4,13 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["ContextMenuChild"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -31,7 +25,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 
 let contextMenus = new WeakMap();
 
-class ContextMenuChild extends JSWindowActorChild {
+export class ContextMenuChild extends JSWindowActorChild {
   // PUBLIC
   constructor() {
     super();

@@ -179,7 +179,7 @@ class nsContextMenu {
     this.shouldDisplay = context.shouldDisplay;
     this.timeStamp = context.timeStamp;
 
-    // Assign what's _possibly_ needed from `context` sent by ContextMenuChild.jsm
+    // Assign what's _possibly_ needed from `context` sent by ContextMenuChild.sys.mjs
     // Keep this consistent with the similar code in ContextMenu's _setContext
     this.imageDescURL = context.imageDescURL;
     this.imageInfo = context.imageInfo;

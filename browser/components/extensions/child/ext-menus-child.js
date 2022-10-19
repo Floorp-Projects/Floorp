@@ -4,11 +4,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ContextMenuChild",
-  "resource:///actors/ContextMenuChild.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ContextMenuChild: "resource:///actors/ContextMenuChild.sys.mjs",
+});
 
 this.menusChild = class extends ExtensionAPI {
   getAPI(context) {
