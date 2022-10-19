@@ -1586,6 +1586,11 @@ pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint-query", "");
 pref("browser.newtabpage.activity-stream.discoverystream.sponsored-collections.enabled", false);
 
+// Changes the spoc content.
+pref("browser.newtabpage.activity-stream.discoverystream.spocAdTypes", "");
+pref("browser.newtabpage.activity-stream.discoverystream.spocZoneIds", "");
+pref("browser.newtabpage.activity-stream.discoverystream.spocSiteId", "");
+
 pref("browser.newtabpage.activity-stream.discoverystream.sendToPocket.enabled", false);
 
 // List of regions that do not get stories, regardless of locale-list-config.
