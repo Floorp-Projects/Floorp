@@ -741,7 +741,7 @@ ul.ruleview-rule-ancestor-data {
   width: 15px;
   height: 15px;
   margin-left: 5px;
-  background: url("chrome://devtools/skin/images/open-inspector.svg") no-repeat 0 0;
+  background: url("chrome://devtools/skin/images/highlight-selector.svg") no-repeat 0 0;
   background-size: contain;
   cursor: pointer;
   -moz-context-properties: fill;
@@ -755,6 +755,9 @@ ul.ruleview-rule-ancestor-data {
 .ruleview-selectorhighlighter:active,
 .ruleview-selectorhighlighter.highlighted {
   fill: var(--theme-icon-checked-color);
+  /* Since the icon is quite thin, it can be hard to differentiate it
+     from its regular state. Adding some background helps make it pop a bit */
+  background-color: var(--toolbarbutton-hover-background);
 }
 
 #ruleview-add-rule-button::before {
