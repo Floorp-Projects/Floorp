@@ -69,7 +69,7 @@ add_task(async function sanitized_pref_test() {
   let count = 0,
     foundIt = false;
   for (let i = 0; i < events.length; i++) {
-    if (events[i].value == "security.sandbox.content.tempDirSuffix") {
+    if (events[i].value == "extensions.webextensions.uuids") {
       foundIt = true;
       count++;
     }
@@ -80,13 +80,13 @@ add_task(async function sanitized_pref_test() {
   // paths, so we happen to count it twice this way.  No big deal. Sometimes we even have 4
   // or 6 based on timing
   dump(
-    `We found ${events.length} events, ${count} of which were the tempDirSuffix ones.`
+    `We found ${events.length} events, ${count} of which were 'extensions.webextensions.uuids'.`
   );
 
   // eslint-disable-next-line
   Assert.ok(
     foundIt,
-    "We did not find an event for security.sandbox.content.tempDirSuffix"
+    "We did not find an event for 'extensions.webextensions.uuids'"
   );
 
   await SpecialPowers.popPrefEnv();
