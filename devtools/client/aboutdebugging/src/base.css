@@ -4,14 +4,21 @@
 
 :root {
   /* Colors from common.css */
-  --bg-color: #f9f9fa; /* --in-content-background-color */
-  --text-color: #0c0c0d; /* --in-content-text-color */
+  --in-content-background-color: f9f9fa;
+  --in-content-border-color: #d7d7db;
+  --in-content-primary-button-background: rgb(0, 97, 224);
+  --in-content-primary-button-background-active: rgb(5, 62, 148);
+  --in-content-primary-button-background-hover: rgb(2, 80, 187);
+  --in-content-text-color: #0c0c0d;
+
+  --bg-color: var(--in-content-background-color);
+  --text-color: var(--in-content-text-color);
   --secondary-text-color: var(--grey-50);
 
-  --border-color: #d7d7db; /* --in-content-border-color */
+  --border-color: var(--in-content-border-color);
 
   --box-background: #fff;
-  --box-border-color: #d7d7db;
+  --box-border-color: var(--in-content-border-color);
 
   --button-background-color: var(--grey-90-a10); /* Note: this is from Photon Default button */
   --button-color: var(--grey-90); /* Note: this is from Photon Default button */
@@ -20,7 +27,7 @@
 
   --category-background-hover: rgba(12,12,13,0.1);
   --category-text: rgba(12,12,13);
-  --category-text-selected: #0a84ff;
+  --category-text-selected: var(--in-content-primary-button-background);
 
   --fieldpair-text-color: var(--grey-50);
 
@@ -40,9 +47,9 @@
   --icon-ok-color: var(--green-70);
   --icon-info-color: var(--grey-90);
 
-  --link-color: #0a8dff;
-  --link-color-active: #003eaa;
-  --link-color-hover: #0060df;
+  --link-color: var(--in-content-primary-button-background);
+  --link-color-active: var(--in-content-primary-button-background-active);
+  --link-color-hover: var(--in-content-primary-button-background-hover);
 
   --primary-button-background-color: var(--blue-60);
   --primary-button-color: var(--white-100);
@@ -127,16 +134,16 @@
 
 @media  (prefers-color-scheme: dark) {
   :root {
-    --bg-color: rgb(28, 27, 34); /* --in-content-background-color */
-    --text-color: #eee; /* --in-content-text-color */
+    --in-content-background-color: rgb(28, 27, 34);
+    --in-content-border-color: rgba(249,249,250,0.2);
+    --in-content-primary-button-background: #00ddff;
+    --in-content-primary-button-background-active: rgb(170,242,255);
+    --in-content-primary-button-background-hover: rgb(128,235,255);
+    --in-content-text-color: #eee;
+
     --secondary-text-color: rgb(168, 168, 168);
 
     --box-background: rgb(35, 34, 43);
-    --box-border-color: rgba(249,249,250,0.2);
-
-    --link-color: #00ddff;
-    --link-color-active: rgb(170,242,255);
-    --link-color-hover: rgb(128,235,255);
 
     --button-background-color: rgb(72, 72, 84);
     --button-color: var(--white-100);
@@ -148,7 +155,6 @@
     --fieldpair-text-color: var(--text-color);
 
     --sidebar-text-color: var(--text-color);
-    --sidebar-selected-color: var(--link-color);
     --sidebar-background-hover: rgb(92, 92, 106);
 
     --card-background-color: rgb(35, 34, 43);
