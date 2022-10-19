@@ -44,6 +44,7 @@ const DEFAULT_RECS_EXPIRE_TIME = 60 * 60 * 1000; // 1 hour
 const MIN_PERSONALIZATION_UPDATE_TIME = 12 * 60 * 60 * 1000; // 12 hours
 const MAX_LIFETIME_CAP = 500; // Guard against misconfiguration on the server
 const FETCH_TIMEOUT = 45 * 1000;
+const SPOCS_URL = "https://spocs.getpocket.com/spocs";
 const PREF_CONFIG = "discoverystream.config";
 const PREF_ENDPOINTS = "discoverystream.endpoints";
 const PREF_IMPRESSION_ID = "browser.newtabpage.activity-stream.impressionId";
@@ -603,11 +604,15 @@ class DiscoveryStreamFeed {
 
       const spocAdTypes = pocketConfig.spocAdTypes
         ?.split(",")
+        .filter(item => item)
         .map(item => parseInt(item, 10));
       const spocZoneIds = pocketConfig.spocZoneIds
         ?.split(",")
+        .filter(item => item)
         .map(item => parseInt(item, 10));
+      const { spocSiteId } = pocketConfig;
       let spocPlacementData;
+      let spocsUrl;
 
       if (spocAdTypes?.length && spocZoneIds?.length) {
         spocPlacementData = {
@@ -616,9 +621,16 @@ class DiscoveryStreamFeed {
         };
       }
 
+      if (spocSiteId) {
+        const newUrl = new URL(SPOCS_URL);
+        newUrl.searchParams.set("site", spocSiteId);
+        spocsUrl = newUrl.href;
+      }
+
       // Set a hardcoded layout if one is needed.
       // Changing values in this layout in memory object is unnecessary.
       layoutResp = getHardcodedLayout({
+        spocsUrl,
         items,
         sponsoredCollectionsEnabled,
         spocPlacementData,
@@ -678,8 +690,8 @@ class DiscoveryStreamFeed {
             isStartup,
           },
         });
+        this.updatePlacements(sendUpdate, layoutResp.layout, isStartup);
       }
-      this.updatePlacements(sendUpdate, layoutResp.layout, isStartup);
     }
   }
 
@@ -1756,7 +1768,7 @@ class DiscoveryStreamFeed {
     }
   }
 
-  onPocketConfigChanged() {
+  onCollectionsChanged() {
     // Update layout, and reload any off screen tabs.
     // This does not change any existing open tabs.
     // It also doesn't update any spoc or rec data, just the layout.
@@ -1776,7 +1788,7 @@ class DiscoveryStreamFeed {
         this.configReset();
         break;
       case PREF_COLLECTIONS_ENABLED:
-        this.onPocketConfigChanged();
+        this.onCollectionsChanged();
         break;
       case PREF_USER_TOPSTORIES:
       case PREF_SYSTEM_TOPSTORIES:
@@ -2009,7 +2021,8 @@ class DiscoveryStreamFeed {
       case at.PREF_CHANGED:
         await this.onPrefChangedAction(action);
         if (action.data.name === "pocketConfig") {
-          this.onPocketConfigChanged();
+          // TODO Now that this is happening for real, do we need the placement changed function moved.
+          await this.onPrefChange();
           this.setupPrefs(false /* isStartup */);
         }
         break;
@@ -2022,6 +2035,7 @@ class DiscoveryStreamFeed {
    persist across pref changes and system_tick updates.
 
    NOTE: There is some branching logic in the template.
+     `spocsUrl` Changing the url for spocs is used for adding a siteId query param.
      `items` How many items to include in the primary card grid.
      `spocPositions` Changes the position of spoc cards.
      `spocPlacementData` Used to set the spoc content.
@@ -2035,6 +2049,7 @@ class DiscoveryStreamFeed {
      `editorsPicksHeader` Updates the Pocket section header and title to say "Editor’s Picks", if used with essentialReadsHeader, creates a second section 2 rows down for editorsPicks.
 */
 getHardcodedLayout = ({
+  spocsUrl = SPOCS_URL,
   items = 21,
   spocPositions = [1, 5, 7, 11, 18, 20],
   spocPlacementData = { ad_types: [3617], zone_ids: [217758, 217995] },
@@ -2051,7 +2066,7 @@ getHardcodedLayout = ({
 }) => ({
   lastUpdate: Date.now(),
   spocs: {
-    url: "https://spocs.getpocket.com/spocs",
+    url: spocsUrl,
   },
   layout: [
     {
