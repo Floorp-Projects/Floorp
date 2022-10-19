@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 var DEBUG = 0;
 var debug;
 if (DEBUG) {
@@ -12,11 +14,13 @@ if (DEBUG) {
   debug = function(s) {};
 }
 
+var EXPORTED_SYMBOLS = ["IndexedDBHelper"];
+
 function getErrorName(err) {
   return (err && err.name) || "UnknownError";
 }
 
-export function IndexedDBHelper() {}
+function IndexedDBHelper() {}
 
 IndexedDBHelper.prototype = {
   // Close the database

@@ -1,4 +1,8 @@
-export var broadcastHandler = {
+"use strict";
+
+var EXPORTED_SYMBOLS = ["broadcastHandler"];
+
+var broadcastHandler = {
   reset() {
     this.notifications = [];
 

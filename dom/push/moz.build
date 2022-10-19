@@ -11,25 +11,25 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    "Push.sys.mjs",
-    "PushBroadcastService.sys.mjs",
-    "PushComponents.sys.mjs",
-    "PushCrypto.sys.mjs",
-    "PushDB.sys.mjs",
-    "PushRecord.sys.mjs",
-    "PushService.sys.mjs",
+    "Push.jsm",
+    "PushBroadcastService.jsm",
+    "PushComponents.jsm",
+    "PushCrypto.jsm",
+    "PushDB.jsm",
+    "PushRecord.jsm",
+    "PushService.jsm",
 ]
 
 if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
     # Everything but Fennec.
     EXTRA_JS_MODULES += [
-        "PushServiceHttp2.sys.mjs",
-        "PushServiceWebSocket.sys.mjs",
+        "PushServiceHttp2.jsm",
+        "PushServiceWebSocket.jsm",
     ]
 else:
     # Fennec only.
     EXTRA_JS_MODULES += [
-        "PushServiceAndroidGCM.sys.mjs",
+        "PushServiceAndroidGCM.jsm",
     ]
 
 XPCOM_MANIFESTS += [
