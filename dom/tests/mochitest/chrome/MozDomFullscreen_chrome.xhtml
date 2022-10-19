@@ -38,28 +38,26 @@ var gOuterDoc = null;
 var gInnerDoc = null;
 
 var gReceivedFullscreenEnteredEvent = false;
-var gReceivedNewOriginEvent = false;
 function firstEntry(event) {
-  if (event.type == "MozDOMFullscreen:Entered") {
-    window.removeEventListener("MozDOMFullscreen:Entered", firstEntry, false);
-    ok(!gReceivedFullscreenEnteredEvent, "MozDOMFullscreen:Entered shouldn't have been triggered twice");
-    is(event.target, gOuterDoc.body, "First MozDOMFullscreen:Entered should be targeted at outer body");
-    gReceivedFullscreenEnteredEvent = true;
-  } else if (event.type == "MozDOMFullscreen:NewOrigin") {
-    window.removeEventListener("MozDOMFullscreen:NewOrigin", firstEntry, false);
-    ok(!gReceivedNewOriginEvent, "MozDOMFullscreen:NewOrigin shouldn't have been triggered twice");
-    is(event.target, gOuterDoc, "First MozDOMFullscreen:NewOrigin should be targeted at outer doc");
-    gReceivedNewOriginEvent = true;
-  } else {
-    ok(false, "Unknown event received");
+  if (event.type == "MozDOMFullscreen:NewOrigin") {
+    ok(false, "MozDOMFullscreen:NewOrigin shouldn't be triggered at first entry");
+    return;
   }
-  if (!gReceivedFullscreenEnteredEvent || !gReceivedNewOriginEvent) {
+
+  if (event.type != "MozDOMFullscreen:Entered") {
+    ok(false, "Unknown event received");
     return;
   }
 
   ok(gOuterDoc.fullscreenElement != null, "Outer doc should be in fullscreen");
+  is(event.target, gOuterDoc.body, "First MozDOMFullscreen:Entered should be targeted at outer body");
+  ok(!gReceivedFullscreenEnteredEvent, "MozDOMFullscreen:Entered shouldn't have been triggered twice");
+  gReceivedFullscreenEnteredEvent = true;
+  window.removeEventListener("MozDOMFullscreen:Entered", firstEntry);
+  window.removeEventListener("MozDOMFullscreen:NewOrigin", firstEntry);
+
+  window.addEventListener("MozDOMFullscreen:NewOrigin", secondEntry);
   gInnerDoc = gOuterDoc.getElementById("innerFrame").contentDocument;
-  window.addEventListener("MozDOMFullscreen:NewOrigin", secondEntry, false);
   gInnerDoc.defaultView.focus();
   gInnerDoc.body.requestFullscreen();
 }
