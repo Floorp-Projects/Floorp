@@ -31,9 +31,9 @@ function test_uri(obj) {
 function run_test() {
   var tests = [
     { uri: "chrome://blah/content/blah.xul", result: true },
-    { uri: "chrome://blah/content/:/blah/blah.xul", result: false },
-    { uri: "chrome://blah/content/%252e./blah/blah.xul", result: false },
-    { uri: "chrome://blah/content/%252e%252e/blah/blah.xul", result: false },
+    { uri: "chrome://blah/content/:/blah/blah.xul", result: true },
+    { uri: "chrome://blah/content/%252e./blah/blah.xul", result: true },
+    { uri: "chrome://blah/content/%252e%252e/blah/blah.xul", result: true },
     { uri: "chrome://blah/content/blah.xul?param=%252e./blah/", result: true },
     { uri: "chrome://blah/content/blah.xul?param=:/blah/", result: true },
     {
