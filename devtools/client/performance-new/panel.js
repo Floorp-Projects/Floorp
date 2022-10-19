@@ -29,7 +29,7 @@ class PerformancePanel {
     this.toolbox = toolbox;
     this.commands = commands;
 
-    const EventEmitter = require("devtools/shared/event-emitter");
+    const EventEmitter = require("resource://devtools/shared/event-emitter.js");
     EventEmitter.decorate(this);
   }
 
@@ -77,7 +77,9 @@ class PerformancePanel {
   }
 
   _openAboutProfiling() {
-    const { openTrustedLink } = require("devtools/client/shared/link");
+    const {
+      openTrustedLink,
+    } = require("resource://devtools/client/shared/link.js");
     openTrustedLink("about:profiling", {});
   }
 

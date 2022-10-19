@@ -12,14 +12,14 @@
 const {
   PureComponent,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   div,
   button,
   p,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const Localized = createFactory(
-  require("devtools/client/shared/vendor/fluent-react").Localized
+  require("resource://devtools/client/shared/vendor/fluent-react.js").Localized
 );
 
 /**
@@ -32,7 +32,9 @@ class Description extends PureComponent {
    * @param {React.MouseEvent<HTMLButtonElement>} event
    */
   handleLinkClick = event => {
-    const { openDocLink } = require("devtools/client/shared/link");
+    const {
+      openDocLink,
+    } = require("resource://devtools/client/shared/link.js");
 
     /** @type HTMLButtonElement */
     const target = /** @type {any} */ (event.target);

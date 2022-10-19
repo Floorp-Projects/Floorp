@@ -40,35 +40,35 @@
   scope.loader = browserLoader.loader;
 }
 
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-const React = require("devtools/client/shared/vendor/react");
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const ReactDOM = require("resource://devtools/client/shared/vendor/react-dom.js");
+const React = require("resource://devtools/client/shared/vendor/react.js");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const {
   FluentL10n,
-} = require("devtools/client/shared/fluent-l10n/fluent-l10n");
+} = require("resource://devtools/client/shared/fluent-l10n/fluent-l10n.js");
 const Provider = React.createFactory(
-  require("devtools/client/shared/vendor/react-redux").Provider
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
 );
 const LocalizationProvider = React.createFactory(
   FluentReact.LocalizationProvider
 );
 const DevToolsPanel = React.createFactory(
-  require("devtools/client/performance-new/components/DevToolsPanel")
+  require("resource://devtools/client/performance-new/components/DevToolsPanel.js")
 );
 const ProfilerEventHandling = React.createFactory(
-  require("devtools/client/performance-new/components/ProfilerEventHandling")
+  require("resource://devtools/client/performance-new/components/ProfilerEventHandling.js")
 );
 const ProfilerPreferenceObserver = React.createFactory(
-  require("devtools/client/performance-new/components/ProfilerPreferenceObserver")
+  require("resource://devtools/client/performance-new/components/ProfilerPreferenceObserver.js")
 );
-const createStore = require("devtools/client/shared/redux/create-store");
-const selectors = require("devtools/client/performance-new/store/selectors");
-const reducers = require("devtools/client/performance-new/store/reducers");
-const actions = require("devtools/client/performance-new/store/actions");
+const createStore = require("resource://devtools/client/shared/redux/create-store.js");
+const selectors = require("resource://devtools/client/performance-new/store/selectors.js");
+const reducers = require("resource://devtools/client/performance-new/store/reducers.js");
+const actions = require("resource://devtools/client/performance-new/store/actions.js");
 const {
   openProfilerTab,
   sharedLibrariesFromProfile,
-} = require("devtools/client/performance-new/browser");
+} = require("resource://devtools/client/performance-new/browser.js");
 const { createLocalSymbolicationService } = ChromeUtils.import(
   "resource://devtools/client/performance-new/symbolication.jsm.js"
 );

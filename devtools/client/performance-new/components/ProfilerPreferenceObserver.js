@@ -41,11 +41,15 @@ const {
 } = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm.js"
 );
-const { PureComponent } = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  PureComponent,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
-const selectors = require("devtools/client/performance-new/store/selectors");
-const actions = require("devtools/client/performance-new/store/actions");
+const selectors = require("resource://devtools/client/performance-new/store/selectors.js");
+const actions = require("resource://devtools/client/performance-new/store/actions.js");
 
 /**
  * This component mirrors the settings in the redux store and the preferences in

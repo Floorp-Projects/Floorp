@@ -27,27 +27,29 @@
 const {
   PureComponent,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 const {
   div,
   h1,
   button,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const Localized = createFactory(
-  require("devtools/client/shared/vendor/fluent-react").Localized
+  require("resource://devtools/client/shared/vendor/fluent-react.js").Localized
 );
 const Settings = createFactory(
-  require("devtools/client/performance-new/components/Settings.js")
+  require("resource://devtools/client/performance-new/components/Settings.js")
 );
 const Presets = createFactory(
-  require("devtools/client/performance-new/components/Presets")
+  require("resource://devtools/client/performance-new/components/Presets.js")
 );
 
-const selectors = require("devtools/client/performance-new/store/selectors");
+const selectors = require("resource://devtools/client/performance-new/store/selectors.js");
 const {
   restartBrowserWithEnvironmentVariable,
-} = require("devtools/client/performance-new/browser");
+} = require("resource://devtools/client/performance-new/browser.js");
 
 /**
  * This is the top level component for the about:profiling page. It shares components

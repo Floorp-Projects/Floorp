@@ -28,9 +28,9 @@ declare namespace MockedExports {
     "resource://devtools/shared/loader/Loader.sys.mjs": typeof import("resource://devtools/shared/loader/Loader.sys.mjs");
     "resource://devtools/client/performance-new/popup/background.jsm.js": typeof import("resource://devtools/client/performance-new/popup/background.jsm.js");
     "resource://devtools/shared/loader/browser-loader.js": any;
-    "resource://devtools/client/performance-new/popup/menu-button.jsm.js": typeof import("devtools/client/performance-new/popup/menu-button.jsm.js");
-    "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js": typeof import("devtools/client/performance-new/typescript-lazy-load.jsm.js");
-    "resource://devtools/client/performance-new/popup/panel.jsm.js": typeof import("devtools/client/performance-new/popup/panel.jsm.js");
+    "resource://devtools/client/performance-new/popup/menu-button.jsm.js": typeof import("resource://devtools/client/performance-new/popup/menu-button.jsm.js");
+    "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js": typeof import("resource://devtools/client/performance-new/typescript-lazy-load.jsm.js");
+    "resource://devtools/client/performance-new/popup/panel.jsm.js": typeof import("resource://devtools/client/performance-new/popup/panel.jsm.js");
     "resource://devtools/client/performance-new/symbolication.jsm.js": typeof import("resource://devtools/client/performance-new/symbolication.jsm.js");
     "resource:///modules/PanelMultiView.jsm": typeof import("resource:///modules/PanelMultiView.jsm");
   }
@@ -302,27 +302,27 @@ interface PathUtilsInterface {
   isAbsolute: (path: string) => boolean;
 }
 
-declare module "devtools/client/shared/vendor/react" {
+declare module "resource://devtools/client/shared/vendor/react.js" {
   import * as React from "react";
   export = React;
 }
 
-declare module "devtools/client/shared/vendor/react-dom-factories" {
+declare module "resource://devtools/client/shared/vendor/react-dom-factories.js" {
   import * as ReactDomFactories from "react-dom-factories";
   export = ReactDomFactories;
 }
 
-declare module "devtools/client/shared/vendor/redux" {
+declare module "resource://devtools/client/shared/vendor/redux.js" {
   import * as Redux from "redux";
   export = Redux;
 }
 
-declare module "devtools/client/shared/vendor/react-redux" {
+declare module "resource://devtools/client/shared/vendor/react-redux.js" {
   import * as ReactRedux from "react-redux";
   export = ReactRedux;
 }
 
-declare module "devtools/shared/event-emitter2" {
+declare module "resource://devtools/shared/event-emitter2.js" {
   export = MockedExports.EventEmitter;
 }
 

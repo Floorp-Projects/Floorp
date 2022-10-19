@@ -17,12 +17,14 @@
  * @property {(value: number) => React.ReactNode} display
  */
 "use strict";
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  PureComponent,
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   div,
   input,
   label,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
 /**
  * Provide a numeric range slider UI that works off of custom numeric scales.
