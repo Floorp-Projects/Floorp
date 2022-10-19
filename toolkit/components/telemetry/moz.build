@@ -34,7 +34,7 @@ if CONFIG["ENABLE_TESTS"]:
     # is no longer true and we could probably move it to tests/gtest.
     DIRS += ["geckoview/gtest", "tests/gtest"]
 
-TEST_DIRS += ["tests"]
+TEST_DIRS += ["tests", "dap/ffi-gtest"]
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
@@ -55,6 +55,7 @@ EXPORTS.mozilla += [
     "core/ipc/TelemetryIPC.h",
     "core/Telemetry.h",
     "dap/DAPTelemetry.h",
+    "dap/DAPTelemetryBindings.h",
     "other/CombinedStacks.h",
     "other/ProcessedStack.h",
     "TelemetryOriginEnums.h",
