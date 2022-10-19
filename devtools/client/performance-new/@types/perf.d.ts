@@ -9,7 +9,7 @@
 import {
   Reducer as ReduxReducer,
   Store as ReduxStore,
-} from "devtools/client/shared/vendor/redux";
+} from "resource://devtools/client/shared/vendor/redux.js";
 
 export interface PanelWindow {
   gToolbox?: any;

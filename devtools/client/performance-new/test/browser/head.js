@@ -21,7 +21,7 @@ const { require } = ChromeUtils.importESModule(
 {
   const {
     getEnvironmentVariable,
-  } = require("devtools/client/performance-new/browser");
+  } = require("resource://devtools/client/performance-new/browser.js");
 
   if (getEnvironmentVariable("MOZ_PROFILER_SHUTDOWN")) {
     throw new Error(

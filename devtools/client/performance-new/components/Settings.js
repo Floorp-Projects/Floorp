@@ -56,7 +56,7 @@
 const {
   PureComponent,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   div,
   label,
@@ -67,27 +67,29 @@ const {
   section,
   p,
   span,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const Range = createFactory(
-  require("devtools/client/performance-new/components/Range")
+  require("resource://devtools/client/performance-new/components/Range.js")
 );
 const DirectoryPicker = createFactory(
-  require("devtools/client/performance-new/components/DirectoryPicker")
+  require("resource://devtools/client/performance-new/components/DirectoryPicker.js")
 );
 const {
   makeLinear10Scale,
   makePowerOf2Scale,
   formatFileSize,
   featureDescriptions,
-} = require("devtools/client/performance-new/utils");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
-const actions = require("devtools/client/performance-new/store/actions");
-const selectors = require("devtools/client/performance-new/store/selectors");
+} = require("resource://devtools/client/performance-new/utils.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
+const actions = require("resource://devtools/client/performance-new/store/actions.js");
+const selectors = require("resource://devtools/client/performance-new/store/selectors.js");
 const {
   openFilePickerForObjdir,
-} = require("devtools/client/performance-new/browser");
+} = require("resource://devtools/client/performance-new/browser.js");
 const Localized = createFactory(
-  require("devtools/client/shared/vendor/fluent-react").Localized
+  require("resource://devtools/client/shared/vendor/fluent-react.js").Localized
 );
 
 // The Gecko Profiler interprets the "entries" setting as 8 bytes per entry.

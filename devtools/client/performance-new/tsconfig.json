@@ -3,6 +3,9 @@
     "module": "commonjs",
     // Set the baseUrl to the root of the project.
     "baseUrl": "../../..",
+    "paths": {
+      "resource://devtools/*": ["devtools/*"]
+    },
     // Make the type checking as strict as possible.
     "strict": true,
     // TypeScript will check JS files only if they have a @ts-check comment in them.

@@ -46,27 +46,27 @@ const { presets } = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm.js"
 );
 
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-const React = require("devtools/client/shared/vendor/react");
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const ReactDOM = require("resource://devtools/client/shared/vendor/react-dom.js");
+const React = require("resource://devtools/client/shared/vendor/react.js");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const {
   FluentL10n,
-} = require("devtools/client/shared/fluent-l10n/fluent-l10n");
+} = require("resource://devtools/client/shared/fluent-l10n/fluent-l10n.js");
 const Provider = React.createFactory(
-  require("devtools/client/shared/vendor/react-redux").Provider
+  require("resource://devtools/client/shared/vendor/react-redux.js").Provider
 );
 const ProfilerPreferenceObserver = React.createFactory(
-  require("devtools/client/performance-new/components/ProfilerPreferenceObserver")
+  require("resource://devtools/client/performance-new/components/ProfilerPreferenceObserver.js")
 );
 const LocalizationProvider = React.createFactory(
   FluentReact.LocalizationProvider
 );
 const AboutProfiling = React.createFactory(
-  require("devtools/client/performance-new/components/AboutProfiling")
+  require("resource://devtools/client/performance-new/components/AboutProfiling.js")
 );
-const createStore = require("devtools/client/shared/redux/create-store");
-const reducers = require("devtools/client/performance-new/store/reducers");
-const actions = require("devtools/client/performance-new/store/actions");
+const createStore = require("resource://devtools/client/shared/redux/create-store.js");
+const reducers = require("resource://devtools/client/performance-new/store/reducers.js");
+const actions = require("resource://devtools/client/performance-new/store/actions.js");
 
 /**
  * Initialize the panel by creating a redux store, and render the root component.

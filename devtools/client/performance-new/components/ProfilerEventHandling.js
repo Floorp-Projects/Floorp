@@ -42,10 +42,14 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
-const actions = require("devtools/client/performance-new/store/actions");
-const selectors = require("devtools/client/performance-new/store/selectors");
+const {
+  PureComponent,
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
+const actions = require("resource://devtools/client/performance-new/store/actions.js");
+const selectors = require("resource://devtools/client/performance-new/store/selectors.js");
 
 /**
  * This component state changes for the performance recording. e.g. If the profiler

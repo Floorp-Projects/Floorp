@@ -9,7 +9,7 @@ const { require } = ChromeUtils.importESModule(
 );
 const {
   withCommonPathPrefixRemoved,
-} = require("devtools/client/performance-new/utils");
+} = require("resource://devtools/client/performance-new/utils.js");
 
 add_task(function test() {
   info(

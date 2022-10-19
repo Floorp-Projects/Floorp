@@ -4,10 +4,10 @@
 // @ts-check
 "use strict";
 
-const selectors = require("devtools/client/performance-new/store/selectors");
+const selectors = require("resource://devtools/client/performance-new/store/selectors.js");
 const {
   getEnvironmentVariable,
-} = require("devtools/client/performance-new/browser");
+} = require("resource://devtools/client/performance-new/browser.js");
 
 /**
  * @typedef {import("../@types/perf").Action} Action

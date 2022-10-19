@@ -15,18 +15,18 @@
 const {
   PureComponent,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   div,
   button,
   select,
   option,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const {
   withCommonPathPrefixRemoved,
-} = require("devtools/client/performance-new/utils");
+} = require("resource://devtools/client/performance-new/utils.js");
 const Localized = createFactory(
-  require("devtools/client/shared/vendor/fluent-react").Localized
+  require("resource://devtools/client/shared/vendor/fluent-react.js").Localized
 );
 
 /**

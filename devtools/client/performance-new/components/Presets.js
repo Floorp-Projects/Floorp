@@ -14,18 +14,20 @@ const {
   createElement,
   createFactory,
   Fragment,
-} = require("devtools/client/shared/vendor/react");
+} = require("resource://devtools/client/shared/vendor/react.js");
 const {
   div,
   label,
   input,
-} = require("devtools/client/shared/vendor/react-dom-factories");
-const selectors = require("devtools/client/performance-new/store/selectors");
-const actions = require("devtools/client/performance-new/store/actions");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
+const selectors = require("resource://devtools/client/performance-new/store/selectors.js");
+const actions = require("resource://devtools/client/performance-new/store/actions.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 const Localized = createFactory(
-  require("devtools/client/shared/vendor/fluent-react").Localized
+  require("resource://devtools/client/shared/vendor/fluent-react.js").Localized
 );
 
 /**

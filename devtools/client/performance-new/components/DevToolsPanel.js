@@ -30,26 +30,28 @@
 const {
   PureComponent,
   createFactory,
-} = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+} = require("resource://devtools/client/shared/vendor/react.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 const {
   div,
   hr,
-} = require("devtools/client/shared/vendor/react-dom-factories");
+} = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const RecordingButton = createFactory(
-  require("devtools/client/performance-new/components/RecordingButton")
+  require("resource://devtools/client/performance-new/components/RecordingButton.js")
 );
 const Description = createFactory(
-  require("devtools/client/performance-new/components/Description")
+  require("resource://devtools/client/performance-new/components/Description.js")
 );
 const DevToolsPresetSelection = createFactory(
-  require("devtools/client/performance-new/components/DevToolsPresetSelection")
+  require("resource://devtools/client/performance-new/components/DevToolsPresetSelection.js")
 );
 const OnboardingMessage = createFactory(
-  require("devtools/client/performance-new/components/OnboardingMessage")
+  require("resource://devtools/client/performance-new/components/OnboardingMessage.js")
 );
 
-const selectors = require("devtools/client/performance-new/store/selectors");
+const selectors = require("resource://devtools/client/performance-new/store/selectors.js");
 
 /**
  * This is the top level component for the DevTools panel.
