@@ -11,12 +11,15 @@
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
+#include "mozilla/dom/InternalRequest.h"
+#include "mozilla/net/HttpBaseChannel.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsICookieJarSettings.h"
 #include "ServiceWorkerManager.h"
 #include "nsIPrincipal.h"
+#include "nsQueryObject.h"
 
 namespace mozilla::dom {
 
@@ -39,29 +42,45 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(
   if (!nsContentUtils::IsNonSubresourceRequest(aChannel)) {
     const Maybe<ServiceWorkerDescriptor>& controller =
         loadInfo->GetController();
-    // If the controller doesn't handle fetch events, return false
-    if (controller.isSome()) {
-      *aShouldIntercept = controller.ref().HandlesFetch();
 
-      // The service worker has no fetch event handler, try to schedule a
-      // soft-update through ServiceWorkerRegistrationInfo.
-      // Get ServiceWorkerRegistrationInfo by the ServiceWorkerInfo's principal
-      // and scope
-      if (!*aShouldIntercept && swm) {
-        nsCOMPtr<nsIPrincipal> principal =
-            controller.ref().GetPrincipal().unwrap();
-        RefPtr<ServiceWorkerRegistrationInfo> registration =
-            swm->GetRegistration(principal, controller.ref().Scope());
-        // Could not get ServiceWorkerRegistration here if unregister is
-        // executed before getting here.
-        if (NS_WARN_IF(!registration)) {
-          return NS_OK;
-        }
-        registration->MaybeScheduleTimeCheckAndUpdate();
-      }
-    } else {
-      *aShouldIntercept = false;
+    // If the controller doesn't handle fetch events, return false
+    if (!controller.isSome()) {
+      return NS_OK;
     }
+
+    *aShouldIntercept = controller.ref().HandlesFetch();
+
+    // The service worker has no fetch event handler, try to schedule a
+    // soft-update through ServiceWorkerRegistrationInfo.
+    // Get ServiceWorkerRegistrationInfo by the ServiceWorkerInfo's principal
+    // and scope
+    if (!*aShouldIntercept && swm) {
+      nsCOMPtr<nsIPrincipal> principal =
+          controller.ref().GetPrincipal().unwrap();
+      RefPtr<ServiceWorkerRegistrationInfo> registration =
+          swm->GetRegistration(principal, controller.ref().Scope());
+      // Could not get ServiceWorkerRegistration here if unregister is
+      // executed before getting here.
+      if (NS_WARN_IF(!registration)) {
+        return NS_OK;
+      }
+      registration->MaybeScheduleTimeCheckAndUpdate();
+    }
+
+    RefPtr<net::HttpBaseChannel> httpChannel = do_QueryObject(aChannel);
+
+    if (httpChannel &&
+        httpChannel->GetRequestHead()->HasHeader(net::nsHttp::Range)) {
+      RequestMode requestMode =
+          InternalRequest::MapChannelToRequestMode(aChannel);
+      bool mayLoad = nsContentUtils::CheckMayLoad(
+          loadInfo->GetLoadingPrincipal(), aChannel,
+          /*allowIfInheritsPrincipal*/ false);
+      if (requestMode == RequestMode::No_cors && !mayLoad) {
+        *aShouldIntercept = false;
+      }
+    }
+
     return NS_OK;
   }
 
