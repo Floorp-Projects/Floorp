@@ -2,16 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * This file exports XPCOM components for C++ and chrome JavaScript callers to
  * interact with the Push service.
  */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 var isParent =
   Services.appinfo.processType === Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
@@ -21,8 +17,8 @@ const lazy = {};
 // The default Push service implementation.
 XPCOMUtils.defineLazyGetter(lazy, "PushService", function() {
   if (Services.prefs.getBoolPref("dom.push.enabled")) {
-    const { PushService } = ChromeUtils.import(
-      "resource://gre/modules/PushService.jsm"
+    const { PushService } = ChromeUtils.importESModule(
+      "resource://gre/modules/PushService.sys.mjs"
     );
     PushService.init();
     return PushService;
@@ -586,6 +582,4 @@ PushSubscription.prototype = {
 
 // Export the correct implementation depending on whether we're running in
 // the parent or content process.
-let Service = isParent ? PushServiceParent : PushServiceContent;
-
-const EXPORTED_SYMBOLS = ["Service"];
+export let Service = isParent ? PushServiceParent : PushServiceContent;

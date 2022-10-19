@@ -2,27 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { PushDB } = ChromeUtils.import("resource://gre/modules/PushDB.jsm");
-const { PushRecord } = ChromeUtils.import(
-  "resource://gre/modules/PushRecord.jsm"
-);
-const { PushCrypto } = ChromeUtils.import(
-  "resource://gre/modules/PushCrypto.jsm"
-);
+import { PushDB } from "resource://gre/modules/PushDB.sys.mjs";
+import { PushRecord } from "resource://gre/modules/PushRecord.sys.mjs";
+import { PushCrypto } from "resource://gre/modules/PushCrypto.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "pushBroadcastService",
-  "resource://gre/modules/PushBroadcastService.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  pushBroadcastService: "resource://gre/modules/PushBroadcastService.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "ObjectUtils",
@@ -58,8 +48,6 @@ const kDELIVERY_REASON_TO_CODE = {
 };
 
 const prefs = Services.prefs.getBranch("dom.push.");
-
-const EXPORTED_SYMBOLS = ["PushServiceWebSocket"];
 
 XPCOMUtils.defineLazyGetter(lazy, "console", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
@@ -132,7 +120,7 @@ const STATE_WAITING_FOR_HELLO = 2;
 // Websocket operational, handshake completed, begin protocol messaging.
 const STATE_READY = 3;
 
-var PushServiceWebSocket = {
+export var PushServiceWebSocket = {
   _mainPushService: null,
   _serverURI: null,
   _currentlyRegistering: new Set(),
