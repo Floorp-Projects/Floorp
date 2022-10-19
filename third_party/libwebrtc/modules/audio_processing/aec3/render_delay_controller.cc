@@ -12,6 +12,7 @@
 #include <stddef.h>
 
 #include <algorithm>
+#include <atomic>
 #include <memory>
 
 #include "absl/types/optional.h"
