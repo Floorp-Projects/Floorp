@@ -239,7 +239,7 @@ impl TestFileFetcher {
             })
             .collect();
         reg.register_sources(sources).unwrap();
-        reg.set_adapt_bundle(bundle_adapter)
+        reg.set_bundle_adapter(bundle_adapter)
             .expect("Failed to set bundle adapter.");
         (provider, reg)
     }

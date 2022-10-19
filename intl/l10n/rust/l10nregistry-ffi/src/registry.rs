@@ -110,7 +110,7 @@ fn create_l10n_registry(sources: Option<Vec<FileSource>>) -> Rc<GeckoL10nRegistr
     let env = GeckoEnvironment::new(None);
     let mut reg = L10nRegistry::with_provider(env);
 
-    reg.set_adapt_bundle(GeckoBundleAdapter::default())
+    reg.set_bundle_adapter(GeckoBundleAdapter::default())
         .expect("Failed to set bundle adaptation closure.");
 
     if let Some(sources) = sources {
@@ -175,10 +175,13 @@ pub struct GeckoResourceId {
 
 impl From<&GeckoResourceId> for ResourceId {
     fn from(resource_id: &GeckoResourceId) -> Self {
-        resource_id.value.to_string().to_resource_id(match resource_id.resource_type {
-            GeckoResourceType::Optional => ResourceType::Optional,
-            GeckoResourceType::Required => ResourceType::Required,
-        })
+        resource_id
+            .value
+            .to_string()
+            .to_resource_id(match resource_id.resource_type {
+                GeckoResourceType::Optional => ResourceType::Optional,
+                GeckoResourceType::Required => ResourceType::Required,
+            })
     }
 }
 
@@ -194,7 +197,7 @@ pub extern "C" fn l10nregistry_new(use_isolating: bool) -> *const GeckoL10nRegis
     let env = GeckoEnvironment::new(None);
     let mut reg = L10nRegistry::with_provider(env);
     let _ = reg
-        .set_adapt_bundle(GeckoBundleAdapter { use_isolating })
+        .set_bundle_adapter(GeckoBundleAdapter { use_isolating })
         .report_error();
     Rc::into_raw(Rc::new(reg))
 }
