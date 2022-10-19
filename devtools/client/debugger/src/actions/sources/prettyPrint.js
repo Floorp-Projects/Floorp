@@ -22,7 +22,6 @@ import { createPrettyPrintOriginalSource } from "../../client/firefox/create";
 
 import {
   getSource,
-  getFirstSourceActorForGeneratedSource,
   getSourceFromId,
   getSourceByURL,
   getSelectedLocation,
@@ -122,11 +121,8 @@ export function togglePrettyPrint(cx, sourceId) {
     if (!source.isPrettyPrinted) {
       recordEvent("pretty_print");
     }
-    const sourceActor = getFirstSourceActorForGeneratedSource(
-      getState(),
-      source.id
-    );
-    await dispatch(loadSourceText({ cx, source, sourceActor }));
+
+    await dispatch(loadSourceText({ cx, source }));
     assert(
       isGenerated(source),
       "Pretty-printing only allowed on generated sources"
@@ -146,7 +142,7 @@ export function togglePrettyPrint(cx, sourceId) {
     const threadcx = getThreadContext(getState());
     await dispatch(mapFrames(threadcx));
 
-    await dispatch(setSymbols({ cx, source: newPrettySource, sourceActor }));
+    await dispatch(setSymbols({ cx, source: newPrettySource }));
 
     await dispatch(updateBreakpointsForNewPrettyPrintedSource(cx, sourceId));
 

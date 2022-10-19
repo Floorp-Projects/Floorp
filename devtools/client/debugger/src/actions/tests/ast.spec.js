@@ -48,28 +48,10 @@ describe("ast", () => {
         const base = await dispatch(
           actions.newGeneratedSource(makeSource("base.js"))
         );
-
-        const baseSourceActor = selectors.getFirstSourceActorForGeneratedSource(
-          getState(),
-          base.id
-        );
-
-        await dispatch(
-          actions.loadSourceText({
-            cx,
-            source: base,
-            sourceActor: baseSourceActor,
-          })
-        );
+        await dispatch(actions.loadSourceText({ cx, source: base }));
 
         const loadedSource = selectors.getSourceFromId(getState(), base.id);
-        await dispatch(
-          actions.setSymbols({
-            cx,
-            source: loadedSource,
-            sourceActor: baseSourceActor,
-          })
-        );
+        await dispatch(actions.setSymbols({ cx, source: loadedSource }));
         await waitForState(store, state => getSymbols(state, base));
 
         const baseSymbols = getSymbols(getState(), base);
