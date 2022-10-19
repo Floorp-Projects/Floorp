@@ -7,14 +7,15 @@ use crate::source::ResourceOption;
 use fluent_fallback::{generator::BundleIterator, types::ResourceId};
 use unic_langid::LanguageIdentifier;
 
-impl<'a, B> L10nRegistryLocked<'a, B> {
-    pub(crate) fn bundle_from_order<P>(
+impl<'a> L10nRegistryLocked<'a> {
+    pub(crate) fn bundle_from_order<P, B>(
         &self,
         metasource: usize,
         locale: LanguageIdentifier,
         source_order: &[usize],
         resource_ids: &[ResourceId],
         error_reporter: &P,
+        bundle_adapter: Option<&B>,
     ) -> Option<Result<FluentBundle, (FluentBundle, Vec<FluentError>)>>
     where
         P: ErrorReporter,
@@ -22,7 +23,7 @@ impl<'a, B> L10nRegistryLocked<'a, B> {
     {
         let mut bundle = FluentBundle::new(vec![locale.clone()]);
 
-        if let Some(bundle_adapter) = self.bundle_adapter {
+        if let Some(bundle_adapter) = bundle_adapter {
             bundle_adapter.adapt_bundle(&mut bundle);
         }
 
@@ -232,6 +233,7 @@ where
                             &order,
                             &self.resource_ids,
                             &self.reg.shared.provider,
+                            self.reg.shared.bundle_adapter.as_ref(),
                         );
                         self.state.put_back_solver(solver);
                         if bundle.is_some() {
