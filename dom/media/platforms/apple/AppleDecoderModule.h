@@ -52,8 +52,8 @@ class AppleDecoderModule : public PlatformDecoderModule {
                             CreateDecoderParams::OptionSet()) const;
   // Enable VP9 HW decoder.
   static bool RegisterSupplementalVP9Decoder();
-  // Return true if a dummy hardware VP9 decoder could be created.
-  static bool CanCreateVP9Decoder();
+  // Return true if a dummy hardware decoder could be created.
+  static bool CanCreateHWDecoder(media::MediaCodec aCodec);
 };
 
 }  // namespace mozilla
