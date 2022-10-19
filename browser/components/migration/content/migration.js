@@ -220,7 +220,8 @@ var MigrationWizard = {
         var migrator = this.spinResolve(
           MigrationUtils.getMigrator(migratorKey)
         );
-        if (migrator) {
+
+        if (migrator?.enabled) {
           // Save this as the first selectable item, if we don't already have
           // one, or if it is the migrator that was passed to us.
           if (!selectedMigrator || this._source == migratorKey) {

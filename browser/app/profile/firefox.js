@@ -2105,9 +2105,25 @@ pref("dom.ipc.processPrelaunch.enabled", false);
 pref("dom.ipc.processPrelaunch.enabled", true);
 #endif
 
+pref("browser.migrate.brave.enabled", true);
+pref("browser.migrate.canary.enabled", true);
+
+pref("browser.migrate.chrome.enabled", true);
 // See comments in bug 1340115 on how we got to these numbers.
 pref("browser.migrate.chrome.history.limit", 2000);
 pref("browser.migrate.chrome.history.maxAgeInDays", 180);
+
+pref("browser.migrate.chrome-beta.enabled", true);
+pref("browser.migrate.chrome-dev.enabled", true);
+pref("browser.migrate.chromium.enabled", true);
+pref("browser.migrate.chromium-360se.enabled", true);
+pref("browser.migrate.chromium-edge.enabled", true);
+pref("browser.migrate.chromium-edge-beta.enabled", true);
+pref("browser.migrate.edge.enabled", true);
+pref("browser.migrate.firefox.enabled", true);
+pref("browser.migrate.ie.enabled", true);
+pref("browser.migrate.safari.enabled", true);
+
 pref("browser.migrate.showBookmarksToolbarAfterMigration", true);
 
 pref("extensions.pocket.api", "api.getpocket.com");

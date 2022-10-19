@@ -211,6 +211,16 @@ var MigratorPrototype = {
   },
 
   /**
+   * Returns true if the migrator is configured to be enabled. This is
+   * controlled by the `browser.migrate.<BROWSER_KEY>.enabled` boolean
+   * preference.
+   */
+  get enabled() {
+    let key = this.getBrowserKey();
+    return Services.prefs.getBoolPref(`browser.migrate.${key}.enabled`, false);
+  },
+
+  /**
    * DO NOT OVERRIDE - After deCOMing migration, the UI will just call
    * getResources.
    *
