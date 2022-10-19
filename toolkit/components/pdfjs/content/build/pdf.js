@@ -1332,7 +1332,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.0.229',
+    apiVersion: '3.0.239',
     data: source.data,
     password: source.password,
     disableAutoFetch: source.disableAutoFetch,
@@ -3351,9 +3351,9 @@ class InternalRenderTask {
 
 }
 
-const version = '3.0.229';
+const version = '3.0.239';
 exports.version = version;
-const build = '9355b7293';
+const build = 'ba3a0e104';
 exports.build = build;
 
 /***/ }),
@@ -10802,6 +10802,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
   #boundEditorDivKeydown = this.editorDivKeydown.bind(this);
   #color;
   #content = "";
+  #editorDivId = `${this.id}-editor`;
   #hasAlreadyBeenCommitted = false;
   #fontSize;
   static _freeTextDefaultContent = "";
@@ -10923,10 +10924,10 @@ class FreeTextEditor extends _editor.AnnotationEditor {
     this.parent.setEditingState(false);
     this.parent.updateToolbar(_util.AnnotationEditorType.FREETEXT);
     super.enableEditMode();
-    this.enableEditing();
     this.overlayDiv.classList.remove("enabled");
     this.editorDiv.contentEditable = true;
     this.div.draggable = false;
+    this.div.removeAttribute("aria-activedescendant");
     this.editorDiv.addEventListener("keydown", this.#boundEditorDivKeydown);
     this.editorDiv.addEventListener("focus", this.#boundEditorDivFocus);
     this.editorDiv.addEventListener("blur", this.#boundEditorDivBlur);
@@ -10940,9 +10941,9 @@ class FreeTextEditor extends _editor.AnnotationEditor {
 
     this.parent.setEditingState(true);
     super.disableEditMode();
-    this.disableEditing();
     this.overlayDiv.classList.add("enabled");
     this.editorDiv.contentEditable = false;
+    this.div.setAttribute("aria-activedescendant", this.#editorDivId);
     this.div.draggable = true;
     this.editorDiv.removeEventListener("keydown", this.#boundEditorDivKeydown);
     this.editorDiv.removeEventListener("focus", this.#boundEditorDivFocus);
@@ -11080,7 +11081,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
     super.render();
     this.editorDiv = document.createElement("div");
     this.editorDiv.className = "internal";
-    this.editorDiv.setAttribute("id", `${this.id}-editor`);
+    this.editorDiv.setAttribute("id", this.#editorDivId);
     this.enableEditing();
 
     FreeTextEditor._l10nPromise.get("editor_free_text2_aria_label").then(msg => this.editorDiv?.setAttribute("aria-label", msg));
@@ -13208,15 +13209,18 @@ class WidgetAnnotationElement extends AnnotationElement {
     const fontSize = this.data.defaultAppearanceData.fontSize || DEFAULT_FONT_SIZE;
     const style = element.style;
     let computedFontSize;
+    const BORDER_SIZE = 2;
+
+    const roundToOneDecimal = x => Math.round(10 * x) / 10;
 
     if (this.data.multiLine) {
-      const height = Math.abs(this.data.rect[3] - this.data.rect[1]);
+      const height = Math.abs(this.data.rect[3] - this.data.rect[1] - BORDER_SIZE);
       const numberOfLines = Math.round(height / (_util.LINE_FACTOR * fontSize)) || 1;
       const lineHeight = height / numberOfLines;
-      computedFontSize = Math.min(fontSize, Math.round(lineHeight / _util.LINE_FACTOR));
+      computedFontSize = Math.min(fontSize, roundToOneDecimal(lineHeight / _util.LINE_FACTOR));
     } else {
-      const height = Math.abs(this.data.rect[3] - this.data.rect[1]);
-      computedFontSize = Math.min(fontSize, Math.round(height / _util.LINE_FACTOR));
+      const height = Math.abs(this.data.rect[3] - this.data.rect[1] - BORDER_SIZE);
+      computedFontSize = Math.min(fontSize, roundToOneDecimal(height / _util.LINE_FACTOR));
     }
 
     style.fontSize = `calc(${computedFontSize}px * var(--scale-factor))`;
@@ -15819,8 +15823,8 @@ var _svg = __w_pdfjs_require__(29);
 
 var _xfa_layer = __w_pdfjs_require__(27);
 
-const pdfjsVersion = '3.0.229';
-const pdfjsBuild = '9355b7293';
+const pdfjsVersion = '3.0.239';
+const pdfjsBuild = 'ba3a0e104';
 ;
 })();
 

@@ -9865,7 +9865,7 @@ class PDFViewer {
   #onVisibilityChange = null;
 
   constructor(options) {
-    const viewerVersion = '3.0.229';
+    const viewerVersion = '3.0.239';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -15228,8 +15228,8 @@ var _pdf_link_service = __webpack_require__(3);
 
 var _app = __webpack_require__(4);
 
-const pdfjsVersion = '3.0.229';
-const pdfjsBuild = '9355b7293';
+const pdfjsVersion = '3.0.239';
+const pdfjsBuild = 'ba3a0e104';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
