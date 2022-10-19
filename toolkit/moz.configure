@@ -2555,12 +2555,30 @@ check_prog(
 )
 
 
+@depends(valid_windows_sdk_dir, host)
+@imports(_from="os", _import="environ")
+def pdbstr_paths(valid_windows_sdk_dir, host):
+    if not valid_windows_sdk_dir:
+        return
+
+    vc_host = {
+        "x86": "x86",
+        "x86_64": "x64",
+    }.get(host.cpu)
+
+    return [
+        environ["PATH"],
+        os.path.join(valid_windows_sdk_dir.path, "Debuggers", vc_host, "srcsrv"),
+    ]
+
+
 check_prog(
     "PDBSTR",
     ["pdbstr.exe"],
     allow_missing=True,
-    bootstrap="pdbstr",
     when=compile_environment & target_is_windows,
+    paths=pdbstr_paths,
+    allow_spaces=True,
 )
 
 
