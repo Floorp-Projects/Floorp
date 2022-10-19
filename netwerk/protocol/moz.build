@@ -7,4 +7,4 @@
 DIRS += ["about", "data", "file"]
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     DIRS += ["gio"]
-DIRS += ["http", "res", "viewsource", "websocket"]
+DIRS += ["http", "res", "viewsource", "websocket", "webtransport"]
