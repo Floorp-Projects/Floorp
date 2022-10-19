@@ -252,7 +252,10 @@ pub const RENDER_REASON_TESTING: usize = 117;
 pub const RENDER_REASON_OTHER: usize = 118;
 pub const RENDER_REASON_VSYNC: usize = 119;
 
-pub const NUM_PROFILER_EVENTS: usize = 120;
+pub const TEXTURES_CREATED: usize = 120;
+pub const TEXTURES_DELETED: usize = 121;
+
+pub const NUM_PROFILER_EVENTS: usize = 122;
 
 pub struct Profiler {
     counters: Vec<Counter>,
@@ -427,6 +430,8 @@ impl Profiler {
             float("Reason other", "", RENDER_REASON_OTHER, expected(0.0..0.01)),
             float("On vsync", "", RENDER_REASON_VSYNC, expected(0.0..0.01)),
 
+            int("Textures created", "", TEXTURES_CREATED, expected(0..5)),
+            int("Textures deleted", "", TEXTURES_DELETED, Expected::none()),
         ];
 
         let mut counters = Vec::with_capacity(profile_counters.len());

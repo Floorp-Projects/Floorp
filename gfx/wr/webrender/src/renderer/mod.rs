@@ -1560,6 +1560,9 @@ impl Renderer {
 
         self.profile.set(profiler::DEPTH_TARGETS_MEM, profiler::bytes_to_mb(self.device.depth_targets_memory()));
 
+        self.profile.set(profiler::TEXTURES_CREATED, self.device.textures_created);
+        self.profile.set(profiler::TEXTURES_DELETED, self.device.textures_deleted);
+
         results.stats.texture_upload_mb = self.profile.get_or(profiler::TEXTURE_UPLOADS_MEM, 0.0);
         self.frame_counter += 1;
         results.stats.resource_upload_time = self.resource_upload_time;
