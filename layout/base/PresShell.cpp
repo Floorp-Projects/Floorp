@@ -45,6 +45,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ViewportUtils.h"
+#include "mozilla/gfx/Types.h"
 #include <algorithm>
 
 #ifdef XP_WIN
@@ -3555,6 +3556,7 @@ static WhereToScroll GetApplicableWhereToScroll(
 static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
                              const nsIFrame* aScrollableFrame,
                              const nsIFrame* aTarget, const nsRect& aRect,
+                             const Sides aScrollPaddingSkipSides,
                              const nsMargin& aMargin, ScrollAxis aVertical,
                              ScrollAxis aHorizontal, ScrollFlags aScrollFlags) {
   nsPoint scrollPt = aFrameAsScrollable->GetVisualViewportOffset();
@@ -3562,7 +3564,11 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   const nsRect visibleRect(scrollPt,
                            aFrameAsScrollable->GetVisualViewportSize());
 
-  const nsMargin padding = aFrameAsScrollable->GetScrollPadding() + aMargin;
+  const nsMargin padding = [&] {
+    nsMargin p = aFrameAsScrollable->GetScrollPadding();
+    p.ApplySkipSides(aScrollPaddingSkipSides);
+    return p + aMargin;
+  }();
 
   const nsRect rectToScrollIntoView = [&] {
     nsRect r(aRect);
@@ -3765,6 +3771,33 @@ bool PresShell::ScrollFrameIntoView(
   const nsMargin scrollMargin =
       aKnownRectRelativeToTarget ? nsMargin() : GetScrollMargin(aTargetFrame);
 
+  Sides skipPaddingSides;
+  const auto MaybeSkipPaddingSides = [&](nsIFrame* aFrame) {
+    if (!aFrame->IsStickyPositioned()) {
+      return;
+    }
+    const nsPoint pos = aFrame->GetPosition();
+    const nsPoint normalPos = aFrame->GetNormalPosition();
+    if (pos == normalPos) {
+      return; // Frame is not stuck.
+    }
+    // If we're targetting a sticky element, make sure not to apply
+    // scroll-padding on the direction we're stuck.
+    const auto& offsets = aFrame->StylePosition()->mOffset;
+    for (auto side : AllPhysicalSides()) {
+      if (offsets.Get(side).IsAuto()) {
+        continue;
+      }
+      // See if this axis is stuck.
+      const bool yAxis = side == eSideTop || side == eSideBottom;
+      const bool stuck = yAxis ? pos.y != normalPos.y : pos.x != normalPos.x;
+      if (!stuck) {
+        continue;
+      }
+      skipPaddingSides |= SideToSideBit(side);
+    }
+  };
+
   nsIFrame* container = aTargetFrame;
 
   // This function needs to work even if rect has a width or height of 0.
@@ -3772,16 +3805,21 @@ bool PresShell::ScrollFrameIntoView(
     if (aKnownRectRelativeToTarget) {
       return *aKnownRectRelativeToTarget;
     }
-    // We really just need a non-fragmented frame so that we can accumulate the
-    // bounds of all our continuations relative to it. We shouldn't jump out of
-    // our nearest scrollable frame, and that's an ok reference frame, so try to
-    // use that, or the root frame if there's nothing to scroll in this document.
-    container = nsLayoutUtils::GetClosestFrameOfType(
-        aTargetFrame->GetParent(), LayoutFrameType::Scroll);
-    if (!container) {
-      container = aTargetFrame->PresShell()->GetRootFrame();
-      MOZ_DIAGNOSTIC_ASSERT(container);
+    MaybeSkipPaddingSides(aTargetFrame);
+    while (nsIFrame* parent = container->GetParent()) {
+      container = parent;
+      if (static_cast<nsIScrollableFrame*>(do_QueryFrame(container))) {
+        // We really just need a non-fragmented frame so that we can accumulate
+        // the bounds of all our continuations relative to it. We shouldn't jump
+        // out of our nearest scrollable frame, and that's an ok reference
+        // frame, so try to use that, or the root frame if there's nothing to
+        // scroll in this document.
+        break;
+      }
+      MaybeSkipPaddingSides(container);
     }
+    MOZ_DIAGNOSTIC_ASSERT(container);
+
     nsRect targetFrameBounds;
     {
       bool haveRect = false;
@@ -3841,7 +3879,7 @@ bool PresShell::ScrollFrameIntoView(
 
       {
         AutoWeakFrame wf(container);
-        ScrollToShowRect(sf, container, target, targetRect,
+        ScrollToShowRect(sf, container, target, targetRect, skipPaddingSides,
                          scrollMargin, aVertical, aHorizontal, aScrollFlags);
         if (!wf.IsAlive()) {
           return didScroll;
@@ -3865,7 +3903,13 @@ bool PresShell::ScrollFrameIntoView(
       // This scroll container will be the next target element in the nearest
       // ancestor scroll container.
       target = container;
+      // We found a sticky scroll container, we shouldn't skip that side
+      // anymore.
+      skipPaddingSides = {};
     }
+
+    MaybeSkipPaddingSides(container);
+
     nsIFrame* parent;
     if (container->IsTransformed()) {
       container->GetTransformMatrix(ViewportType::Layout, RelativeTo{nullptr},
