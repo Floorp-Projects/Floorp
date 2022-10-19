@@ -27,20 +27,6 @@ interface XULElement : Element {
   [SetterThrows]
   attribute DOMString tooltip;
 
-  // Width/height properties
-  [SetterThrows]
-  attribute DOMString width;
-  [SetterThrows]
-  attribute DOMString height;
-  [SetterThrows]
-  attribute DOMString minWidth;
-  [SetterThrows]
-  attribute DOMString minHeight;
-  [SetterThrows]
-  attribute DOMString maxWidth;
-  [SetterThrows]
-  attribute DOMString maxHeight;
-
   // Tooltip
   [SetterThrows]
   attribute DOMString tooltipText;

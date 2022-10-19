@@ -25,12 +25,12 @@ add_UITour_task(async function test_highlight_size_attributes() {
   await new Promise(resolve => {
     SimpleTest.executeSoon(() => {
       is(
-        highlight.height,
+        highlight.style.height,
         "",
         "Highlight panel should have no explicit height set"
       );
       is(
-        highlight.width,
+        highlight.style.width,
         "",
         "Highlight panel should have no explicit width set"
       );
@@ -49,8 +49,16 @@ add_UITour_task(async function test_info_size_attributes() {
   await elementVisiblePromise(tooltip, "Tooltip should be moved to the urlbar");
   await new Promise(resolve => {
     SimpleTest.executeSoon(() => {
-      is(tooltip.height, "", "Info panel should have no explicit height set");
-      is(tooltip.width, "", "Info panel should have no explicit width set");
+      is(
+        tooltip.style.height,
+        "",
+        "Info panel should have no explicit height set"
+      );
+      is(
+        tooltip.style.width,
+        "",
+        "Info panel should have no explicit width set"
+      );
       resolve();
     });
   });

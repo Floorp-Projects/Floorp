@@ -407,13 +407,14 @@ var ctrlTab = {
   _openPanel: function ctrlTab_openPanel() {
     tabPreviewPanelHelper.opening(this);
 
-    this.panel.width = Math.min(
+    let width = Math.min(
       screen.availWidth * 0.99,
       this.canvasWidth * 1.25 * this.tabPreviewCount
     );
+    this.panel.style.width = width + "px";
     var estimateHeight = this.canvasHeight * 1.25 + 75;
     this.panel.openPopupAtScreen(
-      screen.availLeft + (screen.availWidth - this.panel.width) / 2,
+      screen.availLeft + (screen.availWidth - width) / 2,
       screen.availTop + (screen.availHeight - estimateHeight) / 2,
       false
     );
