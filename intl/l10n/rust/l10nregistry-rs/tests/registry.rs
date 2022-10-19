@@ -21,8 +21,8 @@ fn test_generate_sources_for_file() {
     {
         let lock = reg.lock();
 
-        let toolkit = lock.get_source(0, "toolkit").unwrap();
-        let browser = lock.get_source(0, "browser").unwrap();
+        let toolkit = lock.file_source_by_name(0, "toolkit").unwrap();
+        let browser = lock.file_source_by_name(0, "browser").unwrap();
         let toolkit_resource_id = FTL_RESOURCE_TOOLKIT.into();
 
         let mut i = lock.generate_sources_for_file(0, &en_us, &toolkit_resource_id);

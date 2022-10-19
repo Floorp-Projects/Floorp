@@ -52,7 +52,7 @@ impl<'a, B> L10nRegistryLocked<'a, B> {
             .expect("Index out-of-range")
     }
 
-    pub fn get_source(&self, metasource: usize, name: &str) -> Option<&FileSource> {
+    pub fn file_source_by_name(&self, metasource: usize, name: &str) -> Option<&FileSource> {
         self.lock
             .get(metasource)
             .expect("Index out-of-range")
@@ -209,7 +209,11 @@ impl<P, B> L10nRegistry<P, B> {
         Ok(sources.iter().flatten().any(|source| source.name == name))
     }
 
-    pub fn get_source(&self, name: &str) -> Result<Option<FileSource>, L10nRegistrySetupError> {
+    /// Get a [FileSource] by name by searching through all meta sources.
+    pub fn file_source_by_name(
+        &self,
+        name: &str,
+    ) -> Result<Option<FileSource>, L10nRegistrySetupError> {
         let sources = self
             .shared
             .sources
