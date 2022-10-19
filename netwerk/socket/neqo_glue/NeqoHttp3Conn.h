@@ -17,12 +17,12 @@ class NeqoHttp3Conn final {
                        const NetAddr& aLocalAddr, const NetAddr& aRemoteAddr,
                        uint32_t aMaxTableSize, uint16_t aMaxBlockedStreams,
                        uint64_t aMaxData, uint64_t aMaxStreamData,
-                       bool aVersionNegotiation, bool aWebTransport,
-                       const nsACString& aQlogDir, NeqoHttp3Conn** aConn) {
-    return neqo_http3conn_new(
-        &aOrigin, &aAlpn, &aLocalAddr, &aRemoteAddr, aMaxTableSize,
-        aMaxBlockedStreams, aMaxData, aMaxStreamData, aVersionNegotiation,
-        aWebTransport, &aQlogDir, (const mozilla::net::NeqoHttp3Conn**)aConn);
+                       bool aVersionNegotiation, const nsACString& aQlogDir,
+                       NeqoHttp3Conn** aConn) {
+    return neqo_http3conn_new(&aOrigin, &aAlpn, &aLocalAddr, &aRemoteAddr,
+                              aMaxTableSize, aMaxBlockedStreams, aMaxData,
+                              aMaxStreamData, aVersionNegotiation, &aQlogDir,
+                              (const mozilla::net::NeqoHttp3Conn**)aConn);
   }
 
   void Close(uint64_t aError) { neqo_http3conn_close(this, aError); }
@@ -105,26 +105,6 @@ class NeqoHttp3Conn final {
 
   void GetStats(Http3Stats* aStats) {
     return neqo_http3conn_get_stats(this, aStats);
-  }
-
-  nsresult CreateWebTransport(const nsACString& aHost, const nsACString& aPath,
-                              const nsACString& aHeaders,
-                              uint64_t* aSessionId) {
-    return neqo_http3conn_webtransport_create_session(this, &aHost, &aPath,
-                                                      &aHeaders, aSessionId);
-  }
-
-  nsresult CloseWebTransport(uint64_t aSessionId, uint32_t aError,
-                             const nsACString& aMessage) {
-    return neqo_http3conn_webtransport_close_session(this, aSessionId, aError,
-                                                     &aMessage);
-  }
-
-  nsresult CreateWebTransportStream(uint64_t aSessionId,
-                                    WebTransportStreamType aStreamType,
-                                    uint64_t* aStreamId) {
-    return neqo_http3conn_webtransport_create_stream(this, aSessionId,
-                                                     aStreamType, aStreamId);
   }
 
  private:
