@@ -173,15 +173,3 @@ impl<T: AsyncTester> ParallelProblemSolver<T> {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn problem_solver() {
-        // let keys = vec!["key1.ftl", "key2.ftl"];
-        // let sources = vec!["source1", "source2"];
-        // let args = ("foo",);
-
-        // let ps = ProblemSolver::new(keys.len(), sources.len(), &foo);
-    }
-}
