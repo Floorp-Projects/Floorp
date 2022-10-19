@@ -949,6 +949,9 @@ void ChromeUtils::GetPartitionKeyFromURL(dom::GlobalObject& aGlobal,
                                          ErrorResult& aRv) {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
+  if (NS_SUCCEEDED(rv) && uri->SchemeIs("chrome")) {
+    rv = NS_ERROR_FAILURE;
+  }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aPartitionKey.Truncate();
