@@ -74,6 +74,12 @@ async function initTabSync() {
   await TestUtils.waitForTick();
 }
 
+add_setup(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.firefox-view.notify-for-tabs", true]],
+  });
+});
+
 /**
  * Test that the notification badge will show and hide in the correct cases
  */
