@@ -375,7 +375,10 @@ add_task(async function test_remove_source_mid_iter_cycle() {
 
   let bundle0 = await bundles.next();
 
+  // The registry has a copy of the file sources, so it will be unaffected.
   l10nReg.removeSources(["app"]);
+
+  let bundle1 = await bundles.next();
 
   equal((await bundles.next()).done, true);
 

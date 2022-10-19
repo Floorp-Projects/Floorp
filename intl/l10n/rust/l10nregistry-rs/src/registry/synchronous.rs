@@ -1,4 +1,4 @@
-use super::{BundleAdapter, L10nRegistry, L10nRegistryLocked};
+use super::{BundleAdapter, L10nRegistry, MetaSources};
 use crate::env::ErrorReporter;
 use crate::errors::L10nRegistryError;
 use crate::fluent::{FluentBundle, FluentError};
@@ -7,7 +7,7 @@ use crate::source::ResourceOption;
 use fluent_fallback::{generator::BundleIterator, types::ResourceId};
 use unic_langid::LanguageIdentifier;
 
-impl<'a> L10nRegistryLocked<'a> {
+impl MetaSources {
     pub(crate) fn bundle_from_order<P, B>(
         &self,
         metasource: usize,
@@ -152,7 +152,8 @@ impl<P, B> SyncTester for GenerateBundlesSync<P, B> {
         let resource_id = &self.resource_ids[res_idx];
         !self
             .reg
-            .lock()
+            .try_borrow_metasources()
+            .expect("Unable to get the MetaSources.")
             .filesource(self.current_metasource, source_idx)
             .fetch_file_sync(locale, resource_id, /* overload */ true)
             .is_required_and_missing()
@@ -182,7 +183,11 @@ where
         if let Some(locale) = self.locales.next() {
             let mut solver = SerialProblemSolver::new(
                 self.resource_ids.len(),
-                self.reg.lock().metasource_len(self.current_metasource),
+                self.reg
+                    .try_borrow_metasources()
+                    .expect("Unable to get the MetaSources.")
+                    .get(self.current_metasource)
+                    .len(),
             );
             self.state = State::Locale(locale.clone());
             if let Err(idx) = solver.try_next(self, true) {
@@ -208,7 +213,12 @@ where
 
     /// Synchronously generate a bundle based on a solver.
     fn next(&mut self) -> Option<Self::Item> {
-        if self.reg.lock().number_of_metasources() == 0 {
+        let metasources = self
+            .reg
+            .try_borrow_metasources()
+            .expect("Unable to get the MetaSources.");
+
+        if metasources.is_empty() {
             // There are no metasources available, so no bundles can be generated.
             return None;
         }
@@ -224,7 +234,7 @@ where
                     // The solver resolved an ordering, and a bundle may be able
                     // to be generated.
 
-                    let bundle = self.reg.lock().bundle_from_order(
+                    let bundle = metasources.bundle_from_order(
                         self.current_metasource,
                         self.state.get_locale().clone(),
                         &order,
@@ -253,7 +263,7 @@ where
                     self.current_metasource -= 1;
                     let solver = SerialProblemSolver::new(
                         self.resource_ids.len(),
-                        self.reg.lock().metasource_len(self.current_metasource),
+                        metasources.get(self.current_metasource).len(),
                     );
                     self.state = State::Solver {
                         locale: self.state.get_locale().clone(),
@@ -282,12 +292,12 @@ where
 
             // Restart at the end of the metasources for this locale, and iterate
             // backwards.
-            let last_metasource_idx = self.reg.lock().number_of_metasources() - 1;
+            let last_metasource_idx = metasources.len() - 1;
             self.current_metasource = last_metasource_idx;
 
             let solver = SerialProblemSolver::new(
                 self.resource_ids.len(),
-                self.reg.lock().metasource_len(self.current_metasource),
+                metasources.get(self.current_metasource).len(),
             );
 
             // Continue iterating on the next solver.
