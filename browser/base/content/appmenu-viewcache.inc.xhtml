@@ -3,8 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 <html:template id="appMenu-viewCache">
-  <panelview id="appMenu-mainView" class="PanelUI-subView"
-             descriptionheightworkaround="true">
+  <panelview id="appMenu-mainView" class="PanelUI-subView">
     <vbox class="panel-subview-body">
       <toolbarbutton id="appMenu-whatsnew-button"
                      class="subviewbutton subviewbutton-iconic subviewbutton-nav"
@@ -17,7 +16,6 @@
   <!-- This is a placeholder app menu which should be replaced with the "real"
        Proton app menu before the Proton pref starts getting enabled. -->
   <panelview id="appMenu-protonMainView" class="PanelUI-subView"
-             descriptionheightworkaround="true"
              lockpanelvertical="true">
     <vbox class="panel-subview-body">
       <vbox id="appMenu-proton-addon-banners"/>
@@ -248,7 +246,7 @@
                    />
   </panelview>
 
-  <panelview id="PanelUI-profiler" flex="1" descriptionheightworkaround="true">
+  <panelview id="PanelUI-profiler" flex="1">
     <vbox id="PanelUI-profiler-container">
       <vbox id="PanelUI-profiler-header" animationready="false">
         <hbox id="PanelUI-profiler-header-bar">
@@ -345,8 +343,7 @@
     </vbox>
   </panelview>
 
-  <panelview id="PanelUI-panicView" flex="1"
-             descriptionheightworkaround="true">
+  <panelview id="PanelUI-panicView" flex="1">
     <vbox class="panel-subview-body">
       <hbox id="PanelUI-panic-timeframe">
         <image id="PanelUI-panic-timeframe-icon" alt=""/>
@@ -412,8 +409,7 @@
     </vbox>
   </panelview>
 
-  <panelview id="PanelUI-remotetabs" flex="1" class="PanelUI-subView"
-             descriptionheightworkaround="true">
+  <panelview id="PanelUI-remotetabs" flex="1" class="PanelUI-subView">
     <vbox class="panel-subview-body">
       <!-- this widget has 3 boxes in the body, but only 1 is ever visible -->
       <!-- When Sync is ready to sync -->
@@ -541,7 +537,7 @@
     </vbox>
   </panelview>
 
-  <panelview id="PanelUI-fxa" class="PanelUI-subView" descriptionheightworkaround="true">
+  <panelview id="PanelUI-fxa" class="PanelUI-subView">
     <vbox id="PanelUI-fxa-menu" class="panel-subview-body">
       <toolbarbutton id="fxa-manage-account-button"
                      align="center"

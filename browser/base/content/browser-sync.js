@@ -174,9 +174,6 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
           fragment.appendChild(container);
         }
         this.tabsList.appendChild(fragment);
-        PanelView.forNode(
-          this.tabsList.closest("panelview")
-        ).descriptionHeightWorkaround();
       })
       .catch(err => {
         Cu.reportError(err);

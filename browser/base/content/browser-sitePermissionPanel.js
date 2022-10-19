@@ -538,10 +538,6 @@ var gPermissionPanel = {
       this._defaultPermissionAnchor.appendChild(item);
       this._createBlockedPopupIndicator(totalBlockedPopups);
     }
-
-    PanelView.forNode(
-      this._permissionPopupMainView
-    ).descriptionHeightWorkaround();
   },
 
   /**
@@ -807,9 +803,6 @@ var gPermissionPanel = {
       );
 
       this._permissionReloadHint.hidden = false;
-      PanelView.forNode(
-        this._permissionPopupMainView
-      ).descriptionHeightWorkaround();
 
       if (idNoSuffix === "geo") {
         gBrowser.updateBrowserSharing(browser, { geo: false });

@@ -131,7 +131,6 @@ const TRANSITION_PHASES = Object.freeze({
 
 let gNodeToObjectMap = new WeakMap();
 let gWindowsWithUnloadHandler = new WeakSet();
-let gMultiLineElementsMap = new WeakMap();
 
 /**
  * Allows associating an object to a node lazily using a weak map.
@@ -827,7 +826,6 @@ var PanelMultiView = class extends AssociatedToNode {
 
     // Ensure the view will be visible once the panel is opened.
     nextPanelView.visible = true;
-    nextPanelView.descriptionHeightWorkaround();
 
     return true;
   }
@@ -991,7 +989,6 @@ var PanelMultiView = class extends AssociatedToNode {
           return this._getBoundsWithoutFlushing(header).height;
         });
       }
-      await nextPanelView.descriptionHeightWorkaround();
       // Bail out if the panel was closed in the meantime.
       if (!nextPanelView.isOpenIn(this)) {
         return;
@@ -1000,10 +997,6 @@ var PanelMultiView = class extends AssociatedToNode {
       this._offscreenViewStack.style.minHeight = olderView.knownHeight + "px";
       this._offscreenViewStack.appendChild(viewNode);
       nextPanelView.visible = true;
-
-      // Now that the subview is visible, we can check the height of the
-      // description elements it contains.
-      await nextPanelView.descriptionHeightWorkaround();
 
       viewRect = await window.promiseDocumentFlushed(() => {
         return this._getBoundsWithoutFlushing(viewNode);
@@ -1267,7 +1260,6 @@ var PanelMultiView = class extends AssociatedToNode {
         // minimize flicker we need to allow synchronous reflows, and we still
         // make sure the ViewShown event is dispatched synchronously.
         let mainPanelView = this.openViews[0];
-        mainPanelView.descriptionHeightWorkaround(true).catch(Cu.reportError);
         this._activateView(mainPanelView);
         break;
       case "popuphidden": {
@@ -1465,124 +1457,6 @@ var PanelView = class extends AssociatedToNode {
     let rect = this._getBoundsWithoutFlushing(this.node);
     this.knownWidth = rect.width;
     this.knownHeight = rect.height;
-  }
-
-  /**
-   * If the main view or a subview contains wrapping elements, the attribute
-   * "descriptionheightworkaround" should be set on the view to force all the
-   * wrapping "description", "label" or "toolbarbutton" elements to a fixed
-   * height. If the attribute is set and the visibility, contents, or width
-   * of any of these elements changes, this function should be called to
-   * refresh the calculated heights.
-   *
-   * @param allowSyncReflows
-   *        If set to true, the function takes a path that allows synchronous
-   *        reflows, but minimizes flickering. This is used for the main view
-   *        because we cannot use the workaround off-screen.
-   */
-  async descriptionHeightWorkaround(allowSyncReflows = false) {
-    if (!this.node.hasAttribute("descriptionheightworkaround")) {
-      // This view does not require the workaround.
-      return;
-    }
-
-    const profilerMarkerStartTime = Cu.now();
-
-    // We batch DOM changes together in order to reduce synchronous layouts.
-    // First we reset any change we may have made previously. The first time
-    // this is called, and in the best case scenario, this has no effect.
-    let items = [];
-    let collectItems = () => {
-      // Non-hidden <label> or <description> elements that also aren't empty
-      // and also don't have a value attribute can be multiline (if their
-      // text content is long enough).
-      let isMultiline = ":not([hidden],[value],:empty)";
-      let selector = [
-        "description" + isMultiline,
-        "label" + isMultiline,
-        "toolbarbutton[wrap]:not([hidden])",
-      ].join(",");
-      for (let element of this.node.querySelectorAll(selector)) {
-        // Ignore items in hidden containers.
-        if (element.closest("[hidden]")) {
-          continue;
-        }
-
-        // Ignore content inside a <toolbarbutton>
-        if (
-          element.tagName != "toolbarbutton" &&
-          element.closest("toolbarbutton")
-        ) {
-          continue;
-        }
-
-        // Take the label for toolbarbuttons; it only exists on those elements.
-        element = element.multilineLabel || element;
-
-        let bounds = element.getBoundingClientRect();
-        let previous = gMultiLineElementsMap.get(element);
-        // We don't need to (re-)apply the workaround for invisible elements or
-        // on elements we've seen before and haven't changed in the meantime.
-        if (
-          !bounds.width ||
-          !bounds.height ||
-          (previous &&
-            element.textContent == previous.textContent &&
-            bounds.width == previous.bounds.width)
-        ) {
-          continue;
-        }
-
-        items.push({ element });
-      }
-    };
-    if (allowSyncReflows) {
-      collectItems();
-    } else {
-      await this.window.promiseDocumentFlushed(collectItems);
-      // Bail out if the panel was closed in the meantime.
-      if (!this.node.panelMultiView) {
-        return;
-      }
-    }
-
-    // Removing the 'height' property will only cause a layout flush in the next
-    // loop below if it was set.
-    for (let item of items) {
-      item.element.style.removeProperty("height");
-    }
-
-    // We now read the computed style to store the height of any element that
-    // may contain wrapping text.
-    let measureItems = () => {
-      for (let item of items) {
-        item.bounds = item.element.getBoundingClientRect();
-      }
-    };
-    if (allowSyncReflows) {
-      measureItems();
-    } else {
-      await this.window.promiseDocumentFlushed(measureItems);
-      // Bail out if the panel was closed in the meantime.
-      if (!this.node.panelMultiView) {
-        return;
-      }
-    }
-
-    // Now we can make all the necessary DOM changes at once.
-    for (let { element, bounds } of items) {
-      gMultiLineElementsMap.set(element, {
-        bounds,
-        textContent: element.textContent,
-      });
-      element.style.height = bounds.height + "px";
-    }
-
-    ChromeUtils.addProfilerMarker(
-      "PMV.descriptionHeightWorkaround()",
-      profilerMarkerStartTime,
-      `<${this.node.tagName} id="${this.node.id}">`
-    );
   }
 
   /**
