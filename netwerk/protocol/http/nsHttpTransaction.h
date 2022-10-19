@@ -24,7 +24,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsISSLSocketControl.h"
 #include "nsITimer.h"
-#include "nsIWebTransport.h"
 #include "nsTHashMap.h"
 #include "nsThreadUtils.h"
 
@@ -180,8 +179,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
       nsISVCBRecord* aHighestPriorityRecord) override;
 
   void GetHashKeyOfConnectionEntry(nsACString& aResult);
-
-  bool IsForWebTransport() { return mIsForWebTransport; }
 
  private:
   friend class DeleteHttpTransaction;
@@ -551,7 +548,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   nsTHashMap<nsUint32HashKey, uint32_t> mEchRetryCounterMap;
 
   bool mSupportsHTTP3 = false;
-  Atomic<bool, Relaxed> mIsForWebTransport{false};
 
   bool mEarlyDataWasAvailable = false;
   bool ShouldRestartOn0RttError(nsresult reason);
@@ -563,8 +559,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   // be associated with the connection entry whose hash key is not the same as
   // this transaction's.
   nsCString mHashKeyOfConnectionEntry;
-
-  nsCOMPtr<WebTransportSessionEventListener> mWebTransportSessionEventListener;
 };
 
 }  // namespace mozilla::net
