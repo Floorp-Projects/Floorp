@@ -22,7 +22,7 @@
 namespace mozilla::net {
 
 class HttpConnectionUDP;
-class Http3Stream;
+class Http3StreamBase;
 class QuicSocketControl;
 
 // IID for the Http3Session interface
@@ -58,11 +58,11 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
 
   bool CanReuse();
 
-  // The folowing functions are used by Http3Stream:
+  // The following functions are used by Http3Stream:
   nsresult TryActivating(const nsACString& aMethod, const nsACString& aScheme,
                          const nsACString& aAuthorityHeader,
                          const nsACString& aPath, const nsACString& aHeaders,
-                         uint64_t* aStreamId, Http3Stream* aStream);
+                         uint64_t* aStreamId, Http3StreamBase* aStream);
   void CloseSendingSide(uint64_t aStreamId);
   nsresult SendRequestBody(uint64_t aStreamId, const char* buf, uint32_t count,
                            uint32_t* countRead);
@@ -71,7 +71,7 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   nsresult ReadResponseData(uint64_t aStreamId, char* aBuf, uint32_t aCount,
                             uint32_t* aCountWritten, bool* aFin);
 
-  void CloseStream(Http3Stream* aStream, nsresult aResult);
+  void CloseStream(Http3StreamBase* aStream, nsresult aResult);
 
   void SetCleanShutdown(bool aCleanShutdown) {
     mCleanShutdown = aCleanShutdown;
@@ -117,23 +117,23 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   void ProcessInput(nsIUDPSocket* socket);
   nsresult ProcessEvents();
 
-  nsresult ProcessTransactionRead(uint64_t stream_id, uint32_t* countWritten);
-  nsresult ProcessTransactionRead(Http3Stream* stream, uint32_t* countWritten);
+  nsresult ProcessTransactionRead(uint64_t stream_id);
+  nsresult ProcessTransactionRead(Http3StreamBase* stream);
   nsresult ProcessSlowConsumers();
-  void ConnectSlowConsumer(Http3Stream* stream);
+  void ConnectSlowConsumer(Http3StreamBase* stream);
 
   void SetupTimer(uint64_t aTimeout);
 
   void ResetRecvd(uint64_t aStreamId, uint64_t aError);
 
-  void QueueStream(Http3Stream* stream);
-  void RemoveStreamFromQueues(Http3Stream*);
+  void QueueStream(Http3StreamBase* stream);
+  void RemoveStreamFromQueues(Http3StreamBase*);
   void ProcessPending();
 
   void CallCertVerification(Maybe<nsCString> aEchPublicName);
   void SetSecInfo();
 
-  void StreamReadyToWrite(Http3Stream* aStream);
+  void StreamReadyToWrite(Http3StreamBase* aStream);
   void MaybeResumeSend();
 
   void CloseConnectionTelemetry(CloseError& aError, bool aClosing);
@@ -150,13 +150,13 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
 
   RefPtr<NeqoHttp3Conn> mHttp3Connection;
   RefPtr<nsAHttpConnection> mConnection;
-  nsRefPtrHashtable<nsUint64HashKey, Http3Stream> mStreamIdHash;
-  nsRefPtrHashtable<nsPtrHashKey<nsAHttpTransaction>, Http3Stream>
+  nsRefPtrHashtable<nsUint64HashKey, Http3StreamBase> mStreamIdHash;
+  nsRefPtrHashtable<nsPtrHashKey<nsAHttpTransaction>, Http3StreamBase>
       mStreamTransactionHash;
 
-  nsDeque<Http3Stream> mReadyForWrite;
-  nsTArray<RefPtr<Http3Stream>> mSlowConsumersReadyForRead;
-  nsDeque<Http3Stream> mQueuedStreams;
+  nsDeque<Http3StreamBase> mReadyForWrite;
+  nsTArray<RefPtr<Http3StreamBase>> mSlowConsumersReadyForRead;
+  nsDeque<Http3StreamBase> mQueuedStreams;
 
   enum State {
     INITIALIZING,
@@ -198,10 +198,10 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   uint64_t mTransactionCount = 0;
 
   // The stream(s) that we are getting 0RTT data from.
-  nsTArray<WeakPtr<Http3Stream>> m0RTTStreams;
+  nsTArray<WeakPtr<Http3StreamBase>> m0RTTStreams;
   // The stream(s) that are not able to send 0RTT data. We need to
   // remember them put them into mReadyForWrite queue when 0RTT finishes.
-  nsTArray<WeakPtr<Http3Stream>> mCannotDo0RTTStreams;
+  nsTArray<WeakPtr<Http3StreamBase>> mCannotDo0RTTStreams;
 
   // The following variables are needed for telemetry.
   TimeStamp mConnectionIdleStart;
