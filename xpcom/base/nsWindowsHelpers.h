@@ -253,8 +253,6 @@ typedef nsAutoRef<nsHGLOBAL> nsAutoGlobalMem;
 typedef nsAutoRef<nsHPRINTER> nsAutoPrinter;
 typedef nsAutoRef<MSIHANDLE> nsAutoMsiHandle;
 
-namespace {
-
 // Construct a path "<system32>\<aModule>". return false if the output buffer
 // is too small.
 // Note: If the system path cannot be found, or doesn't fit in the output buffer
@@ -300,14 +298,17 @@ bool inline ConstructSystem32Path(LPCWSTR aModule, WCHAR* aSystemPath,
 }
 
 HMODULE inline LoadLibrarySystem32(LPCWSTR aModule) {
+  static const auto setDefaultDllDirectories =
+      GetProcAddress(GetModuleHandleW(L"kernel32"), "SetDefaultDllDirectories");
+  if (setDefaultDllDirectories) {
+    return LoadLibraryExW(aModule, nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+  }
   WCHAR systemPath[MAX_PATH + 1];
   if (!ConstructSystem32Path(aModule, systemPath, MAX_PATH + 1)) {
     return NULL;
   }
-  return LoadLibraryW(systemPath);
+  return LoadLibraryExW(systemPath, nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
 }
-
-}  // namespace
 
 // for UniquePtr
 struct LocalFreeDeleter {
