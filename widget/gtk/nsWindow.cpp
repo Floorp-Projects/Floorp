@@ -8344,6 +8344,20 @@ void nsWindow::InitDragEvent(WidgetDragEvent& aEvent) {
   KeymapWrapper::InitInputEvent(aEvent, modifierState);
 }
 
+static LayoutDeviceIntPoint GetWindowDropPosition(nsWindow* aWindow, int aX,
+                                                  int aY) {
+  // Workaround for Bug 1710344
+  // Caused by Gtk issue https://gitlab.gnome.org/GNOME/gtk/-/issues/4437
+  if (aWindow->IsWaylandPopup()) {
+    int tx = 0, ty = 0;
+    gdk_window_get_position(aWindow->GetToplevelGdkWindow(), &tx, &ty);
+    aX += tx;
+    aY += ty;
+  }
+  LOGDRAG("WindowDropPosition [%d, %d]", aX, aY);
+  return aWindow->GdkPointToDevicePixels({aX, aY});
+}
+
 gboolean WindowDragMotionHandler(GtkWidget* aWidget,
                                  GdkDragContext* aDragContext, gint aX, gint aY,
                                  guint aTime) {
@@ -8362,25 +8376,14 @@ gboolean WindowDragMotionHandler(GtkWidget* aWidget,
   if (!innerMostWindow) {
     innerMostWindow = window;
   }
-
-  // Workaround for Bug 1710344
-  // Caused by Gtk issue https://gitlab.gnome.org/GNOME/gtk/-/issues/4437
-  if (innerMostWindow->IsWaylandPopup()) {
-    int tx = 0, ty = 0;
-    gdk_window_get_position(innerMostWindow->GetToplevelGdkWindow(), &tx, &ty);
-    retx += tx;
-    rety += ty;
-  }
-
-  LayoutDeviceIntPoint point =
-      innerMostWindow->GdkPointToDevicePixels({retx, rety});
-  LOGDRAG("WindowDragMotionHandler nsWindow %p coords [%d, %d]\n",
-          innerMostWindow.get(), retx, rety);
+  LOGDRAG("WindowDragMotionHandler target nsWindow [%p]",
+          innerMostWindow.get());
 
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
   nsDragService::AutoEventLoop loop(dragService);
-  if (!dragService->ScheduleMotionEvent(innerMostWindow, aDragContext, point,
-                                        aTime)) {
+  if (!dragService->ScheduleMotionEvent(
+          innerMostWindow, aDragContext,
+          GetWindowDropPosition(innerMostWindow, retx, rety), aTime)) {
     return FALSE;
   }
   return TRUE;
@@ -8450,22 +8453,12 @@ gboolean WindowDragDropHandler(GtkWidget* aWidget, GdkDragContext* aDragContext,
     innerMostWindow = window;
   }
 
-  int tx = 0, ty = 0;
-  // Workaround for Bug 1710344
-  // Caused by Gtk issue https://gitlab.gnome.org/GNOME/gtk/-/issues/4437
-  if (innerMostWindow->IsWaylandPopup()) {
-    gdk_window_get_position(innerWindow, &tx, &ty);
-  }
-
-  LayoutDeviceIntPoint point =
-      window->GdkPointToDevicePixels({retx + tx, rety + ty});
-  LOGDRAG("WindowDragDropHandler nsWindow %p coords [%d,%d]\n",
-          innerMostWindow.get(), retx, rety);
-
+  LOGDRAG("WindowDragDropHandler nsWindow [%p]", innerMostWindow.get());
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
   nsDragService::AutoEventLoop loop(dragService);
-  return dragService->ScheduleDropEvent(innerMostWindow, aDragContext, point,
-                                        aTime);
+  return dragService->ScheduleDropEvent(
+      innerMostWindow, aDragContext,
+      GetWindowDropPosition(innerMostWindow, retx, rety), aTime);
 }
 
 static gboolean drag_drop_event_cb(GtkWidget* aWidget,
