@@ -58,5 +58,6 @@ function _test_makeURI() {
 
   _("Invalid uris are undefined");
   Assert.equal(CommonUtils.makeURI("mozillalabs.com"), undefined);
+  Assert.equal(CommonUtils.makeURI("chrome://badstuff"), undefined);
   Assert.equal(CommonUtils.makeURI("this is a test"), undefined);
 }
