@@ -258,6 +258,19 @@ newtab-background-gradation =
 newtab-background-not-background =
     .label = Disable Background
 
+lepton-preference = Lepton UI Settings
+photon-mode = 
+    .label = Photon Mode
+
+lepton-mode = 
+    .label = Lepton Mode
+
+## lepton preferences
+
+# pref sidebar
+pane-lepton-title = Design
+category-lepton =
+    .tooltiptext = Customize { -brand-short-name } with designs.
 ################################################################### browser ###############################################################
 
 rest-mode = Taking a break...

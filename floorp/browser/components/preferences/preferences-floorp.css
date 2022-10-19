@@ -12,6 +12,10 @@
     list-style-image: url("chrome://browser/skin/lepton/mail-inbox-all.svg");
   }
 
+  #category-lepton > .category-icon {
+   list-style-image: url("chrome://mozapps/skin/extensions/category-themes.svg")
+  }
+
   .dialogBox {
     --in-content-page-background: #333333 !important;
   }
