@@ -109,12 +109,18 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
 
   LOG3(
       ("Http3Session::Init origin=%s, alpn=%s, selfAddr=%s, peerAddr=%s,"
-       " qpack table size=%u, max blocked streams=%u [this=%p]",
+       " qpack table size=%u, max blocked streams=%u webtransport=%d "
+       "[this=%p]",
        PromiseFlatCString(mConnInfo->GetOrigin()).get(),
        PromiseFlatCString(mConnInfo->GetNPNToken()).get(),
        selfAddr.ToString().get(), peerAddr.ToString().get(),
        gHttpHandler->DefaultQpackTableSize(),
-       gHttpHandler->DefaultHttp3MaxBlockedStreams(), this));
+       gHttpHandler->DefaultHttp3MaxBlockedStreams(),
+       mConnInfo->GetWebTransport(), this));
+
+  if (mConnInfo->GetWebTransport()) {
+    mWebTransportNegotiationStatus = WebTransportNegotiation::NEGOTIATING;
+  }
 
   nsresult rv = NeqoHttp3Conn::Init(
       mConnInfo->GetOrigin(), mConnInfo->GetNPNToken(), selfAddr, peerAddr,
@@ -123,7 +129,8 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
       StaticPrefs::network_http_http3_max_data(),
       StaticPrefs::network_http_http3_max_stream_data(),
       StaticPrefs::network_http_http3_version_negotiation_enabled(),
-      gHttpHandler->Http3QlogDir(), getter_AddRefs(mHttp3Connection));
+      mConnInfo->GetWebTransport(), gHttpHandler->Http3QlogDir(),
+      getter_AddRefs(mHttp3Connection));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -590,6 +597,12 @@ nsresult Http3Session::ProcessEvents() {
           case WebTransportEventExternal::Tag::Negotiated:
             LOG(("Http3Session::ProcessEvents - WebTransport %d",
                  event.web_transport._0.negotiated._0));
+            MOZ_ASSERT(mWebTransportNegotiationStatus ==
+                       WebTransportNegotiation::NEGOTIATING);
+            mWebTransportNegotiationStatus =
+                event.web_transport._0.negotiated._0
+                    ? WebTransportNegotiation::SUCCEEDED
+                    : WebTransportNegotiation::FAILED;
             break;
           case WebTransportEventExternal::Tag::Session: {
             MOZ_ASSERT(mState == CONNECTED);
