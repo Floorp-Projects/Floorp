@@ -963,7 +963,7 @@ Strings
 .. note::
 
    This section overlaps with the more verbose advice given in
-   `Internal strings <https://wiki.developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Guide/Internal_strings>`__.
+   :doc:`String guide </xpcom/stringguide>`.
    These should eventually be merged. For now, please refer to that guide for
    more advice.
 
