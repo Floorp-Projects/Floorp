@@ -28,6 +28,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   Integration: "resource://gre/modules/Integration.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
+  DAPTelemetrySender: "resource://gre/modules/DAPTelemetrySender.sys.mjs",
   Interactions: "resource:///modules/Interactions.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
@@ -2856,6 +2857,16 @@ BrowserGlue.prototype = {
       {
         task: () => {
           lazy.UrlbarQuickSuggest.init();
+        },
+      },
+
+      {
+        condition: Services.prefs.getBoolPref(
+          "toolkit.telemetry.dap_enabled",
+          false
+        ),
+        task: () => {
+          lazy.DAPTelemetrySender.startup();
         },
       },
 
