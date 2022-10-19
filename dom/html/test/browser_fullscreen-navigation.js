@@ -6,9 +6,8 @@
 requestLongerTimeout(2);
 
 // Import helpers
-/* import-globals-from fullscreen_helpers.js */
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/dom/base/test/fullscreen/fullscreen_helpers.js",
+  "chrome://mochitests/content/browser/dom/html/test/fullscreen_helpers.js",
   this
 );
 
@@ -36,13 +35,19 @@ add_task(async function navigation() {
         let button = document.getElementById("button");
         button.addEventListener("click", function() {
           button.requestFullscreen();
-          location.href = "about:blank";
         });
       </script>`,
     },
     async function(browser) {
-      let promiseFsState = waitForFullscreenState(document, false, true);
+      let promiseFsState = waitForFullscreenState(document, true);
+      // Trigger click event
       BrowserTestUtils.synthesizeMouseAtCenter("#button", {}, browser);
+      await promiseFsState;
+
+      promiseFsState = waitForFullscreenState(document, false);
+      await SpecialPowers.spawn(browser, [], async function() {
+        content.location.href = "about:blank";
+      });
       await promiseFsState;
 
       // Ensure the browser exits fullscreen state.
@@ -55,7 +60,7 @@ add_task(async function navigation() {
   );
 });
 
-async function startTests(setupFun, name) {
+async function startTests(testFun, name) {
   TEST_URLS.forEach(url => {
     add_task(async () => {
       info(`Test ${name}, url: ${url}`);
@@ -65,10 +70,7 @@ async function startTests(setupFun, name) {
           url,
         },
         async function(browser) {
-          let promiseFsState = Promise.all([
-            setupFun(browser),
-            waitForFullscreenState(document, false, true),
-          ]);
+          let promiseFsState = waitForFullscreenState(document, true);
           // Trigger click event in inner most iframe
           SpecialPowers.spawn(
             browser.browsingContext.children[0].children[0],
@@ -79,6 +81,11 @@ async function startTests(setupFun, name) {
               }, 0);
             }
           );
+          await promiseFsState;
+
+          // This should exit fullscreen
+          promiseFsState = waitForFullscreenState(document, false);
+          await testFun(browser);
           await promiseFsState;
 
           // Ensure the browser exits fullscreen state.
@@ -98,13 +105,7 @@ async function startTests(setupFun, name) {
 
 function NavigateRemoteDocument(aBrowsingContext, aURL) {
   return SpecialPowers.spawn(aBrowsingContext, [aURL], async function(url) {
-    content.document.addEventListener(
-      "fullscreenchange",
-      function() {
-        content.location.href = url;
-      },
-      { once: true }
-    );
+    content.location.href = url;
   });
 }
 
@@ -114,28 +115,28 @@ startTests(async browser => {
 }, "navigation_toplevel");
 
 startTests(async browser => {
-  // middle iframe
-  let promise = waitRemoteFullscreenExitEvents([
+  let promiseRemoteFsState = waitRemoteFullscreenExitEvents([
     // browsingContext, name
     [browser.browsingContext, "toplevel"],
   ]);
+  // middle iframe
   await NavigateRemoteDocument(
     browser.browsingContext.children[0],
     "about:blank"
   );
-  return promise;
+  await promiseRemoteFsState;
 }, "navigation_middle_frame");
 
 startTests(async browser => {
-  // innermost iframe
-  let promise = waitRemoteFullscreenExitEvents([
+  let promiseRemoteFsState = waitRemoteFullscreenExitEvents([
     // browsingContext, name
     [browser.browsingContext, "toplevel"],
     [browser.browsingContext.children[0], "middle"],
   ]);
+  // innermost iframe
   await NavigateRemoteDocument(
     browser.browsingContext.children[0].children[0],
     "about:blank"
   );
-  return promise;
+  await promiseRemoteFsState;
 }, "navigation_inner_frame");

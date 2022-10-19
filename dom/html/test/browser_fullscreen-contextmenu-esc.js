@@ -10,8 +10,7 @@ function captureUnexpectedFullscreenChange() {
   ok(false, "Caught an unexpected fullscreen change");
 }
 
-const kPage =
-  "https://example.org/browser/dom/base/test/fullscreen/dummy_page.html";
+const kPage = "http://example.org/browser/dom/html/test/dummy_page.html";
 
 function waitForDocActivated(aBrowser) {
   return SpecialPowers.spawn(aBrowser, [], () => {

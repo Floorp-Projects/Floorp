@@ -133,16 +133,14 @@ function checkState(expectedStates, contentStates) {
 }
 
 const kPage =
-  "https://example.org/browser/browser/" +
+  "http://example.org/browser/browser/" +
   "base/content/test/general/dummy_page.html";
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["full-screen-api.transition-duration.enter", "0 0"],
-      ["full-screen-api.transition-duration.leave", "0 0"],
-    ],
-  });
+  await pushPrefs(
+    ["full-screen-api.transition-duration.enter", "0 0"],
+    ["full-screen-api.transition-duration.leave", "0 0"]
+  );
 
   registerCleanupFunction(async function() {
     if (window.fullScreen) {
