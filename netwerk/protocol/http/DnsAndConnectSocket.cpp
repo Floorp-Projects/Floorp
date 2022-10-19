@@ -576,7 +576,7 @@ nsresult DnsAndConnectSocket::SetupConn(bool isPrimary, nsresult status) {
          conn.get(), static_cast<uint32_t>(rv)));
 
     if (nsHttpTransaction* trans = mTransaction->QueryHttpTransaction()) {
-      if (mIsHttp3) {
+      if (mIsHttp3 && !mConnInfo->GetWebTransport()) {
         trans->DisableHttp3(true);
         gHttpHandler->ExcludeHttp3(mConnInfo);
       }

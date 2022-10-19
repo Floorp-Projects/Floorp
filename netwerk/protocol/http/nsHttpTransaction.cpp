@@ -411,7 +411,7 @@ void nsHttpTransaction::OnPendingQueueInserted(
   }
 
   // Don't create mHttp3BackupTimer if HTTPS RR is in play.
-  if (mConnInfo->IsHttp3() && !mOrigConnInfo) {
+  if (mConnInfo->IsHttp3() && !mOrigConnInfo && !mConnInfo->GetWebTransport()) {
     // Backup timer should only be created once.
     if (!mHttp3BackupTimerCreated) {
       CreateAndStartTimer(mHttp3BackupTimer, this,
@@ -3475,6 +3475,10 @@ void nsHttpTransaction::CollectTelemetryForUploads() {
 void nsHttpTransaction::GetHashKeyOfConnectionEntry(nsACString& aResult) {
   MutexAutoLock lock(mLock);
   aResult.Assign(mHashKeyOfConnectionEntry);
+}
+
+void nsHttpTransaction::SetIsForWebTransport(bool aIsForWebTransport) {
+  mIsForWebTransport = aIsForWebTransport;
 }
 
 }  // namespace mozilla::net
