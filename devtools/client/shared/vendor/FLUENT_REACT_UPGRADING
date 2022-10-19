@@ -25,8 +25,8 @@ cp dist/fluent-react.js <gecko-dev>/devtools/client/shared/vendor/fluent-react.j
 ## Patching fluent-react
 
 - Open `fluent-react.js`
-- Replace `require('react')` with `require('devtools/client/shared/vendor/react')`
-- Replace `require('prop-types')` with `require('devtools/client/shared/vendor/react-prop-types')`
+- Replace `require('react')` with `require('resource://devtools/client/shared/vendor/react.js')`
+- Replace `require('prop-types')` with `require('resource://devtools/client/shared/vendor/react-prop-types.js')`
 
 ## Update the version:
 
