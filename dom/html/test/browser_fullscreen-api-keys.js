@@ -52,8 +52,7 @@ function receiveExpectedKeyEvents(aBrowser, aKeyCode, aTrusted) {
 }
 
 const kPage =
-  "https://example.org/browser/" +
-  "dom/base/test/fullscreen/file_fullscreen-api-keys.html";
+  "http://example.org/browser/" + "dom/html/test/file_fullscreen-api-keys.html";
 
 add_task(async function() {
   await pushPrefs(
