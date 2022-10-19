@@ -4271,6 +4271,12 @@ nsresult Http2Session::TakeTransport(nsISocketTransport**,
   return NS_ERROR_UNEXPECTED;
 }
 
+Http3WebTransportSession* Http2Session::GetWebTransportSession(
+    nsAHttpTransaction* aTransaction) {
+  MOZ_ASSERT(false, "GetWebTransportSession of Http2Session");
+  return nullptr;
+}
+
 already_AddRefed<HttpConnectionBase> Http2Session::TakeHttpConnection() {
   MOZ_ASSERT(false, "TakeHttpConnection of Http2Session");
   return nullptr;
