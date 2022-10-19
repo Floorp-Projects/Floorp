@@ -225,6 +225,10 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   PRIntervalTime mLastWriteTime = 0;
 
   nsCOMPtr<nsINetAddr> mNetAddr;
+
+  enum WebTransportNegotiation { DISABLED, NEGOTIATING, FAILED, SUCCEEDED };
+  WebTransportNegotiation mWebTransportNegotiationStatus{
+      WebTransportNegotiation::DISABLED};
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Http3Session, NS_HTTP3SESSION_IID);
