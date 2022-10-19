@@ -741,6 +741,11 @@ bool ModuleObject::isInstance(HandleValue value) {
   return value.isObject() && value.toObject().is<ModuleObject>();
 }
 
+bool ModuleObject::hasCyclicModuleFields() const {
+  // This currently only returns false if we GC during initialization.
+  return !getReservedSlot(CyclicModuleFieldsSlot).isUndefined();
+}
+
 CyclicModuleFields* ModuleObject::cyclicModuleFields() {
   void* ptr = getReservedSlot(CyclicModuleFieldsSlot).toPrivate();
   MOZ_ASSERT(ptr);
@@ -798,7 +803,10 @@ ModuleObject* ModuleObject::create(JSContext* cx) {
 /* static */
 void ModuleObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   ModuleObject* self = &obj->as<ModuleObject>();
-  gcx->delete_(obj, self->cyclicModuleFields(), MemoryUse::ModuleCyclicFields);
+  if (self->hasCyclicModuleFields()) {
+    gcx->delete_(obj, self->cyclicModuleFields(),
+                 MemoryUse::ModuleCyclicFields);
+  }
 }
 
 ModuleEnvironmentObject& ModuleObject::initialEnvironment() const {
@@ -1166,7 +1174,9 @@ void ModuleObject::setMetaObject(JSObject* obj) {
 /* static */
 void ModuleObject::trace(JSTracer* trc, JSObject* obj) {
   ModuleObject& module = obj->as<ModuleObject>();
-  module.cyclicModuleFields()->trace(trc);
+  if (module.hasCyclicModuleFields()) {
+    module.cyclicModuleFields()->trace(trc);
+  }
 }
 
 /* static */
