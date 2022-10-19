@@ -29,9 +29,9 @@ pub struct L10nRegistryLocked<'a> {
 }
 
 impl<'a> L10nRegistryLocked<'a> {
-    pub fn iter(&self, metasource: usize) -> impl Iterator<Item = &FileSource> {
+    pub fn iter(&self, metasource_idx: usize) -> impl Iterator<Item = &FileSource> {
         self.lock
-            .get(metasource)
+            .get(metasource_idx)
             .expect("Index out-of-range")
             .iter()
     }
@@ -40,22 +40,25 @@ impl<'a> L10nRegistryLocked<'a> {
         self.lock.len()
     }
 
-    pub fn metasource_len(&self, metasource: usize) -> usize {
-        self.lock.get(metasource).expect("Index out-of-range").len()
+    pub fn metasource_len(&self, metasource_idx: usize) -> usize {
+        self.lock
+            .get(metasource_idx)
+            .expect("Index out-of-range")
+            .len()
     }
 
-    pub fn source_idx(&self, metasource: usize, index: usize) -> &FileSource {
-        let source_idx = self.metasource_len(metasource) - 1 - index;
-        self.lock[metasource]
+    pub fn filesource(&self, metasource_idx: usize, filesource_idx: usize) -> &FileSource {
+        let source_idx = self.metasource_len(metasource_idx) - 1 - filesource_idx;
+        self.lock[metasource_idx]
             .get(source_idx)
             .expect("Index out-of-range")
     }
 
     /// Get a [FileSource] by name from a metasource. This is useful for testing.
     #[cfg(feature = "test-fluent")]
-    pub fn file_source_by_name(&self, metasource: usize, name: &str) -> Option<&FileSource> {
+    pub fn file_source_by_name(&self, metasource_idx: usize, name: &str) -> Option<&FileSource> {
         self.lock
-            .get(metasource)
+            .get(metasource_idx)
             .expect("Index out-of-range")
             .iter()
             .find(|&source| source.name == name)
@@ -66,11 +69,11 @@ impl<'a> L10nRegistryLocked<'a> {
     #[cfg(feature = "test-fluent")]
     pub fn get_sources_for_resource<'l>(
         &'l self,
-        metasource: usize,
+        metasource_idx: usize,
         langid: &'l LanguageIdentifier,
         resource_id: &'l ResourceId,
     ) -> impl Iterator<Item = &FileSource> {
-        self.iter(metasource)
+        self.iter(metasource_idx)
             .filter(move |source| source.has_file(langid, resource_id) != Some(false))
     }
 }
