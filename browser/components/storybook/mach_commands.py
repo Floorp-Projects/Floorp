@@ -40,7 +40,7 @@ def storybook_launch(command_context):
     description="Install Storybook node dependencies.",
 )
 def storybook_install(command_context):
-    return run_npm(command_context, args=["install"])
+    return run_npm(command_context, args=["ci"])
 
 
 @SubCommand(
