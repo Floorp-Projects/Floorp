@@ -1621,7 +1621,7 @@ var gProtectionsHandler = {
    * Update the in-panel UI given a blocking event. Called when the popup
    * is being shown, or when the popup is open while a new event comes in.
    */
-  updatePanelForBlockingEvent(event, isShown) {
+  updatePanelForBlockingEvent(event) {
     // Update the categories:
     for (let blocker of Object.values(this.blockers)) {
       if (blocker.categoryItem.hasAttribute("uidisabled")) {
@@ -1643,16 +1643,6 @@ var gProtectionsHandler = {
     if (this.anyDetected) {
       // Reorder categories if any are in use.
       this.reorderCategoryItems();
-
-      if (isShown) {
-        // Until we encounter a site that triggers them, category elements might
-        // be invisible when descriptionHeightWorkaround gets called, i.e. they
-        // are omitted from the workaround and the content overflows the panel.
-        // Solution: call it manually here.
-        PanelMultiView.forNode(
-          this._protectionsPopupMainView
-        ).descriptionHeightWorkaround();
-      }
     }
   },
 
@@ -1756,7 +1746,7 @@ var gProtectionsHandler = {
       this._protectionsPopup?.state
     );
     if (isPanelOpen) {
-      this.updatePanelForBlockingEvent(event, true);
+      this.updatePanelForBlockingEvent(event);
     }
 
     // Notify other consumers, like CFR.

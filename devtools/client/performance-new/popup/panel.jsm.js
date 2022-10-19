@@ -135,9 +135,6 @@ function createViewControllers(state, elements) {
         // It will be updated again when it's displayed next time.
         elements.presetsMenuList.value = "custom";
       }
-      const { PanelMultiView } = lazy.PanelMultiView();
-      // Update the description height sizing.
-      PanelMultiView.forNode(elements.panelview).descriptionHeightWorkaround();
     },
 
     updateProfilerState() {
@@ -220,11 +217,6 @@ function initializeView(state, elements, view) {
     view.updateInfoCollapse();
     view.updateProfilerState();
     view.updatePresets();
-
-    // XUL <description> elements don't vertically size correctly, this is
-    // the workaround for it.
-    const { PanelMultiView } = lazy.PanelMultiView();
-    PanelMultiView.forNode(elements.panelview).descriptionHeightWorkaround();
 
     // Now wait for another rAF, and turn the animations back on.
     elements.window.requestAnimationFrame(() => {
