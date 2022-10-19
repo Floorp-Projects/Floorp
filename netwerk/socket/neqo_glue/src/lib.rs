@@ -7,8 +7,10 @@ use libc::{AF_INET, AF_INET6};
 use neqo_common::event::Provider;
 use neqo_common::{self as common, qlog::NeqoQlog, qwarn, Datagram, Header, Role};
 use neqo_crypto::{init, PRErrorCode};
-use neqo_http3::{Error as Http3Error, Priority};
-use neqo_http3::{Http3Client, Http3ClientEvent, Http3Parameters, Http3State};
+use neqo_http3::{
+    features::extended_connect::SessionCloseReason, Error as Http3Error, Http3Client,
+    Http3ClientEvent, Http3Parameters, Http3State, Priority, WebTransportEvent,
+};
 use neqo_transport::{
     stream_id::StreamType, CongestionControlAlgorithm, ConnectionParameters,
     Error as TransportError, Output, RandomConnectionIdGenerator, StreamId, Version,
@@ -333,25 +335,14 @@ fn is_excluded_header(name: &str) -> bool {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn neqo_http3conn_fetch(
-    conn: &mut NeqoHttp3Conn,
-    method: &nsACString,
-    scheme: &nsACString,
-    host: &nsACString,
-    path: &nsACString,
-    headers: &nsACString,
-    stream_id: &mut u64,
-    urgency: u8,
-    incremental: bool,
-) -> nsresult {
+fn parse_headers(headers: &nsACString) -> Result<Vec<Header>, nsresult> {
     let mut hdrs = Vec::new();
     // this is only used for headers built by Firefox.
     // Firefox supplies all headers already prepared for sending over http1.
     // They need to be split into (String, String) pairs.
     match str::from_utf8(headers) {
         Err(_) => {
-            return NS_ERROR_INVALID_ARG;
+            return Err(NS_ERROR_INVALID_ARG);
         }
         Ok(h) => {
             for elem in h.split("\r\n").skip(1) {
@@ -379,7 +370,27 @@ pub extern "C" fn neqo_http3conn_fetch(
             }
         }
     }
+    Ok(hdrs)
+}
 
+#[no_mangle]
+pub extern "C" fn neqo_http3conn_fetch(
+    conn: &mut NeqoHttp3Conn,
+    method: &nsACString,
+    scheme: &nsACString,
+    host: &nsACString,
+    path: &nsACString,
+    headers: &nsACString,
+    stream_id: &mut u64,
+    urgency: u8,
+    incremental: bool,
+) -> nsresult {
+    let hdrs = match parse_headers(headers) {
+        Err(e) => {
+            return e;
+        }
+        Ok(h) => h,
+    };
     let method_tmp = match str::from_utf8(method) {
         Ok(m) => m,
         Err(_) => {
@@ -597,6 +608,98 @@ pub extern "C" fn neqo_http3conn_close_stream(
     }
 }
 
+// WebTransport streams can be unidirectional and bidirectional.
+// It is mapped to and from neqo's StreamType enum.
+#[repr(C)]
+pub enum WebTransportStreamType {
+    BiDi,
+    UniDi,
+}
+
+impl From<StreamType> for WebTransportStreamType {
+    fn from(t: StreamType) -> WebTransportStreamType {
+        match t {
+            StreamType::BiDi => WebTransportStreamType::BiDi,
+            StreamType::UniDi => WebTransportStreamType::UniDi,
+        }
+    }
+}
+
+impl From<WebTransportStreamType> for StreamType {
+    fn from(t: WebTransportStreamType) -> StreamType {
+        match t {
+            WebTransportStreamType::BiDi => StreamType::BiDi,
+            WebTransportStreamType::UniDi => StreamType::UniDi,
+        }
+    }
+}
+
+#[repr(C)]
+pub enum SessionCloseReasonExternal {
+    Error(u64),
+    Status(u16),
+    Clean(u32),
+}
+
+impl SessionCloseReasonExternal {
+    fn new(reason: SessionCloseReason, data: &mut ThinVec<u8>) -> SessionCloseReasonExternal {
+        match reason {
+            SessionCloseReason::Error(e) => SessionCloseReasonExternal::Error(e),
+            SessionCloseReason::Status(s) => SessionCloseReasonExternal::Status(s),
+            SessionCloseReason::Clean { error, message } => {
+                data.extend_from_slice(message.as_ref());
+                SessionCloseReasonExternal::Clean(error)
+            }
+        }
+    }
+}
+
+#[repr(C)]
+pub enum WebTransportEventExternal {
+    Negotiated(bool),
+    Session {
+        stream_id: u64,
+        status: u16,
+    },
+    SessionClosed {
+        stream_id: u64,
+        reason: SessionCloseReasonExternal,
+    },
+    NewStream {
+        stream_id: u64,
+        stream_type: WebTransportStreamType,
+        session_id: u64,
+    },
+}
+
+impl WebTransportEventExternal {
+    fn new(event: WebTransportEvent, data: &mut ThinVec<u8>) -> WebTransportEventExternal {
+        match event {
+            WebTransportEvent::Negotiated(n) => WebTransportEventExternal::Negotiated(n),
+            WebTransportEvent::Session { stream_id, status } => {
+                WebTransportEventExternal::Session {
+                    stream_id: stream_id.as_u64(),
+                    status,
+                }
+            }
+            WebTransportEvent::SessionClosed { stream_id, reason } => {
+                WebTransportEventExternal::SessionClosed {
+                    stream_id: stream_id.as_u64(),
+                    reason: SessionCloseReasonExternal::new(reason, data),
+                }
+            }
+            WebTransportEvent::NewStream {
+                stream_id,
+                session_id,
+            } => WebTransportEventExternal::NewStream {
+                stream_id: stream_id.as_u64(),
+                stream_type: stream_id.stream_type().into(),
+                session_id: session_id.as_u64(),
+            },
+        }
+    }
+}
+
 #[repr(C)]
 pub enum Http3Event {
     /// A request stream has space for more data to be sent.
@@ -660,6 +763,7 @@ pub enum Http3Event {
         expire_in: u64, // microseconds
     },
     EchFallbackAuthenticationNeeded,
+    WebTransport(WebTransportEventExternal),
     NoEvent,
 }
 
@@ -837,7 +941,9 @@ pub extern "C" fn neqo_http3conn_event(
                 data.extend_from_slice(public_name.as_ref());
                 Http3Event::EchFallbackAuthenticationNeeded
             }
-            Http3ClientEvent::WebTransport(_) => Http3Event::NoEvent,
+            Http3ClientEvent::WebTransport(e) => {
+                Http3Event::WebTransport(WebTransportEventExternal::new(e, data))
+            }
         };
 
         if !matches!(fe, Http3Event::NoEvent) {
@@ -1032,4 +1138,87 @@ pub extern "C" fn neqo_http3conn_get_stats(conn: &mut NeqoHttp3Conn, stats: &mut
     stats.late_ack = t_stats.late_ack;
     stats.pto_ack = t_stats.pto_ack;
     stats.pto_counts = t_stats.pto_counts;
+}
+
+#[no_mangle]
+pub extern "C" fn neqo_http3conn_webtransport_create_session(
+    conn: &mut NeqoHttp3Conn,
+    host: &nsACString,
+    path: &nsACString,
+    headers: &nsACString,
+    stream_id: &mut u64,
+) -> nsresult {
+    let hdrs = match parse_headers(headers) {
+        Err(e) => {
+            return e;
+        }
+        Ok(h) => h,
+    };
+    let host_tmp = match str::from_utf8(host) {
+        Ok(h) => h,
+        Err(_) => {
+            return NS_ERROR_INVALID_ARG;
+        }
+    };
+    let path_tmp = match str::from_utf8(path) {
+        Ok(p) => p,
+        Err(_) => {
+            return NS_ERROR_INVALID_ARG;
+        }
+    };
+
+    match conn.conn.webtransport_create_session(
+        Instant::now(),
+        &("https", host_tmp, path_tmp),
+        &hdrs,
+    ) {
+        Ok(id) => {
+            *stream_id = id.as_u64();
+            NS_OK
+        }
+        Err(Http3Error::StreamLimitError) => NS_BASE_STREAM_WOULD_BLOCK,
+        Err(_) => NS_ERROR_UNEXPECTED,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn neqo_http3conn_webtransport_close_session(
+    conn: &mut NeqoHttp3Conn,
+    session_id: u64,
+    error: u32,
+    message: &nsACString,
+) -> nsresult {
+    let message_tmp = match str::from_utf8(message) {
+        Ok(p) => p,
+        Err(_) => {
+            return NS_ERROR_INVALID_ARG;
+        }
+    };
+    match conn
+        .conn
+        .webtransport_close_session(StreamId::from(session_id), error, message_tmp)
+    {
+        Ok(()) => NS_OK,
+        Err(_) => NS_ERROR_INVALID_ARG,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn neqo_http3conn_webtransport_create_stream(
+    conn: &mut NeqoHttp3Conn,
+    session_id: u64,
+    stream_type: WebTransportStreamType,
+    stream_id: &mut u64,
+) -> nsresult {
+    match conn
+        .conn
+        .webtransport_create_stream(StreamId::from(session_id), stream_type.into())
+    {
+        Ok(id) => {
+            *stream_id = id.as_u64();
+            NS_OK
+        }
+        Err(Http3Error::StreamLimitError) => NS_BASE_STREAM_WOULD_BLOCK,
+        Err(_) => NS_ERROR_UNEXPECTED,
+    }
 }
