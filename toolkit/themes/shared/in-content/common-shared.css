@@ -589,11 +589,6 @@ xul|menulist::part(dropmarker) {
   fill: currentColor;
 }
 
-xul|menulist::part(dropmarker-icon) {
-  width: 12px;
-  height: 12px;
-}
-
 xul|menulist > xul|menupopup {
   appearance: none;
 
