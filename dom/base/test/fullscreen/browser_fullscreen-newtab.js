@@ -7,7 +7,8 @@
 SimpleTest.ignoreAllUncaughtExceptions(true);
 
 const kPage =
-  "http://example.org/browser/" + "dom/html/test/file_fullscreen-newtab.html";
+  "https://example.org/browser/" +
+  "dom/base/test/fullscreen/file_fullscreen-newtab.html";
 
 function getSizeMode() {
   return document.documentElement.getAttribute("sizemode");
