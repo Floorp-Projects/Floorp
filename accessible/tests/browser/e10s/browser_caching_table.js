@@ -401,8 +401,44 @@ addAccessibleTask(
     let queryOk = false;
     try {
       table.QueryInterface(nsIAccessibleTable);
+      queryOk = true;
     } catch (e) {}
     todo(queryOk, "Got nsIAccessibleTable");
+  },
+  {
+    chrome: true,
+    topLevel: isCacheEnabled,
+    iframe: isCacheEnabled,
+    remoteIframe: isCacheEnabled,
+  }
+);
+
+/**
+ * Test a broken ARIA table with an invalid cell.
+ */
+addAccessibleTask(
+  `
+<div id="table" role="table">
+  <div role="main">
+    <div role="row">
+      <div id="cell" role="cell">a</div>
+    </div>
+  </div>
+</div>
+  `,
+  async function(browser, docAcc) {
+    const table = findAccessibleChildByID(docAcc, "table", [
+      nsIAccessibleTable,
+    ]);
+    is(table.rowCount, 0, "table rowCount correct");
+    is(table.columnCount, 0, "table columnCount correct");
+    const cell = findAccessibleChildByID(docAcc, "cell");
+    let queryOk = false;
+    try {
+      cell.QueryInterface(nsIAccessibleTableCell);
+      queryOk = true;
+    } catch (e) {}
+    ok(!queryOk, "Got nsIAccessibleTableCell on an invalid cell");
   },
   {
     chrome: true,

@@ -1093,7 +1093,13 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
 
       } else if (roleMapEntry->IsOfType(eTableRow)) {
         if (aContext->IsTable() ||
-            (aContext->LocalParent() && aContext->LocalParent()->IsTable())) {
+            // There can be an Accessible between a row and its table, but it
+            // can only be a row group or a generic container. This is
+            // consistent with Filters::GetRow and CachedTableAccessible's
+            // TablePartRule.
+            ((aContext->Role() == roles::GROUPING ||
+              (aContext->IsGenericHyperText() && !aContext->ARIARoleMap())) &&
+             aContext->LocalParent() && aContext->LocalParent()->IsTable())) {
           newAcc = new ARIARowAccessible(content, document);
         }
 
