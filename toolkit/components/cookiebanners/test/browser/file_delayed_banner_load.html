@@ -1,0 +1,43 @@
+<html>
+<head>
+  <title>A top-level page with delayed cookie banner</title>
+  <script>
+    function clickOptOut() {
+      document.getElementById("result").textContent = "OptOut";
+    }
+
+    function clickOptIn() {
+      document.getElementById("result").textContent = "OptIn";
+    }
+
+    function generateBanner() {
+      let banner = document.createElement("div");
+      banner.id = "banner";
+
+      let buttonOptOut = document.createElement("button");
+      buttonOptOut.id = "OptOut";
+      buttonOptOut.onclick = () => {clickOptOut();};
+
+      let buttonOptIn = document.createElement("button");
+      buttonOptIn.id = "OptIn";
+      buttonOptIn.onclick = () => {clickOptIn();};
+
+      banner.appendChild(buttonOptOut);
+      banner.appendChild(buttonOptIn);
+      document.body.appendChild(banner);
+    }
+
+    window.onload = () => {
+      generateBanner();
+    };
+  </script>
+  <!-- This will cause DOMContentLoaded and load to be further apart which is
+  required for certain test cases. slowSubresource.sjs will delay the page load
+  event.-->
+  <link rel="stylesheet" href="slowSubresource.sjs">
+</head>
+<body>
+  <h1>This is the top-level page</h1>
+  <p id="result">NoClick</p>
+</body>
+</html>
