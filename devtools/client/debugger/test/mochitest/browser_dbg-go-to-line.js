@@ -38,7 +38,7 @@ add_task(async function() {
   await waitForGoToLineBoxFocus(dbg);
   type(dbg, "66");
   pressKey(dbg, "Enter");
-  await assertLine(dbg, 66);
+  assertLine(dbg, 66);
 });
 
 function assertEnabled(dbg) {
@@ -53,9 +53,7 @@ async function waitForGoToLineBoxFocus(dbg) {
   await waitFor(() => dbg.win.document.activeElement.tagName === "INPUT");
 }
 
-async function assertLine(dbg, lineNumber) {
-  // Wait for the line to be set
-  await waitUntil(() => !!dbg.selectors.getSelectedLocation().line);
+function assertLine(dbg, lineNumber) {
   is(
     dbg.selectors.getSelectedLocation().line,
     lineNumber,

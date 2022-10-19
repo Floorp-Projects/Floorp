@@ -15,7 +15,6 @@ import {
   getGeneratedSourceByURL,
   getContext,
   getSourceContent,
-  getFirstSourceActorForGeneratedSource,
 } from "../../selectors";
 import actions from "../../actions";
 
@@ -40,7 +39,6 @@ class SourceTreeItem extends Component {
       hasMatchingGeneratedSource: PropTypes.bool.isRequired,
       item: PropTypes.object.isRequired,
       loadSourceText: PropTypes.func.isRequired,
-      getFirstSourceActorForGeneratedSource: PropTypes.func.isRequired,
       projectRoot: PropTypes.string.isRequired,
       selectSourceItem: PropTypes.func.isRequired,
       setExpanded: PropTypes.func.isRequired,
@@ -83,6 +81,7 @@ class SourceTreeItem extends Component {
     const { item } = this.props;
     if (item.type == "source") {
       const { source } = item;
+
       const copySourceUri2 = {
         id: "node-menu-copy-source",
         label: copySourceUri2Label,
@@ -155,11 +154,7 @@ class SourceTreeItem extends Component {
     }
 
     if (!this.props.sourceContent) {
-      const sourceActor = this.props.getFirstSourceActorForGeneratedSource(
-        source.id,
-        source.thread
-      );
-      await this.props.loadSourceText({ cx, source, sourceActor });
+      await this.props.loadSourceText({ cx, source });
     }
     const data = this.props.sourceContent;
     if (!data) {
@@ -398,14 +393,10 @@ const mapStateToProps = (state, props) => {
       cx: getContext(state),
       hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
       sourceContent: getSourceContentValue(state, source),
-      getFirstSourceActorForGeneratedSource: (sourceId, threadId) =>
-        getFirstSourceActorForGeneratedSource(state, sourceId, threadId),
     };
   }
   return {
     cx: getContext(state),
-    getFirstSourceActorForGeneratedSource: (sourceId, threadId) =>
-      getFirstSourceActorForGeneratedSource(state, sourceId, threadId),
   };
 };
 

@@ -11,7 +11,6 @@ import { isFulfilled } from "../utils/async-value";
 import { findSourceMatches } from "../workers/search";
 import {
   getSource,
-  getFirstSourceActorForGeneratedSource,
   hasPrettySource,
   getSourceList,
   getSourceContent,
@@ -93,12 +92,7 @@ export function searchSources(cx, query) {
       if (cancelled) {
         return;
       }
-
-      const sourceActor = getFirstSourceActorForGeneratedSource(
-        getState(),
-        source.id
-      );
-      await dispatch(loadSourceText({ cx, source, sourceActor }));
+      await dispatch(loadSourceText({ cx, source }));
       await dispatch(searchSource(cx, source.id, query));
     }
     dispatch(updateSearchStatus(cx, statusType.done));
