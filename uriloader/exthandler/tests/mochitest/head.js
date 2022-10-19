@@ -1,8 +1,8 @@
 var { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
-var { HandlerServiceTestUtils } = ChromeUtils.import(
-  "resource://testing-common/HandlerServiceTestUtils.jsm"
+var { HandlerServiceTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/HandlerServiceTestUtils.sys.mjs"
 );
 
 var gMimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);

@@ -15,7 +15,7 @@ TEST_DIRS += [
 ]
 
 TESTING_JS_MODULES += [
-    "HandlerServiceTestUtils.jsm",
+    "HandlerServiceTestUtils.sys.mjs",
 ]
 
 GeckoSimplePrograms(

@@ -1,6 +1,6 @@
 SimpleTest.requestCompleteLog();
-const { HandlerServiceTestUtils } = ChromeUtils.import(
-  "resource://testing-common/HandlerServiceTestUtils.jsm"
+const { HandlerServiceTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/HandlerServiceTestUtils.sys.mjs"
 );
 
 let gHandlerService = Cc["@mozilla.org/uriloader/handler-service;1"].getService(

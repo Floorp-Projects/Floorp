@@ -2,14 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["HandlerService"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const {
   saveToDisk,
@@ -24,12 +18,12 @@ const TOPIC_PDFJS_HANDLER_CHANGED = "pdfjs:handlerChanged";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  kHandlerList: "resource://gre/modules/handlers/HandlerList.sys.mjs",
+  kHandlerListVersion: "resource://gre/modules/handlers/HandlerList.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
 });
-const { Integration } = ChromeUtils.importESModule(
-  "resource://gre/modules/Integration.sys.mjs"
-);
+import { Integration } from "resource://gre/modules/Integration.sys.mjs";
 
 Integration.downloads.defineModuleGetter(
   lazy,
@@ -49,12 +43,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/mime;1",
   "nsIMIMEService"
 );
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  kHandlerList: "resource://gre/modules/handlers/HandlerList.jsm",
-  kHandlerListVersion: "resource://gre/modules/handlers/HandlerList.jsm",
-});
 
-function HandlerService() {
+export function HandlerService() {
   // Observe handlersvc-json-replace so we can switch to the datasource
   Services.obs.addObserver(this, "handlersvc-json-replace", true);
 }

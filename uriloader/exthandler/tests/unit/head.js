@@ -19,8 +19,8 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { HandlerServiceTestUtils } = ChromeUtils.import(
-  "resource://testing-common/HandlerServiceTestUtils.jsm"
+const { HandlerServiceTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/HandlerServiceTestUtils.sys.mjs"
 );
 var { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
