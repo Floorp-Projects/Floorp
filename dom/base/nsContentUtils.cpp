@@ -19,6 +19,7 @@
 #include "BrowserChild.h"
 #include "DecoderTraits.h"
 #include "ErrorList.h"
+#include "HTMLSplitOnSpacesTokenizer.h"
 #include "ImageOps.h"
 #include "InProcessBrowserChildMessageManager.h"
 #include "Layers.h"
@@ -6939,7 +6940,8 @@ static void ReportPatternCompileFailure(nsAString& aPattern,
 // static
 Maybe<bool> nsContentUtils::IsPatternMatching(nsAString& aValue,
                                               nsAString& aPattern,
-                                              const Document* aDocument) {
+                                              const Document* aDocument,
+                                              bool aHasMultiple) {
   NS_ASSERTION(aDocument, "aDocument should be a valid pointer (not null)");
 
   // The fact that we're using a JS regexp under the hood should not be visible
@@ -6982,14 +6984,30 @@ Maybe<bool> nsContentUtils::IsPatternMatching(nsAString& aValue,
   }
 
   JS::Rooted<JS::Value> rval(cx, JS::NullValue());
-  size_t idx = 0;
-  if (!JS::ExecuteRegExpNoStatics(cx, re,
-                                  static_cast<char16_t*>(aValue.BeginWriting()),
-                                  aValue.Length(), &idx, true, &rval)) {
-    return Nothing();
+  if (!aHasMultiple) {
+    size_t idx = 0;
+    if (!JS::ExecuteRegExpNoStatics(
+            cx, re, static_cast<char16_t*>(aValue.BeginWriting()),
+            aValue.Length(), &idx, true, &rval)) {
+      return Nothing();
+    }
+    return Some(!rval.isNull());
   }
 
-  return Some(!rval.isNull());
+  HTMLSplitOnSpacesTokenizer tokenizer(aValue, ',');
+  while (tokenizer.hasMoreTokens()) {
+    const nsAString& value = tokenizer.nextToken();
+    size_t idx = 0;
+    if (!JS::ExecuteRegExpNoStatics(
+            cx, re, static_cast<const char16_t*>(value.BeginReading()),
+            value.Length(), &idx, true, &rval)) {
+      return Nothing();
+    }
+    if (rval.isNull()) {
+      return Some(false);
+    }
+  }
+  return Some(true);
 }
 
 // static
