@@ -15,8 +15,10 @@ add_task(function test_displayOrigin() {
     info(displayOrigin);
     Assert.equal(typeof displayOrigin, "string", "Check type");
     Assert.greater(displayOrigin.length, 0, "Check length");
-    if (loginInfo.origin.startsWith("file://")) {
-      // Fails to create the URL
+    if (
+      loginInfo.origin.startsWith("chrome://") ||
+      loginInfo.origin.startsWith("file://")
+    ) {
       Assert.ok(displayOrigin.startsWith(loginInfo.origin), "Contains origin");
     } else {
       Assert.ok(
