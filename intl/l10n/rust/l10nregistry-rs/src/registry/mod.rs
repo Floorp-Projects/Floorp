@@ -52,6 +52,8 @@ impl<'a, B> L10nRegistryLocked<'a, B> {
             .expect("Index out-of-range")
     }
 
+    /// Get a [FileSource] by name from a metasource. This is useful for testing.
+    #[cfg(feature = "test-fluent")]
     pub fn file_source_by_name(&self, metasource: usize, name: &str) -> Option<&FileSource> {
         self.lock
             .get(metasource)
@@ -60,6 +62,9 @@ impl<'a, B> L10nRegistryLocked<'a, B> {
             .find(|&source| source.name == name)
     }
 
+    /// Get an iterator for the [FileSources](FileSource) that match the [LanguageIdentifier]
+    /// and [ResourceId].
+    #[cfg(feature = "test-fluent")]
     pub fn generate_sources_for_file<'l>(
         &'l self,
         metasource: usize,
