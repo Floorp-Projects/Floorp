@@ -30,14 +30,14 @@ window.MozXULElement = {
     if (root == "toolkit") {
       // eslint-disable-next-line no-unsanitized/method
       let imported = await import(
-        /* webpackInclude: /.*[\/\\].*\.ftl/ */
+        /* webpackInclude: /.*[\/\\].*\.ftl$/ */
         `toolkit/locales/en-US/${name}`
       );
       ftlContents = imported.default;
     } else if (root == "browser") {
       // eslint-disable-next-line no-unsanitized/method
       let imported = await import(
-        /* webpackInclude: /.*[\/\\].*\.ftl/ */
+        /* webpackInclude: /.*[\/\\].*\.ftl$/ */
         `browser/locales/en-US/${name}`
       );
       ftlContents = imported.default;
