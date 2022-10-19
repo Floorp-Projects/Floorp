@@ -4,8 +4,6 @@
 
 // This testing component is used in test_vacuum* tests.
 
-var EXPORTED_SYMBOLS = ["VacuumParticipant"];
-
 /**
  * Returns a new nsIFile reference for a profile database.
  * @param filename for the database, excluded the .sqlite extension.
@@ -24,7 +22,7 @@ function getDatabase(aFile) {
   return Services.storage.openDatabase(aFile);
 }
 
-function VacuumParticipant() {
+export function VacuumParticipant() {
   this._dbConn = getDatabase(new_db_file("testVacuum"));
   Services.obs.addObserver(this, "test-options");
 }

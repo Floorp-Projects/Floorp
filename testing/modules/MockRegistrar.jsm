@@ -95,9 +95,9 @@ var MockRegistrar = Object.freeze({
     return cid;
   },
 
-  registerJSM(contractID, jsm, symbol) {
+  registerESM(contractID, esmPath, symbol) {
     return this.register(contractID, () => {
-      let exports = ChromeUtils.import(jsm);
+      let exports = ChromeUtils.importESModule(esmPath);
       return new exports[symbol]();
     });
   },
