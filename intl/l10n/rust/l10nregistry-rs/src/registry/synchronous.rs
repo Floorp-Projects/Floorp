@@ -30,7 +30,7 @@ impl<'a> L10nRegistryLocked<'a> {
         let mut errors = vec![];
 
         for (&source_idx, resource_id) in source_order.iter().zip(resource_ids.iter()) {
-            let source = self.source_idx(metasource, source_idx);
+            let source = self.filesource(metasource, source_idx);
             if let ResourceOption::Some(res) =
                 source.fetch_file_sync(&locale, resource_id, /* overload */ true)
             {
@@ -153,7 +153,7 @@ impl<P, B> SyncTester for GenerateBundlesSync<P, B> {
         !self
             .reg
             .lock()
-            .source_idx(self.current_metasource, source_idx)
+            .filesource(self.current_metasource, source_idx)
             .fetch_file_sync(locale, resource_id, /* overload */ true)
             .is_required_and_missing()
     }

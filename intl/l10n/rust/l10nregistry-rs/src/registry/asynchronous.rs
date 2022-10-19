@@ -138,7 +138,7 @@ impl<'l, P, B> AsyncTester for GenerateBundles<P, B> {
             .iter()
             .map(|(res_idx, source_idx)| {
                 let resource_id = &self.resource_ids[*res_idx];
-                lock.source_idx(self.current_metasource, *source_idx)
+                lock.filesource(self.current_metasource, *source_idx)
                     .fetch_file(locale, resource_id)
             })
             .collect::<FuturesOrdered<_>>();
