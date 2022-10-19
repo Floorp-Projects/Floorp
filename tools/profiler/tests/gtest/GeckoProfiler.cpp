@@ -2744,7 +2744,7 @@ TEST(GeckoProfiler, Markers)
 
   EXPECT_TRUE(profiler_add_marker(
       "MediaSample", geckoprofiler::category::OTHER, {},
-      geckoprofiler::markers::MediaSampleMarker{}, 123, 456));
+      geckoprofiler::markers::MediaSampleMarker{}, 123, 456, 789));
 
   SpliceableChunkedJSONWriter w{FailureLatchInfallibleSource::Singleton()};
   w.Start();
@@ -3343,7 +3343,7 @@ TEST(GeckoProfiler, Markers)
             EXPECT_EQ(display[0u].asString(), "marker-chart");
             EXPECT_EQ(display[1u].asString(), "marker-table");
 
-            ASSERT_EQ(data.size(), 2u);
+            ASSERT_EQ(data.size(), 3u);
 
             ASSERT_TRUE(data[0u].isObject());
             EXPECT_EQ_JSON(data[0u]["key"], String, "sampleStartTimeUs");
@@ -3353,6 +3353,28 @@ TEST(GeckoProfiler, Markers)
             ASSERT_TRUE(data[1u].isObject());
             EXPECT_EQ_JSON(data[1u]["key"], String, "sampleEndTimeUs");
             EXPECT_EQ_JSON(data[1u]["label"], String, "Sample end time");
+            EXPECT_EQ_JSON(data[1u]["format"], String, "microseconds");
+
+            ASSERT_TRUE(data[2u].isObject());
+            EXPECT_EQ_JSON(data[2u]["key"], String, "queueLength");
+            EXPECT_EQ_JSON(data[2u]["label"], String, "Queue length");
+            EXPECT_EQ_JSON(data[2u]["format"], String, "integer");
+
+          } else if (nameString == "VideoFallingBehind") {
+            EXPECT_EQ(display.size(), 2u);
+            EXPECT_EQ(display[0u].asString(), "marker-chart");
+            EXPECT_EQ(display[1u].asString(), "marker-table");
+
+            ASSERT_EQ(data.size(), 2u);
+
+            ASSERT_TRUE(data[0u].isObject());
+            EXPECT_EQ_JSON(data[0u]["key"], String, "videoFrameStartTimeUs");
+            EXPECT_EQ_JSON(data[0u]["label"], String, "Video frame start time");
+            EXPECT_EQ_JSON(data[0u]["format"], String, "microseconds");
+
+            ASSERT_TRUE(data[1u].isObject());
+            EXPECT_EQ_JSON(data[1u]["key"], String, "mediaCurrentTimeUs");
+            EXPECT_EQ_JSON(data[1u]["label"], String, "Media current time");
             EXPECT_EQ_JSON(data[1u]["format"], String, "microseconds");
 
           } else if (nameString == "Budget") {
