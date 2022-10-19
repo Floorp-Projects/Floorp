@@ -718,6 +718,11 @@ JSObject* js::CopyErrorObject(JSContext* cx, Handle<ErrorObject*> err) {
   if (!cx->compartment()->wrap(cx, &stack)) {
     return nullptr;
   }
+  if (stack && JS_IsDeadWrapper(stack)) {
+    // ErrorObject::create expects |stack| to be either nullptr or a (possibly
+    // wrapped) SavedFrame instance.
+    stack = nullptr;
+  }
   Rooted<mozilla::Maybe<Value>> cause(cx, mozilla::Nothing());
   if (auto maybeCause = err->getCause()) {
     RootedValue errorCause(cx, maybeCause.value());
