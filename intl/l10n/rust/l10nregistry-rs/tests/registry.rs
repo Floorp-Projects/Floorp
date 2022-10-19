@@ -5,7 +5,7 @@ static FTL_RESOURCE_TOOLKIT: &str = "toolkit/global/textActions.ftl";
 static FTL_RESOURCE_BROWSER: &str = "branding/brand.ftl";
 
 #[test]
-fn test_generate_sources_for_file() {
+fn test_get_sources_for_resource() {
     let en_us: LanguageIdentifier = "en-US".parse().unwrap();
     let setup = RegistrySetup::new(
         "test",
@@ -25,7 +25,7 @@ fn test_generate_sources_for_file() {
         let browser = lock.file_source_by_name(0, "browser").unwrap();
         let toolkit_resource_id = FTL_RESOURCE_TOOLKIT.into();
 
-        let mut i = lock.generate_sources_for_file(0, &en_us, &toolkit_resource_id);
+        let mut i = lock.get_sources_for_resource(0, &en_us, &toolkit_resource_id);
 
         assert_eq!(i.next(), Some(toolkit));
         assert_eq!(i.next(), Some(browser));
@@ -35,7 +35,7 @@ fn test_generate_sources_for_file() {
             .fetch_file_sync(&en_us, &FTL_RESOURCE_TOOLKIT.into(), false)
             .is_none());
 
-        let mut i = lock.generate_sources_for_file(0, &en_us, &toolkit_resource_id);
+        let mut i = lock.get_sources_for_resource(0, &en_us, &toolkit_resource_id);
         assert_eq!(i.next(), Some(toolkit));
         assert_eq!(i.next(), None);
 
@@ -43,7 +43,7 @@ fn test_generate_sources_for_file() {
             .fetch_file_sync(&en_us, &FTL_RESOURCE_TOOLKIT.into(), false)
             .is_some());
 
-        let mut i = lock.generate_sources_for_file(0, &en_us, &toolkit_resource_id);
+        let mut i = lock.get_sources_for_resource(0, &en_us, &toolkit_resource_id);
         assert_eq!(i.next(), Some(toolkit));
         assert_eq!(i.next(), None);
     }

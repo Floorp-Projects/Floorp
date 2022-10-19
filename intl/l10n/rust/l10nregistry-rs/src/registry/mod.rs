@@ -65,7 +65,7 @@ impl<'a, B> L10nRegistryLocked<'a, B> {
     /// Get an iterator for the [FileSources](FileSource) that match the [LanguageIdentifier]
     /// and [ResourceId].
     #[cfg(feature = "test-fluent")]
-    pub fn generate_sources_for_file<'l>(
+    pub fn get_sources_for_resource<'l>(
         &'l self,
         metasource: usize,
         langid: &'l LanguageIdentifier,
