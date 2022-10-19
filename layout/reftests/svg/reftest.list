@@ -629,4 +629,4 @@ fails-if(Android) != mask-resource.html about:blank # The image the test uses is
 fuzzy(0-1,0-150) == mask-opacity-invalidation-1.html mask-opacity-invalidation-1-ref.html # clip-path mask/opacity optimization
 skip-if(Android) skip-if(cocoaWidget) skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == transform-animation-on-path.html transform-animation-on-path-ref.html #Bug 1638909
 
-== 1792313.svg 1792313-ref.svg
+fuzzy(0-20,0-110) == 1792313.svg 1792313-ref.svg
