@@ -408,6 +408,7 @@ class ModuleObject : public NativeObject {
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JS::GCContext* gcx, JSObject* obj);
 
+  bool hasCyclicModuleFields() const;
   CyclicModuleFields* cyclicModuleFields();
   const CyclicModuleFields* cyclicModuleFields() const;
 };
