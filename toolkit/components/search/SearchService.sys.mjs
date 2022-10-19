@@ -1610,30 +1610,20 @@ export class SearchService {
 
     // If the previous engine is still available, don't show the notification
     // box.
-    if (prevCurrentEngine && this._engines.has(prevCurrentEngine.name)) {
+    if (prevCurrentEngine && this._engines.has(prevCurrentEngine)) {
       return false;
     }
     if (!prevCurrentEngine && this._engines.has(prevAppDefaultEngine)) {
       return false;
     }
-    // Don't show the notification if the previous engine was an enterprise
-    // engine - the text doesn't quite make sense.
-    if (prevCurrentEngine) {
-      let engineSettings = settings.engines.find(
-        e => e._name == prevCurrentEngine
-      );
-      if (engineSettings._loadPath.includes("set-via-policy")) {
-        return false;
-      }
-    }
 
-    // Don't show the prompt if the previous engine was an enterprise engine -
+    // Don't show the notification if the previous engine was an enterprise engine -
     // the text doesn't quite make sense.
     if (prevCurrentEngine) {
       let engineSettings = settings.engines.find(
         e => e._name == prevCurrentEngine
       );
-      if (engineSettings._loadPath.includes("set-via-policy")) {
+      if (engineSettings?._loadPath?.includes("set-via-policy")) {
         return false;
       }
     }
