@@ -8,6 +8,7 @@
 #include "EditorDOMPoint.h"   // for EditorRawDOMPoint
 #include "HTMLEditHelpers.h"  // for SplitNodeResult
 #include "HTMLEditor.h"       // for HTMLEditor
+#include "HTMLEditorInlines.h"
 #include "HTMLEditUtils.h"
 #include "JoinSplitNodeDirection.h"  // for SplitNodeDirection
 #include "SelectionState.h"          // for AutoTrackDOMPoint and RangeUpdater

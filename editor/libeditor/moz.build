@@ -23,7 +23,6 @@ EXPORTS.mozilla += [
     "EditTransactionBase.h",
     "HTMLEditor.h",
     "HTMLEditorController.h",
-    "JoinSplitNodeDirection.h",
     "ManualNAC.h",
     "PendingStyles.h",
     "SelectionState.h",
