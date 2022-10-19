@@ -28,9 +28,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
 if CONFIG["OS_TARGET"] == "Android":
     UNIFIED_SOURCES += ["ProfileUnlockerAndroid.cpp"]
 
-if CONFIG["MOZ_BACKGROUNDTASKS"]:
-    DEFINES["MOZ_BACKGROUNDTASKS"] = True
-
 UNIFIED_SOURCES += ["nsToolkitProfileService.cpp"]
 
 LOCAL_INCLUDES += [

@@ -175,7 +175,4 @@ else:
         "greprefs.js",
     ]
 
-if CONFIG["MOZ_BACKGROUNDTASKS"]:
-    DEFINES["MOZ_BACKGROUNDTASKS"] = True
-
 REQUIRES_UNIFIED_BUILD = True
