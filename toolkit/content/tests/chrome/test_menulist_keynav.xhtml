@@ -178,7 +178,7 @@ function tabAndScroll()
      "menuitem width accounts for scrollbar");
   list.open = false;
 
-  list.menupopup.style.maxHeight = "100px";
+  list.menupopup.maxHeight = 100;
   list.open = true;
 
   var rowdiff = list.getItemAtIndex(1).getBoundingClientRect().top -
