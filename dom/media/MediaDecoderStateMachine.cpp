@@ -601,9 +601,6 @@ class MediaDecoderStateMachine::DecodingState
       if (!mVideoFirstLateTime) {
         mVideoFirstLateTime = Some(TimeStamp::Now());
       }
-      PROFILER_MARKER("Video falling behind", MEDIA_PLAYBACK, {},
-                      VideoFallingBehindMarker, aVideo->mTime.ToMicroseconds(),
-                      currentTime.ToMicroseconds());
       SLOG("video %" PRId64 " starts being late (current=%" PRId64 ")",
            aVideo->mTime.ToMicroseconds(), currentTime.ToMicroseconds());
     } else {
@@ -781,7 +778,6 @@ class MediaDecoderStateMachine::DecodingState
     const bool rv = elapsedTimeMs >=
                     StaticPrefs::media_decoder_skip_when_video_too_slow_ms();
     if (rv) {
-      PROFILER_MARKER_UNTYPED("Skipping to next keyframe", MEDIA_PLAYBACK);
       SLOG(
           "video has been late behind media time for %f ms, should skip to "
           "next key frame",
@@ -2937,8 +2933,7 @@ void MediaDecoderStateMachine::PushAudio(AudioData* aSample) {
   AudioQueue().Push(aSample);
   PROFILER_MARKER("MDSM::PushAudio", MEDIA_PLAYBACK, {}, MediaSampleMarker,
                   aSample->mTime.ToMicroseconds(),
-                  aSample->GetEndTime().ToMicroseconds(),
-                  AudioQueue().GetSize());
+                  aSample->GetEndTime().ToMicroseconds());
 }
 
 void MediaDecoderStateMachine::PushVideo(VideoData* aSample) {
@@ -2948,8 +2943,7 @@ void MediaDecoderStateMachine::PushVideo(VideoData* aSample) {
   VideoQueue().Push(aSample);
   PROFILER_MARKER("MDSM::PushVideo", MEDIA_PLAYBACK, {}, MediaSampleMarker,
                   aSample->mTime.ToMicroseconds(),
-                  aSample->GetEndTime().ToMicroseconds(),
-                  VideoQueue().GetSize());
+                  aSample->GetEndTime().ToMicroseconds());
 }
 
 void MediaDecoderStateMachine::OnAudioPopped(const RefPtr<AudioData>& aSample) {

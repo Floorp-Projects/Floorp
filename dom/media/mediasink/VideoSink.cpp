@@ -478,8 +478,7 @@ void VideoSink::RenderVideoFrames(int32_t aMaxFrames, int64_t aClockTime,
     if (!wasSent) {
       PROFILER_MARKER("PlayVideo", MEDIA_PLAYBACK, {}, MediaSampleMarker,
                       frame->mTime.ToMicroseconds(),
-                      frame->GetEndTime().ToMicroseconds(),
-                      VideoQueue().GetSize());
+                      frame->GetEndTime().ToMicroseconds());
     }
   }
 
