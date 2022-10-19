@@ -104,49 +104,6 @@ WeakMap<K, V>::WeakMap(JS::Zone* zone, JSObject* memOf)
   }
 }
 
-// Trace a WeakMap entry based on 'markedCell' getting marked, where 'origKey'
-// is the key in the weakmap. In the absence of delegates, these will be the
-// same, but when a delegate is marked then origKey will be its wrapper.
-// `markedCell` is only used for an assertion.
-template <class K, class V>
-void WeakMap<K, V>::markKey(GCMarker* marker, gc::Cell* markedCell,
-                            gc::Cell* origKey) {
-#if DEBUG
-  if (!mapColor) {
-    fprintf(stderr, "markKey called on an unmarked map %p", this);
-    Zone* zone = markedCell->asTenured().zoneFromAnyThread();
-    fprintf(stderr, "  markedCell=%p from zone %p state %d mark %d\n",
-            markedCell, zone, zone->gcState(),
-            int(debug::GetMarkInfo(markedCell)));
-    zone = origKey->asTenured().zoneFromAnyThread();
-    fprintf(stderr, "  origKey=%p from zone %p state %d mark %d\n", origKey,
-            zone, zone->gcState(), int(debug::GetMarkInfo(markedCell)));
-    if (memberOf) {
-      zone = memberOf->asTenured().zoneFromAnyThread();
-      fprintf(stderr, "  memberOf=%p from zone %p state %d mark %d\n",
-              memberOf.get(), zone, zone->gcState(),
-              int(debug::GetMarkInfo(memberOf.get())));
-    }
-  }
-#endif
-  MOZ_ASSERT(mapColor);
-
-  Ptr p = Base::lookup(static_cast<Lookup>(origKey));
-  // We should only be processing <weakmap,key> pairs where the key exists in
-  // the weakmap. Such pairs are inserted when a weakmap is marked, and are
-  // removed by barriers if the key is removed from the weakmap. Failure here
-  // probably means gcEphemeronEdges is not being properly traced during a minor
-  // GC, or the weakmap keys are not being updated when tenured.
-  MOZ_ASSERT(p.found());
-
-  mozilla::DebugOnly<gc::Cell*> oldKey = gc::ToMarkable(p->key());
-  MOZ_ASSERT((markedCell == oldKey) ||
-             (markedCell == gc::detail::GetDelegate(p->key())));
-
-  markEntry(marker, p->mutableKey(), p->value());
-  MOZ_ASSERT(oldKey == gc::ToMarkable(p->key()), "no moving GC");
-}
-
 // If the entry is live, ensure its key and value are marked. Also make sure the
 // key is at least as marked as min(map, delegate), so it cannot get discarded
 // and then recreated by rewrapping the delegate.
