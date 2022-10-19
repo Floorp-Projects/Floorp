@@ -23,11 +23,11 @@ Services.scriptloader.loadSubScript(
 
 const FIRST_PARTY_ONE = "example.com";
 const FIRST_PARTY_TWO = "example.org";
-const THIRD_PARTY = "mochi.test:8888";
+const THIRD_PARTY = "example.net";
 
-const TEST_SITE_ONE = "http://" + FIRST_PARTY_ONE;
-const TEST_SITE_TWO = "http://" + FIRST_PARTY_TWO;
-const THIRD_PARTY_SITE = "http://" + THIRD_PARTY;
+const TEST_SITE_ONE = "https://" + FIRST_PARTY_ONE;
+const TEST_SITE_TWO = "https://" + FIRST_PARTY_TWO;
+const THIRD_PARTY_SITE = "https://" + THIRD_PARTY;
 const TEST_DIRECTORY =
   "/browser/browser/components/originattributes/test/browser/";
 
@@ -200,7 +200,7 @@ async function assignCookiesUnderFirstParty(aURL, aFirstParty, aCookieValue) {
   await SpecialPowers.spawn(tabInfo.browser, [aCookieValue], async function(
     value
   ) {
-    content.document.cookie = value;
+    content.document.cookie = value + "; SameSite=None; Secure;";
   });
 
   BrowserTestUtils.removeTab(tabInfo.tab);
@@ -382,12 +382,7 @@ async function doTestForAllTabsFavicon(
 add_setup(async function() {
   // Make sure first party isolation is enabled.
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["privacy.firstparty.isolate", true],
-      ["dom.security.https_first", false],
-      // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
-      ["network.cookie.sameSite.laxByDefault", false],
-    ],
+    set: [["privacy.firstparty.isolate", true]],
   });
 });
 

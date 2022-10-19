@@ -7,12 +7,12 @@ const CC = Components.Constructor;
 const FIRST_PARTY_OPENER = "example.com";
 const FIRST_PARTY_TARGET = "example.org";
 const OPENER_PAGE =
-  "http://" +
+  "https://" +
   FIRST_PARTY_OPENER +
   "/browser/browser/components/" +
   "originattributes/test/browser/file_windowOpenerRestriction.html";
 const TARGET_PAGE =
-  "http://" +
+  "https://" +
   FIRST_PARTY_TARGET +
   "/browser/browser/components/" +
   "originattributes/test/browser/file_windowOpenerRestrictionTarget.html";
@@ -41,7 +41,7 @@ async function testPref(aIsPrefEnabled) {
 
       // Insert a cookie into this iframe.
       await SpecialPowers.spawn(childFrame, [obj.cookieStr], aCookieStr => {
-        content.document.cookie = aCookieStr;
+        content.document.cookie = aCookieStr + "; SameSite=None; Secure;";
       });
 
       // Open the tab here and focus on it.
@@ -80,19 +80,11 @@ async function testPref(aIsPrefEnabled) {
 }
 
 add_task(async function runTests() {
-  // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
-  await SpecialPowers.pushPrefEnv({
-    set: [["network.cookie.sameSite.laxByDefault", false]],
-  });
-
   let tests = [true, false];
 
   // First, we test the scenario that the first party isolation is enabled.
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["privacy.firstparty.isolate", true],
-      ["dom.security.https_first", false],
-    ],
+    set: [["privacy.firstparty.isolate", true]],
   });
 
   for (let enabled of tests) {
@@ -118,6 +110,4 @@ add_task(async function runTests() {
     // the opener page has the same origin with the target page.
     await testPref(false);
   }
-
-  SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
 });

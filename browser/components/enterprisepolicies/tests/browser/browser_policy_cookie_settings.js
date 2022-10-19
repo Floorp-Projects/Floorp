@@ -8,8 +8,6 @@ const { UrlClassifierTestUtils } = ChromeUtils.import(
 Services.cookies.QueryInterface(Ci.nsICookieService);
 
 function restore_prefs() {
-  // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
-  Services.prefs.clearUserPref("network.cookie.sameSite.laxByDefault");
   Services.prefs.clearUserPref("network.cookie.cookieBehavior");
   Services.prefs.clearUserPref(
     "network.cookieJarSettings.unblocked_for_testing"
@@ -48,8 +46,8 @@ async function test_cookie_settings({
   rejectTrackers,
   cookieJarSettingsLocked,
 }) {
-  let firstPartyURI = NetUtil.newURI("http://example.com/");
-  let thirdPartyURI = NetUtil.newURI("http://example.org/");
+  let firstPartyURI = NetUtil.newURI("https://example.com/");
+  let thirdPartyURI = NetUtil.newURI("https://example.org/");
   let channel = NetUtil.newChannel({
     uri: firstPartyURI,
     loadUsingSystemPrincipal: true,
@@ -58,8 +56,16 @@ async function test_cookie_settings({
     Ci.nsIHttpChannelInternal
   ).forceAllowThirdPartyCookie = true;
   Services.cookies.removeAll();
-  Services.cookies.setCookieStringFromHttp(firstPartyURI, "key=value", channel);
-  Services.cookies.setCookieStringFromHttp(thirdPartyURI, "key=value", channel);
+  Services.cookies.setCookieStringFromHttp(
+    firstPartyURI,
+    "key=value; SameSite=None; Secure;",
+    channel
+  );
+  Services.cookies.setCookieStringFromHttp(
+    thirdPartyURI,
+    "key=value; SameSite=None; Secure;",
+    channel
+  );
 
   let expectedFirstPartyCookies = 1;
   let expectedThirdPartyCookies = 1;
@@ -85,7 +91,7 @@ async function test_cookie_settings({
   Services.cookies.removeAll();
   Services.cookies.setCookieStringFromHttp(
     firstPartyURI,
-    "key=value; max-age=1000",
+    "key=value; max-age=1000; SameSite=None; Secure;",
     channel
   );
 
@@ -170,7 +176,6 @@ add_task(async function test_initial_state() {
     "network.cookie.rejectForeignWithExceptions.enabled",
     false
   );
-  Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
 
   await test_cookie_settings({
     cookiesEnabled: true,
@@ -315,7 +320,6 @@ add_task(async function test_undefined_locked() {
     "network.cookie.rejectForeignWithExceptions.enabled",
     false
   );
-  Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
   await setupPolicyEngineWithJson({
     policies: {
       Cookies: {
@@ -341,7 +345,6 @@ add_task(async function test_cookie_reject_trackers() {
     "network.cookie.rejectForeignWithExceptions.enabled",
     false
   );
-  Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
   await setupPolicyEngineWithJson({
     policies: {
       Cookies: {

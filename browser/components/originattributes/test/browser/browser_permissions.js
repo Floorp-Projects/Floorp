@@ -8,13 +8,10 @@ const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"
 );
 
-const TEST_PAGE = "http://example.net";
+const TEST_PAGE = "https://example.net";
 const uri = Services.io.newURI(TEST_PAGE);
 
 async function disableCookies() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.security.https_first", false]],
-  });
   Services.cookies.removeAll();
   PermissionTestUtils.add(uri, "cookie", Services.perms.DENY_ACTION);
 
@@ -35,12 +32,8 @@ async function disableCookies() {
 }
 
 async function ensureCookieNotSet(aBrowser) {
-  // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
-  await SpecialPowers.pushPrefEnv({
-    set: [["network.cookie.sameSite.laxByDefault", false]],
-  });
   await SpecialPowers.spawn(aBrowser, [], async function() {
-    content.document.cookie = "key=value";
+    content.document.cookie = "key=value; SameSite=None; Secure;";
     Assert.equal(
       content.document.cookie,
       "",
@@ -58,9 +51,6 @@ IsolationTestTools.runTests(
 );
 
 async function enableCookies() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.security.https_first", false]],
-  });
   Services.cookies.removeAll();
   PermissionTestUtils.add(uri, "cookie", Services.perms.ALLOW_ACTION);
 
@@ -77,12 +67,8 @@ async function enableCookies() {
 }
 
 async function ensureCookieSet(aBrowser) {
-  // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
-  await SpecialPowers.pushPrefEnv({
-    set: [["network.cookie.sameSite.laxByDefault", false]],
-  });
   await SpecialPowers.spawn(aBrowser, [], function() {
-    content.document.cookie = "key=value";
+    content.document.cookie = "key=value; SameSite=None; Secure;";
     Assert.equal(
       content.document.cookie,
       "key=value",
