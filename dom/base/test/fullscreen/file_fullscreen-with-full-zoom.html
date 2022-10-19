@@ -18,7 +18,7 @@ function begin() {
   SpecialPowers.setFullZoom(window, 0.3);
 
   addFullscreenChangeContinuation("enter", enteredFullscreen);
-  target.requestFullscreen();
+  document.getElementById("target").requestFullscreen();
 }
 
 function enteredFullscreen() {
