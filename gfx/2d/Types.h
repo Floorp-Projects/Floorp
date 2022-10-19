@@ -1051,6 +1051,10 @@ enum class SideBits {
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SideBits)
 
+inline constexpr SideBits SideToSideBit(Side aSide) {
+  return SideBits(1 << aSide);
+}
+
 enum Corner : uint8_t {
   // This order is important!
   eCornerTopLeft = 0,
