@@ -371,7 +371,7 @@ the tests which use them won't run.
 
 Talos Tests
 ***********
-Talos test lists
+For the sample commands found below, note that the capitalization used is important. Without the exact spelling, the test won't be found when running locally.
 
 .. dropdown:: ARES6
    :container: + anchor-id-ARES6
@@ -386,6 +386,10 @@ Talos test lists
    * lower_is_better: True
    * tpmanifest: ${talos}/tests/ares6/ares6.manifest
    * tppagecycles: 1
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a ARES6
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -440,6 +444,10 @@ Talos test lists
     our pageloader extension and talos harness.
    * tpmanifest: ${talos}/tests/jetstream/jetstream.manifest
    * tppagecycles: 1
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a JetStream
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -505,6 +513,10 @@ Talos test lists
    * tpmozafterpaint: True
    * tppagecycles: 25
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a a11yr
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -714,6 +726,10 @@ Talos test lists
    * tpmanifest: ${talos}/tests/about-preferences/about_preferences_basic.manifest
    * tppagecycles: 1
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a about_preferences_basic
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -922,6 +938,10 @@ Talos test lists
    * tpmanifest: ${talos}/tests/video/video.manifest
    * tppagecycles: 12
    * unit: ms/frame
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a basic_compositor_video
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -1104,6 +1124,10 @@ Talos test lists
    * tpmanifest: ${talos}/tests/cpstartup/cpstartup.manifest
    * tppagecycles: 20
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a cpstartup
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -1285,6 +1309,10 @@ Talos test lists
    * tpmanifest: ${talos}/tests/cross_origin_pageload/cross_origin_pageload.manifest
    * tppagecycles: 10
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a cross_origin_pageload
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -1518,6 +1546,10 @@ Talos test lists
    * unit: ms
    * w7_counters: None
    * win_counters: None
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a damp
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -1841,6 +1873,10 @@ Talos test lists
    * unit: ms
    * w7_counters: None
    * win_counters: None
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a displaylist_mutate
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -2017,6 +2053,10 @@ Talos test lists
     second. The score for a test is then the geometric mean of the
     runs/second numbers for its sub-tests. The score for a sub-suite is the
     geometric mean of the scores for its tests.
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a dromaeo
 
 .. dropdown:: dromaeo_css
    :container: + anchor-id-dromaeo_css
@@ -2056,6 +2096,10 @@ Talos test lists
    * gecko_profile_interval: 2
    * tpmanifest: ${talos}/tests/dromaeo/css.manifest
    * unit: score
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a dromaeo_css
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -2212,6 +2256,10 @@ Talos test lists
    * gecko_profile_interval: 2
    * tpmanifest: ${talos}/tests/dromaeo/dom.manifest
    * unit: score
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a dromaeo_dom
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -2317,6 +2365,10 @@ Talos test lists
    * unit: frame interval
    * w7_counters: None
    * win_counters: None
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a glterrain
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -2584,6 +2636,10 @@ Talos test lists
    * unit: ms
    * w7_counters: None
    * win_counters: None
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a glvideo
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -2859,6 +2915,10 @@ Talos test lists
    * tpmozafterpaint: False
    * tppagecycles: 1
    * unit: score
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a kraken
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -2997,6 +3057,10 @@ Talos test lists
       * suite: we take a geometric mean of all the subtests (9 for
         animometer, 11 for html suite)
    * tpmanifest: ${talos}/tests/motionmark/animometer.manifest
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a motionmark_animometer
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -3037,6 +3101,10 @@ Talos test lists
 
    * contact: :jrmuizel and graphics(gfx) team
    * tpmanifest: ${talos}/tests/motionmark/htmlsuite.manifest
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a motionmark_htmlsuite
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-shippable-qr/opt**
@@ -3086,6 +3154,10 @@ Talos test lists
    * timeout: 600
    * tpmanifest: ${talos}/tests/motionmark/webgl.manifest
    * unit: fps
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a motionmark_webgl
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -3332,6 +3404,10 @@ Talos test lists
    * tpmanifest: ${talos}/tests/pdfpaint/pdfpaint.manifest
    * tppagecycles: 20
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a pdfpaint
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -3554,6 +3630,10 @@ Talos test lists
    * tppagecycles: 10
    * tptimeout: 30000
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a perf_reftest
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -3752,6 +3832,10 @@ Talos test lists
    * tppagecycles: 15
    * tptimeout: 30000
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a perf_reftest_singletons
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -3916,6 +4000,10 @@ Talos test lists
    * unit: score
    * w7_counters: None
    * win_counters: None
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a rasterflood_gradient
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -4113,6 +4201,10 @@ Talos test lists
    * unit: ms
    * w7_counters: None
    * win_counters: None
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a rasterflood_svg
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -4318,6 +4410,10 @@ Talos test lists
    * timeout: 900
    * unit: ms
    * url: about:home
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a sessionrestore
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -4483,6 +4579,10 @@ Talos test lists
 
    * See `sessionrestore <#sessionrestore>`_.
    * profile_path: ${talos}/startup_test/sessionrestore/profile-manywindows
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a sessionrestore_many_windows
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -4649,6 +4749,10 @@ Talos test lists
    * See `sessionrestore <#sessionrestore>`_.
    * preferences: {'browser.startup.page': 1, 'talos.sessionrestore.norestore': True}
    * timeout: 300
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a sessionrestore_no_auto_restore
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -4829,6 +4933,10 @@ Talos test lists
    * timeout: 600
    * tpmanifest: ${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest
    * url: None
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a startup_about_home_paint
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -5001,6 +5109,10 @@ Talos test lists
    * preferences: {'browser.startup.homepage.abouthome_cache.enabled': True}
    * tpmanifest: ${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest
    * url: None
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a startup_about_home_paint_cached
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -5181,6 +5293,10 @@ Talos test lists
    * tpmanifest: ${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest
    * url: None
    * webextensions_folder: ${talos}/webextensions
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a startup_about_home_paint_realworld_webextensions
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -5315,6 +5431,10 @@ Talos test lists
    * measuring: speed of dynamic style recalculation
    * reporting: runs/minute score
    * tpmanifest: ${talos}/tests/stylebench/stylebench.manifest
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a stylebench
 
 .. dropdown:: tabpaint
    :container: + anchor-id-tabpaint
@@ -5351,6 +5471,10 @@ Talos test lists
    * tpmanifest: ${talos}/tests/tabpaint/tabpaint.manifest
    * tppagecycles: 20
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tabpaint
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -5588,6 +5712,10 @@ Talos test lists
    * tpmanifest: ${talos}/tests/tabswitch/tabswitch.manifest
    * tppagecycles: 5
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tabswitch
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -5816,6 +5944,10 @@ Talos test lists
    * unit: ms
    * w7_counters: None
    * win_counters: None
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tart
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -5983,6 +6115,10 @@ Talos test lists
    * Contact: No longer being maintained by any team/individual
    * pine: False
    * preferences: {'layout.css.moz-box-flexbox-emulation.enabled': True}
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tart_flex
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -6026,6 +6162,10 @@ Talos test lists
     tests still make use of this pageset. Here, we provide an overview of
     the tp5 pageset and some information about how data using the tp5
     pageset might be used in various suites.
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tp5
 
 .. dropdown:: tp5n
    :container: + anchor-id-tp5n
@@ -6055,6 +6195,10 @@ Talos test lists
    * xperf_providers: ['PROC_THREAD', 'LOADER', 'HARD_FAULTS', 'FILENAME', 'FILE_IO', 'FILE_IO_INIT']
    * xperf_stackwalk: ['FileCreate', 'FileRead', 'FileWrite', 'FileFlush', 'FileClose']
    * xperf_user_providers: ['Mozilla Generic Provider', 'Microsoft-Windows-TCPIP']
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tp5n
    * **Test Task**:
 
    .. list-table:: **test-windows10-64-2004-qr/opt**
@@ -6209,6 +6353,10 @@ Talos test lists
    * unit: ms
    * w7_counters: ['% Processor Time']
    * win_counters: ['% Processor Time']
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tp5o
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -6461,6 +6609,10 @@ Talos test lists
    * tppagecycles: 12
    * tpscrolltest: True
    * unit: 1/FPS
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tp5o_scroll
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -6627,6 +6779,10 @@ Talos test lists
    * contact: :mixedpuppy and webextension team
    * preferences: {'xpinstall.signatures.required': False}
    * webextensions: ${talos}/webextensions/dummy/dummy.xpi
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tp5o_webext
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -6827,6 +6983,10 @@ Talos test lists
    * tpmozafterpaint: True
    * tppagecycles: 20
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tresize
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -7023,6 +7183,10 @@ Talos test lists
    * url: startup_test/tspaint_test.html
    * win7_counters: []
    * xperf_counters: []
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a ts_paint
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -7190,6 +7354,10 @@ Talos test lists
    * Contact: No longer being maintained by any team/individual
    * pine: False
    * preferences: {'layout.css.moz-box-flexbox-emulation.enabled': True}
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a ts_paint_flex
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -7231,6 +7399,10 @@ Talos test lists
    * `ts_paint <#ts_paint>`_ test run against a heavy user profile.
    * contact: :mconley, Firefox Desktop Front-end team,
    * profile: simple
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a ts_paint_heavy
 
 .. dropdown:: ts_paint_webext
    :container: + anchor-id-ts_paint_webext
@@ -7238,6 +7410,10 @@ Talos test lists
    * contact: :mconley, Firefox Desktop Front-end team,
    * preferences: {'xpinstall.signatures.required': False}
    * webextensions: ${talos}/webextensions/dummy/dummy.xpi
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a ts_paint_webext
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -7441,6 +7617,10 @@ Talos test lists
    * tpmozafterpaint: False
    * tppagecycles: 25
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tscrollx
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -7630,6 +7810,10 @@ Talos test lists
    * tpmozafterpaint: True
    * tppagecycles: 25
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tsvg_static
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -7805,6 +7989,10 @@ Talos test lists
    * tpmozafterpaint: False
    * tppagecycles: 7
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tsvgm
 
 .. dropdown:: tsvgr_opacity
    :container: + anchor-id-tsvgr_opacity
@@ -7844,6 +8032,10 @@ Talos test lists
    * tpmozafterpaint: True
    * tppagecycles: 25
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tsvgr_opacity
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -8052,6 +8244,10 @@ Talos test lists
    * tpmozafterpaint: False
    * tppagecycles: 25
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a tsvgx
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -8242,6 +8438,10 @@ Talos test lists
    * tpmozafterpaint: True
    * tppagecycles: 20
    * unit: ms
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a twinopen
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -8419,6 +8619,10 @@ Talos test lists
    * tpmanifest: ${talos}/tests/v8_7/v8.manifest
    * tpmozafterpaint: False
    * unit: score
+   * Command
+   .. code-block:: None
+
+      ./mach talos-test -a v8_7
 
 
 

@@ -7,7 +7,7 @@ manifest: None
 static-only: False
 suites:
     Talos Tests:
-        description: "Talos test lists"
+        description: "For the sample commands found below, note that the capitalization used is important. Without the exact spelling, the test won't be found when running locally."
         tests:
             ARES6: >
                 - contact: :jandem and SpiderMonkey Team

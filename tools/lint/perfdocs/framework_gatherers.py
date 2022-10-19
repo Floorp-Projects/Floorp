@@ -452,6 +452,11 @@ class TalosGatherer(FrameworkGatherer):
                             value[k] = str(v).replace("\\", r"/")
                 result += r"   * " + key + r": " + str(value) + r"\n"
 
+        # Command
+        result += "   * Command\n"
+        result += "   .. code-block:: None\n\n"
+        result += f"      ./mach talos-test -a {title}\n"
+
         if self._task_list.get(title, []):
             result += "   * **Test Task**:\n\n"
             for platform in sorted(self._task_list[title]):
