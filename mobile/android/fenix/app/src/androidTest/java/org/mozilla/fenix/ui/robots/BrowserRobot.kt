@@ -347,116 +347,35 @@ class BrowserRobot {
     fun clickLinkMatchingText(expectedText: String) =
         clickPageObject(webPageItemContainingText(expectedText))
 
-    fun longClickMatchingText(expectedText: String) {
-        try {
-            mDevice.waitForWindowUpdate(packageName, waitingTime)
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
-                .waitForExists(waitingTime)
-            mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
-            val link = mDevice.findObject(By.textContains(expectedText))
-            link.click(LONG_CLICK_DURATION)
-        } catch (e: NullPointerException) {
-            println(e)
+    fun longClickLink(expectedText: String) =
+        longClickPageObject(webPageItemWithText(expectedText))
 
-            // Refresh the page in case the first long click didn't succeed
-            navigationToolbar {
-            }.openThreeDotMenu {
-            }.refreshPage {
-                mDevice.waitForIdle()
-            }
-
-            // Long click again the desired text
-            mDevice.waitForWindowUpdate(packageName, waitingTime)
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
-                .waitForExists(waitingTime)
-            mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
-            val link = mDevice.findObject(By.textContains(expectedText))
-            link.click(LONG_CLICK_DURATION)
-        }
-    }
+    fun longClickMatchingText(expectedText: String) =
+        longClickPageObject(webPageItemContainingText(expectedText))
 
     fun longClickAndCopyText(expectedText: String, selectAll: Boolean = false) {
-        try {
-            // Long click desired text
-            mDevice.waitForWindowUpdate(packageName, waitingTime)
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
-                .waitForExists(waitingTime)
-            mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
-            val link = mDevice.findObject(By.textContains(expectedText))
-            link.click(LONG_CLICK_DURATION)
+        longClickPageObject(webPageItemContainingText(expectedText))
 
-            // Click Select all from the text selection toolbar
-            if (selectAll) {
-                mDevice.findObject(UiSelector().textContains("Select all")).waitForExists(waitingTime)
-                val selectAllText = mDevice.findObject(By.textContains("Select all"))
-                selectAllText.click()
-            }
-
-            // Click Copy from the text selection toolbar
-            mDevice.findObject(UiSelector().textContains("Copy")).waitForExists(waitingTime)
-            val copyText = mDevice.findObject(By.textContains("Copy"))
-            copyText.click()
-        } catch (e: NullPointerException) {
-            println("Failed to long click desired text: ${e.localizedMessage}")
-
-            // Refresh the page in case the first long click didn't succeed
-            navigationToolbar {
-            }.openThreeDotMenu {
-            }.refreshPage {
-                mDevice.waitForIdle()
-            }
-
-            // Long click again the desired text
-            mDevice.waitForWindowUpdate(packageName, waitingTime)
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
-                .waitForExists(waitingTime)
-            mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
-            val link = mDevice.findObject(By.textContains(expectedText))
-            link.click(LONG_CLICK_DURATION)
-
-            // Click again Select all from the text selection toolbar
-            if (selectAll) {
-                mDevice.findObject(UiSelector().textContains("Select all")).waitForExists(waitingTime)
-                val selectAllText = mDevice.findObject(By.textContains("Select all"))
-                selectAllText.click()
-            }
-
-            // Click again Copy from the text selection toolbar
-            mDevice.findObject(UiSelector().textContains("Copy")).waitForExists(waitingTime)
-            val copyText = mDevice.findObject(By.textContains("Copy"))
-            copyText.click()
+        // Click Select all from the text selection toolbar
+        if (selectAll) {
+            mDevice.findObject(UiSelector().textContains("Select all")).waitForExists(waitingTime)
+            val selectAllText = mDevice.findObject(By.textContains("Select all"))
+            selectAllText.click()
         }
+
+        // Click Copy from the text selection toolbar
+        mDevice.findObject(UiSelector().textContains("Copy")).waitForExists(waitingTime)
+        val copyText = mDevice.findObject(By.textContains("Copy"))
+        copyText.click()
     }
 
     fun longClickAndSearchText(searchButton: String, expectedText: String) {
-        var currentTries = 0
-        while (currentTries++ < 3) {
-            try {
-                // Long click desired text
-                mDevice.waitForWindowUpdate(packageName, waitingTime)
-                mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
-                    .waitForExists(waitingTime)
-                mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
-                val link = mDevice.findObject(By.textContains(expectedText))
-                link.click(LONG_CLICK_DURATION)
+        longClickPageObject(webPageItemContainingText(expectedText))
 
-                // Click search from the text selection toolbar
-                mDevice.findObject(UiSelector().textContains(searchButton)).waitForExists(waitingTime)
-                val searchText = mDevice.findObject(By.textContains(searchButton))
-                searchText.click()
-
-                break
-            } catch (e: NullPointerException) {
-                println("Failed to long click desired text: ${e.localizedMessage}")
-
-                // Refresh the page in case the first long click didn't succeed
-                navigationToolbar {
-                }.openThreeDotMenu {
-                }.refreshPage {
-                    mDevice.waitForIdle()
-                }
-            }
-        }
+        // Click search from the text selection toolbar
+        mDevice.findObject(UiSelector().textContains(searchButton)).waitForExists(waitingTime)
+        val searchText = mDevice.findObject(By.textContains(searchButton))
+        searchText.click()
     }
 
     fun snackBarButtonClick() {
@@ -980,6 +899,29 @@ private fun clickPageObject(webPageItem: UiObject) {
                 }.refreshPage {
                     progressBar.waitUntilGone(waitingTime)
                 }
+            }
+        }
+    }
+}
+
+fun longClickPageObject(webPageItem: UiObject) {
+    for (i in 1..RETRY_COUNT) {
+        try {
+            webPageItem.also {
+                it.waitForExists(waitingTime)
+                it.longClick()
+            }
+
+            break
+        } catch (e: UiObjectNotFoundException) {
+            if (i == RETRY_COUNT) {
+                throw e
+            } else {
+                browserScreen {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                }
+                progressBar.waitUntilGone(waitingTime)
             }
         }
     }

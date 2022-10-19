@@ -186,9 +186,9 @@ class SearchTest {
         homeScreen {
         }.openSearch {
         }.submitQuery("test search") {
-            longClickMatchingText("Link 1")
+            longClickLink("Link 1")
             clickContextOpenLinkInNewTab()
-            longClickMatchingText("Link 2")
+            longClickLink("Link 2")
             clickContextOpenLinkInNewTab()
         }.goToHomescreen {
             verifyJumpBackInSectionIsDisplayed()
@@ -221,9 +221,9 @@ class SearchTest {
         homeScreen {
         }.openSearch {
         }.submitQuery("test search") {
-            longClickMatchingText("Link 1")
+            longClickLink("Link 1")
             clickContextOpenLinkInPrivateTab()
-            longClickMatchingText("Link 2")
+            longClickLink("Link 2")
             clickContextOpenLinkInPrivateTab()
         }.goToHomescreen {
             verifyCurrentSearchGroupIsDisplayed(false, "test search", 3)
@@ -254,9 +254,9 @@ class SearchTest {
         homeScreen {
         }.openSearch {
         }.submitQuery("test search") {
-            longClickMatchingText("Link 1")
+            longClickLink("Link 1")
             clickContextOpenLinkInPrivateTab()
-            longClickMatchingText("Link 2")
+            longClickLink("Link 2")
             clickContextOpenLinkInPrivateTab()
         }.openTabDrawer {
         }.openTab(firstPage) {
@@ -290,9 +290,9 @@ class SearchTest {
         homeScreen {
         }.openSearch {
         }.submitQuery("test search") {
-            longClickMatchingText("Link 1")
+            longClickLink("Link 1")
             clickContextOpenLinkInNewTab()
-            longClickMatchingText("Link 2")
+            longClickLink("Link 2")
             clickContextOpenLinkInNewTab()
         }.openTabDrawer {
         }.openTabFromGroup(firstPage) {
