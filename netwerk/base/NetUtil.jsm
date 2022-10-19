@@ -320,10 +320,6 @@ var NetUtil = {
     return channel;
   },
 
-  newWebTransport: function NetUtil_newWebTransport() {
-    return Services.io.newWebTransport();
-  },
-
   /**
    * Reads aCount bytes from aInputStream into a string.
    *
