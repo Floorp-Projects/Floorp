@@ -1416,8 +1416,10 @@ void nsWindow::WaylandPopupHierarchyHideByLayout(
   // Hide all popups which are not in layout popup chain
   nsWindow* popup = mWaylandPopupNext;
   while (popup) {
-    // Tooltips are not tracked in layout chain
-    if (!popup->mPopupClosed && popup->mPopupType != ePopupTypeTooltip) {
+    MOZ_ASSERT(popup->mPopupType != ePopupTypeTooltip,
+               "Tooltips should be closed!");
+    // Don't check closed popups and drag source popups
+    if (!popup->mPopupClosed && !popup->mSourceDragContext) {
       if (!popup->IsPopupInLayoutPopupChain(aLayoutWidgetHierarchy,
                                             /* aMustMatchParent */ false)) {
         LOG("  hidding popup [%p]", popup);
@@ -4084,6 +4086,15 @@ void nsWindow::OnUnmap() {
   // untill OnUnrealize is called.
   mIsMapped = false;
 
+  if (mSourceDragContext) {
+    static auto sGtkDragCancel =
+        (void (*)(GdkDragContext*))dlsym(RTLD_DEFAULT, "gtk_drag_cancel");
+    if (sGtkDragCancel) {
+      sGtkDragCancel(mSourceDragContext);
+      mSourceDragContext = nullptr;
+    }
+  }
+
 #ifdef MOZ_WAYLAND
   // wl_surface owned by mContainer is going to be deleted.
   // Make sure we don't paint to it on Wayland.
@@ -5249,6 +5260,7 @@ void nsWindow::OnScaleChanged() {
 void nsWindow::DispatchDragEvent(EventMessage aMsg,
                                  const LayoutDeviceIntPoint& aRefPoint,
                                  guint aTime) {
+  LOGDRAG("nsWindow::DispatchDragEvent");
   WidgetDragEvent event(true, aMsg, this);
 
   InitDragEvent(event);
@@ -5265,7 +5277,7 @@ void nsWindow::OnDragDataReceivedEvent(GtkWidget* aWidget,
                                        GtkSelectionData* aSelectionData,
                                        guint aInfo, guint aTime,
                                        gpointer aData) {
-  LOGDRAG("nsWindow::OnDragDataReceived(%p)\n", (void*)this);
+  LOGDRAG("nsWindow::OnDragDataReceived");
 
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
   nsDragService::AutoEventLoop loop(dragService);
@@ -7437,6 +7449,7 @@ void nsWindow::HideWindowChrome(bool aShouldHide) {
 
 bool nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY, bool aIsWheel,
                               bool aAlwaysRollup) {
+  LOG("nsWindow::CheckForRollup() aAlwaysRollup %d", aAlwaysRollup);
   nsIRollupListener* rollupListener = GetActiveRollupListener();
   nsCOMPtr<nsIWidget> rollupWidget;
   if (rollupListener) {
@@ -7550,13 +7563,11 @@ MOZ_CAN_RUN_SCRIPT static void WaylandDragWorkaround(GdkEventButton* aEvent) {
 
 static nsWindow* get_window_for_gtk_widget(GtkWidget* widget) {
   gpointer user_data = g_object_get_data(G_OBJECT(widget), "nsWindow");
-
   return static_cast<nsWindow*>(user_data);
 }
 
 static nsWindow* get_window_for_gdk_window(GdkWindow* window) {
   gpointer user_data = g_object_get_data(G_OBJECT(window), "nsWindow");
-
   return static_cast<nsWindow*>(user_data);
 }
 
@@ -9749,6 +9760,10 @@ LayoutDeviceIntSize nsWindow::GetMozContainerSize() {
   return size;
 }
 
+nsWindow* nsWindow::GetWindow(GdkWindow* window) {
+  return get_window_for_gdk_window(window);
+}
+
 void nsWindow::ClearRenderingQueue() {
   LOG("nsWindow::ClearRenderingQueue()");
 
@@ -9812,4 +9827,8 @@ void nsWindow::NotifyOcclusionState(mozilla::widget::OcclusionState aState) {
   if (mWidgetListener) {
     mWidgetListener->OcclusionStateChanged(mIsFullyOccluded);
   }
+}
+
+void nsWindow::SetDragSource(GdkDragContext* aSourceDragContext) {
+  mSourceDragContext = aSourceDragContext;
 }

@@ -9,6 +9,8 @@
 #include "mozilla/UniquePtr.h"
 #include "nsReadableUtils.h"
 #include "nsWindow.h"
+#include "nsIGfxInfo.h"
+#include "mozilla/Components.h"
 
 #include <gtk/gtk.h>
 #include <dlfcn.h>
@@ -69,6 +71,13 @@ bool GdkIsX11Display(GdkDisplay* display) {
       (GType(*)())dlsym(RTLD_DEFAULT, "gdk_x11_display_get_type");
   return sGdkX11DisplayGetType &&
          G_TYPE_CHECK_INSTANCE_TYPE(display, sGdkX11DisplayGetType());
+}
+
+bool IsXWaylandProtocol() {
+  static bool isXwayland = [] {
+    return !GdkIsWaylandDisplay() && !!getenv("WAYLAND_DISPLAY");
+  }();
+  return isXwayland;
 }
 
 bool GdkIsWaylandDisplay() {
