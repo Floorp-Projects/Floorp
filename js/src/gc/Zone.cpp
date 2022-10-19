@@ -35,7 +35,7 @@ using namespace js::gc;
 Zone* const Zone::NotOnList = reinterpret_cast<Zone*>(1);
 
 ZoneAllocator::ZoneAllocator(JSRuntime* rt, Kind kind)
-    : JS::shadow::Zone(rt, &rt->gc.barrierTracer, kind),
+    : JS::shadow::Zone(rt, &rt->gc.marker, kind),
       jitHeapThreshold(jit::MaxCodeBytesPerProcess * 0.8) {}
 
 ZoneAllocator::~ZoneAllocator() {
