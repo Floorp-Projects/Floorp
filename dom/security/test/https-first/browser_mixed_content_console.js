@@ -6,6 +6,9 @@ const testPath = getRootDirectory(gTestPath).replace(
   "http://example.com"
 );
 
+const UPGRADE_DISPLAY_CONTENT =
+  "security.mixed_content.upgrade_display_content";
+
 let threeMessagesArrived = 0;
 let messageImageSeen = false;
 
@@ -44,8 +47,28 @@ function on_console_message(msgObj) {
     );
     threeMessagesArrived++;
   }
-  // The second console message is:
-  // "Loading mixed (insecure) display content
+  // If security.mixed_content.upgrade_display_content is enabled:
+  // The second console message is about upgrading the insecure image
+  else if (
+    Services.prefs.getBoolPref(UPGRADE_DISPLAY_CONTENT) &&
+    message.includes("Mixed Content: Upgrading")
+  ) {
+    ok(
+      message.includes("insecure display request"),
+      "display content got load"
+    );
+    ok(
+      message.includes(
+        "‘http://example.com/browser/dom/security/test/https-first/auto_upgrading_identity.png’ to use ‘https’"
+      ),
+      "img loaded secure"
+    );
+    threeMessagesArrived++;
+    messageImageSeen = true;
+  }
+  // Else:
+  //  The second console message is about blocking the image:
+  // Message: "Loading mixed (insecure) display content
   // “http://example.com/browser/dom/security/test/https-first/auto_upgrading_identity.png” on a secure page".
   // Since the message is send twice, prevent reading the image message two times
   else if (message.includes("Loading mixed") && !messageImageSeen) {

@@ -13,7 +13,7 @@ let tests = [
     description: "Top-Level upgrade should get logged",
     expectLogLevel: Ci.nsIConsoleMessage.warn,
     expectIncludes: [
-      "Upgrading insecure request",
+      "HTTPS-Only Mode: Upgrading insecure request",
       "to use",
       "file_console_logging.html",
     ],
@@ -22,7 +22,7 @@ let tests = [
     description: "iFrame upgrade failure should get logged",
     expectLogLevel: Ci.nsIConsoleMessage.error,
     expectIncludes: [
-      "Upgrading insecure request",
+      "HTTPS-Only Mode: Upgrading insecure request",
       "failed",
       "file_console_logging.html",
     ],
@@ -31,7 +31,7 @@ let tests = [
     description: "WebSocket upgrade should get logged",
     expectLogLevel: Ci.nsIConsoleMessage.warn,
     expectIncludes: [
-      "Upgrading insecure request",
+      "HTTPS-Only Mode: Upgrading insecure request",
       "to use",
       "ws://does.not.exist",
     ],
@@ -39,12 +39,12 @@ let tests = [
   {
     description: "Sub-Resource upgrade for file_1 should get logged",
     expectLogLevel: Ci.nsIConsoleMessage.warn,
-    expectIncludes: ["Upgrading insecure request", "to use", "file_1.jpg"],
+    expectIncludes: ["Upgrading insecure", "request", "file_1.jpg"],
   },
   {
     description: "Sub-Resource upgrade for file_2 should get logged",
     expectLogLevel: Ci.nsIConsoleMessage.warn,
-    expectIncludes: ["Upgrading insecure request", "to use", "file_2.jpg"],
+    expectIncludes: ["Upgrading insecure", "request", "to use", "file_2.jpg"],
   },
   {
     description: "Exempt request for file_exempt should get logged",
@@ -76,6 +76,9 @@ const kTestURISuccess = testPathUpgradeable + "file_console_logging.html";
 const kTestURIFail = testPathNotUpgradeable + "file_console_logging.html";
 const kTestURIExempt = testPathUpgradeable + "file_exempt.jpg";
 
+const UPGRADE_DISPLAY_CONTENT =
+  "security.mixed_content.upgrade_display_content";
+
 add_task(async function() {
   // A longer timeout is necessary for this test than the plain mochitests
   // due to opening a new tab with the web console.
@@ -106,9 +109,31 @@ function on_new_message(msgObj) {
   const message = msgObj.message;
   const logLevel = msgObj.logLevel;
 
-  if (message.includes("HTTPS-Only Mode:")) {
+  // Bools about message and pref
+  const isMCL2Enabled = Services.prefs.getBoolPref(UPGRADE_DISPLAY_CONTENT);
+  const isHTTPSOnlyModeLog = message.includes("HTTPS-Only Mode:");
+  const isMCLog = message.includes("Mixed Content:");
+
+  // Check for messages about HTTPS-only upgrades (those should be unrelated to mixed content upgrades)
+  // or for mixed content upgrades which should only occur if security.mixed_content.upgrade_display_content is enabled
+  // (unrelated to https-only logs).
+  if (
+    (isHTTPSOnlyModeLog && !isMCLog) ||
+    (isMCLog && isMCL2Enabled && !isHTTPSOnlyModeLog)
+  ) {
     for (let i = 0; i < tests.length; i++) {
       const testCase = tests[i];
+      // If security.mixed_content.upgrade_display_content is enabled, the mixed content control mechanism is upgrading file2.jpg
+      // and HTTPS-Only mode is not failing upgrading file2.jpg, so it won't be logged.
+      // so skip last test case
+      if (
+        testCase.description ==
+          "Sub-Resource upgrade failure for file_2 should get logged" &&
+        isMCL2Enabled
+      ) {
+        tests.splice(i, 1);
+        continue;
+      }
       // Check if log-level matches
       if (logLevel !== testCase.expectLogLevel) {
         continue;
