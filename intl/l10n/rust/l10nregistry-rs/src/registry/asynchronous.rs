@@ -68,21 +68,21 @@ impl<P, B> State<P, B> {
         match self {
             Self::Locale(locale) => locale,
             Self::Solver { locale, .. } => locale,
-            Self::Empty => unreachable!(),
+            Self::Empty => unreachable!("Attempting to get a locale for an empty state."),
         }
     }
 
     fn take_solver(&mut self) -> ParallelProblemSolver<GenerateBundles<P, B>> {
         replace_with::replace_with_or_default_and_return(self, |self_| match self_ {
             Self::Solver { locale, solver } => (solver, Self::Locale(locale)),
-            _ => unreachable!(),
+            _ => unreachable!("Attempting to take a solver in an invalid state."),
         })
     }
 
     fn put_back_solver(&mut self, solver: ParallelProblemSolver<GenerateBundles<P, B>>) {
         replace_with::replace_with_or_default(self, |self_| match self_ {
             Self::Locale(locale) => Self::Solver { locale, solver },
-            _ => unreachable!(),
+            _ => unreachable!("Attempting to put back a solver in an invalid state."),
         })
     }
 }
