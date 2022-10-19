@@ -2744,7 +2744,7 @@ TEST(GeckoProfiler, Markers)
 
   EXPECT_TRUE(profiler_add_marker(
       "MediaSample", geckoprofiler::category::OTHER, {},
-      geckoprofiler::markers::MediaSampleMarker{}, 123, 456));
+      geckoprofiler::markers::MediaSampleMarker{}, 123, 456, 789));
 
   SpliceableChunkedJSONWriter w{FailureLatchInfallibleSource::Singleton()};
   w.Start();
