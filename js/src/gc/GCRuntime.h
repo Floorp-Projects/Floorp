@@ -253,24 +253,6 @@ class WeakCacheSweepIterator {
   void settle();
 };
 
-class BarrierTracer final : public GenericTracerImpl<BarrierTracer> {
- public:
-  static BarrierTracer* fromTracer(JSTracer* trc);
-
-  explicit BarrierTracer(JSRuntime* rt);
-
-  void performBarrier(JS::GCCellPtr cell);
-
- private:
-  template <typename T>
-  void onEdge(T** thingp, const char* name);
-  friend class GenericTracerImpl<BarrierTracer>;
-
-  void handleBufferFull(JS::GCCellPtr cell);
-
-  GCMarker& marker;
-};
-
 struct SweepingTracer final : public GenericTracerImpl<SweepingTracer> {
   explicit SweepingTracer(JSRuntime* rt);
 
@@ -954,7 +936,6 @@ class GCRuntime {
   js::StringStats stringStats;
 
   GCMarker marker;
-  BarrierTracer barrierTracer;
   SweepingTracer sweepingTracer;
 
   Vector<JS::GCCellPtr, 0, SystemAllocPolicy> unmarkGrayStack;

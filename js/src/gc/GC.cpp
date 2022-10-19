@@ -382,7 +382,6 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       heapState_(JS::HeapState::Idle),
       stats_(this),
       marker(rt),
-      barrierTracer(rt),
       sweepingTracer(rt),
       fullGCRequested(false),
       helperThreadRatio(TuningDefaults::HelperThreadRatio),

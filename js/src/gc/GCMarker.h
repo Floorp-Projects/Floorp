@@ -30,10 +30,7 @@ namespace gc {
 
 enum IncrementalProgress { NotFinished = 0, Finished };
 
-class BarrierTracer;
 struct Cell;
-
-using BarrierBuffer = Vector<JS::GCCellPtr, 0, SystemAllocPolicy>;
 
 struct EphemeronEdgeTableHashPolicy {
   using Lookup = Cell*;
@@ -449,21 +446,6 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
 
   template <typename F>
   void forEachDelayedMarkingArena(F&& f);
-
-  gc::BarrierBuffer& barrierBuffer() { return barrierBuffer_.ref(); }
-
-  bool traceBarrieredCells(SliceBudget& budget);
-  friend class gc::GCRuntime;
-
-  void traceBarrieredCell(JS::GCCellPtr cell);
-
-  /*
-   * List of cells encountered by the pre-write barrier whose children have yet
-   * to be marked. These cells have already been marked black. They are "grey"
-   * in the GC sense.
-   */
-  MainThreadOrGCTaskData<gc::BarrierBuffer> barrierBuffer_;
-  friend class gc::BarrierTracer;
 
   /*
    * The mark stack. Pointers in this stack are "gray" in the GC sense, but

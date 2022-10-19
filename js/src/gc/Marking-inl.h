@@ -147,10 +147,9 @@ inline bool IsAboutToBeFinalizedDuringMinorSweep(Cell** cellp) {
 }
 
 // Special case pre-write barrier for strings used during rope flattening. This
-// is a work around as tracing these strings is problematic for two reasons:
-//  - they may have had their cell headers overwritten with temporary GC data
-//  - interior rope nodes may be transformed into dependent strings before their
-//    base nodes have been transformed into linear strings
+// avoids eager marking of ropes which does not immediately mark the cells if we
+// hit OOM. This does not traverse ropes and is instead called on every node in
+// a rope during flattening.
 inline void PreWriteBarrierDuringFlattening(JSString* str) {
   MOZ_ASSERT(str);
   MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
@@ -161,12 +160,13 @@ inline void PreWriteBarrierDuringFlattening(JSString* str) {
 
   auto* cell = reinterpret_cast<TenuredCell*>(str);
   JS::shadow::Zone* zone = cell->shadowZoneFromAnyThread();
-
-  if (zone->needsIncrementalBarrier()) {
-    MOZ_ASSERT(!str->isPermanentAndMayBeShared());
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(zone->runtimeFromAnyThread()));
-    PerformIncrementalBarrierDuringFlattening(str);
+  if (!zone->needsIncrementalBarrier()) {
+    return;
   }
+
+  MOZ_ASSERT(!str->isPermanentAndMayBeShared());
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(zone->runtimeFromAnyThread()));
+  PerformIncrementalBarrierDuringFlattening(str);
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
