@@ -286,7 +286,6 @@ for var in (
 
 for var in (
     "MOZ_ALLOW_ADDON_SIDELOAD",
-    "MOZ_BACKGROUNDTASKS",
     "MOZ_SYSTEM_NSS",
     "MOZ_SYSTEM_POLICIES",
     "MOZ_UNSIGNED_APP_SCOPE",

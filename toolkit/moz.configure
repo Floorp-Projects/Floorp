@@ -2656,9 +2656,13 @@ option(
 )
 
 
-set_config(
-    "MOZ_BACKGROUNDTASKS", depends_if("--enable-backgroundtasks")(lambda _: True)
-)
+@depends("--enable-backgroundtasks")
+def background_tasks(value):
+    return bool(value)
+
+
+set_config("MOZ_BACKGROUNDTASKS", background_tasks)
+set_define("MOZ_BACKGROUNDTASKS", background_tasks)
 
 
 # Update-related programs: updater, maintenance service, update agent,

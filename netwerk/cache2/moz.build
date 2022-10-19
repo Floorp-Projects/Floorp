@@ -68,4 +68,3 @@ if CONFIG["MOZ_BACKGROUNDTASKS"]:
     EXTRA_JS_MODULES.backgroundtasks += [
         "BackgroundTask_purgeHTTPCache.sys.mjs",
     ]
-    DEFINES["MOZ_BACKGROUNDTASKS"] = True
