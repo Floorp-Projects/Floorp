@@ -11,6 +11,7 @@
 #include "AppleATDecoder.h"
 #include "AppleVTDecoder.h"
 #include "MP4Decoder.h"
+#include "VideoUtils.h"
 #include "VPXDecoder.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
@@ -75,19 +76,30 @@ already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateAudioDecoder(
 
 media::DecodeSupportSet AppleDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
-  bool supports = (aMimeType.EqualsLiteral("audio/mpeg") &&
-                   !StaticPrefs::media_ffvpx_mp3_enabled()) ||
-                  aMimeType.EqualsLiteral("audio/mp4a-latm") ||
-                  MP4Decoder::IsH264(aMimeType) || VPXDecoder::IsVP9(aMimeType);
+  bool checkSupport = (aMimeType.EqualsLiteral("audio/mpeg") &&
+                       !StaticPrefs::media_ffvpx_mp3_enabled()) ||
+                      aMimeType.EqualsLiteral("audio/mp4a-latm") ||
+                      MP4Decoder::IsH264(aMimeType) ||
+                      VPXDecoder::IsVP9(aMimeType);
+  media::DecodeSupportSet supportType{media::DecodeSupport::Unsupported};
+
+  if (checkSupport) {
+    UniquePtr<TrackInfo> trackInfo = CreateTrackInfoWithMIMEType(aMimeType);
+    if (!trackInfo) {
+      supportType = media::DecodeSupport::Unsupported;
+    } else if (trackInfo->IsAudio()) {
+      supportType = media::DecodeSupport::SoftwareDecode;
+    } else {
+      supportType = Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
+    }
+  }
+
   MOZ_LOG(sPDMLog, LogLevel::Debug,
           ("Apple decoder %s requested type '%s'",
-           supports ? "supports" : "rejects", aMimeType.BeginReading()));
-  if (supports) {
-    // TODO: Note that we do not yet distinguish between SW/HW decode support.
-    //       Will be done in bug 1754239.
-    return media::DecodeSupport::SoftwareDecode;
-  }
-  return media::DecodeSupport::Unsupported;
+           supportType == media::DecodeSupport::Unsupported ? "rejects"
+                                                            : "supports",
+           aMimeType.BeginReading()));
+  return supportType;
 }
 
 media::DecodeSupportSet AppleDecoderModule::Supports(
