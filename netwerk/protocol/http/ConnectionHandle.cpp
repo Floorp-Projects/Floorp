@@ -49,6 +49,11 @@ nsresult ConnectionHandle::TakeTransport(nsISocketTransport** aTransport,
   return mConn->TakeTransport(aTransport, aInputStream, aOutputStream);
 }
 
+Http3WebTransportSession* ConnectionHandle::GetWebTransportSession(
+    nsAHttpTransaction* aTransaction) {
+  return mConn->GetWebTransportSession(aTransaction);
+}
+
 bool ConnectionHandle::IsPersistent() {
   MOZ_ASSERT(OnSocketThread());
   return mConn->IsPersistent();

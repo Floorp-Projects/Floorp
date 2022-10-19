@@ -34,6 +34,7 @@
 #include "nsIStreamListenerTee.h"
 #include "nsISeekableStream.h"
 #include "nsIProtocolProxyService2.h"
+#include "nsIWebTransport.h"
 #include "nsCRT.h"
 #include "nsMimeTypes.h"
 #include "nsNetCID.h"
@@ -1341,6 +1342,10 @@ nsresult nsHttpChannel::SetupTransaction() {
     mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
   }
 
+  if (mIsForWebTransport) {
+    mCaps |= NS_HTTP_STICKY_CONNECTION;
+  }
+
   nsCOMPtr<nsIHttpPushListener> pushListener;
   NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
                                 NS_GET_IID(nsIHttpPushListener),
@@ -1374,6 +1379,7 @@ nsresult nsHttpChannel::SetupTransaction() {
                                     aResult.closeReason());
     };
   }
+  mTransaction->SetIsForWebTransport(mIsForWebTransport);
   rv = mTransaction->Init(
       mCaps, mConnectionInfo, &mRequestHead, mUploadStream, mReqContentLength,
       LoadUploadStreamHasHeaders(), GetCurrentEventTarget(), callbacks, this,
@@ -1931,6 +1937,10 @@ void nsHttpChannel::ProcessAltService() {
   // alt-authority = quoted-string ;  containing [ uri-host ] ":" port
 
   if (!LoadAllowAltSvc()) {  // per channel opt out
+    return;
+  }
+
+  if (mIsForWebTransport) {
     return;
   }
 
@@ -5792,6 +5802,10 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
     ReleaseListeners();
     return rv;
   }
+
+  nsCOMPtr<WebTransportSessionEventListener> wt = do_QueryInterface(listener);
+  mIsForWebTransport = !!wt;
+
   MOZ_ASSERT(
       mLoadInfo->GetSecurityMode() == 0 ||
           mLoadInfo->GetInitialSecurityCheckDone() ||
@@ -6100,8 +6114,14 @@ nsresult nsHttpChannel::BeginConnect() {
                                  originAttributes, host, port, true);
   } else {
 #endif
-    connInfo = new nsHttpConnectionInfo(host, port, ""_ns, mUsername, proxyInfo,
-                                        originAttributes, isHttps);
+    if (mIsForWebTransport) {
+      connInfo =
+          new nsHttpConnectionInfo(host, port, "h3"_ns, mUsername, proxyInfo,
+                                   originAttributes, isHttps, true, true);
+    } else {
+      connInfo = new nsHttpConnectionInfo(host, port, ""_ns, mUsername,
+                                          proxyInfo, originAttributes, isHttps);
+    }
 #ifdef FUZZING
   }
 #endif
@@ -6115,7 +6135,8 @@ nsresult nsHttpChannel::BeginConnect() {
 
   RefPtr<AltSvcMapping> mapping;
   if (!mConnectionInfo && LoadAllowAltSvc() &&  // per channel
-      (http2Allowed || http3Allowed) && !(mLoadFlags & LOAD_FRESH_CONNECTION) &&
+      !mIsForWebTransport && (http2Allowed || http3Allowed) &&
+      !(mLoadFlags & LOAD_FRESH_CONNECTION) &&
       AltSvcMapping::AcceptableProxy(proxyInfo) &&
       (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https")) &&
       (mapping = gHttpHandler->GetAltServiceMapping(
@@ -9775,6 +9796,12 @@ nsHttpChannel::EarlyHint(const nsACString& linkHeader) {
     mEarlyHintObserver->EarlyHint(linkHeader);
   }
   return NS_OK;
+}
+
+WebTransportSessionEventListener*
+nsHttpChannel::GetWebTransportSessionEventListener() {
+  nsCOMPtr<WebTransportSessionEventListener> wt = do_QueryInterface(mListener);
+  return wt;
 }
 
 }  // namespace net

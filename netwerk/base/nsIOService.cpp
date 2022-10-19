@@ -35,8 +35,10 @@
 #include "nsIProtocolProxyService2.h"
 #include "MainThreadUtils.h"
 #include "nsINode.h"
+#include "nsIWebTransport.h"
 #include "nsIWidget.h"
 #include "nsThreadUtils.h"
+#include "WebTransportSessionProxy.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/net/NeckoCommon.h"
@@ -1237,6 +1239,18 @@ nsIOService::NewChannel(const nsACString& aSpec, const char* aCharset,
   return NewChannelFromURI(uri, aLoadingNode, aLoadingPrincipal,
                            aTriggeringPrincipal, aSecurityFlags,
                            aContentPolicyType, result);
+}
+
+NS_IMETHODIMP
+nsIOService::NewWebTransport(nsIWebTransport** result) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCOMPtr<nsIWebTransport> webTransport = new WebTransportSessionProxy();
+
+  webTransport.forget(result);
+  return NS_OK;
 }
 
 bool nsIOService::IsLinkUp() {
