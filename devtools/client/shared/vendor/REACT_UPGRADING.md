@@ -42,12 +42,12 @@ We need to disable minification and tree shaking as they overcomplicate the upgr
     transformBundle(source) {
       return (
         source.replace(/['"]react['"]/g,
-                        "'devtools/client/shared/vendor/react'")
-              .replace(/createElementNS\(['"]http:\/\/www\.w3\.org\/1999\/xhtml['"], ['"]devtools\/client\/shared\/vendor\/react['"]\)/g,
+                        "'resource://devtools/client/shared/vendor/react.js'")
+              .replace(/createElementNS\(['"]http:\/\/www\.w3\.org\/1999\/xhtml['"], ['"]resource://devtools\/client\/shared\/vendor\/react.js['"]\)/g,
                         "createElementNS('http://www.w3.org/1999/xhtml', 'react'")
               .replace(/['"]react-dom['"]/g,
-                        "'devtools/client/shared/vendor/react-dom'")
-              .replace(/rendererPackageName:\s['"]devtools\/client\/shared\/vendor\/react-dom['"]/g,
+                        "'resource://devtools/client/shared/vendor/react-dom.js'")
+              .replace(/rendererPackageName:\s['"]resource://devtools\/client\/shared\/vendor\/react-dom.js['"]/g,
                         "rendererPackageName: 'react-dom'")
               .replace(/ocument\.createElement\(/g,
                         "ocument.createElementNS('http://www.w3.org/1999/xhtml', ")

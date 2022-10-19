@@ -22,8 +22,8 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-const react = require('devtools/client/shared/vendor/react');
-const PropTypes = _interopDefault(require('devtools/client/shared/vendor/react-prop-types'));
+const react = require("resource://devtools/client/shared/vendor/react.js");
+const PropTypes = _interopDefault(require("resource://devtools/client/shared/vendor/react-prop-types.js"));
 
 /*
  * Synchronously map an identifier or an array of identifiers to the best
