@@ -43,12 +43,11 @@ enum class CollectChildrenOption;              // HTMLEditUtils.h
 enum class EditAction;                         // mozilla/EditAction.h
 enum class EditorCommandParamType : uint16_t;  // mozilla/EditorCommands.h
 enum class EditSubAction : int32_t;            // mozilla/EditAction.h
+enum class JoinNodesDirection;                 // JoinSplitNodeDirection.h
 enum class ParagraphSeparator;                 // mozilla/HTMLEditor.h
 enum class SpecifiedStyle : uint8_t;           // mozilla/PendingStyles.h
+enum class SplitNodeDirection;                 // JoinSplitNodeDirection.h
 enum class SuggestCaret;                       // EditorUtils.h
-
-enum class JoinNodesDirection;  // HTMLEditHelper.h
-enum class SplitNodeDirection;  // HTMLEditHelper.h
 
 /******************************************************************************
  * enum sets
