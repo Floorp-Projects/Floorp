@@ -81,14 +81,7 @@ describe("project text search", () => {
     const source1 = await dispatch(
       actions.newGeneratedSource(makeSource("bar"))
     );
-    const sourceActor1 = selectors.getFirstSourceActorForGeneratedSource(
-      getState(),
-      source1.id
-    );
-
-    await dispatch(
-      actions.loadSourceText({ cx, source: source1, sourceActor: sourceActor1 })
-    );
+    await dispatch(actions.loadSourceText({ cx, source: source1 }));
 
     await dispatch(actions.togglePrettyPrint(cx, source1.id));
 
@@ -104,12 +97,7 @@ describe("project text search", () => {
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("bar"))
     );
-    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
-      getState(),
-      source.id
-    );
-
-    await dispatch(actions.loadSourceText({ cx, source, sourceActor }));
+    await dispatch(actions.loadSourceText({ cx, source }));
 
     dispatch(actions.addSearchQuery(cx, "bla"));
 

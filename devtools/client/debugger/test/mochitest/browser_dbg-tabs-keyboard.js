@@ -15,15 +15,13 @@ add_task(async function() {
 
   await selectSource(dbg, "simple1.js");
   await selectSource(dbg, "simple2.js");
-  is(countTabs(dbg), 2, "Two tabs are open");
+  is(countTabs(dbg), 2);
 
   pressKey(dbg, "close");
   waitForDispatch(dbg.store, "CLOSE_TAB");
-  is(countTabs(dbg), 1, "One tab is open");
-
-  await waitForSelectedSource(dbg, "simple1.js");
+  is(countTabs(dbg), 1);
 
   pressKey(dbg, "close");
   waitForDispatch(dbg.store, "CLOSE_TAB");
-  is(countTabs(dbg), 0, "No tabs open");
+  is(countTabs(dbg), 0);
 });

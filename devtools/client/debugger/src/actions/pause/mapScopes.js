@@ -12,7 +12,6 @@ import {
   getSelectedGeneratedScope,
   getSelectedOriginalScope,
   getThreadContext,
-  getFirstSourceActorForGeneratedSource,
 } from "../../selectors";
 import { loadSourceText } from "../sources/loadSourceText";
 import { PROMISE } from "../utils/middleware/promise";
@@ -150,22 +149,10 @@ export function getMappedScopes(cx, scopes, frame) {
       return null;
     }
 
-    // Load source text for the original source
-    await dispatch(loadSourceText({ cx, source, sourceActor: null }));
-
-    const generatedSourceActor = getFirstSourceActorForGeneratedSource(
-      getState(),
-      generatedSource.id
-    );
-
-    // Also load source text for its corresponding generated source
-    await dispatch(
-      loadSourceText({
-        cx,
-        source: generatedSource,
-        sourceActor: generatedSourceActor,
-      })
-    );
+    await dispatch(loadSourceText({ cx, source }));
+    if (source.isOriginal) {
+      await dispatch(loadSourceText({ cx, source: generatedSource }));
+    }
 
     try {
       const content =
