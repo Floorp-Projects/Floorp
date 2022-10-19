@@ -8,7 +8,7 @@
 <script>
 function onload() {
   let iframe1 = document.getElementById("iframe1");
-  iframe1.contentWindow.postMessage("HI", "http://mochi.test:8888");
+  iframe1.contentWindow.postMessage("HI", "https://example.net");
 }
 
 window.onmessage = function(evt) {

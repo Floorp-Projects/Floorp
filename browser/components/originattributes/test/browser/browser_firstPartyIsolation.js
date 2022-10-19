@@ -1,14 +1,12 @@
 const BASE_URL =
-  "http://mochi.test:8888/browser/browser/components/originattributes/test/browser/";
-const EXAMPLE_BASE_URL = BASE_URL.replace("mochi.test:8888", "example.com");
-const BASE_DOMAIN = "mochi.test";
+  "https://example.net/browser/browser/components/originattributes/test/browser/";
+const EXAMPLE_BASE_URL = BASE_URL.replace("example.net", "example.com");
+const BASE_DOMAIN = "example.net";
 
 add_setup(async function() {
   Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
-  Services.prefs.setBoolPref("dom.security.https_first", false);
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("privacy.firstparty.isolate");
-    Services.prefs.clearUserPref("dom.security.https_first");
     Services.cookies.removeAll();
     Services.cache2.clear();
   });
@@ -127,8 +125,8 @@ add_task(async function redirect_test() {
 
       Assert.equal(
         content.document.documentURI,
-        "http://example.com/browser/browser/components/originattributes/test/browser/dummy.html",
-        "The page should have been redirected to http://example.com/browser/browser/components/originattributes/test/browser/dummy.html"
+        "https://example.com/browser/browser/components/originattributes/test/browser/dummy.html",
+        "The page should have been redirected to https://example.com/browser/browser/components/originattributes/test/browser/dummy.html"
       );
       Assert.equal(
         content.document.nodePrincipal.originAttributes.firstPartyDomain,
@@ -146,7 +144,7 @@ add_task(async function redirect_test() {
   await BrowserTestUtils.browserLoaded(tab2.linkedBrowser, false, function(
     url
   ) {
-    return url == "http://example.com/";
+    return url == "https://example.com/";
   });
 
   await SpecialPowers.spawn(
@@ -160,8 +158,8 @@ add_task(async function redirect_test() {
       Assert.ok(true, "2nd tab document uri: " + content.document.documentURI);
       Assert.equal(
         content.document.documentURI,
-        "http://example.com/",
-        "The page should have been redirected to http://example.com"
+        "https://example.com/",
+        "The page should have been redirected to https://example.com"
       );
       Assert.equal(
         content.document.nodePrincipal.originAttributes.firstPartyDomain,
@@ -181,10 +179,10 @@ add_task(async function redirect_test() {
 
   // This redirect happens on the iframe, so unlike the two redirect tests above,
   // the firstPartyDomain should still stick to the current top-level document,
-  // which is mochi.test.
+  // which is example.net.
   await SpecialPowers.spawn(
     tab3.linkedBrowser,
-    [{ firstPartyDomain: "mochi.test" }],
+    [{ firstPartyDomain: BASE_DOMAIN }],
     async function(attrs) {
       let iframe = content.document.getElementById("iframe1");
       SpecialPowers.spawn(iframe, [attrs.firstPartyDomain], function(
@@ -198,8 +196,8 @@ add_task(async function redirect_test() {
 
         Assert.equal(
           content.document.documentURI,
-          "http://example.com/browser/browser/components/originattributes/test/browser/dummy.html",
-          "The page should have been redirected to http://example.com/browser/browser/components/originattributes/test/browser/dummy.html"
+          "https://example.com/browser/browser/components/originattributes/test/browser/dummy.html",
+          "The page should have been redirected to https://example.com/browser/browser/components/originattributes/test/browser/dummy.html"
         );
 
         Assert.equal(
@@ -260,7 +258,7 @@ add_task(async function openWindow_test() {
 
   await SpecialPowers.spawn(
     tab.linkedBrowser,
-    [{ firstPartyDomain: "mochi.test" }],
+    [{ firstPartyDomain: BASE_DOMAIN }],
     async function(attrs) {
       let promise = new Promise(resolve => {
         content.addEventListener("message", resolve, { once: true });
@@ -325,7 +323,7 @@ add_task(async function window_open_redirect_test() {
 
   await SpecialPowers.spawn(
     win.gBrowser.selectedBrowser,
-    [{ firstPartyDomain: "mochi.test" }],
+    [{ firstPartyDomain: BASE_DOMAIN }],
     async function(attrs) {
       Assert.equal(
         content.docShell.getOriginAttributes().firstPartyDomain,
@@ -363,7 +361,7 @@ add_task(async function window_open_iframe_test() {
 
   await SpecialPowers.spawn(
     win.gBrowser.selectedBrowser,
-    [{ firstPartyDomain: "mochi.test" }],
+    [{ firstPartyDomain: BASE_DOMAIN }],
     async function(attrs) {
       Assert.equal(
         content.docShell.getOriginAttributes().firstPartyDomain,
@@ -371,7 +369,7 @@ add_task(async function window_open_iframe_test() {
         "window.open() should have firstPartyDomain attribute"
       );
 
-      // The document is http://example.com/browser/browser/components/originattributes/test/browser/test_firstParty.html
+      // The document is https://example.com/browser/browser/components/originattributes/test/browser/test_firstParty.html
       // so the firstPartyDomain will be overriden to 'example.com'.
       Assert.equal(
         content.document.nodePrincipal.originAttributes.firstPartyDomain,
@@ -408,7 +406,7 @@ add_task(async function form_test() {
 
   await SpecialPowers.spawn(
     tab.linkedBrowser,
-    [{ firstPartyDomain: "mochi.test" }],
+    [{ firstPartyDomain: BASE_DOMAIN }],
     async function(attrs) {
       Assert.equal(
         content.document.nodePrincipal.originAttributes.firstPartyDomain,
@@ -440,7 +438,7 @@ add_task(async function window_open_form_test() {
 
   await SpecialPowers.spawn(
     win.gBrowser.selectedBrowser,
-    [{ firstPartyDomain: "mochi.test" }],
+    [{ firstPartyDomain: BASE_DOMAIN }],
     async function(attrs) {
       Assert.equal(
         content.docShell.getOriginAttributes().firstPartyDomain,

@@ -39,8 +39,6 @@ add_setup(async function() {
     set: [
       ["privacy.firstparty.isolate", true],
       ["dom.security.https_first", false],
-      // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
-      ["network.cookie.sameSite.laxByDefault", false],
     ],
   });
 
