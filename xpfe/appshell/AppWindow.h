@@ -224,7 +224,10 @@ class AppWindow final : public nsIBaseWindow,
   void SetSpecifiedSize(int32_t aSpecWidth, int32_t aSpecHeight);
   bool UpdateWindowStateFromMiscXULAttributes();
   void SyncAttributesToWidget();
-  NS_IMETHOD SavePersistentAttributes();
+  void SavePersistentAttributes(PersistentAttributes);
+  void SavePersistentAttributes() {
+    SavePersistentAttributes(mPersistentAttributesDirty);
+  }
 
   bool NeedsTooltipListener();
   void AddTooltipSupport();
