@@ -91,7 +91,7 @@ impl<P, B> L10nRegistry<P, B> {
         }
     }
 
-    pub fn set_adapt_bundle(&mut self, bundle_adapter: B) -> Result<(), L10nRegistrySetupError>
+    pub fn set_bundle_adapter(&mut self, bundle_adapter: B) -> Result<(), L10nRegistrySetupError>
     where
         B: BundleAdapter,
     {
