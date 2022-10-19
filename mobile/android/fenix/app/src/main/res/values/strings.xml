@@ -436,7 +436,11 @@
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Recently visited</string>
     <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket">Pocket</string>
+    <string name="customize_toggle_pocket" moz:RemovedIn="108" tools:ignore="UnusedResources">Pocket</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_2">Thought-provoking stories</string>
+    <!-- Summary for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_summary">Articles powered by Pocket</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">Sponsored stories</string>
     <!-- Title for the opening wallpaper settings screen -->

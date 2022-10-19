@@ -130,7 +130,7 @@ private fun recentlyVisitedButton() =
     onView(allOf(withText(R.string.customize_toggle_recently_visited)))
 
 private fun pocketButton() =
-    onView(allOf(withText(R.string.customize_toggle_pocket)))
+    onView(allOf(withText(R.string.customize_toggle_pocket_2)))
 
 private fun sponsoredStoriesButton() =
     onView(allOf(withText(R.string.customize_toggle_pocket_sponsored)))
