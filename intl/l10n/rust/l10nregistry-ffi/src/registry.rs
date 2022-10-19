@@ -224,7 +224,7 @@ pub unsafe extern "C" fn l10nregistry_get_parent_process_sources(
     // `L10nRegistry` instance is cheap and mainly servers as a store of state.
     let reg = get_l10n_registry();
     for name in reg.get_source_names().unwrap() {
-        let source = reg.get_source(&name).unwrap().unwrap();
+        let source = reg.file_source_by_name(&name).unwrap().unwrap();
         let descriptor = L10nFileSourceDescriptor {
             name: source.name.as_str().into(),
             metasource: source.metasource.as_str().into(),
@@ -365,7 +365,7 @@ pub extern "C" fn l10nregistry_get_source(
 
     *status = L10nRegistryStatus::None;
 
-    if let Ok(Some(source)) = reg.get_source(&name.to_utf8()).report_error() {
+    if let Ok(Some(source)) = reg.file_source_by_name(&name.to_utf8()).report_error() {
         Box::into_raw(Box::new(source))
     } else {
         std::ptr::null_mut()
