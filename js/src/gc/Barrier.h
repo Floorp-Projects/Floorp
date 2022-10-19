@@ -530,8 +530,7 @@ class PreBarriered : public WriteBarriered<T> {
  public:
   PreBarriered() : WriteBarriered<T>(JS::SafelyInitialized<T>::create()) {}
   /*
-   * Allow implicit construction for use in generic contexts, such as
-   * DebuggerWeakMap::markKeys.
+   * Allow implicit construction for use in generic contexts.
    */
   MOZ_IMPLICIT PreBarriered(const T& v) : WriteBarriered<T>(v) {}
 

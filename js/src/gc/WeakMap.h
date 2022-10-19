@@ -152,10 +152,6 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   inline bool addImplicitEdges(gc::Cell* key, gc::Cell* delegate,
                                gc::TenuredCell* value);
 
-  // Any weakmap key types that want to participate in the non-iterative
-  // ephemeron marking must override this method.
-  virtual void markKey(GCMarker* marker, gc::Cell* markedCell, gc::Cell* l) = 0;
-
   virtual bool markEntries(GCMarker* marker) = 0;
 
 #ifdef JS_GC_ZEAL
@@ -280,9 +276,6 @@ class WeakMap
     return p && p->value() == value;
   }
 #endif
-
-  void markKey(GCMarker* marker, gc::Cell* markedCell,
-               gc::Cell* origKey) override;
 
   bool markEntry(GCMarker* marker, Key& key, Value& value);
 
