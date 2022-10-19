@@ -962,11 +962,11 @@ export var PlacesUIUtils = {
 
     let browserWindow = getBrowserWindow(aWindow);
     var urls = [];
-    let skipMarking =
+    let isPrivate =
       browserWindow && lazy.PrivateBrowsingUtils.isWindowPrivate(browserWindow);
     for (let item of aItemsToOpen) {
       urls.push(item.uri);
-      if (skipMarking) {
+      if (isPrivate) {
         continue;
       }
 
@@ -993,11 +993,16 @@ export var PlacesUIUtils = {
       );
       args.appendElement(stringsToLoad);
 
+      let features = "chrome,dialog=no,all";
+      if (isPrivate) {
+        features += ",private";
+      }
+
       browserWindow = Services.ww.openWindow(
         aWindow,
         AppConstants.BROWSER_CHROME_URL,
         null,
-        "chrome,dialog=no,all",
+        features,
         args
       );
       return;
@@ -1115,6 +1120,12 @@ export var PlacesUIUtils = {
         } else {
           this.markPageAsTyped(aNode.uri);
         }
+      } else {
+        // This is a targeted fix for bug 1792163, where it was discovered
+        // that if you open the Library from a Private Browsing window, and then
+        // use the "Open in New Window" context menu item to open a new window,
+        // that the window will open under the wrong icon on the Windows taskbar.
+        aPrivate = true;
       }
 
       const isJavaScriptURL = aNode.uri.startsWith("javascript:");
