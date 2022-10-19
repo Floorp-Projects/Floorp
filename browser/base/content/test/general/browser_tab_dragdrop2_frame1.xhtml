@@ -88,9 +88,7 @@ function createPanel(attrs)
   var button = document.createXULElement("button");
   panel.appendChild(button);
   button.label = "OK";
-  button.width = 120;
-  button.height = 40;
-  button.setAttribute("style", "-moz-appearance: none; border: 0; margin: 0;");
+  button.setAttribute("style", "-moz-appearance: none; border: 0; margin: 0; height: 40px; width: 120px;");
   panel.setAttribute("style", "-moz-appearance: none; border: 0; margin: 0;");
   return document.documentElement.appendChild(panel);
 }
