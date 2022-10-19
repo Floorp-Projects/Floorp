@@ -70,4 +70,11 @@ interface nsIBrowserProfileMigrator : nsISupports
    * won't succeed and the user should be warned.
    */
   readonly attribute boolean          sourceLocked;
+
+  /**
+   * Returns true if the migrator is configured to be enabled. This is
+   * controlled via the `browser.migrate.<BROWSER_KEY>.enabled` boolean
+   * preference, and defaults to false if the preference is not set.
+   */
+  readonly attribute boolean          enabled;
 };
