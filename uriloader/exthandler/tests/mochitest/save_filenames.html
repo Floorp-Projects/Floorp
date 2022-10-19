@@ -88,11 +88,11 @@
 
 <!-- script with invalid extension. -->
 <script id="i23" src="http://localhost:8000/save_filename.sjs?type=js&filename=script2.exe"
-        data-filename="script2.exe"></script>
+        data-filename="script2.exe" data-savepagename="script2.exe.js"></script>
 
 <!-- script with escaped characters -->
 <script id="i24" src="http://localhost:8000/save_filename.sjs?type=js&filename=script%20%33.exe"
-        data-filename="script 3.exe"></script>
+        data-filename="script 3.exe" data-savepagename="script 3.exe.js"></script>
 
 <!-- script with long filename -->
 <script id="i25" src="http://localhost:8000/save_filename.sjs?type=js&filename=script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789.js"
@@ -152,11 +152,11 @@
 
 <!-- script where url filename has no extension and invalid extension in content disposition filename -->
 <script id="i41" src="http://localhost:8000/base?type=js&filename=script5.exe"
-        data-filename="script5.exe"></script>
+        data-filename="script5.exe" data-savepagename="script5.exe.js"></script>
 
 <!-- script where url filename has no extension and escaped characters in content disposition filename-->
 <script id="i42" src="http://localhost:8000/base?type=js&filename=script%20%36.exe"
-        data-filename="script 6.exe"></script>
+        data-filename="script 6.exe" data-savepagename="script 6.exe.js"></script>
 
 <!-- text where filename is present -->
 <img id="i43" src="http://localhost:8000/getdata.png?type=text&filename=readme.txt"
@@ -292,6 +292,9 @@
 <img id="i76" src="http://localhost:8000/executable.exe?type=gook"
      data-nodrag="true" data-unknown="typeonly" data-filename="executable.exe">
 
+<!-- embedded child html -->
+<object id="i77" data="http://localhost:8000/save_filename.sjs?type=html&filename=child.par"
+        data-filename="child.par" data-unknown="true"></object>
 </span>
 
 <!-- This set is used to test the filename specified by the download attribute is validated correctly. -->
