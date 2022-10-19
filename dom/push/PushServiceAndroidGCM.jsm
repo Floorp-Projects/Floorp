@@ -2,16 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { PushRecord } from "resource://gre/modules/PushRecord.sys.mjs";
-import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
+"use strict";
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+const { PushRecord } = ChromeUtils.import(
+  "resource://gre/modules/PushRecord.jsm"
+);
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
+);
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  PushCrypto: "resource://gre/modules/PushCrypto.sys.mjs",
-  PushDB: "resource://gre/modules/PushDB.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PushDB",
+  "resource://gre/modules/PushDB.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PushCrypto",
+  "resource://gre/modules/PushCrypto.jsm"
+);
 ChromeUtils.defineModuleGetter(
   lazy,
   "EventDispatcher",
@@ -23,6 +37,8 @@ XPCOMUtils.defineLazyGetter(lazy, "Log", () => {
     "resource://gre/modules/AndroidLog.jsm"
   ).AndroidLog.bind("Push");
 });
+
+const EXPORTED_SYMBOLS = ["PushServiceAndroidGCM"];
 
 XPCOMUtils.defineLazyGetter(lazy, "console", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
@@ -47,7 +63,7 @@ const prefs = new Preferences("dom.push.");
  * The implementation of WebPush push backed by Android's GCM
  * delivery.
  */
-export var PushServiceAndroidGCM = {
+var PushServiceAndroidGCM = {
   _mainPushService: null,
   _serverURI: null,
 
