@@ -426,40 +426,6 @@ class nsXULElement : public nsStyledElement {
   void SetTooltip(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetXULAttr(nsGkAtoms::tooltip, aValue, rv);
   }
-  void GetWidth(DOMString& aValue) const {
-    GetXULAttr(nsGkAtoms::width, aValue);
-  }
-  void SetWidth(const nsAString& aValue, mozilla::ErrorResult& rv) {
-    SetXULAttr(nsGkAtoms::width, aValue, rv);
-  }
-  void GetHeight(DOMString& aValue) { GetXULAttr(nsGkAtoms::height, aValue); }
-  void SetHeight(const nsAString& aValue, mozilla::ErrorResult& rv) {
-    SetXULAttr(nsGkAtoms::height, aValue, rv);
-  }
-  void GetMinWidth(DOMString& aValue) const {
-    GetXULAttr(nsGkAtoms::minwidth, aValue);
-  }
-  void SetMinWidth(const nsAString& aValue, mozilla::ErrorResult& rv) {
-    SetXULAttr(nsGkAtoms::minwidth, aValue, rv);
-  }
-  void GetMinHeight(DOMString& aValue) const {
-    GetXULAttr(nsGkAtoms::minheight, aValue);
-  }
-  void SetMinHeight(const nsAString& aValue, mozilla::ErrorResult& rv) {
-    SetXULAttr(nsGkAtoms::minheight, aValue, rv);
-  }
-  void GetMaxWidth(DOMString& aValue) const {
-    GetXULAttr(nsGkAtoms::maxwidth, aValue);
-  }
-  void SetMaxWidth(const nsAString& aValue, mozilla::ErrorResult& rv) {
-    SetXULAttr(nsGkAtoms::maxwidth, aValue, rv);
-  }
-  void GetMaxHeight(DOMString& aValue) const {
-    GetXULAttr(nsGkAtoms::maxheight, aValue);
-  }
-  void SetMaxHeight(const nsAString& aValue, mozilla::ErrorResult& rv) {
-    SetXULAttr(nsGkAtoms::maxheight, aValue, rv);
-  }
   void GetTooltipText(DOMString& aValue) const {
     GetXULAttr(nsGkAtoms::tooltiptext, aValue);
   }

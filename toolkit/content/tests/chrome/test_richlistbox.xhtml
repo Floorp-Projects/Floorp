@@ -10,7 +10,7 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
-  <richlistbox seltype="multiple" id="richlistbox" flex="1" minheight="80" maxheight="80" height="80" />
+  <richlistbox seltype="multiple" id="richlistbox" flex="1" style="min-height: 80px; max-height: 80px; height: 80px"/>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
@@ -32,7 +32,7 @@ function test_richlistbox()
   var item;
   do {
     item = richListBox.appendItem("Test", "");
-    item.height = item.minHeight = item.maxHeight = Math.floor(height / 4);
+    item.style.height = item.style.minHeight = item.style.maxHeight = Math.floor(height / 4) + "px";
   } while (item.getBoundingClientRect().bottom < (height * 2))
   richListBox.appendItem("Test", "");
   richListBox.firstChild.nextSibling.id = "list-box-first";
