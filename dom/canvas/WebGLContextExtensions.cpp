@@ -288,7 +288,6 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const {
 
     // OES_
     case WebGLExtensionID::OES_draw_buffers_indexed:
-      if (!StaticPrefs::webgl_enable_draft_extensions()) return false;
       if (!IsWebGL2()) return false;
       return gl->IsSupported(gl::GLFeature::draw_buffers_indexed) &&
              gl->IsSupported(gl::GLFeature::get_integer_indexed);
