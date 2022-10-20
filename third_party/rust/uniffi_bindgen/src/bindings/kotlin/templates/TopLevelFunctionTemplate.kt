@@ -1,6 +1,6 @@
-{%- match func.throws() -%}
+{%- match func.throws_type() -%}
 {%- when Some with (throwable) %}
-@Throws({{ throwable|exception_name }}::class)
+@Throws({{ throwable|type_name }}::class)
 {%- else -%}
 {%- endmatch %}
 {%- match func.return_type() -%}

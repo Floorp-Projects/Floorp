@@ -1,19 +1,23 @@
 {%- let e = ci.get_error_definition(name).unwrap() %}
-class {{ type_name }}(Exception):
-    {%- if e.is_flat() %}
 
-    # Each variant is a nested class of the error itself.
-    # It just carries a string error message, so no special implementation is necessary.
-    {%- for variant in e.variants() %}
-    class {{ variant.name()|class_name }}(Exception):
+# {{ type_name }}
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separated, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class UniFFIExceptionTmpNamespace:
+    class {{ type_name }}(Exception):
         pass
-    {%- endfor %}
+    {% for variant in e.variants() %}
+    {%- let variant_type_name = variant.name()|class_name %}
 
+    {%- if e.is_flat() %}
+    class {{ variant_type_name }}({{ type_name }}):
+        def __str__(self):
+            return "{{ type_name }}.{{ variant_type_name }}({})".format(repr(super().__str__()))
     {%- else %}
-
-    # Each variant is a nested class of the error itself.
-    {%- for variant in e.variants() %}
-    class {{ variant.name()|class_name }}(Exception):
+    class {{ variant_type_name }}({{ type_name }}):
         def __init__(self{% for field in variant.fields() %}, {{ field.name()|var_name }}{% endfor %}):
             {%- if variant.has_fields() %}
             {%- for field in variant.fields() %}
@@ -30,13 +34,17 @@ class {{ type_name }}(Exception):
                 '{{ field.name()|var_name }}={!r}'.format(self.{{ field.name()|var_name }}),
                 {%- endfor %}
             ]
-            return "{{ type_name }}.{{ variant.name()|class_name }}({})".format(', '.join(field_parts))
+            return "{{ type_name }}.{{ variant_type_name }}({})".format(', '.join(field_parts))
             {%- else %}
-            return "{{ type_name }}.{{ variant.name()|class_name }}"
+            return "{{ type_name }}.{{ variant_type_name }}()"
             {%- endif %}
-
-    {%- endfor %}
     {%- endif %}
+
+    {{ type_name }}.{{ variant_type_name }} = {{ variant_type_name }}
+    {%- endfor %}
+{{ type_name }} = UniFFIExceptionTmpNamespace.{{ type_name }}
+del UniFFIExceptionTmpNamespace
+
 
 class {{ ffi_converter_name }}(FfiConverterRustBuffer):
     @staticmethod

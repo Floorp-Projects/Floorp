@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "uniffi_macros"
-version = "0.20.0"
+version = "0.21.0"
 authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
 description = "a multi-language bindings generator for rust (convenience macros)"
 homepage = "https://mozilla.github.io/uniffi-rs"
@@ -51,16 +51,19 @@ version = "1.0.136"
 
 [dependencies.syn]
 version = "1.0"
-features = ["full"]
+features = [
+    "full",
+    "visit-mut",
+]
 
 [dependencies.toml]
 version = "0.5.9"
 
 [dependencies.uniffi_build]
-version = "=0.20.0"
+version = "=0.21.0"
 
 [dependencies.uniffi_meta]
-version = "=0.20.0"
+version = "=0.21.0"
 
 [features]
 builtin-bindgen = ["uniffi_build/builtin-bindgen"]

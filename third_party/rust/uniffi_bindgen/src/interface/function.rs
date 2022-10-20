@@ -81,7 +81,11 @@ impl Function {
         &self.ffi_func
     }
 
-    pub fn throws(&self) -> Option<&str> {
+    pub fn throws(&self) -> bool {
+        self.attributes.get_throws_err().is_some()
+    }
+
+    pub fn throws_name(&self) -> Option<&str> {
         self.attributes.get_throws_err()
     }
 
@@ -195,16 +199,16 @@ impl Argument {
         &self.name
     }
 
-    pub fn type_(&self) -> Type {
-        self.type_.clone()
+    pub fn type_(&self) -> &Type {
+        &self.type_
     }
 
     pub fn by_ref(&self) -> bool {
         self.by_ref
     }
 
-    pub fn default_value(&self) -> Option<Literal> {
-        self.default.clone()
+    pub fn default_value(&self) -> Option<&Literal> {
+        self.default.as_ref()
     }
 
     pub fn iter_types(&self) -> TypeIterator<'_> {
@@ -272,7 +276,7 @@ mod test {
         let func1 = ci.get_function_definition("minimal").unwrap();
         assert_eq!(func1.name(), "minimal");
         assert!(func1.return_type().is_none());
-        assert!(func1.throws().is_none());
+        assert!(func1.throws_type().is_none());
         assert_eq!(func1.arguments().len(), 0);
 
         let func2 = ci.get_function_definition("rich").unwrap();
@@ -281,7 +285,7 @@ mod test {
             func2.return_type().unwrap().canonical_name(),
             "SequenceOptionalstring"
         );
-        assert!(matches!(func2.throws(), Some("TestError")));
+        assert!(matches!(func2.throws_type(), Some(Type::Error(s)) if s == "TestError"));
         assert_eq!(func2.arguments().len(), 2);
         assert_eq!(func2.arguments()[0].name(), "arg1");
         assert_eq!(func2.arguments()[0].type_().canonical_name(), "u32");

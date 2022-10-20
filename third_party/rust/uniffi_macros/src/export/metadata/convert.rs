@@ -15,12 +15,19 @@ pub(super) fn fn_param_metadata(
         .filter_map(|a| {
             let _is_method = false;
             let (name, ty) = match a {
+                // methods currently have an implicit self parameter in uniffi_meta
                 syn::FnArg::Receiver(_) => return None,
                 syn::FnArg::Typed(pat_ty) => {
                     let name = match &*pat_ty.pat {
                         syn::Pat::Ident(pat_id) => pat_id.ident.to_string(),
                         _ => unimplemented!(),
                     };
+
+                    // methods currently have an implicit self parameter in uniffi_meta
+                    if name == "self" {
+                        return None;
+                    }
+
                     (name, &pat_ty.ty)
                 }
             };
@@ -56,7 +63,7 @@ pub(crate) fn convert_type(ty: &syn::Type) -> syn::Result<Type> {
 
     match &type_path.path.segments.first() {
         Some(seg) => match &seg.arguments {
-            syn::PathArguments::None => convert_bare_type_name(&seg.ident),
+            syn::PathArguments::None => Ok(convert_bare_type_name(&seg.ident)),
             syn::PathArguments::AngleBracketed(a) => convert_generic_type(&seg.ident, a),
             syn::PathArguments::Parenthesized(_) => Err(type_not_supported(type_path)),
         },
@@ -74,7 +81,7 @@ fn convert_generic_type(
     let mut it = a.args.iter();
     match it.next() {
         // `u8<>` is a valid way to write `u8` in the type namespace, so why not?
-        None => convert_bare_type_name(ident),
+        None => Ok(convert_bare_type_name(ident)),
         Some(arg1) => match it.next() {
             None => convert_generic_type1(ident, arg1),
             Some(arg2) => match it.next() {
@@ -89,21 +96,22 @@ fn convert_generic_type(
     }
 }
 
-fn convert_bare_type_name(ident: &Ident) -> syn::Result<Type> {
-    match ident.to_string().as_str() {
-        "u8" => Ok(Type::U8),
-        "u16" => Ok(Type::U16),
-        "u32" => Ok(Type::U32),
-        "u64" => Ok(Type::U64),
-        "i8" => Ok(Type::I8),
-        "i16" => Ok(Type::I16),
-        "i32" => Ok(Type::I32),
-        "i64" => Ok(Type::I64),
-        "f32" => Ok(Type::F32),
-        "f64" => Ok(Type::F64),
-        "bool" => Ok(Type::Bool),
-        "String" => Ok(Type::String),
-        _ => Err(type_not_supported(ident)),
+fn convert_bare_type_name(ident: &Ident) -> Type {
+    let name = ident.to_string();
+    match name.as_str() {
+        "u8" => Type::U8,
+        "u16" => Type::U16,
+        "u32" => Type::U32,
+        "u64" => Type::U64,
+        "i8" => Type::I8,
+        "i16" => Type::I16,
+        "i32" => Type::I32,
+        "i64" => Type::I64,
+        "f32" => Type::F32,
+        "f64" => Type::F64,
+        "bool" => Type::Bool,
+        "String" => Type::String,
+        _ => Type::Unresolved { name },
     }
 }
 

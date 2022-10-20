@@ -28,6 +28,8 @@
 //! In addition to the core `FfiConverter` trait, we provide a handful of struct definitions useful
 //! for passing core rust types over the FFI, such as [`RustBuffer`].
 
+#![warn(rust_2018_idioms, unused_qualifications)]
+
 use anyhow::bail;
 use bytes::buf::{Buf, BufMut};
 use paste::paste;
@@ -56,7 +58,7 @@ pub mod deps {
     pub use static_assertions;
 }
 
-pub use uniffi_macros::export;
+pub use uniffi_macros::{export, Object, Record};
 
 mod panichook;
 
@@ -276,11 +278,7 @@ unsafe impl FfiConverter for bool {
     type FfiType = i8;
 
     fn lower(obj: Self::RustType) -> Self::FfiType {
-        if obj {
-            1
-        } else {
-            0
-        }
+        i8::from(obj)
     }
 
     fn try_lift(v: Self::FfiType) -> Result<Self::RustType> {

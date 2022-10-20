@@ -34,6 +34,7 @@ pub(crate) fn snapshot<B: Bucketing>(hist: &Histogram<B>) -> DistributionData {
             .map(|(k, v)| (k as i64, v as i64))
             .collect(),
         sum: hist.sum() as i64,
+        count: hist.count() as i64,
     }
 }
 
