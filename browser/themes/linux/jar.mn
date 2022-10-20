@@ -16,7 +16,6 @@ browser.jar:
   skin/classic/browser/customizableui/panelUI.css (customizableui/panelUI.css)
   skin/classic/browser/downloads/allDownloadsView.css (downloads/allDownloadsView.css)
   skin/classic/browser/downloads/downloads.css        (downloads/downloads.css)
-  skin/classic/browser/places/editBookmark.css        (places/editBookmark.css)
   skin/classic/browser/places/organizer.css           (places/organizer.css)
   skin/classic/browser/preferences/alwaysAsk.png      (preferences/alwaysAsk.png)
   skin/classic/browser/preferences/applications.css   (preferences/applications.css)

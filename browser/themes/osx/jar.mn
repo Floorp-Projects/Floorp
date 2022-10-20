@@ -14,7 +14,6 @@ browser.jar:
   skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
   skin/classic/browser/monitor-base.png
   skin/classic/browser/monitor-border.png
-  skin/classic/browser/places/editBookmark.css              (places/editBookmark.css)
   skin/classic/browser/places/organizer.css                 (places/organizer.css)
   skin/classic/browser/preferences/alwaysAsk.png            (preferences/alwaysAsk.png)
   skin/classic/browser/preferences/application.png          (preferences/application.png)
