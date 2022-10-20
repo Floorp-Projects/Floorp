@@ -29,7 +29,7 @@
     <!-- Description for navigation permission. -->
     <string name="mozac_feature_addons_permissions_web_navigation_description">نیویگیشݨ دے دوران براوئزر دی سرگرمی تائیں رسائی</string>
     <!-- Description for bookmarks permission. -->
-    <string name="mozac_feature_addons_permissions_bookmarks_description">کتاب نشان پڑھو تے ترمیم کرو</string>
+    <string name="mozac_feature_addons_permissions_bookmarks_description">نشانیاں پڑھو تے ترمیم کرو</string>
     <!-- Description for browser_setting permission. -->
     <string name="mozac_feature_addons_permissions_browser_setting_description">براؤزر ترتیباں پڑھو تے تبدیل کرو</string>
     <!-- Description for browser_data permission. -->
