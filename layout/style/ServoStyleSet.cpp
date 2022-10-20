@@ -776,17 +776,24 @@ bool ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags) {
     postTraversalRequired |= root->HasAnyOfFlags(
         Element::kAllServoDescendantBits | NODE_NEEDS_FRAME);
 
-    if (parent) {
-      MOZ_ASSERT(root == mDocument->GetServoRestyleRoot());
-      if (parent->HasDirtyDescendantsForServo()) {
+    {
+      uint32_t existingBits = mDocument->GetServoRestyleRootDirtyBits();
+      Element* newRoot = nullptr;
+      while (parent && parent->HasDirtyDescendantsForServo()) {
+        MOZ_ASSERT(root == mDocument->GetServoRestyleRoot(),
+                   "Restyle root shouldn't have magically changed");
         // If any style invalidation was triggered in our siblings, then we may
         // need to post-traverse them, even if the root wasn't restyled after
         // all.
-        uint32_t existingBits = mDocument->GetServoRestyleRootDirtyBits();
-        // We need to propagate the existing bits to the parent.
+        // We need to propagate the existing bits to the ancestor.
         parent->SetFlags(existingBits);
+        newRoot = parent;
+        parent = parent->GetFlattenedTreeParentElementForStyle();
+      }
+
+      if (newRoot) {
         mDocument->SetServoRestyleRoot(
-            parent, existingBits | ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+            newRoot, existingBits | ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
         postTraversalRequired = true;
       }
     }
