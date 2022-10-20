@@ -66,6 +66,15 @@ add_setup(async () => {
   // Telemetry test setup needed to ensure that the builtin events are defined
   // and they can be collected and verified.
   await TelemetryController.testSetup();
+
+  // This is actually only needed on Android, because it does not properly support unified telemetry
+  // and so, if not enabled explicitly here, it would make these tests to fail when running on
+  // release builds.
+  const oldCanRecordBase = Services.telemetry.canRecordBase;
+  Services.telemetry.canRecordBase = true;
+  registerCleanupFunction(() => {
+    Services.telemetry.canRecordBase = oldCanRecordBase;
+  });
 });
 
 add_task(async function test_manifest_site_permissions() {
