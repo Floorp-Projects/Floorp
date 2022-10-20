@@ -5,10 +5,10 @@
 #ifndef HttpWinUtils_h__
 #define HttpWinUtils_h__
 
-class nsHttpChannel;
-
 namespace mozilla {
 namespace net {
+
+class nsHttpChannel;
 
 void AddWindowsSSO(nsHttpChannel* channel);
 

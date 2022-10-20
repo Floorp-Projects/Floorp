@@ -12,6 +12,7 @@ interface nsIURI;
 interface nsIFile;
 interface nsIPrincipal;
 interface nsILoadInfo;
+interface nsIWebTransport;
 
 webidl Node;
 
@@ -148,6 +149,11 @@ interface nsIIOService : nsISupports
                           in nsIPrincipal aTriggeringPrincipal,
                           in unsigned long aSecurityFlags,
                           in nsContentPolicyType aContentPolicyType);
+
+    /**
+     * Creates a WebTransport.
+     */
+    nsIWebTransport newWebTransport();
 
     /**
      * Returns true if networking is in "offline" mode. When in offline mode,

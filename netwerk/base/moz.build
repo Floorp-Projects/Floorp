@@ -314,6 +314,7 @@ LOCAL_INCLUDES += [
     "/dom/base",
     "/netwerk/dns",
     "/netwerk/protocol/http",
+    "/netwerk/protocol/webtransport",
     "/netwerk/socket",
     "/netwerk/url-classifier",
     "/security/manager/ssl",
