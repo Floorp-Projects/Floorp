@@ -89,7 +89,7 @@
 //! to load and use the compiled rust code via its C-compatible FFI.
 //!
 
-#![warn(rust_2018_idioms)]
+#![warn(rust_2018_idioms, unused_qualifications)]
 #![allow(unknown_lints)]
 
 const BINDGEN_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -229,7 +229,7 @@ pub trait BindingGenerator: Sized {
         ci: ComponentInterface,
         config: Self::Config,
         out_dir: &Utf8Path,
-    ) -> anyhow::Result<()>;
+    ) -> Result<()>;
 }
 
 /// Generate bindings for an external binding generator
@@ -596,7 +596,7 @@ pub fn run_main() -> Result<()> {
             config,
             lib_file,
             udl_file,
-        } => crate::generate_bindings(
+        } => generate_bindings(
             udl_file,
             config.as_deref(),
             language.iter().map(String::as_str).collect(),
@@ -609,7 +609,7 @@ pub fn run_main() -> Result<()> {
             config,
             no_format,
             udl_file,
-        } => crate::generate_component_scaffolding(
+        } => generate_component_scaffolding(
             udl_file,
             config.as_deref(),
             out_dir.as_deref(),
@@ -620,7 +620,7 @@ pub fn run_main() -> Result<()> {
             udl_file,
             test_scripts,
             config,
-        } => crate::run_tests(library_file, &[udl_file], test_scripts, config.as_deref()),
+        } => run_tests(library_file, &[udl_file], test_scripts, config.as_deref()),
         Commands::PrintJson { path } => print_json(path),
     }?;
     Ok(())

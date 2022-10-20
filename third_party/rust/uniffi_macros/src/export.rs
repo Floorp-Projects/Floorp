@@ -5,15 +5,18 @@
 use std::collections::BTreeMap;
 
 use proc_macro2::{Ident, TokenStream};
-use quote::{format_ident, quote};
-use uniffi_meta::{checksum, FnMetadata, Metadata, MethodMetadata, Type};
+use quote::{format_ident, quote, quote_spanned};
+use uniffi_meta::{checksum, FnMetadata, MethodMetadata, Type};
 
-mod metadata;
+pub(crate) mod metadata;
 mod scaffolding;
 
 pub use self::metadata::gen_metadata;
 use self::scaffolding::{gen_fn_scaffolding, gen_method_scaffolding};
-use crate::export::metadata::convert::convert_type;
+use crate::{
+    export::metadata::convert::convert_type,
+    util::{assert_type_eq, create_metadata_static_var},
+};
 
 // TODO(jplatte): Ensure no generics, no async, …
 // TODO(jplatte): Aggregate errors instead of short-circuiting, whereever possible
@@ -51,26 +54,41 @@ pub fn expand_export(metadata: ExportItem, mod_path: &[String]) -> TokenStream {
         ExportItem::Impl {
             methods,
             self_ident,
-        } => methods
-            .into_iter()
-            .map(|res| {
-                res.map_or_else(
-                    syn::Error::into_compile_error,
-                    |Method { item, metadata }| {
-                        let checksum = checksum(&metadata);
-                        let scaffolding =
-                            gen_method_scaffolding(&item.sig, mod_path, checksum, &self_ident);
-                        let meta_static_var =
-                            create_metadata_static_var(&item.sig.ident, metadata.into());
+        } => {
+            let method_tokens: TokenStream = methods
+                .into_iter()
+                .map(|res| {
+                    res.map_or_else(
+                        syn::Error::into_compile_error,
+                        |Method { item, metadata }| {
+                            let checksum = checksum(&metadata);
+                            let scaffolding =
+                                gen_method_scaffolding(&item.sig, mod_path, checksum, &self_ident);
+                            let type_assertions = fn_type_assertions(&item.sig);
+                            let meta_static_var = create_metadata_static_var(
+                                &format_ident!("{}_{}", metadata.self_name, item.sig.ident),
+                                metadata.into(),
+                            );
 
-                        quote! {
-                            #scaffolding
-                            #meta_static_var
-                        }
-                    },
-                )
-            })
-            .collect(),
+                            quote! {
+                                #scaffolding
+                                #type_assertions
+                                #meta_static_var
+                            }
+                        },
+                    )
+                })
+                .collect();
+
+            quote_spanned! {self_ident.span()=>
+                ::uniffi::deps::static_assertions::assert_type_eq_all!(
+                    #self_ident,
+                    crate::uniffi_types::#self_ident
+                );
+
+                #method_tokens
+            }
+        }
     }
 }
 
@@ -110,12 +128,20 @@ fn fn_type_assertions(sig: &syn::Signature) -> TokenStream {
                 let object_ident = format_ident!("{object_name}");
                 quote! { ::std::sync::Arc<crate::uniffi_types::#object_ident> }
             }
+            Type::Unresolved { name } => {
+                let ident = format_ident!("{name}");
+                quote! { crate::uniffi_types::#ident }
+            }
         }
     }
 
     let input_types = sig.inputs.iter().filter_map(|input| match input {
         syn::FnArg::Receiver(_) => None,
-        syn::FnArg::Typed(pat_ty) => Some(&pat_ty.ty),
+        syn::FnArg::Typed(pat_ty) => match &*pat_ty.pat {
+            // Self type is asserted separately for impl blocks
+            syn::Pat::Ident(i) if i.ident == "self" => None,
+            _ => Some(&pat_ty.ty),
+        },
     });
     let output_type = match &sig.output {
         syn::ReturnType::Default => None,
@@ -127,24 +153,11 @@ fn fn_type_assertions(sig: &syn::Signature) -> TokenStream {
         .filter_map(|ty| {
             convert_type(ty).ok().map(|meta_ty| {
                 let expected_ty = convert_type_back(&meta_ty);
-                let assert = quote! {
-                    ::uniffi::deps::static_assertions::assert_type_eq_all!(#ty, #expected_ty);
-                };
+                let assert = assert_type_eq(ty, expected_ty);
                 (meta_ty, assert)
             })
         })
         .collect();
 
     type_assertions.into_values().collect()
-}
-
-fn create_metadata_static_var(name: &Ident, val: Metadata) -> TokenStream {
-    let data: Vec<u8> = bincode::serialize(&val).expect("Error serializing metadata item");
-    let count = data.len();
-    let var_name = format_ident!("UNIFFI_META_{}", name);
-
-    quote! {
-        #[no_mangle]
-        pub static #var_name: [u8; #count] = [#(#data),*];
-    }
 }

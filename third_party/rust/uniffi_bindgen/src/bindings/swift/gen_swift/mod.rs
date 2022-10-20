@@ -325,6 +325,9 @@ impl SwiftCodeOracle {
             Type::Map(key, value) => Box::new(compounds::MapCodeType::new(*key, *value)),
             Type::External { .. } => panic!("no support for external types yet"),
             Type::Custom { name, .. } => Box::new(custom::CustomCodeType::new(name)),
+            Type::Unresolved { .. } => {
+                unreachable!("Type must be resolved before calling create_code_type")
+            }
         }
     }
 }
@@ -341,22 +344,22 @@ impl CodeOracle for SwiftCodeOracle {
 
     /// Get the idiomatic Swift rendering of a function name.
     fn fn_name(&self, nm: &str) -> String {
-        nm.to_string().to_lower_camel_case()
+        format!("`{}`", nm.to_string().to_lower_camel_case())
     }
 
     /// Get the idiomatic Swift rendering of a variable name.
     fn var_name(&self, nm: &str) -> String {
-        nm.to_string().to_lower_camel_case()
+        format!("`{}`", nm.to_string().to_lower_camel_case())
     }
 
     /// Get the idiomatic Swift rendering of an individual enum variant.
     fn enum_variant_name(&self, nm: &str) -> String {
-        nm.to_string().to_lower_camel_case()
+        format!("`{}`", nm.to_string().to_lower_camel_case())
     }
 
     /// Get the idiomatic Swift rendering of an exception name.
     fn error_name(&self, nm: &str) -> String {
-        self.class_name(nm)
+        format!("`{}`", self.class_name(nm))
     }
 
     fn ffi_type_label(&self, ffi_type: &FFIType) -> String {
@@ -468,14 +471,5 @@ pub mod filters {
     /// Get the idiomatic Swift rendering of an individual enum variant.
     pub fn enum_variant_swift(nm: &str) -> Result<String, askama::Error> {
         Ok(oracle().enum_variant_name(nm))
-    }
-
-    /// Get the idiomatic Swift rendering of an exception name
-    ///
-    /// This replaces "Error" at the end of the name with "Exception".  Rust code typically uses
-    /// "Error" for any type of error but in the Java world, "Error" means a non-recoverable error
-    /// and is distinguished from an "Exception".
-    pub fn exception_name(nm: &str) -> Result<String, askama::Error> {
-        Ok(oracle().error_name(nm))
     }
 }

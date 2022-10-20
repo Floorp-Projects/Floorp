@@ -48,8 +48,10 @@ impl r#{{ trait_name }} for {{ trait_impl }} {
     {#- Method declaration #}
     fn r#{{ meth.name() -}}
     ({% call rs::arg_list_decl_with_prefix("&self", meth) %})
-    {%- match meth.return_type() %}
-    {%- when Some with (return_type) %} -> {{ return_type.borrow()|type_rs }}
+    {%- match (meth.return_type(), meth.throws_type()) %}
+    {%- when (Some(return_type), None) %} -> {{ return_type.borrow()|type_rs }}
+    {%- when (Some(return_type), Some(err)) %} -> ::std::result::Result<{{ return_type.borrow()|type_rs }}, {{ err|type_rs }}>
+    {%- when (None, Some(err)) %} -> ::std::result::Result<(), {{ err|type_rs }}>
     {% else -%}
     {%- endmatch -%} {
     {#- Method body #}
@@ -69,31 +71,83 @@ impl r#{{ trait_name }} for {{ trait_impl }} {
     {#- Calling into foreign code. #}
         let callback = {{ foreign_callback_internals }}.get_callback().unwrap();
 
-        let ret_rbuf = unsafe {
+        unsafe {
             // SAFETY:
             // * We're passing in a pointer to an empty buffer.
             //   * Nothing allocated, so nothing to drop.
             // * We expect the callback to write into that a valid allocated instance of a
             //   RustBuffer.
-            // * A positive return value signals success.
             let mut ret_rbuf = uniffi::RustBuffer::new();
             let ret = callback(self.handle, {{ loop.index }}, args_rbuf, &mut ret_rbuf);
+            #[allow(clippy::let_and_return, clippy::let_unit_value)]
             match ret {
-                0 => uniffi::RustBuffer::new(),
-                _ if ret < 0 => panic!("Callback failed"),
-                _ => ret_rbuf
+                1 => {
+                    // 1 indicates success with the return value written to the RustBuffer for
+                    //   non-void calls.
+                    let result = {
+                        {% match meth.return_type() -%}
+                        {%- when Some(return_type) -%}
+                        let vec = ret_rbuf.destroy_into_vec();
+                        let mut ret_buf = vec.as_slice();
+                        {{ return_type|ffi_converter }}::try_read(&mut ret_buf).unwrap()
+                        {%- else %}
+                        uniffi::RustBuffer::destroy(ret_rbuf);
+                        {%- endmatch %}
+                    };
+                    {%- if meth.throws() %}
+                    Ok(result)
+                    {%- else %}
+                    result
+                    {%- endif %}
+                }
+                -2 => {
+                    // -2 indicates an error written to the RustBuffer
+                    {% match meth.throws_type() -%}
+                    {% when Some(error_type) -%}
+                    let vec = ret_rbuf.destroy_into_vec();
+                    let mut ret_buf = vec.as_slice();
+                    Err({{ error_type|ffi_converter }}::try_read(&mut ret_buf).unwrap())
+                    {%- else -%}
+                    panic!("Callback return -2, but throws_type() is None");
+                    {%- endmatch %}
+                }
+                // 0 is a deprecated method to indicates success for void returns
+                0 => {
+                    eprintln!("UniFFI: Callback interface returned 0.  Please update the bindings code to return 1 for all successfull calls");
+                    {% match (meth.return_type(), meth.throws()) %}
+                    {% when (Some(_), _) %}
+                    panic!("Callback returned 0 when we were expecting a return value");
+                    {% when (None, false) %}
+                    {% when (None, true) %}
+                    Ok(())
+                    {%- endmatch %}
+                }
+                // -1 indicates an unexpected error
+                {% match meth.throws_type() %}
+                {%- when Some(error_type) -%}
+                -1 => {
+                    let reason = if !ret_rbuf.is_empty() {
+                        match {{ Type::String.borrow()|ffi_converter }}::try_lift(ret_rbuf) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                println!("{{ trait_name }} Error reading ret_buf: {e}");
+                                String::from("[Error reading reason]")
+                            }
+                        }
+                    } else {
+                        uniffi::RustBuffer::destroy(ret_rbuf);
+                        String::from("[Unknown Reason]")
+                    };
+                    let e: {{ error_type|type_rs }} = uniffi::UnexpectedUniFFICallbackError::from_reason(reason).into();
+                    Err(e)
+                }
+                {%- else %}
+                -1 => panic!("Callback failed"),
+                {%- endmatch %}
+                // Other values should never be returned
+                _ => panic!("Callback failed with unexpected return code"),
             }
-        };
-
-    {#- Unpacking the RustBuffer to return to Rust #}
-        {% match meth.return_type() -%}
-        {% when Some with (return_type) -%}
-        let vec = ret_rbuf.destroy_into_vec();
-        let mut ret_buf = vec.as_slice();
-        {{ return_type|ffi_converter }}::try_read(&mut ret_buf).unwrap()
-        {%- else -%}
-        uniffi::RustBuffer::destroy(ret_rbuf);
-        {%- endmatch %}
+        }
     }
     {%- endfor %}
 }
