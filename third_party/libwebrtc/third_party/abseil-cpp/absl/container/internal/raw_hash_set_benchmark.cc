@@ -330,33 +330,42 @@ void BM_Group_Match(benchmark::State& state) {
   h2_t h = 1;
   for (auto _ : state) {
     ::benchmark::DoNotOptimize(h);
+    ::benchmark::DoNotOptimize(g);
     ::benchmark::DoNotOptimize(g.Match(h));
   }
 }
 BENCHMARK(BM_Group_Match);
 
-void BM_Group_MatchEmpty(benchmark::State& state) {
+void BM_Group_MaskEmpty(benchmark::State& state) {
   std::array<ctrl_t, Group::kWidth> group;
   Iota(group.begin(), group.end(), -4);
   Group g{group.data()};
-  for (auto _ : state) ::benchmark::DoNotOptimize(g.MatchEmpty());
+  for (auto _ : state) {
+    ::benchmark::DoNotOptimize(g);
+    ::benchmark::DoNotOptimize(g.MaskEmpty());
+  }
 }
-BENCHMARK(BM_Group_MatchEmpty);
+BENCHMARK(BM_Group_MaskEmpty);
 
-void BM_Group_MatchEmptyOrDeleted(benchmark::State& state) {
+void BM_Group_MaskEmptyOrDeleted(benchmark::State& state) {
   std::array<ctrl_t, Group::kWidth> group;
   Iota(group.begin(), group.end(), -4);
   Group g{group.data()};
-  for (auto _ : state) ::benchmark::DoNotOptimize(g.MatchEmptyOrDeleted());
+  for (auto _ : state) {
+    ::benchmark::DoNotOptimize(g);
+    ::benchmark::DoNotOptimize(g.MaskEmptyOrDeleted());
+  }
 }
-BENCHMARK(BM_Group_MatchEmptyOrDeleted);
+BENCHMARK(BM_Group_MaskEmptyOrDeleted);
 
 void BM_Group_CountLeadingEmptyOrDeleted(benchmark::State& state) {
   std::array<ctrl_t, Group::kWidth> group;
   Iota(group.begin(), group.end(), -2);
   Group g{group.data()};
-  for (auto _ : state)
+  for (auto _ : state) {
+    ::benchmark::DoNotOptimize(g);
     ::benchmark::DoNotOptimize(g.CountLeadingEmptyOrDeleted());
+  }
 }
 BENCHMARK(BM_Group_CountLeadingEmptyOrDeleted);
 
@@ -364,7 +373,10 @@ void BM_Group_MatchFirstEmptyOrDeleted(benchmark::State& state) {
   std::array<ctrl_t, Group::kWidth> group;
   Iota(group.begin(), group.end(), -2);
   Group g{group.data()};
-  for (auto _ : state) ::benchmark::DoNotOptimize(*g.MatchEmptyOrDeleted());
+  for (auto _ : state) {
+    ::benchmark::DoNotOptimize(g);
+    ::benchmark::DoNotOptimize(g.MaskEmptyOrDeleted().LowestBitSet());
+  }
 }
 BENCHMARK(BM_Group_MatchFirstEmptyOrDeleted);
 

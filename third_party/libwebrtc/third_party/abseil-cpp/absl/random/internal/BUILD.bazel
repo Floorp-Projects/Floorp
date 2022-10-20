@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
-
 # Internal-only implementation classes for Abseil Random
 load(
     "//absl:copts/configure_copts.bzl",
@@ -37,7 +35,11 @@ cc_library(
     hdrs = ["traits.h"],
     copts = ABSL_DEFAULT_COPTS,
     linkopts = ABSL_DEFAULT_LINKOPTS,
-    deps = ["//absl/base:config"],
+    deps = [
+        "//absl/base:config",
+        "//absl/numeric:bits",
+        "//absl/numeric:int128",
+    ],
 )
 
 cc_library(
@@ -60,6 +62,7 @@ cc_library(
     copts = ABSL_DEFAULT_COPTS,
     linkopts = ABSL_DEFAULT_LINKOPTS,
     deps = [
+        ":traits",
         "//absl/base:config",
         "//absl/meta:type_traits",
     ],
@@ -219,8 +222,8 @@ cc_library(
         ":salted_seed_seq",
         ":seed_material",
         "//absl/base:core_headers",
+        "//absl/container:inlined_vector",
         "//absl/meta:type_traits",
-        "//absl/types:optional",
         "//absl/types:span",
     ],
 )
@@ -499,6 +502,7 @@ cc_test(
 cc_library(
     name = "mock_helpers",
     hdrs = ["mock_helpers.h"],
+    linkopts = ABSL_DEFAULT_LINKOPTS,
     deps = [
         "//absl/base:fast_type_id",
         "//absl/types:optional",
@@ -509,6 +513,7 @@ cc_library(
     name = "mock_overload_set",
     testonly = 1,
     hdrs = ["mock_overload_set.h"],
+    linkopts = ABSL_DEFAULT_LINKOPTS,
     deps = [
         ":mock_helpers",
         "//absl/random:mocking_bit_gen",
@@ -626,7 +631,7 @@ cc_test(
     name = "randen_hwaes_test",
     size = "small",
     srcs = ["randen_hwaes_test.cc"],
-    copts = ABSL_TEST_COPTS,
+    copts = ABSL_TEST_COPTS + ABSL_RANDOM_RANDEN_COPTS,
     linkopts = ABSL_DEFAULT_LINKOPTS,
     tags = ABSL_RANDOM_NONPORTABLE_TAGS,
     deps = [
@@ -676,6 +681,7 @@ cc_library(
         ":traits",
         "//absl/base:config",
         "//absl/meta:type_traits",
+        "//absl/numeric:int128",
     ],
 )
 
@@ -689,6 +695,7 @@ cc_test(
         "benchmark",
         "no_test_ios_x86_64",
         "no_test_loonix",  # Crashing.
+        "no_test_wasm",
     ],
     deps = [
         ":nanobenchmark",

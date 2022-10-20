@@ -25,6 +25,7 @@ absl_cc_library(
     "internal/stacktrace_emscripten-inl.inc"
     "internal/stacktrace_generic-inl.inc"
     "internal/stacktrace_powerpc-inl.inc"
+    "internal/stacktrace_riscv-inl.inc"
     "internal/stacktrace_unimplemented-inl.inc"
     "internal/stacktrace_win32-inl.inc"
     "internal/stacktrace_x86-inl.inc"
@@ -92,6 +93,7 @@ absl_cc_test(
     GTest::gmock
 )
 
+# Internal-only target, do not depend on directly.
 absl_cc_library(
   NAME
     examine_stack
@@ -124,7 +126,6 @@ absl_cc_library(
     absl::base
     absl::config
     absl::core_headers
-    absl::errno_saver
     absl::raw_logging_internal
   PUBLIC
 )
@@ -146,6 +147,7 @@ absl_cc_test(
     GTest::gmock
 )
 
+# Internal-only target, do not depend on directly.
 absl_cc_library(
   NAME
     debugging_internal
@@ -167,6 +169,7 @@ absl_cc_library(
     absl::raw_logging_internal
 )
 
+# Internal-only target, do not depend on directly.
 absl_cc_library(
   NAME
     demangle_internal
@@ -214,42 +217,6 @@ absl_cc_library(
   PUBLIC
 )
 
-absl_cc_library(
-  NAME
-    leak_check_disable
-  SRCS
-    "leak_check_disable.cc"
-  COPTS
-    ${ABSL_DEFAULT_COPTS}
-  PUBLIC
-)
-
-absl_cc_library(
-  NAME
-    leak_check_api_enabled_for_testing
-  HDRS
-    "leak_check.h"
-  SRCS
-    "leak_check.cc"
-  COPTS
-    ${ABSL_DEFAULT_COPTS}
-    $<$<BOOL:${ABSL_HAVE_LSAN}>:-DLEAK_SANITIZER>
-  TESTONLY
-)
-
-absl_cc_library(
-  NAME
-    leak_check_api_disabled_for_testing
-  HDRS
-    "leak_check.h"
-  SRCS
-    "leak_check.cc"
-  COPTS
-    ${ABSL_DEFAULT_COPTS}
-    "-ULEAK_SANITIZER"
-  TESTONLY
-)
-
 absl_cc_test(
   NAME
     leak_check_test
@@ -257,46 +224,15 @@ absl_cc_test(
     "leak_check_test.cc"
   COPTS
     ${ABSL_TEST_COPTS}
-    "$<$<BOOL:${ABSL_HAVE_LSAN}>:-DABSL_EXPECT_LEAK_SANITIZER>"
   LINKOPTS
-    "${ABSL_LSAN_LINKOPTS}"
+    ${ABSL_DEFAULT_LINKOPTS}
   DEPS
-    absl::leak_check_api_enabled_for_testing
+    absl::leak_check
     absl::base
     GTest::gmock_main
 )
 
-absl_cc_test(
-  NAME
-    leak_check_no_lsan_test
-  SRCS
-    "leak_check_test.cc"
-  COPTS
-    ${ABSL_TEST_COPTS}
-    "-UABSL_EXPECT_LEAK_SANITIZER"
-  DEPS
-    absl::leak_check_api_disabled_for_testing
-    absl::base
-    GTest::gmock_main
-)
-
-absl_cc_test(
-  NAME
-    disabled_leak_check_test
-  SRCS
-    "leak_check_fail_test.cc"
-  COPTS
-    ${ABSL_TEST_COPTS}
-  LINKOPTS
-    "${ABSL_LSAN_LINKOPTS}"
-  DEPS
-    absl::leak_check_api_enabled_for_testing
-    absl::leak_check_disable
-    absl::base
-    absl::raw_logging_internal
-    GTest::gmock_main
-)
-
+# Internal-only target, do not depend on directly.
 absl_cc_library(
   NAME
     stack_consumption
