@@ -7171,7 +7171,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2022-10-11T15:20:33Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2022-10-15T15:17:51Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7389,7 +7389,7 @@ auto
 // autos : 2014-01-09 XYZ.COM LLC
 autos
 
-// avianca : 2015-01-08 Avianca Holdings S.A.
+// avianca : 2015-01-08 Avianca Inc.
 avianca
 
 // aws : 2015-06-25 AWS Registry LLC
@@ -10702,51 +10702,49 @@ altervista.org
 // Submitted by Cyril <admin@alwaysdata.com>
 alwaysdata.net
 
-// Amazon CloudFront : https://aws.amazon.com/cloudfront/
+// Amazon : https://www.amazon.com/
+// Submitted by AWS Security <psl-maintainers@amazon.com>
+// Subsections of Amazon/subsidiaries will appear until "concludes" tag
+
+// Amazon CloudFront
 // Submitted by Donavan Miller <donavanm@amazon.com>
+// Reference: 54144616-fd49-4435-8535-19c6a601bdb3
 cloudfront.net
 
-// Amazon Elastic Compute Cloud : https://aws.amazon.com/ec2/
+// Amazon EC2
 // Submitted by Luke Wells <psl-maintainers@amazon.com>
+// Reference: 4c38fa71-58ac-4768-99e5-689c1767e537
 *.compute.amazonaws.com
 *.compute-1.amazonaws.com
 *.compute.amazonaws.com.cn
 us-east-1.amazonaws.com
 
-// Amazon Elastic Beanstalk : https://aws.amazon.com/elasticbeanstalk/
+// Amazon S3
 // Submitted by Luke Wells <psl-maintainers@amazon.com>
-cn-north-1.eb.amazonaws.com.cn
-cn-northwest-1.eb.amazonaws.com.cn
-elasticbeanstalk.com
-ap-northeast-1.elasticbeanstalk.com
-ap-northeast-2.elasticbeanstalk.com
-ap-northeast-3.elasticbeanstalk.com
-ap-south-1.elasticbeanstalk.com
-ap-southeast-1.elasticbeanstalk.com
-ap-southeast-2.elasticbeanstalk.com
-ca-central-1.elasticbeanstalk.com
-eu-central-1.elasticbeanstalk.com
-eu-west-1.elasticbeanstalk.com
-eu-west-2.elasticbeanstalk.com
-eu-west-3.elasticbeanstalk.com
-sa-east-1.elasticbeanstalk.com
-us-east-1.elasticbeanstalk.com
-us-east-2.elasticbeanstalk.com
-us-gov-west-1.elasticbeanstalk.com
-us-west-1.elasticbeanstalk.com
-us-west-2.elasticbeanstalk.com
-
-// Amazon Elastic Load Balancing : https://aws.amazon.com/elasticloadbalancing/
-// Submitted by Luke Wells <psl-maintainers@amazon.com>
-*.elb.amazonaws.com
-*.elb.amazonaws.com.cn
-
-// Amazon Global Accelerator : https://aws.amazon.com/global-accelerator/
-// Submitted by Daniel Massaguer <psl-maintainers@amazon.com>
-awsglobalaccelerator.com
-
-// Amazon S3 : https://aws.amazon.com/s3/
-// Submitted by Luke Wells <psl-maintainers@amazon.com>
+// Reference: d068bd97-f0a9-4838-a6d8-954b622ef4ae
+s3.cn-north-1.amazonaws.com.cn
+s3.dualstack.ap-northeast-1.amazonaws.com
+s3.dualstack.ap-northeast-2.amazonaws.com
+s3.ap-northeast-2.amazonaws.com
+s3-website.ap-northeast-2.amazonaws.com
+s3.dualstack.ap-south-1.amazonaws.com
+s3.ap-south-1.amazonaws.com
+s3-website.ap-south-1.amazonaws.com
+s3.dualstack.ap-southeast-1.amazonaws.com
+s3.dualstack.ap-southeast-2.amazonaws.com
+s3.dualstack.ca-central-1.amazonaws.com
+s3.ca-central-1.amazonaws.com
+s3-website.ca-central-1.amazonaws.com
+s3.dualstack.eu-central-1.amazonaws.com
+s3.eu-central-1.amazonaws.com
+s3-website.eu-central-1.amazonaws.com
+s3.dualstack.eu-west-1.amazonaws.com
+s3.dualstack.eu-west-2.amazonaws.com
+s3.eu-west-2.amazonaws.com
+s3-website.eu-west-2.amazonaws.com
+s3.dualstack.eu-west-3.amazonaws.com
+s3.eu-west-3.amazonaws.com
+s3-website.eu-west-3.amazonaws.com
 s3.amazonaws.com
 s3-ap-northeast-1.amazonaws.com
 s3-ap-northeast-2.amazonaws.com
@@ -10761,48 +10759,25 @@ s3-eu-west-3.amazonaws.com
 s3-external-1.amazonaws.com
 s3-fips-us-gov-west-1.amazonaws.com
 s3-sa-east-1.amazonaws.com
-s3-us-gov-west-1.amazonaws.com
 s3-us-east-2.amazonaws.com
+s3-us-gov-west-1.amazonaws.com
 s3-us-west-1.amazonaws.com
 s3-us-west-2.amazonaws.com
-s3.ap-northeast-2.amazonaws.com
-s3.ap-south-1.amazonaws.com
-s3.cn-north-1.amazonaws.com.cn
-s3.ca-central-1.amazonaws.com
-s3.eu-central-1.amazonaws.com
-s3.eu-west-2.amazonaws.com
-s3.eu-west-3.amazonaws.com
-s3.us-east-2.amazonaws.com
-s3.dualstack.ap-northeast-1.amazonaws.com
-s3.dualstack.ap-northeast-2.amazonaws.com
-s3.dualstack.ap-south-1.amazonaws.com
-s3.dualstack.ap-southeast-1.amazonaws.com
-s3.dualstack.ap-southeast-2.amazonaws.com
-s3.dualstack.ca-central-1.amazonaws.com
-s3.dualstack.eu-central-1.amazonaws.com
-s3.dualstack.eu-west-1.amazonaws.com
-s3.dualstack.eu-west-2.amazonaws.com
-s3.dualstack.eu-west-3.amazonaws.com
-s3.dualstack.sa-east-1.amazonaws.com
-s3.dualstack.us-east-1.amazonaws.com
-s3.dualstack.us-east-2.amazonaws.com
-s3-website-us-east-1.amazonaws.com
-s3-website-us-west-1.amazonaws.com
-s3-website-us-west-2.amazonaws.com
 s3-website-ap-northeast-1.amazonaws.com
 s3-website-ap-southeast-1.amazonaws.com
 s3-website-ap-southeast-2.amazonaws.com
 s3-website-eu-west-1.amazonaws.com
 s3-website-sa-east-1.amazonaws.com
-s3-website.ap-northeast-2.amazonaws.com
-s3-website.ap-south-1.amazonaws.com
-s3-website.ca-central-1.amazonaws.com
-s3-website.eu-central-1.amazonaws.com
-s3-website.eu-west-2.amazonaws.com
-s3-website.eu-west-3.amazonaws.com
+s3-website-us-east-1.amazonaws.com
+s3-website-us-west-1.amazonaws.com
+s3-website-us-west-2.amazonaws.com
+s3.dualstack.sa-east-1.amazonaws.com
+s3.dualstack.us-east-1.amazonaws.com
+s3.dualstack.us-east-2.amazonaws.com
+s3.us-east-2.amazonaws.com
 s3-website.us-east-2.amazonaws.com
 
-// AWS Cloud9 : https://aws.amazon.com/cloud9/
+// AWS Cloud9
 // Submitted by: AWS Security <psl-maintainers@amazon.com>
 // Reference: 2b6dfa9a-3a7f-4367-b2e7-0321e77c0d59
 vfs.cloud9.af-south-1.amazonaws.com
@@ -10847,6 +10822,49 @@ vfs.cloud9.us-west-1.amazonaws.com
 webview-assets.cloud9.us-west-1.amazonaws.com
 vfs.cloud9.us-west-2.amazonaws.com
 webview-assets.cloud9.us-west-2.amazonaws.com
+
+// AWS Elastic Beanstalk
+// Submitted by Luke Wells <psl-maintainers@amazon.com>
+// Reference: aa202394-43a0-4857-b245-8db04549137e
+cn-north-1.eb.amazonaws.com.cn
+cn-northwest-1.eb.amazonaws.com.cn
+elasticbeanstalk.com
+ap-northeast-1.elasticbeanstalk.com
+ap-northeast-2.elasticbeanstalk.com
+ap-northeast-3.elasticbeanstalk.com
+ap-south-1.elasticbeanstalk.com
+ap-southeast-1.elasticbeanstalk.com
+ap-southeast-2.elasticbeanstalk.com
+ca-central-1.elasticbeanstalk.com
+eu-central-1.elasticbeanstalk.com
+eu-west-1.elasticbeanstalk.com
+eu-west-2.elasticbeanstalk.com
+eu-west-3.elasticbeanstalk.com
+sa-east-1.elasticbeanstalk.com
+us-east-1.elasticbeanstalk.com
+us-east-2.elasticbeanstalk.com
+us-gov-west-1.elasticbeanstalk.com
+us-west-1.elasticbeanstalk.com
+us-west-2.elasticbeanstalk.com
+
+// (AWS) Elastic Load Balancing
+// Submitted by Luke Wells <psl-maintainers@amazon.com>
+// Reference: 12a3d528-1bac-4433-a359-a395867ffed2
+*.elb.amazonaws.com.cn
+*.elb.amazonaws.com
+
+// AWS Global Accelerator
+// Submitted by Daniel Massaguer <psl-maintainers@amazon.com>
+// Reference: d916759d-a08b-4241-b536-4db887383a6a
+awsglobalaccelerator.com
+
+// eero
+// Submitted by Yue Kang <eero-dynamic-dns@amazon.com>
+// Reference: 264afe70-f62c-4c02-8ab9-b5281ed24461
+eero.online
+eero-stage.online
+
+// concludes Amazon
 
 // Amune : https://amune.org/
 // Submitted by Team Amune <cert@amune.org>
@@ -11742,11 +11760,6 @@ e4.cz
 // Submitted by Andrei Canta <andrei@easypanel.io>
 easypanel.app
 easypanel.host
-
-// eero : https://eero.com/
-// Submitted by Yue Kang <eero-dynamic-dns@amazon.com>
-eero.online
-eero-stage.online
 
 // Elementor : Elementor Ltd.
 // Submitted by Anton Barkan <antonb@elementor.com>
@@ -12975,25 +12988,6 @@ cust.retrosnub.co.uk
 // Submitted by Paulus Schoutsen <infra@nabucasa.com>
 ui.nabu.casa
 
-// Names.of.London : https://names.of.london/
-// Submitted by James Stevens <registry[at]names.of.london> or <publiclist[at]jrcs.net>
-pony.club
-of.fashion
-in.london
-of.london
-from.marketing
-with.marketing
-for.men
-repair.men
-and.mom
-for.mom
-for.one
-under.one
-for.sale
-that.win
-from.work
-to.work
-
 // Net at Work Gmbh : https://www.netatwork.de
 // Submitted by Jan Jaeschke <jan.jaeschke@netatwork.de>
 cloud.nospamproxy.com
@@ -13190,7 +13184,26 @@ omniwe.site
 
 // One.com: https://www.one.com/
 // Submitted by Jacob Bunk Nielsen <jbn@one.com>
+123hjemmeside.dk
+123hjemmeside.no
+123homepage.it
+123kotisivu.fi
+123minsida.se
+123miweb.es
+123paginaweb.pt
+123sait.ru
+123siteweb.fr
+123webseite.at
+123webseite.de
+123website.be
+123website.ch
+123website.lu
+123website.nl
 service.one
+simplesite.com
+simplesite.com.br
+simplesite.gr
+simplesite.pl
 
 // One Fold Media : http://www.onefoldmedia.com/
 // Submitted by Eddie Jones <eddie@onefoldmedia.com>
