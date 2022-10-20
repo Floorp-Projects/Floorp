@@ -73,7 +73,11 @@ already_AddRefed<Promise> FileSystemDirectoryHandle::GetFileHandle(
 
   fs::Name name(aName);
   fs::FileSystemChildMetadata metadata(mMetadata.entryId(), name);
-  mRequestHandler->GetFileHandle(mManager, metadata, aOptions.mCreate, promise);
+  mRequestHandler->GetFileHandle(mManager, metadata, aOptions.mCreate, promise,
+                                 aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
 
   return promise.forget();
 }
@@ -91,7 +95,10 @@ already_AddRefed<Promise> FileSystemDirectoryHandle::GetDirectoryHandle(
   fs::Name name(aName);
   fs::FileSystemChildMetadata metadata(mMetadata.entryId(), name);
   mRequestHandler->GetDirectoryHandle(mManager, metadata, aOptions.mCreate,
-                                      promise);
+                                      promise, aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
 
   return promise.forget();
 }
@@ -109,8 +116,11 @@ already_AddRefed<Promise> FileSystemDirectoryHandle::RemoveEntry(
   fs::Name name(aName);
   fs::FileSystemChildMetadata metadata(mMetadata.entryId(), name);
 
-  mRequestHandler->RemoveEntry(mManager, metadata, aOptions.mRecursive,
-                               promise);
+  mRequestHandler->RemoveEntry(mManager, metadata, aOptions.mRecursive, promise,
+                               aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
 
   return promise.forget();
 }
@@ -124,7 +134,10 @@ already_AddRefed<Promise> FileSystemDirectoryHandle::Resolve(
 
   fs::FileSystemEntryPair pair(mMetadata.entryId(),
                                aPossibleDescendant.GetId());
-  mRequestHandler->Resolve(mManager, pair, promise);
+  mRequestHandler->Resolve(mManager, pair, promise, aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
 
   return promise.forget();
 }

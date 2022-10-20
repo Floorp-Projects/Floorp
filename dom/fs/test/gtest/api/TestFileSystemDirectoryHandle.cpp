@@ -102,7 +102,7 @@ TEST_F(TestFileSystemDirectoryHandle, isHandleKindDirectory) {
 }
 
 TEST_F(TestFileSystemDirectoryHandle, isFileHandleReturned) {
-  EXPECT_CALL(*mRequestHandler, GetFileHandle(_, _, _, _))
+  EXPECT_CALL(*mRequestHandler, GetFileHandle(_, _, _, _, _))
       .WillOnce(::testing::ReturnArg<3>());
   RefPtr<FileSystemDirectoryHandle> dirHandle =
       MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
@@ -132,7 +132,7 @@ TEST_F(TestFileSystemDirectoryHandle, doesGetFileHandleFailOnNullGlobal) {
 }
 
 TEST_F(TestFileSystemDirectoryHandle, isDirectoryHandleReturned) {
-  EXPECT_CALL(*mRequestHandler, GetDirectoryHandle(_, _, _, _))
+  EXPECT_CALL(*mRequestHandler, GetDirectoryHandle(_, _, _, _, _))
       .WillOnce(::testing::ReturnArg<3>());
   RefPtr<FileSystemDirectoryHandle> dirHandle =
       MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
@@ -162,7 +162,7 @@ TEST_F(TestFileSystemDirectoryHandle, doesGetDirectoryHandleFailOnNullGlobal) {
 }
 
 TEST_F(TestFileSystemDirectoryHandle, isRemoveEntrySuccessful) {
-  EXPECT_CALL(*mRequestHandler, RemoveEntry(_, _, _, _))
+  EXPECT_CALL(*mRequestHandler, RemoveEntry(_, _, _, _, _))
       .WillOnce(::testing::ReturnArg<3>());
   RefPtr<FileSystemDirectoryHandle> dirHandle =
       MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
