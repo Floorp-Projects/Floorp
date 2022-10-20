@@ -8,7 +8,6 @@
 
 #include "FormControlAccessible.h"
 #include "HyperTextAccessibleWrap.h"
-#include "mozilla/a11y/AccTypes.h"
 #include "mozilla/dom/Element.h"
 #include "AccAttributes.h"
 #include "nsAccUtils.h"
@@ -28,7 +27,6 @@ class HTMLRadioButtonAccessible : public RadioButtonAccessible {
     // Ignore "RadioStateChange" DOM event in lieu of document observer
     // state change notification.
     mStateFlags |= eIgnoreDOMUIEvent;
-    mType = eHTMLRadioButtonType;
   }
 
   // LocalAccessible
@@ -38,11 +36,6 @@ class HTMLRadioButtonAccessible : public RadioButtonAccessible {
  protected:
   virtual void GetPositionAndSetSize(int32_t* aPosInSet,
                                      int32_t* aSetSize) override;
-
-  virtual void DOMAttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                   int32_t aModType,
-                                   const nsAttrValue* aOldValue,
-                                   uint64_t aOldState) override;
 
  private:
   Relation ComputeGroupAttributes(int32_t* aPosInSet, int32_t* aSetSize) const;
