@@ -35,6 +35,7 @@
 #include "TableCellAccessible.h"
 #include "TreeWalker.h"
 #include "HTMLElementAccessibles.h"
+#include "HTMLSelectAccessible.h"
 #include "ImageAccessible.h"
 
 #include "nsIDOMXULButtonElement.h"
@@ -3248,6 +3249,23 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
               MOZ_ASSERT(!child->IsDoc());
               viewportCache.AppendElement(child->ID());
             }
+          }
+        } else if (acc->IsHTMLCombobox()) {
+          // Layout doesn't consider combobox lists (or their
+          // currently selected items) to be onscreen, but we do.
+          // Add those things manually here.
+          HTMLComboboxAccessible* combobox =
+              static_cast<HTMLComboboxAccessible*>(acc);
+          HTMLComboboxListAccessible* list = combobox->List();
+          LocalAccessible* currItem = combobox->SelectedOption();
+          MOZ_ASSERT(list && currItem);
+          // Preserve hittesting order by adding the item, then
+          // the list, and finally the combobox itself.
+          if (inViewAccs.EnsureInserted(currItem)) {
+            viewportCache.AppendElement(currItem->ID());
+          }
+          if (inViewAccs.EnsureInserted(list)) {
+            viewportCache.AppendElement(list->ID());
           }
         }
 
