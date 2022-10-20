@@ -654,6 +654,19 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
   return {isSimilarOrigin, rootBounds, targetRect, intersectionRect};
 }
 
+IntersectionOutput DOMIntersectionObserver::Intersect(
+    const IntersectionInput& aInput, const nsRect& aTargetRect) {
+  nsRect rootBounds = aInput.mRootRect;
+  rootBounds.Inflate(aInput.mRootMargin);
+  auto intersectionRect =
+      EdgeInclusiveIntersection(aInput.mRootRect, aTargetRect);
+  if (intersectionRect && aInput.mRemoteDocumentVisibleRect) {
+    intersectionRect = EdgeInclusiveIntersection(
+        *intersectionRect, *aInput.mRemoteDocumentVisibleRect);
+  }
+  return {true, rootBounds, aTargetRect, intersectionRect};
+}
+
 // https://w3c.github.io/IntersectionObserver/#update-intersection-observations-algo
 // (step 2)
 void DOMIntersectionObserver::Update(Document* aDocument,
