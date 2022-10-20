@@ -19,12 +19,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
 });
 
 const PREF_URLBAR_BRANCH = "browser.urlbar.";
-
-const FIREFOX_SUGGEST_UPDATE_TOPIC = "firefox-suggest-update";
-const FIREFOX_SUGGEST_UPDATE_SKIPPED_TOPIC = "firefox-suggest-update-skipped";
 
 // Prefs are defined as [pref name, default value] or [pref name, [default
 // value, type]].  In the former case, the getter method name is inferred from
@@ -715,6 +713,16 @@ class Preferences {
       await lazy.NimbusFeatures.urlbar.ready();
       this._clearNimbusCache();
 
+      // This also races TelemetryEnvironment's initialization, so wait for it
+      // to finish. TelemetryEnvironment is important because it records the
+      // values of a number of Suggest preferences. If we didn't wait, we could
+      // end up updating prefs after TelemetryEnvironment does its initial pref
+      // cache but before it adds its observer to be notified of pref changes.
+      // It would end up recording the wrong values on startup in that case.
+      if (!this._testSkipTelemetryEnvironmentInit) {
+        await lazy.TelemetryEnvironment.onInitialized();
+      }
+
       this._updateFirefoxSuggestScenarioHelper(isStartup, testOverrides);
     } finally {
       this._updatingFirefoxSuggestScenario = false;
@@ -838,17 +846,6 @@ class Preferences {
     // what the last-seen scenario was. Set it on the user branch so that its
     // value persists across app restarts.
     this.set("quicksuggest.scenario", scenario);
-
-    // Update the pref cache in TelemetryEnvironment. This is only necessary
-    // when we're initializing the scenario on startup, but the scenario will
-    // rarely if ever change after that, so there's no harm in always doing it.
-    // See bug 1731373.
-    //
-    // IMPORTANT: Send the notification only after setting the prefs above.
-    // TelemetryEnvironment updates its cache by fetching the prefs from the
-    // pref service, so the new values need to be set beforehand. See also the
-    // comments in D126017.
-    Services.obs.notifyObservers(null, FIREFOX_SUGGEST_UPDATE_TOPIC);
   }
 
   /**
@@ -1288,9 +1285,6 @@ class Preferences {
         return;
       }
     }
-
-    // Notify consumer who are waiting for the scenario to be updated.
-    Services.obs.notifyObservers(null, FIREFOX_SUGGEST_UPDATE_SKIPPED_TOPIC);
   }
 
   /**
