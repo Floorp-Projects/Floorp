@@ -68,28 +68,6 @@
   color: var(--in-content-deemphasized-text);
 }
 
-/* Tags table */
-
-#bookmarkpropertiesdialog #editBMPanel_tagsSelector {
-  border-color: var(--in-content-border-color);
-  padding: 12px;
-}
-
-/* Reset default margins for tags so we can apply custom ones */
-#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem > image,
-#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem > label {
-  margin: 0;
-}
-
-/* Set spacing between tags */
-#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem:not(:last-child) {
-  margin-bottom: 8px;
-}
-
-#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem > image {
-  margin-inline-end: 8px;
-}
-
 tree[is="places-tree"] > treechildren::-moz-tree-cell {
   /* ensure we use the direction of the website title / url instead of the
    * browser locale */

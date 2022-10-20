@@ -75,6 +75,7 @@ pub(crate) fn snapshot(hist: &Histogram<Functional>) -> DistributionData {
             .map(|(k, v)| (k as i64, v as i64))
             .collect(),
         sum: hist.sum() as i64,
+        count: hist.count() as i64,
     }
 }
 
@@ -487,6 +488,7 @@ mod test {
         let snap = snapshot(&hist);
 
         let expected_json = json!({
+            "count": 10,
             "sum": 55,
             "values": {
                 "1": 1,
@@ -520,6 +522,7 @@ mod test {
         let snap = snapshot(&hist);
 
         let expected_json = json!({
+            "count": 4,
             "sum": 4612,
             "values": {
                 "1024": 2,

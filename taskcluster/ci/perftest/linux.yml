@@ -305,3 +305,23 @@ record-websites:
             --output $MOZ_FETCHES_DIR/../artifacts
             --hooks testing/performance/hooks_recording.py
             testing/performance/perftest_record.js
+
+side-by-side:
+    description: Run mozperftest side-by-side
+    treeherder:
+        symbol: perftest(side-by-side)
+    run:
+        using: run-task
+        sparse-profile: perftest
+        checkout: true
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3.8 python/mozperftest/mozperftest/runner.py
+            tools side-by-side
+            -t {test_name}
+            --base-platform {platform}
+            --base-revision {base_revision}
+            --new-revision {new_revision}
+            --base-branch {base_branch}
+            --new-branch {new_branch}

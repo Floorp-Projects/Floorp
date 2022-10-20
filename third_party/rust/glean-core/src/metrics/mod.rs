@@ -77,6 +77,9 @@ pub struct DistributionData {
 
     /// The accumulated sum of all the samples in the distribution.
     pub sum: i64,
+
+    /// The total number of entries in the distribution.
+    pub count: i64,
 }
 
 /// The available metrics.

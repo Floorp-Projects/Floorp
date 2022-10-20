@@ -6,11 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewSessionStore"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-const { GeckoViewUtils } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewUtils.jsm"
+const { GeckoViewUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewUtils.sys.mjs"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 

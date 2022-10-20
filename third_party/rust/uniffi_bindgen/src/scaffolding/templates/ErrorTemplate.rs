@@ -33,10 +33,22 @@ impl uniffi::RustBufferFfiConverter for {{ e.type_().borrow()|ffi_converter_name
         };
     }
 
+    {%- if ci.should_generate_error_read(e) %}
+    fn try_read(buf: &mut &[u8]) -> uniffi::deps::anyhow::Result<r#{{ e.name() }}> {
+        use uniffi::deps::bytes::Buf;
+        uniffi::check_remaining(buf, 4)?;
+        Ok(match buf.get_i32() {
+            {%- for variant in e.variants() %}
+            {{ loop.index }} => r#{{ e.name() }}::r#{{ variant.name() }}{ },
+            {%- endfor %}
+            v => uniffi::deps::anyhow::bail!("Invalid {{ e.name() }} enum value: {}", v),
+        })
+    }
+    {%- else %}
     fn try_read(_buf: &mut &[u8]) -> uniffi::deps::anyhow::Result<r#{{ e.name() }}> {
-        // It's not currently possible to send errors from the foreign language *into* Rust.
         panic!("try_read not supported for flat errors");
     }
+    {%- endif %}
 
     {% else %}
 
@@ -62,8 +74,8 @@ impl uniffi::RustBufferFfiConverter for {{ e.type_().borrow()|ffi_converter_name
     }
 
     fn try_read(buf: &mut &[u8]) -> uniffi::deps::anyhow::Result<r#{{ e.name() }}> {
-        // It's not currently supported to send errors from the foreign language *into* Rust,
-        // but this is what the supporting code might look like...
+        // Note: no need to call should_generate_error_read here, since it is always true for
+        // non-flat errors
         use uniffi::deps::bytes::Buf;
         uniffi::check_remaining(buf, 4)?;
         Ok(match buf.get_i32() {

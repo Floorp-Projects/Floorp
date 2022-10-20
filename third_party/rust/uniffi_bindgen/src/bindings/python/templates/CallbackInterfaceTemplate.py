@@ -17,7 +17,6 @@ def py_{{ foreign_callback }}(handle, method, args, buf_ptr):
     {% let method_name = format!("invoke_{}", meth.name())|fn_name %}
     def {{ method_name }}(python_callback, args):
         {#- Unpacking args from the RustBuffer #}
-        rval = None
         {%- if meth.arguments().len() != 0 -%}
         {#- Calling the concrete callback object #}
         with args.consumeWithStream() as buf:
@@ -40,8 +39,6 @@ def py_{{ foreign_callback }}(handle, method, args, buf_ptr):
         {%- else -%}
         return RustBuffer.alloc(0)
         {% endmatch -%}
-        # TODO catch errors and report them back to Rust.
-        # https://github.com/mozilla/uniffi-rs/issues/351
     {% endfor %}
 
     cb = {{ ffi_converter_name }}.lift(handle)
@@ -57,10 +54,35 @@ def py_{{ foreign_callback }}(handle, method, args, buf_ptr):
     {% for meth in cbi.methods() -%}
     {% let method_name = format!("invoke_{}", meth.name())|fn_name -%}
     if method == {{ loop.index }}:
-        buf_ptr[0] = {{ method_name }}(cb, args)
-        # Value written to out buffer.
-        # See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
-        return 1
+        # Call the method and handle any errors
+        # See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs` for details
+        try:
+            {%- match meth.throws_type() %}
+            {%- when Some(err) %}
+            try:
+                # Sucessful return
+                buf_ptr[0] = {{ method_name }}(cb, args)
+                return 1
+            except {{ err|type_name }} as e:
+                # Catch errors declared in the UDL file
+                with RustBuffer.allocWithBuilder() as builder:
+                    {{ err|write_fn }}(e, builder)
+                    buf_ptr[0] = builder.finalize()
+                return -2
+            {%- else %}
+            # Sucessful return
+            buf_ptr[0] = {{ method_name }}(cb, args)
+            return 1
+            {%- endmatch %}
+        except BaseException as e:
+            # Catch unexpected errors
+            try:
+                # Try to serialize the exception into a String
+                buf_ptr[0] = {{ Type::String.borrow()|lower_fn }}(repr(e))
+            except:
+                # If that fails, just give up
+                pass
+            return -1
     {% endfor %}
 
     # This should never happen, because an out of bounds method index won't

@@ -9,6 +9,8 @@ dialog {
   color: var(--in-content-page-color);
   margin: 0;
   padding: 0;
+  min-width: 0;
+  min-height: 0;
 }
 
 /* Put padding around the contents of the dialog, but do that on `body`
@@ -33,6 +35,8 @@ dialog::part(content-box) {
 .contentPane.doScroll,
 dialog.doScroll::part(content-box) {
   overflow-y: auto;
+  min-width: 0;
+  min-height: 0;
 }
 
 tree:not(#rejectsTree) {

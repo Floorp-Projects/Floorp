@@ -3060,7 +3060,7 @@ The onboarding experience including UI tours.
       -
         | `browser/components/uitour/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/components/uitour/\*\*/\*>`__
     * - Bugzilla Components
-      - F, i, r, e, f, o, x, :, :, T, o, u, r, s
+      - Firefox::Tours
 
 
 Password Manager

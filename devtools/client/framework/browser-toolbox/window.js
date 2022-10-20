@@ -232,7 +232,6 @@ async function openToolbox(commands) {
   });
 
   bindToolboxHandlers();
-  gToolbox.raise();
 
   // Enable some testing features if the browser toolbox test pref is set.
   if (
@@ -244,6 +243,8 @@ async function openToolbox(commands) {
     // setup a server so that the test can evaluate messages in this process.
     installTestingServer();
   }
+
+  await gToolbox.raise();
 
   // Warn the user if we started recording this browser toolbox via MOZ_BROWSER_TOOLBOX_PROFILER_STARTUP=1
   if (env.get("MOZ_PROFILER_STARTUP") === "1") {

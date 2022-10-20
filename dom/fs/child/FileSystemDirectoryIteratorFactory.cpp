@@ -108,7 +108,10 @@ class DoubleBufferQueueImpl
       return nullptr;
     }
 
-    next(aGlobal, aManager, promise);
+    next(aGlobal, aManager, promise, aError);
+    if (aError.Failed()) {
+      return nullptr;
+    }
 
     return promise.forget();
   }
@@ -117,7 +120,7 @@ class DoubleBufferQueueImpl
 
  protected:
   void next(nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-            RefPtr<Promise> aResult) {
+            RefPtr<Promise> aResult, ErrorResult& aError) {
     MOZ_ASSERT(aResult);
 
     Maybe<DataType> rawValue;
@@ -126,10 +129,8 @@ class DoubleBufferQueueImpl
     // we hit the end of a page?
     // How likely it is that it would that lead to wasted fetch operations?
     if (0u == mWithinPageIndex) {
-      ErrorResult rv;
-      RefPtr<Promise> promise = Promise::Create(aGlobal, rv);
-      if (rv.Failed()) {
-        aResult->MaybeReject(std::move(rv));
+      RefPtr<Promise> promise = Promise::Create(aGlobal, aError);
+      if (aError.Failed()) {
         return;
       }
 
@@ -158,14 +159,16 @@ class DoubleBufferQueueImpl
               nextInternal(value);
             }
 
-            IgnoredErrorResult rv;
             ResolveValue(global, manager, value, aResult);
           },
           [](nsresult aRv) {});
       promise->AppendNativeHandler(listener);
 
       FileSystemRequestHandler{}.GetEntries(aManager, mEntryId, mPageNumber,
-                                            promise, newPage);
+                                            promise, newPage, aError);
+      if (aError.Failed()) {
+        return;
+      }
 
       ++mPageNumber;
       return;

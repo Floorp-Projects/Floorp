@@ -67,6 +67,9 @@ pub enum Type {
     External { name: String, crate_name: String },
     // Custom type on the scaffolding side
     Custom { name: String, builtin: Box<Type> },
+    // An unresolved user-defined type inside a proc-macro exported function
+    // signature. Must be replaced by another type before bindings generation.
+    Unresolved { name: String },
 }
 
 impl Type {
@@ -118,6 +121,9 @@ impl Type {
             ),
             // A type that exists externally.
             Type::External { name, .. } | Type::Custom { name, .. } => format!("Type{name}"),
+            Type::Unresolved { .. } => {
+                unreachable!("Type must be resolved before calling canonical_name")
+            }
         }
     }
 
@@ -174,6 +180,9 @@ impl From<&Type> for FFIType {
             | Type::Duration
             | Type::External { .. } => FFIType::RustBuffer,
             Type::Custom { builtin, .. } => FFIType::from(builtin.as_ref()),
+            Type::Unresolved { .. } => {
+                unreachable!("Type must be resolved before lowering to FFIType")
+            }
         }
     }
 }
@@ -221,7 +230,7 @@ impl TypeUniverse {
                 type_.canonical_name(),
             );
         }
-        let type_ = self.add_known_type(type_)?;
+        self.add_known_type(&type_);
         match self.type_definitions.entry(name.to_string()) {
             Entry::Occupied(_) => bail!("Conflicting type definition for \"{name}\""),
             Entry::Vacant(e) => {
@@ -245,15 +254,31 @@ impl TypeUniverse {
     }
 
     /// Add a [Type] to the set of all types seen in the component interface.
-    ///
-    /// This helpfully returns a `Result<Type>` so it can be chained in with other
-    /// methods during the type resolution process.
-    pub fn add_known_type(&mut self, type_: Type) -> Result<Type> {
-        // Types are more likely to already be known than not, so avoid unnecessary cloning.
-        if !self.all_known_types.contains(&type_) {
-            self.all_known_types.insert(type_.clone());
+    pub fn add_known_type(&mut self, type_: &Type) {
+        // Don't add unresolved types, they are only useful as placeholders
+        // inside function / method signatures.
+        if matches!(type_, Type::Unresolved { .. }) {
+            return;
         }
-        Ok(type_)
+
+        // Types are more likely to already be known than not, so avoid unnecessary cloning.
+        if !self.all_known_types.contains(type_) {
+            self.all_known_types.insert(type_.to_owned());
+
+            // Add inner types. For UDL, this is actually pointless extra work (as is calling
+            // add_known_type from add_function_definition), but for the proc-macro frontend
+            // this is important if the inner type isn't ever mentioned outside one of these
+            // generic builtin types.
+            match type_ {
+                Type::Optional(t) => self.add_known_type(t),
+                Type::Sequence(t) => self.add_known_type(t),
+                Type::Map(k, v) => {
+                    self.add_known_type(k);
+                    self.add_known_type(v);
+                }
+                _ => {}
+            }
+        }
     }
 
     /// Iterator over all the known types in this universe.

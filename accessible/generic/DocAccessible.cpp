@@ -930,6 +930,9 @@ void DocAccessible::ElementStateChanged(dom::Document* aDocument,
   if (aStateMask.HasState(dom::ElementState::CHECKED)) {
     LocalAccessible* widget = accessible->ContainerWidget();
     if (widget && widget->IsSelect()) {
+      // Changing selection here changes what we cache for
+      // the viewport.
+      SetViewportCacheDirty(true);
       AccSelChangeEvent::SelChangeType selChangeType =
           aElement->State().HasState(dom::ElementState::CHECKED)
               ? AccSelChangeEvent::eSelectionAdd

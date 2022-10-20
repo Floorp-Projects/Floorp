@@ -1236,7 +1236,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
     uint32_t classOfServiceFlags = 0;
     mChannel->GetClassFlags(&classOfServiceFlags);
     Telemetry::AccumulateTimeDelta(
-        Telemetry::NETWORK_DNS_END_TO_CONNECT_START_MS,
+        Telemetry::NETWORK_DNS_END_TO_CONNECT_START_EXP_MS,
         protocolVersion + "_"_ns +
             ClassOfService::ToString(classOfServiceFlags),
         args.timing().domainLookupEnd(), args.timing().connectStart());

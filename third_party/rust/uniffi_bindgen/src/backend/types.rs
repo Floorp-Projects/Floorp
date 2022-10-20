@@ -168,13 +168,13 @@ impl CodeTypeDispatch for CallbackInterface {
 
 impl CodeTypeDispatch for Field {
     fn code_type_impl(&self, oracle: &dyn CodeOracle) -> Box<dyn CodeType> {
-        oracle.find(&self.type_())
+        oracle.find(self.type_())
     }
 }
 
 impl CodeTypeDispatch for Argument {
     fn code_type_impl(&self, oracle: &dyn CodeOracle) -> Box<dyn CodeType> {
-        oracle.find(&self.type_())
+        oracle.find(self.type_())
     }
 }
 

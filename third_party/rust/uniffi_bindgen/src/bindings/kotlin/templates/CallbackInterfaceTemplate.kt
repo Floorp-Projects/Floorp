@@ -34,19 +34,49 @@ internal class {{ foreign_callback }} : ForeignCallback {
             {% for meth in cbi.methods() -%}
             {% let method_name = format!("invoke_{}", meth.name())|fn_name -%}
             {{ loop.index }} -> {
-                val buffer = this.{{ method_name }}(cb, args)
-                outBuf.setValue(buffer)
-                // Value written to out buffer.
-                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
-                1
+                // Call the method, write to outBuf and return a status code
+                // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs` for info
+                try {
+                    {%- match meth.throws_type() %}
+                    {%- when Some(error_type) %}
+                    try {
+                        val buffer = this.{{ method_name }}(cb, args)
+                        // Success
+                        outBuf.setValue(buffer)
+                        1
+                    } catch (e: {{ error_type|type_name }}) {
+                        // Expected error
+                        val buffer = {{ error_type|ffi_converter_name }}.lowerIntoRustBuffer(e)
+                        outBuf.setValue(buffer)
+                        -2
+                    }
+                    {%- else %} 
+                    val buffer = this.{{ method_name }}(cb, args)
+                    // Success
+                    outBuf.setValue(buffer)
+                    1
+                    {%- endmatch %}
+                } catch (e: Throwable) {
+                    // Unexpected error
+                    try {
+                        // Try to serialize the error into a string
+                        outBuf.setValue({{ Type::String.borrow()|ffi_converter_name }}.lower(e.toString()))
+                    } catch (e: Throwable) {
+                        // If that fails, then it's time to give up and just return
+                    }
+                    -1
+                }
             }
             {% endfor %}
-            // This should never happen, because an out of bounds method index won't
-            // ever be used. Once we can catch errors, we should return an InternalException.
-            // https://github.com/mozilla/uniffi-rs/issues/351
             else -> {
                 // An unexpected error happened.
                 // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
+                try {
+                    // Try to serialize the error into a string
+                    outBuf.setValue({{ Type::String.borrow()|ffi_converter_name }}.lower("Invalid Callaback index"))
+                } catch (e: Throwable) {
+                    // If that fails, then it's time to give up and just return
+                }
                 -1
             }
         }

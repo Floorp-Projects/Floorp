@@ -8,7 +8,11 @@
 #define DOM_FS_CHILD_FILESYSTEMMANAGER_H_
 
 #include <functional>
+
+#include "mozilla/MozPromise.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/FlippedOnce.h"
+#include "mozilla/dom/quota/ForwardDecls.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
@@ -48,13 +52,15 @@ class FileSystemManager : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(FileSystemManager)
 
+  bool IsShutdown() const { return mShutdown; }
+
   void Shutdown();
 
   void BeginRequest(
       std::function<void(const RefPtr<FileSystemManagerChild>&)>&& aSuccess,
       std::function<void(nsresult)>&& aFailure);
 
-  already_AddRefed<Promise> GetDirectory(ErrorResult& aRv);
+  already_AddRefed<Promise> GetDirectory(ErrorResult& aError);
 
  private:
   virtual ~FileSystemManager();
@@ -65,6 +71,11 @@ class FileSystemManager : public nsISupports {
 
   const RefPtr<FileSystemBackgroundRequestHandler> mBackgroundRequestHandler;
   const UniquePtr<fs::FileSystemRequestHandler> mRequestHandler;
+
+  MozPromiseRequestHolder<BoolPromise>
+      mCreateFileSystemManagerChildPromiseRequestHolder;
+
+  FlippedOnce<false> mShutdown;
 };
 
 }  // namespace dom

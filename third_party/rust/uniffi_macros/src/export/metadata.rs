@@ -6,7 +6,7 @@ use proc_macro2::Span;
 
 use super::ExportItem;
 
-pub(super) mod convert;
+pub(crate) mod convert;
 mod function;
 mod impl_;
 

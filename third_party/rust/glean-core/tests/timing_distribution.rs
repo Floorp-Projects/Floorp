@@ -47,6 +47,7 @@ fn serializer_should_correctly_serialize_timing_distribution() {
             .get_value(&glean, "store1")
             .expect("Value should be stored");
 
+        assert_eq!(snapshot.count, 1);
         assert_eq!(snapshot.sum, duration as i64);
     }
 
@@ -164,8 +165,11 @@ fn the_accumulate_samples_api_correctly_stores_timing_values() {
 
     let seconds_to_nanos = 1000 * 1000 * 1000;
 
-    // Check that we got the right sum and number of samples.
+    // Check that we got the right sum.
     assert_eq!(snapshot.sum, 6 * seconds_to_nanos);
+
+    // Check that we got the right number of samples.
+    assert_eq!(snapshot.count, 3);
 
     // We should get a sample in 3 buckets.
     // These numbers are a bit magic, but they correspond to
@@ -201,8 +205,11 @@ fn the_accumulate_samples_api_correctly_handles_negative_values() {
         .get_value(&glean, "store1")
         .expect("Value should be stored");
 
-    // Check that we got the right sum and number of samples.
+    // Check that we got the right sum.
     assert_eq!(snapshot.sum, 6);
+
+    // Check that we got the right number of samples.
+    assert_eq!(snapshot.count, 3);
 
     // We should get a sample in each of the first 3 buckets.
     assert_eq!(1, snapshot.values[&1]);
@@ -244,6 +251,9 @@ fn the_accumulate_samples_api_correctly_handles_overflowing_values() {
 
     // Overflowing values are truncated to MAX_SAMPLE_TIME and recorded.
     assert_eq!(snapshot.sum as u64, MAX_SAMPLE_TIME + 6);
+
+    // Check that we got the right number of samples.
+    assert_eq!(snapshot.count, 4);
 
     // We should get a sample in each of the first 3 buckets.
     assert_eq!(1, snapshot.values[&1]);
@@ -340,8 +350,11 @@ fn the_accumulate_raw_samples_api_correctly_stores_timing_values() {
         .get_value(&glean, "store1")
         .expect("Value should be stored");
 
-    // Check that we got the right sum and number of samples.
+    // Check that we got the right sum.
     assert_eq!(snapshot.sum, 6 * seconds_to_nanos as i64);
+
+    // Check that we got the right number of samples.
+    assert_eq!(snapshot.count, 3);
 
     // We should get a sample in 3 buckets.
     // These numbers are a bit magic, but they correspond to
@@ -386,8 +399,11 @@ fn raw_samples_api_error_cases() {
         .get_value(&glean, "store1")
         .expect("Value should be stored");
 
-    // Check that we got the right sum and number of samples.
+    // Check that we got the right sum.
     assert_eq!(snapshot.sum, 2 + max_sample_time as i64);
+
+    // Check that we got the right number of samples.
+    assert_eq!(snapshot.count, 3);
 
     // We should get a sample in 3 buckets.
     // These numbers are a bit magic, but they correspond to
@@ -395,7 +411,7 @@ fn raw_samples_api_error_cases() {
     assert_eq!(2, snapshot.values[&1]);
     assert_eq!(1, snapshot.values[&599512966122]);
 
-    // No errors should be reported.
+    // 1 error should be reported.
     assert_eq!(
         Ok(1),
         test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow)

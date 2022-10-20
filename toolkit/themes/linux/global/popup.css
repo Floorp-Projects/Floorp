@@ -30,7 +30,7 @@ menupopup > menu > menupopup {
 
 /* ::::: arrow panel ::::: */
 
-panel[type="arrow"] {
+:is(panel, menupopup)[type="arrow"] {
   border: none;
   background-color: transparent;
 }

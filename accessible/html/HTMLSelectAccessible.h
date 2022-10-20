@@ -177,7 +177,8 @@ class HTMLComboboxAccessible final : public AccessibleWrap {
   virtual LocalAccessible* CurrentItem() const override;
   virtual void SetCurrentItem(const LocalAccessible* aItem) override;
 
- protected:
+  HTMLComboboxListAccessible* List() const { return mListAccessible; }
+
   /**
    * Return selected option.
    */

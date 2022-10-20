@@ -33,7 +33,7 @@ panel[titlebar] {
   appearance: none; /* to disable rounded corners */
 }
 
-panel[type="arrow"] {
+:is(panel, menupopup)[type="arrow"] {
   appearance: none;
   background: transparent;
 }
@@ -57,7 +57,7 @@ panel[type="arrow"] {
   -moz-box-orient: vertical;
 }
 
-panel[type="arrow"]::part(content) {
+:is(panel, menupopup)[type="arrow"]::part(content) {
   margin: 1px;
 }
 

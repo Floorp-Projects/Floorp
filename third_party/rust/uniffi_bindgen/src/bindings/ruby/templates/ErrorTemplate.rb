@@ -37,8 +37,12 @@ module {{ e.name()|class_name_rb }}
       end
     {%- if variant.has_fields() %}
 
-    attr_reader {% for field in variant.fields() %}:{{ field.name() }}{% if !loop.last %}, {% endif %}{% endfor %}
+    attr_reader {% for field in variant.fields() %}:{{ field.name()|var_name_rb }}{% if !loop.last %}, {% endif %}{% endfor %}
     {% endif %}
+
+    def to_s
+     "#{self.class.name}({% for field in variant.fields() %}{{ field.name()|var_name_rb }}=#{@{{ field.name()|var_name_rb }}.inspect}{% if !loop.last %}, {% endif %}{% endfor %})"
+    end
   end
   {%- endfor %}
 {% endif %}

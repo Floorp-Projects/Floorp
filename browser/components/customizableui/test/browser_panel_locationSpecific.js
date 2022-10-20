@@ -14,13 +14,13 @@ add_task(async function() {
   let specificPanel = document.createXULElement("panel");
   specificPanel.setAttribute("locationspecific", "true");
   specificPanel.setAttribute("noautohide", "true");
-  specificPanel.height = "100px";
-  specificPanel.width = "100px";
+  specificPanel.style.height = "100px";
+  specificPanel.style.width = "100px";
 
   let generalPanel = document.createXULElement("panel");
   generalPanel.setAttribute("noautohide", "true");
-  generalPanel.height = "100px";
-  generalPanel.width = "100px";
+  generalPanel.style.height = "100px";
+  generalPanel.style.width = "100px";
 
   let anchor = document.getElementById(CustomizableUI.AREA_NAVBAR);
 

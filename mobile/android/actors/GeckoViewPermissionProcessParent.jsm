@@ -5,8 +5,8 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewPermissionProcessParent"];
 
-const { GeckoViewUtils } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewUtils.jsm"
+const { GeckoViewUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewUtils.sys.mjs"
 );
 
 // See: http://developer.android.com/reference/android/Manifest.permission.html

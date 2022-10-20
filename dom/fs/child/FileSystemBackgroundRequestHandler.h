@@ -10,6 +10,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/quota/ForwardDecls.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 
 template <class T>
 class RefPtr;
@@ -52,9 +53,14 @@ class FileSystemBackgroundRequestHandler {
 
   const UniquePtr<fs::FileSystemChildFactory> mChildFactory;
 
+  MozPromiseRequestHolder<
+      mozilla::ipc::PBackgroundChild::CreateFileSystemManagerParentPromise>
+      mCreateFileSystemManagerParentPromiseRequestHolder;
   MozPromiseHolder<BoolPromise> mCreateFileSystemManagerChildPromiseHolder;
 
   RefPtr<FileSystemManagerChild> mFileSystemManagerChild;
+
+  FlippedOnce<false> mShutdown;
 
   bool mCreatingFileSystemManagerChild;
 };  // class FileSystemBackgroundRequestHandler

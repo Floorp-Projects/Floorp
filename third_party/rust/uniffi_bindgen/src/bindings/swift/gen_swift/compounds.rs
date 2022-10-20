@@ -84,8 +84,8 @@ impl CodeType for MapCodeType {
     fn canonical_name(&self, oracle: &dyn CodeOracle) -> String {
         format!(
             "Dictionary{}{}",
-            oracle.find(&self.key).type_label(oracle),
-            oracle.find(&self.value).type_label(oracle)
+            oracle.find(&self.key).canonical_name(oracle),
+            oracle.find(&self.value).canonical_name(oracle)
         )
     }
 
