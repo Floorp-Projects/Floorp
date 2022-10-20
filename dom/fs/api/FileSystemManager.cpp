@@ -102,17 +102,20 @@ void FileSystemManager::BeginRequest(
              });
 }
 
-already_AddRefed<Promise> FileSystemManager::GetDirectory(ErrorResult& aRv) {
+already_AddRefed<Promise> FileSystemManager::GetDirectory(ErrorResult& aError) {
   MOZ_ASSERT(mGlobal);
 
-  RefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
+  RefPtr<Promise> promise = Promise::Create(mGlobal, aError);
+  if (NS_WARN_IF(aError.Failed())) {
     return nullptr;
   }
 
   MOZ_ASSERT(promise);
 
-  mRequestHandler->GetRootHandle(this, promise);
+  mRequestHandler->GetRootHandle(this, promise, aError);
+  if (NS_WARN_IF(aError.Failed())) {
+    return nullptr;
+  }
 
   return promise.forget();
 }

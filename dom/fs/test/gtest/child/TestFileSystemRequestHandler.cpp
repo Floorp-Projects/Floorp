@@ -88,7 +88,7 @@ TEST_F(TestFileSystemRequestHandler, isGetRootHandleSuccessful) {
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
-  testable->GetRootHandle(mManager, promise);
+  testable->GetRootHandle(mManager, promise, IgnoredErrorResult());
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [this]() { return mListener->IsDone(); });
 }
@@ -114,7 +114,8 @@ TEST_F(TestFileSystemRequestHandler, isGetDirectoryHandleSuccessful) {
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
   testable->GetDirectoryHandle(mManager, mChild,
-                               /* create */ true, promise);
+                               /* create */ true, promise,
+                               IgnoredErrorResult());
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [this]() { return mListener->IsDone(); });
 }
@@ -139,7 +140,8 @@ TEST_F(TestFileSystemRequestHandler, isGetFileHandleSuccessful) {
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
-  testable->GetFileHandle(mManager, mChild, /* create */ true, promise);
+  testable->GetFileHandle(mManager, mChild, /* create */ true, promise,
+                          IgnoredErrorResult());
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [this]() { return mListener->IsDone(); });
 }
@@ -187,7 +189,7 @@ TEST_F(TestFileSystemRequestHandler, isGetFileSuccessful) {
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
-  testable->GetFile(mManager, mEntry, promise);
+  testable->GetFile(mManager, mEntry, promise, IgnoredErrorResult());
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [this]() { return mListener->IsDone(); });
 }
@@ -222,7 +224,8 @@ TEST_F(TestFileSystemRequestHandler, isGetEntriesSuccessful) {
   auto testable = GetFileSystemRequestHandler();
   RefPtr<FileSystemEntryMetadataArray> sink;
 
-  testable->GetEntries(mManager, mEntry.entryId(), /* page */ 0, promise, sink);
+  testable->GetEntries(mManager, mEntry.entryId(), /* page */ 0, promise, sink,
+                       IgnoredErrorResult());
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [listener]() { return listener->IsDone(); });
 }
@@ -246,7 +249,8 @@ TEST_F(TestFileSystemRequestHandler, isRemoveEntrySuccessful) {
 
   auto testable = GetFileSystemRequestHandler();
   RefPtr<Promise> promise = GetDefaultPromise();
-  testable->RemoveEntry(mManager, mChild, /* recursive */ true, promise);
+  testable->RemoveEntry(mManager, mChild, /* recursive */ true, promise,
+                        IgnoredErrorResult());
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [this]() { return mListener->IsDone(); });
 }

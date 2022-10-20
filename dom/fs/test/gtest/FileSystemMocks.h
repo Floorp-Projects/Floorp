@@ -52,54 +52,58 @@ mozilla::ipc::PrincipalInfo GetPrincipalInfo();
 class MockFileSystemRequestHandler : public FileSystemRequestHandler {
  public:
   MOCK_METHOD(void, GetRootHandle,
-              (RefPtr<FileSystemManager> aManager, RefPtr<Promise> aPromise),
+              (RefPtr<FileSystemManager> aManager, RefPtr<Promise> aPromise,
+               ErrorResult& aError),
               (override));
 
   MOCK_METHOD(void, GetDirectoryHandle,
               (RefPtr<FileSystemManager> & aManager,
                const FileSystemChildMetadata& aDirectory, bool aCreate,
-               RefPtr<Promise> aPromise),
+               RefPtr<Promise> aPromise, ErrorResult& aError),
               (override));
 
   MOCK_METHOD(void, GetFileHandle,
               (RefPtr<FileSystemManager> & aManager,
                const FileSystemChildMetadata& aFile, bool aCreate,
-               RefPtr<Promise> aPromise),
+               RefPtr<Promise> aPromise, ErrorResult& aError),
               (override));
 
   MOCK_METHOD(void, GetFile,
               (RefPtr<FileSystemManager> & aManager,
-               const FileSystemEntryMetadata& aFile, RefPtr<Promise> aPromise),
+               const FileSystemEntryMetadata& aFile, RefPtr<Promise> aPromise,
+               ErrorResult& aError),
               (override));
 
   MOCK_METHOD(void, GetEntries,
               (RefPtr<FileSystemManager> & aManager, const EntryId& aDirectory,
                PageNumber aPage, RefPtr<Promise> aPromise,
-               RefPtr<FileSystemEntryMetadataArray>& aSink),
+               RefPtr<FileSystemEntryMetadataArray>& aSink,
+               ErrorResult& aError),
               (override));
 
   MOCK_METHOD(void, RemoveEntry,
               (RefPtr<FileSystemManager> & aManager,
                const FileSystemChildMetadata& aEntry, bool aRecursive,
-               RefPtr<Promise> aPromise),
+               RefPtr<Promise> aPromise, ErrorResult& aError),
               (override));
 
   MOCK_METHOD(void, MoveEntry,
               (RefPtr<FileSystemManager> & aManager, FileSystemHandle* aHandle,
                const FileSystemEntryMetadata& aEntry,
                const FileSystemChildMetadata& aNewEntry,
-               RefPtr<Promise> aPromise),
+               RefPtr<Promise> aPromise, ErrorResult& aError),
               (override));
 
   MOCK_METHOD(void, RenameEntry,
               (RefPtr<FileSystemManager> & aManager, FileSystemHandle* aHandle,
                const FileSystemEntryMetadata& aEntry, const Name& aName,
-               RefPtr<Promise> aPromise),
+               RefPtr<Promise> aPromise, ErrorResult& aError),
               (override));
 
   MOCK_METHOD(void, Resolve,
               (RefPtr<FileSystemManager> & aManager,
-               const FileSystemEntryPair& aEndpoints, RefPtr<Promise> aPromise),
+               const FileSystemEntryPair& aEndpoints, RefPtr<Promise> aPromise,
+               ErrorResult& aError),
               (override));
 };
 
@@ -144,7 +148,7 @@ class TestPromiseListener : public PromiseNativeHandler,
   // PromiseNativeHandler implementation
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+                        ErrorResult& aError) override {
     mozilla::ScopeExit flagAsDone([isDone = mIsDone, timer = mTimer] {
       timer->Cancel();
       *isDone = true;
@@ -154,7 +158,7 @@ class TestPromiseListener : public PromiseNativeHandler,
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+                        ErrorResult& aError) override {
     mozilla::ScopeExit flagAsDone([isDone = mIsDone, timer = mTimer] {
       timer->Cancel();
       *isDone = true;
