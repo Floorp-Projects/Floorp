@@ -231,26 +231,6 @@ class ScreenshotTest : BaseSessionTest() {
     }
 
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
-    @Test(expected = IllegalStateException::class)
-    fun capturePixelsAfterGpuProcessCrash() {
-        // Bug 1754570 - temporarily disable the test
-        assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
-
-        // We need the GPU process for this test
-        assumeTrue(sessionRule.usingGpuProcess())
-
-        sessionRule.display?.let {
-            // Kill the GPU process then immediately request screen pixels. Requesting the pixels
-            // *before* killing the process will often result in the same error, but sometimes the
-            // screenshot request will complete successfully before the crash.
-            sessionRule.killGpuProcess()
-            val result = it.capturePixels()
-
-            sessionRule.waitForResult(result)
-        }
-    }
-
-    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
     @Test
     fun screenshotToBitmap() {
         val screenshotFile = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
