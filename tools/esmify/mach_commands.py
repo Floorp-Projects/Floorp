@@ -502,24 +502,34 @@ def try_rename_in(command_context, path, target, jsm_name, esm_name, jsm_path):
     def info(text):
         command_context.log(logging.INFO, "esmify", {}, f"[INFO] {text}")
 
-    target_path = find_file(path, target)
-    if not target_path:
-        return False
+    if type(target) is str:
+        # Target is specified by filename, that may exist somewhere in
+        # the jsm's directory or ancestor directories.
+        target_path = find_file(path, target)
+        if not target_path:
+            return False
 
-    # Single moz.build or jar.mn can contain multiple files with same name.
-    # Check the relative path.
+        # JSM should be specified with relative path in the file.
+        #
+        # Single moz.build or jar.mn can contain multiple files with same name.
+        # Search for relative path.
+        jsm_relative_path = jsm_path.relative_to(target_path.parent)
+        jsm_path_str = path_sep_from_native(str(jsm_relative_path))
+    else:
+        # Target is specified by full path.
+        target_path = target
 
-    jsm_relative_path = jsm_path.relative_to(target_path.parent)
-    jsm_relative_str = path_sep_from_native(str(jsm_relative_path))
+        # JSM should be specified with full path in the file.
+        jsm_path_str = path_sep_from_native(str(jsm_path))
 
+    jsm_path_re = re.compile(r"\b" + jsm_path_str.replace(".", r"\.") + r"\b")
     jsm_name_re = re.compile(r"\b" + jsm_name.replace(".", r"\.") + r"\b")
-    jsm_relative_re = re.compile(r"\b" + jsm_relative_str.replace(".", r"\.") + r"\b")
 
     modified = False
     content = ""
     with open(target_path, "r") as f:
         for line in f:
-            if jsm_relative_re.search(line):
+            if jsm_path_re.search(line):
                 modified = True
                 line = jsm_name_re.sub(esm_name, line)
 
@@ -604,6 +614,8 @@ def rename_single_file(command_context, vcs_utils, jsm_path, summary):
         "xpcshell-child-process.ini",
         "xpcshell-common.ini",
         "xpcshell-parent-process.ini",
+        pathlib.Path("tools", "lint", "eslint.yml"),
+        pathlib.Path("tools", "lint", "rejected-words.yml"),
     ]
 
     info(f"{jsm_path} => {esm_path}")
