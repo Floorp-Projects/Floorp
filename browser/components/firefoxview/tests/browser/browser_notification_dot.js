@@ -9,6 +9,10 @@ const { SyncedTabs } = ChromeUtils.import(
   "resource://services-sync/SyncedTabs.jsm"
 );
 
+const { FirefoxViewNotificationManager } = ChromeUtils.importESModule(
+  "resource:///modules/firefox-view-notification-manager.sys.mjs"
+);
+
 function setupRecentDeviceListMocks() {
   const sandbox = sinon.createSandbox();
   sandbox.stub(fxAccounts.device, "recentDeviceList").get(() => [
@@ -78,6 +82,14 @@ add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.firefox-view.notify-for-tabs", true]],
   });
+
+  // Clear any synced tabs from previous tests
+  FirefoxViewNotificationManager.syncedTabs = null;
+  Services.obs.notifyObservers(
+    null,
+    "firefoxview-notification-dot-update",
+    "false"
+  );
 });
 
 /**
