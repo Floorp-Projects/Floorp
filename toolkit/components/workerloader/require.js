@@ -29,9 +29,6 @@
  * Human readers should rather use properties |moduleName| and |moduleStack|.
  *
  * Note #2:
- * The current version of |require()| only accepts absolute URIs.
- *
- * Note #3:
  * By opposition to some other module loader implementations, this module
  * loader does not enforce separation of global objects. Consequently, if
  * a module modifies a global object (e.g. |String.prototype|), all other
@@ -52,9 +49,9 @@
   // Simple implementation of |require|
   let require = (function() {
     /**
-     * Mapping from module paths to module exports.
+     * Mapping from module URI to module exports.
      *
-     * @keys {string} The absolute path to a module.
+     * @keys {string} The absolute URI to a module.
      * @values {object} The |exports| objects for that module.
      */
     let modules = new Map();
@@ -87,12 +84,27 @@
     /**
      * Import a module
      *
+     * @param {string} baseURL The URL of the modules from which we load a new module.
+     *        This will be null for the first loaded module and so expect an absolute URI in path.
+     *        Note that this first parameter is bound before `require` method is passed outside
+     *        of this module. So that typical callsites will only path the second `path` parameter.
      * @param {string} path The path to the module.
      * @return {*} An object containing the properties exported by the module.
      */
-    return function require(path) {
+    return function require(baseURL, path) {
       let startTime = performance.now();
-      if (typeof path != "string" || !path.includes("://")) {
+      if (typeof path != "string") {
+        throw new TypeError(
+          "The argument to require() must be a string got " + path
+        );
+      }
+
+      // Resolve relative paths
+      if ((path.startsWith("./") || path.startsWith("../")) && baseURL) {
+        path = new URL(path, baseURL).href;
+      }
+
+      if (!path.includes("://")) {
         throw new TypeError(
           "The argument to require() must be a string uri, got " + path
         );
@@ -117,10 +129,10 @@
 
       // Make module available immediately
       // (necessary in case of circular dependencies)
-      if (modules.has(path)) {
-        return modules.get(path).exports;
+      if (modules.has(uri)) {
+        return modules.get(uri).exports;
       }
-      modules.set(path, module);
+      modules.set(uri, module);
 
       try {
         // Load source of module, synchronously
@@ -144,11 +156,11 @@
           "module",
           `eval(arguments[3] + "\\n//# sourceURL=" + arguments[4] + "\\n")`
         );
-        code(exports, require, module, source, uri);
+        code(exports, require.bind(null, path), module, source, uri);
       } catch (ex) {
         // Module loading has failed, exports should not be made available
         // after all.
-        modules.delete(path);
+        modules.delete(uri);
         throw ex;
       } finally {
         ChromeUtils.addProfilerMarker("require", startTime, path);
@@ -163,7 +175,7 @@
   Object.freeze(require);
 
   Object.defineProperty(exports, "require", {
-    value: require,
+    value: require.bind(null, null),
     enumerable: true,
     configurable: false,
   });
