@@ -2,11 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Folder menulist */
+#editBMPanel_tagsSelector {
+  height: 150px;
+}
 
 #editBMPanel_folderMenuList::part(icon) {
   width: 16px;
   height: 16px;
+}
+
+@media (-moz-platform: macos) {
+  /* FIXME(emilio): Is this rule needed at all? */
+  .folder-icon > .menu-iconic-left > .menu-iconic-icon {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 .folder-icon > .menu-iconic-left {
@@ -21,6 +31,12 @@
 
 #editBMPanel_folderTree {
   margin-block: 2px;
+}
+
+@media (-moz-platform: macos) {
+  #editBMPanel_folderTree {
+    margin: 6px 4px 0;
+  }
 }
 
 /* Hide the value column of the tag autocomplete popup
@@ -41,7 +57,35 @@
   min-height: 13px;
 }
 
-/* Bookmark panel dropdown menu items */
+@media (-moz-platform: windows) {
+  #editBMPanel_tagsSelector > richlistitem > image {
+    border: 1px solid -moz-DialogText;
+    background: Field no-repeat 50% 50%;
+  }
+}
+
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector {
+  border-color: var(--in-content-border-color);
+  padding: 12px;
+}
+
+/* Reset default margins for tags so we can apply custom ones */
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem > image,
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem > label {
+  margin: 0;
+}
+
+/* Set spacing between tags */
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem:not(:last-child) {
+  margin-bottom: 8px;
+}
+
+#bookmarkpropertiesdialog #editBMPanel_tagsSelector > richlistitem > image {
+  margin-inline-end: 8px;
+}
+
+/* Bookmark panel dropdown icons */
+
 #editBMPanel_folderMenuList[selectedGuid="toolbar_____"],
 #editBMPanel_toolbarFolderItem {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg") !important;
