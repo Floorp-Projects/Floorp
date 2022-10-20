@@ -14,6 +14,9 @@ XPCOMUtils.defineLazyGetter(this, "L10n", () => {
 });
 
 
+Preferences.addAll([
+  { id: "floorp.lepton.interface", type : "int"},
+]);
 
 var gLeptonPane = {
   _pane: null,
@@ -51,6 +54,6 @@ function setLeptonUI() {
 }
 
 window.setTimeout(function(){
-  document.getElementById("lepton").addEventListener("command", setLeptonUI);
-  document.getElementById("photon").addEventListener("command", setPhotonUI);
+  document.getElementById("lepton-design-mode").addEventListener("click", setLeptonUI, false);
+  document.getElementById("photon-design-mode").addEventListener("click", setPhotonUI, false);
 }, 1000);
