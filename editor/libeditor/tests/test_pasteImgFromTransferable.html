@@ -60,7 +60,12 @@ add_task(async function() {
     trans.init(null);
     trans.setTransferData(test.mimeType, stringStream);
 
+    let evt = new Promise(resolve =>
+      edit.addEventListener("input", resolve, {once: true}));
+
     getHTMLEditor(window).pasteTransferable(trans);
+
+    await evt;
 
     is(edit.innerHTML,
        "<img src=\"data:" + test.mimeType + ";base64," + test.base64 + "\" alt=\"\">",
