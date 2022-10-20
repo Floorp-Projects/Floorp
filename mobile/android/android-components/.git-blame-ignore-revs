@@ -1,0 +1,9 @@
+# .git-blame-ignore-revs
+# Issue #12939: Address all ktlint issues (#12940)
+f5ac21c0250fdf7bb837130ca7cb3c43733d917f
+# For #12930 - Fix old but now blocking ktlint issues (#12931)
+19c4186a4e5402bfb868fa12c5b0b32aad41c309
+# For #12500: Fix ktlint issues. (#12501)
+79b2da824361f1701758b21ebac503b8077f1c0d
+# For #12151 - Fix ktlint issues for GeckoPromptDelegate.kt (#12802)
+af7078f992e42cbc01292d7884ffe064a2df710d
