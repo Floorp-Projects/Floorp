@@ -3757,6 +3757,9 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
     }
 
     if (sendTransformUpdate) {
+      // If our transform matrix has changed, it's possible our
+      // viewport cache has also changed.
+      mDoc->SetViewportCacheDirty(true);
       // Queuing a cache update for the TransformMatrix domain doesn't
       // necessarily mean we'll send the matrix itself, we may
       // send a DeleteEntry() instead. See BundleFieldsForCache for
