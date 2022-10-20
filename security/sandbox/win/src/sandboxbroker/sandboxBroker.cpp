@@ -1339,13 +1339,6 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
   result = mPolicy->SetProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result, "Invalid flags for SetProcessMitigations.");
 
-  if (exceptionModules.isSome()) {
-    // This needs to be called after MITIGATION_FORCE_MS_SIGNED_BINS is set
-    // because of DCHECK in PolicyBase::AddRuleInternal.
-    result = InitSignedPolicyRulesToBypassCig(mPolicy, exceptionModules.ref());
-    SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
-  }
-
   // Win32k lockdown might not work on earlier versions
   // Bug 1719212, 1769992
   if (IsWin10FallCreatorsUpdateOrLater()
@@ -1388,6 +1381,17 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
   result = mPolicy->SetDelayedProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result,
                          "Invalid flags for SetDelayedProcessMitigations.");
+
+  // This needs to be called after MITIGATION_FORCE_MS_SIGNED_BINS is set
+  // because of DCHECK in PolicyBase::AddRuleInternal.
+  if (exceptionModules.isSome()) {
+    result = InitSignedPolicyRulesToBypassCig(mPolicy, exceptionModules.ref());
+    SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
+  } else {
+    const Vector<const wchar_t*> emptyVector;
+    result = InitSignedPolicyRulesToBypassCig(mPolicy, emptyVector);
+    SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
+  }
 
   // Add the policy for the client side of a pipe. It is just a file
   // in the \pipe\ namespace. We restrict it to pipes that start with
