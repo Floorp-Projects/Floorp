@@ -979,6 +979,22 @@ class TSFTextStore final : public ITextStoreACP,
 
   Maybe<Content>& ContentForTSF();
 
+  class MOZ_STACK_CLASS AutoNotifyingTSFBatch final {
+   public:
+    explicit AutoNotifyingTSFBatch(TSFTextStore& aTextStore)
+        : mTextStore(aTextStore), mOldValue(aTextStore.mDeferNotifyingTSF) {
+      mTextStore.mDeferNotifyingTSF = true;
+    }
+    ~AutoNotifyingTSFBatch() {
+      mTextStore.mDeferNotifyingTSF = mOldValue;
+      mTextStore.MaybeFlushPendingNotifications();
+    }
+
+   private:
+    TSFTextStore& mTextStore;
+    bool mOldValue;
+  };
+
   // CanAccessActualContentDirectly() returns true when TSF/TIP can access
   // actual content directly.  In other words, mContentForTSF and/or
   // mSelectionForTSF doesn't cache content or they matches with actual
@@ -1060,6 +1076,11 @@ class TSFTextStore final : public ITextStoreACP,
   // If this is false, MaybeFlushPendingNotifications() will clear the
   // mContentForTSF.
   bool mDeferClearingContentForTSF = false;
+  // While the instance is initializing content/selection cache, another
+  // initialization shouldn't run recursively.  Therefore, while the
+  // initialization is running, this is set to true.  Use AutoNotifyingTSFBatch
+  // to set this.
+  bool mDeferNotifyingTSF = false;
   // While the instance is dispatching events, the event may not be handled
   // synchronously when remote content has focus.  In the case, we cannot
   // return the latest layout/content information to TSF/TIP until we get next
