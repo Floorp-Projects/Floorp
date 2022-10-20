@@ -99,6 +99,18 @@ object TestAssetHelper {
         return TestAsset(url, "", "")
     }
 
+    fun getHTMLControlsFormAsset(server: MockWebServer): TestAsset {
+        val url = server.url("pages/htmlControls.html").toString().toUri()!!
+
+        return TestAsset(url, "", "")
+    }
+
+    fun getExternalLinksAsset(server: MockWebServer): TestAsset {
+        val url = server.url("pages/externalLinks.html").toString().toUri()!!
+
+        return TestAsset(url, "", "")
+    }
+
     fun getAudioPageAsset(server: MockWebServer): TestAsset {
         val url = server.url("pages/audioMediaPage.html").toString().toUri()!!
         val title = "Audio_Test_Page"

@@ -11,14 +11,17 @@ import android.content.Intent
 import android.net.Uri
 import android.os.SystemClock
 import android.util.Log
+import android.widget.TimePicker
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.PickerActions
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.BundleMatchers
 import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
@@ -34,6 +37,7 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
 import org.hamcrest.CoreMatchers.allOf
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.mozilla.fenix.R
@@ -49,6 +53,7 @@ import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.waitForObjects
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import java.time.LocalDate
 
 class BrowserRobot {
     private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
@@ -651,6 +656,227 @@ class BrowserRobot {
         assertTrue(hintMessage.waitForExists(waitingTime))
     }
 
+    fun clickForm(formType: String) {
+        when (formType) {
+            "Calendar Form" -> {
+                clickPageObject(webPageItemWithResourceId("calendar"))
+                mDevice.waitForIdle(waitingTime)
+            }
+            "Clock Form" -> {
+                clickPageObject(webPageItemWithResourceId("clock"))
+                mDevice.waitForIdle(waitingTime)
+            }
+            "Color Form" -> {
+                clickPageObject(webPageItemWithResourceId("colorPicker"))
+                mDevice.waitForIdle(waitingTime)
+            }
+            "Drop-down Form" -> {
+                clickPageObject(webPageItemWithResourceId("dropDown"))
+                mDevice.waitForIdle(waitingTime)
+            }
+        }
+    }
+
+    fun clickFormViewButton(button: String) = mDevice.findObject(UiSelector().textContains(button)).click()
+
+    fun selectDate() {
+        mDevice.findObject(UiSelector().resourceId("android:id/month_view")).waitForExists(waitingTime)
+
+        mDevice.findObject(
+            UiSelector()
+                .textContains("$currentDay")
+                .descriptionContains("$currentDay $currentMonth $currentYear"),
+        ).click()
+    }
+
+    fun selectTime(hour: Int, minute: Int) =
+        onView(
+            isAssignableFrom(TimePicker::class.java),
+        ).inRoot(
+            isDialog(),
+        ).perform(PickerActions.setTime(hour, minute))
+
+    fun selectColor(hexValue: String) {
+        mDevice.findObject(
+            UiSelector()
+                .textContains("Choose a color")
+                .resourceId("$packageName:id/alertTitle"),
+        ).waitForExists(waitingTime)
+
+        val colorSelection =
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/color_item")
+                    .descriptionContains(hexValue),
+            )
+        colorSelection.click()
+    }
+
+    fun selectDropDownOption(optionName: String) {
+        mDevice.findObject(
+            UiSelector().resourceId("$packageName:id/customPanel"),
+        ).waitForExists(waitingTime)
+        mDevice.findObject(UiSelector().textContains(optionName)).click()
+    }
+
+    fun clickSubmitDateButton() = clickPageObject(webPageItemWithResourceId("submitDate"))
+
+    fun clickSubmitTimeButton() = clickPageObject(webPageItemWithResourceId("submitTime"))
+
+    fun clickSubmitColorButton() = clickPageObject(webPageItemWithResourceId("submitColor"))
+
+    fun clickSubmitDropDownButton() = clickPageObject(webPageItemWithResourceId("submitOption"))
+
+    fun verifySelectedDate() {
+        for (i in 1..RETRY_COUNT) {
+            try {
+                assertTrue(
+                    mDevice.findObject(
+                        UiSelector()
+                            .text("Selected date is: $currentDate"),
+                    ).waitForExists(waitingTime),
+                )
+
+                break
+            } catch (e: AssertionError) {
+                Log.e("TestLog", "Selected time isn't displayed ${e.localizedMessage}")
+
+                clickForm("Calendar Form")
+                selectDate()
+                clickFormViewButton("OK")
+                clickSubmitDateButton()
+            }
+        }
+
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .text("Selected date is: $currentDate"),
+            ).waitForExists(waitingTime),
+        )
+    }
+
+    fun verifyNoDateIsSelected() {
+        assertFalse(
+            mDevice.findObject(
+                UiSelector()
+                    .text("Selected date is: $currentDate"),
+            ).waitForExists(waitingTime),
+        )
+    }
+
+    fun verifySelectedTime(hour: Int, minute: Int) {
+        for (i in 1..RETRY_COUNT) {
+            try {
+                assertTrue(
+                    mDevice.findObject(
+                        UiSelector()
+                            .text("Selected time is: $hour:$minute"),
+                    ).waitForExists(waitingTime),
+                )
+
+                break
+            } catch (e: AssertionError) {
+                Log.e("TestLog", "Selected time isn't displayed ${e.localizedMessage}")
+
+                clickForm("Clock Form")
+                clickFormViewButton("CLEAR")
+                clickForm("Clock Form")
+                selectTime(hour, minute)
+                clickFormViewButton("OK")
+                clickSubmitTimeButton()
+            }
+        }
+
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .text("Selected time is: $hour:$minute"),
+            ).waitForExists(waitingTime),
+        )
+    }
+
+    fun verifySelectedColor(hexValue: String) {
+        for (i in 1..RETRY_COUNT) {
+            try {
+                assertTrue(
+                    mDevice.findObject(
+                        UiSelector()
+                            .text("Selected color is: $hexValue"),
+                    ).waitForExists(waitingTime),
+                )
+
+                break
+            } catch (e: AssertionError) {
+                Log.e("TestLog", "Selected color isn't displayed ${e.localizedMessage}")
+
+                clickForm("Color Form")
+                selectColor(hexValue)
+                clickFormViewButton("SET")
+                clickSubmitColorButton()
+            }
+        }
+
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .text("Selected color is: $hexValue"),
+            ).waitForExists(waitingTime),
+        )
+    }
+
+    fun verifySelectedDropDownOption(optionName: String) {
+        for (i in 1..RETRY_COUNT) {
+            try {
+                mDevice.findObject(
+                    UiSelector()
+                        .textContains("Submit drop down option")
+                        .resourceId("submitOption"),
+                ).waitForExists(waitingTime)
+
+                assertTrue(
+                    mDevice.findObject(
+                        UiSelector()
+                            .text("Selected option is: $optionName"),
+                    ).waitForExists(waitingTime),
+                )
+
+                break
+            } catch (e: AssertionError) {
+                Log.e("TestLog", "Selected option isn't displayed ${e.localizedMessage}")
+
+                clickForm("Drop-down Form")
+                selectDropDownOption(optionName)
+                clickSubmitDropDownButton()
+            }
+        }
+
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .text("Selected option is: $optionName"),
+            ).waitForExists(waitingTime),
+        )
+    }
+
+    fun verifyNoTimeIsSelected(hour: Int, minute: Int) {
+        assertFalse(
+            mDevice.findObject(
+                UiSelector()
+                    .text("Selected date is: $hour:$minute"),
+            ).waitForExists(waitingTime),
+        )
+    }
+
+    fun verifyColorIsNotSelected(hexValue: String) {
+        assertFalse(
+            mDevice.findObject(
+                UiSelector()
+                    .text("Selected date is: $hexValue"),
+            ).waitForExists(waitingTime),
+        )
+    }
+
     class Transition {
         private fun threeDotButton() = onView(
             allOf(
@@ -983,3 +1209,8 @@ private fun setPageObjectText(webPageItem: UiObject, text: String) {
         }
     }
 }
+
+private val currentDate = LocalDate.now()
+private val currentDay = currentDate.dayOfMonth
+private val currentMonth = currentDate.month
+private val currentYear = currentDate.year
