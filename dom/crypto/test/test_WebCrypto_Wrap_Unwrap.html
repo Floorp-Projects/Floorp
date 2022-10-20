@@ -313,6 +313,29 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "AES-KW unwrap AES-KW key data",
+  function() {
+    var that = this;
+    var wrappedKey = new Uint8Array(tv.aes_kw.wrapped_key);
+
+    function doUnwrap(wrapKey) {
+      return crypto.subtle.unwrapKey("raw", wrappedKey, wrapKey,
+                                     "AES-KW", "AES-KW",
+                                     true, ["wrapKey", "unwrapKey"]);
+    }
+
+    crypto.subtle.importKey("jwk", tv.aes_kw.wrapping_key,
+                              "AES-KW", false, ["unwrapKey"])
+      .then(doUnwrap)
+      .then(
+        memcmp_complete(that, tv.aes_kw.key),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "AES-KW wrap/unwrap round-trip",
   function() {
     var that = this;
