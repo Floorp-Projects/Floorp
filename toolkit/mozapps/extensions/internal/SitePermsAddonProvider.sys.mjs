@@ -21,13 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "SITEPERMS_ADDON_PROVIDER_ENABLED",
-  SITEPERMS_ADDON_PROVIDER_PREF,
-  false
-);
-
 const FIRST_CONTENT_PROCESS_TOPIC = "ipc:first-content-process-created";
 const SITEPERMS_ADDON_ID_SUFFIX = "@siteperms.mozilla.org";
 
@@ -547,7 +540,7 @@ const SitePermsAddonProvider = {
   },
 
   get isEnabled() {
-    return lazy.SITEPERMS_ADDON_PROVIDER_ENABLED;
+    return Services.prefs.getBoolPref(SITEPERMS_ADDON_PROVIDER_PREF, false);
   },
 
   observe(subject, topic, data) {
