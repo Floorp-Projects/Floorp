@@ -17,6 +17,7 @@
 #include <cassert>
 
 #include "absl/base/config.h"
+#include "absl/strings/internal/cord_data_edge.h"
 #include "absl/strings/internal/cord_internal.h"
 #include "absl/strings/internal/cord_rep_btree.h"
 #include "absl/strings/internal/cord_rep_btree_navigator.h"
@@ -44,7 +45,7 @@ absl::string_view CordRepBtreeReader::Read(size_t n, size_t chunk_size,
   // can directly return the substring into the current data edge as the next
   // chunk. We can easily establish from the above code that `navigator_.Next()`
   // has not been called as that requires `chunk_size` to be zero.
-  if (n < chunk_size) return CordRepBtree::EdgeData(edge).substr(result.n);
+  if (n < chunk_size) return EdgeData(edge).substr(result.n);
 
   // The amount of data taken from the last edge is `chunk_size` and `result.n`
   // contains the offset into the current edge trailing the read data (which can
@@ -52,15 +53,15 @@ absl::string_view CordRepBtreeReader::Read(size_t n, size_t chunk_size,
   // data, calling `navigator_.Current()` is not safe before checking if we
   // already consumed all remaining data.
   const size_t consumed_by_read = n - chunk_size - result.n;
-  if (consumed_ + consumed_by_read >= length()) {
-    consumed_ = length();
+  if (consumed_by_read >= remaining_) {
+    remaining_ = 0;
     return {};
   }
 
   // We did not read all data, return remaining data from current edge.
   edge = navigator_.Current();
-  consumed_ += consumed_by_read + edge->length;
-  return CordRepBtree::EdgeData(edge).substr(result.n);
+  remaining_ -= consumed_by_read + edge->length;
+  return EdgeData(edge).substr(result.n);
 }
 
 }  // namespace cord_internal
