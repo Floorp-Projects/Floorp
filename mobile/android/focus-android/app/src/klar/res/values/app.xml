@@ -2,10 +2,16 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE resources [ <!ENTITY app_name_entity "Firefox Focus Nightly"> ]>
+
 <resources>
     <string name="app_name" translatable="false">Firefox Klar</string>
 
     <!-- This String is the short version of app name -->
     <string name="onboarding_short_app_name" translatable="false">Klar</string>
 
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine.
+         The argument is the app name (Firefox Focus/Firefox Klar/etc).It can be changed from this file. -->
+    <string name="text_selection_search_action2">Search in &app_name_entity;</string>
 </resources>

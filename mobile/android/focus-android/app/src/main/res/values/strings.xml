@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE resources [ <!ENTITY app_name_entity "Focus"> ]>
+
 <resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
@@ -122,7 +124,12 @@
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
          Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Search Privately</string>
+    <string name="text_selection_search_action" moz:removedIn="106">Search Privately</string>
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine.
+         The argument is the app name (Firefox Focus/Firefox Klar/etc).It can be changed from this file. -->
+    <string name="text_selection_search_action2">Search in &app_name_entity;</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
