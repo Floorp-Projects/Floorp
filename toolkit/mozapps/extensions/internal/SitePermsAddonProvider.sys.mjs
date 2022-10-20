@@ -9,6 +9,7 @@ import {
   SITEPERMS_ADDON_TYPE,
   isGatedPermissionType,
   isKnownPublicSuffix,
+  isPrincipalInSitePermissionsBlocklist,
 } from "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
@@ -423,6 +424,10 @@ const SitePermsAddonProvider = {
     // Gated APIs should probably not be available on non-secure origins,
     // but let's double check here.
     if (permission.principal.scheme !== "https") {
+      return;
+    }
+
+    if (isPrincipalInSitePermissionsBlocklist(permission.principal)) {
       return;
     }
 

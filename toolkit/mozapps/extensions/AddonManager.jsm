@@ -105,6 +105,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs",
   isKnownPublicSuffix:
     "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs",
+  isPrincipalInSitePermissionsBlocklist:
+    "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs",
 });
 
 // Initialize the WebExtension process script service as early as possible,
@@ -1798,6 +1800,7 @@ var AddonManagerInternal = {
    *         - `aInstallingPrincipal` scheme is not https
    *         - `aInstallingPrincipal` is a public etld
    *         - `aInstallingPrincipal` is a plain ip address
+   *         - `aInstallingPrincipal` is in the blocklist
    *         - `aSitePerm` is not a gated permission
    *         - `aBrowser` is not null and not an element
    */
@@ -1826,6 +1829,13 @@ var AddonManagerInternal = {
     if (aBrowser && !Element.isInstance(aBrowser)) {
       throw Components.Exception(
         "aBrowser must be an Element, or null",
+        Cr.NS_ERROR_INVALID_ARG
+      );
+    }
+
+    if (lazy.isPrincipalInSitePermissionsBlocklist(aInstallingPrincipal)) {
+      throw Components.Exception(
+        `SitePermsAddons can't be installed`,
         Cr.NS_ERROR_INVALID_ARG
       );
     }

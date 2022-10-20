@@ -4296,3 +4296,7 @@ pref("cookiebanners.bannerClicking.logLevel", "Error");
 // same domain. Every array item should be a valid CookieBannerRule. See
 // CookieBannerRule.schema.json.
 pref("cookiebanners.listService.testRules", "[]");
+
+// The domains we will block from installing SitePermsAddons. Comma-separated
+// full domains: any subdomains of the domains listed will also be allowed.
+pref("dom.sitepermsaddon-provider.separatedBlocklistedDomains", "shopee.co.th");

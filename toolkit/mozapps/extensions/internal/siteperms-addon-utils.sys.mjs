@@ -2,10 +2,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 export const GATED_PERMISSIONS = ["midi", "midi-sysex"];
 export const SITEPERMS_ADDON_PROVIDER_PREF =
   "dom.sitepermsaddon-provider.enabled";
 export const SITEPERMS_ADDON_TYPE = "sitepermission";
+export const SITEPERMS_ADDON_BLOCKEDLIST_PREF =
+  "dom.sitepermsaddon-provider.separatedBlocklistedDomains";
+
+const lazy = {};
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "blocklistedOriginsSet",
+  SITEPERMS_ADDON_BLOCKEDLIST_PREF,
+  // Default value
+  "",
+  // onUpdate
+  null,
+  // transform
+  prefValue => new Set(prefValue.split(","))
+);
 
 /**
  * @param {string} type
@@ -47,4 +64,12 @@ export function addGatedPermissionTypesForXpcShellTests(permissionTypes) {
   }
 
   GATED_PERMISSIONS.push(...permissionTypes);
+}
+
+/**
+ * @param {nsIPrincipal} principal
+ * @returns {Boolean}
+ */
+export function isPrincipalInSitePermissionsBlocklist(principal) {
+  return lazy.blocklistedOriginsSet.has(principal.baseDomain);
 }
