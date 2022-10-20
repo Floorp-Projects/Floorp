@@ -2734,8 +2734,6 @@ nsLocalFile::GetDiskCapacity(int64_t* aDiskCapacity) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  *aDiskCapacity = 0;
-
   nsresult rv = ResolveAndStat();
   if (NS_FAILED(rv)) {
     return rv;
