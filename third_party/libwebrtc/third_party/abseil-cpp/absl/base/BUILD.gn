@@ -166,6 +166,7 @@ absl_source_set("base") {
     "//third_party/abseil-cpp/absl/meta:type_traits",
   ]
 }
+}
 
 absl_source_set("throw_delegate") {
   sources = [ "internal/throw_delegate.cc" ]
@@ -177,6 +178,7 @@ absl_source_set("throw_delegate") {
   visibility = [ "//third_party/abseil-cpp/absl/*" ]
 }
 
+if (!moz_webrtc_build) {
 absl_source_set("exception_testing") {
   testonly = true
   public = [ "internal/exception_testing.h" ]
