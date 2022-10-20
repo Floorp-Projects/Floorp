@@ -12,12 +12,9 @@
 #permission-popup,
 #protections-popup,
 #appMenu-notification-popup,
+#BMB_bookmarksPopup,
 #editBookmarkPanel {
   margin-top: -1px;
-}
-
-#BMB_bookmarksPopup {
-  margin-top: -4px; /* Overrides value from panelUI-shared.css */
 }
 
 .panel-subview-body {

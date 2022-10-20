@@ -4,14 +4,6 @@
 
 @import "chrome://browser/skin/customizableui/panelUI-shared.css";
 
-#notification-popup {
-  margin-block: -4px;
-}
-
-#BMB_bookmarksPopup menupopup {
-  margin-top: -9px; /* The top component of --panel-subview-body-padding and the 1px border */
-}
-
 #PlacesToolbar menupopup {
   color: var(--arrowpanel-color);
   --panel-background: var(--arrowpanel-background);

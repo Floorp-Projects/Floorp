@@ -291,7 +291,7 @@ nsPopupLevel nsMenuPopupFrame::PopupLevel(bool aIsNoAutoHide) const {
   }
 
   // Panels with titlebars most likely want to be floating popups.
-  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::titlebar))
+  if (mContent->AsElement()->HasAttr(nsGkAtoms::titlebar))
     return ePopupLevelFloating;
 
   // If this panel is a noautohide panel, the default is the parent level.
@@ -1422,6 +1422,22 @@ nsRect nsMenuPopupFrame::ComputeAnchorRect(nsPresContext* aRootPresContext,
       PresContext()->AppUnitsPerDevPixel());
 }
 
+static nsIFrame* MaybeDelegatedAnchorFrame(nsIFrame* aFrame) {
+  if (!aFrame) {
+    return nullptr;
+  }
+  if (auto* element = Element::FromNodeOrNull(aFrame->GetContent())) {
+    if (element->HasAttr(nsGkAtoms::delegatesanchor)) {
+      for (nsIFrame* f : aFrame->PrincipalChildList()) {
+        if (!f->IsPlaceholderFrame()) {
+          return f;
+        }
+      }
+    }
+  }
+  return aFrame;
+}
+
 nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
                                             bool aIsMove, bool aSizedToPopup) {
   if (!mShouldAutoPosition) {
@@ -1463,14 +1479,15 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
       // If that wasn't specified either, use the root frame. Note that
       // mAnchorContent might be a different document so its presshell must be
       // used.
-      if (!aAnchorFrame) {
-        if (mAnchorContent) {
-          aAnchorFrame = mAnchorContent->GetPrimaryFrame();
-        }
-
+      if (aAnchorFrame) {
+        aAnchorFrame = MaybeDelegatedAnchorFrame(aAnchorFrame);
+      } else {
+        aAnchorFrame = GetAnchorFrame();
         if (!aAnchorFrame) {
           aAnchorFrame = rootFrame;
-          if (!aAnchorFrame) return NS_OK;
+          if (!aAnchorFrame) {
+            return NS_OK;
+          }
         }
       }
 
@@ -2445,8 +2462,8 @@ void nsMenuPopupFrame::MoveTo(const CSSPoint& aPos, bool aUpdateAttrs,
   SetPopupPosition(nullptr, true, mSizedToPopup);
 
   RefPtr<Element> popup = mContent->AsElement();
-  if (aUpdateAttrs && (popup->HasAttr(kNameSpaceID_None, nsGkAtoms::left) ||
-                       popup->HasAttr(kNameSpaceID_None, nsGkAtoms::top))) {
+  if (aUpdateAttrs &&
+      (popup->HasAttr(nsGkAtoms::left) || popup->HasAttr(nsGkAtoms::top))) {
     nsAutoString left, top;
     left.AppendInt(RoundedToInt(aPos).x);
     top.AppendInt(RoundedToInt(aPos).y);
@@ -2597,15 +2614,27 @@ bool nsMenuPopupFrame::ShouldFollowAnchor(nsRect& aRect) {
     return false;
   }
 
-  nsIFrame* anchorFrame = mAnchorContent->GetPrimaryFrame();
-  if (anchorFrame) {
-    nsPresContext* rootPresContext = PresContext()->GetRootPresContext();
-    if (rootPresContext) {
+  if (nsIFrame* anchorFrame = GetAnchorFrame()) {
+    if (nsPresContext* rootPresContext = PresContext()->GetRootPresContext()) {
       aRect = ComputeAnchorRect(rootPresContext, anchorFrame);
     }
   }
 
   return true;
+}
+
+bool nsMenuPopupFrame::IsDirectionRTL() const {
+  const nsIFrame* anchor = GetAnchorFrame();
+  const nsIFrame* f = anchor ? anchor : this;
+  return f->StyleVisibility()->mDirection == StyleDirection::Rtl;
+}
+
+nsIFrame* nsMenuPopupFrame::GetAnchorFrame() const {
+  nsIContent* anchor = mAnchorContent;
+  if (!anchor) {
+    return nullptr;
+  }
+  return MaybeDelegatedAnchorFrame(anchor->GetPrimaryFrame());
 }
 
 void nsMenuPopupFrame::CheckForAnchorChange(nsRect& aRect) {
@@ -2620,7 +2649,7 @@ void nsMenuPopupFrame::CheckForAnchorChange(nsRect& aRect) {
   nsPresContext* rootPresContext = PresContext()->GetRootPresContext();
 
   // If the frame for the anchor has gone away, hide the popup.
-  nsIFrame* anchor = mAnchorContent->GetPrimaryFrame();
+  nsIFrame* anchor = GetAnchorFrame();
   if (!anchor || !rootPresContext) {
     shouldHide = true;
   } else if (!anchor->IsVisibleConsideringAncestors(

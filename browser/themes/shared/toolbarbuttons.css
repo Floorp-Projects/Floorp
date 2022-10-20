@@ -97,10 +97,6 @@ toolbar .toolbarbutton-1 {
   padding-inline-end: var(--toolbar-start-end-padding);
 }
 
-toolbar .toolbarbutton-1 > menupopup {
-  margin-top: -3px;
-}
-
 toolbar .toolbarbutton-1 > .toolbarbutton-icon,
 toolbar .toolbarbutton-1 > .toolbarbutton-text,
 toolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
