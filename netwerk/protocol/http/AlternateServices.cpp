@@ -354,7 +354,7 @@ void AltSvcMapping::GetConnectionInfo(
     const OriginAttributes& originAttributes) {
   RefPtr<nsHttpConnectionInfo> ci = new nsHttpConnectionInfo(
       mOriginHost, mOriginPort, mNPNToken, mUsername, pi, originAttributes,
-      mAlternateHost, mAlternatePort, mIsHttp3);
+      mAlternateHost, mAlternatePort, mIsHttp3, false);
 
   // http:// without the mixed-scheme attribute needs to be segmented in the
   // connection manager connection information hash with this attribute
