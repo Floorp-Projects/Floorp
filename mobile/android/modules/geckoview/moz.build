@@ -32,7 +32,7 @@ EXTRA_JS_MODULES += [
     "GeckoViewTab.jsm",
     "GeckoViewTelemetry.jsm",
     "GeckoViewTestUtils.jsm",
-    "GeckoViewUtils.jsm",
+    "GeckoViewUtils.sys.mjs",
     "GeckoViewWebExtension.jsm",
     "LoadURIDelegate.jsm",
     "MediaUtils.jsm",

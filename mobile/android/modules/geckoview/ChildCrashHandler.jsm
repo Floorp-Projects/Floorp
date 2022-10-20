@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["ChildCrashHandler"];
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { GeckoViewUtils } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewUtils.jsm"
+const { GeckoViewUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewUtils.sys.mjs"
 );
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"

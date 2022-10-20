@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewStorageController"];
 
-const { GeckoViewUtils } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewUtils.jsm"
+const { GeckoViewUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewUtils.sys.mjs"
 );
 const { PrincipalsCollector } = ChromeUtils.import(
   "resource://gre/modules/PrincipalsCollector.jsm"

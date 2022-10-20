@@ -1208,8 +1208,6 @@
     "mobile/android/modules/geckoview/GeckoViewTab.jsm",
   "resource://gre/modules/GeckoViewTelemetry.jsm":
     "mobile/android/modules/geckoview/GeckoViewTelemetry.jsm",
-  "resource://gre/modules/GeckoViewUtils.jsm":
-    "mobile/android/modules/geckoview/GeckoViewUtils.jsm",
   "resource://gre/modules/GeckoViewWebExtension.jsm":
     "mobile/android/modules/geckoview/GeckoViewWebExtension.jsm",
   "resource://gre/modules/Geometry.jsm": "toolkit/modules/Geometry.jsm",
