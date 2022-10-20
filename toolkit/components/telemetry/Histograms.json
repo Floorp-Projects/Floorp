@@ -3078,41 +3078,41 @@
     "description": "Count of the HTTP redirection that triggered by top-level document or by subresource, keyed by the URL scheme redirected to.",
     "labels": ["topLevel", "subresource"]
   },
-  "NETWORK_ASYNC_OPEN_CHILD_TO_TRANSACTION_PENDING_MS" :{
+  "NETWORK_ASYNC_OPEN_CHILD_TO_TRANSACTION_PENDING_EXP_MS" :{
     "record_in_processes": ["content"],
     "products": [ "firefox", "fennec" ],
     "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
     "bug_numbers": [1789468],
     "expires_in_version": "never",
     "keyed": true,
-    "kind": "linear",
-    "high": 5000,
+    "kind": "exponential",
+    "high": 2000,
     "n_buckets": 50,
-    "description": "The time spent from HttpChannelChild::AsyncOpen to adding the transactionto the nsHttpConnectionMgr, in milliseconds, keyed by classOfService"
+    "description": "The time spent from HttpChannelChild::AsyncOpen to adding the transactionto the nsHttpConnectionMgr, in milliseconds, keyed by the classOfService flags"
   },
-  "NETWORK_RESPONSE_START_PARENT_TO_CONTENT_MS" :{
+  "NETWORK_RESPONSE_START_PARENT_TO_CONTENT_EXP_MS" :{
       "record_in_processes": ["content"],
       "products": [ "firefox", "fennec" ],
       "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
       "bug_numbers": [1793975],
       "expires_in_version": "never",
       "keyed": true,
-      "kind": "linear",
-      "high": 5000,
+      "kind": "exponential",
+      "high": 2000,
       "n_buckets": 50,
-      "description": "The time spent relaying response start from the socket thread of the parent process to the content process, in milliseconds, keyed by classOfService"
+      "description": "The time spent relaying response start from the socket thread of the parent process to the content process, in milliseconds, keyed by the classOfService flags"
     },
-  "NETWORK_DNS_END_TO_CONNECT_START_MS" :{
+  "NETWORK_DNS_END_TO_CONNECT_START_EXP_MS" :{
     "record_in_processes": ["main"],
     "products": [ "firefox", "fennec" ],
     "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
     "bug_numbers": [1791077],
     "expires_in_version": "never",
     "keyed": true,
-    "kind": "linear",
-    "high": 5000,
+    "kind": "exponential",
+    "high": 2000,
     "n_buckets": 50,
-    "description": "The time spent from dns resolution to connect start, in milliseconds, keyed by protocol version and classOfService"
+    "description": "The time spent from dns resolution to connect start, in milliseconds, keyed by protocol version and the classOfService flags"
   },
   "HTTP_AUTH_DIALOG_STATS_3": {
     "record_in_processes": ["main", "content"],
