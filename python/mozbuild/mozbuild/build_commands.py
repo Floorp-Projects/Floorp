@@ -160,6 +160,9 @@ def build(
     doing_pgo = configure_args and "MOZ_PGO=1" in configure_args
     # Force verbosity on automation.
     verbose = verbose or bool(os.environ.get("MOZ_AUTOMATION", False))
+    # Keep going by default on automation so that we exhaust as many errors as
+    # possible.
+    keep_going = keep_going or bool(os.environ.get("MOZ_AUTOMATION", False))
     append_env = None
 
     # By setting the current process's priority, by default our child processes
