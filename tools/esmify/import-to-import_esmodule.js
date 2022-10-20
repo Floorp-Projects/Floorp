@@ -65,6 +65,10 @@ const importCalls = [
     from: ["ChromeUtils", "import"],
     to: ["ChromeUtils", "importESModule"],
   },
+  {
+    from: ["SpecialPowers", "ChromeUtils", "import"],
+    to: ["SpecialPowers", "ChromeUtils", "importESModule"],
+  },
 ];
 
 const singleLazyGetterCalls = [
@@ -75,6 +79,10 @@ const singleLazyGetterCalls = [
   {
     from: ["ChromeUtils", "defineModuleGetter"],
     to: ["ChromeUtils", "defineESModuleGetters"],
+  },
+  {
+    from: ["SpecialPowers", "ChromeUtils", "defineModuleGetter"],
+    to: ["SpecialPowers", "ChromeUtils", "defineESModuleGetters"],
   },
 ];
 
