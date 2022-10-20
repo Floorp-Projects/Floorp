@@ -1051,7 +1051,7 @@ enum class SideBits {
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SideBits)
 
-inline constexpr SideBits SideToSideBit(Side aSide) {
+inline constexpr SideBits SideToSideBit(mozilla::Side aSide) {
   return SideBits(1 << aSide);
 }
 
