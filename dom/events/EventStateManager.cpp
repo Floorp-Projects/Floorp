@@ -32,6 +32,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/DOMIntersectionObserver.h"
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FrameLoaderBinding.h"
@@ -4060,23 +4061,19 @@ static bool ShouldBlockCustomCursor(nsPresContext* aPresContext,
     return false;
   }
 
-  // We don't want to deal with iframes, just let them do their thing unless
-  // they intersect UI.
-  //
-  // TODO(emilio, bug 1525561): In a fission world, we should have a better way
-  // to find the event coordinates relative to the content area.
-  nsPresContext* topLevel =
-      aPresContext->GetInProcessRootContentDocumentPresContext();
-  if (!topLevel) {
+  auto input = DOMIntersectionObserver::ComputeInput(*aPresContext->Document(),
+                                                     nullptr, nullptr);
+
+  if (!input.mRootFrame) {
     return false;
   }
 
   nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-      aEvent, RelativeTo{topLevel->PresShell()->GetRootFrame()});
+      aEvent, RelativeTo{input.mRootFrame});
 
   // The cursor size won't be affected by our full zoom in the parent process,
   // so undo that before checking the rect.
-  float zoom = topLevel->GetFullZoom();
+  float zoom = aPresContext->GetFullZoom();
 
   // Also adjust for accessibility cursor scaling factor.
   zoom /= LookAndFeel::GetFloat(LookAndFeel::FloatID::CursorScale, 1.0f);
@@ -4086,8 +4083,10 @@ static bool ShouldBlockCustomCursor(nsPresContext* aPresContext,
   nsPoint hotspot(CSSPixel::ToAppUnits(aCursor.mHotspot.x / zoom),
                   CSSPixel::ToAppUnits(aCursor.mHotspot.y / zoom));
 
-  nsRect cursorRect(point - hotspot, size);
-  return !topLevel->GetVisibleArea().Contains(cursorRect);
+  const nsRect cursorRect(point - hotspot, size);
+  auto output = DOMIntersectionObserver::Intersect(input, cursorRect);
+  return !output.mIntersectionRect ||
+         !(*output.mIntersectionRect == cursorRect);
 }
 
 static gfx::IntPoint ComputeHotspot(imgIContainer* aContainer,
