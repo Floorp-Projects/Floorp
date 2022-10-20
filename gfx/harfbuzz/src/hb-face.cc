@@ -806,7 +806,7 @@ hb_face_builder_add_table (hb_face_t *face, hb_tag_t tag, hb_blob_t *blob)
 /**
  * hb_face_builder_sort_tables:
  * @face: A face object created with hb_face_builder_create()
- * @tags: (array zero-terminated=1) ordered list of table tags terminated by
+ * @tags: (array zero-terminated=1): ordered list of table tags terminated by
  *   %HB_TAG_NONE
  *
  * Set the ordering of tables for serialization. Any tables not

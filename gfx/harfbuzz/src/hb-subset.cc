@@ -56,6 +56,7 @@
 #include "hb-ot-math-table.hh"
 #include "hb-ot-stat-table.hh"
 #include "hb-repacker.hh"
+#include "hb-subset-accelerator.hh"
 
 using OT::Layout::GSUB;
 using OT::Layout::GPOS;
@@ -494,6 +495,27 @@ _subset_table (hb_subset_plan_t *plan,
   }
 }
 
+static void _attach_accelerator_data (const hb_subset_plan_t* plan,
+                                      hb_face_t* face /* IN/OUT */)
+{
+  hb_subset_accelerator_t* accel =
+      hb_subset_accelerator_t::create (*plan->codepoint_to_glyph,
+                                       *plan->unicodes);
+
+  if (accel->in_error ())
+  {
+    hb_subset_accelerator_t::destroy (accel);
+    return;
+  }
+
+  if (!hb_face_set_user_data(face,
+                             hb_subset_accelerator_t::user_data_key(),
+                             accel,
+                             hb_subset_accelerator_t::destroy,
+                             true))
+    hb_subset_accelerator_t::destroy (accel);
+}
+
 /**
  * hb_subset_or_fail:
  * @source: font face data to be subset.
@@ -574,6 +596,10 @@ hb_subset_plan_execute_or_fail (hb_subset_plan_t *plan)
       revisit_set = revisit_temp;
     }
     offset += num_tables;
+  }
+
+  if (success && plan->attach_accelerator_data) {
+    _attach_accelerator_data (plan, plan->dest);
   }
 
 end:

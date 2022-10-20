@@ -334,6 +334,7 @@ hb_subset_sources = files(
   'hb-ot-cff1-table.cc',
   'hb-ot-cff2-table.cc',
   'hb-static.cc',
+  'hb-subset-accelerator.hh',
   'hb-subset-cff-common.cc',
   'hb-subset-cff-common.hh',
   'hb-subset-cff1.cc',
