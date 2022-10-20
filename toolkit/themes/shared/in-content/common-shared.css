@@ -270,6 +270,7 @@
   appearance: none;
   background-color: var(--in-content-page-background);
   color: var(--in-content-page-color);
+  -moz-box-layout: flex;
 }
 
 :root:not(.system-font-size) {

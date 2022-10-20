@@ -70,6 +70,10 @@
 
 /* Tags table */
 
+#editBMPanel_tagsSelector {
+  height: 150px;
+}
+
 #bookmarkpropertiesdialog #editBMPanel_tagsSelector {
   border-color: var(--in-content-border-color);
   padding: 12px;
