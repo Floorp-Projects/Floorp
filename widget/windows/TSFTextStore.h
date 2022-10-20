@@ -1061,12 +1061,12 @@ class TSFTextStore final : public ITextStoreACP,
   // mContentForTSF.
   bool mDeferClearingContentForTSF = false;
   // While the instance is dispatching events, the event may not be handled
-  // synchronously in e10s mode.  So, in such case, in strictly speaking,
-  // we shouldn't query layout information.  However, TS_E_NOLAYOUT bugs of
-  // ITextStoreAPC::GetTextExt() blocks us to behave ideally.
-  // For preventing it to be called, we should put off notifying TSF of
-  // anything until layout information becomes available.
-  bool mDeferNotifyingTSF = false;
+  // synchronously when remote content has focus.  In the case, we cannot
+  // return the latest layout/content information to TSF/TIP until we get next
+  // update notification from ContentCacheInParent.  For preventing TSF/TIP
+  // retrieves the latest content/layout information while it becomes available,
+  // we should put off notifying TSF of any updates.
+  bool mDeferNotifyingTSFUntilNextUpdate = false;
   // While the document is locked, committing composition always fails since
   // TSF needs another document lock for modifying the composition, selection
   // and etc.  So, committing composition should be performed after the

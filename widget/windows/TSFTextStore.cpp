@@ -2263,7 +2263,7 @@ void TSFTextStore::DispatchEvent(WidgetGUIEvent& aEvent) {
   // If the event isn't a query content event, the event may be handled
   // asynchronously.  So, we should put off to answer from GetTextExt() etc.
   if (!aEvent.AsQueryContentEvent()) {
-    mDeferNotifyingTSF = true;
+    mDeferNotifyingTSFUntilNextUpdate = true;
   }
   mWidget->DispatchWindowEvent(aEvent);
 }
@@ -2541,7 +2541,7 @@ void TSFTextStore::MaybeFlushPendingNotifications() {
     CommitCompositionInternal(true);
   }
 
-  if (mDeferNotifyingTSF) {
+  if (mDeferNotifyingTSFUntilNextUpdate) {
     MOZ_LOG(gIMELog, LogLevel::Debug,
             ("0x%p   TSFTextStore::MaybeFlushPendingNotifications(), "
              "putting off flushing pending notifications due to being "
@@ -4255,11 +4255,12 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView, const POINT* pt,
                               DWORD dwFlags, LONG* pacp) {
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p TSFTextStore::GetACPFromPoint(pvcView=%ld, pt=%p (x=%ld, "
-           "y=%ld), dwFlags=%s, pacp=%p, mDeferNotifyingTSF=%s, "
+           "y=%ld), dwFlags=%s, pacp=%p, mDeferNotifyingTSFUntilNextUpdate=%s, "
            "mWaitingQueryLayout=%s",
            this, vcView, pt, pt ? pt->x : 0, pt ? pt->y : 0,
            GetACPFromPointFlagName(dwFlags).get(), pacp,
-           GetBoolName(mDeferNotifyingTSF), GetBoolName(mWaitingQueryLayout)));
+           GetBoolName(mDeferNotifyingTSFUntilNextUpdate),
+           GetBoolName(mWaitingQueryLayout)));
 
   if (!IsReadLocked()) {
     MOZ_LOG(gIMELog, LogLevel::Error,
@@ -4417,14 +4418,16 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
            "acpStart=%ld, acpEnd=%ld, prc=0x%p, pfClipped=0x%p), "
            "IsHandlingCompositionInParent()=%s, "
            "IsHandlingCompositionInContent()=%s, mContentForTSF=%s, "
-           "mSelectionForTSF=%s, mComposition=%s, mDeferNotifyingTSF=%s, "
-           "mWaitingQueryLayout=%s, IMEHandler::IsA11yHandlingNativeCaret()=%s",
+           "mSelectionForTSF=%s, mComposition=%s, "
+           "mDeferNotifyingTSFUntilNextUpdate=%s, mWaitingQueryLayout=%s, "
+           "IMEHandler::IsA11yHandlingNativeCaret()=%s",
            this, vcView, acpStart, acpEnd, prc, pfClipped,
            GetBoolName(IsHandlingCompositionInParent()),
            GetBoolName(IsHandlingCompositionInContent()),
            mozilla::ToString(mContentForTSF).c_str(),
            ToString(mSelectionForTSF).c_str(), ToString(mComposition).c_str(),
-           GetBoolName(mDeferNotifyingTSF), GetBoolName(mWaitingQueryLayout),
+           GetBoolName(mDeferNotifyingTSFUntilNextUpdate),
+           GetBoolName(mWaitingQueryLayout),
            GetBoolName(IMEHandler::IsA11yHandlingNativeCaret())));
 
   if (!IsReadLocked()) {
@@ -5987,7 +5990,7 @@ nsresult TSFTextStore::OnTextChangeInternal(
     return NS_OK;
   }
 
-  mDeferNotifyingTSF = false;
+  mDeferNotifyingTSFUntilNextUpdate = false;
 
   // Different from selection change, we don't modify anything with text
   // change data.  Therefore, if neither TSF not TIP wants text change
@@ -6080,7 +6083,7 @@ nsresult TSFTextStore::OnSelectionChangeInternal(
     return NS_OK;
   }
 
-  mDeferNotifyingTSF = false;
+  mDeferNotifyingTSFUntilNextUpdate = false;
 
   // Assign the new selection change data to the pending selection change data
   // because only the latest selection data is necessary.
@@ -6147,7 +6150,7 @@ nsresult TSFTextStore::OnLayoutChangeInternal() {
   NS_ENSURE_TRUE(mContext, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(mSink, NS_ERROR_FAILURE);
 
-  mDeferNotifyingTSF = false;
+  mDeferNotifyingTSFUntilNextUpdate = false;
 
   nsresult rv = NS_OK;
 
@@ -6324,8 +6327,9 @@ void TSFTextStore::NotifyTSFOfLayoutChangeAgain() {
 nsresult TSFTextStore::OnUpdateCompositionInternal() {
   MOZ_LOG(gIMELog, LogLevel::Debug,
           ("0x%p   TSFTextStore::OnUpdateCompositionInternal(), "
-           "mDestroyed=%s, mDeferNotifyingTSF=%s",
-           this, GetBoolName(mDestroyed), GetBoolName(mDeferNotifyingTSF)));
+           "mDestroyed=%s, mDeferNotifyingTSFUntilNextUpdate=%s",
+           this, GetBoolName(mDestroyed),
+           GetBoolName(mDeferNotifyingTSFUntilNextUpdate)));
 
   // There are nothing to do after destroyed.
   if (mDestroyed) {
@@ -6343,7 +6347,7 @@ nsresult TSFTextStore::OnUpdateCompositionInternal() {
   if (mComposition.isNothing() && !IsHandlingCompositionInContent()) {
     mDeferClearingContentForTSF = false;
   }
-  mDeferNotifyingTSF = false;
+  mDeferNotifyingTSFUntilNextUpdate = false;
   MaybeFlushPendingNotifications();
 
   // If we're available, we should create native caret instead of IMEHandler
