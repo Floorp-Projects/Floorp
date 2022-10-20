@@ -6,6 +6,8 @@ toolkit.jar:
    content/global/autocomplete.css
    content/global/aboutAbout.js
    content/global/aboutAbout.html
+   content/global/aboutLogging.js
+   content/global/aboutLogging.html
    content/global/aboutNetError.mjs
    content/global/aboutNetError.xhtml
    content/global/aboutNetworking.js

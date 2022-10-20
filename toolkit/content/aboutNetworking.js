@@ -31,7 +31,6 @@ const gRequestNetworkingData = {
   dns: gDashboard.requestDNSInfo,
   websockets: gDashboard.requestWebsocketConnections,
   dnslookuptool: () => {},
-  logging: () => {},
   rcwn: gDashboard.requestRcwnStats,
   networkid: displayNetworkID,
 };
@@ -246,7 +245,6 @@ function init() {
     return;
   }
   gInited = true;
-  gDashboard.enableLogging = true;
 
   requestAllNetworkingData();
 
@@ -290,39 +288,6 @@ function init() {
     gDNSService.clearCache(true);
   });
 
-  let setLogButton = document.getElementById("set-log-file-button");
-  setLogButton.addEventListener("click", setLogFile);
-
-  let setModulesButton = document.getElementById("set-log-modules-button");
-  setModulesButton.addEventListener("click", setLogModules);
-
-  let startLoggingButton = document.getElementById("start-logging-button");
-  startLoggingButton.addEventListener("click", startLogging);
-
-  let stopLoggingButton = document.getElementById("stop-logging-button");
-  stopLoggingButton.addEventListener("click", stopLogging);
-
-  try {
-    let file = gDirServ.getFile("TmpD", {});
-    file.append("log.txt");
-    document.getElementById("log-file").value = file.path;
-  } catch (e) {
-    console.error(e);
-  }
-
-  // Update the value of the log file.
-  updateLogFile();
-
-  // Update the active log modules
-  updateLogModules();
-
-  // If we can't set the file and the modules at runtime,
-  // the start and stop buttons wouldn't really do anything.
-  if (setLogButton.disabled && setModulesButton.disabled) {
-    startLoggingButton.disabled = true;
-    stopLoggingButton.disabled = true;
-  }
-
   if (location.hash) {
     let sectionButton = document.getElementById(
       "category-" + location.hash.substring(1)
@@ -331,148 +296,6 @@ function init() {
       sectionButton.click();
     }
   }
-}
-
-function updateLogFile() {
-  let logPath = "";
-
-  // Try to get the environment variable for the log file
-  logPath = gEnv.get("MOZ_LOG_FILE") || gEnv.get("NSPR_LOG_FILE");
-  let currentLogFile = document.getElementById("current-log-file");
-  let setLogFileButton = document.getElementById("set-log-file-button");
-
-  // If the log file was set from an env var, we disable the ability to set it
-  // at runtime.
-  if (logPath.length) {
-    currentLogFile.innerText = logPath;
-    setLogFileButton.disabled = true;
-  } else {
-    // There may be a value set by a pref.
-    currentLogFile.innerText = gDashboard.getLogPath();
-  }
-}
-
-function updateLogModules() {
-  // Try to get the environment variable for the log file
-  let logModules =
-    gEnv.get("MOZ_LOG") ||
-    gEnv.get("MOZ_LOG_MODULES") ||
-    gEnv.get("NSPR_LOG_MODULES");
-  let currentLogModules = document.getElementById("current-log-modules");
-  let setLogModulesButton = document.getElementById("set-log-modules-button");
-  if (logModules.length) {
-    currentLogModules.innerText = logModules;
-    // If the log modules are set by an environment variable at startup, do not
-    // allow changing them throught a pref. It would be difficult to figure out
-    // which ones are enabled and which ones are not. The user probably knows
-    // what he they are doing.
-    setLogModulesButton.disabled = true;
-  } else {
-    let activeLogModules = [];
-    try {
-      if (Services.prefs.getBoolPref("logging.config.add_timestamp")) {
-        activeLogModules.push("timestamp");
-      }
-    } catch (e) {}
-    try {
-      if (Services.prefs.getBoolPref("logging.config.sync")) {
-        activeLogModules.push("sync");
-      }
-    } catch (e) {}
-    try {
-      if (Services.prefs.getBoolPref("logging.config.profilerstacks")) {
-        activeLogModules.push("profilerstacks");
-      }
-    } catch (e) {}
-
-    let children = Services.prefs.getBranch("logging.").getChildList("");
-
-    for (let pref of children) {
-      if (pref.startsWith("config.")) {
-        continue;
-      }
-
-      try {
-        let value = Services.prefs.getIntPref(`logging.${pref}`);
-        activeLogModules.push(`${pref}:${value}`);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    currentLogModules.innerText = activeLogModules.join(",");
-  }
-}
-
-function setLogFile() {
-  let setLogButton = document.getElementById("set-log-file-button");
-  if (setLogButton.disabled) {
-    // There's no point trying since it wouldn't work anyway.
-    return;
-  }
-  let logFile = document.getElementById("log-file").value.trim();
-  Services.prefs.setCharPref("logging.config.LOG_FILE", logFile);
-  updateLogFile();
-}
-
-function clearLogModules() {
-  // Turn off all the modules.
-  let children = Services.prefs.getBranch("logging.").getChildList("");
-  for (let pref of children) {
-    if (!pref.startsWith("config.")) {
-      Services.prefs.clearUserPref(`logging.${pref}`);
-    }
-  }
-  Services.prefs.clearUserPref("logging.config.add_timestamp");
-  Services.prefs.clearUserPref("logging.config.sync");
-  updateLogModules();
-}
-
-function setLogModules() {
-  let setLogModulesButton = document.getElementById("set-log-modules-button");
-  if (setLogModulesButton.disabled) {
-    // The modules were set via env var, so we shouldn't try to change them.
-    return;
-  }
-
-  let modules = document.getElementById("log-modules").value.trim();
-
-  // Clear previously set log modules.
-  clearLogModules();
-
-  let logModules = modules.split(",");
-  for (let module of logModules) {
-    if (module == "timestamp") {
-      Services.prefs.setBoolPref("logging.config.add_timestamp", true);
-    } else if (module == "rotate") {
-      // XXX: rotate is not yet supported.
-    } else if (module == "append") {
-      // XXX: append is not yet supported.
-    } else if (module == "sync") {
-      Services.prefs.setBoolPref("logging.config.sync", true);
-    } else if (module == "profilerstacks") {
-      Services.prefs.setBoolPref("logging.config.profilerstacks", true);
-    } else {
-      let lastColon = module.lastIndexOf(":");
-      let key = module.slice(0, lastColon);
-      let value = parseInt(module.slice(lastColon + 1), 10);
-      Services.prefs.setIntPref(`logging.${key}`, value);
-    }
-  }
-
-  updateLogModules();
-}
-
-function startLogging() {
-  setLogFile();
-  setLogModules();
-}
-
-function stopLogging() {
-  clearLogModules();
-  // clear the log file as well
-  Services.prefs.clearUserPref("logging.config.LOG_FILE");
-  updateLogFile();
 }
 
 function show(button) {
