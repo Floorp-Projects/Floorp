@@ -4,7 +4,7 @@
 
 #editBMPanel_folderTree,
 #editBMPanel_tagsSelector {
-  height: 150px;
+  height: 12.5em;
 }
 
 #editBMPanel_folderMenuList::part(icon) {
