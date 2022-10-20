@@ -4,8 +4,8 @@
 
 /* eslint-disable no-unused-vars */
 
-let { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+let { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 const DELAY = AppConstants.DEBUG ? 4000 : 800;
