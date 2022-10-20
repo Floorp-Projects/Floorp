@@ -4,6 +4,7 @@
 
 browser.jar:
    content/browser/preferences/floorp-main.js
+   content/browser/preferences/lepton.js
 
 browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
