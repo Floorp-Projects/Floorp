@@ -7,10 +7,10 @@
 const _path = require("path");
 const { getESMFiles } = require(_path.resolve(__dirname, "./is-esmified.js"));
 const {
-  calleeToString,
   esmifyExtension,
   isString,
   warnForPath,
+  isMemberExpressionWithIdentifiers,
 } = require(_path.resolve(__dirname, "./utils.js"));
 
 function isTargetESM(resourceURI) {
@@ -30,8 +30,10 @@ function isTargetESM(resourceURI) {
 }
 
 function isImportESModuleCall(node) {
-  const s = calleeToString(node.callee);
-  return ["ChromeUtils.importESModule"].includes(s);
+  return isMemberExpressionWithIdentifiers(node.callee, [
+    "ChromeUtils",
+    "importESModule",
+  ]);
 }
 
 // Replace `ChromeUtils.import`, `Cu.import`, and `ChromeUtils.importESModule`
