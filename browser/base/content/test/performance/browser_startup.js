@@ -88,7 +88,7 @@ const startupPhases = {
         "resource://gre/modules/PlacesBackups.sys.mjs",
         "resource://gre/modules/PlacesExpiration.sys.mjs",
         "resource://gre/modules/PlacesSyncUtils.sys.mjs",
-        "resource://gre/modules/PushComponents.jsm",
+        "resource://gre/modules/PushComponents.sys.mjs",
       ]),
       services: new Set(["@mozilla.org/browser/nav-bookmarks-service;1"]),
     },
