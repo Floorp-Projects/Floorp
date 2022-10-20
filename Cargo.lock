@@ -1199,20 +1199,6 @@ name = "dap_ffi"
 version = "0.1.0"
 dependencies = [
  "prio",
- "rand 0.7.999",
- "thin-vec",
-]
-
-[[package]]
-name = "dap_ffi-gtest"
-version = "0.1.0"
-dependencies = [
- "dap_ffi",
- "hex",
- "prio",
- "serde",
- "serde_json",
- "thin-vec",
 ]
 
 [[package]]
@@ -2104,7 +2090,6 @@ name = "gkrust-gtest"
 version = "0.1.0"
 dependencies = [
  "bench-collections-gtest",
- "dap_ffi-gtest",
  "fog-gtest",
  "gecko-fuzz-targets",
  "gkrust-shared",
@@ -2499,15 +2484,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "hex"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
-dependencies = [
- "serde",
 ]
 
 [[package]]
