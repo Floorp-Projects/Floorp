@@ -129,13 +129,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Ehechauka votõ opaite tendayke ramoguápe</string>
-    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
-        The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Eheka \&quot;%1$s\&quot; rupive</string>
-
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d tendakuéra</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Ehechapaite tendayke mbojuehepyre</string>
@@ -295,6 +288,9 @@
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Jepo</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Mboty</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Embojuruja tendayke pyahu %1$s mba’e</string>
@@ -383,8 +379,6 @@
     <string name="preferences_gestures">Ñeha’ãnga</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Ñemomba’ete</string>
-    <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Embojuehe techaukaha, tembiasakue ha mba’ete Firefox pegua ndive</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Eñepyrũ tembiapo embojuehe hag̃ua tendayke, techaukaha, ñe’ẽñemi ha hetave.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -478,12 +472,6 @@
     <string name="wallpaper_select_error_snackbar_message">Noñemoambuekuaái mba’erechaha rugua</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">Kuaave</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Emoambue mba’erechaha rugua opokóvo Firefox kuatiarogue ñepyrũ ra’ãnga’i</string>
-
-    <!-- This is the accessibility content description for the wallpapers functionality. Users are
-    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox ra’ãnga’i - emoambue mba’erechaha rugua, votõ</string>
 
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">Jepokuaa %s</string>
@@ -577,8 +565,6 @@
     <string name="preference_experiments_summary_2">Emoneĩ Mozilla-pe omohenda ha omongu’évo ñembokatupyry</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Emyandy Sync</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Embojuehe ha eñongatu mba’ekuaarã</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -670,10 +656,6 @@
     <string name="tab_view_list">Tysýi</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Kora’ieta</string>
-    <!-- Option for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Eheka atýhápe</string>
-    <!-- Summary text for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Ambyaty tenda ojueheguáva</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Emboty tendayke</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -802,9 +784,6 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Ayvu Ñemigua)</string>
 
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Ambue tendayke</string>
-
     <!-- History -->
     <!-- Text for the button to search all history -->
     <string name="history_search_1">Emoinge ñe’ẽ ehekaséva</string>
@@ -833,20 +812,6 @@
     <string name="history_older">Itujavéva</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Ndaipóri tembiasakue</string>
-
-    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Oñembojuehepyre ambue mba’e’okáre</string>
-
-    <!-- The page title for browsing history coming from other devices. -->
-    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Ambue mba’e’oka guive</string>
-
-    <!-- The synced history sign in dialog message -->
-    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Eike ehecha hag̃ua tembiasakue mbojojapyre ambue nemba’e’okagua.</string>
-    <!-- The synced history sign in dialog button text -->
-    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Eñemboheraguapy</string>
-
-    <!-- The synced history sign in dialog create a new account link -->
-    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Térã emoheñói Firefox mba’ete embojuehe hag̃ua</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1077,6 +1042,8 @@
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Moherakuã</string>
 
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">Eñongatu PDF ramo</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Emondo mba’e’okápe</string>
 
@@ -1089,9 +1056,11 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Emondo kuatiajohápe</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Eike embojuehe hag̃ua</string>
+    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Eike embojuehe hag̃ua</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Eñepyrũ tembiapo Sync-pe</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Embojuehe ha eñongatu mba’ekuaarã</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Emondo opaite mba’e’okápe</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -1219,8 +1188,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Ñesẽ</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Oñemboguepáta opaite ne kundahára mba’ekuaarã.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Pa’ũ embogue hag̃ua</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1958,4 +1925,5 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Eho ñembohekópe</string>
     <string name="firefox_suggest_header">Firefox Kuave’ẽmby</string>
-</resources>
+
+    </resources>
