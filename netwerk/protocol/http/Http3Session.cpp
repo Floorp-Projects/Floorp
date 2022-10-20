@@ -7,8 +7,6 @@
 #include "HttpLog.h"
 #include "Http3Session.h"
 #include "Http3Stream.h"
-#include "Http3StreamBase.h"
-#include "Http3WebTransportSession.h"
 #include "mozilla/net/DNS.h"
 #include "nsHttpHandler.h"
 #include "mozilla/RefPtr.h"
@@ -111,18 +109,12 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
 
   LOG3(
       ("Http3Session::Init origin=%s, alpn=%s, selfAddr=%s, peerAddr=%s,"
-       " qpack table size=%u, max blocked streams=%u webtransport=%d "
-       "[this=%p]",
+       " qpack table size=%u, max blocked streams=%u [this=%p]",
        PromiseFlatCString(mConnInfo->GetOrigin()).get(),
        PromiseFlatCString(mConnInfo->GetNPNToken()).get(),
        selfAddr.ToString().get(), peerAddr.ToString().get(),
        gHttpHandler->DefaultQpackTableSize(),
-       gHttpHandler->DefaultHttp3MaxBlockedStreams(),
-       mConnInfo->GetWebTransport(), this));
-
-  if (mConnInfo->GetWebTransport()) {
-    mWebTransportNegotiationStatus = WebTransportNegotiation::NEGOTIATING;
-  }
+       gHttpHandler->DefaultHttp3MaxBlockedStreams(), this));
 
   nsresult rv = NeqoHttp3Conn::Init(
       mConnInfo->GetOrigin(), mConnInfo->GetNPNToken(), selfAddr, peerAddr,
@@ -131,8 +123,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
       StaticPrefs::network_http_http3_max_data(),
       StaticPrefs::network_http_http3_max_stream_data(),
       StaticPrefs::network_http_http3_version_negotiation_enabled(),
-      mConnInfo->GetWebTransport(), gHttpHandler->Http3QlogDir(),
-      getter_AddRefs(mHttp3Connection));
+      gHttpHandler->Http3QlogDir(), getter_AddRefs(mHttp3Connection));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -239,8 +230,7 @@ void Http3Session::Shutdown() {
         stream->Transaction()->DoNotRemoveAltSvc();
       }
       stream->Close(NS_ERROR_NET_RESET);
-    } else if (stream->GetHttp3Stream() &&
-               stream->GetHttp3Stream()->RecvdData()) {
+    } else if (stream->RecvdData()) {
       stream->Close(NS_ERROR_NET_PARTIAL_TRANSFER);
     } else if (mError == NS_ERROR_NET_HTTP3_PROTOCOL_ERROR) {
       stream->Close(NS_ERROR_NET_HTTP3_PROTOCOL_ERROR);
@@ -254,14 +244,8 @@ void Http3Session::Shutdown() {
       mStreamIdHash.Remove(stream->StreamId());
     }
   }
-  mStreamTransactionHash.Clear();
 
-  for (const auto& stream : mWebTransportSessions) {
-    stream->Close(NS_ERROR_ABORT);
-    RemoveStreamFromQueues(stream);
-    mStreamIdHash.Remove(stream->StreamId());
-  }
-  mWebTransportSessions.Clear();
+  mStreamTransactionHash.Clear();
 }
 
 Http3Session::~Http3Session() {
@@ -329,8 +313,9 @@ void Http3Session::ProcessInput(nsIUDPSocket* socket) {
   }
 }
 
-nsresult Http3Session::ProcessTransactionRead(uint64_t stream_id) {
-  RefPtr<Http3StreamBase> stream = mStreamIdHash.Get(stream_id);
+nsresult Http3Session::ProcessTransactionRead(uint64_t stream_id,
+                                              uint32_t* countWritten) {
+  RefPtr<Http3Stream> stream = mStreamIdHash.Get(stream_id);
   if (!stream) {
     LOG(
         ("Http3Session::ProcessTransactionRead - stream not found "
@@ -339,11 +324,13 @@ nsresult Http3Session::ProcessTransactionRead(uint64_t stream_id) {
     return NS_OK;
   }
 
-  return ProcessTransactionRead(stream);
+  return ProcessTransactionRead(stream, countWritten);
 }
 
-nsresult Http3Session::ProcessTransactionRead(Http3StreamBase* stream) {
-  nsresult rv = stream->WriteSegments();
+nsresult Http3Session::ProcessTransactionRead(Http3Stream* stream,
+                                              uint32_t* countWritten) {
+  nsresult rv = stream->WriteSegments(stream, nsIOService::gDefaultSegmentSize,
+                                      countWritten);
 
   if (ASpdySession::SoftStreamError(rv) || stream->Done()) {
     LOG3(
@@ -386,7 +373,7 @@ nsresult Http3Session::ProcessEvents() {
         LOG(("Http3Session::ProcessEvents - HeaderReady"));
         uint64_t id = event.header_ready.stream_id;
 
-        RefPtr<Http3StreamBase> stream = mStreamIdHash.Get(id);
+        RefPtr<Http3Stream> stream = mStreamIdHash.Get(id);
         if (!stream) {
           LOG(
               ("Http3Session::ProcessEvents - HeaderReady - stream not found "
@@ -395,13 +382,11 @@ nsresult Http3Session::ProcessEvents() {
           break;
         }
 
-        MOZ_RELEASE_ASSERT(stream->GetHttp3Stream(),
-                           "This must be a Http3Stream");
-
         stream->SetResponseHeaders(data, event.header_ready.fin,
                                    event.header_ready.interim);
 
-        rv = ProcessTransactionRead(stream);
+        uint32_t read = 0;
+        rv = ProcessTransactionRead(stream, &read);
 
         if (NS_FAILED(rv)) {
           LOG(("Http3Session::ProcessEvents [this=%p] rv=%" PRIx32, this,
@@ -415,7 +400,8 @@ nsresult Http3Session::ProcessEvents() {
         LOG(("Http3Session::ProcessEvents - DataReadable"));
         uint64_t id = event.data_readable.stream_id;
 
-        nsresult rv = ProcessTransactionRead(id);
+        uint32_t read = 0;
+        nsresult rv = ProcessTransactionRead(id, &read);
 
         if (NS_FAILED(rv)) {
           LOG(("Http3Session::ProcessEvents [this=%p] rv=%" PRIx32, this,
@@ -428,9 +414,8 @@ nsresult Http3Session::ProcessEvents() {
         MOZ_ASSERT(CanSandData());
         LOG(("Http3Session::ProcessEvents - DataWritable"));
 
-        RefPtr<Http3StreamBase> stream =
+        RefPtr<Http3Stream> stream =
             mStreamIdHash.Get(event.data_writable.stream_id);
-
         if (stream) {
           StreamReadyToWrite(stream);
         }
@@ -443,12 +428,10 @@ nsresult Http3Session::ProcessEvents() {
         LOG(("Http3Session::ProcessEvents - StopSeniding with error 0x%" PRIx64,
              event.stop_sending.error));
         if (event.stop_sending.error == HTTP3_APP_ERROR_NO_ERROR) {
-          RefPtr<Http3StreamBase> stream =
+          RefPtr<Http3Stream> stream =
               mStreamIdHash.Get(event.data_writable.stream_id);
           if (stream) {
-            RefPtr<Http3Stream> httpStream = stream->GetHttp3Stream();
-            MOZ_RELEASE_ASSERT(httpStream, "This must be a Http3Stream");
-            httpStream->StopSending();
+            stream->StopSending();
           }
         } else {
           ResetRecvd(event.reset.stream_id, event.reset.error);
@@ -600,102 +583,6 @@ nsresult Http3Session::ProcessEvents() {
         if (!mAuthenticationStarted) {
           mAuthenticationStarted = true;
           CallCertVerification(Some(echPublicName));
-        }
-      } break;
-      case Http3Event::Tag::WebTransport: {
-        switch (event.web_transport._0.tag) {
-          case WebTransportEventExternal::Tag::Negotiated:
-            LOG(("Http3Session::ProcessEvents - WebTransport %d",
-                 event.web_transport._0.negotiated._0));
-            MOZ_ASSERT(mWebTransportNegotiationStatus ==
-                       WebTransportNegotiation::NEGOTIATING);
-            mWebTransportNegotiationStatus =
-                event.web_transport._0.negotiated._0
-                    ? WebTransportNegotiation::SUCCEEDED
-                    : WebTransportNegotiation::FAILED;
-            WebTransportNegotiationDone();
-            break;
-          case WebTransportEventExternal::Tag::Session: {
-            MOZ_ASSERT(mState == CONNECTED);
-
-            uint64_t id = event.web_transport._0.session._0;
-            LOG(
-                ("Http3Session::ProcessEvents - WebTransport Session "
-                 " sessionId=0x%" PRIx64,
-                 id));
-            RefPtr<Http3StreamBase> stream = mStreamIdHash.Get(id);
-            if (!stream) {
-              LOG(
-                  ("Http3Session::ProcessEvents - WebTransport Session - "
-                   "stream not found "
-                   "stream_id=0x%" PRIx64 " [this=%p].",
-                   id, this));
-              break;
-            }
-
-            MOZ_RELEASE_ASSERT(stream->GetHttp3WebTransportSession(),
-                               "It must be a WebTransport session");
-            stream->SetResponseHeaders(data, false, false);
-
-            rv = stream->WriteSegments();
-
-            if (ASpdySession::SoftStreamError(rv) || stream->Done()) {
-              LOG3(
-                  ("Http3Session::ProcessSingleTransactionRead session=%p "
-                   "stream=%p "
-                   "0x%" PRIx64 " cleanup stream rv=0x%" PRIx32 " done=%d.\n",
-                   this, stream.get(), stream->StreamId(),
-                   static_cast<uint32_t>(rv), stream->Done()));
-              if (mStreamTransactionHash.Contains(stream->Transaction())) {
-                CloseStream(stream, (rv == NS_BINDING_RETARGETED)
-                                        ? NS_BINDING_RETARGETED
-                                        : NS_OK);
-              } else {
-                stream->GetHttp3WebTransportSession()->TransactionIsDone(
-                    (rv == NS_BINDING_RETARGETED) ? NS_BINDING_RETARGETED
-                                                  : NS_OK);
-              }
-              return NS_OK;
-            }
-
-            if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
-              LOG(("Http3Session::ProcessEvents [this=%p] rv=%" PRIx32, this,
-                   static_cast<uint32_t>(rv)));
-              return rv;
-            }
-          } break;
-          case WebTransportEventExternal::Tag::SessionClosed: {
-            uint64_t id = event.web_transport._0.session_closed.stream_id;
-            LOG(
-                ("Http3Session::ProcessEvents - WebTransport SessionClosed "
-                 " sessionId=0x%" PRIx64,
-                 id));
-            RefPtr<Http3StreamBase> stream = mStreamIdHash.Get(id);
-            if (!stream) {
-              LOG(
-                  ("Http3Session::ProcessEvents - WebTransport SessionClosed - "
-                   "stream not found "
-                   "stream_id=0x%" PRIx64 " [this=%p].",
-                   id, this));
-              break;
-            }
-
-            RefPtr<Http3WebTransportSession> wt =
-                stream->GetHttp3WebTransportSession();
-            MOZ_RELEASE_ASSERT(wt, "It must be a WebTransport session");
-            // TODO read status and reason properly.
-            // TODO we do not hanlde the case when a WebTransport session stream
-            // is closed before headers are send.
-            nsCString reason = ""_ns;
-            wt->OnSessionClosed(0, reason);
-          } break;
-          case WebTransportEventExternal::Tag::NewStream:
-            LOG(
-                ("Http3Session::ProcessEvents - WebTransport NewStream "
-                 "streamId=0x%" PRIx64 " sessionId=0x%" PRIx64,
-                 event.web_transport._0.new_stream.stream_id,
-                 event.web_transport._0.new_stream.session_id));
-            break;
         }
       } break;
       default:
@@ -870,18 +757,9 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
     cos = trans->GetClassOfService();
   }
 
-  Http3StreamBase* stream = nullptr;
-
-  if (trans && trans->IsForWebTransport()) {
-    LOG3(("Http3Session::AddStream new  WeTransport session %p atrans=%p.\n",
-          this, aHttpTransaction));
-    stream = new Http3WebTransportSession(aHttpTransaction, this);
-  } else {
-    LOG3(("Http3Session::AddStream %p atrans=%p.\n", this, aHttpTransaction));
-    stream = new Http3Stream(aHttpTransaction, this, cos,
-                             mCurrentTopBrowsingContextId);
-  }
-
+  LOG3(("Http3Session::AddStream %p atrans=%p.\n", this, aHttpTransaction));
+  Http3Stream* stream = new Http3Stream(aHttpTransaction, this, cos,
+                                        mCurrentTopBrowsingContextId);
   mStreamTransactionHash.InsertOrUpdate(aHttpTransaction, RefPtr{stream});
 
   if (mState == ZERORTT) {
@@ -896,18 +774,12 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
     m0RTTStreams.AppendElement(stream);
   }
 
-  if ((mWebTransportNegotiationStatus ==
-       WebTransportNegotiation::NEGOTIATING) &&
-      (trans && trans->IsForWebTransport())) {
-    mWaitingForWebTransportNegotiation.AppendElement(stream);
-    return true;
-  }
-
   if (!mFirstHttpTransaction && !IsConnected()) {
     mFirstHttpTransaction = aHttpTransaction->QueryHttpTransaction();
     LOG3(("Http3Session::AddStream first session=%p trans=%p ", this,
           mFirstHttpTransaction.get()));
   }
+
   StreamReadyToWrite(stream);
 
   return true;
@@ -917,7 +789,7 @@ bool Http3Session::CanReuse() {
   return CanSandData() && !(mGoawayReceived || mShouldClose);
 }
 
-void Http3Session::QueueStream(Http3StreamBase* stream) {
+void Http3Session::QueueStream(Http3Stream* stream) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(!stream->Queued());
 
@@ -930,7 +802,7 @@ void Http3Session::QueueStream(Http3StreamBase* stream) {
 void Http3Session::ProcessPending() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  Http3StreamBase* stream;
+  Http3Stream* stream;
   while ((stream = mQueuedStreams.PopFront())) {
     LOG3(("Http3Session::ProcessPending %p stream %p woken from queue.", this,
           stream));
@@ -941,18 +813,18 @@ void Http3Session::ProcessPending() {
   MaybeResumeSend();
 }
 
-static void RemoveStreamFromQueue(Http3StreamBase* aStream,
-                                  nsDeque<Http3StreamBase>& queue) {
+static void RemoveStreamFromQueue(Http3Stream* aStream,
+                                  nsDeque<Http3Stream>& queue) {
   size_t size = queue.GetSize();
   for (size_t count = 0; count < size; ++count) {
-    Http3StreamBase* stream = queue.PopFront();
+    Http3Stream* stream = queue.PopFront();
     if (stream != aStream) {
       queue.Push(stream);
     }
   }
 }
 
-void Http3Session::RemoveStreamFromQueues(Http3StreamBase* aStream) {
+void Http3Session::RemoveStreamFromQueues(Http3Stream* aStream) {
   RemoveStreamFromQueue(aStream, mReadyForWrite);
   RemoveStreamFromQueue(aStream, mQueuedStreams);
   mSlowConsumersReadyForRead.RemoveElement(aStream);
@@ -964,7 +836,7 @@ void Http3Session::RemoveStreamFromQueues(Http3StreamBase* aStream) {
 nsresult Http3Session::TryActivating(
     const nsACString& aMethod, const nsACString& aScheme,
     const nsACString& aAuthorityHeader, const nsACString& aPath,
-    const nsACString& aHeaders, uint64_t* aStreamId, Http3StreamBase* aStream) {
+    const nsACString& aHeaders, uint64_t* aStreamId, Http3Stream* aStream) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(*aStreamId == UINT64_MAX);
 
@@ -991,19 +863,9 @@ nsresult Http3Session::TryActivating(
     }
   }
 
-  nsresult rv = NS_OK;
-  RefPtr<Http3Stream> httpStream = aStream->GetHttp3Stream();
-  if (httpStream) {
-    rv = mHttp3Connection->Fetch(
-        aMethod, aScheme, aAuthorityHeader, aPath, aHeaders, aStreamId,
-        httpStream->PriorityUrgency(), httpStream->PriorityIncremental());
-  } else {
-    MOZ_RELEASE_ASSERT(aStream->GetHttp3WebTransportSession(),
-                       "It must be a WebTransport session");
-    rv = mHttp3Connection->CreateWebTransport(aAuthorityHeader, aPath, aHeaders,
-                                              aStreamId);
-  }
-
+  nsresult rv = mHttp3Connection->Fetch(
+      aMethod, aScheme, aAuthorityHeader, aPath, aHeaders, aStreamId,
+      aStream->PriorityUrgency(), aStream->PriorityIncremental());
   if (NS_FAILED(rv)) {
     LOG(("Http3Session::TryActivating returns error=0x%" PRIx32 "[stream=%p, "
          "this=%p]",
@@ -1077,15 +939,12 @@ nsresult Http3Session::SendRequestBody(uint64_t aStreamId, const char* buf,
 
 void Http3Session::ResetRecvd(uint64_t aStreamId, uint64_t aError) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  RefPtr<Http3StreamBase> stream = mStreamIdHash.Get(aStreamId);
+  RefPtr<Http3Stream> stream = mStreamIdHash.Get(aStreamId);
   if (!stream) {
     return;
   }
 
-  RefPtr<Http3Stream> httpStream = stream->GetHttp3Stream();
-  MOZ_RELEASE_ASSERT(httpStream, "This must be a Http3Stream");
-
-  httpStream->SetRecvdReset();
+  stream->SetRecvdReset();
 
   // We only handle some of Http3 error as epecial, the rest are just equivalent
   // to cancel.
@@ -1093,17 +952,17 @@ void Http3Session::ResetRecvd(uint64_t aStreamId, uint64_t aError) {
     // We will restart the request and the alt-svc will be removed
     // automatically.
     // Also disable http3 we want http1.1.
-    httpStream->Transaction()->DisableHttp3(false);
-    httpStream->Transaction()->DisableSpdy();
+    stream->Transaction()->DisableHttp3(false);
+    stream->Transaction()->DisableSpdy();
     CloseStream(stream, NS_ERROR_NET_RESET);
   } else if (aError == HTTP3_APP_ERROR_REQUEST_REJECTED) {
     // This request was rejected because server is probably busy or going away.
     // We can restart the request using alt-svc. Without calling
     // DoNotRemoveAltSvc the alt-svc route will be removed.
-    httpStream->Transaction()->DoNotRemoveAltSvc();
+    stream->Transaction()->DoNotRemoveAltSvc();
     CloseStream(stream, NS_ERROR_NET_RESET);
   } else {
-    if (httpStream->RecvdData()) {
+    if (stream->RecvdData()) {
       CloseStream(stream, NS_ERROR_NET_PARTIAL_TRANSFER);
     } else {
       CloseStream(stream, NS_ERROR_NET_INTERRUPT);
@@ -1220,14 +1079,14 @@ nsresult Http3Session::SendData(nsIUDPSocket* socket) {
   //      to let the error be handled).
 
   nsresult rv = NS_OK;
-  Http3StreamBase* stream = nullptr;
+  Http3Stream* stream = nullptr;
 
   // Step 1)
   while (CanSandData() && (stream = mReadyForWrite.PopFront())) {
     LOG(("Http3Session::SendData call ReadSegments from stream=%p [this=%p]",
          stream, this));
 
-    rv = stream->ReadSegments();
+    rv = stream->ReadSegments(nullptr);
 
     // on stream error we return earlier to let the error be handled.
     if (NS_FAILED(rv)) {
@@ -1262,7 +1121,7 @@ nsresult Http3Session::SendData(nsIUDPSocket* socket) {
   return rv;
 }
 
-void Http3Session::StreamReadyToWrite(Http3StreamBase* aStream) {
+void Http3Session::StreamReadyToWrite(Http3Stream* aStream) {
   MOZ_ASSERT(aStream);
   mReadyForWrite.Push(aStream);
   if (CanSandData() && mConnection) {
@@ -1281,11 +1140,11 @@ nsresult Http3Session::ProcessSlowConsumers() {
     return NS_OK;
   }
 
-  RefPtr<Http3StreamBase> slowConsumer =
-      mSlowConsumersReadyForRead.ElementAt(0);
+  RefPtr<Http3Stream> slowConsumer = mSlowConsumersReadyForRead.ElementAt(0);
   mSlowConsumersReadyForRead.RemoveElementAt(0);
 
-  nsresult rv = ProcessTransactionRead(slowConsumer);
+  uint32_t countRead = 0;
+  nsresult rv = ProcessTransactionRead(slowConsumer, &countRead);
 
   return rv;
 }
@@ -1467,7 +1326,7 @@ void Http3Session::CloseTransaction(nsAHttpTransaction* aTransaction,
   // Generally this arrives as a cancel event from the connection manager.
 
   // need to find the stream and call CloseStream() on it.
-  RefPtr<Http3StreamBase> stream = mStreamTransactionHash.Get(aTransaction);
+  RefPtr<Http3Stream> stream = mStreamTransactionHash.Get(aTransaction);
   if (!stream) {
     LOG3(("Http3Session::CloseTransaction %p %p 0x%" PRIx32 " - not found.",
           this, aTransaction, static_cast<uint32_t>(aResult)));
@@ -1484,15 +1343,13 @@ void Http3Session::CloseTransaction(nsAHttpTransaction* aTransaction,
   }
 }
 
-void Http3Session::CloseStream(Http3StreamBase* aStream, nsresult aResult) {
+void Http3Session::CloseStream(Http3Stream* aStream, nsresult aResult) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  RefPtr<Http3Stream> httpStream = aStream->GetHttp3Stream();
-  if (httpStream && !httpStream->RecvdFin() && !httpStream->RecvdReset() &&
-      httpStream->HasStreamId()) {
-    mHttp3Connection->CancelFetch(httpStream->StreamId(),
+  if (!aStream->RecvdFin() && !aStream->RecvdReset() &&
+      (aStream->HasStreamId())) {
+    mHttp3Connection->CancelFetch(aStream->StreamId(),
                                   HTTP3_APP_ERROR_REQUEST_CANCELLED);
   }
-
   aStream->Close(aResult);
   if (aStream->HasStreamId()) {
     // We know the transaction reusing an idle connection has succeeded or
@@ -1523,9 +1380,7 @@ void Http3Session::CloseStream(Http3StreamBase* aStream, nsresult aResult) {
   }
   RemoveStreamFromQueues(aStream);
   mStreamTransactionHash.Remove(aStream->Transaction());
-  mWebTransportSessions.RemoveElement(aStream);
-  if ((mShouldClose || mGoawayReceived) &&
-      (!mStreamTransactionHash.Count() || !mWebTransportSessions.IsEmpty())) {
+  if ((mShouldClose || mGoawayReceived) && !mStreamTransactionHash.Count()) {
     MOZ_ASSERT(!IsClosing());
     Close(NS_OK);
   }
@@ -1536,20 +1391,6 @@ nsresult Http3Session::TakeTransport(nsISocketTransport**,
                                      nsIAsyncOutputStream**) {
   MOZ_ASSERT(false, "TakeTransport of Http3Session");
   return NS_ERROR_UNEXPECTED;
-}
-
-Http3WebTransportSession* Http3Session::GetWebTransportSession(
-    nsAHttpTransaction* aTransaction) {
-  RefPtr<Http3StreamBase> stream = mStreamTransactionHash.Get(aTransaction);
-
-  if (!stream || !stream->GetHttp3WebTransportSession()) {
-    MOZ_ASSERT(false, "There must be a stream");
-    return nullptr;
-  }
-  RemoveStreamFromQueues(stream);
-  mStreamTransactionHash.Remove(aTransaction);
-  mWebTransportSessions.AppendElement(stream);
-  return stream->GetHttp3WebTransportSession();
 }
 
 bool Http3Session::IsPersistent() { return true; }
@@ -1580,10 +1421,7 @@ void Http3Session::TopBrowsingContextIdChanged(uint64_t id) {
   mCurrentTopBrowsingContextId = id;
 
   for (const auto& stream : mStreamTransactionHash.Values()) {
-    RefPtr<Http3Stream> httpStream = stream->GetHttp3Stream();
-    if (httpStream) {
-      httpStream->TopBrowsingContextIdChanged(id);
-    }
+    stream->TopBrowsingContextIdChanged(id);
   }
 }
 
@@ -1621,7 +1459,7 @@ void Http3Session::TransactionHasDataToWrite(nsAHttpTransaction* caller) {
   // a trapped signal from the http transaction to the connection that
   // it is no longer blocked on read.
 
-  RefPtr<Http3StreamBase> stream = mStreamTransactionHash.Get(caller);
+  RefPtr<Http3Stream> stream = mStreamTransactionHash.Get(caller);
   if (!stream) {
     LOG3(("Http3Session::TransactionHasDataToWrite %p caller %p not found",
           this, caller));
@@ -1652,7 +1490,7 @@ void Http3Session::TransactionHasDataToRecv(nsAHttpTransaction* caller) {
 
   // a signal from the http transaction to the connection that it will consume
   // more
-  RefPtr<Http3StreamBase> stream = mStreamTransactionHash.Get(caller);
+  RefPtr<Http3Stream> stream = mStreamTransactionHash.Get(caller);
   if (!stream) {
     LOG3(("Http3Session::TransactionHasDataToRecv %p caller %p not found", this,
           caller));
@@ -1664,7 +1502,7 @@ void Http3Session::TransactionHasDataToRecv(nsAHttpTransaction* caller) {
   ConnectSlowConsumer(stream);
 }
 
-void Http3Session::ConnectSlowConsumer(Http3StreamBase* stream) {
+void Http3Session::ConnectSlowConsumer(Http3Stream* stream) {
   LOG3(("Http3Session::ConnectSlowConsumer %p 0x%" PRIx64 "\n", this,
         stream->StreamId()));
   mSlowConsumersReadyForRead.AppendElement(stream);
@@ -2057,30 +1895,5 @@ nsresult Http3Session::GetTransactionTLSSocketControl(
 }
 
 PRIntervalTime Http3Session::LastWriteTime() { return mLastWriteTime; }
-
-void Http3Session::WebTransportNegotiationDone() {
-  for (size_t i = 0; i < mWaitingForWebTransportNegotiation.Length(); ++i) {
-    if (mWaitingForWebTransportNegotiation[i]) {
-      mReadyForWrite.Push(mWaitingForWebTransportNegotiation[i]);
-    }
-  }
-  mWaitingForWebTransportNegotiation.Clear();
-}
-
-//=========================================================================
-// WebTransport
-//=========================================================================
-
-nsresult Http3Session::CloseWebTransport(uint64_t aSessionId, uint32_t aError,
-                                         const nsACString& aMessage) {
-  return mHttp3Connection->CloseWebTransport(aSessionId, aError, aMessage);
-}
-
-nsresult Http3Session::CreateWebTransportStream(
-    uint64_t aSessionId, WebTransportStreamType aStreamType,
-    uint64_t* aStreamId) {
-  return mHttp3Connection->CreateWebTransportStream(aSessionId, aStreamType,
-                                                    aStreamId);
-}
 
 }  // namespace mozilla::net

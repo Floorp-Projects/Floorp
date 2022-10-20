@@ -10,7 +10,6 @@ use neqo_common::{event::Provider, qdebug, qinfo, qtrace, Datagram, Header};
 use neqo_crypto::{generate_ech_keys, init_db, AllowZeroRtt, AntiReplay};
 use neqo_http3::{
     Error, Http3OrWebTransportStream, Http3Parameters, Http3Server, Http3ServerEvent,
-    WebTransportRequest, WebTransportServerEvent,
 };
 use neqo_transport::server::Server;
 use neqo_transport::{ConnectionEvent, ConnectionParameters, Output, RandomConnectionIdGenerator};
@@ -28,7 +27,6 @@ use core::fmt::Display;
 use mio::net::UdpSocket;
 use mio::{Events, Poll, PollOpt, Ready, Token};
 use mio_extras::timer::{Builder, Timeout, Timer};
-use std::cmp::{max, min};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -54,9 +52,6 @@ const HTTP_RESPONSE_WITH_WRONG_FRAME: &[u8] = &[
 trait HttpServer: Display {
     fn process(&mut self, dgram: Option<Datagram>) -> Output;
     fn process_events(&mut self);
-    fn get_timeout(&self) -> Option<Duration> {
-        None
-    }
 }
 
 struct Http3TestServer {
@@ -66,7 +61,6 @@ struct Http3TestServer {
     posts: HashMap<Http3OrWebTransportStream, usize>,
     responses: HashMap<Http3OrWebTransportStream, Vec<u8>>,
     current_connection_hash: u64,
-    sessions_to_close: HashMap<Instant, Vec<WebTransportRequest>>,
 }
 
 impl ::std::fmt::Display for Http3TestServer {
@@ -82,7 +76,6 @@ impl Http3TestServer {
             posts: HashMap::new(),
             responses: HashMap::new(),
             current_connection_hash: 0,
-            sessions_to_close: HashMap::new(),
         }
     }
 
@@ -117,18 +110,6 @@ impl Http3TestServer {
             }
         }
     }
-
-    fn maybe_close_session(&mut self) {
-        let now = Instant::now();
-        for (expires, sessions) in self.sessions_to_close.iter_mut() {
-            if *expires <= now {
-                for s in sessions.iter_mut() {
-                    s.close_session(0, "").unwrap();
-                }
-            }
-        }
-        self.sessions_to_close.retain(|expires, _| *expires >= now);
-    }
 }
 
 impl HttpServer for Http3TestServer {
@@ -137,8 +118,6 @@ impl HttpServer for Http3TestServer {
     }
 
     fn process_events(&mut self) {
-        self.maybe_close_session();
-
         while let Some(event) = self.server.next_event() {
             qtrace!("Event: {:?}", event);
             match event {
@@ -366,68 +345,10 @@ impl HttpServer for Http3TestServer {
                 }
                 Http3ServerEvent::PriorityUpdate { .. }
                 | Http3ServerEvent::StreamReset { .. }
-                | Http3ServerEvent::StreamStopSending { .. } => {}
-                Http3ServerEvent::WebTransport(WebTransportServerEvent::NewSession {
-                    mut session,
-                    headers,
-                }) => {
-                    qdebug!(
-                        "WebTransportServerEvent::NewSession {:?} {:?}",
-                        session,
-                        headers
-                    );
-                    let path_hdr = headers.iter().find(|&h| h.name() == ":path");
-                    match path_hdr {
-                        Some(ph) if !ph.value().is_empty() => {
-                            let path = ph.value();
-                            qtrace!("Serve request {}", path);
-                            if path == "/success" {
-                                session.response(true).unwrap();
-                            } else if path == "/reject" {
-                                session.response(false).unwrap();
-                            } else if path == "/closeafter0ms" {
-                                session.response(true).unwrap();
-                            } else if path == "/closeafter100ms" {
-                                session.response(true).unwrap();
-                                let expires = Instant::now() + Duration::from_millis(100);
-                                if !self.sessions_to_close.contains_key(&expires) {
-                                    self.sessions_to_close.insert(expires, Vec::new());
-                                }
-                                self.sessions_to_close
-                                    .get_mut(&expires)
-                                    .unwrap()
-                                    .push(session);
-                            } else {
-                                session.response(true).unwrap();
-                            }
-                        }
-                        _ => {
-                            session.response(false).unwrap();
-                        }
-                    }
-                }
-                Http3ServerEvent::WebTransport(WebTransportServerEvent::SessionClosed {
-                    session,
-                    reason,
-                }) => {
-                    qdebug!(
-                        "WebTransportServerEvent::SessionClosed {:?} {:?}",
-                        session,
-                        reason
-                    );
-                }
-                Http3ServerEvent::WebTransport(WebTransportServerEvent::NewStream(id)) => {
-                    qdebug!("WebTransportServerEvent::NewStream {:?}", id);
-                }
+                | Http3ServerEvent::StreamStopSending { .. }
+                | Http3ServerEvent::WebTransport(_) => {}
             }
         }
-    }
-
-    fn get_timeout(&self) -> Option<Duration> {
-        if let Some(next) = self.sessions_to_close.keys().min() {
-            return Some(max(*next - Instant::now(), Duration::from_millis(0)));
-        }
-        None
     }
 }
 
@@ -504,10 +425,7 @@ fn process(
             emit_packet(socket, dgram);
             true
         }
-        Output::Callback(mut new_timeout) => {
-            if let Some(t) = server.get_timeout() {
-                new_timeout = min(new_timeout, t);
-            }
+        Output::Callback(new_timeout) => {
             if let Some(svr_timeout) = svr_timeout {
                 timer.cancel_timeout(svr_timeout);
             }
@@ -652,8 +570,7 @@ impl ServersRunner {
                     Http3Parameters::default()
                         .max_table_size_encoder(MAX_TABLE_SIZE)
                         .max_table_size_decoder(MAX_TABLE_SIZE)
-                        .max_blocked_streams(MAX_BLOCKED_STREAMS)
-                        .webtransport(true),
+                        .max_blocked_streams(MAX_BLOCKED_STREAMS),
                     None,
                 )
                 .expect("We cannot make a server!"),
