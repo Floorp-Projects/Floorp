@@ -22,6 +22,25 @@
 // Profiler features
 //---------------------------------------------------------------------------
 
+#if defined(__APPLE__) && defined(__aarch64__)
+#  define POWER_HELP "Sample per process power use"
+#elif defined(__APPLE__) && defined(__x86_64__)
+#  define POWER_HELP \
+    "Record the power used by the entire system with each sample."
+#elif defined(__linux__) && defined(__x86_64__)
+#  define POWER_HELP                                                \
+    "Record the power used by the entire system with each sample. " \
+    "Only available with Intel CPUs and requires setting "          \
+    "the sysctl kernel.perf_event_paranoid to 0."
+
+#elif defined(_MSC_VER)
+#  define POWER_HELP                                                       \
+    "Record the value of every energy meter available on the system with " \
+    "each sample. Only available on Windows 11 with Intel CPUs."
+#else
+#  define POWER_HELP "Not supported on this platform."
+#endif
+
 // Higher-order macro containing all the feature info in one place. Define
 // |MACRO| appropriately to extract the relevant parts. Note that the number
 // values are used internally only and so can be changed without consequence.
@@ -95,9 +114,7 @@
   MACRO(21, "processcpu", ProcessCPU,                                      \
         "Sample the CPU utilization of each process")                      \
                                                                            \
-  MACRO(22, "power", Power,                                                \
-        "Sample energy meters on Windows 11 and per process power use on " \
-        "Apple Silicon")
+  MACRO(22, "power", Power, POWER_HELP)
 // *** Synchronize with lists in BaseProfilerState.h and geckoProfiler.json ***
 
 struct ProfilerFeature {
