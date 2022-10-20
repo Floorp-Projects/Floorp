@@ -327,7 +327,6 @@ menupopup::part(drop-indicator) {
   background-size: 100% auto;
   background-position: center;
   width: 24px;
-  height: 24px;
   margin-inline: 7px;
   position: relative;
   /* Need to ensure this gets positioned on top of the position:relative #navigator-toolbox
