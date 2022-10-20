@@ -19,6 +19,85 @@
 #include "mozilla/WeakPtr.h"
 #include "nsDeque.h"
 
+/*
+ * WebTransport
+ *
+ * Http3Session and the underlying neqo code support multiplexing of multiple
+ * WebTransport and multiplexing WebTransport sessions with regular HTTP
+ * traffic. Whether WebTransport sessions are polled, will be controlled by the
+ * nsHttpConnectionMgr.
+ *
+ * WebTransport support is negotiated using HTTP/3 setting. Before the settings
+ * are available all WebTransport transactions are queued in
+ * mWaitingForWebTransportNegotiation. The information on whether WebTransport
+ * is supported is received via an HTTP/3 event. The event is
+ * Http3Event::Tag::WebTransport  with the value
+ * WebTransportEventExternal::Tag::Negotiated  that can be true or false. If
+ * the WebTransport feature has been negotiated, queued transactions will be
+ * activated otherwise they will be canceled(i.e. WebTransportNegotiationDone).
+ *
+ * The lifetime of a WebTransport session
+ *
+ * A WebTransport lifetime consists of 2 parts:
+ * - WebTransport session setup
+ * - WebTransport session active time
+ *
+ * WebTransport session setup:
+ * A WebTransport session uses a regular HTTP request for negotiation.
+ * Therefore when a new WebTransport is started a nsHttpChannel and the
+ * corresponding nsHttpTransaction are created. The nsHttpTransaction is
+ * dispatched to a Http3Session and after the
+ * WebTransportEventExternal::Tag::Negotiated event it behaves almost the same
+ * as a regular transaction, e.g. it is added to mStreamTransactionHash and
+ * mStreamIdHash. For activating the session NeqoHttp3Conn::CreateWebTransport
+ * is  called instead of NeqoHttp3Conn::Fetch(this is called for the regular
+ * HTTP requests). In this phase, the WebTransport session is canceled in the
+ * same way a regular request is canceled, by canceling the corresponding
+ * nsHttpChannel. If HTTP/3 connection is closed in this phase the
+ * corresponding nsHttpTransaction is canceled and this may cause the
+ * transaction to be restarted (this is the existing restart logic) or the
+ * error is propagated to the nsHttpChannel and its listener(via OnStartRequest
+ * and OnStopRequest as the regular HTTP request).
+ * The phase ends when a connection breaks or when the event
+ * Http3Event::Tag::WebTransport with the value
+ * WebTransportEventExternal::Tag::Session is received. The parameter
+ * aData(from NeqoHttp3Conn::GetEvent) contain the HTTP head of the response.
+ * The headers may be:
+ * - failed code, i.e. anything except 200. In this case, the nsHttpTransaction
+ *   behaves the same as a normal HTTP request and the nsHttpChannel listener
+ *   will be informed via OnStartRequest and OnStopRequest calls.
+ * - success code, i.e. 200. The code will be propagated to the
+ *   nsHttpTransaction. The transaction will parse the header and call
+ *   Http3Session::GetWebTransportSession. The function transfers WebTransport
+ *   session into the next phase:
+ *   - Removes nsHttpTransaction from mStreamTransactionHash.
+ *   - Adds the stream to mWebTransportSessions
+ *   - The nsHttpTransaction supplies Http3WebTransportSession to the
+ *     WebTransportSessionProxy and vice versa.
+ *     TODO remove this circular referencing.
+ *
+ * WebTransport session active time:
+ * During this phase the following actions are possible:
+ * - Cancelling a WebTransport session by the application:
+ *   The application calls Http3WebTransportSession::CloseSession. This
+ *   transfers Http3WebTransportSession into the CLOSE_PENDING state and calls
+ *   Http3Session::ConnectSlowConsumer to add itself to the “ready for reading
+ *   queue”. Consequently, the Http3Session will call
+ *   Http3WebTransportSession::WriteSegments and
+ *   Http3Session::CloseWebTransport will be called to send the closing signal
+ *   to the peer. After this, the Http3WebTransportSession is in the state DONE
+ *   and it will be removed from the Http3Session(the CloseStream function
+ *   takes care of this).
+ * - The peer sending a session closing signal:
+ *   Http3Session will receive a Http3Event::Tag::WebTransport event with value
+ *   WebTransportEventExternal::Tag::SessionClosed. The
+ *   Http3WebTransportSession::OnSessionClosed function for the corresponding
+ *   stream wil be called. The function will inform the corresponding
+ *   WebTransportSessionProxy by calling OnSessionClosed function. The
+ *   Http3WebTransportSession is in the state DONE and will be removed from the
+ *   Http3Session(the CloseStream function takes care of this).
+ */
+
 namespace mozilla::net {
 
 class HttpConnectionUDP;
@@ -58,11 +137,13 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
 
   bool CanReuse();
 
-  // The following functions are used by Http3Stream:
+  // The following functions are used by Http3Stream and
+  // Http3WebTransportSession:
   nsresult TryActivating(const nsACString& aMethod, const nsACString& aScheme,
                          const nsACString& aAuthorityHeader,
                          const nsACString& aPath, const nsACString& aHeaders,
                          uint64_t* aStreamId, Http3StreamBase* aStream);
+  // The folowing functions are used by Http3Stream:
   void CloseSendingSide(uint64_t aStreamId);
   nsresult SendRequestBody(uint64_t aStreamId, const char* buf, uint32_t count,
                            uint32_t* countRead);
@@ -71,6 +152,12 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   nsresult ReadResponseData(uint64_t aStreamId, char* aBuf, uint32_t aCount,
                             uint32_t* aCountWritten, bool* aFin);
 
+  // The folowing functions are used by Http3WebTransportSession:
+  nsresult CloseWebTransport(uint64_t aSessionId, uint32_t aError,
+                             const nsACString& aMessage);
+  nsresult CreateWebTransportStream(uint64_t aSessionId,
+                                    WebTransportStreamType aStreamType,
+                                    uint64_t* aStreamId);
   void CloseStream(Http3StreamBase* aStream, nsresult aResult);
 
   void SetCleanShutdown(bool aCleanShutdown) {
@@ -104,6 +191,8 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   nsresult SendPriorityUpdateFrame(uint64_t aStreamId, uint8_t aPriorityUrgency,
                                    bool aPriorityIncremental);
 
+  void ConnectSlowConsumer(Http3StreamBase* stream);
+
  private:
   ~Http3Session();
 
@@ -120,7 +209,6 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   nsresult ProcessTransactionRead(uint64_t stream_id);
   nsresult ProcessTransactionRead(Http3StreamBase* stream);
   nsresult ProcessSlowConsumers();
-  void ConnectSlowConsumer(Http3StreamBase* stream);
 
   void SetupTimer(uint64_t aTimeout);
 
@@ -229,6 +317,14 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   enum WebTransportNegotiation { DISABLED, NEGOTIATING, FAILED, SUCCEEDED };
   WebTransportNegotiation mWebTransportNegotiationStatus{
       WebTransportNegotiation::DISABLED};
+
+  nsTArray<WeakPtr<Http3StreamBase>> mWaitingForWebTransportNegotiation;
+  // 1795854 implement the case when WebTransport is not supported.
+  // Also, implement the case when the  HTTP/3 session fails before settings
+  // are exchanged.
+  void WebTransportNegotiationDone();
+
+  nsTArray<RefPtr<Http3StreamBase>> mWebTransportSessions;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Http3Session, NS_HTTP3SESSION_IID);
