@@ -168,6 +168,14 @@ normalize_path = normalize_path()
 @imports(_from="os", _import="environ")
 @imports(_from="mozfile", _import="which")
 def find_program(file, paths=None, allow_spaces=False):
+    def which_normalize(file, path, exts):
+        path = which(file, path=path, exts=exts)
+        if not path:
+            return None
+        if not allow_spaces:
+            return normalize_path(path)
+        return normsep(path)
+
     # The following snippet comes from `which` itself, with a slight
     # modification to use lowercase extensions, because it's confusing rustup
     # (on top of making results not really appealing to the eye).
@@ -183,10 +191,9 @@ def find_program(file, paths=None, allow_spaces=False):
         exts = None
 
     if is_absolute_or_relative(file):
-        path = which(os.path.basename(file), path=os.path.dirname(file), exts=exts)
-        if not allow_spaces:
-            return normalize_path(path) if path else None
-        return normsep(path)
+        return which_normalize(
+            os.path.basename(file), path=os.path.dirname(file), exts=exts
+        )
 
     if paths:
         if not isinstance(paths, (list, tuple)):
@@ -196,10 +203,7 @@ def find_program(file, paths=None, allow_spaces=False):
             )
         paths = pathsep.join(paths)
 
-    path = which(file, path=paths, exts=exts)
-    if not allow_spaces:
-        return normalize_path(path) if path else None
-    return normsep(path)
+    return which_normalize(file, path=paths, exts=exts)
 
 
 @imports("os")
