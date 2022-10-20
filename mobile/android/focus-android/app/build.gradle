@@ -331,7 +331,7 @@ dependencies {
     androidTestImplementation Dependencies.fastlane
     implementation Dependencies.falcon // Required by fastlane
 
-    androidTestImplementation Dependencies.espresso_contrib, {
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.1.0-alpha4', {
         exclude group: 'com.android.support', module: 'support-annotations'
         exclude group: 'com.android.support', module: 'support-v4'
         exclude group: 'com.android.support', module: 'design'
