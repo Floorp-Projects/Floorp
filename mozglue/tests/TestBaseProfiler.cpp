@@ -4989,7 +4989,11 @@ void TestProfiler() {
 
     MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
         "media sample", mozilla::baseprofiler::category::OTHER, {},
-        mozilla::baseprofiler::markers::MediaSampleMarker{}, 123, 456));
+        mozilla::baseprofiler::markers::MediaSampleMarker{}, 123, 456, 789));
+
+    MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
+        "video falling behind", mozilla::baseprofiler::category::OTHER, {},
+        mozilla::baseprofiler::markers::VideoFallingBehindMarker{}, 123, 456));
 
     printf("Sleep 1s...\n");
     {
@@ -5607,7 +5611,11 @@ void TestPredefinedMarkers() {
 
   MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("media"), mozilla::baseprofiler::category::OTHER,
-      {}, mozilla::baseprofiler::markers::MediaSampleMarker{}, 123, 456));
+      {}, mozilla::baseprofiler::markers::MediaSampleMarker{}, 123, 456, 789));
+
+  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
+      buffer, std::string_view("media"), mozilla::baseprofiler::category::OTHER,
+      {}, mozilla::baseprofiler::markers::VideoFallingBehindMarker{}, 123, 456));
 
 #  ifdef DEBUG
   buffer.Dump();
