@@ -535,7 +535,7 @@ DevTools.prototype = {
       }
 
       if (raise) {
-        toolbox.raise();
+        await toolbox.raise();
       }
     } else {
       // Toolbox creation is async, we have to be careful about races.

@@ -182,6 +182,9 @@ ToolboxHostManager.prototype = {
         break;
       case "raise-host":
         this.host.raise();
+        this.postMessage({
+          name: "host-raised",
+        });
         break;
       case "set-host-title":
         this.host.setTitle(msg.title);

@@ -5,86 +5,64 @@ const TEST_URL = "data:text/html,test for opening toolbox in different hosts";
 
 var { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
-var toolbox, tab1, tab2;
+add_task(async function() {
+  const tab1 = await addTab(TEST_URL);
+  const tab2 = BrowserTestUtils.addTab(gBrowser);
 
-function test() {
-  addTab(TEST_URL).then(async tab => {
-    tab2 = BrowserTestUtils.addTab(gBrowser);
-    gDevTools
-      .showToolboxForTab(tab)
-      .then(testBottomHost, console.error)
-      .catch(console.error);
-  });
-}
+  const toolbox = await gDevTools.showToolboxForTab(tab1);
+  await testBottomHost(toolbox, tab1, tab2);
 
-function testBottomHost(aToolbox) {
-  toolbox = aToolbox;
+  await testWindowHost(toolbox);
 
-  // switch to another tab and test toolbox.raise()
-  gBrowser.selectedTab = tab2;
-  executeSoon(function() {
-    is(
-      gBrowser.selectedTab,
-      tab2,
-      "Correct tab is selected before calling raise"
-    );
-    toolbox.raise();
-    executeSoon(function() {
-      is(
-        gBrowser.selectedTab,
-        tab1,
-        "Correct tab was selected after calling raise"
-      );
-
-      toolbox
-        .switchHost(Toolbox.HostType.WINDOW)
-        .then(testWindowHost)
-        .catch(console.error);
-    });
-  });
-}
-
-function testWindowHost() {
-  // Make sure toolbox is not focused.
-  window.addEventListener("focus", onFocus, true);
-
-  // Need to wait for focus  as otherwise window.focus() is overridden by
-  // toolbox window getting focused first on Linux and Mac.
-  const onToolboxFocus = () => {
-    toolbox.win.parent.removeEventListener("focus", onToolboxFocus, true);
-    info("focusing main window.");
-    window.focus();
-  };
-  // Need to wait for toolbox window to get focus.
-  toolbox.win.parent.addEventListener("focus", onToolboxFocus, true);
-}
-
-function onFocus() {
-  info("Main window is focused before calling toolbox.raise()");
-  window.removeEventListener("focus", onFocus, true);
-
-  // Check if toolbox window got focus.
-  const onToolboxFocusAgain = () => {
-    toolbox.win.parent.removeEventListener("focus", onToolboxFocusAgain);
-    ok(
-      true,
-      "Toolbox window is the focused window after calling toolbox.raise()"
-    );
-    cleanup();
-  };
-  toolbox.win.parent.addEventListener("focus", onToolboxFocusAgain);
-
-  // Now raise toolbox.
-  toolbox.raise();
-}
-
-function cleanup() {
   Services.prefs.setCharPref("devtools.toolbox.host", Toolbox.HostType.BOTTOM);
 
-  toolbox.destroy().then(function() {
-    toolbox = null;
-    gBrowser.removeCurrentTab();
-    gBrowser.removeCurrentTab();
-    finish();
+  await toolbox.destroy();
+  gBrowser.removeCurrentTab();
+  gBrowser.removeCurrentTab();
+});
+
+async function testBottomHost(toolbox, tab1, tab2) {
+  // switch to another tab and test toolbox.raise()
+  gBrowser.selectedTab = tab2;
+  await new Promise(executeSoon);
+  is(
+    gBrowser.selectedTab,
+    tab2,
+    "Correct tab is selected before calling raise"
+  );
+
+  await toolbox.raise();
+  is(
+    gBrowser.selectedTab,
+    tab1,
+    "Correct tab was selected after calling raise"
+  );
+}
+
+async function testWindowHost(toolbox) {
+  await toolbox.switchHost(Toolbox.HostType.WINDOW);
+
+  info("Wait for the toolbox to be focused when switching to window host");
+  // We can't wait for the "focus" event on toolbox.win.parent as this document is created while calling switchHost.
+  await waitFor(() => {
+    return Services.focus.activeWindow == toolbox.topWindow;
   });
+
+  const onBrowserWindowFocused = new Promise(resolve =>
+    window.addEventListener("focus", resolve, { once: true, capture: true })
+  );
+
+  info("Focusing the browser window");
+  window.focus();
+
+  info("Wait for the browser window to be focused");
+  await onBrowserWindowFocused;
+
+  // Now raise toolbox.
+  await toolbox.raise();
+  is(
+    Services.focus.activeWindow,
+    toolbox.topWindow,
+    "the toolbox window is immediately focused after raise resolution"
+  );
 }

@@ -229,7 +229,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
   async selectToolCommand(win, toolId, startTime) {
     if (gDevToolsBrowser._isAboutDevtoolsToolbox(win)) {
       const toolbox = gDevToolsBrowser._getAboutDevtoolsToolbox(win);
-      toolbox.selectTool(toolId, "key_shortcut");
+      await toolbox.selectTool(toolId, "key_shortcut");
       return;
     }
 
@@ -249,14 +249,14 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
         toolbox.hostType == Toolbox.HostType.WINDOW
       ) {
         if (!toolDefinition.preventRaisingOnKey) {
-          toolbox.raise();
+          await toolbox.raise();
         }
       } else {
-        toolbox.destroy();
+        await toolbox.destroy();
       }
       gDevTools.emit("select-tool-command", toolId);
     } else {
-      gDevTools
+      await gDevTools
         .showToolboxForTab(tab, {
           raise: !toolDefinition.preventRaisingOnKey,
           startTime,

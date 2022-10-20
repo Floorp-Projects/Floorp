@@ -682,6 +682,10 @@ Toolbox.prototype = {
     }
   },
 
+  /**
+   * Be careful, this method is synchronous, but highlightTool, raise, selectTool
+   * are all async.
+   */
   _pauseToolbox(reason) {
     // Suppress interrupted events by default because the thread is
     // paused/resumed a lot for various actions.
@@ -1741,6 +1745,9 @@ Toolbox.prototype = {
     }
     if (event.data?.name === "switched-host-to-tab") {
       this._onSwitchedHostToTab(event.data.browsingContextID);
+    }
+    if (event.data?.name === "host-raised") {
+      this.emit("host-raised");
     }
   },
 
@@ -3209,6 +3216,8 @@ Toolbox.prototype = {
    */
   raise() {
     this.postMessage({ name: "raise-host" });
+
+    return this.once("host-raised");
   },
 
   /**
