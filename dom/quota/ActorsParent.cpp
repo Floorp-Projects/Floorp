@@ -2697,33 +2697,14 @@ Result<uint64_t, nsresult> GetTemporaryStorageLimit(nsIFile& aStorageDir) {
            1024;
   }
 
-  constexpr int64_t teraByte = (1024u * 1024u * 1024u * 1024u);
-  constexpr int64_t maxAllowedCapacity = 8 * teraByte;
-
   // Check for disk capacity of user's device on which storage directory lives.
-  int64_t diskCapacity = maxAllowedCapacity;
-
-  // Log error when default disk capacity is returned due to the error
-  [&aStorageDir, &diskCapacity]() {
-    QM_FAIL(aStorageDir.GetDiskCapacity(&diskCapacity));
-  }();
+  QM_TRY_INSPECT(const int64_t& diskCapacity,
+                 MOZ_TO_RESULT_INVOKE_MEMBER(aStorageDir, GetDiskCapacity));
 
   MOZ_ASSERT(diskCapacity >= 0);
 
   // Allow temporary storage to consume up to 50% of disk capacity.
-  const int64_t regularCapacityLimit = diskCapacity / 2u;
-
-  // If the disk capacity reported by the operating system is very
-  // large and potentially incorrect due to hardware issues,
-  // a hardcoded limit is supplied instead.
-  int64_t capacityLimit = maxAllowedCapacity;
-
-  [regularCapacityLimit, &capacityLimit]() {
-    QM_TRY(OkIf(regularCapacityLimit >= maxAllowedCapacity), QM_VOID);
-    capacityLimit = regularCapacityLimit;
-  }();
-
-  return capacityLimit;
+  return diskCapacity / 2u;
 }
 
 bool IsOriginUnaccessed(const FullOriginMetadata& aFullOriginMetadata,
