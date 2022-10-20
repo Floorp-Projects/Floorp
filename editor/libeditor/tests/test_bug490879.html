@@ -7,7 +7,7 @@
 <iframe id="i1" width="200" height="100" src="about:blank"></iframe>
 <img id="i" src="green.png">
 <script>
-function runTest() {
+async function runTest() {
   function verifyContent() {
     const kExpectedImgSpec = "data:image/png;base64,";
     var e = document.getElementById("i1");
@@ -16,7 +16,7 @@ function runTest() {
        kExpectedImgSpec, "The pasted image is a base64-encoded data: URI");
   }
 
-  function pasteInto() {
+  async function pasteInto() {
     var e = document.getElementById("i1");
     var doc = e.contentDocument;
     doc.designMode = "on";
@@ -25,7 +25,15 @@ function runTest() {
     selection.removeAllRanges();
     selection.selectAllChildren(doc.body);
     selection.collapseToEnd();
+
+    let input = new Promise(resolve => {
+      doc.body.addEventListener("input", resolve, {once: true})
+    });
+
     SpecialPowers.doCommand(window, "cmd_paste");
+
+    info("Waiting for input event");
+    await input;
   }
 
   function copyToClipBoard() {
@@ -34,9 +42,10 @@ function runTest() {
   }
 
   copyToClipBoard();
-  pasteInto();
-  verifyContent();
 
+  await pasteInto();
+
+  verifyContent();
   SimpleTest.finish();
 }
 
