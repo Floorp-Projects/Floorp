@@ -277,7 +277,8 @@ class WeakMap
   }
 #endif
 
-  bool markEntry(GCMarker* marker, Key& key, Value& value);
+  bool markEntry(GCMarker* marker, Key& key, Value& value,
+                 bool populateWeakKeysTable);
 
   void trace(JSTracer* trc) override;
 
