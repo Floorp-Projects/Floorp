@@ -2851,21 +2851,6 @@ class nsContentUtils {
       nsPIDOMWindowOuter* aWindow, UIStateChangeType aShowFocusRings);
 
   /**
-   * Given an nsIFile, attempts to read it into aString.
-   *
-   * Note: Use sparingly! This causes main-thread I/O, which causes jank and all
-   * other bad things.
-   */
-  static nsresult SlurpFileToString(nsIFile* aFile, nsACString& aString);
-
-  /**
-   * Returns true if the mime service thinks this file contains an image.
-   *
-   * The content type is returned in aType.
-   */
-  static bool IsFileImage(nsIFile* aFile, nsACString& aType);
-
-  /**
    * Given an IPCDataTransferImageContainer construct an imgIContainer for the
    * image encoded by the transfer item.
    */
