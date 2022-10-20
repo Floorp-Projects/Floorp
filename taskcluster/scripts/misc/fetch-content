@@ -527,6 +527,31 @@ def fetch_urls(downloads):
             f.result()
 
 
+def _git_checkout_github_archive(dest_path: pathlib.Path, repo: str,
+                                 commit: str, prefix: str):
+    'Use github archive generator to speed up github git repo cloning'
+    repo = repo.rstrip('/')
+    github_url = '{repo}/archive/{commit}.tar.gz'.format(**locals())
+
+    with tempfile.TemporaryDirectory() as td:
+        temp_dir = pathlib.Path(td)
+        dl_dest = temp_dir / 'archive.tar.gz'
+        download_to_path(github_url, dl_dest)
+        repack_archive(dl_dest, dest_path,
+                       strip_components=1,
+                       prefix=prefix + '/')
+
+
+def _github_submodule_required(repo: str, commit: str):
+    'Use github API to check if submodules are used'
+    url = '{repo}/blob/{commit}/.gitmodules'.format(**locals())
+    try:
+        status_code = urllib.request.urlopen(url).getcode()
+        return status_code == 200
+    except:
+        return False
+
+
 def git_checkout_archive(
     dest_path: pathlib.Path,
     repo: str,
@@ -538,14 +563,20 @@ def git_checkout_archive(
     """Produce an archive of the files comprising a Git checkout."""
     dest_path.parent.mkdir(parents=True, exist_ok=True)
 
+    if not prefix:
+        prefix = repo.rstrip("/").rsplit("/", 1)[-1]
+
     if dest_path.suffixes[-2:] != [".tar", ".zst"]:
         raise Exception("Only producing .tar.zst archives is supported.")
+
+    if repo.startswith('https://github.com/'):
+        if not include_dot_git and not _github_submodule_required(repo, commit):
+            log("Using github archive service to speedup archive creation")
+            return _git_checkout_github_archive(dest_path, repo, commit, prefix)
 
     with tempfile.TemporaryDirectory() as td:
         temp_dir = pathlib.Path(td)
 
-        if not prefix:
-            prefix = repo.rstrip("/").rsplit("/", 1)[-1]
         git_dir = temp_dir / prefix
 
         # This could be faster with a shallow clone. However, Git requires a ref
