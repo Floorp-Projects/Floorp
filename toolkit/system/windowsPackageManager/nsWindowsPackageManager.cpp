@@ -196,7 +196,9 @@ nsWindowsPackageManager::GetCampaignId(nsAString& aCampaignId) {
   AsyncStatus status;
   do {
     asyncInfo->get_Status(&status);
-  } while (status != AsyncStatus::Completed);
+  } while (status == AsyncStatus::Started);
+
+  if (status != AsyncStatus::Completed) return NS_ERROR_FAILURE;
 
   ComPtr<IStoreProductResult> productResult = nullptr;
   hr = asyncSpr->GetResults(&productResult);
@@ -249,7 +251,9 @@ nsWindowsPackageManager::GetCampaignId(nsAString& aCampaignId) {
     AsyncStatus status;
     do {
       asyncInfo->get_Status(&status);
-    } while (status != AsyncStatus::Completed);
+    } while (status == AsyncStatus::Started);
+
+    if (status != AsyncStatus::Completed) return NS_ERROR_FAILURE;
 
     ComPtr<IStoreAppLicense> license = nullptr;
     hr = asyncSal->GetResults(&license);
