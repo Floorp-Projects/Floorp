@@ -16,6 +16,7 @@ absl_source_set("any_invocable") {
   ]
 }
 
+if (!moz_webrtc_build) {
 absl_source_set("any_invocable_test") {
   testonly = true
   sources = [
@@ -32,6 +33,7 @@ absl_source_set("any_invocable_test") {
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest",
   ]
+}
 }
 
 absl_source_set("bind_front") {

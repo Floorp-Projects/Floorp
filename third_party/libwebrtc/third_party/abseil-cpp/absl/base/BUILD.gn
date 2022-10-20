@@ -37,7 +37,7 @@ absl_source_set("raw_logging_internal") {
     ":atomic_hook",
     ":config",
     ":core_headers",
-    ":errno_saver",
+#    ":errno_saver",
     ":log_severity",
   ]
   visibility = [ "//third_party/abseil-cpp/absl/*" ]
