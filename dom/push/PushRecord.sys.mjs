@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -21,14 +17,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
-const EXPORTED_SYMBOLS = ["PushRecord"];
-
 const prefs = Services.prefs.getBranch("dom.push.");
 
 /**
  * The push subscription record, stored in IndexedDB.
  */
-function PushRecord(props) {
+export function PushRecord(props) {
   this.pushEndpoint = props.pushEndpoint;
   this.scope = props.scope;
   this.originAttributes = props.originAttributes;

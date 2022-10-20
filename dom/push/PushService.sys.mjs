@@ -2,19 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var PushServiceWebSocket, PushServiceHttp2;
+export var PushServiceWebSocket;
+export var PushServiceHttp2;
 
 const lazy = {};
 
@@ -24,41 +20,24 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/push/Notifier;1",
   "nsIPushNotifier"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "pushBroadcastService",
-  "resource://gre/modules/PushBroadcastService.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PushCrypto",
-  "resource://gre/modules/PushCrypto.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PushServiceAndroidGCM",
-  "resource://gre/modules/PushServiceAndroidGCM.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PushCrypto: "resource://gre/modules/PushCrypto.sys.mjs",
+  PushServiceAndroidGCM: "resource://gre/modules/PushServiceAndroidGCM.sys.mjs",
+  pushBroadcastService: "resource://gre/modules/PushBroadcastService.sys.mjs",
+});
 
 const CONNECTION_PROTOCOLS = (function() {
   if ("android" != AppConstants.MOZ_WIDGET_TOOLKIT) {
-    ({ PushServiceWebSocket } = ChromeUtils.import(
-      "resource://gre/modules/PushServiceWebSocket.jsm"
+    ({ PushServiceWebSocket } = ChromeUtils.importESModule(
+      "resource://gre/modules/PushServiceWebSocket.sys.mjs"
     ));
-    ({ PushServiceHttp2 } = ChromeUtils.import(
-      "resource://gre/modules/PushServiceHttp2.jsm"
+    ({ PushServiceHttp2 } = ChromeUtils.importESModule(
+      "resource://gre/modules/PushServiceHttp2.sys.mjs"
     ));
     return [PushServiceWebSocket, PushServiceHttp2];
   }
   return [lazy.PushServiceAndroidGCM];
 })();
-
-const EXPORTED_SYMBOLS = [
-  "PushService",
-  // The items below are exported for test purposes.
-  "PushServiceHttp2",
-  "PushServiceWebSocket",
-];
 
 XPCOMUtils.defineLazyGetter(lazy, "console", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
@@ -139,7 +118,7 @@ function errorWithResult(message, result = Cr.NS_ERROR_FAILURE) {
  * (PushServiceWebSocket) to communicate with the server and PushDB (IndexedDB)
  * for persistence.
  */
-var PushService = {
+export var PushService = {
   _service: null,
   _state: PUSH_SERVICE_UNINIT,
   _db: null,
