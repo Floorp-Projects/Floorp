@@ -198,12 +198,21 @@ class HgUtils(VCSUtils):
     def find_all_jss(self, path):
         jss = []
 
-        cmd = [
-            "hg",
-            "files",
-            f'set:glob:"{path}/**/*.jsm" or glob:"{path}/**/*.js" or '
-            + f'glob:"{path}/**/*.mjs" or glob:"{path}/**/*.sjs"',
-        ]
+        cmd = ["hg", "files", f'set:glob:"{path}/**/*.jsm"']
+        for line in self.run(cmd):
+            js = pathlib.Path(line)
+            if is_excluded_from_imports(js):
+                continue
+            jss.append(js)
+
+        cmd = ["hg", "files", f'set:glob:"{path}/**/*.js"']
+        for line in self.run(cmd):
+            js = pathlib.Path(line)
+            if is_excluded_from_imports(js):
+                continue
+            jss.append(js)
+
+        cmd = ["hg", "files", f'set:glob:"{path}/**/*.sys.mjs"']
         for line in self.run(cmd):
             js = pathlib.Path(line)
             if is_excluded_from_imports(js):
@@ -251,14 +260,21 @@ class GitUtils(VCSUtils):
     def find_all_jss(self, path):
         jss = []
 
-        cmd = [
-            "git",
-            "ls-files",
-            f"{path}/*.jsm",
-            f"{path}/*.js",
-            f"{path}/*.mjs",
-            f"{path}/*.sjs",
-        ]
+        cmd = ["git", "ls-files", f"{path}/*.jsm"]
+        for line in self.run(cmd):
+            js = pathlib.Path(line)
+            if is_excluded_from_imports(js):
+                continue
+            jss.append(js)
+
+        cmd = ["git", "ls-files", f"{path}/*.js"]
+        for line in self.run(cmd):
+            js = pathlib.Path(line)
+            if is_excluded_from_imports(js):
+                continue
+            jss.append(js)
+
+        cmd = ["git", "ls-files", f"{path}/*.mjs"]
         for line in self.run(cmd):
             js = pathlib.Path(line)
             if is_excluded_from_imports(js):

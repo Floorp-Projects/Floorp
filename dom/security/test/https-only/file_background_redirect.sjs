@@ -1,9 +1,7 @@
 // Custom *.sjs file specifically for the needs of Bug 1683015
 "use strict";
 
-let { setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
+let { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 async function handleRequest(request, response) {
   // avoid confusing cache behaviour

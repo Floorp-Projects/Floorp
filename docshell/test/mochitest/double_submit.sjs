@@ -2,9 +2,7 @@
 
 let self = this;
 
-let { setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
+let { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 const CC = Components.Constructor;
 const BinaryInputStream = CC(
