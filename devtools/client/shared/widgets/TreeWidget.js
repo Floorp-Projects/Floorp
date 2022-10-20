@@ -143,10 +143,16 @@ TreeWidget.prototype = {
   },
 
   /**
-   * Sets the text to be shown when no node is present in the tree
+   * Sets the text to be shown when no node is present in the tree.
+   * The placeholder will be hidden if text is empty.
    */
   setPlaceholderText(text) {
     this.placeholder.textContent = text;
+    if (text) {
+      this.placeholder.removeAttribute("hidden");
+    } else {
+      this.placeholder.setAttribute("hidden", "true");
+    }
   },
 
   /**
