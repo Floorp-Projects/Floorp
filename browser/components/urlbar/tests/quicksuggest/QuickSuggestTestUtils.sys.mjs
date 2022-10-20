@@ -80,9 +80,6 @@ const LEARN_MORE_URL =
 
 const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
 
-const UPDATE_TOPIC = "firefox-suggest-update";
-const UPDATE_SKIPPED_TOPIC = "firefox-suggest-update-skipped";
-
 // On `init`, the following properties and methods are copied from the test
 // scope to the `TestUtils` object so they can be easily accessed. Be careful
 // about assuming a particular property will be defined because depending on the
@@ -112,14 +109,6 @@ class QSTestUtils {
 
   get TELEMETRY_EVENT_CATEGORY() {
     return TELEMETRY_EVENT_CATEGORY;
-  }
-
-  get UPDATE_TOPIC() {
-    return UPDATE_TOPIC;
-  }
-
-  get UPDATE_SKIPPED_TOPIC() {
-    return UPDATE_SKIPPED_TOPIC;
   }
 
   get DEFAULT_CONFIG() {
@@ -712,13 +701,6 @@ class QSTestUtils {
     // enrollments, but tests can trigger lots of updates back to back.
     await this.waitForScenarioUpdated();
 
-    // These notifications signal either that pref updates due to enrollment are
-    // done or that updates weren't necessary.
-    let updatePromise = Promise.race([
-      lazy.TestUtils.topicObserved(QuickSuggestTestUtils.UPDATE_TOPIC),
-      lazy.TestUtils.topicObserved(QuickSuggestTestUtils.UPDATE_SKIPPED_TOPIC),
-    ]);
-
     let doExperimentCleanup = await lazy.ExperimentFakes.enrollWithFeatureConfig(
       {
         enabled: true,
@@ -729,22 +711,16 @@ class QSTestUtils {
 
     // Wait for the pref updates triggered by the experiment enrollment.
     this.info?.("Awaiting update after enrolling in experiment");
-    await updatePromise;
+    await this.waitForScenarioUpdated();
 
     return async () => {
-      // The same pref updates will be triggered by unenrollment, so wait for
-      // them again.
-      let unenrollUpdatePromise = Promise.race([
-        lazy.TestUtils.topicObserved(QuickSuggestTestUtils.UPDATE_TOPIC),
-        lazy.TestUtils.topicObserved(
-          QuickSuggestTestUtils.UPDATE_SKIPPED_TOPIC
-        ),
-      ]);
-
       this.info?.("Awaiting experiment cleanup");
       await doExperimentCleanup();
+
+      // The same pref updates will be triggered by unenrollment, so wait for
+      // them again.
       this.info?.("Awaiting update after unenrolling in experiment");
-      await unenrollUpdatePromise;
+      await this.waitForScenarioUpdated();
     };
   }
 
