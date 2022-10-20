@@ -3180,6 +3180,11 @@ class nsIFrame : public nsQueryFrame {
   nsIWidget* GetNearestWidget() const;
 
   /**
+   * Whether the frame is a subgrid right now.
+   */
+  bool IsSubgrid() const;
+
+  /**
    * Same as GetNearestWidget() above but uses an outparam to return the offset
    * of this frame to the returned widget expressed in appunits of |this| (the
    * widget might be in a different document with a different zoom).
