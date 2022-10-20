@@ -38,13 +38,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "getNodeInfo",
-  "resource://devtools/client/inspector/rules/utils/utils.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "getNodeCompatibilityInfo",
+  ["getNodeInfo", "getNodeCompatibilityInfo", "getRuleFromNode"],
   "resource://devtools/client/inspector/rules/utils/utils.js",
   true
 );
@@ -417,31 +411,55 @@ CssRuleView.prototype = {
    *
    * @param {MouseEvent} event
    */
-  handleClickEvent(event) {
+  async handleClickEvent(event) {
     const target = event.target;
 
     // Handle click on the icon next to a CSS selector.
     if (target.classList.contains("js-toggle-selector-highlighter")) {
-      this.toggleSelectorHighlighter(target.dataset.selector);
       event.stopPropagation();
+      let selector = target.dataset.selector;
+      // dataset.selector will be empty for inline styles (inherited or not)
+      // Rules associated with a regular selector should have this data-attirbute
+      // set in devtools/client/inspector/rules/views/rule-editor.js
+      if (selector === "") {
+        try {
+          const rule = getRuleFromNode(target, this._elementStyle);
+          if (rule.inherited) {
+            // This is an inline style from an inherited rule. Need to resolve the
+            // unique selector from the node which this rule is inherited from.
+            selector = await rule.inherited.getUniqueSelector();
+          } else {
+            // This is an inline style from the current node.
+            selector = await this.inspector.selection.nodeFront.getUniqueSelector();
+          }
+
+          // Now that the selector was computed, we can store it in
+          // dataset.selector for subsequent usage.
+          target.dataset.selector = selector;
+        } finally {
+          // Could not resolve a unique selector for the inline style.
+        }
+      }
+
+      this.toggleSelectorHighlighter(selector);
     }
 
     // Handle click on swatches next to flex and inline-flex CSS properties
     if (target.classList.contains("js-toggle-flexbox-highlighter")) {
+      event.stopPropagation();
       this.inspector.highlighters.toggleFlexboxHighlighter(
         this.inspector.selection.nodeFront,
         "rule"
       );
-      event.stopPropagation();
     }
 
     // Handle click on swatches next to grid CSS properties
     if (target.classList.contains("js-toggle-grid-highlighter")) {
+      event.stopPropagation();
       this.inspector.highlighters.toggleGridHighlighter(
         this.inspector.selection.nodeFront,
         "rule"
       );
-      event.stopPropagation();
     }
   },
 
