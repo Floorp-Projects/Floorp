@@ -367,6 +367,10 @@ LexerResult nsWebPDecoder::ReadHeader(WebPDemuxer* aDemuxer, bool aIsComplete) {
         WebPDemuxReleaseChunkIterator(&iter);
 
       } else {
+        if (!aIsComplete) {
+          return LexerResult(Yield::NEED_MORE_DATA);
+        }
+
         MOZ_LOG(sWebPLog, LogLevel::Warning,
                 ("[this=%p] nsWebPDecoder::ReadHeader header specified ICCP "
                  "but no ICCP chunk found, ignoring\n",
