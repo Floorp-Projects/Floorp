@@ -899,7 +899,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="open_new_tab_snackbar">გადართვა</string>
 
     <!-- Preference for switching to a new tab immediately after opening -->
-    <string name="preference_open_new_tab">ბმულის ახალ ჩანართში გახსნისას, მაშინვე მასზე გადასვლა</string>
+    <string name="preference_open_new_tab">ბმულის ახალ ჩანართში გახსნისას მაშინვე მასზე გადასვლა</string>
 
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">შესაძლო საფრთხის მქონე და თაღლითური საიტების შეზღუდვა</string>
