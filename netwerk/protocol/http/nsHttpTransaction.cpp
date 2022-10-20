@@ -24,7 +24,6 @@
 #include "nsCRT.h"
 #include "nsComponentManagerUtils.h"  // do_CreateInstance
 #include "nsHttpBasicAuth.h"
-#include "nsHttpChannel.h"
 #include "nsHttpChunkedDecoder.h"
 #include "nsHttpDigestAuth.h"
 #include "nsHttpHandler.h"
@@ -412,7 +411,7 @@ void nsHttpTransaction::OnPendingQueueInserted(
   }
 
   // Don't create mHttp3BackupTimer if HTTPS RR is in play.
-  if (mConnInfo->IsHttp3() && !mOrigConnInfo && !mConnInfo->GetWebTransport()) {
+  if (mConnInfo->IsHttp3() && !mOrigConnInfo) {
     // Backup timer should only be created once.
     if (!mHttp3BackupTimerCreated) {
       CreateAndStartTimer(mHttp3BackupTimer, this,
@@ -435,13 +434,6 @@ nsresult nsHttpTransaction::AsyncRead(nsIStreamListener* listener,
   transactionPump.forget(pump);
   MutexAutoLock lock(mLock);
   mEarlyHintObserver = do_QueryInterface(listener);
-
-  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(listener);
-  if (httpChannel) {
-    mWebTransportSessionEventListener =
-        httpChannel->GetWebTransportSessionEventListener();
-  }
-
   return NS_OK;
 }
 
@@ -1358,7 +1350,6 @@ void nsHttpTransaction::Close(nsresult reason) {
   {
     MutexAutoLock lock(mLock);
     mEarlyHintObserver = nullptr;
-    mWebTransportSessionEventListener = nullptr;
   }
 
   if (!mClosed) {
@@ -2187,22 +2178,6 @@ nsresult nsHttpTransaction::HandleContentStart() {
 
     // check if this is a no-content response
     switch (mResponseHead->Status()) {
-      case 200: {
-        if (!mIsForWebTransport) {
-          break;
-        }
-        RefPtr<Http3WebTransportSession> wtSession =
-            mConnection->GetWebTransportSession(this);
-        if (wtSession) {
-          mWebTransportSessionEventListener->OnSessionReadyInternal(wtSession);
-          wtSession->SetWebTransportSessionEventListener(
-              mWebTransportSessionEventListener);
-        }
-        mWebTransportSessionEventListener = nullptr;
-      }
-        // Fall through to WebSocket cases (nsHttpTransaction behaviar is the
-        // same):
-        [[fallthrough]];
       case 101:
         mPreserveStream = true;
         [[fallthrough]];  // to other no content cases:
@@ -3500,10 +3475,6 @@ void nsHttpTransaction::CollectTelemetryForUploads() {
 void nsHttpTransaction::GetHashKeyOfConnectionEntry(nsACString& aResult) {
   MutexAutoLock lock(mLock);
   aResult.Assign(mHashKeyOfConnectionEntry);
-}
-
-void nsHttpTransaction::SetIsForWebTransport(bool aIsForWebTransport) {
-  mIsForWebTransport = aIsForWebTransport;
 }
 
 }  // namespace mozilla::net
