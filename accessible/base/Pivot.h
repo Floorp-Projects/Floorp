@@ -122,6 +122,20 @@ class LocalAccInSameDocRule : public PivotRule {
   virtual uint16_t Match(Accessible* aAcc) override;
 };
 
+/**
+ * This rule matches remote radio button accessibles with the given name
+ * attribute. It assumes the cache is enabled.
+ */
+class PivotRadioNameRule : public PivotRule {
+ public:
+  explicit PivotRadioNameRule(const nsString& aName);
+
+  virtual uint16_t Match(Accessible* aAcc) override;
+
+ protected:
+  const nsString& mName;
+};
+
 }  // namespace a11y
 }  // namespace mozilla
 
