@@ -312,6 +312,11 @@ void FileSystemRequestHandler::GetRootHandle(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aPromise);
 
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
+
   aManager->BeginRequest(
       [onResolve = SelectResolveCallback<FileSystemGetHandleResponse,
                                          RefPtr<FileSystemDirectoryHandle>>(
@@ -333,6 +338,11 @@ void FileSystemRequestHandler::GetDirectoryHandle(
   MOZ_ASSERT(!aDirectory.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
   LOG(("getDirectoryHandle"));
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   if (!IsValidName(aDirectory.childName())) {
     aPromise->MaybeRejectWithTypeError("Invalid directory name");
@@ -363,6 +373,11 @@ void FileSystemRequestHandler::GetFileHandle(
   MOZ_ASSERT(aPromise);
   LOG(("getFileHandle"));
 
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
+
   if (!IsValidName(aFile.childName())) {
     aPromise->MaybeRejectWithTypeError("Invalid filename");
     return;
@@ -388,6 +403,11 @@ void FileSystemRequestHandler::GetAccessHandle(
   MOZ_ASSERT(aPromise);
   LOG(("getAccessHandle"));
 
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
+
   aManager->BeginRequest(
       [request = FileSystemGetAccessHandleRequest(aFile.entryId()),
        onResolve = SelectResolveCallback<FileSystemGetAccessHandleResponse,
@@ -409,6 +429,11 @@ void FileSystemRequestHandler::GetFile(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aFile.entryId().IsEmpty());
   MOZ_ASSERT(aPromise);
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   aManager->BeginRequest(
       [request = FileSystemGetFileRequest(aFile.entryId()),
@@ -432,6 +457,11 @@ void FileSystemRequestHandler::GetEntries(
   MOZ_ASSERT(!aDirectory.IsEmpty());
   MOZ_ASSERT(aPromise);
 
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
+
   aManager->BeginRequest(
       [request = FileSystemGetEntriesRequest(aDirectory, aPage),
        onResolve = SelectResolveCallback<FileSystemGetEntriesResponse, bool>(
@@ -454,6 +484,11 @@ void FileSystemRequestHandler::RemoveEntry(
   MOZ_ASSERT(!aEntry.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
   LOG(("removeEntry"));
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   if (!IsValidName(aEntry.childName())) {
     aPromise->MaybeRejectWithTypeError("Invalid name");
@@ -481,6 +516,11 @@ void FileSystemRequestHandler::MoveEntry(
     ErrorResult& aError) {
   MOZ_ASSERT(aPromise);
   LOG(("MoveEntry"));
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   // reject invalid names: empty, path separators, current & parent directories
   if (!IsValidName(aNewEntry.childName())) {
@@ -510,6 +550,11 @@ void FileSystemRequestHandler::RenameEntry(
   MOZ_ASSERT(aPromise);
   LOG(("RenameEntry"));
 
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
+
   // reject invalid names: empty, path separators, current & parent directories
   if (!IsValidName(aName)) {
     aPromise->MaybeRejectWithTypeError("Invalid name");
@@ -538,6 +583,11 @@ void FileSystemRequestHandler::Resolve(
   MOZ_ASSERT(!aEndpoints.parentId().IsEmpty());
   MOZ_ASSERT(!aEndpoints.childId().IsEmpty());
   MOZ_ASSERT(aPromise);
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   aManager->BeginRequest(
       [request = FileSystemResolveRequest(aEndpoints),

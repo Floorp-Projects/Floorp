@@ -55,6 +55,13 @@ class TestFileSystemRequestHandler : public ::testing::Test {
     return result.forget();
   }
 
+  already_AddRefed<Promise> GetSimplePromise() {
+    IgnoredErrorResult rv;
+    RefPtr<Promise> result = Promise::Create(mGlobal, rv);
+
+    return result.forget();
+  }
+
   UniquePtr<FileSystemRequestHandler> GetFileSystemRequestHandler() {
     return MakeUnique<FileSystemRequestHandler>();
   }
@@ -93,6 +100,17 @@ TEST_F(TestFileSystemRequestHandler, isGetRootHandleSuccessful) {
                      [this]() { return mListener->IsDone(); });
 }
 
+TEST_F(TestFileSystemRequestHandler, isGetRootHandleBlockedAfterShutdown) {
+  mManager->Shutdown();
+
+  IgnoredErrorResult error;
+  GetFileSystemRequestHandler()->GetRootHandle(mManager, GetSimplePromise(),
+                                               error);
+
+  ASSERT_TRUE(error.Failed());
+  ASSERT_TRUE(error.ErrorCodeIs(NS_ERROR_ILLEGAL_DURING_SHUTDOWN));
+}
+
 TEST_F(TestFileSystemRequestHandler, isGetDirectoryHandleSuccessful) {
   auto fakeResponse = [](const auto& /* aRequest */, auto&& aResolve,
                          auto&& /* aReject */) {
@@ -120,6 +138,17 @@ TEST_F(TestFileSystemRequestHandler, isGetDirectoryHandleSuccessful) {
                      [this]() { return mListener->IsDone(); });
 }
 
+TEST_F(TestFileSystemRequestHandler, isGetDirectoryHandleBlockedAfterShutdown) {
+  mManager->Shutdown();
+
+  IgnoredErrorResult error;
+  GetFileSystemRequestHandler()->GetDirectoryHandle(
+      mManager, mChild, /* aCreate */ true, GetSimplePromise(), error);
+
+  ASSERT_TRUE(error.Failed());
+  ASSERT_TRUE(error.ErrorCodeIs(NS_ERROR_ILLEGAL_DURING_SHUTDOWN));
+}
+
 TEST_F(TestFileSystemRequestHandler, isGetFileHandleSuccessful) {
   auto fakeResponse = [](const auto& /* aRequest */, auto&& aResolve,
                          auto&& /* aReject */) {
@@ -144,6 +173,17 @@ TEST_F(TestFileSystemRequestHandler, isGetFileHandleSuccessful) {
                           IgnoredErrorResult());
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [this]() { return mListener->IsDone(); });
+}
+
+TEST_F(TestFileSystemRequestHandler, isGetFileHandleBlockedAfterShutdown) {
+  mManager->Shutdown();
+
+  IgnoredErrorResult error;
+  GetFileSystemRequestHandler()->GetFileHandle(
+      mManager, mChild, /* aCreate */ true, GetSimplePromise(), error);
+
+  ASSERT_TRUE(error.Failed());
+  ASSERT_TRUE(error.ErrorCodeIs(NS_ERROR_ILLEGAL_DURING_SHUTDOWN));
 }
 
 TEST_F(TestFileSystemRequestHandler, isGetFileSuccessful) {
@@ -194,6 +234,17 @@ TEST_F(TestFileSystemRequestHandler, isGetFileSuccessful) {
                      [this]() { return mListener->IsDone(); });
 }
 
+TEST_F(TestFileSystemRequestHandler, isGetFileBlockedAfterShutdown) {
+  mManager->Shutdown();
+
+  IgnoredErrorResult error;
+  GetFileSystemRequestHandler()->GetFile(mManager, mEntry, GetSimplePromise(),
+                                         error);
+
+  ASSERT_TRUE(error.Failed());
+  ASSERT_TRUE(error.ErrorCodeIs(NS_ERROR_ILLEGAL_DURING_SHUTDOWN));
+}
+
 TEST_F(TestFileSystemRequestHandler, isGetEntriesSuccessful) {
   auto fakeResponse = [](const auto& /* aRequest */, auto&& aResolve,
                          auto&& /* aReject */) {
@@ -230,6 +281,20 @@ TEST_F(TestFileSystemRequestHandler, isGetEntriesSuccessful) {
                      [listener]() { return listener->IsDone(); });
 }
 
+TEST_F(TestFileSystemRequestHandler, isGetEntriesBlockedAfterShutdown) {
+  mManager->Shutdown();
+
+  RefPtr<FileSystemEntryMetadataArray> sink;
+
+  IgnoredErrorResult error;
+  GetFileSystemRequestHandler()->GetEntries(mManager, mEntry.entryId(),
+                                            /* aPage */ 0, GetSimplePromise(),
+                                            sink, error);
+
+  ASSERT_TRUE(error.Failed());
+  ASSERT_TRUE(error.ErrorCodeIs(NS_ERROR_ILLEGAL_DURING_SHUTDOWN));
+}
+
 TEST_F(TestFileSystemRequestHandler, isRemoveEntrySuccessful) {
   auto fakeResponse = [](const auto& /* aRequest */, auto&& aResolve,
                          auto&& /* aReject */) {
@@ -253,6 +318,17 @@ TEST_F(TestFileSystemRequestHandler, isRemoveEntrySuccessful) {
                         IgnoredErrorResult());
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [this]() { return mListener->IsDone(); });
+}
+
+TEST_F(TestFileSystemRequestHandler, isRemoveEntryBlockedAfterShutdown) {
+  mManager->Shutdown();
+
+  IgnoredErrorResult error;
+  GetFileSystemRequestHandler()->RemoveEntry(
+      mManager, mChild, /* aRecursive */ true, GetSimplePromise(), error);
+
+  ASSERT_TRUE(error.Failed());
+  ASSERT_TRUE(error.ErrorCodeIs(NS_ERROR_ILLEGAL_DURING_SHUTDOWN));
 }
 
 }  // namespace mozilla::dom::fs::test
