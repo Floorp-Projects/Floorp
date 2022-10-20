@@ -95,7 +95,7 @@
       this.invoke = function setCrop_invoke()
       {
         if (!this.labelNode.hasAttribute("crop"))
-          this.labelNode.width = Math.floor(this.width - 2 * this.charWidth);
+          this.labelNode.style.width = Math.floor(this.width - 2 * this.charWidth) + "px";
 
         this.labelNode.setAttribute("crop", aCropValue);
       }
