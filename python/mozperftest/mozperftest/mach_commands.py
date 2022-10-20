@@ -287,4 +287,4 @@ def run_tools(command_context, **kwargs):
 def run_side_by_side(command_context, **kwargs):
     from mozperftest.runner import run_tools
 
-    run_tools(command_context, kwargs, {})
+    run_tools(command_context, kwargs)
