@@ -805,7 +805,7 @@ ResultCode PolicyBase::AddRuleInternal(SubSystem subsystem,
       // consistency.
       if (base::win::GetVersion() >= base::win::Version::WIN10_TH2) {
         DCHECK_EQ(MITIGATION_FORCE_MS_SIGNED_BINS,
-                  mitigations_ & MITIGATION_FORCE_MS_SIGNED_BINS)
+                  (mitigations_ & MITIGATION_FORCE_MS_SIGNED_BINS) | (delayed_mitigations_ & MITIGATION_FORCE_MS_SIGNED_BINS))
             << "Enable MITIGATION_FORCE_MS_SIGNED_BINS before adding signed "
                "policy rules.";
         if (!SignedPolicy::GenerateRules(pattern, semantics, policy_maker_)) {
