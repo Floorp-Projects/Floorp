@@ -467,3 +467,12 @@ def get_output_dir(output, folder=None):
     result_dir = result_dir.resolve()
 
     return result_dir
+
+
+def create_path(path):
+    if path.exists():
+        return path
+    else:
+        create_path(path.parent)
+        path.mkdir(exist_ok=True)
+        return path
