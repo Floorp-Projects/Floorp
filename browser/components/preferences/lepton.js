@@ -5,7 +5,7 @@
 /* import-globals-from extensionControlled.js */
 /* import-globals-from preferences.js */
 
-var { AppConstants } = ChromeUtils.import( "resource://gre/modules/AppConstants.jsm");
+var { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyGetter(this, "L10n", () => {
   return new Localization([
     "branding/brand.ftl",
@@ -15,7 +15,46 @@ XPCOMUtils.defineLazyGetter(this, "L10n", () => {
 
 
 Preferences.addAll([
-  { id: "floorp.lepton.interface", type : "int"},
+   //select lepton mode ( Obsert the below 1 or 2 Mode will Select Lepton or Photon )
+   { id: "floorp.lepton.interface",                       type : "int"},
+
+   //auto hide
+   { id: "userChrome.autohide.tab",                       type : "bool"},
+   { id: "userChrome.autohide.tabbar",                    type : "bool"},
+   { id: "userChrome.autohide.navbar",                    type : "bool"},
+   { id: "userChrome.autohide.bookmarkbar",               type : "bool"},
+   { id: "userChrome.autohide.sidebar",                   type : "bool"},
+   { id: "userChrome.autohide.fill_urlbar",               type : "bool"},
+   { id: "userChrome.autohide.back_button",               type : "bool"},
+   { id: "userChrome.autohide.forward_button",            type : "bool"},
+   { id: "userChrome.autohide.page_action",               type : "bool"},
+   { id: "userChrome.autohide.toolbar_overlap",           type : "bool"},
+   { id: "userChrome.autohide.toolbar_overlap.allow_layout_shift",type : "bool"},
+
+   // hide Elements
+   { id: "userChrome.hidden.tab_icon",                    type : "bool"},
+   { id: "userChrome.hidden.tabbar",                      type : "bool"},
+   { id: "userChrome.hidden.navbar",                      type : "bool"},
+   { id: "userChrome.hidden.sidebar_header",              type : "bool"},
+   { id: "userChrome.hidden.urlbar_iconbox",              type : "bool"},
+   { id: "userChrome.hidden.bookmarkbar_icon",            type : "bool"},
+   { id: "userChrome.hidden.bookmarkbar_label",           type : "bool"},
+   { id: "userChrome.hidden.disabled_menu",               type : "bool"},
+
+
+   { id: "userChrome.centered.tab",                       type : "bool"},
+   { id: "userChrome.centered.tab.label",                 type : "bool"},
+   { id: "userChrome.centered.urlbar",                    type : "bool"},
+   { id: "userChrome.centered.bookmarkbar",               type : "bool"},
+
+   { id: "userChrome.urlView.move_icon_to_left",          type : "bool"},
+   { id: "userChrome.urlView.go_button_when_typing",      type : "bool"},
+   { id: "userChrome.urlView.always_show_page_actions",   type : "bool"},
+
+   { id: "userChrome.tabbar.as_titlebar",                 type : "bool"},
+   { id: "userChrome.tabbar.one_liner",                   type : "bool"},
+
+   { id: "userChrome.sidebar.overlap",                    type : "bool"},
 ]);
 
 var gLeptonPane = {
