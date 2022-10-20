@@ -224,6 +224,9 @@ impl KotlinCodeOracle {
             Type::Map(key, value) => Box::new(compounds::MapCodeType::new(*key, *value)),
             Type::External { name, .. } => Box::new(external::ExternalCodeType::new(name)),
             Type::Custom { name, .. } => Box::new(custom::CustomCodeType::new(name)),
+            Type::Unresolved { .. } => {
+                unreachable!("Type must be resolved before calling create_code_type")
+            }
         }
     }
 }
@@ -364,5 +367,14 @@ pub mod filters {
     /// `Error` with `Exception`.
     pub fn exception_name(nm: &str) -> Result<String, askama::Error> {
         Ok(oracle().error_name(nm))
+    }
+
+    /// Remove the "`" chars we put around function/variable names
+    ///
+    /// These are used to avoid name clashes with kotlin identifiers, but sometimes you want to
+    /// render the name unquoted.  One example is the message property for errors where we want to
+    /// display the name for the user.
+    pub fn unquote(nm: &str) -> Result<String, askama::Error> {
+        Ok(nm.trim_matches('`').to_string())
     }
 }

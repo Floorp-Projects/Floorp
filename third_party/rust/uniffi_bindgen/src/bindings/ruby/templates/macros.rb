@@ -5,7 +5,7 @@
 #}
 
 {%- macro to_ffi_call(func) -%}
-    {%- match func.throws() -%}
+    {%- match func.throws_name() -%}
     {%- when Some with (e) -%}
       {{ ci.namespace()|class_name_rb }}.rust_call_with_error({{ e|class_name_rb }},
     {%- else -%}
@@ -17,7 +17,7 @@
 {%- endmacro -%}
 
 {%- macro to_ffi_call_with_prefix(prefix, func) -%}
-    {%- match func.throws() -%}
+    {%- match func.throws_name() -%}
     {%- when Some with (e) -%}
       {{ ci.namespace()|class_name_rb }}.rust_call_with_error({{ e|class_name_rb }},
     {%- else -%}

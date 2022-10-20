@@ -298,7 +298,11 @@ def test_fzf_nothing_selected(*mocked):
 @mock.patch("mozperftest.utils.install_package")
 def test_side_by_side(mock1, mock2, mock3, patched_mozperftest_tools):
     with mock.patch(
+        "mozperftest.utils.create_path", return_value="fake_path"
+    ) as _, mock.patch(
         "mozperftest.runner._create_artifacts_dir", return_value="fake_path"
+    ) as _, mock.patch(
+        "mozperftest.runner._save_params", return_value="fake_path"
     ) as _:
         with _get_tools_command() as (cmd, command_context), silence(command_context):
             cmd(command_context)

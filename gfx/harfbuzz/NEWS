@@ -1,3 +1,11 @@
+Overview of changes leading to 5.3.1
+Wednesday, October 19, 2022
+====================================
+- Subsetter repacker fixes. (Garret Rieger)
+- Adjust Grapheme clusters for Katakana voiced sound marks. (Behdad Esfahbod)
+- New “hb-subset” option “--preprocess-face”. (Garret Rieger)
+
+
 Overview of changes leading to 5.3.0
 Saturday, October 8, 2022
 "Women, Life, Freedom" #MahsaAmini

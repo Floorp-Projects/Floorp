@@ -225,6 +225,14 @@ class AppWindow final : public nsIBaseWindow,
   bool UpdateWindowStateFromMiscXULAttributes();
   void SyncAttributesToWidget();
   void SavePersistentAttributes(PersistentAttributes);
+  void MaybeSavePersistentPositionAndSize(PersistentAttributes,
+                                          dom::Element& aRootElement,
+                                          const nsAString& aPersistString,
+                                          bool aShouldPersist);
+  void MaybeSavePersistentMiscAttributes(PersistentAttributes,
+                                         dom::Element& aRootElement,
+                                         const nsAString& aPersistString,
+                                         bool aShouldPersist);
   void SavePersistentAttributes() {
     SavePersistentAttributes(mPersistentAttributesDirty);
   }

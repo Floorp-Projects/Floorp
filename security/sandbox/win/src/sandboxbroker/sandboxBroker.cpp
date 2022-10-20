@@ -1389,6 +1389,13 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
   SANDBOX_ENSURE_SUCCESS(result,
                          "Invalid flags for SetDelayedProcessMitigations.");
 
+  // Running audio decoder somehow fails on MSIX packages unless we do that
+  if (mozilla::HasPackageIdentity() && exceptionModules.isNothing()) {
+    const Vector<const wchar_t*> emptyVector;
+    result = InitSignedPolicyRulesToBypassCig(mPolicy, emptyVector);
+    SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
+  }
+
   // Add the policy for the client side of a pipe. It is just a file
   // in the \pipe\ namespace. We restrict it to pipes that start with
   // "chrome." so the sandboxed process cannot connect to system services.

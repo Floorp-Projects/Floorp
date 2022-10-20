@@ -1107,6 +1107,7 @@ fn resolve_rules_for_element_with_context<'a>(
     element: GeckoElement<'a>,
     mut context: StyleContext<GeckoElement<'a>>,
     rules: StrongRuleNode,
+    original_computed_values: &ComputedValues,
 ) -> Arc<ComputedValues> {
     use style::style_resolver::{PseudoElementResolution, StyleResolverForElement};
 
@@ -1115,6 +1116,7 @@ fn resolve_rules_for_element_with_context<'a>(
     let inputs = CascadeInputs {
         rules: Some(rules),
         visited_rules: None,
+        flags: original_computed_values.flags.for_cascade_inputs(),
     };
 
     // Actually `PseudoElementResolution` doesn't matter.
@@ -1195,7 +1197,7 @@ pub extern "C" fn Servo_StyleSet_GetBaseComputedValuesForElement(
         thread_local: &mut tlc,
     };
 
-    resolve_rules_for_element_with_context(element, context, without_animations_rules).into()
+    resolve_rules_for_element_with_context(element, context, without_animations_rules, &computed_values).into()
 }
 
 #[no_mangle]
@@ -1246,7 +1248,7 @@ pub extern "C" fn Servo_StyleSet_GetComputedValuesByAddingAnimation(
         thread_local: &mut tlc,
     };
 
-    resolve_rules_for_element_with_context(element, context, with_animations_rules).into()
+    resolve_rules_for_element_with_context(element, context, with_animations_rules, &computed_values).into()
 }
 
 #[no_mangle]

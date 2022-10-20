@@ -350,7 +350,7 @@ mod test {
                 .iter()
                 .map(|f| f.type_())
                 .collect::<Vec<_>>(),
-            vec![Type::UInt32]
+            vec![&Type::UInt32]
         );
         assert_eq!(
             ed.variants()[2]
@@ -366,7 +366,7 @@ mod test {
                 .iter()
                 .map(|f| f.type_())
                 .collect::<Vec<_>>(),
-            vec![Type::UInt32, Type::String]
+            vec![&Type::UInt32, &Type::String]
         );
 
         // The enum declared via interface, but with no associated data.
@@ -384,7 +384,7 @@ mod test {
         // (It might be nice to optimize these to pass as plain integers, but that's
         // difficult atop the current factoring of `ComponentInterface` and friends).
         let farg = ci.get_function_definition("takes_an_enum").unwrap();
-        assert_eq!(farg.arguments()[0].type_(), Type::Enum("TestEnum".into()));
+        assert_eq!(*farg.arguments()[0].type_(), Type::Enum("TestEnum".into()));
         assert_eq!(farg.ffi_func().arguments()[0].type_(), FFIType::RustBuffer);
         let fret = ci.get_function_definition("returns_an_enum").unwrap();
         assert!(matches!(fret.return_type(), Some(Type::Enum(nm)) if nm == "TestEnum"));
@@ -398,7 +398,7 @@ mod test {
             .get_function_definition("takes_an_enum_with_data")
             .unwrap();
         assert_eq!(
-            farg.arguments()[0].type_(),
+            *farg.arguments()[0].type_(),
             Type::Enum("TestEnumWithData".into())
         );
         assert_eq!(farg.ffi_func().arguments()[0].type_(), FFIType::RustBuffer);

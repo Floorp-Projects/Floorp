@@ -211,36 +211,23 @@ RuleEditor.prototype = {
     }
 
     if (this.rule.domRule.type !== CSSRule.KEYFRAME_RULE) {
-      // FIXME: Avoid having this as a nested async operation. (Bug 1664511)
-      (async function() {
-        let selector;
-
-        if (this.rule.domRule.selectors) {
-          // This is a "normal" rule with a selector.
-          selector = this.rule.domRule.selectors.join(", ");
-        } else if (this.rule.inherited) {
-          // This is an inline style from an inherited rule. Need to resolve the unique
-          // selector from the node which rule this is inherited from.
-          selector = await this.rule.inherited.getUniqueSelector();
-        } else {
-          // This is an inline style from the current node.
-          selector = await this.ruleView.inspector.selection.nodeFront.getUniqueSelector();
-        }
-
-        const isHighlighted = this.ruleView.isSelectorHighlighted(selector);
-        // Handling of click events is delegated to CssRuleView.handleEvent()
-        createChild(header, "span", {
-          class:
-            "ruleview-selectorhighlighter js-toggle-selector-highlighter" +
-            (isHighlighted ? " highlighted" : ""),
-          "data-selector": selector,
-          title: l10n("rule.selectorHighlighter.tooltip"),
-        });
+      let selector = "";
+      if (this.rule.domRule.selectors) {
+        // This is a "normal" rule with a selector.
+        selector = this.rule.domRule.selectors.join(", ");
+        // Otherwise, the rule is either inherited or inline, and selectors will
+        // be computed on demand when the highlighter is requested.
       }
-        .bind(this)()
-        .catch(error => {
-          console.error("Exception while getting unique selector", error);
-        }));
+
+      const isHighlighted = this.ruleView.isSelectorHighlighted(selector);
+      // Handling of click events is delegated to CssRuleView.handleEvent()
+      createChild(header, "span", {
+        class:
+          "ruleview-selectorhighlighter js-toggle-selector-highlighter" +
+          (isHighlighted ? " highlighted" : ""),
+        "data-selector": selector,
+        title: l10n("rule.selectorHighlighter.tooltip"),
+      });
     }
 
     this.openBrace = createChild(header, "span", {

@@ -89,9 +89,9 @@
 {%- endmacro -%}
 
 {%- macro throws(func) %}
-{%- match func.throws() %}{% when Some with (e) %}throws{% else %}{% endmatch %}
+{%- if func.throws() %}throws{% endif %}
 {%- endmacro -%}
 
 {%- macro try(func) %}
-{%- match func.throws() %}{% when Some with (e) %}try{% else %}try!{% endmatch %}
+{%- if func.throws() %}try{% else %}try!{% endif %}
 {%- endmacro -%}

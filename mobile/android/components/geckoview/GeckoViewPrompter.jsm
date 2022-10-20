@@ -5,12 +5,8 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewPrompter"];
 
-const { GeckoViewUtils } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewUtils.jsm"
-);
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { GeckoViewUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewUtils.sys.mjs"
 );
 
 const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPrompter");

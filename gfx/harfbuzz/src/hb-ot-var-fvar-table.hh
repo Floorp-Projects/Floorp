@@ -44,7 +44,7 @@ struct InstanceRecord
 {
   friend struct fvar;
 
-  hb_array_t<const HBFixed> get_coordinates (unsigned int axis_count) const
+  hb_array_t<const F16DOT16> get_coordinates (unsigned int axis_count) const
   { return coordinatesZ.as_array (axis_count); }
 
   bool subset (hb_subset_context_t *c,
@@ -55,7 +55,7 @@ struct InstanceRecord
     if (unlikely (!c->serializer->embed (subfamilyNameID))) return_trace (false);
     if (unlikely (!c->serializer->embed (flags))) return_trace (false);
 
-    const hb_array_t<const HBFixed> coords = get_coordinates (axis_count);
+    const hb_array_t<const F16DOT16> coords = get_coordinates (axis_count);
     const hb_hashmap_t<hb_tag_t, float> *axes_location = c->plan->user_axes_location;
     for (unsigned i = 0 ; i < axis_count; i++)
     {
@@ -96,7 +96,7 @@ struct InstanceRecord
   NameID	subfamilyNameID;/* The name ID for entries in the 'name' table
 				 * that provide subfamily names for this instance. */
   HBUINT16	flags;		/* Reserved for future use — set to 0. */
-  UnsizedArrayOf<HBFixed>
+  UnsizedArrayOf<F16DOT16>
 		coordinatesZ;	/* The coordinates array for this instance. */
   //NameID	postScriptNameIDX;/*Optional. The name ID for entries in the 'name'
   //				  * table that provide PostScript names for this
@@ -189,9 +189,9 @@ struct AxisRecord
   public:
   Tag		axisTag;	/* Tag identifying the design variation for the axis. */
   protected:
-  HBFixed	minValue;	/* The minimum coordinate value for the axis. */
-  HBFixed	defaultValue;	/* The default coordinate value for the axis. */
-  HBFixed	maxValue;	/* The maximum coordinate value for the axis. */
+  F16DOT16	minValue;	/* The minimum coordinate value for the axis. */
+  F16DOT16	defaultValue;	/* The default coordinate value for the axis. */
+  F16DOT16	maxValue;	/* The maximum coordinate value for the axis. */
   public:
   HBUINT16	flags;		/* Axis flags. */
   NameID	axisNameID;	/* The name ID for entries in the 'name' table that
@@ -306,7 +306,7 @@ struct fvar
 
     if (coords_length && *coords_length)
     {
-      hb_array_t<const HBFixed> instanceCoords = instance->get_coordinates (axisCount)
+      hb_array_t<const F16DOT16> instanceCoords = instance->get_coordinates (axisCount)
 							 .sub_array (0, coords_length);
       for (unsigned int i = 0; i < instanceCoords.length; i++)
 	coords[i] = instanceCoords.arrayZ[i].to_float ();
@@ -339,7 +339,7 @@ struct fvar
 
       if (hb_any (+ hb_zip (instance->get_coordinates (axisCount), hb_range ((unsigned)axisCount))
                   | hb_filter (pinned_axes, hb_second)
-                  | hb_map ([&] (const hb_pair_t<const HBFixed&, unsigned>& _)
+                  | hb_map ([&] (const hb_pair_t<const F16DOT16&, unsigned>& _)
                             {
                               hb_tag_t axis_tag = pinned_axes.get (_.second);
                               float location = user_axes_location->get (axis_tag);
@@ -426,8 +426,8 @@ struct fvar
   HBUINT16	instanceCount;	/* The number of named instances defined in the font
 				 * (the number of records in the instances array). */
   HBUINT16	instanceSize;	/* The size in bytes of each InstanceRecord — set
-				 * to either axisCount * sizeof(HBFixed) + 4, or to
-				 * axisCount * sizeof(HBFixed) + 6. */
+				 * to either axisCount * sizeof(F16DOT16) + 4, or to
+				 * axisCount * sizeof(F16DOT16) + 6. */
 
   public:
   DEFINE_SIZE_STATIC (16);

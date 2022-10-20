@@ -246,6 +246,9 @@ impl PythonCodeOracle {
             Type::Map(key, value) => Box::new(compounds::MapCodeType::new(*key, *value)),
             Type::External { name, .. } => Box::new(external::ExternalCodeType::new(name)),
             Type::Custom { name, .. } => Box::new(custom::CustomCodeType::new(name)),
+            Type::Unresolved { .. } => {
+                unreachable!("Type must be resolved before calling create_code_type")
+            }
         }
     }
 }
@@ -374,11 +377,6 @@ pub mod filters {
     /// Get the idiomatic Python rendering of an individual enum variant.
     pub fn enum_variant_py(nm: &str) -> Result<String, askama::Error> {
         Ok(oracle().enum_variant_name(nm))
-    }
-
-    /// Get the idiomatic Python rendering of an exception name
-    pub fn exception_name(nm: &str) -> Result<String, askama::Error> {
-        Ok(oracle().error_name(nm))
     }
 
     pub fn coerce_py(nm: &str, type_: &Type) -> Result<String, askama::Error> {

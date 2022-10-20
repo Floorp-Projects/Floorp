@@ -295,6 +295,7 @@ let JSWINDOWACTORS = {
       },
     },
 
+    remoteTypes: ["privilegedabout"],
     matches: [
       "about:pocket-saved*",
       "about:pocket-signup*",

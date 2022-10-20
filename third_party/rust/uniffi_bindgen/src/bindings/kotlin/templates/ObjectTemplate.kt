@@ -5,9 +5,9 @@
 
 public interface {{ type_name }}Interface {
     {% for meth in obj.methods() -%}
-    {%- match meth.throws() -%}
+    {%- match meth.throws_type() -%}
     {%- when Some with (throwable) %}
-    @Throws({{ throwable|exception_name }}::class)
+    @Throws({{ throwable|type_name }}::class)
     {%- else -%}
     {%- endmatch %}
     fun {{ meth.name()|fn_name }}({% call kt::arg_list_decl(meth) %})
@@ -44,9 +44,9 @@ class {{ type_name }}(
     }
 
     {% for meth in obj.methods() -%}
-    {%- match meth.throws() -%}
+    {%- match meth.throws_type() -%}
     {%- when Some with (throwable) %}
-    @Throws({{ throwable|exception_name }}::class)
+    @Throws({{ throwable|type_name }}::class)
     {%- else -%}
     {%- endmatch %}
     {%- match meth.return_type() -%}

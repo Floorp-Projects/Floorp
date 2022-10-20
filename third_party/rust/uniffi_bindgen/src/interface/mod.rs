@@ -77,7 +77,7 @@ pub use record::{Field, Record};
 
 pub mod ffi;
 pub use ffi::{FFIArgument, FFIFunction, FFIType};
-use uniffi_meta::MethodMetadata;
+use uniffi_meta::{MethodMetadata, ObjectMetadata};
 
 /// The main public interface for this module, representing the complete details of an interface exposed
 /// by a rust component and the details of consuming it via an extern-C FFI layer.
@@ -89,7 +89,7 @@ pub struct ComponentInterface {
     /// using a different version, which might introduce unsafety.
     uniffi_version: String,
     /// All of the types used in the interface.
-    types: TypeUniverse,
+    pub(super) types: TypeUniverse,
     /// The unique prefix that we'll use for namespacing when exposing this component's API.
     namespace: String,
     /// The internal unique prefix used to namespace FFI symbols
@@ -123,7 +123,7 @@ impl ComponentInterface {
             bail!("parse error");
         }
         // Unconditionally add the String type, which is used by the panic handling
-        let _ = ci.types.add_known_type(Type::String);
+        ci.types.add_known_type(&Type::String);
         // We process the WebIDL definitions in two passes.
         // First, go through and look for all the named types.
         ci.types.add_type_definitions_from(defns.as_slice())?;
@@ -217,6 +217,25 @@ impl ComponentInterface {
     pub fn get_error_definition(&self, name: &str) -> Option<&Error> {
         // TODO: probably we could store these internally in a HashMap to make this easier?
         self.errors.iter().find(|e| e.name == name)
+    }
+
+    /// Should we generate read (and lift) functions for errors?
+    ///
+    /// This is a workaround for the fact that lower/write can't be generated for some errors,
+    /// specifically errors that are defined as flat in the UDL, but actually have fields in the
+    /// Rust source.
+    pub fn should_generate_error_read(&self, error: &Error) -> bool {
+        // We can and should always generate read() methods for fielded errors
+        let fielded = !error.is_flat();
+        // For flat errors, we should only generate read() methods if we need them to support
+        // callback interface errors
+        let used_in_callback_interface = self
+            .callback_interface_definitions()
+            .iter()
+            .flat_map(|cb| cb.methods())
+            .any(|m| m.throws_type() == Some(error.type_()));
+
+        fielded || used_in_callback_interface
     }
 
     /// Get details about all `Type::External` types
@@ -490,7 +509,7 @@ impl ComponentInterface {
     }
 
     /// Called by `APIBuilder` impls to add a newly-parsed record definition to the `ComponentInterface`.
-    fn add_record_definition(&mut self, defn: Record) {
+    pub(super) fn add_record_definition(&mut self, defn: Record) {
         // Note that there will be no duplicates thanks to the previous type-finding pass.
         self.records.push(defn);
     }
@@ -498,10 +517,10 @@ impl ComponentInterface {
     /// Called by `APIBuilder` impls to add a newly-parsed function definition to the `ComponentInterface`.
     pub(super) fn add_function_definition(&mut self, defn: Function) -> Result<()> {
         for arg in &defn.arguments {
-            self.types.add_known_type(arg.type_.clone())?;
+            self.types.add_known_type(&arg.type_);
         }
         if let Some(ty) = &defn.return_type {
-            self.types.add_known_type(ty.clone())?;
+            self.types.add_known_type(ty);
         }
 
         // Since functions are not a first-class type, we have to check for duplicates here
@@ -516,25 +535,22 @@ impl ComponentInterface {
         Ok(())
     }
 
-    pub(super) fn add_method_definition(&mut self, meta: MethodMetadata) -> Result<()> {
-        let object = match self.objects.iter_mut().find(|o| o.name == meta.self_name) {
-            Some(o) => o,
-            None => {
-                self.objects.push(Object::new(meta.self_name.clone()));
-                self.objects.last_mut().unwrap()
-            }
-        };
+    pub(super) fn add_method_definition(&mut self, meta: MethodMetadata) {
+        let object = get_or_insert_object(&mut self.objects, &meta.self_name);
 
         let defn: Method = meta.into();
         for arg in &defn.arguments {
-            self.types.add_known_type(arg.type_.clone())?;
+            self.types.add_known_type(&arg.type_);
         }
         if let Some(ty) = &defn.return_type {
-            self.types.add_known_type(ty.clone())?;
+            self.types.add_known_type(ty);
         }
         object.methods.push(defn);
+    }
 
-        Ok(())
+    pub(super) fn add_object_free_fn(&mut self, meta: ObjectMetadata) {
+        let object = get_or_insert_object(&mut self.objects, &meta.name);
+        object.ffi_func_free.name = meta.free_ffi_symbol_name();
     }
 
     /// Called by `APIBuilder` impls to add a newly-parsed object definition to the `ComponentInterface`.
@@ -553,6 +569,65 @@ impl ComponentInterface {
     fn add_error_definition(&mut self, defn: Error) {
         // Note that there will be no duplicates thanks to the previous type-finding pass.
         self.errors.push(defn);
+    }
+
+    /// Resolve unresolved types within proc-macro function / method signatures.
+    pub fn resolve_types(&mut self) -> Result<()> {
+        fn handle_unresolved_in(
+            ty: &mut Type,
+            f: impl Fn(&str) -> Result<Type> + Clone,
+        ) -> Result<()> {
+            match ty {
+                Type::Unresolved { name } => {
+                    *ty = f(name)?;
+                }
+                Type::Optional(inner) => {
+                    handle_unresolved_in(inner, f)?;
+                }
+                Type::Sequence(inner) => {
+                    handle_unresolved_in(inner, f)?;
+                }
+                Type::Map(k, v) => {
+                    handle_unresolved_in(k, f.clone())?;
+                    handle_unresolved_in(v, f)?;
+                }
+                _ => {}
+            }
+
+            Ok(())
+        }
+
+        let fn_sig_types = self.functions.iter_mut().flat_map(|fun| {
+            fun.arguments
+                .iter_mut()
+                .map(|arg| &mut arg.type_)
+                .chain(&mut fun.return_type)
+        });
+        let method_sig_types = self.objects.iter_mut().flat_map(|obj| {
+            obj.methods.iter_mut().flat_map(|m| {
+                m.arguments
+                    .iter_mut()
+                    .map(|arg| &mut arg.type_)
+                    .chain(&mut m.return_type)
+            })
+        });
+
+        for ty in fn_sig_types.chain(method_sig_types) {
+            handle_unresolved_in(ty, |unresolved_ty_name| {
+                match self.types.get_type_definition(unresolved_ty_name) {
+                    Some(def) => {
+                        assert!(
+                            !matches!(&def, Type::Unresolved { .. }),
+                            "unresolved types must not be part of TypeUniverse"
+                        );
+                        Ok(def)
+                    }
+                    None => bail!("Failed to resolve type `{unresolved_ty_name}`"),
+                }
+            })?;
+        }
+
+        Ok(())
     }
 
     /// Perform global consistency checks on the declared interface.
@@ -611,6 +686,18 @@ impl Hash for ComponentInterface {
         self.objects.hash(state);
         self.callback_interfaces.hash(state);
         self.errors.hash(state);
+    }
+}
+
+fn get_or_insert_object<'a>(objects: &'a mut Vec<Object>, name: &str) -> &'a mut Object {
+    // The find-based way of writing this currently runs into a borrow checker
+    // error, so we use position
+    match objects.iter_mut().position(|o| o.name == name) {
+        Some(idx) => &mut objects[idx],
+        None => {
+            objects.push(Object::new(name.to_owned()));
+            objects.last_mut().unwrap()
+        }
     }
 }
 
@@ -833,6 +920,7 @@ fn convert_type(s: &uniffi_meta::Type) -> Type {
             convert_type(value_type).into(),
         ),
         Ty::ArcObject { object_name } => Type::Object(object_name.clone()),
+        Ty::Unresolved { name } => Type::Unresolved { name: name.clone() },
     }
 }
 

@@ -306,10 +306,16 @@ mozilla::ipc::RejectCallback GetRejectCallback(
 
 void FileSystemRequestHandler::GetRootHandle(
     RefPtr<FileSystemManager>
-        aManager,                // NOLINT(performance-unnecessary-value-param)
-    RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+        aManager,              // NOLINT(performance-unnecessary-value-param)
+    RefPtr<Promise> aPromise,  // NOLINT(performance-unnecessary-value-param)
+    ErrorResult& aError) {
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aPromise);
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   aManager->BeginRequest(
       [onResolve = SelectResolveCallback<FileSystemGetHandleResponse,
@@ -326,11 +332,17 @@ void FileSystemRequestHandler::GetRootHandle(
 void FileSystemRequestHandler::GetDirectoryHandle(
     RefPtr<FileSystemManager>& aManager,
     const FileSystemChildMetadata& aDirectory, bool aCreate,
-    RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+    RefPtr<Promise> aPromise,  // NOLINT(performance-unnecessary-value-param)
+    ErrorResult& aError) {
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aDirectory.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
   LOG(("getDirectoryHandle"));
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   if (!IsValidName(aDirectory.childName())) {
     aPromise->MaybeRejectWithTypeError("Invalid directory name");
@@ -354,11 +366,17 @@ void FileSystemRequestHandler::GetDirectoryHandle(
 void FileSystemRequestHandler::GetFileHandle(
     RefPtr<FileSystemManager>& aManager, const FileSystemChildMetadata& aFile,
     bool aCreate,
-    RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+    RefPtr<Promise> aPromise,  // NOLINT(performance-unnecessary-value-param)
+    ErrorResult& aError) {
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aFile.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
   LOG(("getFileHandle"));
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   if (!IsValidName(aFile.childName())) {
     aPromise->MaybeRejectWithTypeError("Invalid filename");
@@ -381,9 +399,14 @@ void FileSystemRequestHandler::GetFileHandle(
 
 void FileSystemRequestHandler::GetAccessHandle(
     RefPtr<FileSystemManager>& aManager, const FileSystemEntryMetadata& aFile,
-    const RefPtr<Promise>& aPromise) {
+    const RefPtr<Promise>& aPromise, ErrorResult& aError) {
   MOZ_ASSERT(aPromise);
   LOG(("getAccessHandle"));
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   aManager->BeginRequest(
       [request = FileSystemGetAccessHandleRequest(aFile.entryId()),
@@ -401,10 +424,16 @@ void FileSystemRequestHandler::GetAccessHandle(
 
 void FileSystemRequestHandler::GetFile(
     RefPtr<FileSystemManager>& aManager, const FileSystemEntryMetadata& aFile,
-    RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+    RefPtr<Promise> aPromise,  // NOLINT(performance-unnecessary-value-param)
+    ErrorResult& aError) {
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aFile.entryId().IsEmpty());
   MOZ_ASSERT(aPromise);
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   aManager->BeginRequest(
       [request = FileSystemGetFileRequest(aFile.entryId()),
@@ -423,10 +452,15 @@ void FileSystemRequestHandler::GetEntries(
     RefPtr<FileSystemManager>& aManager, const EntryId& aDirectory,
     PageNumber aPage,
     RefPtr<Promise> aPromise,  // NOLINT(performance-unnecessary-value-param)
-    RefPtr<FileSystemEntryMetadataArray>& aSink) {
+    RefPtr<FileSystemEntryMetadataArray>& aSink, ErrorResult& aError) {
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aDirectory.IsEmpty());
   MOZ_ASSERT(aPromise);
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   aManager->BeginRequest(
       [request = FileSystemGetEntriesRequest(aDirectory, aPage),
@@ -444,11 +478,17 @@ void FileSystemRequestHandler::GetEntries(
 void FileSystemRequestHandler::RemoveEntry(
     RefPtr<FileSystemManager>& aManager, const FileSystemChildMetadata& aEntry,
     bool aRecursive,
-    RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+    RefPtr<Promise> aPromise,  // NOLINT(performance-unnecessary-value-param)
+    ErrorResult& aError) {
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aEntry.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
   LOG(("removeEntry"));
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   if (!IsValidName(aEntry.childName())) {
     aPromise->MaybeRejectWithTypeError("Invalid name");
@@ -472,9 +512,15 @@ void FileSystemRequestHandler::MoveEntry(
     RefPtr<FileSystemManager>& aManager, FileSystemHandle* aHandle,
     const FileSystemEntryMetadata& aEntry,
     const FileSystemChildMetadata& aNewEntry,
-    RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+    RefPtr<Promise> aPromise,  // NOLINT(performance-unnecessary-value-param)
+    ErrorResult& aError) {
   MOZ_ASSERT(aPromise);
   LOG(("MoveEntry"));
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   // reject invalid names: empty, path separators, current & parent directories
   if (!IsValidName(aNewEntry.childName())) {
@@ -498,10 +544,16 @@ void FileSystemRequestHandler::MoveEntry(
 void FileSystemRequestHandler::RenameEntry(
     RefPtr<FileSystemManager>& aManager, FileSystemHandle* aHandle,
     const FileSystemEntryMetadata& aEntry, const Name& aName,
-    RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+    RefPtr<Promise> aPromise,  // NOLINT(performance-unnecessary-value-param)
+    ErrorResult& aError) {
   MOZ_ASSERT(!aEntry.entryId().IsEmpty());
   MOZ_ASSERT(aPromise);
   LOG(("RenameEntry"));
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   // reject invalid names: empty, path separators, current & parent directories
   if (!IsValidName(aName)) {
@@ -525,11 +577,17 @@ void FileSystemRequestHandler::RenameEntry(
 void FileSystemRequestHandler::Resolve(
     RefPtr<FileSystemManager>& aManager,
     // NOLINTNEXTLINE(performance-unnecessary-value-param)
-    const FileSystemEntryPair& aEndpoints, RefPtr<Promise> aPromise) {
+    const FileSystemEntryPair& aEndpoints, RefPtr<Promise> aPromise,
+    ErrorResult& aError) {
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aEndpoints.parentId().IsEmpty());
   MOZ_ASSERT(!aEndpoints.childId().IsEmpty());
   MOZ_ASSERT(aPromise);
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   aManager->BeginRequest(
       [request = FileSystemResolveRequest(aEndpoints),

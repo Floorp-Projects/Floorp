@@ -54,6 +54,9 @@ mod filters {
             ),
             Type::Custom { name, .. } => format!("r#{}", name),
             Type::External { .. } => panic!("External types coming to a uniffi near you soon!"),
+            Type::Unresolved { .. } => {
+                unreachable!("UDL scaffolding code never contains unresolved types")
+            }
         })
     }
 
@@ -126,6 +129,9 @@ mod filters {
             Type::Float64 => "f64".into(),
             Type::String => "String".into(),
             Type::Boolean => "bool".into(),
+            Type::Unresolved { .. } => {
+                unreachable!("UDL scaffolding code never contains unresolved types")
+            }
         })
     }
 

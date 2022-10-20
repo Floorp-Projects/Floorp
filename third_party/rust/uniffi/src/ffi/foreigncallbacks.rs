@@ -114,6 +114,7 @@
 //!
 
 use super::RustBuffer;
+use std::fmt;
 use std::os::raw::c_int;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -131,8 +132,12 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 ///   passing individual arguments to the user's callback.
 /// * `buf_ptr` is a pointer to where the resulting buffer will be written. UniFFI will allocate a
 ///   buffer to write the result into.
-/// * A callback returns `-1` if an unexpected error happens, `0` if the call succeeded without a
-///   return value or `1` if data was written into the output buffer.
+/// * A callback returns:
+///    - `-2` An error occured that was serialized to buf_ptr
+///    - `-1` An unexpected error ocurred
+///    - `0` is a deprecated way to signal that if the call succeeded, but did not modify buf_ptr
+///    - `1` If the call succeeded.  For non-void functions the return value should be serialized
+///      to buf_ptr.
 ///   Note: The output buffer might still contain 0 bytes of data.
 pub type ForeignCallback = unsafe extern "C" fn(
     handle: u64,
@@ -195,3 +200,30 @@ impl ForeignCallbackInternals {
         unsafe { std::mem::transmute::<usize, Option<ForeignCallback>>(ptr_value) }
     }
 }
+
+/// Used when internal/unexpected error happened when calling a foreign callback, for example when
+/// a unknown exception is raised
+///
+/// User callback error types must implement a From impl from this type to their own error type.
+#[derive(Debug)]
+pub struct UnexpectedUniFFICallbackError {
+    pub reason: String,
+}
+
+impl UnexpectedUniFFICallbackError {
+    pub fn from_reason(reason: String) -> Self {
+        Self { reason }
+    }
+}
+
+impl fmt::Display for UnexpectedUniFFICallbackError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "UnexpectedUniFFICallbackError(reason: {:?})",
+            self.reason
+        )
+    }
+}
+
+impl std::error::Error for UnexpectedUniFFICallbackError {}

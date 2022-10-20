@@ -526,10 +526,13 @@ struct PairPosFormat2 : public OT::Layout::GPOS_impl::PairPosFormat2_4<SmallType
     }, hb_second)
     ;
 
+    auto new_coverage = + klass_map | hb_map_retains_sorting (hb_first);
     if (!Coverage::make_coverage (split_context.c,
-                                  + klass_map | hb_map_retains_sorting (hb_first),
+                                  + new_coverage,
                                   coverage.index,
-                                  coverage.vertex->table_size ()))
+                                  // existing ranges my not be kept, worst case size is a format 1
+                                  // coverage table.
+                                  4 + new_coverage.len() * 2))
       return false;
 
     return ClassDef::make_class_def (split_context.c,

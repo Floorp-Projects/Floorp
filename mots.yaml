@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-10-14T14:38:51.324618'
+updated_at: '2022-10-20T08:50:11.278470'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3196,7 +3196,8 @@ modules:
         includes:
           - browser/components/uitour/**/*
         meta:
-          components: Firefox::Tours
+          components:
+            - Firefox::Tours
         owners:
           - *ed
         peers:
@@ -3632,5 +3633,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 2e54cf47b7ed94bb234599c439480f9cb6248c9d
-  export: ae3fe1e936c4449470e7dc5736b9105a9a185256
+  config: 65134881bbb4e002a4d94efe5c79895135064c96
+  export: 77b9f5b3d03785ccedee2d81c1808d6b30fb064c

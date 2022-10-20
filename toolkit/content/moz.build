@@ -215,6 +215,9 @@ with Files("aboutNetError*"):
 with Files("aboutNetworking*"):
     BUG_COMPONENT = ("Core", "Networking")
 
+with Files("aboutLogging*"):
+    BUG_COMPONENT = ("Core", "XPCOM")
+
 with Files("aboutProfile*"):
     BUG_COMPONENT = ("Toolkit", "Startup and Profile System")
 

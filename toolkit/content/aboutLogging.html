@@ -1,0 +1,48 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'">
+        <meta name="color-scheme" content="light dark">
+        <title data-l10n-id="about-logging-title"></title>
+        <link rel="stylesheet" href="chrome://global/skin/aboutNetworking.css">
+        <script src="chrome://global/content/aboutLogging.js"></script>
+        <link rel="localization"  href="toolkit/about/aboutLogging.ftl">
+    </head>
+    <body id="body">
+        <div class="main-content">
+          <div id="logging">
+            <div>
+              <button id="start-logging-button" data-l10n-id="about-logging-start-logging"></button>
+              <button id="stop-logging-button" data-l10n-id="about-logging-stop-logging"></button>
+            </div>
+            <br>
+            <br>
+            <div>
+              <label data-l10n-id="about-logging-current-log-file"></label>
+              <div id="current-log-file"></div><br>
+              <input type="text" name="log-file" id="log-file">
+              <button id="set-log-file-button" data-l10n-id="about-logging-set-log-file"></button>
+            </div>
+            <div>
+              <label data-l10n-id="about-logging-current-log-modules"></label>
+              <div id="current-log-modules"></div><br>
+              <input type="text" name="log-modules" id="log-modules" value="timestamp,sync,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5">
+              <button id="set-log-modules-button" data-l10n-id="about-logging-set-log-modules"></button>
+            </div>
+            <br>
+            <br>
+
+            <p id="log-tutorial" data-l10n-id="about-logging-log-tutorial">
+              <a data-l10n-name="logging" href="https://firefox-source-docs.mozilla.org/networking/http/logging.html"></a>
+            </p>
+          </div>
+        </div>
+    </body>
+</html>

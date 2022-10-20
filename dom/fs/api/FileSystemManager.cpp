@@ -73,11 +73,19 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(FileSystemManager);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystemManager);
 NS_IMPL_CYCLE_COLLECTION(FileSystemManager, mGlobal, mStorageManager);
 
-void FileSystemManager::Shutdown() { mBackgroundRequestHandler->Shutdown(); }
+void FileSystemManager::Shutdown() {
+  mShutdown.Flip();
+
+  mBackgroundRequestHandler->Shutdown();
+
+  mCreateFileSystemManagerChildPromiseRequestHolder.DisconnectIfExists();
+}
 
 void FileSystemManager::BeginRequest(
     std::function<void(const RefPtr<FileSystemManagerChild>&)>&& aSuccess,
     std::function<void(nsresult)>&& aFailure) {
+  MOZ_ASSERT(!mShutdown);
+
   if (mBackgroundRequestHandler->FileSystemManagerChildStrongRef()) {
     aSuccess(mBackgroundRequestHandler->FileSystemManagerChildStrongRef());
     return;
@@ -89,30 +97,37 @@ void FileSystemManager::BeginRequest(
                  [&aFailure](nsresult rv) { aFailure(rv); });
 
   mBackgroundRequestHandler->CreateFileSystemManagerChild(principalInfo)
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [self = RefPtr<FileSystemManager>(this),
-              success = std::move(aSuccess), failure = std::move(aFailure)](
-                 const BoolPromise::ResolveOrRejectValue& aValue) {
-               if (aValue.IsResolve()) {
-                 success(self->mBackgroundRequestHandler
-                             ->FileSystemManagerChildStrongRef());
-               } else {
-                 failure(aValue.RejectValue());
-               }
-             });
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr<FileSystemManager>(this),
+           success = std::move(aSuccess), failure = std::move(aFailure)](
+              const BoolPromise::ResolveOrRejectValue& aValue) {
+            self->mCreateFileSystemManagerChildPromiseRequestHolder.Complete();
+
+            if (aValue.IsResolve()) {
+              success(self->mBackgroundRequestHandler
+                          ->FileSystemManagerChildStrongRef());
+            } else {
+              failure(aValue.RejectValue());
+            }
+          })
+      ->Track(mCreateFileSystemManagerChildPromiseRequestHolder);
 }
 
-already_AddRefed<Promise> FileSystemManager::GetDirectory(ErrorResult& aRv) {
+already_AddRefed<Promise> FileSystemManager::GetDirectory(ErrorResult& aError) {
   MOZ_ASSERT(mGlobal);
 
-  RefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
+  RefPtr<Promise> promise = Promise::Create(mGlobal, aError);
+  if (NS_WARN_IF(aError.Failed())) {
     return nullptr;
   }
 
   MOZ_ASSERT(promise);
 
-  mRequestHandler->GetRootHandle(this, promise);
+  mRequestHandler->GetRootHandle(this, promise, aError);
+  if (NS_WARN_IF(aError.Failed())) {
+    return nullptr;
+  }
 
   return promise.forget();
 }

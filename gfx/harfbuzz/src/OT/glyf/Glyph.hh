@@ -288,11 +288,6 @@ struct Glyph
 						    deltas, shift_points_hori, use_my_metrics, phantom_only, depth + 1)))
 	  return false;
 
-	/* Copy phantom points from component if USE_MY_METRICS flag set */
-	if (use_my_metrics && item.is_use_my_metrics ())
-	  for (unsigned int i = 0; i < PHANTOM_COUNT; i++)
-	    phantoms[i] = comp_points[comp_points.length - PHANTOM_COUNT + i];
-
 	/* Apply component transformation & translation */
 	item.transform_points (comp_points);
 
@@ -312,6 +307,11 @@ struct Glyph
 	    comp_points.translate (delta);
 	  }
 	}
+
+	/* Copy phantom points from component if USE_MY_METRICS flag set */
+	if (use_my_metrics && item.is_use_my_metrics ())
+	  for (unsigned int i = 0; i < PHANTOM_COUNT; i++)
+	    phantoms[i] = comp_points[comp_points.length - PHANTOM_COUNT + i];
 
 	all_points.extend (comp_points.sub_array (0, comp_points.length - PHANTOM_COUNT));
 

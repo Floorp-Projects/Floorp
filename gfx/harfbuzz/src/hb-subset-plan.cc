@@ -25,6 +25,7 @@
  */
 
 #include "hb-subset-plan.hh"
+#include "hb-subset-accelerator.hh"
 #include "hb-map.hh"
 #include "hb-set.hh"
 
@@ -456,41 +457,73 @@ _populate_unicodes_to_retain (const hb_set_t *unicodes,
                               hb_subset_plan_t *plan)
 {
   OT::cmap::accelerator_t cmap (plan->source);
-
   unsigned size_threshold = plan->source->get_num_glyphs ();
   if (glyphs->is_empty () && unicodes->get_population () < size_threshold)
   {
+
+    const hb_map_t* unicode_to_gid = nullptr;
+    if (plan->accelerator)
+      unicode_to_gid = &plan->accelerator->unicode_to_gid;
+
     // This is approach to collection is faster, but can only be used  if glyphs
     // are not being explicitly added to the subset and the input unicodes set is
     // not excessively large (eg. an inverted set).
     plan->unicode_to_new_gid_list.alloc (unicodes->get_population ());
-    for (hb_codepoint_t cp : *unicodes)
-    {
-      hb_codepoint_t gid;
-      if (!cmap.get_nominal_glyph (cp, &gid))
+    if (!unicode_to_gid) {
+      for (hb_codepoint_t cp : *unicodes)
       {
-        DEBUG_MSG(SUBSET, nullptr, "Drop U+%04X; no gid", cp);
-        continue;
-      }
+        hb_codepoint_t gid;
+        if (!cmap.get_nominal_glyph (cp, &gid))
+        {
+          DEBUG_MSG(SUBSET, nullptr, "Drop U+%04X; no gid", cp);
+          continue;
+        }
 
-      plan->codepoint_to_glyph->set (cp, gid);
-      plan->unicode_to_new_gid_list.push (hb_pair (cp, gid));
+        plan->codepoint_to_glyph->set (cp, gid);
+        plan->unicode_to_new_gid_list.push (hb_pair (cp, gid));
+      }
+    } else {
+      // Use in memory unicode to gid map it's faster then looking up from
+      // the map. This code is mostly duplicated from above to avoid doing
+      // conditionals on the presence of the unicode_to_gid map each
+      // iteration.
+      for (hb_codepoint_t cp : *unicodes)
+      {
+        hb_codepoint_t gid = unicode_to_gid->get (cp);
+        if (gid == HB_MAP_VALUE_INVALID)
+        {
+          DEBUG_MSG(SUBSET, nullptr, "Drop U+%04X; no gid", cp);
+          continue;
+        }
+
+        plan->codepoint_to_glyph->set (cp, gid);
+        plan->unicode_to_new_gid_list.push (hb_pair (cp, gid));
+      }
     }
   }
   else
   {
     // This approach is slower, but can handle adding in glyphs to the subset and will match
     // them with cmap entries.
-    hb_map_t unicode_glyphid_map;
-    hb_set_t cmap_unicodes;
-    cmap.collect_mapping (&cmap_unicodes, &unicode_glyphid_map);
-    plan->unicode_to_new_gid_list.alloc (hb_min(unicodes->get_population ()
-                                                + glyphs->get_population (),
-                                                cmap_unicodes.get_population ()));
 
-    for (hb_codepoint_t cp : cmap_unicodes)
+    hb_map_t unicode_glyphid_map_storage;
+    hb_set_t cmap_unicodes_storage;
+    const hb_map_t* unicode_glyphid_map = &unicode_glyphid_map_storage;
+    const hb_set_t* cmap_unicodes = &cmap_unicodes_storage;
+
+    if (!plan->accelerator) {
+      cmap.collect_mapping (&cmap_unicodes_storage, &unicode_glyphid_map_storage);
+      plan->unicode_to_new_gid_list.alloc (hb_min(unicodes->get_population ()
+                                                  + glyphs->get_population (),
+                                                  cmap_unicodes->get_population ()));
+    } else {
+      unicode_glyphid_map = &plan->accelerator->unicode_to_gid;
+      cmap_unicodes = &plan->accelerator->unicodes;
+    }
+
+    for (hb_codepoint_t cp : *cmap_unicodes)
     {
-      hb_codepoint_t gid = unicode_glyphid_map[cp];
+      hb_codepoint_t gid = (*unicode_glyphid_map)[cp];
       if (!unicodes->has (cp) && !glyphs->has (gid))
         continue;
 
@@ -729,7 +762,7 @@ _normalize_axes_location (hb_face_t *face, hb_subset_plan_t *plan)
     }
     if (has_avar)
       seg_maps = &StructAfter<OT::SegmentMaps> (*seg_maps);
-    
+
     old_axis_idx++;
   }
   plan->all_axes_pinned = !axis_not_pinned;
@@ -814,6 +847,13 @@ hb_subset_plan_create_or_fail (hb_face_t	 *face,
 
   plan->check_success (plan->vmtx_map = hb_hashmap_create<unsigned, hb_pair_t<unsigned, int>> ());
   plan->check_success (plan->hmtx_map = hb_hashmap_create<unsigned, hb_pair_t<unsigned, int>> ());
+
+  void* accel = hb_face_get_user_data(face, hb_subset_accelerator_t::user_data_key());
+
+  plan->attach_accelerator_data = input->attach_accelerator_data;
+  if (accel)
+    plan->accelerator = (hb_subset_accelerator_t*) accel;
+
 
   if (unlikely (plan->in_error ())) {
     hb_subset_plan_destroy (plan);

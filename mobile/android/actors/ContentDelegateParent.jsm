@@ -5,8 +5,8 @@
 
 var EXPORTED_SYMBOLS = ["ContentDelegateParent"];
 
-const { GeckoViewUtils } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewUtils.jsm"
+const { GeckoViewUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewUtils.sys.mjs"
 );
 
 const { GeckoViewActorParent } = ChromeUtils.import(

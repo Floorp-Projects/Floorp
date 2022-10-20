@@ -455,14 +455,14 @@ void HttpChannelChild::OnStartRequest(
   if (!mAsyncOpenTime.IsNull() &&
       !aArgs.timing().transactionPending().IsNull()) {
     Telemetry::AccumulateTimeDelta(
-        Telemetry::NETWORK_ASYNC_OPEN_CHILD_TO_TRANSACTION_PENDING_MS,
+        Telemetry::NETWORK_ASYNC_OPEN_CHILD_TO_TRANSACTION_PENDING_EXP_MS,
         ClassOfService::ToString(mClassOfService), mAsyncOpenTime,
         aArgs.timing().transactionPending());
   }
 
   if (!aArgs.timing().responseStart().IsNull()) {
     Telemetry::AccumulateTimeDelta(
-        Telemetry::NETWORK_RESPONSE_START_PARENT_TO_CONTENT_MS,
+        Telemetry::NETWORK_RESPONSE_START_PARENT_TO_CONTENT_EXP_MS,
         ClassOfService::ToString(mClassOfService),
         aArgs.timing().responseStart(), TimeStamp::Now());
   }

@@ -111,10 +111,10 @@ function startTest()
   // any padding / border / margin on the menupopup.
   let height = menuitemHeight * 4 + bpmTop + bpmBottom;
 
-  popup.height = height;
-  document.getElementById("menulist-popup2").height = height;
-  document.getElementById("menulist-popup3").height = height;
-  document.getElementById("menulist-popup4").height = height;
+  popup.style.height = height + "px";
+  document.getElementById("menulist-popup2").style.height = height + "px";
+  document.getElementById("menulist-popup3").style.height = height + "px";
+  document.getElementById("menulist-popup4").style.height = height + "px";
 
   runTest();
 }

@@ -388,6 +388,9 @@ dictionary DistributionData {
 
     // The accumulated sum of all the samples in the distribution.
     i64 sum;
+
+    // The total number of entries in the distribution.
+    i64 count;
 };
 
 // Identifier for a running timer.

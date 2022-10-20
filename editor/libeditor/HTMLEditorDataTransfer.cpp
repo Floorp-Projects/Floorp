@@ -20,13 +20,14 @@
 #include "WSRunObject.h"
 
 #include "mozilla/dom/Comment.h"
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileReader.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/StaticRange.h"
@@ -36,6 +37,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Result.h"
@@ -54,7 +56,7 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
-#include "nsNameSpaceManager.h"
+#include "nsIMIMEService.h"
 #include "nsINode.h"
 #include "nsIParserUtils.h"
 #include "nsIPrincipal.h"
@@ -65,6 +67,7 @@
 #include "nsIVariant.h"
 #include "nsLinebreakConverter.h"
 #include "nsLiteralString.h"
+#include "nsNameSpaceManager.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsRange.h"
@@ -1664,11 +1667,12 @@ HTMLEditor::BlobReader::BlobReader(BlobImpl* aBlob, HTMLEditor* aHTMLEditor,
   MOZ_ASSERT(mBlob);
   MOZ_ASSERT(mHTMLEditor);
   MOZ_ASSERT(mHTMLEditor->IsEditActionDataAvailable());
-  MOZ_ASSERT(aPointToInsert.IsSet());
   MOZ_ASSERT(mDataTransfer);
 
   // Take only offset here since it's our traditional behavior.
-  AutoEditorDOMPointChildInvalidator storeOnlyWithOffset(mPointToInsert);
+  if (mPointToInsert.IsSet()) {
+    AutoEditorDOMPointChildInvalidator storeOnlyWithOffset(mPointToInsert);
+  }
 }
 
 nsresult HTMLEditor::BlobReader::OnResult(const nsACString& aResult) {
@@ -1796,16 +1800,14 @@ NS_IMETHODIMP SlurpBlobEventListener::HandleEvent(Event* aEvent) {
 }
 
 // static
-nsresult HTMLEditor::SlurpBlob(Blob* aBlob, nsPIDOMWindowOuter* aWindow,
+nsresult HTMLEditor::SlurpBlob(Blob* aBlob, nsIGlobalObject* aGlobal,
                                BlobReader* aBlobReader) {
   MOZ_ASSERT(aBlob);
-  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aBlobReader);
 
-  nsCOMPtr<nsPIDOMWindowInner> inner = aWindow->GetCurrentInnerWindow();
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(inner);
   RefPtr<WeakWorkerRef> workerRef;
-  RefPtr<FileReader> reader = new FileReader(global, workerRef);
+  RefPtr<FileReader> reader = new FileReader(aGlobal, workerRef);
 
   RefPtr<SlurpBlobEventListener> eventListener =
       new SlurpBlobEventListener(aBlobReader);
@@ -1835,74 +1837,35 @@ nsresult HTMLEditor::InsertObject(
     DeleteSelectedContent aDeleteSelectedContent) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (nsCOMPtr<BlobImpl> blob = do_QueryInterface(aObject)) {
-    RefPtr<BlobReader> br = new BlobReader(
-        blob, this, aSafeToInsertData, aPointToInsert, aDeleteSelectedContent);
-    // XXX This is not guaranteed.
-    MOZ_ASSERT(aPointToInsert.IsSet());
-
-    RefPtr<Blob> domBlob =
-        Blob::Create(aPointToInsert.GetContainer()->GetOwnerGlobal(), blob);
-    if (!domBlob) {
-      NS_WARNING("Blob::Create() failed");
-      return NS_ERROR_FAILURE;
-    }
-
-    nsresult rv = SlurpBlob(
-        domBlob, aPointToInsert.GetContainer()->OwnerDoc()->GetWindow(), br);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::::SlurpBlob() failed");
-    return rv;
-  }
-
+  // Check to see if we the file is actually an image.
   nsAutoCString type(aType);
-
-  // Check to see if we can insert an image file
-  bool insertAsImage = false;
-  nsCOMPtr<nsIFile> fileObj;
   if (type.EqualsLiteral(kFileMime)) {
-    fileObj = do_QueryInterface(aObject);
-    if (fileObj) {
-      // Accept any image type fed to us
-      if (nsContentUtils::IsFileImage(fileObj, type)) {
-        insertAsImage = true;
-      } else {
-        // Reset type.
-        type.AssignLiteral(kFileMime);
+    if (nsCOMPtr<nsIFile> file = do_QueryInterface(aObject)) {
+      nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1");
+      if (NS_WARN_IF(!mime)) {
+        return NS_ERROR_FAILURE;
       }
-    }
-  }
 
-  if (type.EqualsLiteral(kJPEGImageMime) || type.EqualsLiteral(kJPGImageMime) ||
-      type.EqualsLiteral(kPNGImageMime) || type.EqualsLiteral(kGIFImageMime) ||
-      insertAsImage) {
-    nsCString imageData;
-    if (insertAsImage) {
-      nsresult rv = nsContentUtils::SlurpFileToString(fileObj, imageData);
+      nsresult rv = mime->GetTypeFromFile(file, type);
       if (NS_FAILED(rv)) {
-        NS_WARNING("nsContentUtils::SlurpFileToString() failed");
+        NS_WARNING("nsIMIMEService::GetTypeFromFile() failed");
         return rv;
       }
-    } else {
-      nsCOMPtr<nsIInputStream> imageStream;
-      if (RefPtr<Blob> blob = do_QueryObject(aObject)) {
-        RefPtr<File> file = blob->ToFile();
-        if (!file) {
-          NS_WARNING("No mozilla::dom::File object");
-          return NS_ERROR_FAILURE;
-        }
-        ErrorResult error;
-        file->CreateInputStream(getter_AddRefs(imageStream), error);
-        if (error.Failed()) {
-          NS_WARNING("File::CreateInputStream() failed");
-          return error.StealNSResult();
-        }
-      } else {
-        imageStream = do_QueryInterface(aObject);
-        if (NS_WARN_IF(!imageStream)) {
-          return NS_ERROR_FAILURE;
-        }
-      }
+    }
+  }
 
+  nsCOMPtr<nsISupports> object = aObject;
+  if (type.EqualsLiteral(kJPEGImageMime) || type.EqualsLiteral(kJPGImageMime) ||
+      type.EqualsLiteral(kPNGImageMime) || type.EqualsLiteral(kGIFImageMime)) {
+    if (nsCOMPtr<nsIFile> file = do_QueryInterface(object)) {
+      object = new FileBlobImpl(file);
+      // Fallthrough to BlobImpl code below.
+    } else if (RefPtr<Blob> blob = do_QueryObject(object)) {
+      object = blob->Impl();
+      // Fallthrough.
+    } else if (nsCOMPtr<nsIInputStream> imageStream =
+                   do_QueryInterface(object)) {
+      nsCString imageData;
       nsresult rv = NS_ConsumeStream(imageStream, UINT32_MAX, imageData);
       if (NS_FAILED(rv)) {
         NS_WARNING("NS_ConsumeStream() failed");
@@ -1914,28 +1877,57 @@ nsresult HTMLEditor::InsertObject(
         NS_WARNING("nsIInputStream::Close() failed");
         return rv;
       }
-    }
 
-    nsAutoString stuffToPaste;
-    nsresult rv = ImgFromData(type, imageData, stuffToPaste);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("ImgFromData() failed");
-      return rv;
-    }
+      nsAutoString stuffToPaste;
+      rv = ImgFromData(type, imageData, stuffToPaste);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("ImgFromData() failed");
+        return rv;
+      }
 
-    AutoPlaceholderBatch treatAsOneTransaction(
-        *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
-    rv = InsertHTMLWithContextAsSubAction(
-        stuffToPaste, u""_ns, u""_ns, NS_LITERAL_STRING_FROM_CSTRING(kFileMime),
-        aSafeToInsertData, aPointToInsert, aDeleteSelectedContent,
-        InlineStylesAtInsertionPoint::Preserve);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "HTMLEditor::InsertHTMLWithContextAsSubAction("
-        "InlineStylesAtInsertionPoint::Preserve) failed, but ignored");
+      AutoPlaceholderBatch treatAsOneTransaction(
+          *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
+      rv = InsertHTMLWithContextAsSubAction(
+          stuffToPaste, u""_ns, u""_ns,
+          NS_LITERAL_STRING_FROM_CSTRING(kFileMime), aSafeToInsertData,
+          aPointToInsert, aDeleteSelectedContent,
+          InlineStylesAtInsertionPoint::Preserve);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "HTMLEditor::InsertHTMLWithContextAsSubAction("
+          "InlineStylesAtInsertionPoint::Preserve) failed, but ignored");
+      return NS_OK;
+    } else {
+      NS_WARNING("HTMLEditor::InsertObject: Unexpected type for image mime");
+      return NS_OK;
+    }
   }
 
-  return NS_OK;
+  // We always try to insert BlobImpl even without a known image mime.
+  nsCOMPtr<BlobImpl> blob = do_QueryInterface(object);
+  if (!blob) {
+    return NS_OK;
+  }
+
+  RefPtr<BlobReader> br = new BlobReader(
+      blob, this, aSafeToInsertData, aPointToInsert, aDeleteSelectedContent);
+
+  nsCOMPtr<nsPIDOMWindowInner> inner = GetInnerWindow();
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(inner);
+  if (!global) {
+    NS_WARNING("Could not get global");
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<Blob> domBlob = Blob::Create(global, blob);
+  if (!domBlob) {
+    NS_WARNING("Blob::Create() failed");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = SlurpBlob(domBlob, global, br);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::::SlurpBlob() failed");
+  return rv;
 }
 
 static bool GetString(nsISupports* aData, nsAString& aText) {

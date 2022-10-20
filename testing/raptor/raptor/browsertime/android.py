@@ -134,6 +134,9 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                         "--firefox.android.intentArgument=--esa",
                         "--firefox.android.intentArgument=sourceTags",
                         "--firefox.android.intentArgument=automation",
+                        "--firefox.android.intentArgument=--ez",
+                        "--firefox.android.intentArgument=performancetest",
+                        "--firefox.android.intentArgument=true",
                     ]
                 )
 

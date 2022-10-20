@@ -1820,12 +1820,14 @@ var CustomizableUIInternal = {
 
       let button = aDocument.createXULElement("toolbarbutton");
       button.classList.add("toolbarbutton-1");
+      button.setAttribute("delegatesanchor", "true");
 
       let viewbutton = null;
       if (aWidget.type == "button-and-view") {
         button.setAttribute("id", aWidget.id + "-button");
         let dropmarker = aDocument.createXULElement("toolbarbutton");
         dropmarker.setAttribute("id", aWidget.id + "-dropmarker");
+        dropmarker.setAttribute("delegatesanchor", "true");
         dropmarker.classList.add(
           "toolbarbutton-1",
           "toolbarbutton-combined-buttons-dropmarker"

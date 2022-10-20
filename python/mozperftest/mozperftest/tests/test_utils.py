@@ -24,6 +24,7 @@ from mozperftest.utils import (
     load_class,
     checkout_python_script,
     get_output_dir,
+    create_path,
 )
 from mozperftest.tests.support import temp_file, requests_content, EXAMPLE_TESTS_DIR
 
@@ -214,6 +215,18 @@ def test_get_output_dir():
         assert output_dir.exists()
         assert output_dir.is_dir()
         assert "artifacts" == output_dir.parts[-1]
+
+
+def test_create_path():
+    path = Path("path/doesnt/exist").resolve()
+    if path.exists():
+        shutil.rmtree(path.parent.parent)
+    try:
+        path = create_path(path)
+
+        assert path.exists()
+    finally:
+        shutil.rmtree(path.parent.parent)
 
 
 if __name__ == "__main__":
