@@ -43,7 +43,9 @@ var PocketCustomizableWidget = {
         let frame = doc.createXULElement("browser");
 
         frame.setAttribute("type", "content");
-        frame.setAttribute("remote", true);
+        frame.setAttribute("remote", "true");
+        frame.setAttribute("remoteType", "privilegedabout");
+        frame.setAttribute("maychangeremoteness", "true");
         frame.setAttribute("autocompletepopup", "PopupAutoComplete");
         panelNode.appendChild(frame);
 
