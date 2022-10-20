@@ -230,6 +230,7 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun blockCookiesStorageAccessTest() {
         // With Standard TrackingProtection settings
@@ -246,6 +247,7 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun allowCookiesStorageAccessTest() {
         // With Standard TrackingProtection settings
