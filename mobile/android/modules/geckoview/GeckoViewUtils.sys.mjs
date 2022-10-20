@@ -1,14 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+
 const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
@@ -19,8 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AndroidLog: "resource://gre/modules/AndroidLog.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
 });
-
-var EXPORTED_SYMBOLS = ["GeckoViewUtils"];
 
 /**
  * A formatter that does not prepend time/name/level information to messages,
@@ -66,7 +60,7 @@ class AndroidAppender extends Log.Appender {
   }
 }
 
-var GeckoViewUtils = {
+export var GeckoViewUtils = {
   /**
    * Define a lazy getter that loads an object from external code, and
    * optionally handles observer and/or message manager notifications for the

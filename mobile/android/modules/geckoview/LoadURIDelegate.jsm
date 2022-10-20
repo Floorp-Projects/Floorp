@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["LoadURIDelegate"];
 
-const { GeckoViewUtils } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewUtils.jsm"
+const { GeckoViewUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewUtils.sys.mjs"
 );
 
 const { debug, warn } = GeckoViewUtils.initLogging("LoadURIDelegate");
