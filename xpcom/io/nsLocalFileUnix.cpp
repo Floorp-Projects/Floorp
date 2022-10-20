@@ -1492,14 +1492,11 @@ nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
 
   checkedResult = std::forward<StatInfoFunc>(aStatInfoFunc)(fs_buf);
   if (!checkedResult.isValid()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_CANNOT_CONVERT_DATA;
   }
 
-  *aResult = checkedResult.value();
-
-#  ifdef DEBUG_DISK_SPACE
-  printf("DiskInfo: %lu bytes\n", *aResult);
-#  endif
+  // If we return an error, *aValue will not be modified.
+  int64_t tentativeResult = checkedResult.value();
 
 #  if defined(USE_LINUX_QUOTACTL)
 
@@ -1523,14 +1520,20 @@ nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
       && dq.dqb_bhardlimit) {
     checkedResult = std::forward<QuotaInfoFunc>(aQuotaInfoFunc)(dq);
     if (!checkedResult.isValid()) {
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_CANNOT_CONVERT_DATA;
     }
 
-    if (checkedResult.value() < *aResult) {
-      *aResult = checkedResult.value();
+    if (checkedResult.value() < tentativeResult) {
+      tentativeResult = checkedResult.value();
     }
   }
 #  endif
+
+#  ifdef DEBUG_DISK_SPACE
+  printf("DiskInfo: %lu bytes\n", tentativeResult);
+#  endif
+
+  *aResult = tentativeResult;
 
   return NS_OK;
 
