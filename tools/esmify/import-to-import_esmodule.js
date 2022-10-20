@@ -10,7 +10,6 @@
 const _path = require("path");
 const { isESMified } = require(_path.resolve(__dirname, "./is-esmified.js"));
 const {
-  calleeToString,
   jsmExtPattern,
   esmifyExtension,
   isIdentifier,
@@ -18,6 +17,9 @@ const {
   warnForPath,
   getPrevStatement,
   getNextStatement,
+  isMemberExpressionWithIdentifiers,
+  rewriteMemberExpressionWithIdentifiers,
+  createMemberExpressionWithIdentifiers,
 } = require(_path.resolve(__dirname, "./utils.js"));
 const {
   isImportESModuleCall,
@@ -54,30 +56,46 @@ function isESMifiedAndTarget(resourceURI) {
   return true;
 }
 
-function isImportCall(node) {
-  const s = calleeToString(node.callee);
-  return ["Cu.import", "ChromeUtils.import"].includes(s);
+const importCalls = [
+  {
+    from: ["Cu", "import"],
+    to: ["ChromeUtils", "importESModule"],
+  },
+  {
+    from: ["ChromeUtils", "import"],
+    to: ["ChromeUtils", "importESModule"],
+  },
+];
+
+const singleLazyGetterCalls = [
+  {
+    from: ["XPCOMUtils", "defineLazyModuleGetter"],
+    to: ["ChromeUtils", "defineESModuleGetters"],
+  },
+  {
+    from: ["ChromeUtils", "defineModuleGetter"],
+    to: ["ChromeUtils", "defineESModuleGetters"],
+  },
+];
+
+const multiLazyGettersCalls = [
+  {
+    from: ["XPCOMUtils", "defineLazyModuleGetters"],
+    to: ["ChromeUtils", "defineESModuleGetters"],
+  },
+];
+
+function isMemberExpressionMatchingPatterns(node, patterns) {
+  for (const item of patterns) {
+    if (isMemberExpressionWithIdentifiers(node, item.from)) {
+      return item;
+    }
+  }
+
+  return null;
 }
 
-function isLazyGetterCall(node) {
-  const s = calleeToString(node.callee);
-  return [
-    "XPCOMUtils.defineLazyModuleGetter",
-    "ChromeUtils.defineModuleGetter",
-  ].includes(s);
-}
-
-function isLazyGettersCall(node) {
-  const s = calleeToString(node.callee);
-  return ["XPCOMUtils.defineLazyModuleGetters"].includes(s);
-}
-
-function isESModuleGettersCall(node) {
-  const s = calleeToString(node.callee);
-  return ["ChromeUtils.defineESModuleGetters"].includes(s);
-}
-
-function replaceImportCall(inputFile, jscodeshift, path) {
+function replaceImportCall(inputFile, jscodeshift, path, rewriteItem) {
   if (path.node.arguments.length !== 1) {
     warnForPath(inputFile, path, `import call should have only one argument`);
     return;
@@ -108,15 +126,14 @@ function replaceImportCall(inputFile, jscodeshift, path) {
       false
     )
   ) {
-    path.node.callee.object.name = "ChromeUtils";
-    path.node.callee.property.name = "importESModule";
+    rewriteMemberExpressionWithIdentifiers(path.node.callee, rewriteItem.to);
     resourceURINode.value = esmifyExtension(resourceURI);
   }
 }
 
-// Find `ChromeUtils.defineESModuleGetters` statement adjacent to `path` which
-// uses the same target object.
-function findDefineESModuleGettersStmt(path) {
+// Find `ChromeUtils.defineESModuleGetters` or variant statement specified by
+// expectedIDs, adjacent to `path` which uses the same target object.
+function findDefineESModuleGettersStmt(path, expectedIDs) {
   // `path` must be top-level.
   if (path.parent.node.type !== "ExpressionStatement") {
     return null;
@@ -133,7 +150,7 @@ function findDefineESModuleGettersStmt(path) {
     prev &&
     prev.type === "ExpressionStatement" &&
     prev.expression.type === "CallExpression" &&
-    isESModuleGettersCall(prev.expression)
+    isMemberExpressionWithIdentifiers(prev.expression.callee, expectedIDs)
   ) {
     callStmt = prev;
   } else {
@@ -142,7 +159,7 @@ function findDefineESModuleGettersStmt(path) {
       next &&
       next.type === "ExpressionStatement" &&
       next.expression.type === "CallExpression" &&
-      isESModuleGettersCall(next.expression)
+      isMemberExpressionWithIdentifiers(next.expression.callee, expectedIDs)
     ) {
       callStmt = next;
     } else {
@@ -211,7 +228,7 @@ function moveComments(nodeTo, nodeFrom) {
   nodeFrom.comments = [];
 }
 
-function replaceLazyGetterCall(inputFile, jscodeshift, path) {
+function replaceLazyGetterCall(inputFile, jscodeshift, path, rewriteItem) {
   if (path.node.arguments.length !== 3) {
     warnForPath(inputFile, path, `lazy getter call should have 3 arguments`);
     return;
@@ -246,7 +263,7 @@ function replaceLazyGetterCall(inputFile, jscodeshift, path) {
     resourceURINode
   );
 
-  const callStmt = findDefineESModuleGettersStmt(path);
+  const callStmt = findDefineESModuleGettersStmt(path, rewriteItem.to);
   if (callStmt) {
     // Move a property to existing ChromeUtils.defineESModuleGetters call.
 
@@ -258,8 +275,7 @@ function replaceLazyGetterCall(inputFile, jscodeshift, path) {
   } else {
     // Convert this call into ChromeUtils.defineESModuleGetters.
 
-    path.node.callee.object.name = "ChromeUtils";
-    path.node.callee.property.name = "defineESModuleGetters";
+    rewriteMemberExpressionWithIdentifiers(path.node.callee, rewriteItem.to);
     path.node.arguments = [
       path.node.arguments[0],
       jscodeshift.objectExpression([prop]),
@@ -267,7 +283,7 @@ function replaceLazyGetterCall(inputFile, jscodeshift, path) {
   }
 }
 
-function replaceLazyGettersCall(inputFile, jscodeshift, path) {
+function replaceLazyGettersCall(inputFile, jscodeshift, path, rewriteItem) {
   if (path.node.arguments.length !== 2) {
     warnForPath(inputFile, path, `lazy getters call should have 2 arguments`);
     return;
@@ -309,7 +325,7 @@ function replaceLazyGettersCall(inputFile, jscodeshift, path) {
     return;
   }
 
-  let callStmt = findDefineESModuleGettersStmt(path);
+  let callStmt = findDefineESModuleGettersStmt(path, rewriteItem.to);
   if (jsmProps.length === 0) {
     if (callStmt) {
       // Move all properties to existing ChromeUtils.defineESModuleGetters call.
@@ -326,8 +342,7 @@ function replaceLazyGettersCall(inputFile, jscodeshift, path) {
     } else {
       // Convert this call into ChromeUtils.defineESModuleGetters.
 
-      path.node.callee.object.name = "ChromeUtils";
-      path.node.callee.property.name = "defineESModuleGetters";
+      rewriteMemberExpressionWithIdentifiers(path.node.callee, rewriteItem.to);
       for (const prop of esmProps) {
         const resourceURINode = prop.value;
         resourceURINode.value = esmifyExtension(resourceURINode.value);
@@ -344,10 +359,7 @@ function replaceLazyGettersCall(inputFile, jscodeshift, path) {
     if (!callStmt) {
       callStmt = jscodeshift.expressionStatement(
         jscodeshift.callExpression(
-          jscodeshift.memberExpression(
-            jscodeshift.identifier("ChromeUtils"),
-            jscodeshift.identifier("defineESModuleGetters")
-          ),
+          createMemberExpressionWithIdentifiers(jscodeshift, rewriteItem.to),
           [path.node.arguments[0], jscodeshift.objectExpression([])]
         )
       );
@@ -423,14 +435,29 @@ function tryReplaceActorDefinition(inputFile, path, name) {
 
 function doTranslate(inputFile, jscodeshift, root) {
   root.find(jscodeshift.CallExpression).forEach(path => {
-    if (isImportCall(path.node)) {
-      replaceImportCall(inputFile, jscodeshift, path);
-    } else if (isImportESModuleCall(path.node)) {
+    if (isImportESModuleCall(path.node)) {
       replaceImportESModuleCall(inputFile, jscodeshift, path, false);
-    } else if (isLazyGetterCall(path.node)) {
-      replaceLazyGetterCall(inputFile, jscodeshift, path);
-    } else if (isLazyGettersCall(path.node)) {
-      replaceLazyGettersCall(inputFile, jscodeshift, path);
+      return;
+    }
+
+    const callee = path.node.callee;
+
+    let item;
+    item = isMemberExpressionMatchingPatterns(callee, importCalls);
+    if (item) {
+      replaceImportCall(inputFile, jscodeshift, path, item);
+      return;
+    }
+
+    item = isMemberExpressionMatchingPatterns(callee, singleLazyGetterCalls);
+    if (item) {
+      replaceLazyGetterCall(inputFile, jscodeshift, path, item);
+      return;
+    }
+
+    item = isMemberExpressionMatchingPatterns(callee, multiLazyGettersCalls);
+    if (item) {
+      replaceLazyGettersCall(inputFile, jscodeshift, path, item);
     }
   });
 

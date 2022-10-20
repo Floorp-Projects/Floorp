@@ -71,16 +71,84 @@ function esmifyExtension(path) {
   return path.replace(jsmExtPattern, ".sys.mjs");
 }
 
-function calleeToString(node) {
-  if (node.type === "Identifier") {
-    return node.name;
+// Given possible member expression, return the list of Identifier nodes in
+// the source order.
+//
+// Returns an empty array if:
+//   * not a simple MemberExpression tree with Identifiers
+//   * there's computed property
+function memberExpressionsToIdentifiers(memberExpr) {
+  let ids = [];
+
+  function f(node) {
+    if (node.type !== "MemberExpression" || node.computed) {
+      return false;
+    }
+
+    if (node.object.type === "Identifier") {
+      ids.push(node.object);
+      ids.push(node.property);
+      return true;
+    }
+
+    if (!f(node.object)) {
+      return false;
+    }
+    ids.push(node.property);
+    return true;
   }
 
-  if (node.type === "MemberExpression" && !node.computed) {
-    return calleeToString(node.object) + "." + node.property.name;
+  if (!f(memberExpr)) {
+    return [];
   }
 
-  return "???";
+  return ids;
+}
+
+// Returns true if the node is a simple MemberExpression tree with Identifiers
+// matches expectedIDs.
+function isMemberExpressionWithIdentifiers(node, expectedIDs) {
+  const actualIDs = memberExpressionsToIdentifiers(node);
+  if (actualIDs.length !== expectedIDs.length) {
+    return false;
+  }
+
+  for (let i = 0; i < expectedIDs.length; i++) {
+    if (actualIDs[i].name !== expectedIDs[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// Rewrite the Identifiers of MemberExpression tree to toIDs.
+// `node` must be a simple MemberExpression tree with Identifiers, and
+// the length of Identifiers should match.
+function rewriteMemberExpressionWithIdentifiers(node, toIDs) {
+  const actualIDs = memberExpressionsToIdentifiers(node);
+  for (let i = 0; i < toIDs.length; i++) {
+    actualIDs[i].name = toIDs[i];
+  }
+}
+
+// Create a simple MemberExpression tree with given Identifiers.
+function createMemberExpressionWithIdentifiers(jscodeshift, ids) {
+  if (ids.length < 2) {
+    throw new Error("Unexpected length of ids for member expression");
+  }
+
+  if (ids.length > 2) {
+    return jscodeshift.memberExpression(
+      createMemberExpressionWithIdentifiers(jscodeshift, ids.slice(0, -1)),
+      jscodeshift.identifier(ids[ids.length - 1])
+    );
+  }
+
+  return jscodeshift.memberExpression(
+    jscodeshift.identifier(ids[0]),
+    jscodeshift.identifier(ids[1])
+  );
 }
 
 exports.warnForPath = warnForPath;
@@ -90,4 +158,6 @@ exports.isIdentifier = isIdentifier;
 exports.isString = isString;
 exports.jsmExtPattern = jsmExtPattern;
 exports.esmifyExtension = esmifyExtension;
-exports.calleeToString = calleeToString;
+exports.isMemberExpressionWithIdentifiers = isMemberExpressionWithIdentifiers;
+exports.rewriteMemberExpressionWithIdentifiers = rewriteMemberExpressionWithIdentifiers;
+exports.createMemberExpressionWithIdentifiers = createMemberExpressionWithIdentifiers;
