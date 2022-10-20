@@ -496,6 +496,8 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // the popup frame.
   bool ShouldFollowAnchor();
 
+  nsIFrame* GetAnchorFrame() const;
+
  public:
   /**
    * Return whether the popup direction should be RTL.
@@ -504,13 +506,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
    *
    * Return whether the popup direction should be RTL.
    */
-  bool IsDirectionRTL() const {
-    return mAnchorContent && mAnchorContent->GetPrimaryFrame()
-               ? mAnchorContent->GetPrimaryFrame()
-                         ->StyleVisibility()
-                         ->mDirection == mozilla::StyleDirection::Rtl
-               : StyleVisibility()->mDirection == mozilla::StyleDirection::Rtl;
-  }
+  bool IsDirectionRTL() const;
 
   bool ShouldFollowAnchor(nsRect& aRect);
 
