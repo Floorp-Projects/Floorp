@@ -61,9 +61,7 @@ endif
 ### Build it
 build::
 	+$(MOZ_MAKE) $(SCCACHE_STOP_ON_FAILURE)
-
 ifdef MOZ_AUTOMATION
-build::
 	+$(MOZ_MAKE) automation/build $(SCCACHE_STOP_ON_FAILURE)
 endif
 
