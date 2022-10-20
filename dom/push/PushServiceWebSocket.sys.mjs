@@ -1163,7 +1163,7 @@ export var PushServiceWebSocket = {
       return;
     }
 
-    // A whitelist of protocol handlers. Add to these if new messages are added
+    // An allowlist of protocol handlers. Add to these if new messages are added
     // in the protocol.
     let handlers = [
       "Hello",
@@ -1181,7 +1181,7 @@ export var PushServiceWebSocket = {
 
     if (!handlers.includes(handlerName)) {
       lazy.console.warn(
-        "wsOnMessageAvailable: No whitelisted handler",
+        "wsOnMessageAvailable: No allowlisted handler",
         handlerName,
         "for message",
         reply.messageType
@@ -1195,7 +1195,7 @@ export var PushServiceWebSocket = {
       lazy.console.warn(
         "wsOnMessageAvailable: Handler",
         handler,
-        "whitelisted but not implemented"
+        "allowlisted but not implemented"
       );
       return;
     }
