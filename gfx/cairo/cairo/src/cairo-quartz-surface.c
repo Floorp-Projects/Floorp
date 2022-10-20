@@ -1315,7 +1315,7 @@ _cairo_quartz_setup_state (cairo_quartz_drawing_state_t *state,
 
 	srcRect = CGRectMake (0, 0, extents.width, extents.height);
 
-	if (source->extend == CAIRO_EXTEND_NONE) {
+	if (source->extend == CAIRO_EXTEND_NONE || source->extend == CAIRO_EXTEND_PAD) {
 	    int x, y;
 	    if (op == CAIRO_OPERATOR_SOURCE &&
 		(pat_surf->content == CAIRO_CONTENT_ALPHA ||
