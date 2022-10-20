@@ -45,7 +45,8 @@ class nsHttpConnectionInfo final : public ARefBase {
                        const nsACString& npnToken, const nsACString& username,
                        nsProxyInfo* proxyInfo,
                        const OriginAttributes& originAttributes,
-                       bool endToEndSSL = false, bool aIsHttp3 = false);
+                       bool endToEndSSL = false, bool aIsHttp3 = false,
+                       bool aWebTransport = false);
 
   // this version must use TLS and you may supply separate
   // connection (aka routing) information than the authenticated
@@ -55,7 +56,7 @@ class nsHttpConnectionInfo final : public ARefBase {
                        nsProxyInfo* proxyInfo,
                        const OriginAttributes& originAttributes,
                        const nsACString& routedHost, int32_t routedPort,
-                       bool aIsHttp3);
+                       bool aIsHttp3, bool aWebTransport);
 
   static void SerializeHttpConnectionInfo(nsHttpConnectionInfo* aInfo,
                                           HttpConnectionInfoCloneArgs& aArgs);
@@ -84,6 +85,7 @@ class nsHttpConnectionInfo final : public ARefBase {
     BeConservative,
     AnonymousAllowClientCert,
     FallbackConnection,
+    WebTransport,
     End,
   };
   constexpr inline auto UnderlyingIndex(HashKeyIndex aIndex) const {
@@ -217,6 +219,9 @@ class nsHttpConnectionInfo final : public ARefBase {
   void SetIPv6Disabled(bool aNoIPv6);
   bool GetIPv6Disabled() const { return mIPv6Disabled; }
 
+  void SetWebTransport(bool aWebTransport);
+  bool GetWebTransport() const { return mWebTransport; }
+
   const nsCString& GetNPNToken() { return mNPNToken; }
   const nsCString& GetUsername() { return mUsername; }
 
@@ -262,7 +267,7 @@ class nsHttpConnectionInfo final : public ARefBase {
   void Init(const nsACString& host, int32_t port, const nsACString& npnToken,
             const nsACString& username, nsProxyInfo* proxyInfo,
             const OriginAttributes& originAttributes, bool e2eSSL,
-            bool aIsHttp3);
+            bool aIsHttp3, bool aWebTransport);
   void SetOriginServer(const nsACString& host, int32_t port);
   nsCString::char_type GetHashCharAt(HashKeyIndex aIndex) const {
     return mHashKey.CharAt(UnderlyingIndex(aIndex));
@@ -297,6 +302,7 @@ class nsHttpConnectionInfo final : public ARefBase {
                         // tls1.3. If the tls version is till not know or it
                         // is 1.3 or greater the value will be false.
   bool mIsHttp3 = false;
+  bool mWebTransport = false;
 
   bool mHasIPHintAddress = false;
   nsCString mEchConfig;
