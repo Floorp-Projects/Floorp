@@ -2,8 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// SetProcessInformation is only defined for Win8 and newer.
+#if defined(_WIN32_WINNT)
+#  undef _WIN32_WINNT
+#  define _WIN32_WINNT _WIN32_WINNT_WIN8
+#endif  // defined(_WIN32_WINNT)
+
 #include "Hal.h"
 #include "HalLog.h"
+#include "nsWindowsHelpers.h"  // for nsAutoHandle and nsModuleHandle
 
 #include <windows.h>
 
@@ -29,6 +36,38 @@ void SetProcessPriority(int aPid, ProcessPriority aPriority) {
     if (::SetPriorityClass(processHandle, priority)) {
       HAL_LOG("WindowsProcessPriority - priority set to %d for pid %d\n",
               aPriority, aPid);
+    }
+
+    // Set the process into or out of EcoQoS.
+    static bool alreadyInitialized = false;
+    static decltype(::SetProcessInformation)* setProcessInformation = nullptr;
+    if (!alreadyInitialized) {
+      alreadyInitialized = true;
+      // SetProcessInformation only exists on Windows 8 and later.
+      nsModuleHandle module(LoadLibrary(L"Kernel32.dll"));
+      if (module) {
+        setProcessInformation =
+            (decltype(::SetProcessInformation)*)GetProcAddress(
+                module, "SetProcessInformation");
+      }
+    }
+    if (!setProcessInformation) {
+      return;
+    }
+
+    PROCESS_POWER_THROTTLING_STATE PowerThrottling;
+    RtlZeroMemory(&PowerThrottling, sizeof(PowerThrottling));
+    PowerThrottling.Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION;
+    PowerThrottling.ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED;
+    PowerThrottling.StateMask = aPriority == PROCESS_PRIORITY_BACKGROUND
+                                    ? PROCESS_POWER_THROTTLING_EXECUTION_SPEED
+                                    : 0;
+    if (setProcessInformation(processHandle, ProcessPowerThrottling,
+                              &PowerThrottling, sizeof(PowerThrottling))) {
+      HAL_LOG("SetProcessInformation(%d, %s)\n", aPid,
+              aPriority == PROCESS_PRIORITY_BACKGROUND ? "eco" : "normal");
+    } else {
+      HAL_LOG("SetProcessInformation failed for %d\n", aPid);
     }
   }
 }
