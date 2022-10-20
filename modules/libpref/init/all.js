@@ -681,18 +681,6 @@ pref("toolkit.telemetry.server_owner", "Mozilla");
 pref("toolkit.telemetry.debugSlowSql", false);
 // Whether to use the unified telemetry behavior, requires a restart.
 pref("toolkit.telemetry.unified", true);
-
-// DAP related preferences
-pref("toolkit.telemetry.dap_enabled", false);
-// Leader endpoint for the DAP protocol
-pref("toolkit.telemetry.dap_leader", "https://interop-00.api.divviup.org");
-// Not used for anything. Just additional information.
-pref("toolkit.telemetry.dap_leader_owner", "ISRG");
-// Second DAP server. Only two are currently supported.
-pref("toolkit.telemetry.dap_helper", "https://helper1.dap.cloudflareresearch.com/v01");
-pref("toolkit.telemetry.dap_helper_owner", "Cloudflare");
-pref("toolkit.telemetry.dap.logLevel", "Warn");
-
 // AsyncShutdown delay before crashing in case of shutdown freeze
 // ASan, TSan and code coverage builds can be considerably slower. Extend the
 // grace period for both the asyncshutdown and the terminator.

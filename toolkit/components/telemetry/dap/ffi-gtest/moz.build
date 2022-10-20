@@ -1,7 +1,0 @@
-UNIFIED_SOURCES = ["TestDAPTelemetry.cpp"]
-FINAL_LIBRARY = "xul-gtest"
-
-TEST_HARNESS_FILES.gtest += [
-    "../../../../../security/nss/gtests/pk11_gtest/hpke-vectors.json",
-    "PrgAes128_tests.json",
-]
