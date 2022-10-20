@@ -8,6 +8,7 @@
 
 #include "nsAHttpTransaction.h"
 #include "ARefBase.h"
+#include "Http3StreamBase.h"
 #include "mozilla/WeakPtr.h"
 #include "nsIClassOfService.h"
 
@@ -18,8 +19,7 @@ class Http3Session;
 
 class Http3Stream final : public nsAHttpSegmentReader,
                           public nsAHttpSegmentWriter,
-                          public SupportsWeakPtr,
-                          public ARefBase {
+                          public Http3StreamBase {
  public:
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
@@ -29,26 +29,23 @@ class Http3Stream final : public nsAHttpSegmentReader,
   Http3Stream(nsAHttpTransaction*, Http3Session*, const ClassOfService&,
               uint64_t);
 
-  bool HasStreamId() const { return mStreamId != UINT64_MAX; }
-  uint64_t StreamId() const { return mStreamId; }
+  Http3WebTransportSession* GetHttp3WebTransportSession() override {
+    return nullptr;
+  }
+  Http3Stream* GetHttp3Stream() override { return this; }
 
   nsresult TryActivating();
 
   void TopBrowsingContextIdChanged(uint64_t id);
 
-  [[nodiscard]] nsresult ReadSegments(nsAHttpSegmentReader*);
-  [[nodiscard]] nsresult WriteSegments(nsAHttpSegmentWriter*, uint32_t,
-                                       uint32_t*);
+  [[nodiscard]] nsresult ReadSegments() override;
+  [[nodiscard]] nsresult WriteSegments() override;
 
-  void SetQueued(bool aStatus) { mQueued = aStatus; }
-  bool Queued() const { return mQueued; }
+  bool Done() const override { return mRecvState == RECV_DONE; }
 
-  bool Done() const { return mRecvState == RECV_DONE; }
-
-  void Close(nsresult aResult);
+  void Close(nsresult aResult) override;
   bool RecvdData() const { return mDataReceived; }
 
-  nsAHttpTransaction* Transaction() { return mTransaction; }
   bool RecvdFin() const { return mFin; }
   bool RecvdReset() const { return mResetRecv; }
   void SetRecvdReset() { mResetRecv = true; }
@@ -56,11 +53,11 @@ class Http3Stream final : public nsAHttpSegmentReader,
   void StopSending();
 
   void SetResponseHeaders(nsTArray<uint8_t>& aResponseHeaders, bool fin,
-                          bool interim);
+                          bool interim) override;
 
   // Mirrors nsAHttpTransaction
-  bool Do0RTT();
-  nsresult Finish0RTT(bool aRestart);
+  bool Do0RTT() override;
+  nsresult Finish0RTT(bool aRestart) override;
 
   uint8_t PriorityUrgency();
   bool PriorityIncremental();
@@ -138,11 +135,7 @@ class Http3Stream final : public nsAHttpSegmentReader,
     RECV_DONE
   } mRecvState{BEFORE_HEADERS};
 
-  uint64_t mStreamId{UINT64_MAX};
-  Http3Session* mSession;
-  RefPtr<nsAHttpTransaction> mTransaction;
   nsCString mFlatHttpRequestHeaders;
-  bool mQueued{false};
   bool mDataReceived{false};
   bool mResetRecv{false};
   nsTArray<uint8_t> mFlatResponseHeaders;

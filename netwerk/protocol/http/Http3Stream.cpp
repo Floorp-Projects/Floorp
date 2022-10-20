@@ -26,8 +26,7 @@ namespace net {
 Http3Stream::Http3Stream(nsAHttpTransaction* httpTransaction,
                          Http3Session* session, const ClassOfService& cos,
                          uint64_t bcId)
-    : mSession(session),
-      mTransaction(httpTransaction),
+    : Http3StreamBase(httpTransaction, session),
       mCurrentTopBrowsingContextId(bcId) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG3(("Http3Stream::Http3Stream [this=%p]", this));
@@ -331,7 +330,7 @@ nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
   return rv;
 }
 
-nsresult Http3Stream::ReadSegments(nsAHttpSegmentReader* reader) {
+nsresult Http3Stream::ReadSegments() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   if (mRecvState == RECV_DONE) {
@@ -421,8 +420,7 @@ nsresult Http3Stream::ReadSegments(nsAHttpSegmentReader* reader) {
   return rv;
 }
 
-nsresult Http3Stream::WriteSegments(nsAHttpSegmentWriter* writer,
-                                    uint32_t count, uint32_t* countWritten) {
+nsresult Http3Stream::WriteSegments() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("Http3Stream::WriteSegments [this=%p]", this));
   nsresult rv = NS_OK;
@@ -431,9 +429,9 @@ nsresult Http3Stream::WriteSegments(nsAHttpSegmentWriter* writer,
 
   do {
     mSocketInCondition = NS_OK;
-    rv = mTransaction->WriteSegmentsAgain(this, count, &countWrittenSingle,
-                                          &again);
-    *countWritten += countWrittenSingle;
+    countWrittenSingle = 0;
+    rv = mTransaction->WriteSegmentsAgain(
+        this, nsIOService::gDefaultSegmentSize, &countWrittenSingle, &again);
     LOG(("Http3Stream::WriteSegments rv=0x%" PRIx32
          " countWrittenSingle=%" PRIu32 " socketin=%" PRIx32 " [this=%p]",
          static_cast<uint32_t>(rv), countWrittenSingle,
