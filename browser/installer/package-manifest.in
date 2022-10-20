@@ -430,10 +430,6 @@ bin/libfreebl_64int_3.so
 @BINPATH@/minidump-analyzer@BIN_SUFFIX@
 #endif
 
-; [ Ping Sender ]
-;
-@BINPATH@/pingsender@BIN_SUFFIX@
-
 ; [ Notification COM Server ]
 ;
 #if defined(XP_WIN)
