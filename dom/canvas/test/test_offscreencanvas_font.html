@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Serialization of font on OffscreenCanvas2d</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<canvas id="c">
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function testFontShorthand(ctx, font) {
+  ctx.font = font;
+  let w1 = ctx.measureText("Hello World").width;
+  let f = ctx.font;
+  ctx.font = f;
+  let w2 = ctx.measureText("Hello World").width;
+  ok(w1 === w2, "serialization and re-setting of \"" +
+                font + "\" as \"" + f + "\" is idempotent");
+}
+
+const tests = [
+  "12px serif",
+  "12px/1.4 serif",
+  "italic 12px serif",
+  "oblique 12px serif",
+  "bold 12px serif",
+  "bold italic 12px serif",
+  "condensed bold italic 12px serif",
+  "500 italic 12px serif",
+  "italic 500 12px serif",
+];
+
+function runTest() {
+  let canvas = new OffscreenCanvas(100, 100);
+  let ctx = canvas.getContext("2d");
+  tests.forEach((t) => {
+    testFontShorthand(ctx, t);
+  });
+
+  // Although the bug that motivated this test was specific to offscreen canvas,
+  // let's also check that it works with a <canvas> element.
+  ctx = document.getElementById("c").getContext("2d");
+  tests.forEach((t) => {
+    testFontShorthand(ctx, t);
+  });
+
+  SimpleTest.finish();
+}
+
+SpecialPowers.pushPrefEnv({'set': [
+  ['gfx.offscreencanvas.enabled', true],
+]}, runTest);
+
+</script>
+</body>
+</html>
