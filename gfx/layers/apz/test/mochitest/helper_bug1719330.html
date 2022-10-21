@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests that the arrow down key does not scroll by more than 1 element</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+     .time-column {
+       width: 68px;
+       height: 28px;
+
+       overflow-y: scroll;
+       scroll-snap-type: y mandatory;
+
+       border-radius: 4px;
+       border: 1px solid red;
+     }
+
+     .time-item {
+       scroll-snap-align: center;
+       height: 100%;
+     }
+  </style>
+</head>
+<body>
+  <div class="time-column"></div>
+
+  <script type="application/javascript">
+
+    function waitForScrollEvent(target) {
+      return new Promise(resolve => {
+        target.addEventListener("scroll", resolve, { once: true });
+      });
+    }
+
+    async function test() {
+      const timeCol = document.querySelector('.time-column');
+
+      for (let i = 0; i < 60; i++) {
+        let item = document.createElement('div');
+        item.classList.add('time-item');
+        item.textContent = i;
+        timeCol.appendChild(item);
+      }
+
+      is(timeCol.scrollTop, 0, "should begin with no scroll (1)");
+
+      let waitForScroll = waitForScrollEvent(timeCol);
+
+      timeCol.focus();
+      window.synthesizeKey("KEY_ArrowDown");
+
+      await waitForScroll;
+
+      ok(timeCol.scrollTop > 0, "should have scrolled (2)");
+      ok(timeCol.scrollTop < 30, "should have not scrolled too far (3)");
+    }
+
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+  </script>
+</body>
+</html>
