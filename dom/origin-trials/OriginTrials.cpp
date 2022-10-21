@@ -210,8 +210,6 @@ static int32_t PrefState(OriginTrial aTrial) {
   switch (aTrial) {
     case OriginTrial::TestTrial:
       return StaticPrefs::dom_origin_trials_test_trial_state();
-    case OriginTrial::OffscreenCanvas:
-      return StaticPrefs::dom_origin_trials_offscreen_canvas_state();
     case OriginTrial::CoepCredentialless:
       return StaticPrefs::dom_origin_trials_coep_credentialless_state();
     case OriginTrial::MAX:
