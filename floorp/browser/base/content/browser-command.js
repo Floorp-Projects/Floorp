@@ -366,12 +366,14 @@ function UnloadWebpanel() {
 
 function setBrowserDesign() {
   let floorpinterfacenum = Services.prefs.getIntPref("floorp.browser.user.interface")
+  let updateNumberDate = new Date()
+  let updateNumber = `${updateNumberDate.getFullYear()}${updateNumberDate.getMonth()}${updateNumberDate.getDate()}${updateNumberDate.getHours()}${updateNumberDate.getMinutes()}${updateNumberDate.getSeconds()}`
   const ThemeCSS = {
     ProtonfixUI: `@import url(chrome://browser/skin/protonfix/protonfix.css);`,
-    LeptonUI:    `@import url(chrome://browser/skin/lepton/userChrome.css);
-                   @import url(chrome://browser/skin/lepton/userChrome.css);`,
-    LeptonUIMultitab: `@import url(chrome://browser/skin/lepton/photonChrome-multitab.css);
-                    @import url(chrome://browser/skin/lepton/photonContent-multitab.css);`,
+    LeptonUI:    `@import url(chrome://browser/skin/lepton/userChrome.css?${updateNumber});
+                   @import url(chrome://browser/skin/lepton/userChrome.css?${updateNumber});`,
+    LeptonUIMultitab: `@import url(chrome://browser/skin/lepton/photonChrome-multitab.css?${updateNumber});
+                    @import url(chrome://browser/skin/lepton/photonContent-multitab.css?${updateNumber});`,
     MaterialUI: `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);`,
     MaterialUIMultitab: `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);
     .tabbrowser-tab { margin-top: 0.7em !important;  position: relative !important;  top: -0.34em !important; }`,
