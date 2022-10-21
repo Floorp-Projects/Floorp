@@ -260,7 +260,7 @@ newtab-background-not-background =
 
 ## lepton preferences
 
-about-lepton = Customize { -brand-short-name } with Lepton. Applying all settings requires a reboot
+about-lepton = Customize { -brand-short-name } with Lepton.  A change needless to restart { -brand-short-name }.
 
 lepton-preference-button =
     .label = Lepton Preferences...
