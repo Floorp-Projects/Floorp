@@ -422,28 +422,33 @@ function URLbarrecalculation() {
 
 /*---------------------------------------------------------------- Tabbar ----------------------------------------------------------------*/
 function setTabbarMode() {
+  const tabbarCSS = {
+    HideTabBrowser: "@import url(chrome://browser/skin/tabbar/hide-tabbrowser.css);",
+    VerticalTab: "@import url(chrome://browser/skin/tabbar/verticaltab.css);",
+    BottomTabs: "@import url(chrome://browser/skin/tabbar/tabs_on_bottom.css);",
+    WindowBottomTabs: "@import url(chrome://browser/skin/tabbar/tabbar_on_window_bottom.css);"
+  }
   const tabbarPref = Services.prefs.getIntPref("floorp.browser.tabbar.settings");
   var Tag = document.createElement("style");
   Tag.setAttribute("id", "tabbardesgin");
   switch (tabbarPref) { //hide tabbrowser
-    case 2:
-      Tag.innerText = `@import url(chrome://browser/skin/tabbar/hide-tabbrowser.css);`
+    case 1:
+      Tag.innerText = tabbarCSS.HideTabBrowser
       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
       break;
     // vertical tab CSS
-    case 3:
-      Tag.innerText = `@import url(chrome://browser/skin/tabbar/verticaltab.css);`
+    case 2:
+      Tag.innerText = tabbarCSS.VerticalTab
       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
       window.setTimeout(function () { document.getElementById("titlebar").before(document.getElementById("toolbar-menubar")); }, 2000);
       break;
     //tabs_on_bottom
-    case 4:
-      Tag.innerText = `@import url(chrome://browser/skin/tabbar/tabs_on_bottom.css);`
+    case 3:
+      Tag.innerText = tabbarCSS.BottomTabs
       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
       break;
-    // 5 has been removed. v10.3.0
-    case 6:
-      Tag.innerText = `@import url(chrome://browser/skin/tabbar/tabbar_on_window_bottom.css);`
+    case 4:
+      Tag.innerText = tabbarCSS.WindowBottomTabs
       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
       var script = document.createElement("script");
       script.setAttribute("id", "tabbar-script");
