@@ -265,9 +265,11 @@
                          [2, 7, `\n${kEmbedChar}b c d`, 1, 8,
                           [ [ 2, "inlineInput4", kOkIfCache, kOkIfCache, kOkIfCache ] ] ] ]);
 
-      testTextAtOffset([ "contentEditableTable" ], BOUNDARY_LINE_START, [
-        [0, 0, `${kEmbedChar}\n`, 0, 2],
-      ]);
+      testTextAtOffset(/* aOffset */ 0, BOUNDARY_LINE_START,
+        kEmbedChar, 0, 1, "contentEditableTable",
+          /* returned text */ kOkIfCache,
+          /* returned start offset */ kOk,
+          /* returned end offset */ kOkIfCache);
 
       SimpleTest.finish();
     }
