@@ -35,11 +35,6 @@ interface XULPopupElement : XULElement
   [HTMLConstructor] constructor();
 
   /**
-   * Allow the popup to automatically position itself.
-   */
-  attribute boolean autoPosition;
-
-  /**
    * Open the popup relative to a specified node at a specific location.
    *
    * If the popup is already open, calling this method has no effect.

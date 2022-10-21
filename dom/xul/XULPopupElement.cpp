@@ -188,21 +188,6 @@ void XULPopupElement::SizeTo(int32_t aWidth, int32_t aHeight) {
   }
 }
 
-bool XULPopupElement::AutoPosition() {
-  nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
-  if (menuPopupFrame) {
-    return menuPopupFrame->GetAutoPosition();
-  }
-  return true;
-}
-
-void XULPopupElement::SetAutoPosition(bool aShouldAutoPosition) {
-  nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
-  if (menuPopupFrame) {
-    menuPopupFrame->SetAutoPosition(aShouldAutoPosition);
-  }
-}
-
 void XULPopupElement::GetState(nsString& aState) {
   // set this here in case there's no frame for the popup
   aState.AssignLiteral("closed");

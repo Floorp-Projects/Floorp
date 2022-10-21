@@ -519,7 +519,7 @@ void nsXULPopupManager::AdjustPopupsOnWindowChange(
     // only move popups that are within the same window and where auto
     // positioning has not been disabled
     nsMenuPopupFrame* frame = item->Frame();
-    if (item->IsNoAutoHide() && frame->GetAutoPosition()) {
+    if (item->IsNoAutoHide()) {
       nsIContent* popup = frame->GetContent();
       if (popup) {
         Document* document = popup->GetUncomposedDoc();

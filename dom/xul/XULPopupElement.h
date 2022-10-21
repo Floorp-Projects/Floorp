@@ -51,10 +51,6 @@ class XULPopupElement : public nsXULElement {
     SetXULAttr(nsGkAtoms::position, aValue, rv);
   }
 
-  bool AutoPosition();
-
-  void SetAutoPosition(bool aShouldAutoPosition);
-
   void OpenPopup(Element* aAnchorElement,
                  const StringOrOpenPopupOptions& aOptions, int32_t aXPos,
                  int32_t aYPos, bool aIsContextMenu, bool aAttributesOverride,
