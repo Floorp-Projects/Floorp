@@ -56,7 +56,7 @@ class nsHttpConnectionInfo final : public ARefBase {
                        nsProxyInfo* proxyInfo,
                        const OriginAttributes& originAttributes,
                        const nsACString& routedHost, int32_t routedPort,
-                       bool aIsHttp3, bool aWebTransport);
+                       bool aIsHttp3, bool aWebTransport = false);
 
   static void SerializeHttpConnectionInfo(nsHttpConnectionInfo* aInfo,
                                           HttpConnectionInfoCloneArgs& aArgs);
