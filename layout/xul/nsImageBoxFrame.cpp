@@ -207,20 +207,6 @@ void nsImageBoxFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   UpdateImage();
 }
 
-void nsImageBoxFrame::RestartAnimation() {
-  if (mImageRequest && !mRequestRegistered) {
-    nsLayoutUtils::RegisterImageRequestIfAnimated(PresContext(), mImageRequest,
-                                                  &mRequestRegistered);
-  }
-}
-
-void nsImageBoxFrame::StopAnimation() {
-  if (mImageRequest && mRequestRegistered) {
-    nsLayoutUtils::DeregisterImageRequest(PresContext(), mImageRequest,
-                                          &mRequestRegistered);
-  }
-}
-
 void nsImageBoxFrame::UpdateImage() {
   nsPresContext* presContext = PresContext();
   Document* doc = presContext->Document();

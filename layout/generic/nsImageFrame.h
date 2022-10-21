@@ -131,9 +131,6 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
     }
   }
 
-  nsresult RestartAnimation();
-  nsresult StopAnimation();
-
   already_AddRefed<imgIRequest> GetCurrentRequest() const;
   void Notify(imgIRequest*, int32_t aType, const nsIntRect* aData);
 
