@@ -10,8 +10,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
@@ -25,6 +27,8 @@ class WebControlsTest {
     private val hour = 10
     private val minute = 10
     private val colorHexValue = "#5b2067"
+    private val emailLink = "mailto://example@example.com"
+    private val phoneLink = "tel://1234567890"
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule(
@@ -145,6 +149,39 @@ class WebControlsTest {
             selectDropDownOption("The National")
             clickSubmitDropDownButton()
             verifySelectedDropDownOption("The National")
+        }
+    }
+
+    @Test
+    fun externalLinkTest() {
+        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(externalLinksPage.url) {
+            clickLinkMatchingText("External link")
+            verifyUrl("duckduckgo")
+        }
+    }
+
+    @Test
+    fun emailLinkTest() {
+        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(externalLinksPage.url) {
+            clickLinkMatchingText("Email link")
+            assertNativeAppOpens(Constants.PackageName.GMAIL_APP, emailLink)
+        }
+    }
+
+    @Test
+    fun telephoneLinkTest() {
+        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(externalLinksPage.url) {
+            clickLinkMatchingText("Telephone link")
+            assertNativeAppOpens(Constants.PackageName.PHONE_APP, phoneLink)
         }
     }
 }
