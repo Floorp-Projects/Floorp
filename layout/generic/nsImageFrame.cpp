@@ -2813,28 +2813,6 @@ void nsImageFrame::IconLoad::GetPrefs() {
       "browser.display.show_loading_image_placeholder", true);
 }
 
-nsresult nsImageFrame::RestartAnimation() {
-  nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest();
-
-  if (currentRequest) {
-    bool deregister = false;
-    nsLayoutUtils::RegisterImageRequestIfAnimated(PresContext(), currentRequest,
-                                                  &deregister);
-  }
-  return NS_OK;
-}
-
-nsresult nsImageFrame::StopAnimation() {
-  nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest();
-
-  if (currentRequest) {
-    bool deregister = true;
-    nsLayoutUtils::DeregisterImageRequest(PresContext(), currentRequest,
-                                          &deregister);
-  }
-  return NS_OK;
-}
-
 void nsImageFrame::IconLoad::Notify(imgIRequest* aRequest, int32_t aType,
                                     const nsIntRect* aData) {
   MOZ_ASSERT(aRequest);

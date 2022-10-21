@@ -97,9 +97,6 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
    */
   void UpdateLoadFlags();
 
-  void RestartAnimation();
-  void StopAnimation();
-
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
