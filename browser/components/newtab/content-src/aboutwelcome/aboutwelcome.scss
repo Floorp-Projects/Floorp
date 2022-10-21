@@ -435,6 +435,24 @@ html {
               }
             }
           }
+
+          @media (prefers-contrast) {
+            border: 1px solid var(--in-content-page-color);
+
+            .steps.progress-bar {
+              border-top: 1px solid var(--in-content-page-color);
+
+              .indicator {
+                opacity: 1;
+                border-color: var(--in-content-page-background);
+
+                &.current,
+                &.complete {
+                  border-color: var(--in-content-accent-color);
+                }
+              }
+            }
+          }
         }
       }
 
