@@ -95,6 +95,7 @@ impl NeqoHttp3Conn {
         max_data: u64,
         max_stream_data: u64,
         version_negotiation: bool,
+        webtransport: bool,
         qlog_dir: &nsACString,
     ) -> Result<RefPtr<NeqoHttp3Conn>, nsresult> {
         // Nss init.
@@ -140,7 +141,8 @@ impl NeqoHttp3Conn {
             .max_table_size_decoder(max_table_size)
             .max_blocked_streams(max_blocked_streams)
             .max_concurrent_push_streams(0)
-            .connection_parameters(params);
+            .connection_parameters(params)
+            .webtransport(webtransport);
 
         let mut conn = match Http3Client::new(
             origin_conv,
@@ -231,6 +233,7 @@ pub extern "C" fn neqo_http3conn_new(
     max_data: u64,
     max_stream_data: u64,
     version_negotiation: bool,
+    webtransport: bool,
     qlog_dir: &nsACString,
     result: &mut *const NeqoHttp3Conn,
 ) -> nsresult {
@@ -246,6 +249,7 @@ pub extern "C" fn neqo_http3conn_new(
         max_data,
         max_stream_data,
         version_negotiation,
+        webtransport,
         qlog_dir,
     ) {
         Ok(http3_conn) => {
