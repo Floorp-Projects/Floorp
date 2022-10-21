@@ -2194,9 +2194,16 @@ nsresult nsHttpTransaction::HandleContentStart() {
         RefPtr<Http3WebTransportSession> wtSession =
             mConnection->GetWebTransportSession(this);
         if (wtSession) {
-          mWebTransportSessionEventListener->OnSessionReadyInternal(wtSession);
-          wtSession->SetWebTransportSessionEventListener(
-              mWebTransportSessionEventListener);
+          nsCOMPtr<WebTransportSessionEventListener> webTransportListener;
+          {
+            MutexAutoLock lock(mLock);
+            webTransportListener = mWebTransportSessionEventListener;
+          }
+          if (webTransportListener) {
+            webTransportListener->OnSessionReadyInternal(wtSession);
+            wtSession->SetWebTransportSessionEventListener(
+                webTransportListener);
+          }
         }
         mWebTransportSessionEventListener = nullptr;
       }
