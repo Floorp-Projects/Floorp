@@ -249,6 +249,17 @@ class SettingsSubMenuSearchRobot {
 
     fun clickEdit() = onView(withText("Edit")).click()
 
+    fun clickDeleteSearchEngine() =
+        mDevice.findObject(
+            UiSelector().textContains(getStringResource(R.string.search_engine_delete)),
+        ).click()
+
+    fun clickUndoSnackBarButton() =
+        mDevice.findObject(
+            UiSelector()
+                .resourceId("$packageName:id/snackbar_btn"),
+        ).click()
+
     fun saveEditSearchEngine() {
         onView(withId(R.id.save_button)).click()
         assertTrue(

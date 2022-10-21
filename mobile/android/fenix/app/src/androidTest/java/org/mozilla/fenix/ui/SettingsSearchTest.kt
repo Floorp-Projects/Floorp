@@ -312,4 +312,19 @@ class SettingsSearchTest {
             verifyClipboardSuggestionsAreDisplayed(link, false)
         }
     }
+
+    // Expected for en-us defaults
+    @Test
+    fun undoDeleteSearchEngineTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            verifyEngineListContains("Bing")
+            openEngineOverflowMenu("Bing")
+            clickDeleteSearchEngine()
+            clickUndoSnackBarButton()
+            verifyEngineListContains("Bing")
+        }
+    }
 }
