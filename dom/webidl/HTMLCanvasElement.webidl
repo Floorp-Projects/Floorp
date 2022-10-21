@@ -49,7 +49,7 @@ partial interface HTMLCanvasElement {
 // For OffscreenCanvas
 // Reference: https://wiki.whatwg.org/wiki/OffscreenCanvas
 partial interface HTMLCanvasElement {
-  [Func="CanvasUtils::IsOffscreenCanvasEnabled", Throws]
+  [Pref="gfx.offscreencanvas.enabled", Throws]
   OffscreenCanvas transferControlToOffscreen();
 };
 

@@ -3073,13 +3073,6 @@
   value: 0
   mirror: always
 
-# Origin trial state for OffscreenCanvas.
-# 0: normal, 1: always-enabled, 2: always-disabled
-- name: dom.origin-trials.offscreen-canvas.state
-  type: RelaxedAtomicInt32
-  value: 0
-  mirror: always
-
 # Origin trial state for COEP: Credentialless.
 # 0: normal, 1: always-enabled, 2: always-disabled
 - name: dom.origin-trials.coep-credentialless.state
@@ -5977,18 +5970,6 @@
 - name: gfx.offscreencanvas.enabled
   type: RelaxedAtomicBool
   value: true
-  mirror: always
-
-# Enable OffscreenCanvas based on the domain allowlist.
-- name: gfx.offscreencanvas.domain-enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# Domains included in the allowlist.
-- name: gfx.offscreencanvas.domain-allowlist
-  type: DataMutexString
-  value: "*.zoom.us,zoom.us"
   mirror: always
 
 - name: gfx.omta.background-color

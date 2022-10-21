@@ -9,8 +9,7 @@ use std::ffi::c_void;
 pub enum OriginTrial {
     // NOTE(emilio): 0 is reserved for WebIDL usage.
     TestTrial = 1,
-    OffscreenCanvas = 2,
-    CoepCredentialless = 3,
+    CoepCredentialless = 2,
 
     MAX,
 }
@@ -19,7 +18,6 @@ impl OriginTrial {
     fn from_str(s: &str) -> Option<Self> {
         Some(match s {
             "TestTrial" => Self::TestTrial,
-            "OffscreenCanvas" => Self::OffscreenCanvas,
             "CoepCredentialless" => Self::CoepCredentialless,
             _ => return None,
         })
