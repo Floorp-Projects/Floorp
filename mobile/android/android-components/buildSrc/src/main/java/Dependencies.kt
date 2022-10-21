@@ -36,7 +36,7 @@ object Versions {
     const val mozilla_appservices = "94.3.2"
 
     // DO NOT MODIFY MANUALLY. This is auto-updated along with GeckoView.
-    const val mozilla_glean = "51.4.0"
+    const val mozilla_glean = "51.5.0"
 
     const val material = "1.2.1"
 
