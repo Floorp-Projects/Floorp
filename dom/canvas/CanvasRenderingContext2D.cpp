@@ -3446,6 +3446,7 @@ static void SerializeFontForCanvas(const StyleFontFamilyList& aList,
   // font-weight is serialized as a number
   if (!aStyle.weight.IsNormal()) {
     aUsedFont.AppendFloat(aStyle.weight.ToFloat());
+    aUsedFont.Append(" ");
   }
 
   // font-stretch is serialized using CSS Fonts 3 keywords, not percentages.
