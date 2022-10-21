@@ -9,6 +9,7 @@
 #include "nsHttp.h"
 #include "nsISupports.h"
 #include "nsAHttpTransaction.h"
+#include "Http3WebTransportSession.h"
 #include "HttpTrafficAnalyzer.h"
 
 class nsIAsyncInputStream;
@@ -106,6 +107,9 @@ class nsAHttpConnection : public nsISupports {
                                                nsIAsyncInputStream**,
                                                nsIAsyncOutputStream**) = 0;
 
+  [[nodiscard]] virtual Http3WebTransportSession* GetWebTransportSession(
+      nsAHttpTransaction* aTransaction) = 0;
+
   // called by a transaction to get the TLS socket control from the socket.
   virtual void GetTLSSocketControl(nsISSLSocketControl**) = 0;
 
@@ -178,6 +182,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
   [[nodiscard]] nsresult TakeTransport(                                      \
       nsISocketTransport**, nsIAsyncInputStream**, nsIAsyncOutputStream**)   \
       override;                                                              \
+  [[nodiscard]] Http3WebTransportSession* GetWebTransportSession(            \
+      nsAHttpTransaction* aTransaction) override;                            \
   bool IsPersistent() override;                                              \
   bool IsReused() override;                                                  \
   void DontReuse() override;                                                 \

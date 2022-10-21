@@ -661,10 +661,7 @@ impl SessionCloseReasonExternal {
 #[repr(C)]
 pub enum WebTransportEventExternal {
     Negotiated(bool),
-    Session {
-        stream_id: u64,
-        status: u16,
-    },
+    Session(u64),
     SessionClosed {
         stream_id: u64,
         reason: SessionCloseReasonExternal,
@@ -681,17 +678,23 @@ impl WebTransportEventExternal {
         match event {
             WebTransportEvent::Negotiated(n) => WebTransportEventExternal::Negotiated(n),
             WebTransportEvent::Session { stream_id, status } => {
-                WebTransportEventExternal::Session {
-                    stream_id: stream_id.as_u64(),
-                    status,
-                }
+                data.extend_from_slice(b"HTTP/3 ");
+                data.extend_from_slice(&status.to_string().as_bytes());
+                data.extend_from_slice(b"\r\n\r\n");
+                WebTransportEventExternal::Session(stream_id.as_u64())
             }
-            WebTransportEvent::SessionClosed { stream_id, reason } => {
-                WebTransportEventExternal::SessionClosed {
+            WebTransportEvent::SessionClosed { stream_id, reason } => match reason {
+                SessionCloseReason::Status(status) => {
+                    data.extend_from_slice(b"HTTP/3 ");
+                    data.extend_from_slice(&status.to_string().as_bytes());
+                    data.extend_from_slice(b"\r\n\r\n");
+                    WebTransportEventExternal::Session(stream_id.as_u64())
+                }
+                _ => WebTransportEventExternal::SessionClosed {
                     stream_id: stream_id.as_u64(),
                     reason: SessionCloseReasonExternal::new(reason, data),
-                }
-            }
+                },
+            },
             WebTransportEvent::NewStream {
                 stream_id,
                 session_id,
