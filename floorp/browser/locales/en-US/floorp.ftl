@@ -112,8 +112,8 @@ firefox-proton =
 firefox-proton-fix =
  .label = Firefox Proton FIX UI
 
-firefox-photon = 
- .label = Firefox Legacy Photon UI
+firefox-photon-lepton = 
+ .label = Firefox Photon・Lepton UI
  
 floorp-legacy =  
  .label = Floorp Legacy material UI・Unsupported
@@ -258,6 +258,93 @@ newtab-background-gradation =
 newtab-background-not-background =
     .label = Disable Background
 
+## lepton preferences
+
+about-lepton = Customize { -brand-short-name } with Lepton. Applying all settings requires a reboot
+
+lepton-preference-button =
+    .label = Lepton Preferences...
+    .accesskey = L
+
+lepton-header = Lepton Preferences
+
+lepton-preference = Lepton UI Settings
+photon-mode = 
+    .label = Photon Mode
+
+lepton-mode = 
+    .label = Lepton Mode
+
+autohide-preference = Auto hide elements
+
+floorp-lepton-enable-tab-autohide =
+    .label = Enable Auto hide Tabbar
+floorp-lepton-enable-navbar-autohide =
+    .label = Enable Auto hide navbar
+floorp-lepton-enable-sidebar-autohide =
+    .label = Enable Auto hide sidebar
+floorp-lepton-enable-urlbar-autohide =
+    .label = Enable Auto hide urlbar
+floorp-lepton-enable-back-button-autohide =
+    .label = Enable auto hide back button
+floorp-lepton-enable-forward-button-autohide =
+    .label = Enable Auto hide forward button
+floorp-lepton-enable-page-action-button-autohide =
+    .label = Enable Auto hide addressbar addon action button
+floorp-lepton-enable-toolbar-overlap =
+    .label = Enable Toolbar overlay
+floorp-lepton-enable-toolbar-overlap-allow-layout-shift-autohide =
+    .label = Enable toolbar auto hide when in ltr content
+
+hide-preference = Manage display elements
+
+floorp-lepton-enable-tab_icon-hide =
+    .label = Hide Tab icons
+floorp-lepton-enable-tabbar-hide =
+    .label = Hide Tabbar
+floorp-lepton-enable-navbar-hide =
+    .label = Hide Navbar
+floorp-lepton-enable-sidebar_header-hide =
+    .label = Hide Sidebar Header
+floorp-lepton-enable-urlbar_iconbox-hide =
+    .label = Hide urlbar icons
+floorp-lepton-enable-bookmarkbar_icon-hide =
+    .label = Hide bookmarks-bar icons
+floorp-lepton-enable-bookmarkbar_label-hide =
+    .label = Hide bookmarks-bar labels
+floorp-lepton-enable-disabled_menu-hide =
+    .label = Hide disabled context menu
+
+positon-preferences = Position adjustment
+
+floorp-lepton-enable-centered-tab =
+    .label = Centered Tab label
+floorp-lepton-enable-centered-urlbar =
+    .label = Centered urlbar
+floorp-lepton-enable-centered-bookmarkbar =
+    .label = Centered bookmarkbar
+
+urlbar-preferences = URLbar
+
+floorp-lepton-enable-urlbar-icon-move-to-left =
+    .label = Move urlbar icons to the left side
+floorp-lepton-enable-urlname-go_button_when_typing =
+    .label = When typing, reduce the urlbar space and show a Go Button
+floorp-lepton-enable-always-show-page_action =
+    .label = Reduce the urlbar space and always show  addressbar addon action button
+
+tabbar-preferences = Tabbar
+
+floorp-lepton-enable-tabbar-positon-as-titlebar =
+    .label = Tabbar in the titlebar
+floorp-lepton-enable-tabbar-as-urlbar =
+    .label = Tabbar in the urlbar
+
+lepton-sidebar-preferences = Sidebar
+floorp-lepton-enable-overlap-sidebar =
+    .label = Show Sidebar Overlap main Viewer
+
+## tool attribute
 ################################################################### browser ###############################################################
 
 rest-mode = Taking a break...

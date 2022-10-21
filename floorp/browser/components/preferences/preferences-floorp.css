@@ -11,6 +11,14 @@
   .profiles-icon {
     list-style-image: url("chrome://browser/skin/lepton/mail-inbox-all.svg");
   }
+  
+  #leptonButton{
+    margin-right: 10px;
+  }
+
+  #category-lepton > .category-icon {
+   list-style-image: url("chrome://mozapps/skin/extensions/category-themes.svg")
+  }
 
   .dialogBox {
     --in-content-page-background: #333333 !important;
@@ -65,6 +73,50 @@
     box-shadow: 0 0 2px 0 rgba(0,0,0,0.2);
     transform: scaleX(1);
     content: url("chrome://mozapps/content/extensions/default-theme/preview.svg");
+  }
+  #photon-mode{
+    display: block;
+    margin: 0 auto;
+    border: 1px solid var(--in-content-box-border-color);
+    border-radius: 4px;
+    box-shadow: 0 0 2px 0 rgba(0,0,0,0.2);
+    transform: scaleX(1);
+    content: url(chrome://browser/skin/photon.png);
+    min-width: 0px;
+    max-height: 65px;
+  }
+  #lepton-mode{
+    display: block;
+    margin: 0 auto;
+    border: 1px solid var(--in-content-box-border-color);
+    border-radius: 4px;
+    box-shadow: 0 0 2px 0 rgba(0,0,0,0.2);
+    transform: scaleX(1);
+    content: url(chrome://browser/skin/lepton.png);
+    min-width: 0px;
+    max-height: 65px;
+  }
+  #as-titlebar-mode{
+    display: block;
+    margin: 0 auto;
+    border: 1px solid var(--in-content-box-border-color);
+    border-radius: 4px;
+    box-shadow: 0 0 2px 0 rgba(0,0,0,0.2);
+    transform: scaleX(1);
+    content: url(chrome://browser/skin/tabbar-as-titlebar.png);
+    min-width: 0px;
+    max-height: 65px;
+  }
+  #one-liner-mode{
+    display: block;
+    margin: 0 auto;
+    border: 1px solid var(--in-content-box-border-color);
+    border-radius: 4px;
+    box-shadow: 0 0 2px 0 rgba(0,0,0,0.2);
+    transform: scaleX(1);
+    content: url(chrome://browser/skin/tabbarasurlbar.png);
+    min-width: 0px;
+    max-height: 65px;
   }
   
   @media (-moz-platform: linux) {

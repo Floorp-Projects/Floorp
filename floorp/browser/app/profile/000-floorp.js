@@ -320,6 +320,17 @@ pref("general.config.sandbox_enabled", false);
 pref("toolkit.legacyUserProfileCustomizations.script", false);
 
 /*-----------------------------------------------------------------------------以下、Photon の既定の設定-----------------------------------------------------------------------------*/
+//Floorp
+
+// 1 = photon, 2 = lepton
+pref("floorp.lepton.interface", 1);
+
+// ** Theme Default Options ****************************************************
+// userchrome.css usercontent.css activate
+pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
+
+// Proton Enabled #127 || Removed at 97 #328 (Maintained for compatibility with ESR)
+pref("browser.proton.enabled", true);
 
 // Proton Tooltip
 pref("browser.proton.places-tooltip.enabled", true);
@@ -336,32 +347,157 @@ pref("layout.css.backdrop-filter.enabled", true);
 // Restore Compact Mode - 89 Above
 pref("browser.compactmode.show", true);
 
+// about:home Search Bar - 89 Above
+pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
+
+// CSS's `:has()` selector #457 - 103 Above
+pref("layout.css.has-selector.enabled", true);
+
 // Browser Theme Based Scheme - Will be activate 95 Above
 // pref("layout.css.prefers-color-scheme.content-override", 3);
 
 // ** Theme Related Options ****************************************************
 // == Theme Distribution Settings ==============================================
+// The rows that are located continuously must be changed `true`/`false` explicitly because there is a collision.
+// https://github.com/black7375/Firefox-UI-Fix/wiki/Options#important
 pref("userChrome.tab.connect_to_window",          true); // Original, Photon
 pref("userChrome.tab.color_like_toolbar",         true); // Original, Photon
 
-// pref("userChrome.tab.lepton_like_padding",     true); // Original
+pref("userChrome.tab.lepton_like_padding",       false); // Original
 pref("userChrome.tab.photon_like_padding",        true); // Photon
 
-// pref("userChrome.tab.dynamic_separtor",        true); // Original, Proton
+pref("userChrome.tab.dynamic_separator",         false); // Original, Proton
 pref("userChrome.tab.static_separator",           true); // Photon
+pref("userChrome.tab.static_separator.selected_accent", false); // Just option
 
-// pref("userChrome.tab.newtab_button_like_tab",  true); // Original
+pref("userChrome.tab.newtab_button_like_tab",    false); // Original
 pref("userChrome.tab.newtab_button_smaller",      true); // Photon
-// pref("userChrome.tab.newtab_button_proton",    true); // Proton
+pref("userChrome.tab.newtab_button_proton",      false); // Proton
 
-// pref("userChrome.icon.panel_full",             true); // Original, Proton
+pref("userChrome.icon.panel_full",               false); // Original, Proton
 pref("userChrome.icon.panel_photon",              true); // Photon
+pref("userChrome.icon.panel_sparse",             false); // Just option
+
+// Original Only
+pref("userChrome.tab.box_shadow",                false);
+pref("userChrome.tab.bottom_rounded_corner",     false);
 
 // Photon Only
 pref("userChrome.tab.photon_like_contextline",    true);
 pref("userChrome.rounding.square_tab",            true);
+
+// == Theme Compatibility Settings =============================================
+// pref("userChrome.compatibility.accent_color",         true); // Firefox v103 Below
+// pref("userChrome.compatibility.covered_header_image", true);
+// pref("userChrome.compatibility.panel_cutoff",         true);
+// pref("userChrome.compatibility.navbar_top_border",    true);
+// pref("userChrome.compatibility.dynamic_separator",    true); // Need dynamic_separator
+
+// pref("userChrome.compatibility.os.linux_non_native_titlebar_button", true);
+// pref("userChrome.compatibility.os.windows_maximized", true);
+
+// == Theme Custom Settings ====================================================
+// -- User Chrome --------------------------------------------------------------
+// pref("userChrome.theme.proton_color.dark_blue_accent", true);
+// pref("userChrome.theme.monospace",                     true);
+
+// pref("userChrome.decoration.disable_panel_animate",    true);
+// pref("userChrome.decoration.disable_sidebar_animate",  true);
+
+// pref("userChrome.autohide.tab",                        true);
+// pref("userChrome.autohide.tab.opacity",                true);
+// pref("userChrome.autohide.tab.blur",                   true);
+// pref("userChrome.autohide.tabbar",                     true);
+// pref("userChrome.autohide.navbar",                     true);
+// pref("userChrome.autohide.bookmarkbar",                true);
+// pref("userChrome.autohide.sidebar",                    true);
+// pref("userChrome.autohide.fill_urlbar",                true);
+// pref("userChrome.autohide.back_button",                true);
+// pref("userChrome.autohide.forward_button",             true);
+// pref("userChrome.autohide.page_action",                true);
+// pref("userChrome.autohide.toolbar_overlap",            true);
+// pref("userChrome.autohide.toolbar_overlap.allow_layout_shift", true);
+
+// pref("userChrome.hidden.tab_icon",                     true);
+// pref("userChrome.hidden.tab_icon.always",              true);
+// pref("userChrome.hidden.tabbar",                       true);
+// pref("userChrome.hidden.navbar",                       true);
+// pref("userChrome.hidden.sidebar_header",               true);
+// pref("userChrome.hidden.sidebar_header.vertical_tab_only", true);
+// pref("userChrome.hidden.urlbar_iconbox",               true);
+// pref("userChrome.hidden.bookmarkbar_icon",             true);
+// pref("userChrome.hidden.bookmarkbar_label",            true);
+// pref("userChrome.hidden.disabled_menu",                true);
+
+// pref("userChrome.centered.tab",                        true);
+// pref("userChrome.centered.tab.label",                  true);
+// pref("userChrome.centered.urlbar",                     true);
+// pref("userChrome.centered.bookmarkbar",                true);
+
+// pref("userChrome.rounding.square_button",              true);
+// pref("userChrome.rounding.square_panel",               true);
+// pref("userChrome.rounding.square_panelitem",           true);
+// pref("userChrome.rounding.square_menupopup",           true);
+// pref("userChrome.rounding.square_menuitem",            true);
+// pref("userChrome.rounding.square_field",               true);
+// pref("userChrome.rounding.square_checklabel",          true);
+
+// pref("userChrome.padding.first_tab",                   true);
+// pref("userChrome.padding.first_tab.always",            true);
+// pref("userChrome.padding.drag_space",                  true);
+// pref("userChrome.padding.drag_space.maximized",        true);
+
+// pref("userChrome.padding.menu_compact",                true);
+// pref("userChrome.padding.bookmark_menu.compact",       true);
+// pref("userChrome.padding.urlView_expanding",           true);
+// pref("userChrome.padding.urlView_result",              true);
+// pref("userChrome.padding.panel_header",                true);
+
+// pref("userChrome.urlView.move_icon_to_left",           true);
+// pref("userChrome.urlView.go_button_when_typing",       true);
+// pref("userChrome.urlView.always_show_page_actions",    true);
+
+// pref("userChrome.tabbar.as_titlebar",                  true);
+// pref("userChrome.tabbar.on_bottom",                    true);
+// pref("userChrome.tabbar.on_bottom.above_bookmark",     true); // Need on_bottom
+// pref("userChrome.tabbar.on_bottom.menubar_on_top",     true); // Need on_bottom
+// pref("userChrome.tabbar.on_bottom.hidden_single_tab",  true); // Need on_bottom
+// pref("userChrome.tabbar.one_liner",                    true);
+// pref("userChrome.tabbar.one_liner.combine_navbar",     true); // Need one_liner
+// pref("userChrome.tabbar.one_liner.tabbar_first",       true); // Need one_liner
+// pref("userChrome.tabbar.one_liner.responsive",         true); // Need one_liner
+
+// pref("userChrome.tab.always_show_tab_icon",            true);
+// pref("userChrome.tab.close_button_at_pinned",          true);
+// pref("userChrome.tab.close_button_at_pinned.always",   true);
+// pref("userChrome.tab.close_button_at_pinned.background", true);
+// pref("userChrome.tab.close_button_at_hover.always",    true); // Need close_button_at_hover
+// pref("userChrome.tab.sound_show_label",                true); // Need remove sound_hide_label
+
+// pref("userChrome.panel.remove_strip",                  true);
+// pref("userChrome.panel.full_width_separator",          true);
+// pref("userChrome.panel.full_width_padding",            true);
+
+// pref("userChrome.sidebar.overlap",                     true);
+
+// pref("userChrome.icon.disabled",                       true);
+// pref("userChrome.icon.account_image_to_right",         true);
+// pref("userChrome.icon.account_label_to_right",         true);
+// pref("userChrome.icon.menu.full",                      true);
+// pref("userChrome.icon.global_menu.mac",                true);
+
+// -- User Content -------------------------------------------------------------
+// pref("userContent.player.ui.twoline",                  true);
+
+// pref("userContent.page.proton_color.dark_blue_accent", true);
+// pref("userContent.page.proton_color.system_accent",    true);
+// pref("userContent.page.monospace",                     true);
+
+// == Theme Default Settings ===================================================
+// -- User Chrome --------------------------------------------------------------
 pref("userChrome.compatibility.theme",       true);
 pref("userChrome.compatibility.os",          true);
+
 pref("userChrome.theme.built_in_contrast",   true);
 pref("userChrome.theme.system_default",      true);
 pref("userChrome.theme.proton_color",        true);
@@ -398,6 +534,7 @@ pref("userChrome.tab.container",             true);
 pref("userChrome.tab.crashed",               true);
 
 pref("userChrome.fullscreen.overlap",        true);
+pref("userChrome.fullscreen.show_bookmarkbar", true);
 
 pref("userChrome.icon.library",              true);
 pref("userChrome.icon.panel",                true);
@@ -428,4 +565,3 @@ pref("userContent.page.proton",           true); // Need proton_color
 // ** Useful Options ***********************************************************
 // Integrated calculator at urlbar
 pref("browser.urlbar.suggest.calculator", true);
-
