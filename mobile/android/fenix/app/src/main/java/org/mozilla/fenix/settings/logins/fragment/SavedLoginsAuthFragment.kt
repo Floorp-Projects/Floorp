@@ -224,10 +224,12 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
      * Called when authentication succeeds.
      */
     private fun navigateToSavedLoginsFragment() {
-        Logins.openLogins.record(NoExtras())
-        val directions =
-            SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToLoginsListFragment()
-        findNavController().navigate(directions)
+        if (findNavController().currentDestination?.id == R.id.savedLoginsAuthFragment) {
+            Logins.openLogins.record(NoExtras())
+            val directions =
+                SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToLoginsListFragment()
+            findNavController().navigate(directions)
+        }
     }
 
     private fun navigateToSaveLoginSettingFragment() {
