@@ -158,7 +158,7 @@
     </vbox>
   </panelview>
 
-  <panelview id="PanelUI-history" flex="1">
+  <panelview id="PanelUI-history">
     <vbox class="panel-subview-body">
       <toolbarbutton id="appMenuRecentlyClosedTabs"
                      data-l10n-id="appmenu-recently-closed-tabs"
@@ -201,15 +201,15 @@
   <panelview id="appMenu-library-recentlyClosedTabs"/>
   <panelview id="appMenu-library-recentlyClosedWindows"/>
 
-  <panelview id="PanelUI-containers" flex="1">
+  <panelview id="PanelUI-containers">
     <vbox id="PanelUI-containersItems"/>
   </panelview>
 
-  <panelview id="PanelUI-helpView" flex="1" class="PanelUI-subView" data-l10n-id="appmenu-help-header" data-l10n-attrs="title">
+  <panelview id="PanelUI-helpView" class="PanelUI-subView" data-l10n-id="appmenu-help-header" data-l10n-attrs="title">
     <vbox id="PanelUI-helpItems" class="panel-subview-body"/>
   </panelview>
 
-  <panelview id="PanelUI-bookmarks" flex="1" class="PanelUI-subView">
+  <panelview id="PanelUI-bookmarks" class="PanelUI-subView">
     <vbox class="panel-subview-body">
       <toolbarbutton id="panelMenuBookmarkThisPage"
                      class="subviewbutton"
@@ -246,7 +246,7 @@
                    />
   </panelview>
 
-  <panelview id="PanelUI-profiler" flex="1">
+  <panelview id="PanelUI-profiler">
     <vbox id="PanelUI-profiler-container">
       <vbox id="PanelUI-profiler-header" animationready="false">
         <hbox id="PanelUI-profiler-header-bar">
@@ -343,7 +343,7 @@
     </vbox>
   </panelview>
 
-  <panelview id="PanelUI-panicView" flex="1">
+  <panelview id="PanelUI-panicView">
     <vbox class="panel-subview-body">
       <hbox id="PanelUI-panic-timeframe">
         <image id="PanelUI-panic-timeframe-icon" alt=""/>
@@ -392,7 +392,7 @@
     </vbox>
   </panelview>
 
-  <panelview id="PanelUI-developer-tools" flex="1" class="PanelUI-subview">
+  <panelview id="PanelUI-developer-tools" class="PanelUI-subview">
     <vbox id="PanelUI-developer-tools-view"
           class="panel-subview-body"
           role="group">
@@ -401,7 +401,7 @@
   </panelview>
 
   <panelview id="PanelUI-savetopocket"
-             flex="1" class="PanelUI-subView"
+             class="PanelUI-subView"
              remote="true"
              neverhidden="true"
              closemenu="none">
@@ -409,7 +409,7 @@
     </vbox>
   </panelview>
 
-  <panelview id="PanelUI-remotetabs" flex="1" class="PanelUI-subView">
+  <panelview id="PanelUI-remotetabs" class="PanelUI-subView">
     <vbox class="panel-subview-body">
       <!-- this widget has 3 boxes in the body, but only 1 is ever visible -->
       <!-- When Sync is ready to sync -->
@@ -609,7 +609,7 @@
   </panelview>
 
   <!-- This panelview is used to contain the dynamically created buttons for send tab to devices -->
-  <panelview id="PanelUI-sendTabToDevice" flex="1" class="PanelUI-subView">
+  <panelview id="PanelUI-sendTabToDevice" class="PanelUI-subView">
     <vbox class="panel-subview-body">
       <toolbarbutton id="PanelUI-sendTabToDevice-syncingDevices" class="subviewbutton subviewbutton-iconic pageAction-sendToDevice-notReady"
                      data-l10n-id="fxa-menu-send-tab-to-device-syncnotready"
@@ -617,7 +617,7 @@
     </vbox>
   </panelview>
 
-  <panelview id="PanelUI-fxa-menu-sendtab-not-configured" flex="1" class="PanelUI-subView">
+  <panelview id="PanelUI-fxa-menu-sendtab-not-configured" class="PanelUI-subView">
     <vbox id="PanelUI-fxa-sendtab-not-configured" align="center" class="panel-subview-body">
       <image class="fxaSendToDeviceLogo" role="presentation"/>
       <label class="PanelUI-fxa-service-description-label" data-l10n-id="fxa-menu-send-tab-to-device-description"></label>
@@ -628,7 +628,7 @@
     </vbox>
   </panelview>
 
-  <panelview id="PanelUI-fxa-menu-sendtab-no-devices" flex="1" class="PanelUI-subView">
+  <panelview id="PanelUI-fxa-menu-sendtab-no-devices" class="PanelUI-subView">
     <vbox id="PanelUI-fxa-sendtab-no-devices" align="center" class="panel-subview-body">
       <image class="fxaSendToDeviceLogo" role="presentation"/>
       <label class="PanelUI-fxa-service-description-label" data-l10n-id="fxa-menu-send-tab-to-device-description"></label>
@@ -678,8 +678,7 @@
   </panelview>
 
   <panelview id="unified-extensions-view"
-             class="cui-widget-panelview PanelUI-subView"
-             flex="1">
+             class="cui-widget-panelview PanelUI-subView">
     <vbox class="unified-extensions-panel-header">
       <html:h1 data-l10n-id="unified-extensions-header-title"/>
     </vbox>
