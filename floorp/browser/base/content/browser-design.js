@@ -10,11 +10,12 @@ var { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.j
   setBrowserDesign();
 
 //-------------------------------------------------------------------------Observer----------------------------------------------------------------------------
-
-Services.prefs.addObserver("floorp.browser.user.interface", function(){
+function updateDesign(){
   let designID = document.getElementById("browserdesgin");
   if (designID)designID.remove();
   setBrowserDesign();
   URLbarrecalculation();
- }   
-)
+ }
+
+Services.prefs.addObserver("floorp.browser.user.interface",updateDesign)
+Services.obs.addObserver(updateDesign, "update-photon-pref");
