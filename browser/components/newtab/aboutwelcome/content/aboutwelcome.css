@@ -509,6 +509,21 @@ html {
   width: -moz-available;
   margin-inline: 0;
 }
+@media (prefers-contrast) {
+  .onboardingContainer .screen[pos=split] .section-main .main-content {
+    border: 1px solid var(--in-content-page-color);
+  }
+  .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar {
+    border-top: 1px solid var(--in-content-page-color);
+  }
+  .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator {
+    opacity: 1;
+    border-color: var(--in-content-page-background);
+  }
+  .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator.current, .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator.complete {
+    border-color: var(--in-content-accent-color);
+  }
+}
 .onboardingContainer .screen[pos=split] .section-secondary {
   --mr-secondary-position: center center / auto 350px;
   border-radius: 8px 0 0 8px;
