@@ -33,6 +33,7 @@ internal class GeckoWebNotificationDelegate(
             triggeredByWebExtension = source == null,
             privateBrowsing = privateBrowsing,
             engineNotification = this@toWebNotification,
+            silent = silent,
         )
     }
 }

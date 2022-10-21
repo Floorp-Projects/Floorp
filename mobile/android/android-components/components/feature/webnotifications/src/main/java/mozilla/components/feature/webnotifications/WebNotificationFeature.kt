@@ -111,7 +111,7 @@ class WebNotificationFeature(
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 context.getString(R.string.mozac_feature_notification_channel_name),
-                NotificationManager.IMPORTANCE_LOW,
+                NotificationManager.IMPORTANCE_DEFAULT,
             )
             channel.setShowBadge(true)
             channel.lockscreenVisibility = NotificationCompat.VISIBILITY_PRIVATE

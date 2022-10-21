@@ -9,6 +9,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* **feature-webnotifications**
+  * 🌟 Added support for silent web notifications. Default importance level for web notifications was set to `IMPORTANCE_DEFAULT`.[bug #1796766](https://bugzilla.mozilla.org/show_bug.cgi?id=1796766).
+
 * **feature-media**
   * 🚒 Bug fixed [bug #1802620](https://bugzilla.mozilla.org/show_bug.cgi?id=1802620). Handles `ForegroundServiceStartNotAllowedException`.
 

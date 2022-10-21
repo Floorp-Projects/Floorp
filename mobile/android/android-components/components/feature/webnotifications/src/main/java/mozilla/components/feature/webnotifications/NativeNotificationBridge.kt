@@ -13,6 +13,7 @@ import android.graphics.Bitmap
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import androidx.annotation.DrawableRes
+import androidx.core.app.NotificationCompat
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.Icon.Source
 import mozilla.components.browser.icons.IconRequest
@@ -41,10 +42,10 @@ internal class NativeNotificationBridge(
         requestId: Int,
     ): Notification {
         val builder = if (SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(context, channelId)
+            NotificationCompat.Builder(context, channelId)
         } else {
             @Suppress("Deprecation")
-            Notification.Builder(context)
+            NotificationCompat.Builder(context)
         }
 
         with(notification) {
@@ -63,6 +64,7 @@ internal class NativeNotificationBridge(
                 .setShowWhen(true)
                 .setWhen(timestamp)
                 .setAutoCancel(true)
+                .setSilent(notification.silent)
 
             sourceUrl?.let {
                 builder.setSubText(it.tryGetHostFromUrl())
@@ -70,7 +72,7 @@ internal class NativeNotificationBridge(
 
             body?.let {
                 builder.setContentText(body)
-                    .setStyle(Notification.BigTextStyle().bigText(body))
+                    .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             }
 
             loadIcon(sourceUrl, iconUrl, Size.DEFAULT, true)?.let { iconBitmap ->
