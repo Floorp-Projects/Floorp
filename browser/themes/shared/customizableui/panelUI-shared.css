@@ -132,7 +132,6 @@
 
 panelview {
   -moz-box-orient: vertical;
-  -moz-box-flex: 1;
   background: var(--arrowpanel-background);
   padding: 0;
 }
