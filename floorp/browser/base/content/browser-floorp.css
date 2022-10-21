@@ -9,7 +9,7 @@
   
   .browser-sidebar2 {
     -moz-box-ordinal-group: 1 !important;
-    background: var(--toolbar-field-background-color);
+    background: var(--toolbar-bgcolor);
     border: var(--win-sidebar-bgcolor) 0.1px solid;
   } 
 
@@ -22,7 +22,7 @@
     }
   
   #sidebar-select-box {
-    background: var(--toolbar-field-background-color);
+    background: var(--toolbar-bgcolor);
   }
   
   #sidebar-select-box {
