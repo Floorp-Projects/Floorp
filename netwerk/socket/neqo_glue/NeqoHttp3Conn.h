@@ -107,6 +107,26 @@ class NeqoHttp3Conn final {
     return neqo_http3conn_get_stats(this, aStats);
   }
 
+  nsresult CreateWebTransport(const nsACString& aHost, const nsACString& aPath,
+                              const nsACString& aHeaders,
+                              uint64_t* aSessionId) {
+    return neqo_http3conn_webtransport_create_session(this, &aHost, &aPath,
+                                                      &aHeaders, aSessionId);
+  }
+
+  nsresult CloseWebTransport(uint64_t aSessionId, uint32_t aError,
+                             const nsACString& aMessage) {
+    return neqo_http3conn_webtransport_close_session(this, aSessionId, aError,
+                                                     &aMessage);
+  }
+
+  nsresult CreateWebTransportStream(uint64_t aSessionId,
+                                    WebTransportStreamType aStreamType,
+                                    uint64_t* aStreamId) {
+    return neqo_http3conn_webtransport_create_stream(this, aSessionId,
+                                                     aStreamType, aStreamId);
+  }
+
  private:
   NeqoHttp3Conn() = delete;
   ~NeqoHttp3Conn() = delete;
