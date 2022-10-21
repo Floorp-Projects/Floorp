@@ -101,7 +101,6 @@ notification[type="critical"] > .close-icon:hover:active {
 
 .messageImage {
   width: 24px;
-  height: 24px;
   margin: 4px 0;
   -moz-context-properties: fill;
   fill: currentColor;
