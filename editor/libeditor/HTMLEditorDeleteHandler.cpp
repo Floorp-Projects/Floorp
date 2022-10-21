@@ -1018,7 +1018,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
      * `MaybeInsertBRElementBeforeEmptyListItemElement()` before deleting
      * the list item element.
      * If found empty ancestor is not a list item element,
-     * `GetNewCaretPoisition()` will be called to determine new caret position.
+     * `GetNewCaretPosition()` will be called to determine new caret position.
      * Finally, removes the empty block ancestor.
      *
      * @param aHTMLEditor         The HTMLEditor.
@@ -1047,10 +1047,10 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
     MaybeInsertBRElementBeforeEmptyListItemElement(HTMLEditor& aHTMLEditor);
 
     /**
-     * GetNewCaretPoisition() returns new caret position after deleting
+     * GetNewCaretPosition() returns new caret position after deleting
      * `mEmptyInclusiveAncestorBlockElement`.
      */
-    [[nodiscard]] Result<EditorDOMPoint, nsresult> GetNewCaretPoisition(
+    [[nodiscard]] Result<CaretPoint, nsresult> GetNewCaretPosition(
         const HTMLEditor& aHTMLEditor,
         nsIEditor::EDirection aDirectionAndAmount) const;
 
@@ -5884,8 +5884,8 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
   return unwrappedInsertBRElementResult.UnwrapNewNode();
 }
 
-Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
-    AutoEmptyBlockAncestorDeleter::GetNewCaretPoisition(
+Result<CaretPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
+    AutoEmptyBlockAncestorDeleter::GetNewCaretPosition(
         const HTMLEditor& aHTMLEditor,
         nsIEditor::EDirection aDirectionAndAmount) const {
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement);
@@ -5909,12 +5909,12 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
           NS_WARNING("HTMLEditUtils::GetGoodCaretPointFor() failed");
           return Err(NS_ERROR_FAILURE);
         }
-        return pt;
+        return CaretPoint(std::move(pt));
       }
       if (NS_WARN_IF(!afterEmptyBlock.IsSet())) {
         return Err(NS_ERROR_FAILURE);
       }
-      return afterEmptyBlock;
+      return CaretPoint(std::move(afterEmptyBlock));
     }
     case nsIEditor::ePrevious:
     case nsIEditor::ePreviousWord:
@@ -5932,21 +5932,28 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
           NS_WARNING("HTMLEditUtils::GetGoodCaretPointFor() failed");
           return Err(NS_ERROR_FAILURE);
         }
-        return pt;
+        return CaretPoint(std::move(pt));
       }
       auto afterEmptyBlock =
           EditorDOMPoint::After(*mEmptyInclusiveAncestorBlockElement);
       if (NS_WARN_IF(!afterEmptyBlock.IsSet())) {
         return Err(NS_ERROR_FAILURE);
       }
-      return afterEmptyBlock;
+      return CaretPoint(std::move(afterEmptyBlock));
     }
-    case nsIEditor::eNone:
-      return EditorDOMPoint();
+    case nsIEditor::eNone: {
+      // Collapse selection at the removing block when we are replacing
+      // selected content.
+      EditorDOMPoint atEmptyBlock(mEmptyInclusiveAncestorBlockElement);
+      if (NS_WARN_IF(!atEmptyBlock.IsSet())) {
+        return Err(NS_ERROR_FAILURE);
+      }
+      return CaretPoint(std::move(atEmptyBlock));
+    }
     default:
       MOZ_CRASH(
           "AutoEmptyBlockAncestorDeleter doesn't support this action yet");
-      return EditorDOMPoint();
+      return Err(NS_ERROR_FAILURE);
   }
 }
 
@@ -5977,19 +5984,17 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::Run(
       }
     }
   } else {
-    Result<EditorDOMPoint, nsresult> result =
-        GetNewCaretPoisition(aHTMLEditor, aDirectionAndAmount);
-    if (result.isErr()) {
-      NS_WARNING(
-          "AutoEmptyBlockAncestorDeleter::GetNewCaretPoisition() failed");
+    Result<CaretPoint, nsresult> result =
+        GetNewCaretPosition(aHTMLEditor, aDirectionAndAmount);
+    if (MOZ_UNLIKELY(result.isErr())) {
+      NS_WARNING("AutoEmptyBlockAncestorDeleter::GetNewCaretPosition() failed");
       return result.propagateErr();
     }
-    if (result.inspect().IsSet()) {
-      nsresult rv = aHTMLEditor.CollapseSelectionTo(result.inspect());
-      if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-        return Err(rv);
-      }
+    MOZ_ASSERT(result.inspect().HasCaretPointSuggestion());
+    nsresult rv = result.inspect().SuggestCaretPointTo(aHTMLEditor, {});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+      return Err(rv);
     }
   }
   nsresult rv = aHTMLEditor.DeleteNodeWithTransaction(
