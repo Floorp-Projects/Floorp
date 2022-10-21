@@ -75,6 +75,10 @@ Preferences.addAll([
     }
     el = document.getElementById("treestyletaboption");
     el.addEventListener("click", opentreestyletaboption, false);
+
+    document.getElementById("leptonButton").addEventListener("click", function(){
+      window.location.href = "about:preferences#lepton";
+    }, false);
   
     document.getElementById("SetCustomURL").addEventListener("click", function(){
       gSubDialog.open(

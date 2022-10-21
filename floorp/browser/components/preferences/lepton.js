@@ -95,4 +95,5 @@ function setLeptonUI() {
 window.setTimeout(function(){
   document.getElementById("lepton-design-mode").addEventListener("click", setLeptonUI, false);
   document.getElementById("photon-design-mode").addEventListener("click", setPhotonUI, false);
+  document.getElementById("backtogeneral").addEventListener("command", function(){gotoPref("general");});
 }, 1000);

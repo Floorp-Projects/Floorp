@@ -6,12 +6,25 @@
 
 <html:template id="template-paneLepton">
 
+  <hbox class="container-header-links" data-category="paneLepton">
+    <button id="backtogeneral" class="back-button" data-l10n-id="containers-back-button2">
+      <hbox class="box-inherit button-box" align="center" pack="center" flex="1" anonid="button-box">
+        <image class="button-icon"/>
+        <label class="button-text"/>
+      </hbox>
+    </button>
+  </hbox>
+
 <groupbox data-category="paneLepton" hidden="true">
   <vbox class="contentPane">
     <html:h2 data-l10n-id="lepton-preference"/>
+    <description class="indent tip-caption" data-l10n-id="about-lepton"/>
    <radiogroup preference="floorp.lepton.interface">
      <radio id="photon-design-mode" value="1" data-l10n-id="photon-mode"/>
+     <div id="photon-mode">
+    </div>    
      <radio id="lepton-design-mode" value="2" data-l10n-id="lepton-mode"/>
+     <div id="lepton-mode"></div>    
    </radiogroup>
   </vbox>
 
@@ -87,10 +100,11 @@
 
   <checkbox data-l10n-id="floorp-lepton-enable-tabbar-positon-as-titlebar"
             preference="userChrome.tabbar.as_titlebar"/>
+  <div id="as-titlebar-mode"></div>             
 
   <checkbox data-l10n-id="floorp-lepton-enable-tabbar-as-urlbar"
             preference="userChrome.tabbar.one_liner"/>
-
+  <div id="one-liner-mode"></div>   
    <html:h2 data-l10n-id="lepton-sidebar-preferences"/>
 
   <checkbox data-l10n-id="floorp-lepton-enable-overlap-sidebar"

@@ -9,3 +9,7 @@ browser.jar:
 browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
    skin/classic/browser/preferences/preferences-floorp.css
+   skin/classic/browser/lepton.png　　　　　　　　　　　　　　　　　　　　　  (imgs/lepton.png)
+   skin/classic/browser/photon.png  　　　　　　　　　　　　　　　　　   　  (imgs/photon.png)
+   skin/classic/browser/tabbarasurlbar.png                             (imgs/tabbarasurlbar.png)
+   skin/classic/browser/tabbar-as-titlebar.png                         (imgs/tabbar-as-titlebar.png)

@@ -112,8 +112,8 @@ firefox-proton =
 firefox-proton-fix =
  .label = Firefox Proton FIX UI
 
-firefox-photon = 
- .label = Firefox Legacy Photon UI
+firefox-photon-lepton = 
+ .label = Firefox Photon・Lepton UI
  
 floorp-legacy =  
  .label = Floorp Legacy material UI・Unsupported
@@ -260,6 +260,14 @@ newtab-background-not-background =
 
 ## lepton preferences
 
+about-lepton = Customize { -brand-short-name } with Lepton. Applying all settings requires a reboot
+
+lepton-preference-button =
+    .label = Lepton Preferences...
+    .accesskey = L
+
+lepton-header = Lepton Preferences
+
 lepton-preference = Lepton UI Settings
 photon-mode = 
     .label = Photon Mode
@@ -335,6 +343,7 @@ floorp-lepton-enable-tabbar-as-urlbar =
 lepton-sidebar-preferences = Sidebar
 floorp-lepton-enable-overlap-sidebar =
     .label = Show Sidebar Overlap main Viewer
+
 ## tool attribute
 ################################################################### browser ###############################################################
 
