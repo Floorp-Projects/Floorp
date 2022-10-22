@@ -60,31 +60,32 @@ function Readability(doc, options) {
                 this.FLAG_WEIGHT_CLASSES |
                 this.FLAG_CLEAN_CONDITIONALLY;
 
-  var logEl;
 
   // Control whether log messages are sent to the console
   if (this._debug) {
-    logEl = function(e) {
-      var rv = e.nodeName + " ";
-      if (e.nodeType == e.TEXT_NODE) {
-        return rv + '("' + e.textContent + '")';
+    let logNode = function(node) {
+      if (node.nodeType == node.TEXT_NODE) {
+        return `${node.nodeName} ("${node.textContent}")`;
       }
-      var classDesc = e.className && ("." + e.className.replace(/ /g, "."));
-      var elDesc = "";
-      if (e.id)
-        elDesc = "(#" + e.id + classDesc + ")";
-      else if (classDesc)
-        elDesc = "(" + classDesc + ")";
-      return rv + elDesc;
+      let attrPairs = Array.from(node.attributes || [], function(attr) {
+        return `${attr.name}="${attr.value}"`;
+      }).join(" ");
+      return `<${node.localName} ${attrPairs}>`;
     };
     this.log = function () {
       if (typeof dump !== "undefined") {
         var msg = Array.prototype.map.call(arguments, function(x) {
-          return (x && x.nodeName) ? logEl(x) : x;
+          return (x && x.nodeName) ? logNode(x) : x;
         }).join(" ");
         dump("Reader: (Readability) " + msg + "\n");
       } else if (typeof console !== "undefined") {
-        var args = ["Reader: (Readability) "].concat(arguments);
+        let args = Array.from(arguments, arg => {
+          if (arg && arg.nodeType == this.ELEMENT_NODE) {
+            return logNode(arg);
+          }
+          return arg;
+        });
+        args.unshift("Reader: (Readability)");
         console.log.apply(console, args);
       }
     };
@@ -133,6 +134,7 @@ Readability.prototype = {
     shareElements: /(\b|_)(share|sharedaddy)(\b|_)/i,
     nextLink: /(next|weiter|continue|>([^\|]|$)|»([^\|]|$))/i,
     prevLink: /(prev|earl|old|new|<|«)/i,
+    tokenize: /\W+/g,
     whitespace: /^\s*$/,
     hasContent: /\S$/,
     hashUrl: /^#.+/,
@@ -388,8 +390,8 @@ Readability.prototype = {
           } else {
             // if the link has multiple children, they should all be preserved
             var container = this._doc.createElement("span");
-            while (link.childNodes.length > 0) {
-              container.appendChild(link.childNodes[0]);
+            while (link.firstChild) {
+              container.appendChild(link.firstChild);
             }
             link.parentNode.replaceChild(container, link);
           }
@@ -675,7 +677,6 @@ Readability.prototype = {
     this._cleanConditionally(articleContent, "fieldset");
     this._clean(articleContent, "object");
     this._clean(articleContent, "embed");
-    this._clean(articleContent, "h1");
     this._clean(articleContent, "footer");
     this._clean(articleContent, "link");
     this._clean(articleContent, "aside");
@@ -691,25 +692,6 @@ Readability.prototype = {
       });
     });
 
-    // If there is only one h2 and its text content substantially equals article title,
-    // they are probably using it as a header and not a subheader,
-    // so remove it since we already extract the title separately.
-    var h2 = articleContent.getElementsByTagName("h2");
-    if (h2.length === 1) {
-      var lengthSimilarRate = (h2[0].textContent.length - this._articleTitle.length) / this._articleTitle.length;
-      if (Math.abs(lengthSimilarRate) < 0.5) {
-        var titlesMatch = false;
-        if (lengthSimilarRate > 0) {
-          titlesMatch = h2[0].textContent.includes(this._articleTitle);
-        } else {
-          titlesMatch = this._articleTitle.includes(h2[0].textContent);
-        }
-        if (titlesMatch) {
-          this._clean(articleContent, "h2");
-        }
-      }
-    }
-
     this._clean(articleContent, "iframe");
     this._clean(articleContent, "input");
     this._clean(articleContent, "textarea");
@@ -722,6 +704,9 @@ Readability.prototype = {
     this._cleanConditionally(articleContent, "table");
     this._cleanConditionally(articleContent, "ul");
     this._cleanConditionally(articleContent, "div");
+
+    // replace H1 with H2 as H1 should be only title that is displayed separately
+    this._replaceNodeTags(this._getAllNodesWithTag(articleContent, ["h1"]), "h2");
 
     // Remove extra paragraphs
     this._removeNodes(this._getAllNodesWithTag(articleContent, ["p"]), function (paragraph) {
@@ -832,6 +817,21 @@ Readability.prototype = {
     return node && node.nextElementSibling;
   },
 
+  // compares second text to first one
+  // 1 = same text, 0 = completely different text
+  // works the way that it splits both texts into words and then finds words that are unique in second text
+  // the result is given by the lower length of unique parts
+  _textSimilarity: function(textA, textB) {
+    var tokensA = textA.toLowerCase().split(this.REGEXPS.tokenize).filter(Boolean);
+    var tokensB = textB.toLowerCase().split(this.REGEXPS.tokenize).filter(Boolean);
+    if (!tokensA.length || !tokensB.length) {
+      return 0;
+    }
+    var uniqTokensB = tokensB.filter(token => !tokensA.includes(token));
+    var distanceB = uniqTokensB.join(" ").length / tokensB.join(" ").length;
+    return 1 - distanceB;
+  },
+
   _checkByline: function(node, matchString) {
     if (this._articleByline) {
       return false;
@@ -884,6 +884,7 @@ Readability.prototype = {
     var pageCacheHtml = page.innerHTML;
 
     while (true) {
+      this.log("Starting grabArticle loop");
       var stripUnlikelyCandidates = this._flagIsActive(this.FLAG_STRIP_UNLIKELYS);
 
       // First, node prepping. Trash nodes that look cruddy (like ones with the
@@ -892,7 +893,14 @@ Readability.prototype = {
       var elementsToScore = [];
       var node = this._doc.documentElement;
 
+      let shouldRemoveTitleHeader = true;
+
       while (node) {
+
+        if (node.tagName === "HTML") {
+          this._articleLang = node.getAttribute("lang");
+        }
+
         var matchString = node.className + " " + node.id;
 
         if (!this._isProbablyVisible(node)) {
@@ -903,6 +911,13 @@ Readability.prototype = {
 
         // Check to see if this node is a byline, and remove it if it is.
         if (this._checkByline(node, matchString)) {
+          node = this._removeAndGetNext(node);
+          continue;
+        }
+
+        if (shouldRemoveTitleHeader && this._headerDuplicatesTitle(node)) {
+          this.log("Removing header: ", node.textContent.trim(), this._articleTitle.trim());
+          shouldRemoveTitleHeader = false;
           node = this._removeAndGetNext(node);
           continue;
         }
@@ -1075,10 +1090,9 @@ Readability.prototype = {
         neededToCreateTopCandidate = true;
         // Move everything (not just elements, also text nodes etc.) into the container
         // so we even include text directly in the body:
-        var kids = page.childNodes;
-        while (kids.length) {
-          this.log("Moving child out:", kids[0]);
-          topCandidate.appendChild(kids[0]);
+        while (page.firstChild) {
+          this.log("Moving child out:", page.firstChild);
+          topCandidate.appendChild(page.firstChild);
         }
 
         page.appendChild(topCandidate);
@@ -1209,6 +1223,9 @@ Readability.prototype = {
           }
 
           articleContent.appendChild(sibling);
+          // Fetch children again to make it compatible
+          // with DOM parsers without live collection support.
+          siblings = parentOfTopCandidate.children;
           // siblings is a reference to the children array, and
           // sibling is removed from the array when we call appendChild().
           // As a result, we must revisit this index since the nodes
@@ -1236,9 +1253,8 @@ Readability.prototype = {
         var div = doc.createElement("DIV");
         div.id = "readability-page-1";
         div.className = "page";
-        var children = articleContent.childNodes;
-        while (children.length) {
-          div.appendChild(children[0]);
+        while (articleContent.firstChild) {
+          div.appendChild(articleContent.firstChild);
         }
         articleContent.appendChild(div);
       }
@@ -1346,72 +1362,88 @@ Readability.prototype = {
   _getJSONLD: function (doc) {
     var scripts = this._getAllNodesWithTag(doc, ["script"]);
 
-    var jsonLdElement = this._findNode(scripts, function(el) {
-      return el.getAttribute("type") === "application/ld+json";
-    });
+    var metadata;
 
-    if (jsonLdElement) {
-      try {
-        // Strip CDATA markers if present
-        var content = jsonLdElement.textContent.replace(/^\s*<!\[CDATA\[|\]\]>\s*$/g, "");
-        var parsed = JSON.parse(content);
-        var metadata = {};
-        if (
-          !parsed["@context"] ||
-          !parsed["@context"].match(/^https?\:\/\/schema\.org$/)
-        ) {
-          return metadata;
-        }
-
-        if (!parsed["@type"] && Array.isArray(parsed["@graph"])) {
-          parsed = parsed["@graph"].find(function(it) {
-            return (it["@type"] || "").match(
-              this.REGEXPS.jsonLdArticleTypes
-            );
-          });
-        }
-
-        if (
-          !parsed ||
-          !parsed["@type"] ||
-          !parsed["@type"].match(this.REGEXPS.jsonLdArticleTypes)
-        ) {
-          return metadata;
-        }
-        if (typeof parsed.name === "string") {
-          metadata.title = parsed.name.trim();
-        } else if (typeof parsed.headline === "string") {
-          metadata.title = parsed.headline.trim();
-        }
-        if (parsed.author) {
-          if (typeof parsed.author.name === "string") {
-            metadata.byline = parsed.author.name.trim();
-          } else if (Array.isArray(parsed.author) && parsed.author[0] && typeof parsed.author[0].name === "string") {
-            metadata.byline = parsed.author
-              .filter(function(author) {
-                return author && typeof author.name === "string";
-              })
-              .map(function(author) {
-                return author.name.trim();
-              })
-              .join(", ");
+    this._forEachNode(scripts, function(jsonLdElement) {
+      if (!metadata && jsonLdElement.getAttribute("type") === "application/ld+json") {
+        try {
+          // Strip CDATA markers if present
+          var content = jsonLdElement.textContent.replace(/^\s*<!\[CDATA\[|\]\]>\s*$/g, "");
+          var parsed = JSON.parse(content);
+          if (
+            !parsed["@context"] ||
+            !parsed["@context"].match(/^https?\:\/\/schema\.org$/)
+          ) {
+            return;
           }
+
+          if (!parsed["@type"] && Array.isArray(parsed["@graph"])) {
+            parsed = parsed["@graph"].find(function(it) {
+              return (it["@type"] || "").match(
+                this.REGEXPS.jsonLdArticleTypes
+              );
+            });
+          }
+
+          if (
+            !parsed ||
+            !parsed["@type"] ||
+            !parsed["@type"].match(this.REGEXPS.jsonLdArticleTypes)
+          ) {
+            return;
+          }
+
+          metadata = {};
+
+          if (typeof parsed.name === "string" && typeof parsed.headline === "string" && parsed.name !== parsed.headline) {
+            // we have both name and headline element in the JSON-LD. They should both be the same but some websites like aktualne.cz
+            // put their own name into "name" and the article title to "headline" which confuses Readability. So we try to check if either
+            // "name" or "headline" closely matches the html title, and if so, use that one. If not, then we use "name" by default.
+
+            var title = this._getArticleTitle();
+            var nameMatches = this._textSimilarity(parsed.name, title) > 0.75;
+            var headlineMatches = this._textSimilarity(parsed.headline, title) > 0.75;
+
+            if (headlineMatches && !nameMatches) {
+              metadata.title = parsed.headline;
+            } else {
+              metadata.title = parsed.name;
+            }
+          } else if (typeof parsed.name === "string") {
+            metadata.title = parsed.name.trim();
+          } else if (typeof parsed.headline === "string") {
+            metadata.title = parsed.headline.trim();
+          }
+          if (parsed.author) {
+            if (typeof parsed.author.name === "string") {
+              metadata.byline = parsed.author.name.trim();
+            } else if (Array.isArray(parsed.author) && parsed.author[0] && typeof parsed.author[0].name === "string") {
+              metadata.byline = parsed.author
+                .filter(function(author) {
+                  return author && typeof author.name === "string";
+                })
+                .map(function(author) {
+                  return author.name.trim();
+                })
+                .join(", ");
+            }
+          }
+          if (typeof parsed.description === "string") {
+            metadata.excerpt = parsed.description.trim();
+          }
+          if (
+            parsed.publisher &&
+            typeof parsed.publisher.name === "string"
+          ) {
+            metadata.siteName = parsed.publisher.name.trim();
+          }
+          return;
+        } catch (err) {
+          this.log(err.message);
         }
-        if (typeof parsed.description === "string") {
-          metadata.excerpt = parsed.description.trim();
-        }
-        if (
-          parsed.publisher &&
-          typeof parsed.publisher.name === "string"
-        ) {
-          metadata.siteName = parsed.publisher.name.trim();
-        }
-        return metadata;
-      } catch (err) {
-        this.log(err.message);
       }
-    }
-    return {};
+    });
+    return metadata ? metadata : {};
   },
 
   /**
@@ -1876,7 +1908,7 @@ Readability.prototype = {
   /**
    * Look for 'data' (as opposed to 'layout') tables, for which we use
    * similar checks as
-   * https://dxr.mozilla.org/mozilla-central/rev/71224049c0b52ab190564d3ea0eab089a159a4cf/accessible/html/HTMLTableAccessible.cpp#920
+   * https://searchfox.org/mozilla-central/rev/f82d5c549f046cb64ce5602bfd894b7ae807c8f8/accessible/generic/TableAccessible.cpp#19
    */
   _markDataTables: function(root) {
     var tables = root.getElementsByTagName("table");
@@ -1976,7 +2008,7 @@ Readability.prototype = {
 
       for (var j = 0; j < elem.attributes.length; j++) {
         attr = elem.attributes[j];
-        if (attr.name === "src" || attr.name === "srcset") {
+        if (attr.name === "src" || attr.name === "srcset" || attr.name === "alt") {
           continue;
         }
         var copyTo = null;
@@ -1999,6 +2031,17 @@ Readability.prototype = {
         }
       }
     });
+  },
+
+  _getTextDensity: function(e, tags) {
+    var textLength = this._getInnerText(e, true).length;
+    if (textLength === 0) {
+      return 0;
+    }
+    var childrenLength = 0;
+    var children = this._getAllNodesWithTag(e, tags);
+    this._forEachNode(children, (child) => childrenLength += this._getInnerText(child, true).length);
+    return childrenLength / textLength;
   },
 
   /**
@@ -2061,6 +2104,7 @@ Readability.prototype = {
         var img = node.getElementsByTagName("img").length;
         var li = node.getElementsByTagName("li").length - 100;
         var input = node.getElementsByTagName("input").length;
+        var headingDensity = this._getTextDensity(node, ["h1", "h2", "h3", "h4", "h5", "h6"]);
 
         var embedCount = 0;
         var embeds = this._getAllNodesWithTag(node, ["object", "embed", "iframe"]);
@@ -2088,7 +2132,7 @@ Readability.prototype = {
           (img > 1 && p / img < 0.5 && !this._hasAncestorTag(node, "figure")) ||
           (!isList && li > p) ||
           (input > Math.floor(p/3)) ||
-          (!isList && contentLength < 25 && (img === 0 || img > 2) && !this._hasAncestorTag(node, "figure")) ||
+          (!isList && headingDensity < 0.9 && contentLength < 25 && (img === 0 || img > 2) && !this._hasAncestorTag(node, "figure")) ||
           (!isList && weight < 25 && linkDensity > 0.2) ||
           (weight >= 25 && linkDensity > 0.5) ||
           ((embedCount === 1 && contentLength < 75) || embedCount > 1);
@@ -2118,15 +2162,36 @@ Readability.prototype = {
   },
 
   /**
-   * Clean out spurious headers from an Element. Checks things like classnames and link density.
+   * Clean out spurious headers from an Element.
    *
    * @param Element
    * @return void
   **/
   _cleanHeaders: function(e) {
-    this._removeNodes(this._getAllNodesWithTag(e, ["h1", "h2"]), function (header) {
-      return this._getClassWeight(header) < 0;
+    let headingNodes = this._getAllNodesWithTag(e, ["h1", "h2"]);
+    this._removeNodes(headingNodes, function(node) {
+      let shouldRemove = this._getClassWeight(node) < 0;
+      if (shouldRemove) {
+        this.log("Removing header with low class weight:", node);
+      }
+      return shouldRemove;
     });
+  },
+
+  /**
+   * Check if this node is an H1 or H2 element whose content is mostly
+   * the same as the article title.
+   *
+   * @param Element  the node to check.
+   * @return boolean indicating whether this is a title-like header.
+   */
+  _headerDuplicatesTitle: function(node) {
+    if (node.tagName != "H1" && node.tagName != "H2") {
+      return false;
+    }
+    var heading = this._getInnerText(node, false);
+    this.log("Evaluating similarity of header:", heading, this._articleTitle);
+    return this._textSimilarity(this._articleTitle, heading) > 0.75;
   },
 
   _flagIsActive: function(flag) {
@@ -2203,6 +2268,7 @@ Readability.prototype = {
       title: this._articleTitle,
       byline: metadata.byline || this._articleByline,
       dir: this._articleDir,
+      lang: this._articleLang,
       content: this._serializer(articleContent),
       textContent: textContent,
       length: textContent.length,
