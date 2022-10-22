@@ -203,10 +203,10 @@ add_task(async function test_xpcom_graph_wait() {
     .get("MOZ_UPLOAD_DIR");
   profilePath =
     profilePath ||
-    (await IOUtils.createUniqueFile(
+    (await IOUtils.createUniqueDirectory(
       PathUtils.profileDir,
       "testBackgroundTask",
-      0o600
+      0o700
     ));
 
   profilePath = PathUtils.join(profilePath, "profile_backgroundtask_wait.json");
