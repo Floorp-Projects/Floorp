@@ -319,34 +319,32 @@ class WrappableIterableIterator final : public IterableIterator<T> {
 
 class AsyncIterableNextImpl {
  protected:
-  already_AddRefed<Promise> Next(JSContext* aCx,
-                                 AsyncIterableIteratorBase* aObject,
-                                 nsISupports* aGlobalObject, ErrorResult& aRv);
-  virtual already_AddRefed<Promise> GetNextResult(ErrorResult& aRv) = 0;
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Next(
+      JSContext* aCx, AsyncIterableIteratorBase* aObject,
+      nsISupports* aGlobalObject, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> GetNextResult(
+      ErrorResult& aRv) = 0;
 
  private:
-  already_AddRefed<Promise> NextSteps(JSContext* aCx,
-                                      AsyncIterableIteratorBase* aObject,
-                                      nsIGlobalObject* aGlobalObject,
-                                      ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> NextSteps(
+      JSContext* aCx, AsyncIterableIteratorBase* aObject,
+      nsIGlobalObject* aGlobalObject, ErrorResult& aRv);
 };
 
 class AsyncIterableReturnImpl {
  protected:
-  already_AddRefed<Promise> Return(JSContext* aCx,
-                                   AsyncIterableIteratorBase* aObject,
-                                   nsISupports* aGlobalObject,
-                                   JS::Handle<JS::Value> aValue,
-                                   ErrorResult& aRv);
-  virtual already_AddRefed<Promise> GetReturnPromise(
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Return(
+      JSContext* aCx, AsyncIterableIteratorBase* aObject,
+      nsISupports* aGlobalObject, JS::Handle<JS::Value> aValue,
+      ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> GetReturnPromise(
       JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv) = 0;
 
  private:
-  already_AddRefed<Promise> ReturnSteps(JSContext* aCx,
-                                        AsyncIterableIteratorBase* aObject,
-                                        nsIGlobalObject* aGlobalObject,
-                                        JS::Handle<JS::Value> aValue,
-                                        ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> ReturnSteps(
+      JSContext* aCx, AsyncIterableIteratorBase* aObject,
+      nsIGlobalObject* aGlobalObject, JS::Handle<JS::Value> aValue,
+      ErrorResult& aRv);
 };
 
 template <typename T>
@@ -355,14 +353,17 @@ class AsyncIterableIteratorNoReturn : public AsyncIterableIterator<T>,
  public:
   using AsyncIterableIterator<T>::AsyncIterableIterator;
 
-  already_AddRefed<Promise> Next(JSContext* aCx, ErrorResult& aRv) {
-    return AsyncIterableNextImpl::Next(
-        aCx, this, this->mIterableObj->GetParentObject(), aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Next(JSContext* aCx,
+                                                    ErrorResult& aRv) {
+    nsCOMPtr<nsISupports> parentObject = this->mIterableObj->GetParentObject();
+    return AsyncIterableNextImpl::Next(aCx, this, parentObject, aRv);
   }
 
  protected:
-  already_AddRefed<Promise> GetNextResult(ErrorResult& aRv) override {
-    return this->mIterableObj->GetNextIterationResult(
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> GetNextResult(
+      ErrorResult& aRv) override {
+    RefPtr<T> iterableObj(this->mIterableObj);
+    return iterableObj->GetNextIterationResult(
         static_cast<AsyncIterableIterator<T>*>(this), aRv);
   }
 };
@@ -371,19 +372,20 @@ template <typename T>
 class AsyncIterableIteratorWithReturn : public AsyncIterableIteratorNoReturn<T>,
                                         public AsyncIterableReturnImpl {
  public:
-  already_AddRefed<Promise> Return(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                   ErrorResult& aRv) {
-    return AsyncIterableReturnImpl::Return(
-        aCx, this, this->mIterableObj->GetParentObject(), aValue, aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Return(
+      JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
+    nsCOMPtr<nsISupports> parentObject = this->mIterableObj->GetParentObject();
+    return AsyncIterableReturnImpl::Return(aCx, this, parentObject, aValue,
+                                           aRv);
   }
 
  protected:
   using AsyncIterableIteratorNoReturn<T>::AsyncIterableIteratorNoReturn;
 
-  already_AddRefed<Promise> GetReturnPromise(JSContext* aCx,
-                                             JS::Handle<JS::Value> aValue,
-                                             ErrorResult& aRv) override {
-    return this->mIterableObj->IteratorReturn(
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> GetReturnPromise(
+      JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv) override {
+    RefPtr<T> iterableObj(this->mIterableObj);
+    return iterableObj->IteratorReturn(
         aCx, static_cast<AsyncIterableIterator<T>*>(this), aValue, aRv);
   }
 };
