@@ -1846,16 +1846,6 @@ bool gfxPlatform::IsFontFormatSupported(
   return true;
 }
 
-gfxFontGroup* gfxPlatform::CreateFontGroup(
-    nsPresContext* aPresContext, const StyleFontFamilyList& aFontFamilyList,
-    const gfxFontStyle* aStyle, nsAtom* aLanguage, bool aExplicitLanguage,
-    gfxTextPerfMetrics* aTextPerf, gfxUserFontSet* aUserFontSet,
-    gfxFloat aDevToCssSize) const {
-  return new gfxFontGroup(aPresContext, aFontFamilyList, aStyle, aLanguage,
-                          aExplicitLanguage, aTextPerf, aUserFontSet,
-                          aDevToCssSize);
-}
-
 gfxFontEntry* gfxPlatform::LookupLocalFont(nsPresContext* aPresContext,
                                            const nsACString& aFontName,
                                            WeightRange aWeightForEntry,
