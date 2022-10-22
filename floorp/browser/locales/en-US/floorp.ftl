@@ -456,3 +456,9 @@ set-pref-description = This operation requires a path to the editor. Set "view_s
 dual-theme-enable-addon-button = Enable (Sub Theme)
 dual-theme-disable-addon-button = Disable (Sub Theme)
 dual-theme-enabled-heading = Enabled (Sub Theme)
+
+##################################################################### migration  ###############################################################
+
+import-from-vivaldi =
+    .label = Vivaldi
+    .accesskey = V
