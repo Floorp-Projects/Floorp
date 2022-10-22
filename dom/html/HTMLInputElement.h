@@ -1022,7 +1022,7 @@ class HTMLInputElement final : public TextControlElement,
    * When the element isn't mutable (immutable), the value or checkedness
    * should not be changed by the user.
    *
-   * See: http://dev.w3.org/html5/spec/forms.html#concept-input-mutable
+   * See: https://html.spec.whatwg.org/#concept-fe-mutable
    */
   bool IsMutable() const;
 
