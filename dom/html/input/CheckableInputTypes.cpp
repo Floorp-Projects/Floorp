@@ -18,10 +18,6 @@ bool CheckboxInputType::IsValueMissing() const {
     return false;
   }
 
-  if (!IsMutable()) {
-    return false;
-  }
-
   return !mInputElement->Checked();
 }
 

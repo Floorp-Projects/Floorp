@@ -16,10 +16,6 @@ bool FileInputType::IsValueMissing() const {
     return false;
   }
 
-  if (!IsMutable()) {
-    return false;
-  }
-
   return mInputElement->GetFilesOrDirectoriesInternal().IsEmpty();
 }
 
