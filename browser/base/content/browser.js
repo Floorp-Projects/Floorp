@@ -2534,6 +2534,7 @@ var gBrowserInit = {
     gSync.uninit();
 
     gExtensionsNotifications.uninit();
+    gUnifiedExtensions.uninit();
 
     try {
       gBrowser.removeProgressListener(window.XULBrowserWindow);
