@@ -167,6 +167,7 @@ rusty-enums = [
     "mozilla::StyleBlend",
     "mozilla::StyleMaskComposite",
     "mozilla::StyleWritingModeProperty",
+    "StyleFontVariantEmoji",
 ]
 allowlist-vars = [
     "NS_ATTRVALUE_.*",

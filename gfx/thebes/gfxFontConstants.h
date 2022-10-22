@@ -155,6 +155,8 @@
 #define NS_FONT_VARIANT_WIDTH_THIRD 3
 #define NS_FONT_VARIANT_WIDTH_QUARTER 4
 
+enum class StyleFontVariantEmoji : uint8_t { Normal, Text, Emoji, Unicode };
+
 // based on fixed offset values used within WebKit
 #define NS_FONT_SUBSCRIPT_OFFSET_RATIO (0.20)
 #define NS_FONT_SUPERSCRIPT_OFFSET_RATIO (0.34)

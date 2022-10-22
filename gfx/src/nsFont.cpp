@@ -50,7 +50,8 @@ nsFont::MaxDifference nsFont::CalcDifference(const nsFont& aOther) const {
       (variantLigatures != aOther.variantLigatures) ||
       (variantNumeric != aOther.variantNumeric) ||
       (variantPosition != aOther.variantPosition) ||
-      (variantWidth != aOther.variantWidth)) {
+      (variantWidth != aOther.variantWidth) ||
+      (variantEmoji != aOther.variantEmoji)) {
     return MaxDifference::eLayoutAffecting;
   }
 
