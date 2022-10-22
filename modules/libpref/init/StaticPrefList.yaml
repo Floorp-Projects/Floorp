@@ -8058,6 +8058,13 @@
   mirror: always
   rust: true
 
+# Is support for font-variant-emoji enabled?
+- name: layout.css.font-variant-emoji.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Visibility level of font families available to CSS font-matching:
 #   1 - only base system fonts
 #   2 - also fonts from optional language packs
