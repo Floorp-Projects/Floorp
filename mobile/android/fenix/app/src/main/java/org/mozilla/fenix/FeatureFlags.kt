@@ -32,39 +32,9 @@ object FeatureFlags {
     const val syncAddressesFeature = false
 
     /**
-     * Enables the onboarding sync CFR on the home screen.
-     */
-    const val showSynCFR = true
-
-    /**
-     * Enables the onboarding jump back in CFR on the home screen.
-     */
-    const val showJumpBackInCFR = true
-
-    /**
-     * Enables the first run onboarding updates.
-     */
-    const val showFirstRunOnboardingUpdates = false
-
-    /**
-     * Enables the "recent" tabs feature in the home screen.
-     */
-    const val showRecentTabsFeature = true
-
-    /**
      * Enables UI features based on history metadata.
      */
     const val historyMetadataUIFeature = true
-
-    /**
-     * Enables the recently saved bookmarks feature in the home screen.
-     */
-    const val recentBookmarksFeature = true
-
-    /**
-     * Identifies and separates the tabs list with a secondary section containing least used tabs.
-     */
-    const val inactiveTabs = true
 
     /**
      * Show Pocket recommended stories on home.
@@ -83,34 +53,14 @@ object FeatureFlags {
     }
 
     /**
-     * Enables showing the homescreen onboarding card.
-     */
-    const val showHomeOnboarding = true
-
-    /**
-     * Enables the Task Continuity enhancements.
-     */
-    const val taskContinuityFeature = true
-
-    /**
      * Enables the Unified Search feature.
      */
     val unifiedSearchFeature = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables receiving from the messaging framework.
-     */
-    const val messagingFeature = true
-
-    /**
      * Enables compose on the tabs tray items.
      */
     val composeTabsTray = Config.channel.isDebug
-
-    /**
-     * Enables the wallpaper onboarding.
-     */
-    const val wallpaperOnboardingEnabled = true
 
     /**
      * Enables the wallpaper v2 enhancements.

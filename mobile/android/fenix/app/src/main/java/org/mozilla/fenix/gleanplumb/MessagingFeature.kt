@@ -5,7 +5,6 @@
 package org.mozilla.fenix.gleanplumb
 
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction
 
@@ -15,9 +14,7 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction
 class MessagingFeature(val appStore: AppStore) : LifecycleAwareFeature {
 
     override fun start() {
-        if (FeatureFlags.messagingFeature) {
-            appStore.dispatch(MessagingAction.Evaluate)
-        }
+        appStore.dispatch(MessagingAction.Evaluate)
     }
 
     override fun stop() = Unit

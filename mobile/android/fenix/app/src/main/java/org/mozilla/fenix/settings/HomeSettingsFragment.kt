@@ -68,7 +68,6 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_recent_tabs).apply {
-            isVisible = FeatureFlags.showRecentTabsFeature
             isChecked = context.settings().showRecentTabsFeature
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
@@ -85,7 +84,6 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_recent_bookmarks).apply {
-            isVisible = FeatureFlags.recentBookmarksFeature
             isChecked = context.settings().showRecentBookmarksFeature
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {

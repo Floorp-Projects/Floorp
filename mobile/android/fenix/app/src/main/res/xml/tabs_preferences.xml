@@ -51,8 +51,7 @@
         android:title="@string/preferences_inactive_tabs"
         android:key="@string/pref_key_inactive_tabs_category"
         app:allowDividerAbove="true"
-        app:iconSpaceReserved="false"
-        app:isPreferenceVisible="false">
+        app:iconSpaceReserved="false">
         <SwitchPreference
             android:defaultValue="true"
             android:key="@string/pref_key_inactive_tabs"

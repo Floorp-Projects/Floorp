@@ -238,7 +238,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var showWallpaperOnboarding by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_wallpapers_onboarding),
-        featureFlag = FeatureFlags.wallpaperOnboardingEnabled,
+        featureFlag = true,
         default = { mr2022Sections[Mr2022Section.WALLPAPERS_SELECTION_TOOL] == true },
     )
 
@@ -450,10 +450,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the user has enabled the inactive tabs feature.
      */
-    var inactiveTabsAreEnabled by featureFlagPreference(
+    var inactiveTabsAreEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_inactive_tabs),
-        default = FeatureFlags.inactiveTabs,
-        featureFlag = FeatureFlags.inactiveTabs,
+        default = true,
     )
 
     @VisibleForTesting
@@ -910,7 +909,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var shouldShowJumpBackInCFR by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_should_show_jump_back_in_tabs_popup),
-        featureFlag = FeatureFlags.showJumpBackInCFR,
+        featureFlag = true,
         default = { mr2022Sections[Mr2022Section.JUMP_BACK_IN_CFR] == true },
     )
 
@@ -1271,7 +1270,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var showSyncCFR by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_should_show_sync_cfr),
-        featureFlag = FeatureFlags.showSynCFR,
+        featureFlag = true,
         default = { mr2022Sections[Mr2022Section.SYNC_CFR] == true },
     )
 
@@ -1280,28 +1279,26 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var showHomeOnboardingDialog by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_should_show_home_onboarding_dialog),
-        featureFlag = FeatureFlags.showHomeOnboarding,
+        featureFlag = true,
         default = { mr2022Sections[Mr2022Section.HOME_ONBOARDING_DIALOG_EXISTING_USERS] == true },
     )
 
     /**
      * Indicates if the recent tabs functionality should be visible.
-     * Returns true if the [FeatureFlags.showRecentTabsFeature] and [R.string.pref_key_recent_tabs] are true.
      */
     var showRecentTabsFeature by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_recent_tabs),
-        featureFlag = FeatureFlags.showRecentTabsFeature,
+        featureFlag = true,
         default = { homescreenSections[HomeScreenSection.JUMP_BACK_IN] == true },
     )
 
     /**
      * Indicates if the recent saved bookmarks functionality should be visible.
-     * Returns true if the [FeatureFlags.showRecentTabsFeature] and [R.string.pref_key_recent_bookmarks] are true.
      */
     var showRecentBookmarksFeature by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_recent_bookmarks),
         default = { homescreenSections[HomeScreenSection.RECENTLY_SAVED] == true },
-        featureFlag = FeatureFlags.recentBookmarksFeature,
+        featureFlag = true,
     )
 
     /**
@@ -1378,10 +1375,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the Task Continuity enhancements are enabled.
      */
-    var enableTaskContinuityEnhancements by featureFlagPreference(
+    var enableTaskContinuityEnhancements by booleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_task_continuity),
-        default = FeatureFlags.taskContinuityFeature,
-        featureFlag = FeatureFlags.taskContinuityFeature,
+        default = true,
     )
 
     /**

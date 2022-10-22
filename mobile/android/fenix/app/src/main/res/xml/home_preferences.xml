@@ -17,13 +17,11 @@
 
     <androidx.preference.SwitchPreference
         android:key="@string/pref_key_recent_tabs"
-        android:title="@string/customize_toggle_jump_back_in"
-        app:isPreferenceVisible="false" />
+        android:title="@string/customize_toggle_jump_back_in" />
 
     <androidx.preference.SwitchPreference
         android:key="@string/pref_key_recent_bookmarks"
-        android:title="@string/customize_toggle_recent_bookmarks"
-        app:isPreferenceVisible="false" />
+        android:title="@string/customize_toggle_recent_bookmarks" />
 
     <androidx.preference.SwitchPreference
         android:key="@string/pref_key_history_metadata_feature"

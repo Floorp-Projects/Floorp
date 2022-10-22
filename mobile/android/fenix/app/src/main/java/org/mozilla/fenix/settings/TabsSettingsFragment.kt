@@ -10,7 +10,6 @@ import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Tabs
 import org.mozilla.fenix.R
@@ -67,7 +66,6 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
         }
 
         inactiveTabsCategory = requirePreference<PreferenceCategory>(R.string.pref_key_inactive_tabs_category).also {
-            it.isVisible = FeatureFlags.inactiveTabs
             it.isEnabled = !(it.context.settings().closeTabsAfterOneDay || it.context.settings().closeTabsAfterOneWeek)
         }
 

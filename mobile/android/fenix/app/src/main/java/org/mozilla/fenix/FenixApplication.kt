@@ -467,7 +467,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             components.core.trackingProtectionPolicyFactory.createTrackingProtectionPolicy()
 
         val settings = settings()
-        if (FeatureFlags.messagingFeature && settings.isExperimentationEnabled) {
+        if (settings.isExperimentationEnabled) {
             components.appStore.dispatch(AppAction.MessagingAction.Restore)
         }
         reportHomeScreenSectionMetrics(settings)
