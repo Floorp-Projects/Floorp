@@ -399,16 +399,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
                                    const nsACString& aGenericFamily);
 
   /**
-   * Create a gfxFontGroup based on the given family list and style.
-   */
-  gfxFontGroup* CreateFontGroup(
-      nsPresContext* aPresContext,
-      const mozilla::StyleFontFamilyList& aFontFamilyList,
-      const gfxFontStyle* aStyle, nsAtom* aLanguage, bool aExplicitLanguage,
-      gfxTextPerfMetrics* aTextPerf, gfxUserFontSet* aUserFontSet,
-      gfxFloat aDevToCssSize) const;
-
-  /**
    * Look up a local platform font using the full font face name.
    * (Needed to support @font-face src local().)
    * Ownership of the returned gfxFontEntry is passed to the caller,

@@ -936,7 +936,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
                const mozilla::StyleFontFamilyList& aFontFamilyList,
                const gfxFontStyle* aStyle, nsAtom* aLanguage,
                bool aExplicitLanguage, gfxTextPerfMetrics* aTextPerf,
-               gfxUserFontSet* aUserFontSet, gfxFloat aDevToCssSize);
+               gfxUserFontSet* aUserFontSet, gfxFloat aDevToCssSize,
+               StyleFontVariantEmoji aVariantEmoji);
 
   virtual ~gfxFontGroup();
 
@@ -1419,6 +1420,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
                       // timer to fire)
 
   bool mExplicitLanguage;  // Does mLanguage come from an explicit attribute?
+
+  eFontPresentation mEmojiPresentation = eFontPresentation::Any;
 
   // Generic font family used to select among font prefs during fallback.
   mozilla::StyleGenericFontFamily mFallbackGeneric =

@@ -138,9 +138,9 @@ nsFontMetrics::nsFontMetrics(const nsFont& aFont, const Params& aParams,
   aFont.AddFontVariationsToStyle(&style);
 
   gfxFloat devToCssSize = gfxFloat(mP2A) / gfxFloat(AppUnitsPerCSSPixel());
-  mFontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(
+  mFontGroup = new gfxFontGroup(
       mPresContext, aFont.family.families, &style, mLanguage, mExplicitLanguage,
-      aParams.textPerf, aParams.userFontSet, devToCssSize);
+      aParams.textPerf, aParams.userFontSet, devToCssSize, aFont.variantEmoji);
 }
 
 nsFontMetrics::~nsFontMetrics() {
