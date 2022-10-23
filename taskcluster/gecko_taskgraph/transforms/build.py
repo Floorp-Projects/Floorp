@@ -204,6 +204,7 @@ def enable_full_crashsymbols(config, jobs):
     'enable-full-crashsymbols' set to True and on release branches, or
     on try"""
     branches = RELEASE_PROJECTS | {
+        "toolchains",
         "try",
     }
     for job in jobs:
