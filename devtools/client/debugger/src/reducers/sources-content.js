@@ -79,7 +79,6 @@ function updateSourceTextContent(state, action) {
   }
 
   state.mutableTextContentMap.set(action.sourceId, content);
-
   return {
     ...state,
   };
