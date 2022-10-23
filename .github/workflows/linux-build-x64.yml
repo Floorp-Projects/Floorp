@@ -25,6 +25,7 @@ jobs:
 
     - name: Create environment
       run: |
+        sudo apt install xvfb
         git clone https://github.com/floorp-projects/l10n-central.git
         ./mach bootstrap
         echo 'ac_add_options --with-app-name=floorp' >> mozconfig
