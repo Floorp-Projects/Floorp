@@ -5,7 +5,6 @@ that aren't enough to accomodate that change.
 Until our code is adjusted, revert this change.
 
 ---
- clang/docs/ReleaseNotes.rst                   |   7 -
  clang/docs/ThreadSafetyAnalysis.rst           |  10 +-
  .../Analysis/Analyses/ThreadSafetyCommon.h    |  13 +-
  .../clang/Analysis/Analyses/ThreadSafetyTIL.h |   7 +-
@@ -15,24 +14,6 @@ Until our code is adjusted, revert this change.
  .../SemaCXX/warn-thread-safety-analysis.cpp   | 155 +++-----------
  8 files changed, 155 insertions(+), 290 deletions(-)
 
-diff --git a/clang/docs/ReleaseNotes.rst b/clang/docs/ReleaseNotes.rst
-index 2a81877f27b7..02a83340588f 100644
---- a/clang/docs/ReleaseNotes.rst
-+++ b/clang/docs/ReleaseNotes.rst
-@@ -307,13 +307,6 @@ Improvements to Clang's diagnostics
-   function definition without a prototype which is preceded by a static
-   declaration of the function with a prototype. Fixes
-   `Issue 58181 <https://github.com/llvm/llvm-project/issues/58181>`_.
--- Copy-elided initialization of lock scopes is now handled differently in
--  ``-Wthread-safety-analysis``: annotations on the move constructor are no
--  longer taken into account, in favor of annotations on the function returning
--  the lock scope by value. This could result in new warnings if code depended
--  on the previous undocumented behavior. As a side effect of this change,
--  constructor calls outside of initializer expressions are no longer ignored,
--  which can result in new warnings (or make existing warnings disappear).
- 
- Non-comprehensive list of changes in this release
- -------------------------------------------------
 diff --git a/clang/docs/ThreadSafetyAnalysis.rst b/clang/docs/ThreadSafetyAnalysis.rst
 index dcde0c706c70..23f460b248e1 100644
 --- a/clang/docs/ThreadSafetyAnalysis.rst
