@@ -1,0 +1,73 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: ft=cpp tw=78 sw=2 et ts=2 sts=2 cin
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIContentPolicy.idl"
+
+interface nsIPrincipal;
+interface nsIRedirectHistoryEntry;
+
+%{C++
+#include "nsTArray.h"
+%}
+
+[ref] native nsIRedirectHistoryEntryArray(const nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>>);
+/**
+ * nsIInterceptionInfo is used to record the needed information of the
+ * InterceptedHttpChannel.
+ * This infomration need to be propagated to the new channel which created by
+ * FetchEvent.request or ServiceWorker NavigationPreload.
+ */
+[scriptable, builtinclass, uuid(8b9cd81f-3cd1-4f6a-9086-92a9bbf055f4)]
+interface nsIInterceptionInfo : nsISupports
+{
+  /**
+   * InterceptedHttpChannel's triggering principal
+   */
+  [noscript, notxpcom, nostdcall, binaryname(TriggeringPrincipal)]
+  nsIPrincipal binaryTriggeringPrincipal();
+
+  [noscript, notxpcom, nostdcall, binaryname(SetTriggeringPrincipal)]
+  void binarySetTriggeringPrincipal(in nsIPrincipal aPrincipal);
+
+  /**
+   * InterceptedHttpChannel's content policy type
+   */
+  [noscript, notxpcom, nostdcall, binaryname(ContentPolicyType)]
+  nsContentPolicyType binaryContentPolicyType();
+
+  [noscript, notxpcom, nostdcall, binaryname(ExternalContentPolicyType)]
+  nsContentPolicyType binaryExternalContentPolicyType();
+
+  [noscript, notxpcom, nostdcall, binaryname(SetContentPolicyType)]
+  void binarySetContentPolicyType(in nsContentPolicyType aContentPolicyType);
+
+%{ C++
+  inline ExtContentPolicyType GetExtContentPolicyType()
+  {
+    return static_cast<ExtContentPolicyType>(ExternalContentPolicyType());
+  }
+%}
+
+  /**
+   * The InterceptedHttpChannel's redirect chain
+   */
+  [noscript, notxpcom, nostdcall, binaryname(RedirectChain)]
+  nsIRedirectHistoryEntryArray binaryRedirectChain();
+
+  [noscript, notxpcom, nostdcall, binaryname(SetRedirectChain)]
+  void binarySetRedirectChain(
+      in nsIRedirectHistoryEntryArray aRedirectChain);
+
+  /**
+   * The InterceptedHttpChannel is a third party channel or not.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(FromThirdParty)]
+  bool binaryFromThirdParty();
+
+  [noscript, notxpcom, nostdcall, binaryname(SetFromThirdParty)]
+  void binarySetFromThirdParty(in bool aFromThirdParty);
+};

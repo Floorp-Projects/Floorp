@@ -486,6 +486,27 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
   }
 
   SafeRefPtr<InternalRequest> r = request->GetInternalRequest();
+
+  // Restore information of InterceptedHttpChannel if they are passed with the
+  // Request. Since Request::Constructor would not copy these members.
+  if (aInput.IsRequest()) {
+    RefPtr<Request> inputReq = &aInput.GetAsRequest();
+    SafeRefPtr<InternalRequest> inputInReq = inputReq->GetInternalRequest();
+    if (inputInReq->GetInterceptionTriggeringPrincipalInfo()) {
+      r->SetInterceptionContentPolicyType(
+          inputInReq->InterceptionContentPolicyType());
+      r->SetInterceptionTriggeringPrincipalInfo(
+          MakeUnique<mozilla::ipc::PrincipalInfo>(
+              *(inputInReq->GetInterceptionTriggeringPrincipalInfo().get())));
+      if (!inputInReq->InterceptionRedirectChain().IsEmpty()) {
+        r->SetInterceptionRedirectChain(
+            inputInReq->InterceptionRedirectChain());
+      }
+      r->SetInterceptionFromThirdParty(
+          inputInReq->InterceptionFromThirdParty());
+    }
+  }
+
   RefPtr<AbortSignalImpl> signalImpl = request->GetSignalImpl();
 
   if (signalImpl && signalImpl->Aborted()) {

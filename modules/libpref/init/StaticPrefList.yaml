@@ -10499,7 +10499,11 @@
 # prevent proxies from being used for that specific request.
 - name: network.proxy.allow_bypass
   type: bool
+#ifdef MOZ_PROXY_BYPASS_PROTECTION
+  value: false
+#else
   value: true
+#endif
   mirror: always
 
 - name: network.proxy.parse_pac_on_socket_process

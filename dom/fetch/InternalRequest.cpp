@@ -139,8 +139,17 @@ InternalRequest::InternalRequest(const InternalRequest& aOther,
       mSynchronous(aOther.mSynchronous),
       mUnsafeRequest(aOther.mUnsafeRequest),
       mUseURLCredentials(aOther.mUseURLCredentials),
-      mContentPolicyTypeOverridden(aOther.mContentPolicyTypeOverridden) {
+      mContentPolicyTypeOverridden(aOther.mContentPolicyTypeOverridden),
+      mInterceptionContentPolicyType(aOther.mInterceptionContentPolicyType),
+      mInterceptionRedirectChain(aOther.mInterceptionRedirectChain),
+      mInterceptionFromThirdParty(aOther.mInterceptionFromThirdParty) {
   // NOTE: does not copy body stream... use the fallible Clone() for that
+
+  if (aOther.GetInterceptionTriggeringPrincipalInfo()) {
+    mInterceptionTriggeringPrincipalInfo =
+        MakeUnique<mozilla::ipc::PrincipalInfo>(
+            *(aOther.GetInterceptionTriggeringPrincipalInfo().get()));
+  }
 }
 
 InternalRequest::InternalRequest(const IPCInternalRequest& aIPCRequest)
@@ -159,10 +168,20 @@ InternalRequest::InternalRequest(const IPCInternalRequest& aIPCRequest)
       mCacheMode(aIPCRequest.cacheMode()),
       mRedirectMode(aIPCRequest.requestRedirect()),
       mIntegrity(aIPCRequest.integrity()),
-      mFragment(aIPCRequest.fragment()) {
+      mFragment(aIPCRequest.fragment()),
+      mInterceptionContentPolicyType(static_cast<nsContentPolicyType>(
+          aIPCRequest.interceptionContentPolicyType())),
+      mInterceptionRedirectChain(aIPCRequest.interceptionRedirectChain()),
+      mInterceptionFromThirdParty(aIPCRequest.interceptionFromThirdParty()) {
   if (aIPCRequest.principalInfo()) {
     mPrincipalInfo = MakeUnique<mozilla::ipc::PrincipalInfo>(
         aIPCRequest.principalInfo().ref());
+  }
+
+  if (aIPCRequest.interceptionTriggeringPrincipalInfo()) {
+    mInterceptionTriggeringPrincipalInfo =
+        MakeUnique<mozilla::ipc::PrincipalInfo>(
+            aIPCRequest.interceptionTriggeringPrincipalInfo().ref());
   }
 
   const Maybe<BodyStreamVariant>& body = aIPCRequest.body();
@@ -186,6 +205,11 @@ void InternalRequest::OverrideContentPolicyType(
     nsContentPolicyType aContentPolicyType) {
   SetContentPolicyType(aContentPolicyType);
   mContentPolicyTypeOverridden = true;
+}
+
+void InternalRequest::SetInterceptionContentPolicyType(
+    nsContentPolicyType aContentPolicyType) {
+  mInterceptionContentPolicyType = aContentPolicyType;
 }
 
 /* static */
@@ -399,4 +423,8 @@ void InternalRequest::SetPrincipalInfo(
   mPrincipalInfo = std::move(aPrincipalInfo);
 }
 
+void InternalRequest::SetInterceptionTriggeringPrincipalInfo(
+    UniquePtr<mozilla::ipc::PrincipalInfo> aPrincipalInfo) {
+  mInterceptionTriggeringPrincipalInfo = std::move(aPrincipalInfo);
+}
 }  // namespace mozilla::dom

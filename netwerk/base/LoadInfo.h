@@ -8,6 +8,7 @@
 #define mozilla_LoadInfo_h
 
 #include "nsIContentSecurityPolicy.h"
+#include "nsIInterceptionInfo.h"
 #include "nsILoadInfo.h"
 #include "nsIPrincipal.h"
 #include "nsIWeakReferenceUtils.h"  // for nsWeakPtr
@@ -230,7 +231,7 @@ class LoadInfo final : public nsILoadInfo {
       bool aIsMetaRefresh, uint32_t aRequestBlockingReason,
       nsINode* aLoadingContext,
       nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
-      nsIURI* aUnstrippedURI);
+      nsIURI* aUnstrippedURI, nsIInterceptionInfo* aInterceptionInfo);
   LoadInfo(const LoadInfo& rhs);
 
   NS_IMETHOD GetRedirects(JSContext* aCx,
@@ -357,6 +358,8 @@ class LoadInfo final : public nsILoadInfo {
       nsILoadInfo::EMBEDDER_POLICY_NULL;
 
   nsCOMPtr<nsIURI> mUnstrippedURI;
+
+  nsCOMPtr<nsIInterceptionInfo> mInterceptionInfo;
 };
 
 // This is exposed solely for testing purposes and should not be used outside of

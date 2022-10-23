@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <title><!-- Test with dialog & buttons --></title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script><![CDATA[
+    add_task(async function test_dialog_button_accesskey() {
+      var win = window.browsingContext.topChromeWindow.openDialog(
+        "dialog_button.xhtml",
+        "_new",
+        "chrome,dialog"
+      );
+      await new Promise((r) => win.addEventListener("load", r, { once: true }));
+
+      let dialogClosed = new Promise((r) => {
+        win.document.addEventListener("dialogclosing", r, { once: true });
+      });
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1625632
+      // When pressing an accesskey for a built in dialog button while a regular button is focused,
+      // it should forward to the dialog.
+      win.document.querySelector("#button").focus();
+      synthesizeKey("a", {}, win);
+      await dialogClosed;
+      ok(true, "Accesskey on focused button");
+    });
+  ]]></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
