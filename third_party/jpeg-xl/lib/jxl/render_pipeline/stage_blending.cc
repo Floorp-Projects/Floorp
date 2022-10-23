@@ -48,14 +48,27 @@ class BlendingStage : public RenderPipelineStage {
       zeroes_.resize(image_xsize_, 0.f);
     }
 
-    if (bg.xsize() != 0 && bg.ysize() != 0 &&
-        (bg.xsize() < image_xsize_ || bg.ysize() < image_ysize_ ||
-         bg.origin.x0 != 0 || bg.origin.y0 != 0)) {
-      initialized_ = JXL_FAILURE("Trying to use a %" PRIuS "x%" PRIuS
-                                 " crop as a background",
-                                 bg.xsize(), bg.ysize());
+    auto verify_bg_size = [&](const ImageBundle& bg) -> Status {
+      if (bg.xsize() != 0 && bg.ysize() != 0 &&
+          (bg.xsize() < image_xsize_ || bg.ysize() < image_ysize_ ||
+           bg.origin.x0 != 0 || bg.origin.y0 != 0)) {
+        return JXL_FAILURE("Trying to use a %" PRIuS "x%" PRIuS
+                           " crop as a background",
+                           bg.xsize(), bg.ysize());
+      }
+      return true;
+    };
+
+    Status ok = verify_bg_size(bg);
+    for (const auto& info : ec_info) {
+      const ImageBundle& bg = *state_.reference_frames[info.source].frame;
+      if (!!ok) ok = verify_bg_size(bg);
+    }
+    if (!ok) {
+      initialized_ = ok;
       return;
     }
+
     if (state_.metadata->m.xyb_encoded) {
       if (!dec_state->output_encoding_info.color_encoding_is_original) {
         initialized_ = JXL_FAILURE("Blending in unsupported color space");

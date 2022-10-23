@@ -147,7 +147,7 @@ TEST(ModularTest, RoundtripLossyDeltaPaletteWP) {
   cparams.ba_params.intensity_target = 80.0f;
   EXPECT_THAT(ButteraugliDistance(io, io_out, cparams.ba_params, GetJxlCms(),
                                   /*distmap=*/nullptr, pool),
-              IsSlightlyBelow(10.0));
+              IsSlightlyBelow(10.1));
 }
 
 TEST(ModularTest, RoundtripLossy) {

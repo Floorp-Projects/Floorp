@@ -322,9 +322,9 @@ template <class D, class V>
 HWY_INLINE void XybLowFreqToVals(const D d, const V& x, const V& y,
                                  const V& b_arg, V* HWY_RESTRICT valx,
                                  V* HWY_RESTRICT valy, V* HWY_RESTRICT valb) {
-  static const double xmuli = 32.2217497012;
-  static const double ymuli = 13.7697791434;
-  static const double bmuli = 47.504615728;
+  static const double xmuli = 33.832837186260;
+  static const double ymuli = 14.458268100570;
+  static const double bmuli = 49.87984651440;
   static const double y_to_b_muli = -0.362267051518;
   const V xmul = Set(d, xmuli);
   const V ymul = Set(d, ymuli);
@@ -1078,7 +1078,7 @@ void DiffPrecompute(const ImageF& xyb, float mul, float bias_arg, ImageF* out) {
 // std::log(80.0) / std::log(255.0);
 constexpr float kIntensityTargetNormalizationHack = 0.79079917404f;
 static const float kInternalGoodQualityThreshold =
-    17.8f * kIntensityTargetNormalizationHack;
+    17.83f * kIntensityTargetNormalizationHack;
 static const float kGlobalScale = 1.0 / kInternalGoodQualityThreshold;
 
 void StoreMin3(const float v, float& min0, float& min1, float& min2) {

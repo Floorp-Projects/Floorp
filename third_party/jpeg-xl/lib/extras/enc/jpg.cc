@@ -42,6 +42,124 @@ enum class JpegEncoder {
   kSJpeg,
 };
 
+#define ARRAYSIZE(X) (sizeof(X) / sizeof((X)[0]))
+
+// Popular jpeg scan scripts
+// The fields of the individual scans are:
+// comps_in_scan, component_index[], Ss, Se, Ah, Al
+static constexpr jpeg_scan_info kScanScript1[] = {
+    {1, {0}, 0, 0, 0, 0},   //
+    {1, {1}, 0, 0, 0, 0},   //
+    {1, {2}, 0, 0, 0, 0},   //
+    {1, {0}, 1, 8, 0, 0},   //
+    {1, {0}, 9, 63, 0, 0},  //
+    {1, {1}, 1, 63, 0, 0},  //
+    {1, {2}, 1, 63, 0, 0},  //
+};
+static constexpr size_t kNumScans1 = ARRAYSIZE(kScanScript1);
+
+static constexpr jpeg_scan_info kScanScript2[] = {
+    {1, {0}, 0, 0, 0, 0},   //
+    {1, {1}, 0, 0, 0, 0},   //
+    {1, {2}, 0, 0, 0, 0},   //
+    {1, {0}, 1, 2, 0, 1},   //
+    {1, {0}, 3, 63, 0, 1},  //
+    {1, {0}, 1, 63, 1, 0},  //
+    {1, {1}, 1, 63, 0, 0},  //
+    {1, {2}, 1, 63, 0, 0},  //
+};
+static constexpr size_t kNumScans2 = ARRAYSIZE(kScanScript2);
+
+static constexpr jpeg_scan_info kScanScript3[] = {
+    {1, {0}, 0, 0, 0, 0},   //
+    {1, {1}, 0, 0, 0, 0},   //
+    {1, {2}, 0, 0, 0, 0},   //
+    {1, {0}, 1, 63, 0, 2},  //
+    {1, {0}, 1, 63, 2, 1},  //
+    {1, {0}, 1, 63, 1, 0},  //
+    {1, {1}, 1, 63, 0, 0},  //
+    {1, {2}, 1, 63, 0, 0},  //
+};
+static constexpr size_t kNumScans3 = ARRAYSIZE(kScanScript3);
+
+static constexpr jpeg_scan_info kScanScript4[] = {
+    {3, {0, 1, 2}, 0, 0, 0, 1},  //
+    {1, {0}, 1, 5, 0, 2},        //
+    {1, {2}, 1, 63, 0, 1},       //
+    {1, {1}, 1, 63, 0, 1},       //
+    {1, {0}, 6, 63, 0, 2},       //
+    {1, {0}, 1, 63, 2, 1},       //
+    {3, {0, 1, 2}, 0, 0, 1, 0},  //
+    {1, {2}, 1, 63, 1, 0},       //
+    {1, {1}, 1, 63, 1, 0},       //
+    {1, {0}, 1, 63, 1, 0},       //
+};
+static constexpr size_t kNumScans4 = ARRAYSIZE(kScanScript4);
+
+static constexpr jpeg_scan_info kScanScript5[] = {
+    {3, {0, 1, 2}, 0, 0, 0, 1},  //
+    {1, {0}, 1, 5, 0, 2},        //
+    {1, {1}, 1, 5, 0, 2},        //
+    {1, {2}, 1, 5, 0, 2},        //
+    {1, {1}, 6, 63, 0, 2},       //
+    {1, {2}, 6, 63, 0, 2},       //
+    {1, {0}, 6, 63, 0, 2},       //
+    {1, {0}, 1, 63, 2, 1},       //
+    {1, {1}, 1, 63, 2, 1},       //
+    {1, {2}, 1, 63, 2, 1},       //
+    {3, {0, 1, 2}, 0, 0, 1, 0},  //
+    {1, {0}, 1, 63, 1, 0},       //
+    {1, {1}, 1, 63, 1, 0},       //
+    {1, {2}, 1, 63, 1, 0},       //
+};
+static constexpr size_t kNumScans5 = ARRAYSIZE(kScanScript5);
+
+// Adapt RGB scan info to grayscale jpegs.
+void FilterScanComponents(const jpeg_compress_struct* cinfo,
+                          jpeg_scan_info* si) {
+  const int all_comps_in_scan = si->comps_in_scan;
+  si->comps_in_scan = 0;
+  for (int j = 0; j < all_comps_in_scan; ++j) {
+    const int component = si->component_index[j];
+    if (component < cinfo->input_components) {
+      si->component_index[si->comps_in_scan++] = component;
+    }
+  }
+}
+
+Status SetJpegProgression(int progressive_id,
+                          std::vector<jpeg_scan_info>* scan_infos,
+                          jpeg_compress_struct* cinfo) {
+  if (progressive_id < 0) {
+    return true;
+  }
+  if (progressive_id == 0) {
+    jpeg_simple_progression(cinfo);
+    return true;
+  }
+  constexpr const jpeg_scan_info* kScanScripts[] = {
+      kScanScript1, kScanScript2, kScanScript3, kScanScript4, kScanScript5,
+  };
+  constexpr size_t kNumScans[] = {kNumScans1, kNumScans2, kNumScans3,
+                                  kNumScans4, kNumScans5};
+  if (progressive_id > static_cast<int>(ARRAYSIZE(kNumScans))) {
+    return JXL_FAILURE("Unknown jpeg scan script id %d", progressive_id);
+  }
+  const jpeg_scan_info* scan_script = kScanScripts[progressive_id - 1];
+  const size_t num_scans = kNumScans[progressive_id - 1];
+  // filter scan script for number of components
+  for (size_t i = 0; i < num_scans; ++i) {
+    jpeg_scan_info scan_info = scan_script[i];
+    FilterScanComponents(cinfo, &scan_info);
+    if (scan_info.comps_in_scan > 0) {
+      scan_infos->emplace_back(std::move(scan_info));
+    }
+  }
+  cinfo->scan_info = scan_infos->data();
+  cinfo->num_scans = scan_infos->size();
+  return true;
+}
+
 bool IsSRGBEncoding(const JxlColorEncoding& c) {
   return ((c.color_space == JXL_COLOR_SPACE_RGB ||
            c.color_space == JXL_COLOR_SPACE_GRAY) &&
@@ -111,7 +229,7 @@ Status EncodeWithLibJpeg(const PackedImage& image, const JxlBasicInfo& info,
                          const std::vector<uint8_t>& icc,
                          std::vector<uint8_t> exif, size_t quality,
                          const std::string& chroma_subsampling,
-                         bool progressive, std::vector<uint8_t>* bytes) {
+                         int progressive_id, std::vector<uint8_t>* bytes) {
   if (BITS_IN_JSAMPLE != 8 || sizeof(JSAMPLE) != 1) {
     return JXL_FAILURE("Only 8 bit JSAMPLE is supported.");
   }
@@ -139,9 +257,8 @@ Status EncodeWithLibJpeg(const PackedImage& image, const JxlBasicInfo& info,
     jpeg_set_colorspace(&cinfo, JCS_RGB);
   }
   jpeg_set_quality(&cinfo, quality, TRUE);
-  if (progressive) {
-    jpeg_simple_progression(&cinfo);
-  }
+  std::vector<jpeg_scan_info> scan_infos;
+  JXL_RETURN_IF_ERROR(SetJpegProgression(progressive_id, &scan_infos, &cinfo));
   jpeg_start_compress(&cinfo, TRUE);
   if (!icc.empty()) {
     WriteICCProfile(&cinfo, icc);
@@ -212,7 +329,7 @@ Status EncodeImageJPG(const PackedImage& image, const JxlBasicInfo& info,
                       const std::vector<uint8_t>& icc,
                       std::vector<uint8_t> exif, JpegEncoder encoder,
                       size_t quality, const std::string& chroma_subsampling,
-                      bool progressive, ThreadPool* pool,
+                      int progressive_id, ThreadPool* pool,
                       std::vector<uint8_t>* bytes) {
   if (image.format.data_type != JXL_TYPE_UINT8) {
     return JXL_FAILURE("Unsupported pixel data type");
@@ -226,9 +343,9 @@ Status EncodeImageJPG(const PackedImage& image, const JxlBasicInfo& info,
 
   switch (encoder) {
     case JpegEncoder::kLibJpeg:
-      JXL_RETURN_IF_ERROR(
-          EncodeWithLibJpeg(image, info, color_encoding, icc, std::move(exif),
-                            quality, chroma_subsampling, progressive, bytes));
+      JXL_RETURN_IF_ERROR(EncodeWithLibJpeg(
+          image, info, color_encoding, icc, std::move(exif), quality,
+          chroma_subsampling, progressive_id, bytes));
       break;
     case JpegEncoder::kSJpeg:
       JXL_RETURN_IF_ERROR(EncodeWithSJpeg(image, info, icc, std::move(exif),
@@ -260,7 +377,7 @@ class JPEGEncoder : public Encoder {
     int quality = 100;
     std::string chroma_subsampling = "444";
     JpegEncoder jpeg_encoder = JpegEncoder::kLibJpeg;
-    bool progressive = false;
+    int progressive_id = -1;
     for (const auto& it : options()) {
       if (it.first == "q") {
         std::istringstream is(it.second);
@@ -276,7 +393,8 @@ class JPEGEncoder : public Encoder {
           return JXL_FAILURE("unknown jpeg encoder \"%s\"", it.second.c_str());
         }
       } else if (it.first == "progressive") {
-        progressive = true;
+        std::istringstream is(it.second);
+        JXL_RETURN_IF_ERROR(static_cast<bool>(is >> progressive_id));
       }
     }
     std::vector<uint8_t> icc;
@@ -290,7 +408,7 @@ class JPEGEncoder : public Encoder {
       encoded_image->bitstreams.emplace_back();
       JXL_RETURN_IF_ERROR(EncodeImageJPG(
           frame.color, ppf.info, ppf.color_encoding, icc, ppf.metadata.exif,
-          jpeg_encoder, quality, chroma_subsampling, progressive, pool,
+          jpeg_encoder, quality, chroma_subsampling, progressive_id, pool,
           &encoded_image->bitstreams.back()));
     }
     return true;

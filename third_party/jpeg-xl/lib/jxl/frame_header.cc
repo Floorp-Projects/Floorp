@@ -81,7 +81,6 @@ Status BlendingInfo::VisitFields(Visitor* JXL_RESTRICT visitor) {
 
 std::string BlendingInfo::DebugString() const {
   std::ostringstream os;
-  os << ",";
   os << (mode == BlendMode::kReplace            ? "Replace"
          : mode == BlendMode::kAdd              ? "Add"
          : mode == BlendMode::kBlend            ? "Blend"
@@ -484,7 +483,13 @@ std::string FrameHeader::DebugString() const {
   if (animation_frame.duration > 0) os << ",dur=" << animation_frame.duration;
   if (frame_type == FrameType::kRegularFrame ||
       frame_type == FrameType::kSkipProgressive) {
+    os << ",";
     os << blending_info.DebugString();
+    for (size_t i = 0; i < extra_channel_blending_info.size(); ++i) {
+      os << (i == 0 ? "[" : ";");
+      os << extra_channel_blending_info[i].DebugString();
+      if (i + 1 == extra_channel_blending_info.size()) os << "]";
+    }
   }
   if (save_as_reference > 0) os << ",ref=" << save_as_reference;
   os << "," << (save_before_color_transform ? "before" : "after") << "_ct";

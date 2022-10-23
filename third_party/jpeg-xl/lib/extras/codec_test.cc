@@ -329,6 +329,39 @@ TEST(CodecTest, TestRoundTrip) {
   }
 }
 
+TEST(CodecTest, LosslessPNMRoundtrip) {
+  ThreadPoolInternal pool(12);
+
+  static const char* kChannels[] = {"", "g", "ga", "rgb", "rgba"};
+  static const char* kExtension[] = {"", ".pgm", ".pam", ".ppm", ".pam"};
+  for (size_t bit_depth = 1; bit_depth <= 16; ++bit_depth) {
+    for (size_t channels = 1; channels <= 4; ++channels) {
+      if (bit_depth == 1 && (channels == 2 || channels == 4)) continue;
+      std::string extension(kExtension[channels]);
+      std::string filename = "jxl/flower/flower_small." +
+                             std::string(kChannels[channels]) + ".depth" +
+                             std::to_string(bit_depth) + extension;
+      const PaddedBytes orig = ReadTestData(filename);
+
+      PackedPixelFile ppf;
+      ColorHints color_hints;
+      color_hints.Add("color_space",
+                      channels < 3 ? "Gra_D65_Rel_SRG" : "RGB_D65_SRG_Rel_SRG");
+      ASSERT_TRUE(DecodeBytes(Span<const uint8_t>(orig.data(), orig.size()),
+                              color_hints, SizeConstraints(), &ppf));
+
+      EncodedImage encoded;
+      auto encoder = Encoder::FromExtension(extension);
+      ASSERT_TRUE(encoder.get());
+      ASSERT_TRUE(encoder->Encode(ppf, &encoded, &pool));
+      ASSERT_EQ(encoded.bitstreams.size(), 1);
+      ASSERT_EQ(orig.size(), encoded.bitstreams[0].size());
+      EXPECT_EQ(0,
+                memcmp(orig.data(), encoded.bitstreams[0].data(), orig.size()));
+    }
+  }
+}
+
 CodecInOut DecodeRoundtrip(const std::string& pathname, ThreadPool* pool,
                            const ColorHints& color_hints = ColorHints()) {
   CodecInOut io;

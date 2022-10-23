@@ -1159,13 +1159,6 @@ Status EncodeFrame(const CompressParams& cparams_orig,
                          cparams.progressive_dc);
     }
     cparams.progressive_dc = 0;
-    // Enable progressive_dc for lower qualities, except for fast speeds where
-    // the modular encoder uses fixed tree.
-    if (cparams.speed_tier <= SpeedTier::kCheetah &&
-        cparams.butteraugli_distance >=
-            kMinButteraugliDistanceForProgressiveDc) {
-      cparams.progressive_dc = 1;
-    }
   }
   if (cparams.ec_resampling < cparams.resampling) {
     cparams.ec_resampling = cparams.resampling;

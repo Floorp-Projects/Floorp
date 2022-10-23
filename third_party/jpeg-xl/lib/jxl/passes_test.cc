@@ -68,7 +68,7 @@ TEST(PassesTest, RoundtripUnalignedPasses) {
   Roundtrip(&io, cparams, {}, pool, &io2);
   EXPECT_THAT(ButteraugliDistance(io, io2, cparams.ba_params, GetJxlCms(),
                                   /*distmap=*/nullptr, pool),
-              IsSlightlyBelow(1.6));
+              IsSlightlyBelow(1.72));
 }
 
 TEST(PassesTest, RoundtripMultiGroupPasses) {
