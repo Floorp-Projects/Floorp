@@ -102,19 +102,23 @@ fun PrimaryButton(
  * Secondary button.
  *
  * @param text The button text to be displayed.
+ * @param textColor [Color] to apply to the button text.
+ * @param backgroundColor The background [Color] of the button.
  * @param icon Optional [Painter] used to display an [Icon] before the button text.
  * @param onClick Invoked when the user clicks on the button.
  */
 @Composable
 fun SecondaryButton(
     text: String,
+    textColor: Color = FirefoxTheme.colors.textActionSecondary,
+    backgroundColor: Color = FirefoxTheme.colors.actionSecondary,
     icon: Painter? = null,
     onClick: () -> Unit,
 ) {
     Button(
         text = text,
-        textColor = FirefoxTheme.colors.textActionSecondary,
-        backgroundColor = FirefoxTheme.colors.actionSecondary,
+        textColor = textColor,
+        backgroundColor = backgroundColor,
         icon = icon,
         tint = FirefoxTheme.colors.iconActionSecondary,
         onClick = onClick,

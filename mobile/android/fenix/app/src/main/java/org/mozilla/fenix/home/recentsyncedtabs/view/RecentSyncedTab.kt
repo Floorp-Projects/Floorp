@@ -48,7 +48,7 @@ import mozilla.components.support.ktx.kotlin.trimmed
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.ThumbnailCard
-import org.mozilla.fenix.compose.button.Button
+import org.mozilla.fenix.compose.button.SecondaryButton
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -179,7 +179,7 @@ fun RecentSyncedTab(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Button(
+            SecondaryButton(
                 text = if (tab != null) {
                     stringResource(R.string.recent_tabs_see_all_synced_tabs_button_text)
                 } else {
@@ -187,7 +187,6 @@ fun RecentSyncedTab(
                 },
                 textColor = buttonTextColor,
                 backgroundColor = buttonBackgroundColor,
-                tint = FirefoxTheme.colors.iconActionSecondary,
                 onClick = onSeeAllSyncedTabsButtonClick,
             )
         }
