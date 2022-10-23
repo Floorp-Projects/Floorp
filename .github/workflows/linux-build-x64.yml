@@ -18,7 +18,7 @@ jobs:
 
     - name: Add swap file
       run: |
-        sudo fallocate -l 5G /swapfile2
+        sudo fallocate -l 15G /swapfile2
         sudo chmod 600 /swapfile2
         sudo mkswap /swapfile2
         sudo swapon /swapfile2
@@ -40,12 +40,15 @@ jobs:
         echo 'ac_add_options --enable-bootstrap' >> mozconfig
         echo 'ac_add_options --with-l10n-base=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/l10n-central/l10n-central' >> mozconfig
         echo 'ac_add_options "--enable-optimize=-O2"' >> mozconfig
+        echo 'ac_add_options MOZ_PGO=1'
         echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
         echo 'MOZ_DATA_REPORTING=' >> mozconfig
         echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
         ./mach configure
     - name: Build & Package
       run: |        
+        Xvfb :2 -screen 0 1024x768x24 &
+        export DISPLAY=:2
         ./mach build
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
