@@ -419,7 +419,7 @@ description#identity-popup-content-verifier,
 #protections-popup-sendReportView-collection-url {
   appearance: none;
   border: none;
-  margin: 4px auto;
+  margin: 4px 0;
 }
 
 #protections-popup-sendReportView-collection-comments {
