@@ -50,7 +50,7 @@ add_task(async function() {
     { sourceId: source.id },
     { keepContext: false }
   );
-  is(getCM(dbg).getValue(), `Error loading this URI: Unknown source`);
+  is(getCM(dbg).getValue(), `Please refresh to debug this module`);
 
   info("Reload and assert that WASM files are then debuggable");
   await reload(dbg, "doc-wasm-sourcemaps.html", "fib.wasm", "fib.c");
