@@ -2146,10 +2146,10 @@ class AddonOptions extends HTMLElement {
         el.hidden = !isAbuseReportSupported(addon);
         break;
       case "dual_theme_disable":
-        el.hidden = !dual_theme_check(addon.id) || addon.isActive;
+        el.hidden = !dual_theme_check(addon.id) || addon.isActive || addon.type != "theme" || Services.prefs.getBoolPref("floorp.enable.dualtheme", false);
         break;
       case "dual_theme_enable":
-        el.hidden = dual_theme_check(addon.id) || addon.isActive;
+        el.hidden = dual_theme_check(addon.id) || addon.isActive || addon.type != "theme" || Services.prefs.getBoolPref("floorp.enable.dualtheme", false);
         break;
       case "install-update":
         el.hidden = !updateInstall;
