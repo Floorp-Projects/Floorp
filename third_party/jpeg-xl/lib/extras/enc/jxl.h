@@ -42,6 +42,8 @@ struct JXLCompressParams {
   bool use_container = false;
   // Whether to enable/disable byte-exact jpeg reconstruction for jpeg inputs.
   bool jpeg_store_metadata = true;
+  // Whether to create brob boxes.
+  bool compress_boxes = true;
   // Upper bound on the intensity level present in the image in nits (zero means
   // that the library chooses a default).
   float intensity_target = 0;

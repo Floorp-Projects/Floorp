@@ -218,9 +218,9 @@ void VerifyFrameEncoding(size_t xsize, size_t ysize, JxlEncoder* enc,
   EXPECT_LE(
       ComputeDistance2(input_io.Main(), decoded_io.Main(), jxl::GetJxlCms()),
 #if JXL_HIGH_PRECISION
-      1.8);
+      1.84);
 #else
-      8.0);
+      8.7);
 #endif
 }
 

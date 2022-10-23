@@ -74,6 +74,29 @@ else()
       add_library(${brlib} ALIAS ${brlib}-static)
     endforeach()
   endif()  # BROTLI_EMSCRIPTEN
+  if(APPLE)
+    if(NOT DEFINED CMAKE_MACOSX_RPATH)
+      # Use @rpath in install_name when CMAKE_MACOSX_RPATH is not set.
+      set_property(TARGET brotlienc PROPERTY MACOSX_RPATH TRUE)
+      set_property(TARGET brotlidec PROPERTY MACOSX_RPATH TRUE)
+      set_property(TARGET brotlicommon PROPERTY MACOSX_RPATH TRUE)
+    endif()
+    if((NOT DEFINED CMAKE_MACOSX_RPATH) OR CMAKE_MACOSX_RPATH)
+      # Set library search path when @rpath is used.
+      if(NOT DEFINED CMAKE_INSTALL_RPATH)
+        set_property(TARGET brotlienc PROPERTY INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+        set_property(TARGET brotlidec PROPERTY INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+        set_property(TARGET brotlicommon PROPERTY INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+      endif()
+    else()
+      # Set conventional install_name when @rpath is not used.
+      if(NOT DEFINED CMAKE_INSTALL_NAME_DIR)
+        set_property(TARGET brotlienc PROPERTY INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+        set_property(TARGET brotlidec PROPERTY INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+        set_property(TARGET brotlicommon PROPERTY INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+      endif()
+    endif()
+  endif()  # APPLE
 endif()
 
 # *cms

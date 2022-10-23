@@ -188,6 +188,9 @@ struct CompressParams {
   // allowing reconstruction of the original JPEG.
   bool force_cfl_jpeg_recompression = true;
 
+  // Use brotli compression for any boxes derived from a JPEG frame.
+  bool jpeg_compress_boxes = true;
+
   // Set the noise to what it would approximately be if shooting at the nominal
   // exposure for a given ISO setting on a 35mm camera.
   float photon_noise_iso = 0;
@@ -246,13 +249,12 @@ struct CompressParams {
 static constexpr float kMinButteraugliForDynamicAR = 0.5f;
 static constexpr float kMinButteraugliForDots = 3.0f;
 static constexpr float kMinButteraugliToSubtractOriginalPatches = 3.0f;
-static constexpr float kMinButteraugliDistanceForProgressiveDc = 4.5f;
 
 // Always off
 static constexpr float kMinButteraugliForNoise = 99.0f;
 
 // Minimum butteraugli distance the encoder accepts.
-static constexpr float kMinButteraugliDistance = 0.01f;
+static constexpr float kMinButteraugliDistance = 0.001f;
 
 // Tile size for encoder-side processing. Must be equal to color tile dim in the
 // current implementation.

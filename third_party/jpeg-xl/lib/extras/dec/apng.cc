@@ -57,6 +57,9 @@ namespace extras {
 
 namespace {
 
+constexpr unsigned char kExifSignature[6] = {0x45, 0x78, 0x69,
+                                             0x66, 0x00, 0x00};
+
 /* hIST chunk tail is not proccesed properly; skip this chunk completely;
    see https://github.com/glennrp/libpng/pull/413 */
 const png_byte kIgnoredPngChunks[] = {
@@ -129,6 +132,11 @@ class BlobsReaderPNG {
       return false;
     }
     if (type == "exif") {
+      // Remove "Exif\0\0" prefix if present
+      if (bytes.size() >= sizeof kExifSignature &&
+          memcmp(bytes.data(), kExifSignature, sizeof kExifSignature) == 0) {
+        bytes.erase(bytes.begin(), bytes.begin() + sizeof kExifSignature);
+      }
       if (!metadata->exif.empty()) {
         JXL_WARNING("overwriting EXIF (%" PRIuS " bytes) with base16 (%" PRIuS
                     " bytes)",
@@ -228,6 +236,10 @@ class BlobsReaderPNG {
     // We parsed so far a \n, some number of non \n characters and are now
     // pointing at a \n.
     if (*(pos++) != '\n') return false;
+    // Skip leading spaces
+    while (pos < encoded_end && *pos == ' ') {
+      pos++;
+    }
     uint32_t bytes_to_decode = 0;
     JXL_RETURN_IF_ERROR(DecodeDecimal(&pos, encoded_end, &bytes_to_decode));
 

@@ -20,7 +20,10 @@
 namespace jxl {
 
 struct Histogram {
-  Histogram() { total_count_ = 0; }
+  Histogram() {
+    total_count_ = 0;
+    entropy_ = 0.0;
+  }
   void Clear() {
     data_.clear();
     total_count_ = 0;

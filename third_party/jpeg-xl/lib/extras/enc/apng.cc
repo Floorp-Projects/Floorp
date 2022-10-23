@@ -52,6 +52,9 @@ namespace extras {
 
 namespace {
 
+constexpr unsigned char kExifSignature[6] = {0x45, 0x78, 0x69,
+                                             0x66, 0x00, 0x00};
+
 class APNGEncoder : public Encoder {
  public:
   std::vector<JxlPixelFormat> AcceptedFormats() const override {
@@ -98,12 +101,23 @@ class BlobsWriterPNG {
       // identity to avoid repeated orientation.
       std::vector<uint8_t> exif = blobs.exif;
       ResetExifOrientation(exif);
+      // By convention, the data is prefixed with "Exif\0\0" when stored in
+      // the legacy (and non-standard) "Raw profile type exif" text chunk
+      // currently used here.
+      // TODO: Store Exif data in an eXIf chunk instead, which always begins
+      // with the TIFF header.
+      if (exif.size() >= sizeof kExifSignature &&
+          memcmp(exif.data(), kExifSignature, sizeof kExifSignature) != 0) {
+        exif.insert(exif.begin(), kExifSignature,
+                    kExifSignature + sizeof kExifSignature);
+      }
       JXL_RETURN_IF_ERROR(EncodeBase16("exif", exif, strings));
     }
     if (!blobs.iptc.empty()) {
       JXL_RETURN_IF_ERROR(EncodeBase16("iptc", blobs.iptc, strings));
     }
     if (!blobs.xmp.empty()) {
+      // TODO: Store XMP data in an "XML:com.adobe.xmp" text chunk instead.
       JXL_RETURN_IF_ERROR(EncodeBase16("xmp", blobs.xmp, strings));
     }
     return true;

@@ -1418,8 +1418,8 @@ cmd_authors() {
   merge_request_commits
   local emails
   local names
-  readarray -t emails < <(git log --format='%ae' "${MR_HEAD_SHA}...${MR_ANCESTOR_SHA}")
-  readarray -t names < <(git log --format='%an' "${MR_HEAD_SHA}...${MR_ANCESTOR_SHA}")
+  readarray -t emails < <(git log --format='%ae' "${MR_ANCESTOR_SHA}..${MR_HEAD_SHA}")
+  readarray -t names < <(git log --format='%an' "${MR_ANCESTOR_SHA}..${MR_HEAD_SHA}")
   for i in "${!names[@]}"; do
     echo "Checking name '${names[$i]}' with email '${emails[$i]}' ..."
     "${MYDIR}"/tools/check_author.py "${emails[$i]}" "${names[$i]}"

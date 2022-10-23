@@ -6,6 +6,7 @@
 #include "lib/extras/enc/jxl.h"
 
 #include "jxl/encode_cxx.h"
+#include "lib/jxl/exif.h"
 
 namespace jxl {
 namespace extras {
@@ -57,12 +58,10 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
     return false;
   }
 
-  bool use_container = params.use_container;
-  if (!ppf.metadata.exif.empty() || !ppf.metadata.xmp.empty() ||
-      !ppf.metadata.jumbf.empty() || !ppf.metadata.iptc.empty() ||
-      (jpeg_bytes && params.jpeg_store_metadata)) {
-    use_container = true;
-  }
+  bool use_boxes = !ppf.metadata.exif.empty() || !ppf.metadata.xmp.empty() ||
+                   !ppf.metadata.jumbf.empty() || !ppf.metadata.iptc.empty();
+  bool use_container = params.use_container || use_boxes ||
+                       (jpeg_bytes && params.jpeg_store_metadata);
 
   if (JXL_ENC_SUCCESS !=
       JxlEncoderUseContainer(enc, static_cast<int>(use_container))) {
@@ -129,6 +128,41 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
         fprintf(stderr, "JxlEncoderSetColorEncoding() failed.\n");
         return false;
       }
+    }
+
+    if (use_boxes) {
+      if (JXL_ENC_SUCCESS != JxlEncoderUseBoxes(enc)) {
+        fprintf(stderr, "JxlEncoderUseBoxes() failed.\n");
+        return false;
+      }
+      // Prepend 4 zero bytes to exif for tiff header offset
+      std::vector<uint8_t> exif_with_offset;
+      bool bigendian;
+      if (IsExif(ppf.metadata.exif, &bigendian)) {
+        exif_with_offset.resize(ppf.metadata.exif.size() + 4);
+        memcpy(exif_with_offset.data() + 4, ppf.metadata.exif.data(),
+               ppf.metadata.exif.size());
+      }
+      const struct BoxInfo {
+        const char* type;
+        const std::vector<uint8_t>& bytes;
+      } boxes[] = {
+          {"Exif", exif_with_offset},
+          {"xml ", ppf.metadata.xmp},
+          {"jumb", ppf.metadata.jumbf},
+          {"xml ", ppf.metadata.iptc},
+      };
+      for (size_t i = 0; i < sizeof boxes / sizeof *boxes; ++i) {
+        const BoxInfo& box = boxes[i];
+        if (!box.bytes.empty() &&
+            JXL_ENC_SUCCESS != JxlEncoderAddBox(enc, box.type, box.bytes.data(),
+                                                box.bytes.size(),
+                                                params.compress_boxes)) {
+          fprintf(stderr, "JxlEncoderAddBox() failed (%s).\n", box.type);
+          return false;
+        }
+      }
+      JxlEncoderCloseBoxes(enc);
     }
 
     for (size_t num_frame = 0; num_frame < ppf.frames.size(); ++num_frame) {

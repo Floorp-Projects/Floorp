@@ -9,59 +9,14 @@
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/common.h"
-#include "lib/jxl/frame_header.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/jpeg/enc_jpeg_data.h"
 #include "lib/jxl/jpeg/enc_jpeg_data_reader.h"
-#include "lib/jxl/render_pipeline/render_pipeline.h"
-#include "lib/jxl/render_pipeline/stage_chroma_upsampling.h"
-#include "lib/jxl/render_pipeline/stage_write.h"
-#include "lib/jxl/render_pipeline/stage_ycbcr.h"
 
 namespace jxl {
 namespace extras {
 
 namespace {
-
-Rect BlockGroupRect(const FrameDimensions& frame_dim, size_t group_index) {
-  const size_t gx = group_index % frame_dim.xsize_groups;
-  const size_t gy = group_index / frame_dim.xsize_groups;
-  const Rect rect(gx * (frame_dim.group_dim >> 3),
-                  gy * (frame_dim.group_dim >> 3), frame_dim.group_dim >> 3,
-                  frame_dim.group_dim >> 3, frame_dim.xsize_blocks,
-                  frame_dim.ysize_blocks);
-  return rect;
-}
-
-Rect DCGroupRect(const FrameDimensions& frame_dim, size_t group_index) {
-  const size_t gx = group_index % frame_dim.xsize_dc_groups;
-  const size_t gy = group_index / frame_dim.xsize_dc_groups;
-  const Rect rect(gx * frame_dim.group_dim, gy * frame_dim.group_dim,
-                  frame_dim.group_dim, frame_dim.group_dim,
-                  frame_dim.xsize_blocks, frame_dim.ysize_blocks);
-  return rect;
-}
-
-Status SetChromaSubsamplingFromJpegData(const jpeg::JPEGData& jpeg_data,
-                                        YCbCrChromaSubsampling* cs) {
-  size_t nbcomp = jpeg_data.components.size();
-  if (nbcomp == 3) {
-    uint8_t hsample[3], vsample[3];
-    for (size_t i = 0; i < nbcomp; i++) {
-      hsample[i] = jpeg_data.components[i].h_samp_factor;
-      vsample[i] = jpeg_data.components[i].v_samp_factor;
-    }
-    JXL_RETURN_IF_ERROR(cs->Set(hsample, vsample));
-  } else if (nbcomp == 1) {
-    uint8_t hsample[3], vsample[3];
-    for (size_t i = 0; i < 3; i++) {
-      hsample[i] = jpeg_data.components[0].h_samp_factor;
-      vsample[i] = jpeg_data.components[0].v_samp_factor;
-    }
-    JXL_RETURN_IF_ERROR(cs->Set(hsample, vsample));
-  }
-  return true;
-}
 
 bool IsYCbCrJpeg(const jpeg::JPEGData& jpeg_data) {
   size_t nbcomp = jpeg_data.components.size();
@@ -100,104 +55,30 @@ bool IsYCbCrJpeg(const jpeg::JPEGData& jpeg_data) {
   return (!is_rgb || nbcomp == 1);
 }
 
-inline std::array<int, 3> JpegOrder(bool is_ycbcr, bool is_gray) {
-  if (is_gray) {
-    return {{0, 0, 0}};
-  } else if (is_ycbcr) {
-    return {{1, 0, 2}};
-  } else {
-    return {{0, 1, 2}};
+// See the following article for the details:
+// J. R. Price and M. Rabbani, "Dequantization bias for JPEG decompression"
+// Proceedings International Conference on Information Technology: Coding and
+// Computing (Cat. No.PR00540), 2000, pp. 30-35, doi: 10.1109/ITCC.2000.844179.
+void ComputeOptimalLaplacianBiases(const int num_blocks, const int* nonzeros,
+                                   const int* sumabs, float* biases) {
+  for (size_t k = 1; k < kDCTBlockSize; ++k) {
+    // Notation adapted from the article
+    int N = num_blocks;
+    int N1 = nonzeros[k];
+    int N0 = num_blocks - N1;
+    int S = sumabs[k];
+    // Compute gamma from N0, N1, N, S (eq. 11), with A and B being just
+    // temporary grouping of terms.
+    float A = 4.0 * S + 2.0 * N;
+    float B = 4.0 * S - 2.0 * N1;
+    float gamma = (-1.0 * N0 + std::sqrt(N0 * N0 * 1.0 + A * B)) / A;
+    float gamma2 = gamma * gamma;
+    // The bias is computed from gamma with (eq. 5), where the quantization
+    // multiplier Q can be factored out and thus the bias can be applied
+    // directly on the quantized coefficient.
+    biases[k] =
+        0.5 * (((1.0 + gamma2) / (1.0 - gamma2)) + 1.0 / std::log(gamma));
   }
-}
-
-void SetDequantWeightsFromJpegData(const jpeg::JPEGData& jpeg_data,
-                                   const bool is_ycbcr, float* dequant) {
-  auto jpeg_c_map = JpegOrder(is_ycbcr, jpeg_data.components.size() == 1);
-  const float kDequantScale = 1.0f / (8 * 255);
-  for (size_t c = 0; c < 3; c++) {
-    size_t jpeg_c = jpeg_c_map[c];
-    const int32_t* quant =
-        jpeg_data.quant[jpeg_data.components[jpeg_c].quant_idx].values.data();
-    for (size_t k = 0; k < kDCTBlockSize; ++k) {
-      dequant[c * kDCTBlockSize + k] = quant[k] * kDequantScale;
-    }
-  }
-}
-
-void SetCoefficientsFromJpegData(const jpeg::JPEGData& jpeg_data,
-                                 const FrameDimensions& frame_dim,
-                                 const YCbCrChromaSubsampling& cs,
-                                 const bool is_ycbcr, Image3S* coeffs) {
-  auto jpeg_c_map = JpegOrder(is_ycbcr, jpeg_data.components.size() == 1);
-  *coeffs = Image3S(kGroupDim * kGroupDim, frame_dim.num_groups);
-  for (size_t c = 0; c < 3; ++c) {
-    if (jpeg_data.components.size() == 1 && c != 1) {
-      ZeroFillImage(&coeffs->Plane(c));
-      continue;
-    }
-    const auto& comp = jpeg_data.components[jpeg_c_map[c]];
-    size_t hshift = cs.HShift(c);
-    size_t vshift = cs.VShift(c);
-    int dcquant = jpeg_data.quant[comp.quant_idx].values.data()[0];
-    int16_t dc_level = 1024 / dcquant;
-    size_t jpeg_stride = comp.width_in_blocks * kDCTBlockSize;
-    for (size_t group_index = 0; group_index < frame_dim.num_groups;
-         group_index++) {
-      Rect block_rect = BlockGroupRect(frame_dim, group_index);
-      size_t xsize_blocks = DivCeil(block_rect.xsize(), 1 << hshift);
-      size_t ysize_blocks = DivCeil(block_rect.ysize(), 1 << vshift);
-      size_t group_xsize = xsize_blocks * kDCTBlockSize;
-      size_t bx0 = block_rect.x0() >> hshift;
-      size_t by0 = block_rect.y0() >> vshift;
-      size_t jpeg_offset = by0 * jpeg_stride + bx0 * kDCTBlockSize;
-      const int16_t* JXL_RESTRICT jpeg_coeffs =
-          comp.coeffs.data() + jpeg_offset;
-      int16_t* JXL_RESTRICT coeff_row = coeffs->PlaneRow(c, group_index);
-      for (size_t by = 0; by < ysize_blocks; ++by) {
-        memcpy(&coeff_row[by * group_xsize], &jpeg_coeffs[by * jpeg_stride],
-               group_xsize * sizeof(coeff_row[0]));
-      }
-      if (!is_ycbcr) {
-        for (size_t offset = 0; offset < coeffs->xsize();
-             offset += kDCTBlockSize) {
-          coeff_row[offset] += dc_level;
-        }
-      }
-    }
-  }
-}
-
-std::unique_ptr<RenderPipeline> PreparePipeline(
-    const YCbCrChromaSubsampling& cs, const bool is_ycbcr,
-    const FrameDimensions& frame_dim, PackedImage* output) {
-  RenderPipeline::Builder builder(3);
-  if (!cs.Is444()) {
-    for (size_t c = 0; c < 3; c++) {
-      if (cs.HShift(c) != 0) {
-        builder.AddStage(GetChromaUpsamplingStage(c, /*horizontal=*/true));
-      }
-      if (cs.VShift(c) != 0) {
-        builder.AddStage(GetChromaUpsamplingStage(c, /*horizontal=*/false));
-      }
-    }
-  }
-  if (is_ycbcr) {
-    builder.AddStage(GetYCbCrStage());
-  }
-  ImageOutput main_output;
-  main_output.format = output->format;
-  main_output.bits_per_sample =
-      PackedImage::BitsPerChannel(output->format.data_type);
-  main_output.buffer = reinterpret_cast<uint8_t*>(output->pixels());
-  main_output.buffer_size = output->pixels_size;
-  main_output.stride = output->stride;
-  std::vector<ImageOutput> extra_output;
-  builder.AddStage(GetWriteToOutputStage(
-      main_output, output->xsize, output->ysize,
-      /*has_alpha=*/false,
-      /*unpremul_alpha=*/false,
-      /*alpha_c=*/0, Orientation::kIdentity, extra_output));
-  return std::move(builder).Finalize(frame_dim);
 }
 
 }  // namespace
@@ -224,49 +105,194 @@ Status DecodeJpeg(const std::vector<uint8_t>& compressed,
   ppf->icc.assign(icc.data(), icc.data() + icc.size());
   ConvertInternalToExternalColorEncoding(color_encoding, &ppf->color_encoding);
 
-  YCbCrChromaSubsampling cs;
-  JXL_RETURN_IF_ERROR(SetChromaSubsamplingFromJpegData(jpeg_data, &cs));
+  int max_h_samp = 1;
+  int max_v_samp = 1;
+  for (size_t c = 0; c < nbcomp; ++c) {
+    const auto& comp = jpeg_data.components[c];
+    max_h_samp = std::max(comp.h_samp_factor, max_h_samp);
+    max_v_samp = std::max(comp.v_samp_factor, max_v_samp);
+  }
+  JXL_RETURN_IF_ERROR(max_h_samp <= 2);
+  JXL_RETURN_IF_ERROR(max_v_samp <= 2);
 
-  FrameDimensions frame_dim;
-  frame_dim.Set(xsize, ysize, /*group_size_shift=*/1, cs.MaxHShift(),
-                cs.MaxVShift(),
-                /*modular_mode=*/false, /*upsampling=*/1);
-
-  std::vector<float> dequant(3 * kDCTBlockSize);
-  SetDequantWeightsFromJpegData(jpeg_data, is_ycbcr, &dequant[0]);
-
-  Image3S coeffs;
-  SetCoefficientsFromJpegData(jpeg_data, frame_dim, cs, is_ycbcr, &coeffs);
+  const float kDequantScale = 1.0f / (8 * 255);
+  std::vector<float> dequant(nbcomp * kDCTBlockSize);
+  for (size_t c = 0; c < nbcomp; c++) {
+    const auto& comp = jpeg_data.components[c];
+    const int32_t* quant = jpeg_data.quant[comp.quant_idx].values.data();
+    for (size_t k = 0; k < kDCTBlockSize; ++k) {
+      dequant[c * kDCTBlockSize + k] = quant[k] * kDequantScale;
+    }
+  }
 
   JxlPixelFormat format = {nbcomp, output_data_type, JXL_LITTLE_ENDIAN, 0};
   ppf->frames.emplace_back(xsize, ysize, format);
   auto& frame = ppf->frames.back();
 
-  std::unique_ptr<RenderPipeline> render_pipeline =
-      PreparePipeline(cs, is_ycbcr, frame_dim, &frame.color);
-  JXL_RETURN_IF_ERROR(render_pipeline->IsInitialized());
+  // Padding for horizontal chroma upsampling.
+  static constexpr size_t kPaddingLeft = CacheAligned::kAlignment;
+  static constexpr size_t kPaddingRight = 1;
 
-  hwy::AlignedFreeUniquePtr<float[]> float_memory;
-  const auto allocate_storage = [&](const size_t num_threads) -> Status {
-    JXL_RETURN_IF_ERROR(
-        render_pipeline->PrepareForThreads(num_threads,
-                                           /*use_group_ids=*/false));
-    float_memory = hwy::AllocateAligned<float>(kDCTBlockSize * 2 * num_threads);
-    return true;
-  };
-  const auto process_group = [&](const uint32_t group_index,
-                                 const size_t thread) {
-    RenderPipelineInput input =
-        render_pipeline->GetInputBuffers(group_index, thread);
-    float* group_dec_cache = float_memory.get() + thread * kDCTBlockSize * 2;
-    const Rect block_rect = BlockGroupRect(frame_dim, group_index);
-    JXL_CHECK(DecodeGroupJpeg(coeffs, group_index, block_rect, cs, &dequant[0],
-                              group_dec_cache, thread, input));
-    input.Done();
-  };
-  JXL_CHECK(RunOnPool(pool, 0, frame_dim.num_groups, allocate_storage,
-                      process_group, "Decode Groups"));
+  size_t MCU_width = kBlockDim * max_h_samp;
+  size_t MCU_height = kBlockDim * max_v_samp;
+  size_t MCU_rows = DivCeil(ysize, MCU_height);
+  size_t MCU_cols = DivCeil(xsize, MCU_width);
+  size_t stride = MCU_cols * MCU_width + kPaddingLeft + kPaddingRight;
+  Image3F MCU_row_buf(stride, MCU_height);
+  size_t xsize_blocks = DivCeil(xsize, kBlockDim);
 
+  // Temporary buffers for vertically upsampled chroma components. We keep a
+  // ringbuffer of 3 * kBlockDim rows so that we have access for previous and
+  // next rows.
+  std::vector<ImageF> chroma;
+  // In the rendering order, vertically upsampled chroma components come first.
+  std::vector<size_t> component_order;
+  for (size_t c = 0; c < nbcomp; ++c) {
+    const auto& comp = jpeg_data.components[c];
+    if (comp.v_samp_factor < max_v_samp) {
+      component_order.emplace_back(c);
+      chroma.emplace_back(ImageF(stride, 3 * kBlockDim));
+    }
+  }
+  for (size_t c = 0; c < nbcomp; ++c) {
+    const auto& comp = jpeg_data.components[c];
+    if (comp.v_samp_factor == max_v_samp) {
+      component_order.emplace_back(c);
+    }
+  }
+
+  hwy::AlignedFreeUniquePtr<float[]> idct_scratch =
+      hwy::AllocateAligned<float>(kDCTBlockSize * 2);
+  hwy::AlignedFreeUniquePtr<float[]> upsample_scratch =
+      hwy::AllocateAligned<float>(stride);
+
+  constexpr size_t kTempOutputLen = 1024;
+  size_t bytes_per_sample = ppf->info.bits_per_sample / 8;
+  size_t bytes_per_pixel = nbcomp * bytes_per_sample;
+  hwy::AlignedFreeUniquePtr<uint8_t[]> output_scratch =
+      hwy::AllocateAligned<uint8_t>(bytes_per_pixel * kTempOutputLen);
+
+  // Per channel and per frequency statistics about the number of nonzeros and
+  // the sum of coefficient absolute values, used in dequantization bias
+  // computation.
+  std::vector<int> nonzeros(nbcomp * kDCTBlockSize);
+  std::vector<int> sumabs(nbcomp * kDCTBlockSize);
+  std::vector<size_t> num_processed_blocks(nbcomp);
+  std::vector<float> biases(nbcomp * kDCTBlockSize);
+
+  for (size_t mcu_y = 0; mcu_y <= MCU_rows; mcu_y++) {
+    for (size_t ci = 0; ci < nbcomp; ++ci) {
+      size_t c = component_order[ci];
+      size_t k0 = c * kDCTBlockSize;
+      auto& comp = jpeg_data.components[c];
+      bool hups = comp.h_samp_factor < max_h_samp;
+      bool vups = comp.v_samp_factor < max_v_samp;
+      size_t nblocks_y = comp.v_samp_factor;
+      ImageF* output = vups ? &chroma[ci] : &MCU_row_buf.Plane(c);
+      size_t mcu_y0 = vups ? (mcu_y * kBlockDim) % output->ysize() : 0;
+      if (ci == chroma.size() && mcu_y > 0) {
+        // For the previous MCU row we have everything we need at this point,
+        // including the chroma components for the current MCU row that was used
+        // in upsampling, so we can do the color conversion and the interleaved
+        // output.
+        for (size_t y = 0; y < MCU_height; ++y) {
+          float* rows[3];
+          for (size_t c = 0; c < nbcomp; ++c) {
+            rows[c] = MCU_row_buf.PlaneRow(c, y) + kPaddingLeft;
+          }
+          if (is_ycbcr && nbcomp == 3) {
+            YCbCrToRGB(rows[0], rows[1], rows[2], xsize_blocks * kBlockDim);
+          } else {
+            for (size_t c = 0; c < nbcomp; ++c) {
+              // Libjpeg encoder converts all unsigned input values to signed
+              // ones, i.e. for 8 bit input from [0..255] to [-128..127]. For
+              // YCbCr jpegs this is undone in the YCbCr -> RGB conversion above
+              // by adding 128 to Y channel, but for grayscale and RGB jpegs we
+              // need to undo it here channel by channel.
+              DecenterRow(rows[c], xsize_blocks * kBlockDim);
+            }
+          }
+          size_t y0 = (mcu_y - 1) * MCU_height + y;
+          if (y0 >= ysize) continue;
+          for (size_t x0 = 0; x0 < xsize; x0 += kTempOutputLen) {
+            size_t len = std::min(xsize - x0, kTempOutputLen);
+            WriteToPackedImage(rows, x0, y0, len, output_scratch.get(),
+                               &frame.color);
+          }
+        }
+      }
+      if (mcu_y < MCU_rows) {
+        if (!hups && !vups) {
+          size_t num_coeffs = comp.width_in_blocks * kDCTBlockSize;
+          size_t offset = mcu_y * comp.width_in_blocks * kDCTBlockSize;
+          // Update statistics for this MCU row.
+          GatherBlockStats(&comp.coeffs[offset], num_coeffs, &nonzeros[k0],
+                           &sumabs[k0]);
+          num_processed_blocks[c] += comp.width_in_blocks;
+          if (mcu_y % 4 == 3) {
+            // Re-compute optimal biases every few MCU-rows.
+            ComputeOptimalLaplacianBiases(num_processed_blocks[c],
+                                          &nonzeros[k0], &sumabs[k0],
+                                          &biases[k0]);
+          }
+        }
+        for (size_t iy = 0; iy < nblocks_y; ++iy) {
+          size_t by = mcu_y * nblocks_y + iy;
+          size_t y0 = mcu_y0 + iy * kBlockDim;
+          int16_t* JXL_RESTRICT row_in =
+              &comp.coeffs[by * comp.width_in_blocks * kDCTBlockSize];
+          float* JXL_RESTRICT row_out = output->Row(y0) + kPaddingLeft;
+          for (size_t bx = 0; bx < comp.width_in_blocks; ++bx) {
+            DecodeJpegBlock(&row_in[bx * kDCTBlockSize], &dequant[k0],
+                            &biases[k0], idct_scratch.get(),
+                            &row_out[bx * kBlockDim], output->PixelsPerRow());
+          }
+          if (hups) {
+            for (size_t y = 0; y < kBlockDim; ++y) {
+              float* JXL_RESTRICT row = output->Row(y0 + y) + kPaddingLeft;
+              Upsample2Horizontal(row, upsample_scratch.get(),
+                                  xsize_blocks * kBlockDim);
+              memcpy(row, upsample_scratch.get(),
+                     xsize_blocks * kBlockDim * sizeof(row[0]));
+            }
+          }
+        }
+      }
+      if (vups) {
+        auto y_idx = [&](size_t mcu_y, ssize_t y) {
+          return (output->ysize() + mcu_y * kBlockDim + y) % output->ysize();
+        };
+        if (mcu_y == 0) {
+          // Copy the first row of the current MCU row to the last row of the
+          // previous one.
+          memcpy(output->Row(y_idx(mcu_y, -1)), output->Row(y_idx(mcu_y, 0)),
+                 output->PixelsPerRow() * sizeof(output->Row(0)[0]));
+        }
+        if (mcu_y == MCU_rows) {
+          // Copy the last row of the current MCU row to the  first row of the
+          // next  one.
+          memcpy(output->Row(y_idx(mcu_y + 1, 0)),
+                 output->Row(y_idx(mcu_y, kBlockDim - 1)),
+                 output->PixelsPerRow() * sizeof(output->Row(0)[0]));
+        }
+        if (mcu_y > 0) {
+          for (size_t y = 0; y < kBlockDim; ++y) {
+            size_t y_top = y_idx(mcu_y - 1, y - 1);
+            size_t y_cur = y_idx(mcu_y - 1, y);
+            size_t y_bot = y_idx(mcu_y - 1, y + 1);
+            size_t y_out0 = 2 * y;
+            size_t y_out1 = 2 * y + 1;
+            Upsample2Vertical(output->Row(y_top) + kPaddingLeft,
+                              output->Row(y_cur) + kPaddingLeft,
+                              output->Row(y_bot) + kPaddingLeft,
+                              MCU_row_buf.PlaneRow(c, y_out0) + kPaddingLeft,
+                              MCU_row_buf.PlaneRow(c, y_out1) + kPaddingLeft,
+                              xsize_blocks * kBlockDim);
+          }
+        }
+      }
+    }
+  }
   return true;
 }
 

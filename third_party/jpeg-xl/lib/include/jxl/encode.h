@@ -339,6 +339,13 @@ typedef enum {
    */
   JXL_ENC_FRAME_SETTING_BROTLI_EFFORT = 32,
 
+  /** Enables or disables brotli compression of metadata boxes derived from
+   * a JPEG frame when using JxlEncoderAddJPEGFrame. This has no effect on boxes
+   * added using JxlEncoderAddBox.
+   * -1 = default, 0 = disable compression, 1 = enable compression.
+   */
+  JXL_ENC_FRAME_SETTING_JPEG_COMPRESS_BOXES = 33,
+
   /** Enum value not to be used as an option. This value is added to force the
    * C compiler to have the enum to take a known size.
    */
