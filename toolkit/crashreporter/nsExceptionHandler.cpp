@@ -11,6 +11,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryService.h"
+#include "nsString.h"
 #include "nsTHashMap.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
@@ -138,7 +139,7 @@ typedef std::wstring xpstring;
 #  define XP_STRLEN(x) wcslen(x)
 #  define my_strlen strlen
 #  define my_memchr memchr
-#  define CRASH_REPORTER_FILENAME "crashreporter.exe"
+#  define CRASH_REPORTER_FILENAME u"crashreporter.exe"_ns
 #  define XP_PATH_SEPARATOR L"\\"
 #  define XP_PATH_SEPARATOR_CHAR L'\\'
 #  define XP_PATH_MAX (MAX_PATH + 1)
@@ -151,7 +152,7 @@ typedef char XP_CHAR;
 typedef std::string xpstring;
 #  define XP_TEXT(x) x
 #  define CONVERT_XP_CHAR_TO_UTF16(x) NS_ConvertUTF8toUTF16(x)
-#  define CRASH_REPORTER_FILENAME "crashreporter"
+#  define CRASH_REPORTER_FILENAME u"crashreporter"_ns
 #  define XP_PATH_SEPARATOR "/"
 #  define XP_PATH_SEPARATOR_CHAR '/'
 #  define XP_PATH_MAX PATH_MAX
@@ -1840,9 +1841,9 @@ static void TerminateHandler() { MOZ_CRASH("Unhandled exception"); }
 #if !defined(MOZ_WIDGET_ANDROID)
 
 // Locate the specified executable and store its path as a native string in
-// the |aPathPtr| so we can later invoke it from within the exception handler.
-static nsresult LocateExecutable(nsIFile* aXREDirectory,
-                                 const nsACString& aName, nsAString& aPath) {
+// the |aPath| so we can later invoke it from within the exception handler.
+static nsresult LocateExecutable(nsIFile* aXREDirectory, const nsAString& aName,
+                                 PathString& aPath) {
   nsCOMPtr<nsIFile> exePath;
   nsresult rv = aXREDirectory->Clone(getter_AddRefs(exePath));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1854,8 +1855,8 @@ static nsresult LocateExecutable(nsIFile* aXREDirectory,
   exePath->Append(u"MacOS"_ns);
 #  endif
 
-  exePath->AppendNative(aName);
-  exePath->GetPath(aPath);
+  exePath->Append(aName);
+  aPath = exePath->NativePath();
   return NS_OK;
 }
 
@@ -1952,34 +1953,14 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
 
 #if !defined(MOZ_WIDGET_ANDROID)
   // Locate the crash reporter executable
-  nsAutoString crashReporterPath_temp;
-  nsresult rv =
-      LocateExecutable(aXREDirectory, nsLiteralCString(CRASH_REPORTER_FILENAME),
-                       crashReporterPath_temp);
+  PathString crashReporterPath_temp;
+  nsresult rv = LocateExecutable(aXREDirectory, CRASH_REPORTER_FILENAME,
+                                 crashReporterPath_temp);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-#  ifdef XP_MACOSX
-  nsCOMPtr<nsIFile> libPath;
-  rv = aXREDirectory->Clone(getter_AddRefs(libPath));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsAutoString libraryPath_temp;
-  rv = libPath->GetPath(libraryPath_temp);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-#  endif  // XP_MACOSX
-
-#  ifdef XP_WIN
-  crashReporterPath = xpstring(crashReporterPath_temp.get());
-#  else
-  crashReporterPath =
-      xpstring(NS_ConvertUTF16toUTF8(crashReporterPath_temp).get());
-#  endif  // XP_WIN
+  crashReporterPath = crashReporterPath_temp.get();
 #else
   // On Android, we launch a service defined via MOZ_ANDROID_CRASH_HANDLER
   const char* androidCrashHandler = PR_GetEnv("MOZ_ANDROID_CRASH_HANDLER");
@@ -2002,11 +1983,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
 #endif  // !defined(MOZ_WIDGET_ANDROID)
 
   // get temp path to use for minidump path
-#if defined(XP_WIN)
-  nsString tempPath;
-#else
-  nsCString tempPath;
-#endif
+  PathString tempPath;
   if (!BuildTempPath(tempPath)) {
     return NS_ERROR_FAILURE;
   }
@@ -2323,21 +2300,21 @@ nsresult SetupExtraData(nsIFile* aAppDataDirectory,
   NS_ENSURE_SUCCESS(rv, rv);
   memset(lastCrashTimeFilename, 0, sizeof(lastCrashTimeFilename));
 
+  PathString filename;
 #if defined(XP_WIN)
-  nsAutoString filename;
   rv = lastCrashFile->GetPath(filename);
+#else
+  rv = lastCrashFile->GetNativePath(filename);
+#endif
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (filename.Length() < XP_PATH_MAX)
+  if (filename.Length() < XP_PATH_MAX) {
+#if defined(XP_WIN)
     wcsncpy(lastCrashTimeFilename, filename.get(), filename.Length());
 #else
-  nsAutoCString filename;
-  rv = lastCrashFile->GetNativePath(filename);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (filename.Length() < XP_PATH_MAX)
     strncpy(lastCrashTimeFilename, filename.get(), filename.Length());
 #endif
+  }
 
   return NS_OK;
 }
@@ -2586,7 +2563,7 @@ nsresult SetRestartArgs(int argc, char** argv) {
     }
 
     // PR_SetEnv() wants the string to be available for the lifetime
-    // of the app, so dup it here
+    // of the app, so dup it here. This conversion is not lossy.
     env = ToNewCString(envVar, mozilla::fallible);
     if (!env) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2599,7 +2576,7 @@ nsresult SetRestartArgs(int argc, char** argv) {
   envVar += "=";
 
   // PR_SetEnv() wants the string to be available for the lifetime
-  // of the app, so dup it here
+  // of the app, so dup it here. This conversion is not lossy.
   env = ToNewCString(envVar, mozilla::fallible);
   if (!env) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2610,6 +2587,9 @@ nsresult SetRestartArgs(int argc, char** argv) {
   if (appfile && *appfile) {
     envVar = "MOZ_CRASHREPORTER_RESTART_XUL_APP_FILE=";
     envVar += appfile;
+
+    // PR_SetEnv() wants the string to be available for the lifetime
+    // of the app, so dup it here. This conversion is not lossy.
     env = ToNewCString(envVar);
     PR_SetEnv(env);
   }
@@ -2938,15 +2918,14 @@ void SetMemoryReportFile(nsIFile* aFile) {
   if (!gExceptionHandler) {
     return;
   }
+
+  PathString path;
 #ifdef XP_WIN
-  nsString path;
   aFile->GetPath(path);
-  memoryReportPath = xpstring(path.get());
 #else
-  nsCString path;
   aFile->GetNativePath(path);
-  memoryReportPath = xpstring(path.get());
 #endif
+  memoryReportPath = xpstring(path.get());
 }
 
 nsresult GetDefaultMemoryReportFile(nsIFile** aFile) {
@@ -2987,15 +2966,13 @@ static void FindPendingDir() {
     pendingDir->Append(u"Crash Reports"_ns);
     pendingDir->Append(u"pending"_ns);
 
+    PathString path;
 #ifdef XP_WIN
-    nsString path;
     pendingDir->GetPath(path);
-    pendingDirectory = path.get();
 #else
-    nsCString path;
     pendingDir->GetNativePath(path);
-    pendingDirectory = xpstring(path.get());
 #endif
+    pendingDirectory = xpstring(path.get());
   }
 }
 
@@ -3179,11 +3156,10 @@ bool WriteExtraFile(const nsAString& id, const AnnotationTable& annotations) {
   }
 
   extra->Append(id + u".extra"_ns);
+  PathString path;
 #ifdef XP_WIN
-  nsAutoString path;
   NS_ENSURE_SUCCESS(extra->GetPath(path), false);
 #elif defined(XP_UNIX)
-  nsAutoCString path;
   NS_ENSURE_SUCCESS(extra->GetNativePath(path), false);
 #endif
 
