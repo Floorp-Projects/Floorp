@@ -10,6 +10,8 @@ transforms = TransformSequence()
 @transforms.add
 def sentry(config, tasks):
     """Do transforms specific to github-sync tasks."""
+    if config.params["project"] not in ["mozilla-central", "try"]:
+        return
     for task in tasks:
         scopes = [
             scope.format(level=config.params["level"]) for scope in task["scopes"]
