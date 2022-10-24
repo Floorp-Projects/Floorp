@@ -82,12 +82,10 @@ module.exports = {
           ["==", "!=", ">", "<"].includes(node.operator) &&
           ((node.right.type == "Literal" &&
             node.right.value == 0 &&
-            node.left.property &&
-            node.left.property.name == "length") ||
+            node.left.property?.name == "length") ||
             (node.left.type == "Literal" &&
               node.left.value == 0 &&
-              node.right.property &&
-              node.right.property.name == "length"))
+              node.right.property?.name == "length"))
         ) {
           if (
             conditionStatement.includes(node.parent.type) ||

@@ -33,10 +33,7 @@ module.exports = {
           relativePath = relativePath.split(path.sep).join("/");
         }
 
-        if (
-          browserWindowEnv.browserjsScripts &&
-          browserWindowEnv.browserjsScripts.includes(relativePath)
-        ) {
+        if (browserWindowEnv.browserjsScripts?.includes(relativePath)) {
           for (let global in browserWindowEnv.globals) {
             helpers.addVarToScope(
               global,
