@@ -8,9 +8,12 @@ package org.mozilla.focus
 import android.content.Context
 import android.os.Build
 import android.os.StrictMode
+import android.util.Log.INFO
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.preference.PreferenceManager
+import androidx.work.Configuration.Builder
+import androidx.work.Configuration.Provider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +40,7 @@ import org.mozilla.focus.utils.AdjustHelper
 import org.mozilla.focus.utils.AppConstants
 import kotlin.coroutines.CoroutineContext
 
-open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
+open class FocusApplication : LocaleAwareApplication(), Provider, CoroutineScope {
     private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
@@ -192,4 +195,6 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
             },
         )
     }
+
+    override fun getWorkManagerConfiguration() = Builder().setMinimumLoggingLevel(INFO).build()
 }

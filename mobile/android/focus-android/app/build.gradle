@@ -230,6 +230,7 @@ dependencies {
     implementation Dependencies.androidx_savedstate
     implementation Dependencies.androidx_splashscreen
     implementation Dependencies.androidx_transition
+    implementation Dependencies.androidx_work_ktx
 
     implementation Dependencies.google_accompanist_insets_ui
     implementation Dependencies.google_play
