@@ -120,7 +120,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.0.239';
+    const workerVersion = '3.0.252';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -16154,19 +16154,14 @@ class Lexer {
     }
 
     if (ch < 0x30 || ch > 0x39) {
-      if ((0, _core_utils.isWhiteSpace)(ch) || ch === -1) {
-        if (divideBy === 10 && sign === 0) {
-          (0, _util.warn)("Lexer.getNumber - treating a single decimal point as zero.");
-          return 0;
-        }
+      const msg = `Invalid number: ${String.fromCharCode(ch)} (charCode ${ch})`;
 
-        if (divideBy === 0 && sign === -1) {
-          (0, _util.warn)("Lexer.getNumber - treating a single minus sign as zero.");
-          return 0;
-        }
+      if ((0, _core_utils.isWhiteSpace)(ch) || ch === -1) {
+        (0, _util.info)(`Lexer.getNumber - "${msg}".`);
+        return 0;
       }
 
-      throw new _util.FormatError(`Invalid number: ${String.fromCharCode(ch)} (charCode ${ch})`);
+      throw new _util.FormatError(msg);
     }
 
     sign = sign || 1;
@@ -25099,10 +25094,6 @@ class Glyph {
     this.isInvisibleFormatMark = category.isInvisibleFormatMark;
   }
 
-  matchesForCache(originalCharCode, fontChar, unicode, accent, width, vmetric, operatorListId, isSpace, isInFont) {
-    return this.originalCharCode === originalCharCode && this.fontChar === fontChar && this.unicode === unicode && this.accent === accent && this.width === width && this.vmetric === vmetric && this.operatorListId === operatorListId && this.isSpace === isSpace && this.isInFont === isInFont;
-  }
-
 }
 
 function int16(b0, b1) {
@@ -27674,6 +27665,12 @@ class Font {
   }
 
   _charToGlyph(charcode, isSpace = false) {
+    let glyph = this._glyphCache[charcode];
+
+    if (glyph && glyph.isSpace === isSpace) {
+      return glyph;
+    }
+
     let fontCharCode, width, operatorListId;
     let widthCode = charcode;
 
@@ -27737,14 +27734,8 @@ class Font {
       }
     }
 
-    let glyph = this._glyphCache[charcode];
-
-    if (!glyph || !glyph.matchesForCache(charcode, fontChar, unicode, accent, width, vmetric, operatorListId, isSpace, isInFont)) {
-      glyph = new Glyph(charcode, fontChar, unicode, accent, width, vmetric, operatorListId, isSpace, isInFont);
-      this._glyphCache[charcode] = glyph;
-    }
-
-    return glyph;
+    glyph = new Glyph(charcode, fontChar, unicode, accent, width, vmetric, operatorListId, isSpace, isInFont);
+    return this._glyphCache[charcode] = glyph;
   }
 
   charsToGlyphs(chars) {
@@ -62466,6 +62457,8 @@ class XRef {
         continue;
       }
 
+      let validPagesDict = false;
+
       try {
         const rootDict = dict.get("Root");
 
@@ -62478,12 +62471,18 @@ class XRef {
         if (!(pagesDict instanceof _primitives.Dict)) {
           continue;
         }
+
+        const pagesCount = pagesDict.get("Count");
+
+        if (Number.isInteger(pagesCount)) {
+          validPagesDict = true;
+        }
       } catch (ex) {
         trailerError = ex;
         continue;
       }
 
-      if (dict.has("ID")) {
+      if (validPagesDict && dict.has("ID")) {
         return dict;
       }
 
@@ -63520,8 +63519,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '3.0.239';
-const pdfjsBuild = 'ba3a0e104';
+const pdfjsVersion = '3.0.252';
+const pdfjsBuild = '987062c30';
 })();
 
 /******/ 	return __webpack_exports__;
