@@ -222,7 +222,7 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
     rv = mWorkerRef->Private()->SetPrincipalsAndCSPFromChannel(channel);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIContentSecurityPolicy> csp = mWorkerRef->Private()->GetCSP();
+    nsCOMPtr<nsIContentSecurityPolicy> csp = mWorkerRef->Private()->GetCsp();
     // We did inherit CSP in bug 1223647. If we do not already have a CSP, we
     // should get it from the HTTP headers on the worker script.
     if (!csp) {

@@ -122,11 +122,11 @@ async function testPolicy({
       browser.runtime.getURL("").replace(/\/$/, "")
     );
 
-    browser.test.sendMessage("background-csp", window.getCSP());
+    browser.test.sendMessage("background-csp", window.getCsp());
   }
 
   function tabScript() {
-    browser.test.sendMessage("tab-csp", window.getCSP());
+    browser.test.sendMessage("tab-csp", window.getCsp());
 
     const worker = new Worker("worker.js");
     worker.onmessage = event => {
@@ -208,11 +208,11 @@ async function testPolicy({
       "DOMWindowCreated",
       event => {
         let win = event.target.ownerGlobal;
-        function getCSP() {
+        function getCsp() {
           let { cspJSON } = win.document;
           return win.wrappedJSObject.JSON.parse(cspJSON);
         }
-        Cu.exportFunction(getCSP, win, { defineAs: "getCSP" });
+        Cu.exportFunction(getCsp, win, { defineAs: "getCsp" });
       },
       true
     );
@@ -248,7 +248,7 @@ async function testPolicy({
         frame.onload = resolve;
       });
 
-      return frame.contentWindow.wrappedJSObject.getCSP();
+      return frame.contentWindow.wrappedJSObject.getCsp();
     }
   );
 

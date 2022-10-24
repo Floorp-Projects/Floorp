@@ -85,5 +85,5 @@ interface nsIDroppedLinkHandler : nsISupports
   /**
    * Given a drop event aEvent, determines the CSP for the event and returns it.
    */
-  nsIContentSecurityPolicy getCSP(in DragEvent aEvent);
+  nsIContentSecurityPolicy getCsp(in DragEvent aEvent);
 };

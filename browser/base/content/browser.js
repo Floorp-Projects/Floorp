@@ -3643,8 +3643,8 @@ var browserDragAndDrop = {
     return Services.droppedLinkHandler.getTriggeringPrincipal(aEvent);
   },
 
-  getCSP(aEvent) {
-    return Services.droppedLinkHandler.getCSP(aEvent);
+  getCsp(aEvent) {
+    return Services.droppedLinkHandler.getCsp(aEvent);
   },
 
   validateURIsForDrop(aEvent, aURIs) {
@@ -3737,7 +3737,7 @@ var newTabButtonObserver = {
 
     let where = aEvent.shiftKey ? "tabshifted" : "tab";
     let triggeringPrincipal = browserDragAndDrop.getTriggeringPrincipal(aEvent);
-    let csp = browserDragAndDrop.getCSP(aEvent);
+    let csp = browserDragAndDrop.getCsp(aEvent);
     for (let link of links) {
       if (link.url) {
         let data = await UrlbarUtils.getShortcutOrURIAndPostData(link.url);
@@ -3774,7 +3774,7 @@ var newWindowButtonObserver = {
     }
 
     let triggeringPrincipal = browserDragAndDrop.getTriggeringPrincipal(aEvent);
-    let csp = browserDragAndDrop.getCSP(aEvent);
+    let csp = browserDragAndDrop.getCsp(aEvent);
     for (let link of links) {
       if (link.url) {
         let data = await UrlbarUtils.getShortcutOrURIAndPostData(link.url);

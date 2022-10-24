@@ -793,12 +793,12 @@ class WorkerPrivate final
 
   void EvictFromBFCache();
 
-  nsIContentSecurityPolicy* GetCSP() const {
+  nsIContentSecurityPolicy* GetCsp() const {
     AssertIsOnMainThread();
     return mLoadInfo.mCSP;
   }
 
-  void SetCSP(nsIContentSecurityPolicy* aCSP);
+  void SetCsp(nsIContentSecurityPolicy* aCSP);
 
   nsresult SetCSPFromHeaderValues(const nsACString& aCSPHeaderValue,
                                   const nsACString& aCSPReportOnlyHeaderValue);

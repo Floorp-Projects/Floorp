@@ -204,7 +204,7 @@ ContentAreaDropListener.prototype = {
     return this._getTriggeringPrincipalFromDataTransfer(dataTransfer, true);
   },
 
-  getCSP(aEvent) {
+  getCsp(aEvent) {
     let sourceNode = aEvent.dataTransfer.mozSourceNode;
     if (aEvent.dataTransfer.mozCSP !== null) {
       return aEvent.dataTransfer.mozCSP;

@@ -1963,7 +1963,7 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
 bool LogViolationDetailsRunnable::MainThreadRun() {
   AssertIsOnMainThread();
 
-  nsIContentSecurityPolicy* csp = mWorkerPrivate->GetCSP();
+  nsIContentSecurityPolicy* csp = mWorkerPrivate->GetCsp();
   if (csp) {
     csp->LogViolationDetails(mViolationType,
                              nullptr,  // triggering element

@@ -83,7 +83,7 @@ class WorkerCSPCheckRunnable final : public WorkerMainThreadRunnable {
 
   bool MainThreadRun() override {
     mResult = CheckInternal(
-        mWorkerPrivate->GetCSP(), mWorkerPrivate->CSPEventListener(),
+        mWorkerPrivate->GetCsp(), mWorkerPrivate->CSPEventListener(),
         mWorkerPrivate->GetLoadingPrincipal(), mExpression, mFileNameString,
         mLineNum, mColumnNum, &mEvalAllowed);
     return true;

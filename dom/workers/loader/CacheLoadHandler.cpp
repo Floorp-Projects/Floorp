@@ -614,7 +614,7 @@ void CacheLoadHandler::DataReceived() {
       mWorkerRef->Private()->SetXHRParamsAllowed(parent->XHRParamsAllowed());
 
       // Set Eval and ContentSecurityPolicy
-      mWorkerRef->Private()->SetCSP(parent->GetCSP());
+      mWorkerRef->Private()->SetCsp(parent->GetCsp());
       mWorkerRef->Private()->SetEvalAllowed(parent->IsEvalAllowed());
       mWorkerRef->Private()->SetWasmEvalAllowed(parent->IsWasmEvalAllowed());
     }

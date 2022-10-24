@@ -965,7 +965,7 @@ nsDocShellTreeOwner::HandleEvent(Event* aEvent) {
               LoadURIOptions loadURIOptions;
               loadURIOptions.mTriggeringPrincipal = triggeringPrincipal;
               nsCOMPtr<nsIContentSecurityPolicy> csp;
-              handler->GetCSP(dragEvent, getter_AddRefs(csp));
+              handler->GetCsp(dragEvent, getter_AddRefs(csp));
               loadURIOptions.mCsp = csp;
               webnav->LoadURI(url, loadURIOptions);
             }

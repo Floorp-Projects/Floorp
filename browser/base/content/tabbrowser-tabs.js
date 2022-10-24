@@ -817,7 +817,7 @@
         let replace = !!targetTab;
         let newIndex = this._getDropIndex(event, true);
         let urls = links.map(link => link.url);
-        let csp = browserDragAndDrop.getCSP(event);
+        let csp = browserDragAndDrop.getCsp(event);
         let triggeringPrincipal = browserDragAndDrop.getTriggeringPrincipal(
           event
         );
