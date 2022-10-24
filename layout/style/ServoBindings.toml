@@ -110,6 +110,7 @@ rusty-enums = [
     "mozilla::StyleShapeSourceType",
     "mozilla::StyleVisibility",
     "mozilla::StyleBasicShapeType",
+    "mozilla::StyleMathStyle",
     "nsStyleImageLayers_Size_DimensionType",
     "mozilla::StyleBorderCollapse",
     "mozilla::StyleBorderImageRepeat",
