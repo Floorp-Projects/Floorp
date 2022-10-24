@@ -20,11 +20,11 @@ async function testFirstPartyDomain(pageInfo) {
     info("preview.src=" + preview.src);
 
     // For <img>, we will query imgIRequest.imagePrincipal later, so we wait
-    // for loadend event. For <audio> and <video>, so far we only can get
+    // for load event. For <audio> and <video>, so far we only can get
     // the triggeringprincipal attribute on the node, so we simply wait for
     // loadstart.
     if (i == 0) {
-      await BrowserTestUtils.waitForEvent(preview, "loadend");
+      await BrowserTestUtils.waitForEvent(preview, "load");
     } else {
       await BrowserTestUtils.waitForEvent(preview, "loadstart");
     }
