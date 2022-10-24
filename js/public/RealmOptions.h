@@ -172,19 +172,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool getCoopAndCoepEnabled() const;
   RealmCreationOptions& setCoopAndCoepEnabled(bool flag);
 
-  bool getStreamsEnabled() const { return streams_; }
-  RealmCreationOptions& setStreamsEnabled(bool flag) {
-#ifdef MOZ_JS_STREAMS
-#  ifdef MOZ_DOM_STREAMS
-#    error "JS and DOM streams shouldn't be simultaneously configured"
-#  endif
-    streams_ = flag;
-#else
-    MOZ_ASSERT(!streams_);
-#endif
-    return *this;
-  }
-
   WeakRefSpecifier getWeakRefsEnabled() const { return weakRefs_; }
   RealmCreationOptions& setWeakRefsEnabled(WeakRefSpecifier spec) {
     weakRefs_ = spec;
@@ -280,7 +267,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool sharedMemoryAndAtomics_ = false;
   bool defineSharedArrayBufferConstructor_ = true;
   bool coopAndCoep_ = false;
-  bool streams_ = false;
   bool toSource_ = false;
   bool propertyErrorMessageFix_ = false;
   bool iteratorHelpers_ = false;

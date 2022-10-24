@@ -3879,12 +3879,6 @@ static bool RejectPromise(JSContext* cx, unsigned argc, Value* vp) {
   return result;
 }
 
-static bool StreamsAreEnabled(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(cx->realm()->creationOptions().getStreamsEnabled());
-  return true;
-}
-
 static unsigned finalizeCount = 0;
 
 static void finalize_counter_finalize(JS::GCContext* gcx, JSObject* obj) {
@@ -8325,10 +8319,6 @@ JS_FN_HELP("resolvePromise", ResolvePromise, 2, 0,
 JS_FN_HELP("rejectPromise", RejectPromise, 2, 0,
 "rejectPromise(promise, reason)",
 "  Reject a Promise by calling the JSAPI function JS::RejectPromise."),
-
-JS_FN_HELP("streamsAreEnabled", StreamsAreEnabled, 0, 0,
-"streamsAreEnabled()",
-"  Returns a boolean indicating whether WHATWG Streams are enabled for the current realm."),
 
     JS_FN_HELP("makeFinalizeObserver", MakeFinalizeObserver, 0, 0,
 "makeFinalizeObserver()",

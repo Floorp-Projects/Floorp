@@ -8,7 +8,6 @@
 #define mozilla_dom_BodyStream_h
 
 #include "jsapi.h"
-#include "js/Stream.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/ByteStreamHelpers.h"
 #include "mozilla/dom/BindingDeclarations.h"

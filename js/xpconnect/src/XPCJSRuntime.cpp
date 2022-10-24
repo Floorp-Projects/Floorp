@@ -53,7 +53,6 @@
 #include "js/MemoryMetrics.h"
 #include "js/Object.h"  // JS::GetClass
 #include "js/RealmIterators.h"
-#include "js/Stream.h"  // JS::AbortSignalIsAborted, JS::InitPipeToHandling
 #include "js/SliceBudget.h"
 #include "js/UbiNode.h"
 #include "js/UbiNodeUtils.h"

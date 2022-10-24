@@ -122,11 +122,6 @@ extern bool enableTestWasmAwaitTier2;
 extern bool enableSourcePragmas;
 extern bool enableAsyncStacks;
 extern bool enableAsyncStackCaptureDebuggeeOnly;
-extern bool enableStreams;
-extern bool enableReadableByteStreams;
-extern bool enableBYOBStreamReaders;
-
-extern bool enableReadableStreamPipeTo;
 extern bool enableWeakRefs;
 extern bool enableToSource;
 extern bool enablePropertyErrorMessageFix;
