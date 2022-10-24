@@ -27,19 +27,9 @@
 
 import os
 import re
-import subprocess
 import sys
+import subprocess
 from pathlib import Path
-
-
-def get_hash(path):
-    # Get the hash for the current git revision
-    cwd = os.getcwd()
-    os.chdir(path)
-    command = ["git", "rev-parse", "HEAD"]
-    result = subprocess.check_output(command, encoding="utf-8")
-    os.chdir(cwd)
-    return result.rstrip()
 
 
 def copy_and_update_includes(src_path, dst_path):
@@ -113,12 +103,6 @@ def import_from(srcdir, dstdir):
             continue
         copy_and_update_includes(file, dstdir / "imported" / file.name)
 
-    # Update IRREGEXP_VERSION file
-    hash = get_hash(srcdir)
-    version_file = open(str(dstdir / "IRREGEXP_VERSION"), "w")
-    version_file.write("Imported using import-irregexp.py from:\n")
-    version_file.write("https://github.com/v8/v8/tree/%s/src/regexp\n" % hash)
-
 
 if __name__ == "__main__":
     import argparse
@@ -131,21 +115,42 @@ if __name__ == "__main__":
         raise RuntimeError("%s must be run from %s" % (sys.argv[0], expected_path))
 
     parser = argparse.ArgumentParser(description="Import irregexp from v8")
-    parser.add_argument("-p", "--path", help="path to v8/src/regexp")
+    parser.add_argument("-p", "--path", help="path to v8/src/regexp", required=False)
     args = parser.parse_args()
 
     if args.path:
         src_path = Path(args.path)
+        provided_path = "the command-line"
+    elif "TASK_ID" in os.environ:
+        src_path = Path("/builds/worker/v8/")
+        subprocess.run("git pull origin master", shell=True, cwd=src_path)
 
-        if not (src_path / "regexp.h").exists():
-            print("Usage:\n  import-irregexp.py --path <path/to/v8/src/regexp>")
-            sys.exit(1)
-        import_from(src_path, current_path)
-        sys.exit(0)
-
-    with tempfile.TemporaryDirectory() as tempdir:
+        src_path = Path("/builds/worker/v8/src/regexp")
+        provided_path = "the hardcoded path in the taskcluster image"
+    elif "V8_GIT" in os.environ:
+        src_path = Path(os.environ["V8_GIT"])
+        provided_path = "the V8_GIT environment variable"
+    else:
+        tempdir = tempfile.TemporaryDirectory()
         v8_git = "https://github.com/v8/v8.git"
-        clone = "git clone --depth 1 %s %s" % (v8_git, tempdir)
+        clone = "git clone --depth 1 %s %s" % (v8_git, tempdir.name)
         os.system(clone)
-        src_path = Path(tempdir) / "src/regexp"
-        import_from(src_path, current_path)
+        src_path = Path(tempdir.name) / "src/regexp"
+        provided_path = "the temporary git checkout"
+
+    if not (src_path / "regexp.h").exists():
+        print("Could not find regexp.h in the path provided from", provided_path)
+        print("Usage:\n  import-irregexp.py [--path <path/to/v8/src/regexp>]")
+        sys.exit(1)
+
+    if "MACH_VENDOR" not in os.environ:
+        print(
+            "Running this script outside ./mach vendor is not recommended - ",
+            "You will need to update moz.yaml manually",
+        )
+        print("We recommend instead `./mach vendor js/src/irregexp/moz.yaml`")
+        response = input("Type Y to continue... ")
+        if response.lower() != "y":
+            sys.exit(1)
+
+    import_from(src_path, current_path)
