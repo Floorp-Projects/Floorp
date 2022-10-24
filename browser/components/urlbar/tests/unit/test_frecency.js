@@ -5,7 +5,7 @@
 /**
  * Test for bug 406358 to make sure frecency works for empty input/search, but
  * this also tests for non-empty inputs as well. Because the interactions among
- * *DIFFERENT* visit counts and visit dates is not well defined, this test
+ * DIFFERENT* visit counts and visit dates is not well defined, this test
  * holds one of the two values constant when modifying the other.
  *
  * Also test bug 419068 to make sure tagged pages don't necessarily have to be

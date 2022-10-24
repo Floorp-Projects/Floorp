@@ -118,6 +118,7 @@ class ProvidersManager {
 
   /**
    * Registers a provider object with the manager.
+   *
    * @param {object} provider
    */
   registerProvider(provider) {
@@ -146,6 +147,7 @@ class ProvidersManager {
 
   /**
    * Unregisters a previously registered provider object.
+   *
    * @param {object} provider
    */
   unregisterProvider(provider) {
@@ -158,6 +160,7 @@ class ProvidersManager {
 
   /**
    * Returns the provider with the given name.
+   *
    * @param {string} name The provider name.
    * @returns {UrlbarProvider} The provider.
    */
@@ -167,6 +170,7 @@ class ProvidersManager {
 
   /**
    * Registers a muxer object with the manager.
+   *
    * @param {object} muxer a UrlbarMuxer object
    */
   registerMuxer(muxer) {
@@ -179,6 +183,7 @@ class ProvidersManager {
 
   /**
    * Unregisters a previously registered muxer object.
+   *
    * @param {object} muxer a UrlbarMuxer object or name.
    */
   unregisterMuxer(muxer) {
@@ -189,6 +194,7 @@ class ProvidersManager {
 
   /**
    * Starts querying.
+   *
    * @param {object} queryContext The query context object
    * @param {object} [controller] a UrlbarController instance
    */
@@ -268,6 +274,7 @@ class ProvidersManager {
 
   /**
    * Cancels a running query.
+   *
    * @param {object} queryContext
    */
   cancelQuery(queryContext) {
@@ -290,7 +297,8 @@ class ProvidersManager {
    * A provider can use this util when it needs to run a SQL query that can't
    * be interrupted. Otherwise, when a query is canceled any running SQL query
    * is interrupted abruptly.
-   * @param {function} taskFn a Task to execute in the critical section.
+   *
+   * @param {Function} taskFn a Task to execute in the critical section.
    */
   async runInCriticalSection(taskFn) {
     this.interruptLevel++;
@@ -339,6 +347,7 @@ export var UrlbarProvidersManager = new ProvidersManager();
 class Query {
   /**
    * Initializes the query object.
+   *
    * @param {object} queryContext
    *        The query context
    * @param {object} controller
@@ -482,8 +491,7 @@ class Query {
   }
 
   /**
-   * Cancels this query.
-   * @note Invoking cancel multiple times is a no-op.
+   * Cancels this query. Note: Invoking cancel multiple times is a no-op.
    */
   cancel() {
     if (this.canceled) {
@@ -512,6 +520,7 @@ class Query {
 
   /**
    * Adds a result returned from a provider to the results set.
+   *
    * @param {object} provider
    * @param {object} result
    */
@@ -651,6 +660,7 @@ class Query {
 
 /**
  * Updates in place the sources for a given UrlbarQueryContext.
+ *
  * @param {UrlbarQueryContext} context The query context to examine
  * @returns {object} The restriction token that was used to set sources, or
  *          undefined if there's no restriction token.

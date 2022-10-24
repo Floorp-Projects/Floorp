@@ -104,13 +104,15 @@ add_task(async function mouse_insideTipButNotOnButtons() {
 /**
  * Runs this test's main checks.
  *
- * @param {boolean} click
+ * @param {object} options
+ *   Options for the test.
+ * @param {boolean} options.click
  *   Pass true to trigger a click, false to trigger an enter key.
- * @param {string} buttonUrl
+ * @param {string} [options.buttonUrl]
  *   Pass a URL if picking the main button should open a URL.  Pass nothing if
  *   picking it should call provider.pickResult instead, or if you want to pick
  *   the help button instead of the main button.
- * @param {string} helpUrl
+ * @param {string} [options.helpUrl]
  *   Pass a URL if you want to pick the help button.  Pass nothing if you want
  *   to pick the main button instead.
  */

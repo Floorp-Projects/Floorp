@@ -70,7 +70,7 @@ add_setup(async function initXPCShellDependencies() {
  *        connection is asyncClosed it cannot anymore schedule async statements,
  *        though connectionReady will keep returning true (Bug 726990).
  *
- * @return The database connection or null if unable to get one.
+ * @returns The database connection or null if unable to get one.
  */
 var gDBConn;
 function DBConn(aForceNewConnection) {
@@ -194,8 +194,8 @@ function convertToUtf8(str) {
  * Helper function to clear the existing providers and register a basic provider
  * that returns only the results given.
  *
- * @param {array} results The results for the provider to return.
- * @param {function} [onCancel] Optional, called when the query provider
+ * @param {Array} results The results for the provider to return.
+ * @param {Function} [onCancel] Optional, called when the query provider
  *                              receives a cancel instruction.
  * @param {UrlbarUtils.PROVIDER_TYPE} type The provider type.
  * @param {string} [name] Optional, use as the provider name.
@@ -223,7 +223,7 @@ function makeTestServer(port = -1) {
  * Sets up a search engine that provides some suggestions by appending strings
  * onto the search query.
  *
- * @param {function} suggestionsFn
+ * @param {Function} suggestionsFn
  *        A function that returns an array of suggestion strings given a
  *        search string.  If not given, a default function is used.
  * @returns {nsISearchEngine} The new engine.
@@ -257,7 +257,7 @@ async function addTestSuggestionsEngine(suggestionsFn = null) {
  * Sets up a search engine that provides some tail suggestions by creating an
  * array that mimics Google's tail suggestion responses.
  *
- * @param {function} suggestionsFn
+ * @param {Function} suggestionsFn
  *        A function that returns an array that mimics Google's tail suggestion
  *        responses. See bug 1626897.
  *        NOTE: Consumers specifying suggestionsFn must include searchStr as a
@@ -399,18 +399,23 @@ function frecencyForUrl(aURI) {
 
 /**
  * Creates a UrlbarResult for a bookmark result.
+ *
  * @param {UrlbarQueryContext} queryContext
  *   The context that this result will be displayed in.
+ * @param {object} options
+ *   Options for the result.
  * @param {string} options.title
  *   The page title.
  * @param {string} options.uri
  *   The page URI.
  * @param {string} [options.iconUri]
  *   A URI for the page's icon.
- * @param {array} [options.tags]
+ * @param {Array} [options.tags]
  *   An array of string tags. Defaults to an empty array.
  * @param {boolean} [options.heuristic]
  *   True if this is a heuristic result. Defaults to false.
+ * @param {number} [options.source]
+ *   Where the results should be sourced from. See {@link UrlbarUtils.RESULT_SOURCE}.
  * @returns {UrlbarResult}
  */
 function makeBookmarkResult(
@@ -442,8 +447,11 @@ function makeBookmarkResult(
 
 /**
  * Creates a UrlbarResult for a form history result.
+ *
  * @param {UrlbarQueryContext} queryContext
  *   The context that this result will be displayed in.
+ * @param {object} options
+ *   Options for the result.
  * @param {string} options.suggestion
  *   The form history suggestion.
  * @param {string} options.engineName
@@ -466,8 +474,11 @@ function makeFormHistoryResult(queryContext, { suggestion, engineName }) {
  * Creates a UrlbarResult for an omnibox extension result. For more information,
  * see the documentation for omnibox.SuggestResult:
  * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/omnibox/SuggestResult
+ *
  * @param {UrlbarQueryContext} queryContext
  *   The context that this result will be displayed in.
+ * @param {object} options
+ *   Options for the result.
  * @param {string} options.content
  *   The string displayed when the result is highlighted.
  * @param {string} options.description
@@ -498,8 +509,11 @@ function makeOmniboxResult(
 
 /**
  * Creates a UrlbarResult for an switch-to-tab result.
+ *
  * @param {UrlbarQueryContext} queryContext
  *   The context that this result will be displayed in.
+ * @param {object} options
+ *   Options for the result.
  * @param {string} options.uri
  *   The page URI.
  * @param {string} [options.title]
@@ -523,8 +537,11 @@ function makeTabSwitchResult(queryContext, { uri, title, iconUri }) {
 
 /**
  * Creates a UrlbarResult for a keyword search result.
+ *
  * @param {UrlbarQueryContext} queryContext
  *   The context that this result will be displayed in.
+ * @param {object} options
+ *   Options for the result.
  * @param {string} options.uri
  *   The page URI.
  * @param {string} options.keyword
@@ -564,8 +581,11 @@ function makeKeywordSearchResult(
 
 /**
  * Creates a UrlbarResult for a priority search result.
+ *
  * @param {UrlbarQueryContext} queryContext
  *   The context that this result will be displayed in.
+ * @param {object} options
+ *   Options for the result.
  * @param {string} [options.engineName]
  *   The name of the engine providing the suggestion. Leave blank if there
  *   is no suggestion.
@@ -596,8 +616,11 @@ function makePrioritySearchResult(
 
 /**
  * Creates a UrlbarResult for a remote tab result.
+ *
  * @param {UrlbarQueryContext} queryContext
  *   The context that this result will be displayed in.
+ * @param {object} options
+ *   Options for the result.
  * @param {string} options.uri
  *   The page URI.
  * @param {string} options.device
@@ -644,10 +667,20 @@ function makeRemoteTabResult(
 
 /**
  * Creates a UrlbarResult for a search result.
+ *
  * @param {UrlbarQueryContext} queryContext
  *   The context that this result will be displayed in.
+ * @param {object} options
+ *   Options for the result.
  * @param {string} [options.suggestion]
  *   The suggestion offered by the search engine.
+ * @param {string} [options.tailPrefix]
+ *   The characters placed at the end of a Google "tail" suggestion. See
+ *   {@link https://firefox-source-docs.mozilla.org/browser/urlbar/nontechnical-overview.html#search-suggestions}
+ * @param {*} [options.tail]
+ *   The details of the URL bar tail
+ * @param {number} [options.tailOffsetIndex]
+ *   The index of the first character in the tail suggestion that should be
  * @param {string} [options.engineName]
  *   The name of the engine providing the suggestion. Leave blank if there
  *   is no suggestion.
@@ -669,6 +702,16 @@ function makeRemoteTabResult(
  * @param {string} [options.providerName]
  *   The name of the provider offering this result. The test suite will not
  *   check which provider offered a result unless this option is specified.
+ * @param {boolean} [options.inPrivateWindow]
+ *   If the window to test is a private window.
+ * @param {boolean} [options.isPrivateEngine]
+ *   If the engine is a private engine.
+ * @param {number} [options.type]
+ *   The type of the search result. Defaults to UrlbarUtils.RESULT_TYPE.SEARCH.
+ * @param {number} [options.source]
+ *   The source of the search result. Defaults to UrlbarUtils.RESULT_SOURCE.SEARCH.
+ * @param {boolean} [options.satisfiesAutofillThreshold]
+ *   If this search should appear in the autofill section of the box
  * @returns {UrlbarResult}
  */
 function makeSearchResult(
@@ -759,21 +802,25 @@ function makeSearchResult(
 
 /**
  * Creates a UrlbarResult for a history result.
+ *
  * @param {UrlbarQueryContext} queryContext
  *   The context that this result will be displayed in.
+ * @param {object} options Options for the result.
  * @param {string} options.title
  *   The page title.
  * @param {string} options.uri
  *   The page URI.
- * @param {array} [options.tags]
+ * @param {Array} [options.tags]
  *   An array of string tags. Defaults to an empty array.
  * @param {string} [options.iconUri]
  *   A URI for the page's icon.
  * @param {boolean} [options.heuristic]
  *   True if this is a heuristic result. Defaults to false.
- *  * @param {string} providerName
+ * @param {string} options.providerName
  *   The name of the provider offering this result. The test suite will not
  *   check which provider offered a result unless this option is specified.
+ * @param {number} [options.source]
+ *   The source of the result
  * @returns {UrlbarResult}
  */
 function makeVisitResult(
@@ -823,20 +870,22 @@ function makeVisitResult(
 /**
  * Checks that the results returned by a UrlbarController match those in
  * the param `matches`.
- * @param {UrlbarQueryContext} context
+ *
+ * @param {object} options Options for the check.
+ * @param {UrlbarQueryContext} options.context
  *   The context for this query.
- * @param {string} [incompleteSearch]
+ * @param {string} [options.incompleteSearch]
  *   A search will be fired for this string and then be immediately canceled by
  *   the query in `context`.
- * @param {string} [autofilled]
+ * @param {string} [options.autofilled]
  *   The autofilled value in the first result.
- * @param {string} [completed]
+ * @param {string} [options.completed]
  *   The value that would be filled if the autofill result was confirmed.
  *   Has no effect if `autofilled` is not specified.
- * @param {array} matches
+ * @param {boolean} [options.hasAutofillTitle]
+ *   The expected value of the `autofill.hasTitle` property of the first result.
+ * @param {Array} options.matches
  *   An array of UrlbarResults.
- * @param {boolean} [isPrivate]
- *   Set this to `true` to simulate a search in a private window.
  */
 async function check_results({
   context,
@@ -1035,6 +1084,7 @@ async function getOriginAutofillThreshold() {
 
 /**
  * Checks that origins appear in a given order in the database.
+ *
  * @param {string} host The "fixed" host, without "www."
  * @param {Array} prefixOrder The prefixes (scheme + www.) sorted appropriately.
  */

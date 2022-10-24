@@ -188,7 +188,7 @@ add_task(async function formHistoryKeyboard() {
  * clickCallback, gets telemetry/FHR counts again to compare them to the old
  * counts.
  *
- * @param {function} clickCallback Use this to open the urlbar popup and choose
+ * @param {Function} clickCallback Use this to open the urlbar popup and choose
  *   and click a result.
  */
 async function compareCounts(clickCallback) {

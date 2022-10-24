@@ -16,6 +16,7 @@ add_task(async function test() {
 
   /**
    * Tests the given search string.
+   *
    * @param {string} str The search string
    * @param {boolean} passthrough whether the value should be passed unchanged
    * to the docshell that will first execute a DNS request.

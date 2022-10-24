@@ -47,6 +47,7 @@ class ProviderQuickActions extends UrlbarProvider {
 
   /**
    * Returns the name of this provider.
+   *
    * @returns {string} the name of this provider.
    */
   get name() {
@@ -78,6 +79,7 @@ class ProviderQuickActions extends UrlbarProvider {
    * Whether this provider should be invoked for the given context.
    * If this method returns false, the providers manager won't start a query
    * with this provider, to save on resources.
+   *
    * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
@@ -90,12 +92,13 @@ class ProviderQuickActions extends UrlbarProvider {
   }
 
   /**
-   * Starts querying.
+   * Starts querying. Extended classes should return a Promise resolved when the
+   * provider is done searching AND returning results.
+   *
    * @param {UrlbarQueryContext} queryContext The query context object
-   * @param {function} addCallback Callback invoked by the provider to add a new
+   * @param {Function} addCallback Callback invoked by the provider to add a new
    *        result. A UrlbarResult should be passed to it.
-   * @note Extended classes should return a Promise resolved when the provider
-   *       is done searching AND returning results.
+   * @returns {Promise}
    */
   async startQuery(queryContext, addCallback) {
     let input = queryContext.trimmedSearchString.toLowerCase();
@@ -243,6 +246,7 @@ class ProviderQuickActions extends UrlbarProvider {
 
   /**
    * Adds a new QuickAction.
+   *
    * @param {string} key A key to identify this action.
    * @param {string} definition An object that describes the action.
    */
@@ -264,6 +268,7 @@ class ProviderQuickActions extends UrlbarProvider {
 
   /**
    * Removes an action.
+   *
    * @param {string} key A key to identify this action.
    */
   removeAction(key) {

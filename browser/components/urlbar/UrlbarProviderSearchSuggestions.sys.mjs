@@ -26,6 +26,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 /**
  * Returns whether the passed in string looks like a url.
+ *
  * @param {string} str
  * @param {boolean} [ignoreAlphanumericHosts]
  * @returns {boolean}
@@ -52,6 +53,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
   /**
    * Returns the name of this provider.
+   *
    * @returns {string} the name of this provider.
    */
   get name() {
@@ -60,6 +62,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
   /**
    * Returns the type of this provider.
+   *
    * @returns {integer} one of the types from UrlbarUtils.PROVIDER_TYPE.*
    */
   get type() {
@@ -70,6 +73,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
    * Whether this provider should be invoked for the given context.
    * If this method returns false, the providers manager won't start a query
    * with this provider, to save on resources.
+   *
    * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
@@ -109,6 +113,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
    * Returns whether the user typed a token alias or restriction token, or is in
    * search mode. We use this value to override the pref to disable search
    * suggestions in the Urlbar.
+   *
    * @param {UrlbarQueryContext} queryContext  The query context object.
    * @returns {boolean} True if the user typed a token alias or search
    *   restriction token.
@@ -197,8 +202,9 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
   /**
    * Starts querying.
+   *
    * @param {object} queryContext The query context object
-   * @param {function} addCallback Callback invoked by the provider to add a new
+   * @param {Function} addCallback Callback invoked by the provider to add a new
    *        result.
    * @returns {Promise} resolved when the query stops.
    */
@@ -278,6 +284,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
   /**
    * Gets the provider's priority.
+   *
    * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {number} The provider's priority for the given query.
    */
@@ -287,6 +294,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
   /**
    * Cancels a running query.
+   *
    * @param {object} queryContext The query context object
    */
   cancelQuery(queryContext) {
@@ -431,6 +439,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
   /**
    * Searches for an engine alias given the queryContext.
+   *
    * @param {UrlbarQueryContext} queryContext
    * @returns {object} aliasEngine
    *   A representation of the aliased engine. Null if there's no match.

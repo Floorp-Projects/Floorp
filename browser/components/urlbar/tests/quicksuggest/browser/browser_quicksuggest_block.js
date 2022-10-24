@@ -76,7 +76,7 @@ add_setup(async function() {
  * - Best match disabled and enabled
  * - Each suggestion in `SUGGESTIONS`
  *
- * @param {function} fn
+ * @param {Function} fn
  *   The callback function. It's passed: `{ isBestMatch, suggestion }`
  */
 function add_combo_task(fn) {

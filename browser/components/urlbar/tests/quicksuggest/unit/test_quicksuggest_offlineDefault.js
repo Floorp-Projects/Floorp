@@ -70,6 +70,8 @@ add_task(async function test() {
  * `UrlbarPrefs.updateFirefoxSuggestScenario`, and asserts that the pref values
  * are correct.
  *
+ * @param {object} options
+ *   Options object.
  * @param {string} options.locale
  *   The locale to simulate.
  * @param {string} options.home
@@ -127,11 +129,11 @@ async function doTest({ locale, home, expectedOfflineDefault }) {
 /**
  * Sets the app's locales, calls your callback, and resets locales.
  *
- * @param {array} locales
+ * @param {Array} locales
  *   An array of locale strings. The entire array will be set as the available
  *   locales, and the first locale in the array will be set as the requested
  *   locale.
- * @param {function} callback
+ * @param {Function} callback
  */
 async function withLocales(locales, callback) {
   let available = Services.locale.availableLocales;

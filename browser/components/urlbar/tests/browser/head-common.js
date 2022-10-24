@@ -50,8 +50,9 @@ XPCOMUtils.defineLazyGetter(this, "SearchTestUtils", () => {
 
 /**
  * Initializes an HTTP Server, and runs a task with it.
+ *
  * @param {object} details {scheme, host, port}
- * @param {function} taskFn The task to run, gets the server as argument.
+ * @param {Function} taskFn The task to run, gets the server as argument.
  */
 async function withHttpServer(
   details = { scheme: "http", host: "localhost", port: -1 },

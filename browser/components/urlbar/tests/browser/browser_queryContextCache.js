@@ -274,21 +274,24 @@ add_task(async function evict() {
  * Opens the view and checks that it is or is not synchronously opened and
  * populated as specified.
  *
- * @param {window} win
- * @param {boolean} cached
+ * @param {object} options
+ *   Options object.
+ * @param {window} options.win
+ *   The window to open the view in.
+ * @param {boolean} options.cached
  *   Whether a query context is expected to already be cached for the search
  *   that's performed when the view opens. If true, then the view should
  *   synchronously open and populate using the cached context. If false, then
  *   the view should asynchronously open once the first results are fetched.
- * @param {boolean} cachedAfterOpen
+ * @param {boolean} [options.cachedAfterOpen]
  *   Whether the context is expected to be cached after the view opens and the
  *   query finishes.
- * @param {string} searchString
+ * @param {string} [options.searchString]
  *   The search string for which the context should or should not be cached. If
  *   falsey, then the relevant context is assumed to be the top-sites context.
- * @param {array} urls
+ * @param {Array} [options.urls]
  *   Array of URLs that are expected to be shown in the view.
- * @param {boolean} ignoreOrder
+ * @param {boolean} [options.ignoreOrder]
  *   Whether to treat `urls` as an unordered set instead of an array. When true,
  *   the order of results is ignored.
  */

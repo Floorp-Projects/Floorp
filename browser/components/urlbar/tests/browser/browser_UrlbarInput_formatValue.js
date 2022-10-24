@@ -7,6 +7,7 @@
 /**
  * Tests a given url.
  * The de-emphasized parts must be wrapped in "<" and ">" chars.
+ *
  * @param {string} aExpected The url to test.
  * @param {string} aClobbered [optional] Normally the url is de-emphasized
  *        in-place, thus it's enough to pass aExpected. Though, in some cases

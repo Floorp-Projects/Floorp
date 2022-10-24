@@ -170,10 +170,11 @@ export var UrlbarTokenizer = {
    *
    * @param {string} token
    *        The string token to verify
-   * @param {boolean} [ignoreKnownDomains] If true, the origin doesn't have to be
+   * @param {object} options Options object
+   * @param {boolean} [options.ignoreKnownDomains] If true, the origin doesn't have to be
    *        in the known domain list
-   * @param {boolean} [noIp] If true, the origin cannot be an IP address
-   * @param {boolean} [noPort] If true, the origin cannot have a port number
+   * @param {boolean} [options.noIp] If true, the origin cannot be an IP address
+   * @param {boolean} [options.noPort] If true, the origin cannot have a port number
    * @returns {boolean} whether the token looks like an origin.
    */
   looksLikeOrigin(
@@ -230,6 +231,7 @@ export var UrlbarTokenizer = {
 
   /**
    * Tokenizes the searchString from a UrlbarQueryContext.
+   *
    * @param {UrlbarQueryContext} queryContext
    *        The query context object to tokenize
    * @returns {UrlbarQueryContext} the same query context object with a new
@@ -249,6 +251,7 @@ export var UrlbarTokenizer = {
 
   /**
    * Given a token, tells if it's a restriction token.
+   *
    * @param {string} token
    * @returns {boolean} Whether the token is a restriction character.
    */
@@ -270,9 +273,10 @@ const CHAR_TO_TYPE_MAP = new Map(
 
 /**
  * Given a search string, splits it into string tokens.
+ *
  * @param {string} searchString
  *        The search string to split
- * @returns {array} An array of string tokens.
+ * @returns {Array} An array of string tokens.
  */
 function splitString(searchString) {
   // The first step is splitting on unicode whitespaces. We ignore whitespaces
@@ -329,10 +333,10 @@ function splitString(searchString) {
  * Given an array of unfiltered tokens, this function filters them and converts
  * to token objects with a type.
  *
- * @param {array} tokens
+ * @param {Array} tokens
  *        An array of strings, representing search tokens.
- * @returns {array} An array of token objects.
- * @note restriction characters are only considered if they appear at the start
+ * @returns {Array} An array of token objects.
+ * Note: restriction characters are only considered if they appear at the start
  *       or at the end of the tokens list. In case of restriction characters
  *       conflict, the most external ones win. Leading ones win over trailing
  *       ones. Discarded restriction characters are considered text.

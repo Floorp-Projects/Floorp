@@ -78,7 +78,7 @@ add_setup(async function() {
  * Adds a test task that runs the given callback with each suggestion in
  * `SUGGESTIONS`.
  *
- * @param {function} fn
+ * @param {Function} fn
  *   The callback function. It's passed the current suggestion.
  */
 function add_suggestions_task(fn) {
@@ -1167,7 +1167,7 @@ add_task(async function telemetryEnvironmentOnStartup() {
  * Adds a search engine that provides suggestions, calls your callback, and then
  * removes the engine.
  *
- * @param {function} callback
+ * @param {Function} callback
  *   Your callback function.
  */
 async function withSuggestions(callback) {

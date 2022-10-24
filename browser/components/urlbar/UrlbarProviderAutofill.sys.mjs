@@ -267,6 +267,7 @@ class ProviderAutofill extends UrlbarProvider {
 
   /**
    * Returns the name of this provider.
+   *
    * @returns {string} the name of this provider.
    */
   get name() {
@@ -275,6 +276,7 @@ class ProviderAutofill extends UrlbarProvider {
 
   /**
    * Returns the type of this provider.
+   *
    * @returns {integer} one of the types from UrlbarUtils.PROVIDER_TYPE.*
    */
   get type() {
@@ -285,6 +287,7 @@ class ProviderAutofill extends UrlbarProvider {
    * Whether this provider should be invoked for the given context.
    * If this method returns false, the providers manager won't start a query
    * with this provider, to save on resources.
+   *
    * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
@@ -362,6 +365,7 @@ class ProviderAutofill extends UrlbarProvider {
 
   /**
    * Gets the provider's priority.
+   *
    * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {number} The provider's priority for the given query.
    */
@@ -380,8 +384,9 @@ class ProviderAutofill extends UrlbarProvider {
 
   /**
    * Starts querying.
+   *
    * @param {object} queryContext The query context object
-   * @param {function} addCallback Callback invoked by the provider to add a new
+   * @param {Function} addCallback Callback invoked by the provider to add a new
    *        result.
    * @returns {Promise} resolved when the query stops.
    */
@@ -404,6 +409,7 @@ class ProviderAutofill extends UrlbarProvider {
 
   /**
    * Cancels a running query.
+   *
    * @param {object} queryContext The query context object
    */
   cancelQuery(queryContext) {
@@ -415,10 +421,12 @@ class ProviderAutofill extends UrlbarProvider {
   /**
    * Filters hosts by retaining only the ones over the autofill threshold, then
    * sorts them by their frecency, and extracts the one with the highest value.
+   *
    * @param {UrlbarQueryContext} queryContext The current queryContext.
    * @param {Array} hosts Array of host names to examine.
-   * @returns {Promise} Resolved when the filtering is complete.
-   * @resolves {string} The top matching host, or null if not found.
+   * @returns {Promise<string?>}
+   *   Resolved when the filtering is complete. Resolves with the top matching
+   *   host, or null if not found.
    */
   async getTopHostOverThreshold(queryContext, hosts) {
     let db = await lazy.PlacesUtils.promiseLargeCacheDBConnection();
@@ -478,7 +486,7 @@ class ProviderAutofill extends UrlbarProvider {
    * Obtains the query to search for autofill origin results.
    *
    * @param {UrlbarQueryContext} queryContext
-   * @returns {array} consisting of the correctly optimized query to search the
+   * @returns {Array} consisting of the correctly optimized query to search the
    *         database with and an object containing the params to bound.
    */
   _getOriginQuery(queryContext) {
@@ -533,7 +541,7 @@ class ProviderAutofill extends UrlbarProvider {
    * Obtains the query to search for autoFill url results.
    *
    * @param {UrlbarQueryContext} queryContext
-   * @returns {array} consisting of the correctly optimized query to search the
+   * @returns {Array} consisting of the correctly optimized query to search the
    *         database with and an object containing the params to bound.
    */
   _getUrlQuery(queryContext) {
@@ -683,6 +691,7 @@ class ProviderAutofill extends UrlbarProvider {
 
   /**
    * Processes a matched row in the Places database.
+   *
    * @param {object} row
    *   The matched row.
    * @param {UrlbarQueryContext} queryContext

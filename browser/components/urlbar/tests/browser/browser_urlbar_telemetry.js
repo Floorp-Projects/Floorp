@@ -68,7 +68,7 @@ async function clickURLBarSuggestion(resultTitle, button = 1) {
  * Create an engine to generate search suggestions and add it as default
  * for this test.
  *
- * @param {function} taskFn
+ * @param {Function} taskFn
  *   The function to run with the new search engine as default.
  */
 async function withNewSearchEngine(taskFn) {

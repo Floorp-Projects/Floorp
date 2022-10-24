@@ -48,9 +48,11 @@ add_setup(async function loadSource() {
  * background script.  Be sure to call `await ext.unload()` when you're done
  * with it.
  *
- * @param {function} background
+ * @param {object} options
+ *   Options object
+ * @param {Function} options.background
  *   This function is serialized and becomes the background script.
- * @param {object} extraFiles
+ * @param {object} [options.extraFiles]
  *   Extra files to load in the extension.
  * @returns {object}
  *   The extension.
@@ -89,7 +91,7 @@ async function loadExtension({ background, extraFiles = {} }) {
  *   The name of the pref to be tested.
  * @param {string} type
  *   The type of the pref being set. One of "string", "boolean", or "number".
- * @param {function} background
+ * @param {Function} background
  *   Boilerplate function that returns the value from calling the
  *   browser.experiments.urlbar.prefName[method] APIs.
  */

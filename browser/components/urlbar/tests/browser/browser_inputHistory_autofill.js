@@ -165,9 +165,11 @@ async function triggerAutofillAndPickResult(searchString, autofilledValue) {
 /**
  * Gets the use count of an input history record.
  *
- * @param {string} url
+ * @param {object} options
+ *   Options object.
+ * @param {string} [options.url]
  *   The URL of the `moz_places` row corresponding to the record.
- * @param {string} input
+ * @param {string} [options.input]
  *   The `input` value in the record.
  * @returns {number}
  *   The use count. If no record exists with the URL and/or input, undefined is

@@ -455,7 +455,7 @@ add_task(async function shouldNavigate() {
   class TestShouldNavigateProvider extends TestProvider {
     /**
      * @param {object} context - Data regarding the context of the query.
-     * @param {function} addCallback - Function to add a result to the query.
+     * @param {Function} addCallback - Function to add a result to the query.
      */
     async startQuery(context, addCallback) {
       for (let result of this._results) {
@@ -723,6 +723,7 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
 
 /**
  * Provides a dynamic result.
+ *
  * @param {object} callback - Function that runs the body of the test.
  * @param {object} provider - The dummy provider to use.
  */

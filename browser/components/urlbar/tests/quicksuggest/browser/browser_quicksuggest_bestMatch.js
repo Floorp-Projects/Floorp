@@ -136,12 +136,22 @@ add_task(async function nimbusExposure_notBestMatchExperimentType() {
  * Installs a mock experiment, triggers best match, and asserts that the Nimbus
  * exposure event was or was not recorded appropriately.
  *
- * @param {boolean} bestMatchEnabled
+ * @param {object} options
+ *   Options object
+ * @param {boolean} options.bestMatchEnabled
  *   The value to set for the experiment's `bestMatchEnabled` Nimbus variable.
- * @param {boolean} bestMatchExpected
+ * @param {boolean} options.bestMatchExpected
  *   Whether a best match result is expected to be shown.
- * @param {boolean} exposureEventExpected
+ * @param {string} options.experimentType
+ *   The key that represents the current experiment type. See
+ * @param {boolean} options.isBestMatchExperiment
+ *   This is a deprecated version of `experimentType == "best-match"`.
+ * @param {boolean} options.skipFirstSearch
+ *   If the first test result should be skipped.
+ * @param {boolean} options.exposureEventExpected
  *   Whether an exposure event is expected to be recorded.
+ *
+ * @see {@link https://firefox-source-docs.mozilla.org/browser/urlbar/firefox-suggest-telemetry.html#nimbus-exposure-event}
  */
 async function doNimbusExposureTest({
   bestMatchEnabled,

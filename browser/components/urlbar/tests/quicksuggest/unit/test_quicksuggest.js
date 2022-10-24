@@ -617,14 +617,16 @@ add_task(async function dedupeAgainstURL_lowerPrefix() {
  * `PREFIX_SUGGESTIONS_STRIPPED_URL`. The visit's title will be set to the given
  * `searchString` so that both the visit and the quick suggest will match it.
  *
- * @param {string} searchString
+ * @param {object} options
+ *   Options object.
+ * @param {string} options.searchString
  *   The search string that should trigger one of the mock prefix-test quick
  *   suggest results.
- * @param {object} expectedQuickSuggestResult
+ * @param {object} options.expectedQuickSuggestResult
  *   The expected quick suggest result.
- * @param {string} otherPrefix
+ * @param {string} options.otherPrefix
  *   The visit will be created with a URL with this prefix, e.g., "http://".
- * @param {boolean} expectOther
+ * @param {boolean} options.expectOther
  *   Whether the visit result should appear in the final results.
  */
 async function doDedupeAgainstURLTest({

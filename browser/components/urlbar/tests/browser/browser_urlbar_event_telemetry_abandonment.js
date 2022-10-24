@@ -315,6 +315,7 @@ add_task(async function disabled() {
 
 /**
  * Replaces the contents of Top Sites with the specified site.
+ *
  * @param {string} site
  *   A site to add to Top Sites.
  */

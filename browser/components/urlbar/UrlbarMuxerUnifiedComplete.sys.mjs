@@ -233,7 +233,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   as described above. They will be used as the limits for the group.
    * @param {object} state
    *   The muxer state.
-   * @returns {array}
+   * @returns {Array}
    *   `[results, usedLimits, hasMoreResults]` -- see `_addResults`.
    */
   _fillGroup(group, limits, state) {
@@ -291,9 +291,9 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   as described in `_fillGroup`.
    * @param {object} state
    *   The muxer state.
-   * @param {array} flexDataArray
+   * @param {Array} flexDataArray
    *   See `_updateFlexData`.
-   * @returns {array}
+   * @returns {Array}
    *   `[results, usedLimits, hasMoreResults]` -- see `_addResults`.
    */
   _fillGroupChildren(group, limits, state, flexDataArray = null) {
@@ -398,7 +398,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   The result group being filled.
    * @param {object} limits
    *   An object defining the group's limits as described in `_fillGroup`.
-   * @param {array} flexDataArray
+   * @param {Array} flexDataArray
    *   An array parallel to `group.children`. The object at index i corresponds
    *   to the child in `group.children` at index i. Each object maintains some
    *   flex-related state for its child and is updated during each pass in
@@ -406,7 +406,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   this argument should be null, and the method will create and return a new
    *   `flexDataArray` array that should be used in the remainder of the first
    *   pass and all subsequent passes.
-   * @returns {array}
+   * @returns {Array}
    *   A new `flexDataArray` when called in the first pass, and `flexDataArray`
    *   itself when called in subsequent passes.
    */
@@ -558,16 +558,16 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   An object defining the group's limits as described in `_fillGroup`.
    * @param {object} state
    *   Global state that we use to make decisions during this sort.
-   * @returns {array}
+   * @returns {Array}
    *   `[results, usedLimits, hasMoreResults]` where:
-   *     * results: A flat array of results in the group, empty if no results
+   *     results: A flat array of results in the group, empty if no results
    *       were added.
-   *     * usedLimits: An object defining the amount of each limit that the
+   *     usedLimits: An object defining the amount of each limit that the
    *       results use. For each possible limit property (see `_fillGroup`),
    *       there will be a corresponding property in this object. For example,
    *       if 3 results are added with a total span of 4, then this object will
    *       be: { maxResultCount: 3, availableSpan: 4 }
-   *     * hasMoreResults: True if `state.resultsByGroup` has more results of
+   *     hasMoreResults: True if `state.resultsByGroup` has more results of
    *       the same `RESULT_GROUP`. This is not related to the group's limits.
    */
   _addResults(groupConst, limits, state) {
@@ -1137,9 +1137,9 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    * global or group-relative suggestedIndex results. It should be called after
    * `sortedResults` has been filled in.
    *
-   * @param {array} suggestedIndexResults
+   * @param {Array} suggestedIndexResults
    *   Results with a `suggestedIndex` property.
-   * @param {array} sortedResults
+   * @param {Array} sortedResults
    *   The sorted results. For global suggestedIndex results, this should be the
    *   final list of all results before suggestedIndex results are inserted. For
    *   group-relative suggestedIndex results, this should be the final list of

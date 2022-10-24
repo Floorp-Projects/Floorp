@@ -70,15 +70,17 @@ add_task(async function privateWindow_engagement() {
 /**
  * Performs an engagement test.
  *
- * @param {string} expectedEndState
+ * @param {object} options
+ *   Options object.
+ * @param {string} options.expectedEndState
  *   The expected state at the end of the engagement.
- * @param {function} endEngagement
+ * @param {Function} options.endEngagement
  *   A function that should end the engagement.
- * @param {window} [win]
+ * @param {window} [options.win]
  *   The window to perform the test in.
- * @param {boolean} [expectedIsPrivate]
+ * @param {boolean} [options.expectedIsPrivate]
  *   Whether the engagement and query context are expected to be private.
- * @param {object} [expectedEndDetails]
+ * @param {object} [options.expectedEndDetails]
  *   The expected `details` at the end of the engagement.  `searchString` is
  *   automatically included since it's always present.  If `provider` is
  *   expected, then include it and set it to any value; this function will

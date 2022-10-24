@@ -892,12 +892,14 @@ add_task(async function noAdaptiveHistoryMatch() {
  *    this point, it will be due to the autofill result fetched by the search.
  * 5. Compares the placeholder to `placeholderAfter`.
  *
- * @param {string} searchString
- * @param {string} valueBefore
+ * @param {object} options
+ *   The options object.
+ * @param {string} options.searchString
+ * @param {string} options.valueBefore
  *   The expected input value before the search completes.
- * @param {string} valueAfter
+ * @param {string} options.valueAfter
  *   The expected input value after the search completes.
- * @param {string} placeholderAfter
+ * @param {string} options.placeholderAfter
  *   The expected placeholder value after the search completes.
  */
 async function search({

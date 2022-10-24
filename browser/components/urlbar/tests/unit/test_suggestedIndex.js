@@ -490,16 +490,18 @@ add_task(async function suggestedIndex() {
  * Sets up a provider with some results with suggested indexes and result spans,
  * performs a search, and then checks the results.
  *
- * @param {array} suggestedIndexes
+ * @param {object} options
+ *   Options for the test.
+ * @param {Array} options.suggestedIndexes
  *   For each of the indexes in this array, a new result with the given
  *   suggestedIndex will be returned by the provider.
- * @param {array} expected
+ * @param {Array} options.expected
  *   The indexes of the expected results within the array of results returned by
  *   the provider.
- * @param {object} [spansByIndex]
+ * @param {object} [options.spansByIndex]
  *   Maps indexes within the array of results returned by the provider to result
  *   spans to set on those results.
- * @param {number} [resultCount]
+ * @param {number} [options.resultCount]
  *   Aside from the results with suggested indexes, this is the number of
  *   results that the provider will return.
  */
@@ -565,9 +567,9 @@ async function doSuggestedIndexTest({
  *   indexes([0, 5]) => [0, 1, 2, 3, 4]
  *   indexes([0, 1], [4, 3], [8, 2]) => [0, 4, 5, 6, 8, 9]
  *
- * @param {array} pairs
+ * @param {Array} pairs
  *   [index, length] tuples as described above.
- * @returns {array}
+ * @returns {Array}
  *   An array of indexes.
  */
 function indexes(...pairs) {

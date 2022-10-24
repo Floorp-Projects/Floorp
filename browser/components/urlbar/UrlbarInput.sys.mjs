@@ -485,6 +485,7 @@ export class UrlbarInput {
 
   /**
    * Passes DOM events to the _on_<event type> methods.
+   *
    * @param {Event} event
    */
   handleEvent(event) {
@@ -530,22 +531,29 @@ export class UrlbarInput {
   }
 
   /**
+   * @typedef {object} HandleNavigationOneOffParams
+   *
+   * @property {string} openWhere
+   *   Where we expect the result to be opened.
+   * @property {object} openParams
+   *   The parameters related to where the result will be opened.
+   * @property {Node} engine
+   *   The selected one-off's engine.
+   */
+
+  /**
    * Handles an event which would cause a URL or text to be opened.
    *
-   * @param {Event} [event]
+   * @param {object} [options]
+   *   Options for the navigation.
+   * @param {Event} [options.event]
    *   The event triggering the open.
-   * @param {object} [oneOffParams]
+   * @param {HandleNavigationOneOffParams} [options.oneOffParams]
    *   Optional. Pass if this navigation was triggered by a one-off. Practically
    *   speaking, UrlbarSearchOneOffs passes this when the user holds certain key
    *   modifiers while picking a one-off. In those cases, we do an immediate
    *   search using the one-off's engine instead of entering search mode.
-   * @param {string} oneOffParams.openWhere
-   *   Where we expect the result to be opened.
-   * @param {object} oneOffParams.openParams
-   *   The parameters related to where the result will be opened.
-   * @param {Node} oneOffParams.engine
-   *   The selected one-off's engine.
-   * @param {object} [triggeringPrincipal]
+   * @param {object} [options.triggeringPrincipal]
    *   The principal that the action was triggered from.
    */
   handleNavigation({ event, oneOffParams, triggeringPrincipal }) {
@@ -1171,11 +1179,13 @@ export class UrlbarInput {
    * with the current input value.  If you need to set this result but don't
    * want to also set the input value, then use setResultForCurrentValue.
    *
-   * @param {UrlbarResult} [result]
+   * @param {object} options
+   *   Options.
+   * @param {UrlbarResult} [options.result]
    *   The result that was selected or picked, null if no result was selected.
-   * @param {Event} [event]
+   * @param {Event} [options.event]
    *   The event that picked the result.
-   * @param {string} [urlOverride]
+   * @param {string} [options.urlOverride]
    *   Normally the URL is taken from `result.payload.url`, but if `urlOverride`
    *   is specified, it's used instead.
    * @returns {boolean}
@@ -1385,6 +1395,8 @@ export class UrlbarInput {
   /**
    * Starts a query based on the current input value.
    *
+   * @param {object} [options]
+   *   Object options
    * @param {boolean} [options.allowAutofill]
    *   Whether or not to allow providers to include autofill results.
    * @param {boolean} [options.autofillIgnoresSelection]
@@ -1473,6 +1485,8 @@ export class UrlbarInput {
    * @param {string} value
    *   The input's value will be set to this value, and the search will
    *   use it as its query.
+   * @param {object} [options]
+   *   Object options
    * @param {nsISearchEngine} [options.searchEngine]
    *   Search engine to use when the search is using a known alias.
    * @param {UrlbarUtils.SEARCH_MODE_ENTRY} [options.searchModeEntry]
@@ -1906,14 +1920,16 @@ export class UrlbarInput {
    * Confirms search mode and starts a new search if appropriate for the given
    * result.  See also _searchModeForResult.
    *
-   * @param {string} entry
+   * @param {object} options
+   *   Options object.
+   * @param {string} options.entry
    *   The search mode entry point. See setSearchMode documentation for details.
-   * @param {UrlbarResult} [result]
+   * @param {UrlbarResult} [options.result]
    *   The result to confirm. Defaults to the currently selected result.
-   * @param {boolean} [checkValue]
+   * @param {boolean} [options.checkValue]
    *   If true, the trimmed input value must equal the result's keyword in order
    *   to enter search mode.
-   * @param {boolean} [startQuery]
+   * @param {boolean} [options.startQuery]
    *   If true, start a query after entering search mode. Defaults to true.
    * @returns {boolean}
    *   True if we entered search mode and false if not.
@@ -2201,8 +2217,6 @@ export class UrlbarInput {
    * that was requested, as the server may re-direct the URIs.
    *
    * @param {nsIURI} uri
-   *   The uri to check against
-   * @param {boolean} mustBeEqual
    *   The uri to check against
    * @returns {string}
    *   The search terms use.
@@ -2543,15 +2557,17 @@ export class UrlbarInput {
    * Autofills a value into the input.  The value will be autofilled regardless
    * of the input's current value.
    *
-   * @param {string} value
+   * @param {object} options
+   *   The options object.
+   * @param {string} options.value
    *   The value to autofill.
-   * @param {integer} selectionStart
+   * @param {integer} options.selectionStart
    *   The new selectionStart.
-   * @param {integer} selectionEnd
+   * @param {integer} options.selectionEnd
    *   The new selectionEnd.
-   * @param {string} type
+   * @param {"origin" | "url" | "adaptive"} options.type
    *   The autofill type, one of: "origin", "url", "adaptive"
-   * @param {string} adaptiveHistoryInput
+   * @param {string} options.adaptiveHistoryInput
    *   If the autofill type is "adaptive", this is the matching `input` value
    *   from adaptive history.
    */
@@ -2589,11 +2605,11 @@ export class UrlbarInput {
    *   Whether the principal can be inherited.
    * @param {object} [resultDetails]
    *   Details of the selected result, if any.
-   * @param {UrlbarUtils.RESULT_TYPE} [result.type]
+   * @param {UrlbarUtils.RESULT_TYPE} [resultDetails.type]
    *   Details of the result type, if any.
-   * @param {string} [result.searchTerm]
+   * @param {string} [resultDetails.searchTerm]
    *   Search term of the result source, if any.
-   * @param {UrlbarUtils.RESULT_SOURCE} [result.source]
+   * @param {UrlbarUtils.RESULT_SOURCE} [resultDetails.source]
    *   Details of the result source, if any.
    * @param {object} browser [optional] the browser to use for the load.
    */
@@ -3616,6 +3632,7 @@ export class UrlbarInput {
 
 /**
  * Tries to extract droppable data from a DND event.
+ *
  * @param {Event} event The DND event to examine.
  * @returns {URL|string|null}
  *          null if there's a security reason for which we should do nothing.
@@ -3837,7 +3854,7 @@ class CopyCutController {
 /**
  * Manages the Add Search Engine contextual menu entries.
  *
- * @note setEnginesFromBrowser must be invoked from the outside when the
+ * Note: setEnginesFromBrowser must be invoked from the outside when the
  *       page provided engines list changes.
  *       refreshContextMenu must be invoked when the context menu is opened.
  */
@@ -3857,6 +3874,7 @@ class AddSearchEngineHelper {
 
   /**
    * Invoked by browser when the list of available engines changes.
+   *
    * @param {object} browser The invoking browser.
    */
   setEnginesFromBrowser(browser) {

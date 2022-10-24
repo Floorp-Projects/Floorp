@@ -228,7 +228,7 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
 /**
  * Does a round of test permutations.
  *
- * @param {function} callback
+ * @param {Function} callback
  *   For each permutation, this will be called with the arguments of `doTest()`,
  *   and it should return an object with the appropriate values of
  *   `expectedResultCount` and `expectedIndex`.
@@ -251,16 +251,18 @@ async function doTestPermutations(callback) {
 /**
  * Does one test run.
  *
- * @param {boolean} isSponsored
+ * @param {object} options
+ *   Options for the test.
+ * @param {boolean} options.isSponsored
  *   True to use a sponsored result, false to use a non-sponsored result.
- * @param {boolean} withHistory
+ * @param {boolean} options.withHistory
  *   True to run with a bunch of history, false to run with no history.
- * @param {number} generalIndex
+ * @param {number} options.generalIndex
  *   The value to set as the relevant index pref, i.e., the index within the
  *   general group of the quick suggest result.
- * @param {number} expectedResultCount
+ * @param {number} options.expectedResultCount
  *   The expected total result count for sanity checking.
- * @param {number} expectedIndex
+ * @param {number} options.expectedIndex
  *   The expected index of the quick suggest result in the whole results list.
  */
 async function doTest({
@@ -337,7 +339,7 @@ async function addHistory() {
  * Adds a search engine that provides suggestions, calls your callback, and then
  * removes the engine.
  *
- * @param {function} callback
+ * @param {Function} callback
  *   Your callback function.
  */
 async function withSuggestions(callback) {
@@ -368,7 +370,7 @@ async function withSuggestions(callback) {
  * Registers a test provider that returns a result with a suggestedIndex and
  * resultSpan and asserts the given expected results match the actual results.
  *
- * @param {array} expectedProps
+ * @param {Array} expectedProps
  *   See `checkResults()`.
  */
 async function doSuggestedIndexTest(expectedProps) {
@@ -390,9 +392,9 @@ async function doSuggestedIndexTest(expectedProps) {
 /**
  * Asserts the given actual and expected results match.
  *
- * @param {array} actualResults
+ * @param {Array} actualResults
  *   Array of actual results.
- * @param {array} expectedProps
+ * @param {Array} expectedProps
  *   Array of expected result-like objects. Only the properties defined in each
  *   of these objects are compared against the corresponding actual result.
  */

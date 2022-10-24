@@ -39,6 +39,7 @@ add_task(async function test_setup() {
  * Simulates a drop on the URL bar input field.
  * The drag source must be something different from the URL bar, so we pick the
  * home button somewhat arbitrarily.
+ *
  * @param {object} content a {type, data} object representing the DND content.
  */
 function simulateURLBarDrop(content) {
