@@ -252,6 +252,10 @@ void MonoAgc::SetLevel(int new_level) {
     return;
   }
 
+  // Detect manual input volume adjustments by checking if the current level
+  // `voe_level` is outside of the `[level_ - kLevelQuantizationSlack, level_ +
+  // kLevelQuantizationSlack]` range where `level_` is the last input volume
+  // known by this gain controller.
   if (voe_level > level_ + kLevelQuantizationSlack ||
       voe_level < level_ - kLevelQuantizationSlack) {
     RTC_DLOG(LS_INFO) << "[agc] Mic volume was manually adjusted. Updating "

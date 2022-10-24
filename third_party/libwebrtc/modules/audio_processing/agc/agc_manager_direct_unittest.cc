@@ -146,6 +146,14 @@ std::string GetAgcMinMicLevelExperimentFieldTrialEnabled(
   return builder.str();
 }
 
+std::string GetAgcMinMicLevelExperimentFieldTrial(
+    absl::optional<int> min_mic_level) {
+  if (min_mic_level.has_value()) {
+    return GetAgcMinMicLevelExperimentFieldTrialEnabled(*min_mic_level);
+  }
+  return GetAgcMinMicLevelExperimentFieldTrial("Disabled");
+}
+
 // (Over)writes `samples_value` for the samples in `audio_buffer`.
 // When `clipped_ratio`, a value in [0, 1], is greater than 0, the corresponding
 // fraction of the frame is set to a full scale value to simulate clipping.
@@ -297,17 +305,31 @@ class AgcManagerDirectTestHelper {
   MockGainControl mock_gain_control;
 };
 
-// TODO(crbug.com/1275566): Switch to parametric test and run all the
-// AgcManagerDirectTest tests enabling and disabling
-// "WebRTC-Audio-2ndAgcMinMicLevelExperiment".
+class AgcManagerDirectParametrizedTest
+    : public ::testing::TestWithParam<absl::optional<int>> {
+ protected:
+  AgcManagerDirectParametrizedTest()
+      : field_trials_(GetAgcMinMicLevelExperimentFieldTrial(GetParam())) {}
 
-TEST(AgcManagerDirectTest, StartupMinVolumeConfigurationIsRespected) {
+  bool IsMinMicLevelOverridden() const { return GetParam().has_value(); }
+  int GetMinMicLevel() const { return GetParam().value_or(kMinMicLevel); }
+
+ private:
+  test::ScopedFieldTrials field_trials_;
+};
+
+INSTANTIATE_TEST_SUITE_P(,
+                         AgcManagerDirectParametrizedTest,
+                         testing::Values(absl::nullopt, 12, 20));
+
+TEST_P(AgcManagerDirectParametrizedTest,
+       StartupMinVolumeConfigurationIsRespected) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
   EXPECT_EQ(kInitialVolume, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, MicVolumeResponseToRmsError) {
+TEST_P(AgcManagerDirectParametrizedTest, MicVolumeResponseToRmsError) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
 
@@ -357,7 +379,7 @@ TEST(AgcManagerDirectTest, MicVolumeResponseToRmsError) {
   EXPECT_EQ(129, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, MicVolumeIsLimited) {
+TEST_P(AgcManagerDirectParametrizedTest, MicVolumeIsLimited) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
 
@@ -409,19 +431,21 @@ TEST(AgcManagerDirectTest, MicVolumeIsLimited) {
   helper.CallProcess(/*num_calls=*/1);
   EXPECT_EQ(33, helper.manager.stream_analog_level());
 
-  EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
-      .WillOnce(DoAll(SetArgPointee<0>(-40), Return(true)));
-  helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(18, helper.manager.stream_analog_level());
-
   // Won't go lower than the minimum.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-40), Return(true)));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(12, helper.manager.stream_analog_level());
+  EXPECT_EQ(std::max(18, GetMinMicLevel()),
+            helper.manager.stream_analog_level());
+
+  EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
+      .WillOnce(DoAll(SetArgPointee<0>(-40), Return(true)));
+  helper.CallProcess(/*num_calls=*/1);
+  EXPECT_EQ(std::max(12, GetMinMicLevel()),
+            helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, CompressorStepsTowardsTarget) {
+TEST_P(AgcManagerDirectParametrizedTest, CompressorStepsTowardsTarget) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
 
@@ -474,7 +498,7 @@ TEST(AgcManagerDirectTest, CompressorStepsTowardsTarget) {
   helper.CallProcess(/*num_calls=*/20);
 }
 
-TEST(AgcManagerDirectTest, CompressorErrorIsDeemphasized) {
+TEST_P(AgcManagerDirectParametrizedTest, CompressorErrorIsDeemphasized) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
 
@@ -508,7 +532,7 @@ TEST(AgcManagerDirectTest, CompressorErrorIsDeemphasized) {
   helper.CallProcess(/*num_calls=*/20);
 }
 
-TEST(AgcManagerDirectTest, CompressorReachesMaximum) {
+TEST_P(AgcManagerDirectParametrizedTest, CompressorReachesMaximum) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
 
@@ -536,7 +560,7 @@ TEST(AgcManagerDirectTest, CompressorReachesMaximum) {
   helper.CallProcess(/*num_calls=*/1);
 }
 
-TEST(AgcManagerDirectTest, CompressorReachesMinimum) {
+TEST_P(AgcManagerDirectParametrizedTest, CompressorReachesMinimum) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
 
@@ -564,7 +588,7 @@ TEST(AgcManagerDirectTest, CompressorReachesMinimum) {
   helper.CallProcess(/*num_calls=*/1);
 }
 
-TEST(AgcManagerDirectTest, NoActionWhileMuted) {
+TEST_P(AgcManagerDirectParametrizedTest, NoActionWhileMuted) {
   AgcManagerDirectTestHelper helper;
   helper.manager.HandleCaptureOutputUsedChange(false);
   helper.manager.Process(&helper.audio_buffer);
@@ -575,7 +599,7 @@ TEST(AgcManagerDirectTest, NoActionWhileMuted) {
   }
 }
 
-TEST(AgcManagerDirectTest, UnmutingChecksVolumeWithoutRaising) {
+TEST_P(AgcManagerDirectParametrizedTest, UnmutingChecksVolumeWithoutRaising) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
 
@@ -588,7 +612,7 @@ TEST(AgcManagerDirectTest, UnmutingChecksVolumeWithoutRaising) {
   EXPECT_EQ(127, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, UnmutingRaisesTooLowVolume) {
+TEST_P(AgcManagerDirectParametrizedTest, UnmutingRaisesTooLowVolume) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
 
@@ -597,10 +621,11 @@ TEST(AgcManagerDirectTest, UnmutingRaisesTooLowVolume) {
   helper.ExpectCheckVolumeAndReset(/*volume=*/11);
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_)).WillOnce(Return(false));
   helper.CallProcess(/*num_calls=*/1);
-  EXPECT_EQ(12, helper.manager.stream_analog_level());
+  EXPECT_EQ(GetMinMicLevel(), helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, ManualLevelChangeResultsInNoSetMicCall) {
+TEST_P(AgcManagerDirectParametrizedTest,
+       ManualLevelChangeResultsInNoSetMicCall) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
 
@@ -634,7 +659,8 @@ TEST(AgcManagerDirectTest, ManualLevelChangeResultsInNoSetMicCall) {
   EXPECT_EQ(99, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, RecoveryAfterManualLevelChangeFromMax) {
+TEST_P(AgcManagerDirectParametrizedTest,
+       RecoveryAfterManualLevelChangeFromMax) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
 
@@ -664,14 +690,17 @@ TEST(AgcManagerDirectTest, RecoveryAfterManualLevelChangeFromMax) {
   EXPECT_EQ(69, helper.manager.stream_analog_level());
 }
 
+// Checks that, when the min mic level override is not specified, AGC ramps up
+// towards the minimum mic level after the mic level is manually set below the
+// minimum gain to enforce.
 TEST(AgcManagerDirectTest, RecoveryAfterManualLevelChangeBelowMin) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
 
-  // Manual change below min.
+  // Manual change below min, but strictly positive, otherwise
+  // AGC won't take any action.
   EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
       .WillOnce(DoAll(SetArgPointee<0>(-1), Return(true)));
-  // Don't set to zero, which will cause AGC to take no action.
   helper.manager.set_stream_analog_level(1);
   EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
   helper.CallProcess(/*num_calls=*/1);
@@ -694,7 +723,29 @@ TEST(AgcManagerDirectTest, RecoveryAfterManualLevelChangeBelowMin) {
   EXPECT_EQ(18, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, NoClippingHasNoImpact) {
+// Checks that, when the min mic level override is specified, AGC immediately
+// applies the minimum mic level after the mic level is manually set below the
+// minimum gain to enforce.
+TEST_P(AgcManagerDirectParametrizedTest,
+       RecoveryAfterManualLevelChangeBelowMin) {
+  if (!IsMinMicLevelOverridden()) {
+    GTEST_SKIP() << "Skipped. Min mic level not overridden.";
+  }
+
+  AgcManagerDirectTestHelper helper;
+  helper.FirstProcess();
+
+  // Manual change below min, but strictly positive, otherwise
+  // AGC won't take any action.
+  EXPECT_CALL(*helper.mock_agc, GetRmsErrorDb(_))
+      .WillOnce(DoAll(SetArgPointee<0>(-1), Return(true)));
+  helper.manager.set_stream_analog_level(1);
+  EXPECT_CALL(*helper.mock_agc, Reset()).Times(AtLeast(1));
+  helper.CallProcess(/*num_calls=*/1);
+  EXPECT_EQ(GetMinMicLevel(), helper.manager.stream_analog_level());
+}
+
+TEST_P(AgcManagerDirectParametrizedTest, NoClippingHasNoImpact) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
 
@@ -702,7 +753,7 @@ TEST(AgcManagerDirectTest, NoClippingHasNoImpact) {
   EXPECT_EQ(128, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, ClippingUnderThresholdHasNoImpact) {
+TEST_P(AgcManagerDirectParametrizedTest, ClippingUnderThresholdHasNoImpact) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
 
@@ -710,7 +761,7 @@ TEST(AgcManagerDirectTest, ClippingUnderThresholdHasNoImpact) {
   EXPECT_EQ(128, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, ClippingLowersVolume) {
+TEST_P(AgcManagerDirectParametrizedTest, ClippingLowersVolume) {
   AgcManagerDirectTestHelper helper;
   helper.SetVolumeAndProcess(/*volume=*/255);
 
@@ -719,7 +770,7 @@ TEST(AgcManagerDirectTest, ClippingLowersVolume) {
   EXPECT_EQ(240, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, WaitingPeriodBetweenClippingChecks) {
+TEST_P(AgcManagerDirectParametrizedTest, WaitingPeriodBetweenClippingChecks) {
   AgcManagerDirectTestHelper helper;
   helper.SetVolumeAndProcess(255);
 
@@ -737,7 +788,7 @@ TEST(AgcManagerDirectTest, WaitingPeriodBetweenClippingChecks) {
   EXPECT_EQ(225, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, ClippingLoweringIsLimited) {
+TEST_P(AgcManagerDirectParametrizedTest, ClippingLoweringIsLimited) {
   AgcManagerDirectTestHelper helper;
   helper.SetVolumeAndProcess(/*volume=*/180);
 
@@ -751,7 +802,8 @@ TEST(AgcManagerDirectTest, ClippingLoweringIsLimited) {
   EXPECT_EQ(kClippedMin, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, ClippingMaxIsRespectedWhenEqualToLevel) {
+TEST_P(AgcManagerDirectParametrizedTest,
+       ClippingMaxIsRespectedWhenEqualToLevel) {
   AgcManagerDirectTestHelper helper;
   helper.SetVolumeAndProcess(/*volume=*/255);
 
@@ -765,7 +817,8 @@ TEST(AgcManagerDirectTest, ClippingMaxIsRespectedWhenEqualToLevel) {
   EXPECT_EQ(240, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, ClippingMaxIsRespectedWhenHigherThanLevel) {
+TEST_P(AgcManagerDirectParametrizedTest,
+       ClippingMaxIsRespectedWhenHigherThanLevel) {
   AgcManagerDirectTestHelper helper;
   helper.SetVolumeAndProcess(/*volume=*/200);
 
@@ -781,7 +834,8 @@ TEST(AgcManagerDirectTest, ClippingMaxIsRespectedWhenHigherThanLevel) {
   EXPECT_EQ(240, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, MaxCompressionIsIncreasedAfterClipping) {
+TEST_P(AgcManagerDirectParametrizedTest,
+       MaxCompressionIsIncreasedAfterClipping) {
   AgcManagerDirectTestHelper helper;
   helper.SetVolumeAndProcess(/*volume=*/210);
 
@@ -867,7 +921,7 @@ TEST(AgcManagerDirectTest, MaxCompressionIsIncreasedAfterClipping) {
   helper.CallProcess(/*num_calls=*/1);
 }
 
-TEST(AgcManagerDirectTest, UserCanRaiseVolumeAfterClipping) {
+TEST_P(AgcManagerDirectParametrizedTest, UserCanRaiseVolumeAfterClipping) {
   AgcManagerDirectTestHelper helper;
   helper.SetVolumeAndProcess(/*volume=*/225);
 
@@ -901,7 +955,7 @@ TEST(AgcManagerDirectTest, UserCanRaiseVolumeAfterClipping) {
   EXPECT_EQ(250, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, ClippingDoesNotPullLowVolumeBackUp) {
+TEST_P(AgcManagerDirectParametrizedTest, ClippingDoesNotPullLowVolumeBackUp) {
   AgcManagerDirectTestHelper helper;
   helper.SetVolumeAndProcess(/*volume=*/80);
 
@@ -911,7 +965,7 @@ TEST(AgcManagerDirectTest, ClippingDoesNotPullLowVolumeBackUp) {
   EXPECT_EQ(initial_volume, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, TakesNoActionOnZeroMicVolume) {
+TEST_P(AgcManagerDirectParametrizedTest, TakesNoActionOnZeroMicVolume) {
   AgcManagerDirectTestHelper helper;
   helper.FirstProcess();
 
@@ -922,7 +976,7 @@ TEST(AgcManagerDirectTest, TakesNoActionOnZeroMicVolume) {
   EXPECT_EQ(0, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, ClippingDetectionLowersVolume) {
+TEST_P(AgcManagerDirectParametrizedTest, ClippingDetectionLowersVolume) {
   AgcManagerDirectTestHelper helper;
   helper.SetVolumeAndProcess(/*volume=*/255);
   EXPECT_EQ(255, helper.manager.stream_analog_level());
@@ -932,7 +986,8 @@ TEST(AgcManagerDirectTest, ClippingDetectionLowersVolume) {
   EXPECT_EQ(240, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, DisabledClippingPredictorDoesNotLowerVolume) {
+TEST_P(AgcManagerDirectParametrizedTest,
+       DisabledClippingPredictorDoesNotLowerVolume) {
   AgcManagerDirectTestHelper helper;
   helper.SetVolumeAndProcess(/*volume=*/255);
   EXPECT_FALSE(helper.manager.clipping_predictor_enabled());
@@ -943,7 +998,7 @@ TEST(AgcManagerDirectTest, DisabledClippingPredictorDoesNotLowerVolume) {
   EXPECT_EQ(255, helper.manager.stream_analog_level());
 }
 
-TEST(AgcManagerDirectTest, DisableDigitalDisablesDigital) {
+TEST_P(AgcManagerDirectParametrizedTest, DisableDigitalDisablesDigital) {
   auto agc = std::unique_ptr<Agc>(new ::testing::NiceMock<MockAgc>());
   MockGainControl mock_gain_control;
   EXPECT_CALL(mock_gain_control, set_mode(GainControl::kFixedDigital));
@@ -1132,7 +1187,7 @@ TEST(AgcManagerDirectTest,
 // TODO(bugs.webrtc.org/12774): Test the bahavior of `clipped_ratio_threshold`.
 // TODO(bugs.webrtc.org/12774): Test the bahavior of `clipped_wait_frames`.
 // Verifies that configurable clipping parameters are initialized as intended.
-TEST(AgcManagerDirectTest, ClippingParametersVerified) {
+TEST_P(AgcManagerDirectParametrizedTest, ClippingParametersVerified) {
   std::unique_ptr<AgcManagerDirect> manager =
       CreateAgcManagerDirect(kInitialVolume, kClippedLevelStep,
                              kClippedRatioThreshold, kClippedWaitFrames);
@@ -1151,7 +1206,8 @@ TEST(AgcManagerDirectTest, ClippingParametersVerified) {
   EXPECT_EQ(manager_custom->clipped_wait_frames_, 50);
 }
 
-TEST(AgcManagerDirectTest, DisableClippingPredictorDisablesClippingPredictor) {
+TEST_P(AgcManagerDirectParametrizedTest,
+       DisableClippingPredictorDisablesClippingPredictor) {
   // TODO(bugs.webrtc.org/12874): Use designated initializers once fixed.
   ClippingPredictorConfig config;
   config.enabled = false;
@@ -1164,12 +1220,13 @@ TEST(AgcManagerDirectTest, DisableClippingPredictorDisablesClippingPredictor) {
   EXPECT_FALSE(manager->use_clipping_predictor_step());
 }
 
-TEST(AgcManagerDirectTest, ClippingPredictorDisabledByDefault) {
+TEST_P(AgcManagerDirectParametrizedTest, ClippingPredictorDisabledByDefault) {
   constexpr ClippingPredictorConfig kDefaultConfig;
   EXPECT_FALSE(kDefaultConfig.enabled);
 }
 
-TEST(AgcManagerDirectTest, EnableClippingPredictorEnablesClippingPredictor) {
+TEST_P(AgcManagerDirectParametrizedTest,
+       EnableClippingPredictorEnablesClippingPredictor) {
   // TODO(bugs.webrtc.org/12874): Use designated initializers once fixed.
   ClippingPredictorConfig config;
   config.enabled = true;
@@ -1183,7 +1240,8 @@ TEST(AgcManagerDirectTest, EnableClippingPredictorEnablesClippingPredictor) {
   EXPECT_TRUE(manager->use_clipping_predictor_step());
 }
 
-TEST(AgcManagerDirectTest, DisableClippingPredictorDoesNotLowerVolume) {
+TEST_P(AgcManagerDirectParametrizedTest,
+       DisableClippingPredictorDoesNotLowerVolume) {
   AudioBuffer audio_buffer(kSampleRateHz, kNumChannels, kSampleRateHz,
                            kNumChannels, kSampleRateHz, kNumChannels);
 
@@ -1204,7 +1262,8 @@ TEST(AgcManagerDirectTest, DisableClippingPredictorDoesNotLowerVolume) {
   EXPECT_EQ(manager.stream_analog_level(), 255);
 }
 
-TEST(AgcManagerDirectTest, UsedClippingPredictionsProduceLowerAnalogLevels) {
+TEST_P(AgcManagerDirectParametrizedTest,
+       UsedClippingPredictionsProduceLowerAnalogLevels) {
   AudioBuffer audio_buffer(kSampleRateHz, kNumChannels, kSampleRateHz,
                            kNumChannels, kSampleRateHz, kNumChannels);
 
@@ -1302,7 +1361,8 @@ TEST(AgcManagerDirectTest, UsedClippingPredictionsProduceLowerAnalogLevels) {
             kInitialLevel - 2 * kClippedLevelStep);
 }
 
-TEST(AgcManagerDirectTest, UnusedClippingPredictionsProduceEqualAnalogLevels) {
+TEST_P(AgcManagerDirectParametrizedTest,
+       UnusedClippingPredictionsProduceEqualAnalogLevels) {
   AudioBuffer audio_buffer(kSampleRateHz, kNumChannels, kSampleRateHz,
                            kNumChannels, kSampleRateHz, kNumChannels);
 
