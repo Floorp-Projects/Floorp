@@ -34,7 +34,7 @@ add_task(async function disableBackgroundUpdatesBackgroundTask() {
 
   let { updates } = await waitForUpdateCheck(true);
   let bestUpdate = gAUS.selectUpdate(updates);
-  let success = gAUS.downloadUpdate(bestUpdate, false);
+  let success = await gAUS.downloadUpdate(bestUpdate, false);
   Assert.equal(
     success,
     false,

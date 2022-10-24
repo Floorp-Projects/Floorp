@@ -39,7 +39,7 @@ async function downloadUpdate() {
   });
 
   let bestUpdate = gAUS.selectUpdate(updates);
-  let success = gAUS.downloadUpdate(bestUpdate, false);
+  let success = await gAUS.downloadUpdate(bestUpdate, false);
   Assert.ok(success, "Update download should have started");
   return downloadRestrictionHitPromise;
 }

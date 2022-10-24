@@ -98,7 +98,7 @@ async function downloadUpdate(appUpdateAuto, onDownloadStartCallback) {
       "Should attempt to show the update-available prompt"
     );
     // Simulate accepting the update-available prompt
-    gAUS.downloadUpdate(update, true);
+    await gAUS.downloadUpdate(update, true);
   }
 
   await continueFileHandler(CONTINUE_DOWNLOAD);
@@ -139,7 +139,7 @@ async function testUpdateDoesNotDownload() {
   );
   let update = result.updates[0];
 
-  let downloadStarted = gAUS.downloadUpdate(update, true);
+  let downloadStarted = await gAUS.downloadUpdate(update, true);
   Assert.equal(
     downloadStarted,
     false,
