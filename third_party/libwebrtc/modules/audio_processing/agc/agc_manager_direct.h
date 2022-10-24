@@ -109,12 +109,13 @@ class AgcManagerDirect final {
                            AgcMinMicLevelExperimentEnabled50);
   FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest,
                            AgcMinMicLevelExperimentEnabledAboveStartupLevel);
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest, ClippingParametersVerified);
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest,
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectParametrizedTest,
+                           ClippingParametersVerified);
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectParametrizedTest,
                            DisableClippingPredictorDoesNotLowerVolume);
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest,
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectParametrizedTest,
                            UsedClippingPredictionsProduceLowerAnalogLevels);
-  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectTest,
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectParametrizedTest,
                            UnusedClippingPredictionsProduceEqualAnalogLevels);
 
   // Ctor that creates a single channel AGC and by injecting `agc`.
