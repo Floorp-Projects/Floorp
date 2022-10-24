@@ -246,13 +246,13 @@ browser.Context = class {
   async openTab(focus = false) {
     let tab = null;
 
-    // Bug 1533058 - For Firefox the TabManager cannot be used yet. As such
+    // Bug 1795841 - For Firefox the TabManager cannot be used yet. As such
     // handle opening a tab differently for Android.
     if (lazy.AppInfo.isAndroid) {
       tab = await lazy.TabManager.addTab({ focus, window: this.window });
     } else if (lazy.AppInfo.isFirefox) {
       const opened = new lazy.EventPromise(this.window, "TabOpen");
-      this.window.BrowserOpenTab();
+      this.window.BrowserOpenTab({ url: "about:blank" });
       await opened;
 
       tab = this.tabBrowser.selectedTab;
