@@ -194,6 +194,7 @@
          "fractionalSecondDigits")                                             \
   MACRO_(frame, frame, "frame")                                                \
   MACRO_(from, from, "from")                                                   \
+  MACRO_(fromAsync, fromAsync, "fromAsync")                                    \
   MACRO_(fulfilled, fulfilled, "fulfilled")                                    \
   MACRO_(futexNotEqual, futexNotEqual, "not-equal")                            \
   MACRO2(futexOK, futexOK, "ok")                                               \

@@ -611,6 +611,7 @@ bool shell::enableIteratorHelpers = false;
 bool shell::enableShadowRealms = false;
 #ifdef NIGHTLY_BUILD
 bool shell::enableArrayGrouping = true;
+bool shell::enableArrayFromAsync = false;
 #endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 bool shell::enableChangeArrayByCopy = false;
@@ -3849,6 +3850,7 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setShadowRealmsEnabled(enableShadowRealms)
 #ifdef NIGHTLY_BUILD
       .setArrayGroupingEnabled(enableArrayGrouping)
+      .setArrayFromAsyncEnabled(enableArrayFromAsync)
 #endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       .setChangeArrayByCopyEnabled(enableChangeArrayByCopy)
@@ -10607,6 +10609,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableShadowRealms = op.getBoolOption("enable-shadow-realms");
 #ifdef NIGHTLY_BUILD
   enableArrayGrouping = op.getBoolOption("enable-array-grouping");
+  enableArrayFromAsync = op.getBoolOption("enable-array-from-async");
 #endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   enableChangeArrayByCopy = op.getBoolOption("enable-change-array-by-copy");
@@ -11581,6 +11584,8 @@ int main(int argc, char** argv) {
                         "Enable iterator helpers") ||
       !op.addBoolOption('\0', "enable-shadow-realms", "Enable ShadowRealms") ||
       !op.addBoolOption('\0', "enable-array-grouping",
+                        "Enable Array.fromAsync") ||
+      !op.addBoolOption('\0', "enable-array-from-async",
                         "Enable Array Grouping") ||
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       !op.addBoolOption('\0', "enable-change-array-by-copy",
