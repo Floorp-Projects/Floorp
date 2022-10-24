@@ -9,14 +9,14 @@
 
       // Try to ensure the input element is repainted.
       let rAFCounter = 0;
-      (function rAF() {
+      requestIdleCallback(function rAF() {
         if (rAFCounter < 10) {
           ++rAFCounter;
           requestAnimationFrame(rAF);
         } else {
           document.documentElement.removeAttribute("class");
         }
-      })();
+      });
     </script>
 </body>
 </html>
