@@ -57,7 +57,8 @@ class TabPickupContainer extends HTMLDetailsElement {
     if (event.type == "click" && event.target.dataset.action) {
       switch (event.target.dataset.action) {
         case "view0-sync-error-action":
-        case "view0-network-offline-action": {
+        case "view0-network-offline-action":
+        case "view0-password-locked-action": {
           TabsSetupFlowManager.tryToClearError();
           break;
         }
@@ -205,6 +206,18 @@ class TabPickupContainer extends HTMLDetailsElement {
         description: "firefoxview-tabpickup-sync-disconnected-description",
         buttonLabel: "firefoxview-tabpickup-sync-disconnected-primarybutton",
       },
+
+      "password-locked": {
+        header: "firefoxview-tabpickup-password-locked-header",
+        description: "firefoxview-tabpickup-password-locked-description",
+        buttonLabel: "firefoxview-tabpickup-password-locked-primarybutton",
+        link: {
+          label: "firefoxview-tabpickup-password-locked-link",
+          href:
+            Services.urlFormatter.formatURLPref("app.support.baseURL") +
+            "primary-password-stored-logins",
+        },
+      },
     };
 
     const errorStateHeader = this.querySelector(
@@ -214,14 +227,13 @@ class TabPickupContainer extends HTMLDetailsElement {
       "#error-state-description"
     );
     const errorStateButton = this.querySelector("#error-state-button");
+    const errorStateLink = this.querySelector("#error-state-link");
+    const errorStateProperties = errorStateStringMappings[this.errorState];
 
-    document.l10n.setAttributes(
-      errorStateHeader,
-      errorStateStringMappings[this.errorState].header
-    );
+    document.l10n.setAttributes(errorStateHeader, errorStateProperties.header);
     document.l10n.setAttributes(
       errorStateDescription,
-      errorStateStringMappings[this.errorState].description
+      errorStateProperties.description
     );
 
     errorStateButton.hidden = this.errorState == "fxa-admin-disabled";
@@ -229,12 +241,23 @@ class TabPickupContainer extends HTMLDetailsElement {
     if (this.errorState != "fxa-admin-disabled") {
       document.l10n.setAttributes(
         errorStateButton,
-        errorStateStringMappings[this.errorState].buttonLabel
+        errorStateProperties.buttonLabel
       );
       errorStateButton.setAttribute(
         "data-action",
         `view0-${this.errorState}-action`
       );
+    }
+
+    if (errorStateProperties.link) {
+      document.l10n.setAttributes(
+        errorStateLink,
+        errorStateProperties.link.label
+      );
+      errorStateLink.href = errorStateProperties.link.href;
+      errorStateLink.hidden = false;
+    } else {
+      errorStateLink.hidden = true;
     }
   }
 

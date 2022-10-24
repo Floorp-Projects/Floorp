@@ -43,6 +43,31 @@ add_task(async function test_primary_password_locked() {
     await waitForVisibleSetupStep(browser, {
       expectedVisible: "#tabpickup-steps-view0",
     });
+
+    const errorStateHeader = document.querySelector(
+      "#tabpickup-steps-view0-header"
+    );
+    await BrowserTestUtils.waitForMutationCondition(
+      errorStateHeader,
+      { childList: true },
+      () => errorStateHeader.textContent.includes("Enter your Primary Password")
+    );
+
+    ok(
+      errorStateHeader.getAttribute("data-l10n-id").includes("password-locked"),
+      "Correct error message is shown"
+    );
+
+    const errorLink = document.querySelector("#error-state-link");
+    ok(
+      errorLink && BrowserTestUtils.is_visible(errorLink),
+      "Error link is visible"
+    );
+    ok(
+      errorLink.getAttribute("data-l10n-id").includes("password-locked-link"),
+      "Correct link text is shown"
+    );
+
     const primaryButton = document.querySelector("#error-state-button");
     ok(
       primaryButton && BrowserTestUtils.is_visible(primaryButton),

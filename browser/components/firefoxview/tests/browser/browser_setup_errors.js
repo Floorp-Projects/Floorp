@@ -5,6 +5,10 @@ const { TabsSetupFlowManager } = ChromeUtils.importESModule(
   "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
 );
 
+const { LoginTestUtils } = ChromeUtils.import(
+  "resource://testing-common/LoginTestUtils.jsm"
+);
+
 async function setupWithDesktopDevices(state = UIState.STATUS_SIGNED_IN) {
   const sandbox = setupSyncFxAMocks({
     state,
@@ -305,6 +309,69 @@ add_task(async function test_password_change_disconnect_error() {
         .includes("sync-disconnected"),
       "Correct message should show when user has been logged out due to external password change."
     );
+  });
+  await tearDown(sandbox);
+});
+
+add_task(async function test_multiple_errors() {
+  let sandbox = await setupWithDesktopDevices();
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    // Simulate conditions in which both the locked password and sync error
+    // messages could be shown
+    LoginTestUtils.primaryPassword.enable();
+    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+    Services.obs.notifyObservers(null, "weave:service:sync:error");
+
+    info("Waiting for the primary password error message to be shown");
+    await waitForElementVisible(browser, "#tabpickup-steps", true);
+    await waitForVisibleSetupStep(browser, {
+      expectedVisible: "#tabpickup-steps-view0",
+    });
+
+    const errorStateHeader = document.querySelector(
+      "#tabpickup-steps-view0-header"
+    );
+    await BrowserTestUtils.waitForMutationCondition(
+      errorStateHeader,
+      { childList: true },
+      () => errorStateHeader.textContent.includes("Enter your Primary Password")
+    );
+
+    ok(
+      errorStateHeader.getAttribute("data-l10n-id").includes("password-locked"),
+      "Password locked error message is shown"
+    );
+
+    const errorLink = document.querySelector("#error-state-link");
+    ok(
+      errorLink && BrowserTestUtils.is_visible(errorLink),
+      "Error link is visible"
+    );
+
+    // Clear the primary password error message
+    LoginTestUtils.primaryPassword.disable();
+    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
+    info("Waiting for the sync error message to be shown");
+    await BrowserTestUtils.waitForMutationCondition(
+      errorStateHeader,
+      { childList: true },
+      () => errorStateHeader.textContent.includes("trouble syncing")
+    );
+
+    ok(
+      errorStateHeader.getAttribute("data-l10n-id").includes("sync-error"),
+      "Sync error message is now shown"
+    );
+
+    ok(
+      errorLink && BrowserTestUtils.is_hidden(errorLink),
+      "Error link is now hidden"
+    );
+
+    // Clear the sync error
+    Services.obs.notifyObservers(null, "weave:service:sync:finish");
   });
   await tearDown(sandbox);
 });
