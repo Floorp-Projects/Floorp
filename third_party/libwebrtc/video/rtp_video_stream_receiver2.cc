@@ -278,21 +278,11 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
   rtp_rtcp_->SetRTCPStatus(config_.rtp.rtcp_mode);
   rtp_rtcp_->SetRemoteSSRC(config_.rtp.remote_ssrc);
 
-  static const int kMaxPacketAgeToNack = 450;
-  const int max_reordering_threshold = (config_.rtp.nack.rtp_history_ms > 0)
-                                           ? kMaxPacketAgeToNack
-                                           : kDefaultMaxReorderingThreshold;
-  rtp_receive_statistics_->SetMaxReorderingThreshold(config_.rtp.remote_ssrc,
-                                                     max_reordering_threshold);
-  // TODO(nisse): For historic reasons, we applied the above
-  // max_reordering_threshold also for RTX stats, which makes little sense since
-  // we don't NACK rtx packets. Consider deleting the below block, and rely on
-  // the default threshold.
-  if (config_.rtp.rtx_ssrc) {
-    rtp_receive_statistics_->SetMaxReorderingThreshold(
-        config_.rtp.rtx_ssrc, max_reordering_threshold);
+  if (config_.rtp.nack.rtp_history_ms > 0) {
+    static constexpr int kMaxPacketAgeToNack = 450;
+    rtp_receive_statistics_->SetMaxReorderingThreshold(config_.rtp.remote_ssrc,
+                                                       kMaxPacketAgeToNack);
   }
-
   ParseFieldTrial(
       {&forced_playout_delay_max_ms_, &forced_playout_delay_min_ms_},
       field_trials_.Lookup("WebRTC-ForcePlayoutDelay"));
