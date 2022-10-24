@@ -36,7 +36,10 @@ if CONFIG["ENABLE_TESTS"]:
 
 TEST_DIRS += ["tests", "dap/ffi-gtest"]
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += [
+    "dap/tests/xpcshell/xpcshell.ini",
+    "tests/unit/xpcshell.ini",
+]
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
 XPIDL_SOURCES += [
@@ -112,6 +115,7 @@ EXTRA_JS_MODULES += [
     "app/TelemetryStorage.jsm",
     "app/TelemetryTimestamps.jsm",
     "app/TelemetryUtils.jsm",
+    "dap/DAPTelemetrySender.sys.mjs",
     "pings/CoveragePing.jsm",
     "pings/EventPing.jsm",
     "pings/HealthPing.jsm",
