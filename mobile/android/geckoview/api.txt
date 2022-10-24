@@ -432,6 +432,9 @@ package org.mozilla.geckoview {
   @Retention(value=RetentionPolicy.SOURCE) public static interface ContentBlocking.CBAntiTracking {
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface ContentBlocking.CBCookieBannerMode {
+  }
+
   @Retention(value=RetentionPolicy.SOURCE) public static interface ContentBlocking.CBCookieBehavior {
   }
 
@@ -439,6 +442,13 @@ package org.mozilla.geckoview {
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface ContentBlocking.CBSafeBrowsing {
+  }
+
+  public static class ContentBlocking.CookieBannerMode {
+    ctor protected CookieBannerMode();
+    field public static final int COOKIE_BANNER_MODE_DISABLED = 0;
+    field public static final int COOKIE_BANNER_MODE_REJECT = 1;
+    field public static final int COOKIE_BANNER_MODE_REJECT_OR_ACCEPT = 2;
   }
 
   public static class ContentBlocking.CookieBehavior {
@@ -508,6 +518,8 @@ package org.mozilla.geckoview {
 
   @AnyThread public static class ContentBlocking.Settings extends RuntimeSettings {
     method public int getAntiTrackingCategories();
+    method public int getCookieBannerMode();
+    method public int getCookieBannerModePrivateBrowsing();
     method public int getCookieBehavior();
     method public int getCookieBehaviorPrivateMode();
     method public boolean getCookiePurging();
@@ -518,6 +530,8 @@ package org.mozilla.geckoview {
     method @NonNull public Collection<ContentBlocking.SafeBrowsingProvider> getSafeBrowsingProviders();
     method public boolean getStrictSocialTrackingProtection();
     method @NonNull public ContentBlocking.Settings setAntiTracking(int);
+    method @NonNull public ContentBlocking.Settings setCookieBannerMode(int);
+    method @NonNull public ContentBlocking.Settings setCookieBannerModePrivateBrowsing(int);
     method @NonNull public ContentBlocking.Settings setCookieBehavior(int);
     method @NonNull public ContentBlocking.Settings setCookieBehaviorPrivateMode(int);
     method @NonNull public ContentBlocking.Settings setCookiePurging(boolean);
@@ -533,6 +547,8 @@ package org.mozilla.geckoview {
   @AnyThread public static class ContentBlocking.Settings.Builder extends RuntimeSettings.Builder<ContentBlocking.Settings> {
     ctor public Builder();
     method @NonNull public ContentBlocking.Settings.Builder antiTracking(int);
+    method @NonNull public ContentBlocking.Settings.Builder cookieBannerHandlingMode(int);
+    method @NonNull public ContentBlocking.Settings.Builder cookieBannerHandlingModePrivateBrowsing(int);
     method @NonNull public ContentBlocking.Settings.Builder cookieBehavior(int);
     method @NonNull public ContentBlocking.Settings.Builder cookieBehaviorPrivateMode(int);
     method @NonNull public ContentBlocking.Settings.Builder cookiePurging(boolean);

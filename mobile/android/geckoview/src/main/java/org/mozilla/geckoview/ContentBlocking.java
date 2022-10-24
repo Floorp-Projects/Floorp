@@ -221,6 +221,29 @@ public class ContentBlocking {
         getSettings().setCookiePurging(enabled);
         return this;
       }
+
+      /**
+       * Set the Cookie Banner Handling Mode.
+       *
+       * @param mode The mode of the Cookie Banner Handling one of the {@link CBCookieBannerMode}.
+       * @return The Builder instance.
+       */
+      public @NonNull Builder cookieBannerHandlingMode(final @CBCookieBannerMode int mode) {
+        getSettings().setCookieBannerMode(mode);
+        return this;
+      }
+
+      /**
+       * Set the Cookie Banner Handling Mode for private browsing.
+       *
+       * @param mode The mode of the Cookie Banner Handling one of the {@link CBCookieBannerMode}.
+       * @return The Builder instance.
+       */
+      public @NonNull Builder cookieBannerHandlingModePrivateBrowsing(
+          final @CBCookieBannerMode int mode) {
+        getSettings().setCookieBannerModePrivateBrowsing(mode);
+        return this;
+      }
     }
 
     /* package */ final Pref<String> mAt =
@@ -263,6 +286,14 @@ public class ContentBlocking {
         new Pref<Boolean>("privacy.trackingprotection.annotate_channels", false);
     /* package */ final Pref<Boolean> mEtpStrict =
         new Pref<Boolean>("privacy.annotate_channels.strict_list.enabled", false);
+
+    /* package */ final Pref<Integer> mCbhMode =
+        new Pref<Integer>(
+            "cookiebanners.service.mode", CookieBannerMode.COOKIE_BANNER_MODE_DISABLED);
+    /* package */ final Pref<Integer> mCbhModePrivateBrowsing =
+        new Pref<Integer>(
+            "cookiebanners.service.mode.privateBrowsing",
+            CookieBannerMode.COOKIE_BANNER_MODE_REJECT);
 
     /* package */ final Pref<String> mSafeBrowsingMalwareTable =
         new Pref<>(
@@ -576,6 +607,50 @@ public class ContentBlocking {
     public @NonNull Settings setCookiePurging(final boolean enabled) {
       mCookiePurging.commit(enabled);
       return this;
+    }
+
+    /**
+     * Set the Cookie Banner Handling Mode to the new provided {@link CBCookieBannerMode} value.
+     *
+     * @param mode Integer indicating the new mode.
+     * @return This Settings instance.
+     */
+    public @NonNull Settings setCookieBannerMode(final @CBCookieBannerMode int mode) {
+      mCbhMode.commit(mode);
+      return this;
+    }
+
+    /**
+     * Gets the current cookie banner handling mode.
+     *
+     * @return int the current cookie banner handling mode, one of the {@link CBCookieBannerMode}.
+     */
+    @SuppressLint("WrongConstant")
+    public @CBCookieBannerMode int getCookieBannerMode() {
+      return mCbhMode.get();
+    }
+
+    /**
+     * Set the Cookie Banner Handling Mode for private browsing to the new provided {@link
+     * CBCookieBannerMode} value.
+     *
+     * @param mode Integer indicating the new mode.
+     * @return This Settings instance.
+     */
+    public @NonNull Settings setCookieBannerModePrivateBrowsing(
+        final @CBCookieBannerMode int mode) {
+      mCbhModePrivateBrowsing.commit(mode);
+      return this;
+    }
+
+    /**
+     * Gets the current cookie banner handling mode for private browsing.
+     *
+     * @return int the current cookie banner handling mode, one of the {@link CBCookieBannerMode}.
+     */
+    @SuppressLint("WrongConstant")
+    public @CBCookieBannerMode int getCookieBannerModePrivateBrowsing() {
+      return mCbhModePrivateBrowsing.get();
     }
 
     public static final Parcelable.Creator<Settings> CREATOR =
@@ -1551,4 +1626,27 @@ public class ContentBlocking {
     // TODO: There are more reasons why cookies may be blocked.
     return CookieBehavior.ACCEPT_ALL;
   }
+
+  // Cookie Banner Handling feature.
+
+  public static class CookieBannerMode {
+    /** Do not enable handling cookie banners. */
+    public static final int COOKIE_BANNER_MODE_DISABLED = 0;
+
+    /** Only handle banners where selecting "reject all" is possible. */
+    public static final int COOKIE_BANNER_MODE_REJECT = 1;
+
+    /** Reject cookies when possible otherwise accept the cookies. */
+    public static final int COOKIE_BANNER_MODE_REJECT_OR_ACCEPT = 2;
+
+    protected CookieBannerMode() {}
+  }
+
+  @Retention(RetentionPolicy.SOURCE)
+  @IntDef({
+    CookieBannerMode.COOKIE_BANNER_MODE_DISABLED,
+    CookieBannerMode.COOKIE_BANNER_MODE_REJECT,
+    CookieBannerMode.COOKIE_BANNER_MODE_REJECT_OR_ACCEPT
+  })
+  public @interface CBCookieBannerMode {}
 }
