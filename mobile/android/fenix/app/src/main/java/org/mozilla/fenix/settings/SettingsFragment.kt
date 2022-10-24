@@ -432,7 +432,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val preferenceLeakCanary = findPreference<Preference>(leakKey)
         val preferenceRemoteDebugging = findPreference<Preference>(debuggingKey)
         val preferenceMakeDefaultBrowser =
-            requirePreference<Preference>(R.string.pref_key_make_default_browser)
+            requirePreference<DefaultBrowserPreference>(R.string.pref_key_make_default_browser)
+
         val preferenceOpenLinksInExternalApp =
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_open_links_in_external_app))
         if (!Config.channel.isReleased) {
@@ -451,8 +452,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
-        preferenceMakeDefaultBrowser.onPreferenceClickListener =
-            getClickListenerForMakeDefaultBrowser()
+        preferenceMakeDefaultBrowser.apply {
+            updateSwitch()
+            onPreferenceClickListener =
+                getClickListenerForMakeDefaultBrowser()
+        }
 
         preferenceOpenLinksInExternalApp?.onPreferenceChangeListener = SharedPreferenceUpdater()
 
