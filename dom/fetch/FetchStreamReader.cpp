@@ -146,10 +146,16 @@ void FetchStreamReader::CloseAndRelease(JSContext* aCx, nsresult aStatus) {
       // comments in ReadableStream::cancel() conveying the spec, step 2 of
       // 3.4.3 that specified ReadableStreamCancel is: If stream.[[state]] is
       // "closed", return a new promise resolved with undefined.
-      RefPtr<Promise> ignoredResultPromise =
+      RefPtr<Promise> cancelResultPromise =
           MOZ_KnownLive(mReader)->Cancel(aCx, errorValue, ignoredError);
       NS_WARNING_ASSERTION(!ignoredError.Failed(),
                            "Failed to cancel stream during close and release");
+      if (cancelResultPromise) {
+        bool setHandled = cancelResultPromise->SetAnyPromiseIsHandled();
+        NS_WARNING_ASSERTION(setHandled,
+                             "Failed to mark cancel promise as handled.");
+        (void)setHandled;
+      }
     }
 
     // We don't want to propagate exceptions during the cleanup.
