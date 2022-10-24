@@ -74,7 +74,7 @@ job-template:
         by-build-platform:
             linux-shippable.*: ['release']  # Do not run on autoland - Bug 1599197
             default: ['all']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     docker-image: {in-tree: debian11-amd64-build}
     treeherder:
         symbol: L10n
