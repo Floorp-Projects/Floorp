@@ -305,7 +305,8 @@ void RtpSenderBase::SetSsrc(uint32_t ssrc) {
     SetSend();
     AddTrackToStats();
   }
-  if (!init_parameters_.encodings.empty()) {
+  if (!init_parameters_.encodings.empty() ||
+      init_parameters_.degradation_preference.has_value()) {
     worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
       RTC_DCHECK(media_channel_);
       // Get the current parameters, which are constructed from the SDP.
@@ -328,6 +329,7 @@ void RtpSenderBase::SetSsrc(uint32_t ssrc) {
           init_parameters_.degradation_preference;
       media_channel_->SetRtpSendParameters(ssrc_, current_parameters);
       init_parameters_.encodings.clear();
+      init_parameters_.degradation_preference = absl::nullopt;
     });
   }
   // Attempt to attach the frame decryptor to the current media channel.

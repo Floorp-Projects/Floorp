@@ -3649,6 +3649,32 @@ TEST_P(PeerConnectionInterfaceTest, ExtmapAllowMixedIsConfigurable) {
   EXPECT_FALSE(offer->description()->extmap_allow_mixed());
 }
 
+TEST_P(PeerConnectionInterfaceTest,
+       RtpSenderSetDegradationPreferenceWithoutEncodings) {
+  CreatePeerConnection();
+  AddVideoTrack("video_label");
+
+  std::vector<rtc::scoped_refptr<RtpSenderInterface>> rtp_senders =
+      pc_->GetSenders();
+  ASSERT_EQ(rtp_senders.size(), 1u);
+  ASSERT_EQ(rtp_senders[0]->media_type(), cricket::MEDIA_TYPE_VIDEO);
+  rtc::scoped_refptr<RtpSenderInterface> video_rtp_sender = rtp_senders[0];
+  RtpParameters parameters = video_rtp_sender->GetParameters();
+  ASSERT_NE(parameters.degradation_preference,
+            DegradationPreference::MAINTAIN_RESOLUTION);
+  parameters.degradation_preference =
+      DegradationPreference::MAINTAIN_RESOLUTION;
+  ASSERT_TRUE(video_rtp_sender->SetParameters(parameters).ok());
+
+  std::unique_ptr<SessionDescriptionInterface> local_offer;
+  ASSERT_TRUE(DoCreateOffer(&local_offer, nullptr));
+  ASSERT_TRUE(DoSetLocalDescription(std::move(local_offer)));
+
+  RtpParameters parameters_new = video_rtp_sender->GetParameters();
+  ASSERT_EQ(parameters_new.degradation_preference,
+            DegradationPreference::MAINTAIN_RESOLUTION);
+}
+
 INSTANTIATE_TEST_SUITE_P(PeerConnectionInterfaceTest,
                          PeerConnectionInterfaceTest,
                          Values(SdpSemantics::kPlanB_DEPRECATED,
