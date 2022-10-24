@@ -617,14 +617,11 @@ SubDialog.prototype = {
       // content pane exists, which is usually the case when the "window"
       // element is used to implement the subdialog instead.
       frameMinHeight = maxHeight + "px";
-
-      if (contentPane) {
-        // There are also instances where the subdialog is neither implemented
-        // using a content pane, nor a <dialog> (such as manageAddresses.xhtml)
-        // so make sure to check that we actually got a contentPane before we
-        // use it.
-        contentPane.classList.add("doScroll");
-      }
+      // There also instances where the subdialog is neither implemented using
+      // a content pane, nor a <dialog> (such as manageAddresses.xhtml)
+      // so make sure to check that we actually got a contentPane before we
+      // use it.
+      contentPane?.classList.add("doScroll");
     }
 
     this._overlay.parentNode.style.setProperty("--inner-height", frameHeight);
