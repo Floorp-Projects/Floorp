@@ -24,6 +24,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 class ProviderAboutPages extends UrlbarProvider {
   /**
    * Unique name for the provider, used by the context to filter on providers.
+   *
+   * @returns {string}
    */
   get name() {
     return "AboutPages";
@@ -31,6 +33,8 @@ class ProviderAboutPages extends UrlbarProvider {
 
   /**
    * The type of the provider, must be one of UrlbarUtils.PROVIDER_TYPE.
+   *
+   * @returns {UrlbarUtils.PROVIDER_TYPE}
    */
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;

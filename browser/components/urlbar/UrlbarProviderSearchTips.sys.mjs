@@ -116,6 +116,8 @@ class ProviderSearchTips extends UrlbarProvider {
 
   /**
    * Enum of the types of search tips.
+   *
+   * @returns {{ NONE: string; ONBOARD: string; REDIRECT: string; }}
    */
   get TIP_TYPE() {
     return TIPS;
@@ -129,6 +131,8 @@ class ProviderSearchTips extends UrlbarProvider {
   /**
    * Unique name for the provider, used by the context to filter on providers.
    * Not using a unique name will cause the newest registration to win.
+   *
+   * @returns {string}
    */
   get name() {
     return "UrlbarProviderSearchTips";
@@ -136,6 +140,8 @@ class ProviderSearchTips extends UrlbarProvider {
 
   /**
    * The type of the provider.
+   *
+   * @returns {UrlbarUtils.PROVIDER_TYPE}
    */
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;
@@ -277,6 +283,7 @@ class ProviderSearchTips extends UrlbarProvider {
    * @param {URL} uri
    *  The URI being navigated to.
    * @param {nsIWebProgress} webProgress
+   *   The progress object, which can have event listeners added to it.
    * @param {number} flags
    *   Load flags. See nsIWebProgressListener.idl for possible values.
    */

@@ -252,7 +252,8 @@ export var UrlbarTokenizer = {
   /**
    * Given a token, tells if it's a restriction token.
    *
-   * @param {string} token
+   * @param {object} token
+   *   The token to check.
    * @returns {boolean} Whether the token is a restriction character.
    */
   isRestrictionToken(token) {

@@ -136,10 +136,10 @@ add_task(async function notBumped_url() {
 });
 
 /**
- * Performs a search and picks the first result. The search string is assumed
- * to trigger an autofill result.
+ * Performs a search and picks the first result.
  *
  * @param {string} searchString
+ *   The search string. Assumed to trigger an autofill result.
  * @param {string} autofilledValue
  *   The input's expected value after autofill occurs.
  */

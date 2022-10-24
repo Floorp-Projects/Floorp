@@ -650,6 +650,7 @@ export var UrlbarTestUtils = {
    * initialized with init().
    *
    * @param {object} window
+   *   The window to operate on.
    * @param {object} searchMode
    *   If given, the one-off matching this search mode will be clicked; it
    *   should be a full search mode object as described in
@@ -704,7 +705,9 @@ export var UrlbarTestUtils = {
    * initialized with init().
    *
    * @param {object} window
-   * @param {object} options Options object
+   *   The window to operate on.
+   * @param {object} options
+   *   Options object
    * @param {boolean} options.backspace
    *   Exits search mode by backspacing at the beginning of the search string.
    * @param {boolean} options.clickClose

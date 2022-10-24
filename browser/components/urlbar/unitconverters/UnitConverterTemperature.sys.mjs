@@ -26,6 +26,7 @@ export class UnitConverterTemperature {
    * Convert the given search string.
    *
    * @param {string} searchString
+   *   The string to be converted
    * @returns {string} conversion result.
    */
   convert(searchString) {
@@ -95,12 +96,10 @@ export class UnitConverterTemperature {
  * If could not found suitable unit, returns null.
  *
  * @param {string} inputUnit
+ *    A set of units to convert, mapped to the `inputUnit` value on the return
  * @param {string} outputUnit
- * @returns {object}
- *   {
- *     inputUnit: input unit,
- *     outputUnit: output unit,
- *   }
+ *    A set of units to convert, mapped to the `outputUnit` value on the return
+ * @returns {{ inputUnit: string, outputUnit: string }} The suitable units.
  */
 function findUnits(inputUnit, outputUnit) {
   inputUnit = inputUnit.toLowerCase();

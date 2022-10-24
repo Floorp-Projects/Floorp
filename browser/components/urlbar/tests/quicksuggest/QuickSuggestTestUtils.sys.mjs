@@ -238,6 +238,7 @@ class QSTestUtils {
    * `DEFAULT_CONFIG` before your test finishes. See also `withConfig()`.
    *
    * @param {object} config
+   *   The config to be applied. See {@link UrlbarQuickSuggest._setConfig}
    */
   setConfig(config) {
     lazy.UrlbarQuickSuggest._setConfig(config);
@@ -296,6 +297,7 @@ class QSTestUtils {
    *   The expected original URL (the URL with an unreplaced timestamp
    *   template). At least one of `url` and `originalUrl` must be given.
    * @param {object} options.window
+   *   The window that should be used for this assertion
    * @param {number} [options.index]
    *   The expected index of the quick suggest result. Pass -1 to use the index
    *   of the last result.
@@ -406,6 +408,7 @@ class QSTestUtils {
    * Asserts a result is not a quick suggest result.
    *
    * @param {object} window
+   *   The window that should be used for this assertion
    * @param {number} index
    *   The index of the result.
    */
@@ -425,6 +428,7 @@ class QSTestUtils {
    * Asserts that none of the results are quick suggest results.
    *
    * @param {object} window
+   *   The window that should be used for this assertion
    */
   async assertNoQuickSuggestResults(window) {
     for (let i = 0; i < lazy.UrlbarTestUtils.getResultCount(window); i++) {
@@ -614,15 +618,16 @@ class QSTestUtils {
    * Asserts that URLs in a result's payload have the timestamp template
    * substring replaced with real timestamps.
    *
-   * @param {UrlbarResult} result
+   * @param {UrlbarResult} result The results to check
    * @param {object} urls
    *   An object that contains the expected payload properties with template
    *   substrings. For example:
-   *
+   *   ```js
    *   {
    *     url: "http://example.com/foo-%YYYYMMDDHH%",
    *     sponsoredClickUrl: "http://example.com/bar-%YYYYMMDDHH%",
    *   }
+   *   ```
    */
   assertTimestampsReplaced(result, urls) {
     let {
@@ -697,6 +702,7 @@ class QSTestUtils {
    * Enrolls in a mock Nimbus experiment.
    *
    * @param {object} options
+   *   Options for the mock experiment.
    * @param {object} [options.valueOverrides]
    *   Values for feature variables.
    * @returns {Promise<Function>}

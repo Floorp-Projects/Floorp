@@ -1458,11 +1458,16 @@ function add_resultGroups_task({
 /**
  * Adds test tasks for each of the keys in `LIMIT_KEYS`.
  *
- * @param {object} options The options for the test
+ * @param {object} options
+ *   The options for the test
  * @param {string} options.testName
+ *   The name of the test.
  * @param {object} options.resultGroups
+ *   The resultGroups object to set.
  * @param {Array} options.providerResults
+ *   The results to return from the test
  * @param {Array} options.expectedResultIndexes
+ *   Indexes of the expected results within {@link providerResults}
  */
 function add_resultGroupsLimit_tasks({
   testName,

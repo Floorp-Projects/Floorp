@@ -373,6 +373,7 @@ add_task(async function pickNonHeuristic() {
  * maximum number of results when the heuristic is hidden.
  *
  * @param {Function} callback
+ *   The callback to call after adding visits. Can be async
  */
 async function withVisits(callback) {
   let urls = [];
@@ -400,6 +401,7 @@ async function withVisits(callback) {
  * @param {boolean} [options.makeDefault]
  *   Whether to make the engine default.
  * @param {Function} callback
+ *   The callback to call after changing the default search engine. Can be async
  */
 async function withEngine(
   { keyword = undefined, makeDefault = false },
@@ -429,6 +431,7 @@ async function withEngine(
  * Asserts the view contains visit results with the given URLs.
  *
  * @param {Array} expectedURLs
+ *   The expected urls.
  */
 async function checkVisitResults(expectedURLs) {
   Assert.equal(

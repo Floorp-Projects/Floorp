@@ -28,7 +28,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * Returns whether the passed in string looks like a url.
  *
  * @param {string} str
+ *   The string to check.
  * @param {boolean} [ignoreAlphanumericHosts]
+ *   If true, don't consider a string with an alphanumeric host to be a URL.
  * @returns {boolean}
  *   True if the query looks like a URL.
  */
@@ -438,16 +440,23 @@ class ProviderSearchSuggestions extends UrlbarProvider {
   }
 
   /**
+   * @typedef {object} EngineAlias
+   *
+   * @property {nsISearchEngine} engine
+   *   The search engine
+   * @property {string} alias
+   *   The search engine's alias
+   * @property {string} query
+   *   The remainder of the search engine string after the alias
+   */
+
+  /**
    * Searches for an engine alias given the queryContext.
    *
    * @param {UrlbarQueryContext} queryContext
-   * @returns {object} aliasEngine
+   *   The query context object.
+   * @returns {EngineAlias?} aliasEngine
    *   A representation of the aliased engine. Null if there's no match.
-   * @returns {nsISearchEngine} aliasEngine.engine
-   * @returns {string} aliasEngine.alias
-   * @returns {string} aliasEngine.query
-   * @returns {object} { engine, alias, query }
-   *
    */
   async _maybeGetAlias(queryContext) {
     if (queryContext.searchMode) {

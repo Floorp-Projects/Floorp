@@ -409,8 +409,11 @@ const MATCH_TYPE = {
  * Manages a single instance of a Places search.
  *
  * @param {UrlbarQueryContext} queryContext
- * @param {Function} listener Called as: `listener(matches, searchOngoing)`
+ *   The query context.
+ * @param {Function} listener
+ *   Called as: `listener(matches, searchOngoing)`
  * @param {PlacesProvider} provider
+ *   The singleton that contains Places information
  */
 function Search(queryContext, listener, provider) {
   // We want to store the original string for case sensitive searches.
@@ -835,6 +838,7 @@ Search.prototype = {
    *   engine.
    *
    * @param {object} match
+   *   The match to maybe restyle.
    * @returns {boolean} True if the match can be restyled, false otherwise.
    */
   _maybeRestyleSearchMatch(match) {
@@ -938,6 +942,16 @@ Search.prototype = {
   },
 
   /**
+   * @typedef {object} MatchPositionInformation
+   * @property {number} index
+   *   The index the match should take in the results. Return -1 if the match
+   *   should be discarded.
+   * @property {boolean} replace
+   *   True if the match should replace the result already at
+   *   matchPosition.index.
+   */
+
+  /**
    * Check for duplicates and either discard the duplicate or replace the
    * original match, in case the new one is more specific. For example,
    * a Remote Tab wins over History, and a Switch to Tab wins over a Remote Tab.
@@ -945,14 +959,8 @@ Search.prototype = {
    * the url by replacing the %s placeholder.
    *
    * @param {object} match
-   * @returns {object} matchPosition
-   * @returns {number} matchPosition.index
-   *   The index the match should take in the results. Return -1 if the match
-   *   should be discarded.
-   * @returns {boolean} matchPosition.replace
-   *   True if the match should replace the result already at
-   *   matchPosition.index.
-   *
+   *   The match to insert.
+   * @returns {MatchPositionInformation}
    */
   _getInsertIndexForMatch(match) {
     let [urlMapKey, prefix, action] = makeKeyForMatch(match);

@@ -553,7 +553,7 @@ async function checkLabels(resultCount, labelsByIndex) {
 /**
  * Asserts that an element for group aria label.
  *
- * @param {object} expectedRows
+ * @param {Array} expectedRows The expected rows.
  */
 async function checkGroupAriaLabels(expectedRows) {
   Assert.equal(

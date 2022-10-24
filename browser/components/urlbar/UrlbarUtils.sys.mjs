@@ -664,6 +664,7 @@ export var UrlbarUtils = {
    * Gets a default icon for a URL.
    *
    * @param {string} url
+   *   The URL to get the icon for.
    * @returns {string} A URI pointing to an icon for `url`.
    */
   getIconForUrl(url) {
@@ -758,7 +759,8 @@ export var UrlbarUtils = {
    *
    * @param {string} spec
    *        The text to modify.
-   * @param {object} options
+   * @param {object} [options]
+   *        The options object.
    * @param {boolean} options.stripHttp
    *        Whether to strip http.
    * @param {boolean} options.stripHttps
@@ -773,7 +775,7 @@ export var UrlbarUtils = {
    *        Whether to trim a trailing `#`.
    * @param {boolean} options.trimTrailingDot
    *        Whether to trim a trailing '.'.
-   * @returns {Array} [modified, prefix, suffix]
+   * @returns {string[]} [modified, prefix, suffix]
    *          modified: {string} The modified spec.
    *          prefix: {string} The parts stripped from the prefix, if any.
    *          suffix: {string} The parts trimmed from the suffix, if any.
@@ -897,7 +899,9 @@ export var UrlbarUtils = {
    * URIFixup::KeywordURIFixup
    *
    * @param {string} value
-   * @returns {boolean} Whether the value looks like a single word host.
+   *   The string to check.
+   * @returns {boolean}
+   *   Whether the value looks like a single word host.
    */
   looksLikeSingleWordHost(value) {
     let str = value.trim();
@@ -1102,7 +1106,9 @@ export var UrlbarUtils = {
    * autofill. It should not be used for other types of autofill.
    *
    * @param {string} url
+   *                 The URL to test
    * @param {string} candidate
+   *                 The candidate string to test against
    * @param {string} checkFragmentOnly
    *                 If want to check the fragment only, pass true.
    *                 Otherwise, check whole url.
@@ -1671,6 +1677,8 @@ export class UrlbarQueryContext {
    * Only returns a subset of the properties from URIFixup. This is both to
    * reduce the memory footprint of UrlbarQueryContexts and to keep them
    * serializable so they can be sent to extensions.
+   *
+   * @returns {{ href: string; isSearch: boolean; }?}
    */
   get fixupInfo() {
     if (this.trimmedSearchString && !this._fixupInfo) {
@@ -1702,6 +1710,8 @@ export class UrlbarQueryContext {
    * Returns the error that was thrown when fixupInfo was fetched, if any. If
    * fixupInfo has not yet been fetched for this queryContext, it is fetched
    * here.
+   *
+   * @returns {any?}
    */
   get fixupError() {
     if (!this.fixupInfo) {
@@ -1905,6 +1915,7 @@ export class UrlbarProvider {
    * provider and the type of result.
    *
    * @param {UrlbarQueryContext} queryContext
+   *   The query context object.
    * @param {UrlbarResult} result
    *   The result that should be blocked.
    * @returns {boolean}
@@ -2317,8 +2328,11 @@ export class L10nCache {
    * Observer method from Services.obs.addObserver.
    *
    * @param {nsISupports} subject
+   *   The subject of the notification.
    * @param {string} topic
+   *   The topic of the notification.
    * @param {string} data
+   *   The data attached to the notification.
    */
   async observe(subject, topic, data) {
     switch (topic) {

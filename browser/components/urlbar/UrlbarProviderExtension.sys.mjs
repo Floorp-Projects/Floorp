@@ -72,6 +72,8 @@ export class UrlbarProviderExtension extends UrlbarProvider {
 
   /**
    * The provider's name.
+   *
+   * @returns {string}
    */
   get name() {
     return this._name;
@@ -80,6 +82,8 @@ export class UrlbarProviderExtension extends UrlbarProvider {
   /**
    * The provider's type.  The type of extension providers is always
    * UrlbarUtils.PROVIDER_TYPE.EXTENSION.
+   *
+   * @returns {UrlbarUtils.PROVIDER_TYPE}
    */
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.EXTENSION;

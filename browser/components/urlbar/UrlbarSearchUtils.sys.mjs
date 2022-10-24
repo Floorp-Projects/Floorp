@@ -60,6 +60,7 @@ class SearchUtils {
    * @param {string} prefix
    *   String containing the first part of the matching domain name(s).
    * @param {object} [options]
+   *   Options object.
    * @param {boolean} [options.matchAllDomainLevels]
    *   Match at each sub domain, for example "a.b.c.com" will be matched at
    *   "a.b.c.com", "b.c.com", and "c.com". Partial matches are always returned
@@ -188,6 +189,7 @@ class SearchUtils {
 
   /**
    * @param {nsISearchEngine} engine
+   *   The engine to get the root domain of
    * @returns {string}
    *   The root domain of a search engine. e.g. If `engine` has the domain
    *   www.subdomain.rootdomain.com, `rootdomain` is returned. Returns the

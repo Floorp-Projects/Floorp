@@ -120,6 +120,7 @@ class ProvidersManager {
    * Registers a provider object with the manager.
    *
    * @param {object} provider
+   *   The provider object to register.
    */
   registerProvider(provider) {
     if (!provider || !(provider instanceof lazy.UrlbarProvider)) {
@@ -149,6 +150,7 @@ class ProvidersManager {
    * Unregisters a previously registered provider object.
    *
    * @param {object} provider
+   *   The provider object to unregister.
    */
   unregisterProvider(provider) {
     lazy.logger.info(`Unregistering provider ${provider.name}`);
@@ -161,7 +163,8 @@ class ProvidersManager {
   /**
    * Returns the provider with the given name.
    *
-   * @param {string} name The provider name.
+   * @param {string} name
+   *   The provider name.
    * @returns {UrlbarProvider} The provider.
    */
   getProvider(name) {
@@ -171,7 +174,8 @@ class ProvidersManager {
   /**
    * Registers a muxer object with the manager.
    *
-   * @param {object} muxer a UrlbarMuxer object
+   * @param {object} muxer
+   *   a UrlbarMuxer object
    */
   registerMuxer(muxer) {
     if (!muxer || !(muxer instanceof lazy.UrlbarMuxer)) {
@@ -184,7 +188,8 @@ class ProvidersManager {
   /**
    * Unregisters a previously registered muxer object.
    *
-   * @param {object} muxer a UrlbarMuxer object or name.
+   * @param {object} muxer
+   *   a UrlbarMuxer object or name.
    */
   unregisterMuxer(muxer) {
     let muxerName = typeof muxer == "string" ? muxer : muxer.name;
@@ -195,8 +200,10 @@ class ProvidersManager {
   /**
    * Starts querying.
    *
-   * @param {object} queryContext The query context object
-   * @param {object} [controller] a UrlbarController instance
+   * @param {object} queryContext
+   *   The query context object
+   * @param {object} [controller]
+   *   a UrlbarController instance
    */
   async startQuery(queryContext, controller = null) {
     lazy.logger.info(`Query start ${queryContext.searchString}`);
@@ -275,7 +282,7 @@ class ProvidersManager {
   /**
    * Cancels a running query.
    *
-   * @param {object} queryContext
+   * @param {object} queryContext The query context object
    */
   cancelQuery(queryContext) {
     lazy.logger.info(`Query cancel "${queryContext.searchString}"`);
@@ -521,8 +528,8 @@ class Query {
   /**
    * Adds a result returned from a provider to the results set.
    *
-   * @param {object} provider
-   * @param {object} result
+   * @param {UrlbarProvider} provider The provider that returned the result.
+   * @param {object} result The result object.
    */
   add(provider, result) {
     if (!(provider instanceof lazy.UrlbarProvider)) {
