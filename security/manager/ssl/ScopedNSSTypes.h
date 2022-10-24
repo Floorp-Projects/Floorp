@@ -22,6 +22,7 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "NSSErrorsService.h"
+#include "pk11hpke.h"
 #include "pk11pub.h"
 #include "pkcs12.h"
 #include "prerror.h"
@@ -376,6 +377,10 @@ inline void VFY_DestroyContext_true(VFYContext* ctx) {
   VFY_DestroyContext(ctx, true);
 }
 
+inline void PK11_HPKE_DestroyContext_true(HpkeContext* cx) {
+  PK11_HPKE_DestroyContext(cx, true);
+}
+
 }  // namespace internal
 
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertificate, CERTCertificate,
@@ -452,6 +457,8 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSEC_PKCS12ExportContext,
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(
     UniqueSECKEYEncryptedPrivateKeyInfo, SECKEYEncryptedPrivateKeyInfo,
     internal::SECKEYEncryptedPrivateKeyInfo_true)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueHpkeContext, HpkeContext,
+                                      internal::PK11_HPKE_DestroyContext_true)
 }  // namespace mozilla
 
 #endif  // ScopedNSSTypes_h

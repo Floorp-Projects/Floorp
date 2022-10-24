@@ -1,0 +1,6 @@
+UNIFIED_SOURCES = ["TestDAPTelemetry.cpp"]
+FINAL_LIBRARY = "xul-gtest"
+
+TEST_HARNESS_FILES.gtest += [
+    "PrgAes128_tests.json",
+]
