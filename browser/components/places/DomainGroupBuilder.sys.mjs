@@ -84,6 +84,7 @@ export const DomainGroupBuilder = new (class DomainGroupBuilder {
    * Updates the domain snapshot groups based on the added and removed urls.
    *
    * @param {object} options
+   *   The options for the update.
    * @param {Set<object>} options.addedItems
    *   The added items (url, userPersisted) to handle in this update.
    * @param {Set<string>} options.removedUrls
@@ -206,6 +207,7 @@ export const DomainGroupBuilder = new (class DomainGroupBuilder {
    * Gets the domain of a URL.
    *
    * @param {string} url
+   *   The url to get the domain of
    * @returns {string}
    */
   #getDomain(url) {

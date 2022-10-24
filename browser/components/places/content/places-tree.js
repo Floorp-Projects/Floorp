@@ -165,7 +165,8 @@
     /**
      * overriding
      *
-     * @param {object} val
+     * @param {PlacesTreeView} val
+     *   The parent view
      */
     set view(val) {
       // We save the view so that we can avoid expensive get calls when
@@ -475,6 +476,7 @@
      * will be opened, so that the node is visible.
      *
      * @param {string} placeURI
+     *   The URI that should be selected
      */
     selectPlaceURI(placeURI) {
       // Do nothing if a node matching the given uri is already selected
@@ -543,6 +545,7 @@
      * node is visible.
      *
      * @param {object} node
+     *   The node that should be selected
      */
     selectNode(node) {
       var view = this.view;
@@ -717,6 +720,7 @@
        * in its subtree.
        *
        * @param {object} node
+       *   The node to search.
        * @returns {boolean}
        *   Returns true if at least one item was found.
        */

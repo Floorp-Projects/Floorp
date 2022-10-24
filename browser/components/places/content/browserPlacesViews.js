@@ -667,6 +667,7 @@ PlacesViewBase.prototype = {
    * This method may be overridden by classes that extend this base class.
    *
    * @param  {Element} elt
+   *   The element to check.
    * @returns {boolean}
    */
   _isPopupOpen(elt) {

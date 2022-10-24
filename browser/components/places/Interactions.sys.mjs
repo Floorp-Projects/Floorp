@@ -156,8 +156,10 @@ class _Interactions {
   _pageViewStartTime = Cu.now();
 
   /**
-   * Stores interactions in the database, see the InteractionsStore class.
-   * This is created lazily, see the `store` getter.
+   * Stores interactions in the database, see the {@link InteractionsStore}
+   * class. This is created lazily, see the `store` getter.
+   *
+   * @type {InteractionsStore | undefined}
    */
   #store = undefined;
 
@@ -230,6 +232,8 @@ class _Interactions {
    * Retrieve the underlying InteractionsStore object. This exists for testing
    * purposes and should not be abused by production code (for example it'd be
    * a bad idea to force flushes).
+   *
+   * @returns {InteractionsStore}
    */
   get store() {
     if (!this.#store) {
@@ -336,6 +340,8 @@ class _Interactions {
 
   /**
    * Returns the interactions update promise to be used when sychronization is needed from tests.
+   *
+   * @returns {Promise<void>}
    */
   get interactionUpdatePromise() {
     return _Interactions.interactionUpdatePromise;
@@ -344,12 +350,18 @@ class _Interactions {
   /**
    * Updates the current interaction on fulfillment of the asynchronous collection of scrolling interactions.
    *
-   *  @param {Browser} browser
-   *  @param {DOMWindow} activeWindow
-   *  @param {boolean} userIsIdle
-   *  @param {WeakMap<browser, InteractionInfo>} interactions
-   *  @param {number} pageViewStartTime
-   *  @param {InteractionsStore} store
+   * @param {Browser} browser
+   *   The browser object that has triggered the update, if known.
+   * @param {DOMWindow} activeWindow
+   *   The active window.
+   * @param {boolean} userIsIdle
+   *   Whether the user is idle.
+   * @param {WeakMap<Browser, InteractionInfo>} interactions
+   *   A map of interactions for each browser instance
+   * @param {number} pageViewStartTime
+   *   The time the page was loaded.
+   * @param {InteractionsStore} store
+   *   The interactions store.
    */
   static async #updateInteraction_async(
     browser,
@@ -419,6 +431,7 @@ class _Interactions {
    * Handles a window becoming active.
    *
    * @param {DOMWindow} win
+   *   The window that has become active.
    */
   #onActivateWindow(win) {
     lazy.logConsole.debug("Window activated");
@@ -435,6 +448,7 @@ class _Interactions {
    * Handles a window going inactive.
    *
    * @param {DOMWindow} win
+   *   The window that is going inactive.
    */
   #onDeactivateWindow(win) {
     lazy.logConsole.debug("Window deactivate");
@@ -462,6 +476,7 @@ class _Interactions {
    * Handles various events and forwards them to appropriate functions.
    *
    * @param {DOMEvent} event
+   *   The event that will be handled
    */
   handleEvent(event) {
     switch (event.type) {
@@ -484,8 +499,11 @@ class _Interactions {
    * Handles notifications from the observer service.
    *
    * @param {nsISupports} subject
+   *   The subject of the notification.
    * @param {string} topic
+   *   The topic of the notification.
    * @param {string} data
+   *   The data attached to the notification.
    */
   observe(subject, topic, data) {
     switch (topic) {
@@ -713,8 +731,11 @@ class InteractionsStore {
    * Handles notifications from the observer service.
    *
    * @param {nsISupports} subject
+   *   The subject of the notification.
    * @param {string} topic
+   *   The topic of the notification.
    * @param {string} data
+   *   The data attached to the notification.
    */
   observe(subject, topic, data) {
     switch (topic) {

@@ -36,6 +36,7 @@ const TOPIC_DELETED = "places-snapshots-deleted";
  * Adds a test interaction to the database.
  *
  * @param {InteractionInfo[]} interactions
+ *   The array of interactions to add
  */
 async function addInteractions(interactions) {
   await PlacesTestUtils.addVisits(interactions);
@@ -94,8 +95,11 @@ async function getInteractions() {
  * the given list of urls.
  *
  * @param {string} topic
+ *   The notifications topic. One of TOPIC_ADDED or TOPIC_DELETED.
  * @param {string[]} expected
+ *   A list of URLs to have expected the call from
  * @param {Function} task
+ *   The task that will trigger the notification
  */
 async function assertUrlNotification(topic, expected, task) {
   let seen = false;
@@ -130,7 +134,9 @@ async function assertUrlNotification(topic, expected, task) {
  * not sent.
  *
  * @param {string} topic
+ *   The notifications topic. One of TOPIC_ADDED or TOPIC_DELETED.
  * @param {Function} task
+ *   The task that will trigger the notification
  */
 async function assertTopicNotObserved(topic, task) {
   let seen = false;
@@ -298,7 +304,7 @@ async function assertSnapshotList(received, expected) {
  * @param {Snapshot[]} expected
  *   The expected snapshots.
  * @param {object} options
- *   @see Snapshots.query().
+ *   See the options for {@link Snapshots.query}
  */
 async function assertSnapshots(expected, options) {
   let snapshots = await Snapshots.query(options);
@@ -367,7 +373,7 @@ function orderedGroups(list, order) {
  * @param {Snapshot[]} expected
  *   The expected snapshots.
  * @param {SelectionContext} context
- *   @see SnapshotSelector.#context.
+ *   See the documentation for {@link SnapshotSelector.#context}
  */
 async function assertOverlappingSnapshots(expected, context) {
   let recommendations = await Snapshots.recommendationSources.Overlapping(
@@ -383,7 +389,7 @@ async function assertOverlappingSnapshots(expected, context) {
  * @param {Snapshot[]} expected
  *   The expected snapshots.
  * @param {SelectionContext} context
- *   @see SnapshotSelector.#context.
+ *   See the documentation for {@link SnapshotSelector.#context}
  */
 async function assertCommonReferrerSnapshots(expected, context) {
   let recommendations = await Snapshots.recommendationSources.CommonReferrer(
@@ -399,7 +405,7 @@ async function assertCommonReferrerSnapshots(expected, context) {
  * @param {Snapshot[]} expected
  *   The expected snapshots.
  * @param {SelectionContext} context
- *   @see SnapshotSelector.#context.
+ *   See the documentation for {@link SnapshotSelector.#context}
  */
 async function assertTimeOfDaySnapshots(expected, context) {
   let recommendations = await Snapshots.recommendationSources.TimeOfDay(

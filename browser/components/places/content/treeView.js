@@ -147,7 +147,7 @@ PlacesTreeView.prototype = {
    *        node which isn't supposed to be in the tree (e.g. separators in
    *        sorted trees).
    * @param {boolean} [aForceBuild]
-   *        @see _isPlainContainer.
+   *        See {@link _isPlainContainer}.
    *        If true, the row will be computed even if the node still isn't set
    *        in our rows array.
    * @param {object} [aParentRow]
@@ -254,6 +254,7 @@ PlacesTreeView.prototype = {
    * Gets the node at a given row.
    *
    * @param {number} aRow
+   *   The index of the row to set
    * @returns {object}
    */
   _getNodeForRow: function PTV__getNodeForRow(aRow) {
@@ -399,6 +400,7 @@ PlacesTreeView.prototype = {
    * will count the node itself plus any child node following it.
    *
    * @param {number} aNodeRow
+   *   The row of the node to count
    * @returns {number}
    */
   _countVisibleRowsForNodeAtRow: function PTV__countVisibleRowsForNodeAtRow(
@@ -766,8 +768,11 @@ PlacesTreeView.prototype = {
    * change for visits, and date sorting is the only time things are collapsed.
    *
    * @param {object} aParentNode
+   *   The parent node of the node being removed.
    * @param {object} aNode
+   *   The node to remove from the tree.
    * @param {number} aOldIndex
+   *   The old index of the node in the parent.
    */
   nodeRemoved: function PTV_nodeRemoved(aParentNode, aNode, aOldIndex) {
     console.assert(this._result, "Got a notification but have no result!");

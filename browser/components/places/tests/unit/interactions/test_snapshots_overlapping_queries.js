@@ -23,6 +23,7 @@ const overlapLimit = Services.prefs.getIntPref(
  * will be the first interaction.
  *
  * @param {object} [options]
+ *   The options object properties containing the following:
  * @param {number} [options.num]
  *   Number of snapshots to create
  * @param {number} [options.duration]

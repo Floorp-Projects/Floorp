@@ -34,6 +34,15 @@ add_setup(async function() {
 
 /**
  * Helper to check we've shown the toolbar
+ *
+ * @param {object} options
+ *   Options for the test
+ * @param {boolean} options.showToolbar
+ *   If the toolbar should be shown or not
+ * @param {string} options.expectedFolder
+ *   The expected folder to be shown
+ * @param {string} options.reason
+ *   The reason the toolbar should be shown
  */
 async function checkResponse({ showToolbar, expectedFolder, reason }) {
   // Check folder.
