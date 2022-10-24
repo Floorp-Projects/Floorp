@@ -26,12 +26,12 @@ class ClassOfService {
   bool Incremental() const { return mIncremental; }
   void SetIncremental(bool incremental) { mIncremental = incremental; }
 
-  static void ToString(const ClassOfService aCos, nsACString& aOut) {
-    return ToString(aCos.Flags(), aOut);
+  static nsCString ToString(const ClassOfService cos) {
+    return ToString(cos.Flags());
   }
 
-  static void ToString(unsigned long aFlags, nsACString& aOut) {
-    aOut = nsPrintfCString("%lX", aFlags);
+  static nsCString ToString(unsigned long flags) {
+    return nsCString(std::bitset<32>(flags).to_string());
   }
 
  private:
