@@ -2868,8 +2868,11 @@ RefPtr<LocalDeviceSetPromise> MediaManager::AnonymizeDevices(
             RefPtr anonymized = new LocalMediaDeviceSetRefCnt();
             for (const RefPtr<MediaDevice>& device : *rawDevices) {
               nsString id = device->mRawID;
-              nsContentUtils::AnonymizeId(id, aOriginKey);
-
+              // An empty id represents a virtual default device, for which
+              // the exposed deviceId is the empty string.
+              if (!id.IsEmpty()) {
+                nsContentUtils::AnonymizeId(id, aOriginKey);
+              }
               nsString groupId = device->mRawGroupID;
               // Use window id to salt group id in order to make it session
               // based as required by the spec. This does not provide unique
