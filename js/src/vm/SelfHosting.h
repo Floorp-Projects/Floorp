@@ -275,6 +275,9 @@ bool intrinsic_NewStringIterator(JSContext* cx, unsigned argc, JS::Value* vp);
 
 bool intrinsic_NewRegExpStringIterator(JSContext* cx, unsigned argc,
                                        JS::Value* vp);
+
+bool intrinsic_CreateAsyncFromSyncIterator(JSContext* cx, unsigned argc,
+                                           JS::Value* vp);
 #ifdef ENABLE_RECORD_TUPLE
 bool IsTupleUnchecked(JSContext* cx, const CallArgs& args);
 bool intrinsic_IsTuple(JSContext* cx, unsigned argc, JS::Value* vp);
