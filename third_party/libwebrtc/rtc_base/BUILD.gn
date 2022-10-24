@@ -700,9 +700,12 @@ if (!build_with_mozilla) {
       ":safe_conversions",
       ":timeutils",
       "../api/task_queue",
+      "../api/units:time_delta",
+      "../api/units:timestamp",
       "synchronization:mutex",
     ]
     absl_deps = [
+      "//third_party/abseil-cpp/absl/functional:any_invocable",
       "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
     ]
