@@ -37,7 +37,6 @@ class FetchUtil final {
    */
   static nsresult GetValidRequestMethod(const nsACString& aMethod,
                                         nsCString& outMethod);
-
   /**
    * Extracts an HTTP header from a substring range.
    */

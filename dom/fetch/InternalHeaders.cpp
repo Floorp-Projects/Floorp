@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/InternalHeaders.h"
 
+#include "FetchUtil.h"
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/ErrorResult.h"
 
@@ -56,11 +57,11 @@ bool InternalHeaders::IsValidHeaderValue(const nsCString& aLowerName,
   }
 
   // Step 4
-  if (mGuard == HeadersGuardEnum::Request &&
-      IsForbiddenRequestHeader(aLowerName)) {
-    return false;
+  if (mGuard == HeadersGuardEnum::Request) {
+    if (IsForbiddenRequestHeader(aLowerName, aNormalizedValue)) {
+      return false;
+    }
   }
-
   // Step 5
   if (mGuard == HeadersGuardEnum::Request_no_cors) {
     nsAutoCString tempValue;
@@ -161,7 +162,9 @@ void InternalHeaders::Delete(const nsACString& aName, ErrorResult& aRv) {
   }
 
   // Step 3
-  if (IsForbiddenRequestHeader(lowerName)) {
+  nsAutoCString value;
+  GetInternal(lowerName, value, aRv);
+  if (IsForbiddenRequestHeader(lowerName, value)) {
     return;
   }
 
@@ -381,9 +384,10 @@ bool InternalHeaders::IsImmutable(ErrorResult& aRv) const {
   return false;
 }
 
-bool InternalHeaders::IsForbiddenRequestHeader(const nsCString& aName) const {
+bool InternalHeaders::IsForbiddenRequestHeader(const nsCString& aName,
+                                               const nsACString& aValue) const {
   return mGuard == HeadersGuardEnum::Request &&
-         nsContentUtils::IsForbiddenRequestHeader(aName);
+         nsContentUtils::IsForbiddenRequestHeader(aName, aValue);
 }
 
 bool InternalHeaders::IsForbiddenRequestNoCorsHeader(
