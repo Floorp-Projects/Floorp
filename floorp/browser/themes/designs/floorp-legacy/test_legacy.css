@@ -2473,21 +2473,6 @@ spacer[part="overflow-end-indicator"] {
 }
 
 
-
-/* separator */
-#urlbar[pageproxystate=valid] #identity-box:-moz-any(.chromeUI, .extensionPage, .notSecureText) #identity-icon-box::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute !important;
-  height: 16px !important;
-  top: calc(50% - 8px) !important;
-  right: 0 !important;
-  background: #9d9e9f !important;
-  width: 1px !important;
-  transition: opacity .2s var(--ease-basic) !important;
-}
-
-
 #urlbar[pageproxystate=valid] #identity-box:-moz-any(.chromeUI, .extensionPage, .notSecureText) {
   padding-inline-end: 9px !important;
   margin-inline-end: 9px !important;
