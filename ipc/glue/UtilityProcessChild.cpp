@@ -11,6 +11,7 @@
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/Endpoint.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RemoteDecoderManagerParent.h"
 
@@ -56,6 +57,9 @@ UtilityProcessChild::~UtilityProcessChild() = default;
 /* static */
 RefPtr<UtilityProcessChild> UtilityProcessChild::GetSingleton() {
   MOZ_ASSERT(XRE_IsUtilityProcess());
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownFinal)) {
+    return nullptr;
+  }
   StaticMutexAutoLock lock(sUtilityProcessChildMutex);
   if (!sUtilityProcessChild) {
     sUtilityProcessChild = new UtilityProcessChild();
