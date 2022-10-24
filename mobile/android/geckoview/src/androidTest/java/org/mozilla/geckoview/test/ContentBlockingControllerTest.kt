@@ -13,10 +13,10 @@ import org.hamcrest.Matchers.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.ContentBlocking
+import org.mozilla.geckoview.ContentBlocking.CookieBannerMode
 import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class ContentBlockingControllerTest : BaseSessionTest() {
@@ -152,5 +152,44 @@ class ContentBlockingControllerTest : BaseSessionTest() {
                 }
             }
         })
+    }
+
+    @Test
+    fun cookieBannerHandlingSettings(){
+        // Check default value
+
+        val contentBlocking = sessionRule.runtime.settings.contentBlocking
+
+        assertThat(
+            "Expect correct default value which is off",
+            contentBlocking.cookieBannerMode,
+            equalTo(CookieBannerMode.COOKIE_BANNER_MODE_DISABLED)
+        )
+        assertThat(
+            "Expect correct default value for private browsing",
+            contentBlocking.cookieBannerModePrivateBrowsing,
+            equalTo(CookieBannerMode.COOKIE_BANNER_MODE_REJECT)
+        )
+
+        // Checks that the pref value is also consistent with the runtime settings
+        val originalPrefs = sessionRule.getPrefs(
+            "cookiebanners.service.mode",
+            "cookiebanners.service.mode.privateBrowsing",
+        )
+
+        assertThat("Initial value is correct", originalPrefs[0] as Int, equalTo(contentBlocking.cookieBannerMode))
+        assertThat("Initial value is correct", originalPrefs[1] as Int, equalTo(contentBlocking.cookieBannerModePrivateBrowsing))
+
+        contentBlocking.cookieBannerMode = CookieBannerMode.COOKIE_BANNER_MODE_REJECT_OR_ACCEPT
+        contentBlocking.cookieBannerModePrivateBrowsing = CookieBannerMode.COOKIE_BANNER_MODE_DISABLED
+
+        val actualPrefs = sessionRule.getPrefs(
+            "cookiebanners.service.mode",
+            "cookiebanners.service.mode.privateBrowsing",
+        )
+
+        assertThat("Initial value is correct", actualPrefs[0] as Int, equalTo(contentBlocking.cookieBannerMode))
+        assertThat("Initial value is correct", actualPrefs[1] as Int, equalTo(contentBlocking.cookieBannerModePrivateBrowsing))
+
     }
 }

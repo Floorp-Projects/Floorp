@@ -13,6 +13,12 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v108
+- Added [`CookieBannerHandler`][108.1];`cookieBannerHandlingMode` to [`ContentBlocking.Settings.Builder`][81.1]; `getCookieBannerHandlingMode`, `setCookieBannerHandlingMode`, `getCookieBannerHandlingModePrivateBrowsing` and `setCookieBannerHandlingModePrivateBrowsing`
+  to [`ContentBlocking.Settings`][81.2]
+
+[103.2]: {{javadoc_uri}}/ContentBlocking.CookieBannerMode
+
 ## v107
 - Removed deprecated [`cookieLifetime`][103.2]
 - Removed deprecated `setPermission`, see deprecation note in [v90](#v90)
@@ -1244,4 +1250,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: bb201329d2b34084e4d2e48364dd2b1447f504a5
+[api-version]: 0996b9058eab189d80b636b07d61bdb7db45c367
