@@ -115,7 +115,7 @@
         </html:div>
       </box> <!-- .splitview-nav-container -->
     </box>   <!-- .splitview-controller -->
-    <splitter class="devtools-side-splitter devtools-invisible-splitter"/>
+    <splitter class="devtools-side-splitter devtools-invisible-splitter" resizebefore="sibling" resizeafter="none" />
     <box class="splitview-side-details devtools-main-content"/>
 
     <html:div id="splitview-templates" hidden="">
@@ -139,7 +139,7 @@
         <hbox class="stylesheet-details-container">
           <box class="stylesheet-editor-input textbox"
                data-l10n-id="styleeditor-editor-textbox"/>
-          <splitter class="devtools-side-splitter"/>
+          <splitter class="devtools-side-splitter" resizebefore="none" resizeafter="sibling" />
           <vbox class="stylesheet-sidebar theme-sidebar" hidden="true">
             <toolbar class="devtools-toolbar"
               data-l10n-id="styleeditor-media-rules">

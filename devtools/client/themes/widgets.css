@@ -34,6 +34,8 @@
 /* Responsive container */
 
 .devtools-responsive-container {
+  min-width: 0;
+  min-height: 0;
   -moz-box-orient: horizontal;
 }
 

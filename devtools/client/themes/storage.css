@@ -17,7 +17,8 @@ a {
   min-width: 220px;
   max-width: 500px;
   overflow: auto;
-  contain: size;
+  min-width: 0;
+  min-height: 0;
   background: var(--theme-sidebar-background);
   /* Let the component gain focus when a click hits an empty area */
   -moz-user-focus: normal;
@@ -148,9 +149,19 @@ a {
 }
 
 /* Responsive sidebar */
-@media (max-width: 700px) {
+@media (width < 700px) {
   #storage-tree,
   #storage-sidebar {
-    max-width: 100%;
+    max-width: none;
+    /* Override potential splitter-set width */
+    width: auto !important;
+  }
+}
+
+@media (width >= 700px) {
+  #storage-tree,
+  #storage-sidebar {
+    /* Override potential splitter-set height */
+    height: auto !important;
   }
 }
