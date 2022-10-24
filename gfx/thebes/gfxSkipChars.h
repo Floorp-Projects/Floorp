@@ -153,22 +153,6 @@ class gfxSkipCharsIterator {
   gfxSkipCharsIterator(const gfxSkipCharsIterator& aIterator) = default;
 
   /**
-   * The empty constructor creates an object that is useless until it is
-   * assigned.
-   */
-  gfxSkipCharsIterator()
-      : mSkipChars(nullptr),
-        mOriginalStringOffset(0),
-        mSkippedStringOffset(0),
-        mCurrentRangeIndex(0),
-        mOriginalStringToSkipCharsOffset(0) {}
-
-  /**
-   * Return true if this iterator is properly initialized and usable.
-   */
-  bool IsInitialized() const { return mSkipChars != nullptr; }
-
-  /**
    * Set the iterator to aOriginalStringOffset in the original string.
    * This can efficiently move forward or backward from the current position.
    * aOriginalStringOffset is clamped to [0,originalStringLength].
