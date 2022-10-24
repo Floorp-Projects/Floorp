@@ -1450,20 +1450,6 @@ nsNavBookmarks::GetItemTitle(int64_t aItemId, nsACString& _title) {
   return NS_OK;
 }
 
-nsresult nsNavBookmarks::GetBookmarkURI(int64_t aItemId, nsIURI** _URI) {
-  NS_ENSURE_ARG_MIN(aItemId, 1);
-  NS_ENSURE_ARG_POINTER(_URI);
-
-  BookmarkData bookmark;
-  nsresult rv = FetchItemInfo(aItemId, bookmark);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = NS_NewURI(_URI, bookmark.url);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 nsresult nsNavBookmarks::ResultNodeForContainer(
     const nsCString& aGUID, nsNavHistoryQueryOptions* aOptions,
     nsNavHistoryResultNode** aNode) {

@@ -3518,10 +3518,7 @@ nsresult nsNavHistoryFolderResultNode::OnItemMoved(
   // moving between two different folders, just do a remove and an add
   nsCOMPtr<nsIURI> itemURI;
   if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK) {
-    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-    NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-    nsresult rv = bookmarks->GetBookmarkURI(aItemId, getter_AddRefs(itemURI));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = NS_NewURI(getter_AddRefs(itemURI), aURI);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   if (aOldParentGUID.Equals(mTargetFolderGuid)) {
