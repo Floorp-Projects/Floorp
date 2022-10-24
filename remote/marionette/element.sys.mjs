@@ -18,7 +18,6 @@ const ORDERED_NODE_ITERATOR_TYPE = 5;
 const FIRST_ORDERED_NODE_TYPE = 9;
 
 const ELEMENT_NODE = 1;
-const DOCUMENT_NODE = 9;
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -739,6 +738,7 @@ element.isStale = function(el, win = undefined) {
   if (typeof win == "undefined") {
     win = el.ownerGlobal;
   }
+
   if (el === null || !el.ownerGlobal || el.ownerDocument !== win.document) {
     return true;
   }
@@ -1305,7 +1305,7 @@ element.isDOMElement = function(obj) {
     typeof obj == "object" &&
     obj !== null &&
     "nodeType" in obj &&
-    [ELEMENT_NODE, DOCUMENT_NODE].includes(obj.nodeType) &&
+    obj.nodeType == ELEMENT_NODE &&
     !element.isXULElement(obj)
   );
 };
