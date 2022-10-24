@@ -22,13 +22,10 @@ module.exports = {
     return {
       CallExpression(node) {
         if (
-          node.callee.object &&
-          node.callee.object.callee &&
           ["add_task", "decorate_task"].includes(
-            node.callee.object.callee.name
+            node.callee.object?.callee?.name
           ) &&
-          node.callee.property &&
-          node.callee.property.name == "only"
+          node.callee.property?.name == "only"
         ) {
           context.report({
             node,

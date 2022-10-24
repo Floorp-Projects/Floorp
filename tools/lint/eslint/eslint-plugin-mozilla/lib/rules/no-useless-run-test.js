@@ -46,7 +46,7 @@ module.exports = {
               // rather than the token before the comments, so that we don't
               // remove the comments - for run_test, these are likely to be useful
               // information about the test.
-              if (startNode && startNode.length) {
+              if (startNode?.length) {
                 startNode = startNode[startNode.length - 1];
               } else {
                 startNode = sourceCode.getTokenBefore(node);

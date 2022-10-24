@@ -21,15 +21,12 @@ module.exports = {
     return {
       ExpressionStatement(node) {
         if (
-          !node.expression ||
-          node.expression.type != "CallExpression" ||
-          !node.expression.callee ||
-          node.expression.callee.type != "MemberExpression" ||
-          !node.expression.callee.property ||
-          node.expression.callee.property.type != "Identifier" ||
-          (node.expression.callee.property.name != "concat" &&
-            node.expression.callee.property.name != "join" &&
-            node.expression.callee.property.name != "slice")
+          node.expression?.type != "CallExpression" ||
+          node.expression.callee?.type != "MemberExpression" ||
+          node.expression.callee.property?.type != "Identifier" ||
+          !["concat", "join", "slice"].includes(
+            node.expression.callee.property?.name
+          )
         ) {
           return;
         }
