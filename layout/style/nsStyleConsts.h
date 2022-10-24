@@ -390,7 +390,8 @@ enum class StyleMathVariant : uint8_t {
 };
 
 // See nsStyleFont::mMathStyle
-enum class StyleMathStyle : uint8_t { Compact = 0, Normal = 1 };
+#define NS_STYLE_MATH_STYLE_COMPACT 0
+#define NS_STYLE_MATH_STYLE_NORMAL 1
 
 // See nsStyleDisplay.mPosition
 enum class StylePositionProperty : uint8_t {
