@@ -483,6 +483,11 @@ html {
           margin-inline: 40px 0;
         }
 
+        .image-alt {
+          width: inherit;
+          height: inherit;
+        }
+
         .hero-image {
           flex: 1;
           display: flex;

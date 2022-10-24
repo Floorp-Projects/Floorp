@@ -416,3 +416,23 @@ mr2022-onboarding-gratitude-secondary-button-label = Start browsing
 onboarding-infrequent-import-title = Make yourself at home
 onboarding-infrequent-import-subtitle = Whether you’re settling in or just stopping by, remember you can import your bookmarks, passwords, and more.
 onboarding-infrequent-import-primary-button = Import to { -brand-short-name }
+
+## MR2022 Illustration alt tags
+## Descriptive tags for illustrations used by screen readers and other assistive tech
+
+mr2022-onboarding-pin-image-alt =
+  .aria-label = Person working on a laptop surrounded by stars and flowers
+mr2022-onboarding-default-image-alt =
+  .aria-label = Person hugging the { -brand-product-name } logo
+mr2022-onboarding-import-image-alt =
+  .aria-label = Person riding a skateboard with a box of software icons
+mr2022-onboarding-mobile-download-image-alt =
+  .aria-label = Frogs hopping across lily pads with a QR code to download { -brand-product-name } for mobile in the center
+mr2022-onboarding-pin-private-image-alt =
+  .aria-label = Magic wand makes { -brand-product-name } private browsing logo appear out of a hat
+mr2022-onboarding-privacy-segmentation-image-alt =
+  .aria-label = Light-skinned and dark-skinned hands high five
+mr2022-onboarding-gratitude-image-alt =
+  .aria-label = View of a sunset through a window with a fox and a house plant on a windowsill
+mr2022-onboarding-colorways-image-alt =
+  .aria-label = A hand spray paints a colorful collage of a green eye, orange shoe, red basketball, purple headphones, blue heart, and yellow crown

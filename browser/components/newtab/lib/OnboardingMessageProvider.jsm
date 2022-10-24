@@ -146,6 +146,9 @@ const BASE_MESSAGES = () => [
           content: {
             position: "split",
             split_narrow_bkg_position: "-155px",
+            image_alt_text: {
+              string_id: "mr2022-onboarding-pin-image-alt",
+            },
             progress_bar: "true",
             background:
               "url('chrome://activity-stream/content/data/content/assets/mr-pintaskbar.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
@@ -204,6 +207,9 @@ const BASE_MESSAGES = () => [
           content: {
             position: "split",
             split_narrow_bkg_position: "-60px",
+            image_alt_text: {
+              string_id: "mr2022-onboarding-default-image-alt",
+            },
             progress_bar: "true",
             background:
               "url('chrome://activity-stream/content/data/content/assets/mr-settodefault.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
@@ -239,6 +245,9 @@ const BASE_MESSAGES = () => [
           content: {
             position: "split",
             split_narrow_bkg_position: "-42px",
+            image_alt_text: {
+              string_id: "mr2022-onboarding-import-image-alt",
+            },
             progress_bar: "true",
             background:
               "url('chrome://activity-stream/content/data/content/assets/mr-import.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
@@ -276,6 +285,9 @@ const BASE_MESSAGES = () => [
           content: {
             position: "split",
             split_narrow_bkg_position: "-65px",
+            image_alt_text: {
+              string_id: "mr2022-onboarding-colorways-image-alt",
+            },
             background:
               "url('chrome://activity-stream/content/data/content/assets/mr-colorways.avif') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
             progress_bar: true,
@@ -430,6 +442,9 @@ const BASE_MESSAGES = () => [
           content: {
             position: "split",
             split_narrow_bkg_position: "-160px",
+            image_alt_text: {
+              string_id: "mr2022-onboarding-mobile-download-image-alt",
+            },
             background:
               "url('chrome://activity-stream/content/data/content/assets/mr-mobilecrosspromo.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
             progress_bar: true,
@@ -474,6 +489,9 @@ const BASE_MESSAGES = () => [
           content: {
             position: "split",
             split_narrow_bkg_position: "-100px",
+            image_alt_text: {
+              string_id: "mr2022-onboarding-pin-private-image-alt",
+            },
             progress_bar: "true",
             background:
               "url('chrome://activity-stream/content/data/content/assets/mr-pinprivate.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
@@ -514,6 +532,9 @@ const BASE_MESSAGES = () => [
           content: {
             position: "split",
             split_narrow_bkg_position: "-80px",
+            image_alt_text: {
+              string_id: "mr2022-onboarding-privacy-segmentation-image-alt",
+            },
             progress_bar: "true",
             dual_action_buttons: true,
             background:
@@ -570,6 +591,9 @@ const BASE_MESSAGES = () => [
             position: "split",
             progress_bar: "true",
             split_narrow_bkg_position: "-228px",
+            image_alt_text: {
+              string_id: "mr2022-onboarding-gratitude-image-alt",
+            },
             background:
               "url('chrome://activity-stream/content/data/content/assets/mr-gratitude.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
             logo: {},
