@@ -112,6 +112,10 @@ places-delete-bookmark =
       }
   .accesskey = D
 
+places-untag-bookmark =
+  .label = Remove Tag
+  .accesskey = R
+
 places-manage-bookmarks =
   .label = Manage Bookmarks
   .accesskey = M

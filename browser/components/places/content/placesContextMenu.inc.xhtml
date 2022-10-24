@@ -85,7 +85,13 @@
             data-l10n-args='{"count":"1"}'
             command="placesCmd_delete"
             closemenu="single"
-            node-type="link_bookmark"/>
+            node-type="link_bookmark"
+            hide-if-node-type="link_bookmark_tag"/>
+  <menuitem id="placesContext_removeTag"
+            data-l10n-id="places-untag-bookmark"
+            command="placesCmd_delete"
+            closemenu="single"
+            node-type="link_bookmark_tag"/>
   <menuitem id="placesContext_deleteFolder"
             data-l10n-id="places-delete-folder"
             data-l10n-args='{"count":"1"}'
