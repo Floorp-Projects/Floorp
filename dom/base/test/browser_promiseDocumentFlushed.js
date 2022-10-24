@@ -193,7 +193,7 @@ add_task(async function test_resolved_in_window_close() {
 /**
  * Test that re-entering promiseDocumentFlushed is not possible
  * from within a promiseDocumentFlushed callback. Doing so will
- * result in the outer Promise rejecting with NS_ERROR_FAILURE.
+ * result in the outer Promise rejecting with InvalidStateError.
  */
 add_task(async function test_reentrancy() {
   dirtyStyleAndLayout();
@@ -205,7 +205,7 @@ add_task(async function test_reentrancy() {
     });
   });
 
-  await Assert.rejects(promise, ex => ex.result == Cr.NS_ERROR_FAILURE);
+  await Assert.rejects(promise, ex => ex.name == 'InvalidStateError');
 });
 
 /**
