@@ -1167,6 +1167,16 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
         PaintMenulistArrowButton(aFrame, aPaintData, devPxRect, elementState);
       }
       break;
+    case StyleAppearance::Tooltip: {
+      const CSSCoord strokeWidth(1.0f);
+      const CSSCoord strokeRadius(2.0f);
+      ThemeDrawing::PaintRoundedRectWithRadius(
+          aPaintData, devPxRect,
+          colors.System(StyleSystemColor::Infobackground),
+          colors.System(StyleSystemColor::Infotext), strokeWidth, strokeRadius,
+          dpiRatio);
+      break;
+    }
     case StyleAppearance::Menuitem: {
       ThemeDrawing::FillRect(aPaintData, devPxRect, [&] {
         if (CheckBooleanAttr(aFrame, nsGkAtoms::menuactive)) {
@@ -1611,6 +1621,7 @@ bool Theme::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame,
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
     case StyleAppearance::Menuitem:
+    case StyleAppearance::Tooltip:
       return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
     default:
       return false;
