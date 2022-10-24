@@ -845,6 +845,25 @@ bool js::intrinsic_NewRegExpStringIterator(JSContext* cx, unsigned argc,
   return true;
 }
 
+bool js::intrinsic_CreateAsyncFromSyncIterator(JSContext* cx, unsigned argc,
+                                               Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 2);
+  MOZ_ASSERT(args.get(0).isObject());
+
+  RootedObject iter(cx, &args.get(0).toObject());
+  RootedValue nextMethod(cx, args.get(1));
+
+  RootedObject syncIter(cx,
+                        js::CreateAsyncFromSyncIterator(cx, iter, nextMethod));
+  if (!syncIter) {
+    return false;
+  }
+
+  args.rval().setObject(*syncIter);
+  return true;
+}
+
 js::PropertyName* js::GetClonedSelfHostedFunctionName(const JSFunction* fun) {
   if (!fun->isExtended()) {
     return nullptr;
@@ -1967,6 +1986,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("NewRegExpStringIterator",
                     intrinsic_NewRegExpStringIterator, 0, 0,
                     IntrinsicNewRegExpStringIterator),
+    JS_FN("CreateAsyncFromSyncIterator", intrinsic_CreateAsyncFromSyncIterator,
+          2, 0),
     JS_INLINABLE_FN("NewStringIterator", intrinsic_NewStringIterator, 0, 0,
                     IntrinsicNewStringIterator),
     JS_FN("NewWrapForValidIterator", intrinsic_NewWrapForValidIterator, 0, 0),
