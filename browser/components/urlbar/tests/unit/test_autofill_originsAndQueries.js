@@ -13,7 +13,7 @@ const PLACES_PROVIDERNAME = "Places";
  *
  * `completed` is the URL that the controller sets to input.value, and the URL
  * that will ultimately be loaded when you press enter.
- **/
+ */
 
 async function cleanup() {
   let suggestPrefs = ["history", "bookmark", "openpage"];

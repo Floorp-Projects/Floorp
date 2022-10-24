@@ -108,14 +108,16 @@ add_task(async function switchToNonInitialPage_exit() {
  * in one of the tabs, closes the window, restores it, and makes sure that
  * search mode is restored properly.
  *
- * @param {array} urls
+ * @param {object} options
+ *   Options object
+ * @param {Array} options.urls
  *   Array of string URLs to open.
- * @param {number} searchModeTabIndex
+ * @param {number} options.searchModeTabIndex
  *   The index of the tab in which to enter search mode.
- * @param {boolean} exitSearchMode
+ * @param {boolean} options.exitSearchMode
  *   If true, search mode will be immediately exited after entering it.  Use
  *   this to make sure search mode is *not* restored after it's exited.
- * @param {boolean} switchTabsAfterEnteringSearchMode
+ * @param {boolean} options.switchTabsAfterEnteringSearchMode
  *   If true, we'll switch to a tab other than the one that search mode was
  *   entered in before closing the window.  `urls` should contain more than one
  *   URL in this case.
@@ -276,9 +278,9 @@ add_task(async function duplicateTabs() {
  * Opens a new browser window with the given URLs, calls a callback, and then
  * closes the window.
  *
- * @param {array} urls
+ * @param {Array} urls
  *   Array of string URLs to open.
- * @param {function} callback
+ * @param {Function} callback
  *   The callback.
  */
 async function withNewWindow(urls, callback) {

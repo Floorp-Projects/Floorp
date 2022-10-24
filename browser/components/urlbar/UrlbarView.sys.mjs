@@ -106,6 +106,7 @@ export class UrlbarView {
 
   /**
    * Whether the panel is open.
+   *
    * @returns {boolean}
    */
   get isOpen() {
@@ -334,10 +335,11 @@ export class UrlbarView {
    *
    * @param {number} amount
    *   The number of steps to move.
-   * @param {boolean} options.reverse
+   * @param {object} options Options object
+   * @param {boolean} [options.reverse]
    *   Set to true to select the previous item. By default the next item
    *   will be selected.
-   * @param {boolean} options.userPressedTab
+   * @param {boolean} [options.userPressedTab]
    *   Set to true if the user pressed Tab to select a result. Default false.
    */
   selectBy(amount, { reverse = false, userPressedTab = false } = {}) {
@@ -437,9 +439,11 @@ export class UrlbarView {
 
   /**
    * Closes the view, cancelling the query if necessary.
-   * @param {boolean} [elementPicked]
+   *
+   * @param {object} options Options object
+   * @param {boolean} [options.elementPicked]
    *   True if the view is being closed because a result was picked.
-   * @param {boolean} [showFocusBorder]
+   * @param {boolean} [options.showFocusBorder]
    *   True if the Urlbar focus border should be shown after the view is closed.
    */
   close({ elementPicked = false, showFocusBorder = true } = {}) {
@@ -491,8 +495,10 @@ export class UrlbarView {
    * If the user abandoned a search (there is a search string) the view is
    * reopened, and we try to use cached results to reduce flickering, then a new
    * query is started to refresh results.
-   * @param {Event} event The event associated with the call to autoOpen.
-   * @param {boolean} [suppressFocusBorder] If true, we hide the focus border
+   *
+   * @param {object} options Options object
+   * @param {Event} options.event The event associated with the call to autoOpen.
+   * @param {boolean} [options.suppressFocusBorder] If true, we hide the focus border
    *        when the panel is opened. This is true by default to avoid flashing
    *        the border when the unfocused address bar is clicked.
    * @returns {boolean} Whether the view was opened.
@@ -771,6 +777,7 @@ export class UrlbarView {
 
   /**
    * Passes DOM events for the view to the _on_<event type> methods.
+   *
    * @param {Event} event
    *   DOM event from the <view>.
    */
@@ -916,6 +923,7 @@ export class UrlbarView {
 
   /**
    * Whether a result is a search suggestion.
+   *
    * @param {UrlbarResult} result The result to examine.
    * @returns {boolean} Whether the result is a search suggestion.
    */
@@ -931,6 +939,7 @@ export class UrlbarView {
    * Checks whether the given row index can be update to the result we want
    * to apply. This is used in _updateResults to avoid flickering of results, by
    * reusing existing rows.
+   *
    * @param {number} rowIndex Index of the row to examine.
    * @param {UrlbarResult} result The result we'd like to apply.
    * @param {boolean} seenSearchSuggestion Whether the view update has
@@ -2177,6 +2186,7 @@ export class UrlbarView {
 
   /**
    * Sets `result`'s title in `titleNode`'s DOM.
+   *
    * @param {UrlbarResult} result
    *   The result for which the title is being set.
    * @param {Node} titleNode
@@ -2211,7 +2221,7 @@ export class UrlbarView {
    *   The text content will be added to this node.
    * @param {string} textContent
    *   The text content to give the node.
-   * @param {array} highlights
+   * @param {Array} highlights
    *   The matches to highlight in the text.
    */
   _addTextContentWithHighlights(parentNode, textContent, highlights) {
@@ -2243,6 +2253,7 @@ export class UrlbarView {
 
   /**
    * Adds markup for a tail suggestion prefix to a row.
+   *
    * @param {Node} item
    *   The node for the result row.
    * @param {UrlbarResult} result
@@ -2313,7 +2324,7 @@ export class UrlbarView {
    * Caches some l10n strings used by the view. Strings that are already cached
    * are not cached again.
    *
-   * @note
+   * Note:
    *   Currently strings are never evicted from the cache, so do not cache
    *   strings whose arguments include the search string or other values that
    *   can cause the cache to grow unbounded. Suitable strings include those
@@ -2355,7 +2366,7 @@ export class UrlbarView {
    * A helper for l10n string caching that returns `{ id, args }` objects for
    * strings that depend on the search service.
    *
-   * @returns {array}
+   * @returns {Array}
    *   Array of `{ id, args }` objects, possibly empty.
    */
   _cacheL10nIDArgsForSearchService() {
@@ -2414,6 +2425,7 @@ export class UrlbarView {
    * there's no way around it.
    *
    * @param {Element} element
+   * @param {object} options Options object.
    * @param {string} options.id
    *   The l10n string ID.
    * @param {object} [options.args]
@@ -2445,6 +2457,9 @@ export class UrlbarView {
    * Removes textContent and attributes set by `_setElementL10n`.
    *
    * @param {Element} element
+   *   The element that should be acted on
+   * @param {object} options
+   *   Options object
    * @param {string} [options.attribute]
    *   If you passed an attribute to `_setElementL10n`, then pass it here too.
    */
@@ -2698,6 +2713,7 @@ UrlbarView.removeStaleRowsTimeout = DEFAULT_REMOVE_STALE_ROWS_TIMEOUT;
 class QueryContextCache {
   /**
    * Constructor.
+   *
    * @param {number} size The number of entries to keep in the cache.
    */
   constructor(size) {
@@ -2727,8 +2743,9 @@ class QueryContextCache {
 
   /**
    * Adds a new entry to the cache.
+   *
    * @param {UrlbarQueryContext} queryContext The UrlbarQueryContext to add.
-   * @note QueryContexts without results are ignored and not added. Contexts
+   * Note: QueryContexts without results are ignored and not added. Contexts
    *       with an empty searchString that are not the top-sites context are
    *       also ignored.
    */

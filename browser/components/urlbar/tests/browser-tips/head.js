@@ -177,7 +177,7 @@ async function initUpdate(params) {
  * Performs steps in a mock update.  Adapted from runAboutDialogUpdateTest:
  * https://searchfox.org/mozilla-central/source/toolkit/mozapps/update/tests/browser/head.js
  *
- * @param {array} steps
+ * @param {Array} steps
  *   See the files in toolkit/mozapps/update/tests/browser.
  */
 async function processUpdateSteps(steps) {
@@ -277,15 +277,17 @@ async function processUpdateStep(step) {
  * Checks an intervention tip.  This works by starting a search that should
  * trigger a tip, picks the tip, and waits for the tip's action to happen.
  *
- * @param {string} searchString
+ * @param {object} options
+ *   Options for the test
+ * @param {string} options.searchString
  *   The search string.
- * @param {string} tip
+ * @param {string} options.tip
  *   The expected tip type.
- * @param {string/regexp} title
+ * @param {string | RegExp} options.title
  *   The expected tip title.
- * @param {string/regexp} button
+ * @param {string | RegExp} options.button
  *   The expected button title.
- * @param {function} awaitCallback
+ * @param {Function} options.awaitCallback
  *   A function that checks the tip's action.  Should return a promise (or be
  *   async).
  * @returns {object}
@@ -352,7 +354,7 @@ async function doUpdateTest({
  *   The search string.
  * @param {window} win
  *   The window.
- * @returns {[result, element]}
+ * @returns {(result| element)[]}
  *   The result and its element in the DOM.
  */
 async function awaitTip(searchString, win = window) {
@@ -430,15 +432,17 @@ function makeProfileResettable() {
  * Starts a search that should trigger a tip, picks the tip, and waits for the
  * tip's action to happen.
  *
- * @param {string} searchString
+ * @param {object} options
+ *   Options for the test
+ * @param {string} options.searchString
  *   The search string.
- * @param {TIPS} tip
+ * @param {TIPS} options.tip
  *   The expected tip type.
- * @param {string} title
+ * @param {string} options.title
  *   The expected tip title.
- * @param {string} button
+ * @param {string} options.button
  *   The expected button title.
- * @param {function} awaitCallback
+ * @param {Function} options.awaitCallback
  *   A function that checks the tip's action.  Should return a promise (or be
  *   async).
  * @returns {*}
@@ -638,11 +642,12 @@ async function checkTab(win, url, expectedTip, reset = true) {
 /**
  * This lets us visit www.google.com (for example) and have it redirect to
  * our test HTTP server instead of visiting the actual site.
+ *
  * @param {string} domain
  *   The domain to which we are redirecting.
  * @param {string} path
  *   The pathname on the domain.
- * @param {function} callback
+ * @param {Function} callback
  *   Executed when the test suite thinks `domain` is loaded.
  */
 async function withDNSRedirect(domain, path, callback) {

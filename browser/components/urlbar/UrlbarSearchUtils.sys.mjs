@@ -169,7 +169,7 @@ class SearchUtils {
   /**
    * The list of engines with token ("@") aliases.
    *
-   * @returns {array}
+   * @returns {Array}
    *   Array of objects { engine, tokenAliases } for token alias engines.
    */
   async tokenAliasEngines() {
@@ -283,20 +283,20 @@ class SearchUtils {
    *   (b) The values of the query parameters contained in both `x` and `y `are
    *       the same.
    *
+   * This function does not compare the SERPs' origins or pathnames.
+   * `historySerp` can have a different origin and/or pathname than
+   * `generatedSerp` and still be considered equivalent.
+   *
    * @param {string} historySerp
    *   The SERP from history whose params should be contained in
    *   `generatedSerp`.
    * @param {string} generatedSerp
    *   The search URL we would generate for a search result with the same search
    *   string used in `historySerp`.
-   * @param {array} [ignoreParams]
+   * @param {Array} [ignoreParams]
    *   A list of params to ignore in the matching, i.e. params that can be
    *   contained in `historySerp` but not be in `generatedSerp`.
    * @returns {boolean} True if `historySerp` can be deduped by `generatedSerp`.
-   *
-   * @note This function does not compare the SERPs' origins or pathnames.
-   *   `historySerp` can have a different origin and/or pathname than
-   *   `generatedSerp` and still be considered equivalent.
    */
   serpsAreEquivalent(historySerp, generatedSerp, ignoreParams = []) {
     let historyParams = new URL(historySerp).searchParams;
@@ -323,7 +323,7 @@ class SearchUtils {
    *
    * @param {nsISearchEngine} engine
    *   The aliases of this search engine will be returned.
-   * @returns {array}
+   * @returns {Array}
    *   An array of lower-cased string aliases as described above.
    */
   _aliasesForEngine(engine) {

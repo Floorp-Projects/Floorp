@@ -460,7 +460,7 @@ async function doAltArrowTest(searchString, expectedHeuristicType, useLocal) {
  * @param {boolean} useLocal
  *   Whether to test a local one-off or an engine one-off.  If true, test a
  *   local one-off.  If false, test an engine one-off.
- * @param {function} callback
+ * @param {Function} callback
  *   This is called after the search completes.  It should perform whatever
  *   checks are necessary for the test task.  Important: When it returns, it
  *   should make sure that the first one-off is selected.

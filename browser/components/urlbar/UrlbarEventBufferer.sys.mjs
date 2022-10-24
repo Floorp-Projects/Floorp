@@ -53,6 +53,7 @@ const QUERY_STATUS = {
 export class UrlbarEventBufferer {
   /**
    * Initialises the class.
+   *
    * @param {UrlbarInput} input The urlbar input object.
    */
   constructor(input) {
@@ -117,6 +118,7 @@ export class UrlbarEventBufferer {
 
   /**
    * Handles DOM events.
+   *
    * @param {Event} event DOM event from the input.
    */
   handleEvent(event) {
@@ -135,6 +137,7 @@ export class UrlbarEventBufferer {
   /**
    * Receives DOM events, eventually queues them up, and calls back when it's
    * the right time to handle the event.
+   *
    * @param {Event} event DOM event from the input.
    * @param {Function} callback to be invoked when it's the right time to handle
    *        the event.
@@ -153,6 +156,7 @@ export class UrlbarEventBufferer {
 
   /**
    * Adds a deferrable event to the deferred event queue.
+   *
    * @param {Event} event The event to defer.
    * @param {Function} callback to be invoked when it's the right time to handle
    *        the event.
@@ -187,6 +191,7 @@ export class UrlbarEventBufferer {
 
   /**
    * Replays deferred key events.
+   *
    * @param {boolean} onlyIfSafe replays only if it's a safe time to do so.
    *        Setting this to false will replay all the queue events, without any
    *        checks, that is something we want to do only if the deferring
@@ -218,6 +223,7 @@ export class UrlbarEventBufferer {
 
   /**
    * Checks whether a given event should be deferred
+   *
    * @param {Event} event The event that should maybe be deferred.
    * @returns {boolean} Whether the event should be deferred.
    */
@@ -271,6 +277,7 @@ export class UrlbarEventBufferer {
 
   /**
    * Checks if the bufferer is deferring events.
+   *
    * @returns {boolean} Whether the bufferer is deferring events.
    */
   get isDeferringEvents() {
@@ -280,6 +287,7 @@ export class UrlbarEventBufferer {
   /**
    * Checks if any of the current query provider asked to defer user selection
    * events.
+   *
    * @returns {boolean} Whether a provider asked to defer events.
    */
   get waitingDeferUserSelectionProviders() {
@@ -292,6 +300,7 @@ export class UrlbarEventBufferer {
    * and the type of event.
    * Use this method only after determining that the event should be deferred,
    * or after it has been deferred and you want to know if it can be played now.
+   *
    * @param {Event} event The event.
    * @returns {boolean} Whether the event can be played.
    */

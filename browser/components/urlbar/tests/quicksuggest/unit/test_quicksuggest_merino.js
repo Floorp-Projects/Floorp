@@ -1451,14 +1451,16 @@ function getAndClearHistograms() {
  * Asserts the Merino latency and response histograms are updated as expected.
  * Clears the histograms before returning.
  *
- * @param {object} histograms
+ * @param {object} options
+ *   The options object
+ * @param {object} options.histograms
  *   The histograms object returned from getAndClearHistograms().
- * @param {number} response
+ * @param {number} options.response
  *   The expected `FETCH_RESPONSE`.
- * @param {boolean} latencyRecorded
+ * @param {boolean} options.latencyRecorded
  *   Whether the Merino latency histogram is expected to contain a value.
- * @param {UrlbarQueryContext} context
- * @param {boolean} latencyStopwatchRunning
+ * @param {UrlbarQueryContext} options.context
+ * @param {boolean} options.latencyStopwatchRunning
  *   Whether the Merino latency stopwatch is expected to be running.
  */
 function assertAndClearHistograms({

@@ -31,6 +31,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 export class UrlbarResult {
   /**
    * Creates a result.
+   *
    * @param {integer} resultType one of UrlbarUtils.RESULT_TYPE.* values
    * @param {integer} resultSource one of UrlbarUtils.RESULT_SOURCE.* values
    * @param {object} payload data for this result. A payload should always
@@ -88,6 +89,7 @@ export class UrlbarResult {
 
   /**
    * Returns a title that could be used as a label for this result.
+   *
    * @returns {string} The label to show in a simplified title / url view.
    */
   get title() {
@@ -96,7 +98,8 @@ export class UrlbarResult {
 
   /**
    * Returns an array of highlights for the title.
-   * @returns {array} The array of highlights.
+   *
+   * @returns {Array} The array of highlights.
    */
   get titleHighlights() {
     return this._titleAndHighlights[1];
@@ -104,7 +107,8 @@ export class UrlbarResult {
 
   /**
    * Returns an array [title, highlights].
-   * @returns {array} The title and array of highlights.
+   *
+   * @returns {Array} The title and array of highlights.
    */
   get _titleAndHighlights() {
     switch (this.type) {
@@ -141,6 +145,7 @@ export class UrlbarResult {
 
   /**
    * Returns an icon url.
+   *
    * @returns {string} url of the icon.
    */
   get icon() {
@@ -151,6 +156,7 @@ export class UrlbarResult {
    * Returns whether the result's `suggestedIndex` property is defined.
    * `suggestedIndex` is an optional hint to the muxer that can be set to
    * suggest a specific position among the results.
+   *
    * @returns {boolean} Whether `suggestedIndex` is defined.
    */
   get hasSuggestedIndex() {
@@ -193,7 +199,7 @@ export class UrlbarResult {
    * If the payload doesn't have a title or has an empty title, and it also has
    * a URL, then this function also sets the title to the URL's domain.
    *
-   * @param {array} tokens The tokens that should be highlighted in each of the
+   * @param {Array} tokens The tokens that should be highlighted in each of the
    *        payload properties.
    * @param {object} payloadInfo An object that looks like this:
    *        { payloadPropertyName: payloadPropertyInfo }
@@ -208,7 +214,7 @@ export class UrlbarResult {
    *        UrlbarUtils.getTokenMatches().  If it's an array, then
    *        payloadHighlights will be an array of arrays of match highlights,
    *        one element per element in payloadPropertyValue.
-   * @returns {array} An array [payload, payloadHighlights].
+   * @returns {Array} An array [payload, payloadHighlights].
    */
   static payloadAndSimpleHighlights(tokens, payloadInfo) {
     // Convert scalar values in payloadInfo to [value] arrays.
@@ -335,6 +341,7 @@ export class UrlbarResult {
   /**
    * This is useful for logging results. If you need the full payload, then it's
    * better to JSON.stringify the result object itself.
+   *
    * @returns {string} string representation of the result.
    */
   toString() {

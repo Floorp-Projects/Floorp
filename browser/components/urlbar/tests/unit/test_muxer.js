@@ -571,9 +571,9 @@ add_task(async function test_badHeuristicsGroups_notFirst_4() {
  * Regardless of the groups, the muxer should include at most one heuristic in
  * its results and it should always be the first result.
  *
- * @param {array} resultGroups
+ * @param {Array} resultGroups
  *   The result groups.
- * @param {array} expectedResults
+ * @param {Array} expectedResults
  *   The expected results.
  */
 async function doBadHeuristicGroupsTest(resultGroups, expectedResults) {

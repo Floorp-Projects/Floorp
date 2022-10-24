@@ -3670,9 +3670,11 @@ add_task(async function resetInterval() {
 /**
  * Main test helper. Sets up state, calls your callback, and resets state.
  *
- * @param {object} config
+ * @param {object} options
+ *   Options object.
+ * @param {object} options.config
  *   The quick suggest config to use during the test.
- * @param {function} callback
+ * @param {Function} options.callback
  */
 async function doTest({ config, callback }) {
   Services.telemetry.clearEvents();
@@ -3823,11 +3825,13 @@ async function doTimedCallbacks(callbacksBySecond) {
 /**
  * Does a search, triggers an engagement, and checks the results.
  *
- * @param {string} name
+ * @param {object} options
+ *   Options object.
+ * @param {string} options.name
  *   This value is the name of the search and will be logged in messages to make
  *   debugging easier.
- * @param {string} searchString
- * @param {array} expectedResults
+ * @param {string} options.searchString
+ * @param {Array} options.expectedResults
  */
 async function checkSearch({ name, searchString, expectedResults }) {
   info(`Preparing search "${name}" with search string "${searchString}"`);

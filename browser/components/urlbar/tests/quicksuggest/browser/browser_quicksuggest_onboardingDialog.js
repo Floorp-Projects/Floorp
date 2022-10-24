@@ -1480,9 +1480,11 @@ async function doDialogTest({
 /**
  * Show onbaording dialog.
  *
- * @param {object}
- *   skipIntroduction: If true, return dialog with skipping the introduction section.
- * @returns {object}
+ * @param {object} [options]
+ *   The object options.
+ * @param {boolean} [options.skipIntroduction]
+ *   If true, return dialog with skipping the introduction section.
+ * @returns {{ window, maybeShowPromise: Promise }}
  *   win: window object of the dialog.
  *   maybeShowPromise: Promise of UrlbarQuickSuggest.maybeShowOnboardingDialog().
  */

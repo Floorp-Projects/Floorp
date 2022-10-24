@@ -461,6 +461,7 @@ export class UrlbarValueFormatter {
 
   /**
    * Passes DOM events to the _on_<event type> methods.
+   *
    * @param {Event} event
    *   DOM event.
    */

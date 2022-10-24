@@ -437,13 +437,15 @@ export class UrlbarController {
   /**
    * Tries to initialize a speculative connection on a result.
    * Speculative connections are only supported for a subset of all the results.
-   * @param {UrlbarResult} result Tthe result to speculative connect to.
-   * @param {UrlbarQueryContext} context The queryContext
-   * @param {string} reason Reason for the speculative connect request.
-   * @note speculative connect to:
+   *
+   * Speculative connect to:
    *  - Search engine heuristic results
    *  - autofill results
    *  - http/https results
+   *
+   * @param {UrlbarResult} result The result to speculative connect to.
+   * @param {UrlbarQueryContext} context The queryContext
+   * @param {string} reason Reason for the speculative connect request.
    */
   speculativeConnect(result, context, reason) {
     // Never speculative connect in private contexts.
@@ -701,6 +703,7 @@ export class UrlbarController {
  * potentially be extended to other categories.
  * To record an event, invoke start() with a starting event, then either
  * invoke record() with a final event, or discard() to drop the recording.
+ *
  * @see Events.yaml
  */
 class TelemetryEvent {
@@ -715,12 +718,13 @@ class TelemetryEvent {
    * After this has been invoked, any subsequent calls to start() are ignored,
    * until either record() or discard() are invoked. Thus, it is safe to keep
    * invoking this on every input event as the user is typing, for example.
+   *
    * @param {event} event A DOM event.
    * @param {string} [searchString] Pass a search string related to the event if
    *        you have one.  The event by itself sometimes isn't enough to
    *        determine the telemetry details we should record.
-   * @note This should never throw, or it may break the urlbar.
-   * @see the in-tree urlbar telemetry documentation.
+   * @throws This should never throw, or it may break the urlbar.
+   * @see {@link https://firefox-source-docs.mozilla.org/browser/urlbar/telemetry.html}
    */
   start(event, searchString = null) {
     // In case of a "returned" interaction ongoing, the user may either
@@ -795,7 +799,11 @@ class TelemetryEvent {
    * When the user picks a result from a search through the mouse or keyboard,
    * an engagement event is recorded. If instead the user abandons a search, by
    * blurring the input field, an abandonment event is recorded.
-   * @param {event} [event] A DOM event.
+   *
+   * @param {event} [event]
+   *        A DOM event.
+   *        Note: event can be null, that usually happens for paste&go or drop&go.
+   *        If there's no _startEventInfo this is a no-op.
    * @param {object} details An object describing action details.
    * @param {string} details.searchString The user's search string. Note that
    *        this string is not sent with telemetry data. It is only used
@@ -809,8 +817,6 @@ class TelemetryEvent {
    *        "switchtab", "remotetab", "extension", "oneoff".
    * @param {string} details.provider The name of the provider for the selected
    *        result.
-   * @note event can be null, that usually happens for paste&go or drop&go.
-   *       If there's no _startEventInfo this is a no-op.
    */
   record(event, details) {
     // This should never throw, or it may break the urlbar.
@@ -944,6 +950,7 @@ class TelemetryEvent {
 
   /**
    * Extracts a telemetry type from an element for event telemetry.
+   *
    * @param {Element} element The element to analyze.
    * @returns {string} a string type for the telemetry event.
    */

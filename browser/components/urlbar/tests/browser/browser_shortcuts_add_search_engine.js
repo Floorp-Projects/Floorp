@@ -62,6 +62,7 @@ add_task(async function test_shortcuts() {
 
 /**
  * Test add engine shortcuts.
+ *
  * @param {Function} activateTask a function receiveing the shortcut button to
  *        activate as argument. The scope of this function is to activate the
  *        shortcut button.

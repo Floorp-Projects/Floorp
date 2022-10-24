@@ -133,7 +133,7 @@ class QuickSuggest extends EventEmitter {
    *
    * @param {string} phrase
    *   The search string.
-   * @returns {array}
+   * @returns {Array}
    *   The matched suggestion objects. If there are no matches, an empty array
    *   is returned.
    */
@@ -209,7 +209,7 @@ class QuickSuggest extends EventEmitter {
    *
    * @param {string} query
    *   The query string that matched `result`.
-   * @param {array} keywords
+   * @param {Array} keywords
    *   An array of result keywords.
    * @returns {string}
    *   The full keyword.
@@ -485,7 +485,7 @@ class QuickSuggest extends EventEmitter {
    * Adds a list of result objects to the results map. This method is also used
    * by tests to set up mock suggestions.
    *
-   * @param {array} results
+   * @param {Array} results
    *   Array of result objects.
    */
   async _addResults(results) {

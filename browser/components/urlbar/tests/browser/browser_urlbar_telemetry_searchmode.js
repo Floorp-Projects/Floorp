@@ -35,6 +35,7 @@ XPCOMUtils.defineLazyServiceGetter(
 /**
  * Asserts that search mode telemetry was recorded correctly. Checks both the
  * urlbar.searchmode.* and urlbar.searchmode_picked.* probes.
+ *
  * @param {string} entry
  *   A search mode entry point.
  * @param {string} engineOrSource

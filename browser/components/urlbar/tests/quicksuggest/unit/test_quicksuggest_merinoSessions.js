@@ -470,14 +470,16 @@ add_task(async function sessionTimeout() {
  * Asserts a given number of requests have been received and checks the last
  * request's search params.
  *
- * @param {array} requests
+ * @param {Array} requests
  *   An array of objects that look like `{ params }`.
- * @param {number} count
+ * @param {object} options
+ *   Options for the check.
+ * @param {number} options.count
  *   The expected number of requests.
- * @param {object} params
+ * @param {object} options.params
  *   The expected search params of the last request. An object that maps param
  *   names to expected values.
- * @param {boolean} areSessionIDsUnique
+ * @param {boolean} options.areSessionIDsUnique
  *   Whether each session ID param is expected to be unique.
  */
 function checkRequests(requests, { count, params, areSessionIDsUnique }) {

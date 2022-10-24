@@ -24,7 +24,9 @@ add_setup(async function setUpQuickSuggestXpcshellTest() {
 /**
  * Tests quick suggest prefs migrations.
  *
- * @param {object} testOverrides
+ * @param {object} options
+ *   The options object.
+ * @param {object} options.testOverrides
  *   An object that modifies how migration is performed. It has the following
  *   properties, and all are optional:
  *
@@ -37,12 +39,12 @@ add_setup(async function setUpQuickSuggestXpcshellTest() {
  *     default-branch values. These should be the default prefs for the given
  *     `migrationVersion` and will be set as defaults before migration occurs.
  *
- * @param {string} scenario
+ * @param {string} options.scenario
  *   The scenario to set at the time migration occurs.
- * @param {object} expectedPrefs
+ * @param {object} options.expectedPrefs
  *   The expected prefs after migration: `{ defaultBranch, userBranch }`
  *   Pref names should be relative to `browser.urlbar`.
- * @param {object} [initialUserBranch]
+ * @param {object} [options.initialUserBranch]
  *   Prefs to set on the user branch before migration ocurs. Use these to
  *   simulate user actions like disabling prefs or opting in or out of the
  *   online modal. Pref names should be relative to `browser.urlbar`.

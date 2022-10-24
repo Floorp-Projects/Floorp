@@ -279,7 +279,7 @@ add_task(async function spaceToEnterSearchMode() {
  * window.  We use a new window in each task so that the view starts with a
  * blank slate each time.
  *
- * @param {function} callback
+ * @param {Function} callback
  *   Will be called as: callback(newWindow)
  */
 async function withNewWindow(callback) {

@@ -82,6 +82,7 @@ class ProviderTopSites extends UrlbarProvider {
    * Whether this provider should be invoked for the given context.
    * If this method returns false, the providers manager won't start a query
    * with this provider, to save on resources.
+   *
    * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
@@ -95,6 +96,7 @@ class ProviderTopSites extends UrlbarProvider {
 
   /**
    * Gets the provider's priority.
+   *
    * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {number} The provider's priority for the given query.
    */
@@ -103,12 +105,13 @@ class ProviderTopSites extends UrlbarProvider {
   }
 
   /**
-   * Starts querying.
+   * Starts querying. Extended classes should return a Promise resolved when the
+   * provider is done searching AND returning results.
+   *
    * @param {UrlbarQueryContext} queryContext The query context object
-   * @param {function} addCallback Callback invoked by the provider to add a new
+   * @param {Function} addCallback Callback invoked by the provider to add a new
    *        result. A UrlbarResult should be passed to it.
-   * @note Extended classes should return a Promise resolved when the provider
-   *       is done searching AND returning results.
+   * @returns {Promise}
    */
   async startQuery(queryContext, addCallback) {
     // Bail if Top Sites are not enabled. We check this condition here instead
@@ -309,8 +312,8 @@ class ProviderTopSites extends UrlbarProvider {
    * recorded as well.
    *
    * Note:
-   *   * No telemetry recording in private browsing mode
-   *   * The impression is only recorded for the "engagement" and "abandonment"
+   *   No telemetry recording in private browsing mode
+   *   The impression is only recorded for the "engagement" and "abandonment"
    *     states
    *
    * @param {boolean} isPrivate True if the engagement is in a private context.
@@ -352,7 +355,7 @@ class ProviderTopSites extends UrlbarProvider {
    * keep a strong reference to it to keep it from being immediately garbage
    * collected.
    *
-   * @param {function} callback
+   * @param {Function} callback
    *   The listener function. This class will hold a weak reference to it.
    */
   addTopSitesListener(callback) {

@@ -108,6 +108,7 @@ class ProviderTabToSearch extends UrlbarProvider {
 
   /**
    * Returns the name of this provider.
+   *
    * @returns {string} the name of this provider.
    */
   get name() {
@@ -116,6 +117,7 @@ class ProviderTabToSearch extends UrlbarProvider {
 
   /**
    * Returns the type of this provider.
+   *
    * @returns {integer} one of the types from UrlbarUtils.PROVIDER_TYPE.*
    */
   get type() {
@@ -126,6 +128,7 @@ class ProviderTabToSearch extends UrlbarProvider {
    * Whether this provider should be invoked for the given context.
    * If this method returns false, the providers manager won't start a query
    * with this provider, to save on resources.
+   *
    * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
@@ -140,6 +143,7 @@ class ProviderTabToSearch extends UrlbarProvider {
 
   /**
    * Gets the provider's priority.
+   *
    * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {number} The provider's priority for the given query.
    */
@@ -322,6 +326,7 @@ class ProviderTabToSearch extends UrlbarProvider {
   /**
    * Defines whether the view should defer user selection events while waiting
    * for the first result from this provider.
+   *
    * @returns {boolean} Whether the provider wants to defer user selection
    *          events.
    */
@@ -331,8 +336,9 @@ class ProviderTabToSearch extends UrlbarProvider {
 
   /**
    * Starts querying.
+   *
    * @param {object} queryContext The query context object
-   * @param {function} addCallback Callback invoked by the provider to add a new
+   * @param {Function} addCallback Callback invoked by the provider to add a new
    *        result.
    * @returns {Promise} resolved when the query stops.
    */

@@ -145,6 +145,7 @@ class ProviderSearchTips extends UrlbarProvider {
    * Whether this provider should be invoked for the given context.
    * If this method returns false, the providers manager won't start a query
    * with this provider, to save on resources.
+   *
    * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
@@ -154,6 +155,7 @@ class ProviderSearchTips extends UrlbarProvider {
 
   /**
    * Gets the provider's priority.
+   *
    * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {number} The provider's priority for the given query.
    */
@@ -162,12 +164,13 @@ class ProviderSearchTips extends UrlbarProvider {
   }
 
   /**
-   * Starts querying.
+   * Starts querying. Extended classes should return a Promise resolved when the
+   * provider is done searching AND returning results.
+   *
    * @param {UrlbarQueryContext} queryContext The query context object
-   * @param {function} addCallback Callback invoked by the provider to add a new
+   * @param {Function} addCallback Callback invoked by the provider to add a new
    *        result. A UrlbarResult should be passed to it.
-   * @note Extended classes should return a Promise resolved when the provider
-   *       is done searching AND returning results.
+   * @returns {Promise}
    */
   async startQuery(queryContext, addCallback) {
     let instance = this.queryInstance;
@@ -220,6 +223,7 @@ class ProviderSearchTips extends UrlbarProvider {
 
   /**
    * Called when the tip is selected.
+   *
    * @param {UrlbarResult} result
    *   The result that was picked.
    */
@@ -267,6 +271,7 @@ class ProviderSearchTips extends UrlbarProvider {
 
   /**
    * Called from `onLocationChange` in browser.js.
+   *
    * @param {window} window
    *  The browser window where the location change happened.
    * @param {URL} uri
@@ -333,6 +338,7 @@ class ProviderSearchTips extends UrlbarProvider {
   /**
    * Determines whether we should show a tip for the current tab, sets
    * this.currentTip, and starts a search on an empty string.
+   *
    * @param {number} urlStr
    *   The URL of the page being loaded, in string form.
    */
@@ -484,6 +490,7 @@ async function isBrowserShowingNotification() {
 /**
  * Checks if the given URL is the homepage of the current default search engine.
  * Returns false if the default engine is not listed in SUPPORTED_ENGINES.
+ *
  * @param {string} urlStr
  *   The URL to check, in string form.
  *

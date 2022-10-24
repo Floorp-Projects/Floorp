@@ -15,7 +15,8 @@ var previousSuggestionsFn;
 
 /**
  * Set the current suggestion funciton.
- * @param {function} fn
+ *
+ * @param {Function} fn
  *   A function that that a search string and returns an array of strings that
  *   will be used as search suggestions.
  *   Note: `fn` should return > 1 suggestion in most cases. Otherwise, you may

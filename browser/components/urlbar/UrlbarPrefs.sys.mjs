@@ -1376,6 +1376,7 @@ class Preferences {
 
   /**
    * Returns a descriptor of the given preference.
+   *
    * @param {string} pref The preference to examine.
    * @returns {object} An object describing the pref with the following shape:
    *          { defaultValue, get, set, clear }

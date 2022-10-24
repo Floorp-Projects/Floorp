@@ -50,6 +50,7 @@ export var UrlbarTestUtils = {
    * Running this init allows helpers to access test scope helpers, like Assert
    * and SimpleTest. Note this initialization is not enforced, thus helpers
    * should always check _testScope and provide a fallback path.
+   *
    * @param {object} scope The global scope where tests are being run.
    */
   init(scope) {
@@ -74,6 +75,7 @@ export var UrlbarTestUtils = {
 
   /**
    * Waits to a search to be complete.
+   *
    * @param {object} win The window containing the urlbar
    * @returns {Promise} Resolved when done.
    */
@@ -93,9 +95,11 @@ export var UrlbarTestUtils = {
 
   /**
    * Starts a search for a given string and waits for the search to be complete.
+   *
+   * @param {object} options The options object.
    * @param {object} options.window The window containing the urlbar
    * @param {string} options.value the search string
-   * @param {function} options.waitForFocus The SimpleTest function
+   * @param {Function} options.waitForFocus The SimpleTest function
    * @param {boolean} [options.fireInputEvent] whether an input event should be
    *        used when starting the query (simulates the user's typing, sets
    *        userTypedValued, triggers engagement event telemetry, etc.)
@@ -165,6 +169,7 @@ export var UrlbarTestUtils = {
    * Waits for a result to be added at a certain index. Since we implement lazy
    * results replacement, even if we have a result at an index, it may be
    * related to the previous query, this methods ensures the result is current.
+   *
    * @param {object} win The window containing the urlbar
    * @param {number} index The index to look for
    * @returns {HtmlElement|XulElement} the result's element.
@@ -180,6 +185,7 @@ export var UrlbarTestUtils = {
 
   /**
    * Returns the oneOffSearchButtons object for the urlbar.
+   *
    * @param {object} win The window containing the urlbar
    * @returns {object} The oneOffSearchButtons
    */
@@ -189,6 +195,7 @@ export var UrlbarTestUtils = {
 
   /**
    * Returns true if the oneOffSearchButtons are visible.
+   *
    * @param {object} win The window containing the urlbar
    * @returns {boolean} True if the buttons are visible.
    */
@@ -199,6 +206,7 @@ export var UrlbarTestUtils = {
 
   /**
    * Gets an abstracted representation of the result at an index.
+   *
    * @param {object} win The window containing the urlbar
    * @param {number} index The index to look for
    * @returns {object} An object with numerous properties describing the result.
@@ -257,6 +265,7 @@ export var UrlbarTestUtils = {
 
   /**
    * Gets the currently selected element.
+   *
    * @param {object} win The window containing the urlbar.
    * @returns {HtmlElement|XulElement} The selected element.
    */
@@ -266,6 +275,7 @@ export var UrlbarTestUtils = {
 
   /**
    * Gets the index of the currently selected element.
+   *
    * @param {object} win The window containing the urlbar.
    * @returns {number} The selected index.
    */
@@ -276,6 +286,7 @@ export var UrlbarTestUtils = {
   /**
    * Gets the currently selected row. If the selected element is a descendant of
    * a row, this will return the ancestor row.
+   *
    * @param {object} win The window containing the urlbar.
    * @returns {HTMLElement|XulElement} The selected row.
    */
@@ -285,6 +296,7 @@ export var UrlbarTestUtils = {
 
   /**
    * Gets the index of the currently selected element.
+   *
    * @param {object} win The window containing the urlbar.
    * @returns {number} The selected row index.
    */
@@ -294,6 +306,7 @@ export var UrlbarTestUtils = {
 
   /**
    * Selects the element at the index specified.
+   *
    * @param {object} win The window containing the urlbar.
    * @param {index} index The index to select.
    */
@@ -304,6 +317,7 @@ export var UrlbarTestUtils = {
   /**
    * Gets the number of results.
    * You must wait for the query to be complete before using this.
+   *
    * @param {object} win The window containing the urlbar
    * @returns {number} the number of results.
    */
@@ -313,6 +327,7 @@ export var UrlbarTestUtils = {
 
   /**
    * Ensures at least one search suggestion is present.
+   *
    * @param {object} win The window containing the urlbar
    * @returns {boolean} whether at least one search suggestion is present.
    */
@@ -335,6 +350,7 @@ export var UrlbarTestUtils = {
 
   /**
    * Waits for the given number of connections to an http server.
+   *
    * @param {object} httpserver an HTTP Server instance
    * @param {number} count Number of connections to wait for
    * @returns {Promise} resolved when all the expected connections were started.
@@ -351,8 +367,9 @@ export var UrlbarTestUtils = {
 
   /**
    * Waits for the popup to be shown.
+   *
    * @param {object} win The window containing the urlbar
-   * @param {function} openFn Function to be used to open the popup.
+   * @param {Function} openFn Function to be used to open the popup.
    * @returns {Promise} resolved once the popup is closed
    */
   async promisePopupOpen(win, openFn) {
@@ -377,8 +394,9 @@ export var UrlbarTestUtils = {
 
   /**
    * Waits for the popup to be hidden.
+   *
    * @param {object} win The window containing the urlbar
-   * @param {function} [closeFn] Function to be used to close the popup, if not
+   * @param {Function} [closeFn] Function to be used to close the popup, if not
    *        supplied it will default to a closing the popup directly.
    * @returns {Promise} resolved once the popup is closed
    */
@@ -405,8 +423,9 @@ export var UrlbarTestUtils = {
 
   /**
    * Open the input field context menu and run a task on it.
+   *
    * @param {nsIWindow} win the current window
-   * @param {function} task a task function to run, gets the contextmenu popup
+   * @param {Function} task a task function to run, gets the contextmenu popup
    *        as argument.
    */
   async withContextMenu(win, task) {
@@ -448,13 +467,13 @@ export var UrlbarTestUtils = {
   },
 
   /**
-   * Asserts that the input is in a given search mode, or no search mode.
+   * Asserts that the input is in a given search mode, or no search mode. Can
+   * only be used if UrlbarTestUtils has been initialized with init().
    *
    * @param {Window} window
    *   The browser window.
    * @param {object} expectedSearchMode
    *   The expected search mode object.
-   * @note Can only be used if UrlbarTestUtils has been initialized with init().
    */
   async assertSearchMode(window, expectedSearchMode) {
     this.Assert.equal(
@@ -627,13 +646,14 @@ export var UrlbarTestUtils = {
 
   /**
    * Enters search mode by clicking a one-off.  The view must already be open
-   * before you call this.
+   * before you call this. Can only be used if UrlbarTestUtils has been
+   * initialized with init().
+   *
    * @param {object} window
    * @param {object} searchMode
    *   If given, the one-off matching this search mode will be clicked; it
    *   should be a full search mode object as described in
    *   UrlbarInput.setSearchMode.  If not given, the first one-off is clicked.
-   * @note Can only be used if UrlbarTestUtils has been initialized with init().
    */
   async enterSearchMode(window, searchMode = null) {
     this._testScope?.info(`Enter Search Mode ${JSON.stringify(searchMode)}`);
@@ -679,19 +699,20 @@ export var UrlbarTestUtils = {
   },
 
   /**
-   * Exits search mode.
+   * Exits search mode. If neither `backspace` nor `clickClose` is given, we'll
+   * default to backspacing. Can only be used if UrlbarTestUtils has been
+   * initialized with init().
+   *
    * @param {object} window
+   * @param {object} options Options object
    * @param {boolean} options.backspace
    *   Exits search mode by backspacing at the beginning of the search string.
    * @param {boolean} options.clickClose
    *   Exits search mode by clicking the close button on the search mode
    *   indicator.
-   * @param {boolean} [waitForSearch]
+   * @param {boolean} [options.waitForSearch]
    *   Whether the test should wait for a search after exiting search mode.
    *   Defaults to true.
-   * @note If neither `backspace` nor `clickClose` is given, we'll default to
-   *       backspacing.
-   * @note Can only be used if UrlbarTestUtils has been initialized with init().
    */
   async exitSearchMode(
     window,
@@ -757,9 +778,10 @@ export var UrlbarTestUtils = {
 
   /**
    * Returns the userContextId (container id) for the last search.
+   *
    * @param {object} win The browser window
-   * @returns {Promise} resolved when fetching is complete
-   * @resolves {number} a userContextId
+   * @returns {Promise<number>}
+   *   resolved when fetching is complete. Its value is a userContextId
    */
   async promiseUserContextId(win) {
     const defaultId = Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
@@ -769,6 +791,7 @@ export var UrlbarTestUtils = {
 
   /**
    * Dispatches an input event to the input field.
+   *
    * @param {object} win The browser window
    */
   fireInputEvent(win) {
@@ -782,6 +805,7 @@ export var UrlbarTestUtils = {
 
   /**
    * Returns a new mock controller.  This is useful for xpcshell tests.
+   *
    * @param {object} options Additional options to pass to the UrlbarController
    *        constructor.
    * @returns {UrlbarController} A new controller.
@@ -834,7 +858,7 @@ UrlbarTestUtils.formHistory = {
   /**
    * Adds values to the urlbar's form history.
    *
-   * @param {array} values
+   * @param {Array} values
    *   The form history entries to remove.
    * @param {object} window
    *   The window containing the urlbar.
@@ -849,7 +873,7 @@ UrlbarTestUtils.formHistory = {
    * Removes values from the urlbar's form history.  If you want to remove all
    * history, use clearFormHistory.
    *
-   * @param {array} values
+   * @param {Array} values
    *   The form history entries to remove.
    * @param {object} window
    *   The window containing the urlbar.
@@ -926,20 +950,25 @@ class TestProvider extends UrlbarProvider {
   /**
    * Constructor.
    *
-   * @param {array} results
+   * @param {object} options
+   *   Constructor options
+   * @param {Array} options.results
    *   An array of UrlbarResult objects that will be the provider's results.
-   * @param {string} [name]
+   * @param {string} [options.name]
    *   The provider's name.  Provider names should be unique.
-   * @param {UrlbarUtils.PROVIDER_TYPE} [type]
+   * @param {UrlbarUtils.PROVIDER_TYPE} [options.type]
    *   The provider's type.
-   * @param {number} [priority]
+   * @param {number} [options.priority]
    *   The provider's priority.  Built-in providers have a priority of zero.
-   * @param {number} [addTimeout]
+   * @param {number} [options.addTimeout]
    *   If non-zero, each result will be added on this timeout.  If zero, all
    *   results will be added immediately and synchronously.
-   * @param {function} [onCancel]
+   * @param {Function} [options.onCancel]
    *   If given, a function that will be called when the provider's cancelQuery
    *   method is called.
+   * @param {Function} [options.onSelection]
+   *   If given, a function that will be called when
+   *   {@link UrlbarView._selectElement} method is called.
    */
   constructor({
     results,
