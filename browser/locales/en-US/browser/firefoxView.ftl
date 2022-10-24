@@ -56,6 +56,11 @@ firefoxview-tabpickup-sync-disconnected-header = Turn on syncing to continue
 firefoxview-tabpickup-sync-disconnected-description = To grab your tabs, you’ll need to allow syncing in { -brand-short-name }.
 firefoxview-tabpickup-sync-disconnected-primarybutton = Turn on sync in settings
 
+firefoxview-tabpickup-password-locked-header = Enter your Primary Password to view tabs
+firefoxview-tabpickup-password-locked-description = To grab your tabs, you’ll need to enter the Primary Password for { -brand-short-name }.
+firefoxview-tabpickup-password-locked-link = Learn more
+firefoxview-tabpickup-password-locked-primarybutton = Enter Primary Password
+
 firefoxview-tabpickup-syncing = Sit tight while your tabs sync. It’ll be just a moment.
 
 firefoxview-mobile-promo-header = Grab tabs from your phone or tablet
