@@ -82,11 +82,13 @@ browser:
       - https://github.com/mozilla-mobile/focus-android/issues/5684
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5694
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - technical
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   back_button_pressed:
     type: event
     description: Back button has been presed on a browser tab.
@@ -94,11 +96,13 @@ browser:
       - https://github.com/mozilla-mobile/focus-android/issues/5914
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5913
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       action_performed:
         description: |
@@ -114,11 +118,13 @@ browser:
       - https://github.com/mozilla-mobile/focus-android/issues/5897
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5898
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
 
 perf.startup:
   startup_type:
@@ -301,12 +307,14 @@ browser.search:
       - https://github.com/mozilla-mobile/focus-android/issues/6229
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/6238
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - technical
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 109
+      - rtestard@mozilla.com
+    expires: never
 
 mozilla_products:
   has_fenix_installed:
@@ -371,11 +379,13 @@ autocomplete:
       - https://github.com/mozilla-mobile/focus-android/issues/5885
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5886
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   domain_removed:
     type: counter
     description: |
@@ -385,11 +395,13 @@ autocomplete:
       - https://github.com/mozilla-mobile/focus-android/issues/5885
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5886
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   list_order_changed:
     type: counter
     description: |
@@ -399,11 +411,13 @@ autocomplete:
       - https://github.com/mozilla-mobile/focus-android/issues/5885
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5886
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   top_sites_setting_changed:
     type: event
     description: |
@@ -412,11 +426,13 @@ autocomplete:
       - https://github.com/mozilla-mobile/focus-android/issues/5885
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5940
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       is_enabled:
         description: The new setting true for ON, false for OFF
@@ -429,11 +445,13 @@ autocomplete:
       - https://github.com/mozilla-mobile/focus-android/issues/5885
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5940
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       is_enabled:
         description: The new setting true for ON, false for OFF
@@ -656,11 +674,13 @@ pro_tips:
       - https://github.com/mozilla-mobile/focus-android/issues/5541
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5542
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       tip_id:
         description: |
@@ -675,11 +695,13 @@ pro_tips:
       - https://github.com/mozilla-mobile/focus-android/issues/5541
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5542
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       tip_id:
         description: |
@@ -714,11 +736,13 @@ app_opened:
       - https://github.com/mozilla-mobile/focus-android/issues/5546
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5552
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       open_type:
         description: |
@@ -732,11 +756,13 @@ app_opened:
       - https://github.com/mozilla-mobile/focus-android/issues/5547
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5839
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   browse_intent:
     type: event
     description: |
@@ -745,11 +771,13 @@ app_opened:
       - https://github.com/mozilla-mobile/focus-android/issues/5547
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5839
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   text_selection_intent:
     type: event
     description: |
@@ -758,11 +786,13 @@ app_opened:
       - https://github.com/mozilla-mobile/focus-android/issues/5547
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5839
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   share_intent:
     type: event
     description: |
@@ -771,11 +801,13 @@ app_opened:
       - https://github.com/mozilla-mobile/focus-android/issues/5547
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5839
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       is_search:
         description: Is the shared intent a search?
@@ -790,11 +822,13 @@ add_to_home_screen:
       - https://github.com/mozilla-mobile/focus-android/issues/5548
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5598
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   add_button_tapped:
     type: event
     description: The add(yes) option from add to home dialog was tapped.
@@ -802,11 +836,13 @@ add_to_home_screen:
       - https://github.com/mozilla-mobile/focus-android/issues/5548
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5598
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       has_edited_title:
         description: Did the user edit the default title provided by the app?
@@ -818,11 +854,13 @@ add_to_home_screen:
       - https://github.com/mozilla-mobile/focus-android/issues/5548
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5598
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
 set_default_browser:
   from_app_settings:
     type: event
@@ -832,11 +870,13 @@ set_default_browser:
       - https://github.com/mozilla-mobile/focus-android/issues/5636
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5637
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       is_default:
         description: Shows if Focus was already default.
@@ -849,11 +889,13 @@ set_default_browser:
       - https://github.com/mozilla-mobile/focus-android/issues/5636
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5637
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       is_default:
         description: Shows if Focus was already default.
@@ -866,11 +908,13 @@ set_default_browser:
       - https://github.com/mozilla-mobile/focus-android/issues/5636
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5637
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       is_default:
         description: Shows if Focus was already default.
@@ -884,11 +928,13 @@ tab_count:
       - https://github.com/mozilla-mobile/focus-android/issues/5583
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5644
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       opened_tabs:
         description: Number of currently opened tabs
@@ -900,11 +946,13 @@ tab_count:
       - https://github.com/mozilla-mobile/focus-android/issues/5583
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5644
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       opened_tabs:
         description: Number of currently opened tabs
@@ -916,11 +964,13 @@ tab_count:
       - https://github.com/mozilla-mobile/focus-android/issues/5583
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5644
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       opened_tabs:
         description: Number of currently opened tabs
@@ -932,11 +982,13 @@ tab_count:
       - https://github.com/mozilla-mobile/focus-android/issues/5583
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5644
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       opened_tabs:
         description: Number of currently opened tabs
@@ -948,11 +1000,13 @@ tab_count:
       - https://github.com/mozilla-mobile/focus-android/issues/5583
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5644
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       opened_tabs:
         description: Number of currently opened tabs
@@ -973,11 +1027,13 @@ tab_count:
       - https://github.com/mozilla-mobile/focus-android/issues/5583
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5793
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
 
 search_bar:
   entered_url:
@@ -987,11 +1043,13 @@ search_bar:
       - https://github.com/mozilla-mobile/focus-android/issues/5546
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5660
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   performed_search:
     type: event
     description: The user has entered text and performed a search.
@@ -999,11 +1057,13 @@ search_bar:
       - https://github.com/mozilla-mobile/focus-android/issues/5546
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5660
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       engine_name:
         description: The name of the engine used to perform the search.
@@ -1017,11 +1077,13 @@ show_search_suggestions:
       - https://github.com/mozilla-mobile/focus-android/issues/5840
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5858
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   disabled_from_panel:
     type: event
     description: The "no"" option from the suggestion panel has been tapped.
@@ -1029,11 +1091,13 @@ show_search_suggestions:
       - https://github.com/mozilla-mobile/focus-android/issues/5840
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5858
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   changed_from_settings:
     type: event
     description: The enabled state has been changed from the settings screen.
@@ -1041,11 +1105,13 @@ show_search_suggestions:
       - https://github.com/mozilla-mobile/focus-android/issues/5840
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5858
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       is_enabled:
         description: The new setting value, true for ON, false for OFF
@@ -1059,11 +1125,13 @@ downloads:
       - https://github.com/mozilla-mobile/focus-android/issues/5650
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5663
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   download_paused:
     type: event
     description: A download has been paused.
@@ -1071,11 +1139,13 @@ downloads:
       - https://github.com/mozilla-mobile/focus-android/issues/5650
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5663
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   download_canceled:
     type: event
     description: A download has been cancelled.
@@ -1083,11 +1153,13 @@ downloads:
       - https://github.com/mozilla-mobile/focus-android/issues/5650
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5663
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   download_completed:
     type: event
     description: A download has been completed successfully.
@@ -1095,11 +1167,13 @@ downloads:
       - https://github.com/mozilla-mobile/focus-android/issues/5650
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5663
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   download_failed:
     type: event
     description: The download has failed.
@@ -1107,11 +1181,13 @@ downloads:
       - https://github.com/mozilla-mobile/focus-android/issues/5650
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5663
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       file_extension:
         description: The extension of the downloaded file.
@@ -1123,11 +1199,13 @@ downloads:
       - https://github.com/mozilla-mobile/focus-android/issues/5650
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5663
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       open_successful:
         description: Did the user succeed in opening the downloaded file?
@@ -1144,11 +1222,13 @@ search_engines:
       - https://github.com/mozilla-mobile/focus-android/issues/5646
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5713
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   add_engine_tapped:
     type: event
     description: The user has tapped on the add another search engine button.
@@ -1156,11 +1236,13 @@ search_engines:
       - https://github.com/mozilla-mobile/focus-android/issues/5646
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5713
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   save_engine_tapped:
     type: event
     description: The user has tried to save a custom engine.
@@ -1168,11 +1250,13 @@ search_engines:
       - https://github.com/mozilla-mobile/focus-android/issues/5646
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5713
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       save_successful:
         description: If the engine has been saved successfully.
@@ -1184,11 +1268,13 @@ search_engines:
       - https://github.com/mozilla-mobile/focus-android/issues/5646
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5713
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       engine_type:
         description: |
@@ -1201,11 +1287,13 @@ search_engines:
       - https://github.com/mozilla-mobile/focus-android/issues/5646
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5713
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       engine_count:
         description: How many search engines has the user removed
@@ -1217,11 +1305,13 @@ search_engines:
       - https://github.com/mozilla-mobile/focus-android/issues/5646
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5713
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       current_engines_count:
         description: How many search engines did the user had at that point.
@@ -1233,11 +1323,13 @@ search_engines:
       - https://github.com/mozilla-mobile/focus-android/issues/5646
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5713
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       current_engines_count:
         description: How many search engines did the user had at that point.
@@ -1249,11 +1341,13 @@ search_engines:
       - https://github.com/mozilla-mobile/focus-android/issues/5646
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5713
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
 
 open_with:
   list_displayed:
@@ -1263,11 +1357,13 @@ open_with:
       - https://github.com/mozilla-mobile/focus-android/issues/5654
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5703
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       list_size:
         description: The number of apps in the list
@@ -1279,11 +1375,13 @@ open_with:
       - https://github.com/mozilla-mobile/focus-android/issues/5654
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5703
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       package_name:
         description: The app the user has chosen is a Mozilla product.
@@ -1295,11 +1393,13 @@ open_with:
       - https://github.com/mozilla-mobile/focus-android/issues/5654
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5703
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
 
 crash_reporter:
   displayed:
@@ -1309,11 +1409,13 @@ crash_reporter:
       - https://github.com/mozilla-mobile/focus-android/issues/5652
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5725
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   close_report:
     type: event
     description: The crash report has been submitted.
@@ -1321,11 +1423,13 @@ crash_reporter:
       - https://github.com/mozilla-mobile/focus-android/issues/5652
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5725
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       submit_report:
         description: Did the user choose to send the report?
@@ -1339,11 +1443,13 @@ browser_menu:
       - https://github.com/mozilla-mobile/focus-android/issues/5648
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5748
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       item:
         description: |
@@ -1357,11 +1463,13 @@ browser_menu:
       - https://github.com/mozilla-mobile/focus-android/issues/5648
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5748
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       item:
         description: |
@@ -1378,11 +1486,13 @@ custom_tabs_toolbar:
       - https://github.com/mozilla-mobile/focus-android/issues/5649
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5748
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       item:
         description: |
@@ -1396,11 +1506,13 @@ custom_tabs_toolbar:
       - https://github.com/mozilla-mobile/focus-android/issues/5649
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5748
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       item:
         description: |
@@ -1415,11 +1527,13 @@ custom_tabs_toolbar:
       - https://github.com/mozilla-mobile/focus-android/issues/5649
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5748
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   action_button_tapped:
     type: event
     description: The user has tapped the actionbutton a custom tab.
@@ -1427,11 +1541,13 @@ custom_tabs_toolbar:
       - https://github.com/mozilla-mobile/focus-android/issues/5649
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5748
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
 
 tracking_protection_exceptions:
   allow_list_opened:
@@ -1441,11 +1557,13 @@ tracking_protection_exceptions:
       - https://github.com/mozilla-mobile/focus-android/issues/5753
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5758
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   allow_list_cleared:
     type: event
     description: The user has removed all items from exceptions list.
@@ -1453,11 +1571,13 @@ tracking_protection_exceptions:
       - https://github.com/mozilla-mobile/focus-android/issues/5753
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5758
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       list_size:
         description: The number of exceptions in the list.
@@ -1469,11 +1589,13 @@ tracking_protection_exceptions:
       - https://github.com/mozilla-mobile/focus-android/issues/5753
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5758
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       list_size:
         description: The number of selected items removed.
@@ -1487,11 +1609,13 @@ notifications:
       - https://github.com/mozilla-mobile/focus-android/issues/5651
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5769
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
   erase_open_button_tapped:
     type: event
     description: The user has tapped the Erase & Open button from notification.
@@ -1499,11 +1623,13 @@ notifications:
       - https://github.com/mozilla-mobile/focus-android/issues/5651
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5769
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       opened_tabs:
         description: Number of currently opened tabs
@@ -1515,11 +1641,13 @@ notifications:
       - https://github.com/mozilla-mobile/focus-android/issues/5651
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5769
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
 
 app_shortcuts:
   just_erase_button_tapped:
@@ -1529,11 +1657,13 @@ app_shortcuts:
       - https://github.com/mozilla-mobile/focus-android/issues/5651
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5769
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       opened_tabs:
         description: Number of currently opened tabs
@@ -1545,11 +1675,13 @@ app_shortcuts:
       - https://github.com/mozilla-mobile/focus-android/issues/5651
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5769
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       opened_tabs:
         description: Number of currently opened tabs
@@ -1563,11 +1695,13 @@ recent_apps:
       - https://github.com/mozilla-mobile/focus-android/issues/5651
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5769
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
 
 context_menu:
   item_tapped:
@@ -1577,11 +1711,13 @@ context_menu:
       - https://github.com/mozilla-mobile/focus-android/issues/5647
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5773
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       item_name:
         description: |
@@ -1658,11 +1794,13 @@ onboarding:
       - https://github.com/mozilla-mobile/focus-android/issues/5635
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5869
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       current_item:
         description: The curent displayed item position.
@@ -1674,11 +1812,13 @@ onboarding:
       - https://github.com/mozilla-mobile/focus-android/issues/5635
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5869
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       current_item:
         description: The curent displayed item position.
@@ -1690,11 +1830,13 @@ onboarding:
       - https://github.com/mozilla-mobile/focus-android/issues/5635
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5869
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       current_item:
         description: The curent displayed item position.
@@ -1706,11 +1848,13 @@ onboarding:
       - https://github.com/mozilla-mobile/focus-android/issues/5635
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5869
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       current_item:
         description: The curent displayed item position.
@@ -1724,11 +1868,13 @@ search_suggestions:
       - https://github.com/mozilla-mobile/focus-android/issues/5662
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5864
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       engine_name:
         description: The name of the engine used to perform the search.
@@ -1740,11 +1886,13 @@ search_suggestions:
       - https://github.com/mozilla-mobile/focus-android/issues/5662
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5864
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       engine_name:
         description: The name of the engine used to perform the search.
@@ -1756,11 +1904,13 @@ search_suggestions:
       - https://github.com/mozilla-mobile/focus-android/issues/5662
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5864
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
 
 advanced_settings:
   remote_debug_setting_changed:
@@ -1771,11 +1921,13 @@ advanced_settings:
       - https://github.com/mozilla-mobile/focus-android/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5940
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       is_enabled:
         description: The new setting true for ON, false for OFF
@@ -1788,11 +1940,13 @@ advanced_settings:
       - https://github.com/mozilla-mobile/focus-android/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5940
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       is_enabled:
         description: The new setting true for ON, false for OFF
@@ -1806,11 +1960,13 @@ privacy_settings:
       - https://github.com/mozilla-mobile/focus-android/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5940
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       is_enabled:
         description: The new setting true for ON, false for OFF
@@ -1823,11 +1979,13 @@ privacy_settings:
       - https://github.com/mozilla-mobile/focus-android/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5940
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       is_enabled:
         description: The new setting true for ON, false for OFF
@@ -1840,11 +1998,13 @@ privacy_settings:
       - https://github.com/mozilla-mobile/focus-android/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5940
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       is_enabled:
         description: The new setting true for ON, false for OFF
@@ -1857,11 +2017,13 @@ privacy_settings:
       - https://github.com/mozilla-mobile/focus-android/issues/5653
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5940
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 107
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       is_enabled:
         description: The new setting true for ON, false for OFF
@@ -1874,11 +2036,13 @@ privacy_settings:
       - https://github.com/mozilla-mobile/focus-android/issues/6097
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/6105
+      - https://github.com/mozilla-mobile/focus-android/pull/7906
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 108
+      - rtestard@mozilla.com
+    expires: never
     extra_keys:
       is_enabled:
         description: |
