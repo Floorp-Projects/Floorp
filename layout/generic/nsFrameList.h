@@ -100,10 +100,7 @@ class nsFrameList {
 
   // nsFrameList is a move-only class.
   nsFrameList(const nsFrameList& aOther) = delete;
-
-  // XXX: ideally, copy assignment should be removed because we should use move
-  // assignment to transfer the ownership.
-  nsFrameList& operator=(const nsFrameList& aOther) = default;
+  nsFrameList& operator=(const nsFrameList& aOther) = delete;
 
   /**
    * Transfer frames in aOther to this list. aOther becomes empty after this
