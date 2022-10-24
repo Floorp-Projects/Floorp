@@ -27,6 +27,7 @@ function invalidEventHandler(e)
 
 function checkValidURL(element)
 {
+  info(`Checking ${element.value}\n`);
   gInvalid = false;
   ok(!element.validity.typeMismatch,
     "Element should not suffer from type mismatch");
@@ -71,6 +72,7 @@ var values = [
   [ "http://mózillä.órg", true ],
   [ "ht://mózillä.órg", true ],
   [ "httŭ://mózillä.órg", false ],
+  [ "chrome://bookmarks", true ],
 ];
 
 values.forEach(function([value, valid]) {
