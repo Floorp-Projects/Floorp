@@ -166,7 +166,7 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
 
   // 2) Apply actual CSP to all loads. Please note that in case
   // the csp should be overruled (e.g. by an ExpandedPrincipal)
-  // then loadinfo->GetCSP() returns that CSP instead of the
+  // then loadinfo->GetCsp() returns that CSP instead of the
   // document's CSP.
   nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadInfo->GetCsp();
 

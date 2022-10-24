@@ -3763,7 +3763,7 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
     mCSP->AppendPolicy(addonPolicy->ExtensionPageCSP(), false, false);
     // Bug 1548468: Move CSP off ExpandedPrincipal
     // Currently the LoadInfo holds the source of truth for every resource load
-    // because LoadInfo::GetCSP() queries the CSP from an ExpandedPrincipal
+    // because LoadInfo::GetCsp() queries the CSP from an ExpandedPrincipal
     // (and not from the Client) if the load was triggered by an extension.
     auto* basePrin = BasePrincipal::Cast(principal);
     if (basePrin->Is<ExpandedPrincipal>()) {

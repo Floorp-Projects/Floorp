@@ -1223,9 +1223,9 @@ interface nsILoadInfo : nsISupports
    * when fetching the resource this loadinfo belongs to.
    *
    * a) Non-navigations:
-   * For non-navigation loads, GetCSP() returns what the spec refers to as the
+   * For non-navigation loads, GetCsp() returns what the spec refers to as the
    * "request's client's global object's CSP list". In practice, if this is the
-   * loadinfo of a subresource load (e.g an image load), then GetCSP() or
+   * loadinfo of a subresource load (e.g an image load), then GetCsp() or
    * GetPreloadCSP() returns the CSP of the document which embeds the image.
    * The returned CSP includes any policy delivered through the HTTP header or
    * also through the meta tag (modulo the difference for preloads, e.g. image
@@ -1236,7 +1236,7 @@ interface nsILoadInfo : nsISupports
    *
    * b) Navigations:
    *   * Top-level loads:
-   *     For top-level loads (navigations) GetCSP() will return null, unless
+   *     For top-level loads (navigations) GetCsp() will return null, unless
    *     the navigation is started by a WebExtension, in which case it will
    *     return the CSP of the webextension, if any.
    *     If you need to query the CSP that potentially should apply to the
@@ -1245,7 +1245,7 @@ interface nsILoadInfo : nsISupports
    *     is for non-navigation requests.
    *
    *   * Iframe-loads:
-   *     For iframe-loads (navigations) GetCSP() will return the CSP of the
+   *     For iframe-loads (navigations) GetCsp() will return the CSP of the
    *     parent document, unless the navigation is started by a WebExtension,
    *     in which case it will return the CSP of the webextension, if any.
    *
