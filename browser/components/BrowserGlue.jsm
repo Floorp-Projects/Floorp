@@ -47,6 +47,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
   WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -2660,10 +2662,7 @@ BrowserGlue.prototype = {
 
       {
         task: () => {
-          let { setTimeout } = ChromeUtils.importESModule(
-            "resource://gre/modules/Timer.sys.mjs"
-          );
-          setTimeout(function() {
+          lazy.setTimeout(function() {
             Services.tm.idleDispatchToMainThread(
               Services.startup.trackStartupCrashEnd
             );
@@ -5851,15 +5850,11 @@ var AboutHomeStartupCache = {
 
       // To avoid hanging shutdowns, we'll ensure that we wait a maximum of
       // SHUTDOWN_CACHE_WRITE_TIMEOUT_MS millseconds before giving up.
-      let { setTimeout, clearTimeout } = ChromeUtils.importESModule(
-        "resource://gre/modules/Timer.sys.mjs"
-      );
-
       const TIMED_OUT = Symbol();
       let timeoutID = 0;
 
       let timeoutPromise = new Promise(resolve => {
-        timeoutID = setTimeout(
+        timeoutID = lazy.setTimeout(
           () => resolve(TIMED_OUT),
           this.SHUTDOWN_CACHE_WRITE_TIMEOUT_MS
         );
@@ -5875,7 +5870,7 @@ var AboutHomeStartupCache = {
 
       let result = await Promise.race(promises);
       this.log.trace("Done blocking shutdown.");
-      clearTimeout(timeoutID);
+      lazy.clearTimeout(timeoutID);
       if (result === TIMED_OUT) {
         this.log.error("Timed out getting cache streams. Skipping cache task.");
         return false;
