@@ -27,7 +27,7 @@ object Versions {
     const val detekt = "1.19.0"
 
     const val sentry_legacy = "1.7.30"
-    const val sentry_latest = "6.4.2"
+    const val sentry_latest = "6.6.0"
     const val zxing = "3.5.0"
     const val jna = "5.12.1"
     const val disklrucache = "2.0.2"
