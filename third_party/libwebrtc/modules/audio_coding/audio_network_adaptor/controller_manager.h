@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "modules/audio_coding/audio_network_adaptor/controller.h"
 
 namespace webrtc {
@@ -46,7 +47,7 @@ class ControllerManagerImpl final : public ControllerManager {
   };
 
   static std::unique_ptr<ControllerManager> Create(
-      const std::string& config_string,
+      absl::string_view config_string,
       size_t num_encoder_channels,
       rtc::ArrayView<const int> encoder_frame_lengths_ms,
       int min_encoder_bitrate_bps,
@@ -57,7 +58,7 @@ class ControllerManagerImpl final : public ControllerManager {
       bool initial_dtx_enabled);
 
   static std::unique_ptr<ControllerManager> Create(
-      const std::string& config_string,
+      absl::string_view config_string,
       size_t num_encoder_channels,
       rtc::ArrayView<const int> encoder_frame_lengths_ms,
       int min_encoder_bitrate_bps,

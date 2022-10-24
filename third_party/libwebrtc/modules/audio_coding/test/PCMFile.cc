@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
 #include "test/gtest.h"
 
@@ -103,12 +104,13 @@ int16_t PCMFile::ChooseFile(std::string* file_name,
   return 0;
 }
 
-void PCMFile::Open(const std::string& file_name,
+void PCMFile::Open(absl::string_view file_name,
                    uint16_t frequency,
-                   const char* mode,
+                   absl::string_view mode,
                    bool auto_rewind) {
-  if ((pcm_file_ = fopen(file_name.c_str(), mode)) == NULL) {
-    printf("Cannot open file %s.\n", file_name.c_str());
+  if ((pcm_file_ = fopen(std::string(file_name).c_str(),
+                         std::string(mode).c_str())) == NULL) {
+    printf("Cannot open file %s.\n", std::string(file_name).c_str());
     ADD_FAILURE() << "Unable to read file";
   }
   frequency_ = frequency;

@@ -68,7 +68,7 @@ void PrintDelays(const NetEqDelayAnalyzer::Delays& delays,
                  absl::string_view var_name_x,
                  absl::string_view var_name_y,
                  std::ofstream& output,
-                 const std::string& terminator = "") {
+                 absl::string_view terminator = "") {
   output << var_name_x << " = [ ";
   for (const std::pair<int64_t, float>& delay : delays) {
     output << (delay.first - ref_time_ms) / 1000.f << ", ";
@@ -185,7 +185,7 @@ void NetEqDelayAnalyzer::CreateGraphs(Delays* arrival_delay_ms,
 }
 
 void NetEqDelayAnalyzer::CreateMatlabScript(
-    const std::string& script_name) const {
+    absl::string_view script_name) const {
   Delays arrival_delay_ms;
   Delays corrected_arrival_delay_ms;
   Delays playout_delay_ms;
@@ -198,7 +198,7 @@ void NetEqDelayAnalyzer::CreateMatlabScript(
   const int64_t ref_time_ms = arrival_delay_ms.front().first;
 
   // Create an output file stream to Matlab script file.
-  std::ofstream output(script_name);
+  std::ofstream output(std::string{script_name});
 
   PrintDelays(corrected_arrival_delay_ms, ref_time_ms, kArrivalDelayX,
               kArrivalDelayY, output, ";");
@@ -241,7 +241,7 @@ void NetEqDelayAnalyzer::CreateMatlabScript(
 }
 
 void NetEqDelayAnalyzer::CreatePythonScript(
-    const std::string& script_name) const {
+    absl::string_view script_name) const {
   Delays arrival_delay_ms;
   Delays corrected_arrival_delay_ms;
   Delays playout_delay_ms;
@@ -254,7 +254,7 @@ void NetEqDelayAnalyzer::CreatePythonScript(
   const int64_t ref_time_ms = arrival_delay_ms.front().first;
 
   // Create an output file stream to the python script file.
-  std::ofstream output(script_name);
+  std::ofstream output(std::string{script_name});
 
   // Necessary includes
   output << "import numpy as np" << std::endl;

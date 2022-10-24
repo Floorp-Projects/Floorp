@@ -15,6 +15,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "api/audio_codecs/audio_decoder_factory.h"
 #include "api/audio_codecs/audio_format.h"
 #include "api/scoped_refptr.h"
@@ -41,7 +42,7 @@ class DecoderDatabase {
     DecoderInfo(const SdpAudioFormat& audio_format,
                 absl::optional<AudioCodecPairId> codec_pair_id,
                 AudioDecoderFactory* factory,
-                const std::string& codec_name);
+                absl::string_view codec_name);
     explicit DecoderInfo(const SdpAudioFormat& audio_format,
                          absl::optional<AudioCodecPairId> codec_pair_id,
                          AudioDecoderFactory* factory = nullptr);
@@ -80,9 +81,7 @@ class DecoderDatabase {
     bool IsRed() const { return subtype_ == Subtype::kRed; }
 
     // Returns true if the decoder's format is named `name`.
-    bool IsType(const char* name) const;
-    // Returns true if the decoder's format is named `name`.
-    bool IsType(const std::string& name) const;
+    bool IsType(absl::string_view name) const;
 
     const std::string& get_name() const { return name_; }
 
