@@ -8,11 +8,28 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: pierotofy/set-swap-space@master
-      with:
-        swap-size-gb: 5
+
+    - name: Delete system folders
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        
+    - name: Prepare cross compiler
+      run: |
+        sudo apt -y install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+        rustup target add aarch64-unknown-linux-gnu
+
+
+    - name: Add swap file
+      run: |
+        sudo fallocate -l 15G /swapfile2
+        sudo chmod 600 /swapfile2
+        sudo mkswap /swapfile2
+        sudo swapon /swapfile2
     - name: Create environment
       run: |
+        sudo apt install xvfb
         sudo apt update
         sudo apt install gzip gpg dpkg-dev
         export WORKDIR=`pwd`
@@ -31,13 +48,20 @@ jobs:
         echo 'ac_add_options --with-google-safebrowsing-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-safe-browsing-key' >> mozconfig
         echo 'ac_add_options --enable-bootstrap' >> mozconfig
         echo 'ac_add_options --with-l10n-base=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/l10n-central/l10n-central' >> mozconfig
-        echo 'ac_add_options "--enable-optimize=-O2"' >> mozconfig
+        echo 'ac_add_options --enable-optimize="-O3"' >> mozconfig
+        echo 'ac_add_options --enable-lto' >> mozconfig
+        echo 'ac_add_options MOZ_PGO=1' >> mozconfig
+        echo 'export RUSTC_OPT_LEVEL=2 '>> mozconfig
+        echo 'export MOZ_INCLUDE_SOURCE_INFO=1' >> mozconfig
         echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
         echo 'MOZ_DATA_REPORTING=' >> mozconfig
         echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
         ./mach configure
+
     - name: Build
       run: |
+        Xvfb :2 -screen 0 1024x768x24 &
+        export DISPLAY=:2
         export WORKDIR=`pwd`
         echo "Current Workdir: $WORKDIR"
         ./mach build

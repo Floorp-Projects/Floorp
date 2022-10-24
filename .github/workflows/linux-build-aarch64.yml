@@ -23,12 +23,13 @@ jobs:
 
     - name: Add swap file
       run: |
-        sudo fallocate -l 5G /swapfile2
+        sudo fallocate -l 15G /swapfile2
         sudo chmod 600 /swapfile2
         sudo mkswap /swapfile2
         sudo swapon /swapfile2
     - name: Create environment
       run: |
+        sudo apt install xvfb
         git clone https://github.com/floorp-projects/l10n-central.git
         ./mach bootstrap
         echo 'ac_add_options --with-app-name=floorp' >> mozconfig
@@ -43,17 +44,23 @@ jobs:
         echo 'ac_add_options --with-google-safebrowsing-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-safe-browsing-key' >> mozconfig
         echo 'ac_add_options --enable-bootstrap' >> mozconfig
         echo 'ac_add_options --with-l10n-base=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/l10n-central/l10n-central' >> mozconfig
-        echo 'ac_add_options "--enable-optimize=-O2"' >> mozconfig
         echo 'ac_add_options --enable-rust-simd' >> mozconfig
         echo 'ac_add_options --target=aarch64-unknown-linux-gnu' >> mozconfig
         echo 'ac_add_options --enable-linker=lld' >> mozconfig
-        echo 'ac_add_options --without-wasm-sandboxed-libraries' >> mozconfig
+        echo 'ac_add_options --enable-optimize="-O3"' >> mozconfig
+        echo 'ac_add_options --enable-lto' >> mozconfig
+        echo 'ac_add_options MOZ_PGO=1' >> mozconfig
+        echo 'export RUSTC_OPT_LEVEL=2 '>> mozconfig
+        echo 'export MOZ_INCLUDE_SOURCE_INFO=1' >> mozconfig
         echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
         echo 'MOZ_DATA_REPORTING=' >> mozconfig
         echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
         ./mach configure
+
     - name: Build & Package
       run: |        
+        Xvfb :2 -screen 0 1024x768x24 &
+        export DISPLAY=:2
         ./mach build
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
