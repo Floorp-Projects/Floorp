@@ -17,14 +17,18 @@ ChromeUtils.defineESModuleGetters(lazy, {
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AppUpdater: "resource:///modules/AppUpdater.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "BrowserUpdater", () => {
-  return AppConstants.MOZ_UPDATER ? new lazy.AppUpdater() : null;
-});
+if (AppConstants.MOZ_UPDATER) {
+  XPCOMUtils.defineLazyServiceGetter(
+    lazy,
+    "AUS",
+    "@mozilla.org/updates/update-service;1",
+    "nsIApplicationUpdateService"
+  );
+}
 
 let openUrlFun = url => () => openUrl(url);
 let openUrl = url => {
@@ -199,7 +203,14 @@ const DEFAULT_ACTIONS = {
   update: {
     l10nCommands: ["quickactions-cmd-update", "quickactions-update"],
     label: "quickactions-update",
-    isActive: () => !!lazy.BrowserUpdater?.isReadyForRestart,
+    isActive: () => {
+      if (!AppConstants.MOZ_UPDATER) {
+        return false;
+      }
+      return (
+        lazy.AUS.currentState == Ci.nsIApplicationUpdateService.STATE_PENDING
+      );
+    },
     onPick: restartBrowser,
   },
   viewsource: {
