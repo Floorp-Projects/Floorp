@@ -28,11 +28,13 @@ class DatabaseFileManager final
   const PersistenceType mPersistenceType;
   const quota::OriginMetadata mOriginMetadata;
   const nsString mDatabaseName;
+  const nsCString mDatabaseID;
 
   LazyInitializedOnce<const nsString> mDirectoryPath;
   LazyInitializedOnce<const nsString> mJournalDirectoryPath;
 
   const bool mEnforcingQuota;
+  const bool mIsInPrivateBrowsingMode;
 
   // Lock protecting DatabaseFileManager.mFileInfos.
   // It's s also used to atomically update DatabaseFileInfo.mRefCnt and
@@ -59,7 +61,9 @@ class DatabaseFileManager final
 
   DatabaseFileManager(PersistenceType aPersistenceType,
                       const quota::OriginMetadata& aOriginMetadata,
-                      const nsAString& aDatabaseName, bool aEnforcingQuota);
+                      const nsAString& aDatabaseName,
+                      const nsCString& aDatabaseID, bool aEnforcingQuota,
+                      bool aIsInPrivateBrowsingMode);
 
   PersistenceType Type() const { return mPersistenceType; }
 
@@ -70,7 +74,8 @@ class DatabaseFileManager final
   const nsACString& Origin() const { return mOriginMetadata.mOrigin; }
 
   const nsAString& DatabaseName() const { return mDatabaseName; }
-
+  const nsCString& DatabaseID() const { return mDatabaseID; }
+  auto IsInPrivateBrowsingMode() const { return mIsInPrivateBrowsingMode; }
   bool EnforcingQuota() const { return mEnforcingQuota; }
 
   nsresult Init(nsIFile* aDirectory, mozIStorageConnection& aConnection);
