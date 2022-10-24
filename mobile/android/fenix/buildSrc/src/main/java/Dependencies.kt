@@ -45,7 +45,7 @@ object Versions {
 
     const val mozilla_android_components = AndroidComponents.VERSION
 
-    const val adjust = "4.32.0"
+    const val adjust = "4.33.0"
     const val installreferrer = "2.2"
 
     const val junit = "5.5.2"
