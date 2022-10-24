@@ -1,6 +1,78 @@
 {
   "data": [
     {
+      "schema": 1666400223579,
+      "derHash": "DSzH5pc/gPoiU/uIgo72rLs7lf+nfEiWUMNWc19UtwY=",
+      "subject": "CN=AlpiroSSL ECC OV CA,O=Alpiro s.r.o.,C=CZ",
+      "subjectDN": "MEMxCzAJBgNVBAYTAkNaMRYwFAYDVQQKEw1BbHBpcm8gcy5yLm8uMRwwGgYDVQQDExNBbHBpcm9TU0wgRUNDIE9WIENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "660704e30efa63fe14a6055be29e0064227817f3e4921c304bfb45606557a9d9",
+        "size": 1264,
+        "filename": "X_kxO0BscKQlU9_xYyElfuh-DkcVP6lXeRrOBQPEQoo=.pem",
+        "location": "security-state-staging/intermediates/1020a8f8-4a5a-47ee-9eb9-9d138fbefe60.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "X/kxO0BscKQlU9/xYyElfuh+DkcVP6lXeRrOBQPEQoo=",
+      "crlite_enrolled": false,
+      "id": "6a660601-87ea-408d-a641-5343680f0cca",
+      "last_modified": 1666486623083
+    },
+    {
+      "schema": 1666378623627,
+      "derHash": "MysQFTn6icpOIocZ/lKHq2hprzGrIcvxEPXdPFmUwcc=",
+      "subject": "CN=Amazon ECDSA 256 M01,O=Amazon,C=US",
+      "subjectDN": "MD0xCzAJBgNVBAYTAlVTMQ8wDQYDVQQKEwZBbWF6b24xHTAbBgNVBAMTFEFtYXpvbiBFQ0RTQSAyNTYgTTAx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "bc9627b077f8e49740f4a758d95cf104d557357e7ff2d32a3d1b71ff7f66af51",
+        "size": 1041,
+        "filename": "Qn2rVbyC3wQTe4rKJB9XU1WaCtwtBNpusM7f5eHjj9M=.pem",
+        "location": "security-state-staging/intermediates/b355804b-4052-46bc-8216-e19067687e45.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Qn2rVbyC3wQTe4rKJB9XU1WaCtwtBNpusM7f5eHjj9M=",
+      "crlite_enrolled": true,
+      "id": "5cc801d8-6a8e-49a7-8156-422a38db6b13",
+      "last_modified": 1666400223062
+    },
+    {
+      "schema": 1666399697146,
+      "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
+      "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
+      "subjectDN": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a111efc20329e87b541cfc3e7f526fc54bb24624fddf210f4347b9fadfb1ab6b",
+        "size": 1727,
+        "filename": "8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8=.pem",
+        "location": "security-state-staging/intermediates/a2a04dfe-6201-4d0a-b8cf-80d2975bfb51.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8Rw90Ej3Ttt8RRkrg+WYDS9n7IS03bk5bjP/UXPtaY8=",
+      "crlite_enrolled": true,
+      "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
+      "last_modified": 1666400223049
+    },
+    {
+      "schema": 1666270087163,
+      "derHash": "2nOKR07nRzyWmey6jrX0g62pZ5iBhaBZdcS6DAGzlVk=",
+      "subject": "CN=CFCA DV OCA,O=China Financial Certification Authority,C=CN",
+      "subjectDN": "MFUxCzAJBgNVBAYTAkNOMTAwLgYDVQQKDCdDaGluYSBGaW5hbmNpYWwgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFDASBgNVBAMMC0NGQ0EgRFYgT0NB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "7f0388d9dbe44b8309b49af6bc57cbb9d6bcdecd52e63a0224fe0aaa48f21fd9",
+        "size": 2020,
+        "filename": "a3jzvw9CT6-ZtuS70fb8B8cu5T5zTulOjkR9ebqiaxc=.pem",
+        "location": "security-state-staging/intermediates/da5b57f9-5a82-4c18-a7b9-af8d2654de55.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "a3jzvw9CT6+ZtuS70fb8B8cu5T5zTulOjkR9ebqiaxc=",
+      "crlite_enrolled": false,
+      "id": "bd831e0b-483b-4c5f-98d9-156c61ccb3cd",
+      "last_modified": 1666270623205
+    },
+    {
       "schema": 1665967729988,
       "derHash": "9fGowE5c8P22eN0nmZRGPkhQjENJZDsNksv9dSP2xAo=",
       "subject": "CN=Bloomberg TLS CA,O=Bloomberg LP,C=US",
@@ -521,24 +593,6 @@
       "crlite_enrolled": true,
       "id": "b2b776e5-2b2f-4c8e-819d-026b8d3855d2",
       "last_modified": 1665860223282
-    },
-    {
-      "schema": 1665859726766,
-      "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
-      "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
-      "subjectDN": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a111efc20329e87b541cfc3e7f526fc54bb24624fddf210f4347b9fadfb1ab6b",
-        "size": 1727,
-        "filename": "8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8=.pem",
-        "location": "security-state-staging/intermediates/a2a04dfe-6201-4d0a-b8cf-80d2975bfb51.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "8Rw90Ej3Ttt8RRkrg+WYDS9n7IS03bk5bjP/UXPtaY8=",
-      "crlite_enrolled": true,
-      "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
-      "last_modified": 1665860223269
     },
     {
       "schema": 1665708517697,
@@ -6481,24 +6535,6 @@
       "last_modified": 1663873023539
     },
     {
-      "schema": 1663872542293,
-      "derHash": "DSzH5pc/gPoiU/uIgo72rLs7lf+nfEiWUMNWc19UtwY=",
-      "subject": "CN=AlpiroSSL ECC OV CA,O=Alpiro s.r.o.,C=CZ",
-      "subjectDN": "MEMxCzAJBgNVBAYTAkNaMRYwFAYDVQQKEw1BbHBpcm8gcy5yLm8uMRwwGgYDVQQDExNBbHBpcm9TU0wgRUNDIE9WIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "660704e30efa63fe14a6055be29e0064227817f3e4921c304bfb45606557a9d9",
-        "size": 1264,
-        "filename": "X_kxO0BscKQlU9_xYyElfuh-DkcVP6lXeRrOBQPEQoo=.pem",
-        "location": "security-state-staging/intermediates/1020a8f8-4a5a-47ee-9eb9-9d138fbefe60.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "X/kxO0BscKQlU9/xYyElfuh+DkcVP6lXeRrOBQPEQoo=",
-      "crlite_enrolled": true,
-      "id": "6a660601-87ea-408d-a641-5343680f0cca",
-      "last_modified": 1663873023527
-    },
-    {
       "schema": 1663872531322,
       "derHash": "G/2HAtj5uzQPNTggMwwLun5SLGMWTJHylUFNrHl/CGM=",
       "subject": "CN=TI Trust Technologies OV CA,O=TI Trust Technologies S.R.L.,L=Pomezia,ST=Roma,C=IT",
@@ -10171,24 +10207,6 @@
       "last_modified": 1661561823088
     },
     {
-      "schema": 1661561321402,
-      "derHash": "MysQFTn6icpOIocZ/lKHq2hprzGrIcvxEPXdPFmUwcc=",
-      "subject": "CN=Amazon ECDSA 256 M01,O=Amazon,C=US",
-      "subjectDN": "MD0xCzAJBgNVBAYTAlVTMQ8wDQYDVQQKEwZBbWF6b24xHTAbBgNVBAMTFEFtYXpvbiBFQ0RTQSAyNTYgTTAx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "bc9627b077f8e49740f4a758d95cf104d557357e7ff2d32a3d1b71ff7f66af51",
-        "size": 1041,
-        "filename": "Qn2rVbyC3wQTe4rKJB9XU1WaCtwtBNpusM7f5eHjj9M=.pem",
-        "location": "security-state-staging/intermediates/b355804b-4052-46bc-8216-e19067687e45.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Qn2rVbyC3wQTe4rKJB9XU1WaCtwtBNpusM7f5eHjj9M=",
-      "crlite_enrolled": false,
-      "id": "5cc801d8-6a8e-49a7-8156-422a38db6b13",
-      "last_modified": 1661561823074
-    },
-    {
       "schema": 1661561324860,
       "derHash": "+WkyVZM7aBWdFoqpokfaHcZuI8BiAzjvcUnkj4Oxrnk=",
       "subject": "CN=Amazon ECDSA 256 M02,O=Amazon,C=US",
@@ -12545,24 +12563,6 @@
       "crlite_enrolled": false,
       "id": "9ae59d4e-7e03-474f-941d-3981e7735030",
       "last_modified": 1655989023218
-    },
-    {
-      "schema": 1655707894171,
-      "derHash": "uL4mSapRjpQ78P0eNKJARD5G556ntWLgn8yDCsfS8/w=",
-      "subject": "CN=CFCA DV OCA,O=China Financial Certification Authority,C=CN",
-      "subjectDN": "MFUxCzAJBgNVBAYTAkNOMTAwLgYDVQQKDCdDaGluYSBGaW5hbmNpYWwgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFDASBgNVBAMMC0NGQ0EgRFYgT0NB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2be5224f05030c2619f20c79e5d3d0a7ccec19c852503bc9f670433a504fd4ba",
-        "size": 1906,
-        "filename": "NDdbYkZJ3sCpHzwdPTY7sHel3usnZ9uO-7xS1XQnIZA=.pem",
-        "location": "security-state-staging/intermediates/1232f2c6-0b0b-4420-8bea-7f81a03108de.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "NDdbYkZJ3sCpHzwdPTY7sHel3usnZ9uO+7xS1XQnIZA=",
-      "crlite_enrolled": false,
-      "id": "25d39d77-0444-499e-b07d-aee39a597a47",
-      "last_modified": 1655708223204
     },
     {
       "schema": 1655388215620,
@@ -26785,5 +26785,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1665968223348
+  "timestamp": 1666486623083
 }

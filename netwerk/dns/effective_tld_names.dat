@@ -7171,7 +7171,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2022-10-15T15:17:51Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2022-10-20T15:22:15Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7341,7 +7341,7 @@ arab
 // aramco : 2014-11-20 Aramco Services Company
 aramco
 
-// archi : 2014-02-06 Afilias Limited
+// archi : 2014-02-06 Identity Digital Limited
 archi
 
 // army : 2014-03-06 Dog Beach, LLC
@@ -7485,7 +7485,7 @@ best
 // bestbuy : 2015-07-31 BBY Solutions, Inc.
 bestbuy
 
-// bet : 2015-05-07 Afilias Limited
+// bet : 2015-05-07 Identity Digital Limited
 bet
 
 // bharti : 2014-01-09 Bharti Enterprises (Holding) Private Limited
@@ -7506,10 +7506,10 @@ bing
 // bingo : 2014-12-04 Binky Moon, LLC
 bingo
 
-// bio : 2014-03-06 Afilias Limited
+// bio : 2014-03-06 Identity Digital Limited
 bio
 
-// black : 2014-01-16 Afilias Limited
+// black : 2014-01-16 Identity Digital Limited
 black
 
 // blackfriday : 2014-01-16 Registry Services, LLC
@@ -7524,7 +7524,7 @@ blog
 // bloomberg : 2014-07-17 Bloomberg IP Holdings LLC
 bloomberg
 
-// blue : 2013-11-07 Afilias Limited
+// blue : 2013-11-07 Identity Digital Limited
 blue
 
 // bms : 2014-10-30 Bristol-Myers Squibb Company
@@ -8430,7 +8430,7 @@ graphics
 // gratis : 2014-03-20 Binky Moon, LLC
 gratis
 
-// green : 2014-05-08 Afilias Limited
+// green : 2014-05-08 Identity Digital Limited
 green
 
 // gripe : 2014-03-06 Binky Moon, LLC
@@ -8745,7 +8745,7 @@ kia
 // kids : 2021-08-13 DotKids Foundation Limited
 kids
 
-// kim : 2013-09-23 Afilias Limited
+// kim : 2013-09-23 Identity Digital Limited
 kim
 
 // kinder : 2014-11-07 Ferrero Trading Lux S.A.
@@ -8850,7 +8850,7 @@ lego
 // lexus : 2015-04-23 TOYOTA MOTOR CORPORATION
 lexus
 
-// lgbt : 2014-05-08 Afilias Limited
+// lgbt : 2014-05-08 Identity Digital Limited
 lgbt
 
 // lidl : 2014-09-18 Schwarz Domains und Services GmbH & Co. KG
@@ -8898,7 +8898,7 @@ live
 // living : 2015-07-30 Lifestyle Domain Holdings, Inc.
 living
 
-// llc : 2017-12-14 Afilias Limited
+// llc : 2017-12-14 Identity Digital Limited
 llc
 
 // llp : 2019-08-26 Intercap Registry Inc.
@@ -8928,7 +8928,7 @@ london
 // lotte : 2014-11-07 Lotte Holdings Co., Ltd.
 lotte
 
-// lotto : 2014-04-10 Afilias Limited
+// lotto : 2014-04-10 Identity Digital Limited
 lotto
 
 // love : 2014-12-22 Merchant Law Group LLP
@@ -9276,7 +9276,7 @@ oracle
 // orange : 2015-03-12 Orange Brand Services Limited
 orange
 
-// organic : 2014-03-27 Afilias Limited
+// organic : 2014-03-27 Identity Digital Limited
 organic
 
 // origins : 2015-10-01 The Estée Lauder Companies Inc.
@@ -9324,7 +9324,7 @@ pay
 // pccw : 2015-05-14 PCCW Enterprises Limited
 pccw
 
-// pet : 2015-05-07 Afilias Limited
+// pet : 2015-05-07 Identity Digital Limited
 pet
 
 // pfizer : 2015-09-11 Pfizer Inc.
@@ -9372,7 +9372,7 @@ pin
 // ping : 2015-06-11 Ping Registry Provider, Inc.
 ping
 
-// pink : 2013-10-01 Afilias Limited
+// pink : 2013-10-01 Identity Digital Limited
 pink
 
 // pioneer : 2015-07-16 Pioneer Corporation
@@ -9402,7 +9402,7 @@ pnc
 // pohl : 2014-06-23 Deutsche Vermögensberatung Aktiengesellschaft DVAG
 pohl
 
-// poker : 2014-07-03 Afilias Limited
+// poker : 2014-07-03 Identity Digital Limited
 poker
 
 // politie : 2015-08-20 Politie Nederland
@@ -9435,7 +9435,7 @@ prof
 // progressive : 2015-07-23 Progressive Casualty Insurance Company
 progressive
 
-// promo : 2014-12-18 Afilias Limited
+// promo : 2014-12-18 Identity Digital Limited
 promo
 
 // properties : 2013-12-05 Binky Moon, LLC
@@ -9489,7 +9489,7 @@ realty
 // recipes : 2013-10-17 Binky Moon, LLC
 recipes
 
-// red : 2013-11-07 Afilias Limited
+// red : 2013-11-07 Identity Digital Limited
 red
 
 // redstone : 2014-10-31 Redstone Haute Couture Co., Ltd.
@@ -9738,7 +9738,7 @@ shell
 // shia : 2014-09-04 Asia Green IT System Bilgisayar San. ve Tic. Ltd. Sti.
 shia
 
-// shiksha : 2013-11-14 Afilias Limited
+// shiksha : 2013-11-14 Identity Digital Limited
 shiksha
 
 // shoes : 2013-10-02 Binky Moon, LLC
@@ -9771,7 +9771,7 @@ singles
 // site : 2015-01-15 Radix FZC
 site
 
-// ski : 2015-04-09 Afilias Limited
+// ski : 2015-04-09 Identity Digital Limited
 ski
 
 // skin : 2015-01-15 XYZ.COM LLC
@@ -10212,7 +10212,7 @@ wanggou
 // watch : 2013-11-14 Binky Moon, LLC
 watch
 
-// watches : 2014-12-22 Afilias Limited
+// watches : 2014-12-22 Identity Digital Limited
 watches
 
 // weather : 2015-01-08 International Business Machines Corporation
@@ -10347,7 +10347,7 @@ xin
 // xn--5tzm5g : 2014-12-22 Global Website TLD Asia Limited
 网站
 
-// xn--6frz82g : 2013-09-23 Afilias Limited
+// xn--6frz82g : 2013-09-23 Identity Digital Limited
 移动
 
 // xn--6qq986b3xl : 2013-09-13 Tycoon Treasure Limited
