@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "logging/rtc_event_log/rtc_event_log_parser.h"
 #include "modules/audio_coding/neteq/tools/packet_source.h"
@@ -33,11 +34,11 @@ class RtcEventLogSource : public PacketSource {
   // Creates an RtcEventLogSource reading from `file_name`. If the file cannot
   // be opened, or has the wrong format, NULL will be returned.
   static std::unique_ptr<RtcEventLogSource> CreateFromFile(
-      const std::string& file_name,
+      absl::string_view file_name,
       absl::optional<uint32_t> ssrc_filter);
   // Same as above, but uses a string with the file contents.
   static std::unique_ptr<RtcEventLogSource> CreateFromString(
-      const std::string& file_contents,
+      absl::string_view file_contents,
       absl::optional<uint32_t> ssrc_filter);
 
   virtual ~RtcEventLogSource();

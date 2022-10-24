@@ -13,6 +13,7 @@
 
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "common_audio/wav_file.h"
 #include "modules/audio_coding/neteq/tools/audio_sink.h"
 
@@ -23,7 +24,7 @@ class OutputWavFile : public AudioSink {
  public:
   // Creates an OutputWavFile, opening a file named `file_name` for writing.
   // The output file is a PCM encoded wav file.
-  OutputWavFile(const std::string& file_name,
+  OutputWavFile(absl::string_view file_name,
                 int sample_rate_hz,
                 int num_channels = 1)
       : wav_writer_(file_name, sample_rate_hz, num_channels) {}

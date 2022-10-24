@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -664,12 +665,13 @@ RtpFileReader* RtpFileReader::Create(FileFormat format,
 }
 
 RtpFileReader* RtpFileReader::Create(FileFormat format,
-                                     const std::string& filename,
+                                     absl::string_view filename,
                                      const std::set<uint32_t>& ssrc_filter) {
   RtpFileReaderImpl* reader = CreateReaderForFormat(format);
-  FILE* file = fopen(filename.c_str(), "rb");
+  std::string filename_str = std::string(filename);
+  FILE* file = fopen(filename_str.c_str(), "rb");
   if (file == nullptr) {
-    printf("ERROR: Can't open file: %s\n", filename.c_str());
+    printf("ERROR: Can't open file: %s\n", filename_str.c_str());
     return nullptr;
   }
 
@@ -681,7 +683,7 @@ RtpFileReader* RtpFileReader::Create(FileFormat format,
 }
 
 RtpFileReader* RtpFileReader::Create(FileFormat format,
-                                     const std::string& filename) {
+                                     absl::string_view filename) {
   return RtpFileReader::Create(format, filename, std::set<uint32_t>());
 }
 

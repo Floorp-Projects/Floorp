@@ -17,6 +17,7 @@
 #include <memory>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/audio_codecs/audio_encoder.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
@@ -860,7 +861,7 @@ class AcmSenderBitExactnessOldApi : public ::testing::Test,
 
   // Sets up the test::AcmSendTest object. Returns true on success, otherwise
   // false.
-  bool SetUpSender(std::string input_file_name, int source_rate) {
+  bool SetUpSender(absl::string_view input_file_name, int source_rate) {
     // Note that `audio_source_` will loop forever. The test duration is set
     // explicitly by `kTestDurationMs`.
     audio_source_.reset(new test::InputAudioFile(input_file_name));
@@ -871,7 +872,7 @@ class AcmSenderBitExactnessOldApi : public ::testing::Test,
 
   // Registers a send codec in the test::AcmSendTest object. Returns true on
   // success, false on failure.
-  bool RegisterSendCodec(const char* payload_name,
+  bool RegisterSendCodec(absl::string_view payload_name,
                          int sampling_freq_hz,
                          int channels,
                          int payload_type,
@@ -895,8 +896,8 @@ class AcmSenderBitExactnessOldApi : public ::testing::Test,
 
   // Runs the test. SetUpSender() and RegisterSendCodec() must have been called
   // before calling this method.
-  void Run(const std::string& audio_checksum_ref,
-           const std::string& payload_checksum_ref,
+  void Run(absl::string_view audio_checksum_ref,
+           absl::string_view payload_checksum_ref,
            int expected_packets,
            test::AcmReceiveTestOldApi::NumOutputChannels expected_channels,
            rtc::scoped_refptr<AudioDecoderFactory> decoder_factory = nullptr) {
@@ -943,12 +944,12 @@ class AcmSenderBitExactnessOldApi : public ::testing::Test,
   }
 
   // Helper: result must be one the "|"-separated checksums.
-  void ExpectChecksumEq(std::string ref, std::string result) {
+  void ExpectChecksumEq(absl::string_view ref, absl::string_view result) {
     if (ref.size() == result.size()) {
       // Only one checksum: clearer message.
       EXPECT_EQ(ref, result);
     } else {
-      EXPECT_NE(ref.find(result), std::string::npos)
+      EXPECT_NE(ref.find(result), absl::string_view::npos)
           << result << " must be one of these:\n"
           << ref;
     }
@@ -988,7 +989,7 @@ class AcmSenderBitExactnessOldApi : public ::testing::Test,
                               packet->payload_length_bytes());
   }
 
-  void SetUpTest(const char* codec_name,
+  void SetUpTest(absl::string_view codec_name,
                  int codec_sample_rate_hz,
                  int channels,
                  int payload_type,
@@ -1284,7 +1285,7 @@ class AcmSetBitRateTest : public ::testing::Test {
 
   // Registers a send codec in the test::AcmSendTest object. Returns true on
   // success, false on failure.
-  virtual bool RegisterSendCodec(const char* payload_name,
+  virtual bool RegisterSendCodec(absl::string_view payload_name,
                                  int sampling_freq_hz,
                                  int channels,
                                  int payload_type,
@@ -1310,7 +1311,7 @@ class AcmSetBitRateTest : public ::testing::Test {
     EXPECT_GE(max_expected_total_bits, nr_bytes * 8);
   }
 
-  void SetUpTest(const char* codec_name,
+  void SetUpTest(absl::string_view codec_name,
                  int codec_sample_rate_hz,
                  int channels,
                  int payload_type,

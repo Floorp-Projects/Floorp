@@ -18,6 +18,7 @@
 #include <utility>
 
 #include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
 #include "api/audio_codecs/audio_decoder.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -39,7 +40,7 @@ DecoderDatabase::DecoderInfo::DecoderInfo(
     const SdpAudioFormat& audio_format,
     absl::optional<AudioCodecPairId> codec_pair_id,
     AudioDecoderFactory* factory,
-    const std::string& codec_name)
+    absl::string_view codec_name)
     : name_(codec_name),
       audio_format_(audio_format),
       codec_pair_id_(codec_pair_id),
@@ -71,12 +72,8 @@ AudioDecoder* DecoderDatabase::DecoderInfo::GetDecoder() const {
   return decoder_.get();
 }
 
-bool DecoderDatabase::DecoderInfo::IsType(const char* name) const {
+bool DecoderDatabase::DecoderInfo::IsType(absl::string_view name) const {
   return absl::EqualsIgnoreCase(audio_format_.name, name);
-}
-
-bool DecoderDatabase::DecoderInfo::IsType(const std::string& name) const {
-  return IsType(name.c_str());
 }
 
 absl::optional<DecoderDatabase::DecoderInfo::CngDecoder>

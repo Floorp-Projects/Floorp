@@ -14,6 +14,7 @@
 
 #include <algorithm>
 
+#include "absl/strings/string_view.h"
 #include "modules/audio_coding/neteq/delay_manager.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/numerics/safe_conversions.h"
@@ -38,7 +39,7 @@ constexpr int kInterruptionLenMs = 150;
 const size_t StatisticsCalculator::kLenWaitingTimes;
 
 StatisticsCalculator::PeriodicUmaLogger::PeriodicUmaLogger(
-    const std::string& uma_name,
+    absl::string_view uma_name,
     int report_interval_ms,
     int max_value)
     : uma_name_(uma_name),
@@ -64,7 +65,7 @@ void StatisticsCalculator::PeriodicUmaLogger::LogToUma(int value) const {
 }
 
 StatisticsCalculator::PeriodicUmaCount::PeriodicUmaCount(
-    const std::string& uma_name,
+    absl::string_view uma_name,
     int report_interval_ms,
     int max_value)
     : PeriodicUmaLogger(uma_name, report_interval_ms, max_value) {}
@@ -87,7 +88,7 @@ void StatisticsCalculator::PeriodicUmaCount::Reset() {
 }
 
 StatisticsCalculator::PeriodicUmaAverage::PeriodicUmaAverage(
-    const std::string& uma_name,
+    absl::string_view uma_name,
     int report_interval_ms,
     int max_value)
     : PeriodicUmaLogger(uma_name, report_interval_ms, max_value) {}

@@ -15,6 +15,7 @@
 
 #include <queue>
 
+#include "absl/strings/string_view.h"
 #include "api/rtp_headers.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
@@ -100,7 +101,7 @@ class RTPFile : public RTPStream {
 
   RTPFile() : _rtpFile(NULL), _rtpEOF(false) {}
 
-  void Open(const char* outFilename, const char* mode);
+  void Open(absl::string_view outFilename, absl::string_view mode);
 
   void Close();
 
