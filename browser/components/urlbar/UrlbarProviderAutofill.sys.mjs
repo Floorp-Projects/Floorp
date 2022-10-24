@@ -486,6 +486,7 @@ class ProviderAutofill extends UrlbarProvider {
    * Obtains the query to search for autofill origin results.
    *
    * @param {UrlbarQueryContext} queryContext
+   *   The current queryContext.
    * @returns {Array} consisting of the correctly optimized query to search the
    *         database with and an object containing the params to bound.
    */
@@ -541,6 +542,7 @@ class ProviderAutofill extends UrlbarProvider {
    * Obtains the query to search for autoFill url results.
    *
    * @param {UrlbarQueryContext} queryContext
+   *   The current queryContext.
    * @returns {Array} consisting of the correctly optimized query to search the
    *         database with and an object containing the params to bound.
    */
@@ -695,6 +697,7 @@ class ProviderAutofill extends UrlbarProvider {
    * @param {object} row
    *   The matched row.
    * @param {UrlbarQueryContext} queryContext
+   *   The query context.
    * @returns {UrlbarResult} a result generated from the matches row.
    */
   _processRow(row, queryContext) {

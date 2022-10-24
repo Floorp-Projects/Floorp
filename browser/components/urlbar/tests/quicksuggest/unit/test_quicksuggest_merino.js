@@ -1460,6 +1460,7 @@ function getAndClearHistograms() {
  * @param {boolean} options.latencyRecorded
  *   Whether the Merino latency histogram is expected to contain a value.
  * @param {UrlbarQueryContext} options.context
+ *   The URLBar's autocomplete information.
  * @param {boolean} options.latencyStopwatchRunning
  *   Whether the Merino latency stopwatch is expected to be running.
  */

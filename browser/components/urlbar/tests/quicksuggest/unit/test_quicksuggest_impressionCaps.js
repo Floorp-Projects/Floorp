@@ -3675,6 +3675,7 @@ add_task(async function resetInterval() {
  * @param {object} options.config
  *   The quick suggest config to use during the test.
  * @param {Function} options.callback
+ *   The callback that will be run with the {@link config}
  */
 async function doTest({ config, callback }) {
   Services.telemetry.clearEvents();
@@ -3697,6 +3698,7 @@ async function doTest({ config, callback }) {
  * too.
  *
  * @param {string} searchString
+ *   The query that should be timed
  * @param {object} expectedBySecond
  *   An object that maps from seconds to objects that describe the searches to
  *   perform, their expected results, and the expected telemetry. For a given
@@ -3831,7 +3833,9 @@ async function doTimedCallbacks(callbacksBySecond) {
  *   This value is the name of the search and will be logged in messages to make
  *   debugging easier.
  * @param {string} options.searchString
+ *   The query that should be searched.
  * @param {Array} options.expectedResults
+ *   The results that are expected from the search.
  */
 async function checkSearch({ name, searchString, expectedResults }) {
   info(`Preparing search "${name}" with search string "${searchString}"`);

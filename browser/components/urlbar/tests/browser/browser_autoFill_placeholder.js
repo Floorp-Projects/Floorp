@@ -895,12 +895,14 @@ add_task(async function noAdaptiveHistoryMatch() {
  * @param {object} options
  *   The options object.
  * @param {string} options.searchString
+ *   The search string.
  * @param {string} options.valueBefore
  *   The expected input value before the search completes.
  * @param {string} options.valueAfter
  *   The expected input value after the search completes.
  * @param {string} options.placeholderAfter
  *   The expected placeholder value after the search completes.
+ * @returns {Promise}
  */
 async function search({
   searchString,
@@ -1006,7 +1008,7 @@ async function search({
 /**
  * Adds enough visits to URLs so their origins start autofilling.
  *
- * @param {...string} urls
+ * @param {...string} urls The URLs to add visits to.
  */
 async function addVisits(...urls) {
   for (let url of urls) {

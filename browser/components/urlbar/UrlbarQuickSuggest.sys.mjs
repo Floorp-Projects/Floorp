@@ -475,6 +475,7 @@ class QuickSuggest extends EventEmitter {
    * Sets the quick suggest config and emits a "config-set" event.
    *
    * @param {object} config
+   *   The config object.
    */
   _setConfig(config) {
     this._config = config || {};

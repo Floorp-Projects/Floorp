@@ -136,6 +136,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
   /**
    * The type of the provider.
+   *
+   * @returns {UrlbarUtils.PROVIDER_TYPE}
    */
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.NETWORK;
@@ -391,6 +393,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * provider and the type of result.
    *
    * @param {UrlbarQueryContext} queryContext
+   *   The query context.
    * @param {UrlbarResult} result
    *   The result that should be blocked.
    * @returns {boolean}
@@ -735,6 +738,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * Cancels the current query.
    *
    * @param {UrlbarQueryContext} queryContext
+   *   The query context.
    */
   cancelQuery(queryContext) {
     // Cancel the Merino timeout timer so it doesn't fire and record a timeout.
@@ -765,7 +769,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * regardless of their real timestamp values.
    *
    * @param {string} url
+   *   The URL to check.
    * @param {UrlbarResult} result
+   *   The quick suggest result. Will compare {@link url} to `result.payload.url`
    * @returns {boolean}
    *   Whether `url` is equivalent to `result.payload.url`.
    */
@@ -809,7 +815,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * Fetches remote settings suggestions.
    *
    * @param {UrlbarQueryContext} queryContext
+   *   The query context.
    * @param {string} searchString
+   *   The search string.
    * @returns {Array}
    *   The remote settings suggestions. If there are no matches, an empty array
    *   is returned.
@@ -843,7 +851,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * Fetches Merino suggestions.
    *
    * @param {UrlbarQueryContext} queryContext
+   *   The query context.
    * @param {string} searchString
+   *   The search string.
    * @returns {Array}
    *   The Merino suggestions or null if there's an error or unexpected
    *   response.
@@ -1023,6 +1033,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * provider itself should be active.
    *
    * @param {object} suggestion
+   *   The suggestion to check.
    * @returns {boolean}
    *   Whether the suggestion can be added.
    */
@@ -1406,7 +1417,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * Records an impression cap telemetry event.
    *
    * @param {object} options
-   * @param {string} options.eventType
+   *   Options object
+   * @param {"hit" | "reset"} options.eventType
    *   One of: "hit", "reset"
    * @param {string} options.suggestionType
    *   One of: "sponsored", "nonsponsored"
@@ -1513,6 +1525,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * Returns the SHA-1 digest of a string as a 40-character hex-encoded string.
    *
    * @param {string} string
+   *   The string to convert to SHA-1
    * @returns {string}
    *   The hex-encoded digest of the given string.
    */

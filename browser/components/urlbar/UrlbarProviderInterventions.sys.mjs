@@ -465,6 +465,8 @@ class ProviderInterventions extends UrlbarProvider {
 
   /**
    * Enum of the types of intervention tips.
+   *
+   * @returns {{ NONE: string; CLEAR: string; REFRESH: string; UPDATE_ASK: string; UPDATE_CHECKING: string; UPDATE_REFRESH: string; UPDATE_RESTART: string; UPDATE_WEB: string; }}
    */
   get TIP_TYPE() {
     return TIPS;
@@ -472,6 +474,8 @@ class ProviderInterventions extends UrlbarProvider {
 
   /**
    * Unique name for the provider, used by the context to filter on providers.
+   *
+   * @returns {string}
    */
   get name() {
     return "UrlbarProviderInterventions";
@@ -479,6 +483,8 @@ class ProviderInterventions extends UrlbarProvider {
 
   /**
    * The type of the provider, must be one of UrlbarUtils.PROVIDER_TYPE.
+   *
+   * @returns {UrlbarUtils.PROVIDER_TYPE}
    */
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;

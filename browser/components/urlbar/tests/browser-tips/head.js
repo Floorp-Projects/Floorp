@@ -511,6 +511,7 @@ function checkIntervention({
  * @param {string} searchString
  *   The search string.
  * @param {Window} win
+ *   The host window.
  */
 async function awaitNoTip(searchString, win = window) {
   let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({

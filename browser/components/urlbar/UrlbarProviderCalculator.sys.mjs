@@ -82,6 +82,8 @@ class ProviderCalculator extends UrlbarProvider {
 
   /**
    * The type of the provider.
+   *
+   * @returns {UrlbarUtils.PROVIDER_TYPE}
    */
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;

@@ -134,6 +134,8 @@ async function doTest({ locale, home, expectedOfflineDefault }) {
  *   locales, and the first locale in the array will be set as the requested
  *   locale.
  * @param {Function} callback
+ *  The callback to be called with the {@link locales} set. This function can be
+ *  async.
  */
 async function withLocales(locales, callback) {
   let available = Services.locale.availableLocales;

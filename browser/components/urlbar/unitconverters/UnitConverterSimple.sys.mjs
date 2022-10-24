@@ -173,6 +173,7 @@ export class UnitConverterSimple {
    * Convert the given search string.
    *
    * @param {string} searchString
+   *   The string to be converted
    * @returns {string} conversion result.
    */
   convert(searchString) {
@@ -208,17 +209,14 @@ export class UnitConverterSimple {
 }
 
 /**
- * Returns the suitable unit group and unit for the given two values.
- * If could not found suitable unit group, returns null.
+ * Returns the suitable units for the given two values.
+ * If could not found suitable unit, returns null.
  *
  * @param {string} inputUnit
+ *    A set of units to convert, mapped to the `inputUnit` value on the return
  * @param {string} outputUnit
- * @returns {object}
- *   {
- *     group: one in UNITS_GROUPS,
- *     inputUnit: input unit,
- *     outputUnit: output unit,
- *   }
+ *    A set of units to convert, mapped to the `outputUnit` value on the return
+ * @returns {{ inputUnit: string, outputUnit: string }} The suitable units.
  */
 function findUnitGroup(inputUnit, outputUnit) {
   inputUnit = toSuitableUnit(inputUnit);

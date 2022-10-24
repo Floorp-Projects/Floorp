@@ -486,7 +486,7 @@ export class UrlbarInput {
   /**
    * Passes DOM events to the _on_<event type> methods.
    *
-   * @param {Event} event
+   * @param {Event} event The event to handle.
    */
   handleEvent(event) {
     let methodName = "_on_" + event.type;
@@ -754,6 +754,7 @@ export class UrlbarInput {
    * about:privatebrowsing.
    *
    * @param {string} searchString
+   *   The search string to use.
    * @param {nsISearchEngine} [searchEngine]
    *   Optional. If included and the right prefs are set, we will enter search
    *   mode when handing `searchString` from the fake input to the Urlbar.
@@ -2846,6 +2847,7 @@ export class UrlbarInput {
    * selected.
    *
    * @param {UrlbarResult} result
+   *   The result to check.
    * @param {string} [entry]
    *   If provided, this will be recorded as the entry point into search mode.
    *   See setSearchMode() documentation for details.
@@ -3823,6 +3825,7 @@ class CopyCutController {
 
   /**
    * @param {string} command
+   *   The name of the command to check.
    * @returns {boolean}
    *   Whether the command is handled by this controller.
    */
@@ -3837,6 +3840,7 @@ class CopyCutController {
 
   /**
    * @param {string} command
+   *   The name of the command to check.
    * @returns {boolean}
    *   Whether the command should be enabled.
    */
@@ -3859,6 +3863,14 @@ class CopyCutController {
  *       refreshContextMenu must be invoked when the context menu is opened.
  */
 class AddSearchEngineHelper {
+  /**
+   * @type {UrlbarSearchOneOffs}
+   */
+  shortcutButtons;
+
+  /**
+   * @param {UrlbarInput} input The parent UrlbarInput.
+   */
   constructor(input) {
     this.input = input;
     this.shortcutButtons = input.view.oneOffSearchButtons;
@@ -3867,6 +3879,8 @@ class AddSearchEngineHelper {
   /**
    * If there's more than this number of engines, the context menu offers
    * them in a submenu.
+   *
+   * @returns {number}
    */
   get maxInlineEngines() {
     return this.shortcutButtons._maxInlineAddEngines;

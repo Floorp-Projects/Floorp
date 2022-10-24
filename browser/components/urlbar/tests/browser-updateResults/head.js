@@ -73,6 +73,7 @@ class DelayingTestProvider extends UrlbarTestUtils.TestProvider {
  * Makes a result with a suggested index.
  *
  * @param {number} suggestedIndex
+ *   The preferred index of the result.
  * @param {number} resultSpan
  *   The result will have this span.
  * @returns {UrlbarResult}

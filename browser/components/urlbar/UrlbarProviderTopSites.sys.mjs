@@ -66,6 +66,8 @@ class ProviderTopSites extends UrlbarProvider {
   /**
    * Unique name for the provider, used by the context to filter on providers.
    * Not using a unique name will cause the newest registration to win.
+   *
+   * @returns {string}
    */
   get name() {
     return "UrlbarProviderTopSites";
@@ -73,6 +75,8 @@ class ProviderTopSites extends UrlbarProvider {
 
   /**
    * The type of the provider.
+   *
+   * @returns {UrlbarUtils.PROVIDER_TYPE}
    */
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;

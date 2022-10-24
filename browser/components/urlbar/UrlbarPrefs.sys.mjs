@@ -885,6 +885,8 @@ class Preferences {
    * configurable via Nimbus variables. This getter returns an object that maps
    * from variable names to pref names relative to `browser.urlbar`. See point 3
    * in the comment inside `_updateFirefoxSuggestScenarioHelper()` for more.
+   *
+   * @returns {{ quickSuggestNonSponsoredEnabled: string; quickSuggestSponsoredEnabled: string; quickSuggestDataCollectionEnabled: string; }}
    */
   get FIREFOX_SUGGEST_UI_PREFS_BY_VARIABLE() {
     return {
@@ -896,6 +898,8 @@ class Preferences {
 
   /**
    * Default prefs relative to `browser.urlbar` per Firefox Suggest scenario.
+   *
+   * @returns {Record<Record<string, boolean>>}
    */
   get FIREFOX_SUGGEST_DEFAULT_PREFS() {
     // Important notes when modifying this:
@@ -934,6 +938,8 @@ class Preferences {
 
   /**
    * The current version of the Firefox Suggest prefs.
+   *
+   * @returns {number}
    */
   get FIREFOX_SUGGEST_MIGRATION_VERSION() {
     return 2;
@@ -1198,8 +1204,11 @@ class Preferences {
    * Observes preference changes.
    *
    * @param {nsISupports} subject
+   *   The subject of the notification.
    * @param {string} topic
+   *   The topic of the notification.
    * @param {string} data
+   *   The data attached to the notification.
    */
   observe(subject, topic, data) {
     let pref = data.replace(PREF_URLBAR_BRANCH, "");

@@ -2425,7 +2425,9 @@ export class UrlbarView {
    * there's no way around it.
    *
    * @param {Element} element
-   * @param {object} options Options object.
+   *   The element to set.
+   * @param {object} options
+   *   Options object.
    * @param {string} options.id
    *   The l10n string ID.
    * @param {object} [options.args]

@@ -17,7 +17,7 @@ let controller;
 /**
  * Asserts that the query context has the expected values.
  *
- * @param {UrlbarQueryContext} context
+ * @param {UrlbarQueryContext} context The query context.
  * @param {object} expectedValues The expected values for the UrlbarQueryContext.
  */
 function assertContextMatches(context, expectedValues) {

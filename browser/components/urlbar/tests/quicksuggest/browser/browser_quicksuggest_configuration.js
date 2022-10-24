@@ -1756,6 +1756,7 @@ add_task(async function() {
  * such objects, one per enrollment.
  *
  * @param {object} options
+ *   Function options.
  * @param {object} options.initialPrefsToSet
  *   An object: { userBranch, defaultBranch }
  *   `userBranch` and `defaultBranch` are objects that map pref names (relative
