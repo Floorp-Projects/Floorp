@@ -37,6 +37,8 @@ class XULResizerElement final : public nsXULElement {
   Direction GetDirection();
 
   nsIContent* GetContentToResize() const;
+  // The current size of the content to resize (if available).
+  Maybe<nsSize> GetCurrentSize() const;
 
   struct SizeInfo {
     nsCString width, height;
