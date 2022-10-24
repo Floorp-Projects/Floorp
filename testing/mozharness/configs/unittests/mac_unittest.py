@@ -102,7 +102,6 @@ config = {
             "options": [
                 "--self-test",
                 "--symbols-path=%(symbols_path)s",
-                "--test-plugin-path=%(test_plugin_path)s",
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--utility-path=tests/bin",

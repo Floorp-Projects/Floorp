@@ -27,13 +27,6 @@ def run_xpcshell(context, **kwargs):
     if not args.xpcshell:
         args.xpcshell = os.path.join(args.appPath, "xpcshell")
 
-    if not args.pluginsPath:
-        for path in context.ancestors(args.appPath, depth=2):
-            test = os.path.join(path, "plugins")
-            if os.path.isdir(test):
-                args.pluginsPath = test
-                break
-
     log = mozlog.commandline.setup_logging(
         "XPCShellTests", args, {"mach": sys.stdout}, {"verbose": True}
     )

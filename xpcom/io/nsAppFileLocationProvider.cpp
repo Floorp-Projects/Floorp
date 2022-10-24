@@ -42,21 +42,10 @@
 // define default product directory
 #define DEFAULT_PRODUCT_DIR nsLiteralCString(MOZ_USER_DIR)
 
-// Locally defined keys used by nsAppDirectoryEnumerator
-#define NS_USER_PLUGINS_DIR "UserPlugins"
-
-#ifdef MOZ_WIDGET_COCOA
-#  define NS_MACOSX_USER_PLUGIN_DIR "OSXUserPlugins"
-#  define NS_MACOSX_LOCAL_PLUGIN_DIR "OSXLocalPlugins"
-#elif XP_UNIX
-#  define NS_SYSTEM_PLUGINS_DIR "SysPlugins"
-#endif
-
 #define DEFAULTS_DIR_NAME "defaults"_ns
 #define DEFAULTS_PREF_DIR_NAME "pref"_ns
 #define RES_DIR_NAME "res"_ns
 #define CHROME_DIR_NAME "chrome"_ns
-#define PLUGINS_DIR_NAME "plugins"_ns
 
 //*****************************************************************************
 // nsAppFileLocationProvider::Constructor/Destructor
@@ -68,8 +57,7 @@ nsAppFileLocationProvider::nsAppFileLocationProvider() = default;
 // nsAppFileLocationProvider::nsISupports
 //*****************************************************************************
 
-NS_IMPL_ISUPPORTS(nsAppFileLocationProvider, nsIDirectoryServiceProvider,
-                  nsIDirectoryServiceProvider2)
+NS_IMPL_ISUPPORTS(nsAppFileLocationProvider, nsIDirectoryServiceProvider)
 
 //*****************************************************************************
 // nsAppFileLocationProvider::nsIDirectoryServiceProvider
@@ -87,11 +75,6 @@ nsAppFileLocationProvider::GetFile(const char* aProp, bool* aPersistent,
 
   *aResult = nullptr;
   *aPersistent = true;
-
-#ifdef MOZ_WIDGET_COCOA
-  FSRef fileRef;
-  nsCOMPtr<nsILocalFileMac> macFile;
-#endif
 
   if (nsCRT::strcmp(aProp, NS_APP_APPLICATION_REGISTRY_DIR) == 0) {
     rv = GetProductDirectory(getter_AddRefs(localFile));
@@ -127,56 +110,7 @@ nsAppFileLocationProvider::GetFile(const char* aProp, bool* aPersistent,
     if (NS_SUCCEEDED(rv)) {
       rv = localFile->AppendRelativeNativePath(CHROME_DIR_NAME);
     }
-  }
-#ifdef MOZ_WIDGET_COCOA
-  else if (nsCRT::strcmp(aProp, NS_MACOSX_USER_PLUGIN_DIR) == 0) {
-    if (::FSFindFolder(kUserDomain, kInternetPlugInFolderType, false,
-                       &fileRef) == noErr) {
-      rv = NS_NewLocalFileWithFSRef(&fileRef, true, getter_AddRefs(macFile));
-      if (NS_SUCCEEDED(rv)) {
-        localFile = macFile;
-      }
-    }
-  } else if (nsCRT::strcmp(aProp, NS_MACOSX_LOCAL_PLUGIN_DIR) == 0) {
-    if (::FSFindFolder(kLocalDomain, kInternetPlugInFolderType, false,
-                       &fileRef) == noErr) {
-      rv = NS_NewLocalFileWithFSRef(&fileRef, true, getter_AddRefs(macFile));
-      if (NS_SUCCEEDED(rv)) {
-        localFile = macFile;
-      }
-    }
-  }
-#else
-  else if (nsCRT::strcmp(aProp, NS_USER_PLUGINS_DIR) == 0) {
-#  ifdef ENABLE_SYSTEM_EXTENSION_DIRS
-    rv = GetProductDirectory(getter_AddRefs(localFile));
-    if (NS_SUCCEEDED(rv)) {
-      rv = localFile->AppendRelativeNativePath(PLUGINS_DIR_NAME);
-    }
-#  else
-    rv = NS_ERROR_FAILURE;
-#  endif
-  }
-#  ifdef XP_UNIX
-  else if (nsCRT::strcmp(aProp, NS_SYSTEM_PLUGINS_DIR) == 0) {
-#    ifdef ENABLE_SYSTEM_EXTENSION_DIRS
-    static const char* const sysLPlgDir =
-#      if defined(HAVE_USR_LIB64_DIR) && defined(__LP64__)
-        "/usr/lib64/mozilla/plugins";
-#      elif defined(__OpenBSD__) || defined(__FreeBSD__)
-        "/usr/local/lib/mozilla/plugins";
-#      else
-        "/usr/lib/mozilla/plugins";
-#      endif
-    rv = NS_NewNativeLocalFile(nsDependentCString(sysLPlgDir), false,
-                               getter_AddRefs(localFile));
-#    else
-    rv = NS_ERROR_FAILURE;
-#    endif
-  }
-#  endif
-#endif
-  else if (nsCRT::strcmp(aProp, NS_APP_INSTALL_CLEANUP_DIR) == 0) {
+  } else if (nsCRT::strcmp(aProp, NS_APP_INSTALL_CLEANUP_DIR) == 0) {
     // This is cloned so that embeddors will have a hook to override
     // with their own cleanup dir.  See bugzilla bug #105087
     rv = CloneMozBinDirectory(getter_AddRefs(localFile));
@@ -350,7 +284,7 @@ nsresult nsAppFileLocationProvider::GetDefaultUserProfileRoot(
 }
 
 //*****************************************************************************
-// nsAppFileLocationProvider::nsIDirectoryServiceProvider2
+// nsAppFileLocationProvider::nsIDirectoryServiceProvider
 //*****************************************************************************
 
 class nsAppDirectoryEnumerator : public nsSimpleEnumerator {
@@ -401,31 +335,3 @@ class nsAppDirectoryEnumerator : public nsSimpleEnumerator {
   const char** mCurrentKey;
   nsCOMPtr<nsIFile> mNext;
 };
-
-NS_IMETHODIMP
-nsAppFileLocationProvider::GetFiles(const char* aProp,
-                                    nsISimpleEnumerator** aResult) {
-  if (NS_WARN_IF(!aResult)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aResult = nullptr;
-  nsresult rv = NS_ERROR_FAILURE;
-
-  if (!nsCRT::strcmp(aProp, NS_APP_PLUGINS_DIR_LIST)) {
-#ifdef MOZ_WIDGET_COCOA
-    static const char* keys[] = {NS_MACOSX_USER_PLUGIN_DIR,
-                                 NS_MACOSX_LOCAL_PLUGIN_DIR, nullptr};
-#else
-#  ifdef XP_UNIX
-    static const char* keys[] = {NS_USER_PLUGINS_DIR, NS_SYSTEM_PLUGINS_DIR,
-                                 nullptr};
-#  else
-    static const char* keys[] = {NS_USER_PLUGINS_DIR, nullptr};
-#  endif
-#endif
-    *aResult = new nsAppDirectoryEnumerator(this, keys);
-    NS_ADDREF(*aResult);
-    rv = NS_OK;
-  }
-  return rv;
-}
