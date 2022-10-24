@@ -4627,7 +4627,9 @@ static const JSFunctionSpec array_methods[] = {
 
 static const JSFunctionSpec array_static_methods[] = {
     JS_INLINABLE_FN("isArray", array_isArray, 1, 0, ArrayIsArray),
-    JS_SELF_HOSTED_FN("from", "ArrayFrom", 3, 0), JS_FN("of", array_of, 0, 0),
+    JS_SELF_HOSTED_FN("from", "ArrayFrom", 3, 0),
+    JS_SELF_HOSTED_FN("fromAsync", "ArrayFromAsync", 3, 0),
+    JS_FN("of", array_of, 0, 0),
 
     JS_FS_END};
 
