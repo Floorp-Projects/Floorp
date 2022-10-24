@@ -1577,6 +1577,11 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
         return true;
       }
 
+      if (action == SET && bi.kind() == BindingKind::Const) {
+        ReportRuntimeLexicalError(cx, JSMSG_BAD_CONST_ASSIGN, id);
+        return false;
+      }
+
       if (bi.location().kind() == BindingLocation::Kind::Import) {
         return true;
       }
@@ -1695,6 +1700,11 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
       }
       if (!bi) {
         return true;
+      }
+
+      if (action == SET && bi.kind() == BindingKind::Const) {
+        ReportRuntimeLexicalError(cx, JSMSG_BAD_CONST_ASSIGN, id);
+        return false;
       }
 
       BindingLocation loc = bi.location();
