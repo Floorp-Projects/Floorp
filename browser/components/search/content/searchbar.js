@@ -191,9 +191,12 @@
       // Return a dummy engine if there is no currentEngine
       return currentEngine || { name: "", uri: null };
     }
+
     /**
      * textbox is used by sanitize.js to clear the undo history when
      * clearing form information.
+     *
+     * @returns {HTMLInputElement}
      */
     get textbox() {
       return this._textbox;

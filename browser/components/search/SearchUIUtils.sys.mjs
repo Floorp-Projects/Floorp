@@ -74,6 +74,8 @@ export var SearchUIUtils = {
 
   /**
    * Returns the URL to use for where to get more search engines.
+   *
+   * @returns {string}
    */
   get searchEnginesURL() {
     return Services.urlFormatter.formatURLPref(
