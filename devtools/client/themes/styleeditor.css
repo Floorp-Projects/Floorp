@@ -29,11 +29,14 @@ li:hover > hgroup > .stylesheet-more > h3 > .stylesheet-saveButton {
 
 .stylesheet-details-container {
   -moz-box-flex: 1;
+  min-width: 0;
+  min-height: 0;
 }
 
 .stylesheet-media-container {
   overflow-y: auto;
-  contain: size;
+  min-width: 0;
+  min-height: 0;
 }
 
 .stylesheet-error-message {
