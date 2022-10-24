@@ -20,7 +20,6 @@
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/indexedDB/Key.h"
 #include "mozilla/dom/quota/IPCStreamCipherStrategy.h"
-#include "IndexedDBCipherKeyManager.h"
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
@@ -39,6 +38,9 @@ struct StructuredCloneFileParent;
 struct StructuredCloneReadInfoParent;
 
 extern const nsLiteralString kJournalDirectoryName;
+
+using IndexedDBCipherStrategy = quota::IPCStreamCipherStrategy;
+using CipherKey = IndexedDBCipherStrategy::KeyType;
 
 // At the moment, the encrypted stream block size is assumed to be unchangeable
 // between encrypting and decrypting blobs. This assumptions holds as long as we
