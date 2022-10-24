@@ -118,6 +118,15 @@ graphics-window-protocol = Window Protocol
 # Desktop environment in use on Linux (e.g. GNOME, KDE, XFCE, etc).
 graphics-desktop-environment = Desktop Environment
 place-database-title = Places Database
+place-database-stats = Statistics
+place-database-stats-show = Show Statistics
+place-database-stats-hide = Hide Statistics
+place-database-stats-entity = Entity
+place-database-stats-count = Count
+place-database-stats-size-kib = Size (KiB)
+place-database-stats-size-perc = Size (%)
+place-database-stats-efficiency-perc = Efficiency (%)
+place-database-stats-sequentiality-perc = Sequentiality (%)
 place-database-integrity = Integrity
 place-database-verify-integrity = Verify Integrity
 a11y-title = Accessibility

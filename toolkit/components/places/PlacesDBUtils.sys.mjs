@@ -1372,6 +1372,38 @@ export var PlacesDBUtils = {
   },
 
   /**
+   * Gets detailed statistics about database entities and their respective row
+   * counts.
+   * @returns {Array} An array that augments each object returned by
+   *          {@link getEntitiesStats} with the following extra properties:
+   *            - entity: name of the entity
+   *            - count: row count of the entity
+   */
+  async getEntitiesStatsAndCounts() {
+    let stats = await PlacesDBUtils.getEntitiesStats();
+    let data = [];
+    let db = await lazy.PlacesUtils.promiseDBConnection();
+    for (let [entity, value] of stats) {
+      let count = "-";
+      try {
+        if (
+          entity.startsWith("moz_") &&
+          !entity.endsWith("index") &&
+          entity != "moz_places_visitcount" /* bug in index name */
+        ) {
+          count = (
+            await db.execute(`SELECT count(*) FROM ${entity}`)
+          )[0].getResultByIndex(0);
+        }
+      } catch (ex) {
+        console.error(ex);
+      }
+      data.push(Object.assign(value, { entity, count }));
+    }
+    return data;
+  },
+
+  /**
    * Runs a list of tasks, returning a Map when done.
    *
    * @param tasks

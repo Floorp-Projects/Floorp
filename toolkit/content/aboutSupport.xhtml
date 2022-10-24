@@ -647,10 +647,27 @@
           <tr class="no-copy">
             <th class="column" data-l10n-id="place-database-integrity"/>
 
-            <td>
+            <td colspan="5">
               <button id="verify-place-integrity-button" data-l10n-id="place-database-verify-integrity"/>
               <pre id="verify-place-result" class="hidden no-copy"></pre>
             </td>
+          </tr>
+          <tr class="no-copy">
+            <th class="column" data-l10n-id="place-database-stats"/>
+
+            <td colspan="5">
+              <button id="place-database-stats-toggle" data-l10n-id="place-database-stats-show"/>
+            </td>
+          </tr>
+        </tbody>
+        <tbody id="place-database-stats-tbody">
+          <tr>
+            <th data-l10n-id="place-database-stats-entity"/>
+            <th data-l10n-id="place-database-stats-count"/>
+            <th data-l10n-id="place-database-stats-size-kib"/>
+            <th data-l10n-id="place-database-stats-size-perc"/>
+            <th data-l10n-id="place-database-stats-efficiency-perc"/>
+            <th data-l10n-id="place-database-stats-sequentiality-perc"/>
           </tr>
         </tbody>
       </table>
