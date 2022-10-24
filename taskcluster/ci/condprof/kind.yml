@@ -65,7 +65,7 @@ jobs:
                   path: archive
                   type: directory
     linux64-firefox:
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         description: Creates or updates conditioned profiles on Linux
         run-on-projects: ['mozilla-central']
         treeherder:
