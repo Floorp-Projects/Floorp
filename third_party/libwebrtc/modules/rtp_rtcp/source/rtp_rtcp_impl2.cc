@@ -781,10 +781,14 @@ void ModuleRtpRtcpImpl2::MaybeSendRtcpAtOrAfterTimestamp(
     return;
   }
 
-  RTC_DLOG(LS_WARNING)
-      << "BUGBUG: Task queue scheduled delayed call too early.";
+  TimeDelta delta = execution_time - now;
+  // TaskQueue may run task 1ms earlier, so don't print warning if in this case.
+  if (delta > TimeDelta::Millis(1)) {
+    RTC_DLOG(LS_WARNING) << "BUGBUG: Task queue scheduled delayed call "
+                         << delta << " too early.";
+  }
 
-  ScheduleMaybeSendRtcpAtOrAfterTimestamp(execution_time, execution_time - now);
+  ScheduleMaybeSendRtcpAtOrAfterTimestamp(execution_time, delta);
 }
 
 void ModuleRtpRtcpImpl2::ScheduleRtcpSendEvaluation(TimeDelta duration) {
