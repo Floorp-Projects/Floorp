@@ -2947,9 +2947,9 @@ function openLocation(event) {
   );
 }
 
-function BrowserOpenTab(event) {
-  let where = "tab";
+function BrowserOpenTab({ event, url = BROWSER_NEW_TAB_URL } = {}) {
   let relatedToCurrent = false;
+  let where = "tab";
 
   if (event) {
     where = whereToOpenLink(event, false, true);
@@ -2980,7 +2980,7 @@ function BrowserOpenTab(event) {
   Services.obs.notifyObservers(
     {
       wrappedJSObject: new Promise(resolve => {
-        openTrustedLinkIn(BROWSER_NEW_TAB_URL, where, {
+        openTrustedLinkIn(url, where, {
           relatedToCurrent,
           resolveOnNewTabCreated: resolve,
         });
