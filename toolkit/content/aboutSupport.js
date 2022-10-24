@@ -432,6 +432,33 @@ var snapshotFormatters = {
     $.append($("locked-prefs-tbody"), prefsTable(data));
   },
 
+  places(data) {
+    const statsBody = $("place-database-stats-tbody");
+    $.append(
+      statsBody,
+      data.map(function(entry) {
+        return $.new("tr", [
+          $.new("td", entry.entity),
+          $.new("td", entry.count),
+          $.new("td", entry.sizeBytes / 1024),
+          $.new("td", entry.sizePerc),
+          $.new("td", entry.efficiencyPerc),
+          $.new("td", entry.sequentialityPerc),
+        ]);
+      })
+    );
+    statsBody.style.display = "none";
+    $("place-database-stats-toggle").addEventListener("click", function(event) {
+      if (statsBody.style.display === "none") {
+        document.l10n.setAttributes(event.target, "place-database-stats-hide");
+        statsBody.style.display = "";
+      } else {
+        document.l10n.setAttributes(event.target, "place-database-stats-show");
+        statsBody.style.display = "none";
+      }
+    });
+  },
+
   printingPreferences(data) {
     if (AppConstants.platform == "android") {
       return;
