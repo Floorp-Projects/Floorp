@@ -56,6 +56,10 @@ git clone https://github.com/mozilla/pdf.js.git
 cd /builds/worker/pdf.js
 npm ci --legacy-peer-deps
 
+# seed a v8 repository because it's large, and doing an update will
+# be much faster than a new clone each time.
+cd /builds/worker/
+git clone https://github.com/v8/v8.git
 
 # Build Google's Cloud SQL Proxy from source
 cd /builds/worker/

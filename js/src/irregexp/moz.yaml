@@ -25,3 +25,12 @@ vendoring:
     - action: run-script
       script: 'import-irregexp.py'
       cwd: '{yaml_dir}'
+
+updatebot:
+  maintainer-phab: iain
+  maintainer-bz: iireland@mozilla.com
+  fuzzy-query: sm-shell
+  tasks:
+    - type: vendoring
+      enabled: True
+      frequency: 1 week
