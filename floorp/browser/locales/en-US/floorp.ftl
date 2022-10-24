@@ -120,6 +120,9 @@ floorp-legacy =
 
 floorp-fluentUI =
  .label = fluentUI
+ 
+ floorp-fluerialUI =
+ .label = Floorp Fluerial UI
 
 floorp-gnomeUI =
  .label = Gnome Theme
