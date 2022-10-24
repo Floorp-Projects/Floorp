@@ -886,10 +886,6 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   display: none;
 }
 
-.subview-subheader {
-  display: -moz-box;
-}
-
 #PlacesToolbar menuitem,
 #PlacesToolbar menu,
 .subview-subheader,
@@ -902,6 +898,14 @@ panelview .toolbarbutton-1,
   padding: var(--arrowpanel-menuitem-padding);
   border-radius: var(--arrowpanel-menuitem-border-radius);
   background-color: transparent;
+}
+
+.subview-subheader {
+  font-size: 11px;
+  font-weight: inherit;
+  color: var(--panel-description-color);
+  padding-block: 4px;
+  box-sizing: border-box;
 }
 
 .subviewbutton {
@@ -1182,12 +1186,6 @@ panelmultiview .toolbaritem-combined-buttons > label {
   padding-inline-start: 0;
 }
 
-.subview-subheader {
-  font-size: inherit;
-  font-weight: inherit;
-  color: var(--panel-description-color);
-}
-
 panelview .toolbarbutton-1 {
   margin-top: 6px;
 }
@@ -1253,11 +1251,6 @@ panelview .toolbarbutton-1 {
   color: inherit;
   background-color: var(--panel-item-active-bgcolor);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
-}
-
-.subview-subheader {
-  font-size: 11px;
-  padding-block: 4px;
 }
 
 #PlacesToolbar menuitem,
