@@ -25,7 +25,7 @@ jobs:
             symbol: AB
             tier: 2
         run-on-projects: ['mozilla-central']
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         worker:
             max-run-time: 3600
             env:
