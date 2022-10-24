@@ -259,6 +259,7 @@
 
     /**
      * Passes DOM events for the popup to the _on_<event type> methods.
+     *
      * @param {Event} event
      *   DOM event from the <popup>.
      */
