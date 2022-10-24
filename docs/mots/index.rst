@@ -148,7 +148,7 @@ Tracking detection and content-blocking.
     * - Peer(s)
       -
         | `Andrea Marchesini (baku) <https://people.mozilla.org/s?query=baku>`__
-        | `Dimi Lee (dimi) <https://people.mozilla.org/s?query=dimi>`__
+        | `Dimi Lee (dlee) <https://people.mozilla.org/s?query=dlee>`__
         | `Paul Zühlcke (pbz) <https://people.mozilla.org/s?query=pbz>`__
         | `Johann Hofmann (johannh) <https://people.mozilla.org/s?query=johannh>`__
     * - Peer(s) Emeritus
@@ -2453,7 +2453,7 @@ macOS widget support
 
     * - Owner(s)
       -
-        | `Not active (spohl) <https://people.mozilla.org/s?query=spohl>`__
+        | `Stephen A Pohl (spohl) <https://people.mozilla.org/s?query=spohl>`__
     * - Peer(s)
       -
         | `Markus Stange (mstange) <https://people.mozilla.org/s?query=mstange>`__
@@ -2937,7 +2937,7 @@ Form detection and autocomplete.
     * - Peer(s)
       -
         | `Tim Giles (tgiles) <https://people.mozilla.org/s?query=tgiles>`__
-        | `Dimi Lee (dimi) <https://people.mozilla.org/s?query=dimi>`__
+        | `Dimi Lee (dlee) <https://people.mozilla.org/s?query=dlee>`__
     * - Owner(s) Emeritus
       - Matthew Noorenberghe
     * - Includes
@@ -3079,7 +3079,7 @@ Managing, saving and filling logins.
       -
         | `jaws <https://people.mozilla.org/s?query=jaws>`__
         | `Tim Giles (tgiles) <https://people.mozilla.org/s?query=tgiles>`__
-        | `Dimi Lee (dimi) <https://people.mozilla.org/s?query=dimi>`__
+        | `Dimi Lee (dlee) <https://people.mozilla.org/s?query=dlee>`__
         | `Sam Foster (sfoster) <https://people.mozilla.org/s?query=sfoster>`__
     * - Owner(s) Emeritus
       - Matthew Noorenberghe
