@@ -10,15 +10,22 @@ add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
 
   // Inject lots of sources to go beyond the maximum limit of displayed sources (set to 100)
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
-    for (let i = 1; i <= 200; i++) {
-      content.eval(
-        `function evalSource() {}; //# sourceURL=eval-source-${String(
-          i
-        ).padStart(3, "0")}.js`
-      );
+  const injectedSources = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    function() {
+      const sources = [];
+      for (let i = 1; i <= 200; i++) {
+        const value = String(i).padStart(3, "0");
+        content.eval(
+          `function evalSource() {}; //# sourceURL=eval-source-${value}.js`
+        );
+        sources.push(`eval-source-${value}.js`);
+      }
+      return sources;
     }
-  });
+  );
+  await waitForSources(dbg, ...injectedSources);
 
   info("test opening and closing");
   await quickOpen(dbg, "");
