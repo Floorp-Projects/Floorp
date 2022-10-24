@@ -2628,7 +2628,7 @@ UpdateService.prototype = {
    */
   /* eslint-disable-next-line complexity */
   _postUpdateProcessing: async function AUS__postUpdateProcessing() {
-    if (this.disabledByPolicy) {
+    if (this.disabled) {
       // This function is a point when we can potentially enter the update
       // system, even with update disabled. Make sure that we do not continue
       // because update code can have side effects that are visible to the user
@@ -3145,11 +3145,11 @@ UpdateService.prototype = {
   _checkForBackgroundUpdates: function AUS__checkForBackgroundUpdates(
     isNotify
   ) {
-    if (!this.disabledByPolicy && AppConstants.NIGHTLY_BUILD) {
+    if (!this.disabled && AppConstants.NIGHTLY_BUILD) {
       // Scalar ID: update.suppress_prompts
       AUSTLMY.pingSuppressPrompts();
     }
-    if (this.disabledByPolicy || this.manualUpdateOnly) {
+    if (this.disabled || this.manualUpdateOnly) {
       // Return immediately if we are disabled by policy. Otherwise, just the
       // telemetry we try to collect below can potentially trigger a restart
       // prompt if the update directory isn't writable. And we shouldn't be
@@ -3523,7 +3523,7 @@ UpdateService.prototype = {
       return;
     }
 
-    if (this.disabledByPolicy) {
+    if (this.disabled) {
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_DISABLED_BY_POLICY);
       LOG(
         "UpdateService:_selectAndInstallUpdate - not prompting because " +
@@ -3618,13 +3618,10 @@ UpdateService.prototype = {
     );
   },
 
-  // This property reflects any state that should cause the update service to
-  // behave as if it were disabled by policy. This includes the policy itself,
-  // but also other runtime conditions which should in effect disable updates.
-  // This may be distinct from how some of these cases are presented to the
-  // user; for instance, user interfaces should only indicate that policies are
-  // set when policies are actually set, and not under any other condition.
-  get disabledByPolicy() {
+  /**
+   * See nsIUpdateService.idl
+   */
+  get disabled() {
     let hasWinPackageId = false;
     try {
       hasWinPackageId = Services.sysinfo.getProperty("hasWinPackageId");
@@ -3651,7 +3648,7 @@ UpdateService.prototype = {
    * See nsIUpdateService.idl
    */
   get canUsuallyCheckForUpdates() {
-    if (this.disabledByPolicy) {
+    if (this.disabled) {
       LOG(
         "UpdateService.canUsuallyCheckForUpdates - unable to automatically check " +
           "for updates, the option has been disabled by the administrator."
@@ -3937,8 +3934,8 @@ UpdateService.prototype = {
     if (!lazy.gLogEnabled) {
       return;
     }
-    if (this.disabledByPolicy) {
-      LOG("Current UpdateService status: disabledByPolicy");
+    if (this.disabled) {
+      LOG("Current UpdateService status: disabled");
       // Return early if UpdateService is disabled by policy. Otherwise some of
       // the getters we call to display status information may discover that the
       // update directory is not writable, which automatically results in the
@@ -4659,7 +4656,7 @@ Checker.prototype = {
     let UpdateServiceInstance = UpdateServiceFactory.createInstance();
     // |force| can override |canCheckForUpdates| since |force| indicates a
     // manual update check. But nothing should override enterprise policies.
-    if (UpdateServiceInstance.disabledByPolicy) {
+    if (UpdateServiceInstance.disabled) {
       LOG("Checker: checkForUpdates, disabled by policy");
       return;
     }
