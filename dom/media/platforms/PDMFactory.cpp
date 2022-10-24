@@ -115,24 +115,32 @@ class PDMInitializer final {
   }
 
   static void InitUtilityPDMs() {
+    const ipc::SandboxingKind kind = GetCurrentSandboxingKind();
 #ifdef XP_WIN
-    if (!IsWin7AndPre2000Compatible()) {
+    if (!IsWin7AndPre2000Compatible() &&
+        kind == ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF) {
       WMFDecoderModule::Init();
     }
 #  ifdef MOZ_WMF_MEDIA_ENGINE
-    if (IsWin8OrLater() && StaticPrefs::media_wmf_media_engine_enabled()) {
+    if (IsWin8OrLater() && StaticPrefs::media_wmf_media_engine_enabled() &&
+        kind == ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM) {
       MFMediaEngineDecoderModule::Init();
     }
 #  endif
 #endif
 #ifdef MOZ_APPLEMEDIA
-    AppleDecoderModule::Init();
+    if (kind == ipc::SandboxingKind::UTILITY_AUDIO_DECODING_APPLE_MEDIA) {
+      AppleDecoderModule::Init();
+    }
 #endif
 #ifdef MOZ_FFVPX
-    FFVPXRuntimeLinker::Init();
+    if (kind == ipc::SandboxingKind::GENERIC_UTILITY) {
+      FFVPXRuntimeLinker::Init();
+    }
 #endif
 #ifdef MOZ_FFMPEG
-    if (StaticPrefs::media_utility_ffmpeg_enabled()) {
+    if (StaticPrefs::media_utility_ffmpeg_enabled() &&
+        kind == ipc::SandboxingKind::GENERIC_UTILITY) {
       FFmpegRuntimeLinker::Init();
     }
 #endif
