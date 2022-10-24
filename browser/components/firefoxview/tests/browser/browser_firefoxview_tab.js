@@ -1,6 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+function forceFocus(aElem) {
+  aElem.setAttribute("tabindex", "-1");
+  aElem.focus();
+  aElem.removeAttribute("tabindex");
+}
+
 add_task(async function aria_attributes() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   is(
@@ -52,6 +58,23 @@ add_task(async function load_opens_new_tab() {
     ok(
       !win.FirefoxViewHandler.tab.selected,
       "Firefox View tab is not selected anymore (new tab opened in the foreground)"
+    );
+  });
+});
+
+add_task(async function first_tab_focusable_with_keyboard() {
+  await withFirefoxView({}, async browser => {
+    let win = browser.ownerGlobal;
+    ok(win.FirefoxViewHandler.tab.selected, "Firefox View tab is selected");
+    let firefoxViewBtn = win.FirefoxViewHandler.button;
+    let focused = BrowserTestUtils.waitForEvent(firefoxViewBtn, "focus", false);
+    forceFocus(firefoxViewBtn);
+    await focused;
+    EventUtils.synthesizeKey("KEY_Tab", {}, win);
+    is(
+      win.document.activeElement,
+      win.gBrowser.visibleTabs[0],
+      "First available tab should be focused."
     );
   });
 });
