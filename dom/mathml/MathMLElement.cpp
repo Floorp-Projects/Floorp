@@ -593,8 +593,8 @@ void MathMLElement::MapMathMLAttributesInto(
       !aDecls.PropertyIsSet(eCSSProperty_math_style)) {
     auto str = value->GetStringValue();
     static const char displaystyles[][6] = {"false", "true"};
-    static const uint8_t mathStyle[MOZ_ARRAY_LENGTH(displaystyles)] = {
-        NS_STYLE_MATH_STYLE_COMPACT, NS_STYLE_MATH_STYLE_NORMAL};
+    static const StyleMathStyle mathStyle[MOZ_ARRAY_LENGTH(displaystyles)] = {
+        StyleMathStyle::Compact, StyleMathStyle::Normal};
     for (uint32_t i = 0; i < ArrayLength(displaystyles); ++i) {
       if (str.LowerCaseEqualsASCII(displaystyles[i])) {
         aDecls.SetKeywordValue(eCSSProperty_math_style, mathStyle[i]);
