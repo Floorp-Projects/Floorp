@@ -28,7 +28,7 @@ class FrameChildList {
  public:
   FrameChildList(const nsFrameList& aList, FrameChildListID aID)
       : mList(aList), mID(aID) {}
-  nsFrameList mList;
+  const nsFrameList& mList;
   FrameChildListID mID;
 };
 

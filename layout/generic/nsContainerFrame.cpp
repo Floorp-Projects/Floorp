@@ -105,7 +105,7 @@ void nsContainerFrame::SetInitialChildList(ChildListID aListID,
                  "The placeholder should points to a backdrop frame");
     }
 #endif
-    nsFrameList* list = new (PresShell()) nsFrameList(aChildList);
+    nsFrameList* list = new (PresShell()) nsFrameList(std::move(aChildList));
     SetProperty(BackdropProperty(), list);
   } else {
     MOZ_ASSERT_UNREACHABLE("Unexpected child list");
@@ -1441,7 +1441,7 @@ nsFrameList nsContainerFrame::StealFramesAfter(nsIFrame* aChild) {
   }
 
   NS_ERROR("StealFramesAfter: can't find aChild");
-  return nsFrameList::EmptyList();
+  return nsFrameList();
 }
 
 /*
