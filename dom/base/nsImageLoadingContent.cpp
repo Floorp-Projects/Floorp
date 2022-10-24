@@ -252,8 +252,15 @@ void nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest,
   // Fire the appropriate DOM event.
   if (NS_SUCCEEDED(aStatus)) {
     FireEvent(u"load"_ns);
+
+    // Do not fire loadend event for multipart/x-mixed-replace image streams.
+    bool isMultipart;
+    if (NS_FAILED(aRequest->GetMultipart(&isMultipart)) || !isMultipart) {
+      FireEvent(u"loadend"_ns);
+    }
   } else {
     FireEvent(u"error"_ns);
+    FireEvent(u"loadend"_ns);
   }
 
   SVGObserverUtils::InvalidateDirectRenderingObservers(
@@ -980,6 +987,7 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
   if (!mCurrentRequest) aChannel->GetURI(getter_AddRefs(mCurrentURI));
 
   FireEvent(u"error"_ns);
+  FireEvent(u"loadend"_ns);
   return rv;
 }
 
@@ -1055,10 +1063,14 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
     return NS_OK;
   }
 
+  // Fire loadstart event if required
+  FireEvent(u"loadstart"_ns);
+
   if (!mLoadingEnabled) {
     // XXX Why fire an error here? seems like the callers to SetLoadingEnabled
     // don't want/need it.
     FireEvent(u"error"_ns);
+    FireEvent(u"loadend"_ns);
     return NS_OK;
   }
 
@@ -1088,6 +1100,7 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
     ClearPendingRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DiscardImages));
 
     FireEvent(u"error"_ns);
+    FireEvent(u"loadend"_ns);
     return NS_OK;
   }
 
@@ -1194,6 +1207,7 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
     }
 
     FireEvent(u"error"_ns);
+    FireEvent(u"loadend"_ns);
   }
 
   return NS_OK;
