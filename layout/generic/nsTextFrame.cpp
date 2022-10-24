@@ -9182,14 +9182,12 @@ nsRect nsTextFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const {
 /* virtual */
 nsresult nsTextFrame::GetPrefWidthTightBounds(gfxContext* aContext, nscoord* aX,
                                               nscoord* aXMost) {
-  gfxSkipCharsIterator iter =
-      const_cast<nsTextFrame*>(this)->EnsureTextRun(nsTextFrame::eInflated);
+  gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
   if (!mTextRun) {
     return NS_ERROR_FAILURE;
   }
 
-  PropertyProvider provider(const_cast<nsTextFrame*>(this), iter,
-                            nsTextFrame::eInflated, mFontMetrics);
+  PropertyProvider provider(this, iter, nsTextFrame::eInflated, mFontMetrics);
   provider.InitializeForMeasure();
 
   gfxTextRun::Metrics metrics = mTextRun->MeasureText(
