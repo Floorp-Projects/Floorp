@@ -128,6 +128,7 @@ class BrowserSearchTelemetryHandler {
    *
    * Telemetry records only which search mode is entered and how it was entered.
    * It does not record anything pertaining to searches made within search mode.
+   *
    * @param {object} searchMode
    *   A search mode object. See UrlbarInput.setSearchMode documentation for
    *   details.

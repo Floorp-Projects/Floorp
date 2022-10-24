@@ -184,7 +184,9 @@ class TelemetryHandler {
    * Test-only function, used to override the provider information, so that
    * unit tests can set it to easy to test values.
    *
-   * @param {array} providerInfo @see search-telemetry-schema.json for type information.
+   * @param {Array} providerInfo
+   *   See {@link https://searchfox.org/mozilla-central/search?q=search-telemetry-schema.json}
+   *   for type information.
    */
   overrideSearchTelemetryForTests(providerInfo) {
     let info = providerInfo ? providerInfo : this._originalProviderInfo;
@@ -197,7 +199,7 @@ class TelemetryHandler {
    * This automatically maps the regexps to RegExp objects so that
    * we don't have to create a new instance each time.
    *
-   * @param {array} providerInfo
+   * @param {Array} providerInfo
    *   A raw array of provider information to set.
    */
   _setSearchProviderInfo(providerInfo) {
@@ -457,7 +459,7 @@ class TelemetryHandler {
    * @param {string} url The url to match for a provider.
    * @param {boolean} useOnlyExtraAdServers If true, this will use the extra
    *   ad server regexp to match instead of the main regexp.
-   * @returns {array|null} Returns an array of provider name and the provider information.
+   * @returns {Array | null} Returns an array of provider name and the provider information.
    */
   _getProviderInfoForURL(url, useOnlyExtraAdServers = false) {
     if (useOnlyExtraAdServers) {
@@ -609,9 +611,11 @@ class ContentHandler {
    * Constructor.
    *
    * @param {object} options
-   * @param {Map} options.browserInfoByURL The  map of urls from TelemetryHandler.
-   * @param {function} options.getProviderInfoForURL A function that obtains
-   *   the provider information for a url.
+   *   The options for the handler.
+   * @param {Map} options.browserInfoByURL
+   *   The  map of urls from TelemetryHandler.
+   * @param {Function} options.getProviderInfoForURL
+   *   A function that obtains the provider information for a url.
    */
   constructor(options) {
     this._browserInfoByURL = options.browserInfoByURL;
@@ -624,7 +628,7 @@ class ContentHandler {
    * Initializes the content handler. This will also set up the shared data that is
    * shared with the SearchTelemetryChild actor.
    *
-   * @param {array} providerInfo
+   * @param {Array} providerInfo
    *  The provider information for the search telemetry to record.
    */
   init(providerInfo) {

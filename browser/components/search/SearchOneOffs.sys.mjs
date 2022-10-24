@@ -477,9 +477,9 @@ export class SearchOneOffs {
   /**
    * Adds one-offs for the given engines to the DOM.
    *
-   * @param {array} engines
+   * @param {Array} engines
    *        The engines to add.
-   * @param {array} addEngines
+   * @param {Array} addEngines
    *        The engines that can be added.
    */
   _rebuildEngineList(engines, addEngines) {
