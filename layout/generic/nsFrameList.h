@@ -98,12 +98,16 @@ class nsFrameList {
     VerifyList();
   }
 
-  // nsFrameList is a move-only class.
-  nsFrameList(const nsFrameList& aOther) = delete;
-  nsFrameList& operator=(const nsFrameList& aOther) = delete;
+  // XXX: Ideally, copy constructor should be removed because a frame should be
+  // owned by one list.
+  nsFrameList(const nsFrameList& aOther) = default;
+
+  // XXX: ideally, copy assignment should be removed because we should use move
+  // assignment to transfer the ownership.
+  nsFrameList& operator=(const nsFrameList& aOther) = default;
 
   /**
-   * Transfer frames in aOther to this list. aOther becomes empty after this
+   * Move the frames in aOther to this list. aOther becomes empty after this
    * operation.
    */
   nsFrameList(nsFrameList&& aOther)
@@ -112,9 +116,7 @@ class nsFrameList {
     VerifyList();
   }
   nsFrameList& operator=(nsFrameList&& aOther) {
-    if (this != &aOther) {
-      SetFrames(aOther);
-    }
+    SetFrames(aOther);
     return *this;
   }
 

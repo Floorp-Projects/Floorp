@@ -5618,7 +5618,7 @@ nsFrameList* nsBlockFrame::GetOverflowOutOfFlows() const {
 }
 
 // This takes ownership of the frames
-void nsBlockFrame::SetOverflowOutOfFlows(nsFrameList&& aList,
+void nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList,
                                          nsFrameList* aPropValue) {
   MOZ_ASSERT(
       HasAnyStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS) == !!aPropValue,
@@ -5636,10 +5636,10 @@ void nsBlockFrame::SetOverflowOutOfFlows(nsFrameList&& aList,
   } else if (HasAnyStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS)) {
     NS_ASSERTION(aPropValue == GetProperty(OverflowOutOfFlowsProperty()),
                  "prop value mismatch");
-    *aPropValue = std::move(aList);
+    *aPropValue = aList;
   } else {
     SetProperty(OverflowOutOfFlowsProperty(),
-                new (PresShell()) nsFrameList(std::move(aList)));
+                new (PresShell()) nsFrameList(aList));
     AddStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   }
 }
