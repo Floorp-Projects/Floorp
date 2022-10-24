@@ -1172,6 +1172,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
 #customization-container {
   -moz-box-orient: horizontal;
   flex-direction: column;
+  min-height: 0;
 }
 
 #customization-container:not([hidden]) {
@@ -1192,7 +1193,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
 }
 
 #customization-panelHolder > #widget-overflow-fixed-list {
-  flex: 1 1 auto; /* Grow within the available space, and allow ourselves to shrink */
+  flex: 1; /* Grow within the available space, and allow ourselves to shrink */
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -1208,7 +1209,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
 }
 
 #customization-panelWrapper {
-  flex: 1 1 auto;
+  flex: 1;
   height: 0; /* Don't let my contents affect ancestors' content-based sizing */
   align-items: end; /* align to the end on the cross-axis (affects arrow) */
 }
