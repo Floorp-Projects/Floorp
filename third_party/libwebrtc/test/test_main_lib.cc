@@ -28,6 +28,7 @@
 #include "system_wrappers/include/metrics.h"
 #include "test/field_trial.h"
 #include "test/gtest.h"
+#include "test/test_flags.h"
 #include "test/testsupport/perf_test.h"
 #include "test/testsupport/resources_dir_flag.h"
 
@@ -64,22 +65,6 @@ ABSL_FLAG(std::string,
           "",
           "Path to output an empty JSON file which Chromium infra requires.");
 
-ABSL_FLAG(
-    std::string,
-    isolated_script_test_perf_output,
-    "",
-    "Path where the perf results should be stored in proto format described "
-    "described by histogram.proto in "
-    "https://chromium.googlesource.com/catapult/.");
-
-constexpr char kPlotAllMetrics[] = "all";
-ABSL_FLAG(std::vector<std::string>,
-          plot,
-          {},
-          "List of metrics that should be exported for plotting (if they are "
-          "available). Example: psnr,ssim,encode_time. To plot all available "
-          " metrics pass 'all' as flag value");
-
 ABSL_FLAG(bool, logs, true, "print logs to stderr");
 ABSL_FLAG(bool, verbose, false, "verbose logs to stderr");
 
@@ -89,16 +74,11 @@ ABSL_FLAG(std::string,
           "Path to collect trace events (json file) for chrome://tracing. "
           "If not set, events aren't captured.");
 
-ABSL_FLAG(std::string,
-          force_fieldtrials,
-          "",
-          "Field trials control experimental feature code which can be forced. "
-          "E.g. running with --force_fieldtrials=WebRTC-FooFeature/Enable/"
-          " will assign the group Enable to field trial WebRTC-FooFeature.");
-
 namespace webrtc {
 
 namespace {
+
+constexpr char kPlotAllMetrics[] = "all";
 
 class TestMainImpl : public TestMain {
  public:
