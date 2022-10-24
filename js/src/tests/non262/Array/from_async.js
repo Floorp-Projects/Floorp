@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-array-from-async) skip-if(!Array.fromAsync)
 
 // Basic Smoke Test
 async function* asyncGen(n) {
