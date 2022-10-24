@@ -400,7 +400,8 @@
               <menu id="browserToolsMenu" data-l10n-id="menu-tools-browser-tools">
                 <menupopup id="menuWebDeveloperPopup">
                   <menuitem id="menu_taskManager"
-                            oncommand="switchToTabHavingURI('about:processes', true)"
+                            key="key_aboutProcesses"
+                            command="View:AboutProcesses"
                             data-l10n-id="menu-tools-task-manager"/>
                   <menuitem id="menu_pageSource"
                             key="key_viewSource"

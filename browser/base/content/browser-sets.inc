@@ -39,6 +39,7 @@
     <command id="cmd_toggleOfflineStatus" oncommand="BrowserOffline.toggleOfflineStatus();"/>
     <command id="cmd_quitApplication" oncommand="goQuitApplication(event)"/>
 
+    <command id="View:AboutProcesses" oncommand="switchToTabHavingURI('about:processes', true)"/>
     <command id="View:PageSource" oncommand="BrowserViewSource(window.gBrowser.selectedBrowser);"/>
     <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
@@ -241,6 +242,7 @@
 
     <key data-l10n-id="nav-reload-shortcut" command="Browser:Reload" modifiers="accel" id="key_reload"/>
     <key data-l10n-id="nav-reload-shortcut" command="Browser:ReloadSkipCache" modifiers="accel,shift" id="key_reload_skip_cache"/>
+    <key id="key_aboutProcesses" command="View:AboutProcesses" keycode="VK_ESCAPE" modifiers="shift"/>
     <key id="key_viewSource" data-l10n-id="page-source-shortcut" command="View:PageSource" modifiers="accel"/>
 #ifdef XP_MACOSX
     <key id="key_viewSourceSafari" data-l10n-id="page-source-shortcut-safari" command="View:PageSource" modifiers="accel,alt"/>
