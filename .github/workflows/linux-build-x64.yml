@@ -18,7 +18,7 @@ jobs:
 
     - name: Add swap file
       run: |
-        sudo fallocate -l 15G /swapfile2
+        sudo fallocate -l 10G /swapfile2
         sudo chmod 600 /swapfile2
         sudo mkswap /swapfile2
         sudo swapon /swapfile2
