@@ -25,11 +25,6 @@
 #include "builtin/FinalizationRegistryObject.h"
 #include "builtin/MapObject.h"
 #include "builtin/ShadowRealm.h"
-#include "builtin/Stream.h"
-#include "builtin/streams/QueueingStrategies.h"  // js::{ByteLength,Count}QueueingStrategy
-#include "builtin/streams/ReadableStream.h"  // js::ReadableStream
-#include "builtin/streams/ReadableStreamController.h"  // js::Readable{StreamDefault,ByteStream}Controller
-#include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStreamDefaultReader
 #include "builtin/Symbol.h"
 #include "builtin/WeakMapObject.h"
 #include "builtin/WeakRefObject.h"
@@ -179,15 +174,6 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_PluralRules:
     case JSProto_RelativeTimeFormat:
       return false;
-#endif
-#ifdef MOZ_JS_STREAMS
-    case JSProto_ReadableStream:
-    case JSProto_ReadableStreamDefaultReader:
-    case JSProto_ReadableStreamDefaultController:
-    case JSProto_ReadableByteStreamController:
-    case JSProto_ByteLengthQueuingStrategy:
-    case JSProto_CountQueuingStrategy:
-      return !cx->realm()->creationOptions().getStreamsEnabled();
 #endif
 
     // Return true if the given constructor has been disabled at run-time.
