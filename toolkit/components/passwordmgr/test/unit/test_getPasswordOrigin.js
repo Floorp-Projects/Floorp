@@ -7,7 +7,7 @@
 const TESTCASES = [
   ["javascript:void(0);", null],
   ["javascript:void(0);", "javascript:", true],
-  ["chrome://MyAccount", null],
+  ["chrome://MyAccount", "chrome://myaccount"],
   ["data:text/html,example", null],
   [
     "http://username:password@example.com:80/foo?bar=baz#fragment",
