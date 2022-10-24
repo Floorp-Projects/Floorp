@@ -1,0 +1,40 @@
+<html>
+	<head>
+		<script>
+			async function ensureIDB(name, ver, store) {
+				return new Promise((resolve, reject) => {
+					let createObjectStore = (db, store) => {
+						db.createObjectStore(store);
+					};
+
+					var req = indexedDB.open(name, ver);
+					req.onerror = reject;
+
+					req.onsuccess = (event) => {
+						resolve(req.result);
+					};
+
+					req.onupgradeneeded = function (event) {
+						let db = event.target.result;
+						createObjectStore(db, store);
+					};
+				});
+			};
+
+			async function addDataIntoIDB(idb, store, key, value) {
+				let db = await ensureIDB(idb, 1, store);
+				await (new Promise((resolve, reject) => {
+						var transaction = db.transaction([store], "readwrite");
+						var put = transaction.objectStore(store).put(value, key);
+						put.onsuccess = resolve();
+				}));
+
+				closeIDB(db)
+			};
+
+			function closeIDB(db) {
+				db.close();
+			}
+		</script>
+	</head>
+</html>
