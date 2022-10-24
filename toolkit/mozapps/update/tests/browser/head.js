@@ -662,6 +662,7 @@ function runAboutDialogUpdateTest(params, steps) {
       continueFile,
       downloadInfo,
       forceApply,
+      noContinue,
     } = step;
     return (async function() {
       await TestUtils.waitForCondition(
@@ -722,10 +723,11 @@ function runAboutDialogUpdateTest(params, steps) {
         ok(!gUpdateManager.readyUpdate, "There should not be a ready update");
       }
 
-      if (panelId == "downloading") {
+      // Some tests just want to stop at the downloading state. These won't
+      // include a continue file in that state.
+      if (panelId == "downloading" && continueFile) {
         for (let i = 0; i < downloadInfo.length; ++i) {
           let data = downloadInfo[i];
-          // The About Dialog tests always specify a continue file.
           await continueFileHandler(continueFile);
           let patch = getPatchOfType(
             data.patchType,
@@ -794,8 +796,9 @@ function runAboutDialogUpdateTest(params, steps) {
         );
       }
 
+      // Automatically click the download button unless `noContinue` was passed.
       let buttonPanels = ["downloadAndInstall", "apply"];
-      if (buttonPanels.includes(panelId)) {
+      if (buttonPanels.includes(panelId) && !noContinue) {
         let buttonEl = selectedPanel.querySelector("button");
         await TestUtils.waitForCondition(
           () => aboutDialog.document.activeElement == buttonEl,
