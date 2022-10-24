@@ -14,7 +14,7 @@ object Versions {
     const val android_gradle_plugin = "7.3.0"
     const val android_lint_api = "30.3.0"
 
-    const val sentry = "6.4.2"
+    const val sentry = "6.6.0"
     const val leakcanary = "2.9.1"
     const val osslicenses_plugin = "0.10.4"
     const val detekt = "1.19.0"
