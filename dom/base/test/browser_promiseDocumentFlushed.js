@@ -205,7 +205,7 @@ add_task(async function test_reentrancy() {
     });
   });
 
-  await Assert.rejects(promise, ex => ex.name == 'InvalidStateError');
+  await Assert.rejects(promise, ex => ex.name == "InvalidStateError");
 });
 
 /**
