@@ -221,7 +221,7 @@ bool GPUProcessManager::LaunchGPUProcess() {
   // If the process didn't live long enough, reset the stable flag so that we
   // don't end up in a restart loop.
   auto newTime = TimeStamp::Now();
-  if (IsProcessStable(newTime)) {
+  if (!IsProcessStable(newTime)) {
     mUnstableProcessAttempts++;
   }
   mTotalProcessAttempts++;
