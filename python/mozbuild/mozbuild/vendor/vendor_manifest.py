@@ -601,6 +601,8 @@ class VendorManifest(MozbuildObject):
                     if "GECKO_PATH" not in os.environ
                     else {}
                 )
+                # We also add a signal to scripts that they are running under mach vendor
+                extra_env["MACH_VENDOR"] = "1"
                 self.run_process(
                     args=[command] + args,
                     cwd=run_dir,
