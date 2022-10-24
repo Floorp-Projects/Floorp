@@ -2122,8 +2122,7 @@ const nsFrameList& nsIFrame::GetChildList(ChildListID aListID) const {
 
 void nsIFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
   if (IsAbsoluteContainer()) {
-    const nsFrameList& absoluteList =
-        GetAbsoluteContainingBlock()->GetChildList();
+    nsFrameList absoluteList = GetAbsoluteContainingBlock()->GetChildList();
     absoluteList.AppendIfNonempty(aLists, GetAbsoluteListID());
   }
 }

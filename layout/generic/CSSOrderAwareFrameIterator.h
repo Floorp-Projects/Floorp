@@ -184,7 +184,7 @@ class CSSOrderAwareFrameIteratorT {
   void Next() {
 #ifdef DEBUG
     MOZ_ASSERT(!AtEnd());
-    const nsFrameList& list = mContainer->GetChildList(mListID);
+    nsFrameList list = mContainer->GetChildList(mListID);
     MOZ_ASSERT(list.FirstChild() == mChildren.FirstChild() &&
                    list.LastChild() == mChildren.LastChild(),
                "the list of child frames must not change while iterating!");
@@ -223,6 +223,7 @@ class CSSOrderAwareFrameIteratorT {
   void Invalidate() {
     mIter.reset();
     mArray.reset();
+    mozWritePoison(&mChildren, sizeof(mChildren));
   }
 
   bool ItemsAreAlreadyInOrder() const { return mIter.isSome(); }
@@ -237,7 +238,7 @@ class CSSOrderAwareFrameIteratorT {
   static int CSSBoxOrdinalGroupComparator(nsIFrame* const& a,
                                           nsIFrame* const& b);
 
-  const nsFrameList& mChildren;
+  nsFrameList mChildren;
   // Used if child list is already in ascending 'order'.
   Maybe<Iterator> mIter;
   Maybe<Iterator> mIterEnd;

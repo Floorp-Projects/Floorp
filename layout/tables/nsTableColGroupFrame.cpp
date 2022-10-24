@@ -102,7 +102,7 @@ nsresult nsTableColGroupFrame::AddColsToTable(int32_t aFirstColIndex,
 
 nsTableColGroupFrame* nsTableColGroupFrame::GetLastRealColGroup(
     nsTableFrame* aTableFrame) {
-  const nsFrameList& colGroups = aTableFrame->GetColGroups();
+  nsFrameList colGroups = aTableFrame->GetColGroups();
 
   auto lastColGroup = static_cast<nsTableColGroupFrame*>(colGroups.LastChild());
   if (!lastColGroup) {
