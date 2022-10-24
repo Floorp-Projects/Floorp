@@ -117,7 +117,7 @@
       <html:link rel="stylesheet" href="chrome://global/skin/button.css"/>
       <html:link rel="stylesheet" href="chrome://global/skin/dialog.css"/>
       ${this.hasAttribute("subdialog") ? this.inContentStyle : ""}
-      <vbox class="box-inherit dialog-content-box" part="content-box" flex="1">
+      <vbox class="box-inherit" part="content-box">
         <html:slot></html:slot>
       </vbox>
       ${buttons}`;
