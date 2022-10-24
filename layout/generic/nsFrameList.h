@@ -106,7 +106,7 @@ class nsFrameList {
   nsFrameList& operator=(const nsFrameList& aOther) = default;
 
   /**
-   * Move the frames in aOther to this list. aOther becomes empty after this
+   * Transfer frames in aOther to this list. aOther becomes empty after this
    * operation.
    */
   nsFrameList(nsFrameList&& aOther)
@@ -115,7 +115,9 @@ class nsFrameList {
     VerifyList();
   }
   nsFrameList& operator=(nsFrameList&& aOther) {
-    SetFrames(aOther);
+    if (this != &aOther) {
+      SetFrames(aOther);
+    }
     return *this;
   }
 
