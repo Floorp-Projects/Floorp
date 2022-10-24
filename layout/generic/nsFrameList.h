@@ -98,9 +98,8 @@ class nsFrameList {
     VerifyList();
   }
 
-  // XXX: Ideally, copy constructor should be removed because a frame should be
-  // owned by one list.
-  nsFrameList(const nsFrameList& aOther) = default;
+  // nsFrameList is a move-only class.
+  nsFrameList(const nsFrameList& aOther) = delete;
 
   // XXX: ideally, copy assignment should be removed because we should use move
   // assignment to transfer the ownership.
