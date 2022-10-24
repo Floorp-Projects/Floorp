@@ -59,6 +59,7 @@ export const PinnedGroupBuilder = new (class PinnedGroupBuilder {
    * Updates the group based on the added and removed urls.
    *
    * @param {object} options
+   *   The options object.
    * @param {Set<object>} options.addedItems
    *   The added items to handle in this update. A set of objects with
    *   properties of url and userPersisted.

@@ -297,6 +297,7 @@ export const SnapshotScorer = new (class SnapshotScorer {
    * Calculates points based on how many times the snapshot has been visited.
    *
    * @param {Snapshot} snapshot
+   *   The snapshot used for calculation
    * @returns {number}
    */
   _scoreVisit(snapshot) {
@@ -312,7 +313,9 @@ export const SnapshotScorer = new (class SnapshotScorer {
    * the current session.
    *
    * @param {Snapshot} snapshot
+   *   The snapshot used for calculation
    * @param {Set} currentSessionUrls
+   *   The urls of the current session
    * @returns {number}
    */
   _scoreCurrentSession(snapshot, currentSessionUrls) {
@@ -323,6 +326,7 @@ export const SnapshotScorer = new (class SnapshotScorer {
    * Calculates points based on if the user persisted the snapshot.
    *
    * @param {Snapshot} snapshot
+   *   The snapshot used for calculation
    * @returns {number}
    */
   _scoreIsUserPersisted(snapshot) {
@@ -333,6 +337,7 @@ export const SnapshotScorer = new (class SnapshotScorer {
    * Calculates points based on if the user removed the snapshot.
    *
    * @param {Snapshot} snapshot
+   *   The snapshot used for calculation
    * @returns {number}
    */
   _scoreIsUserRemoved(snapshot) {

@@ -525,6 +525,7 @@ async function closeToolbarContextMenu() {
  * Other Bookmarks folder testable.
  *
  * @param {object} [win]
+ *   The window object to use.
  */
 async function setupBookmarksToolbar(win = window) {
   let toolbar = win.document.getElementById("PersonalToolbar");

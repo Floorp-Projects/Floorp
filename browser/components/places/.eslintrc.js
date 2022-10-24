@@ -5,20 +5,5 @@
 "use strict";
 
 module.exports = {
-  extends: ["plugin:mozilla/valid-jsdoc"],
-
-  rules: {
-    "require-jsdoc": [
-      "error",
-      {
-        require: {
-          FunctionDeclaration: false,
-          MethodDefinition: false,
-          ClassDeclaration: true,
-          ArrowFunctionExpression: false,
-          FunctionExpression: false,
-        },
-      },
-    ],
-  },
+  extends: ["plugin:mozilla/require-jsdoc", "plugin:mozilla/valid-jsdoc"],
 };

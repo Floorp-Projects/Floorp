@@ -14,6 +14,7 @@ var wasCollapsed = toolbar.collapsed;
  * We cannot just use menu.open, since it would not work on Mac due to native menubar.
  *
  * @param {object} aPopup
+ *   The popup element
  */
 function fakeOpenPopup(aPopup) {
   var popupEvent = document.createEvent("MouseEvent");

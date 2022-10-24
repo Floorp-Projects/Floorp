@@ -287,6 +287,7 @@ export const SnapshotGroups = new (class SnapshotGroups {
    * Queries the list of SnapshotGroups.
    *
    * @param {object} [options]
+   *   Options for the query.
    * @param {number} [options.limit]
    *   A numerical limit to the number of snapshots to retrieve, defaults to 50.
    *   Use -1 to specify no limit.
@@ -385,7 +386,7 @@ export const SnapshotGroups = new (class SnapshotGroups {
    * Obtains the snapshot urls for a particular group. This is designed for
    * builders to easily grab the list of urls in a group.
    *
-   * @param {object} options
+   * @param {object} options Options for the query.
    * @param {number} options.id
    *   The id of the snapshot group to get the snapshots for.
    * @param {boolean} [options.hidden]
@@ -422,6 +423,7 @@ export const SnapshotGroups = new (class SnapshotGroups {
    * snapshots across to the content process at one time.
    *
    * @param {object} options
+   *   Options for the query.
    * @param {number} options.id
    *   The id of the snapshot group to get the snapshots for.
    * @param {number} [options.startIndex]

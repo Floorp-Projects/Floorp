@@ -23,6 +23,7 @@ async function reset_interactions_snapshots() {
  * Creates an interaction and snapshot for a given url
  *
  * @param {object} [options]
+ *   The options property containing the following:
  * @param {string} [options.url]
  *   The url
  * @param {string} [options.referrer]

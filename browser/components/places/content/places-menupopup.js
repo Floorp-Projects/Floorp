@@ -214,6 +214,9 @@
 
     /**
      * This is the view that manages the popup.
+     *
+     * @see {@link PlacesUIUtils.getViewForNode}
+     * @returns {DOMNode}
      */
     get _rootView() {
       if (!this.__rootView) {

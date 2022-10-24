@@ -238,6 +238,7 @@ var gEditItemOverlay = {
    * Initialize the panel.
    *
    * @param {object} aInfo
+   *   The initialization info.
    * @param {object} [aInfo.node]
    *   If aInfo.uris is not specified, this must be specified.
    *   Either a result node or a node-like object representing the item to be edited.
