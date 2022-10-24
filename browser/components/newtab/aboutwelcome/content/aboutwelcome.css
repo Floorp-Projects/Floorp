@@ -549,6 +549,10 @@ html {
   text-shadow: none;
   margin-inline: 40px 0;
 }
+.onboardingContainer .screen[pos=split] .section-secondary .image-alt {
+  width: inherit;
+  height: inherit;
+}
 .onboardingContainer .screen[pos=split] .section-secondary .hero-image {
   flex: 1;
   display: flex;
