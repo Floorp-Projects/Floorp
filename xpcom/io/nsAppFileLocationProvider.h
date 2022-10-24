@@ -17,13 +17,12 @@ class nsIFile;
 // class nsAppFileLocationProvider
 //*****************************************************************************
 
-class nsAppFileLocationProvider final : public nsIDirectoryServiceProvider2 {
+class nsAppFileLocationProvider final : public nsIDirectoryServiceProvider {
  public:
   nsAppFileLocationProvider();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
-  NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
 
  private:
   ~nsAppFileLocationProvider() = default;

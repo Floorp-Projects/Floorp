@@ -40,7 +40,6 @@
 #define NS_APP_CHROME_DIR "AChrom"
 
 #define NS_APP_CHROME_DIR_LIST "AChromDL"
-#define NS_APP_PLUGINS_DIR_LIST "APluginsDL"
 
 // --------------------------------------------------------------------------------------
 // Files and directories which exist on a per-profile basis

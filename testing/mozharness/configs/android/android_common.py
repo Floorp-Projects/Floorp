@@ -301,7 +301,6 @@ config = {
                 "--log-raw-level=%(log_raw_level)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--log-tbpl-level=%(log_tbpl_level)s",
-                "--test-plugin-path=none",
                 "--threads=4",
                 "--deviceSerial=%(device_serial)s",
                 "%(xpcshell_extra)s",

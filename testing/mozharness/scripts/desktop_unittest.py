@@ -666,10 +666,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
             if c["test_tags"]:
                 base_cmd.extend(["--tag={}".format(t) for t in c["test_tags"]])
 
-            # set pluginsPath
-            abs_res_plugins_dir = os.path.join(abs_res_dir, "plugins")
-            str_format_values["test_plugin_path"] = abs_res_plugins_dir
-
             if suite_category not in c["suite_definitions"]:
                 self.fatal("'%s' not defined in the config!")
 

@@ -215,20 +215,6 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         self.env["XPCSHELL_TEST_TEMP_DIR"] = self.remoteTmpDir
         return self.remoteTmpDir
 
-    def setupPluginsDir(self):
-        if not os.path.isdir(self.pluginsPath):
-            return None
-
-        # making sure tmp dir is set up
-        self.setupTempDir()
-
-        pluginsDir = posixpath.join(self.remoteTmpDir, "plugins")
-        self.device.push(self.pluginsPath, pluginsDir)
-        self.device.chmod(pluginsDir)
-        if self.interactive:
-            self.log.info("plugins dir is %s" % pluginsDir)
-        return pluginsDir
-
     def setupProfileDir(self):
         profileId = str(uuid.uuid4())
         self.profileDir = posixpath.join(self.profileDir, profileId)

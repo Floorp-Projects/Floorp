@@ -99,9 +99,6 @@ class XPCShellRunner(MozbuildObject):
         if kwargs["profileName"] is None:
             kwargs["profileName"] = "firefox"
 
-        if kwargs["pluginsPath"] is None:
-            kwargs["pluginsPath"] = os.path.join(self.distdir, "plugins")
-
         if kwargs["testingModulesDir"] is None:
             kwargs["testingModulesDir"] = os.path.join(self.topobjdir, "_tests/modules")
 

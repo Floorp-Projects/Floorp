@@ -92,17 +92,6 @@ def add_common_arguments(parser):
         help="Directory where testing modules are located.",
     )
     parser.add_argument(
-        "--test-plugin-path",
-        type=str,
-        dest="pluginsPath",
-        default=None,
-        help="Path to the location of a plugins directory containing the "
-        "test plugin or plugins required for tests. "
-        "By default xpcshell's dir svc provider returns gre/plugins. "
-        "Use test-plugin-path to add a directory "
-        "to return for NS_APP_PLUGINS_DIR_LIST when queried.",
-    )
-    parser.add_argument(
         "--total-chunks",
         type=int,
         dest="totalChunks",
