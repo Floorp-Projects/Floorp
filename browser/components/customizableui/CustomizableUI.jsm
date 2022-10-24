@@ -5264,10 +5264,9 @@ OverflowableToolbar.prototype = {
 
     // If the target has min-width: 0, their children might actually overflow
     // it, so check for both cases explicitly.
-    let isOverflowing =
-      Math.floor(targetWidth) > totalAvailWidth ||
-      Math.floor(targetChildrenWidth) > totalAvailWidth;
-    return [isOverflowing, totalAvailWidth];
+    let targetContentWidth = Math.max(targetWidth, targetChildrenWidth);
+    let isOverflowing = Math.floor(targetContentWidth) > totalAvailWidth;
+    return { isOverflowing, targetContentWidth, totalAvailWidth };
   },
 
   /**
@@ -5281,7 +5280,7 @@ OverflowableToolbar.prototype = {
     let win = this._target.ownerGlobal;
     let checkOverflowHandle = this._checkOverflowHandle;
 
-    let [isOverflowing] = await this._getOverflowInfo();
+    let { isOverflowing, targetContentWidth } = await this._getOverflowInfo();
 
     // Stop if the window has closed or if we re-enter while waiting for
     // layout.
@@ -5295,7 +5294,7 @@ OverflowableToolbar.prototype = {
       let prevChild = child.previousElementSibling;
 
       if (child.getAttribute("overflows") != "false") {
-        this._collapsed.set(child.id, this._target.clientWidth);
+        this._collapsed.set(child.id, targetContentWidth);
         child.setAttribute("overflowedItem", true);
         child.setAttribute("cui-anchorid", this._chevron.id);
         CustomizableUIInternal.ensureButtonContextMenu(
@@ -5315,7 +5314,7 @@ OverflowableToolbar.prototype = {
         }
       }
       child = prevChild;
-      [isOverflowing] = await this._getOverflowInfo();
+      ({ isOverflowing, targetContentWidth } = await this._getOverflowInfo());
       // Stop if the window has closed or if we re-enter while waiting for
       // layout.
       if (win.closed || this._checkOverflowHandle != checkOverflowHandle) {
@@ -5364,7 +5363,7 @@ OverflowableToolbar.prototype = {
 
       if (!shouldMoveAllItems && minSize) {
         if (!totalAvailWidth) {
-          [, totalAvailWidth] = await this._getOverflowInfo();
+          ({ totalAvailWidth } = await this._getOverflowInfo());
 
           // If the window has closed or if we re-enter because we were waiting
           // for layout, stop.
@@ -5441,7 +5440,7 @@ OverflowableToolbar.prototype = {
     let checkOverflowHandle = (this._checkOverflowHandle = {});
 
     lazy.log.debug("Checking overflow");
-    let [isOverflowing, totalAvailWidth] = await this._getOverflowInfo();
+    let { isOverflowing, totalAvailWidth } = await this._getOverflowInfo();
     if (win.closed || this._checkOverflowHandle != checkOverflowHandle) {
       return;
     }
