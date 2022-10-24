@@ -2025,7 +2025,7 @@ class CharIterator {
    * Returns whether the current character is a skipped character.
    */
   bool IsOriginalCharSkipped() const {
-    return mSkipCharsIterator.IsOriginalCharSkipped();
+    return mSkipCharsIterator->IsOriginalCharSkipped();
   }
 
   /**
@@ -2141,7 +2141,7 @@ class CharIterator {
    * A gfxSkipCharsIterator for the text frame the current character is
    * a part of.
    */
-  gfxSkipCharsIterator mSkipCharsIterator;
+  Maybe<gfxSkipCharsIterator> mSkipCharsIterator;
 
   // Cache for information computed by IsOriginalCharTrimmed.
   mutable nsTextFrame* mFrameForTrimCheck;
@@ -2194,7 +2194,8 @@ CharIterator::CharIterator(SVGTextFrame* aSVGTextFrame,
       mLengthAdjustScaleFactor(aSVGTextFrame->mLengthAdjustScaleFactor),
       mPostReflow(aPostReflow) {
   if (!AtEnd()) {
-    mSkipCharsIterator = TextFrame()->EnsureTextRun(nsTextFrame::eInflated);
+    mSkipCharsIterator =
+        Some(TextFrame()->EnsureTextRun(nsTextFrame::eInflated));
     mTextRun = TextFrame()->GetTextRun(nsTextFrame::eInflated);
     mTextElementCharIndex = mFrameIterator.UndisplayedCharacters();
     UpdateGlyphStartTextElementCharIndex();
@@ -2282,15 +2283,15 @@ bool CharIterator::AdvanceToSubtree() {
 
 bool CharIterator::IsClusterAndLigatureGroupStart() const {
   return mTextRun->IsLigatureGroupStart(
-             mSkipCharsIterator.GetSkippedOffset()) &&
-         mTextRun->IsClusterStart(mSkipCharsIterator.GetSkippedOffset());
+             mSkipCharsIterator->GetSkippedOffset()) &&
+         mTextRun->IsClusterStart(mSkipCharsIterator->GetSkippedOffset());
 }
 
 const gfxTextRun::GlyphRun& CharIterator::GlyphRun() const {
   uint32_t numRuns;
   const gfxTextRun::GlyphRun* glyphRuns = mTextRun->GetGlyphRuns(&numRuns);
   uint32_t runIndex = mTextRun->FindFirstGlyphRunContaining(
-      mSkipCharsIterator.GetSkippedOffset());
+      mSkipCharsIterator->GetSkippedOffset());
   MOZ_ASSERT(runIndex < numRuns);
   return glyphRuns[runIndex];
 }
@@ -2313,7 +2314,7 @@ bool CharIterator::IsOriginalCharTrimmed() const {
 
   // A character is trimmed if it is outside the mTrimmedOffset/mTrimmedLength
   // range and it is not a significant newline character.
-  uint32_t index = mSkipCharsIterator.GetOriginalOffset();
+  uint32_t index = mSkipCharsIterator->GetOriginalOffset();
   return !(
       (index >= mTrimmedOffset && index < mTrimmedOffset + mTrimmedLength) ||
       (index >= mTrimmedOffset + mTrimmedLength &&
@@ -2330,7 +2331,7 @@ gfxFloat CharIterator::GetAdvance(nsPresContext* aContext) const {
       TextFrame()->EnsureTextRun(nsTextFrame::eInflated);
   nsTextFrame::PropertyProvider provider(TextFrame(), start);
 
-  uint32_t offset = mSkipCharsIterator.GetSkippedOffset();
+  uint32_t offset = mSkipCharsIterator->GetSkippedOffset();
   gfxFloat advance =
       mTextRun->GetAdvanceWidth(Range(offset, offset + 1), &provider);
   return aContext->AppUnitsToGfxUnits(advance) * mLengthAdjustScaleFactor *
@@ -2345,8 +2346,8 @@ bool CharIterator::NextCharacter() {
   mTextElementCharIndex++;
 
   // Advance within the current text run.
-  mSkipCharsIterator.AdvanceOriginal(1);
-  if (mSkipCharsIterator.GetOriginalOffset() < TextFrame()->GetContentEnd()) {
+  mSkipCharsIterator->AdvanceOriginal(1);
+  if (mSkipCharsIterator->GetOriginalOffset() < TextFrame()->GetContentEnd()) {
     // We're still within the part of the text run for the current text frame.
     UpdateGlyphStartTextElementCharIndex();
     return true;
@@ -2360,11 +2361,11 @@ bool CharIterator::NextCharacter() {
   mTextElementCharIndex += undisplayed;
   if (!TextFrame()) {
     // We're at the end.
-    mSkipCharsIterator = gfxSkipCharsIterator();
+    mSkipCharsIterator.reset();
     return false;
   }
 
-  mSkipCharsIterator = TextFrame()->EnsureTextRun(nsTextFrame::eInflated);
+  mSkipCharsIterator = Some(TextFrame()->EnsureTextRun(nsTextFrame::eInflated));
   mTextRun = TextFrame()->GetTextRun(nsTextFrame::eInflated);
   UpdateGlyphStartTextElementCharIndex();
   return true;
