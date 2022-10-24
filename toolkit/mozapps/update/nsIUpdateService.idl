@@ -226,61 +226,143 @@ interface nsIUpdate : nsISupports
 };
 
 /**
- * An interface describing an object that listens to the progress of an update
- * check operation. This object is notified as the check continues, finishes
- * and if it has an error.
+ * An interface describing the result of an update check.
  */
-[scriptable, uuid(4aa2b4bb-39ea-407b-98ff-89f19134d4c0)]
-interface nsIUpdateCheckListener : nsISupports
+[scriptable, uuid(bff08110-e79f-4a9f-a56c-348170f9208a)]
+interface nsIUpdateCheckResult : nsISupports
 {
   /**
-   * The update check was completed.
-   * @param   request
-   *          The XMLHttpRequest handling the update check.
-   * @param   updates
-   *          An array of nsIUpdate objects listing available updates.
-   * @returns A Promise that resolves when the callback is complete.
+   * True if update checks are allowed. otherwise false.
    */
-  Promise onCheckComplete(in jsval request, in Array<nsIUpdate> updates);
+  readonly attribute boolean checksAllowed;
 
   /**
-   * An error occurred while loading the remote update service file.
-   * @param   request
-   *          The XMLHttpRequest handling the update check.
-   * @param   update
-   *          A nsIUpdate object that contains details about the
-   *          error in its |statusText| property.
-   * @returns A Promise that resolves when the callback is complete.
+   * True if the update check succeeded, otherwise false. Guaranteed to be false
+   * if checksAllowed is false.
    */
-  Promise onError(in jsval request,
-                  in nsIUpdate update);
+  readonly attribute boolean succeeded;
+
+  /**
+   * The XMLHttpRequest handling the update check. Depending on exactly how the
+   * check failed, it's possible for this to be null.
+   */
+  readonly attribute jsval request;
+
+  /**
+   * If `!checksAllowed`, this will always be an empty array.
+   *
+   * If `succeeded`, this will be an array of nsIUpdate objects listing
+   * available updates. The length will be 0 if there are no available updates.
+   *
+   * If `checksAllowed && !succeeded`, this will be an array containing exactly
+   * one nsIUpdate object. Most of the attributes will have no useful value
+   * since we did not successfully retrieve an update, but `errorCode` and
+   * `statusText` will be set to values that describe the error encountered when
+   * checking for updates.
+   */
+  readonly attribute Array<nsIUpdate> updates;
 };
 
 /**
- * An interface describing an object that knows how to check for updates.
+ * An interface describing an update check that may still be in-progress or may
+ * be completed.
+ */
+[scriptable, uuid(2620aa24-27aa-463a-b6d2-0734695c1f7a)]
+interface nsIUpdateCheck : nsISupports
+{
+  /**
+   * An id that represents a particular update check. Can be passed to
+   * nsIUpdateChecker::stopCheck.
+   *
+   * Ids are guaranteed to be truthy (non-zero) and non-repeating. This is
+   * just for caller convenience so that (a) it's not an error to cancel a check
+   * that already completed and (b) they can easily check `if (idVar)` to see if
+   * they stored an id.
+   */
+  readonly attribute long id;
+
+  /**
+   * A promise that resolves to the results of the update check, which will be
+   * of type nsIUpdateCheckResult.
+   */
+  readonly attribute Promise result;
+};
+
+/**
+ * An interface describing an object that knows how to check for updates. It can
+ * perform multiple update checks simultaneously or consolidate multiple check
+ * requests into a single web request, depending on whether the parameters
+ * specified for update checking match.
  */
 [scriptable, uuid(877ace25-8bc5-452a-8586-9c1cf2871994)]
 interface nsIUpdateChecker : nsISupports
 {
   /**
-   * Checks for available updates, notifying a listener of the results.
-   * @param   listener
-   *          An object implementing nsIUpdateCheckListener which is notified
-   *          of the results of an update check.
-   * @param   force
-   *          Forces the checker to check for updates, regardless of the
-   *          current value of the user's update settings. This is used by
-   *          any piece of UI that offers the user the imperative option to
-   *          check for updates now, regardless of their update settings.
-   *          However, if updates are disabled by policy, setting force to true
-   *          will not override the the policy.
+   * Enumerated constants. See the `checkType` parameter of `checkForUpdates`
+   * for details.
    */
-  void checkForUpdates(in nsIUpdateCheckListener listener, in boolean force);
+  const long BACKGROUND_CHECK                                             = 1;
+  const long FOREGROUND_CHECK                                             = 2;
 
   /**
-   * Ends any pending update check.
+   * Checks for available updates.
+   * @param   checkType
+   *          Must be either BACKGROUND_CHECK or FOREGROUND_CHECK. If
+   *          FOREGROUND_CHECK is specified, the normal
+   *          nsIApplicationUpdateService.canCheckForUpdates check will be
+   *          overridden and the "force" parameter will be included in the
+   *          update URL.
+   *
+   *          Regarding the "force" parameter:
+   *          Sometimes the update server throttles updates, arbitrarily
+   *          refraining from returning the newest version to some clients. The
+   *          force parameter overrides this behavior and tells it to
+   *          unconditionally return the newest available version.
+   *
+   *          It's worth noting that the update server technically supports
+   *          forcing the decision in the other direction too, preventing
+   *          the newest version from being returned, but this interface doesn't
+   *          actually support setting the force parameter this way. If the
+   *          force parameter is used, it always forces getting the newest
+   *          version.
+   * @returns An nsIUpdateCheck object that describes the update check and
+   *          provides a Promise that resolves to the update check results.
    */
-  void stopCurrentCheck();
+  nsIUpdateCheck checkForUpdates(in long checkType);
+
+  /**
+   * Gets the update URL.
+   * @param   checkType
+   *          Must be either BACKGROUND_CHECK or FOREGROUND_CHECK. See the
+   *          checkType parameter of nsIUpdateChecker.checkForUpdates for more
+   *          details.
+   * @returns A Promise that resolves to the URL to be used to check for
+   *          updates, as a string. This URL should resolve to an XML describing
+   *          the updates that are available to the current Firefox
+   *          installation.
+   */
+  Promise getUpdateURL(in long checkType);
+
+  /**
+   * Ends a pending update check. Has no effect if the id is invalid or the
+   * check corresponding to the id has already completed.
+   *
+   * Note that because `nsIUpdateChecker` potentially combines multiple update
+   * checks, it is not guaranteed that this will actually cause the update
+   * request to be aborted. It also doesn't guarantee that
+   * `nsIUpdateCheck.result` will resolve when this is called. This merely marks
+   * the check id as cancelled and only if there are no other check ids waiting
+   * on the request does it abort it.
+   *
+   * @param   id
+   *          The id of a check to stop (accessible via nsIUpdateCheck).
+   */
+  void stopCheck(in long id);
+
+  /**
+   * Ends all pending update checks.
+   */
+  void stopAllChecks();
 };
 
 /**
@@ -299,11 +381,6 @@ interface nsIApplicationUpdateService : nsISupports
    *          succeed or that an update will be downloaded.
    */
   bool checkForBackgroundUpdates();
-
-  /**
-   * The Update Checker used for background update checking.
-   */
-  readonly attribute nsIUpdateChecker backgroundChecker;
 
   /**
    * Selects the best update to install from a list of available updates.
@@ -334,9 +411,24 @@ interface nsIApplicationUpdateService : nsISupports
   void removeDownloadListener(in nsIRequestObserver listener);
 
   /**
+   * Starts downloading the update passed. Once the update is downloaded, it
+   * will automatically be prepared for installation.
    *
+   * @param   update
+   *          The update to download.
+   * @returns A promise that resolves to `true` if an update download was
+   *          started, otherwise `false.
    */
-  bool downloadUpdate(in nsIUpdate update, in boolean background);
+  Promise downloadUpdate(in nsIUpdate update);
+
+  /**
+   * This is the function called internally by the Application Update Service
+   * when an update check is complete. Though this can be used to potentially
+   * start an update download, `downloadUpdate` should used for that.
+   * This is mostly exposed in the interface in order to make it accessible for
+   * testing.
+   */
+  Promise onCheckComplete(in nsIUpdateCheckResult result);
 
   /**
    * Stop the active update download process. This is the equivalent of
@@ -349,9 +441,11 @@ interface nsIApplicationUpdateService : nsISupports
   Promise stopDownload();
 
   /**
-   * Whether or not there is an download happening at the moment.
+   * There are a few things that can disable the Firefox updater at runtime
+   * such as Enterprise Policies. If this attribute is set to true, update
+   * should not be performed and most update interfaces will return errors.
    */
-  readonly attribute boolean isDownloading;
+  readonly attribute boolean disabled;
 
   /**
    * Whether or not the Update Service can usually check for updates. This is a
@@ -448,6 +542,84 @@ interface nsIApplicationUpdateService : nsISupports
    * to stage while the background task is shutting down.
    */
   attribute boolean onlyDownloadUpdatesThisSession;
+
+  /**
+   * Enumerated constants describing the update states that the updater can be
+   * in.
+   * Note that update checking is not part of the states that this interface
+   * can recognize and report. This is for two reasons: 1) there are multiple
+   * kinds of update checks (ex: foreground and background) and it would make
+   * the current update state more complicated if we wanted to track both, and
+   * 2) there isn't really any reason to concern ourselves with current update
+   * checks because nsIUpdateChecker will seamlessly combine multiple identical
+   * update checks into a single request without the caller having to worry
+   * about its internal state.
+   */
+  // An update download hasn't started yet, or we failed at some point in the
+  // update process and aborted.
+  const long STATE_IDLE                                                   = 1;
+  // An update is currently being downloaded.
+  // This state begins once nsIApplicationUpdateService.downloadUpdate resolves
+  // to `true`.
+  // Note that we may be downloading an update but not be in this state because
+  // we can download a second update while we have an update ready. But there
+  // isn't much reason for currentState to track the second update. We know that
+  // it will always be in the downloading state until it finishes downloading
+  // and becomes the ready update. See STATE_UPDATE_SWAP for more details.
+  const long STATE_DOWNLOADING                                            = 2;
+  // An update is currently being staged. Note that we do not always stage
+  // updates.
+  const long STATE_STAGING                                                = 4;
+  // An update is pending. If the browser restarts now, it will be installed.
+  // Note that although "pending" is one of the potential update statuses, this
+  // does not correspond to exactly that status.
+  const long STATE_PENDING                                                = 5;
+  // We had an update pending. Then we downloaded another update. Now we are
+  // in the process of removing the old update and swapping the new update into
+  // its place.
+  // Note that when the state initially changes to `STATE_SWAP`, the new update
+  // will be in `nsIUpdateManager.downloadingUpdate` but it will be moved into
+  // `nsIUpdateManager.readyUpdate` before moving to the next state.
+  const long STATE_SWAP                                                   = 6;
+
+  /**
+   * Gets a string describing the state (mostly intended to be make console
+   * logs easier to read).
+   */
+  AString getStateName(in long state);
+
+  /**
+   * The current state of the application updater. Returns one of the enumerated
+   * constants, above.
+   *
+   * The expected flow looks like this:
+   *   STATE_IDLE -> STATE_DOWNLOADING -> STATE_STAGING -> STATE_PENDING
+   * If a failure is encountered at some time, we go back to STATE_IDLE.
+   * If staging is not enabled, STATE_STAGING will be skipped.
+   *
+   * We may download additional updates after we reach STATE_PENDING. If we do,
+   * the state will remain at STATE_PENDING while we download the new update. If
+   * we restart during that time, the pending update will be installed and the
+   * partially downloaded update will be discarded. If a download completes
+   * successfully, there will be a brief period where STATE_PENDING is no longer
+   * correct, because the Update Service is in the process of removing the old
+   * update and replacing it with the new update. So if we restart during that
+   * period, the update will not be correctly installed. Thus, we switch away
+   * from STATE_PENDING to STATE_SWAP during that time. Assuming that the swap
+   * is successful, the state will then switch back STATE_STAGING (assuming that
+   * staging is enabled), then to STATE_PENDING. So the full expected state flow
+   * looks more like this:
+   *   STATE_IDLE -> STATE_DOWNLOADING -> STATE_STAGING -> STATE_PENDING ->
+   *   STATE_SWAP -> STATE_STAGING -> STATE_PENDING ->
+   *   STATE_SWAP -> STATE_STAGING -> STATE_PENDING -> ...
+   * (Omitting STATE_STAGING if staging is not enabled).
+   */
+  readonly attribute long currentState;
+
+  /**
+   * A Promise that resolves immediately after `currentState` changes.
+   */
+  readonly attribute Promise stateTransition;
 };
 
 /**
