@@ -55,7 +55,7 @@
       });
 
       // for things that we need to initialize after onload fires
-      window.addEventListener("load", () => this._postLoadInit());
+      window.addEventListener("load", event => this.postLoadInit(event));
     }
 
     static get observedAttributes() {
@@ -325,27 +325,21 @@
       }
     }
 
-    async _postLoadInit() {
+    postLoadInit(aEvent) {
       this._setInitialFocusIfNeeded();
-      if (this._l10nButtons.length) {
-        await document.l10n.translateElements(this._l10nButtons);
-        // FIXME(emilio): Should this be outside the if condition?
-        this._sizeToPreferredSize();
-      }
-      await this._snapCursorToDefaultButtonIfNeeded();
-    }
 
-    // This snaps the cursor to the default button rect on windows, when
-    // SPI_GETSNAPTODEFBUTTON is set.
-    async _snapCursorToDefaultButtonIfNeeded() {
-      const defaultButton = this.getButton(this.defaultButton);
-      if (!defaultButton) {
-        return;
-      }
-      await window.promiseDocumentFlushed(() => {});
       try {
-        window.notifyDefaultButtonLoaded(defaultButton);
+        const defaultButton = this.getButton(this.defaultButton);
+        if (defaultButton) {
+          window.notifyDefaultButtonLoaded(defaultButton);
+        }
       } catch (e) {}
+
+      if (this._l10nButtons.length) {
+        document.l10n.translateElements(this._l10nButtons).then(() => {
+          this._sizeToPreferredSize();
+        });
+      }
     }
 
     _configureButtons(aButtons) {
