@@ -232,7 +232,7 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mFontPalette(StyleFontPalette::Normal()),
       mMathDepth(0),
       mMathVariant(StyleMathVariant::None),
-      mMathStyle(NS_STYLE_MATH_STYLE_NORMAL),
+      mMathStyle(StyleMathStyle::Normal),
       mMinFontSizeRatio(100),  // 100%
       mExplicitLanguage(false),
       mAllowZoomAndMinSize(true),
