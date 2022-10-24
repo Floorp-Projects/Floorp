@@ -184,6 +184,8 @@ export class SearchOneOffs {
   /**
    * Width in pixels of the one-off buttons.
    * NOTE: Used in browser/components/search/content/searchbar.js only.
+   *
+   * @returns {number}
    */
   get buttonWidth() {
     return 48;

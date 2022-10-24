@@ -169,6 +169,7 @@ class TelemetryHandler {
    * Handles the TabClose event received from the listeners.
    *
    * @param {object} event
+   *   The event object provided by the listener.
    */
   handleEvent(event) {
     if (event.type != "TabClose") {
@@ -573,7 +574,7 @@ class TelemetryHandler {
   /**
    * Logs telemetry for a search provider visit.
    *
-   * @param {object} info
+   * @param {object} info The search provider information.
    * @param {string} info.provider The name of the provider.
    * @param {string} info.oldType The type of search.
    * @param {string} [info.code] The code for the provider.
@@ -613,7 +614,7 @@ class ContentHandler {
    * @param {object} options
    *   The options for the handler.
    * @param {Map} options.browserInfoByURL
-   *   The  map of urls from TelemetryHandler.
+   *   The map of urls from TelemetryHandler.
    * @param {Function} options.getProviderInfoForURL
    *   A function that obtains the provider information for a url.
    */
@@ -818,6 +819,7 @@ class ContentHandler {
    * provider pages that we're tracking.
    *
    * @param {object} info
+   *     The search provider information for the page.
    * @param {boolean} info.hasAds
    *     Whether or not the page has adverts.
    * @param {string} info.url

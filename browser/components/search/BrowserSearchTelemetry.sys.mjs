@@ -246,7 +246,7 @@ class BrowserSearchTelemetryHandler {
    * @param {string} source
    *   Where the search originated from.
    * @param {object} details
-   *   @see recordSearch
+   *   See {@link BrowserSearchTelemetryHandler.recordSearch}
    */
   _handleSearchAndUrlbar(browser, engine, source, details) {
     const isOneOff = !!details.isOneOff;
