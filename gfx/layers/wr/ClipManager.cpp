@@ -124,19 +124,26 @@ void ClipManager::PopOverrideForASR(const ActiveScrolledRoot* aASR) {
   MOZ_ASSERT(space.isSome());
 
   auto it = mASROverride.find(*space);
-  CLIP_LOG("Popping %p override %zu -> %s\n", aASR, space->id,
-           ToString(it->second.top().id).c_str());
 
-  it->second.pop();
+  if (it == mASROverride.end()) {
+    MOZ_ASSERT_UNREACHABLE("Push/PopOverrideForASR should be balanced");
+  } else {
+    CLIP_LOG("Popping %p override %zu -> %s\n", aASR, space->id,
+             ToString(it->second.top().id).c_str());
+
+    it->second.pop();
+  }
 
   if (!mItemClipStack.empty()) {
     auto& top = mItemClipStack.top();
     if (top.mASR == aASR) {
-      top.mScrollId = it->second.empty() ? *space : it->second.top();
+      top.mScrollId = (it == mASROverride.end() || it->second.empty())
+                          ? *space
+                          : it->second.top();
     }
   }
 
-  if (it->second.empty()) {
+  if (it != mASROverride.end() && it->second.empty()) {
     mASROverride.erase(it);
   }
 }
