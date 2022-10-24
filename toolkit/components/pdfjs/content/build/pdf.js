@@ -1332,7 +1332,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.0.239',
+    apiVersion: '3.0.252',
     data: source.data,
     password: source.password,
     disableAutoFetch: source.disableAutoFetch,
@@ -3351,9 +3351,9 @@ class InternalRenderTask {
 
 }
 
-const version = '3.0.239';
+const version = '3.0.252';
 exports.version = version;
-const build = 'ba3a0e104';
+const build = '987062c30';
 exports.build = build;
 
 /***/ }),
@@ -8579,12 +8579,7 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
       tmpCtx.fill();
       pattern = ctx.createPattern(tmpCanvas.canvas, "no-repeat");
       const domMatrix = new DOMMatrix(inverse);
-
-      try {
-        pattern.setTransform(domMatrix);
-      } catch (ex) {
-        (0, _util.warn)(`RadialAxialShadingPattern.getPattern: "${ex?.message}".`);
-      }
+      pattern.setTransform(domMatrix);
     } else {
       applyBoundingBox(ctx, this._bbox);
       pattern = this._createGradient(ctx);
@@ -9024,13 +9019,7 @@ class TilingPattern {
     domMatrix = domMatrix.translate(temporaryPatternCanvas.offsetX, temporaryPatternCanvas.offsetY);
     domMatrix = domMatrix.scale(1 / temporaryPatternCanvas.scaleX, 1 / temporaryPatternCanvas.scaleY);
     const pattern = ctx.createPattern(temporaryPatternCanvas.canvas, "repeat");
-
-    try {
-      pattern.setTransform(domMatrix);
-    } catch (ex) {
-      (0, _util.warn)(`TilingPattern.getPattern: "${ex?.message}".`);
-    }
-
+    pattern.setTransform(domMatrix);
     return pattern;
   }
 
@@ -12806,9 +12795,9 @@ class AnnotationElement {
 
     for (const domElement of document.getElementsByName(name)) {
       const {
-        id,
         exportValue
       } = domElement;
+      const id = domElement.getAttribute("data-element-id");
 
       if (id === skipId) {
         continue;
@@ -15823,8 +15812,8 @@ var _svg = __w_pdfjs_require__(29);
 
 var _xfa_layer = __w_pdfjs_require__(27);
 
-const pdfjsVersion = '3.0.239';
-const pdfjsBuild = 'ba3a0e104';
+const pdfjsVersion = '3.0.252';
+const pdfjsBuild = '987062c30';
 ;
 })();
 
