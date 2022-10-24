@@ -2119,8 +2119,6 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame) {
     }
 
     MappedFlow* mappedFlow = mMappedFlows.AppendElement();
-    if (!mappedFlow) return;
-
     mappedFlow->mStartFrame = frame;
     mappedFlow->mAncestorControllingInitialBreak = mCommonAncestorWithLastFrame;
 
@@ -2834,7 +2832,6 @@ void BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
 
     UniquePtr<BreakSink>* breakSink = mBreakSinks.AppendElement(
         MakeUnique<BreakSink>(aTextRun, mDrawTarget, offset));
-    if (!breakSink || !*breakSink) return;
 
     uint32_t length = iterNext.GetSkippedOffset() - offset;
     uint32_t flags = 0;
