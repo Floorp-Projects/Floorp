@@ -104,10 +104,7 @@ function DateKeeper(props) {
       let selectedMonth = 0;
 
       if (selectedYear === year) {
-        selectedMonth = Math.min(
-          Math.max(month, this.state.min.getMonth()),
-          this.state.max.getMonth()
-        );
+        selectedMonth = month;
       } else if (selectedYear === minYear) {
         selectedMonth = this.state.min.getMonth();
       } else if (selectedYear === maxYear) {
