@@ -94,7 +94,7 @@ async function testWindowSizePositive(width, height) {
     let reader = new FileReader();
     reader.onloadend = function() {
       let screenshot = new Image();
-      screenshot.onload = function() {
+      screenshot.onloadend = function() {
         is(
           screenshot.width,
           width,
@@ -131,7 +131,7 @@ async function testGreen(url, path) {
     let reader = new FileReader();
     reader.onloadend = function() {
       let screenshot = new Image();
-      screenshot.onload = function() {
+      screenshot.onloadend = function() {
         resolve(screenshot);
       };
       screenshot.src = reader.result;

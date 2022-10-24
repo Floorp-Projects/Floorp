@@ -36,7 +36,7 @@ add_task(async function() {
   await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
 
   let pageInfoImg = pageInfo.document.getElementById("thepreviewimage");
-  await BrowserTestUtils.waitForEvent(pageInfoImg, "load");
+  await BrowserTestUtils.waitForEvent(pageInfoImg, "loadend");
   Assert.equal(
     pageInfoImg.src,
     imageInfo.src,

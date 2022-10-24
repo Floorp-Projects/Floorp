@@ -62,6 +62,7 @@ interface mixin GlobalEventHandlers {
            attribute EventHandler onload;
            attribute EventHandler onloadeddata;
            attribute EventHandler onloadedmetadata;
+           attribute EventHandler onloadend;
            attribute EventHandler onloadstart;
            attribute EventHandler onmousedown;
   [LegacyLenientThis] attribute EventHandler onmouseenter;
