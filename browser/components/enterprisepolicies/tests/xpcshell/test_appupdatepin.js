@@ -3,9 +3,6 @@
 
 "use strict";
 
-const { Checker } = ChromeUtils.import(
-  "resource://gre/modules/UpdateService.jsm"
-);
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
@@ -40,8 +37,10 @@ async function test_update_pin(pinString, pinIsValid = true) {
     "AppUpdatePin policy should only be active if the pin was valid."
   );
 
-  let checker = new Checker();
-  let updateURL = await checker.getUpdateURL();
+  let checker = Cc["@mozilla.org/updates/update-checker;1"].getService(
+    Ci.nsIUpdateChecker
+  );
+  let updateURL = await checker.getUpdateURL(checker.BACKGROUND_CHECK);
 
   let expected = pinIsValid
     ? `https://www.example.com/update.xml?pin=${pinString}`

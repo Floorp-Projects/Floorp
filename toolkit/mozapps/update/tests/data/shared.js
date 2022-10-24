@@ -122,8 +122,7 @@ XPCOMUtils.defineLazyGetter(this, "gAUS", function test_gAUS() {
   return Cc["@mozilla.org/updates/update-service;1"]
     .getService(Ci.nsIApplicationUpdateService)
     .QueryInterface(Ci.nsITimerCallback)
-    .QueryInterface(Ci.nsIObserver)
-    .QueryInterface(Ci.nsIUpdateCheckListener);
+    .QueryInterface(Ci.nsIObserver);
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -133,11 +132,12 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIUpdateManager"
 );
 
-XPCOMUtils.defineLazyGetter(this, "gUpdateChecker", function test_gUC() {
-  return Cc["@mozilla.org/updates/update-checker;1"].createInstance(
-    Ci.nsIUpdateChecker
-  );
-});
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gUpdateChecker",
+  "@mozilla.org/updates/update-checker;1",
+  "nsIUpdateChecker"
+);
 
 XPCOMUtils.defineLazyGetter(this, "gDefaultPrefBranch", function test_gDPB() {
   return Services.prefs.getDefaultBranch(null);
