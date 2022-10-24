@@ -468,7 +468,6 @@ bool MaybeInstallAndRelaunch() {
       }
     }
 
-    Telemetry::ScalarSet(Telemetry::ScalarID::STARTUP_IS_RUN_FROM_DMG, isFromDmg);
     Telemetry::ScalarSet(Telemetry::ScalarID::STARTUP_IS_RUN_FROM_APP_TRANSLOCATED_LOCATION,
                          isTranslocated);
 
