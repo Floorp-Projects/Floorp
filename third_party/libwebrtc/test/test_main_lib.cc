@@ -183,7 +183,6 @@ class TestMainImpl : public TestMain {
     if (!result_filename.empty()) {
       std::ofstream result_file(result_filename);
       result_file << "{\"version\": 3}";
-      result_file.close();
     }
 #endif
 
