@@ -589,6 +589,51 @@ add_task(async function test_datepicker_min_max() {
   await helper.tearDown();
 });
 
+add_task(async function test_datepicker_minmax_current_year() {
+  const thisYear = new Date().getFullYear();
+  const thisMonth = new Date().getMonth() + 1;
+  // Testing bug 1778086, the month would default to the current month if the
+  // current year is allowed, regardless of if the current month is valid. Make
+  // sure the min/max are for a month other than the current month.
+  // Date.getMonth() is 0 indexed.
+  const testMonth = thisMonth == 0 ? "03" : "01";
+  const minDay = 10;
+  const maxDay = 15;
+
+  const inputMin = `${thisYear}-${testMonth}-${minDay}`;
+  const inputMax = `${thisYear}-${testMonth}-${maxDay}`;
+
+  await helper.openPicker(
+    `data:text/html, <input type="date" min="${inputMin}" max="${inputMax}">`
+  );
+
+  const days = helper.getChildren(DAYS_VIEW);
+  const getDay = d => parseInt(d.textContent, 10);
+  const allowedDays = days.filter(
+    d => getDay(d) >= minDay && getDay(d) <= maxDay
+  );
+  const notAllowedDays = days.filter(
+    d => getDay(d) <= minDay && getDay(d) >= maxDay
+  );
+
+  Assert.equal(
+    helper.getElement(MONTH_YEAR).textContent,
+    DATE_FORMAT(new Date(inputMin)),
+    "Selected month is testMonth"
+  );
+  Assert.equal(allowedDays.length, 6, "6 allowed days");
+  Assert.ok(
+    allowedDays.every(d => !d.classList.contains(R)),
+    "Allowed days are not out of range"
+  );
+  Assert.ok(
+    notAllowedDays.every(d => d.classList.contains(R)),
+    "Not allowed days are out of range"
+  );
+
+  await helper.tearDown();
+});
+
 /**
  * When step attribute is set, calendar should show some dates as off-step.
  */
