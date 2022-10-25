@@ -1742,25 +1742,6 @@ bool TSFStaticSink::IsTIPCategoryKeyboard(REFCLSID aTextService, LANGID aLangID,
 }
 
 /******************************************************************/
-/* TSFPreference                                                  */
-/******************************************************************/
-
-class TSFPrefs final {
- public:
-#define DECL_AND_IMPL_BOOL_PREF(aPref, aName, aDefaultValue)                  \
-  static bool aName() {                                                       \
-    static bool s##aName##Value = Preferences::GetBool(aPref, aDefaultValue); \
-    return s##aName##Value;                                                   \
-  }
-
-  DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.ms_traditional_chinese.query_insert_result",
-      NeedToHackQueryInsertForMSTraditionalTIP, true)
-
-#undef DECL_AND_IMPL_BOOL_PREF
-};
-
-/******************************************************************/
 /* TSFTextStore                                                   */
 /******************************************************************/
 
@@ -2702,7 +2683,8 @@ TSFTextStore::QueryInsert(LONG acpTestStart, LONG acpTestEnd, ULONG cch,
   // XXX need to adjust to cluster boundary
   // Assume we are given good offsets for now
   if (IsWin8OrLater() && mComposition.isNothing() &&
-      ((TSFPrefs::NeedToHackQueryInsertForMSTraditionalTIP() &&
+      ((StaticPrefs::
+            intl_tsf_hack_ms_traditional_chinese_query_insert_result() &&
         TSFStaticSink::IsMSChangJieOrMSQuickActive()) ||
        (StaticPrefs::
             intl_tsf_hack_ms_simplified_chinese_query_insert_result() &&
