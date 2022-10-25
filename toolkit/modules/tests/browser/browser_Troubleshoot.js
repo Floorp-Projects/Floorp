@@ -531,6 +531,39 @@ const SNAPSHOT_SCHEMA = {
         },
       },
     },
+    places: {
+      required: true,
+      type: "array",
+      items: {
+        type: "object",
+        items: {
+          entity: {
+            required: true,
+            type: "string",
+          },
+          count: {
+            required: true,
+            type: "number",
+          },
+          sizeBytes: {
+            required: true,
+            type: "number",
+          },
+          sizePerc: {
+            required: true,
+            type: "number",
+          },
+          efficiencyPerc: {
+            required: true,
+            type: "number",
+          },
+          sequentialityPerc: {
+            required: true,
+            type: "number",
+          },
+        },
+      },
+    },
     graphics: {
       required: true,
       type: "object",
