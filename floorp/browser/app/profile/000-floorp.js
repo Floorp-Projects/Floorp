@@ -494,6 +494,7 @@ pref("userChrome.rounding.square_tab",            true);
 // pref("userContent.page.monospace",                     true);
 
 // == Theme Default Settings ===================================================
+pref("userChrome.compatibility.accent_color", true, locked); // ESR102 Compatibility Options
 // -- User Chrome --------------------------------------------------------------
 pref("userChrome.compatibility.theme",       true);
 pref("userChrome.compatibility.os",          true);
