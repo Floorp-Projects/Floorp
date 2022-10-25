@@ -182,13 +182,13 @@ grcov-osx-x86_64:
         sha256: c7c323e0647b1309b412874000d677e8f5b898401ec57761c57a9c396c433823
         size: 2476735
 
-zlib-1.2.12:
-    description: zlib 1.2.12 source code
+zlib-1.2.13:
+    description: zlib 1.2.13 source code
     fetch:
         type: static-url
-        url: http://zlib.net/zlib-1.2.12.tar.gz
-        sha256: 91844808532e5ce316b3c010929493c0244f3d37593afd6de04f71821d5136d9
-        size: 1490071
+        url: https://zlib.net/zlib-1.2.13.tar.gz
+        sha256: b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30
+        size: 1497445
         gpg-signature:
             sig-url: "{url}.asc"
             key-path: build/unix/build-gcc/5ED46A6721D365587791E2AA783FCD8E58BCAFBA.key
