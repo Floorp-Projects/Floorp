@@ -10,14 +10,14 @@ use std::collections::HashMap;
 
 /// Argument to Store::prepare_for_sync. See comment there for more info. Only
 /// really intended to be used by tabs engine.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ClientData {
     pub local_client_id: String,
     pub recent_clients: HashMap<String, RemoteClient>,
 }
 
 /// Information about a remote client in the clients collection.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq, Serialize, Deserialize)]
 pub struct RemoteClient {
     pub fxa_device_id: Option<String>,
     pub device_name: String,

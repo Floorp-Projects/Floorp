@@ -107,6 +107,7 @@ mio = "=0.8.0"
 [target.'cfg(not(target_os = "android"))'.dependencies]
 viaduct = "0.1"
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
+tabs = { version = "0.1" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 detect_win32k_conflicts = { path = "../../../xre/detect_win32k_conflicts" }

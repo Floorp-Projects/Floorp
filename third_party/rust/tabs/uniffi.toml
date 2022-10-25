@@ -1,0 +1,8 @@
+[bindings.kotlin]
+package_name = "mozilla.appservices.remotetabs"
+cdylib_name = "megazord"
+
+[bindings.swift]
+ffi_module_name = "MozillaRustComponents"
+ffi_module_filename = "tabsFFI"
+generate_module_map = false
