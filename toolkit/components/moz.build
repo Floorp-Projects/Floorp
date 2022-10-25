@@ -79,6 +79,7 @@ DIRS += [
     "tooltiptext",
     "typeaheadfind",
     "uniffi-js",
+    "uniffi-bindgen-gecko-js/components",
     "utils",
     "url-classifier",
     "urlformatter",

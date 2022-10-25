@@ -13,8 +13,9 @@ from mach.decorators import (
 # committing to using UniFFI. There are other ways to consume Rust from
 # JavaScript that might fit your use case better.
 UDL_FILES = [
-    # TODO: Use UniFFI
+    "third_party/rust/tabs/src/tabs.udl",
 ]
+
 FIXTURE_UDL_FILES = [
     "third_party/rust/uniffi-example-geometry/src/geometry.udl",
     "third_party/rust/uniffi-example-arithmetic/src/arithmetic.udl",
