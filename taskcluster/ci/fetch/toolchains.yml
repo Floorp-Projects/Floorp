@@ -250,14 +250,14 @@ cctools-port:
     fetch:
         type: git
         repo: https://github.com/tpoechtrager/cctools-port
-        revision: 30518813875aed656aa7f18b6d485feee25f8f87
+        revision: 11c93763d7e7ce7305163341d08052374e4712de
 
 libtapi:
     description: libtapi source code
     fetch:
         type: git
         repo: https://github.com/tpoechtrager/apple-libtapi
-        revision: b4f141a16c7c82f75973429c92242a8c7de3ddb1
+        revision: b7b5bdbfda9e8062d405b48da3b811afad98ae76
 
 ldid:
     description: ldid source code
