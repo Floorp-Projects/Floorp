@@ -19,7 +19,6 @@ add_setup(async function() {
     TabsSetupFlowManager.resetInternalState();
   });
 
-  await promiseSyncReady();
   // gSync.init() is called in a requestIdleCallback. Force its initialization.
   gSync.init();
 });

@@ -69,7 +69,7 @@ var BrowserTabs = {
     // Find the uri in Weave's list of tabs for the given profile.
     let tabEngine = Weave.Service.engineManager.get("tabs");
     for (let client of Weave.Service.clientsEngine.remoteClients) {
-      let tabClient = tabEngine.getClientById(client.id);
+      let tabClient = tabEngine.getAllClients().find(x => x.id === client.id);
       if (!tabClient || !tabClient.tabs) {
         continue;
       }
