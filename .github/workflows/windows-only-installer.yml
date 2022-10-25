@@ -8,10 +8,41 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: pierotofy/set-swap-space@master
-      with:
-        swap-size-gb: 13
-    - name: init
+    - name: Setup Disk & Swap Space 💿
+      run: |
+        echo Before:
+        free -h
+        df -h
+        echo
+        echo
+        sudo swapoff /mnt/swapfile
+        sudo rm /mnt/swapfile
+        sudo fallocate -l 10G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+        sudo apt autoremove -y
+        sudo apt clean
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/local/graalvm
+        sudo rm -rf /usr/local/share/powershell
+        sudo rm -rf /usr/local/share/chromium
+        sudo rm -rf /usr/local/lib/node_modules
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo fallocate -l 20G /home/runner/swapfile2
+        sudo chmod 600 /home/runner/swapfile2
+        sudo mkswap /home/runner/swapfile2
+        sudo swapon /home/runner/swapfile2
+        echo
+        echo
+        echo After:
+        free -h
+        df -h
+    - name: init 🤖
       run: |
         sudo sed -i.bak -r 's!(deb|deb-src) \S+!\1 mirror+http://mirrors.ubuntu.com/mirrors.txt!' /etc/apt/sources.list
         sudo apt update
@@ -30,7 +61,7 @@ jobs:
           /home/runner/work/clang.tar.zst
           /home/runner/work/vsdownload.py
         key: ${{ runner.os }}
-    - name: Create environment
+    - name: Create environment 🌲
       run: |
 
         mkdir -p /home/runner/work/win-cross
@@ -175,10 +206,11 @@ jobs:
         sccache --stop-server
         sccache --start-server
          ./mach configure
-    - name: 🔨Build
+    - name: Build 🔨
       run: |
           ./mach build
-    - name: Package
+
+    - name: Package 📦
       run: |
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do     ./mach build chrome-$AB_CD; done
@@ -188,7 +220,7 @@ jobs:
         mv ./obj-x86_64-pc-mingw32/dist/install/sea/floorp-*.en-US.win64.installer.exe ./obj-x86_64-pc-mingw32/dist/install/sea/floorp-win64.installer.exe
         rm ./obj-x86_64-pc-mingw32/dist/install/sea/floorp-*.en-US.win64.installer-stub.exe
 
-    - name: Publish
+    - name: Publish 🎁
       uses: actions/upload-artifact@master
       with:
         name: floorp-windows-x64

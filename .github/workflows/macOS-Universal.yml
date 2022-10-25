@@ -23,7 +23,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Create environment
+    - name: Create environment 🌲
       run: |
         export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
         git clone https://github.com/floorp-projects/l10n-central
@@ -51,11 +51,13 @@ jobs:
         echo 'MOZ_DATA_REPORTING=' >> mozconfig
         echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
         ./mach configure
-    - name: 🔨Build
+
+    - name: Build 🔨
       run: |
         export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
         ./mach build
-    - name: Package
+
+    - name: Package 📦
       run: |
         export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
@@ -64,7 +66,8 @@ jobs:
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
         tar -Jcf obj-aarch64-apple-darwin.tar.xz obj-aarch64-apple-darwin/
-    - name: Publish
+
+    - name: Publish 🎁
       uses: actions/upload-artifact@v3
       with:
         name: obj-aarch64-apple-darwin
@@ -77,7 +80,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Create environment
+    - name: Create environment 🌲
       run: |
         export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
         git clone https://github.com/floorp-projects/l10n-central
@@ -104,12 +107,13 @@ jobs:
         echo 'MOZ_DATA_REPORTING=' >> mozconfig
         echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
         ./mach configure
-    - name: 🔨Build
+
+    - name: Build 🔨
       run: |
         export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
         ./mach build
 
-    - name: Package
+    - name: Package 📦
       run: |
         export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
@@ -118,7 +122,8 @@ jobs:
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
         tar -Jcf obj-x86_64-apple-darwin.tar.xz obj-x86_64-apple-darwin/
-    - name: Publish
+
+    - name: Publish 🎁
       uses: actions/upload-artifact@v3
       with:
         name: obj-x86_64-apple-darwin
@@ -130,7 +135,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/download-artifact@v3
-    - name: Create environment
+    - name: Create environment 🌲
       shell: bash
       run: |
         ./mach bootstrap
@@ -142,12 +147,13 @@ jobs:
         tar -xf ./obj-x86_64-apple-darwin/obj-x86_64-apple-darwin.tar.xz -C ./
         tar -xf ./obj-aarch64-apple-darwin/obj-aarch64-apple-darwin.tar.xz -C ./
         ls -a
-    - name: Package
+
+    - name: Integration 🗃 & Package 📦 
       run: |       
         ./mach python ./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/${{ github.event.repository.name }}/${{ github.event.repository.name }}.app ./obj-aarch64-apple-darwin/dist/${{ github.event.repository.name }}/${{ github.event.repository.name }}.app
         ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp floorp-macOS-universal.dmg
 
-    - name: Publish
+    - name: Publish 🎁
       uses: actions/upload-artifact@v3
       with:
         name: Universal-Artifact
