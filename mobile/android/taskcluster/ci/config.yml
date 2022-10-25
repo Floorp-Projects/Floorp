@@ -26,6 +26,7 @@ treeherder:
         compose-tabstray: compose-tabstray
         concept-awesomebar: concept-awesomebar
         concept-base: concept-base
+        compose-cfr: compose-cfr
         concept-engine: concept-engine
         concept-fetch: concept-fetch
         concept-menu: concept-menu
