@@ -6886,6 +6886,17 @@
     value: true
     mirror: always
 
+  # Whether Gecko sets input scope of ATOK to "search" or never does it.
+  # When "search" is set to the input scope, ATOK may stop their suggestions.
+  # To avoid it, turn this pref on, or changing the settings in ATOK.
+  # Note that if you enable this pref and you use the touch keyboard for touch
+  # screens, you cannot access some specific features for a "search" input
+  # field.
+-   name: intl.tsf.hack.atok.search_input_scope_disabled
+    type: bool
+    value: false
+    mirror: always
+
   # Whether Gecko returns caret rect before composition string or TS_E_NOLAYOUT
   # from ITextStoreACP::GetTextExt() when the specified range is larger than
   # composition start offset if and only if Free ChangJie is active TIP.

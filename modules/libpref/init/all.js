@@ -2550,16 +2550,6 @@ pref("font.size.monospace.x-math", 13);
   // legacy IMM-IME.
   pref("intl.tsf.associate_imc_only_when_imm_ime_is_active", false);
 
-  // Enables/Disables hack for specific TIP.
-
-  // Whether disable "search" input scope when the ATOK is active on windows.
-  // When "search" is set to the input scope, ATOK may stop their suggestions.
-  // To avoid it, turn this pref on, or changing the settings in ATOK.
-  // Note that if you enable this pref and you use the touch keyboard for touch
-  // screens, you cannot access some specific features for a "search" input
-  // field.
-  pref("intl.tsf.hack.atok.search_input_scope_disabled", false);
-
   // If composition_font is set, Gecko sets the font to IME.  IME may use
   // the fonts on their window like candidate window.  If they are empty,
   // Gecko uses the system default font which is set to the IM context.
