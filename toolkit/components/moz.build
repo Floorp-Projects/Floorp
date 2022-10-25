@@ -33,6 +33,7 @@ DIRS += [
     "contextualidentity",
     "crashes",
     "crashmonitor",
+    "credentialmanagement",
     "downloads",
     "enterprisepolicies",
     "extensions",
