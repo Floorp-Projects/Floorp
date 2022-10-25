@@ -1454,7 +1454,7 @@ export var PlacesUtils = {
   },
 
   /**
-   * Gets a shared Sqlite.sys.mjs readonly connection to the Places database,
+   * Gets a shared Sqlite.jsm readonly connection to the Places database,
    * usable only for SELECT queries.
    *
    * This is intended to be used mostly internally, components outside of
@@ -1480,14 +1480,14 @@ export var PlacesUtils = {
   },
 
   /**
-   * Returns a Sqlite.sys.mjs wrapper for the main Places connection. Most callers
+   * Returns a Sqlite.jsm wrapper for the main Places connection. Most callers
    * should prefer `withConnectionWrapper`, which ensures that all database
    * operations finish before the connection is closed.
    */
   promiseUnsafeWritableDBConnection: () => lazy.gAsyncDBWrapperPromised,
 
   /**
-   * Performs a read/write operation on the Places database through a Sqlite.sys.mjs
+   * Performs a read/write operation on the Places database through a Sqlite.jsm
    * wrapped connection to the Places database.
    *
    * This is intended to be used only by Places itself, always use APIs if you
@@ -1509,7 +1509,7 @@ export var PlacesUtils = {
    *
    * @param {string} name The name of the operation. Used for debugging, logging
    *   and crash reporting.
-   * @param {function(db)} task A function that takes as argument a Sqlite.sys.mjs
+   * @param {function(db)} task A function that takes as argument a Sqlite.jsm
    *   connection and returns a Promise. Shutdown is guaranteed to not interrupt
    *   execution of `task`.
    */
@@ -2116,10 +2116,10 @@ function setupDbForShutdown(conn, name) {
             // database. We just need to close the high-level connection.
             try {
               await conn.close();
-              state = "2. Closed Sqlite.sys.mjs connection.";
+              state = "2. Closed Sqlite.jsm connection.";
               resolve();
             } catch (ex) {
-              state = "2. Failed to closed Sqlite.sys.mjs connection: " + ex;
+              state = "2. Failed to closed Sqlite.jsm connection: " + ex;
               reject(ex);
             }
           },
@@ -2132,10 +2132,10 @@ function setupDbForShutdown(conn, name) {
       }
     }).catch(Cu.reportError);
 
-    // Make sure that Sqlite.sys.mjs doesn't close until we are done
+    // Make sure that Sqlite.jsm doesn't close until we are done
     // with the high-level connection.
     lazy.Sqlite.shutdown.addBlocker(
-      `${name} must be closed before Sqlite.sys.mjs`,
+      `${name} must be closed before Sqlite.jsm`,
       () => promiseClosed,
       () => state
     );

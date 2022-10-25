@@ -216,6 +216,8 @@ declare namespace MockedExports {
     principal: PrincipalStub;
   }
 
+  const WebChannelJSM: any;
+
   // TS-TODO
   const CustomizableUIJSM: any;
   const CustomizableWidgetsJSM: any;
@@ -334,6 +336,10 @@ declare module "ChromeUtils" {
 
 declare module "resource://gre/modules/AppConstants.sys.mjs" {
   export = MockedExports.AppConstantsSYSMJS;
+}
+
+declare module "resource://gre/modules/WebChannel.jsm" {
+  export = MockedExports.WebChannelJSM;
 }
 
 declare module "resource://devtools/client/performance-new/popup/background.jsm.js" {

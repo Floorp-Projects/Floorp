@@ -38,7 +38,7 @@ nsresult GetGpuTimeSinceProcessStartInMs(uint64_t* aResult);
 // WebIDLProcType, ChromeUtils::RequestProcInfo and ProcTypeToWebIDL to
 // mirror the changes.
 enum class ProcType {
-  // These must match the ones in RemoteType.h, and E10SUtils.sys.mjs
+  // These must match the ones in RemoteType.h, and E10SUtils.jsm
   Web,
   WebIsolated,
   File,

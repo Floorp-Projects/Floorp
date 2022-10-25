@@ -334,10 +334,10 @@ class TestUrlFinder(unittest.TestCase):
                     "browser/base/content/license.html",
                     None,
                 ],
-                "dist/bin/modules/AppConstants.sys.mjs": [
-                    "toolkit/modules/AppConstants.sys.mjs",
+                "dist/bin/modules/AppConstants.jsm": [
+                    "toolkit/modules/AppConstants.jsm",
                     {
-                        "101,102": ["toolkit/modules/AppConstants.sys.mjs", 135],
+                        "101,102": ["toolkit/modules/AppConstants.jsm", 135],
                     },
                 ],
             },
@@ -422,11 +422,11 @@ class TestUrlFinder(unittest.TestCase):
             ),
             # Path with pp_info
             (
-                "resource://gre/modules/AppConstants.sys.mjs",
+                "resource://gre/modules/AppConstants.jsm",
                 (
-                    "toolkit/modules/AppConstants.sys.mjs",
+                    "toolkit/modules/AppConstants.jsm",
                     {
-                        "101,102": ["toolkit/modules/AppConstants.sys.mjs", 135],
+                        "101,102": ["toolkit/modules/AppConstants.jsm", 135],
                     },
                 ),
             ),

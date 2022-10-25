@@ -877,7 +877,7 @@ uint32_t Navigator::MaxTouchPoints(CallerType aCallerType) {
 
 // This list should be kept up-to-date with the spec:
 // https://html.spec.whatwg.org/multipage/system-state.html#custom-handlers
-// If you change this list, please also update the copy in E10SUtils.sys.mjs.
+// If you change this list, please also update the copy in E10SUtils.jsm.
 static const char* const kSafeSchemes[] = {
     // clang-format off
     "bitcoin",

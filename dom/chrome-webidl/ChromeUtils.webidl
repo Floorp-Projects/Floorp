@@ -648,8 +648,7 @@ partial namespace ChromeUtils {
 
 /*
  * This type is a WebIDL representation of mozilla::ProcType.
- * These must match the similar ones in E10SUtils.sys.mjs, RemoteTypes.h,
- * ProcInfo.h and ChromeUtils.cpp
+ * These must match the similar ones in E10SUtils.jsm, RemoteTypes.h, ProcInfo.h and ChromeUtils.cpp
  */
 enum WebIDLProcType {
  "web",

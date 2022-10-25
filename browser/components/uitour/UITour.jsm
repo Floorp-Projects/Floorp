@@ -36,8 +36,7 @@ XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   ).getFxAccountsSingleton();
 });
 
-// See LOG_LEVELS in Console.sys.mjs. Common examples: "All", "Info", "Warn", &
-// "Error".
+// See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL = "browser.uitour.loglevel";
 
 const BACKGROUND_PAGE_ACTIONS_ALLOWED = new Set([

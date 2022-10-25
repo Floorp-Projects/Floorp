@@ -241,7 +241,7 @@ browser often reorders requests and so your code must be resilient to that to
 avoid intermittent failures.
 
 ```js
-let { setTimeout } = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
+let { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 function handleRequest(request, response) {
   response.processAsync();

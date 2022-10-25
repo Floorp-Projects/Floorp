@@ -120,7 +120,7 @@ function getErrorDetails(error) {
     .replace(/\/.*\//gm, "[REDACTED]");
   let details = { message: cleanMessage, stack: null };
 
-  // Adapted from Console.sys.mjs.
+  // Adapted from Console.jsm.
   if (error.stack) {
     let frames = [];
     for (let frame = error.stack; frame; frame = frame.caller) {

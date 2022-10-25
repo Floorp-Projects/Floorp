@@ -666,7 +666,7 @@ pref("toolkit.scrollbox.smoothScroll", true);
 pref("toolkit.scrollbox.scrollIncrement", 20);
 pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 
-// Controls logging for Sqlite.sys.mjs.
+// Controls logging for Sqlite.jsm.
 pref("toolkit.sqlitejsm.loglevel", "Error");
 
 pref("toolkit.tabbox.switchByScrolling", false);

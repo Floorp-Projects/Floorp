@@ -161,8 +161,8 @@ Example 4: A service with both internal and external dependencies
     let { AsyncShutdown } = ChromeUtils.import(
       "resource://gre/modules/AsyncShutdown.jsm"
     );
-    let { PromiseUtils } = ChromeUtils.importESModule(
-      "resource://gre/modules/PromiseUtils.sys.mjs"
+    let { PromiseUtils } = ChromeUtils.import(
+      "resource://gre/modules/PromiseUtils.jsm"
     );
 
     this.exports = ["FooService2"];

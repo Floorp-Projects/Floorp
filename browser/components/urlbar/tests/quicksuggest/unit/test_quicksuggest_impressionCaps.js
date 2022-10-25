@@ -3808,8 +3808,8 @@ async function doTimedCallbacks(callbacksBySecond) {
 // timeout internal to macOS is being hit. This problem does not seem to happen
 // when running the full browser, only during xpcshell tests. In fact the
 // problem can be reproduced in an xpcshell test that simply creates an interval
-// timer whose period is 1s (e.g., using `setInterval()` from Timer.sys.mjs).
-// After ~33 ticks, the timer's period jumps to ~10s.
+// timer whose period is 1s (e.g., using `setInterval()` from Timer.jsm). After
+// ~33 ticks, the timer's period jumps to ~10s.
 async function doTimedCallbacks(callbacksBySecond) {
   await Promise.all(
     Object.entries(callbacksBySecond).map(

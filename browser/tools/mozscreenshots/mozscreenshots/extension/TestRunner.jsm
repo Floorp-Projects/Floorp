@@ -263,7 +263,7 @@ var TestRunner = {
    * Calculate the bounding box based on CSS selector from config for cropping
    *
    * @param {String[]} selectors - array of CSS selectors for relevant DOM element
-   * @return {Geometry.sys.mjs Rect} Rect holding relevant x, y, width, height with padding
+   * @return {Geometry.jsm Rect} Rect holding relevant x, y, width, height with padding
    **/
   _findBoundingBox(selectors, windowType) {
     if (!selectors.length) {
