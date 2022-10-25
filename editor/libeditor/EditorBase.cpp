@@ -4177,6 +4177,10 @@ nsresult EditorBase::DeleteSelectionAsAction(
     }
   }
 
+  editActionData.SetSelectionCreatedByDoubleclick(
+      SelectionRef().GetFrameSelection() &&
+      SelectionRef().GetFrameSelection()->IsDoubleClickSelection());
+
   if (!FlushPendingNotificationsIfToHandleDeletionWithFrameSelection(
           aDirectionAndAmount)) {
     NS_WARNING("Flusing pending notifications caused destroying the editor");
