@@ -80,3 +80,8 @@ Mozilla.org changes:
   Sync'ed with 1.2.12 release
   (keeping '#include "mozzconf.h"' in zconf.h)
   See bug #1761764
+  
+- 21 October 2022
+  Sync'ed with 1.2.13 release
+  (keeping '#include "mozzconf.h"' in zconf.h)
+  See bug #1796811
