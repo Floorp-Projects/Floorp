@@ -255,7 +255,6 @@ static void ShowInstallFailedDialog() {
  */
 static void LaunchTask(NSString* aPath, NSArray* aArguments) {
   if (@available(macOS 10.13, *)) {
-    setenv("MOZ_INSTALLED_AND_RELAUNCHED_FROM_DMG", "1", 1);
     NSTask* task = [[NSTask alloc] init];
     [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
     if (aArguments) {
@@ -330,8 +329,6 @@ static bool InstallFromPath(NSString* aBundlePath, NSString* aDestPath) {
     installSuccessful = true;
   }
 
-  bool triedElevatedInstall = false;
-
 #ifdef MOZ_UPDATER
   // The installation may have been unsuccessful if the user did not have the
   // rights to write to the Applications directory. Check for this situation and
@@ -351,17 +348,10 @@ static bool InstallFromPath(NSString* aBundlePath, NSString* aDestPath) {
     NSArray* arguments = @[ @"-dmgInstall", aBundlePath, aDestPath ];
     LaunchElevatedDmgInstall(updaterBinPath, arguments);
     installSuccessful = [fileManager fileExistsAtPath:aDestPath];
-    triedElevatedInstall = true;
   }
 #endif
 
   if (!installSuccessful) {
-    if (!triedElevatedInstall) {
-      glean::startup::run_from_dmg_install_outcome.Get("non_privileged_install_failed"_ns)
-          .Set(true);
-    } else {
-      glean::startup::run_from_dmg_install_outcome.Get("privileged_install_failed"_ns).Set(true);
-    }
     return false;
   }
 
@@ -468,12 +458,7 @@ bool MaybeInstallAndRelaunch() {
       }
     }
 
-
     if (!isFromDmg && !isTranslocated) {
-      if (getenv("MOZ_INSTALLED_AND_RELAUNCHED_FROM_DMG")) {
-        unsetenv("MOZ_INSTALLED_AND_RELAUNCHED_FROM_DMG");
-        glean::startup::run_from_dmg_install_outcome.Get("installed_and_relaunched"_ns).Set(true);
-      }
       return false;
     }
 
@@ -488,8 +473,6 @@ bool MaybeInstallAndRelaunch() {
     NSFileManager* fileManager = [NSFileManager defaultManager];
     BOOL isDir;
     if (![fileManager fileExistsAtPath:applicationsDir isDirectory:&isDir] || !isDir) {
-      glean::startup::run_from_dmg_install_outcome.Get("root_applications_dir_missing"_ns)
-          .Set(true);
       return false;
     }
 
@@ -505,17 +488,12 @@ bool MaybeInstallAndRelaunch() {
       if (AskUserIfWeShouldLaunchExistingInstall()) {
         StripQuarantineBit(destPath);
         LaunchInstalledApp(destPath);
-        glean::startup::run_from_dmg_install_outcome.Get("user_accepted_launch_existing"_ns)
-            .Set(true);
         return true;
       }
-      glean::startup::run_from_dmg_install_outcome.Get("user_declined_launch_existing"_ns)
-          .Set(true);
       return false;
     }
 
     if (!AskUserIfWeShouldInstall()) {
-      glean::startup::run_from_dmg_install_outcome.Get("user_declined_install_prompt"_ns).Set(true);
       return false;
     }
 
