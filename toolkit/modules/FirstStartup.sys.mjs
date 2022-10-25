@@ -60,7 +60,7 @@ export var FirstStartup = {
       Promise.all(promises).then(() => (initialized = true));
 
       this.elapsed = 0;
-      Services.tm.spinEventLoopUntil("FirstStartup.jsm:init", () => {
+      Services.tm.spinEventLoopUntil("FirstStartup.sys.mjs:init", () => {
         this.elapsed = Date.now() - startingTime;
         if (this.elapsed >= timeout) {
           this._state = this.TIMED_OUT;

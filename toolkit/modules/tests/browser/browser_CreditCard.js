@@ -26,13 +26,6 @@ add_setup(function() {
   registerCleanupFunction(async () => {
     OSKeyStore.__defineGetter__("isLoggedIn", oldGetters.isLoggedIn);
     await OSKeyStoreTestUtils.cleanup();
-
-    // CreditCard.jsm, OSKeyStore.jsm, and OSKeyStoreTestUtils.jsm are imported
-    // into the global scope -- the window -- above. If they're not deleted,
-    // they outlive the test and are reported as a leak.
-    delete window.OSKeyStore;
-    delete window.CreditCard;
-    delete window.OSKeyStoreTestUtils;
   });
 });
 

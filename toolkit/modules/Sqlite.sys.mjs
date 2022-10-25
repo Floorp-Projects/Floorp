@@ -33,7 +33,7 @@ var likeSqlRegex = /\bLIKE\b\s(?![@:?])/i;
 var connectionCounters = new Map();
 
 // Tracks identifiers of wrapped connections, that are Storage connections
-// opened through mozStorage and then wrapped by Sqlite.jsm to use its syntactic
+// opened through mozStorage and then wrapped by Sqlite.sys.mjs to use its syntactic
 // sugar API.  Since these connections have an unknown origin, we use this set
 // to differentiate their behavior.
 var wrappedConnections = new Set();
@@ -147,19 +147,19 @@ function convertStorageErrorResult(result) {
   }
 }
 /**
- * Barriers used to ensure that Sqlite.jsm is shutdown after all
+ * Barriers used to ensure that Sqlite.sys.mjs is shutdown after all
  * its clients.
  */
 XPCOMUtils.defineLazyGetter(lazy, "Barriers", () => {
   let Barriers = {
     /**
      * Public barrier that clients may use to add blockers to the
-     * shutdown of Sqlite.jsm. Triggered by profile-before-change.
+     * shutdown of Sqlite.sys.mjs. Triggered by profile-before-change.
      * Once all blockers of this barrier are lifted, we close the
      * ability to open new connections.
      */
     shutdown: new lazy.AsyncShutdown.Barrier(
-      "Sqlite.jsm: wait until all clients have completed their task"
+      "Sqlite.sys.mjs: wait until all clients have completed their task"
     ),
 
     /**
@@ -168,7 +168,7 @@ XPCOMUtils.defineLazyGetter(lazy, "Barriers", () => {
      * set to `true`.
      */
     connections: new lazy.AsyncShutdown.Barrier(
-      "Sqlite.jsm: wait until all connections are closed"
+      "Sqlite.sys.mjs: wait until all connections are closed"
     ),
   };
 
@@ -202,13 +202,13 @@ XPCOMUtils.defineLazyGetter(lazy, "Barriers", () => {
   Services.obs.addObserver(finalizationObserver, "sqlite-finalization-witness");
 
   /**
-   * Ensure that Sqlite.jsm:
+   * Ensure that Sqlite.sys.mjs:
    * - informs its clients before shutting down;
    * - lets clients open connections during shutdown, if necessary;
    * - waits for all connections to be closed before shutdown.
    */
   lazy.AsyncShutdown.profileBeforeChange.addBlocker(
-    "Sqlite.jsm shutdown blocker",
+    "Sqlite.sys.mjs shutdown blocker",
     async function() {
       await Barriers.shutdown.wait();
       // At this stage, all clients have had a chance to open (and close)
@@ -271,7 +271,7 @@ XPCOMUtils.defineLazyGetter(lazy, "Barriers", () => {
  */
 function ConnectionData(connection, identifier, options = {}) {
   this._log = lazy.Log.repository.getLoggerWithMessagePrefix(
-    "Sqlite.jsm",
+    "Sqlite.sys.mjs",
     `Connection ${identifier}: `
   );
   this._log.manageLevelFromPref("toolkit.sqlitejsm.loglevel");
@@ -391,7 +391,7 @@ ConnectionData.prototype = Object.freeze({
    *
    * @param {string} name A human-readable name for the ongoing operation, used
    *  for logging and debugging purposes.
-   * @param {function(db)} task A function that takes as argument a Sqlite.jsm
+   * @param {function(db)} task A function that takes as argument a Sqlite.sys.mjs
    *  db and returns a Promise.
    */
   executeBeforeShutdown(parent, name, task) {
@@ -541,7 +541,7 @@ ConnectionData.prototype = Object.freeze({
     // function and asyncClose() finishing. See also bug 726990.
     this._open = false;
 
-    // We must always close the connection at the Sqlite.jsm-level, not
+    // We must always close the connection at the Sqlite.sys.mjs-level, not
     // necessarily at the mozStorage-level.
     let markAsClosed = () => {
       this._log.debug("Closed");
@@ -691,7 +691,7 @@ ConnectionData.prototype = Object.freeze({
           } catch (ex) {
             // Unfortunately, if we are wrapping an existing connection, a
             // transaction could have been started by a client of the same
-            // connection that doesn't use Sqlite.jsm (e.g. C++ consumer).
+            // connection that doesn't use Sqlite.sys.mjs (e.g. C++ consumer).
             // The best we can do is proceed without a transaction and hope
             // things won't break.
             if (wrappedConnections.has(this._identifier)) {
@@ -1093,7 +1093,7 @@ ConnectionData.prototype = Object.freeze({
  */
 function openConnection(options) {
   let log = lazy.Log.repository.getLoggerWithMessagePrefix(
-    "Sqlite.jsm",
+    "Sqlite.sys.mjs",
     `ConnectionOpener: `
   );
   log.manageLevelFromPref("toolkit.sqlitejsm.loglevel");
@@ -1104,7 +1104,8 @@ function openConnection(options) {
 
   if (isClosed) {
     throw new Error(
-      "Sqlite.jsm has been shutdown. Cannot open connection to: " + options.path
+      "Sqlite.sys.mjs has been shutdown. Cannot open connection to: " +
+        options.path
     );
   }
 
@@ -1239,7 +1240,7 @@ function openConnection(options) {
  */
 function cloneStorageConnection(options) {
   let log = lazy.Log.repository.getLoggerWithMessagePrefix(
-    "Sqlite.jsm",
+    "Sqlite.sys.mjs",
     `ConnectionCloner: `
   );
   log.manageLevelFromPref("toolkit.sqlitejsm.loglevel");
@@ -1254,7 +1255,7 @@ function cloneStorageConnection(options) {
 
   if (isClosed) {
     throw new Error(
-      "Sqlite.jsm has been shutdown. Cannot clone connection to: " +
+      "Sqlite.sys.mjs has been shutdown. Cannot clone connection to: " +
         source.databaseFile.path
     );
   }
@@ -1299,11 +1300,11 @@ function cloneStorageConnection(options) {
 }
 
 /**
- * Wraps an existing and open Storage connection with Sqlite.jsm API.  The
+ * Wraps an existing and open Storage connection with Sqlite.sys.mjs API.  The
  * wrapped connection clone has the same underlying characteristics of the
  * original connection and is returned in form of an OpenedConnection handle.
  *
- * Clients are responsible for closing both the Sqlite.jsm wrapper and the
+ * Clients are responsible for closing both the Sqlite.sys.mjs wrapper and the
  * underlying mozStorage connection.
  *
  * The following parameters can control the wrapped connection:
@@ -1318,7 +1319,7 @@ function cloneStorageConnection(options) {
  */
 function wrapStorageConnection(options) {
   let log = lazy.Log.repository.getLoggerWithMessagePrefix(
-    "Sqlite.jsm",
+    "Sqlite.sys.mjs",
     `ConnectionCloner: `
   );
   log.manageLevelFromPref("toolkit.sqlitejsm.loglevel");
@@ -1330,7 +1331,7 @@ function wrapStorageConnection(options) {
 
   if (isClosed) {
     throw new Error(
-      "Sqlite.jsm has been shutdown. Cannot wrap connection to: " +
+      "Sqlite.sys.mjs has been shutdown. Cannot wrap connection to: " +
         connection.databaseFile.path
     );
   }
@@ -1443,13 +1444,13 @@ OpenedConnection.prototype = Object.freeze({
 
   /**
    * Returns a handle to the underlying `mozIStorageAsyncConnection`. This is
-   * ⚠️ **extremely unsafe** ⚠️ because `Sqlite.jsm` continues to manage the
+   * ⚠️ **extremely unsafe** ⚠️ because `Sqlite.sys.mjs` continues to manage the
    * connection's lifecycle, including transactions and shutdown blockers.
    * Misusing the raw connection can easily lead to data loss, memory leaks,
    * and errors.
    *
    * Consumers of the raw connection **must not** close or re-wrap it,
-   * and should not run statements concurrently with `Sqlite.jsm`.
+   * and should not run statements concurrently with `Sqlite.sys.mjs`.
    *
    * It's _much_ safer to open a `mozIStorage{Async}Connection` yourself,
    * and access it from JavaScript via `Sqlite.wrapStorageConnection`.
@@ -1644,7 +1645,7 @@ OpenedConnection.prototype = Object.freeze({
    * Whether a transaction is currently in progress.
    *
    * Note that this is true if a transaction is active on the connection,
-   * regardless of whether it was started by `Sqlite.jsm` or another consumer.
+   * regardless of whether it was started by `Sqlite.sys.mjs` or another consumer.
    * See the explanation above `mozIStorageConnection.transactionInProgress` for
    * why this distinction matters.
    */
