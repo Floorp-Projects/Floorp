@@ -178,7 +178,7 @@ impl MergeTask {
             // merge, since we won't be able to apply the merged tree back to
             // Places. This is common, especially if the user makes lots of
             // changes at once. In that case, our merge task might run in the
-            // middle of a `Sqlite.jsm` transaction, and fail when we try to
+            // middle of a `Sqlite.sys.mjs` transaction, and fail when we try to
             // open our own transaction in `Store::apply`. Since the local
             // tree might be in an inconsistent state, we can't safely update
             // Places.
