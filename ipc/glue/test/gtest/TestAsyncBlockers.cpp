@@ -136,6 +136,26 @@ TEST_F(TestAsyncBlockers, NoRegister_WaitUntilClear) {
   PROCESS_EVENTS_UNTIL(done);
 }
 
+TEST_F(TestAsyncBlockers, Register_WaitUntilClear_0s) {
+  AsyncBlockers blockers;
+  bool done = false;
+
+  Blocker* blocker = new Blocker();
+  blockers.Register(blocker);
+
+  blockers.WaitUntilClear(0)->Then(GetCurrentSerialEventTarget(), __func__,
+                                   [&]() {
+                                     EXPECT_TRUE(true);
+                                     done = true;
+                                   });
+
+  NS_ProcessPendingEvents(nullptr);
+
+  blockers.Deregister(blocker);
+
+  PROCESS_EVENTS_UNTIL(done);
+}
+
 #if !defined(ANDROID)
 static void DisableCrashReporter() {
   nsCOMPtr<nsICrashReporter> crashreporter =
