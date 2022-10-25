@@ -1374,60 +1374,25 @@ GfxInfoBase::GetFeatureSuggestedDriverVersion(int32_t aFeature,
 
 void GfxInfoBase::EvaluateDownloadedBlocklist(
     nsTArray<GfxDriverInfo>& aDriverInfo) {
-  int32_t features[] = {nsIGfxInfo::FEATURE_DIRECT2D,
-                        nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS,
-                        nsIGfxInfo::FEATURE_DIRECT3D_10_LAYERS,
-                        nsIGfxInfo::FEATURE_DIRECT3D_10_1_LAYERS,
-                        nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS,
-                        nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE,
-                        nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
-                        nsIGfxInfo::FEATURE_OPENGL_LAYERS,
-                        nsIGfxInfo::FEATURE_WEBGL_OPENGL,
-                        nsIGfxInfo::FEATURE_WEBGL_ANGLE,
-                        nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE,
-                        nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE,
-                        nsIGfxInfo::UNUSED_FEATURE_WEBGL_MSAA,
-                        nsIGfxInfo::FEATURE_STAGEFRIGHT,
-                        nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_H264,
-                        nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION,
-                        nsIGfxInfo::FEATURE_VP8_HW_DECODE,
-                        nsIGfxInfo::FEATURE_VP9_HW_DECODE,
-                        nsIGfxInfo::FEATURE_DX_INTEROP2,
-                        nsIGfxInfo::FEATURE_GPU_PROCESS,
-                        nsIGfxInfo::FEATURE_WEBGL2,
-                        nsIGfxInfo::FEATURE_D3D11_KEYED_MUTEX,
-                        nsIGfxInfo::FEATURE_WEBRENDER,
-                        nsIGfxInfo::FEATURE_WEBRENDER_COMPOSITOR,
-                        nsIGfxInfo::FEATURE_DX_NV12,
-                        nsIGfxInfo::FEATURE_DX_P010,
-                        nsIGfxInfo::FEATURE_DX_P016,
-                        nsIGfxInfo::FEATURE_GL_SWIZZLE,
-                        nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS,
-                        nsIGfxInfo::FEATURE_X11_EGL,
-                        nsIGfxInfo::FEATURE_DMABUF,
-                        nsIGfxInfo::FEATURE_WEBGPU,
-                        nsIGfxInfo::FEATURE_VIDEO_OVERLAY,
-                        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY,
-                        nsIGfxInfo::FEATURE_REUSE_DECODER_DEVICE,
-                        nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT,
-                        nsIGfxInfo::FEATURE_BACKDROP_FILTER,
-                        0};
-
   // For every feature we know about, we evaluate whether this blocklist has a
   // non-STATUS_OK status. If it does, we set the pref we evaluate in
   // GetFeatureStatus above, so we don't need to hold on to this blocklist
   // anywhere permanent.
-  int i = 0;
-  while (features[i]) {
+  for (int feature = 1; feature <= nsIGfxInfo::FEATURE_MAX_VALUE; ++feature) {
     int32_t status;
     nsCString failureId;
     nsAutoString suggestedVersion;
-    if (NS_SUCCEEDED(GetFeatureStatusImpl(
-            features[i], &status, suggestedVersion, aDriverInfo, failureId))) {
+    if (NS_SUCCEEDED(GetFeatureStatusImpl(feature, &status, suggestedVersion,
+                                          aDriverInfo, failureId))) {
       switch (status) {
         default:
+          MOZ_FALLTHROUGH_ASSERT("Unhandled feature status!");
+        case nsIGfxInfo::FEATURE_STATUS_UNKNOWN:
+          // UNKNOWN may be returned during shutdown or for invalid features.
         case nsIGfxInfo::FEATURE_STATUS_OK:
-          RemovePrefForFeature(features[i]);
+        case nsIGfxInfo::FEATURE_ALLOW_ALWAYS:
+        case nsIGfxInfo::FEATURE_ALLOW_QUALIFIED:
+          RemovePrefForFeature(feature);
           break;
 
         case nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION:
@@ -1442,12 +1407,12 @@ void GfxInfoBase::EvaluateDownloadedBlocklist(
         case nsIGfxInfo::FEATURE_BLOCKED_DEVICE:
         case nsIGfxInfo::FEATURE_DISCOURAGED:
         case nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION:
-          SetPrefValueForFeature(features[i], status, failureId);
+        case nsIGfxInfo::FEATURE_DENIED:
+        case nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST:
+          SetPrefValueForFeature(feature, status, failureId);
           break;
       }
     }
-
-    ++i;
   }
 }
 
