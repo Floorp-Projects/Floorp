@@ -13,7 +13,7 @@ async function run_test() {
   debugDump("testing update xml not available");
   await waitForUpdateCheck(false).then(aArgs => {
     Assert.equal(
-      aArgs.update.errorCode,
+      aArgs.updates[0].errorCode,
       1500,
       "the update errorCode" + MSG_SHOULD_EQUAL
     );
@@ -216,7 +216,7 @@ async function run_test() {
   gResponseBody = "<parsererror/>";
   await waitForUpdateCheck(false).then(aArgs => {
     Assert.equal(
-      aArgs.update.errorCode,
+      aArgs.updates[0].errorCode,
       1200,
       "the update errorCode" + MSG_SHOULD_EQUAL
     );
