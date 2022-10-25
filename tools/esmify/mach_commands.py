@@ -4,6 +4,7 @@
 
 from __future__ import print_function, absolute_import
 
+import json
 import logging
 import os
 import pathlib
@@ -544,6 +545,31 @@ def try_rename_in(command_context, path, target, jsm_name, esm_name, jsm_path):
     return True
 
 
+def try_rename_uri_in(command_context, target, jsm_name, esm_name, jsm_uri, esm_uri):
+    """Replace the occurrences of `jsm_uri` with `esm_uri` in `target` file."""
+
+    def info(text):
+        command_context.log(logging.INFO, "esmify", {}, f"[INFO] {text}")
+
+    modified = False
+    content = ""
+    with open(target, "r") as f:
+        for line in f:
+            if jsm_uri in line:
+                modified = True
+                line = line.replace(jsm_uri, esm_uri)
+
+            content += line
+
+    if modified:
+        info(f"  {str(target)}")
+        info(f"    {jsm_name} => {esm_name}")
+        with open(target, "w", newline="\n") as f:
+            f.write(content)
+
+    return True
+
+
 def try_rename_components_conf(command_context, path, jsm_name, esm_name):
     """Replace the occurrences of `jsm_name` with `esm_name` in components.conf
     file."""
@@ -590,6 +616,44 @@ def esmify_path(jsm_path):
     return esm_path
 
 
+path_to_uri_map = None
+
+
+def load_path_to_uri_map():
+    global path_to_uri_map
+
+    if path_to_uri_map:
+        return
+
+    if "ESMIFY_MAP_JSON" in os.environ:
+        json_map = pathlib.Path(os.environ["ESMIFY_MAP_JSON"])
+    else:
+        json_map = pathlib.Path(__file__).parent / "map.json"
+
+    with open(json_map, "r") as f:
+        uri_to_path_map = json.loads(f.read())
+
+    path_to_uri_map = dict()
+
+    for uri, paths in uri_to_path_map.items():
+        if type(paths) is str:
+            paths = [paths]
+
+        for path in paths:
+            path_to_uri_map[path] = uri
+
+
+def find_jsm_uri(jsm_path):
+    load_path_to_uri_map()
+
+    path = path_sep_from_native(jsm_path)
+
+    if path in path_to_uri_map:
+        return path_to_uri_map[path]
+
+    return None
+
+
 def rename_single_file(command_context, vcs_utils, jsm_path, summary):
     """Rename `jsm_path` to .sys.mjs, and fix references to the file in build
     and test definitions."""
@@ -629,6 +693,46 @@ def rename_single_file(command_context, vcs_utils, jsm_path, summary):
 
     if try_rename_components_conf(command_context, jsm_path, jsm_name, esm_name):
         renamed = True
+
+    uri_target_files = [
+        pathlib.Path(
+            "browser", "base", "content", "test", "performance", "browser_startup.js"
+        ),
+        pathlib.Path(
+            "browser",
+            "base",
+            "content",
+            "test",
+            "performance",
+            "browser_startup_content.js",
+        ),
+        pathlib.Path(
+            "browser",
+            "base",
+            "content",
+            "test",
+            "performance",
+            "browser_startup_content_subframe.js",
+        ),
+        pathlib.Path(
+            "toolkit",
+            "components",
+            "backgroundtasks",
+            "tests",
+            "browser",
+            "browser_xpcom_graph_wait.js",
+        ),
+    ]
+
+    jsm_uri = find_jsm_uri(jsm_path)
+    if jsm_uri:
+        esm_uri = re.sub(r"\.(jsm|js|jsm\.js)$", ".sys.mjs", jsm_uri)
+
+        for target in uri_target_files:
+            if try_rename_uri_in(
+                command_context, target, jsm_uri, esm_uri, jsm_name, esm_name
+            ):
+                renamed = True
 
     if not renamed:
         summary.no_refs.append([jsm_path, None])
