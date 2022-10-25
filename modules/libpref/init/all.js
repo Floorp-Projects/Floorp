@@ -2544,12 +2544,6 @@ pref("font.size.monospace.x-math", 13);
   // Support IMEs implemented with IMM in TSF mode.
   pref("intl.tsf.support_imm", true);
 
-  // This is referred only when both "intl.tsf.enable" and
-  // "intl.tsf.support_imm" are true.  When this is true, default IMC is
-  // associated with focused window only when active keyboard layout is a
-  // legacy IMM-IME.
-  pref("intl.tsf.associate_imc_only_when_imm_ime_is_active", false);
-
   // If composition_font is set, Gecko sets the font to IME.  IME may use
   // the fonts on their window like candidate window.  If they are empty,
   // Gecko uses the system default font which is set to the IM context.

@@ -202,7 +202,6 @@ class IMEHandler final {
   // If sIMMEnabled is false, any IME messages are not handled in TSF mode.
   // Additionally, IME context is always disassociated from focused window.
   static bool sIsIMMEnabled;
-  static bool sAssociateIMCOnlyWhenIMM_IMEActive;
 
   static bool IsTSFAvailable() { return sIsInTSFMode; }
   static bool IsIMMActive();
