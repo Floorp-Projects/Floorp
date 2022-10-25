@@ -6929,6 +6929,17 @@
     value: true
     mirror: always
 
+  # Whether Geckos hacks ITextStoreACP::QueryInsert() or not.  The method should
+  # return new selection after specified length text is inserted at specified
+  # range.  However, Microsoft Pinyin and Microsoft Wubi expect that the result
+  # is same as specified range.  If following prefs are true,
+  # ITextStoreACP::QueryInsert() returns specified range only when one of the
+  # TIPs is active.
+-   name: intl.tsf.hack.ms_simplified_chinese.query_insert_result
+    type: bool
+    value: true
+    mirror: always
+
   # Whether Gecko returns caret rect before composition string or TS_E_NOLAYOUT
   # from ITfContextView::GetTextExt() when the specified range is larger than
   # composition start offset if and only Traditional Chinese TIP of Microsoft

@@ -2564,8 +2564,7 @@ pref("font.size.monospace.x-math", 13);
   // specified range. However, Microsoft's some Chinese TIPs expect that the
   // result is same as specified range.  If following prefs are true,
   // ITextStoreACP::QueryInsert() returns specified range only when one of
-  // the TIPs is active. For Microsoft Pinyin and Microsoft Wubi.
-  pref("intl.tsf.hack.ms_simplified_chinese.query_insert_result", true);
+  // the TIPs is active.
   // For Microsoft ChangJie and Microsoft Quick
   pref("intl.tsf.hack.ms_traditional_chinese.query_insert_result", true);
 
