@@ -150,7 +150,7 @@ add_task(async function() {
     useAddonManager: "temporary",
     manifest: {
       devtools_page: "extension.html",
-      applications: {
+      browser_specific_settings: {
         gecko: { id: EXTENSION },
       },
     },
