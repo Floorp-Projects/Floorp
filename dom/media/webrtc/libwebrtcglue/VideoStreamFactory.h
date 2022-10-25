@@ -9,9 +9,13 @@
 
 #include "CodecConfig.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/DataMutex.h"
+#include "mozilla/gfx/Point.h"
 #include "mozilla/UniquePtr.h"
+#include "api/video/video_source_interface.h"
 #include "api/video_codecs/video_encoder_config.h"
-#include "media/base/video_adapter.h"
+#include "common_video/framerate_controller.h"
+#include "rtc_base/time_utils.h"
 
 namespace mozilla {
 
@@ -34,25 +38,68 @@ class VideoStreamFactory
   VideoStreamFactory(VideoCodecConfig aConfig,
                      webrtc::VideoCodecMode aCodecMode, int aMinBitrate,
                      int aStartBitrate, int aPrefMaxBitrate,
-                     int aNegotiatedMaxBitrate, unsigned int aMaxFramerate)
+                     int aNegotiatedMaxBitrate,
+                     const rtc::VideoSinkWants& aWants, bool aLockScaling)
       : mCodecMode(aCodecMode),
-        mMaxFramerateForAllStreams(aMaxFramerate),
+        mMaxFramerateForAllStreams(std::numeric_limits<unsigned int>::max()),
         mCodecConfig(std::forward<VideoCodecConfig>(aConfig)),
         mMinBitrate(aMinBitrate),
         mStartBitrate(aStartBitrate),
         mPrefMaxBitrate(aPrefMaxBitrate),
         mNegotiatedMaxBitrate(aNegotiatedMaxBitrate),
-        mSimulcastAdapter(MakeUnique<cricket::VideoAdapter>()) {}
-
-  void SetCodecMode(webrtc::VideoCodecMode aCodecMode);
-  void SetMaxFramerateForAllStreams(unsigned int aMaxFramerate);
+        mFramerateController("VideoStreamFactory::mFramerateController"),
+        mWants(aWants),
+        mLockScaling(aLockScaling) {}
 
   // This gets called off-main thread and may hold internal webrtc.org
   // locks. May *NOT* lock the conduit's mutex, to avoid deadlocks.
   std::vector<webrtc::VideoStream> CreateEncoderStreams(
-      int width, int height, const webrtc::VideoEncoderConfig& config) override;
+      int aWidth, int aHeight,
+      const webrtc::VideoEncoderConfig& aConfig) override;
+  /**
+   * Function to select and change the encoding resolution based on incoming
+   * frame size and current available bandwidth.
+   * @param width, height: dimensions of the frame
+   */
+  void SelectMaxFramerateForAllStreams(unsigned short aWidth,
+                                       unsigned short aHeight);
+
+  /**
+   * Function to determine if the frame should be dropped to achieve a lower
+   * framerate  based on the given timestamp.
+   * @param aTimestamp timestamp of frame to be evaluated.
+   * @return true if frame should be dropped to achieve a specific framerate,
+   * false otehrwise.
+   */
+  bool ShouldDropFrame(int64_t aTimestamp);
 
  private:
+  /**
+   * Function to calculate a scaled down width and height based on
+   * scaleDownByResolution, maxFS, and max pixel count settings.
+   * @param aWidth current frame width
+   * @param aHeight current frame height
+   * @param aScaleDownByResolution value to scale width and height down by.
+   * @param aMaxPixelCount maximum number of pixels wanted in a frame.
+   * @return a gfx:IntSize containing  width and height to use. These may match
+   * the aWidth and aHeight passed in if no scaling was needed.
+   */
+  gfx::IntSize CalculateScaledResolution(int aWidth, int aHeight,
+                                         double aScaleDownByResolution,
+                                         unsigned int aMaxPixelCount);
+
+  /**
+   * Function to select and change the encoding frame rate based on incoming
+   * frame rate, current frame size and max-mbps setting.
+   * @param aOldFramerate current framerate
+   * @param aSendingWidth width of frames being sent
+   * @param aSendingHeight height of frames being sent
+   * @return new framerate meeting max-mbps requriements based on frame size
+   */
+  unsigned int SelectFrameRate(unsigned int aOldFramerate,
+                               unsigned short aSendingWidth,
+                               unsigned short aSendingHeight);
+
   // Used to limit number of streams for screensharing.
   Atomic<webrtc::VideoCodecMode> mCodecMode;
 
@@ -68,10 +115,12 @@ class VideoStreamFactory
   const int mPrefMaxBitrate = 0;
   const int mNegotiatedMaxBitrate = 0;
 
-  // Adapter for simulcast layers. We use this to handle scaleResolutionDownBy
-  // for layers. It's separate from the conduit's mVideoAdapter to not affect
-  // scaling settings for incoming frames.
-  UniquePtr<cricket::VideoAdapter> mSimulcastAdapter;
+  // DatamMutex used as object is mutated from a libwebrtc thread and
+  // a seperate thread used to pass video frames to libwebrtc.
+  DataMutex<webrtc::FramerateController> mFramerateController;
+
+  const rtc::VideoSinkWants mWants;
+  const bool mLockScaling;
 };
 
 }  // namespace mozilla
