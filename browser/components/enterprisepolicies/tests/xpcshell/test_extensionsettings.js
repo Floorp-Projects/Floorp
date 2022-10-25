@@ -26,7 +26,7 @@ add_task(async function setup() {
 
   let webExtensionFile = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: addonID,
         },
@@ -229,7 +229,7 @@ add_task(async function test_extensionsettings_string() {
 add_task(async function test_theme() {
   let themeFile = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: themeID,
         },
