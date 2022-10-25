@@ -138,6 +138,7 @@ var gTestID;
 // This default value will be overridden when using the http server.
 var gURLData = URL_HOST + "/";
 var gTestserver;
+var gUpdateCheckCount = 0;
 
 var gIncrementalDownloadErrorType;
 
@@ -4226,6 +4227,7 @@ function start_httpserver() {
  *          The http response for the request.
  */
 function pathHandler(aMetadata, aResponse) {
+  gUpdateCheckCount += 1;
   aResponse.setHeader("Content-Type", "text/xml", false);
   aResponse.setStatusLine(aMetadata.httpVersion, 200, "OK");
   aResponse.bodyOutputStream.write(gResponseBody, gResponseBody.length);
