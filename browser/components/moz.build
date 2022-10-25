@@ -32,7 +32,6 @@ DIRS += [
     "attribution",
     "colorways",
     "contextualidentity",
-    "credentialmanager",
     "customizableui",
     "doh",
     "downloads",

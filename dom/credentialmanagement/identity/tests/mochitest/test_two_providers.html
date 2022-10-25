@@ -27,18 +27,13 @@
         });
       }
     ).then((cred) => {
-      ok(true, "successfully got a credential");
-      is(cred.token,
-        "account_id=1234&client_id=mochitest&nonce=nonce&disclosure_text_shown=false",
-        "Correct token on the credential.");
-      is(cred.id,
-        "1234",
-        "Correct id on the credential");
-      is(cred.type,
-        "identity",
-        "Correct type on the credential");
+      // This is not the long-term planned behavior, but is the current
+      // state of the spec.
+      // See https://fedidcg.github.io/FedCM/#dom-identitycredential-discoverfromexternalsource-slot
+      // as of Sept 2022.
+      ok(false, "incorrectly got a credential");
     }).catch((err) => {
-      ok(false, "must not have an error");
+      ok(true, "correctly got an error");
     }).finally(() => {
       SimpleTest.finish();
     })

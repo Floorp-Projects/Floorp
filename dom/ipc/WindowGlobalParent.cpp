@@ -1353,7 +1353,7 @@ IPCResult WindowGlobalParent::RecvDiscoverIdentityCredentialFromExternalSource(
     const IdentityCredentialRequestOptions& aOptions,
     const DiscoverIdentityCredentialFromExternalSourceResolver& aResolver) {
   IdentityCredential::DiscoverFromExternalSourceInMainProcess(
-      DocumentPrincipal(), this->BrowsingContext(), aOptions)
+      DocumentPrincipal(), aOptions)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [aResolver](const IPCIdentityCredential& aResult) {
