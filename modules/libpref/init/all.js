@@ -2559,14 +2559,6 @@ pref("font.size.monospace.x-math", 13);
   // screens, you cannot access some specific features for a "search" input
   // field.
   pref("intl.tsf.hack.atok.search_input_scope_disabled", false);
-  // Whether hack ITextStoreACP::QueryInsert() or not.  The method should
-  // return new selection after specified length text is inserted at
-  // specified range. However, Microsoft's some Chinese TIPs expect that the
-  // result is same as specified range.  If following prefs are true,
-  // ITextStoreACP::QueryInsert() returns specified range only when one of
-  // the TIPs is active.
-  // For Microsoft ChangJie and Microsoft Quick
-  pref("intl.tsf.hack.ms_traditional_chinese.query_insert_result", true);
 
   // If composition_font is set, Gecko sets the font to IME.  IME may use
   // the fonts on their window like candidate window.  If they are empty,

@@ -6949,6 +6949,17 @@
     value: true
     mirror: always
 
+  # Whether Geckos hacks ITextStoreACP::QueryInsert() or not.  The method should
+  # return new selection after specified length text is inserted at specified
+  # range.  However, Microsoft ChangJie and Microsoft Quick expect that the
+  # result is same as specified range.  If following prefs are true,
+  # ITextStoreACP::QueryInsert() returns specified range only when one of the
+  # TIPs is active.
+-   name: intl.tsf.hack.ms_traditional_chinese.query_insert_result
+    type: bool
+    value: true
+    mirror: always
+
   # Whether Gecko sets input scope of the URL bar to IS_DEFAULT when black
   # listed IMEs are active or does not.  If you use tablet mode mainly and you
   # want to use touch keyboard for URL when you set focus to the URL bar, you
