@@ -126,7 +126,8 @@ function _createContainer() {
   container.id = CONTAINER_ID;
   container.setAttribute("aria-describedby", `#${CONTAINER_ID} .welcome-text`);
   container.tabIndex = 0;
-  document.body.prepend(container);
+  parent.setAttribute("aria-owns", `${CONTAINER_ID}`);
+  document.body.appendChild(container);
   return container;
 }
 
@@ -494,6 +495,8 @@ async function showFeatureCallout(messageId) {
           window.addEventListener("focus", focusHandler, {
             capture: true, // get the event before retargeting
           });
+          // Alert screen readers to the presence of the callout
+          container.setAttribute("role", "alert");
         });
       });
     }
