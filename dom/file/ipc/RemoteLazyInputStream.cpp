@@ -217,6 +217,13 @@ already_AddRefed<RemoteLazyInputStream> RemoteLazyInputStream::WrapStream(
 
   RefPtr<RemoteLazyInputStreamChild> actor =
       BindChildActor(id, std::move(childEp));
+
+  if (!actor) {
+    MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Warning,
+            ("Wrapping stream failed as we are probably late in shutdown!"));
+    return do_AddRef(new RemoteLazyInputStream());
+  }
+
   return do_AddRef(new RemoteLazyInputStream(actor));
 }
 
@@ -1388,6 +1395,12 @@ already_AddRefed<RemoteLazyInputStream> RemoteLazyInputStream::IPCRead(
 
   RefPtr<RemoteLazyInputStreamChild> actor =
       BindChildActor(id, std::move(endpoint));
+
+  if (!actor) {
+    MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Warning,
+            ("Deserialize failed as we are probably late in shutdown!"));
+    return do_AddRef(new RemoteLazyInputStream());
+  }
 
   return do_AddRef(new RemoteLazyInputStream(actor, start, length));
 }
