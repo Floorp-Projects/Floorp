@@ -303,7 +303,7 @@ Despite being outlawed as a way of synchronously accessing the properties of obj
 
 CPOW messages, however, cannot be sent over the JSWindowActor communications pipe, so this handy mechanism will no longer work.
 
-Instead, a new module called `ContentDOMReference.jsm`_ has been created which supplies the same capability. See that file for documentation.
+Instead, a new module called :searchfox:`ContentDOMReference.sys.mjs <toolkit/modules/ContentDOMReference.sys.mjs>` has been created which supplies the same capability. See that file for documentation.
 
 How to start porting parent-process browser code to use JSWindowActors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -542,7 +542,6 @@ And more
 .. _Electrolysis Project: https://wiki.mozilla.org/Electrolysis
 .. _IPC Actors: https://developer.mozilla.org/en-US/docs/Mozilla/IPDL/Tutorial
 .. _Context Menu Fission Port: https://hg.mozilla.org/mozilla-central/rev/adc60720b7b8
-.. _ContentDOMReference.jsm: https://searchfox.org/mozilla-central/source/toolkit/modules/ContentDOMReference.jsm
 .. _JSProcessActor.webidl: https://searchfox.org/mozilla-central/source/dom/chrome-webidl/JSWindowActor.webidl
 .. _JSWindowActor.webidl: https://searchfox.org/mozilla-central/source/dom/chrome-webidl/JSWindowActor.webidl
 .. _BrowserElementParent.jsm: https://searchfox.org/mozilla-central/rev/ec806131cb7bcd1c26c254d25cd5ab8a61b2aeb6/toolkit/actors/BrowserElementParent.jsm
