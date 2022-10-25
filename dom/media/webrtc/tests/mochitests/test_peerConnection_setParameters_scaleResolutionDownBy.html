@@ -12,7 +12,7 @@ createHTML({
 });
 
 let sender, localElem, remoteElem;
-let originalWidth, originalHeight;
+let originalWidth, originalAspectRatio, originalScale;
 
 async function checkScaleDownBy(scale) {
   sender.setParameters({ encodings: [{ scaleResolutionDownBy: scale }] });
@@ -21,11 +21,12 @@ async function checkScaleDownBy(scale) {
   // Find the expected resolution. Internally we pick the closest lower
   // resolution with an identical aspect ratio.
   let expectedWidth = Math.floor(originalWidth / scale);
-  let expectedHeight = Math.floor(originalHeight / scale);
-
+  while (expectedWidth / originalAspectRatio % 1 != 0) {
+    --expectedWidth;
+  }
   is(remoteElem.videoWidth, expectedWidth,
     `Width should have scaled down by ${scale}`);
-  is(remoteElem.videoHeight, expectedHeight,
+  is(remoteElem.videoHeight, expectedWidth / originalAspectRatio,
     `Height should have scaled down by ${scale}`);
 }
 
@@ -56,7 +57,8 @@ runNetworkTest(async function (options) {
         info(`Video resized to ${remoteElem.videoWidth}x${remoteElem.videoHeight}`));
 
       originalWidth = localElem.videoWidth;
-      originalHeight = localElem.videoHeight;
+      originalAspectRatio = originalWidth / localElem.videoHeight;
+      originalScale = remoteElem.videoWidth / originalWidth;
       info(`Original width is ${originalWidth}`);
     },
     function PC_LOCAL_SCALEDOWNBY_2() {

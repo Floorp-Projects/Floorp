@@ -99,6 +99,53 @@ void ConstrainPreservingAspectRatioExact(uint32_t max_fs, t* width, t* height) {
   *height = 0;
 }
 
+template <class t>
+void ConstrainPreservingAspectRatio(uint16_t max_width, uint16_t max_height,
+                                    t* width, t* height) {
+  if (((*width) <= max_width) && ((*height) <= max_height)) {
+    return;
+  }
+
+  if ((*width) * max_height > max_width * (*height)) {
+    (*height) = max_width * (*height) / (*width);
+    (*width) = max_width;
+  } else {
+    (*width) = max_height * (*width) / (*height);
+    (*height) = max_height;
+  }
+}
+
+/**
+ * Function to select and change the encoding frame rate based on incoming frame
+ * rate and max-mbps setting.
+ * @param current framerate
+ * @result new framerate
+ */
+unsigned int SelectSendFrameRate(const VideoCodecConfig& codecConfig,
+                                 unsigned int old_framerate,
+                                 unsigned short sending_width,
+                                 unsigned short sending_height) {
+  unsigned int new_framerate = old_framerate;
+
+  // Limit frame rate based on max-mbps
+  if (codecConfig.mEncodingConstraints.maxMbps) {
+    unsigned int cur_fs, mb_width, mb_height;
+
+    mb_width = (sending_width + 15) >> 4;
+    mb_height = (sending_height + 15) >> 4;
+
+    cur_fs = mb_width * mb_height;
+    if (cur_fs > 0) {  // in case no frames have been sent
+      new_framerate = codecConfig.mEncodingConstraints.maxMbps / cur_fs;
+    }
+  }
+
+  new_framerate =
+      std::min(new_framerate, WebrtcVideoConduit::ToLibwebrtcMaxFramerate(
+                                  codecConfig.mEncodingConstraints.maxFps));
+  return new_framerate;
+}
+
 /**
  * Perform validation on the codecConfig to be applied
  */
@@ -337,9 +384,11 @@ WebrtcVideoConduit::WebrtcVideoConduit(
           MakeUnique<WebrtcVideoDecoderFactory>(mCallThread.get(), aPCHandle)),
       mEncoderFactory(MakeUnique<WebrtcVideoEncoderFactory>(
           mCallThread.get(), std::move(aPCHandle))),
+      mVideoAdapter(MakeUnique<cricket::VideoAdapter>()),
       mBufferPool(false, SCALER_BUFFER_POOL_SIZE),
       mEngineTransmitting(false),
       mEngineReceiving(false),
+      mMaxFramerateForAllStreams(std::numeric_limits<unsigned int>::max()),
       mVideoLatencyTestEnable(aOptions.mVideoLatencyTestEnable),
       mMinBitrate(aOptions.mMinBitrate),
       mStartBitrate(aOptions.mStartBitrate),
@@ -608,6 +657,7 @@ void WebrtcVideoConduit::OnControlConfigChange() {
 
       if (ValidateCodecConfig(*codecConfig) == kMediaConduitNoError) {
         encoderReconfigureNeeded = true;
+        mUpdateSendResolution = true;
 
         mCurSendCodecConfig = codecConfig;
 
@@ -628,6 +678,15 @@ void WebrtcVideoConduit::OnControlConfigChange() {
                     "Updating send codec for VideoConduit:%p stream count:%zu",
                     this, streamCount);
 
+        {
+          // maxFps inside codecConfig applies to all streams.
+          const unsigned maxFramerate =
+              ToLibwebrtcMaxFramerate(codecConfig->mEncodingConstraints.maxFps);
+          // apply restrictions from maxMbps/etc
+          mMaxFramerateForAllStreams = SelectSendFrameRate(
+              *codecConfig, maxFramerate, mLastWidth, mLastHeight);
+        }
+
         // So we can comply with b=TIAS/b=AS/maxbr=X when input resolution
         // changes
         MOZ_ASSERT(codecConfig->mTias < INT_MAX);
@@ -642,6 +701,22 @@ void WebrtcVideoConduit::OnControlConfigChange() {
           settings.start_bitrate_bps = mMinBitrateEstimate;
           mCall->Call()->SetClientBitratePreferences(settings);
         }
+
+        mVideoStreamFactory = new rtc::RefCountedObject<VideoStreamFactory>(
+            *codecConfig, mControl.mCodecMode, mMinBitrate, mStartBitrate,
+            mPrefMaxBitrate, mNegotiatedMaxBitrate, mMaxFramerateForAllStreams);
+        mEncoderConfig.video_stream_factory = mVideoStreamFactory.get();
+
+        // Reset the VideoAdapter. SelectResolution will ensure limits are set.
+        mVideoAdapter = MakeUnique<cricket::VideoAdapter>(
+            streamCount > 1 ? SIMULCAST_RESOLUTION_ALIGNMENT : 1);
+        mVideoAdapter->OnScaleResolutionBy(
+            codecConfig->mEncodings[highestResolutionIndex]
+                        .constraints.scaleDownBy > 1.0
+                ? absl::optional<float>(
+                      codecConfig->mEncodings[highestResolutionIndex]
+                          .constraints.scaleDownBy)
+                : absl::optional<float>());
 
         // XXX parse the encoded SPS/PPS data and set
         // spsData/spsLen/ppsData/ppsLen
@@ -739,8 +814,6 @@ void WebrtcVideoConduit::OnControlConfigChange() {
           mSendStreamConfig.rtp = newRtp;
           sendStreamRecreationNeeded = true;
         }
-
-        mEncoderConfig.video_stream_factory = CreateVideoStreamFactory();
       }
     }
 
@@ -748,15 +821,8 @@ void WebrtcVideoConduit::OnControlConfigChange() {
       const auto& mode = mControl.mCodecMode.Ref();
       MOZ_ASSERT(mode == webrtc::VideoCodecMode::kRealtimeVideo ||
                  mode == webrtc::VideoCodecMode::kScreensharing);
-
-      auto contentType =
-          mode == webrtc::VideoCodecMode::kRealtimeVideo
-              ? webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo
-              : webrtc::VideoEncoderConfig::ContentType::kScreen;
-
-      if (contentType != mEncoderConfig.content_type) {
-        mEncoderConfig.video_stream_factory = CreateVideoStreamFactory();
-        encoderReconfigureNeeded = true;
+      if (mVideoStreamFactory) {
+        mVideoStreamFactory->SetCodecMode(mode);
       }
     }
 
@@ -1247,13 +1313,49 @@ void WebrtcVideoConduit::DetachRenderer() {
   }
 }
 
-rtc::RefCountedObject<mozilla::VideoStreamFactory>*
-WebrtcVideoConduit::CreateVideoStreamFactory() {
-  mVideoStreamFactory = new rtc::RefCountedObject<VideoStreamFactory>(
-      *mCurSendCodecConfig, mControl.mCodecMode, mMinBitrate, mStartBitrate,
-      mPrefMaxBitrate, mNegotiatedMaxBitrate, mVideoBroadcaster.wants(),
-      mLockScaling);
-  return mVideoStreamFactory.get();
+void WebrtcVideoConduit::SelectSendResolution(unsigned short width,
+                                              unsigned short height) {
+  mMutex.AssertCurrentThreadOwns();
+  if (mCurSendCodecConfig) {
+    int max_fs = std::numeric_limits<int>::max();
+    if (!mLockScaling) {
+      max_fs = mVideoBroadcaster.wants().max_pixel_count;
+    }
+    // Limit resolution to max-fs
+    if (mCurSendCodecConfig->mEncodingConstraints.maxFs) {
+      // max-fs is in macroblocks, convert to pixels
+      max_fs = std::min(
+          max_fs,
+          static_cast<int>(mCurSendCodecConfig->mEncodingConstraints.maxFs *
+                           (16 * 16)));
+    }
+
+    unsigned int framerate_all_streams = SelectSendFrameRate(
+        mCurSendCodecConfig.ref(), mMaxFramerateForAllStreams, width, height);
+    if (mMaxFramerateForAllStreams != framerate_all_streams) {
+      CSFLogDebug(LOGTAG, "%s: framerate changing to %u (from %u)",
+                  __FUNCTION__, framerate_all_streams,
+                  mMaxFramerateForAllStreams);
+      mMaxFramerateForAllStreams = framerate_all_streams;
+      mVideoStreamFactory->SetMaxFramerateForAllStreams(
+          mMaxFramerateForAllStreams);
+    }
+
+    int framerate_with_wants;
+    if (framerate_all_streams > std::numeric_limits<int>::max()) {
+      framerate_with_wants = std::numeric_limits<int>::max();
+    } else {
+      framerate_with_wants = static_cast<int>(framerate_all_streams);
+    }
+
+    framerate_with_wants = std::min(
+        framerate_with_wants, mVideoBroadcaster.wants().max_framerate_fps);
+    CSFLogDebug(LOGTAG,
+                "%s: Calling OnOutputFormatRequest, max_fs=%d, max_fps=%d",
+                __FUNCTION__, max_fs, framerate_with_wants);
+    mVideoAdapter->OnOutputFormatRequest(absl::optional<std::pair<int, int>>(),
+                                         max_fs, framerate_with_wants);
+  }
 }
 
 void WebrtcVideoConduit::AddOrUpdateSink(
@@ -1266,8 +1368,7 @@ void WebrtcVideoConduit::AddOrUpdateSink(
   auto oldWants = mVideoBroadcaster.wants();
   mVideoBroadcaster.AddOrUpdateSink(sink, wants);
   if (oldWants != mVideoBroadcaster.wants()) {
-    mEncoderConfig.video_stream_factory = CreateVideoStreamFactory();
-    mSendStream->ReconfigureVideoEncoder(mEncoderConfig.Copy());
+    mUpdateSendResolution = true;
   }
 }
 
@@ -1279,8 +1380,7 @@ void WebrtcVideoConduit::RemoveSink(
   auto oldWants = mVideoBroadcaster.wants();
   mVideoBroadcaster.RemoveSink(sink);
   if (oldWants != mVideoBroadcaster.wants()) {
-    mEncoderConfig.video_stream_factory = CreateVideoStreamFactory();
-    mSendStream->ReconfigureVideoEncoder(mEncoderConfig.Copy());
+    mUpdateSendResolution = true;
   }
 }
 
@@ -1291,6 +1391,10 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
   // avoids sampling error when capturing frames, but google had to deal with
   // some broken cameras, include Logitech c920's IIRC.
 
+  int cropWidth;
+  int cropHeight;
+  int adaptedWidth;
+  int adaptedHeight;
   {
     MutexAutoLock lock(mMutex);
     if (mSendStreamConfig.rtp.ssrcs.empty()) {
@@ -1307,7 +1411,9 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
                   this, __FUNCTION__, mSendStreamConfig.rtp.ssrcs.front(),
                   mSendStreamConfig.rtp.ssrcs.front());
 
-    if (aFrame.width() != mLastWidth || aFrame.height() != mLastHeight) {
+    bool updateSendResolution = mUpdateSendResolution.exchange(false);
+    if (updateSendResolution || aFrame.width() != mLastWidth ||
+        aFrame.height() != mLastHeight) {
       // See if we need to recalculate what we're sending.
       CSFLogVerbose(LOGTAG, "%s: call SelectSendResolution with %ux%u",
                     __FUNCTION__, aFrame.width(), aFrame.height());
@@ -1317,6 +1423,7 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
 
       mLastWidth = aFrame.width();
       mLastHeight = aFrame.height();
+      SelectSendResolution(aFrame.width(), aFrame.height());
     }
 
     // adapt input video to wants of sink
@@ -1324,20 +1431,49 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
       return kMediaConduitNoError;
     }
 
-    // Check if we need to drop this frame to meet a requested FPS
-    if (mVideoStreamFactory->ShouldDropFrame(aFrame.timestamp_us())) {
+    if (!mVideoAdapter->AdaptFrameResolution(
+            aFrame.width(), aFrame.height(),
+            aFrame.timestamp_us() * rtc::kNumNanosecsPerMicrosec, &cropWidth,
+            &cropHeight, &adaptedWidth, &adaptedHeight)) {
+      // VideoAdapter dropped the frame.
       return kMediaConduitNoError;
+    }
+
+    uint16_t max_width = mCurSendCodecConfig->mEncodingConstraints.maxWidth;
+    uint16_t max_height = mCurSendCodecConfig->mEncodingConstraints.maxHeight;
+    if (max_width || max_height) {
+      max_width = max_width ? max_width : UINT16_MAX;
+      max_height = max_height ? max_height : UINT16_MAX;
+      ConstrainPreservingAspectRatio(max_width, max_height, &adaptedWidth,
+                                     &adaptedHeight);
     }
   }
 
   // If we have zero width or height, drop the frame here. Attempting to send
   // it will cause all sorts of problems in the webrtc.org code.
-  if (aFrame.width() == 0 || aFrame.height() == 0) {
+  if (cropWidth == 0 || cropHeight == 0) {
     return kMediaConduitNoError;
   }
 
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer =
-      aFrame.video_frame_buffer();
+  int cropX = (aFrame.width() - cropWidth) / 2;
+  int cropY = (aFrame.height() - cropHeight) / 2;
+
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer;
+  if (adaptedWidth == aFrame.width() && adaptedHeight == aFrame.height()) {
+    // No adaption - optimized path.
+    buffer = aFrame.video_frame_buffer();
+  } else {
+    // Adapted I420 frame.
+    rtc::scoped_refptr<webrtc::I420Buffer> i420Buffer =
+        mBufferPool.CreateI420Buffer(adaptedWidth, adaptedHeight);
+    if (!i420Buffer) {
+      CSFLogWarn(LOGTAG, "Creating a buffer for scaling failed, pool is empty");
+      return kMediaConduitNoError;
+    }
+    i420Buffer->CropAndScaleFrom(*aFrame.video_frame_buffer()->GetI420(), cropX,
+                                 cropY, cropWidth, cropHeight);
+    buffer = i420Buffer;
+  }
 
   MOZ_ASSERT(!aFrame.color_space(), "Unexpected use of color space");
   MOZ_ASSERT(!aFrame.has_update_rect(), "Unexpected use of update rect");
@@ -1364,7 +1500,12 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
                   timestampDelta / 1000.f, ssrcsCommaSeparated.get());
   }
 
-  mVideoBroadcaster.OnFrame(aFrame);
+  mVideoBroadcaster.OnFrame(webrtc::VideoFrame::Builder()
+                                .set_video_frame_buffer(buffer)
+                                .set_timestamp_us(aFrame.timestamp_us())
+                                .set_timestamp_rtp(aFrame.timestamp())
+                                .set_rotation(aFrame.rotation())
+                                .build());
 
   return kMediaConduitNoError;
 }
