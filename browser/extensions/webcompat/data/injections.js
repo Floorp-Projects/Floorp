@@ -97,17 +97,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1551672",
-    platform: "android",
-    domain: "Sites using PDK 5 video",
-    bug: "1551672",
-    data: {
-      urls: ["https://*/*/tpPdk.js", "https://*/*/pdk/js/*/*.js"],
-      types: ["script"],
-    },
-    customFunc: "pdk5fix",
-  },
-  {
     id: "bug1583366",
     platform: "desktop",
     domain: "Download prompt for files with no content-type",
@@ -184,20 +173,6 @@ const AVAILABLE_INJECTIONS = [
       js: [
         {
           file: "injections/js/bug1605611-maps.google.com-directions-time.js",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1610358",
-    platform: "android",
-    domain: "pcloud.com",
-    bug: "1610358",
-    contentScripts: {
-      matches: ["https://www.pcloud.com/*"],
-      js: [
-        {
-          file: "injections/js/bug1610358-pcloud.com-appVersion-change.js",
         },
       ],
     },
@@ -604,7 +579,8 @@ const AVAILABLE_INJECTIONS = [
         "*://*.pixiv.net/*", // Bug 1774006
         "*://*.webex.com/*", // Bug 1788934
         "*://business.help.royalmail.com/app/webforms/*", // Bug 1786404
-        "*://www.northcountrypublicradio.org/contact/subscribe.html*", // Bug 1778382
+        "*://www.northcountrypublicradio.org/contact/subscribe.html*", // Bug 1778382,
+        "*://www.schoolnutritionandfitness.com/*", // Bug 1793761
       ],
       js: [
         {
@@ -683,20 +659,6 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1784195-nutmeg.morrisons.com-overflow.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1784546",
-    platform: "android",
-    domain: "seznam.cz",
-    bug: "1784546",
-    contentScripts: {
-      matches: ["*://*.seznam.cz/*"],
-      css: [
-        {
-          file: "injections/css/bug1784546-seznam.cz-popup-height.css",
         },
       ],
     },
