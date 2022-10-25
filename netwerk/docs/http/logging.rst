@@ -14,19 +14,25 @@ upload to Bugzilla if a developer has asked you for a log).
    also offers the ability to peek at HTTP transactions within Firefox.
    HTTP logging generally provides more detailed logging.
 
-Using about:networking
-----------------------
+.. _using-about-networking:
+
+Using about:logging
+-------------------
 
 This is the best and easiest way to do HTTP logging.  At any point
 during while your browser is running, you can turn logging on and off.
+
+.. note::
+
+   **Note:** Before Firefox 108 the logging UI used to be located at `about:networking#logging`
+
 This allows you to capture only the "interesting" part of the browser's
 behavior (i.e. your bug), which makes the HTTP log much smaller and
 easier to analyze.
 
 #. Launch the browser and get it into whatever state you need to be in
    just before your bug occurs.
-#. Open a new tab and type in "about:networking" into the URL bar.
-#. Go to the "Logging section"
+#. Open a new tab and type in "about:logging" into the URL bar.
 #. Adjust the location of the log file if you don't like the default
 #. Adjust the list of modules that you want to log: this list has the
    exact same format as the MOZ_LOG environment variable (see below).
@@ -52,7 +58,7 @@ easier to analyze.
 Logging HTTP activity by manually setting environment variables
 ---------------------------------------------------------------
 
-Sometimes the about:networking approach won't work, for instance if your
+Sometimes the about:logging approach won't work, for instance if your
 bug occurs during startup, or you're running on mobile, etc.  In that
 case you can set environment variables \*before\* you launch Firefox.
 Note that this approach winds up logging the whole browser history, so
