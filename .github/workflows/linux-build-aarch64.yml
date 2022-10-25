@@ -50,7 +50,6 @@ jobs:
         echo 'ac_add_options --enable-linker=lld' >> mozconfig
         echo 'ac_add_options --enable-optimize="-O3"' >> mozconfig
         echo 'ac_add_options --enable-lto' >> mozconfig
-        echo 'ac_add_options MOZ_PGO=1' >> mozconfig
         echo 'export RUSTC_OPT_LEVEL=2 '>> mozconfig
         echo 'export MOZ_INCLUDE_SOURCE_INFO=1' >> mozconfig
         echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
