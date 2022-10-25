@@ -2559,10 +2559,6 @@ pref("font.size.monospace.x-math", 13);
   // screens, you cannot access some specific features for a "search" input
   // field.
   pref("intl.tsf.hack.atok.search_input_scope_disabled", false);
-  // Whether use previous character rect for the result of
-  // ITfContextView::GetTextExt() if the specified range is the caret of
-  // composition string.
-  pref("intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_caret", true);
   // Whether hack ITextStoreACP::QueryInsert() or not.  The method should
   // return new selection after specified length text is inserted at
   // specified range. However, Microsoft's some Chinese TIPs expect that the
