@@ -31,24 +31,30 @@ pub enum EngineSyncAssociation {
 /// The concrete `SyncEngine` implementations
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SyncEngineId {
+    // Note that we've derived PartialOrd etc, which uses lexicographic ordering
+    // of the variants. We leverage that such that the higher priority engines
+    // are listed first.
+    // This order matches desktop.
     Passwords,
-    History,
-    Bookmarks,
     Tabs,
+    Bookmarks,
     Addresses,
     CreditCards,
+    History,
 }
 
 impl SyncEngineId {
-    // Iterate over all possible engines
+    // Iterate over all possible engines. Note that we've made a policy decision
+    // that this should enumerate in "order" as defined by PartialCmp, and tests
+    // enforce this.
     pub fn iter() -> impl Iterator<Item = SyncEngineId> {
         [
             Self::Passwords,
-            Self::History,
-            Self::Bookmarks,
             Self::Tabs,
+            Self::Bookmarks,
             Self::Addresses,
             Self::CreditCards,
+            Self::History,
         ]
         .into_iter()
     }
@@ -194,4 +200,36 @@ pub trait SyncEngine {
     fn reset(&self, assoc: &EngineSyncAssociation) -> Result<()>;
 
     fn wipe(&self) -> Result<()>;
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::iter::zip;
+
+    #[test]
+    fn test_engine_priority() {
+        fn sorted(mut engines: Vec<SyncEngineId>) -> Vec<SyncEngineId> {
+            engines.sort();
+            engines
+        }
+        assert_eq!(
+            vec![SyncEngineId::Passwords, SyncEngineId::Tabs],
+            sorted(vec![SyncEngineId::Passwords, SyncEngineId::Tabs])
+        );
+        assert_eq!(
+            vec![SyncEngineId::Passwords, SyncEngineId::Tabs],
+            sorted(vec![SyncEngineId::Tabs, SyncEngineId::Passwords])
+        );
+    }
+
+    #[test]
+    fn test_engine_enum_order() {
+        let unsorted = SyncEngineId::iter().collect::<Vec<SyncEngineId>>();
+        let mut sorted = SyncEngineId::iter().collect::<Vec<SyncEngineId>>();
+        sorted.sort();
+
+        // iterating should supply identical elements in each.
+        assert!(zip(unsorted, sorted).fold(true, |acc, (a, b)| acc && (a == b)))
+    }
 }
