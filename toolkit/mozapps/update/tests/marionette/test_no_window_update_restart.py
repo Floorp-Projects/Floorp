@@ -46,7 +46,9 @@ class TestNoWindowUpdateRestart(MarionetteTestCase):
                 Services.prefs.setIntPref("app.update.noWindowAutoRestart.delayMs", 1000);
                 Services.prefs.clearUserPref("testing.no_window_update_restart.silent_restart_env");
 
-                let { UpdateUtils } = ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
+                let { UpdateUtils } = ChromeUtils.importESModule(
+                    "resource://gre/modules/UpdateUtils.sys.mjs"
+                );
                 let origAppUpdateAuto = await UpdateUtils.getAppUpdateAutoEnabled();
                 await UpdateUtils.setAppUpdateAutoEnabled(true);
 
@@ -100,7 +102,9 @@ class TestNoWindowUpdateRestart(MarionetteTestCase):
                 Services.prefs.clearUserPref("app.update.noWindowAutoRestart.delayMs");
                 Services.prefs.clearUserPref("testing.no_window_update_restart.silent_restart_env");
 
-                let { UpdateUtils } = ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
+                let { UpdateUtils } = ChromeUtils.importESModule(
+                    "resource://gre/modules/UpdateUtils.sys.mjs"
+                );
                 await UpdateUtils.setAppUpdateAutoEnabled(origAppUpdateAuto);
             })().then(resolve);
         """,
@@ -163,7 +167,9 @@ class TestNoWindowUpdateRestart(MarionetteTestCase):
             let { UpdateListener } = ChromeUtils.import("resource://gre/modules/UpdateListener.jsm");
             UpdateListener.reset();
 
-            let { AppMenuNotifications } = ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
+            let { AppMenuNotifications } = ChromeUtils.importESModule(
+                "resource://gre/modules/AppMenuNotifications.sys.mjs"
+            );
             AppMenuNotifications.removeNotification(/.*/);
 
             // Remove old update files so that they don't interfere with tests.
