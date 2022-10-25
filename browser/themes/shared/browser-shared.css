@@ -12,6 +12,7 @@
 @import url("chrome://browser/skin/identity-block/identity-block.css");
 @import url("chrome://browser/skin/notification-icons.css");
 @import url("chrome://browser/skin/addon-notification.css");
+@import url("chrome://browser/skin/identity-credential-notification.css");
 @import url("chrome://browser/skin/urlbarView.css");
 @import url("chrome://browser/skin/translation/infobar.css");
 @import url("chrome://browser/skin/autocomplete.css");
