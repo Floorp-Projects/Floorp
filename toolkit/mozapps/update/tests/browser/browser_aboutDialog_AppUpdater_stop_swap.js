@@ -49,6 +49,7 @@ add_task(async function aboutDialog_backgroundCheck_multiUpdate() {
     {
       panelId: "checkForUpdates",
       checkActiveUpdate: { state: STATE_PENDING },
+      expectedStateOverride: Ci.nsIApplicationUpdateService.STATE_STAGING,
     },
   ]);
 

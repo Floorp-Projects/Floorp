@@ -29,8 +29,10 @@ add_task(async function aboutDialog_AppUpdater_stop_downloading() {
     {
       panelId: "checkForUpdates",
       // The update will still be in the downloading state even though
-      // AppUpdater has stopped.
+      // AppUpdater has stopped because stopping AppUpdater doesn't stop the
+      // Application Update Service from continuing with the update.
       checkActiveUpdate: { state: STATE_DOWNLOADING },
+      expectedStateOverride: Ci.nsIApplicationUpdateService.STATE_DOWNLOADING,
     },
   ]);
 
