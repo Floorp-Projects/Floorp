@@ -8,6 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+// Mozilla - this file should not be included in Mozilla builds until
+// win32k API usage is removed.  This was once done in Bug 1395259, but
+// the upstreaming attempt stalled.  Until win32k usage is officially
+// removed upstream, we have reverted to upstream's version of the file
+// (to reduce or elminate merge conflicts), and a static assert is
+// placed here to ensure this file isn't accidentally included in the
+// Mozilla build.
+static_assert(false, "This file should not be built, see Bug 1797161.");
+
 #include "rtc_base/task_queue_win.h"
 
 // clang-format off
