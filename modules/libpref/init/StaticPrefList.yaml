@@ -6903,6 +6903,15 @@
     value: true
     mirror: always
 
+  # Whether Gecko returns previous character rect or TS_E_NOLAYOUT from
+  # ITfContextView::GetTextExt() when the specified range is the first
+  # character of selected clause of composition string if and only if Japanese TIP
+  # of Microsoft is active.
+-   name: intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_char
+    type: bool
+    value: true
+    mirror: always
+
   # Whether Gecko returns caret rect before composition string or TS_E_NOLAYOUT
   # from ITfContextView::GetTextExt() when the specified range is larger than
   # composition start offset if and only Simplified Chinese TIP of Microsoft

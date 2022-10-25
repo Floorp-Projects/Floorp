@@ -1754,10 +1754,6 @@ class TSFPrefs final {
   }
 
   DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_"
-      "char",
-      DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar, true)
-  DECL_AND_IMPL_BOOL_PREF(
       "intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_caret",
       DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret, true)
   DECL_AND_IMPL_BOOL_PREF(
@@ -4680,7 +4676,8 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       // available, we should use it as the result.
       // Note that according to bug 1609675, MS-IME for Japanese itself does
       // not handle TS_E_NOLAYOUT correctly at least on Build 18363.657 (1909).
-      if (TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar() &&
+      if (StaticPrefs::
+              intl_tsf_hack_ms_japanese_ime_do_not_return_no_layout_error_at_first_char() &&
           aACPStart < aACPEnd) {
         aACPEnd = aACPStart;
         break;
