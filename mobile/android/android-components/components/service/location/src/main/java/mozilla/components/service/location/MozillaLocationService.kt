@@ -7,7 +7,7 @@ package mozilla.components.service.location
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.NONE
+import androidx.annotation.VisibleForTesting.Companion.NONE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.Build

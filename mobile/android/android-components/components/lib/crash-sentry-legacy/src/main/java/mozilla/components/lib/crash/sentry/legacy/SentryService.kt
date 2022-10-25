@@ -7,7 +7,7 @@ package mozilla.components.lib.crash.sentry.legacy
 import android.content.Context
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import io.sentry.SentryClient
 import io.sentry.SentryClientFactory
 import io.sentry.android.AndroidSentryClientFactory

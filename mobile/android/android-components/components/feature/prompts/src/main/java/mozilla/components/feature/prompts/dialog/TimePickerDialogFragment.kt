@@ -22,7 +22,7 @@ import android.view.View
 import android.widget.DatePicker
 import android.widget.TimePicker
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.ext.day
 import mozilla.components.feature.prompts.ext.hour

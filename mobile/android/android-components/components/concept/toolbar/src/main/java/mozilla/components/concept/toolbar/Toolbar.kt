@@ -12,7 +12,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.annotation.ColorRes
 import androidx.annotation.Dimension
-import androidx.annotation.Dimension.DP
+import androidx.annotation.Dimension.Companion.DP
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.appcompat.widget.AppCompatImageView

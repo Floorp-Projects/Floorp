@@ -16,7 +16,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.Dimension
-import androidx.annotation.Dimension.DP
+import androidx.annotation.Dimension.Companion.DP
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.drawable.toBitmap

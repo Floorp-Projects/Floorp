@@ -5,7 +5,7 @@
 package mozilla.components.support.base.android
 
 import androidx.annotation.Dimension
-import androidx.annotation.Dimension.PX
+import androidx.annotation.Dimension.Companion.PX
 
 /**
  * A representation of an Android Padding.

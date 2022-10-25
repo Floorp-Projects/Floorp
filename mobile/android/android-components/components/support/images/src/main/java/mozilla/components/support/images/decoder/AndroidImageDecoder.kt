@@ -8,7 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Size
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.images.DesiredSize
 import kotlin.math.floor

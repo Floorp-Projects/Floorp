@@ -15,7 +15,7 @@ import android.view.View
 import android.view.View.GONE
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.appcompat.app.AlertDialog
 import mozilla.components.feature.prompts.R
 

@@ -5,7 +5,7 @@
 package mozilla.components.service.glean.net
 
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Header
 import mozilla.components.concept.fetch.Request
