@@ -13,14 +13,16 @@ jobs:
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf /usr/local/lib/android
         sudo rm -rf /opt/ghc
-    
 
-    - name: Add swap file
+    - name: Setup Swap Space
       run: |
-        sudo fallocate -l 15G /swapfile2
-        sudo chmod 600 /swapfile2
-        sudo mkswap /swapfile2
-        sudo swapon /swapfile2
+        sudo swapoff /mnt/swapfile
+        sudo rm /mnt/swapfile
+        sudo fallocate -l 6G /home/runner/swapfile2
+        sudo chmod 600 /home/runner/swapfile2
+        sudo mkswap /home/runner/swapfile2
+        sudo swapon /home/runner/swapfile2
+  
     - name: Create environment
       run: |
         sudo apt update
