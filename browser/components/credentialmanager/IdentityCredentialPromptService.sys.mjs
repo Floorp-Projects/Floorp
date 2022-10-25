@@ -17,6 +17,20 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIIDNService"
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "SELECT_FIRST_IN_UI_LISTS",
+  "dom.security.credentialmanagement.identity.select_first_in_ui_lists",
+  false
+);
+
+function fulfilledPromiseFromFirstListElement(list) {
+  if (list.length) {
+    return Promise.resolve(list[0]);
+  }
+  return Promise.reject();
+}
+
 /**
  * Class implementing the nsIIdentityCredentialPromptService
  * */
@@ -33,6 +47,10 @@ export class IdentityCredentialPromptService {
    * @returns {Promise<IdentityProvider>} The user-selected identity provider
    */
   showProviderPrompt(browsingContext, identityProviders) {
+    // For testing only.
+    if (lazy.SELECT_FIRST_IN_UI_LISTS) {
+      return fulfilledPromiseFromFirstListElement(identityProviders);
+    }
     return new Promise(function(resolve, reject) {
       let browser = browsingContext.top.embedderElement;
       if (!browser) {
@@ -129,6 +147,10 @@ export class IdentityCredentialPromptService {
    * @returns {Promise<IdentityAccount>} The user-selected account
    */
   showAccountListPrompt(browsingContext, accountList) {
+    // For testing only.
+    if (lazy.SELECT_FIRST_IN_UI_LISTS) {
+      return fulfilledPromiseFromFirstListElement(accountList.accounts);
+    }
     return new Promise(function(resolve, reject) {
       let browser = browsingContext.top.embedderElement;
       if (!browser) {
