@@ -25,10 +25,6 @@ namespace gfx {
 struct RecordingSourceSurfaceUserData {
   void* refPtr;
   RefPtr<DrawEventRecorderPrivate> recorder;
-
-  // The optimized surface holds a reference to our surface, for GetDataSurface
-  // calls, so we must hold a weak reference to avoid circular dependency.
-  ThreadSafeWeakPtr<SourceSurface> optimizedSurface;
 };
 
 static void RecordingSourceSurfaceUserDataFunc(void* aUserData) {
@@ -527,16 +523,6 @@ already_AddRefed<SourceSurface> DrawTargetRecording::OptimizeSourceSurface(
     return do_AddRef(aSurface);
   }
 
-  // See if we have a previously optimized surface available.
-  auto* userData = static_cast<RecordingSourceSurfaceUserData*>(
-      aSurface->GetUserData(reinterpret_cast<UserDataKey*>(mRecorder.get())));
-  if (userData) {
-    RefPtr<SourceSurface> strongRef(userData->optimizedSurface);
-    if (strongRef) {
-      return do_AddRef(strongRef);
-    }
-  }
-
   EnsureSurfaceStoredRecording(mRecorder, aSurface, "OptimizeSourceSurface");
 
   RefPtr<SourceSurface> retSurf = new SourceSurfaceRecording(
@@ -544,10 +530,6 @@ already_AddRefed<SourceSurface> DrawTargetRecording::OptimizeSourceSurface(
 
   mRecorder->RecordEvent(
       RecordedOptimizeSourceSurface(aSurface, this, retSurf));
-
-  userData = static_cast<RecordingSourceSurfaceUserData*>(
-      aSurface->GetUserData(reinterpret_cast<UserDataKey*>(mRecorder.get())));
-  userData->optimizedSurface = retSurf;
 
   return retSurf.forget();
 }
