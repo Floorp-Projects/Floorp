@@ -4113,50 +4113,42 @@ function checkFilesInDirRecursive(aDir, aCallback) {
 }
 
 /**
- * Waits for an update check request to complete.
+ * Waits for an update check request to complete and asserts that the results
+ * are as-expected.
  *
  * @param   aSuccess
  *          Whether the update check succeeds or not. If aSuccess is true then
- *          onCheckComplete should be called and if aSuccess is false then
- *          onError should be called.
+ *          the check should succeed and if aSuccess is false then the check
+ *          should fail.
  * @param   aExpectedValues
  *          An object with common values to check.
- * @return  A promise which will resolve the first time either the update check
- *          onCheckComplete or onError occurs and returns the arguments from
- *          onCheckComplete or onError.
+ * @return  A promise which will resolve with the nsIUpdateCheckResult object
+ *          once the update check is complete.
  */
-function waitForUpdateCheck(aSuccess, aExpectedValues = {}) {
-  return new Promise(resolve =>
-    gUpdateChecker.checkForUpdates(
-      {
-        onProgress: (aRequest, aPosition, aTotalSize) => {},
-        onCheckComplete: async (request, updates) => {
-          Assert.ok(aSuccess, "the update check should succeed");
-          if (aExpectedValues.updateCount) {
-            Assert.equal(
-              aExpectedValues.updateCount,
-              updates.length,
-              "the update count" + MSG_SHOULD_EQUAL
-            );
-          }
-          resolve({ request, updates });
-        },
-        onError: async (request, update) => {
-          Assert.ok(!aSuccess, "the update check should error");
-          if (aExpectedValues.url) {
-            Assert.equal(
-              aExpectedValues.url,
-              request.channel.originalURI.spec,
-              "the url" + MSG_SHOULD_EQUAL
-            );
-          }
-          resolve({ request, update });
-        },
-        QueryInterface: ChromeUtils.generateQI(["nsIUpdateCheckListener"]),
-      },
-      true
-    )
+async function waitForUpdateCheck(aSuccess, aExpectedValues = {}) {
+  let check = gUpdateChecker.checkForUpdates(gUpdateChecker.FOREGROUND_CHECK);
+  let result = await check.result;
+  Assert.ok(result.checksAllowed, "We should be able to check for updates");
+  Assert.equal(
+    result.succeeded,
+    aSuccess,
+    "the update check should " + (aSuccess ? "succeed" : "error")
   );
+  if (aExpectedValues.updateCount) {
+    Assert.equal(
+      aExpectedValues.updateCount,
+      result.updates.length,
+      "the update count" + MSG_SHOULD_EQUAL
+    );
+  }
+  if (aExpectedValues.url) {
+    Assert.equal(
+      aExpectedValues.url,
+      result.request.channel.originalURI.spec,
+      "the url" + MSG_SHOULD_EQUAL
+    );
+  }
+  return result;
 }
 
 /**
