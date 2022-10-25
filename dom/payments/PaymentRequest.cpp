@@ -83,7 +83,7 @@ bool PaymentRequest::PrefEnabled(JSContext* aCx, JSObject* aObj) {
   MOZ_ASSERT(manager);
 
   nsCOMPtr<nsIRegion> regionJsm =
-      do_ImportModule("resource://gre/modules/Region.jsm", "Region");
+      do_ImportESModule("resource://gre/modules/Region.sys.mjs", "Region");
   nsAutoString region;
   nsresult rv = regionJsm->GetHome(region);
   if (NS_FAILED(rv)) {
