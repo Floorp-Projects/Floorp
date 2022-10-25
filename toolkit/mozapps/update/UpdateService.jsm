@@ -6289,33 +6289,8 @@ class RestartOnLastWindowClosed {
   #restartTimer = null;
   #restartTimerExpired = false;
 
-  // Tracks whether an update is ready to be installed (i.e. could we restart
-  // now and apply an update). We can safely start this value at false. If
-  // Firefox starts up with an update ready, it should apply it. If it still
-  // appears to be in a ready state after that, we assume that something is
-  // going wrong applying that update at which point we clean it up and report
-  // to the user that they should update manually. So there is no situation
-  // where we start up wanting to shutdown to apply an update.
-  // Note: We keep this value up to date even if the class is disabled. The
-  //       reason is that it's surprisingly difficult to determine if an update
-  //       is ready to be installed by examining the update state. There are a
-  //       lot of little race conditions where we could, for example, run while
-  //       an asynchronous update function is still part way through its work.
-  //       The best way to be sure of the current update state is to listen to
-  //       every update observer notification.
-  //       Since this class could always be enabled later, we watch every
-  //       update notification in order to keep this value up to date, even if
-  //       the class isn't currently enabled.
-  #updateReady = false;
-
   constructor() {
     this.#maybeEnableOrDisable();
-
-    // We connect these observers even if the class is disabled. See the
-    // #updateReady definition for details.
-    Services.obs.addObserver(this, "update-downloaded");
-    Services.obs.addObserver(this, "update-staged");
-    Services.obs.addObserver(this, "update-swap");
 
     Services.prefs.addObserver(
       PREF_APP_UPDATE_NO_WINDOW_AUTO_RESTART_ENABLED,
@@ -6333,10 +6308,6 @@ class RestartOnLastWindowClosed {
       this
     );
     Services.obs.removeObserver(this, "quit-application");
-
-    Services.obs.removeObserver(this, "update-downloaded");
-    Services.obs.removeObserver(this, "update-staged");
-    Services.obs.removeObserver(this, "update-swap");
 
     this.#maybeEnableOrDisable();
   }
@@ -6378,9 +6349,6 @@ class RestartOnLastWindowClosed {
       case "update-staged":
         this.#onUpdateReady(data);
         break;
-      case "update-swap":
-        this.#onUpdateUnready();
-        break;
     }
   }
 
@@ -6406,9 +6374,9 @@ class RestartOnLastWindowClosed {
 
       Services.obs.addObserver(this, "domwindowclosed");
       Services.obs.addObserver(this, "domwindowopened");
+      Services.obs.addObserver(this, "update-downloaded");
+      Services.obs.addObserver(this, "update-staged");
 
-      // Reset internal state, except for #updateReady (see its definition for
-      // details).
       this.#restartTimer = null;
       this.#restartTimerExpired = false;
 
@@ -6424,6 +6392,8 @@ class RestartOnLastWindowClosed {
 
       Services.obs.removeObserver(this, "domwindowclosed");
       Services.obs.removeObserver(this, "domwindowopened");
+      Services.obs.removeObserver(this, "update-downloaded");
+      Services.obs.removeObserver(this, "update-staged");
 
       this.#enabled = false;
 
@@ -6447,8 +6417,6 @@ class RestartOnLastWindowClosed {
         STATE_PENDING_SERVICE,
       ].includes(updateState)
     ) {
-      this.#updateReady = true;
-
       if (this.#enabled) {
         LOG("RestartOnLastWindowClosed.#onUpdateReady - update ready");
         this.#maybeRestartBrowser();
@@ -6459,20 +6427,6 @@ class RestartOnLastWindowClosed {
           `ready because the state is ${updateState}`
       );
     }
-  }
-
-  // Note: Since we keep track of the update state even when this class is
-  //       disabled, this function will run even in that case.
-  #onUpdateUnready() {
-    // Seeing logging from this class could be confusing if it is meant to be
-    // disabled.
-    if (this.#enabled) {
-      LOG(
-        "RestartOnLastWindowClosed.#onUpdateUnready - update no longer ready"
-      );
-    }
-
-    this.#updateReady = false;
   }
 
   #onWindowClose() {
@@ -6537,7 +6491,7 @@ class RestartOnLastWindowClosed {
       return;
     }
 
-    if (!this.#updateReady) {
+    if (lazy.AUS.currentState != Ci.nsIApplicationUpdateService.STATE_PENDING) {
       LOG(
         "RestartOnLastWindowClosed.#maybeRestartBrowser - No update ready. " +
           "(not restarting)"
