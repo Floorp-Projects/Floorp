@@ -18,6 +18,7 @@ dictionary IdentityCredentialRequestOptions {
  sequence<IdentityProvider> providers;
 };
 
+[GenerateConversionToJS]
 dictionary IdentityProvider {
  required USVString configURL;
  required USVString clientId;
@@ -63,7 +64,7 @@ dictionary IdentityAccount {
 };
 
 // https://fedidcg.github.io/FedCM/#idp-api-accounts-endpoint
-[GenerateInit]
+[GenerateInit, GenerateConversionToJS]
 dictionary IdentityAccountList {
   sequence<IdentityAccount> accounts;
 };
