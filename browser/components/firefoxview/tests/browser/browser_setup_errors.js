@@ -36,7 +36,6 @@ async function tearDown(sandbox) {
 }
 
 add_setup(async function() {
-  await promiseSyncReady();
   // gSync.init() is called in a requestIdleCallback. Force its initialization.
   gSync.init();
 

@@ -36,6 +36,11 @@ add_task(async function test_primary_password_locked() {
   const sandbox = setupMocks();
 
   await withFirefoxView({}, async browser => {
+    sandbox
+      .stub(TabsSetupFlowManager, "syncTabs")
+      .returns(Promise.resolve(null));
+    sandbox.stub(TabsSetupFlowManager, "startFullTabsSync").returns(undefined);
+
     const { document } = browser.contentWindow;
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
 
@@ -97,6 +102,9 @@ add_task(async function test_primary_password_locked() {
 
     info("notifying of the primary-password unlock");
     const clearErrorSpy = sandbox.spy(TabsSetupFlowManager, "tryToClearError");
+    // we stubbed out sync, so pretend it ran.
+    info("notifying of sync:finish");
+    Services.obs.notifyObservers(null, "weave:service:sync:finish");
 
     const setupContainer = document.querySelector(".sync-setup-container");
     // wait until the setup container gets hidden before checking if the tabs container is visible
@@ -138,5 +146,5 @@ add_task(async function test_primary_password_locked() {
       "Synced tabs isn't loading any more"
     );
   });
-  tearDown();
+  await tearDown(sandbox);
 });

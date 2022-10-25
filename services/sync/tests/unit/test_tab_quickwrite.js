@@ -4,18 +4,22 @@
 ChromeUtils.import("resource://services-sync/engines/tabs.js");
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
-const { TabEngine } = ChromeUtils.import(
+const { TabProvider } = ChromeUtils.import(
   "resource://services-sync/engines/tabs.js"
 );
 
-async function getMockedEngine() {
-  let engine = new TabEngine(Service);
+let engine;
+
+add_task(async function setup() {
+  engine = Service.engineManager.get("tabs");
   await engine.initialize();
-  let store = engine._store;
-  store.getTabState = mockGetTabState;
-  store.shouldSkipWindow = mockShouldSkipWindow;
-  return engine;
-}
+
+  // Since these are xpcshell tests, we'll need to mock ui features
+  TabProvider.shouldSkipWindow = mockShouldSkipWindow;
+  TabProvider.getWindowEnumerator = mockGetWindowEnumerator.bind(this, [
+    "http://foo.com",
+  ]);
+});
 
 async function prepareServer() {
   _("Setting up Sync server");
@@ -46,9 +50,7 @@ async function withPatchedValue(object, name, patchedVal, fn) {
 
 add_task(async function test_tab_quickwrite_works() {
   _("Ensure a simple quickWrite works.");
-  let engine = await getMockedEngine();
   let { server, collection } = await prepareServer();
-
   Assert.equal(collection.count(), 0, "starting with 0 tab records");
   await engine.quickWrite();
   Assert.equal(collection.count(), 1, "tab record was written");
@@ -58,9 +60,9 @@ add_task(async function test_tab_quickwrite_works() {
 
 add_task(async function test_tab_bad_status() {
   _("Ensure quickWrite silently aborts when we aren't setup correctly.");
-  let engine = await getMockedEngine();
   let { server } = await prepareServer();
-
+  // Store the original lock to reset it back after this test
+  let lock = engine.lock;
   // Arrange for this test to fail if it tries to take the lock.
   engine.lock = function() {
     throw new Error("this test should abort syncing before locking");
@@ -73,13 +75,12 @@ add_task(async function test_tab_bad_status() {
   Services.prefs.clearUserPref("services.sync.username");
   quickWrite();
   Service.status.resetSync();
-
+  engine.lock = lock;
   await promiseStopServer(server);
 });
 
 add_task(async function test_tab_quickwrite_lock() {
   _("Ensure we fail to quickWrite if the engine is locked.");
-  let engine = await getMockedEngine();
   let { server, collection } = await prepareServer();
 
   Assert.equal(collection.count(), 0, "starting with 0 tab records");
@@ -93,7 +94,6 @@ add_task(async function test_tab_quickwrite_lock() {
 
 add_task(async function test_tab_lastSync() {
   _("Ensure we restore the lastSync timestamp after a quick-write.");
-  let engine = await getMockedEngine();
   let { server, collection } = await prepareServer();
 
   let origLastSync = engine.lastSync;
@@ -118,7 +118,6 @@ add_task(async function test_tab_quickWrite_telemetry() {
     };
   });
 
-  let engine = await getMockedEngine();
   let { server, collection } = await prepareServer();
 
   Assert.equal(collection.count(), 0, "starting with 0 tab records");

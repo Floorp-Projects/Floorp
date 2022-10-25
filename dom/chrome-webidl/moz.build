@@ -81,7 +81,6 @@ WEBIDL_FILES = [
     "SessionStoreUtils.webidl",
     "StructuredCloneHolder.webidl",
     "TelemetryStopwatch.webidl",
-    "UniFFI.webidl",
     "UserInteraction.webidl",
     "WebExtensionContentScript.webidl",
     "WebExtensionPolicy.webidl",
@@ -91,6 +90,11 @@ WEBIDL_FILES = [
     "XULTextElement.webidl",
     "XULTreeElement.webidl",
 ]
+
+if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
+    WEBIDL_FILES += [
+        "UniFFI.webidl",
+    ]
 
 if CONFIG["MOZ_PLACES"]:
     WEBIDL_FILES += [

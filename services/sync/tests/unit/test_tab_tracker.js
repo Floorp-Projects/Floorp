@@ -82,7 +82,7 @@ function clearQuickWriteTimer(tracker) {
 
 add_task(async function run_test() {
   let engine = Service.engineManager.get("tabs");
-
+  await engine.initialize();
   _("We assume that tabs have changed at startup.");
   let tracker = engine._tracker;
   tracker.getTabState = fakeGetTabState;

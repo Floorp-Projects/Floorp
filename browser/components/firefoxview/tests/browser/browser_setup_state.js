@@ -48,14 +48,6 @@ function setupMocks({ fxaDevices = null, state, syncEnabled = true }) {
       }),
     };
   });
-  sandbox
-    .stub(Weave.Service.clientsEngine, "getClientByFxaDeviceId")
-    .callsFake(fxaDeviceId => {
-      let target = gMockFxaDevices.find(c => c.id == fxaDeviceId);
-      return target ? target.clientRecord : null;
-    });
-  sandbox.stub(Weave.Service.clientsEngine, "getClientType").returns("desktop");
-
   return sandbox;
 }
 
@@ -95,7 +87,6 @@ add_setup(async function() {
     TabsSetupFlowManager.resetInternalState();
   });
 
-  await promiseSyncReady();
   // gSync.init() is called in a requestIdleCallback. Force its initialization.
   gSync.init();
 
