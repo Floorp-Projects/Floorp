@@ -863,7 +863,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     const currentStep = this.props.order + 1;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("main", {
       className: `screen ${this.props.id || ""} ${screenClassName} ${textColorClass}`,
-      role: "alertdialog",
+      role: "dialog",
       pos: content.position || "center",
       tabIndex: "-1",
       "aria-labelledby": "mainContentHeader",
