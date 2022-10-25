@@ -2150,3 +2150,7 @@ description#PanelUI-profiler-locked {
 .webextension-popup-stack {
   border-radius: inherit;
 }
+
+.webextension-popup-stack {
+  position: relative;
+}
