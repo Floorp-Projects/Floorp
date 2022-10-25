@@ -1754,9 +1754,6 @@ class TSFPrefs final {
   }
 
   DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error",
-      DoNotReturnNoLayoutErrorToMSTraditionalTIP, true)
-  DECL_AND_IMPL_BOOL_PREF(
       "intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_"
       "char",
       DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar, true)
@@ -4831,7 +4828,8 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       [[fallthrough]];
     case TextInputProcessorID::eMicrosoftChangJie:
       if (!IsWin8OrLater() ||
-          !TSFPrefs::DoNotReturnNoLayoutErrorToMSTraditionalTIP()) {
+          !StaticPrefs::
+              intl_tsf_hack_ms_traditional_chinese_do_not_return_no_layout_error()) {
         return false;
       }
       aACPEnd = mContentForTSF->LatestCompositionRange()->StartOffset();

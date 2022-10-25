@@ -2559,11 +2559,6 @@ pref("font.size.monospace.x-math", 13);
   // screens, you cannot access some specific features for a "search" input
   // field.
   pref("intl.tsf.hack.atok.search_input_scope_disabled", false);
-  // Whether use composition start position for the result of
-  // ITfContextView::GetTextExt() if the specified range is larger than
-  // composition start offset.
-  // For Microsoft ChangJie and Microsoft Quick
-  pref("intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error", true);
   // Whether use previous character rect for the result of
   // ITfContextView::GetTextExt() if the specified range is the first
   // character of selected clause of composition string.
