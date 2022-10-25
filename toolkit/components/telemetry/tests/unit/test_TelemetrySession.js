@@ -8,6 +8,9 @@
  * checked in the second request.
  */
 
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 const { TelemetrySession } = ChromeUtils.import(
   "resource://gre/modules/TelemetrySession.jsm"
@@ -1507,7 +1510,7 @@ add_task(async function test_savedSessionData() {
     subsessionId: null,
     profileSubsessionCounter: 3785,
   };
-  await IOUtils.writeJSON(sessionState, dataFilePath);
+  await CommonUtils.writeJSON(sessionState, dataFilePath);
 
   const PREF_TEST = "toolkit.telemetry.test.pref1";
   Preferences.reset(PREF_TEST);
@@ -1558,7 +1561,7 @@ add_task(async function test_savedSessionData() {
   fakeGenerateUUID(TelemetryUtils.generateUUID, TelemetryUtils.generateUUID);
 
   // Load back the serialised session data.
-  let data = await IOUtils.readJSON(dataFilePath);
+  let data = await CommonUtils.readJSON(dataFilePath);
   Assert.equal(data.profileSubsessionCounter, expectedSubsessions);
   Assert.equal(data.sessionId, expectedSessionUUID);
   Assert.equal(data.subsessionId, expectedSubsessionUUID);
@@ -1645,7 +1648,7 @@ add_task(async function test_invalidSessionData() {
     profileSubsessionCounter: "not-a-number?",
     someOtherField: 12,
   };
-  await IOUtils.writeJSON(sessionState, dataFilePath);
+  await CommonUtils.writeJSON(sessionState, dataFilePath);
 
   // The session data file should not load. Only expect the current subsession.
   const expectedSubsessions = 1;
@@ -1672,7 +1675,7 @@ add_task(async function test_invalidSessionData() {
   fakeGenerateUUID(TelemetryUtils.generateUUID, TelemetryUtils.generateUUID);
 
   // Load back the serialised session data.
-  let data = await IOUtils.readJSON(dataFilePath);
+  let data = await CommonUtils.readJSON(dataFilePath);
   Assert.equal(data.profileSubsessionCounter, expectedSubsessions);
   Assert.equal(data.sessionId, expectedSessionUUID);
   Assert.equal(data.subsessionId, expectedSubsessionUUID);
