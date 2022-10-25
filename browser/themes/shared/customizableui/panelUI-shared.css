@@ -2139,3 +2139,14 @@ description#PanelUI-profiler-locked {
   /* Make sure this description is wider than the header's */
   max-width: 310px;
 }
+
+/* Web-extension pop-ups */
+
+.cui-widget-panelview[id^=PanelUI-webext-] {
+  border-radius: var(--arrowpanel-border-radius);
+}
+
+.webextension-popup-browser,
+.webextension-popup-stack {
+  border-radius: inherit;
+}
