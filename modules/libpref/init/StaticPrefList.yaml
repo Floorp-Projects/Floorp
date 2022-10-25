@@ -7020,6 +7020,14 @@
     value: @IS_NOT_EARLY_BETA_OR_EARLIER@
     mirror: always
 
+  # Whether Gecko supports IMM even if TSF is enabled.  This pref exists
+  # only for check TSF behavior of new versions.  Therefore, users should
+  # not set this to false for daily use.
+-   name: intl.tsf.support_imm
+    type: bool
+    value: true
+    mirror: once
+
   # If true, TSF and TIP (IME) can retrieve URL of the document containing
   # the focused element.  When this is set to true, Gecko exposes the spec
   # of the URL.

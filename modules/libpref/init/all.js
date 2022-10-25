@@ -2541,9 +2541,6 @@ pref("font.size.monospace.x-math", 13);
   // Enable/Disable TSF support.
   pref("intl.tsf.enable", true);
 
-  // Support IMEs implemented with IMM in TSF mode.
-  pref("intl.tsf.support_imm", true);
-
   // If composition_font is set, Gecko sets the font to IME.  IME may use
   // the fonts on their window like candidate window.  If they are empty,
   // Gecko uses the system default font which is set to the IM context.
