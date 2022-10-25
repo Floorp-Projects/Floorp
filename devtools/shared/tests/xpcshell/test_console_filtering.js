@@ -70,7 +70,7 @@ function createFakeAddonWindow({ addonId } = {}) {
  * through to console messages.
  */
 function run_test() {
-  // console1 Test Console.jsm messages tagged by the Addon SDK
+  // console1 Test Console.sys.mjs messages tagged by the Addon SDK
   // are still filtered correctly.
   const console1 = new ConsoleAPI({
     consoleID: "addon/foo",
