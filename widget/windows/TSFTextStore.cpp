@@ -1754,10 +1754,6 @@ class TSFPrefs final {
   }
 
   DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.japanist10."
-      "do_not_return_no_layout_error_of_composition_string",
-      DoNotReturnNoLayoutErrorToJapanist10OfCompositionString, true)
-  DECL_AND_IMPL_BOOL_PREF(
       "intl.tsf.hack.ms_simplified_chinese.do_not_return_no_layout_error",
       DoNotReturnNoLayoutErrorToMSSimplifiedTIP, true)
   DECL_AND_IMPL_BOOL_PREF(
@@ -4807,8 +4803,8 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
     // where we know.  This is Japanist's bug.  So, even after build 17643,
     // we need this hack.
     case TextInputProcessorID::eJapanist10:
-      if (!TSFPrefs::
-              DoNotReturnNoLayoutErrorToJapanist10OfCompositionString()) {
+      if (!StaticPrefs::
+              intl_tsf_hack_japanist10_do_not_return_no_layout_error_of_composition_string()) {
         return false;
       }
       if (!mContentForTSF->LatestCompositionRange()->IsOffsetInRangeOrEndOffset(
