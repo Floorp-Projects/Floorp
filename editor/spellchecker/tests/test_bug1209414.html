@@ -71,7 +71,7 @@ SimpleTest.waitForFocus(async function() {
       var state = contextMenu.state;
 
       // Select Language from the menu.  Take a look at
-      // toolkit/modules/InlineSpellChecker.jsm to see how the menu works.
+      // toolkit/modules/InlineSpellChecker.sys.mjs to see how the menu works.
       contextMenu.ownerDocument.getElementById("spell-check-dictionary-en-US")
                  .doCommand();
       contextMenu.hidePopup();
