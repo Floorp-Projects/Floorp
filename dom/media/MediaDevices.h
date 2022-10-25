@@ -109,6 +109,8 @@ class MediaDevices final : public DOMEventTargetHelper {
 
   nsTHashSet<nsString> mExplicitlyGrantedAudioOutputRawIds;
   nsTArray<RefPtr<Promise>> mPendingEnumerateDevicesPromises;
+  // Set only once, if and when required.
+  mutable nsString mDefaultOutputLabel;
 
   // Connect/Disconnect on main thread only
   MediaEventListener mDeviceChangeListener;
