@@ -1712,7 +1712,7 @@ async function handleFallbackToCompleteUpdate(postStaging) {
       "handleFallbackToCompleteUpdate - install of partial patch " +
         "failed, downloading complete patch"
     );
-    var success = lazy.AUS.downloadUpdate(update, !postStaging);
+    var success = await lazy.AUS.downloadUpdate(update);
     if (!success) {
       cleanupDownloadingUpdate();
     }
@@ -2544,7 +2544,7 @@ UpdateService.prototype = {
         await this._postUpdateProcessing();
         break;
       case "network:offline-status-changed":
-        this._offlineStatusChanged(data);
+        await this._offlineStatusChanged(data);
         break;
       case "nsPref:changed":
         if (data == PREF_APP_UPDATE_LOG || data == PREF_APP_UPDATE_LOG_FILE) {
@@ -2828,7 +2828,7 @@ UpdateService.prototype = {
             "UpdateService:_postUpdateProcessing - resuming patch found in " +
               "downloading state"
           );
-          let success = this.downloadUpdate(lazy.UM.downloadingUpdate, true);
+          let success = await this.downloadUpdate(lazy.UM.downloadingUpdate);
           if (!success) {
             cleanupDownloadingUpdate();
           }
@@ -2991,7 +2991,7 @@ UpdateService.prototype = {
   /**
    * Called from the network:offline-status-changed observer.
    */
-  _offlineStatusChanged: function AUS__offlineStatusChanged(status) {
+  _offlineStatusChanged: async function AUS__offlineStatusChanged(status) {
     if (status !== "online") {
       return;
     }
@@ -3005,7 +3005,7 @@ UpdateService.prototype = {
     );
 
     // the background checker is contained in notify
-    this._attemptResume();
+    await this._attemptResume();
   },
 
   /**
@@ -3099,7 +3099,7 @@ UpdateService.prototype = {
   /**
    * Called when a connection should be resumed
    */
-  _attemptResume: function AUS_attemptResume() {
+  _attemptResume: async function AUS_attemptResume() {
     LOG("UpdateService:_attemptResume");
     // If a download is in progress, then resume it.
     if (
@@ -3112,10 +3112,7 @@ UpdateService.prototype = {
         "UpdateService:_attemptResume - _patch.state: " +
           this._downloader._patch.state
       );
-      let success = this.downloadUpdate(
-        this._downloader._update,
-        this._downloader.background
-      );
+      let success = await this.downloadUpdate(this._downloader._update);
       LOG("UpdateService:_attemptResume - downloadUpdate success: " + success);
       if (!success) {
         cleanupDownloadingUpdate();
@@ -3613,7 +3610,7 @@ UpdateService.prototype = {
     }
 
     LOG("UpdateService:_selectAndInstallUpdate - download the update");
-    let success = this.downloadUpdate(update, true);
+    let success = await this.downloadUpdate(update);
     if (!success) {
       cleanupDownloadingUpdate();
     }
@@ -3846,7 +3843,7 @@ UpdateService.prototype = {
   /**
    * See nsIUpdateService.idl
    */
-  downloadUpdate: function AUS_downloadUpdate(update, background) {
+  downloadUpdate: async function AUS_downloadUpdate(update) {
     if (!update) {
       throw Components.Exception("", Cr.NS_ERROR_NULL_POINTER);
     }
@@ -3904,12 +3901,11 @@ UpdateService.prototype = {
           "UpdateService:downloadUpdate - no support for downloading more " +
             "than one update at a time"
         );
-        this._downloader.background = background;
         return true;
       }
       this._downloader.cancel();
     }
-    this._downloader = new Downloader(background, this);
+    this._downloader = new Downloader(this);
     return this._downloader.downloadUpdate(update);
   },
 
@@ -4927,9 +4923,8 @@ Checker.prototype = {
  *          The update service that created this downloader.
  * @constructor
  */
-function Downloader(background, updateService) {
+function Downloader(updateService) {
   LOG("Creating Downloader");
-  this.background = background;
   this.updateService = updateService;
 }
 Downloader.prototype = {
@@ -5305,8 +5300,8 @@ Downloader.prototype = {
    * @param   update
    *          A nsIUpdate object to download a patch for. Cannot be null.
    */
-  downloadUpdate: function Downloader_downloadUpdate(update) {
-    LOG("UpdateService:_downloadUpdate");
+  downloadUpdate: async function Downloader_downloadUpdate(update) {
+    LOG("UpdateService:downloadUpdate");
     if (!update) {
       AUSTLMY.pingDownloadCode(undefined, AUSTLMY.DWNLD_ERR_NO_UPDATE);
       throw Components.Exception("", Cr.NS_ERROR_NULL_POINTER);
@@ -5355,6 +5350,8 @@ Downloader.prototype = {
     }
 
     if (!canUseBits) {
+      this._pendingRequest = null;
+
       let patchFile = updateDir.clone();
       patchFile.append(FILE_UPDATE_MAR);
 
@@ -5379,13 +5376,6 @@ Downloader.prototype = {
         if (!(status == STATE_DOWNLOADING && patchFile.exists())) {
           cleanupDownloadingUpdate();
         }
-
-        // Tell any listeners that the download failed. In some cases, there
-        // won't actually have been a corresponding onStartRequest, but that
-        // shouldn't really hurt anything.
-        this.updateService.forEachDownloadListener(listener => {
-          listener.onStopRequest(null, Cr.NS_ERROR_FAILURE);
-        });
         return false;
       }
 
@@ -5466,78 +5456,73 @@ Downloader.prototype = {
           null
         );
       }
-      this._pendingRequest = this._pendingRequest.then(
-        request => {
-          this._request = request;
-          this._patch.setProperty("bitsId", request.bitsId);
+      let request;
+      try {
+        request = await this._pendingRequest;
+      } catch (error) {
+        if (
+          (error.type == Ci.nsIBits.ERROR_TYPE_FAILED_TO_GET_BITS_JOB ||
+            error.type == Ci.nsIBits.ERROR_TYPE_FAILED_TO_CONNECT_TO_BCM) &&
+          error.action == Ci.nsIBits.ERROR_ACTION_MONITOR_DOWNLOAD &&
+          error.stage == Ci.nsIBits.ERROR_STAGE_BITS_CLIENT &&
+          error.codeType == Ci.nsIBits.ERROR_CODE_TYPE_HRESULT &&
+          error.code == HRESULT_E_ACCESSDENIED
+        ) {
+          LOG(
+            "Downloader:downloadUpdate - Failed to connect to existing " +
+              "BITS job. It is likely owned by another user."
+          );
+          // This isn't really a failure code since the BITS job may be working
+          // just fine on another account, so convert this to a code that
+          // indicates that. This will make it easier to identify in telemetry.
+          error.type = Ci.nsIBits.ERROR_TYPE_ACCESS_DENIED_EXPECTED;
+          error.codeType = Ci.nsIBits.ERROR_CODE_TYPE_NONE;
+          error.code = null;
+          // When we detect this situation, disable BITS until Firefox shuts
+          // down. There are a couple of reasons for this. First, without any
+          // kind of flag, we enter an infinite loop here where we keep trying
+          // BITS over and over again (normally setting bitsResult prevents
+          // this, but we don't know the result of the BITS job, so we don't
+          // want to set that). Second, since we are trying to update, this
+          // process must have the update mutex. We don't ever give up the
+          // update mutex, so even if the other user starts Firefox, they will
+          // not complete the BITS job while this Firefox instance is around.
+          gBITSInUseByAnotherUser = true;
+        } else {
+          this._patch.setProperty("bitsResult", Cr.NS_ERROR_FAILURE);
+          lazy.UM.saveUpdates();
 
           LOG(
-            "Downloader:downloadUpdate - BITS download running. BITS ID: " +
-              request.bitsId
+            "Downloader:downloadUpdate - Failed to start to BITS job. " +
+              "Error: " +
+              error
           );
-
-          if (this.hasDownloadListeners) {
-            this._maybeStartActiveNotifications();
-          } else {
-            this._maybeStopActiveNotifications();
-          }
-
-          lazy.UM.saveUpdates();
-          this._pendingRequest = null;
-        },
-        error => {
-          if (
-            (error.type == Ci.nsIBits.ERROR_TYPE_FAILED_TO_GET_BITS_JOB ||
-              error.type == Ci.nsIBits.ERROR_TYPE_FAILED_TO_CONNECT_TO_BCM) &&
-            error.action == Ci.nsIBits.ERROR_ACTION_MONITOR_DOWNLOAD &&
-            error.stage == Ci.nsIBits.ERROR_STAGE_BITS_CLIENT &&
-            error.codeType == Ci.nsIBits.ERROR_CODE_TYPE_HRESULT &&
-            error.code == HRESULT_E_ACCESSDENIED
-          ) {
-            LOG(
-              "Downloader:downloadUpdate - Failed to connect to existing " +
-                "BITS job. It is likely owned by another user."
-            );
-            // This isn't really a failure code since the BITS job may be working
-            // just fine on another account, so convert this to a code that
-            // indicates that. This will make it easier to identify in telemetry.
-            error.type = Ci.nsIBits.ERROR_TYPE_ACCESS_DENIED_EXPECTED;
-            error.codeType = Ci.nsIBits.ERROR_CODE_TYPE_NONE;
-            error.code = null;
-            // When we detect this situation, disable BITS until Firefox shuts
-            // down. There are a couple of reasons for this. First, without any
-            // kind of flag, we enter an infinite loop here where we keep trying
-            // BITS over and over again (normally setting bitsResult prevents
-            // this, but we don't know the result of the BITS job, so we don't
-            // want to set that). Second, since we are trying to update, this
-            // process must have the update mutex. We don't ever give up the
-            // update mutex, so even if the other user starts Firefox, they will
-            // not complete the BITS job while this Firefox instance is around.
-            gBITSInUseByAnotherUser = true;
-          } else {
-            this._patch.setProperty("bitsResult", Cr.NS_ERROR_FAILURE);
-            lazy.UM.saveUpdates();
-
-            LOG(
-              "Downloader:downloadUpdate - Failed to start to BITS job. " +
-                "Error: " +
-                error
-            );
-          }
-
-          this._pendingRequest = null;
-
-          AUSTLMY.pingBitsError(this.isCompleteUpdate, error);
-
-          // Try download again with nsIIncrementalDownload
-          // The update status file has already had STATE_DOWNLOADING written to
-          // it. If the downloadUpdate call below returns early, that status
-          // should probably be rewritten. However, the only conditions that might
-          // cause it to return early would have prevented this code from running.
-          // So it should be fine.
-          this.downloadUpdate(this._update);
         }
+
+        this._pendingRequest = null;
+
+        AUSTLMY.pingBitsError(this.isCompleteUpdate, error);
+
+        // Try download again with nsIIncrementalDownload
+        return this.downloadUpdate(this._update);
+      }
+
+      this._request = request;
+      this._patch.setProperty("bitsId", request.bitsId);
+
+      LOG(
+        "Downloader:downloadUpdate - BITS download running. BITS ID: " +
+          request.bitsId
       );
+
+      if (this.hasDownloadListeners) {
+        this._maybeStartActiveNotifications();
+      } else {
+        this._maybeStopActiveNotifications();
+      }
+
+      lazy.UM.saveUpdates();
+      this._pendingRequest = null;
     }
 
     if (!lazy.UM.readyUpdate) {
@@ -6075,7 +6060,7 @@ Downloader.prototype = {
             "Downloader:onStopRequest - BITS download failed. Falling back " +
               "to nsIIncrementalDownload"
           );
-          let success = this.downloadUpdate(this._update);
+          let success = await this.downloadUpdate(this._update);
           if (!success) {
             cleanupDownloadingUpdate();
           } else {
@@ -6094,7 +6079,7 @@ Downloader.prototype = {
               "downloading complete update patch"
           );
           this._update.isCompleteUpdate = true;
-          let success = this.downloadUpdate(this._update);
+          let success = await this.downloadUpdate(this._update);
 
           if (!success) {
             cleanupDownloadingUpdate();
@@ -6246,9 +6231,9 @@ Downloader.prototype = {
         "@mozilla.org/timer;1"
       ].createInstance(Ci.nsITimer);
       this.updateService._retryTimer.initWithCallback(
-        function() {
-          this._attemptResume();
-        }.bind(this.updateService),
+        async () => {
+          await this.updateService._attemptResume();
+        },
         retryTimeout,
         Ci.nsITimer.TYPE_ONE_SHOT
       );
