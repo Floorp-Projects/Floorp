@@ -2538,9 +2538,6 @@ pref("font.size.monospace.x-math", 13);
   // Switch the keyboard layout per window
   pref("intl.keyboard.per_window_layout", false);
 
-  // Enable/Disable TSF support.
-  pref("intl.tsf.enable", true);
-
   // If composition_font is set, Gecko sets the font to IME.  IME may use
   // the fonts on their window like candidate window.  If they are empty,
   // Gecko uses the system default font which is set to the IM context.

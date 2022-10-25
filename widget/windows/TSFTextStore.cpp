@@ -51,8 +51,6 @@ static const GUID sGUID_PROP_URL = {
 namespace mozilla {
 namespace widget {
 
-static const char* kPrefNameEnableTSF = "intl.tsf.enable";
-
 /**
  * TSF related code should log its behavior even on release build especially
  * in the interface methods.
@@ -6764,7 +6762,7 @@ void TSFTextStore::Initialize() {
     return;
   }
 
-  bool enableTsf = Preferences::GetBool(kPrefNameEnableTSF, false);
+  const bool enableTsf = StaticPrefs::intl_tsf_enabled_AtStartup();
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("  TSFTextStore::Initialize(), TSF is %s",
            enableTsf ? "enabled" : "disabled"));

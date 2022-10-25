@@ -6868,6 +6868,18 @@
   mirror: always
 
 #ifdef XP_WIN
+  # Whether making Gecko TSF-aware or only working with IMM.  TSF is a modern
+  # IME API set of Windows which replaces IMM APIs.  Unless you can avoid the
+  # problem which you see with enabling TSF, you shouldn't change this pref
+  # to false since IMM handler is now not maintained nor tested with latest
+  # Windows.  If you need to change this pref to false, please file a bug to
+  # <https://bugzilla.mozilla.org>.
+  # Restart required to apply this pref change.
+-   name: intl.tsf.enabled
+    type: bool
+    value: true
+    mirror: once
+
   # Whether Gecko creates or does not create native caret for legacy ATOK
   # (2011 - 2015).
 -   name: intl.tsf.hack.atok.create_native_caret
