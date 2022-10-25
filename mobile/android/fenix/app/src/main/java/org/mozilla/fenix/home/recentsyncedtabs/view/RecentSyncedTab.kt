@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -57,16 +58,22 @@ import org.mozilla.fenix.theme.Theme
  * A recent synced tab card.
  *
  * @param tab The [RecentSyncedTab] to display.
+ * @param backgroundColor The background [Color] of the item.
+ * @param buttonBackgroundColor The background [Color] of the item's button.
+ * @param buttonTextColor The [Color] of the button's text.
  * @param onRecentSyncedTabClick Invoked when the user clicks on the recent synced tab.
  * @param onSeeAllSyncedTabsButtonClick Invoked when user clicks on the "See all" button in the synced tab card.
  * @param onRemoveSyncedTab Invoked when user clicks on the "Remove" dropdown menu option.
  * @param onRecentSyncedTabLongClick Invoked when user long presses the recent synced tab.
  */
 @OptIn(ExperimentalFoundationApi::class)
-@Suppress("LongMethod")
+@Suppress("LongMethod", "LongParameterList")
 @Composable
 fun RecentSyncedTab(
     tab: RecentSyncedTab?,
+    backgroundColor: Color = FirefoxTheme.colors.layer2,
+    buttonBackgroundColor: Color = FirefoxTheme.colors.actionSecondary,
+    buttonTextColor: Color = FirefoxTheme.colors.textActionSecondary,
     onRecentSyncedTabClick: (RecentSyncedTab) -> Unit,
     onSeeAllSyncedTabsButtonClick: () -> Unit,
     onRemoveSyncedTab: (RecentSyncedTab) -> Unit,
@@ -91,7 +98,7 @@ fun RecentSyncedTab(
                 },
             ),
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = FirefoxTheme.colors.layer2,
+        backgroundColor = backgroundColor,
         elevation = 6.dp,
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -178,12 +185,8 @@ fun RecentSyncedTab(
                 } else {
                     ""
                 },
-                textColor = FirefoxTheme.colors.textActionSecondary,
-                backgroundColor = if (tab == null) {
-                    FirefoxTheme.colors.layer3
-                } else {
-                    FirefoxTheme.colors.actionSecondary
-                },
+                textColor = buttonTextColor,
+                backgroundColor = buttonBackgroundColor,
                 tint = FirefoxTheme.colors.iconActionSecondary,
                 onClick = onSeeAllSyncedTabsButtonClick,
             )
@@ -302,6 +305,7 @@ private fun LoadingRecentSyncedTab() {
     FirefoxTheme(theme = Theme.getTheme()) {
         RecentSyncedTab(
             tab = null,
+            buttonBackgroundColor = FirefoxTheme.colors.layer3,
             onRecentSyncedTabClick = {},
             onSeeAllSyncedTabsButtonClick = {},
             onRemoveSyncedTab = {},

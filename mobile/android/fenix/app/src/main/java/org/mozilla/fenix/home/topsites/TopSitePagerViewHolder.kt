@@ -12,18 +12,20 @@ import androidx.viewpager2.widget.ViewPager2
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.databinding.ComponentTopSitesPagerBinding
 import org.mozilla.fenix.home.sessioncontrol.AdapterItem
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 
 class TopSitePagerViewHolder(
     view: View,
+    store: AppStore,
     viewLifecycleOwner: LifecycleOwner,
     interactor: TopSiteInteractor,
 ) : RecyclerView.ViewHolder(view) {
 
     private val binding = ComponentTopSitesPagerBinding.bind(view)
-    private val topSitesPagerAdapter = TopSitesPagerAdapter(viewLifecycleOwner, interactor)
+    private val topSitesPagerAdapter = TopSitesPagerAdapter(store, viewLifecycleOwner, interactor)
     private val pageIndicator = binding.pageIndicator
     private var currentPage = 0
 

@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
@@ -66,12 +67,14 @@ import org.mozilla.fenix.theme.FirefoxTheme
  *
  * @param recentTabs List of [RecentTab] to display.
  * @param menuItems List of [RecentTabMenuItem] shown long clicking a [RecentTab].
+ * @param backgroundColor The background [Color] of each item.
  * @param onRecentTabClick Invoked when the user clicks on a recent tab.
  */
 @Composable
 fun RecentTabs(
     recentTabs: List<RecentTab>,
     menuItems: List<RecentTabMenuItem>,
+    backgroundColor: Color = FirefoxTheme.colors.layer2,
     onRecentTabClick: (String) -> Unit = {},
     onRecentTabLongClick: () -> Unit = {},
 ) {
@@ -85,6 +88,7 @@ fun RecentTabs(
                     RecentTabItem(
                         tab = tab,
                         menuItems = menuItems,
+                        backgroundColor = backgroundColor,
                         onRecentTabClick = onRecentTabClick,
                         onRecentTabLongClick = onRecentTabLongClick,
                     )
@@ -98,6 +102,7 @@ fun RecentTabs(
  * A recent tab item.
  *
  * @param tab [RecentTab.Tab] that was recently viewed.
+ * @param backgroundColor The background [Color] of the item.
  * @param onRecentTabClick Invoked when the user clicks on a recent tab.
  */
 @OptIn(ExperimentalFoundationApi::class)
@@ -105,6 +110,7 @@ fun RecentTabs(
 private fun RecentTabItem(
     tab: RecentTab.Tab,
     menuItems: List<RecentTabMenuItem>,
+    backgroundColor: Color,
     onRecentTabClick: (String) -> Unit = {},
     onRecentTabLongClick: () -> Unit = {},
 ) {
@@ -123,7 +129,7 @@ private fun RecentTabItem(
                 },
             ),
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = FirefoxTheme.colors.layer2,
+        backgroundColor = backgroundColor,
         elevation = 6.dp,
     ) {
         Row(

@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,6 +65,7 @@ private val imageModifier = Modifier
  *
  * @param bookmarks List of [RecentBookmark]s to display.
  * @param menuItems List of [RecentBookmarksMenuItem] shown when long clicking a [RecentBookmarkItem]
+ * @param backgroundColor The background [Color] of each bookmark.
  * @param onRecentBookmarkClick Invoked when the user clicks on a recent bookmark.
  * @param onRecentBookmarkLongClick Invoked when the user long clicks on a recent bookmark.
  */
@@ -71,6 +73,7 @@ private val imageModifier = Modifier
 fun RecentBookmarks(
     bookmarks: List<RecentBookmark>,
     menuItems: List<RecentBookmarksMenuItem>,
+    backgroundColor: Color,
     onRecentBookmarkClick: (RecentBookmark) -> Unit = {},
     onRecentBookmarkLongClick: () -> Unit = {},
 ) {
@@ -82,6 +85,7 @@ fun RecentBookmarks(
             RecentBookmarkItem(
                 bookmark = bookmark,
                 menuItems = menuItems,
+                backgroundColor = backgroundColor,
                 onRecentBookmarkClick = onRecentBookmarkClick,
                 onRecentBookmarkLongClick = onRecentBookmarkLongClick,
             )
@@ -93,6 +97,8 @@ fun RecentBookmarks(
  * A recent bookmark item.
  *
  * @param bookmark The [RecentBookmark] to display.
+ * @param menuItems The list of [RecentBookmarksMenuItem] shown when long clicking on the recent bookmark item.
+ * @param backgroundColor The background [Color] of the recent bookmark item.
  * @param onRecentBookmarkClick Invoked when the user clicks on the recent bookmark item.
  * @param onRecentBookmarkLongClick Invoked when the user long clicks on the recent bookmark item.
  */
@@ -101,6 +107,7 @@ fun RecentBookmarks(
 private fun RecentBookmarkItem(
     bookmark: RecentBookmark,
     menuItems: List<RecentBookmarksMenuItem>,
+    backgroundColor: Color,
     onRecentBookmarkClick: (RecentBookmark) -> Unit = {},
     onRecentBookmarkLongClick: () -> Unit = {},
 ) {
@@ -118,7 +125,7 @@ private fun RecentBookmarkItem(
                 },
             ),
         shape = cardShape,
-        backgroundColor = FirefoxTheme.colors.layer2,
+        backgroundColor = backgroundColor,
         elevation = 6.dp,
     ) {
         Column(
@@ -277,6 +284,7 @@ private fun RecentBookmarksPreview() {
                 ),
             ),
             menuItems = listOf(),
+            backgroundColor = FirefoxTheme.colors.layer2,
         )
     }
 }

@@ -15,6 +15,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
+import org.mozilla.fenix.wallpapers.WallpaperState
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks as RecentBookmarksMetrics
 
 class RecentBookmarksViewHolder(
@@ -33,11 +34,13 @@ class RecentBookmarksViewHolder(
 
     @Composable
     override fun Content() {
-        val recentBookmarks = components.appStore
-            .observeAsComposableState { state -> state.recentBookmarks }
+        val recentBookmarks = components.appStore.observeAsComposableState { state -> state.recentBookmarks }
+        val wallpaperState = components.appStore
+            .observeAsComposableState { state -> state.wallpaperState }.value ?: WallpaperState.default
 
         RecentBookmarks(
             bookmarks = recentBookmarks.value ?: emptyList(),
+            backgroundColor = wallpaperState.wallpaperCardColor,
             onRecentBookmarkClick = interactor::onRecentBookmarkClicked,
             menuItems = listOf(
                 RecentBookmarksMenuItem(

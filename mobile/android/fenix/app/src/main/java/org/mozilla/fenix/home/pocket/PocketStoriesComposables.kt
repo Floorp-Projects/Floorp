@@ -98,11 +98,13 @@ private val placeholderStory = PocketRecommendedStory("", "", "", "", "", 0, 0)
  * Displays a single [PocketRecommendedStory].
  *
  * @param story The [PocketRecommendedStory] to be displayed.
+ * @param backgroundColor The background [Color] of the story.
  * @param onStoryClick Callback for when the user taps on this story.
  */
 @Composable
 fun PocketStory(
     @PreviewParameter(PocketStoryProvider::class) story: PocketRecommendedStory,
+    backgroundColor: Color,
     onStoryClick: (PocketRecommendedStory) -> Unit,
 ) {
     val imageUrl = story.imageUrl.replace(
@@ -113,6 +115,7 @@ fun PocketStory(
     val isValidTimeToRead = story.timeToRead >= 0
     ListItemTabLarge(
         imageUrl = imageUrl,
+        backgroundColor = backgroundColor,
         onClick = { onStoryClick(story) },
         title = {
             Text(
@@ -151,11 +154,13 @@ fun PocketStory(
  * Displays a single [PocketSponsoredStory].
  *
  * @param story The [PocketSponsoredStory] to be displayed.
+ * @param backgroundColor The background [Color] of the story.
  * @param onStoryClick Callback for when the user taps on this story.
  */
 @Composable
 fun PocketSponsoredStory(
     story: PocketSponsoredStory,
+    backgroundColor: Color,
     onStoryClick: (PocketSponsoredStory) -> Unit,
 ) {
     val (imageWidth, imageHeight) = with(LocalDensity.current) {
@@ -168,6 +173,7 @@ fun PocketSponsoredStory(
 
     ListItemTabSurface(
         imageUrl = imageUrl,
+        backgroundColor = backgroundColor,
         onClick = { onStoryClick(story) },
     ) {
         Text(
@@ -208,14 +214,17 @@ fun PocketSponsoredStory(
  * @param stories The list of [PocketStory]ies to be displayed. Expect a list with 8 items.
  * @param contentPadding Dimension for padding the content after it has been clipped.
  * This space will be used for shadows and also content rendering when the list is scrolled.
+ * @param backgroundColor The background [Color] of each story.
  * @param onStoryShown Callback for when a certain story is visible to the user.
  * @param onStoryClicked Callback for when the user taps on a recommended story.
  * @param onDiscoverMoreClicked Callback for when the user taps an element which contains an
  */
+@Suppress("LongParameterList")
 @Composable
 fun PocketStories(
     @PreviewParameter(PocketStoryProvider::class) stories: List<PocketStory>,
     contentPadding: Dp,
+    backgroundColor: Color = FirefoxTheme.colors.layer2,
     onStoryShown: (PocketStory, Pair<Int, Int>) -> Unit,
     onStoryClicked: (PocketStory, Pair<Int, Int>) -> Unit,
     onDiscoverMoreClicked: (String) -> Unit,
@@ -241,7 +250,10 @@ fun PocketStories(
                             onDiscoverMoreClicked("https://getpocket.com/explore?$POCKET_FEATURE_UTM_KEY_VALUE")
                         }
                     } else if (story is PocketRecommendedStory) {
-                        PocketStory(story) {
+                        PocketStory(
+                            story = story,
+                            backgroundColor = backgroundColor,
+                        ) {
                             val uri = Uri.parse(story.url)
                                 .buildUpon()
                                 .appendQueryParameter(URI_PARAM_UTM_KEY, POCKET_STORIES_UTM_VALUE)
@@ -254,7 +266,10 @@ fun PocketStories(
                                 onStoryShown(story, rowIndex to columnIndex)
                             },
                         ) {
-                            PocketSponsoredStory(story) {
+                            PocketSponsoredStory(
+                                story = story,
+                                backgroundColor = backgroundColor,
+                            ) {
                                 onStoryClicked(story, rowIndex to columnIndex)
                             }
                         }
@@ -359,13 +374,22 @@ private fun Rect.getIntersectPercentage(realSize: IntSize, other: Rect): Float {
  *
  * @param categories The categories needed to be displayed.
  * @param selections List of categories currently selected.
+ * @param selectedTextColor Text [Color] when the category is selected.
+ * @param unselectedTextColor Text [Color] when the category is not selected.
+ * @param selectedBackgroundColor Background [Color] when the category is selected.
+ * @param unselectedBackgroundColor Background [Color] when the category is not selected.
  * @param onCategoryClick Callback for when the user taps a category.
  * @param modifier [Modifier] to be applied to the layout.
  */
+@Suppress("LongParameterList")
 @Composable
 fun PocketStoriesCategories(
     categories: List<PocketRecommendedStoriesCategory>,
     selections: List<PocketRecommendedStoriesSelectedCategory>,
+    selectedTextColor: Color? = null,
+    unselectedTextColor: Color? = null,
+    selectedBackgroundColor: Color? = null,
+    unselectedBackgroundColor: Color? = null,
     onCategoryClick: (PocketRecommendedStoriesCategory) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -375,7 +399,14 @@ fun PocketStoriesCategories(
             verticalItemsSpacing = 16.dp,
         ) {
             categories.filter { it.name != POCKET_STORIES_DEFAULT_CATEGORY_NAME }.forEach { category ->
-                SelectableChip(category.name, selections.map { it.name }.contains(category.name)) {
+                SelectableChip(
+                    text = category.name,
+                    isSelected = selections.map { it.name }.contains(category.name),
+                    selectedTextColor = selectedTextColor,
+                    unselectedTextColor = unselectedTextColor,
+                    selectedBackgroundColor = selectedBackgroundColor,
+                    unselectedBackgroundColor = unselectedBackgroundColor,
+                ) {
                     onCategoryClick(category)
                 }
             }

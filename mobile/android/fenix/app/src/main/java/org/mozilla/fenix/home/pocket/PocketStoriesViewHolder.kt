@@ -23,12 +23,12 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import org.mozilla.fenix.R
-import org.mozilla.fenix.R.dimen
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.compose.home.HomeSectionHeader
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.wallpapers.WallpaperState
 
 /**
  * [RecyclerView.ViewHolder] for displaying the list of [PocketRecommendedStory]s from [AppStore].
@@ -49,13 +49,16 @@ class PocketStoriesViewHolder(
 
     @Composable
     override fun Content() {
-        val horizontalPadding = dimensionResource(dimen.home_item_horizontal_margin)
+        val horizontalPadding = dimensionResource(R.dimen.home_item_horizontal_margin)
 
         val homeScreenReady = components.appStore
             .observeAsComposableState { state -> state.firstFrameDrawn }.value ?: false
 
         val stories = components.appStore
             .observeAsComposableState { state -> state.pocketStories }.value
+
+        val wallpaperState = components.appStore
+            .observeAsComposableState { state -> state.wallpaperState }.value ?: WallpaperState.default
 
         /* This was originally done to address this perf issue:
          * https://github.com/mozilla-mobile/fenix/issues/25545 for details.
@@ -88,11 +91,12 @@ class PocketStoriesViewHolder(
             Spacer(Modifier.height(16.dp))
 
             PocketStories(
-                stories ?: emptyList(),
-                horizontalPadding,
-                interactor::onStoryShown,
-                interactor::onStoryClicked,
-                interactor::onDiscoverMoreClicked,
+                stories = stories ?: emptyList(),
+                contentPadding = horizontalPadding,
+                backgroundColor = wallpaperState.wallpaperCardColor,
+                onStoryShown = interactor::onStoryShown,
+                onStoryClicked = interactor::onStoryClicked,
+                onDiscoverMoreClicked = interactor::onDiscoverMoreClicked,
             )
         }
     }
@@ -113,6 +117,7 @@ fun PocketStoriesViewHolderPreview() {
             PocketStories(
                 stories = getFakePocketStories(8),
                 contentPadding = 0.dp,
+                backgroundColor = FirefoxTheme.colors.layer2,
                 onStoryShown = { _, _ -> },
                 onStoryClicked = { _, _ -> },
                 onDiscoverMoreClicked = {},

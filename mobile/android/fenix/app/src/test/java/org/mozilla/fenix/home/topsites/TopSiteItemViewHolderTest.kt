@@ -23,6 +23,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.TopSites
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.databinding.TopSiteItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -37,6 +38,7 @@ class TopSiteItemViewHolderTest {
     private lateinit var binding: TopSiteItemBinding
     private lateinit var interactor: TopSiteInteractor
     private lateinit var lifecycleOwner: LifecycleOwner
+    private lateinit var store: AppStore
 
     private val pocket = TopSite.Default(
         id = 1L,
@@ -50,13 +52,14 @@ class TopSiteItemViewHolderTest {
         binding = TopSiteItemBinding.inflate(LayoutInflater.from(testContext))
         interactor = mockk(relaxed = true)
         lifecycleOwner = mockk(relaxed = true)
+        store = mockk(relaxed = true)
 
         every { testContext.components.core.icons } returns BrowserIcons(testContext, mockk(relaxed = true))
     }
 
     @Test
     fun `calls interactor on click`() {
-        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(pocket, position = 0)
+        TopSiteItemViewHolder(binding.root, store, lifecycleOwner, interactor).bind(pocket, position = 0)
 
         binding.root.performClick()
         verify { interactor.onSelectTopSite(pocket, position = 0) }
@@ -65,7 +68,7 @@ class TopSiteItemViewHolderTest {
     @Test
     fun `calls interactor on long click`() {
         every { testContext.components.analytics } returns mockk(relaxed = true)
-        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(pocket, position = 0)
+        TopSiteItemViewHolder(binding.root, store, lifecycleOwner, interactor).bind(pocket, position = 0)
 
         binding.root.performLongClick()
         verify { interactor.onTopSiteMenuOpened() }
@@ -80,7 +83,7 @@ class TopSiteItemViewHolderTest {
             createdAt = 0,
         )
 
-        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(defaultTopSite, position = 0)
+        TopSiteItemViewHolder(binding.root, store, lifecycleOwner, interactor).bind(defaultTopSite, position = 0)
         val pinIndicator = binding.topSiteTitle.compoundDrawables[0]
 
         assertNotNull(pinIndicator)
@@ -95,7 +98,7 @@ class TopSiteItemViewHolderTest {
             createdAt = 0,
         )
 
-        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(pinnedTopSite, position = 0)
+        TopSiteItemViewHolder(binding.root, store, lifecycleOwner, interactor).bind(pinnedTopSite, position = 0)
         val pinIndicator = binding.topSiteTitle.compoundDrawables[0]
 
         assertNotNull(pinIndicator)
@@ -110,7 +113,7 @@ class TopSiteItemViewHolderTest {
             createdAt = 0,
         )
 
-        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(frecentTopSite, position = 0)
+        TopSiteItemViewHolder(binding.root, store, lifecycleOwner, interactor).bind(frecentTopSite, position = 0)
         val pinIndicator = binding.topSiteTitle.compoundDrawables[0]
 
         assertNull(pinIndicator)
@@ -144,7 +147,7 @@ class TopSiteItemViewHolderTest {
             topSiteImpressionSubmitted = true
         }
 
-        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).submitTopSitesImpressionPing(topSite, position)
+        TopSiteItemViewHolder(binding.root, store, lifecycleOwner, interactor).submitTopSitesImpressionPing(topSite, position)
 
         assertNotNull(TopSites.contileImpression.testGetValue())
 

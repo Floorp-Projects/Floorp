@@ -11,11 +11,13 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import mozilla.components.feature.top.sites.TopSite
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.home.sessioncontrol.AdapterItem.TopSitePagerPayload
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 import org.mozilla.fenix.home.topsites.TopSitePagerViewHolder.Companion.TOP_SITES_PER_PAGE
 
 class TopSitesPagerAdapter(
+    private val store: AppStore,
     private val viewLifecycleOwner: LifecycleOwner,
     private val interactor: TopSiteInteractor,
 ) : ListAdapter<List<TopSite>, TopSiteViewHolder>(TopSiteListDiffCallback) {
@@ -23,7 +25,7 @@ class TopSitesPagerAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TopSiteViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(TopSiteViewHolder.LAYOUT_ID, parent, false)
-        return TopSiteViewHolder(view, viewLifecycleOwner, interactor)
+        return TopSiteViewHolder(view, store, viewLifecycleOwner, interactor)
     }
 
     override fun onBindViewHolder(

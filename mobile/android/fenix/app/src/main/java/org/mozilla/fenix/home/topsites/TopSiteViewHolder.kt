@@ -9,17 +9,19 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.databinding.ComponentTopSitesBinding
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 import org.mozilla.fenix.utils.AccessibilityGridLayoutManager
 
 class TopSiteViewHolder(
     view: View,
+    store: AppStore,
     viewLifecycleOwner: LifecycleOwner,
     interactor: TopSiteInteractor,
 ) : RecyclerView.ViewHolder(view) {
 
-    private val topSitesAdapter = TopSitesAdapter(viewLifecycleOwner, interactor)
+    private val topSitesAdapter = TopSitesAdapter(store, viewLifecycleOwner, interactor)
     val binding = ComponentTopSitesBinding.bind(view)
 
     init {

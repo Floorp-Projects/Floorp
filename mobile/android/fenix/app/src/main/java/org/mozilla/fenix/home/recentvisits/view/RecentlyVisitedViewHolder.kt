@@ -20,6 +20,7 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
+import org.mozilla.fenix.wallpapers.WallpaperState
 
 /**
  * View holder for [RecentlyVisitedItem]s.
@@ -43,6 +44,8 @@ class RecentlyVisitedViewHolder(
     override fun Content() {
         val recentVisits = components.appStore
             .observeAsComposableState { state -> state.recentHistory }
+        val wallpaperState = components.appStore
+            .observeAsComposableState { state -> state.wallpaperState }.value ?: WallpaperState.default
 
         RecentlyVisited(
             recentVisits = recentVisits.value ?: emptyList(),
@@ -59,6 +62,7 @@ class RecentlyVisitedViewHolder(
                     },
                 ),
             ),
+            backgroundColor = wallpaperState.wallpaperCardColor,
             onRecentVisitClick = { recentlyVisitedItem, pageNumber ->
                 when (recentlyVisitedItem) {
                     is RecentHistoryHighlight -> {

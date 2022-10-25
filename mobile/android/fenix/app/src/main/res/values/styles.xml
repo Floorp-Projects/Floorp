@@ -682,7 +682,6 @@
         <item name="android:layout_gravity">center_horizontal</item>
         <item name="android:importantForAccessibility">noHideDescendants</item>
         <item name="contentPadding">@dimen/top_sites_card_padding</item>
-        <item name="cardBackgroundColor">?mozac_widget_favicon_background_color</item>
         <item name="cardCornerRadius">@dimen/top_sites_card_radius</item>
         <item name="cardElevation">@dimen/top_sites_card_elevation</item>
     </style>

@@ -5,12 +5,14 @@
 package org.mozilla.fenix.home.pocket
 
 import android.view.View
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,6 +26,7 @@ import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.compose.home.HomeSectionHeader
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.wallpapers.WallpaperState
 
 internal const val POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT = 8
 
@@ -55,12 +58,37 @@ class PocketCategoriesViewHolder(
         val categoriesSelections = components.appStore
             .observeAsComposableState { state -> state.pocketStoriesCategoriesSelections }.value
 
+        val wallpaperState = components.appStore
+            .observeAsComposableState { state -> state.wallpaperState }.value ?: WallpaperState.default
+
+        var selectedBackgroundColor: Color? = null
+        var unselectedBackgroundColor: Color? = null
+        var selectedTextColor: Color? = null
+        var unselectedTextColor: Color? = null
+        wallpaperState.composeRunIfWallpaperCardColorsAreAvailable { cardColorLight, cardColorDark ->
+            if (isSystemInDarkTheme()) {
+                selectedBackgroundColor = cardColorDark
+                unselectedBackgroundColor = cardColorLight
+                selectedTextColor = FirefoxTheme.colors.textActionPrimary
+                unselectedTextColor = FirefoxTheme.colors.textActionSecondary
+            } else {
+                selectedBackgroundColor = cardColorLight
+                unselectedBackgroundColor = cardColorDark
+                selectedTextColor = FirefoxTheme.colors.textActionSecondary
+                unselectedTextColor = FirefoxTheme.colors.textActionPrimary
+            }
+        }
+
         // See the detailed comment in PocketStoriesViewHolder for reasoning behind this change.
         if (!homeScreenReady) return
         Column {
             Spacer(Modifier.height(24.dp))
 
             PocketTopics(
+                selectedBackgroundColor = selectedBackgroundColor,
+                unselectedBackgroundColor = unselectedBackgroundColor,
+                selectedTextColor = selectedTextColor,
+                unselectedTextColor = unselectedTextColor,
                 categories = categories ?: emptyList(),
                 categoriesSelections = categoriesSelections ?: emptyList(),
                 onCategoryClick = interactor::onCategoryClicked,
@@ -75,6 +103,10 @@ class PocketCategoriesViewHolder(
 
 @Composable
 private fun PocketTopics(
+    selectedTextColor: Color? = null,
+    unselectedTextColor: Color? = null,
+    selectedBackgroundColor: Color? = null,
+    unselectedBackgroundColor: Color? = null,
     categories: List<PocketRecommendedStoriesCategory> = emptyList(),
     categoriesSelections: List<PocketRecommendedStoriesSelectedCategory> = emptyList(),
     onCategoryClick: (PocketRecommendedStoriesCategory) -> Unit,
@@ -89,6 +121,10 @@ private fun PocketTopics(
         PocketStoriesCategories(
             categories = categories,
             selections = categoriesSelections,
+            selectedTextColor = selectedTextColor,
+            unselectedTextColor = unselectedTextColor,
+            selectedBackgroundColor = selectedBackgroundColor,
+            unselectedBackgroundColor = unselectedBackgroundColor,
             onCategoryClick = onCategoryClick,
             modifier = Modifier
                 .fillMaxWidth(),

@@ -13,6 +13,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.databinding.ComponentTopSitesBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
@@ -23,17 +24,19 @@ class TopSiteViewHolderTest {
     private lateinit var binding: ComponentTopSitesBinding
     private lateinit var lifecycleOwner: LifecycleOwner
     private lateinit var interactor: TopSiteInteractor
+    private lateinit var store: AppStore
 
     @Before
     fun setup() {
         binding = ComponentTopSitesBinding.inflate(LayoutInflater.from(testContext))
         interactor = mockk(relaxed = true)
         lifecycleOwner = mockk(relaxed = true)
+        store = mockk(relaxed = true)
     }
 
     @Test
     fun `binds list of top sites`() {
-        TopSiteViewHolder(binding.root, lifecycleOwner, interactor).bind(
+        TopSiteViewHolder(binding.root, store, lifecycleOwner, interactor).bind(
             listOf(
                 TopSite.Default(
                     id = 1L,

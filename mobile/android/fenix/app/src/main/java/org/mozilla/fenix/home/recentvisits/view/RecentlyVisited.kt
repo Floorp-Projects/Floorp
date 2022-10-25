@@ -39,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -64,6 +65,7 @@ private const val VISITS_PER_COLUMN = 3
  *
  * @param recentVisits List of [RecentlyVisitedItem] to display.
  * @param menuItems List of [RecentVisitMenuItem] shown long clicking a [RecentlyVisitedItem].
+ * @param backgroundColor The background [Color] of each item.
  * @param onRecentVisitClick Invoked when the user clicks on a recent visit.
  * @param onRecentVisitLongClick Invoked when the user long clicks on a recent visit.
  */
@@ -71,13 +73,14 @@ private const val VISITS_PER_COLUMN = 3
 fun RecentlyVisited(
     recentVisits: List<RecentlyVisitedItem>,
     menuItems: List<RecentVisitMenuItem>,
+    backgroundColor: Color = FirefoxTheme.colors.layer2,
     onRecentVisitClick: (RecentlyVisitedItem, Int) -> Unit = { _, _ -> },
     onRecentVisitLongClick: () -> Unit = {},
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = FirefoxTheme.colors.layer2,
+        backgroundColor = backgroundColor,
         elevation = 6.dp,
     ) {
         val listState = rememberLazyListState()
