@@ -50,10 +50,9 @@ class BrowserAction extends BrowserActionBase {
     });
   }
 
-  openPopup(tab, openPopupWithoutUserInteraction = false) {
-    const popupUri = openPopupWithoutUserInteraction
-      ? this.getPopupUrl(tab)
-      : this.triggerClickOrPopup(tab);
+  openPopup() {
+    const tab = tabTracker.activeTab;
+    const popupUri = this.triggerClickOrPopup(tab);
     const actionObject = this.getContextData(tab);
     const action = this.helper.extractProperties(actionObject);
     this.helper.sendRequest(tab.id, {
@@ -152,35 +151,8 @@ this.browserAction = class extends ExtensionAPIPersistent {
           extensionApi: this,
         }).api(),
 
-        openPopup: options => {
-          const isHandlingUserInput =
-            context.callContextData?.isHandlingUserInput;
-
-          if (
-            !Services.prefs.getBoolPref(
-              "extensions.openPopupWithoutUserGesture.enabled"
-            ) &&
-            !isHandlingUserInput
-          ) {
-            throw new ExtensionError("openPopup requires a user gesture");
-          }
-
-          const currentWindow = windowTracker.getCurrentWindow(context);
-
-          const window =
-            typeof options?.windowId === "number"
-              ? windowTracker.getWindow(options.windowId, context)
-              : currentWindow;
-
-          if (window !== currentWindow) {
-            throw new ExtensionError(
-              "Only the current window is supported on Android."
-            );
-          }
-
-          if (this.action.getPopupUrl(window.tab, true)) {
-            action.openPopup(window.tab, !isHandlingUserInput);
-          }
+        openPopup: function() {
+          action.openPopup();
         },
       },
     };

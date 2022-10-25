@@ -36,7 +36,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
 
-var { DefaultWeakMap, ExtensionError } = ExtensionUtils;
+var { DefaultWeakMap } = ExtensionUtils;
 
 var { ExtensionParent } = ChromeUtils.import(
   "resource://gre/modules/ExtensionParent.jsm"
@@ -256,9 +256,6 @@ this.browserAction = class extends ExtensionAPIPersistent {
           button: event.button || 0,
           modifiers: clickModifiersFromEvent(event),
         };
-        // The openPopupWithoutUserInteraction flag may be set by openPopup.
-        this.openPopupWithoutUserInteraction =
-          event.detail?.openPopupWithoutUserInteraction === true;
       },
 
       onViewShowing: async event => {
@@ -272,10 +269,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
         let tabbrowser = document.defaultView.gBrowser;
 
         let tab = tabbrowser.selectedTab;
-
-        let popupURL = !this.openPopupWithoutUserInteraction
-          ? this.action.triggerClickOrPopup(tab, this.lastClickInfo)
-          : this.action.getPopupUrl(tab);
+        let popupURL = this.action.triggerClickOrPopup(tab, this.lastClickInfo);
 
         if (popupURL) {
           try {
@@ -333,51 +327,6 @@ this.browserAction = class extends ExtensionAPIPersistent {
   }
 
   /**
-   * Shows the popup. The caller is expected to check if a popup is set before
-   * this is called.
-   *
-   * @param {Window} window Window to show the popup for
-   * @param {boolean} openPopupWithoutUserInteraction
-   *        If the popup was opened without user interaction
-   */
-  async openPopup(window, openPopupWithoutUserInteraction = false) {
-    const widgetForWindow = this.widget.forWindow(window);
-
-    if (!widgetForWindow.node) {
-      return;
-    }
-
-    // We want to focus hidden or minimized windows (both for the API, and to
-    // avoid an issue where showing the popup in a non-focused window
-    // immediately triggers a popuphidden event)
-    window.focus();
-
-    if (widgetForWindow.node.open) {
-      return;
-    }
-
-    if (this.widget.areaType == CustomizableUI.TYPE_MENU_PANEL) {
-      await window.document.getElementById("nav-bar").overflowable.show();
-    }
-
-    // This should already have been checked by callers, but acts as an
-    // an additional safeguard. It also makes sure we don't dispatch a click
-    // if the URL is removed while waiting for the overflow to show above.
-    if (!this.action.getPopupUrl(window.gBrowser.selectedTab)) {
-      return;
-    }
-
-    const event = new window.CustomEvent("command", {
-      bubbles: true,
-      cancelable: true,
-      detail: {
-        openPopupWithoutUserInteraction,
-      },
-    });
-    widgetForWindow.node.dispatchEvent(event);
-  }
-
-  /**
    * Triggers this browser action for the given window, with the same effects as
    * if it were clicked by a user.
    *
@@ -386,21 +335,34 @@ this.browserAction = class extends ExtensionAPIPersistent {
    *
    * @param {Window} window
    */
-  triggerAction(window) {
+  async triggerAction(window) {
     let popup = ViewPopup.for(this.extension, window);
     if (!this.pendingPopup && popup) {
       popup.closePopup();
       return;
     }
 
+    let widget = this.widget.forWindow(window);
     let tab = window.gBrowser.selectedTab;
+
+    if (!widget.node) {
+      return;
+    }
 
     let popupUrl = this.action.triggerClickOrPopup(tab, {
       button: 0,
       modifiers: [],
     });
     if (popupUrl) {
-      this.openPopup(window);
+      if (this.widget.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+        await window.document.getElementById("nav-bar").overflowable.show();
+      }
+
+      let event = new window.CustomEvent("command", {
+        bubbles: true,
+        cancelable: true,
+      });
+      widget.node.dispatchEvent(event);
     }
   }
 
@@ -734,27 +696,9 @@ this.browserAction = class extends ExtensionAPIPersistent {
           extensionApi: this,
         }).api(),
 
-        openPopup: async options => {
-          const isHandlingUserInput =
-            context.callContextData?.isHandlingUserInput;
-
-          if (
-            !Services.prefs.getBoolPref(
-              "extensions.openPopupWithoutUserGesture.enabled"
-            ) &&
-            !isHandlingUserInput
-          ) {
-            throw new ExtensionError("openPopup requires a user gesture");
-          }
-
-          const window =
-            typeof options?.windowId === "number"
-              ? windowTracker.getWindow(options.windowId, context)
-              : windowTracker.getTopNormalWindow(context);
-
-          if (this.action.getPopupUrl(window.gBrowser.selectedTab, true)) {
-            await this.openPopup(window, !isHandlingUserInput);
-          }
+        openPopup: () => {
+          let window = windowTracker.topWindow;
+          this.triggerAction(window);
         },
       },
     };

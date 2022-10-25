@@ -16,6 +16,11 @@ add_task(async function test_openPopup_requires_user_interaction() {
         "The error is informative."
       );
       await browser.test.assertRejects(
+        browser.browserAction.openPopup(),
+        "browserAction.openPopup may only be called from a user input handler",
+        "The error is informative."
+      );
+      await browser.test.assertRejects(
         browser.sidebarAction.open(),
         "sidebarAction.open may only be called from a user input handler",
         "The error is informative."
@@ -59,6 +64,7 @@ add_task(async function test_openPopup_requires_user_interaction() {
       "tab.html": `
       <!DOCTYPE html>
       <html><head><meta charset="utf-8"></head><body>
+      <button id="openBrowserAction">openBrowserAction</button>
       <button id="openPageAction">openPageAction</button>
       <button id="openSidebarAction">openSidebarAction</button>
       <button id="closeSidebarAction">closeSidebarAction</button>
@@ -73,6 +79,13 @@ add_task(async function test_openPopup_requires_user_interaction() {
       </body></html>
       `,
       "tab.js": function() {
+        document.getElementById("openBrowserAction").addEventListener(
+          "click",
+          () => {
+            browser.browserAction.openPopup();
+          },
+          { once: true }
+        );
         document.getElementById("openPageAction").addEventListener(
           "click",
           () => {
@@ -120,8 +133,22 @@ add_task(async function test_openPopup_requires_user_interaction() {
     return open;
   }
 
+  function testActiveTab(extension, expected) {
+    let ext = WebExtensionPolicy.getByID(extension.id).extension;
+    is(
+      ext.tabManager.hasActiveTabPermission(gBrowser.selectedTab),
+      expected,
+      "activeTab permission is correct"
+    );
+  }
+
   await extension.startup();
   await extension.awaitMessage("ready");
+
+  await click("#openBrowserAction");
+  testActiveTab(extension, false);
+  closeBrowserAction(extension);
+  await new Promise(resolve => setTimeout(resolve, 0));
 
   await click("#openPageAction");
   closePageAction(extension);
@@ -144,6 +171,19 @@ add_task(async function test_openPopup_requires_user_interaction() {
     gBrowser.selectedBrowser
   );
   await TestUtils.waitForCondition(() => !SidebarUI.isOpen);
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await extension.unload();
+
+  extensionData.manifest.permissions = ["activeTab"];
+  extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  await click("#openBrowserAction");
+  testActiveTab(extension, true);
+  closeBrowserAction(extension);
+  await new Promise(resolve => setTimeout(resolve, 0));
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await extension.unload();

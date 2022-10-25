@@ -469,24 +469,10 @@
       {
         "name": "openPopup",
         "type": "function",
-        "description": "Opens the extension popup window in the specified window.",
+        "requireUserInput": true,
+        "description": "Opens the extension popup window in the active window.",
         "async": true,
-        "parameters": [
-          {
-            "name": "options",
-            "optional": true,
-            "type": "object",
-            "description": "An object with information about the popup to open.",
-            "properties": {
-              "windowId": {
-                "type": "integer",
-                "minimum": -2,
-                "optional": true,
-                "description": "Defaults to the $(topic:current-window)[current window]."
-              }
-            }
-          }
-        ]
+        "parameters": []
       }
     ],
     "events": [
