@@ -2552,8 +2552,6 @@ pref("font.size.monospace.x-math", 13);
 
   // Enables/Disables hack for specific TIP.
 
-  // Whether creates native caret for ATOK or not.
-  pref("intl.tsf.hack.atok.create_native_caret", true);
   // Whether use available composition string rect for result of
   // ITextStoreACP::GetTextExt() even if the specified range is same as the
   // range of composition string but some character rects of them are not

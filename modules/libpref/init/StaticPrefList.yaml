@@ -6868,6 +6868,13 @@
   mirror: always
 
 #ifdef XP_WIN
+  # Whether Gecko creates or does not create native caret for legacy ATOK
+  # (2011 - 2015).
+-   name: intl.tsf.hack.atok.create_native_caret
+    type: bool
+    value: true
+    mirror: always
+
   # Whether Gecko sets input scope of the URL bar to IS_DEFAULT when black
   # listed IMEs are active or does not.  If you use tablet mode mainly and you
   # want to use touch keyboard for URL when you set focus to the URL bar, you

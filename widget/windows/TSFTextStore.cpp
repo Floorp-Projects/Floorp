@@ -1753,8 +1753,6 @@ class TSFPrefs final {
     return s##aName##Value;                                                   \
   }
 
-  DECL_AND_IMPL_BOOL_PREF("intl.tsf.hack.atok.create_native_caret",
-                          NeedToCreateNativeCaretForLegacyATOK, true)
   DECL_AND_IMPL_BOOL_PREF(
       "intl.tsf.hack.atok.do_not_return_no_layout_error_of_composition_string",
       DoNotReturnNoLayoutErrorToATOKOfCompositionString, true)
@@ -4628,7 +4626,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
   // even if we'll create native caret later, we need to creat it here with
   // current information.
   if (!IMEHandler::IsA11yHandlingNativeCaret() &&
-      TSFPrefs::NeedToCreateNativeCaretForLegacyATOK() &&
+      StaticPrefs::intl_tsf_hack_atok_create_native_caret() &&
       TSFStaticSink::IsATOKReferringNativeCaretActive() &&
       mComposition.isSome() &&
       mComposition->IsOffsetInRangeOrEndOffset(acpStart) &&
@@ -4786,7 +4784,7 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       // If we'll create native caret where we paint our caret.  Then, ATOK
       // will refer native caret.  So, we don't need to hack anything in
       // this case.
-      if (TSFPrefs::NeedToCreateNativeCaretForLegacyATOK()) {
+      if (StaticPrefs::intl_tsf_hack_atok_create_native_caret()) {
         MOZ_ASSERT(TSFStaticSink::IsATOKReferringNativeCaretActive());
         return false;
       }
