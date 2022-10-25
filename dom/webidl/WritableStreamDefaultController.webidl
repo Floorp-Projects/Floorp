@@ -9,13 +9,7 @@
 
 [Exposed=*, Pref="dom.streams.writable_streams.enabled"]
 interface WritableStreamDefaultController {
+  readonly attribute AbortSignal signal;
   [Throws]
   undefined error(optional any e);
 };
-
-// TODO: AbortSignal is not exposed on Worklet
-[Exposed=(Window,Worker)]
-partial interface WritableStreamDefaultController {
-  readonly attribute AbortSignal signal;
-};
-
