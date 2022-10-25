@@ -67,14 +67,20 @@ class GTests(object):
 
                 process_output = f
 
+        proc = None
+
+        def timeout_handler():
+            mozcrash.kill_and_get_minidump(proc.pid, cwd, utility_path)
+
         proc = mozprocess.ProcessHandler(
             [prog, "-unittest", "--gtest_death_test_style=threadsafe"],
             cwd=cwd,
             env=env,
+            kill_on_timeout=False,
+            onTimeout=(timeout_handler,),
             processOutputLine=process_output,
         )
-        # TODO: After bug 811320 is fixed, don't let .run() kill the process,
-        # instead use a timeout in .wait() and then kill to get a stack.
+
         proc.run(
             timeout=GTests.TEST_PROC_TIMEOUT,
             outputTimeout=GTests.TEST_PROC_NO_OUTPUT_TIMEOUT,
@@ -91,6 +97,7 @@ class GTests(object):
                 log.testFail(
                     "gtest | timed out after %d seconds", GTests.TEST_PROC_TIMEOUT
                 )
+            mozcrash.check_for_crashes(cwd, symbols_path, test_name="gtest")
             return False
         if mozcrash.check_for_crashes(cwd, symbols_path, test_name="gtest"):
             # mozcrash will output the log failure line for us.
