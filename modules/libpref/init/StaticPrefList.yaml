@@ -6868,6 +6868,33 @@
   mirror: always
 
 #ifdef XP_WIN
+  # Whether Gecko sets input scope of the URL bar to IS_DEFAULT when black
+  # listed IMEs are active or does not.  If you use tablet mode mainly and you
+  # want to use touch keyboard for URL when you set focus to the URL bar, you
+  # can set this to false.  Then, you'll see, e.g., ".com" key on the keyboard.
+  # However, if you set this to false, such IMEs set its open state to "closed"
+  # when you set focus to the URL bar.  I.e., input mode is automatically
+  # changed to English input mode.
+  # Known buggy IME list:
+  #   - Microsoft IME for Japanese
+  #   - Google Japanese Input
+  #   - Microsoft Bopomofo
+  #   - Microsoft ChangJie
+  #   - Microsoft Phonetic
+  #   - Microsoft Quick
+  #   - Microsoft New ChangJie
+  #   - Microsoft New Phonetic
+  #   - Microsoft New Quick
+  #   - Microsoft Pinyin
+  #   - Microsoft Pinyin New Experience Input Style
+  #   - Microsoft Wubi
+  #   - Microsoft IME for Korean (except on Win7)
+  #   - Microsoft Old Hangul
+-   name: intl.ime.hack.set_input_scope_of_url_bar_to_default
+    type: bool
+    value: true
+    mirror: always
+
   # If true, automatically extend selection to cluster boundaries when
   # TSF/TIP requests to select from/by middle of a cluster.
 -   name: intl.tsf.hack.extend_setting_selection_range_to_cluster_boundaries
@@ -6911,6 +6938,7 @@
   type: bool
   value: false
   mirror: always
+
 
 #if defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
 # Whether text input without keyboard press nor IME composition should cause a

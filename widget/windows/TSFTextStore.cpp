@@ -1753,8 +1753,6 @@ class TSFPrefs final {
     return s##aName##Value;                                                   \
   }
 
-  DECL_AND_IMPL_BOOL_PREF("intl.ime.hack.set_input_scope_of_url_bar_to_default",
-                          ShouldSetInputScopeOfURLBarToDefault, true)
   DECL_AND_IMPL_BOOL_PREF(
       "intl.tsf.hack.allow_to_stop_hacking_on_build_17643_or_later",
       AllowToStopHackingOnBuild17643OrLater, false)
@@ -3903,7 +3901,7 @@ bool TSFTextStore::ShouldSetInputScopeOfURLBarToDefault() {
   //      However, if it's installed on Win7 and has not been updated yet
   //      after the OS is upgraded to Win8 or later, it's still an IMM-IME.
   //      Therefore, we also need to check with IMMHandler here.
-  if (!TSFPrefs::ShouldSetInputScopeOfURLBarToDefault()) {
+  if (!StaticPrefs::intl_ime_hack_set_input_scope_of_url_bar_to_default()) {
     return false;
   }
 
