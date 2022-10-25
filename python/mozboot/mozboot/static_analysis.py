@@ -7,3 +7,4 @@ from __future__ import absolute_import, print_function, unicode_literals
 WINDOWS_CLANG_TIDY = "win64-clang-tidy"
 LINUX_CLANG_TIDY = "linux64-clang-tidy"
 MACOS_CLANG_TIDY = "macosx64-clang-tidy"
+MACOS_AARCH64_CLANG_TIDY = "macosx64-aarch64-clang-tidy"
