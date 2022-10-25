@@ -57,7 +57,6 @@ jobs:
                 - linux64-rust
                 - linux64-cbindgen
                 - linux64-dump_syms
-                - linux64-pkgconf
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
 

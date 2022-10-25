@@ -46,4 +46,10 @@ RUN apt-get update && \
       uuid \
       wget \
       x11-utils \
-      zip
+      xvfb \
+      zip \
+      pkg-config
+
+# Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
+# %include taskcluster/docker/recipes/xvfb.sh
+COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
