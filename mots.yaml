@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-10-24T12:52:11.112046'
+updated_at: '2022-10-25T11:42:56.563947'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -37,6 +37,10 @@ people:
     bmo_id: 329611
     name: Aki Sasaki
     nick: aki
+  - &allstarschh
+    bmo_id: 434670
+    name: Yoshi Cheng-Hao Huang
+    nick: allstars.chh
   - &alwu
     bmo_id: 517691
     name: Alastor Wu
@@ -137,6 +141,10 @@ people:
     bmo_id: 596517
     name: Brian Stack
     nick: bstack
+  - &bthrall
+    bmo_id: 700441
+    name: Bryan Thrall
+    nick: bthrall
   - &bwc
     bmo_id: 478411
     name: Byron Campen
@@ -863,6 +871,10 @@ people:
     bmo_id: 600802
     name: Yulia Startsev
     nick: yulia
+  - &yury
+    bmo_id: 382167
+    name: Yury Delendik
+    nick: yury
   - &yzen
     bmo_id: 458165
     name: Yura Zenevich
@@ -1713,17 +1725,23 @@ modules:
     owners:
       - *jandem
     peers:
+      - *allstarschh
       - *anba
       - *arai
       - *bholley
+      - *bthrall
+      - *dminor
       - *evilpie
       - *iain
       - *jonco
+      - *jseward
       - *mgaudet
       - *nbp
+      - *rhunt
       - *sfink
       - *tcampbell
       - *yulia
+      - *yury
     machine_name: core_javascript
 
   - name: 'Core: JavaScript JIT'
@@ -3633,5 +3651,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 8850b02f61b1f5e8519c87ec75a421c770337650
-  export: bc0c9447bd355bf9554147d9065fb4b5ff11240c
+  config: 217d28f9119387eef55fee24b105f7ef70f29c5e
+  export: 4f676229419b9f0e5dba85e481f6ced724825aad

@@ -1048,17 +1048,23 @@ JavaScript engine (SpiderMonkey)
         | `Jan de Mooij (jandem) <https://people.mozilla.org/s?query=jandem>`__
     * - Peer(s)
       -
+        | `Yoshi Cheng-Hao Huang (allstars.chh) <https://people.mozilla.org/s?query=allstars.chh>`__
         | `André Bargull (anba) <https://people.mozilla.org/s?query=anba>`__
         | `Tooru Fujisawa (arai) <https://people.mozilla.org/s?query=arai>`__
         | `Bobby Holley (bholley) <https://people.mozilla.org/s?query=bholley>`__
+        | `Bryan Thrall (bthrall) <https://people.mozilla.org/s?query=bthrall>`__
+        | `Dan Minor (dminor) <https://people.mozilla.org/s?query=dminor>`__
         | `Tom Schuster (evilpie) <https://people.mozilla.org/s?query=evilpie>`__
         | `Iain Ireland (iain) <https://people.mozilla.org/s?query=iain>`__
         | `Jon Coppeard (jonco) <https://people.mozilla.org/s?query=jonco>`__
+        | `Julian Seward (jseward) <https://people.mozilla.org/s?query=jseward>`__
         | `Matthew Gaudet (mgaudet) <https://people.mozilla.org/s?query=mgaudet>`__
         | `Nicolas B (nbp) <https://people.mozilla.org/s?query=nbp>`__
+        | `Ryan Hunt (rhunt) <https://people.mozilla.org/s?query=rhunt>`__
         | `Steve Fink (sfink) <https://people.mozilla.org/s?query=sfink>`__
         | `Ted Campbell (tcampbell) <https://people.mozilla.org/s?query=tcampbell>`__
         | `Yulia Startsev (yulia) <https://people.mozilla.org/s?query=yulia>`__
+        | `Yury Delendik (yury) <https://people.mozilla.org/s?query=yury>`__
     * - Owner(s) Emeritus
       - Brendan Eich, Dave Mandelin, Luke Wagner, Jason Orendorff
     * - Peer(s) Emeritus
