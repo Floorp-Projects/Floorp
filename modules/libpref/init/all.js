@@ -1974,6 +1974,12 @@ pref("extensions.manifestV2.actionsPopupURLRestricted", false);
 #else
   pref("extensions.unifiedExtensions.enabled", false);
 #endif
+// Whether to enable the updated openPopup API.
+#ifdef NIGHTLY_BUILD
+  pref("extensions.openPopupWithoutUserGesture.enabled", true);
+#else
+  pref("extensions.openPopupWithoutUserGesture.enabled", false);
+#endif
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
