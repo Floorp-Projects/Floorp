@@ -1754,9 +1754,6 @@ class TSFPrefs final {
   }
 
   DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_caret",
-      DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret, true)
-  DECL_AND_IMPL_BOOL_PREF(
       "intl.tsf.hack.ms_simplified_chinese.query_insert_result",
       NeedToHackQueryInsertForMSSimplifiedTIP, true)
   DECL_AND_IMPL_BOOL_PREF(
@@ -4691,7 +4688,8 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       // nearest character rect.
       // (Let's return true if there is no selection which must be not expected
       // by MS-IME nor TSF.)
-      if (TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret() &&
+      if (StaticPrefs::
+              intl_tsf_hack_ms_japanese_ime_do_not_return_no_layout_error_at_caret() &&
           aACPStart == aACPEnd && selectionForTSF.isSome() &&
           (!selectionForTSF->HasRange() ||
            (selectionForTSF->Collapsed() &&
