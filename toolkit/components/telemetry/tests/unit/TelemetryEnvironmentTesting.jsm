@@ -15,7 +15,9 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Assert: "resource://testing-common/Assert.jsm",
   // AttributionCode is only needed for Firefox
   AttributionCode: "resource:///modules/AttributionCode.jsm",
+  CommonUtils: "resource://services-common/utils.js",
   MockRegistrar: "resource://testing-common/MockRegistrar.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["TelemetryEnvironmentTesting"];
@@ -127,13 +129,13 @@ var TelemetryEnvironmentTesting = {
   },
 
   spoofProfileReset() {
-    return IOUtils.writeJSON(
+    return lazy.CommonUtils.writeJSON(
       {
         created: PROFILE_CREATION_DATE_MS,
         reset: PROFILE_RESET_DATE_MS,
         firstUse: PROFILE_FIRST_USE_MS,
       },
-      PathUtils.join(PathUtils.profileDir, "times.json")
+      lazy.OS.Path.join(lazy.OS.Constants.Path.profileDir, "times.json")
     );
   },
 

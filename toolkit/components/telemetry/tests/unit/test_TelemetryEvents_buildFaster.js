@@ -2,6 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
+
 /**
  * Return the path to the definitions file for the events.
  */
@@ -93,7 +97,7 @@ add_task(
     // Let's write to the definition file to also cover the file
     // loading part.
     const FILE_PATH = getDefinitionsPath();
-    await IOUtils.writeJSON(DYNAMIC_EVENT_SPEC, FILE_PATH);
+    await CommonUtils.writeJSON(DYNAMIC_EVENT_SPEC, FILE_PATH);
 
     // Start TelemetryController to trigger loading the specs.
     await TelemetryController.testReset();
