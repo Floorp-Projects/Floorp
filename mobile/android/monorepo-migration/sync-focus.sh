@@ -5,12 +5,12 @@ set -ex
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 CURRENT_REPO_PATH="$(dirname -- "$SCRIPT_DIR")"
 
-REPO_NAME_TO_SYNC='android-components'
+REPO_NAME_TO_SYNC='focus-android'
 MAIN_BRANCH_NAME='main'
-PREP_BRANCH_NAME='ac-prep'
+PREP_BRANCH_NAME='focus-prep'
 TMP_REPO_PATH="/tmp/git/$REPO_NAME_TO_SYNC"
 TMP_REPO_BRANCH_NAME='firefox-android'
-TAG_PREFIX='components-'
+TAG_PREFIX='focus-'
 MONOREPO_URL='git@github.com:mozilla-mobile/firefox-android.git'
 MERGE_COMMIT_MESSAGE=$(cat <<EOF
 Merge https://github.com/mozilla-mobile/$REPO_NAME_TO_SYNC repository
@@ -18,7 +18,7 @@ Merge https://github.com/mozilla-mobile/$REPO_NAME_TO_SYNC repository
 The history was slightly altered before merging it:
   * All files from $REPO_NAME_TO_SYNC are now under its own subdirectory
   * All commits messages were rewritten to link issues and pull requests to the former repository
-  * All commits messages were prefixed with [components]
+  * All commits messages were prefixed with [focus]
   * All tags were were prefixed with $TAG_PREFIX
 EOF
 )
@@ -106,12 +106,6 @@ function _merge_histories() {
     git commit --amend --message "$MERGE_COMMIT_MESSAGE"
 }
 
-function _move_files_into_subfolder() {
-    cd "$CURRENT_REPO_PATH"
-    git mv --force 'l10n.toml' "$REPO_NAME_TO_SYNC/l10n.toml"
-    git commit --message 'Move l10n.toml into android-components subfolder'
-}
-
 function _clean_up_temporary_repo() {
     rm -rf "$TMP_REPO_PATH"
 }
@@ -125,7 +119,6 @@ _rewrite_git_history
 _remove_old_tags
 _reset_prep_branch
 _merge_histories
-_move_files_into_subfolder
 _clean_up_temporary_repo
 
 

@@ -14,7 +14,7 @@ logging.basicConfig(
 DATA_DIR = (Path(__file__).parent / "data").absolute()
 GITHUB_URL_TEMPLATE = "https://github.com/{repo_owner}/{repo_name}/{number_type}"
 REPO_OWNER = "mozilla-mobile"
-REPO_NAME_TO_IMPORT = "android-components"
+REPO_NAME_TO_IMPORT = "focus-android"
 
 
 def divide_chunks(sequence, n):
@@ -36,7 +36,7 @@ def main():
         repo_numbers = json.load(f)
 
     regexes = [
-        "regex:^==>[components] ",
+        "regex:^==>[focus] ",
     ]
 
     for repo_name in order_repo_names(repo_numbers.keys()):
