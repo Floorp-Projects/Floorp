@@ -259,22 +259,31 @@ void FontFaceSet::Clear() {
 }
 
 bool FontFaceSet::Delete(FontFace& aFontFace) {
-  FontFaceImpl* fontImpl = aFontFace.GetImpl();
+  // Hold onto a strong reference to make sure that when we remove FontFace from
+  // the list, the FontFaceImpl does not get freed right away. We need to check
+  // the FontFaceSetImpl first.
+  RefPtr<FontFaceImpl> fontImpl = aFontFace.GetImpl();
   MOZ_ASSERT(fontImpl);
 
-  if (!mImpl->Delete(fontImpl)) {
-    return false;
-  }
-
+  // Ensure that we remove from mNonRuleFaces first. This is important so that
+  // when we check to see if all of the fonts have finished loading, the list in
+  // FontFaceSet and FontFaceSetImpl match.
+  bool removed = false;
   for (size_t i = 0; i < mNonRuleFaces.Length(); i++) {
     if (mNonRuleFaces[i].mFontFace == &aFontFace) {
       mNonRuleFaces.RemoveElementAt(i);
-      return true;
+      removed = true;
+      break;
     }
   }
 
-  MOZ_ASSERT_UNREACHABLE("Missing rule present in Impl!");
-  return true;
+  if (!mImpl->Delete(fontImpl)) {
+    MOZ_ASSERT(!removed, "Missing rule present in Impl!");
+  } else {
+    MOZ_ASSERT(removed, "Rule present but missing in Impl!");
+  }
+
+  return removed;
 }
 
 bool FontFaceSet::HasAvailableFontFace(FontFace* aFontFace) {
