@@ -133,5 +133,3 @@ TEST_F(UtilityProcess, DestroyProcess) {
 
   WAIT_FOR_EVENTS;
 }
-
-#undef WAIT_FOR_EVENTS

@@ -7,7 +7,6 @@
 #ifndef mozilla_ipc_AsyncBlockers_h
 #define mozilla_ipc_AsyncBlockers_h
 
-#include "mozilla/MozPromise.h"
 #include "mozilla/ThreadSafety.h"
 #include "nsTArray.h"
 
@@ -29,21 +28,32 @@ class AsyncBlockers {
         mPromise(new GenericPromise::Private(__func__)) {}
   void Register(void* aBlocker) {
     MutexAutoLock lock(mLock);
+    if (mResolved) {
+      // Too late.
+      return;
+    }
     mBlockers.InsertElementSorted(aBlocker);
   }
   void Deregister(void* aBlocker) {
     MutexAutoLock lock(mLock);
+    if (mResolved) {
+      // Too late.
+      return;
+    }
+
     MOZ_ASSERT(mBlockers.ContainsSorted(aBlocker));
     MOZ_ALWAYS_TRUE(mBlockers.RemoveElementSorted(aBlocker));
     MaybeResolve();
   }
   RefPtr<GenericPromise> WaitUntilClear(uint32_t aTimeOutInMs = 0) {
-    {
+    if (!aTimeOutInMs) {
+      // We don't need to wait, resolve the promise right away.
       MutexAutoLock lock(mLock);
-      MaybeResolve();
-    }
-
-    if (aTimeOutInMs > 0) {
+      if (!mResolved) {
+        mPromise->Resolve(true, __func__);
+        mResolved = true;
+      }
+    } else {
       GetCurrentEventTarget()->DelayedDispatch(
           NS_NewRunnableFunction("AsyncBlockers::WaitUntilClear",
                                  [promise = mPromise]() {
@@ -58,22 +68,30 @@ class AsyncBlockers {
                                  }),
           aTimeOutInMs);
     }
-
     return mPromise;
   }
 
-  virtual ~AsyncBlockers() { mPromise->Resolve(true, __func__); }
+  virtual ~AsyncBlockers() {
+    if (!mResolved) {
+      mPromise->Resolve(true, __func__);
+    }
+  }
 
  private:
   void MaybeResolve() MOZ_REQUIRES(mLock) {
     mLock.AssertCurrentThreadOwns();
+    if (mResolved) {
+      return;
+    }
     if (!mBlockers.IsEmpty()) {
       return;
     }
     mPromise->Resolve(true, __func__);
+    mResolved = true;
   }
   Mutex mLock;
   nsTArray<void*> mBlockers MOZ_GUARDED_BY(mLock);
+  bool mResolved MOZ_GUARDED_BY(mLock) = false;
   const RefPtr<GenericPromise::Private> mPromise;
 };
 
