@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { setInterval, clearInterval } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
+const { setInterval, clearInterval } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
 );
 
 // stolen from file_blocked_script.sjs
