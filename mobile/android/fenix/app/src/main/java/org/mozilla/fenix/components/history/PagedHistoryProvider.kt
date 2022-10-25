@@ -11,7 +11,6 @@ import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.HistoryItemTimeGroup
 import org.mozilla.fenix.utils.Settings.Companion.SEARCH_GROUP_MINIMUM_SITES
@@ -86,7 +85,6 @@ interface PagedHistoryProvider {
  */
 class DefaultPagedHistoryProvider(
     private val historyStorage: PlacesHistoryStorage,
-    private val historyImprovementFeatures: Boolean = FeatureFlags.historyImprovementFeatures,
 ) : PagedHistoryProvider {
 
     /**
@@ -132,11 +130,7 @@ class DefaultPagedHistoryProvider(
                     )
                 }
                 .filter {
-                    if (historyImprovementFeatures) {
-                        it.items.size >= SEARCH_GROUP_MINIMUM_SITES
-                    } else {
-                        true
-                    }
+                    it.items.size >= SEARCH_GROUP_MINIMUM_SITES
                 }
                 .toList()
         }
@@ -207,10 +201,7 @@ class DefaultPagedHistoryProvider(
             emptyList()
         }
         val historyMetadata = historyGroupsInOffset.flatMap { it.items }
-
-        if (historyImprovementFeatures) {
-            history = history.distinctBy { Pair(it.historyTimeGroup, it.url) }
-        }
+        history = history.distinctBy { Pair(it.historyTimeGroup, it.url) }
 
         // Add all history items that are not in a group filtering out any matches with a history
         // metadata item.
@@ -227,11 +218,7 @@ class DefaultPagedHistoryProvider(
             },
         )
 
-        return if (historyImprovementFeatures) {
-            result.sortedByDescending { it.visitedAt }
-        } else {
-            result.removeConsecutiveDuplicates().sortedByDescending { it.visitedAt }
-        }
+        return result.sortedByDescending { it.visitedAt }
     }
 
     private fun transformVisitInfoToHistoryItem(visit: VisitInfo): HistoryDB.Regular {

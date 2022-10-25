@@ -40,7 +40,6 @@ import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavHostActivity
@@ -182,10 +181,6 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             is BookmarkFragmentState.Mode.Normal -> {
                 if (mode.showMenu) {
                     inflater.inflate(R.menu.bookmarks_menu, menu)
-                }
-
-                if (!FeatureFlags.historyImprovementFeatures) {
-                    menu.findItem(R.id.bookmark_search)?.isVisible = false
                 }
             }
             is BookmarkFragmentState.Mode.Selecting -> {

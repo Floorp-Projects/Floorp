@@ -17,6 +17,7 @@ import mozilla.components.concept.storage.VisitType
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.utils.Settings
 
 class PagedHistoryProviderTest {
 
@@ -25,13 +26,13 @@ class PagedHistoryProviderTest {
     @Before
     fun setup() {
         storage = mockk()
+        Settings.SEARCH_GROUP_MINIMUM_SITES = 1
     }
 
     @Test
     fun `getHistory uses getVisitsPaginated`() = runTest {
         val provider = DefaultPagedHistoryProvider(
             historyStorage = storage,
-            historyImprovementFeatures = false,
         )
 
         val visitInfo1 = VisitInfo(
@@ -148,7 +149,6 @@ class PagedHistoryProviderTest {
     fun `history metadata matching lower bound`() = runTest {
         val provider = DefaultPagedHistoryProvider(
             historyStorage = storage,
-            historyImprovementFeatures = false,
         )
         // Oldest history visit on the page is 15 seconds (buffer time) newer than matching
         // metadata record.
@@ -218,7 +218,6 @@ class PagedHistoryProviderTest {
     fun `history metadata matching upper bound`() = runTest {
         val provider = DefaultPagedHistoryProvider(
             historyStorage = storage,
-            historyImprovementFeatures = false,
         )
         // Newest history visit on the page is 15 seconds (buffer time) older than matching
         // metadata record.
@@ -288,7 +287,6 @@ class PagedHistoryProviderTest {
     fun `redirects are filtered out from history metadata groups`() = runTest {
         val provider = DefaultPagedHistoryProvider(
             historyStorage = storage,
-            historyImprovementFeatures = false,
         )
 
         val visitInfo1 = VisitInfo(

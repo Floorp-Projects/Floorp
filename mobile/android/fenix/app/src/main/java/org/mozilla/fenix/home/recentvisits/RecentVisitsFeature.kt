@@ -17,7 +17,6 @@ import mozilla.components.concept.storage.HistoryHighlightWeights
 import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.home.HomeFragment
@@ -52,7 +51,6 @@ class RecentVisitsFeature(
     private val historyHighlightsStorage: Lazy<PlacesHistoryStorage>,
     private val scope: CoroutineScope,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val historyImprovementFeatures: Boolean = FeatureFlags.historyImprovementFeatures,
 ) : LifecycleAwareFeature {
 
     private var job: Job? = null
@@ -214,11 +212,7 @@ class RecentVisitsFeature(
                 )
             }
             .filter {
-                if (historyImprovementFeatures) {
-                    it.groupItems.size >= SEARCH_GROUP_MINIMUM_SITES
-                } else {
-                    true
-                }
+                it.groupItems.size >= SEARCH_GROUP_MINIMUM_SITES
             }
     }
 

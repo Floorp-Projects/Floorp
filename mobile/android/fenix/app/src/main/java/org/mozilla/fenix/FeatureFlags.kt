@@ -93,11 +93,6 @@ object FeatureFlags {
     const val showHomeOnboarding = true
 
     /**
-     * Enables history improvement features.
-     */
-    const val historyImprovementFeatures = true
-
-    /**
      * Enables the Task Continuity enhancements.
      */
     const val taskContinuityFeature = true

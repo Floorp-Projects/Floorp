@@ -38,7 +38,6 @@ import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavHostActivity
 import org.mozilla.fenix.R
@@ -223,10 +222,6 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                 }
         } else {
             inflater.inflate(R.menu.history_menu, menu)
-        }
-
-        if (!FeatureFlags.historyImprovementFeatures) {
-            menu.findItem(R.id.history_search)?.isVisible = false
         }
     }
 
