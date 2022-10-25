@@ -17,8 +17,4 @@ RUN apt-get update && \
       unzip \
       zip
 
-# Add wrapper scripts for xvfb for repackage.sh, and interactive sessions
-# %include taskcluster/docker/recipes/xvfb.sh
-COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
-
 COPY known_hosts /etc/ssh/ssh_known_hosts

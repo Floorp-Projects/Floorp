@@ -4,8 +4,6 @@ set -x -e
 
 echo "running as" $(id)
 
-. /builds/worker/scripts/xvfb.sh
-
 ####
 # Taskcluster friendly wrapper for performing fx desktop l10n repacks via mozharness.
 # Based on ./build-linux.sh
@@ -22,8 +20,6 @@ echo "running as" $(id)
 : TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/builds/worker/tooltool-cache}
 
 : MOZ_SCM_LEVEL                 ${MOZ_SCM_LEVEL:=1}
-
-: NEED_XVFB                     ${NEED_XVFB:=false}
 
 : MOZ_SCM_LEVEL                 ${MOZ_SCM_LEVEL:=1}
 
@@ -44,18 +40,6 @@ export TINDERBOX_OUTPUT=1
 # test required parameters are supplied
 if [[ -z ${MOZHARNESS_SCRIPT} ]]; then fail "MOZHARNESS_SCRIPT is not set"; fi
 if [[ -z "${MOZHARNESS_CONFIG}" && -z "${EXTRA_MOZHARNESS_CONFIG}" ]]; then fail "MOZHARNESS_CONFIG or EXTRA_MOZHARNESS_CONFIG is not set"; fi
-
-cleanup() {
-    local rv=$?
-    cleanup_xvfb
-    exit $rv
-}
-trap cleanup EXIT INT
-
-# run XVfb in the background, if necessary
-if $NEED_XVFB; then
-    start_xvfb '1024x768x24' 2
-fi
 
 # set up mozharness configuration, via command line, env, etc.
 
