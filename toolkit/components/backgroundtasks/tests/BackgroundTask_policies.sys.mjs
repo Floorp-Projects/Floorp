@@ -3,16 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { Checker } = ChromeUtils.import(
+  "resource://gre/modules/UpdateService.jsm"
+);
 import { EnterprisePolicyTesting } from "resource://testing-common/EnterprisePolicyTesting.sys.mjs";
 
 export async function runBackgroundTask(commandLine) {
   let filePath = commandLine.getArgument(0);
   await EnterprisePolicyTesting.setupPolicyEngineWithJson(filePath);
 
-  let checker = Cc["@mozilla.org/updates/update-checker;1"].getService(
-    Ci.nsIUpdateChecker
-  );
-  let actual = await checker.getUpdateURL(checker.BACKGROUND_CHECK);
+  let checker = new Checker();
+  let actual = await checker.getUpdateURL();
   let expected = commandLine.getArgument(1);
 
   // 0, 1, 2, 3 are all meaningful exit codes already.

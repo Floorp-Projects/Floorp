@@ -98,7 +98,7 @@ async function downloadUpdate(appUpdateAuto, onDownloadStartCallback) {
       "Should attempt to show the update-available prompt"
     );
     // Simulate accepting the update-available prompt
-    await gAUS.downloadUpdate(update, true);
+    gAUS.downloadUpdate(update, true);
   }
 
   await continueFileHandler(CONTINUE_DOWNLOAD);
@@ -123,23 +123,34 @@ async function downloadUpdate(appUpdateAuto, onDownloadStartCallback) {
  * a download. But this doesn't properly check that the update-available
  * notification isn't shown. So we will do an additional check where we follow
  * the normal flow a bit more closely by forwarding the results that we got from
- * checkForUpdates() to aus.onCheckComplete() and make sure that the update
+ * onCheckComplete() to aus.onCheckComplete() and make sure that the update
  * prompt isn't shown.
  */
 async function testUpdateDoesNotDownload() {
-  let check = gUpdateChecker.checkForUpdates(gUpdateChecker.BACKGROUND_CHECK);
-  let result = await check.result;
-  Assert.ok(result.checksAllowed, "Should be able to check for updates");
-  Assert.ok(result.succeeded, "Update check should have succeeded");
+  let { request, updates } = await new Promise((resolve, reject) => {
+    let listener = {
+      // eslint-disable-next-line no-shadow
+      onCheckComplete: async (request, updates) => {
+        resolve({ request, updates });
+      },
+      // eslint-disable-next-line no-shadow
+      onError: async (request, update) => {
+        Assert.ok(false, "Update check should have succeeded");
+        reject();
+      },
+      QueryInterface: ChromeUtils.generateQI(["nsIUpdateCheckListener"]),
+    };
+    gUpdateChecker.checkForUpdates(listener, false);
+  });
 
   Assert.equal(
-    result.updates.length,
+    updates.length,
     1,
     "Should have gotten 1 update in update check"
   );
-  let update = result.updates[0];
+  let update = updates[0];
 
-  let downloadStarted = await gAUS.downloadUpdate(update, true);
+  let downloadStarted = gAUS.downloadUpdate(update, true);
   Assert.equal(
     downloadStarted,
     false,
@@ -151,7 +162,7 @@ async function testUpdateDoesNotDownload() {
     updateAvailableObserved = true;
   };
   Services.obs.addObserver(observer, "update-available");
-  await gAUS.onCheckComplete(result);
+  await gAUS.onCheckComplete(request, updates);
   Services.obs.removeObserver(observer, "update-available");
   Assert.equal(
     updateAvailableObserved,
