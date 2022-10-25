@@ -780,6 +780,15 @@ class nsBlockFrame : public nsContainerFrame {
                              nsIFrame* aFrame);
 
   /**
+   * Set line-break-before status in aState.mReflowStatus because aLine cannot
+   * be placed on this page/column and we don't want to break within ourselves.
+   * Also, mark the aLine dirty, and set aKeepReflowGoing to false;
+   */
+  void SetBreakBeforeStatusBeforeLine(BlockReflowState& aState,
+                                      LineIterator aLine,
+                                      bool* aKeepReflowGoing);
+
+  /**
    * Push aLine (and any after it), since it cannot be placed on this
    * page/column.  Set aKeepReflowGoing to false and set
    * flag aState.mReflowStatus as incomplete.
