@@ -3907,13 +3907,10 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
       // *it* to be pushed in its entirety.)
       aState.mBCoord = startingBCoord;
       aState.mPrevBEndMargin = incomingMargin;
-      *aKeepReflowGoing = false;
       if (ShouldAvoidBreakInside(aState.mReflowInput)) {
-        aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
-        aLine->MarkDirty();
+        SetBreakBeforeStatusBeforeLine(aState, aLine, aKeepReflowGoing);
       } else {
-        PushLines(aState, aLine.prev());
-        aState.mReflowStatus.SetIncomplete();
+        PushTruncatedLine(aState, aLine, aKeepReflowGoing);
       }
       return;
     }
@@ -4155,13 +4152,10 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
 
     if (frameReflowStatus.IsInlineBreakBefore()) {
       // None of the child block fits.
-      *aKeepReflowGoing = false;
       if (ShouldAvoidBreakInside(aState.mReflowInput)) {
-        aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
-        aLine->MarkDirty();
+        SetBreakBeforeStatusBeforeLine(aState, aLine, aKeepReflowGoing);
       } else {
-        PushLines(aState, aLine.prev());
-        aState.mReflowStatus.SetIncomplete();
+        PushTruncatedLine(aState, aLine, aKeepReflowGoing);
       }
     } else {
       // Note: line-break-after a block is a nop
@@ -4235,8 +4229,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
               mLines.after_insert(aLine, line);
             }
 
-            PushLines(aState, aLine);
-            aState.mReflowStatus.SetIncomplete();
+            PushTruncatedLine(aState, aLine.next(), aKeepReflowGoing);
 
             // If we need to reflow the continuation of the block child,
             // then we'd better reflow our continuation
@@ -4262,7 +4255,6 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
                 }
               }
             }
-            *aKeepReflowGoing = false;
 
             // The block-end margin for a block is only applied on the last
             // flow block. Since we just continued the child block frame,
@@ -4331,15 +4323,11 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
           // If it's our very first line *or* we're not at the top of the page
           // and we have page-break-inside:avoid, then we need to be pushed to
           // our parent's next-in-flow.
-          aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
-          // When we reflow in the new position, we need to reflow this
-          // line again.
-          aLine->MarkDirty();
+          SetBreakBeforeStatusBeforeLine(aState, aLine, aKeepReflowGoing);
         } else {
           // Push the line that didn't fit and any lines that follow it
           // to our next-in-flow.
-          PushLines(aState, aLine.prev());
-          aState.mReflowStatus.SetIncomplete();
+          PushTruncatedLine(aState, aLine, aKeepReflowGoing);
         }
       }
     }
@@ -4431,6 +4419,15 @@ void nsBlockFrame::ReflowInlineFrames(BlockReflowState& aState,
       } while (LineReflowStatus::RedoNoPull == lineReflowStatus);
     } while (LineReflowStatus::RedoMoreFloats == lineReflowStatus);
   } while (LineReflowStatus::RedoNextBand == lineReflowStatus);
+}
+
+void nsBlockFrame::SetBreakBeforeStatusBeforeLine(BlockReflowState& aState,
+                                                  LineIterator aLine,
+                                                  bool* aKeepReflowGoing) {
+  aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
+  // Reflow the line again when we reflow at our new position.
+  aLine->MarkDirty();
+  *aKeepReflowGoing = false;
 }
 
 void nsBlockFrame::PushTruncatedLine(BlockReflowState& aState,
@@ -5184,10 +5181,7 @@ bool nsBlockFrame::PlaceLine(BlockReflowState& aState,
   if (!aState.mReflowStatus.IsFullyComplete() &&
       ShouldAvoidBreakInside(aState.mReflowInput)) {
     aLine->AppendFloats(std::move(aState.mCurrentLineFloats));
-    aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
-    // Reflow the line again when we reflow at our new position.
-    aLine->MarkDirty();
-    *aKeepReflowGoing = false;
+    SetBreakBeforeStatusBeforeLine(aState, aLine, aKeepReflowGoing);
     return true;
   }
 
@@ -5198,8 +5192,7 @@ bool nsBlockFrame::PlaceLine(BlockReflowState& aState,
     NS_ASSERTION(aState.mCurrentLine == aLine, "oops");
     if (ShouldAvoidBreakInside(aState.mReflowInput)) {
       // All our content doesn't fit, start on the next page.
-      aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
-      *aKeepReflowGoing = false;
+      SetBreakBeforeStatusBeforeLine(aState, aLine, aKeepReflowGoing);
     } else {
       // Push aLine and all of its children and anything else that
       // follows to our next-in-flow.
