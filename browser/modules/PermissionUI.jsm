@@ -20,8 +20,8 @@ var EXPORTED_SYMBOLS = ["PermissionUI"];
  * permission request is coming up from content by way of the
  * nsContentPermissionHelper. The system add-on could then do the following:
  *
- * const { Integration } = ChromeUtils.import(
- *   "resource://gre/modules/Integration.jsm"
+ * const { Integration } = ChromeUtils.importESModule(
+ *   "resource://gre/modules/Integration.sys.mjs"
  * );
  * const { PermissionUI } = ChromeUtils.import(
  *   "resource:///modules/PermissionUI.jsm"
@@ -188,7 +188,7 @@ var PermissionPromptPrototype = {
   /**
    * These are the options that will be passed to the PopupNotification when it
    * is shown. See the documentation of `PopupNotifications_show` in
-   * PopupNotifications.jsm for details.
+   * PopupNotifications.sys.mjs for details.
    *
    * Note that prompt() will automatically set displayURI to
    * be the URI of the requesting pricipal, unless the displayURI is exactly
@@ -229,7 +229,7 @@ var PermissionPromptPrototype = {
    * then you need to make sure its ID has the "-notification" suffix,
    * and then return the prefix here.
    *
-   * See PopupNotifications.jsm for more details.
+   * See PopupNotifications.sys.mjs for more details.
    *
    * @return {string}
    *         The unique ID that will be used to as the
@@ -251,7 +251,7 @@ var PermissionPromptPrototype = {
 
   /**
    * The message to show to the user in the PopupNotification, see
-   * `PopupNotifications_show` in PopupNotifications.jsm.
+   * `PopupNotifications_show` in PopupNotifications.sys.mjs.
    *
    * Subclasses must override this.
    *
