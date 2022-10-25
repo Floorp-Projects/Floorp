@@ -6875,6 +6875,17 @@
     value: true
     mirror: always
 
+  # Whether Gecko returns available composition string rect or TS_E_NOLAYOUT
+  # from ITextStoreACP::GetTextExt() when the specified range is same as the
+  # range of composition string but some character rects in it are still dirty
+  # if and only if ATOK is active TIP.
+  # Note that this is ignored if active ATOK is or older than 2016 and
+  # create_native_caret is true.
+-   name: intl.tsf.hack.atok.do_not_return_no_layout_error_of_composition_string
+    type: bool
+    value: true
+    mirror: always
+
   # Whether Gecko sets input scope of the URL bar to IS_DEFAULT when black
   # listed IMEs are active or does not.  If you use tablet mode mainly and you
   # want to use touch keyboard for URL when you set focus to the URL bar, you
