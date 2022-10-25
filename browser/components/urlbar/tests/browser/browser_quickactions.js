@@ -15,7 +15,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
 });
 XPCOMUtils.defineLazyModuleGetters(this, {
-  UpdateService: "resource://gre/modules/UpdateService.jsm",
+  AppUpdater: "resource:///modules/AppUpdater.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
@@ -653,19 +653,15 @@ add_task(async function test_update() {
 
   const sandbox = sinon.createSandbox();
   try {
-    sandbox
-      .stub(UpdateService.prototype, "currentState")
-      .get(() => Ci.nsIApplicationUpdateService.STATE_IDLE);
+    sandbox.stub(AppUpdater.prototype, "isReadyForRestart").get(() => false);
     await doUpdateActionTest(
       false,
-      "Should be disabled since current update state is not pending"
+      "Should be disabled since AppUpdater.isReadyForRestart returns false"
     );
-    sandbox
-      .stub(UpdateService.prototype, "currentState")
-      .get(() => Ci.nsIApplicationUpdateService.STATE_PENDING);
+    sandbox.stub(AppUpdater.prototype, "isReadyForRestart").get(() => true);
     await doUpdateActionTest(
       true,
-      "Should be enabled since current update state is pending"
+      "Should be enabled since AppUpdater.isReadyForRestart returns true"
     );
   } finally {
     sandbox.restore();

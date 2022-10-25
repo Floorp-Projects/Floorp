@@ -138,7 +138,6 @@ var gTestID;
 // This default value will be overridden when using the http server.
 var gURLData = URL_HOST + "/";
 var gTestserver;
-var gUpdateCheckCount = 0;
 
 var gIncrementalDownloadErrorType;
 
@@ -4114,42 +4113,50 @@ function checkFilesInDirRecursive(aDir, aCallback) {
 }
 
 /**
- * Waits for an update check request to complete and asserts that the results
- * are as-expected.
+ * Waits for an update check request to complete.
  *
  * @param   aSuccess
  *          Whether the update check succeeds or not. If aSuccess is true then
- *          the check should succeed and if aSuccess is false then the check
- *          should fail.
+ *          onCheckComplete should be called and if aSuccess is false then
+ *          onError should be called.
  * @param   aExpectedValues
  *          An object with common values to check.
- * @return  A promise which will resolve with the nsIUpdateCheckResult object
- *          once the update check is complete.
+ * @return  A promise which will resolve the first time either the update check
+ *          onCheckComplete or onError occurs and returns the arguments from
+ *          onCheckComplete or onError.
  */
-async function waitForUpdateCheck(aSuccess, aExpectedValues = {}) {
-  let check = gUpdateChecker.checkForUpdates(gUpdateChecker.FOREGROUND_CHECK);
-  let result = await check.result;
-  Assert.ok(result.checksAllowed, "We should be able to check for updates");
-  Assert.equal(
-    result.succeeded,
-    aSuccess,
-    "the update check should " + (aSuccess ? "succeed" : "error")
+function waitForUpdateCheck(aSuccess, aExpectedValues = {}) {
+  return new Promise(resolve =>
+    gUpdateChecker.checkForUpdates(
+      {
+        onProgress: (aRequest, aPosition, aTotalSize) => {},
+        onCheckComplete: async (request, updates) => {
+          Assert.ok(aSuccess, "the update check should succeed");
+          if (aExpectedValues.updateCount) {
+            Assert.equal(
+              aExpectedValues.updateCount,
+              updates.length,
+              "the update count" + MSG_SHOULD_EQUAL
+            );
+          }
+          resolve({ request, updates });
+        },
+        onError: async (request, update) => {
+          Assert.ok(!aSuccess, "the update check should error");
+          if (aExpectedValues.url) {
+            Assert.equal(
+              aExpectedValues.url,
+              request.channel.originalURI.spec,
+              "the url" + MSG_SHOULD_EQUAL
+            );
+          }
+          resolve({ request, update });
+        },
+        QueryInterface: ChromeUtils.generateQI(["nsIUpdateCheckListener"]),
+      },
+      true
+    )
   );
-  if (aExpectedValues.updateCount) {
-    Assert.equal(
-      aExpectedValues.updateCount,
-      result.updates.length,
-      "the update count" + MSG_SHOULD_EQUAL
-    );
-  }
-  if (aExpectedValues.url) {
-    Assert.equal(
-      aExpectedValues.url,
-      result.request.channel.originalURI.spec,
-      "the url" + MSG_SHOULD_EQUAL
-    );
-  }
-  return result;
 }
 
 /**
@@ -4164,9 +4171,9 @@ async function waitForUpdateCheck(aSuccess, aExpectedValues = {}) {
  * @return  A promise which will resolve the first time the update download
  *          onStopRequest occurs and returns the arguments from onStopRequest.
  */
-async function waitForUpdateDownload(aUpdates, aExpectedStatus) {
+function waitForUpdateDownload(aUpdates, aExpectedStatus) {
   let bestUpdate = gAUS.selectUpdate(aUpdates);
-  let success = await gAUS.downloadUpdate(bestUpdate, false);
+  let success = gAUS.downloadUpdate(bestUpdate, false);
   if (!success) {
     do_throw("nsIApplicationUpdateService:downloadUpdate returned " + success);
   }
@@ -4227,7 +4234,6 @@ function start_httpserver() {
  *          The http response for the request.
  */
 function pathHandler(aMetadata, aResponse) {
-  gUpdateCheckCount += 1;
   aResponse.setHeader("Content-Type", "text/xml", false);
   aResponse.setStatusLine(aMetadata.httpVersion, 200, "OK");
   aResponse.bodyOutputStream.write(gResponseBody, gResponseBody.length);
