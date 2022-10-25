@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_IdentityCredential_h
 #define mozilla_dom_IdentityCredential_h
 
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/Credential.h"
 #include "mozilla/dom/IPCIdentityCredential.h"
 #include "mozilla/MozPromise.h"
@@ -20,6 +21,8 @@ class IdentityCredential final : public Credential {
       GetIdentityCredentialPromise;
   typedef MozPromise<IPCIdentityCredential, nsresult, true>
       GetIPCIdentityCredentialPromise;
+  typedef MozPromise<IdentityProvider, nsresult, true>
+      GetIdentityProviderPromise;
   typedef MozPromise<bool, nsresult, true> ValidationPromise;
   typedef MozPromise<IdentityInternalManifest, nsresult, true>
       GetManifestPromise;
@@ -28,6 +31,9 @@ class IdentityCredential final : public Credential {
       GetAccountListPromise;
   typedef MozPromise<Tuple<IdentityToken, IdentityAccount>, nsresult, true>
       GetTokenPromise;
+  typedef MozPromise<Tuple<IdentityInternalManifest, IdentityAccount>, nsresult,
+                     true>
+      GetAccountPromise;
 
   explicit IdentityCredential(nsPIDOMWindowInner* aParent);
 
@@ -51,7 +57,7 @@ class IdentityCredential final : public Credential {
 
   static RefPtr<GetIPCIdentityCredentialPromise>
   DiscoverFromExternalSourceInMainProcess(
-      nsIPrincipal* aPrincipal,
+      nsIPrincipal* aPrincipal, CanonicalBrowsingContext* aBrowsingContext,
       const IdentityCredentialRequestOptions& aOptions);
 
   // Create an IPC credential that can be passed back to the content process.
@@ -69,7 +75,8 @@ class IdentityCredential final : public Credential {
   //    Will send network requests to the IDP. The details of which are in the
   //    other static methods here.
   static RefPtr<GetIPCIdentityCredentialPromise> CreateCredential(
-      nsIPrincipal* aPrincipal, const IdentityProvider& aProvider);
+      nsIPrincipal* aPrincipal, BrowsingContext* aBrowsingContext,
+      const IdentityProvider& aProvider);
 
   // Performs a Fetch for the root manifest of the provided identity provider
   // and validates it as correct. The returned promise resolves with a bool
@@ -146,6 +153,16 @@ class IdentityCredential final : public Credential {
       nsIPrincipal* aPrincipal, const IdentityProvider& aProvider,
       const IdentityInternalManifest& aManifest,
       const IdentityAccount& aAccount);
+
+  static RefPtr<GetIdentityProviderPromise> PromptUserToSelectProvider(
+      BrowsingContext* aBrowsingContext,
+      const Sequence<IdentityProvider>& aProviders);
+
+  static RefPtr<GetAccountPromise> PromptUserToSelectAccount(
+      BrowsingContext* aBrowsingContext, const IdentityAccountList& aAccounts,
+      const IdentityInternalManifest& aManifest);
+
+  static void CloseUserInterface(BrowsingContext* aBrowsingContext);
 
  private:
   nsAutoString mToken;
