@@ -40,8 +40,7 @@ class RangeConsumerView final : public webgl::ConsumerView<RangeConsumerView> {
 
   template <typename T>
   Maybe<Range<const T>> ReadRange(const size_t elemCount) {
-    // uint32_t/float data may masquerade as a Range<uint8_t>.
-    AlignTo(std::max(alignof(T), kUniversalAlignment));
+    AlignTo(alignof(T));
 
     constexpr auto elemSize = sizeof(T);
     const auto byteSizeChecked = CheckedInt<size_t>(elemCount) * elemSize;
@@ -70,8 +69,7 @@ class SizeOnlyProducerView final
 
   template <typename T>
   bool WriteFromRange(const Range<const T>& src) {
-    // uint32_t/float data may masquerade as a Range<uint8_t>.
-    constexpr auto alignment = std::max(alignof(T), kUniversalAlignment);
+    constexpr auto alignment = alignof(T);
     const size_t byteSize = ByteSize(src);
     // printf_stderr("SizeOnlyProducerView: @%zu +%zu\n", alignment, byteSize);
 
