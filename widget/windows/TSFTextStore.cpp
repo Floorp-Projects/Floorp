@@ -1754,9 +1754,6 @@ class TSFPrefs final {
   }
 
   DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.atok.do_not_return_no_layout_error_of_composition_string",
-      DoNotReturnNoLayoutErrorToATOKOfCompositionString, true)
-  DECL_AND_IMPL_BOOL_PREF(
       "intl.tsf.hack.japanist10."
       "do_not_return_no_layout_error_of_composition_string",
       DoNotReturnNoLayoutErrorToJapanist10OfCompositionString, true)
@@ -4791,7 +4788,8 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       [[fallthrough]];
     case TextInputProcessorID::eATOK2016:
     case TextInputProcessorID::eATOKUnknown:
-      if (!TSFPrefs::DoNotReturnNoLayoutErrorToATOKOfCompositionString()) {
+      if (!StaticPrefs::
+              intl_tsf_hack_atok_do_not_return_no_layout_error_of_composition_string()) {
         return false;
       }
       // If the range is in the composition string, we should return rectangle
