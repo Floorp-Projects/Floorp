@@ -45,6 +45,10 @@ people:
     bmo_id: 517691
     name: Alastor Wu
     nick: alwu
+  - &amy
+    bmo_id: 622155
+    name: Amy Churchwell
+    nick: amy
   - &anba
     bmo_id: 339940
     name: André Bargull
@@ -516,6 +520,10 @@ people:
     bmo_id: 106098
     name: Kris Maglione
     nick: kmag
+  - &kpatenio
+    bmo_id: 690690
+    name: kpatenio
+    nick: kpatenio
   - &KrisWright
     bmo_id: 617144
     name: Kris Wright
@@ -601,8 +609,8 @@ people:
     name: Miko Mynttinen
     nick: mikokm
   - &mkaply
-    bmo_id: 566790
-    name: Please use mozilla
+    bmo_id: 7313
+    name: Mike Kaply
     nick: mkaply
   - &morgan
     bmo_id: 618000
@@ -3019,6 +3027,7 @@ modules:
           - *rpl
           - *zombie
           - *robwu
+          - *willdurand
         machine_name: addons_manager
 
       - name: Add-ons Manager UI
@@ -3080,6 +3089,7 @@ modules:
         peers:
           - *itielyn8
           - *sfoster
+          - *amy
         machine_name: desktop_theme
 
       - name: Desktop UI
@@ -3099,12 +3109,13 @@ modules:
         includes:
           - browser/components/downloads/**/*
           - toolkit/mozapps/downloads/**/*
-        meta: {}
+        meta:
+          peers_emeritus:
+            - Micah Tigley
         owners:
           - *mak
         peers:
           - *Gijs
-          - *mtigley
         machine_name: download_manager
 
       - name: Enterprise Policies
@@ -3160,10 +3171,9 @@ modules:
           components:
             - Firefox::Messaging System
         owners:
-          - *aoprea
+          - *pdahiya
         peers:
           - *nanj
-          - *pdahiya
           - *Mardak
           - *k88hudson
         machine_name: inproduct_messaging
@@ -3248,6 +3258,23 @@ modules:
           - *sfoster
         machine_name: password_manager
 
+      - machine_name: firefox_pip
+        name: Picture-in-Picture
+        description: A component that allows video elements to be pulled out into
+          an always-on-top window.
+        includes:
+          - toolkit/components/pictureinpicture
+          - browser/extensions/pictureinpicture
+        excludes: []
+        owners:
+          - *mhowell
+          - *mconley
+        peers:
+          - *niklas
+          - *kpatenio
+        meta:
+          owners_emeritus:
+            - Micah Tigley
       - name: Preferences
         description: The front-end preferences system.
         includes:
@@ -3650,6 +3677,4 @@ modules:
           - *willdurand
         machine_name: webextensions
     machine_name: toolkit
-hashes:
-  config: 217d28f9119387eef55fee24b105f7ef70f29c5e
-  export: 4f676229419b9f0e5dba85e481f6ced724825aad
+hashes: {}
