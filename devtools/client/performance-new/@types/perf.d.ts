@@ -548,7 +548,7 @@ type QuerySymbolicationApiResponse = string;
 
 /**
  * This represents an event channel that can talk to a content page on the web.
- * This interface is a manually typed version of toolkit/modules/WebChannel.sys.mjs
+ * This interface is a manually typed version of toolkit/modules/WebChannel.jsm
  * and is opinionated about the types of messages we can send with it.
  *
  * The definition is here rather than gecko.d.ts because it was simpler than getting

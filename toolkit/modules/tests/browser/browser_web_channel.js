@@ -502,7 +502,7 @@ var gTests = [
     desc:
       "WebChannel errors handling the message are delivered back to content",
     async run() {
-      const ERRNO_UNKNOWN_ERROR = 999; // WebChannel.sys.mjs doesn't export this.
+      const ERRNO_UNKNOWN_ERROR = 999; // WebChannel.jsm doesn't export this.
 
       // The channel where we purposely fail responding to a command.
       let channel = new WebChannel("error", Services.io.newURI(HTTP_PATH));
@@ -542,7 +542,7 @@ var gTests = [
     desc:
       "WebChannel errors due to an invalid channel are delivered back to content",
     async run() {
-      const ERRNO_NO_SUCH_CHANNEL = 2; // WebChannel.sys.mjs doesn't export this.
+      const ERRNO_NO_SUCH_CHANNEL = 2; // WebChannel.jsm doesn't export this.
       // The channel where we see the response when the content sees the error
       let echoChannel = new WebChannel("echo", Services.io.newURI(HTTP_PATH));
 

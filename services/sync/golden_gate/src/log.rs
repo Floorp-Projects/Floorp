@@ -26,7 +26,7 @@ impl Default for LogSink {
 
 impl LogSink {
     /// Creates a log sink that adapts the Rust `log` crate to the Sync
-    /// `Log.sys.mjs` logger.
+    /// `Log.jsm` logger.
     ///
     /// This is copied from `bookmark_sync::Logger`. It would be nice to share
     /// these, but, for now, we've just duplicated it to make prototyping

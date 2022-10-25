@@ -114,12 +114,10 @@ export var BrowserUtils = {
   },
 
   isFindbarVisible(docShell) {
-    const FINDER_SYS_MJS = "resource://gre/modules/Finder.sys.mjs";
+    const FINDER_JSM = "resource://gre/modules/Finder.jsm";
     return (
-      Cu.isESModuleLoaded(FINDER_SYS_MJS) &&
-      ChromeUtils.importESModule(FINDER_SYS_MJS).Finder.isFindbarVisible(
-        docShell
-      )
+      Cu.isModuleLoaded(FINDER_JSM) &&
+      ChromeUtils.import(FINDER_JSM).Finder.isFindbarVisible(docShell)
     );
   },
 

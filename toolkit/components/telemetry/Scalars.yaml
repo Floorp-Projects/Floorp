@@ -3220,7 +3220,7 @@ mozstorage:
     bug_numbers:
       - 1727261
     description: >
-      Collection of javascript modules that created a Sqlite.sys.mjs transaction
+      Collection of javascript modules that created a Sqlite.jsm transaction
       taking too long and timing out. This can be used to identify and optimize
       those modules transactions.
     expires: never

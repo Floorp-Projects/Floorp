@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * Internal module used to test the generation of Integration.sys.mjs getters.
+ * Internal module used to test the generation of Integration.jsm getters.
  */
 
 "use strict";

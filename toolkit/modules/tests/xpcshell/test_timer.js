@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Tests exports from Timer.sys.mjs
+// Tests exports from Timer.jsm
 
 var imported = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"

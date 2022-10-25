@@ -45,7 +45,7 @@ function test() {
 }
 
 registerCleanupFunction(function() {
-  // Troubleshoot.sys.mjs is imported into the global scope -- the window -- above.
+  // Troubleshoot.jsm is imported into the global scope -- the window -- above.
   // If it's not deleted, it outlives the test and is reported as a leak.
   delete window.Troubleshoot;
 });

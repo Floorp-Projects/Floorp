@@ -14,7 +14,7 @@ const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
 
-// Tests for PromiseUtils.sys.mjs
+// Tests for PromiseUtils.jsm
 
 // Tests for PromiseUtils.defer()
 

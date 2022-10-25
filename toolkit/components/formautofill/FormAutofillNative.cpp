@@ -359,7 +359,7 @@ const Rule kFirefoxRules[] = {
     {RegexKey::YEAR, "year"},
     {RegexKey::MMYY, "mm\\s*(/|\\\\)\\s*yy"},
     {RegexKey::VISA_CHECKOUT, "visa(-|\\s)checkout"},
-    // This should be a union of NETWORK_NAMES in CreditCard.sys.mjs
+    // This should be a union of NETWORK_NAMES in CreditCard.jsm
     {RegexKey::CREDIT_CARD_NETWORK_LONG,
      "american express|master card|union pay"},
     // Please also update CREDIT_CARD_NETWORK_EXACT_MATCH while updating

@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * Tests the Integration.sys.mjs module.
+ * Tests the Integration.jsm module.
  */
 
 "use strict";

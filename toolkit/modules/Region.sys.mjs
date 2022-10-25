@@ -87,7 +87,7 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 const log = console.createInstance({
-  prefix: "Region.sys.mjs",
+  prefix: "Region.jsm",
   maxLogLevel: lazy.loggingEnabled ? "All" : "Warn",
 });
 
@@ -134,7 +134,7 @@ class RegionDetector {
   _retryCount = 0;
   // Let tests wait for init to complete.
   _initPromise = null;
-  // Topic for Observer events fired by Region.sys.mjs.
+  // Topic for Observer events fired by Region.jsm.
   REGION_TOPIC = "browser-region-updated";
   // Values for telemetry.
   TELEMETRY = {

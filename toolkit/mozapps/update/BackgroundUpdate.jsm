@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   );
   let consoleOptions = {
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
-    // messages during development. See LOG_LEVELS in Console.sys.mjs for details.
+    // messages during development. See LOG_LEVELS in Console.jsm for details.
     maxLogLevel: "error",
     maxLogLevelPref: "app.update.background.loglevel",
     prefix: "BackgroundUpdate",
@@ -661,7 +661,7 @@ var BackgroundUpdate = {
     // Persist.
     snapshot.saveSoon();
 
-    // Continue persisting periodically.  `JSONFile.sys.mjs` will also persist one
+    // Continue persisting periodically.  `JSONFile.jsm` will also persist one
     // last time before shutdown.
     this._targetingSnapshottingTimer = Cc[
       "@mozilla.org/timer;1"

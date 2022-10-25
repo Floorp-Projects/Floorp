@@ -604,7 +604,7 @@ export class Runtime extends ContentProcessDomain {
 }
 
 function fromConsoleAPI(message) {
-  // From sendConsoleAPIMessage (toolkit/modules/Console.sys.mjs)
+  // From sendConsoleAPIMessage (toolkit/modules/Console.jsm)
   return {
     arguments: message.arguments,
     innerWindowId: message.innerID,

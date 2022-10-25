@@ -167,7 +167,7 @@ const DoHConfigController = {
   // consumer use.
   currentConfig: makeBaseConfigObject(),
 
-  // Loads the client's region via Region.sys.mjs. This might mean waiting
+  // Loads the client's region via Region.jsm. This might mean waiting
   // until the region is available.
   async loadRegion() {
     await new Promise(resolve => {

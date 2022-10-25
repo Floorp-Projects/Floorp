@@ -1,5 +1,5 @@
 /**
- * Tests of OSKeyStore.sys.mjs
+ * Tests of OSKeyStore.jsm
  */
 
 "use strict";

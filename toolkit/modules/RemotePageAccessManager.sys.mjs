@@ -13,7 +13,7 @@
  * This module may be used from both the child and parent process.
  *
  * Please note that prefs that one wants to update need to be
- * explicitly allowed within AsyncPrefs.sys.mjs.
+ * explicitly allowed within AsyncPrefs.jsm.
  */
 export let RemotePageAccessManager = {
   /* The accessMap lists the permissions that are allowed per page.

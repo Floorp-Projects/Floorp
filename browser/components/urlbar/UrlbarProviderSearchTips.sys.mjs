@@ -302,8 +302,8 @@ class ProviderSearchTips extends UrlbarProvider {
       }
 
       // Second, wait 500ms.  ts_paint waits at most 500ms after MozAfterPaint
-      // before ending.  We use XPCOM directly instead of Timer.sys.mjs to avoid the
-      // perf impact of loading Timer.sys.mjs, in case it's not already loaded.
+      // before ending.  We use XPCOM directly instead of Timer.jsm to avoid the
+      // perf impact of loading Timer.jsm, in case it's not already loaded.
       await new Promise(resolve => {
         let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
         timer.initWithCallback(resolve, 500, Ci.nsITimer.TYPE_ONE_SHOT);

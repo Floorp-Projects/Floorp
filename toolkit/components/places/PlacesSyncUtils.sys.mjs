@@ -592,7 +592,7 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
    *   remaining items to "NEW"; and don't wipe the server.
    *
    * @param db
-   *        the Sqlite.sys.mjs connection handle.
+   *        the Sqlite.jsm connection handle.
    * @param source
    *        the change source constant.
    */
@@ -1182,7 +1182,7 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
    * tag or keyword entry.
    *
    * @param db
-   *        the Sqlite.sys.mjs connection handle.
+   *        the Sqlite.jsm connection handle.
    * @param url
    *        the bookmark URL object.
    * @param syncChangeDelta
@@ -1848,7 +1848,7 @@ function addRowToChangeRecords(row, changeRecords) {
  * changeset for the Sync bookmarks engine.
  *
  * @param db
- *        The Sqlite.sys.mjs connection handle.
+ *        The Sqlite.jsm connection handle.
  * @param forGuids
  *        Fetch Sync tracking information for only the requested GUIDs.
  * @return {Promise} resolved once all items have been fetched.

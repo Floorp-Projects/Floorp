@@ -25,7 +25,7 @@ class AboutHttpsOnlyErrorChild extends RemotePageChild {
   actorCreated() {
     super.actorCreated();
 
-    // If you add a new function, remember to add it to RemotePageAccessManager.sys.mjs
+    // If you add a new function, remember to add it to RemotePageAccessManager.jsm
     // to allow content-privileged about:httpsonlyerror to use it.
     const exportableFunctions = [
       "RPMTryPingSecureWWWLink",

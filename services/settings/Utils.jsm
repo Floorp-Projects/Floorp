@@ -34,8 +34,7 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
-// See LOG_LEVELS in Console.sys.mjs. Common examples: "all", "debug", "info",
-// "warn", "error".
+// See LOG_LEVELS in Console.jsm. Common examples: "all", "debug", "info", "warn", "error".
 const log = (() => {
   const { ConsoleAPI } = ChromeUtils.importESModule(
     "resource://gre/modules/Console.sys.mjs"
