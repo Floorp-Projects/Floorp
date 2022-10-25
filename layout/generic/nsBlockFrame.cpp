@@ -2881,9 +2881,7 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
         // Immediately fragment for page-name. It is possible we could break
         // out of the loop right here, but this should make it more similar to
         // what happens when reflow causes fragmentation.
-        keepGoing = false;
-        PushLines(aState, line.prev());
-        aState.mReflowStatus.SetIncomplete();
+        PushTruncatedLine(aState, line, &keepGoing);
       } else {
         // Reflow the dirty line. If it's an incremental reflow, then force
         // it to invalidate the dirty area if necessary
