@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test that Console.jsm outputs messages to the Browser Console.
+// Test that Console.sys.mjs outputs messages to the Browser Console.
 
 "use strict";
 
@@ -37,7 +37,7 @@ add_task(async function testCategoryLogs() {
   testTrace();
   console.timeEnd("foobarTimer");
 
-  info("wait for the Console.jsm messages");
+  info("wait for the Console.sys.mjs messages");
 
   await checkMessageExists(hud, "bug851231-log");
   await checkMessageExists(hud, "bug851231-info");
