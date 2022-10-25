@@ -84,16 +84,16 @@ interface mozIStorageAsyncConnection : nsISupports {
    *    `createStatement("BEGIN").execute()` on a `mozIStorageConnection`.
    * 3. Executing an async statement, like
    *    `createAsyncStatement("BEGIN").executeAsync(...)`. This is what
-   *    `Sqlite.jsm` does under the hood.
+   *    `Sqlite.sys.mjs` does under the hood.
    *
    * Because of this, it's important *not* to use this attribute to decide
    * whether to *commit* the active transaction, because the caller that opened
    * it may not expect that. This is why both `mozStorageTransaction` and
-   * `Sqlite.jsm` use an internal variable (`mHasTransaction` for the former;
+   * `Sqlite.sys.mjs` use an internal variable (`mHasTransaction` for the former;
    * `_hasInProgressTransaction` for the latter) to check if their transaction
    * is already in progress, instead of just checking this attribute before
    * committing. Otherwise, mozStorage might accidentally commit (or roll back!)
-   * a transaction started by `Sqlite.jsm`, and vice versa.
+   * a transaction started by `Sqlite.sys.mjs`, and vice versa.
    */
   readonly attribute boolean transactionInProgress;
 
