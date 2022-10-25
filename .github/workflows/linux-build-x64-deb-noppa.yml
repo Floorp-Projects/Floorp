@@ -19,7 +19,7 @@ jobs:
       run: |
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
-        sudo fallocate -l 6G /home/runner/swapfile2
+        sudo fallocate -l 5G /home/runner/swapfile2
         sudo chmod 600 /home/runner/swapfile2
         sudo mkswap /home/runner/swapfile2
         sudo swapon /home/runner/swapfile2
@@ -62,16 +62,17 @@ jobs:
 
     - name: Build
       run: |
+        rm -rf /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/l10n-central/.git
         Xvfb :2 -screen 0 1024x768x24 &
         export DISPLAY=:2
         export WORKDIR=`pwd`
         echo "Current Workdir: $WORKDIR"
         ./mach build
+    - name: Package
+      run: |
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
-    - name: Package
-      run: |
         export WORKDIR=`pwd`
         export DISPVER=`cat browser/config/version_display.txt`
         export DEBWORK=$WORKDIR/floorp-$DISPVER
