@@ -341,7 +341,7 @@ nsresult nsTypeAheadFind::FindItNow(uint32_t aMode, bool aIsLinksOnly,
   if (!aDontIterateFrames) {
     // The use of GetInProcessSameTypeRootTreeItem (and later in this method) is
     // OK here as out-of-process frames are handled externally by
-    // FinderParent.jsm, which will end up only calling this method with
+    // FinderParent.sys.mjs, which will end up only calling this method with
     // aDontIterateFrames set to true.
     startingDocShell->GetInProcessSameTypeRootTreeItem(
         getter_AddRefs(rootContentTreeItem));

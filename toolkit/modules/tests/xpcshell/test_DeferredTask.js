@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * This file tests the DeferredTask.jsm module.
+ * This file tests the DeferredTask.sys.mjs module.
  */
 
 // Globals

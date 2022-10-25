@@ -202,7 +202,7 @@ FinderParent.prototype = {
 
   onResultFound(aResponse) {
     this._foundSearchString = aResponse.searchString;
-    // The rect stops being a Geometry.jsm:Rect over IPC.
+    // The rect stops being a Geometry.sys.mjs:Rect over IPC.
     if (aResponse.rect) {
       aResponse.rect = lazy.Rect.fromRect(aResponse.rect);
     }

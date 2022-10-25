@@ -471,7 +471,7 @@ add_task(async function test_extensionId_trimmed_in_telemetry_event() {
 // can't be successfully migrated to the new storage backend, then:
 // - the new storage backend for that extension is still initialized and enabled
 // - any new data is being stored in the new backend
-// - the old file is being renamed (with the `.corrupted` suffix that JSONFile.jsm
+// - the old file is being renamed (with the `.corrupted` suffix that JSONFile.sys.mjs
 //   adds when it fails to load the data file) and still available on disk.
 add_task(async function test_storage_local_corrupted_data_migration() {
   const EXTENSION_ID = "extension-corrupted-data-migration@mozilla.org";

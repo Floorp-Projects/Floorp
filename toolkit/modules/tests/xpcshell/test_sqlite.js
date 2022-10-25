@@ -38,7 +38,7 @@ function sleep(ms) {
   });
 }
 
-// When testing finalization, use this to tell Sqlite.jsm to not throw
+// When testing finalization, use this to tell Sqlite.sys.mjs to not throw
 // an uncatchable `Promise.reject`
 function failTestsOnAutoClose(enabled) {
   Sqlite.failTestsOnAutoClose(enabled);
