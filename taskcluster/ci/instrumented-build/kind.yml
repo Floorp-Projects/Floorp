@@ -66,6 +66,7 @@ jobs:
                 - linux64-dump_syms
                 - linux64-nasm
                 - linux64-node
+                - linux64-pkgconf
                 - sysroot-i686-linux-gnu
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
@@ -95,6 +96,7 @@ jobs:
                 - linux64-dump_syms
                 - linux64-nasm
                 - linux64-node
+                - linux64-pkgconf
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
 
