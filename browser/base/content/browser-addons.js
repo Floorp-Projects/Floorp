@@ -1453,7 +1453,7 @@ var gUnifiedExtensions = {
       if (!aBrowser[attr]) {
         // A hacky way of setting the popup anchor outside the usual url bar
         // icon box, similar to how it was done for CFR.
-        // See: https://searchfox.org/mozilla-central/rev/847b64cc28b74b44c379f9bff4f415b97da1c6d7/toolkit/modules/PopupNotifications.jsm#42
+        // See: https://searchfox.org/mozilla-central/rev/c5c002f81f08a73e04868e0c2bf0eb113f200b03/toolkit/modules/PopupNotifications.sys.mjs#40
         aBrowser[attr] = aWindow.document.getElementById(
           anchorID
           // Anchor on the toolbar icon to position the popup right below the
