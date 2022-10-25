@@ -118,6 +118,7 @@ async function _attemptBackgroundUpdate() {
           `${SLUG}: background update transitioned to terminal status ${status}: ${stringStatus}`
         );
         appUpdater.removeListener(_appUpdaterListener);
+        appUpdater.stop();
         resolve(true);
       } else if (status == lazy.AppUpdater.STATUS.CHECKING) {
         // The usual initial flow for the Background Update Task is to kick off
@@ -154,6 +155,7 @@ async function _attemptBackgroundUpdate() {
           lazy.UpdateService.onlyDownloadUpdatesThisSession = true;
 
           appUpdater.removeListener(_appUpdaterListener);
+          appUpdater.stop();
           resolve(true);
         } else {
           lazy.log.debug(`${SLUG}: Download has completed!`);
