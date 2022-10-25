@@ -97,6 +97,9 @@ PER_PROJECT_PARAMETERS = {
     "kaios": {
         "target_tasks_method": "kaios_tasks",
     },
+    "toolchains": {
+        "target_tasks_method": "mozilla_central_tasks",
+    },
     # the default parameters are used for projects that do not match above.
     "default": {
         "target_tasks_method": "default",
