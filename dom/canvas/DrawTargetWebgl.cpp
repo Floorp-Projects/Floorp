@@ -1784,6 +1784,12 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
         }
       }
 
+      // We need to be able to transform from local space into texture space.
+      Matrix invMatrix = surfacePattern.mMatrix;
+      if (!invMatrix.Invert()) {
+        break;
+      }
+
       RefPtr<WebGLTextureJS> tex;
       IntRect bounds;
       IntSize backingSize;
@@ -1988,7 +1994,7 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
       // the backing texture subrect.
       Size backingSizeF(backingSize);
       Matrix uvMatrix(aRect.width, 0.0f, 0.0f, aRect.height, aRect.x, aRect.y);
-      uvMatrix *= surfacePattern.mMatrix.Inverse();
+      uvMatrix *= invMatrix;
       uvMatrix *= Matrix(1.0f / backingSizeF.width, 0.0f, 0.0f,
                          1.0f / backingSizeF.height,
                          float(bounds.x - offset.x) / backingSizeF.width,
