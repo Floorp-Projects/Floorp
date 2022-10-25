@@ -13821,7 +13821,13 @@
 
 - name: webgl.out-of-process
   type: RelaxedAtomicBool
+#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX)
   value: true
+#elif defined(ANDROID) && defined(NIGHTLY_BUILD)
+  value: true
+#else
+  value: false
+#endif
   mirror: always
 
 - name: webgl.out-of-process.worker
