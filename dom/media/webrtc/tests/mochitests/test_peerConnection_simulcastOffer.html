@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
@@ -86,13 +86,13 @@
     info('Waiting for second video element to start playing');
     await helper.checkVideoPlaying(videoElems[1]);
 
-    is(videoElems[0].videoWidth, 48,
+    is(videoElems[0].videoWidth, 50,
        "sink is same width as source, modulo our cropping algorithm");
-    is(videoElems[0].videoHeight, 48,
+    is(videoElems[0].videoHeight, 50,
        "sink is same height as source, modulo our cropping algorithm");
-    is(videoElems[1].videoWidth, 24,
+    is(videoElems[1].videoWidth, 25,
        "sink is 1/2 width of source, modulo our cropping algorithm");
-    is(videoElems[1].videoHeight, 24,
+    is(videoElems[1].videoHeight, 25,
        "sink is 1/2 height of source, modulo our cropping algorithm");
 
     await statsReady;
