@@ -2560,10 +2560,6 @@ pref("font.size.monospace.x-math", 13);
   // field.
   pref("intl.tsf.hack.atok.search_input_scope_disabled", false);
   // Whether use previous character rect for the result of
-  // ITfContextView::GetTextExt() if the specified range is the first
-  // character of selected clause of composition string.
-  pref("intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_char", true);
-  // Whether use previous character rect for the result of
   // ITfContextView::GetTextExt() if the specified range is the caret of
   // composition string.
   pref("intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_caret", true);
