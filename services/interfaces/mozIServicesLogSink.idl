@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-// Adapts a `Log.jsm` logger so that it can be used from native (Rust) code.
+// Adapts a `Log.sys.mjs` logger so that it can be used from native (Rust) code.
 // The synced bookmarks mirror and bridged engines implement this interface
 // to hook in to the services `LogManager` infrastructure.
 [scriptable, uuid(c92bfe0d-50b7-4a7f-9686-fe5335a696b9)]

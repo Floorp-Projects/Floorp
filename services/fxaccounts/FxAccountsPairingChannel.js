@@ -22,7 +22,7 @@
 // from Firefox browser code, hence the presence of these privileged browser APIs.
 // If you're trying to use this from ordinary web content you're in for a bad time.
 
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const {setTimeout} = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
 // We cannot use WebSocket from chrome code without a window,
 // see https://bugzilla.mozilla.org/show_bug.cgi?id=784686
 const browser = Services.appShell.createWindowlessBrowser(true);
