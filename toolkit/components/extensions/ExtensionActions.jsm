@@ -185,25 +185,14 @@ class PanelActionBase {
    *
    * @param {XULElement} tab
    *        The tab the popup refers to.
-   * @param {boolean} strict
-   *        If errors should be thrown if a URL is not available.
    * @returns {string}
    *        The popup URL if a popup is present, undefined otherwise.
    */
-  getPopupUrl(tab, strict = false) {
+  getPopupUrl(tab) {
     if (!this.isShownForTab(tab)) {
-      if (strict) {
-        throw new ExtensionError("Popup is disabled");
-      }
-
       return undefined;
     }
     let popupUrl = this.getProperty(tab, "popup");
-
-    if (strict && !popupUrl) {
-      throw new ExtensionError("No popup URL is set");
-    }
-
     return popupUrl;
   }
 

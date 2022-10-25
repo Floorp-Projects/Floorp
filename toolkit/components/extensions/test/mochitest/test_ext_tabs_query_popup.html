@@ -40,7 +40,9 @@ async function test_query(query) {
           browser.runtime.sendMessage({ tab, query });
         }
       });
-      browser.browserAction.openPopup();
+      browser.test.withHandlingUserInput(() =>
+          browser.browserAction.openPopup()
+      );
     },
 
     files: {
