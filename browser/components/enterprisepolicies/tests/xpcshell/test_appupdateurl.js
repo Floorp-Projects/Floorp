@@ -3,6 +3,10 @@
 
 "use strict";
 
+let { Checker } = ChromeUtils.import(
+  "resource://gre/modules/UpdateService.jsm"
+);
+
 add_task(async function test_app_update_URL() {
   await setupPolicyEngineWithJson({
     policies: {
@@ -16,10 +20,8 @@ add_task(async function test_app_update_URL() {
     "Engine is active"
   );
 
-  let checker = Cc["@mozilla.org/updates/update-checker;1"].getService(
-    Ci.nsIUpdateChecker
-  );
-  let expected = await checker.getUpdateURL(checker.BACKGROUND_CHECK);
+  let checker = new Checker();
+  let expected = await checker.getUpdateURL();
 
   equal("https://www.example.com/", expected, "Correct app update URL");
 });

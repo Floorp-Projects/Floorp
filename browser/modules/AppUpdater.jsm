@@ -43,79 +43,6 @@ XPCOMUtils.defineLazyGetter(
 const PREF_APP_UPDATE_CANCELATIONS_OSX = "app.update.cancelations.osx";
 const PREF_APP_UPDATE_ELEVATE_NEVER = "app.update.elevate.never";
 
-class AbortError extends Error {
-  constructor(...params) {
-    super(...params);
-    this.name = this.constructor.name;
-  }
-}
-
-/**
- * `AbortablePromise`s automatically add themselves to this set on construction
- * and remove themselves when they settle.
- */
-var gPendingAbortablePromises = new Set();
-
-/**
- * Creates a Promise that can be resolved immediately with an abort method.
- *
- * Note that the underlying Promise will probably still run to completion since
- * there isn't any general way to abort Promises. So if it is possible to abort
- * the operation instead or in addition to using this class, that is preferable.
- */
-class AbortablePromise {
-  #abortFn;
-  #promise;
-  #hasCompleted = false;
-
-  constructor(promise) {
-    let abortPromise = new Promise((resolve, reject) => {
-      this.#abortFn = () => reject(new AbortError());
-    });
-    this.#promise = Promise.race([promise, abortPromise]);
-    this.#promise = this.#promise.finally(() => {
-      this.#hasCompleted = true;
-      gPendingAbortablePromises.delete(this);
-    });
-    gPendingAbortablePromises.add(this);
-  }
-
-  abort() {
-    if (this.#hasCompleted) {
-      return;
-    }
-    this.#abortFn();
-  }
-
-  /**
-   * This can be `await`ed on to get the result of the `AbortablePromise`. It
-   * will resolve with the value that the Promise provided to the constructor
-   * resolves with.
-   */
-  get promise() {
-    return this.#promise;
-  }
-
-  /**
-   * Will be `true` if the Promise provided to the constructor has resolved or
-   * `abort()` has been called. Otherwise `false`.
-   */
-  get hasCompleted() {
-    return this.#hasCompleted;
-  }
-}
-
-function makeAbortable(promise) {
-  let abortable = new AbortablePromise(promise);
-  return abortable.promise;
-}
-
-function abortAllPromises() {
-  for (const promise of gPendingAbortablePromises) {
-    promise.abort();
-  }
-}
-
 /**
  * This class checks for app updates in the foreground.  It has several public
  * methods for checking for updates, downloading updates, stopping the current
@@ -123,106 +50,33 @@ function abortAllPromises() {
  * listeners that will be called back as different stages of updates occur.
  */
 class AppUpdater {
-  #listeners = new Set();
-  #status = AppUpdater.STATUS.NEVER_CHECKED;
-  // This will basically be set to `true` when `AppUpdater.check` is called and
-  // back to `false` right before it returns.
-  // It is also set to `true` during an update swap and back to `false` when the
-  // swap completes.
-  #updateBusy = false;
-  // When settings require that the user be asked for permission to download
-  // updates and we have an update to download, we will assign a function.
-  // Calling this function allows the download to proceed.
-  #permissionToDownloadGivenFn = null;
-  #_update = null;
-  // Keeps track of if we have an `update-swap` listener connected. We only
-  // connect it when the status is `READY_TO_RESTART`, but we can't use that to
-  // tell if its connected because we might be in the middle of an update swap
-  // in which case the status will have temporarily changed.
-  #swapListenerConnected = false;
-
   constructor() {
     try {
+      this._listeners = new Set();
       this.QueryInterface = ChromeUtils.generateQI([
         "nsIObserver",
+        "nsIProgressEventSink",
+        "nsIRequestObserver",
         "nsISupportsWeakReference",
       ]);
+      Services.obs.addObserver(this, "update-swap", /* ownsWeak */ true);
 
       // This one call observes PREF_APP_UPDATE_LOG and PREF_APP_UPDATE_LOG_FILE
-      Services.prefs.addObserver(PREF_APP_UPDATE_LOG, this, /* ownWeak */ true);
+      Services.prefs.addObserver(PREF_APP_UPDATE_LOG, this);
     } catch (e) {
-      this.#onException(e);
+      this.onException(e);
     }
   }
 
-  #onException(exception) {
+  onException(exception) {
+    LOG(
+      "AppUpdater:onException - Exception caught. Setting status INTERNAL_ERROR"
+    );
+    console.error(exception);
     try {
-      this.#update = null;
-
-      if (this.#swapListenerConnected) {
-        LOG("AppUpdater:#onException - Removing update-swap listener");
-        Services.obs.removeObserver(this, "update-swap");
-        this.#swapListenerConnected = false;
-      }
-
-      if (exception instanceof AbortError) {
-        // This should be where we end up if `AppUpdater.stop()` is called while
-        // `AppUpdater.check` is running or during an update swap.
-        LOG(
-          "AppUpdater:#onException - Caught AbortError. Setting status " +
-            "NEVER_CHECKED"
-        );
-        this.#setStatus(AppUpdater.STATUS.NEVER_CHECKED);
-      } else {
-        LOG(
-          "AppUpdater:#onException - Exception caught. Setting status " +
-            "INTERNAL_ERROR"
-        );
-        console.error(exception);
-        this.#setStatus(AppUpdater.STATUS.INTERNAL_ERROR);
-      }
+      this._setStatus(AppUpdater.STATUS.INTERNAL_ERROR);
     } catch (e) {
-      LOG(
-        "AppUpdater:#onException - Caught additional exception while " +
-          "handling previous exception"
-      );
       console.error(e);
-    }
-  }
-
-  /**
-   * This can be accessed by consumers to inspect the update that is being
-   * prepared for installation. It will always be null if `AppUpdater.check`
-   * hasn't been called yet. `AppUpdater.check` will set it to an instance of
-   * nsIUpdate once there is one available. This may be immediate, if an update
-   * is already downloading or has been downloaded. It may be delayed if an
-   * update check needs to be performed first. It also may remain null if the
-   * browser is up to date or if the update check fails.
-   *
-   * Regarding the difference between `AppUpdater.update`, `AppUpdater.#update`,
-   * and `AppUpdater.#_update`:
-   *  - `AppUpdater.update` and `AppUpdater.#update` are effectively identical
-   *    except that `AppUpdater.update` is readonly since it should not be
-   *    changed from outside this class.
-   *  - `AppUpdater.#_update` should only ever be modified by the setter for
-   *    `AppUpdater.#update` in order to ensure that the "foregroundDownload"
-   *    property is set on assignment.
-   * The quick and easy rule for using these is to always use `#update`
-   * internally and (of course) always use `update` externally.
-   */
-  get update() {
-    return this.#update;
-  }
-
-  get #update() {
-    return this.#_update;
-  }
-
-  set #update(update) {
-    this.#_update = update;
-    if (this.#_update) {
-      this.#_update.QueryInterface(Ci.nsIWritablePropertyBag);
-      this.#_update.setProperty("foregroundDownload", "true");
     }
   }
 
@@ -230,219 +84,151 @@ class AppUpdater {
    * The main entry point for checking for updates.  As different stages of the
    * check and possible subsequent update occur, the updater's status is set and
    * listeners are called.
-   *
-   * Note that this is the correct entry point, regardless of the current state
-   * of the updater. Although the function name suggests that this function will
-   * start an update check, it will only do that if we aren't already in the
-   * update process. Otherwise, it will simply monitor the update process,
-   * update its own status, and call listeners.
-   *
-   * This function is async and will resolve when the update is ready to
-   * install, or a failure state is reached.
-   * However, most callers probably don't actually want to track its progress by
-   * awaiting on this function. More likely, it is desired to kick this function
-   * off without awaiting and add a listener via addListener. This allows the
-   * caller to see when the updater is checking for an update, downloading it,
-   * etc rather than just knowing "now it's running" and "now it's done".
-   *
-   * Note that calling this function while this instance is already performing
-   * or monitoring an update check/download will have no effect. In other words,
-   * it is only really necessary/useful to call this function when the status is
-   * `NEVER_CHECKED` or `NO_UPDATES_FOUND`.
    */
-  async check() {
+  check() {
     try {
-      // We don't want to end up with multiple instances of the same `async`
-      // functions waiting on the same events, so if we are already busy going
-      // through the update state, don't enter this function. This must not
-      // be in the try/catch that sets #updateBusy to false in its finally
-      // block.
-      if (this.#updateBusy) {
-        return;
-      }
-    } catch (e) {
-      this.#onException(e);
-    }
-
-    try {
-      this.#updateBusy = true;
-      this.#update = null;
-
-      if (this.#swapListenerConnected) {
-        LOG("AppUpdater:check - Removing update-swap listener");
-        Services.obs.removeObserver(this, "update-swap");
-        this.#swapListenerConnected = false;
-      }
-
-      if (!AppConstants.MOZ_UPDATER || this.#updateDisabledByPackage) {
+      if (!AppConstants.MOZ_UPDATER || this.updateDisabledByPackage) {
         LOG(
           "AppUpdater:check -" +
             "AppConstants.MOZ_UPDATER=" +
             AppConstants.MOZ_UPDATER +
-            "this.#updateDisabledByPackage: " +
-            this.#updateDisabledByPackage
+            "this.updateDisabledByPackage: " +
+            this.updateDisabledByPackage
         );
-        this.#setStatus(AppUpdater.STATUS.NO_UPDATER);
+        this._setStatus(AppUpdater.STATUS.NO_UPDATER);
         return;
       }
 
-      if (this.aus.disabled) {
-        LOG("AppUpdater:check - AUS disabled");
-        this.#setStatus(AppUpdater.STATUS.UPDATE_DISABLED_BY_POLICY);
+      if (this.updateDisabledByPolicy) {
+        LOG("AppUpdater:check - this.updateDisabledByPolicy");
+        this._setStatus(AppUpdater.STATUS.UPDATE_DISABLED_BY_POLICY);
         return;
       }
 
-      let updateState = this.aus.currentState;
-      let stateName = this.aus.getStateName(updateState);
-      LOG(`AppUpdater:check - currentState=${stateName}`);
-
-      if (updateState == Ci.nsIApplicationUpdateService.STATE_PENDING) {
-        LOG("AppUpdater:check - ready for restart");
-        this.#onReadyToRestart();
+      if (this.isReadyForRestart) {
+        LOG("AppUpdater:check - this.isReadyForRestart");
+        this._setStatus(AppUpdater.STATUS.READY_FOR_RESTART);
         return;
       }
 
       if (this.aus.isOtherInstanceHandlingUpdates) {
         LOG("AppUpdater:check - this.aus.isOtherInstanceHandlingUpdates");
-        this.#setStatus(AppUpdater.STATUS.OTHER_INSTANCE_HANDLING_UPDATES);
+        this._setStatus(AppUpdater.STATUS.OTHER_INSTANCE_HANDLING_UPDATES);
         return;
       }
 
-      if (updateState == Ci.nsIApplicationUpdateService.STATE_DOWNLOADING) {
-        LOG("AppUpdater:check - downloading");
-        this.#update = this.um.downloadingUpdate;
-        await this.#downloadUpdate();
+      if (this.isDownloading) {
+        LOG("AppUpdater:check - this.isDownloading");
+        this.startDownload();
         return;
       }
 
-      if (updateState == Ci.nsIApplicationUpdateService.STATE_STAGING) {
-        LOG("AppUpdater:check - staging");
-        this.#update = this.um.readyUpdate;
-        await this.#awaitStagingComplete();
+      if (this.isStaging) {
+        LOG("AppUpdater:check - this.isStaging");
+        this._waitForUpdateToStage();
         return;
       }
 
-      // Clear prefs that could prevent a user from discovering available updates.
-      if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CANCELATIONS_OSX)) {
-        Services.prefs.clearUserPref(PREF_APP_UPDATE_CANCELATIONS_OSX);
-      }
-      if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_ELEVATE_NEVER)) {
-        Services.prefs.clearUserPref(PREF_APP_UPDATE_ELEVATE_NEVER);
-      }
-      this.#setStatus(AppUpdater.STATUS.CHECKING);
-      LOG("AppUpdater:check - starting update check");
-      let check = this.checker.checkForUpdates(this.checker.FOREGROUND_CHECK);
-      let result;
-      try {
-        result = await makeAbortable(check.result);
-      } catch (e) {
-        // If we are aborting, stop the update check on our way out.
-        if (e instanceof AbortError) {
-          this.checker.stopCheck(check.id);
-        }
-        throw e;
-      }
+      // We might need this value later, so start loading it from the disk now.
+      this.promiseAutoUpdateSetting = lazy.UpdateUtils.getAppUpdateAutoEnabled();
 
-      if (!result.checksAllowed) {
-        // This shouldn't happen. The cases where this can happen should be
-        // handled specifically, above.
-        LOG("AppUpdater:check - !checksAllowed; INTERNAL_ERROR");
-        this.#setStatus(AppUpdater.STATUS.INTERNAL_ERROR);
-        return;
-      }
-
-      if (!result.succeeded) {
-        // Errors in the update check are treated as no updates found. If the
-        // update check fails repeatedly without a success the user will be
-        // notified with the normal app update user interface so this is safe.
-        LOG("AppUpdater:check - Update check failed; NO_UPDATES_FOUND");
-        this.#setStatus(AppUpdater.STATUS.NO_UPDATES_FOUND);
-        return;
-      }
-
-      LOG("AppUpdater:check - Update check succeeded");
-      this.#update = this.aus.selectUpdate(result.updates);
-      if (!this.#update) {
-        LOG("AppUpdater:check - result: NO_UPDATES_FOUND");
-        this.#setStatus(AppUpdater.STATUS.NO_UPDATES_FOUND);
-        return;
-      }
-
-      if (this.#update.unsupported) {
-        LOG("AppUpdater:check - result: UNSUPPORTED SYSTEM");
-        this.#setStatus(AppUpdater.STATUS.UNSUPPORTED_SYSTEM);
-        return;
-      }
-
-      if (!this.aus.canApplyUpdates) {
-        LOG("AppUpdater:check - result: MANUAL_UPDATE");
-        this.#setStatus(AppUpdater.STATUS.MANUAL_UPDATE);
-        return;
-      }
-
-      let updateAuto = await makeAbortable(
-        lazy.UpdateUtils.getAppUpdateAutoEnabled()
-      );
-      if (!updateAuto || this.aus.manualUpdateOnly) {
-        LOG(
-          "AppUpdater:check - Need to wait for user approval to start the " +
-            "download."
-        );
-
-        let downloadPermissionPromise = new Promise(resolve => {
-          this.#permissionToDownloadGivenFn = resolve;
-        });
-        // There are other interfaces through which the user can start the
-        // download, so we want to listen both for permission, and for the
-        // download to independently start.
-        let downloadStartPromise = Promise.race([
-          downloadPermissionPromise,
-          this.aus.stateTransition,
-        ]);
-
-        this.#setStatus(AppUpdater.STATUS.DOWNLOAD_AND_INSTALL);
-
-        await makeAbortable(downloadStartPromise);
-        LOG("AppUpdater:check - Got user approval. Proceeding with download");
-        // If we resolved because of `aus.stateTransition`, we may actually be
-        // downloading a different update now.
-        if (this.um.downloadingUpdate) {
-          this.#update = this.um.downloadingUpdate;
-        }
-      } else {
-        LOG(
-          "AppUpdater:check - updateAuto is active and " +
-            "manualUpdateOnlydateOnly is inactive. Start the download."
-        );
-      }
-      await this.#downloadUpdate();
+      // That leaves the options
+      // "Check for updates, but let me choose whether to install them", and
+      // "Automatically install updates".
+      // In both cases, we check for updates without asking.
+      // In the "let me choose" case, we ask before downloading though, in onCheckComplete.
+      this.checkForUpdates();
     } catch (e) {
-      this.#onException(e);
-    } finally {
-      this.#updateBusy = false;
+      this.onException(e);
     }
   }
 
-  /**
-   * This only has an effect if the status is `DOWNLOAD_AND_INSTALL`.This
-   * indicates that the user has configured Firefox not to download updates
-   * without permission, and we are waiting the user's permission.
-   * This function should be called if and only if the user's permission was
-   * given as it will allow the update download to proceed.
-   */
-  allowUpdateDownload() {
-    if (this.#permissionToDownloadGivenFn) {
-      this.#permissionToDownloadGivenFn();
+  // true when there is an update ready to be applied on restart or staged.
+  get isPending() {
+    if (this.update) {
+      return (
+        this.update.state == "pending" ||
+        this.update.state == "pending-service" ||
+        this.update.state == "pending-elevate"
+      );
     }
+    return (
+      this.um.readyUpdate &&
+      (this.um.readyUpdate.state == "pending" ||
+        this.um.readyUpdate.state == "pending-service" ||
+        this.um.readyUpdate.state == "pending-elevate")
+    );
+  }
+
+  // true when there is an update already staged.
+  get isApplied() {
+    if (this.update) {
+      return (
+        this.update.state == "applied" || this.update.state == "applied-service"
+      );
+    }
+    return (
+      this.um.readyUpdate &&
+      (this.um.readyUpdate.state == "applied" ||
+        this.um.readyUpdate.state == "applied-service")
+    );
+  }
+
+  get isStaging() {
+    if (!this.updateStagingEnabled) {
+      return false;
+    }
+    let errorCode;
+    if (this.update) {
+      errorCode = this.update.errorCode;
+    } else if (this.um.readyUpdate) {
+      errorCode = this.um.readyUpdate.errorCode;
+    }
+    // If the state is pending and the error code is not 0, staging must have
+    // failed.
+    return this.isPending && errorCode == 0;
+  }
+
+  // true when an update ready to restart to finish the update process.
+  get isReadyForRestart() {
+    if (this.updateStagingEnabled) {
+      let errorCode;
+      if (this.update) {
+        errorCode = this.update.errorCode;
+      } else if (this.um.readyUpdate) {
+        errorCode = this.um.readyUpdate.errorCode;
+      }
+      // If the state is pending and the error code is not 0, staging must have
+      // failed and Firefox should be restarted to try to apply the update
+      // without staging.
+      return this.isApplied || (this.isPending && errorCode != 0);
+    }
+    return this.isPending;
+  }
+
+  // true when there is an update download in progress.
+  get isDownloading() {
+    if (this.update) {
+      return this.update.state == "downloading";
+    }
+    return (
+      this.um.downloadingUpdate &&
+      this.um.downloadingUpdate.state == "downloading"
+    );
+  }
+
+  // true when updating has been disabled by enterprise policy
+  get updateDisabledByPolicy() {
+    return Services.policies && !Services.policies.isAllowed("appUpdate");
   }
 
   // true if updating is disabled because we're running in an app package.
-  // This is distinct from aus.disabled because we need to avoid
+  // This is distinct from updateDisabledByPolicy because we need to avoid
   // messages being shown to the user about an "administrator" handling
   // updates; packaged apps may be getting updated by an administrator or they
   // may not be, and we don't have a good way to tell the difference from here,
   // so we err to the side of less confusion for unmanaged users.
-  get #updateDisabledByPackage() {
+  get updateDisabledByPackage() {
     try {
       return Services.sysinfo.getProperty("hasWinPackageId");
     } catch (_ex) {
@@ -452,149 +238,295 @@ class AppUpdater {
   }
 
   // true when updating in background is enabled.
-  get #updateStagingEnabled() {
+  get updateStagingEnabled() {
     LOG(
-      "AppUpdater:#updateStagingEnabled" +
+      "AppUpdater:updateStagingEnabled" +
         "canStageUpdates: " +
         this.aus.canStageUpdates
     );
     return (
-      !this.aus.disabled &&
-      !this.#updateDisabledByPackage &&
+      !this.updateDisabledByPolicy &&
+      !this.updateDisabledByPackage &&
       this.aus.canStageUpdates
     );
   }
 
   /**
-   * Downloads an update mar or connects to an in-progress download.
-   * Doesn't resolve until the update is ready to install, or a failure state
-   * is reached.
+   * Check for updates
    */
-  async #downloadUpdate() {
-    this.#setStatus(AppUpdater.STATUS.DOWNLOADING);
-
-    let success = await this.aus.downloadUpdate(this.#update, false);
-    if (!success) {
-      LOG("AppUpdater:#downloadUpdate - downloadUpdate failed.");
-      this.#setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
-      return;
+  checkForUpdates() {
+    // Clear prefs that could prevent a user from discovering available updates.
+    if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CANCELATIONS_OSX)) {
+      Services.prefs.clearUserPref(PREF_APP_UPDATE_CANCELATIONS_OSX);
     }
-
-    await this.#awaitDownloadComplete();
+    if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_ELEVATE_NEVER)) {
+      Services.prefs.clearUserPref(PREF_APP_UPDATE_ELEVATE_NEVER);
+    }
+    this._setStatus(AppUpdater.STATUS.CHECKING);
+    this.checker.checkForUpdates(this._updateCheckListener, true);
+    // after checking, onCheckComplete() is called
+    LOG("AppUpdater:checkForUpdates - waiting for onCheckComplete()");
   }
 
   /**
-   * Listens for a download to complete.
-   * Doesn't resolve until the update is ready to install, or a failure state
-   * is reached.
+   * Implements nsIUpdateCheckListener. The methods implemented by
+   * nsIUpdateCheckListener are in a different scope from nsIIncrementalDownload
+   * to make it clear which are used by each interface.
    */
-  async #awaitDownloadComplete() {
-    let updateState = this.aus.currentState;
-    if (
-      updateState != Ci.nsIApplicationUpdateService.STATE_DOWNLOADING &&
-      updateState != Ci.nsIApplicationUpdateService.STATE_SWAP
-    ) {
-      throw new Error(
-        "AppUpdater:#awaitDownloadComplete invoked in unexpected state: " +
-          this.aus.getStateName(updateState)
-      );
+  get _updateCheckListener() {
+    if (!this.__updateCheckListener) {
+      this.__updateCheckListener = {
+        /**
+         * See nsIUpdateService.idl
+         */
+        onCheckComplete: async (aRequest, aUpdates) => {
+          LOG("AppUpdater:_updateCheckListener:onCheckComplete - reached.");
+          this.update = this.aus.selectUpdate(aUpdates);
+          if (!this.update) {
+            LOG(
+              "AppUpdater:_updateCheckListener:onCheckComplete - result: " +
+                "NO_UPDATES_FOUND"
+            );
+            this._setStatus(AppUpdater.STATUS.NO_UPDATES_FOUND);
+            return;
+          }
+
+          if (this.update.unsupported) {
+            LOG(
+              "AppUpdater:_updateCheckListener:onCheckComplete - result: " +
+                "UNSUPPORTED SYSTEM"
+            );
+            this._setStatus(AppUpdater.STATUS.UNSUPPORTED_SYSTEM);
+            return;
+          }
+
+          if (!this.aus.canApplyUpdates) {
+            LOG(
+              "AppUpdater:_updateCheckListener:onCheckComplete - result: " +
+                "MANUAL_UPDATE"
+            );
+            this._setStatus(AppUpdater.STATUS.MANUAL_UPDATE);
+            return;
+          }
+
+          if (!this.promiseAutoUpdateSetting) {
+            this.promiseAutoUpdateSetting = lazy.UpdateUtils.getAppUpdateAutoEnabled();
+          }
+          this.promiseAutoUpdateSetting.then(updateAuto => {
+            if (updateAuto && !this.aus.manualUpdateOnly) {
+              LOG(
+                "AppUpdater:_updateCheckListener:onCheckComplete - " +
+                  "updateAuto is active and " +
+                  "manualUpdateOnlydateOnly is inactive." +
+                  "start the download."
+              );
+              // automatically download and install
+              this.startDownload();
+            } else {
+              // ask
+              this._setStatus(AppUpdater.STATUS.DOWNLOAD_AND_INSTALL);
+            }
+          });
+        },
+
+        /**
+         * See nsIUpdateService.idl
+         */
+        onError: async (aRequest, aUpdate) => {
+          // Errors in the update check are treated as no updates found. If the
+          // update check fails repeatedly without a success the user will be
+          // notified with the normal app update user interface so this is safe.
+          LOG("AppUpdater:_updateCheckListener:onError: NO_UPDATES_FOUND");
+          this._setStatus(AppUpdater.STATUS.NO_UPDATES_FOUND);
+        },
+
+        /**
+         * See nsISupports.idl
+         */
+        QueryInterface: ChromeUtils.generateQI(["nsIUpdateCheckListener"]),
+      };
+    }
+    return this.__updateCheckListener;
+  }
+
+  /**
+   * Sets the status to STAGING.  The status will then be set again when the
+   * update finishes staging.
+   */
+  _waitForUpdateToStage() {
+    if (!this.update) {
+      this.update = this.um.readyUpdate;
+    }
+    this.update.QueryInterface(Ci.nsIWritablePropertyBag);
+    this.update.setProperty("foregroundDownload", "true");
+    this._setStatus(AppUpdater.STATUS.STAGING);
+    this._awaitStagingComplete();
+  }
+
+  /**
+   * Starts the download of an update mar.
+   */
+  startDownload() {
+    if (!this.update) {
+      this.update = this.um.downloadingUpdate;
+    }
+    this.update.QueryInterface(Ci.nsIWritablePropertyBag);
+    this.update.setProperty("foregroundDownload", "true");
+
+    let success = this.aus.downloadUpdate(this.update, false);
+    if (!success) {
+      LOG("AppUpdater:startDownload - downloadUpdate failed.");
+      this._setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
+      return;
     }
 
-    // We may already be in the `DOWNLOADING` state, depending on how we entered
-    // this function. But we actually want to alert the listeners again even if
-    // we are because `this.update.selectedPatch` is null early in the
-    // downloading state, but it should be set by now and listeners may want to
-    // update UI based on that.
-    this.#setStatus(AppUpdater.STATUS.DOWNLOADING);
+    this._setupDownloadListener();
+  }
 
-    const updateDownloadProgress = (progress, progressMax) => {
-      this.#setStatus(AppUpdater.STATUS.DOWNLOADING, progress, progressMax);
-    };
+  /**
+   * Starts tracking the download.
+   */
+  _setupDownloadListener() {
+    this._setStatus(AppUpdater.STATUS.DOWNLOADING);
+    this.aus.addDownloadListener(this);
+    LOG("AppUpdater:_setupDownloadListener - registered a download listener");
+  }
 
-    const progressObserver = {
-      onStartRequest(aRequest) {
-        LOG(
-          `AppUpdater:#awaitDownloadComplete.observer.onStartRequest - ` +
-            `aRequest: ${aRequest}`
-        );
-      },
+  /**
+   * See nsIRequestObserver.idl
+   */
+  onStartRequest(aRequest) {
+    LOG("AppUpdater:onStartRequest - aRequest: " + aRequest);
+  }
 
-      onStatus(aRequest, aStatus, aStatusArg) {
-        LOG(
-          `AppUpdater:#awaitDownloadComplete.observer.onStatus ` +
-            `- aRequest: ${aRequest}, aStatus: ${aStatus}, ` +
-            `aStatusArg: ${aStatusArg}`
-        );
-      },
-
-      onProgress(aRequest, aProgress, aProgressMax) {
-        LOG(
-          `AppUpdater:#awaitDownloadComplete.observer.onProgress ` +
-            `- aRequest: ${aRequest}, aProgress: ${aProgress}, ` +
-            `aProgressMax: ${aProgressMax}`
-        );
-        updateDownloadProgress(aProgress, aProgressMax);
-      },
-
-      onStopRequest(aRequest, aStatusCode) {
-        LOG(
-          `AppUpdater:#awaitDownloadComplete.observer.onStopRequest ` +
-            `- aRequest: ${aRequest}, aStatusCode: ${aStatusCode}`
-        );
-      },
-
-      QueryInterface: ChromeUtils.generateQI([
-        "nsIProgressEventSink",
-        "nsIRequestObserver",
-      ]),
-    };
-
-    let listenForProgress =
-      updateState == Ci.nsIApplicationUpdateService.STATE_DOWNLOADING;
-
-    if (listenForProgress) {
-      this.aus.addDownloadListener(progressObserver);
-      LOG("AppUpdater:#awaitDownloadComplete - Registered download listener");
-    }
-
-    LOG("AppUpdater:#awaitDownloadComplete - Waiting for state transition.");
-    try {
-      await makeAbortable(this.aus.stateTransition);
-    } finally {
-      if (listenForProgress) {
-        this.aus.removeDownloadListener(progressObserver);
-        LOG("AppUpdater:#awaitDownloadComplete - Download listener removed");
-      }
-    }
-
-    updateState = this.aus.currentState;
+  /**
+   * See nsIRequestObserver.idl
+   */
+  onStopRequest(aRequest, aStatusCode) {
     LOG(
-      "AppUpdater:#awaitDownloadComplete - State transition seen. New state: " +
-        this.aus.getStateName(updateState)
+      "AppUpdater:onStopRequest " +
+        "- aRequest: " +
+        aRequest +
+        ", aStatusCode: " +
+        aStatusCode
     );
-
-    switch (updateState) {
-      case Ci.nsIApplicationUpdateService.STATE_IDLE:
+    switch (aStatusCode) {
+      case Cr.NS_ERROR_UNEXPECTED:
+        if (
+          this.update.selectedPatch.state == "download-failed" &&
+          (this.update.isCompleteUpdate || this.update.patchCount != 2)
+        ) {
+          // Verification error of complete patch, informational text is held in
+          // the update object.
+          this.aus.removeDownloadListener(this);
+          LOG(
+            "AppUpdater:onStopRequest " +
+              "- download failed with unexpected error" +
+              ", removed download listener"
+          );
+          this._setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
+          break;
+        }
+        // Verification failed for a partial patch, complete patch is now
+        // downloading so return early and do NOT remove the download listener!
+        break;
+      case Cr.NS_BINDING_ABORTED:
+        // Do not remove UI listener since the user may resume downloading again.
+        break;
+      case Cr.NS_OK:
+        this.aus.removeDownloadListener(this);
         LOG(
-          "AppUpdater:#awaitDownloadComplete - Setting status DOWNLOAD_FAILED."
+          "AppUpdater:onStopRequest " +
+            "- download ok" +
+            ", removed download listener"
         );
-        this.#setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
-        break;
-      case Ci.nsIApplicationUpdateService.STATE_STAGING:
-        LOG("AppUpdater:#awaitDownloadComplete - awaiting staging completion.");
-        await this.#awaitStagingComplete();
-        break;
-      case Ci.nsIApplicationUpdateService.STATE_PENDING:
-        LOG("AppUpdater:#awaitDownloadComplete - ready to restart.");
-        this.#onReadyToRestart();
+        if (this.updateStagingEnabled) {
+          // It could be that another instance was started during the download,
+          // and if that happened, then we actually should not advance to the
+          // STAGING status because the staging process isn't really happening
+          // until that instance exits (or we time out waiting).
+          if (this.aus.isOtherInstanceHandlingUpdates) {
+            LOG(
+              "AppUpdater:onStopRequest " +
+                "- aStatusCode=Cr.NS_OK" +
+                ", another instance is handling updates"
+            );
+            this._setStatus(AppUpdater.OTHER_INSTANCE_HANDLING_UPDATES);
+          } else {
+            LOG(
+              "AppUpdater:onStopRequest " +
+                "- aStatusCode=Cr.NS_OK" +
+                ", no competitive instance found."
+            );
+            this._setStatus(AppUpdater.STATUS.STAGING);
+          }
+          // But we should register the staging observer in either case, because
+          // if we do time out waiting for the other instance to exit, then
+          // staging really will start at that point.
+          this._awaitStagingComplete();
+        } else {
+          this._awaitDownloadComplete();
+        }
         break;
       default:
+        this.aus.removeDownloadListener(this);
         LOG(
-          "AppUpdater:#awaitDownloadComplete - Setting status INTERNAL_ERROR."
+          "AppUpdater:onStopRequest " +
+            "- case default" +
+            ", removing download listener" +
+            ", because the download failed."
         );
-        this.#setStatus(AppUpdater.STATUS.INTERNAL_ERROR);
+        this._setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
         break;
     }
+  }
+
+  /**
+   * See nsIProgressEventSink.idl
+   */
+  onStatus(aRequest, aStatus, aStatusArg) {
+    LOG(
+      "AppUpdater:onStatus " +
+        "- aRequest: " +
+        aRequest +
+        ", aStatus: " +
+        aStatus +
+        ", aStatusArg: " +
+        aStatusArg
+    );
+  }
+
+  /**
+   * See nsIProgressEventSink.idl
+   */
+  onProgress(aRequest, aProgress, aProgressMax) {
+    LOG(
+      "AppUpdater:onProgress " +
+        "- aRequest: " +
+        aRequest +
+        ", aProgress: " +
+        aProgress +
+        ", aProgressMax: " +
+        aProgressMax
+    );
+    this._setStatus(AppUpdater.STATUS.DOWNLOADING, aProgress, aProgressMax);
+  }
+
+  /**
+   * This function registers an observer that watches for the download
+   * to complete. Once it does, it updates the status accordingly.
+   */
+  _awaitDownloadComplete() {
+    let observer = (aSubject, aTopic, aData) => {
+      // Update the UI when the download is finished
+      LOG(
+        "AppUpdater:_awaitStagingComplete - observer reached" +
+          ", status changes to READY_FOR_RESTART"
+      );
+      this._setStatus(AppUpdater.STATUS.READY_FOR_RESTART);
+      Services.obs.removeObserver(observer, "update-downloaded");
+    };
+    Services.obs.addObserver(observer, "update-downloaded");
   }
 
   /**
@@ -603,107 +535,94 @@ class AppUpdater {
    * user restarts to install the update on success, request that the user
    * manually download and install the newer version, or automatically download
    * a complete update if applicable.
-   * Doesn't resolve until the update is ready to install, or a failure state
-   * is reached.
    */
-  async #awaitStagingComplete() {
-    let updateState = this.aus.currentState;
-    if (updateState != Ci.nsIApplicationUpdateService.STATE_STAGING) {
-      throw new Error(
-        "AppUpdater:#awaitStagingComplete invoked in unexpected state: " +
-          this.aus.getStateName(updateState)
-      );
-    }
-
-    LOG("AppUpdater:#awaitStagingComplete - Setting status STAGING.");
-    this.#setStatus(AppUpdater.STATUS.STAGING);
-
-    LOG("AppUpdater:#awaitStagingComplete - Waiting for state transition.");
-    await makeAbortable(this.aus.stateTransition);
-
-    updateState = this.aus.currentState;
-    LOG(
-      "AppUpdater:#awaitStagingComplete - State transition seen. New state: " +
-        this.aus.getStateName(updateState)
-    );
-
-    switch (updateState) {
-      case Ci.nsIApplicationUpdateService.STATE_PENDING:
-        LOG("AppUpdater:#awaitStagingComplete - ready for restart");
-        this.#onReadyToRestart();
-        break;
-      case Ci.nsIApplicationUpdateService.STATE_IDLE:
-        LOG("AppUpdater:#awaitStagingComplete - DOWNLOAD_FAILED");
-        this.#setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
-        break;
-      case Ci.nsIApplicationUpdateService.STATE_DOWNLOADING:
-        // We've fallen back to downloading the complete update because the
-        // partial update failed to be staged. Return to the downloading stage.
-        LOG(
-          "AppUpdater:#awaitStagingComplete - Partial update must have " +
-            "failed to stage. Downloading complete update."
-        );
-        await this.#awaitDownloadComplete();
-        break;
-      default:
-        LOG(
-          "AppUpdater:#awaitStagingComplete - Setting status INTERNAL_ERROR."
-        );
-        this.#setStatus(AppUpdater.STATUS.INTERNAL_ERROR);
-        break;
-    }
-  }
-
-  #onReadyToRestart() {
-    let updateState = this.aus.currentState;
-    if (updateState != Ci.nsIApplicationUpdateService.STATE_PENDING) {
-      throw new Error(
-        "AppUpdater:#onReadyToRestart invoked in unexpected state: " +
-          this.aus.getStateName(updateState)
-      );
-    }
-
-    LOG("AppUpdater:#onReadyToRestart - Setting status READY_FOR_RESTART.");
-    if (this.#swapListenerConnected) {
+  _awaitStagingComplete() {
+    let observer = (aSubject, aTopic, aData) => {
       LOG(
-        "AppUpdater:#onReadyToRestart - update-swap listener already attached"
+        "AppUpdater:_awaitStagingComplete:observer" +
+          "- aSubject: " +
+          aSubject +
+          "- aTopic: " +
+          aTopic +
+          "- aData (=status): " +
+          aData
       );
-    } else {
-      this.#swapListenerConnected = true;
-      LOG("AppUpdater:#onReadyToRestart - Attaching update-swap listener");
-      Services.obs.addObserver(this, "update-swap", /* ownsWeak */ true);
-    }
-    this.#setStatus(AppUpdater.STATUS.READY_FOR_RESTART);
+      // Update the UI when the background updater is finished
+      switch (aTopic) {
+        case "update-staged":
+          let status = aData;
+          if (
+            status == "applied" ||
+            status == "applied-service" ||
+            status == "pending" ||
+            status == "pending-service" ||
+            status == "pending-elevate"
+          ) {
+            // If the update is successfully applied, or if the updater has
+            // fallen back to non-staged updates, show the "Restart to Update"
+            // button.
+            this._setStatus(AppUpdater.STATUS.READY_FOR_RESTART);
+          } else if (status == "failed") {
+            // Background update has failed, let's show the UI responsible for
+            // prompting the user to update manually.
+            this._setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
+          } else if (status == "downloading") {
+            // We've fallen back to downloading the complete update because the
+            // partial update failed to get staged in the background.
+            // Therefore we need to keep our observer.
+            this._setupDownloadListener();
+            return;
+          }
+          break;
+        case "update-error":
+          this._setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
+          break;
+      }
+      Services.obs.removeObserver(observer, "update-staged");
+      Services.obs.removeObserver(observer, "update-error");
+    };
+    Services.obs.addObserver(observer, "update-staged");
+    Services.obs.addObserver(observer, "update-error");
   }
 
   /**
    * Stops the current check for updates and any ongoing download.
-   *
-   * If this is called before `AppUpdater.check()` is called or after it
-   * resolves, this should have no effect. If this is called while `check()` is
-   * still running, `AppUpdater` will return to the NEVER_CHECKED state. We
-   * don't really want to leave it in any of the intermediary states after we
-   * have disconnected all the listeners that would allow those states to ever
-   * change.
    */
   stop() {
-    LOG("AppUpdater:stop called");
-    if (this.#swapListenerConnected) {
-      LOG("AppUpdater:stop - Removing update-swap listener");
-      Services.obs.removeObserver(this, "update-swap");
-      this.#swapListenerConnected = false;
-    }
-    abortAllPromises();
+    LOG("AppUpdater:stop called, remove download listener");
+    this.checker.stopCurrentCheck();
+    this.aus.removeDownloadListener(this);
   }
 
   /**
    * {AppUpdater.STATUS} The status of the current check or update.
-   *
-   * Note that until AppUpdater.check has been called, this will always be set
-   * to NEVER_CHECKED.
    */
   get status() {
-    return this.#status;
+    if (!this._status) {
+      if (!AppConstants.MOZ_UPDATER || this.updateDisabledByPackage) {
+        LOG("AppUpdater:status - no updater or updates disabled by package.");
+        this._status = AppUpdater.STATUS.NO_UPDATER;
+      } else if (this.updateDisabledByPolicy) {
+        LOG("AppUpdater:status - updateDisabledByPolicy");
+        this._status = AppUpdater.STATUS.UPDATE_DISABLED_BY_POLICY;
+      } else if (this.isReadyForRestart) {
+        LOG("AppUpdater:status - isReadyForRestart");
+        this._status = AppUpdater.STATUS.READY_FOR_RESTART;
+      } else if (this.aus.isOtherInstanceHandlingUpdates) {
+        LOG("AppUpdater:status - another instance is handling updates");
+        this._status = AppUpdater.STATUS.OTHER_INSTANCE_HANDLING_UPDATES;
+      } else if (this.isDownloading) {
+        LOG("AppUpdater:status - isDownloading");
+        this._status = AppUpdater.STATUS.DOWNLOADING;
+      } else if (this.isStaging) {
+        LOG("AppUpdater:status - isStaging");
+        this._status = AppUpdater.STATUS.STAGING;
+      } else {
+        LOG("AppUpdater:status - NEVER_CHECKED");
+        this._status = AppUpdater.STATUS.NEVER_CHECKED;
+      }
+    }
+    return this._status;
   }
 
   /**
@@ -717,7 +636,7 @@ class AppUpdater {
    *   The listener function to add.
    */
   addListener(listener) {
-    this.#listeners.add(listener);
+    this._listeners.add(listener);
   }
 
   /**
@@ -728,7 +647,7 @@ class AppUpdater {
    *   The listener function to remove.
    */
   removeListener(listener) {
-    this.#listeners.delete(listener);
+    this._listeners.delete(listener);
   }
 
   /**
@@ -739,9 +658,9 @@ class AppUpdater {
    * @param {*} listenerArgs
    *   Arguments to pass to listeners.
    */
-  #setStatus(status, ...listenerArgs) {
-    this.#status = status;
-    for (let listener of this.#listeners) {
+  _setStatus(status, ...listenerArgs) {
+    this._status = status;
+    for (let listener of this._listeners) {
       listener(status, ...listenerArgs);
     }
     return status;
@@ -759,9 +678,7 @@ class AppUpdater {
     );
     switch (topic) {
       case "update-swap":
-        // This is asynchronous, but we don't really want to wait for it in this
-        // observer.
-        this.#handleUpdateSwap();
+        this._handleUpdateSwap();
         break;
       case "nsPref:changed":
         if (
@@ -774,39 +691,40 @@ class AppUpdater {
             Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false);
         }
         break;
+      case "quit-application":
+        Services.prefs.removeObserver(PREF_APP_UPDATE_LOG, this);
+        Services.obs.removeObserver(this, topic);
     }
   }
 
-  async #handleUpdateSwap() {
-    try {
-      // This must not be in the try/catch that sets #updateBusy to `false` in
-      // its finally block.
-      // There really shouldn't be any way to enter this function when
-      // `#updateBusy` is `true`. But let's just be safe because we don't want
-      // to ever end up with two things running at once.
-      if (this.#updateBusy) {
-        return;
-      }
-    } catch (e) {
-      this.#onException(e);
+  _handleUpdateSwap() {
+    // This function exists to deal with the fact that we support handling 2
+    // updates at once: a ready update and a downloading update. But AppUpdater
+    // only ever really considers a single update at a time.
+    // We see an update swap just when the downloading update has finished
+    // downloading and is being swapped into UpdateManager.readyUpdate. At this
+    // point, we are in one of two states. Either:
+    //  a) The update that is being swapped in is the update that this
+    //     AppUpdater has already been tracking, or
+    //  b) We've been tracking the ready update. Now that the downloading
+    //     update is about to be swapped into the place of the ready update, we
+    //     need to switch over to tracking the new update.
+    if (
+      this._status == AppUpdater.STATUS.DOWNLOADING ||
+      this._status == AppUpdater.STATUS.STAGING
+    ) {
+      // We are already tracking the correct update.
+      return;
     }
 
-    try {
-      this.#updateBusy = true;
-
-      // During an update swap, the new update will initially be stored in
-      // `downloadingUpdate`. Part way through, it will be moved into
-      // `readyUpdate` and `downloadingUpdate` will be set to `null`.
-      this.#update = this.um.downloadingUpdate;
-      if (!this.#update) {
-        this.#update = this.um.readyUpdate;
-      }
-
-      await this.#awaitDownloadComplete();
-    } catch (e) {
-      this.#onException(e);
-    } finally {
-      this.#updateBusy = false;
+    if (this.updateStagingEnabled) {
+      LOG("AppUpdater:_handleUpdateSwap - updateStagingEnabled");
+      this._setStatus(AppUpdater.STATUS.STAGING);
+      this._awaitStagingComplete();
+    } else {
+      LOG("AppUpdater:_handleUpdateSwap - updateStagingDisabled");
+      this._setStatus(AppUpdater.STATUS.DOWNLOADING);
+      this._awaitDownloadComplete();
     }
   }
 }
