@@ -2562,8 +2562,6 @@ pref("font.size.monospace.x-math", 13);
   // Whether use composition start position for the result of
   // ITfContextView::GetTextExt() if the specified range is larger than
   // composition start offset.
-  // For Microsoft Pinyin and Microsoft Wubi
-  pref("intl.tsf.hack.ms_simplified_chinese.do_not_return_no_layout_error", true);
   // For Microsoft ChangJie and Microsoft Quick
   pref("intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error", true);
   // Whether use previous character rect for the result of
