@@ -1280,7 +1280,6 @@ panelview .toolbarbutton-1 {
 #widget-overflow-mainView > .panel-subview-body > toolbarseparator,
 .PanelUI-subView toolbarseparator,
 #permission-popup-mainView > toolbarseparator,
-#protections-popup-multiView toolbarseparator,
 #identity-popup-mainView toolbarseparator,
 #identity-popup-securityView > toolbarseparator,
 #editBookmarkPanel toolbarseparator,
@@ -1717,8 +1716,6 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
   height: 260px;
   overflow: hidden;
   transition: margin-bottom .25s;
-  border-top: 1px solid var(--panel-separator-color);
-  box-sizing: border-box;
 }
 
 #protections-popup #messaging-system-message-container[disabled] {
@@ -1747,11 +1744,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
 }
 
 #protections-popup-message:-moz-locale-dir(rtl) {
-  background-position: top left;
-}
-
-#protections-popup-message > .whatsNew-message-body > .text-link {
-  text-decoration: underline;
+  background-position-x: left;
 }
 
 #protections-popup-message .protections-popup-content {
@@ -1891,11 +1884,6 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 #protections-popup-message .text-link {
   color: inherit;
   font-weight: 600;
-}
-
-#protections-popup-message .text-link:hover {
-  text-decoration: underline;
-  cursor: pointer;
 }
 
 #PanelUI-whatsNew .text-link:hover {
