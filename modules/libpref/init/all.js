@@ -2559,11 +2559,6 @@ pref("font.size.monospace.x-math", 13);
   // screens, you cannot access some specific features for a "search" input
   // field.
   pref("intl.tsf.hack.atok.search_input_scope_disabled", false);
-  // Whether use available composition string rect for result of
-  // ITextStoreACP::GetTextExt() even if the specified range is same as or is
-  // in the range of composition string but some character rects of them are
-  // not available.
-  pref("intl.tsf.hack.japanist10.do_not_return_no_layout_error_of_composition_string", true);
   // Whether use composition start position for the result of
   // ITfContextView::GetTextExt() if the specified range is larger than
   // composition start offset.
