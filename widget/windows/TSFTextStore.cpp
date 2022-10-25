@@ -1760,9 +1760,6 @@ class TSFPrefs final {
       "intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error",
       DoNotReturnNoLayoutErrorToMSTraditionalTIP, true)
   DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error",
-      DoNotReturnNoLayoutErrorToFreeChangJie, true)
-  DECL_AND_IMPL_BOOL_PREF(
       "intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_"
       "char",
       DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar, true)
@@ -4821,7 +4818,8 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       if (sAlllowToStopHackingIfFine) {
         return false;
       }
-      if (!TSFPrefs::DoNotReturnNoLayoutErrorToFreeChangJie()) {
+      if (!StaticPrefs::
+              intl_tsf_hack_free_chang_jie_do_not_return_no_layout_error()) {
         return false;
       }
       aACPEnd = mContentForTSF->LatestCompositionRange()->StartOffset();

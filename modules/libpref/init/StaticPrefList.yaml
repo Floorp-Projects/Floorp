@@ -6886,6 +6886,14 @@
     value: true
     mirror: always
 
+  # Whether Gecko returns caret rect before composition string or TS_E_NOLAYOUT
+  # from ITextStoreACP::GetTextExt() when the specified range is larger than
+  # composition start offset if and only if Free ChangJie is active TIP.
+-   name: intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error
+    type: bool
+    value: true
+    mirror: always
+
   # Whether Gecko returns available composition string rect or TS_E_NOLAYOUT
   # from ITextStoreACP::GetTextExt() when the specified range is same as the
   # range of composition string but some character rects in it are still dirty

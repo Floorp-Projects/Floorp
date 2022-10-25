@@ -2562,8 +2562,6 @@ pref("font.size.monospace.x-math", 13);
   // Whether use composition start position for the result of
   // ITfContextView::GetTextExt() if the specified range is larger than
   // composition start offset.
-  // For Free ChangJie 2010
-  pref("intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error", true);
   // For Microsoft Pinyin and Microsoft Wubi
   pref("intl.tsf.hack.ms_simplified_chinese.do_not_return_no_layout_error", true);
   // For Microsoft ChangJie and Microsoft Quick
