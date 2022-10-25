@@ -104,19 +104,6 @@ class GetNdkVersionError(Exception):
     pass
 
 
-def install_bundletool(url, path: Path):
-    """
-    Fetch bundletool to the desired directory.
-    """
-    try:
-        subprocess.check_call(
-            ["wget", "--continue", url, "--output-document", "bundletool.jar"],
-            cwd=str(path),
-        )
-    finally:
-        pass
-
-
 def install_mobile_android_sdk_or_ndk(url, path: Path):
     """
     Fetch an Android SDK or NDK from |url| and unpack it into the given |path|.
@@ -141,30 +128,7 @@ def install_mobile_android_sdk_or_ndk(url, path: Path):
 
     file_name = url.split("/")[-1]
     download_file_path = download_path / file_name
-
-    with requests.Session() as session:
-        request = session.head(url)
-        remote_file_size = int(request.headers["content-length"])
-
-        if download_file_path.is_file():
-            local_file_size = download_file_path.stat().st_size
-
-            if local_file_size == remote_file_size:
-                print(f"{download_file_path} already downloaded. Skipping download...")
-            else:
-                print(
-                    f"Partial download detected. Resuming download of {download_file_path}..."
-                )
-                download(
-                    download_file_path,
-                    session,
-                    url,
-                    remote_file_size,
-                    local_file_size,
-                )
-        else:
-            print(f"Downloading {download_file_path}...")
-            download(download_file_path, session, url, remote_file_size)
+    download(url, download_file_path)
 
     if file_name.endswith(".tar.gz") or file_name.endswith(".tgz"):
         cmd = ["tar", "zxf", str(download_file_path)]
@@ -194,6 +158,35 @@ def install_mobile_android_sdk_or_ndk(url, path: Path):
 
 
 def download(
+    url,
+    download_file_path: Path,
+):
+    with requests.Session() as session:
+        request = session.head(url)
+        remote_file_size = int(request.headers["content-length"])
+
+        if download_file_path.is_file():
+            local_file_size = download_file_path.stat().st_size
+
+            if local_file_size == remote_file_size:
+                print(f"{download_file_path} already downloaded. Skipping download...")
+            else:
+                print(
+                    f"Partial download detected. Resuming download of {download_file_path}..."
+                )
+                download_internal(
+                    download_file_path,
+                    session,
+                    url,
+                    remote_file_size,
+                    local_file_size,
+                )
+        else:
+            print(f"Downloading {download_file_path}...")
+            download_internal(download_file_path, session, url, remote_file_size)
+
+
+def download_internal(
     download_file_path: Path,
     session,
     url,
@@ -463,7 +456,7 @@ def ensure_android_sdk_and_ndk(
         (cmdline_tools_path / "cmdline-tools").rename(
             cmdline_tools_path / CMDLINE_TOOLS_VERSION_STRING
         )
-        install_bundletool(bundletool_url, mozbuild_path)
+        download(bundletool_url, mozbuild_path / "bundletool.jar")
 
 
 def get_packages_to_install(packages_file_content, avd_manifest):
