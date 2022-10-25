@@ -4,16 +4,6 @@
 
 @import url("chrome://browser/skin/addons/unified-extensions-item.css");
 
-#unified-extensions-view,
-#unified-extensions-view > .panel-subview-body {
-  display: flex;
-  flex-direction: column;
-}
-
-#unified-extensions-view > .panel-subview-body {
-  max-height: 70vh;
-}
-
 .unified-extensions-panel-header {
   align-items: center;
   display: flex;
