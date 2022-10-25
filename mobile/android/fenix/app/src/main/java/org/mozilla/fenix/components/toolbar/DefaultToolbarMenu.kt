@@ -7,7 +7,7 @@ package org.mozilla.fenix.components.toolbar
 import android.content.Context
 import androidx.annotation.ColorRes
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.core.content.ContextCompat.getColor
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope

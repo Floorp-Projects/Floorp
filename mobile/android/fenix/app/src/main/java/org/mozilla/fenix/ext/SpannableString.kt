@@ -11,7 +11,7 @@ import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
 import androidx.annotation.AttrRes
 import androidx.annotation.Dimension
-import androidx.annotation.Dimension.DP
+import androidx.annotation.Dimension.Companion.DP
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.util.dpToPx
 

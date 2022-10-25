@@ -25,7 +25,7 @@ import android.view.WindowManager.LayoutParams.FLAG_SECURE
 import androidx.annotation.CallSuper
 import androidx.annotation.IdRes
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PROTECTED
+import androidx.annotation.VisibleForTesting.Companion.PROTECTED
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope

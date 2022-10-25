@@ -7,7 +7,7 @@ package org.mozilla.fenix.home
 import android.content.Context
 import android.view.View
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope

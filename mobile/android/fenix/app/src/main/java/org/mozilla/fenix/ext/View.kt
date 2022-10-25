@@ -12,7 +12,7 @@ import android.view.TouchDelegate
 import android.view.View
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.Dimension
-import androidx.annotation.Dimension.DP
+import androidx.annotation.Dimension.Companion.DP
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.WindowInsetsCompat
 import mozilla.components.support.ktx.android.util.dpToPx

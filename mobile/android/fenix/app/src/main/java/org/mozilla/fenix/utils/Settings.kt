@@ -13,7 +13,7 @@ import android.content.pm.ShortcutManager
 import android.os.Build
 import android.view.accessibility.AccessibilityManager
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.concept.engine.Engine.HttpsOnlyMode
 import mozilla.components.feature.sitepermissions.SitePermissionsRules

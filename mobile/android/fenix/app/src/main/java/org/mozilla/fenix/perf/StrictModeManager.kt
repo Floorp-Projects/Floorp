@@ -14,7 +14,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.StrictMode
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import mozilla.components.support.ktx.android.os.resetAfter

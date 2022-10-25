@@ -5,7 +5,7 @@
 package org.mozilla.fenix.detektrules.perf
 
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import io.gitlab.arturbosch.detekt.api.CodeSmell
 import io.gitlab.arturbosch.detekt.api.Config
 import io.gitlab.arturbosch.detekt.api.Debt

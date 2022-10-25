@@ -10,7 +10,7 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.annotation.WorkerThread
 import androidx.core.content.getSystemService
 import kotlinx.coroutines.DelicateCoroutinesApi

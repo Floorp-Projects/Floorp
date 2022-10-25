@@ -5,8 +5,8 @@
 package org.mozilla.fenix.perf
 
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.NONE
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.NONE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner

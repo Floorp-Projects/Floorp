@@ -29,7 +29,7 @@ object Versions {
     const val androidx_constraint_layout = "2.0.4"
     const val androidx_preference = "1.1.1"
     const val androidx_legacy = "1.0.0"
-    const val androidx_annotation = "1.1.0"
+    const val androidx_annotation = "1.5.0"
     const val androidx_lifecycle = "2.5.1"
     const val androidx_fragment = "1.5.1"
     const val androidx_navigation = "2.5.1"

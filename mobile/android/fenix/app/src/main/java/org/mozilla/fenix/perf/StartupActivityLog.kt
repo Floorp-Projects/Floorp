@@ -8,8 +8,8 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.NONE
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.NONE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner

@@ -560,6 +560,7 @@ dependencies {
     implementation Deps.mozilla_lib_dataprotect
     debugImplementation Deps.leakcanary
 
+    implementation Deps.androidx_annotation
     implementation Deps.androidx_compose_ui
     implementation Deps.androidx_compose_ui_tooling
     implementation Deps.androidx_compose_foundation

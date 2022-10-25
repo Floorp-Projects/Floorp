@@ -7,7 +7,7 @@ package org.mozilla.fenix.perf
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact

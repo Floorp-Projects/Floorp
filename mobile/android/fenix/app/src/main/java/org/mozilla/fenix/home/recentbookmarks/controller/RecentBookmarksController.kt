@@ -5,7 +5,7 @@
 package org.mozilla.fenix.home.recentbookmarks.controller
 
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.navigation.NavController
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.engine.EngineSession

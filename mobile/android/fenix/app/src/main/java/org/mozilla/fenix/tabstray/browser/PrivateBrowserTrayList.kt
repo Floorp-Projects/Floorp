@@ -7,7 +7,7 @@ package org.mozilla.fenix.tabstray.browser
 import android.content.Context
 import android.util.AttributeSet
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.PACKAGE_PRIVATE
+import androidx.annotation.VisibleForTesting.Companion.PACKAGE_PRIVATE
 import org.mozilla.fenix.ext.components
 
 class PrivateBrowserTrayList @JvmOverloads constructor(
