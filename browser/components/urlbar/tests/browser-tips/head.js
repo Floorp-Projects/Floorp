@@ -200,18 +200,6 @@ async function processUpdateStep(step) {
   }
 
   const { panelId, checkActiveUpdate, continueFile, downloadInfo } = step;
-
-  if (
-    panelId == "downloading" &&
-    gAUS.currentState == Ci.nsIApplicationUpdateService.STATE_IDLE
-  ) {
-    // Now that `AUS.downloadUpdate` is async, we start showing the
-    // downloading panel while `AUS.downloadUpdate` is still resolving.
-    // But the below checks assume that this resolution has already
-    // happened. So we need to wait for things to actually resolve.
-    await gAUS.stateTransition;
-  }
-
   if (checkActiveUpdate) {
     let whichUpdate =
       checkActiveUpdate.state == STATE_DOWNLOADING

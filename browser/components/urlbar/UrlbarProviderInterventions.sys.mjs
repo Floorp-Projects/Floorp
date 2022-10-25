@@ -774,7 +774,7 @@ function installBrowserUpdateAndRestart() {
   }
   return new Promise(resolve => {
     let listener = () => {
-      // Once we call allowUpdateDownload, there are two possible end
+      // Once we call startDownload, there are two possible end
       // states: DOWNLOAD_FAILED and READY_FOR_RESTART.
       if (
         lazy.appUpdater.status != lazy.AppUpdater.STATUS.READY_FOR_RESTART &&
@@ -789,7 +789,7 @@ function installBrowserUpdateAndRestart() {
       resolve();
     };
     lazy.appUpdater.addListener(listener);
-    lazy.appUpdater.allowUpdateDownload();
+    lazy.appUpdater.startDownload();
   });
 }
 
