@@ -46,7 +46,6 @@ linux64/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -84,7 +83,6 @@ linux64-x11/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu-x11
             - sysroot-wasm32-wasi
 
@@ -123,7 +121,6 @@ linux64-plain/opt:
             - linux64-node
             - linux64-cbindgen
             - linux64-dump_syms
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     optimization:
@@ -167,7 +164,6 @@ linux64-hybrid/plain:
             - linux64-cbindgen
             - linux64-sccache
             - linux64-dump_syms
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -208,7 +204,6 @@ linux64-gcc/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -249,7 +244,6 @@ linux64-plain-clang-trunk/opt:
             - linux64-cbindgen
             - linux64-dump_syms
             - linux64-toolchain-sysroot
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     optimization:
@@ -295,7 +289,6 @@ linux64-fuzzing/debug:
             - linux64-rust-size
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     optimization:
@@ -341,7 +334,6 @@ linux64-fuzzing-noopt/debug:
             - linux64-rust-size
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     optimization:
@@ -388,7 +380,6 @@ linux64/debug:
             - linux64-rust-size
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -427,7 +418,6 @@ linux64-plain/debug:
             - linux64-node
             - linux64-cbindgen
             - linux64-dump_syms
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     optimization:
@@ -481,7 +471,6 @@ linux64-devedition/opt:
             - linux64-dump_syms
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -522,7 +511,6 @@ linux/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
@@ -565,7 +553,6 @@ linux/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
@@ -607,7 +594,6 @@ linux-rusttests/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
@@ -651,7 +637,6 @@ linux-rusttests/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
@@ -702,7 +687,6 @@ linux-devedition/opt:
             - linux64-dump_syms
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
@@ -748,7 +732,6 @@ linux-shippable/opt:
             - linux64-dump_syms
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
@@ -792,7 +775,6 @@ linux-reproduced/opt:
             - linux64-dump_syms
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-i686-linux-gnu
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
@@ -836,7 +818,6 @@ linux64-reproduced/opt:
             - linux64-dump_syms
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -877,7 +858,6 @@ linux64-asan/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -918,7 +898,6 @@ linux64-tsan/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -962,7 +941,6 @@ linux64-tsan-fuzzing/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     optimization:
@@ -1008,7 +986,6 @@ linux64-asan-fuzzing/noopt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     optimization:
@@ -1057,7 +1034,6 @@ linux64-asan-fuzzing-nyx/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     optimization:
@@ -1103,7 +1079,6 @@ linux64-asan-fuzzing/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     optimization:
@@ -1149,7 +1124,6 @@ linux64-asan-fuzzing-ccov/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -1190,7 +1164,6 @@ linux64-fuzzing-ccov/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     optimization:
@@ -1245,7 +1218,6 @@ linux64-asan-reporter-shippable/opt:
             - linux64-llvm-symbolizer
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -1285,7 +1257,6 @@ linux64-asan/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     optimization:
@@ -1336,7 +1307,6 @@ linux64-shippable/opt:
             - linux64-dump_syms
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -1378,7 +1348,6 @@ linux64-noopt/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -1419,7 +1388,6 @@ linux64-rusttests/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     optimization:
@@ -1462,7 +1430,6 @@ linux64-rusttests/debug:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     optimization:
@@ -1510,7 +1477,6 @@ linux64-ccov/opt:
             - linux64-nasm
             - linux64-node
             - linux64-grcov
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -1551,7 +1517,6 @@ linux64-ccov/debug:
             - linux64-nasm
             - linux64-node
             - linux64-grcov
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -1590,7 +1555,6 @@ linux64-add-on-devel/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
@@ -1630,7 +1594,6 @@ linux64-aarch64/opt:
             - linux64-cbindgen
             - linux64-dump_syms
             - linux64-node
-            - linux64-pkgconf
             - sysroot-aarch64-linux-gnu
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi

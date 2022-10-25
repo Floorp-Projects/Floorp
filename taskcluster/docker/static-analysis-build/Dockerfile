@@ -31,6 +31,7 @@ RUN apt-get update && \
       libmpfr-dev \
       nasm \
       opam \
+      pkg-config \
       patch \
       p7zip-full \
       procps \
