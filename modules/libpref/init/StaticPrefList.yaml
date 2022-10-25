@@ -6912,6 +6912,15 @@
     value: true
     mirror: always
 
+  # Whether Gecko returns caret rect before composition string or TS_E_NOLAYOUT
+  # from ITfContextView::GetTextExt() when the specified range is larger than
+  # composition start offset if and only Traditional Chinese TIP of Microsoft
+  # is active.
+-   name: intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error
+    type: bool
+    value: true
+    mirror: always
+
   # Whether Gecko sets input scope of the URL bar to IS_DEFAULT when black
   # listed IMEs are active or does not.  If you use tablet mode mainly and you
   # want to use touch keyboard for URL when you set focus to the URL bar, you
