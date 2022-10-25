@@ -17,7 +17,6 @@
   skin/classic/browser/blockedSite.css                         (../shared/blockedSite.css)
   skin/classic/browser/browser-shared.css                      (../shared/browser-shared.css)
   skin/classic/browser/ctrlTab.css                             (../shared/ctrlTab.css)
-  skin/classic/browser/identity-credential-notification.css    (../shared/identity-credential-notification.css)
   skin/classic/browser/light-dark-overrides.css                (../shared/light-dark-overrides.css)
   skin/classic/browser/menupanel.css                           (../shared/menupanel.css)
   skin/classic/browser/notification-icons.css                  (../shared/notification-icons.css)

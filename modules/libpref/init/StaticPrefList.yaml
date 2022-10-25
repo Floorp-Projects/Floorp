@@ -3664,17 +3664,10 @@
   value: false
   mirror: always
 
-# pref controls `identity` credentials timeout for testing
+# pref controls `identity` credentials being exposed
 - name: dom.security.credentialmanagement.identity.wait_for_timeout
   type: bool
   value: true
-  mirror: always
-
-# pref controls `identity` credential UI for testing. When true, UI is not shown and
-# the first option in the account and provider lists are chosen
-- name: dom.security.credentialmanagement.identity.select_first_in_ui_lists
-  type: bool
-  value: false
   mirror: always
 
 # Whether or not selection events on text controls are enabled.

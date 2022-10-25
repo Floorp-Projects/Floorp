@@ -198,10 +198,6 @@
   list-style-image: url(chrome://browser/skin/fingerprint.svg);
 }
 
-#identity-credential-notification-icon {
-  list-style-image: url(chrome://browser/skin/fingerprint.svg);
-}
-
 #permission-popup-menulist {
   margin-inline-end: 0;
 }
