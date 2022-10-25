@@ -1754,9 +1754,6 @@ class TSFPrefs final {
   }
 
   DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.ms_simplified_chinese.query_insert_result",
-      NeedToHackQueryInsertForMSSimplifiedTIP, true)
-  DECL_AND_IMPL_BOOL_PREF(
       "intl.tsf.hack.ms_traditional_chinese.query_insert_result",
       NeedToHackQueryInsertForMSTraditionalTIP, true)
 
@@ -2707,7 +2704,8 @@ TSFTextStore::QueryInsert(LONG acpTestStart, LONG acpTestEnd, ULONG cch,
   if (IsWin8OrLater() && mComposition.isNothing() &&
       ((TSFPrefs::NeedToHackQueryInsertForMSTraditionalTIP() &&
         TSFStaticSink::IsMSChangJieOrMSQuickActive()) ||
-       (TSFPrefs::NeedToHackQueryInsertForMSSimplifiedTIP() &&
+       (StaticPrefs::
+            intl_tsf_hack_ms_simplified_chinese_query_insert_result() &&
         TSFStaticSink::IsMSPinyinOrMSWubiActive()))) {
     MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p   TSFTextStore::QueryInsert() WARNING using different "
