@@ -2732,6 +2732,7 @@ Extension management back-end.
         | `Luca Greco (rpl) <https://people.mozilla.org/s?query=rpl>`__
         | `Tomislav Jovanovic (zombie) <https://people.mozilla.org/s?query=zombie>`__
         | `Rob Wu (robwu) <https://people.mozilla.org/s?query=robwu>`__
+        | `William Durand (willdurand) <https://people.mozilla.org/s?query=willdurand>`__
     * - Owner(s) Emeritus
       - Robert Strong, Andrew Swan, Kris Maglione
     * - Includes
@@ -2824,6 +2825,7 @@ The style rules used in the desktop UI.
       -
         | `Itiel (itiel_yn8) <https://people.mozilla.org/s?query=itiel_yn8>`__
         | `Sam Foster (sfoster) <https://people.mozilla.org/s?query=sfoster>`__
+        | `Amy Churchwell (amy) <https://people.mozilla.org/s?query=amy>`__
     * - Peer(s) Emeritus
       - Tim Nguyen
     * - Includes
@@ -2870,7 +2872,8 @@ The downloads UI and service.
     * - Peer(s)
       -
         | `Gijs <https://people.mozilla.org/s?query=Gijs>`__
-        | `Micah (mtigley) <https://people.mozilla.org/s?query=mtigley>`__
+    * - Peer(s) Emeritus
+      - Micah Tigley
     * - Includes
       -
         | `browser/components/downloads/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/components/downloads/\*\*/\*>`__
@@ -2888,7 +2891,7 @@ System policies for controlling Firefox.
 
     * - Owner(s)
       -
-        | `Please use mozilla (mkaply) <https://people.mozilla.org/s?query=mkaply>`__
+        | `Mike Kaply (mkaply) <https://people.mozilla.org/s?query=mkaply>`__
     * - Peer(s)
       -
         | `Dão Gottwald (dao) <https://people.mozilla.org/s?query=dao>`__
@@ -2963,11 +2966,10 @@ The system for delivering in-product messaging.
 
     * - Owner(s)
       -
-        | `Andrei Oprea (aoprea) <https://people.mozilla.org/s?query=aoprea>`__
+        | `Punam Dahiya (pdahiya) <https://people.mozilla.org/s?query=pdahiya>`__
     * - Peer(s)
       -
         | `Nan Jiang (nanj) <https://people.mozilla.org/s?query=nanj>`__
-        | `Punam Dahiya (pdahiya) <https://people.mozilla.org/s?query=pdahiya>`__
         | `Ed Lee (Mardak) <https://people.mozilla.org/s?query=Mardak>`__
         | `Kate Hudson (k88hudson) <https://people.mozilla.org/s?query=k88hudson>`__
     * - Includes
@@ -3099,6 +3101,31 @@ Managing, saving and filling logins.
       - https://wiki.mozilla.org/Toolkit:Password_Manager
     * - Bugzilla Components
       - Toolkit::Password Manager, Toolkit::Password Manager: Site, Compatibility, Firefox::about:logins
+
+
+Picture-in-Picture
+==================
+A component that allows video elements to be pulled out into an always-on-top window.
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Molly Howell (mhowell) <https://people.mozilla.org/s?query=mhowell>`__
+        | `Mike Conley (mconley) <https://people.mozilla.org/s?query=mconley>`__
+    * - Peer(s)
+      -
+        | `Niklas Baumgardner (niklas) <https://people.mozilla.org/s?query=niklas>`__
+        | `kpatenio (kpatenio) <https://people.mozilla.org/s?query=kpatenio>`__
+    * - Owner(s) Emeritus
+      - Micah Tigley
+    * - Includes
+      -
+        | `toolkit/components/pictureinpicture <https://searchfox.org/mozilla-central/search?q=&path=toolkit/components/pictureinpicture>`__
+        | `browser/extensions/pictureinpicture <https://searchfox.org/mozilla-central/search?q=&path=browser/extensions/pictureinpicture>`__
 
 
 Preferences

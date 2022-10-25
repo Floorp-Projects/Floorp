@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-10-25T11:42:56.563947'
+updated_at: '2022-10-25T11:47:42.361309'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -644,10 +644,6 @@ people:
     bmo_id: 438654
     name: Martin Thomson
     nick: mt
-  - &mtigley
-    bmo_id: 618808
-    name: Micah
-    nick: mtigley
   - &nalexander
     bmo_id: 432887
     name: Nick Alexander
@@ -3677,4 +3673,6 @@ modules:
           - *willdurand
         machine_name: webextensions
     machine_name: toolkit
-hashes: {}
+hashes:
+  config: e6258204a0080e87fd06a71dfcb099e44bab0806
+  export: f5825ace9d4f74a39ecc55b01daa13323914e341
