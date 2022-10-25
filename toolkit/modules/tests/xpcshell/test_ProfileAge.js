@@ -1,9 +1,6 @@
 const { ProfileAge } = ChromeUtils.importESModule(
   "resource://gre/modules/ProfileAge.sys.mjs"
 );
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
 
 const gProfD = do_get_profile();
 let ID = 0;
@@ -42,7 +39,7 @@ add_task(
     const CREATED_TIME = Date.now() - 2000;
     const RESET_TIME = Date.now() - 1000;
 
-    await CommonUtils.writeJSON(
+    await IOUtils.writeJSON(
       {
         created: CREATED_TIME,
       },
@@ -72,9 +69,7 @@ add_task(
     );
     await promise;
 
-    let results = await CommonUtils.readJSON(
-      PathUtils.join(profile, "times.json")
-    );
+    let results = await IOUtils.readJSON(PathUtils.join(profile, "times.json"));
     Assert.deepEqual(
       results,
       {
@@ -98,9 +93,7 @@ add_task(
       times.recordProfileReset(RESET_TIME2),
     ]);
 
-    let results = await CommonUtils.readJSON(
-      PathUtils.join(profile, "times.json")
-    );
+    let results = await IOUtils.readJSON(PathUtils.join(profile, "times.json"));
     delete results.firstUse;
     Assert.deepEqual(
       results,
@@ -116,7 +109,7 @@ add_task(
   withDummyProfile(async profile => {
     const CREATED_TIME = Date.now() - 1000;
 
-    await CommonUtils.writeJSON(
+    await IOUtils.writeJSON(
       {
         created: CREATED_TIME,
         firstUse: null,

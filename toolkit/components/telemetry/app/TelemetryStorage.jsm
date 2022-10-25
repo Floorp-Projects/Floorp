@@ -49,11 +49,6 @@ XPCOMUtils.defineLazyGetter(lazy, "gAbortedSessionFilePath", function() {
 });
 ChromeUtils.defineModuleGetter(
   lazy,
-  "CommonUtils",
-  "resource://services-common/utils.js"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
   "TelemetryHealthPing",
   "resource://gre/modules/HealthPing.jsm"
 );
@@ -828,7 +823,7 @@ var TelemetryStorageImpl = {
       SESSION_STATE_FILE_NAME
     );
     try {
-      await lazy.CommonUtils.writeJSON(sessionData, filePath);
+      await IOUtils.writeJSON(sessionData, filePath);
     } catch (e) {
       this._log.error(
         "_saveSessionData - Failed to write session data to " + filePath,
