@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return new ConsoleAPI({
     prefix: "GPOParser.jsm",
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
-    // messages during development. See LOG_LEVELS in Console.jsm for details.
+    // messages during development. See LOG_LEVELS in Console.sys.mjs for details.
     maxLogLevel: "error",
     maxLogLevelPref: PREF_LOGLEVEL,
   });
