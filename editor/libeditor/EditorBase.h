@@ -957,6 +957,14 @@ class EditorBase : public nsIEditor,
                              nsIPrincipal* aPrincipal = nullptr);
     ~AutoEditActionDataSetter();
 
+    void SetSelectionCreatedByDoubleclick(bool aSelectionCreatedByDoubleclick) {
+      mSelectionCreatedByDoubleclick = aSelectionCreatedByDoubleclick;
+    }
+
+    [[nodiscard]] bool SelectionCreatedByDoubleclick() const {
+      return mSelectionCreatedByDoubleclick;
+    }
+
     void UpdateEditAction(EditAction aEditAction) {
       MOZ_ASSERT(!mHasTriedToDispatchBeforeInputEvent,
                  "It's too late to update EditAction since this may have "
@@ -1353,6 +1361,10 @@ class EditorBase : public nsIEditor,
     EditorBase& mEditorBase;
     RefPtr<Selection> mSelection;
     nsTArray<OwningNonNull<Selection>> mRetiredSelections;
+
+    // True if the selection was created by doubleclicking a word.
+    bool mSelectionCreatedByDoubleclick{false};
+
     nsCOMPtr<nsIPrincipal> mPrincipal;
     // EditAction may be nested, for example, a command may be executed
     // from mutation event listener which is run while editor changes

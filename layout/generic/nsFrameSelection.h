@@ -247,6 +247,26 @@ class nsFrameSelection final {
                                           FocusMode aFocusMode,
                                           CaretAssociateHint aHint);
 
+ public:
+  /**
+   * Sets flag to true if a selection is created by doubleclick or
+   * long tapping a word.
+   *
+   * @param aIsDoubleClickSelection   True if the selection is created by
+   *                                  doubleclick or long tap over a word.
+   */
+  void SetIsDoubleClickSelection(bool aIsDoubleClickSelection) {
+    mIsDoubleClickSelection = aIsDoubleClickSelection;
+  }
+
+  /**
+   * Returns true if the selection was created by doubleclick or
+   * long tap over a word.
+   */
+  [[nodiscard]] bool IsDoubleClickSelection() const {
+    return mIsDoubleClickSelection;
+  }
+
   /**
    * HandleDrag extends the selection to contain the frame closest to aPoint.
    *
@@ -1097,6 +1117,12 @@ class nsFrameSelection final {
 
   bool mDragState = false;  // for drag purposes
   bool mAccessibleCaretEnabled = false;
+
+  // Records if a selection was created by doubleclicking a word.
+  // This information is needed later on to determine if a leading
+  // or trailing whitespace needs to be removed as well to achieve
+  // native behaviour on macOS.
+  bool mIsDoubleClickSelection{false};
 };
 
 #endif /* nsFrameSelection_h___ */
