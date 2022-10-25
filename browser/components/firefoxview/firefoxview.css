@@ -640,6 +640,7 @@ details[open] > .page-section-header > .twisty {
   padding: 8px;
   cursor: pointer;
   align-items: center;
+  user-select: none;
 }
 
 @media (prefers-contrast) {
