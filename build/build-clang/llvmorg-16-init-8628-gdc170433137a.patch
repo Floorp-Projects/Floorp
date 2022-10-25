@@ -1,0 +1,196 @@
+From d9f9351b6a783d2d6f44f64732687358e1a68036 Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Date: Tue, 25 Oct 2022 14:10:33 +0900
+Subject: [PATCH] Revert "[clang] Fix missing diagnostic of declaration use
+ when accessing TypeDecls through typename access"
+
+This reverts commit dc170433137aeda5e5276bd292cac12aa93fee7c.
+---
+ clang/include/clang/Sema/Sema.h               |  4 --
+ clang/lib/Sema/SemaDecl.cpp                   | 47 +++++++------------
+ clang/lib/Sema/SemaTemplate.cpp               | 18 ++++---
+ .../dcl.attr/dcl.attr.deprecated/p1.cpp       | 14 ------
+ .../allocate.depr_in_cxx17.verify.cpp         | 11 ++---
+ 6 files changed, 33 insertions(+), 64 deletions(-)
+
+diff --git a/clang/include/clang/Sema/Sema.h b/clang/include/clang/Sema/Sema.h
+index 92c89e757c9d..e84e6b22f281 100644
+--- a/clang/include/clang/Sema/Sema.h
++++ b/clang/include/clang/Sema/Sema.h
+@@ -2566,10 +2566,6 @@ public:
+ 
+   bool isSimpleTypeSpecifier(tok::TokenKind Kind) const;
+ 
+-  enum class DiagCtorKind { None, Implicit, Typename };
+-  QualType getTypeDeclType(DeclContext *LookupCtx, DiagCtorKind DCK,
+-                           TypeDecl *TD, SourceLocation NameLoc);
+-
+   ParsedType getTypeName(const IdentifierInfo &II, SourceLocation NameLoc,
+                          Scope *S, CXXScopeSpec *SS = nullptr,
+                          bool isClassName = false, bool HasTrailingDot = false,
+diff --git a/clang/lib/Sema/SemaDecl.cpp b/clang/lib/Sema/SemaDecl.cpp
+index e0605fea8e27..19bd670e791b 100644
+--- a/clang/lib/Sema/SemaDecl.cpp
++++ b/clang/lib/Sema/SemaDecl.cpp
+@@ -169,26 +169,6 @@ bool Sema::isSimpleTypeSpecifier(tok::TokenKind Kind) const {
+   return false;
+ }
+ 
+-QualType Sema::getTypeDeclType(DeclContext *LookupCtx, DiagCtorKind DCK,
+-                               TypeDecl *TD, SourceLocation NameLoc) {
+-  auto *LookupRD = dyn_cast_or_null<CXXRecordDecl>(LookupCtx);
+-  auto *FoundRD = dyn_cast<CXXRecordDecl>(TD);
+-  if (DCK != DiagCtorKind::None && LookupRD && FoundRD &&
+-      FoundRD->isInjectedClassName() &&
+-      declaresSameEntity(LookupRD, cast<Decl>(FoundRD->getParent()))) {
+-    Diag(NameLoc,
+-         DCK == DiagCtorKind::Typename
+-             ? diag::ext_out_of_line_qualified_id_type_names_constructor
+-             : diag::err_out_of_line_qualified_id_type_names_constructor)
+-        << TD->getIdentifier() << /*Type*/ 1
+-        << 0 /*if any keyword was present, it was 'typename'*/;
+-  }
+-
+-  DiagnoseUseOfDecl(TD, NameLoc);
+-  MarkAnyDeclReferenced(TD->getLocation(), TD, /*OdrUse=*/false);
+-  return Context.getTypeDeclType(TD);
+-}
+-
+ namespace {
+ enum class UnqualifiedTypeNameLookupResult {
+   NotFound,
+@@ -352,11 +332,10 @@ ParsedType Sema::getTypeName(const IdentifierInfo &II, SourceLocation NameLoc,
+                              bool IsClassTemplateDeductionContext,
+                              ImplicitTypenameContext AllowImplicitTypename,
+                              IdentifierInfo **CorrectedII) {
+-  bool IsImplicitTypename = !isClassName && !IsCtorOrDtorName;
+   // FIXME: Consider allowing this outside C++1z mode as an extension.
+   bool AllowDeducedTemplate = IsClassTemplateDeductionContext &&
+-                              getLangOpts().CPlusPlus17 && IsImplicitTypename &&
+-                              !HasTrailingDot;
++                              getLangOpts().CPlusPlus17 && !IsCtorOrDtorName &&
++                              !isClassName && !HasTrailingDot;
+ 
+   // Determine where we will perform name lookup.
+   DeclContext *LookupCtx = nullptr;
+@@ -380,9 +359,11 @@ ParsedType Sema::getTypeName(const IdentifierInfo &II, SourceLocation NameLoc,
+         // refer to a member of an unknown specialization.
+         // In C++2a, in several contexts a 'typename' is not required. Also
+         // allow this as an extension.
++        if (AllowImplicitTypename == ImplicitTypenameContext::No &&
++            !isClassName && !IsCtorOrDtorName)
++          return nullptr;
++        bool IsImplicitTypename = !isClassName && !IsCtorOrDtorName;
+         if (IsImplicitTypename) {
+-          if (AllowImplicitTypename == ImplicitTypenameContext::No)
+-            return nullptr;
+           SourceLocation QualifiedLoc = SS->getRange().getBegin();
+           if (getLangOpts().CPlusPlus20)
+             Diag(QualifiedLoc, diag::warn_cxx17_compat_implicit_typename);
+@@ -556,10 +537,18 @@ ParsedType Sema::getTypeName(const IdentifierInfo &II, SourceLocation NameLoc,
+     // C++ [class.qual]p2: A lookup that would find the injected-class-name
+     // instead names the constructors of the class, except when naming a class.
+     // This is ill-formed when we're not actually forming a ctor or dtor name.
+-    T = getTypeDeclType(LookupCtx,
+-                        IsImplicitTypename ? DiagCtorKind::Implicit
+-                                           : DiagCtorKind::None,
+-                        TD, NameLoc);
++    auto *LookupRD = dyn_cast_or_null<CXXRecordDecl>(LookupCtx);
++    auto *FoundRD = dyn_cast<CXXRecordDecl>(TD);
++    if (!isClassName && !IsCtorOrDtorName && LookupRD && FoundRD &&
++        FoundRD->isInjectedClassName() &&
++        declaresSameEntity(LookupRD, cast<Decl>(FoundRD->getParent())))
++      Diag(NameLoc, diag::err_out_of_line_qualified_id_type_names_constructor)
++          << &II << /*Type*/1;
++
++    DiagnoseUseOfDecl(IIDecl, NameLoc);
++
++    T = Context.getTypeDeclType(TD);
++    MarkAnyDeclReferenced(TD->getLocation(), TD, /*OdrUse=*/false);
+   } else if (ObjCInterfaceDecl *IDecl = dyn_cast<ObjCInterfaceDecl>(IIDecl)) {
+     (void)DiagnoseUseOfDecl(IDecl, NameLoc);
+     if (!HasTrailingDot)
+diff --git a/clang/lib/Sema/SemaTemplate.cpp b/clang/lib/Sema/SemaTemplate.cpp
+index 84f06bceeea8..7a30a736bff9 100644
+--- a/clang/lib/Sema/SemaTemplate.cpp
++++ b/clang/lib/Sema/SemaTemplate.cpp
+@@ -10963,14 +10963,20 @@ Sema::CheckTypenameType(ElaboratedTypeKeyword Keyword,
+       //
+       // FIXME: That's not strictly true: mem-initializer-id lookup does not
+       // ignore functions, but that appears to be an oversight.
+-      QualType T = getTypeDeclType(
+-          Ctx,
+-          Keyword == ETK_Typename ? DiagCtorKind::Typename : DiagCtorKind::None,
+-          Type, IILoc);
++      auto *LookupRD = dyn_cast_or_null<CXXRecordDecl>(Ctx);
++      auto *FoundRD = dyn_cast<CXXRecordDecl>(Type);
++      if (Keyword == ETK_Typename && LookupRD && FoundRD &&
++          FoundRD->isInjectedClassName() &&
++          declaresSameEntity(LookupRD, cast<Decl>(FoundRD->getParent())))
++        Diag(IILoc, diag::ext_out_of_line_qualified_id_type_names_constructor)
++            << &II << 1 << 0 /*'typename' keyword used*/;
++
+       // We found a type. Build an ElaboratedType, since the
+       // typename-specifier was just sugar.
+-      return Context.getElaboratedType(
+-          Keyword, QualifierLoc.getNestedNameSpecifier(), T);
++      MarkAnyDeclReferenced(Type->getLocation(), Type, /*OdrUse=*/false);
++      return Context.getElaboratedType(Keyword,
++                                       QualifierLoc.getNestedNameSpecifier(),
++                                       Context.getTypeDeclType(Type));
+     }
+ 
+     // C++ [dcl.type.simple]p2:
+diff --git a/clang/test/CXX/dcl.dcl/dcl.attr/dcl.attr.deprecated/p1.cpp b/clang/test/CXX/dcl.dcl/dcl.attr/dcl.attr.deprecated/p1.cpp
+index 26738583da50..58c7c0cfac8b 100644
+--- a/clang/test/CXX/dcl.dcl/dcl.attr/dcl.attr.deprecated/p1.cpp
++++ b/clang/test/CXX/dcl.dcl/dcl.attr/dcl.attr.deprecated/p1.cpp
+@@ -58,17 +58,3 @@ template <typename T>
+   FunS2 f;// No warning, entire function is deprecated, so usage here should be fine.
+ 
+ }
+-
+-namespace GH58547 {
+-struct A {
+-  using ta [[deprecated]] = int; // expected-note 2{{marked deprecated here}}
+-};
+-
+-using t1 = typename A::ta; // expected-warning {{'ta' is deprecated}}
+-
+-template <class B1> struct B {
+-  using tb = typename B1::ta; // expected-warning {{'ta' is deprecated}}
+-};
+-
+-template struct B<A>; // expected-note {{requested here}}
+-} // namespace GH58547
+diff --git a/libcxx/test/libcxx/depr/depr.default.allocator/allocator.members/allocate.depr_in_cxx17.verify.cpp b/libcxx/test/libcxx/depr/depr.default.allocator/allocator.members/allocate.depr_in_cxx17.verify.cpp
+index 40fdaf8219de..efb57b6e496e 100644
+--- a/libcxx/test/libcxx/depr/depr.default.allocator/allocator.members/allocate.depr_in_cxx17.verify.cpp
++++ b/libcxx/test/libcxx/depr/depr.default.allocator/allocator.members/allocate.depr_in_cxx17.verify.cpp
+@@ -13,8 +13,7 @@
+ 
+ // Deprecated in C++17
+ 
+-// FIXME: Remove 'clang-16' from UNSUPPORTED by 2022-11-05 (bugfix D136533).
+-// UNSUPPORTED: c++03, c++11, c++14, clang-16
++// UNSUPPORTED: c++03, c++11, c++14
+ 
+ // ADDITIONAL_COMPILE_FLAGS: -D_LIBCPP_ENABLE_CXX20_REMOVED_ALLOCATOR_MEMBERS
+ 
+@@ -24,11 +23,7 @@
+ int main(int, char**)
+ {
+     std::allocator<int> a;
+-    TEST_IGNORE_NODISCARD a.allocate(3, nullptr);
+-    // expected-warning@-1 {{'allocate' is deprecated}}
+-#if defined(TEST_CLANG_VER) && TEST_CLANG_VER >= 1600
+-    // expected-warning@*:* {{'pointer' is deprecated}}
+-    // expected-warning@*:* {{'const_pointer' is deprecated}}
+-#endif
++    TEST_IGNORE_NODISCARD a.allocate(3, nullptr); // expected-warning {{'allocate' is deprecated}}
++
+     return 0;
+ }
+-- 
+2.38.1.1.g6d9df9d320
+
