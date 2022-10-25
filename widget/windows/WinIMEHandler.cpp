@@ -7,6 +7,7 @@
 
 #include "IMMHandler.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefList_intl.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowDefs.h"
@@ -719,9 +720,8 @@ void IMEHandler::AppendInputScopeFromType(const nsAString& aHTMLInputType,
 
 // static
 bool IMEHandler::NeedsSearchInputScope() {
-  return !(Preferences::GetBool(
-               "intl.tsf.hack.atok.search_input_scope_disabled", false) &&
-           TSFTextStore::IsATOKActive());
+  return !StaticPrefs::intl_tsf_hack_atok_search_input_scope_disabled() ||
+         !TSFTextStore::IsATOKActive();
 }
 
 // static
