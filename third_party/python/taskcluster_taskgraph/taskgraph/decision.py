@@ -224,8 +224,13 @@ def get_decision_parameters(graph_config, options):
 
     # ..but can be overridden by the commit message: if it contains the special
     # string "DONTBUILD" and this is an on-push decision task, then use the
-    # special 'nothing' target task method.
-    if "DONTBUILD" in commit_message and options["tasks_for"] == "hg-push":
+    # special 'nothing' target task method. (except on the toolchains project,
+    # where we ignore "DONTBUILD").
+    if (
+        "DONTBUILD" in commit_message
+        and options["tasks_for"] == "hg-push"
+        and project != "toolchains"
+    ):
         parameters["target_tasks_method"] = "nothing"
 
     if options.get("optimize_target_tasks") is not None:
