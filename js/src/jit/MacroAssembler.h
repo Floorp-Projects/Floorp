@@ -5014,10 +5014,19 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void loadMegamorphicCache(Register dest);
 
+  void loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
+                               Register outHash, Label* cacheMiss);
+
   void emitMegamorphicCacheLookup(PropertyKey id, Register obj,
                                   Register scratch1, Register scratch2,
                                   Register scratch3, ValueOperand output,
                                   Label* fail, Label* cacheHit);
+
+  void emitMegamorphicCacheLookupExists(ValueOperand id, Register obj,
+                                        Register scratch1, Register scratch2,
+                                        Register scratch3, Register output,
+                                        Label* fail, Label* cacheHit,
+                                        bool hasOwn);
 
   void loadDOMExpandoValueGuardGeneration(
       Register obj, ValueOperand output,
