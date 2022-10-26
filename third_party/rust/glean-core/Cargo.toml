@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "glean-core"
-version = "51.5.0"
+version = "51.7.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -109,6 +109,9 @@ version = "3.1.0"
 [build-dependencies.uniffi_build]
 version = "0.21.0"
 features = ["builtin-bindgen"]
+
+[features]
+preinit_million_queue = []
 
 [target."cfg(not(target_os = \"android\"))".dependencies.env_logger]
 version = "0.9.0"
