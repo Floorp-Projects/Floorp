@@ -5890,6 +5890,28 @@ pocket:
     metadata:
       tags:
         - PocketIntegration
+  spoc_shim:
+    type: text
+    description: |
+      Shim data of the Pocket sponsored story the user just
+      interacted with.
+      The shim is a unique base64 string identifying each story and
+      type of user interaction: story impression or click.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/27549
+      - https://mozilla-hub.atlassian.net/browse/FNXV2-21791
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/27550#issuecomment-1295027631
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+    send_in_pings:
+      - spoc
+    metadata:
+      tags:
+        - PocketIntegration
   home_recs_spoc_shown:
     type: event
     description: |

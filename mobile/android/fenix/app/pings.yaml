@@ -43,3 +43,22 @@ topsites-impression:
     - https://github.com/mozilla-mobile/fenix/pull/23945
   notification_emails:
     - android-probes@mozilla.com
+
+spoc:
+  description: |
+    Contains data identifying with which Pocket sponsored story the user
+    interacted with and the type of interaction: story impression or click.
+  include_client_id: false
+  reasons:
+    impression: |
+      A sponsored story had more than 50% of it's content visible
+      on the screen.
+    click: |
+      A sponsored story was clicked by the user.
+  bugs:
+    - https://github.com/mozilla-mobile/fenix/issues/27549
+    - https://mozilla-hub.atlassian.net/browse/FNXV2-21791
+  data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/27550#issuecomment-1295027631
+  notification_emails:
+    - android-probes@mozilla.com

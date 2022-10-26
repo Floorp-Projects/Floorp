@@ -12,6 +12,7 @@ import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.ext.getCurrentFlightImpressions
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -93,6 +94,8 @@ internal class DefaultPocketStoriesController(
                         timesShown = storyShown.getCurrentFlightImpressions().size.inc().toString(),
                     ),
                 )
+                Pocket.spocShim.set(storyShown.shim.impression)
+                Pings.spoc.submit(Pings.spocReasonCodes.impression)
             }
             else -> {
                 // no-op
@@ -169,6 +172,8 @@ internal class DefaultPocketStoriesController(
                         timesShown = storyClicked.getCurrentFlightImpressions().size.inc().toString(),
                     ),
                 )
+                Pocket.spocShim.set(storyClicked.shim.click)
+                Pings.spoc.submit(Pings.spocReasonCodes.click)
             }
         }
     }
