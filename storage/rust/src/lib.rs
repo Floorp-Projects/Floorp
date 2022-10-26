@@ -131,7 +131,7 @@ impl Conn {
     /// error.
     ///
     /// Note that this is `true` even if the transaction was started by another
-    /// caller, like `Sqlite.jsm` or `mozStorageTransaction` from C++. See the
+    /// caller, like `Sqlite.sys.mjs` or `mozStorageTransaction` from C++. See the
     /// explanation above `mozIStorageConnection.transactionInProgress` for why
     /// this matters.
     pub fn transaction_in_progress(&self) -> Result<bool> {
