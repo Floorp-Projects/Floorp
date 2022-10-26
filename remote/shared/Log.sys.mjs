@@ -34,7 +34,7 @@ XPCOMUtils.defineLazyGetter(lazy, "prefLogLevel", () => {
   return PREF_REMOTE_LOG_LEVEL;
 });
 
-/** E10s compatible wrapper for the standard logger from Log.jsm. */
+/** E10s compatible wrapper for the standard logger from Log.sys.mjs. */
 export class Log {
   static TYPES = {
     CDP: "CDP",
@@ -71,7 +71,7 @@ export class Log {
   }
 
   static get verbose() {
-    // we can't use Preferences.jsm before first paint,
+    // we can't use Preferences.sys.mjs before first paint,
     // see ../browser/base/content/test/performance/browser_startup.js
     const level = Services.prefs.getStringPref(PREF_REMOTE_LOG_LEVEL, "Info");
     return StdLog.Level[level] >= StdLog.Level.Info;
