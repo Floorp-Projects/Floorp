@@ -1479,17 +1479,14 @@ The Mozilla Networking Library
 
     * - Owner(s)
       -
-        | `Dragana Damjanovic (dragana) <https://people.mozilla.org/s?query=dragana>`__
+        | `Valentin Gosu (valentin) <https://people.mozilla.org/s?query=valentin>`__
     * - Peer(s)
       -
-        | `Honza Bambas (mayhemer) <https://people.mozilla.org/s?query=mayhemer>`__
-        | `Michal Novotny (michal) <https://people.mozilla.org/s?query=michal>`__
-        | `Valentin Gosu (valentin) <https://people.mozilla.org/s?query=valentin>`__
         | `Kershaw Chang (kershaw) <https://people.mozilla.org/s?query=kershaw>`__
     * - Owner(s) Emeritus
-      - Patrick McManus, Christian Biesinger
+      - Dragana Damjanovic, Patrick McManus, Christian Biesinger
     * - Peer(s) Emeritus
-      - Shih-Chiang Chien, Boris Zbarsky, Steve Workman, Nick Hurley, Daniel Stenberg, Jason Duell, Junior Hsu
+      - Michal Novotny, Honza Bambas, Shih-Chiang Chien, Boris Zbarsky, Steve Workman, Nick Hurley, Daniel Stenberg, Jason Duell, Junior Hsu
     * - Includes
       -
         | `netwerk/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/\*\*/\*>`__
@@ -1506,12 +1503,16 @@ The Mozilla Networking Library
         | `netwerk/system/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/system/\*\*/\*>`__
         | `netwerk/test/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/test/\*\*/\*>`__
         | `netwerk/testserver/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/testserver/\*\*/\*>`__
+        | `dom/fetch/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=dom/fetch/\*\*/\*>`__
+        | `dom/xhr/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=dom/xhr/\*\*/\*>`__
+        | `dom/network/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=dom/network/\*\*/\*>`__
+        | `dom/websocket/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=dom/websocket/\*\*/\*>`__
     * - Group
       - dev-tech-network
     * - URL
       - http://www.mozilla.org/projects/netlib/, https://developer.mozilla.org/en/Necko
     * - Bugzilla Components
-      - Core::Networking, Core::Networking: Cache, Core::Networking: Cookies, Core::Networking: FTP, Core::Networking: File, Core::Networking: HTTP, Core::Networking: JAR, Core::Networking: Websockets
+      - Core::Networking, Core::Networking: Cache, Core::Networking: Cookies, Core::Networking: FTP, Core::Networking: File, Core::Networking: HTTP, Core::Networking: JAR, Core::Networking: Websockets, Core::DOM: Networking
 
 Core: NodeJS usage, tools, and style
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
