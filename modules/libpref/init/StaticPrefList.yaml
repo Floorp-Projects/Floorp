@@ -9115,7 +9115,7 @@
 #elif defined(XP_WIN) && !defined(_ARM64_)
   value: true
 #elif defined(XP_MACOSX)
-  value: false
+  value: @IS_NIGHTLY_BUILD@
 #else
   value: false
 #endif
@@ -9129,7 +9129,7 @@
 #elif defined(XP_WIN) && !defined(_ARM64_)
   value: true
 #elif defined(XP_MACOSX)
-  value: false
+  value: @IS_NIGHTLY_BUILD@
 #else
   value: false
 #endif
