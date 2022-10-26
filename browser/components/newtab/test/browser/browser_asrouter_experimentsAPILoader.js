@@ -278,6 +278,28 @@ add_task(async function test_loading_experimentsAPI_legacy() {
   await cleanup();
 });
 
+add_task(async function test_loading_experimentsAPI_rollout() {
+  const rollout = await getCFRExperiment();
+  rollout.isRollout = true;
+  rollout.branches.pop();
+
+  await setup(rollout);
+  await RemoteSettingsExperimentLoader.updateRecipes();
+  await BrowserTestUtils.waitForCondition(() =>
+    ExperimentAPI.getRolloutMetaData({ featureId: "cfr" })
+  );
+
+  await ASRouter._updateMessageProviders();
+  await ASRouter.loadMessagesFromAllProviders();
+
+  Assert.ok(
+    ASRouter.state.messages.find(m => m.id === "xman_test_message"),
+    "Found rollout message in ASRouter state"
+  );
+
+  await cleanup();
+});
+
 add_task(async function test_exposure_ping() {
   // Reset this check to allow sending multiple exposure pings in tests
   NimbusFeatures.cfr._didSendExposureEvent = false;
