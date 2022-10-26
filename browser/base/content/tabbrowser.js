@@ -5428,7 +5428,7 @@
       const kPrefCaretBrowsingOn = "accessibility.browsewithcaret";
 
       var isEnabled = Services.prefs.getBoolPref(kPrefShortcutEnabled);
-      if (!isEnabled || this._awaitingToggleCaretBrowsingPrompt) {
+      if (!isEnabled) {
         return;
       }
 
@@ -5442,28 +5442,20 @@
         var checkValue = { value: false };
         var promptService = Services.prompt;
 
-        try {
-          this._awaitingToggleCaretBrowsingPrompt = true;
-          var buttonPressed = promptService.confirmEx(
-            window,
-            gTabBrowserBundle.GetStringFromName(
-              "browsewithcaret.checkWindowTitle"
-            ),
-            gTabBrowserBundle.GetStringFromName("browsewithcaret.checkLabel"),
-            // Make "No" the default:
-            promptService.STD_YES_NO_BUTTONS |
-              promptService.BUTTON_POS_1_DEFAULT,
-            null,
-            null,
-            null,
-            gTabBrowserBundle.GetStringFromName("browsewithcaret.checkMsg"),
-            checkValue
-          );
-        } catch (ex) {
-          return;
-        } finally {
-          this._awaitingToggleCaretBrowsingPrompt = false;
-        }
+        var buttonPressed = promptService.confirmEx(
+          window,
+          gTabBrowserBundle.GetStringFromName(
+            "browsewithcaret.checkWindowTitle"
+          ),
+          gTabBrowserBundle.GetStringFromName("browsewithcaret.checkLabel"),
+          // Make "No" the default:
+          promptService.STD_YES_NO_BUTTONS | promptService.BUTTON_POS_1_DEFAULT,
+          null,
+          null,
+          null,
+          gTabBrowserBundle.GetStringFromName("browsewithcaret.checkMsg"),
+          checkValue
+        );
         if (buttonPressed != 0) {
           if (checkValue.value) {
             try {
