@@ -884,7 +884,7 @@ async function prepareContentForReact(content) {
 
       // Get started content will navigate without action, so remove "Not now."
       if (removeDefault) {
-        delete pinScreen.content.secondary_button;
+        if (!content.templateMR) delete pinScreen.content.secondary_button;
       } else {
         // The "pin" screen will now handle "default" so remove other "default."
         pinScreen.content.primary_button.action.type = "SET_DEFAULT_BROWSER";
