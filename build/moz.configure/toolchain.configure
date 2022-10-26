@@ -1708,7 +1708,12 @@ def linker_ldflags(
         flags.append("-Wl,--rpath-link={}/usr/lib".format(android_platform))
         flags.append("--sysroot")
         flags.append(android_platform)
-    if developer_options and linker.KIND == "lld" and target.kernel != "WINNT":
+    if (
+        developer_options
+        and linker
+        and linker.KIND == "lld"
+        and target.kernel != "WINNT"
+    ):
         flags.append("-Wl,-O0")
     return flags
 
