@@ -1435,6 +1435,7 @@ function cleanUpDownloadingUpdateDir() {
 function cleanupReadyUpdate() {
   // Move the update from the Active Update list into the Past Updates list.
   if (lazy.UM.readyUpdate) {
+    LOG("cleanupReadyUpdate - Clearing readyUpdate");
     lazy.UM.addUpdateToHistory(lazy.UM.readyUpdate);
     lazy.UM.readyUpdate = null;
   }
@@ -1474,6 +1475,7 @@ function cleanupReadyUpdate() {
 function cleanupDownloadingUpdate() {
   // Move the update from the Active Update list into the Past Updates list.
   if (lazy.UM.downloadingUpdate) {
+    LOG("cleanupDownloadingUpdate - Clearing downloadingUpdate.");
     lazy.UM.addUpdateToHistory(lazy.UM.downloadingUpdate);
     lazy.UM.downloadingUpdate = null;
   }
@@ -1510,10 +1512,12 @@ function cleanupDownloadingUpdate() {
 function cleanupActiveUpdates() {
   // Move the update from the Active Update list into the Past Updates list.
   if (lazy.UM.readyUpdate) {
+    LOG("cleanupActiveUpdates - Clearing readyUpdate");
     lazy.UM.addUpdateToHistory(lazy.UM.readyUpdate);
     lazy.UM.readyUpdate = null;
   }
   if (lazy.UM.downloadingUpdate) {
+    LOG("cleanupActiveUpdates - Clearing downloadingUpdate.");
     lazy.UM.addUpdateToHistory(lazy.UM.downloadingUpdate);
     lazy.UM.downloadingUpdate = null;
   }
@@ -1579,6 +1583,9 @@ function readStringFromFile(file) {
  */
 function handleUpdateFailure(update) {
   if (WRITE_ERRORS.includes(update.errorCode)) {
+    LOG(
+      "handleUpdateFailure - Failure is a write error. Setting state to pending"
+    );
     writeStatusFile(getReadyUpdateDir(), (update.state = STATE_PENDING));
     transitionState(Ci.nsIApplicationUpdateService.STATE_PENDING);
     return true;
@@ -1664,9 +1671,17 @@ function handleUpdateFailure(update) {
       // Prevent the preference from setting a value greater than 5.
       maxCancels = Math.min(maxCancels, 5);
       if (osxCancelations >= maxCancels) {
+        LOG(
+          "handleUpdateFailure - Too many OSX cancellations. Cleaning up " +
+            "ready update."
+        );
         cleanupReadyUpdate();
         return false;
       }
+      LOG(
+        `handleUpdateFailure - OSX cancellation. Trying again by setting ` +
+          `status to "${STATE_PENDING_ELEVATE}".`
+      );
       writeStatusFile(
         getReadyUpdateDir(),
         (update.state = STATE_PENDING_ELEVATE)
@@ -1675,6 +1690,10 @@ function handleUpdateFailure(update) {
         "elevationFailure"
       );
     } else {
+      LOG(
+        "handleUpdateFailure - Failure because elevation was cancelled. " +
+          "again by setting status to pending."
+      );
       writeStatusFile(getReadyUpdateDir(), (update.state = STATE_PENDING));
     }
     transitionState(Ci.nsIApplicationUpdateService.STATE_PENDING);
@@ -1710,6 +1729,10 @@ function handleUpdateFailure(update) {
       Services.prefs.setIntPref(PREF_APP_UPDATE_SERVICE_ERRORS, failCount);
     }
 
+    LOG(
+      "handleUpdateFailure - Got a service error. Try to update without the " +
+        "service by setting the state to pending."
+    );
     writeStatusFile(getReadyUpdateDir(), (update.state = STATE_PENDING));
     transitionState(Ci.nsIApplicationUpdateService.STATE_PENDING);
     return true;
@@ -1766,6 +1789,10 @@ async function handleFallbackToCompleteUpdate() {
     return;
   }
 
+  LOG(
+    "handleFallbackToCompleteUpdate - Cleaning up active updates in " +
+      "preparation of falling back to complete update."
+  );
   await lazy.AUS.stopDownload();
   cleanupActiveUpdates();
 
@@ -1789,6 +1816,10 @@ async function handleFallbackToCompleteUpdate() {
     );
     var success = await lazy.AUS.downloadUpdate(update);
     if (!success) {
+      LOG(
+        "handleFallbackToCompleteUpdate - Starting complete patch download " +
+          "failed. Cleaning up downloading patch."
+      );
       cleanupDownloadingUpdate();
     }
   } else {
@@ -2782,6 +2813,7 @@ UpdateService.prototype = {
       return;
     }
     let status = readStatusFile(getReadyUpdateDir());
+    LOG(`UpdateService:_postUpdateProcessing - status = "${status}"`);
 
     if (!this.canApplyUpdates) {
       LOG(
@@ -2791,6 +2823,9 @@ UpdateService.prototype = {
       if (hasUpdateMutex()) {
         // If the update is present in the update directory somehow,
         // it would prevent us from notifying the user of further updates.
+        LOG(
+          "UpdateService:_postUpdateProcessing - Cleaning up active updates."
+        );
         cleanupActiveUpdates();
       }
       return;
@@ -2809,6 +2844,9 @@ UpdateService.prototype = {
       // update.status file is present but there isn't an update in progress.
       // This isn't an expected state, so if we find ourselves in it, we want
       // to just clean things up to go back to a good state.
+      LOG(
+        "UpdateService:_postUpdateProcessing - Cleaning up unexpected state."
+      );
       if (!updates.length) {
         updates.push(new Update(null));
       }
@@ -2963,12 +3001,17 @@ UpdateService.prototype = {
           );
           let success = await this.downloadUpdate(lazy.UM.downloadingUpdate);
           if (!success) {
+            LOG(
+              "UpdateService:_postUpdateProcessing - Failed to resume patch. " +
+                "Cleaning up downloading update."
+            );
             cleanupDownloadingUpdate();
           }
         } else {
           LOG(
             "UpdateService:_postUpdateProcessing - Warning: found " +
-              "downloading state, but no downloading patch"
+              "downloading state, but no downloading patch. Cleaning up " +
+              "active updates."
           );
           // Put ourselves back in a good state.
           cleanupActiveUpdates();
@@ -3013,7 +3056,7 @@ UpdateService.prototype = {
         // We get here even if we don't have an update object
         LOG(
           "UpdateService:_postUpdateProcessing - patch found in applying " +
-            "state for the second time"
+            "state for the second time. Cleaning up ready update."
         );
         cleanupReadyUpdate();
       }
@@ -3024,18 +3067,30 @@ UpdateService.prototype = {
       if (status != STATE_SUCCEEDED) {
         LOG(
           "UpdateService:_postUpdateProcessing - previous patch failed " +
-            "and no patch available"
+            "and no patch available. Cleaning up ready update."
         );
         cleanupReadyUpdate();
         return;
       }
+      LOG(
+        "UpdateService:_postUpdateProcessing - Update data missing. Creating " +
+          "an empty update object."
+      );
       update = new Update(null);
     }
 
     let parts = status.split(":");
     update.state = parts[0];
+    LOG(
+      `UpdateService:_postUpdateProcessing - Setting update's state from ` +
+        `the status file (="${update.state}")`
+    );
     if (update.state == STATE_FAILED && parts[1]) {
       update.errorCode = parseInt(parts[1]);
+      LOG(
+        `UpdateService:_postUpdateProcessing - Setting update's errorCode ` +
+          `from the status file (="${update.errorCode}")`
+      );
     }
 
     if (status != STATE_SUCCEEDED) {
@@ -3055,10 +3110,18 @@ UpdateService.prototype = {
       // The only time that update is not a reference to readyUpdate is when
       // readyUpdate is null.
       if (!lazy.UM.readyUpdate) {
+        LOG(
+          "UpdateService:_postUpdateProcessing - Assigning successful update " +
+            "readyUpdate before cleaning it up."
+        );
         lazy.UM.readyUpdate = update;
       }
 
       // Done with this update. Clean it up.
+      LOG(
+        "UpdateService:_postUpdateProcessing - Cleaning up successful ready " +
+          "update."
+      );
       cleanupReadyUpdate();
 
       Services.prefs.setIntPref(PREF_APP_UPDATE_ELEVATE_ATTEMPTS, 0);
@@ -3085,6 +3148,10 @@ UpdateService.prototype = {
               "elevation window has been suppressed."
           );
         } else {
+          LOG(
+            "UpdateService:_postUpdateProcessing - status is " +
+              "pending-elevate. Showing Update elevation dialog."
+          );
           let uri = "chrome://mozapps/content/update/updateElevation.xhtml";
           let features =
             "chrome,centerscreen,resizable=no,titlebar,toolbar=no,dialog=no";
@@ -3096,11 +3163,21 @@ UpdateService.prototype = {
       // and it is set to pending so an attempt to apply it again will happen
       // when the application is restarted.
       if (update.state == STATE_FAILED && update.errorCode) {
+        LOG(
+          "UpdateService:_postUpdateProcessing - Attempting handleUpdateFailure"
+        );
         if (handleUpdateFailure(update)) {
+          LOG(
+            "UpdateService:_postUpdateProcessing - handleUpdateFailure success."
+          );
           return;
         }
       }
 
+      LOG(
+        "UpdateService:_postUpdateProcessing - Attempting to fall back to a " +
+          "complete update."
+      );
       // Something went wrong with the patch application process.
       await handleFallbackToCompleteUpdate();
     }
@@ -3254,6 +3331,10 @@ UpdateService.prototype = {
       let success = await this.downloadUpdate(this._downloader._update);
       LOG("UpdateService:_attemptResume - downloadUpdate success: " + success);
       if (!success) {
+        LOG(
+          "UpdateService:_attemptResume - Resuming download failed. Cleaning " +
+            "up downloading update."
+        );
         cleanupDownloadingUpdate();
       }
       return;
@@ -3751,6 +3832,10 @@ UpdateService.prototype = {
     LOG("UpdateService:_selectAndInstallUpdate - download the update");
     let success = await this.downloadUpdate(update);
     if (!success) {
+      LOG(
+        "UpdateService:_selectAndInstallUpdate - Failed to start downloading " +
+          "update. Cleaning up downloading update."
+      );
       cleanupDownloadingUpdate();
     }
     AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_DOWNLOAD_UPDATE);
@@ -3995,7 +4080,7 @@ UpdateService.prototype = {
     // download an update that isn't newer than the one we already have.
     if (updateIsAtLeastAsOldAsCurrentVersion(update)) {
       LOG(
-        "UpdateService:downloadUpdate - canceling download of update since " +
+        "UpdateService:downloadUpdate - Skipping download of update since " +
           "it is for an earlier or same application version and build ID.\n" +
           "current application version: " +
           Services.appinfo.version +
@@ -4197,6 +4282,7 @@ function UpdateManager() {
       this._downloadingUpdate = activeUpdates[1];
     }
     let status = readStatusFile(getReadyUpdateDir());
+    LOG(`UpdateManager:UpdateManager - status = "${status}"`);
     // This check is performed here since UpdateService:_postUpdateProcessing
     // won't be called when there isn't an update.status file.
     if (status == STATE_NONE) {
@@ -4204,6 +4290,10 @@ function UpdateManager() {
       // active-update.xml will contain a pending update without the status
       // file. To recover from this situation clean the updates dir and move
       // the active update to the update history.
+      LOG(
+        "UpdateManager:UpdateManager - Found update data with no status " +
+          "file. Cleaning up..."
+      );
       this._readyUpdate.state = STATE_FAILED;
       this._readyUpdate.errorCode = ERR_UPDATE_STATE_NONE;
       this._readyUpdate.statusText = lazy.gUpdateBundle.GetStringFromName(
@@ -4233,6 +4323,27 @@ function UpdateManager() {
       this._readyUpdate = null;
     }
   }
+
+  LOG(
+    "UpdateManager:UpdateManager - Initialized downloadingUpdate to " +
+      this._downloadingUpdate
+  );
+  if (this._downloadingUpdate) {
+    LOG(
+      "UpdateManager:UpdateManager - Initialized downloadingUpdate state to " +
+        this._downloadingUpdate.state
+    );
+  }
+  LOG(
+    "UpdateManager:UpdateManager - Initialized readyUpdate to " +
+      this._readyUpdate
+  );
+  if (this._readyUpdate) {
+    LOG(
+      "UpdateManager:UpdateManager - Initialized readyUpdate state to " +
+        this._readyUpdate.state
+    );
+  }
 }
 UpdateManager.prototype = {
   /**
@@ -4260,6 +4371,7 @@ UpdateManager.prototype = {
       if (!Cu.isInAutomation) {
         return;
       }
+      LOG("UpdateManager:observe - Reloading update data.");
       if (this._updatesXMLSaver) {
         this._updatesXMLSaver.disarm();
       }
@@ -4277,6 +4389,7 @@ UpdateManager.prototype = {
             this._downloadingUpdate = activeUpdates[1];
           }
           let status = readStatusFile(getReadyUpdateDir());
+          LOG(`UpdateManager:observe - Got status = ${status}`);
           if (status == STATE_DOWNLOADING) {
             this._downloadingUpdate = this._readyUpdate;
             this._readyUpdate = null;
@@ -4296,6 +4409,26 @@ UpdateManager.prototype = {
         updates = this._loadXMLFileIntoArray(FILE_UPDATES_XML);
       }
       this._updatesCache = updates;
+
+      LOG(
+        "UpdateManager:observe - Reloaded downloadingUpdate as " +
+          this._downloadingUpdate
+      );
+      if (this._downloadingUpdate) {
+        LOG(
+          "UpdateManager:observe - Reloaded downloadingUpdate state as " +
+            this._downloadingUpdate.state
+        );
+      }
+      LOG(
+        "UpdateManager:observe - Reloaded readyUpdate as " + this._readyUpdate
+      );
+      if (this._readyUpdate) {
+        LOG(
+          "UpdateManager:observe - Reloaded readyUpdate state as " +
+            this._readyUpdate.state
+        );
+      }
     }
   },
 
@@ -4591,20 +4724,28 @@ UpdateManager.prototype = {
    */
   refreshUpdateStatus: async function UM_refreshUpdateStatus() {
     try {
+      LOG("UpdateManager:refreshUpdateStatus - Staging done.");
+
       var update = this._readyUpdate;
       if (!update) {
+        LOG("UpdateManager:refreshUpdateStatus - Missing ready update?");
         return;
       }
 
       var status = readStatusFile(getReadyUpdateDir());
       pingStateAndStatusCodes(update, false, status);
+      LOG(`UpdateManager:refreshUpdateStatus - status = ${status}`);
 
       let parts = status.split(":");
       update.state = parts[0];
       if (update.state == STATE_APPLYING) {
+        LOG(
+          "UpdateManager:refreshUpdateStatus - Staging appears to have crashed."
+        );
         update.state = STATE_FAILED;
         update.errorCode = ERR_UPDATER_CRASHED;
       } else if (update.state == STATE_FAILED) {
+        LOG("UpdateManager:refreshUpdateStatus - Staging failed.");
         if (parts[1]) {
           update.errorCode = parseInt(parts[1]) || INVALID_UPDATER_STATUS_CODE;
         } else {
@@ -4624,6 +4765,10 @@ UpdateManager.prototype = {
         ) {
           update.state = getBestPendingState();
           writeStatusFile(getReadyUpdateDir(), update.state);
+          LOG(
+            `UpdateManager:refreshUpdateStatus - Unexpected staging error. ` +
+              `Setting status to "${update.state}"`
+          );
         } else if (isServiceSpecificErrorCode(update.errorCode)) {
           // Sometimes when staging, we might encounter an error that is
           // specific to the Maintenance Service. If this happens, we should try
@@ -4631,15 +4776,28 @@ UpdateManager.prototype = {
           LOG(
             `UpdateManager:refreshUpdateStatus - Encountered service ` +
               `specific error code: ${update.errorCode}. Will try installing ` +
-              `update without the Maintenance Service.`
+              `update without the Maintenance Service. Setting state to pending`
           );
           update.state = STATE_PENDING;
           writeStatusFile(getReadyUpdateDir(), update.state);
-        } else if (!handleUpdateFailure(update)) {
-          await handleFallbackToCompleteUpdate();
+        } else {
+          LOG(
+            "UpdateManager:refreshUpdateStatus - Attempting handleUpdateFailure"
+          );
+          if (!handleUpdateFailure(update)) {
+            LOG(
+              "UpdateManager:refreshUpdateStatus - handleUpdateFailure " +
+                "failed. Attempting to fall back to complete update."
+            );
+            await handleFallbackToCompleteUpdate();
+          }
         }
       }
       if (update.state == STATE_APPLIED && shouldUseService()) {
+        LOG(
+          `UpdateManager:refreshUpdateStatus - Staging successful. ` +
+            `Setting status to "${STATE_APPLIED_SERVICE}"`
+        );
         writeStatusFile(
           getReadyUpdateDir(),
           (update.state = STATE_APPLIED_SERVICE)
@@ -4701,6 +4859,7 @@ UpdateManager.prototype = {
     let parts = status.split(":");
     update.state = parts[0];
     if (update.state == STATE_PENDING_ELEVATE) {
+      LOG("UpdateManager:elevationOptedIn - Setting state to pending.");
       // Proceed with the pending update.
       // Note: STATE_PENDING_ELEVATE stands for "pending user's approval to
       // proceed with an elevated update". As long as we see this state, we will
@@ -4711,6 +4870,8 @@ UpdateManager.prototype = {
       // displays the elevation prompt if necessary. This last step does not
       // depend on the state in the status file.
       writeStatusFile(getReadyUpdateDir(), STATE_PENDING);
+    } else {
+      LOG("UpdateManager:elevationOptedIn - Not in pending-elevate state.");
     }
   },
 
@@ -4718,6 +4879,9 @@ UpdateManager.prototype = {
    * See nsIUpdateService.idl
    */
   cleanupDownloadingUpdate: function UM_cleanupDownloadingUpdate() {
+    LOG(
+      "UpdateManager:cleanupDownloadingUpdate - cleaning up downloading update."
+    );
     cleanupDownloadingUpdate();
   },
 
@@ -4725,6 +4889,7 @@ UpdateManager.prototype = {
    * See nsIUpdateService.idl
    */
   cleanupReadyUpdate: function UM_cleanupReadyUpdate() {
+    LOG("UpdateManager:cleanupReadyUpdate - cleaning up ready update.");
     cleanupReadyUpdate();
   },
 
@@ -5578,6 +5743,10 @@ Downloader.prototype = {
       update.isCompleteUpdate = selectedPatch.type == "complete";
     }
 
+    LOG(
+      "Downloader:_selectPatch - Patch selected. Assigning update to " +
+        "downloadingUpdate."
+    );
     lazy.UM.downloadingUpdate = update;
 
     return selectedPatch;
@@ -5760,6 +5929,11 @@ Downloader.prototype = {
         // for partially downloaded files. If we have started an update
         // download with it, it will be available at its ultimate location.
         if (!(status == STATE_DOWNLOADING && patchFile.exists())) {
+          LOG(
+            "Downloader:downloadUpdate - Can't download with internal " +
+              "downloader from a background task. Cleaning up downloading " +
+              "update."
+          );
           cleanupDownloadingUpdate();
         }
         return false;
@@ -5912,9 +6086,11 @@ Downloader.prototype = {
     }
 
     if (!lazy.UM.readyUpdate) {
+      LOG("Downloader:downloadUpdate - Setting status to downloading");
       writeStatusFile(getReadyUpdateDir(), STATE_DOWNLOADING);
     }
     if (this._patch.state != STATE_DOWNLOADING) {
+      LOG("Downloader:downloadUpdate - Setting state to downloading");
       this._patch.state = STATE_DOWNLOADING;
       lazy.UM.saveUpdates();
     }
@@ -6046,7 +6222,9 @@ Downloader.prototype = {
    *          The nsIRequest object for the transfer
    */
   onStartRequest: function Downloader_onStartRequest(request) {
-    if (!this.usingBits) {
+    if (this.usingBits) {
+      LOG("Downloader:onStartRequest");
+    } else {
       LOG(
         "Downloader:onStartRequest - original URI spec: " +
           request.URI.spec +
@@ -6241,6 +6419,11 @@ Downloader.prototype = {
       if (this._verifyDownload()) {
         AUSTLMY.pingDownloadCode(this.isCompleteUpdate, AUSTLMY.DWNLD_SUCCESS);
 
+        LOG(
+          "Downloader:onStopRequest - Clearing readyUpdate in preparation of " +
+            "moving downloadingUpdate into readyUpdate."
+        );
+
         // Clear out any old update before we notify anyone about the new one.
         // It will be invalid in a moment anyways when we call
         // `cleanUpReadyUpdateDir()`.
@@ -6274,6 +6457,10 @@ Downloader.prototype = {
           shouldShowPrompt = !getCanStageUpdates();
 
           // Tell the updater.exe we're ready to apply.
+          LOG(
+            `Downloader:onStopRequest - Ready to apply. Setting state to ` +
+              `"${state}".`
+          );
           writeStatusFile(getReadyUpdateDir(), state);
           writeVersionFile(getReadyUpdateDir(), this._update.appVersion);
           this._update.installDate = new Date().getTime();
@@ -6311,6 +6498,7 @@ Downloader.prototype = {
         this._update.statusText = message;
 
         if (this._update.isCompleteUpdate || this._update.patchCount != 2) {
+          LOG("Downloader:onStopRequest - No alternative patch to try");
           deleteActiveUpdate = true;
         }
 
@@ -6388,8 +6576,10 @@ Downloader.prototype = {
       deleteActiveUpdate = true;
     }
     if (!this.usingBits) {
+      LOG(`Downloader:onStopRequest - Setting internalResult to ${status}`);
       this._patch.setProperty("internalResult", status);
     } else {
+      LOG(`Downloader:onStopRequest - Setting bitsResult to ${status}`);
       this._patch.setProperty("bitsResult", status);
 
       // If we failed when using BITS, we want to override the retry decision
@@ -6429,6 +6619,7 @@ Downloader.prototype = {
       this._patch.state = state;
     }
     if (deleteActiveUpdate) {
+      LOG("Downloader:onStopRequest - Clearing downloadingUpdate.");
       this._update.installDate = new Date().getTime();
       lazy.UM.addUpdateToHistory(lazy.UM.downloadingUpdate);
       lazy.UM.downloadingUpdate = null;
@@ -6439,6 +6630,9 @@ Downloader.prototype = {
       lazy.UM.downloadingUpdate.state = state;
     }
     if (migratedToReadyUpdate) {
+      LOG(
+        "Downloader:onStopRequest - Moving downloadingUpdate into readyUpdate"
+      );
       lazy.UM.readyUpdate = lazy.UM.downloadingUpdate;
       lazy.UM.downloadingUpdate = null;
     }
@@ -6472,6 +6666,10 @@ Downloader.prototype = {
           );
           let success = await this.downloadUpdate(this._update);
           if (!success) {
+            LOG(
+              "Downloader:onStopRequest - Failed to fall back to " +
+                "nsIIncrementalDownload. Cleaning up downloading update."
+            );
             cleanupDownloadingUpdate();
           } else {
             allFailed = false;
@@ -6492,6 +6690,10 @@ Downloader.prototype = {
           let success = await this.downloadUpdate(this._update);
 
           if (!success) {
+            LOG(
+              "Downloader:onStopRequest - Failed to fall back to complete " +
+                "patch. Cleaning up downloading update."
+            );
             cleanupDownloadingUpdate();
           } else {
             allFailed = false;
