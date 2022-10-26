@@ -20,18 +20,22 @@ import org.mozilla.geckoview.test.TrackingPermissionService.TrackingPermissionIn
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Criteria
+import android.location.Location
 import android.location.LocationManager
 import android.os.Build
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.MediumTest
+import android.os.SystemClock
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.filters.MediumTest
+import androidx.test.ext.junit.runners.AndroidJUnit4
+
 import org.hamcrest.Matchers.*
 import org.json.JSONArray
 import org.junit.Assert.fail
 import org.junit.Assume.assumeThat
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.Ignore
 import org.mozilla.geckoview.GeckoSessionSettings
 
 @RunWith(AndroidJUnit4::class)
@@ -575,7 +579,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat("Permission should be granted",
                 result as String, equalTo("granted"))
 
-        val perms = sessionRule.waitForResult(storageController.getPermissions(url, false))
+        val perms = sessionRule.waitForResult(storageController.getPermissions(url))
 
         assertThat("Permissions should not be null", perms, notNullValue())
         var permFound = false
@@ -631,7 +635,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat("Permission should be granted",
                 result2 as String, equalTo("granted"))
 
-        val perms2 = sessionRule.waitForResult(storageController.getPermissions(url, true))
+        val perms2 = sessionRule.waitForResult(storageController.getPermissions(url))
 
         assertThat("Permissions should not be null", perms, notNullValue())
         permFound = false
