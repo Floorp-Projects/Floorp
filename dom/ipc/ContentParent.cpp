@@ -1229,23 +1229,26 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateGMPService() {
   Endpoint<PGMPServiceParent> parent;
   Endpoint<PGMPServiceChild> child;
 
+  if (mGMPCreated) {
+    return IPC_FAIL(this, "GMP Service already created");
+  }
+
   nsresult rv;
   rv = PGMPService::CreateEndpoints(base::GetCurrentProcId(), OtherPid(),
                                     &parent, &child);
   if (NS_FAILED(rv)) {
-    MOZ_ASSERT(false, "CreateEndpoints failed");
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "CreateEndpoints failed");
   }
 
   if (!GMPServiceParent::Create(std::move(parent))) {
-    MOZ_ASSERT(false, "GMPServiceParent::Create failed");
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "GMPServiceParent::Create failed");
   }
 
   if (!SendInitGMPService(std::move(child))) {
-    MOZ_ASSERT(false, "SendInitGMPService failed");
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "SendInitGMPService failed");
   }
+
+  mGMPCreated = true;
 
   return IPC_OK();
 }
@@ -2833,6 +2836,7 @@ ContentParent::ContentParent(const nsACString& aRemoteType, int32_t aJSPluginID)
       mIsRemoteInputEventQueueEnabled(false),
       mIsInputPriorityEventEnabled(false),
       mIsInPool(false),
+      mGMPCreated(false),
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       mBlockShutdownCalled(false),
 #endif
@@ -3534,7 +3538,7 @@ mozilla::ipc::IPCResult ContentParent::RecvPlaySound(nsIURI* aURI) {
   // If the check here fails, it can only mean that this message was spoofed.
   if (!aURI || !aURI->SchemeIs("chrome")) {
     // PlaySound only accepts a valid chrome URI.
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Invalid aURI passed.");
   }
   nsCOMPtr<nsIURL> soundURL(do_QueryInterface(aURI));
   if (!soundURL) {
@@ -4609,7 +4613,7 @@ bool ContentParent::DeallocPSpeechSynthesisParent(
 mozilla::ipc::IPCResult ContentParent::RecvPSpeechSynthesisConstructor(
     PSpeechSynthesisParent* aActor) {
   if (!static_cast<SpeechSynthesisParent*>(aActor)->SendInit()) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "SpeechSynthesisParent::SendInit failed.");
   }
   return IPC_OK();
 }
@@ -4633,7 +4637,7 @@ mozilla::ipc::IPCResult ContentParent::RecvStartVisitedQueries(
 mozilla::ipc::IPCResult ContentParent::RecvSetURITitle(nsIURI* uri,
                                                        const nsAString& title) {
   if (!uri) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "uri must not be null.");
   }
   nsCOMPtr<IHistory> history = components::History::Service();
   if (history) {
@@ -4647,14 +4651,14 @@ mozilla::ipc::IPCResult ContentParent::RecvIsSecureURI(
     bool* aIsSecureURI) {
   nsCOMPtr<nsISiteSecurityService> sss(do_GetService(NS_SSSERVICE_CONTRACTID));
   if (!sss) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Failed to get nsISiteSecurityService.");
   }
   if (!aURI) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "aURI must not be null.");
   }
   nsresult rv = sss->IsSecureURI(aURI, aOriginAttributes, aIsSecureURI);
   if (NS_FAILED(rv)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "IsSecureURI failed.");
   }
   return IPC_OK();
 }
@@ -4663,7 +4667,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAccumulateMixedContentHSTS(
     nsIURI* aURI, const bool& aActive,
     const OriginAttributes& aOriginAttributes) {
   if (!aURI) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "aURI must not be null.");
   }
   nsMixedContentBlocker::AccumulateMixedContentHSTS(aURI, aActive,
                                                     aOriginAttributes);
@@ -4686,7 +4690,7 @@ mozilla::ipc::IPCResult ContentParent::RecvLoadURIExternal(
   }
 
   if (!uri) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "uri must not be null.");
   }
 
   BrowsingContext* bc = aContext.get();
@@ -4724,7 +4728,7 @@ mozilla::ipc::IPCResult ContentParent::RecvExtProtocolChannelConnectParent(
 mozilla::ipc::IPCResult ContentParent::RecvShowAlert(
     nsIAlertNotification* aAlert) {
   if (!aAlert) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "aAlert must not be null.");
   }
   nsCOMPtr<nsIAlertsService> sysAlerts(components::Alerts::Service());
   if (sysAlerts) {
@@ -5087,12 +5091,12 @@ mozilla::ipc::IPCResult ContentParent::RecvAddIdleObserver(
   nsresult rv;
   nsCOMPtr<nsIUserIdleService> idleService =
       do_GetService("@mozilla.org/widget/useridleservice;1", &rv);
-  NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
+  NS_ENSURE_SUCCESS(rv, IPC_FAIL(this, "Failed to get UserIdleService."));
 
   RefPtr<ParentIdleListener> listener =
       new ParentIdleListener(this, aObserver, aIdleTimeInS);
   rv = idleService->AddIdleObserver(listener, aIdleTimeInS);
-  NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
+  NS_ENSURE_SUCCESS(rv, IPC_FAIL(this, "AddIdleObserver failed."));
   mIdleListeners.AppendElement(listener);
   return IPC_OK();
 }
@@ -5106,7 +5110,7 @@ mozilla::ipc::IPCResult ContentParent::RecvRemoveIdleObserver(
       nsresult rv;
       nsCOMPtr<nsIUserIdleService> idleService =
           do_GetService("@mozilla.org/widget/useridleservice;1", &rv);
-      NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
+      NS_ENSURE_SUCCESS(rv, IPC_FAIL(this, "Failed to get UserIdleService."));
       idleService->RemoveIdleObserver(listener, aIdleTimeInS);
       mIdleListeners.RemoveElementAt(i);
       break;
@@ -5846,7 +5850,7 @@ mozilla::ipc::IPCResult ContentParent::RecvStartCmapLoading(
 mozilla::ipc::IPCResult ContentParent::RecvGetHyphDict(
     nsIURI* aURI, base::SharedMemoryHandle* aOutHandle, uint32_t* aOutSize) {
   if (!aURI) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "aURI must not be null.");
   }
   nsHyphenationManager::Instance()->ShareHyphDictToProcess(
       aURI, Pid(), aOutHandle, aOutSize);
@@ -5880,8 +5884,7 @@ mozilla::ipc::IPCResult ContentParent::RecvBeginDriverCrashGuard(
       guard = MakeUnique<gfx::WMFVPXVideoCrashGuard>(this);
       break;
     default:
-      MOZ_ASSERT_UNREACHABLE("unknown crash guard type");
-      return IPC_FAIL_NO_REASON(this);
+      return IPC_FAIL(this, "unknown crash guard type");
   }
 
   if (guard->Crashed()) {
@@ -6054,7 +6057,7 @@ mozilla::ipc::IPCResult ContentParent::RecvStoreAndBroadcastBlobURLRegistration(
   }
   RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aBlob);
   if (NS_WARN_IF(!blobImpl)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Blob deserialization failed.");
   }
 
   BlobURLProtocolHandler::AddDataEntry(aURI, aPrincipal, aAgentClusterId,
@@ -6132,9 +6135,12 @@ mozilla::ipc::IPCResult ContentParent::RecvGetFilesRequest(
   if (!mozilla::Preferences::GetBool("dom.filesystem.pathcheck.disabled",
                                      false)) {
     RefPtr<FileSystemSecurity> fss = FileSystemSecurity::Get();
-    if (NS_WARN_IF(!fss || !fss->ContentProcessHasAccessTo(ChildID(),
-                                                           aDirectoryPath))) {
-      return IPC_FAIL_NO_REASON(this);
+    if (!fss) {
+      return IPC_FAIL(this, "Failed to get FileSystemSecurity.");
+    }
+
+    if (!fss->ContentProcessHasAccessTo(ChildID(), aDirectoryPath)) {
+      return IPC_FAIL(this, "ContentProcessHasAccessTo failed.");
     }
   }
 
@@ -6145,7 +6151,7 @@ mozilla::ipc::IPCResult ContentParent::RecvGetFilesRequest(
   if (NS_WARN_IF(rv.Failed())) {
     if (!SendGetFilesResponse(aUUID,
                               GetFilesResponseFailure(rv.StealNSResult()))) {
-      return IPC_FAIL_NO_REASON(this);
+      return IPC_FAIL(this, "SendGetFilesResponse failed.");
     }
     return IPC_OK();
   }
@@ -6492,8 +6498,7 @@ mozilla::ipc::IPCResult ContentParent::RecvPURLClassifierLocalConstructor(
   nsTArray<IPCURLClassifierFeature> features = std::move(aFeatures);
 
   if (!aURI) {
-    NS_WARNING("aURI should not be null");
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "aURI should not be null");
   }
 
   auto* actor = static_cast<URLClassifierLocalParent*>(aActor);
@@ -6524,7 +6529,7 @@ mozilla::ipc::IPCResult ContentParent::RecvPLoginReputationConstructor(
   MOZ_ASSERT(aActor);
 
   if (!aURI) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "aURI should not be null");
   }
 
   auto* actor = static_cast<LoginReputationParent*>(aActor);
@@ -6554,7 +6559,7 @@ mozilla::ipc::IPCResult ContentParent::RecvPSessionStorageObserverConstructor(
   MOZ_ASSERT(aActor);
 
   if (!mozilla::dom::RecvPSessionStorageObserverConstructor(aActor)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "RecvPSessionStorageObserverConstructor failed.");
   }
   return IPC_OK();
 }
