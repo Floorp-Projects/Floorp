@@ -282,6 +282,10 @@ void AddContentSandboxLevelAnnotation() {
     int level = GetEffectiveContentSandboxLevel();
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::ContentSandboxLevel, level);
+  } else if (XRE_GetProcessType() == GeckoProcessType_GPU) {
+    int level = GetEffectiveGpuSandboxLevel();
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::GpuSandboxLevel, level);
   }
 }
 #endif /* MOZ_SANDBOX */

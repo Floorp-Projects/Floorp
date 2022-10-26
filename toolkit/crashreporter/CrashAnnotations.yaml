@@ -219,6 +219,11 @@ ContentSandboxWin32kState:
     Content sandbox Win32k state
   type: string
 
+GpuSandboxLevel:
+  description: >
+    GPU sandbox level.
+  type: integer
+
 CoUnmarshalInterfaceResult:
   description: >
     Annotation describing the error returned by trying to unmarshal an object
