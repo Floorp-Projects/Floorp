@@ -1705,7 +1705,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     auto contain = mContain;
     // content-visibility and container-type implicitly enable some containment
     // flags.
-    if (MOZ_LIKELY(mContainerType == mozilla::StyleContainerType::Normal) &&
+    if (MOZ_LIKELY(!mContainerType) &&
         MOZ_LIKELY(mContentVisibility == StyleContentVisibility::Visible)) {
       return contain;
     }
@@ -1726,24 +1726,18 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
         break;
     }
 
-    switch (mContainerType) {
-      case mozilla::StyleContainerType::Normal:
-        break;
-      case mozilla::StyleContainerType::InlineSize:
-        // https://drafts.csswg.org/css-contain-3/#valdef-container-type-inline-size:
-        //     Applies layout containment, style containment, and inline-size
-        //     containment to the principal box.
-        contain |= mozilla::StyleContain::LAYOUT |
-                   mozilla::StyleContain::STYLE |
-                   mozilla::StyleContain::INLINE_SIZE;
-        break;
-      case mozilla::StyleContainerType::Size:
-        // https://drafts.csswg.org/css-contain-3/#valdef-container-type-size:
-        //     Applies layout containment, style containment, and size
-        //     containment to the principal box.
-        contain |= mozilla::StyleContain::LAYOUT |
-                   mozilla::StyleContain::STYLE | mozilla::StyleContain::SIZE;
-        break;
+    if (mContainerType & mozilla::StyleContainerType::SIZE) {
+      // https://drafts.csswg.org/css-contain-3/#valdef-container-type-size:
+      //     Applies layout containment, style containment, and size containment
+      //     to the principal box.
+      contain |= mozilla::StyleContain::LAYOUT | mozilla::StyleContain::STYLE |
+                 mozilla::StyleContain::SIZE;
+    } else if (mContainerType & mozilla::StyleContainerType::INLINE_SIZE) {
+      // https://drafts.csswg.org/css-contain-3/#valdef-container-type-inline-size:
+      //     Applies layout containment, style containment, and inline-size
+      //     containment to the principal box.
+      contain |= mozilla::StyleContain::LAYOUT | mozilla::StyleContain::STYLE |
+                 mozilla::StyleContain::INLINE_SIZE;
     }
 
     return contain;
