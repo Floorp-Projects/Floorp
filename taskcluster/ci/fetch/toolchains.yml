@@ -353,13 +353,6 @@ clang-14:
         repo: https://github.com/llvm/llvm-project
         revision: 4bc1d0b51c8e488d78ab69c8b19cfbcd1f7db6a4
 
-clang-15:
-    description: clang 15.0.3 source code
-    fetch:
-        type: git
-        repo: https://github.com/llvm/llvm-project
-        revision: 4a2c05b05ed07f1f620e94f6524a8b4b2760a0b1
-
 clang-trunk:
     description: clang main branch source code
     attributes:
