@@ -280,6 +280,11 @@ static bool GetPrefValueForFeature(int32_t aFeature, int32_t& aValue,
     return false;
   }
 
+  if (aValue == nsIGfxInfo::FEATURE_DENIED) {
+    // We should never see the DENIED status with the downloadable blocklist.
+    return false;
+  }
+
   nsCString failureprefname(prefname);
   failureprefname += ".failureid";
   nsAutoCString failureValue;
@@ -303,7 +308,7 @@ static void SetPrefValueForFeature(int32_t aFeature, int32_t aValue,
 
   Preferences::SetInt(prefname, aValue);
   if (!aFailureId.IsEmpty()) {
-    nsCString failureprefname(prefname);
+    nsAutoCString failureprefname(prefname);
     failureprefname += ".failureid";
     Preferences::SetCString(failureprefname.get(), aFailureId);
   }
@@ -810,6 +815,8 @@ GfxInfoBase::GetFeatureStatus(int32_t aFeature, nsACString& aFailureId,
     return NS_OK;
   }
 
+  // This is how we evaluate the downloadable blocklist. If there is no pref,
+  // then we will fallback to checking the static blocklist.
   if (GetPrefValueForFeature(aFeature, *aStatus, aFailureId)) {
     return NS_OK;
   }
@@ -1308,10 +1315,7 @@ nsresult GfxInfoBase::GetFeatureStatusImpl(
     return NS_OK;
   }
 
-  // Check if the device is blocked from the downloaded blocklist. If not, check
-  // the static list after that. This order is used so that we can later escape
-  // out of static blocks (i.e. if we were wrong or something was patched, we
-  // can back out our static block without doing a release).
+  // We only check either the given blocklist, or the static list, as given.
   int32_t status;
   if (aDriverInfo.Length()) {
     status =
@@ -1374,44 +1378,63 @@ GfxInfoBase::GetFeatureSuggestedDriverVersion(int32_t aFeature,
 
 void GfxInfoBase::EvaluateDownloadedBlocklist(
     nsTArray<GfxDriverInfo>& aDriverInfo) {
+  // If the list is empty, then we don't actually want to call
+  // GetFeatureStatusImpl since we will use the static list instead. In that
+  // case, all we want to do is make sure the pref is removed.
+  if (aDriverInfo.IsEmpty()) {
+    gfxCriticalNoteOnce << "Evaluate empty downloaded blocklist";
+    return;
+  }
+
+  OperatingSystem os = GetOperatingSystem();
+
   // For every feature we know about, we evaluate whether this blocklist has a
   // non-STATUS_OK status. If it does, we set the pref we evaluate in
   // GetFeatureStatus above, so we don't need to hold on to this blocklist
   // anywhere permanent.
   for (int feature = 1; feature <= nsIGfxInfo::FEATURE_MAX_VALUE; ++feature) {
-    int32_t status;
+    int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
     nsCString failureId;
     nsAutoString suggestedVersion;
-    if (NS_SUCCEEDED(GetFeatureStatusImpl(feature, &status, suggestedVersion,
-                                          aDriverInfo, failureId))) {
-      switch (status) {
-        default:
-          MOZ_FALLTHROUGH_ASSERT("Unhandled feature status!");
-        case nsIGfxInfo::FEATURE_STATUS_UNKNOWN:
-          // UNKNOWN may be returned during shutdown or for invalid features.
-        case nsIGfxInfo::FEATURE_STATUS_OK:
-        case nsIGfxInfo::FEATURE_ALLOW_ALWAYS:
-        case nsIGfxInfo::FEATURE_ALLOW_QUALIFIED:
-          RemovePrefForFeature(feature);
-          break;
 
-        case nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION:
-          if (!suggestedVersion.IsEmpty()) {
-            SetPrefValueForDriverVersion(suggestedVersion);
-          } else {
-            RemovePrefForDriverVersion();
-          }
-          [[fallthrough]];
+    // Note that we are careful to call the base class method since we only want
+    // to evaluate the downloadable blocklist for these prefs.
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(GfxInfoBase::GetFeatureStatusImpl(
+        feature, &status, suggestedVersion, aDriverInfo, failureId, &os)));
 
-        case nsIGfxInfo::FEATURE_BLOCKED_MISMATCHED_VERSION:
-        case nsIGfxInfo::FEATURE_BLOCKED_DEVICE:
-        case nsIGfxInfo::FEATURE_DISCOURAGED:
-        case nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION:
-        case nsIGfxInfo::FEATURE_DENIED:
-        case nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST:
-          SetPrefValueForFeature(feature, status, failureId);
-          break;
-      }
+    switch (status) {
+      default:
+        MOZ_FALLTHROUGH_ASSERT("Unhandled feature status!");
+      case nsIGfxInfo::FEATURE_STATUS_UNKNOWN:
+        // This may be returned during shutdown or for invalid features.
+      case nsIGfxInfo::FEATURE_ALLOW_ALWAYS:
+      case nsIGfxInfo::FEATURE_ALLOW_QUALIFIED:
+      case nsIGfxInfo::FEATURE_DENIED:
+        // We cannot use the downloadable blocklist to control the allowlist.
+        // If a feature is allowlisted, then we should also ignore DENIED
+        // statuses from GetFeatureStatusImpl because we don't check the
+        // static list when and this is an expected value. If we wish to
+        // override the allowlist, it is as simple as creating a normal
+        // blocklist rule with a BLOCKED* status code.
+      case nsIGfxInfo::FEATURE_STATUS_OK:
+        RemovePrefForFeature(feature);
+        break;
+
+      case nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION:
+        if (!suggestedVersion.IsEmpty()) {
+          SetPrefValueForDriverVersion(suggestedVersion);
+        } else {
+          RemovePrefForDriverVersion();
+        }
+        [[fallthrough]];
+
+      case nsIGfxInfo::FEATURE_BLOCKED_MISMATCHED_VERSION:
+      case nsIGfxInfo::FEATURE_BLOCKED_DEVICE:
+      case nsIGfxInfo::FEATURE_DISCOURAGED:
+      case nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION:
+      case nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST:
+        SetPrefValueForFeature(feature, status, failureId);
+        break;
     }
   }
 }
