@@ -62,7 +62,7 @@ Protocol (CDP).  This protocol allows a client to:
   network traffic;
 
 - and extract information from the user session, including cookies
-  and local strage.
+  and local storage.
 
 There are no web-exposed features in the Remote Agent whatsoever.
 
