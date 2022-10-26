@@ -1015,7 +1015,7 @@ static WebIDLProcType ProcTypeToWebIDL(mozilla::ProcType aType) {
       "In order for this static cast to be okay, "
       "WebIDLProcType must match ProcType exactly");
 
-  // These must match the similar ones in E10SUtils.jsm, RemoteTypes.h,
+  // These must match the similar ones in E10SUtils.sys.mjs, RemoteTypes.h,
   // ProcInfo.h and ChromeUtils.webidl
   switch (aType) {
     PROCTYPE_TO_WEBIDL_CASE(Web, Web);

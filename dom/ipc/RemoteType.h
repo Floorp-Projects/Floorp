@@ -10,7 +10,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 
-// These must match the similar ones in E10SUtils.jsm and ProcInfo.h and
+// These must match the similar ones in E10SUtils.sys.mjs and ProcInfo.h and
 // ChromeUtils.webidl Process names as reported by about:memory are defined in
 // ContentChild:RecvRemoteType.  Add your value there too or it will be called
 // "Web Content".
