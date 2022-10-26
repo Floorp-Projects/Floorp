@@ -832,13 +832,17 @@ mozilla::ipc::IPCResult CamerasParent::RecvStartCapture(
                 static_cast<webrtc::VideoType>(ipcCaps.videoType());
             capability.interlaced = ipcCaps.interlaced();
 
+#ifndef FUZZING_SNAPSHOT
             MOZ_DIAGNOSTIC_ASSERT(sDeviceUniqueIDs.find(aCaptureId) ==
                                   sDeviceUniqueIDs.end());
+#endif
             sDeviceUniqueIDs.emplace(aCaptureId,
                                      cap.VideoCapture()->CurrentDeviceName());
 
+#ifndef FUZZING_SNAPSHOT
             MOZ_DIAGNOSTIC_ASSERT(sAllRequestedCapabilities.find(aCaptureId) ==
                                   sAllRequestedCapabilities.end());
+#endif
             sAllRequestedCapabilities.emplace(aCaptureId, capability);
 
             if (aCapEngine == CameraEngine) {
