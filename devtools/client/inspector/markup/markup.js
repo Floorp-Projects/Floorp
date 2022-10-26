@@ -258,6 +258,8 @@ function MarkupView(inspector, frame, controllerWindow) {
   this.doc = this._frame.contentDocument;
   this._elt = this.doc.getElementById("root");
   this.telemetry = this.inspector.telemetry;
+  this._breakpointIDsInLocalState = new Map();
+  this._containersToUpdate = new Map();
 
   this.maxChildren = Services.prefs.getIntPref(
     "devtools.markup.pagesize",
@@ -306,6 +308,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._onNewSelection = this._onNewSelection.bind(this);
   this._onToolboxPickerCanceled = this._onToolboxPickerCanceled.bind(this);
   this._onToolboxPickerHover = this._onToolboxPickerHover.bind(this);
+  this._onDomMutation = this._onDomMutation.bind(this);
 
   // Listening to various events.
   this._elt.addEventListener("blur", this._onBlur, true);
@@ -315,6 +318,9 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._elt.addEventListener("mouseout", this._onMouseOut);
   this._frame.addEventListener("focus", this._onFocus);
   this.inspector.selection.on("new-node-front", this._onNewSelection);
+  this._unsubscribeFromToolboxStore = this.inspector.toolbox.store.subscribe(
+    this._onDomMutation
+  );
 
   if (flags.testing) {
     // In tests, we start listening immediately to avoid having to simulate a mousemove.
@@ -419,6 +425,46 @@ MarkupView.prototype = {
     }
 
     return this._undo;
+  },
+
+  _onDomMutation() {
+    const domMutationBreakpoints = this.inspector.toolbox.store.getState()
+      .domMutationBreakpoints.breakpoints;
+    const breakpointIDsInCurrentState = [];
+    for (const breakpoint of domMutationBreakpoints) {
+      const nodeFront = breakpoint.nodeFront;
+      const mutationType = breakpoint.mutationType;
+      const enabledStatus = breakpoint.enabled;
+      breakpointIDsInCurrentState.push(breakpoint.id);
+      // If breakpoint is not in local state
+      if (!this._breakpointIDsInLocalState.has(breakpoint.id)) {
+        this._breakpointIDsInLocalState.set(breakpoint.id, breakpoint);
+        if (!this._containersToUpdate.has(nodeFront)) {
+          this._containersToUpdate.set(nodeFront, new Map());
+        }
+      }
+      this._containersToUpdate.get(nodeFront).set(mutationType, enabledStatus);
+    }
+    // If a breakpoint is in local state but not current state, it has been
+    // removed by the user.
+    for (const id of this._breakpointIDsInLocalState.keys()) {
+      if (breakpointIDsInCurrentState.includes(id) === false) {
+        const nodeFront = this._breakpointIDsInLocalState.get(id).nodeFront;
+        const mutationType = this._breakpointIDsInLocalState.get(id)
+          .mutationType;
+        this._containersToUpdate.get(nodeFront).delete(mutationType);
+        this._breakpointIDsInLocalState.delete(id);
+      }
+    }
+    // Update each container
+    for (const nodeFront of this._containersToUpdate.keys()) {
+      const mutationBreakpoints = this._containersToUpdate.get(nodeFront);
+      const container = this.getContainer(nodeFront);
+      container.update(mutationBreakpoints);
+      if (this._containersToUpdate.get(nodeFront).size === 0) {
+        this._containersToUpdate.delete(nodeFront);
+      }
+    }
   },
 
   /**
@@ -1520,8 +1566,7 @@ MarkupView.prototype = {
         type === "characterData" ||
         type === "customElementDefined" ||
         type === "events" ||
-        type === "pseudoClassLock" ||
-        type === "mutationBreakpoint"
+        type === "pseudoClassLock"
       ) {
         container.update();
       } else if (
@@ -2438,6 +2483,7 @@ MarkupView.prototype = {
     this._elt.removeEventListener("mousemove", this._onMouseMove);
     this._elt.removeEventListener("mouseout", this._onMouseOut);
     this._frame.removeEventListener("focus", this._onFocus);
+    this._unsubscribeFromToolboxStore();
     this.inspector.selection.off("new-node-front", this._onNewSelection);
     this.resourceCommand.unwatchResources(
       [this.resourceCommand.TYPES.ROOT_NODE],
