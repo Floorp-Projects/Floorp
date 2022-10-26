@@ -614,9 +614,6 @@ struct TableDesc {
   uint32_t initialLength;
   Maybe<uint32_t> maximumLength;
 
-  WASM_CHECK_CACHEABLE_POD(elemType, isImportedOrExported, isAsmJS,
-                           globalDataOffset, initialLength, maximumLength);
-
   TableDesc() = default;
   TableDesc(RefType elemType, uint32_t initialLength,
             Maybe<uint32_t> maximumLength, bool isAsmJS,
@@ -628,8 +625,6 @@ struct TableDesc {
         initialLength(initialLength),
         maximumLength(maximumLength) {}
 };
-
-WASM_DECLARE_CACHEABLE_POD(TableDesc);
 
 using TableDescVector = Vector<TableDesc, 0, SystemAllocPolicy>;
 

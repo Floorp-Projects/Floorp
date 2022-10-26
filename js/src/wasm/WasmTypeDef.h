@@ -213,11 +213,7 @@ struct StructField {
   FieldType type;
   uint32_t offset;
   bool isMutable;
-
-  WASM_CHECK_CACHEABLE_POD(type, offset, isMutable);
 };
-
-WASM_DECLARE_CACHEABLE_POD(StructField);
 
 using StructFieldVector = Vector<StructField, 0, SystemAllocPolicy>;
 
@@ -296,9 +292,8 @@ class ArrayType {
   FieldType elementType_;  // field type
   bool isMutable_;         // mutability
 
-  WASM_CHECK_CACHEABLE_POD(elementType_, isMutable_);
-
  public:
+  ArrayType() : isMutable_(false) {}
   ArrayType(FieldType elementType, bool isMutable)
       : elementType_(elementType), isMutable_(isMutable) {}
 

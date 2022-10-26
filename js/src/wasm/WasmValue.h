@@ -276,20 +276,17 @@ class LitVal {
 
     Cell() : v128_() {}
     ~Cell() = default;
+
+    WASM_CHECK_CACHEABLE_POD(i32_, i64_, f32_, f64_, v128_);
+    WASM_ALLOW_NON_CACHEABLE_POD_FIELD(
+        ref_,
+        "The pointer value in ref_ is guaranteed to always be null in a "
+        "LitVal.");
   };
 
  protected:
   ValType type_;
   Cell cell_;
-
-  // We check the fields of cell_ here instead of in the union to avoid a
-  // template issue. In addition, Cell is only cacheable POD when used in
-  // LitVal and not Val, so checking here makes sense.
-  WASM_CHECK_CACHEABLE_POD(type_, cell_.i32_, cell_.i64_, cell_.f32_,
-                           cell_.f64_, cell_.v128_);
-  WASM_ALLOW_NON_CACHEABLE_POD_FIELD(
-      cell_.ref_,
-      "The pointer value in ref_ is guaranteed to always be null in a LitVal.");
 
  public:
   LitVal() : type_(ValType()), cell_{} {}
@@ -369,9 +366,11 @@ class LitVal {
     MOZ_ASSERT(type_ == ValType::V128);
     return cell_.v128_;
   }
+
+  WASM_DECLARE_FRIEND_SERIALIZE(LitVal);
 };
 
-WASM_DECLARE_CACHEABLE_POD(LitVal);
+WASM_DECLARE_CACHEABLE_POD(LitVal::Cell);
 
 // A Val is a LitVal that can contain (non-null) pointers to GC things. All Vals
 // must be used with the rooting APIs as they may contain JS objects.
