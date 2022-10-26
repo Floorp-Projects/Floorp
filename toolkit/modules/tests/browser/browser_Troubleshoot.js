@@ -1043,6 +1043,10 @@ const SNAPSHOT_SCHEMA = {
           required: AppConstants.MOZ_SANDBOX,
           type: "string",
         },
+        supportSandboxGpuLevel: {
+          required: AppConstants.MOZ_SANDBOX,
+          type: "number",
+        },
         syscallLog: {
           required: AppConstants.platform == "linux",
           type: "array",
