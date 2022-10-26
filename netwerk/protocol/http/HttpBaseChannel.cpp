@@ -4434,8 +4434,10 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
     TimeStamp newRedirectEnd;
     if (shouldHideTiming) {
       newRedirectEnd = config.timedChannelInfo->redirectEnd();
-    } else {
+    } else if (!config.timedChannelInfo->responseEnd().IsNull()) {
       newRedirectEnd = config.timedChannelInfo->responseEnd();
+    } else {
+      newRedirectEnd = TimeStamp::Now();
     }
     newTimedChannel->SetRedirectEnd(newRedirectEnd);
 
