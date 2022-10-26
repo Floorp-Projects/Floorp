@@ -543,11 +543,11 @@ inline void SetInitialSingleChild(nsContainerFrame* aParent, nsIFrame* aFrame) {
 // state information needed for absolutely positioned elements
 namespace mozilla {
 struct AbsoluteFrameList final : public nsFrameList {
-  // containing block for absolutely positioned elements
-  nsContainerFrame* containingBlock;
+  // Containing block for absolutely positioned elements.
+  nsContainerFrame* mContainingBlock;
 
   explicit AbsoluteFrameList(nsContainerFrame* aContainingBlock = nullptr)
-      : containingBlock(aContainingBlock) {}
+      : mContainingBlock(aContainingBlock) {}
 
   // Transfer frames in aOther to this list. aOther becomes empty after this
   // operation.
@@ -827,7 +827,7 @@ nsFrameConstructorState::nsFrameConstructorState(
   nsIPopupContainer* popupContainer =
       nsIPopupContainer::GetPopupContainer(aPresShell);
   if (popupContainer) {
-    mPopupList.containingBlock = popupContainer->GetPopupSetFrame();
+    mPopupList.mContainingBlock = popupContainer->GetPopupSetFrame();
   }
   MOZ_COUNT_CTOR(nsFrameConstructorState);
 }
@@ -955,10 +955,10 @@ nsContainerFrame* nsFrameConstructorState::GetGeometricParent(
     return aContentParentFrame;
   }
 
-  if (aStyleDisplay.IsFloatingStyle() && mFloatedList.containingBlock) {
+  if (aStyleDisplay.IsFloatingStyle() && mFloatedList.mContainingBlock) {
     NS_ASSERTION(!aStyleDisplay.IsAbsolutelyPositionedStyle(),
                  "Absolutely positioned _and_ floating?");
-    return mFloatedList.containingBlock;
+    return mFloatedList.mContainingBlock;
   }
 
   if (aStyleDisplay.mTopLayer != StyleTopLayer::None) {
@@ -967,22 +967,22 @@ nsContainerFrame* nsFrameConstructorState::GetGeometricParent(
     MOZ_ASSERT(aStyleDisplay.IsAbsolutelyPositionedStyle(),
                "Top layer items should always be absolutely positioned");
     if (aStyleDisplay.mPosition == StylePositionProperty::Fixed) {
-      MOZ_ASSERT(mTopLayerFixedList.containingBlock, "No root frame?");
-      return mTopLayerFixedList.containingBlock;
+      MOZ_ASSERT(mTopLayerFixedList.mContainingBlock, "No root frame?");
+      return mTopLayerFixedList.mContainingBlock;
     }
     MOZ_ASSERT(aStyleDisplay.mPosition == StylePositionProperty::Absolute);
-    MOZ_ASSERT(mTopLayerAbsoluteList.containingBlock);
-    return mTopLayerAbsoluteList.containingBlock;
+    MOZ_ASSERT(mTopLayerAbsoluteList.mContainingBlock);
+    return mTopLayerAbsoluteList.mContainingBlock;
   }
 
   if (aStyleDisplay.mPosition == StylePositionProperty::Absolute &&
-      mAbsoluteList.containingBlock) {
-    return mAbsoluteList.containingBlock;
+      mAbsoluteList.mContainingBlock) {
+    return mAbsoluteList.mContainingBlock;
   }
 
   if (aStyleDisplay.mPosition == StylePositionProperty::Fixed &&
-      GetFixedList().containingBlock) {
-    return GetFixedList().containingBlock;
+      GetFixedList().mContainingBlock) {
+    return GetFixedList().mContainingBlock;
   }
 
   return aContentParentFrame;
@@ -1057,7 +1057,7 @@ AbsoluteFrameList* nsFrameConstructorState::GetOutOfFlowFrameList(
     nsIFrame* aNewFrame, bool aCanBePositioned, bool aCanBeFloated,
     bool aIsOutOfFlowPopup, nsFrameState* aPlaceholderType) {
   if (MOZ_UNLIKELY(aIsOutOfFlowPopup)) {
-    MOZ_ASSERT(mPopupList.containingBlock, "Must have a popup set frame!");
+    MOZ_ASSERT(mPopupList.mContainingBlock, "Must have a popup set frame!");
     *aPlaceholderType = PLACEHOLDER_FOR_POPUP;
     return &mPopupList;
   }
@@ -1138,8 +1138,8 @@ void nsFrameConstructorState::AddChild(
   // all apply here, unfortunately. Thus, we need to check whether
   // the returned frame items really has containing block.
   nsFrameList* frameList;
-  if (outOfFlowFrameList && outOfFlowFrameList->containingBlock) {
-    MOZ_ASSERT(aNewFrame->GetParent() == outOfFlowFrameList->containingBlock,
+  if (outOfFlowFrameList && outOfFlowFrameList->mContainingBlock) {
+    MOZ_ASSERT(aNewFrame->GetParent() == outOfFlowFrameList->mContainingBlock,
                "Parent of the frame is not the containing block?");
     frameList = outOfFlowFrameList;
   } else {
@@ -1197,7 +1197,7 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
     return;
   }
 
-  nsContainerFrame* containingBlock = aFrameList.containingBlock;
+  nsContainerFrame* containingBlock = aFrameList.mContainingBlock;
 
   NS_ASSERTION(containingBlock, "Child list without containing block?");
 
@@ -3681,12 +3681,12 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
     bool allowOutOfFlow = !(bits & FCDATA_DISALLOW_OUT_OF_FLOW);
     bool isPopup = aItem.mIsPopup;
     NS_ASSERTION(
-        !isPopup || (aState.mPopupList.containingBlock &&
-                     aState.mPopupList.containingBlock->IsPopupSetFrame()),
+        !isPopup || (aState.mPopupList.mContainingBlock &&
+                     aState.mPopupList.mContainingBlock->IsPopupSetFrame()),
         "Should have a containing block here!");
 
     nsContainerFrame* geometricParent =
-        isPopup ? aState.mPopupList.containingBlock
+        isPopup ? aState.mPopupList.mContainingBlock
                 : (allowOutOfFlow
                        ? aState.GetGeometricParent(*display, aParentFrame)
                        : aParentFrame);
@@ -3781,7 +3781,7 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
                          nsIPopupContainer::GetPopupContainer(mPresShell)
                                  ->GetPopupSetFrame() == newFrame,
                      "Unexpected PopupSetFrame");
-        aState.mPopupList.containingBlock = newFrameAsContainer;
+        aState.mPopupList.mContainingBlock = newFrameAsContainer;
         aState.mHavePendingPopupgroup = false;
       }
 
@@ -5378,7 +5378,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
       (data->mBits & FCDATA_IS_POPUP) && (!aParentFrame ||  // Parent is inline
                                           !aParentFrame->IsMenuFrame());
 
-  if (isPopup && !aState.mPopupList.containingBlock &&
+  if (isPopup && !aState.mPopupList.mContainingBlock &&
       !aState.mHavePendingPopupgroup) {
     return;
   }
@@ -7006,7 +7006,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
   // reason we care is that the internal structure in these cases
   // is not the normal structure and requires custom updating
   // logic.
-  nsContainerFrame* containingBlock = state.mFloatedList.containingBlock;
+  nsContainerFrame* containingBlock = state.mFloatedList.mContainingBlock;
   bool haveFirstLetterStyle = false;
   bool haveFirstLineStyle = false;
 
@@ -7045,7 +7045,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
       }
 
       // Remove the old letter frames before doing the insertion
-      RemoveLetterFrames(mPresShell, state.mFloatedList.containingBlock);
+      RemoveLetterFrames(mPresShell, state.mFloatedList.mContainingBlock);
 
       // Removing the letterframes messes around with the frame tree, removing
       // and creating frames.  We need to reget our prevsibling, parent frame,
@@ -7056,7 +7056,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
       // Need check whether a range insert is still safe.
       if (!isSingleInsert && !isRangeInsertSafe) {
         // Need to recover the letter frames first.
-        RecoverLetterFrames(state.mFloatedList.containingBlock);
+        RecoverLetterFrames(state.mFloatedList.mContainingBlock);
 
         // must fall back to a single ContertInserted for each child in the
         // range
@@ -7278,7 +7278,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
   if (haveFirstLetterStyle) {
     // Recover the letter frames for the containing block when
     // it has first-letter style.
-    RecoverLetterFrames(state.mFloatedList.containingBlock);
+    RecoverLetterFrames(state.mFloatedList.mContainingBlock);
   }
 
 #ifdef DEBUG
