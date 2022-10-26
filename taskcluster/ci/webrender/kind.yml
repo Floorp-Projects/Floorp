@@ -107,7 +107,7 @@ jobs:
                   name: public/build/wrench-macos-headless.tar.bz2
                   path: /builds/worker/artifacts/wrench-macos-headless.tar.bz2
         dependencies:
-            macosx64-clang-14: toolchain-macosx64-clang-14-raw
+            macosx64-clang-14: toolchain-macosx64-clang-14
         fetches:
             toolchain:
                 - linux64-rust-macos
