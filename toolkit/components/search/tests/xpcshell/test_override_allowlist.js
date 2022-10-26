@@ -272,7 +272,7 @@ add_task(async function setup() {
 
   baseExtension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "test@thirdparty.example.com",
         },

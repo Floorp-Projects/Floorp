@@ -31,7 +31,7 @@ const addon1ID = "addon1@tests.mozilla.org";
 const ADDONS = {
   test_addon1: {
     manifest: {
-      applications: { gecko: { id: addon1ID } },
+      browser_specific_settings: { gecko: { id: addon1ID } },
     },
   },
 };

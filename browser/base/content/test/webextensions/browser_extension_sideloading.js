@@ -17,7 +17,7 @@ const kSideloaded = true;
 async function createWebExtension(details) {
   let options = {
     manifest: {
-      applications: { gecko: { id: details.id } },
+      browser_specific_settings: { gecko: { id: details.id } },
 
       name: details.name,
 

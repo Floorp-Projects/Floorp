@@ -305,7 +305,7 @@ export var SearchTestUtils = {
     options.version = options.version ?? "1.0";
     let manifest = {
       version: options.version,
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: options.id,
         },
