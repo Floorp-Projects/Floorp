@@ -27,7 +27,7 @@ using FrameChildListIDs = EnumSet<FrameChildListID>;
 class FrameChildList {
  public:
   FrameChildList(const nsFrameList& aList, FrameChildListID aID)
-      : mList(aList), mID(aID) {}
+      : mList(aList.Clone()), mID(aID) {}
   nsFrameList mList;
   FrameChildListID mID;
 };
