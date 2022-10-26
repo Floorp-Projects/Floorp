@@ -65,17 +65,15 @@ def get_timeout_multiplier(test_type, run_info_data, **kwargs):
             multiplier = 2
 
     if test_type == "reftest":
-        if (
-            run_info_data["debug"]
-            or run_info_data.get("asan")
-            or run_info_data.get("tsan")
-        ):
+        if (run_info_data["debug"] or
+            run_info_data.get("asan") or
+            run_info_data.get("tsan")):
             return 4 * multiplier
         else:
             return 2 * multiplier
-    elif (
-        run_info_data["debug"] or run_info_data.get("asan") or run_info_data.get("tsan")
-    ):
+    elif (run_info_data["debug"] or
+          run_info_data.get("asan") or
+          run_info_data.get("tsan")):
         if run_info_data.get("ccov"):
             return 4 * multiplier
         else:
