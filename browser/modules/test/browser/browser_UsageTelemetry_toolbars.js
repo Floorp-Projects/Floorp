@@ -409,7 +409,7 @@ add_task(async function extensions() {
       useAddonManager: "temporary",
       manifest: {
         version: "1",
-        applications: {
+        browser_specific_settings: {
           gecko: { id: "random_addon@example.com" },
         },
         browser_action: {

@@ -72,7 +72,7 @@ add_task(async function() {
   const id = "secure-proxy@mozilla.com";
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       name: "Firefox Proxy",
     },
     useAddonManager: "temporary",

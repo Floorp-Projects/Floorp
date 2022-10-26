@@ -12,7 +12,7 @@ add_task(async function setup() {
   xpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: { id: ENGINE_ID },
       },
       chrome_settings_overrides: {

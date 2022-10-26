@@ -320,7 +320,7 @@ add_task(async function webextension() {
     const extension = ExtensionTestUtils.loadExtension({
       manifest: {
         version: "1",
-        applications: {
+        browser_specific_settings: {
           gecko: { id: "random_addon@example.com" },
         },
         browser_action: {
@@ -410,7 +410,7 @@ add_task(async function webextension() {
     const extension2 = ExtensionTestUtils.loadExtension({
       manifest: {
         version: "1",
-        applications: {
+        browser_specific_settings: {
           gecko: { id: "random_addon2@example.com" },
         },
         browser_action: {

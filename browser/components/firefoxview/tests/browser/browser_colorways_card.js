@@ -63,7 +63,7 @@ async function createTempTheme(id) {
   const xpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       name: "Monochromatic Theme",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       theme: {},
     },
   });
