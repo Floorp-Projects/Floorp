@@ -40,21 +40,22 @@ dialog[insecureauth] {
   white-space: pre-wrap;
   word-break: break-word;
   unicode-bidi: plaintext;
-}
-
-.sizeDetermined #infoBody {
   overflow-y: auto;
 }
 
 .sizeDetermined,
-.sizeDetermined::part(content-box) {
-  display: flex;
-  flex-direction: column;
+.sizeDetermined::part(content-box),
+.sizeDetermined #infoBody,
+.sizeDetermined #infoRow,
+.sizeDetermined #infoContainer {
+  /* Allow stuff to shrink */
   min-height: 0;
 }
 
-.sizeDetermined > div {
-  display: contents;
+.sizeDetermined #infoRow {
+  /* Make the info row take all the available space, potentially shrinking,
+   * since it's what contains the infoBody, which is scrollable */
+  flex: 1;
 }
 
 #loginLabel, #password1Label {
@@ -74,23 +75,6 @@ dialog[subdialog] .dialogRow:not([hidden]) {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-}
-
-dialog[subdialog] #infoContainer {
-  max-height: 100%;
-}
-
-dialog[subdialog] #infoContainer,
-dialog[subdialog] #checkboxContainer {
-  /* Needed to ensure text wrapping happens correctly. Without this, when
-   * text wraps unexpectedly, the overall dialog height is off by the height
-   * of a line of text. This is 100% of the width, minus the grid padding, 8px
-   * of which is inline padding on the contents of these containers. */
-  max-width: calc(100vw - 2 * var(--grid-padding) + 8px);
-}
-
-.sizeDetermined #infoRow {
-  min-height: 0;
 }
 
 dialog[subdialog] #iconContainer {

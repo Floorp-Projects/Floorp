@@ -25,18 +25,15 @@
     <html:link rel="localization" href="toolkit/global/resetProfile.ftl"/>
   </linkset>
 
-  <!-- The <div> was added in bug 1606617 to workaround bug 1614447 -->
-  <div xmlns="http://www.w3.org/1999/xhtml">
-    <div id="dialogGrid">
-      <div class="dialogRow" id="infoRow">
-        <div id="iconContainer">
-          <xul:image id="infoIcon"/>
-        </div>
-        <div id="infoContainer">
-          <xul:description id="infoTitle" data-l10n-id="refresh-profile-dialog-title"/>
-          <xul:description id="infoBody" context="contentAreaContextMenu" noinitialfocus="true" data-l10n-id="refresh-profile-dialog-description"/>
-          <xul:description id="learnMoreDescription"><a id="refreshProfileLearnMore" data-l10n-id="refresh-profile-learn-more" href=""></a></xul:description>
-        </div>
+  <div xmlns="http://www.w3.org/1999/xhtml" id="dialogGrid">
+    <div class="dialogRow" id="infoRow">
+      <div id="iconContainer">
+        <xul:image id="infoIcon"/>
+      </div>
+      <div id="infoContainer">
+        <xul:description id="infoTitle" data-l10n-id="refresh-profile-dialog-title"/>
+        <xul:description id="infoBody" context="contentAreaContextMenu" noinitialfocus="true" data-l10n-id="refresh-profile-dialog-description"/>
+        <xul:description id="learnMoreDescription"><a id="refreshProfileLearnMore" data-l10n-id="refresh-profile-learn-more" href=""></a></xul:description>
       </div>
     </div>
   </div>
