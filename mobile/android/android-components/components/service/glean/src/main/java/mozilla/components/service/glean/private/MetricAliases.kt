@@ -27,6 +27,7 @@ typealias QuantityMetricType = mozilla.telemetry.glean.private.QuantityMetricTyp
 typealias RecordedExperiment = mozilla.telemetry.glean.private.RecordedExperiment
 typealias StringListMetricType = mozilla.telemetry.glean.private.StringListMetricType
 typealias StringMetricType = mozilla.telemetry.glean.private.StringMetricType
+typealias TextMetricType = mozilla.telemetry.glean.private.TextMetricType
 typealias TimeUnit = mozilla.telemetry.glean.private.TimeUnit
 typealias TimespanMetricType = mozilla.telemetry.glean.private.TimespanMetricType
 typealias TimingDistributionMetricType = mozilla.telemetry.glean.private.TimingDistributionMetricType
