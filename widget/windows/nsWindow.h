@@ -529,7 +529,8 @@ class nsWindow final : public nsBaseWidget {
   bool AssociateWithNativeWindow();
   void DissociateFromNativeWindow();
   bool CanTakeFocus();
-  bool UpdateNonClientMargins(bool aReflowWindow = true);
+  bool UpdateNonClientMargins(int32_t aSizeMode = -1,
+                              bool aReflowWindow = true);
   void UpdateDarkModeToolbar();
   void UpdateGetWindowInfoCaptionStatus(bool aActiveCaption);
   void ResetLayout();
@@ -587,7 +588,7 @@ class nsWindow final : public nsBaseWidget {
    */
   void OnDestroy() override;
   bool OnResize(const LayoutDeviceIntSize& aSize);
-  void OnSizeModeChange();
+  void OnSizeModeChange(nsSizeMode aSizeMode);
   bool OnGesture(WPARAM wParam, LPARAM lParam);
   bool OnTouch(WPARAM wParam, LPARAM lParam);
   bool OnHotKey(WPARAM wParam, LPARAM lParam);
