@@ -337,6 +337,9 @@ class MaybeCrossOriginObject : public Base,
   bool enumerate(JSContext* cx, JS::Handle<JSObject*> proxy,
                  JS::MutableHandleVector<jsid> props) const final;
 
+  // Cross origin objects should not participate in private fields.
+  virtual bool throwOnPrivateField() const override { return true; }
+
   /**
    * Spidermonkey-internal hook used by Object.prototype.toString.  Subclasses
    * need to implement this, because we don't know what className they want.

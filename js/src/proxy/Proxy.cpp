@@ -987,3 +987,26 @@ void ProxyObject::renew(const BaseProxyHandler* handler, const Value& priv) {
     setReservedSlot(i, UndefinedValue());
   }
 }
+
+// This implementation of HostEnsureCanAddPrivateElement is designed to work in
+// collaboration with Gecko to support the HTML implementation, which applies
+// only to Proxy type objects, and as a result we can simply provide proxy
+// handlers to correctly match the required semantics.
+bool DefaultHostEnsureCanAddPrivateElementCallback(JSContext* cx,
+                                                   HandleValue val) {
+  if (!val.isObject()) {
+    return true;
+  }
+
+  Rooted<JSObject*> valObj(cx, &val.toObject());
+  if (!IsProxy(valObj)) {
+    return true;
+  }
+
+  if (GetProxyHandler(valObj)->throwOnPrivateField()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_ILLEGAL_PRIVATE_EXOTIC);
+    return false;
+  }
+  return true;
+}

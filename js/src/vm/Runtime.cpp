@@ -77,6 +77,9 @@ const JSSecurityCallbacks js::NullSecurityCallbacks = {};
 static const JSWrapObjectCallbacks DefaultWrapObjectCallbacks = {
     TransparentObjectWrapper, nullptr};
 
+extern bool DefaultHostEnsureCanAddPrivateElementCallback(JSContext* cx,
+                                                          HandleValue val);
+
 static size_t ReturnZeroSize(const void* p) { return 0; }
 
 JSRuntime::JSRuntime(JSRuntime* parentRuntime)
@@ -100,6 +103,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       DOMcallbacks(nullptr),
       destroyPrincipals(nullptr),
       readPrincipals(nullptr),
+      canAddPrivateElement(&DefaultHostEnsureCanAddPrivateElementCallback),
       warningReporter(nullptr),
       selfHostedLazyScript(),
       geckoProfiler_(thisFromCtor()),
