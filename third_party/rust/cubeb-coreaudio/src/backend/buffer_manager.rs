@@ -147,7 +147,7 @@ impl BufferManager {
         assert!(input_channel_count >= input_channels_to_ignore + output_channel_count);
         // 8 times the expected callback size, to handle the input callback being caled multiple
         //   times in a row correctly.
-        let buffer_element_count = output_channel_count * buffer_size_frames as usize * 8;
+        let buffer_element_count = output_channel_count * buffer_size_frames * 8;
         match format {
             SampleFormat::S16LE | SampleFormat::S16BE | SampleFormat::S16NE => {
                 let ring = RingBuffer::<i16>::new(buffer_element_count);
