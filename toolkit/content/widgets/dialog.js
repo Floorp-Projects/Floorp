@@ -323,6 +323,11 @@
         return;
       }
       try {
+        // FIXME(emilio, bug 1797624): This setTimeout() ensures enough time
+        // has passed so that the dialog vertical margin has been set by the
+        // front-end. For subdialogs, cursor positioning should probably be
+        // done by the opener instead, once the dialog is positioned.
+        await new Promise(r => setTimeout(r, 0));
         await window.promiseDocumentFlushed(() => {});
         window.notifyDefaultButtonLoaded(defaultButton);
       } catch (e) {}
