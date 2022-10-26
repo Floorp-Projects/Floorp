@@ -324,7 +324,6 @@ struct BaseCompiler final {
   // WasmBaselineObject-inl.h.
 
   inline const FuncType& funcType() const;
-  inline const TypeIdDesc& funcTypeId() const;
   inline bool usesMemory() const;
   inline bool usesSharedMemory() const;
   inline bool isMem32() const;

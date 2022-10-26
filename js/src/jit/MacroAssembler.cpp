@@ -3958,15 +3958,15 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
 
   // Write the functype-id into the ABI functype-id register.
 
-  const wasm::TypeIdDesc funcTypeId = callee.wasmTableSigId();
-  switch (funcTypeId.kind()) {
-    case wasm::TypeIdDescKind::Global:
-      loadWasmGlobalPtr(funcTypeId.globalDataOffset(), WasmTableCallSigReg);
+  const wasm::CallIndirectId callIndirectId = callee.wasmTableSigId();
+  switch (callIndirectId.kind()) {
+    case wasm::CallIndirectIdKind::Global:
+      loadWasmGlobalPtr(callIndirectId.globalDataOffset(), WasmTableCallSigReg);
       break;
-    case wasm::TypeIdDescKind::Immediate:
-      move32(Imm32(funcTypeId.immediate()), WasmTableCallSigReg);
+    case wasm::CallIndirectIdKind::Immediate:
+      move32(Imm32(callIndirectId.immediate()), WasmTableCallSigReg);
       break;
-    case wasm::TypeIdDescKind::None:
+    case wasm::CallIndirectIdKind::None:
       break;
   }
 

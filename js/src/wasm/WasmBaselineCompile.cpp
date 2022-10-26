@@ -378,7 +378,7 @@ bool BaseCompiler::beginFunction() {
   }
 
   GenerateFunctionPrologue(
-      masm, *moduleEnv_.funcs[func_.index].typeId,
+      masm, CallIndirectId::forFunc(moduleEnv_, func_.index),
       compilerEnv_.mode() == CompileMode::Tier1 ? Some(func_.index) : Nothing(),
       &offsets_);
 
@@ -1574,15 +1574,16 @@ bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
                                 const Stk& indexVal, const FunctionCall& call,
                                 CodeOffset* fastCallOffset,
                                 CodeOffset* slowCallOffset) {
-  const TypeIdDesc& funcTypeId = moduleEnv_.typeIds[funcTypeIndex];
-  MOZ_ASSERT(funcTypeId.kind() != TypeIdDescKind::None);
+  CallIndirectId callIndirectId =
+      CallIndirectId::forFuncType(moduleEnv_, funcTypeIndex);
+  MOZ_ASSERT(callIndirectId.kind() != CallIndirectIdKind::None);
 
   const TableDesc& table = moduleEnv_.tables[tableIndex];
 
   loadI32(indexVal, RegI32(WasmTableCallIndexReg));
 
   CallSiteDesc desc(bytecodeOffset(), CallSiteDesc::Indirect);
-  CalleeDesc callee = CalleeDesc::wasmTable(table, funcTypeId);
+  CalleeDesc callee = CalleeDesc::wasmTable(table, callIndirectId);
   OutOfLineCode* oob = addOutOfLineCode(
       new (alloc_) OutOfLineAbortingTrap(Trap::OutOfBounds, bytecodeOffset()));
   if (!oob) {
@@ -4706,7 +4707,7 @@ bool BaseCompiler::emitCall() {
 
   CodeOffset raOffset;
   if (import) {
-    raOffset = callImport(moduleEnv_.funcImportGlobalDataOffsets[funcIndex],
+    raOffset = callImport(moduleEnv_.offsetOfFuncImportInstanceData(funcIndex),
                           baselineCall);
   } else {
     raOffset = callDefinition(funcIndex, baselineCall);
@@ -6305,12 +6306,11 @@ void BaseCompiler::emitBarrieredClear(RegPtr valueAddr) {
 #ifdef ENABLE_WASM_GC
 
 void BaseCompiler::emitGcCanon(uint32_t typeIndex) {
-  const TypeIdDesc& typeId = moduleEnv_.typeIds[typeIndex];
   RegRef rp = needRef();
 #  ifndef RABALDR_PIN_INSTANCE
   fr.loadInstancePtr(InstanceReg);
 #  endif
-  masm.loadWasmGlobalPtr(typeId.globalDataOffset(), rp);
+  masm.loadWasmGlobalPtr(moduleEnv_.offsetOfTypeId(typeIndex), rp);
   pushRef(rp);
 }
 

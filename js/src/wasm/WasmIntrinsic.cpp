@@ -150,8 +150,7 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
   // as the function declaration metadata uses pointers into the type vectors
   // that must be stable.
   for (uint32_t funcIndex = 0; funcIndex < ids.size(); funcIndex++) {
-    FuncDesc decl(&(*moduleEnv.types)[funcIndex].funcType(),
-                  &moduleEnv.typeIds[funcIndex], funcIndex);
+    FuncDesc decl(&(*moduleEnv.types)[funcIndex].funcType(), funcIndex);
     if (!moduleEnv.funcs.append(decl)) {
       ReportOutOfMemory(cx);
       return false;

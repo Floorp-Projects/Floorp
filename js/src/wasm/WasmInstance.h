@@ -187,7 +187,7 @@ class alignas(16) Instance {
   MOZ_ALIGNED_DECL(16, char globalArea_);
 
   // Internal helpers:
-  const void** addressOfTypeId(const TypeIdDesc& typeId) const;
+  const void** addressOfTypeId(const uint32_t typeIndex) const;
   FuncImportInstanceData& funcImportInstanceData(const FuncImport& fi);
   TableInstanceData& tableInstanceData(const TableDesc& td) const;
   GCPtr<WasmTagObject*>& tagInstanceData(const TagDesc& td) const;

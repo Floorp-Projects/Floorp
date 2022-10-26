@@ -106,7 +106,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   [[nodiscard]] bool generate();
   [[nodiscard]] bool generateWasm(
-      wasm::TypeIdDesc funcTypeId, wasm::BytecodeOffset trapOffset,
+      wasm::CallIndirectId callIndirectId, wasm::BytecodeOffset trapOffset,
       const wasm::ArgTypeVector& argTys, const RegisterOffsets& trapExitLayout,
       size_t trapExitLayoutNumWords, wasm::FuncOffsets* offsets,
       wasm::StackMaps* stackMaps, wasm::Decoder* decoder);

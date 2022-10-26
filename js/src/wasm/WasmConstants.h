@@ -112,8 +112,6 @@ static constexpr TypeCode AbstractReferenceTypeCode = TypeCode::ExternRef;
 
 static constexpr TypeCode AbstractReferenceTypeIndexCode = TypeCode::Ref;
 
-enum class TypeIdDescKind { None, Immediate, Global };
-
 // A wasm::Trap represents a wasm-defined trap that can occur during execution
 // which triggers a WebAssembly.RuntimeError. Generated code may jump to a Trap
 // symbolically, passing the bytecode offset to report as the trap offset. The

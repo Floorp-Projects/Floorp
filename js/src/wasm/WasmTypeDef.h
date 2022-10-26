@@ -47,6 +47,14 @@ using mozilla::MallocSizeOf;
 class FuncType {
   ValTypeVector args_;
   ValTypeVector results_;
+  // A packed structural type identifier for use in the call_indirect type
+  // check in the prologue of functions. If this function type cannot fit in
+  // this immediate, it will be NO_IMMEDIATE_TYPE_ID.
+  uint32_t immediateTypeId_;
+
+  // This function type cannot be packed into an immediate for call_indirect
+  // signature checks.
+  static const uint32_t NO_IMMEDIATE_TYPE_ID = UINT32_MAX;
 
   // Entry from JS to wasm via the JIT is currently unimplemented for
   // functions that return multiple values.
@@ -90,14 +98,23 @@ class FuncType {
     return false;
   }
 
+  void initImmediateTypeId();
+
  public:
-  FuncType() : args_(), results_() {}
+  FuncType() : args_(), results_() { initImmediateTypeId(); }
+
   FuncType(ValTypeVector&& args, ValTypeVector&& results)
-      : args_(std::move(args)), results_(std::move(results)) {}
+      : args_(std::move(args)), results_(std::move(results)) {
+    initImmediateTypeId();
+  }
+
+  FuncType(FuncType&&) = default;
+  FuncType& operator=(FuncType&&) = default;
 
   [[nodiscard]] bool clone(const FuncType& src) {
     MOZ_ASSERT(args_.empty());
     MOZ_ASSERT(results_.empty());
+    immediateTypeId_ = src.immediateTypeId_;
     return args_.appendAll(src.args_) && results_.appendAll(src.results_);
   }
 
@@ -105,6 +122,18 @@ class FuncType {
   const ValTypeVector& args() const { return args_; }
   ValType result(unsigned i) const { return results_[i]; }
   const ValTypeVector& results() const { return results_; }
+
+  bool hasImmediateTypeId() const {
+    return immediateTypeId_ != NO_IMMEDIATE_TYPE_ID;
+  }
+  uint32_t immediateTypeId() const {
+    MOZ_ASSERT(hasImmediateTypeId());
+    return immediateTypeId_;
+  }
+
+  // The lsb for every immediate type id is set to distinguish an immediate type
+  // id from a type id represented by a pointer to the global hash type set.
+  static const uint32_t ImmediateBit = 0x1;
 
   HashNumber hash() const {
     HashNumber hn = 0;
@@ -214,6 +243,8 @@ class StructType {
     return true;
   }
 
+  [[nodiscard]] bool init();
+
   bool isDefaultable() const {
     for (auto& field : fields_) {
       if (!field.type.isDefaultable()) {
@@ -222,7 +253,6 @@ class StructType {
     }
     return true;
   }
-  [[nodiscard]] bool computeLayout();
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   WASM_DECLARE_FRIEND_SERIALIZE(StructType);
@@ -754,62 +784,6 @@ class TypeHandle {
 // 'global type context' that RTTValues refer to by type index. Types are never
 // freed from the global type context as that would shift the index space. In
 // the future, this will be fixed.
-
-class TypeIdDesc {
- public:
-  static const uintptr_t ImmediateBit = 0x1;
-
- private:
-  TypeIdDescKind kind_;
-  size_t bits_;
-
-  WASM_CHECK_CACHEABLE_POD(kind_, bits_);
-
-  TypeIdDesc(TypeIdDescKind kind, size_t bits) : kind_(kind), bits_(bits) {}
-
- public:
-  TypeIdDescKind kind() const { return kind_; }
-  static bool isGlobal(const TypeDef& type);
-
-  TypeIdDesc() : kind_(TypeIdDescKind::None), bits_(0) {}
-  static TypeIdDesc global(const TypeDef& type, uint32_t globalDataOffset);
-  static TypeIdDesc immediate(const TypeDef& type);
-
-  bool isGlobal() const { return kind_ == TypeIdDescKind::Global; }
-
-  uint32_t immediate() const {
-    MOZ_ASSERT(kind_ == TypeIdDescKind::Immediate);
-    return bits_;
-  }
-  uint32_t globalDataOffset() const {
-    MOZ_ASSERT(kind_ == TypeIdDescKind::Global);
-    return bits_;
-  }
-};
-
-WASM_DECLARE_CACHEABLE_POD(TypeIdDesc);
-
-using TypeIdDescVector = Vector<TypeIdDesc, 0, SystemAllocPolicy>;
-
-// TypeDefWithId pairs a FuncType with TypeIdDesc, describing either how to
-// compile code that compares this signature's id or, at instantiation what
-// signature ids to allocate in the global hash and where to put them.
-
-struct TypeDefWithId : public TypeDef {
-  TypeIdDesc id;
-
-  TypeDefWithId() = default;
-  explicit TypeDefWithId(TypeDef&& typeDef)
-      : TypeDef(std::move(typeDef)), id() {}
-  TypeDefWithId(TypeDef&& typeDef, TypeIdDesc id)
-      : TypeDef(std::move(typeDef)), id(id) {}
-
-  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-};
-
-using TypeDefWithIdVector = Vector<TypeDefWithId, 0, SystemAllocPolicy>;
-using TypeDefWithIdPtrVector =
-    Vector<const TypeDefWithId*, 0, SystemAllocPolicy>;
 
 }  // namespace wasm
 }  // namespace js
