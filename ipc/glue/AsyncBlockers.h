@@ -29,32 +29,21 @@ class AsyncBlockers {
         mPromise(new GenericPromise::Private(__func__)) {}
   void Register(void* aBlocker) {
     MutexAutoLock lock(mLock);
-    if (mResolved) {
-      // Too late.
-      return;
-    }
     mBlockers.InsertElementSorted(aBlocker);
   }
   void Deregister(void* aBlocker) {
     MutexAutoLock lock(mLock);
-    if (mResolved) {
-      // Too late.
-      return;
-    }
-
     MOZ_ASSERT(mBlockers.ContainsSorted(aBlocker));
     MOZ_ALWAYS_TRUE(mBlockers.RemoveElementSorted(aBlocker));
     MaybeResolve();
   }
   RefPtr<GenericPromise> WaitUntilClear(uint32_t aTimeOutInMs = 0) {
-    if (!aTimeOutInMs) {
-      // We don't need to wait, resolve the promise right away.
+    {
       MutexAutoLock lock(mLock);
-      if (!mResolved) {
-        mPromise->Resolve(true, __func__);
-        mResolved = true;
-      }
-    } else {
+      MaybeResolve();
+    }
+
+    if (aTimeOutInMs > 0) {
       GetCurrentEventTarget()->DelayedDispatch(
           NS_NewRunnableFunction("AsyncBlockers::WaitUntilClear",
                                  [promise = mPromise]() {
@@ -69,30 +58,22 @@ class AsyncBlockers {
                                  }),
           aTimeOutInMs);
     }
+
     return mPromise;
   }
 
-  virtual ~AsyncBlockers() {
-    if (!mResolved) {
-      mPromise->Resolve(true, __func__);
-    }
-  }
+  virtual ~AsyncBlockers() { mPromise->Resolve(true, __func__); }
 
  private:
   void MaybeResolve() MOZ_REQUIRES(mLock) {
     mLock.AssertCurrentThreadOwns();
-    if (mResolved) {
-      return;
-    }
     if (!mBlockers.IsEmpty()) {
       return;
     }
     mPromise->Resolve(true, __func__);
-    mResolved = true;
   }
   Mutex mLock;
   nsTArray<void*> mBlockers MOZ_GUARDED_BY(mLock);
-  bool mResolved MOZ_GUARDED_BY(mLock) = false;
   const RefPtr<GenericPromise::Private> mPromise;
 };
 
