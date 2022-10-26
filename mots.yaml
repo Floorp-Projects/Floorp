@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-10-26T13:12:12.276907'
+updated_at: '2022-10-26T16:08:31.117344'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3275,21 +3275,6 @@ modules:
         meta:
           owners_emeritus:
             - Micah Tigley
-      - name: Preferences
-        description: The front-end preferences system.
-        includes:
-          - browser/components/preferences/**/*
-          - browser/themes/*/preferences
-          - toolkit/mozapps/preferences
-        meta:
-          peers_emeritus:
-            - Tim Nguyen
-        owners:
-          - *jaws
-        peers:
-          - *mstriemer
-          - *Gijs
-        machine_name: preferences
 
       - name: Profile Migration
         description: Migrating data from other browsers.
@@ -3386,6 +3371,24 @@ modules:
         peers:
           - *farre
         machine_name: session_restore
+
+      - name: Settings UI
+        description: The front-end settings user interface.
+        includes:
+          - browser/components/preferences/**/*
+          - browser/themes/*/preferences
+          - toolkit/mozapps/preferences
+        meta:
+          peers_emeritus:
+            - Tim Nguyen
+        owners:
+          - *jaws
+        peers:
+          - *mstriemer
+          - *Gijs
+          - *mossop
+          - *mconley
+        machine_name: settings_ui
 
       - name: Tabbed Browser
         description: The UI component controlling browser tabs.
@@ -3678,5 +3681,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 507d43360a6cef1eb8be30c92a8188723ed955e5
-  export: b0b55aabe027549fe77b5fad0560f6f146285adf
+  config: dd05ad6c67fbd5baea1cafadf3a91355fc11b305
+  export: 5814374023f580461c6234907480b7c401e6da1d

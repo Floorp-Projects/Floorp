@@ -3129,31 +3129,6 @@ A component that allows video elements to be pulled out into an always-on-top wi
         | `browser/extensions/pictureinpicture <https://searchfox.org/mozilla-central/search?q=&path=browser/extensions/pictureinpicture>`__
 
 
-Preferences
-===========
-The front-end preferences system.
-
-
-.. list-table::
-    :stub-columns: 1
-    :widths: 30 70
-
-    * - Owner(s)
-      -
-        | `jaws <https://people.mozilla.org/s?query=jaws>`__
-    * - Peer(s)
-      -
-        | `Mark Striemer (mstriemer) <https://people.mozilla.org/s?query=mstriemer>`__
-        | `Gijs <https://people.mozilla.org/s?query=Gijs>`__
-    * - Peer(s) Emeritus
-      - Tim Nguyen
-    * - Includes
-      -
-        | `browser/components/preferences/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/components/preferences/\*\*/\*>`__
-        | `browser/themes/\*/preferences <https://searchfox.org/mozilla-central/search?q=&path=browser/themes/\*/preferences>`__
-        | `toolkit/mozapps/preferences <https://searchfox.org/mozilla-central/search?q=&path=toolkit/mozapps/preferences>`__
-
-
 Profile Migration
 =================
 Migrating data from other browsers.
@@ -3285,6 +3260,33 @@ Restoring a user's session after starting Firefox.
         | `toolkit/components/sessionstore/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=toolkit/components/sessionstore/\*\*/\*>`__
     * - Bugzilla Components
       - Firefox::Session Restore
+
+
+Settings UI
+===========
+The front-end settings user interface.
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `jaws <https://people.mozilla.org/s?query=jaws>`__
+    * - Peer(s)
+      -
+        | `Mark Striemer (mstriemer) <https://people.mozilla.org/s?query=mstriemer>`__
+        | `Gijs <https://people.mozilla.org/s?query=Gijs>`__
+        | `Dave Townsend (mossop) <https://people.mozilla.org/s?query=mossop>`__
+        | `Mike Conley (mconley) <https://people.mozilla.org/s?query=mconley>`__
+    * - Peer(s) Emeritus
+      - Tim Nguyen
+    * - Includes
+      -
+        | `browser/components/preferences/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/components/preferences/\*\*/\*>`__
+        | `browser/themes/\*/preferences <https://searchfox.org/mozilla-central/search?q=&path=browser/themes/\*/preferences>`__
+        | `toolkit/mozapps/preferences <https://searchfox.org/mozilla-central/search?q=&path=toolkit/mozapps/preferences>`__
 
 
 Tabbed Browser
