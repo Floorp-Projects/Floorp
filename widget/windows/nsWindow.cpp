@@ -2850,12 +2850,14 @@ void nsWindow::UpdateDarkModeToolbar() {
  * For non-glass windows, we only allow frames to be their default size
  * or removed entirely.
  */
-bool nsWindow::UpdateNonClientMargins(bool aReflowWindow) {
+bool nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow) {
   if (!mCustomNonClient) {
     return false;
   }
 
-  const nsSizeMode sizeMode = mFrameState->GetSizeMode();
+  if (aSizeMode == -1) {
+    aSizeMode = mFrameState->GetSizeMode();
+  }
 
   bool hasCaption = (mBorderStyle & (eBorderStyle_all | eBorderStyle_title |
                                      eBorderStyle_menu | eBorderStyle_default));
@@ -2907,13 +2909,13 @@ bool nsWindow::UpdateNonClientMargins(bool aReflowWindow) {
                     : 0);
   }
 
-  if (sizeMode == nsSizeMode_Minimized) {
+  if (aSizeMode == nsSizeMode_Minimized) {
     // Use default frame size for minimized windows
     mNonClientOffset.top = 0;
     mNonClientOffset.left = 0;
     mNonClientOffset.right = 0;
     mNonClientOffset.bottom = 0;
-  } else if (sizeMode == nsSizeMode_Fullscreen) {
+  } else if (aSizeMode == nsSizeMode_Fullscreen) {
     // Remove the default frame from the top of our fullscreen window.  This
     // makes the whole caption part of our client area, allowing us to draw
     // in the whole caption area.  Additionally remove the default frame from
@@ -2922,7 +2924,7 @@ bool nsWindow::UpdateNonClientMargins(bool aReflowWindow) {
     mNonClientOffset.bottom = mVertResizeMargin;
     mNonClientOffset.left = mHorResizeMargin;
     mNonClientOffset.right = mHorResizeMargin;
-  } else if (sizeMode == nsSizeMode_Maximized) {
+  } else if (aSizeMode == nsSizeMode_Maximized) {
     // On Windows 10+, we make the entire frame part of the client area.
     // We leave the default frame sizes for left, right and bottom since
     // Windows will automagically position the edges "offscreen" for maximized
@@ -3736,7 +3738,7 @@ void nsWindow::OnFullscreenWillChange(bool aFullScreen) {
 void nsWindow::OnFullscreenChanged(bool aFullScreen) {
   // If we are going fullscreen, the window size continues to change
   // and the window will be reflow again then.
-  UpdateNonClientMargins(/* Reflow */ !aFullScreen);
+  UpdateNonClientMargins(mFrameState->GetSizeMode(), /* Reflow */ !aFullScreen);
 
   // Will call hide chrome, reposition window. Note this will
   // also cache dimensions for restoration, so it should only
@@ -3750,7 +3752,7 @@ void nsWindow::OnFullscreenChanged(bool aFullScreen) {
     DispatchFocusToTopLevelWindow(true);
   }
 
-  OnSizeModeChange();
+  OnSizeModeChange(mFrameState->GetSizeMode());
 
   if (mWidgetListener) {
     mWidgetListener->FullscreenChanged(aFullScreen);
@@ -7059,7 +7061,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp) {
 
     // If a maximized window is resized, recalculate the non-client margins.
     if (mFrameState->GetSizeMode() == nsSizeMode_Maximized) {
-      if (UpdateNonClientMargins(true)) {
+      if (UpdateNonClientMargins(nsSizeMode_Maximized, true)) {
         // gecko resize event already sent by UpdateNonClientMargins.
         return;
       }
@@ -7594,31 +7596,29 @@ bool nsWindow::OnResize(const LayoutDeviceIntSize& aSize) {
   return result;
 }
 
-void nsWindow::OnSizeModeChange() {
-  const nsSizeMode mode = mFrameState->GetSizeMode();
-
+void nsWindow::OnSizeModeChange(nsSizeMode aSizeMode) {
   MOZ_LOG(gWindowsLog, LogLevel::Info,
-          ("nsWindow::OnSizeModeChange() sizeMode %d", mode));
+          ("nsWindow::OnSizeModeChange() aSizeMode %d", aSizeMode));
 
   if (NeedsToTrackWindowOcclusionState()) {
     WinWindowOcclusionTracker::Get()->OnWindowVisibilityChanged(
-        this, mode != nsSizeMode_Minimized);
+        this, aSizeMode != nsSizeMode_Minimized);
 
     wr::DebugFlags flags{0};
     flags.bits = gfx::gfxVars::WebRenderDebugFlags();
     bool debugEnabled = bool(flags & wr::DebugFlags::WINDOW_VISIBILITY_DBG);
     if (debugEnabled && mCompositorWidgetDelegate) {
-      mCompositorWidgetDelegate->NotifyVisibilityUpdated(mode,
+      mCompositorWidgetDelegate->NotifyVisibilityUpdated(aSizeMode,
                                                          mIsFullyOccluded);
     }
   }
 
   if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->OnWindowModeChange(mode);
+    mCompositorWidgetDelegate->OnWindowModeChange(aSizeMode);
   }
 
   if (mWidgetListener) {
-    mWidgetListener->SizeModeChanged(mode);
+    mWidgetListener->SizeModeChanged(aSizeMode);
   }
 }
 
@@ -9433,17 +9433,16 @@ void nsWindow::FrameState::OnFrameChanging() {
     return;
   }
 
-  const nsSizeMode previousSizeMode = mSizeMode;
+  WINDOWPLACEMENT pl;
+  pl.length = sizeof(pl);
+  ::GetWindowPlacement(mWindow->mWnd, &pl);
 
   const nsSizeMode newSizeMode =
       GetSizeModeForWindowFrame(mWindow->mWnd, mFullscreenMode);
-  EnsureSizeMode(newSizeMode);
 
-  if (previousSizeMode != mSizeMode) {
-    mWindow->OnSizeModeChange();
-  }
+  mWindow->OnSizeModeChange(newSizeMode);
 
-  mWindow->UpdateNonClientMargins(false);
+  mWindow->UpdateNonClientMargins(newSizeMode, false);
 }
 
 void nsWindow::FrameState::OnFrameChanged() {
@@ -9453,18 +9452,19 @@ void nsWindow::FrameState::OnFrameChanged() {
 
   const nsSizeMode previousSizeMode = mSizeMode;
 
-  // Windows has just changed the size mode of this window. We don't want to go
-  // through EnsureSizeMode because there we would set the min/max window state
-  // again or for nsSizeMode_Normal, call SetWindow with a parameter of
-  // SW_RESTORE.
-  // There's no need as this window's mode has already changed.
-  // This addresses a bug on Win7 related to window docking. (bug 489258)
+  // Windows has just changed the size mode of this window. The call to
+  // SizeModeChanged will trigger a call into SetSizeMode where we will
+  // set the min/max window state again or for nsSizeMode_Normal, call
+  // SetWindow with a parameter of SW_RESTORE. There's no need however as
+  // this window's mode has already changed. Updating SizeMode here
+  // insures the SetSizeMode call is a no-op. Addresses a bug on Win7 related
+  // to window docking. (bug 489258)
   mSizeMode = GetSizeModeForWindowFrame(mWindow->mWnd, mFullscreenMode);
 
   MaybeLogSizeMode(mSizeMode);
 
   if (mSizeMode != previousSizeMode) {
-    mWindow->OnSizeModeChange();
+    mWindow->OnSizeModeChange(mSizeMode);
   }
 
   // If window was restored, window activation was bypassed during the
