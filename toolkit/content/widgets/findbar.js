@@ -97,7 +97,7 @@
       }
 
       /**
-       * Please keep in sync with toolkit/modules/FindBarContent.jsm
+       * Please keep in sync with toolkit/modules/FindBarContent.sys.mjs
        */
       this.FIND_NORMAL = 0;
 

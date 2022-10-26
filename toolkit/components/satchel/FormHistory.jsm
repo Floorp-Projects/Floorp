@@ -792,11 +792,11 @@ var DB = {
    * notification is fired.
    *
    * @returns {Promise}
-   * @resolves An Sqlite.jsm connection to the database.
+   * @resolves An Sqlite.sys.mjs connection to the database.
    * @rejects  If connecting to the database, or migrating the database
    *           failed after MAX_ATTEMPTS attempts (where each attempt
    *           backs up and deletes the old database), this will reject
-   *           with the Sqlite.jsm error.
+   *           with the Sqlite.sys.mjs error.
    */
   get conn() {
     delete this.conn;
@@ -828,8 +828,8 @@ var DB = {
    *        The optional number of the attempt that is being made to connect
    *        to the database. Defaults to 0.
    * @returns {Promise}
-   * @resolves An Sqlite.jsm connection to the database.
-   * @rejects  After MAX_ATTEMPTS, this will reject with the Sqlite.jsm
+   * @resolves An Sqlite.sys.mjs connection to the database.
+   * @rejects  After MAX_ATTEMPTS, this will reject with the Sqlite.mjs
    *           error.
    */
   async _establishConn(attemptNum = 0) {
