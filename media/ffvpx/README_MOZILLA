@@ -39,7 +39,7 @@ for Linux desktop):
 
 > ./configure --disable-all --enable-avcodec --enable-decoder=vp8,vp9,mp3,flac,av1 \
               --enable-parser=vp8,vp9 --disable-static --enable-shared \
-              --disable-autodetect --disable-iconv --enable-libdav1d
+              --disable-autodetect --disable-iconv --enable-libdav1d --disable-linux-perf
 
 For Linux Desktop, there are a number of overrides in `config_common.h` for
 VAAPI. We can't put them in `config_components.h` because this breaks the build.
@@ -53,6 +53,9 @@ instructions below:
 
 To produce `config_unix32.h` on a 64-bits machine, add to the configure command
 above: `--disable-asm --disable-x86asm --cc='clang -m32'`
+
+Those files shouldn't be Linux-specific, and are included in e.g. various BSDs,
+hence the `--disable-linux-perf` above.
 
 # macOS, x86 and aarch64
 
