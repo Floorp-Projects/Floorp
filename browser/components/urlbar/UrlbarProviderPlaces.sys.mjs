@@ -1425,7 +1425,7 @@ class ProviderPlaces extends UrlbarProvider {
    * Gets a Sqlite database handle.
    *
    * @returns {Promise<OpenedConnection>}
-   *   A connection to the Sqlite database handle (according to {@link Sqlite.jsm}).
+   *   A connection to the Sqlite database handle (according to {@link Sqlite.sys.mjs}).
    * @throws A javascript exception
    */
   getDatabaseHandle() {

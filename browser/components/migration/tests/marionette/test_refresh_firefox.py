@@ -534,8 +534,8 @@ class TestFirefoxRefresh(MarionetteTestCase):
           window.global = {};
           global.LoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1", "nsILoginInfo", "init");
           global.profSvc = Cc["@mozilla.org/toolkit/profile-service;1"].getService(Ci.nsIToolkitProfileService);
-          global.Preferences = ChromeUtils.import(
-            "resource://gre/modules/Preferences.jsm"
+          global.Preferences = ChromeUtils.importESModule(
+            "resource://gre/modules/Preferences.sys.mjs"
           ).Preferences;
           global.FormHistory = ChromeUtils.import(
             "resource://gre/modules/FormHistory.jsm"

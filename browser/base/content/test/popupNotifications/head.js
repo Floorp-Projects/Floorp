@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(this, {
  * we are sure that an attempt to display a notification will not fail.
  */
 async function waitForWindowReadyForPopupNotifications(win) {
-  // These are the same checks that PopupNotifications.jsm makes before it
+  // These are the same checks that PopupNotifications.sys.mjs makes before it
   // allows a notification to open.
   await TestUtils.waitForCondition(
     () => win.gBrowser.selectedBrowser.docShellIsActive,

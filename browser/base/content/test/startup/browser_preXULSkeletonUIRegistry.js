@@ -10,9 +10,9 @@ function getFirefoxExecutableFile() {
   return file;
 }
 
-// This is copied from WindowsRegistry.jsm, but extended to support
+// This is copied from WindowsRegistry.sys.mjs, but extended to support
 // TYPE_BINARY, as that is how we represent doubles in the registry for
-// the skeleton UI. However, we didn't extend WindowsRegistry.jsm itself,
+// the skeleton UI. However, we didn't extend WindowsRegistry.sys.mjs itself,
 // because TYPE_BINARY is kind of a footgun for javascript callers - our
 // use case is just trivial (checking that the value is non-zero).
 function readRegKeyExtended(aRoot, aPath, aKey, aRegistryNode = 0) {

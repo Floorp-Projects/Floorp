@@ -103,7 +103,7 @@ add_setup(async function setup_head() {
     }
 
     if (msg.errorMessage.includes('Unknown event: ["jsonfile", "load"')) {
-      // Ignore telemetry errors from JSONFile.jsm.
+      // Ignore telemetry errors from JSONFile.sys.mjs.
       return;
     }
 
