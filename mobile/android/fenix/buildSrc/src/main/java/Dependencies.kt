@@ -20,7 +20,7 @@ object Versions {
     const val detekt = "1.19.0"
     const val jna = "5.12.1"
 
-    const val androidx_compose = "1.2.1"
+    const val androidx_compose = "1.3.1"
     const val androidx_compose_compiler = "1.3.2"
     const val androidx_appcompat = "1.3.0"
     const val androidx_benchmark = "1.0.0"
