@@ -375,19 +375,6 @@ html {
   margin: auto;
   min-height: 550px;
 }
-.onboardingContainer .screen[pos=split]::before {
-  content: "";
-  position: absolute;
-  box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
-  width: 800px;
-  height: 550px;
-  border-radius: 8px;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  margin: auto;
-}
 .onboardingContainer .screen[pos=split] .section-secondary,
 .onboardingContainer .screen[pos=split] .section-main {
   width: 400px;
@@ -540,6 +527,7 @@ html {
 .onboardingContainer .screen[pos=split] .section-secondary {
   --mr-secondary-position: center center / auto 350px;
   border-radius: 8px 0 0 8px;
+  box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
   margin: auto 0 auto auto;
   display: flex;
   align-items: center;
@@ -614,9 +602,6 @@ html {
   .onboardingContainer .screen[pos=split] {
     flex-direction: column;
     min-height: 550px;
-  }
-  .onboardingContainer .screen[pos=split]::before {
-    width: 400px;
   }
   .onboardingContainer .screen[pos=split] .section-secondary,
 .onboardingContainer .screen[pos=split] .section-main {
