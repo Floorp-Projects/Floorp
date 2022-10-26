@@ -2825,6 +2825,10 @@ void AppWindow::SizeModeChanged(nsSizeMode aSizeMode) {
     }
   }
 
+#ifdef XP_WIN
+  mWindow->SetSizeMode(aSizeMode);
+#endif
+
   RecomputeBrowsingContextVisibility();
 
   // Persist mode, but not immediately, because in many (all?)
