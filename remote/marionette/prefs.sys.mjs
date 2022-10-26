@@ -110,7 +110,7 @@ export class Branch {
  * `LogBranch` specialisation deserialises the string value to the
  * correct `Log.Level` by sanitising the input data first.
  *
- * A further complication is that we cannot rely on `Preferences.jsm`
+ * A further complication is that we cannot rely on `Preferences.sys.mjs`
  * in Marionette.  See https://bugzilla.mozilla.org/show_bug.cgi?id=1357517
  * for further details.
  */

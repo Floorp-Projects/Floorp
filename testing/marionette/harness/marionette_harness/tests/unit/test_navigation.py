@@ -78,8 +78,8 @@ class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
             # TODO: DO NOT USE MOST RECENT WINDOW BUT CURRENT ONE
             return self.marionette.execute_script(
                 """
-              const { AppConstants } = ChromeUtils.import(
-                "resource://gre/modules/AppConstants.jsm"
+              const { AppConstants } = ChromeUtils.importESModule(
+                "resource://gre/modules/AppConstants.sys.mjs"
               );
 
               let win = null;
