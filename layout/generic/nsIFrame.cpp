@@ -721,7 +721,7 @@ void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
   }
 
-  if (disp->mContainerType != StyleContainerType::Normal) {
+  if (disp->mContainerType) {
     PresContext()->RegisterContainerQueryFrame(this);
   }
 
@@ -811,7 +811,7 @@ void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
     }
   }
 
-  if (disp->mContainerType != StyleContainerType::Normal) {
+  if (disp->mContainerType) {
     PresContext()->UnregisterContainerQueryFrame(this);
   }
 
