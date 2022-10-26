@@ -21,6 +21,7 @@
 #include "nsWrapperCache.h"
 
 class nsIGlobalObject;
+class nsIURI;
 
 namespace mozilla {
 
@@ -52,6 +53,11 @@ struct VideoFrameCopyToOptions;
 }  // namespace mozilla
 
 namespace mozilla::dom {
+
+struct VideoFrameImageData {
+  const RefPtr<layers::Image> mImage;
+  const nsCOMPtr<nsIURI> mURI;
+};
 
 class VideoFrame final : public nsISupports, public nsWrapperCache {
  public:
@@ -140,7 +146,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   // [Serializable] implementations: {Read, Write}StructuredClone
   static JSObject* ReadStructuredClone(JSContext* aCx, nsIGlobalObject* aGlobal,
                                        JSStructuredCloneReader* aReader,
-                                       RefPtr<layers::Image>& aImage);
+                                       const VideoFrameImageData& aImage);
 
   bool WriteStructuredClone(JSStructuredCloneWriter* aWriter,
                             StructuredCloneHolder* aHolder) const;
