@@ -153,7 +153,7 @@ add_task(async function testExtensionControlledHomepage() {
     manifest: {
       version: "1.0",
       name: "set_homepage",
-      browser_specific_settings: {
+      applications: {
         gecko: {
           id: ADDON_ID,
         },
@@ -237,7 +237,7 @@ add_task(async function testExtensionControlledHomepage() {
     manifest: {
       version: "1.0",
       name: "second_set_homepage",
-      browser_specific_settings: {
+      applications: {
         gecko: {
           id: SECOND_ADDON_ID,
         },
@@ -411,7 +411,7 @@ add_task(async function testPrefLockedHomepage() {
     manifest: {
       version: "1.0",
       name: "set_homepage",
-      browser_specific_settings: {
+      applications: {
         gecko: {
           id: ADDON_ID,
         },
@@ -625,7 +625,7 @@ add_task(async function testExtensionControlledNewTab() {
     manifest: {
       version: "1.0",
       name: "set_newtab",
-      browser_specific_settings: {
+      applications: {
         gecko: {
           id: ADDON_ID,
         },
@@ -699,7 +699,7 @@ add_task(async function testExtensionControlledNewTab() {
     manifest: {
       version: "1.0",
       name: "second_set_newtab",
-      browser_specific_settings: {
+      applications: {
         gecko: {
           id: SECOND_ADDON_ID,
         },
@@ -787,7 +787,7 @@ add_task(async function testExtensionControlledWebNotificationsPermission() {
     name: "TestExtension",
     version: "1.0",
     description: "Testing WebNotificationsDisable",
-    browser_specific_settings: { gecko: { id: "@web_notifications_disable" } },
+    applications: { gecko: { id: "@web_notifications_disable" } },
     permissions: ["browserSettings"],
     browser_action: {
       default_title: "Testing",
@@ -1021,7 +1021,7 @@ add_task(async function testExtensionControlledTrackingProtection() {
     useAddonManager: "permanent",
     manifest: {
       name: "set_tp",
-      browser_specific_settings: { gecko: { id: EXTENSION_ID } },
+      applications: { gecko: { id: EXTENSION_ID } },
       permissions: ["privacy"],
     },
     background,
@@ -1063,7 +1063,7 @@ add_task(async function testExtensionControlledPasswordManager() {
     name: "testPasswordManagerExtension",
     version: "1.0",
     description: "Testing rememberSignons",
-    browser_specific_settings: { gecko: { id: EXTENSION_ID } },
+    applications: { gecko: { id: EXTENSION_ID } },
     permissions: ["privacy"],
     browser_action: {
       default_title: "Testing rememberSignons",
@@ -1342,7 +1342,7 @@ add_task(async function testExtensionControlledProxyConfig() {
     useAddonManager: "permanent",
     manifest: {
       name: "set_proxy",
-      browser_specific_settings: { gecko: { id: EXTENSION_ID } },
+      applications: { gecko: { id: EXTENSION_ID } },
       permissions: ["proxy"],
     },
     background,

@@ -58,7 +58,7 @@ decorate_task(
       manifest: {
         version: "1.0",
 
-        browser_specific_settings: {
+        applications: {
           gecko: { id: ID },
         },
 
@@ -227,7 +227,7 @@ decorate_task(
       manifest: {
         version: "1.0",
 
-        browser_specific_settings: {
+        applications: {
           gecko: { id: ID },
         },
       },

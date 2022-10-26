@@ -55,7 +55,7 @@ add_task(
         name: "test Language Pack",
         version: "1.0",
         manifest_version: 2,
-        browser_specific_settings: {
+        applications: {
           gecko: {
             id: "@test-langpack",
             strict_min_version: "42.0",

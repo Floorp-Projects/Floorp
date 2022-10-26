@@ -22,7 +22,7 @@ function mockPromptService() {
 add_task(async function test_save_link_blocked_by_extension() {
   let ext = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_specific_settings: { gecko: { id: "cancel@test" } },
+      applications: { gecko: { id: "cancel@test" } },
       name: "Cancel Test",
       permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
     },
