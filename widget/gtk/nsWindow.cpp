@@ -1144,25 +1144,23 @@ bool nsWindow::WaylandPopupRemoveNegativePosition(int* aX, int* aY) {
 
   int x, y;
   gtk_window_get_position(GTK_WINDOW(mShell), &x, &y);
-  if (x >= 0 || y >= 0) {
-    LOG("  coordinates are correct (%d, %d)", x, y);
-    return false;
+  bool moveBack = (x < 0 && y < 0);
+  if (moveBack) {
+    gtk_window_move(GTK_WINDOW(mShell), 0, 0);
+    if (aX) {
+      *aX = x;
+    }
+    if (aY) {
+      *aY = y;
+    }
   }
 
-  // We need to reset coordinates of both GtkWindow and GtkWindow
-  LOG("  wrong coord (%d, %d) move to 0,0", x, y);
-  GdkWindow* window = gtk_widget_get_window(mShell);
-  gdk_window_move(window, 0, 0);
-  gtk_window_move(GTK_WINDOW(mShell), 0, 0);
-
-  if (aX) {
-    *aX = x;
-  }
-  if (aY) {
-    *aY = y;
+  gdk_window_get_geometry(window, &x, &y, nullptr, nullptr);
+  if (x < 0 && y < 0) {
+    gdk_window_move(window, 0, 0);
   }
 
-  return true;
+  return moveBack;
 }
 
 void nsWindow::ShowWaylandPopupWindow() {
