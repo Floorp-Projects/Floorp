@@ -1793,6 +1793,25 @@ void VideoFrame::Close() {
   mTimestamp.reset();
 }
 
+// https://w3c.github.io/webcodecs/#ref-for-deserialization-steps%E2%91%A0
+/* static */
+already_AddRefed<VideoFrame> VideoFrame::ReadStructuredClone(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
+  return nullptr;
+}
+
+// https://w3c.github.io/webcodecs/#ref-for-serialization-steps%E2%91%A0
+bool VideoFrame::WriteStructuredClone(JSContext* aCx,
+                                      JSStructuredCloneWriter* aWriter) const {
+  // TODO: Throw error if this is _detached_ instead of checking resource (bug
+  // 1774306).
+  if (!mResource) {
+    return false;
+  }
+  return false;
+}
+
 /*
  * VideoFrame::Format
  *

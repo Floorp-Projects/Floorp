@@ -12,7 +12,7 @@ enum AlphaOption {
   "discard",
 };
 
-[Exposed=(Window,DedicatedWorker) /* , Serializable (bug 1774302), Transferable (bug 1774306) */, Pref="dom.media.webcodecs.enabled"]
+[Exposed=(Window,DedicatedWorker), Serializable /* Transferable (bug 1774306) */, Pref="dom.media.webcodecs.enabled"]
 interface VideoFrame {
   // The constructors should be shorten to:
   //   ```
