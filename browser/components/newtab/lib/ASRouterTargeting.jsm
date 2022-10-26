@@ -115,11 +115,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
+  AUS: ["@mozilla.org/updates/update-service;1", "nsIApplicationUpdateService"],
   BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
   TrackingDBService: [
     "@mozilla.org/tracking-db-service;1",
     "nsITrackingDBService",
   ],
+  UpdateCheckSvc: ["@mozilla.org/updates/update-checker;1", "nsIUpdateChecker"],
 });
 
 const FXA_USERNAME_PREF = "services.sync.username";
@@ -195,7 +197,6 @@ function CacheListAttachedOAuthClients() {
 function CheckBrowserNeedsUpdate(
   updateInterval = FRECENT_SITES_UPDATE_INTERVAL
 ) {
-  const UpdateChecker = Cc["@mozilla.org/updates/update-checker;1"];
   const checker = {
     _lastUpdated: 0,
     _value: null,
@@ -208,37 +209,27 @@ function CheckBrowserNeedsUpdate(
       this._lastUpdated = 0;
       this._value = null;
     },
-    get() {
-      return new Promise((resolve, reject) => {
-        const now = Date.now();
-        const updateServiceListener = {
-          // eslint-disable-next-line require-await
-          async onCheckComplete(request, updates) {
-            checker._value = !!updates.length;
-            resolve(checker._value);
-          },
-          // eslint-disable-next-line require-await
-          async onError(request, update) {
-            reject(request);
-          },
-
-          QueryInterface: ChromeUtils.generateQI(["nsIUpdateCheckListener"]),
-        };
-
-        if (UpdateChecker && now - this._lastUpdated >= updateInterval) {
-          const checkerInstance = UpdateChecker.createInstance(
-            Ci.nsIUpdateChecker
-          );
-          if (checkerInstance.canCheckForUpdates) {
-            checkerInstance.checkForUpdates(updateServiceListener, true);
-            this._lastUpdated = now;
-          } else {
-            resolve(false);
-          }
-        } else {
-          resolve(this._value);
-        }
-      });
+    async get() {
+      const now = Date.now();
+      if (
+        !AppConstants.MOZ_UPDATER ||
+        now - this._lastUpdated < updateInterval
+      ) {
+        return this._value;
+      }
+      if (!lazy.AUS.canCheckForUpdates) {
+        return false;
+      }
+      this._lastUpdated = now;
+      let check = lazy.UpdateCheckSvc.checkForUpdates(
+        lazy.UpdateCheckSvc.FOREGROUND_CHECK
+      );
+      let result = await check.result;
+      if (!result.succeeded) {
+        throw result.request;
+      }
+      checker._value = !!result.updates.length;
+      return checker._value;
     },
   };
 
