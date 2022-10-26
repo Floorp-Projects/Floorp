@@ -37,7 +37,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   );
   let consoleOptions = {
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
-    // messages during development. See LOG_LEVELS in Console.jsm for details.
+    // messages during development. See LOG_LEVELS in Console.sys.mjs for details.
     maxLogLevel: "error",
     maxLogLevelPref: "app.update.background.loglevel",
     prefix: "BackgroundUpdate",
@@ -198,7 +198,7 @@ export async function runBackgroundTask(commandLine) {
   lazy.log.error(`${SLUG}: backgroundupdate`);
 
   // Help debugging.  This is a pared down version of
-  // `dataProviders.application` in `Troubleshoot.jsm`.  When adding to this
+  // `dataProviders.application` in `Troubleshoot.sys.mjs`.  When adding to this
   // debugging data, try to follow the form from that module.
   let data = {
     name: Services.appinfo.name,
