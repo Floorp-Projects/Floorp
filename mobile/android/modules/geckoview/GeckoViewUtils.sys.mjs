@@ -374,7 +374,7 @@ export var GeckoViewUtils = {
 
   /**
    * Add logging functions to the specified scope that forward to the given
-   * Log.jsm logger. Currently "debug" and "warn" functions are supported. To
+   * Log.sys.mjs logger. Currently "debug" and "warn" functions are supported. To
    * log something, call the function through a template literal:
    *
    *   function foo(bar, baz) {

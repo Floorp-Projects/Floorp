@@ -96,7 +96,7 @@ SandboxReporter* SandboxReporter::Singleton() {
     // thread before freeing anything, IPC should already be shut down
     // by that point (so it won't race by calling Singleton()), all
     // non-main XPCOM threads will also be shut down, and currently
-    // the only other user is the main-thread-only Troubleshoot.jsm.
+    // the only other user is the main-thread-only Troubleshoot.sys.mjs.
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "SandboxReporter::Singleton", [] { ClearOnShutdown(&sSingleton); }));
   }

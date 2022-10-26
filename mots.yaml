@@ -2231,7 +2231,7 @@ modules:
     includes:
     # TODO
     # Implementation and consumers of Private Browsing APIs in nsILoadContext,
-    # nsIPrivateBrowsingChannel, PrivateBrowsingUtils.jsm and the related glue code. '
+    # nsIPrivateBrowsingChannel, PrivateBrowsingUtils.sys.mjs and the related glue code. '
     meta:
       owners_emeritus:
         - Ehsan Akhgari
