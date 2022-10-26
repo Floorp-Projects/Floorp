@@ -73,22 +73,22 @@ Messages from add-ons
 
 The Browser Console displays messages logged by all Firefox add-ons.
 
-Console.jsm
-~~~~~~~~~~~
+Console.sys.mjs
+~~~~~~~~~~~~~~~
 
 To use the console API from a traditional or bootstrapped add-on, get it from the Console module.
 
-One exported symbol from ``Console.jsm`` is ``console``. Below is an example of how to access it, which adds a message to the Browser Console.
+One exported symbol from ``Console.sys.mjs`` is ``console``. Below is an example of how to access it, which adds a message to the Browser Console.
 
 .. code-block:: JavaScript
 
-  const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  const { console } = ChromeUtils.importESModule("resource://gre/modules/Console.sys.mjs");
   console.log("Hello from Firefox code"); //output messages to the console</pre>
 
 Learn more:
 
 - `Console API reference <https://developer.mozilla.org/en-US/docs/Web/API/console>`_
-- `Console.jsm source code in the Mozilla DXR <https://dxr.mozilla.org/mozilla-central/source/toolkit/modules/Console.jsm>`_
+- :searchfox:`Console.sys.mjs source code <toolkit/modules/Console.sys.mjs>`
 
 
 Browser Console command line
