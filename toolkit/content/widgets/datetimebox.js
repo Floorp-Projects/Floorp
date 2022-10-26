@@ -17,7 +17,6 @@ this.DateTimeBoxWidget = class {
     this.element = shadowRoot.host;
     this.document = this.element.ownerDocument;
     this.window = this.document.defaultView;
-
     // The DOMLocalization instance needs to allow for sync methods so that
     // the placeholder value may be determined and set during the
     // createEditFieldAndAppend() call.
@@ -25,7 +24,6 @@ this.DateTimeBoxWidget = class {
       ["toolkit/global/datetimebox.ftl"],
       /* aSync = */ true
     );
-    this.l10n.connectRoot(this.shadowRoot);
   }
 
   /*
@@ -77,7 +75,6 @@ this.DateTimeBoxWidget = class {
     });
 
     this.l10n.disconnectRoot(this.shadowRoot);
-    this.l10n = null;
 
     this.removeEditFields();
 
@@ -131,6 +128,8 @@ this.DateTimeBoxWidget = class {
 
   setup() {
     this.DEBUG = false;
+
+    this.l10n.connectRoot(this.shadowRoot);
 
     this.generateContent();
 
