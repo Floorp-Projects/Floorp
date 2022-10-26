@@ -38,7 +38,6 @@ RUN apt-get update && \
       p7zip-full \
       pkg-config \
       procps \
-      python2 \
       python3-distutils-extra \
       python3-requests \
       python3-pytoml \

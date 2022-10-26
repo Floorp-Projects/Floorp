@@ -5,9 +5,9 @@ set -e -v
 cd $MOZ_FETCHES_DIR/gn
 
 if test -n "$MAC_CROSS"; then
-    python build/gen.py --platform darwin --no-last-commit-position
+    python3 build/gen.py --platform darwin --no-last-commit-position
 else
-    python build/gen.py --no-last-commit-position
+    python3 build/gen.py --no-last-commit-position
 fi
 
 cat > out/last_commit_position.h <<EOF
