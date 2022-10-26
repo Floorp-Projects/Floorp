@@ -75,7 +75,7 @@ class DebugFrame {
             case RefType::Func:
             case RefType::Extern:
             case RefType::Eq:
-            case RefType::TypeIndex:
+            case RefType::TypeRef:
               return;
           }
       }

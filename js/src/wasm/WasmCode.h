@@ -374,7 +374,7 @@ WASM_DECLARE_CACHEABLE_POD(MetadataCacheablePod)
 using ModuleHash = uint8_t[8];
 
 struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
-  TypeDefVector types;
+  SharedTypeContext types;
   uint32_t typeIdsOffsetStart;
   GlobalDescVector globals;
   TableDescVector tables;
@@ -407,16 +407,16 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   }
 
   const FuncType& getFuncImportType(const FuncImport& funcImport) const {
-    return types[funcImport.typeIndex()].funcType();
+    return types->type(funcImport.typeIndex()).funcType();
   }
   const FuncType& getFuncExportType(const FuncExport& funcExport) const {
-    return types[funcExport.typeIndex()].funcType();
+    return types->type(funcExport.typeIndex()).funcType();
   }
 
   size_t debugNumFuncs() const { return debugFuncTypeIndices.length(); }
   const FuncType& debugFuncType(uint32_t funcIndex) const {
     MOZ_ASSERT(debugEnabled);
-    return types[debugFuncTypeIndices[funcIndex]].funcType();
+    return types->type(debugFuncTypeIndices[funcIndex]).funcType();
   }
 
   // AsmJSMetadata derives Metadata iff isAsmJS(). Mostly this distinction is
