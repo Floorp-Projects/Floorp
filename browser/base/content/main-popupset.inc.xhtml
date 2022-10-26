@@ -507,13 +507,13 @@
            class="places-tooltip"
            onpopupshowing="gBrowser.createTooltip(event);"
            onpopuphiding="this.removeAttribute('position')">
-    <vbox class="places-tooltip-box" flex="1">
+    <box class="places-tooltip-box">
       <description class="tooltip-label places-tooltip-title"/>
       <hbox>
         <image id="places-tooltip-insecure-icon"></image>
         <description crop="center" class="tooltip-label places-tooltip-uri uri-element"/>
       </hbox>
-    </vbox>
+    </box>
   </tooltip>
 
   <tooltip id="back-button-tooltip">

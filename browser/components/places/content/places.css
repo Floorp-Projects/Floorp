@@ -104,3 +104,7 @@ tree[is="places-tree"] > treechildren::-moz-tree-cell {
   margin: 2px 4px;
   color: currentColor;
 }
+
+.places-tooltip-box {
+  display: block;
+}
