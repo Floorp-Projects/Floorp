@@ -714,6 +714,12 @@ bool MediaEngineRemoteVideoSource::ChooseCapability(
           c.mFrameRate.Clamp(c.mFrameRate.mIdeal.valueOr(aPrefs.mFPS));
       return true;
     }
+    case camera::BrowserEngine: {
+      FlattenedConstraints c(aConstraints);
+      aCapability.maxFPS =
+          c.mFrameRate.Clamp(c.mFrameRate.mIdeal.valueOr(aPrefs.mFPS));
+      return true;
+    }
     default:
       break;
   }
