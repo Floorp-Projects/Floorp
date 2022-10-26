@@ -550,7 +550,7 @@ more](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structure
 without having to do conversions for JSON compatibility.
 
 A Promise-based wrapper for IndexedDB,
-[IndexedDB.jsm](http://searchfox.org/mozilla-central/source/toolkit/modules/IndexedDB.jsm)
+[IndexedDB.sys.mjs](http://searchfox.org/mozilla-central/source/toolkit/modules/IndexedDB.sys.mjs)
 is available for chrome code.
 
 ## Test on weak hardware 

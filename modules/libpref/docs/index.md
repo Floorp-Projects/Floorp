@@ -231,7 +231,7 @@ activity.
 ### about:support
 about:support contains an "Important Modified Preferences" table. It contains
 all prefs that (a) have had their value changed from the default, and (b) whose
-prefix match a allowlist in `Troubleshoot.jsm`. The allowlist matching is to
+prefix match a allowlist in `Troubleshoot.sys.mjs`. The allowlist matching is to
 avoid exposing pref values that might be privacy-sensitive.
 
 **Problem:** The allowlist of prefixes is specified separately from the prefs
