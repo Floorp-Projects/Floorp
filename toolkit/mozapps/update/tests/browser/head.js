@@ -683,6 +683,26 @@ function runAboutDialogUpdateTest(params, steps) {
         "The panel should be visible"
       );
 
+      if (
+        panelId == "downloading" &&
+        gAUS.currentState == Ci.nsIApplicationUpdateService.STATE_IDLE
+      ) {
+        // Now that `AUS.downloadUpdate` is async, we start showing the
+        // downloading panel while `AUS.downloadUpdate` is still resolving.
+        // But the below checks assume that this resolution has already
+        // happened. So we need to wait for things to actually resolve.
+        debugDump("Waiting for downloading state to actually start");
+        await gAUS.stateTransition;
+
+        // Check that the checks that we made above are still valid.
+        selectedPanel = aboutDialog.gAppUpdater.selectedPanel;
+        is(selectedPanel.id, panelId, "The panel ID should equal " + panelId);
+        ok(
+          BrowserTestUtils.is_visible(selectedPanel),
+          "The panel should be visible"
+        );
+      }
+
       if (checkActiveUpdate) {
         let activeUpdate =
           checkActiveUpdate.state == STATE_DOWNLOADING
@@ -904,6 +924,31 @@ function runAboutPrefsUpdateTest(params, steps) {
           );
         }
       );
+
+      if (
+        panelId == "downloading" &&
+        gAUS.currentState == Ci.nsIApplicationUpdateService.STATE_IDLE
+      ) {
+        // Now that `AUS.downloadUpdate` is async, we start showing the
+        // downloading panel while `AUS.downloadUpdate` is still resolving.
+        // But the below checks assume that this resolution has already
+        // happened. So we need to wait for things to actually resolve.
+        debugDump("Waiting for downloading state to actually start");
+        await gAUS.stateTransition;
+
+        // Check that the checks that we made above are still valid.
+        await SpecialPowers.spawn(
+          tab.linkedBrowser,
+          [{ panelId }],
+          ({ panelId }) => {
+            is(
+              content.gAppUpdater.selectedPanel.id,
+              panelId,
+              "The panel ID should equal " + panelId
+            );
+          }
+        );
+      }
 
       if (checkActiveUpdate) {
         let activeUpdate =
