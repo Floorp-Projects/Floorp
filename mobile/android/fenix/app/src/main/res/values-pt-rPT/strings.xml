@@ -131,13 +131,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Mostrar botão todos os separadores recentes</string>
-    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
-        The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">A sua pesquisa por \&quot;%1$s\&quot;</string>
-
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d sites</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Ver todos os separadores sincronizados</string>
@@ -486,12 +479,6 @@
     <string name="wallpaper_select_error_snackbar_message">Não foi possível alterar o fundo</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">Saber mais</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Altere o fundo ao tocar no logótipo da página principal do Firefox</string>
-
-    <!-- This is the accessibility content description for the wallpapers functionality. Users are
-    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logótipo do Firefox - altere o fundo, botão</string>
 
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">%s clássico</string>
@@ -680,10 +667,6 @@
     <string name="tab_view_list">Lista</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Grelha</string>
-    <!-- Option for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Pesquisar grupos</string>
-    <!-- Summary text for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Agrupar sites relacionados</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Fechar separadores</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -832,18 +815,6 @@
     <string name="history_older">Mais antigo</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Sem histórico</string>
-
-    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Sincronizado de outros dispositivos</string>
-    <!-- The page title for browsing history coming from other devices. -->
-    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">De outros dispositivos</string>
-
-    <!-- The synced history sign in dialog message -->
-    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Inicie sessão para ver o histórico sincronizado dos seus outros dispositivos.</string>
-    <!-- The synced history sign in dialog button text -->
-    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Iniciar sessão</string>
-    <!-- The synced history sign in dialog create a new account link -->
-    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Ou crie uma conta Firefox para iniciar a sincronização</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1517,7 +1488,7 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Nunca guardar</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
-    <string name="preferences_passwords_autofill2">Auto-preenchimento em %1$s</string>
+    <string name="preferences_passwords_autofill2">Autopreenchimento do %1$s</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill_description">Preencher e guardar nomes de utilizador e palavras-passe em site ao utilizar o %1$s.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
