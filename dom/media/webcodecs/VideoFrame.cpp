@@ -12,7 +12,6 @@
 
 #include "ImageContainer.h"
 #include "VideoColorSpace.h"
-#include "js/StructuredClone.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
@@ -29,14 +28,11 @@
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/SVGImageElement.h"
-#include "mozilla/dom/StructuredCloneHolder.h"
-#include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "nsLayoutUtils.h"
 #include "nsIPrincipal.h"
-#include "nsIURI.h"
 
 namespace mozilla::dom {
 
@@ -256,15 +252,6 @@ class NV12BufferReader final : public YUVBufferReaderBase {
  * The followings are helpers defined in
  * https://w3c.github.io/webcodecs/#videoframe-algorithms
  */
-static bool IsSameOrigin(nsIGlobalObject* aGlobal, nsIURI* aURI) {
-  MOZ_ASSERT(aGlobal);
-
-  nsIPrincipal* principal = aGlobal->PrincipalOrNull();
-  // If VideoFrames is created in worker, then it's from the same origin. In
-  // this case, principal or aURI is null. Otherwise, check the origin.
-  return !principal || !aURI || principal->IsSameOrigin(aURI);
-}
-
 static bool IsSameOrigin(nsIGlobalObject* aGlobal, const VideoFrame& aFrame) {
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aFrame.GetParentObject());
@@ -1192,16 +1179,10 @@ VideoFrame::VideoFrame(const VideoFrame& aOther)
   MOZ_ASSERT(mParent);
 }
 
-nsIGlobalObject* VideoFrame::GetParentObject() const {
-  AssertIsOnOwningThread();
-
-  return mParent.get();
-}
+nsIGlobalObject* VideoFrame::GetParentObject() const { return mParent.get(); }
 
 JSObject* VideoFrame::WrapObject(JSContext* aCx,
                                  JS::Handle<JSObject*> aGivenProto) {
-  AssertIsOnOwningThread();
-
   return VideoFrame_Binding::Wrap(aCx, this, aGivenProto);
 }
 
@@ -1804,179 +1785,6 @@ void VideoFrame::Close() {
   mDisplaySize = gfx::IntSize();
   mDuration.reset();
   mTimestamp.reset();
-}
-
-// https://w3c.github.io/webcodecs/#ref-for-deserialization-steps%E2%91%A0
-/* static */
-JSObject* VideoFrame::ReadStructuredClone(JSContext* aCx,
-                                          nsIGlobalObject* aGlobal,
-                                          JSStructuredCloneReader* aReader,
-                                          const VideoFrameImageData& aData) {
-  if (!IsSameOrigin(aGlobal, aData.mURI.get())) {
-    return nullptr;
-  }
-
-  VideoPixelFormat format;
-  if (NS_WARN_IF(!JS_ReadBytes(aReader, &format, 1))) {
-    return nullptr;
-  }
-
-  uint32_t codedWidth = 0;
-  uint32_t codedHeight = 0;
-  if (NS_WARN_IF(!JS_ReadUint32Pair(aReader, &codedWidth, &codedHeight))) {
-    return nullptr;
-  }
-
-  uint32_t visibleX = 0;
-  uint32_t visibleY = 0;
-  uint32_t visibleWidth = 0;
-  uint32_t visibleHeight = 0;
-  if (NS_WARN_IF(!JS_ReadUint32Pair(aReader, &visibleX, &visibleY)) ||
-      NS_WARN_IF(!JS_ReadUint32Pair(aReader, &visibleWidth, &visibleHeight))) {
-    return nullptr;
-  }
-
-  uint32_t displayWidth = 0;
-  uint32_t displayHeight = 0;
-  if (NS_WARN_IF(!JS_ReadUint32Pair(aReader, &displayWidth, &displayHeight))) {
-    return nullptr;
-  }
-
-  uint8_t hasDuration = 0;
-  uint32_t durationLow = 0;
-  uint32_t durationHigh = 0;
-  if (NS_WARN_IF(!JS_ReadBytes(aReader, &hasDuration, 1)) ||
-      NS_WARN_IF(!JS_ReadUint32Pair(aReader, &durationLow, &durationHigh))) {
-    return nullptr;
-  }
-  Maybe<uint64_t> duration =
-      hasDuration ? Some(uint64_t(durationHigh) << 32 | durationLow)
-                  : Nothing();
-
-  uint8_t hasTimestamp = 0;
-  uint32_t timestampLow = 0;
-  uint32_t timestampHigh = 0;
-  if (NS_WARN_IF(!JS_ReadBytes(aReader, &hasTimestamp, 1)) ||
-      NS_WARN_IF(!JS_ReadUint32Pair(aReader, &timestampLow, &timestampHigh))) {
-    return nullptr;
-  }
-  Maybe<uint64_t> timestamp =
-      hasTimestamp ? Some(uint64_t(timestampHigh) << 32 | timestampLow)
-                   : Nothing();
-
-  uint8_t colorSpaceFullRange = 0;
-  uint8_t colorSpaceMatrix = 0;
-  uint8_t colorSpacePrimaries = 0;
-  uint8_t colorSpaceTransfer = 0;
-  if (NS_WARN_IF(!JS_ReadBytes(aReader, &colorSpaceFullRange, 1)) ||
-      NS_WARN_IF(!JS_ReadBytes(aReader, &colorSpaceMatrix, 1)) ||
-      NS_WARN_IF(!JS_ReadBytes(aReader, &colorSpacePrimaries, 1)) ||
-      NS_WARN_IF(!JS_ReadBytes(aReader, &colorSpaceTransfer, 1))) {
-    return nullptr;
-  }
-  VideoColorSpaceInit colorSpace{};
-  if (colorSpaceFullRange < 2) {
-    colorSpace.mFullRange.Construct(colorSpaceFullRange > 0);
-  }
-  if (colorSpaceMatrix <
-      static_cast<uint8_t>(VideoMatrixCoefficients::EndGuard_)) {
-    colorSpace.mMatrix.Construct(
-        static_cast<VideoMatrixCoefficients>(colorSpaceMatrix));
-  }
-  if (colorSpacePrimaries <
-      static_cast<uint8_t>(VideoColorPrimaries::EndGuard_)) {
-    colorSpace.mPrimaries.Construct(
-        static_cast<VideoColorPrimaries>(colorSpacePrimaries));
-  }
-  if (colorSpaceTransfer <
-      static_cast<uint8_t>(VideoTransferCharacteristics::EndGuard_)) {
-    colorSpace.mTransfer.Construct(
-        static_cast<VideoTransferCharacteristics>(colorSpaceTransfer));
-  }
-
-  RefPtr<VideoFrame> frame = MakeAndAddRef<VideoFrame>(
-      aGlobal, aData.mImage, format, gfx::IntSize(codedWidth, codedHeight),
-      gfx::IntRect(visibleX, visibleY, visibleWidth, visibleHeight),
-      gfx::IntSize(displayWidth, displayHeight), std::move(duration),
-      std::move(timestamp), colorSpace);
-
-  JS::Rooted<JS::Value> value(aCx, JS::NullValue());
-  if (!GetOrCreateDOMReflector(aCx, frame, &value)) {
-    return nullptr;
-  }
-  return value.toObjectOrNull();
-}
-
-// https://w3c.github.io/webcodecs/#ref-for-serialization-steps%E2%91%A0
-bool VideoFrame::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
-                                      StructuredCloneHolder* aHolder) const {
-  AssertIsOnOwningThread();
-
-  // TODO: Throw error if this is _detached_ instead of checking resource (bug
-  // 1774306).
-  if (!mResource) {
-    return false;
-  }
-
-  const uint8_t format = BitwiseCast<uint8_t>(mResource->mFormat.PixelFormat());
-
-  const uint32_t codedWidth = BitwiseCast<uint32_t>(mCodedSize.Width());
-  const uint32_t codedHeight = BitwiseCast<uint32_t>(mCodedSize.Height());
-
-  const uint32_t visibleX = BitwiseCast<uint32_t>(mVisibleRect.X());
-  const uint32_t visibleY = BitwiseCast<uint32_t>(mVisibleRect.Y());
-  const uint32_t visibleWidth = BitwiseCast<uint32_t>(mVisibleRect.Width());
-  const uint32_t visibleHeight = BitwiseCast<uint32_t>(mVisibleRect.Height());
-
-  const uint32_t displayWidth = BitwiseCast<uint32_t>(mDisplaySize.Width());
-  const uint32_t displayHeight = BitwiseCast<uint32_t>(mDisplaySize.Height());
-
-  const uint8_t hasDuration = mDuration ? 1 : 0;
-  const uint32_t durationLow = mDuration ? uint32_t(*mDuration) : 0;
-  const uint32_t durationHigh = mDuration ? uint32_t(*mDuration >> 32) : 0;
-
-  const uint8_t hasTimestamp = mTimestamp ? 1 : 0;
-  const uint32_t timestampLow = mTimestamp ? uint32_t(*mTimestamp) : 0;
-  const uint32_t timestampHigh = mTimestamp ? uint32_t(*mTimestamp >> 32) : 0;
-
-  const uint8_t colorSpaceFullRange =
-      mColorSpace.mFullRange.WasPassed() ? mColorSpace.mFullRange.Value() : 2;
-  const uint8_t colorSpaceMatrix = BitwiseCast<uint8_t>(
-      mColorSpace.mMatrix.WasPassed() ? mColorSpace.mMatrix.Value()
-                                      : VideoMatrixCoefficients::EndGuard_);
-  const uint8_t colorSpacePrimaries = BitwiseCast<uint8_t>(
-      mColorSpace.mPrimaries.WasPassed() ? mColorSpace.mPrimaries.Value()
-                                         : VideoColorPrimaries::EndGuard_);
-  const uint8_t colorSpaceTransfer =
-      BitwiseCast<uint8_t>(mColorSpace.mTransfer.WasPassed()
-                               ? mColorSpace.mTransfer.Value()
-                               : VideoTransferCharacteristics::EndGuard_);
-
-  // Indexing the image and send the index to the receiver.
-  const uint32_t index = aHolder->VideoFrameImages().Length();
-  RefPtr<layers::Image> image(mResource->mImage.get());
-  // The serialization is limited to the same process scope so it's ok to
-  // serialize a reference instead of a copy.
-  nsIPrincipal* principal = mParent->PrincipalOrNull();
-  nsCOMPtr<nsIURI> uri = principal ? principal->GetURI() : nullptr;
-  aHolder->VideoFrameImages().AppendElement(
-      VideoFrameImageData{image.forget(), uri});
-
-  return !(
-      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, SCTAG_DOM_VIDEOFRAME, index)) ||
-      NS_WARN_IF(!JS_WriteBytes(aWriter, &format, 1)) ||
-      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, codedWidth, codedHeight)) ||
-      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, visibleX, visibleY)) ||
-      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, visibleWidth, visibleHeight)) ||
-      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, displayWidth, displayHeight)) ||
-      NS_WARN_IF(!JS_WriteBytes(aWriter, &hasDuration, 1)) ||
-      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, durationLow, durationHigh)) ||
-      NS_WARN_IF(!JS_WriteBytes(aWriter, &hasTimestamp, 1)) ||
-      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, timestampLow, timestampHigh)) ||
-      NS_WARN_IF(!JS_WriteBytes(aWriter, &colorSpaceFullRange, 1)) ||
-      NS_WARN_IF(!JS_WriteBytes(aWriter, &colorSpaceMatrix, 1)) ||
-      NS_WARN_IF(!JS_WriteBytes(aWriter, &colorSpacePrimaries, 1)) ||
-      NS_WARN_IF(!JS_WriteBytes(aWriter, &colorSpaceTransfer, 1)));
 }
 
 /*

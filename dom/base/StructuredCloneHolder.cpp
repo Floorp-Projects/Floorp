@@ -55,8 +55,6 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/TransformStream.h"
 #include "mozilla/dom/TransformStreamBinding.h"
-#include "mozilla/dom/VideoFrame.h"
-#include "mozilla/dom/VideoFrameBinding.h"
 #include "mozilla/dom/WebIDLSerializable.h"
 #include "mozilla/dom/WritableStream.h"
 #include "mozilla/dom/WritableStreamBinding.h"
@@ -399,7 +397,6 @@ void StructuredCloneHolder::Read(nsIGlobalObject* aGlobal, JSContext* aCx,
     mWasmModuleArray.Clear();
     mClonedSurfaces.Clear();
     mInputStreamArray.Clear();
-    mVideoFrameImages.Clear();
     Clear();
   }
 }
@@ -1025,13 +1022,6 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
     return ClonedErrorHolder::ReadStructuredClone(aCx, aReader, this);
   }
 
-  if (StaticPrefs::dom_media_webcodecs_enabled() &&
-      aTag == SCTAG_DOM_VIDEOFRAME &&
-      CloneScope() == StructuredCloneScope::SameProcess) {
-    return VideoFrame::ReadStructuredClone(aCx, mGlobal, aReader,
-                                           VideoFrameImages()[aIndex]);
-  }
-
   return ReadFullySerializableObjects(aCx, aReader, aTag);
 }
 
@@ -1126,17 +1116,6 @@ bool StructuredCloneHolder::CustomWriteHandler(
       return WriteWasmModule(aWriter, module, this);
     }
     return false;
-  }
-
-  // See if this is a VideoFrame object.
-  if (StaticPrefs::dom_media_webcodecs_enabled()) {
-    VideoFrame* videoFrame = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(VideoFrame, &obj, videoFrame))) {
-      SameProcessScopeRequired(aSameProcessScopeRequired);
-      return CloneScope() == StructuredCloneScope::SameProcess
-                 ? videoFrame->WriteStructuredClone(aWriter, this)
-                 : false;
-    }
   }
 
   {

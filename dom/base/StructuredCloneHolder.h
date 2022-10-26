@@ -166,7 +166,6 @@ class StructuredCloneHolderBase {
 class BlobImpl;
 class MessagePort;
 class MessagePortIdentifier;
-struct VideoFrameImageData;
 
 class StructuredCloneHolder : public StructuredCloneHolderBase {
  public:
@@ -209,8 +208,7 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
   // Call this method to know if this object is keeping some DOM object alive.
   bool HasClonedDOMObjects() const {
     return !mBlobImplArray.IsEmpty() || !mWasmModuleArray.IsEmpty() ||
-           !mClonedSurfaces.IsEmpty() || !mInputStreamArray.IsEmpty() ||
-           !mVideoFrameImages.IsEmpty();
+           !mClonedSurfaces.IsEmpty() || !mInputStreamArray.IsEmpty();
   }
 
   nsTArray<RefPtr<BlobImpl>>& BlobImpls() {
@@ -264,10 +262,6 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
 
   nsTArray<RefPtr<gfx::DataSourceSurface>>& GetSurfaces() {
     return mClonedSurfaces;
-  }
-
-  nsTArray<VideoFrameImageData>& VideoFrameImages() {
-    return mVideoFrameImages;
   }
 
   // Implementations of the virtual methods to allow cloning of objects which
@@ -366,9 +360,6 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
   // The DataSourceSurface object will not be written ever via any ImageBitmap
   // instance, so no race condition will occur.
   nsTArray<RefPtr<gfx::DataSourceSurface>> mClonedSurfaces;
-
-  // Used for cloning VideoFrame in the structured cloning algorithm.
-  nsTArray<VideoFrameImageData> mVideoFrameImages;
 
   // This raw pointer is only set within ::Read() and is unset by the end.
   nsIGlobalObject* MOZ_NON_OWNING_REF mGlobal;
