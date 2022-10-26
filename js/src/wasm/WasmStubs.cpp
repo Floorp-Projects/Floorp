@@ -1958,13 +1958,13 @@ static void FillArgumentArrayForJitExit(MacroAssembler& masm, Register instance,
 static bool GenerateImportFunction(jit::MacroAssembler& masm,
                                    const FuncImport& fi,
                                    const FuncType& funcType,
-                                   TypeIdDesc funcTypeId,
+                                   CallIndirectId callIndirectId,
                                    FuncOffsets* offsets) {
   AutoCreatedBy acb(masm, "wasm::GenerateImportFunction");
 
   AssertExpectedSP(masm);
 
-  GenerateFunctionPrologue(masm, funcTypeId, Nothing(), offsets);
+  GenerateFunctionPrologue(masm, callIndirectId, Nothing(), offsets);
 
   MOZ_ASSERT(masm.framePushed() == 0);
   const unsigned sizeOfInstanceSlot = sizeof(void*);
@@ -2033,10 +2033,10 @@ bool wasm::GenerateImportFunctions(const ModuleEnvironment& env,
   for (uint32_t funcIndex = 0; funcIndex < imports.length(); funcIndex++) {
     const FuncImport& fi = imports[funcIndex];
     const FuncType& funcType = *env.funcs[funcIndex].type;
-    TypeIdDesc funcTypeId = *env.funcs[funcIndex].typeId;
+    CallIndirectId callIndirectId = CallIndirectId::forFunc(env, funcIndex);
 
     FuncOffsets offsets;
-    if (!GenerateImportFunction(masm, fi, funcType, funcTypeId, &offsets)) {
+    if (!GenerateImportFunction(masm, fi, funcType, callIndirectId, &offsets)) {
       return false;
     }
     if (!code->codeRanges.emplaceBack(funcIndex, /* bytecodeOffset = */ 0,

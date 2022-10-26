@@ -21,6 +21,7 @@
 #include "wasm/WasmExprType.h"
 #include "wasm/WasmStubs.h"
 #include "wasm/WasmTypeDef.h"
+#include "wasm/WasmValidate.h"
 #include "wasm/WasmValue.h"
 
 using mozilla::MakeEnumeratedRange;
@@ -153,6 +154,28 @@ const CodeRange* wasm::LookupInSorted(const CodeRangeVector& codeRanges,
   return &codeRanges[match];
 }
 
+CallIndirectId CallIndirectId::forFunc(const ModuleEnvironment& moduleEnv,
+                                       uint32_t funcIndex) {
+  return CallIndirectId::forFuncType(moduleEnv,
+                                     moduleEnv.funcs[funcIndex].typeIndex);
+}
+
+CallIndirectId CallIndirectId::forFuncType(const ModuleEnvironment& moduleEnv,
+                                           uint32_t funcTypeIndex) {
+  // asm.js tables are homogenous and don't require a signature check
+  if (moduleEnv.isAsmJS()) {
+    return CallIndirectId();
+  }
+
+  const FuncType& funcType = moduleEnv.types->type(funcTypeIndex).funcType();
+  if (funcType.hasImmediateTypeId()) {
+    return CallIndirectId(CallIndirectIdKind::Immediate,
+                          funcType.immediateTypeId());
+  }
+  return CallIndirectId(CallIndirectIdKind::Global,
+                        moduleEnv.offsetOfTypeId(funcTypeIndex));
+}
+
 CalleeDesc CalleeDesc::function(uint32_t funcIndex) {
   CalleeDesc c;
   c.which_ = Func;
@@ -165,13 +188,14 @@ CalleeDesc CalleeDesc::import(uint32_t globalDataOffset) {
   c.u.import.globalDataOffset_ = globalDataOffset;
   return c;
 }
-CalleeDesc CalleeDesc::wasmTable(const TableDesc& desc, TypeIdDesc funcTypeId) {
+CalleeDesc CalleeDesc::wasmTable(const TableDesc& desc,
+                                 CallIndirectId callIndirectId) {
   CalleeDesc c;
   c.which_ = WasmTable;
   c.u.table.globalDataOffset_ = desc.globalDataOffset;
   c.u.table.minLength_ = desc.initialLength;
   c.u.table.maxLength_ = desc.maximumLength;
-  c.u.table.funcTypeId_ = funcTypeId;
+  c.u.table.callIndirectId_ = callIndirectId;
   return c;
 }
 CalleeDesc CalleeDesc::asmJSTable(const TableDesc& desc) {

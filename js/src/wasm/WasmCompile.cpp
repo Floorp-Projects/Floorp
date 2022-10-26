@@ -674,7 +674,7 @@ static bool DecodeCodeSection(const ModuleEnvironment& env, DecoderT& d,
   }
 
   for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
-    if (!DecodeFunctionBody(d, mg, env.numFuncImports() + funcDefIndex)) {
+    if (!DecodeFunctionBody(d, mg, env.numFuncImports + funcDefIndex)) {
       return false;
     }
   }

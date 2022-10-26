@@ -439,6 +439,7 @@ CoderResult CodeFuncType(Coder<mode>& coder, CoderArg<mode, FuncType> item) {
   WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::FuncType, 208);
   MOZ_TRY(CodePodVector(coder, &item->results_));
   MOZ_TRY(CodePodVector(coder, &item->args_));
+  MOZ_TRY(CodePod(coder, &item->immediateTypeId_));
   return Ok();
 }
 
@@ -801,7 +802,7 @@ CoderResult CodeMetadata(Coder<mode>& coder,
   MOZ_TRY(Magic(coder, Marker::Metadata));
   MOZ_TRY(CodePod(coder, &item->pod()));
   MOZ_TRY((CodeVector<mode, TypeDef, &CodeTypeDef<mode>>(coder, &item->types)));
-  MOZ_TRY((CodePodVector(coder, &item->typeIds)));
+  MOZ_TRY((CodePod(coder, &item->typeIdsOffsetStart)));
   MOZ_TRY((CodeVector<mode, GlobalDesc, &CodeGlobalDesc<mode>>(
       coder, &item->globals)));
   MOZ_TRY(CodePodVector(coder, &item->tables));
