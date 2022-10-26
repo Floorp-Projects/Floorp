@@ -17,7 +17,7 @@ with Files("permissionPrompts/**"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("preferences/**"):
-    BUG_COMPONENT = ("Firefox", "Preferences")
+    BUG_COMPONENT = ("Firefox", "Settings UI")
 
 BROWSER_CHROME_MANIFESTS += [
     # Each test is in it's own directory so it gets run in a clean profile with

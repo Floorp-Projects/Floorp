@@ -20,4 +20,4 @@ if CONFIG["MOZ_UPDATE_AGENT"]:
 JAR_MANIFESTS += ["jar.mn"]
 
 with Files("**"):
-    BUG_COMPONENT = ("Firefox", "Preferences")
+    BUG_COMPONENT = ("Firefox", "Settings UI")
