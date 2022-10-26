@@ -4118,13 +4118,15 @@ class ADBDevice(ADBCommand):
         if grant_runtime_permissions:
             self.grant_runtime_permissions(app_name)
 
-        acmd = ["am"] + [
-            "startservice" if is_service else "start",
-            "-W" if wait else "",
-            "-n",
-            "%s/%s" % (app_name, activity_name),
-        ]
-
+        acmd = ["am"] + ["startservice" if is_service else "start"]
+        if wait:
+            acmd.extend(["-W"])
+        acmd.extend(
+            [
+                "-n",
+                "%s/%s" % (app_name, activity_name),
+            ]
+        )
         if intent:
             acmd.extend(["-a", intent])
 
@@ -4151,7 +4153,9 @@ class ADBDevice(ADBCommand):
         if "Error:" in cmd_output:
             for line in cmd_output.split("\n"):
                 self._logger.info(line)
-            raise ADBError("launch_activity %s/%s failed" % (app_name, activity_name))
+            raise ADBError(
+                "launch_application %s/%s failed" % (app_name, activity_name)
+            )
 
     def launch_fennec(
         self,
