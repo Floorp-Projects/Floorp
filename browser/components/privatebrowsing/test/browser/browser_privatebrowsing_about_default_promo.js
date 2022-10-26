@@ -12,6 +12,34 @@ add_setup(async function() {
   await ASRouter.onPrefChange();
 });
 
+add_task(async function test_privatebrowsing_asrouter_messages_state() {
+  ASRouter.resetMessageState();
+  const initialMsgCount = ASRouter.state.messages.length;
+  let pinPromoMessage = ASRouter.state.messages.find(
+    m => m.id === "PB_NEWTAB_PIN_PROMO"
+  );
+
+  Assert.ok(pinPromoMessage, "Pin Promo message found");
+  let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab1, [], async function() {
+    const promoContainer = content.document.querySelector(".promo");
+    ok(promoContainer, "Focus promo is shown");
+  });
+
+  Assert.equal(
+    ASRouter.state.messages.filter(m => m.id === "PB_NEWTAB_PIN_PROMO").length,
+    0,
+    "Pin Promo message removed from state when Promotype Pin is disabled"
+  );
+  Assert.equal(
+    ASRouter.state.messages.length,
+    initialMsgCount - 1,
+    "ASRouter state browsing messages persists"
+  );
+  await BrowserTestUtils.closeWindow(win1);
+});
+
 add_task(async function test_default_promo() {
   ASRouter.resetMessageState();
 
