@@ -4020,7 +4020,7 @@ static bool EmitGetGlobal(FunctionCompiler& f) {
           MOZ_ASSERT(value.ref().isNull());
           result = f.nullRefConstant();
           break;
-        case RefType::TypeIndex:
+        case RefType::TypeRef:
           MOZ_CRASH("unexpected reference type in EmitGetGlobal");
       }
       break;

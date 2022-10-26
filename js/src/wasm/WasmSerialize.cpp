@@ -414,33 +414,55 @@ CoderResult CodeShareableBytes(Coder<mode>& coder,
 
 // WasmValType.h
 
+/* static */
+SerializableTypeCode SerializableTypeCode::serialize(PackedTypeCode ptc,
+                                                     const TypeContext& types) {
+  SerializableTypeCode stc = {};
+  stc.typeCode = PackedRepr(ptc.typeCode());
+  stc.typeIndex = ptc.typeDef() ? types.indexOf(*ptc.typeDef())
+                                : SerializableTypeCode::NoTypeIndex;
+  stc.nullable = ptc.isNullable();
+  return stc;
+}
+
+PackedTypeCode SerializableTypeCode::deserialize(const TypeContext& types) {
+  if (typeIndex == SerializableTypeCode::NoTypeIndex) {
+    return PackedTypeCode::pack(TypeCode(typeCode), nullable);
+  }
+  const TypeDef* typeDef = &types.type(typeIndex);
+  return PackedTypeCode::pack(TypeCode(typeCode), typeDef, nullable);
+}
+
 template <CoderMode mode>
-CoderResult CodeValType(Coder<mode>& coder, CoderArg<mode, ValType> item) {
+CoderResult CodePackedTypeCode(Coder<mode>& coder,
+                               CoderArg<mode, PackedTypeCode> item) {
   if constexpr (mode == MODE_DECODE) {
-    return coder.readBytes((void*)item, sizeof(ValType));
+    SerializableTypeCode stc;
+    MOZ_TRY(CodePod(coder, &stc));
+    *item = stc.deserialize(*coder.types_);
+    return Ok();
+  } else if constexpr (mode == MODE_SIZE) {
+    return coder.writeBytes(nullptr, sizeof(SerializableTypeCode));
   } else {
-    return coder.writeBytes((const void*)item, sizeof(ValType));
+    SerializableTypeCode stc =
+        SerializableTypeCode::serialize(*item, *coder.types_);
+    return CodePod(coder, &stc);
   }
 }
 
-CoderResult CodeFieldType(Coder<MODE_DECODE>& coder, FieldType* item) {
-  return coder.readBytes((void*)item, sizeof(FieldType));
+template <CoderMode mode>
+CoderResult CodeValType(Coder<mode>& coder, CoderArg<mode, ValType> item) {
+  return CodePackedTypeCode(coder, item->addressOfPacked());
 }
 
 template <CoderMode mode>
-CoderResult CodeFieldType(Coder<mode>& coder, const FieldType* item) {
-  STATIC_ASSERT_ENCODING_OR_SIZING;
-  return coder.writeBytes((const void*)item, sizeof(FieldType));
-}
-
-CoderResult CodeRefType(Coder<MODE_DECODE>& coder, RefType* item) {
-  return coder.readBytes((void*)item, sizeof(RefType));
+CoderResult CodeFieldType(Coder<mode>& coder, CoderArg<mode, FieldType> item) {
+  return CodePackedTypeCode(coder, item->addressOfPacked());
 }
 
 template <CoderMode mode>
-CoderResult CodeRefType(Coder<mode>& coder, const RefType* item) {
-  STATIC_ASSERT_ENCODING_OR_SIZING;
-  return coder.writeBytes((const void*)item, sizeof(RefType));
+CoderResult CodeRefType(Coder<mode>& coder, CoderArg<mode, RefType> item) {
+  return CodePackedTypeCode(coder, item->addressOfPacked());
 }
 
 // WasmValue.h
@@ -476,7 +498,7 @@ CoderResult CodeInitExpr(Coder<mode>& coder, CoderArg<mode, InitExpr> item) {
 
 template <CoderMode mode>
 CoderResult CodeFuncType(Coder<mode>& coder, CoderArg<mode, FuncType> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::FuncType, 208);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::FuncType, 344);
   MOZ_TRY((CodeVector<mode, ValType, &CodeValType<mode>>(coder, &item->args_)));
   MOZ_TRY(
       (CodeVector<mode, ValType, &CodeValType<mode>>(coder, &item->results_)));
@@ -505,7 +527,7 @@ CoderResult CodeStructType(Coder<mode>& coder,
 
 template <CoderMode mode>
 CoderResult CodeArrayType(Coder<mode>& coder, CoderArg<mode, ArrayType> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::ArrayType, 48);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::ArrayType, 16);
   MOZ_TRY(CodeFieldType(coder, &item->elementType_));
   MOZ_TRY(CodePod(coder, &item->isMutable_));
   return Ok();
@@ -513,7 +535,7 @@ CoderResult CodeArrayType(Coder<mode>& coder, CoderArg<mode, ArrayType> item) {
 
 template <CoderMode mode>
 CoderResult CodeTypeDef(Coder<mode>& coder, CoderArg<mode, TypeDef> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TypeDef, 216);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TypeDef, 360);
   // TypeDef is a tagged union that begins with kind = None. This implies that
   // we must manually initialize the variant that we decode.
   if constexpr (mode == MODE_DECODE) {
@@ -547,6 +569,28 @@ CoderResult CodeTypeDef(Coder<mode>& coder, CoderArg<mode, TypeDef> item) {
     }
     default:
       MOZ_ASSERT_UNREACHABLE();
+  }
+  return Ok();
+}
+
+template <CoderMode mode>
+CoderResult CodeTypeContext(Coder<mode>& coder,
+                            CoderArg<mode, TypeContext> item) {
+  // Subsequent decoding needs to reference type definitions
+  if constexpr (mode == MODE_DECODE) {
+    MOZ_ASSERT(!coder.types_);
+    coder.types_ = item;
+  }
+
+  size_t length = item->length();
+  MOZ_TRY(CodePod(coder, &length));
+  if constexpr (mode == MODE_DECODE) {
+    if (!item->addTypes(length)) {
+      return Err(OutOfMemory());
+    }
+  }
+  for (uint32_t typeIndex = 0; typeIndex < item->length(); typeIndex++) {
+    MOZ_TRY(CodeTypeDef(coder, &item->type(typeIndex)));
   }
   return Ok();
 }
@@ -586,7 +630,7 @@ CoderResult CodeGlobalDesc(Coder<mode>& coder,
 
 template <CoderMode mode>
 CoderResult CodeTagType(Coder<mode>& coder, CoderArg<mode, TagType> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TagType, 168);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TagType, 232);
   MOZ_TRY(
       (CodeVector<mode, ValType, &CodeValType<mode>>(coder, &item->argTypes_)));
   MOZ_TRY(CodePodVector(coder, &item->argOffsets_));
@@ -640,7 +684,7 @@ CoderResult CodeCustomSection(Coder<mode>& coder,
 
 template <CoderMode mode>
 CoderResult CodeTableDesc(Coder<mode>& coder, CoderArg<mode, TableDesc> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TableDesc, 48);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TableDesc, 32);
   MOZ_TRY(CodeRefType(coder, &item->elemType));
   MOZ_TRY(CodePod(coder, &item->isImportedOrExported));
   MOZ_TRY(CodePod(coder, &item->isAsmJS));
@@ -868,15 +912,17 @@ CoderResult CodeMetadataTier(Coder<mode>& coder,
 template <CoderMode mode>
 CoderResult CodeMetadata(Coder<mode>& coder,
                          CoderArg<mode, wasm::Metadata> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::Metadata, 464);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::Metadata, 400);
   if constexpr (mode == MODE_ENCODE) {
+    // Serialization doesn't handle asm.js or debug enabled modules
     MOZ_ASSERT(!item->debugEnabled && item->debugFuncTypeIndices.empty());
     MOZ_ASSERT(!item->isAsmJS());
   }
 
   MOZ_TRY(Magic(coder, Marker::Metadata));
   MOZ_TRY(CodePod(coder, &item->pod()));
-  MOZ_TRY((CodeVector<mode, TypeDef, &CodeTypeDef<mode>>(coder, &item->types)));
+  MOZ_TRY((CodeRefPtr<mode, const TypeContext, &CodeTypeContext>(
+      coder, &item->types)));
   MOZ_TRY((CodePod(coder, &item->typeIdsOffsetStart)));
   MOZ_TRY((CodeVector<mode, GlobalDesc, &CodeGlobalDesc<mode>>(
       coder, &item->globals)));
@@ -889,6 +935,7 @@ CoderResult CodeMetadata(Coder<mode>& coder,
   MOZ_TRY(CodeCacheableChars(coder, &item->sourceMapURL));
 
   if constexpr (mode == MODE_DECODE) {
+    // Initialize debugging state to disabled
     item->debugEnabled = false;
     item->debugFuncTypeIndices.clear();
   }
@@ -1075,7 +1122,7 @@ CoderResult CodeModule(Coder<mode>& coder, CoderArg<mode, Module> item,
 
 static bool GetSerializedSize(const Module& module, const LinkData& linkData,
                               size_t* size) {
-  Coder<MODE_SIZE> coder;
+  Coder<MODE_SIZE> coder(module.metadata().types.get());
   auto result = CodeModule(coder, &module, linkData);
   if (result.isErr()) {
     return false;
@@ -1099,7 +1146,8 @@ bool Module::serialize(const LinkData& linkData, Bytes* bytes) const {
     return false;
   }
 
-  Coder<MODE_ENCODE> coder(bytes->begin(), serializedSize);
+  Coder<MODE_ENCODE> coder(metadata().types.get(), bytes->begin(),
+                           serializedSize);
   CoderResult result = CodeModule(coder, this, linkData);
   if (result.isErr()) {
     // An error is an OOM, return false
@@ -1129,7 +1177,7 @@ void Module::initGCMallocBytesExcludingCode() {
   // calculate a value. We consume all errors, as they can only be overflow and
   // can be ignored until the end.
   constexpr CoderMode MODE = MODE_SIZE;
-  Coder<MODE> coder;
+  Coder<MODE> coder(metadata().types.get());
   (void)CodeVector<MODE, Import, &CodeImport<MODE>>(coder, &imports_);
   (void)CodeVector<MODE, Export, &CodeExport<MODE>>(coder, &exports_);
   (void)CodeVector<MODE, SharedDataSegment,

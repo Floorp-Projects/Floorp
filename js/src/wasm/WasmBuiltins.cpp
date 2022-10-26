@@ -847,7 +847,7 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, Instance* instance,
             break;
           case RefType::Func:
           case RefType::Eq:
-          case RefType::TypeIndex:
+          case RefType::TypeRef:
             // Guarded against by temporarilyUnsupportedReftypeForEntry()
             MOZ_CRASH("unexpected input argument in CoerceInPlace_JitEntry");
         }

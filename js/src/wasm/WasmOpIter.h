@@ -867,10 +867,12 @@ inline bool OpIter<Policy>::checkIsSubtypeOf(ResultType params,
 template <typename Policy>
 inline bool OpIter<Policy>::checkIsSubtypeOf(uint32_t actualTypeIndex,
                                              uint32_t expectedTypeIndex) {
-  return CheckIsSubtypeOf(
-      d_, env_, lastOpcodeOffset(),
-      ValType(RefType::fromTypeIndex(actualTypeIndex, true)),
-      ValType(RefType::fromTypeIndex(expectedTypeIndex, true)), &cache_);
+  const TypeDef& actualTypeDef = env_.types->type(actualTypeIndex);
+  const TypeDef& expectedTypeDef = env_.types->type(expectedTypeIndex);
+  return CheckIsSubtypeOf(d_, env_, lastOpcodeOffset(),
+                          ValType(RefType::fromTypeDef(&actualTypeDef, true)),
+                          ValType(RefType::fromTypeDef(&expectedTypeDef, true)),
+                          &cache_);
 }
 #endif
 
@@ -989,7 +991,7 @@ inline bool OpIter<Policy>::popWithRefType(Value* value, StackType* type) {
     return true;
   }
 
-  UniqueChars actualText = ToString(type->valType());
+  UniqueChars actualText = ToString(type->valType(), env_.types);
   if (!actualText) {
     return false;
   }
@@ -1142,11 +1144,12 @@ inline bool OpIter<Policy>::readBlockType(BlockType* type) {
     return fail("invalid block type type index");
   }
 
-  if (!env_.types->isFuncType(x)) {
+  const TypeDef* typeDef = &env_.types->type(x);
+  if (!typeDef->isFuncType()) {
     return fail("block type type index must be func type");
   }
 
-  *type = BlockType::Func(env_.types->funcType(x));
+  *type = BlockType::Func(typeDef->funcType());
 
   return true;
 }
@@ -1416,7 +1419,7 @@ inline bool OpIter<Policy>::checkCastedBranchValueAndPush(
   // Check we at least have one type in the branch target type, which will take
   // the casted type.
   if (branchTargetType->length() < 1) {
-    UniqueChars expectedText = ToString(castedToType);
+    UniqueChars expectedText = ToString(castedToType, env_.types);
     if (!expectedText) {
       return false;
     }
@@ -2254,7 +2257,8 @@ inline bool OpIter<Policy>::readRefFunc(uint32_t* funcIndex) {
   // validation of the call_ref instruction.
   if (env_.functionReferencesEnabled()) {
     const uint32_t typeIndex = env_.funcs[*funcIndex].typeIndex;
-    return push(RefType::fromTypeIndex(typeIndex, false));
+    const TypeDef& typeDef = env_.types->type(typeIndex);
+    return push(RefType::fromTypeDef(&typeDef, false));
   }
 #endif
   return push(RefType::func());
@@ -2446,11 +2450,11 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
     return false;
   }
 
-  if (!env_.types->isFuncType(*funcTypeIndex)) {
+  const TypeDef& typeDef = env_.types->type(*funcTypeIndex);
+  if (!typeDef.isFuncType()) {
     return fail("expected signature type");
   }
-
-  const FuncType& funcType = env_.types->funcType(*funcTypeIndex);
+  const FuncType& funcType = typeDef.funcType();
 
 #ifdef WASM_PRIVATE_REFTYPES
   if (env_.tables[*tableIndex].isImportedOrExported &&
@@ -2477,19 +2481,18 @@ inline bool OpIter<Policy>::readCallRef(const FuncType** funcType,
     return false;
   }
 
-  if (!popWithType(ValType(RefType::fromTypeIndex(funcTypeIndex, true)),
-                   callee)) {
+  const TypeDef& typeDef = env_.types->type(funcTypeIndex);
+  *funcType = &typeDef.funcType();
+
+  if (!popWithType(ValType(RefType::fromTypeDef(&typeDef, true)), callee)) {
     return false;
   }
 
-  const FuncType* funcType_ = &env_.types->funcType(funcTypeIndex);
-  *funcType = funcType_;
-
-  if (!popCallArgs(funcType_->args(), argValues)) {
+  if (!popCallArgs((*funcType)->args(), argValues)) {
     return false;
   }
 
-  return push(ResultType::Vector(funcType_->results()));
+  return push(ResultType::Vector((*funcType)->results()));
 }
 #endif
 
@@ -2537,11 +2540,11 @@ inline bool OpIter<Policy>::readOldCallIndirect(uint32_t* funcTypeIndex,
     return fail("signature index out of range");
   }
 
-  if (!env_.types->isFuncType(*funcTypeIndex)) {
+  const TypeDef& typeDef = env_.types->type(*funcTypeIndex);
+  if (!typeDef.isFuncType()) {
     return fail("expected signature type");
   }
-
-  const FuncType& funcType = env_.types->funcType(*funcTypeIndex);
+  const FuncType& funcType = typeDef.funcType();
 
   if (!popCallArgs(funcType.args(), argValues)) {
     return false;
@@ -2967,8 +2970,8 @@ inline bool OpIter<Policy>::readGcTypeIndex(uint32_t* typeIndex) {
     return fail("type index out of range");
   }
 
-  if (!env_.types->isStructType(*typeIndex) &&
-      !env_.types->isArrayType(*typeIndex)) {
+  if (!env_.types->type(*typeIndex).isStructType() &&
+      !env_.types->type(*typeIndex).isArrayType()) {
     return fail("not a gc type");
   }
 
@@ -2985,7 +2988,7 @@ inline bool OpIter<Policy>::readStructTypeIndex(uint32_t* typeIndex) {
     return fail("type index out of range");
   }
 
-  if (!env_.types->isStructType(*typeIndex)) {
+  if (!env_.types->type(*typeIndex).isStructType()) {
     return fail("not a struct type");
   }
 
@@ -3002,7 +3005,7 @@ inline bool OpIter<Policy>::readArrayTypeIndex(uint32_t* typeIndex) {
     return fail("type index out of range");
   }
 
-  if (!env_.types->isArrayType(*typeIndex)) {
+  if (!env_.types->type(*typeIndex).isArrayType()) {
     return fail("not an array type");
   }
 
@@ -3019,7 +3022,7 @@ inline bool OpIter<Policy>::readFuncTypeIndex(uint32_t* typeIndex) {
     return fail("type index out of range");
   }
 
-  if (!env_.types->isFuncType(*typeIndex)) {
+  if (!env_.types->type(*typeIndex).isFuncType()) {
     return fail("not an func type");
   }
 
@@ -3051,21 +3054,23 @@ inline bool OpIter<Policy>::readStructNew(uint32_t* typeIndex,
     return false;
   }
 
-  const StructType& str = env_.types->structType(*typeIndex);
+  const TypeDef& typeDef = env_.types->type(*typeIndex);
+  const StructType& structType = typeDef.structType();
 
-  if (!argValues->resize(str.fields_.length())) {
+  if (!argValues->resize(structType.fields_.length())) {
     return false;
   }
 
   static_assert(MaxStructFields <= INT32_MAX, "Or we iloop below");
 
-  for (int32_t i = str.fields_.length() - 1; i >= 0; i--) {
-    if (!popWithType(str.fields_[i].type.widenToValType(), &(*argValues)[i])) {
+  for (int32_t i = structType.fields_.length() - 1; i >= 0; i--) {
+    if (!popWithType(structType.fields_[i].type.widenToValType(),
+                     &(*argValues)[i])) {
       return false;
     }
   }
 
-  return push(RefType::fromTypeIndex(*typeIndex, false));
+  return push(RefType::fromTypeDef(&typeDef, false));
 }
 
 template <typename Policy>
@@ -3076,13 +3081,14 @@ inline bool OpIter<Policy>::readStructNewDefault(uint32_t* typeIndex) {
     return false;
   }
 
-  const StructType& str = env_.types->structType(*typeIndex);
+  const TypeDef& typeDef = env_.types->type(*typeIndex);
+  const StructType& structType = typeDef.structType();
 
-  if (!str.isDefaultable()) {
+  if (!structType.isDefaultable()) {
     return fail("struct must be defaultable");
   }
 
-  return push(RefType::fromTypeIndex(*typeIndex, false));
+  return push(RefType::fromTypeDef(&typeDef, false));
 }
 
 template <typename Policy>
@@ -3097,13 +3103,14 @@ inline bool OpIter<Policy>::readStructGet(uint32_t* typeIndex,
     return false;
   }
 
-  const StructType& structType = env_.types->structType(*typeIndex);
+  const TypeDef& typeDef = env_.types->type(*typeIndex);
+  const StructType& structType = typeDef.structType();
 
   if (!readFieldIndex(fieldIndex, structType)) {
     return false;
   }
 
-  if (!popWithType(RefType::fromTypeIndex(*typeIndex, true), ptr)) {
+  if (!popWithType(RefType::fromTypeDef(&typeDef, true), ptr)) {
     return false;
   }
 
@@ -3131,7 +3138,8 @@ inline bool OpIter<Policy>::readStructSet(uint32_t* typeIndex,
     return false;
   }
 
-  const StructType& structType = env_.types->structType(*typeIndex);
+  const TypeDef& typeDef = env_.types->type(*typeIndex);
+  const StructType& structType = typeDef.structType();
 
   if (!readFieldIndex(fieldIndex, structType)) {
     return false;
@@ -3146,7 +3154,7 @@ inline bool OpIter<Policy>::readStructSet(uint32_t* typeIndex,
     return fail("field is not mutable");
   }
 
-  if (!popWithType(RefType::fromTypeIndex(*typeIndex, true), ptr)) {
+  if (!popWithType(RefType::fromTypeDef(&typeDef, true), ptr)) {
     return false;
   }
 
@@ -3162,17 +3170,18 @@ inline bool OpIter<Policy>::readArrayNew(uint32_t* typeIndex,
     return false;
   }
 
-  const ArrayType& arr = env_.types->arrayType(*typeIndex);
+  const TypeDef& typeDef = env_.types->type(*typeIndex);
+  const ArrayType& arrayType = typeDef.arrayType();
 
   if (!popWithType(ValType::I32, numElements)) {
     return false;
   }
 
-  if (!popWithType(arr.elementType_.widenToValType(), argValue)) {
+  if (!popWithType(arrayType.elementType_.widenToValType(), argValue)) {
     return false;
   }
 
-  return push(RefType::fromTypeIndex(*typeIndex, false));
+  return push(RefType::fromTypeDef(&typeDef, false));
 }
 
 template <typename Policy>
@@ -3184,7 +3193,8 @@ inline bool OpIter<Policy>::readArrayNewFixed(uint32_t* typeIndex,
     return false;
   }
 
-  const ArrayType& arrayType = env_.types->arrayType(*typeIndex);
+  const TypeDef& typeDef = env_.types->type(*typeIndex);
+  const ArrayType& arrayType = typeDef.arrayType();
 
   if (!readVarU32(numElements)) {
     return false;
@@ -3200,7 +3210,7 @@ inline bool OpIter<Policy>::readArrayNewFixed(uint32_t* typeIndex,
     }
   }
 
-  return push(RefType::fromTypeIndex(*typeIndex, false));
+  return push(RefType::fromTypeDef(&typeDef, false));
 }
 
 template <typename Policy>
@@ -3212,17 +3222,18 @@ inline bool OpIter<Policy>::readArrayNewDefault(uint32_t* typeIndex,
     return false;
   }
 
-  const ArrayType& arr = env_.types->arrayType(*typeIndex);
+  const TypeDef& typeDef = env_.types->type(*typeIndex);
+  const ArrayType& arrayType = typeDef.arrayType();
 
   if (!popWithType(ValType::I32, numElements)) {
     return false;
   }
 
-  if (!arr.elementType_.isDefaultable()) {
+  if (!arrayType.elementType_.isDefaultable()) {
     return fail("array must be defaultable");
   }
 
-  return push(RefType::fromTypeIndex(*typeIndex, false));
+  return push(RefType::fromTypeDef(&typeDef, false));
 }
 
 template <typename Policy>
@@ -3239,7 +3250,8 @@ inline bool OpIter<Policy>::readArrayNewData(uint32_t* typeIndex,
     return fail("unable to read segment index");
   }
 
-  const ArrayType& arrayType = env_.types->arrayType(*typeIndex);
+  const TypeDef& typeDef = env_.types->type(*typeIndex);
+  const ArrayType& arrayType = typeDef.arrayType();
   FieldType elemType = arrayType.elementType_;
   if (!elemType.isNumber() && !elemType.isPacked() && !elemType.isVector()) {
     return fail("element type must be i8/i16/i32/i64/f32/f64/v128");
@@ -3258,7 +3270,7 @@ inline bool OpIter<Policy>::readArrayNewData(uint32_t* typeIndex,
     return false;
   }
 
-  return push(RefType::fromTypeIndex(*typeIndex, false));
+  return push(RefType::fromTypeDef(&typeDef, false));
 }
 
 template <typename Policy>
@@ -3275,7 +3287,8 @@ inline bool OpIter<Policy>::readArrayNewElem(uint32_t* typeIndex,
     return fail("unable to read segment index");
   }
 
-  const ArrayType& arrayType = env_.types->arrayType(*typeIndex);
+  const TypeDef& typeDef = env_.types->type(*typeIndex);
+  const ArrayType& arrayType = typeDef.arrayType();
   FieldType dstElemType = arrayType.elementType_;
   if (!dstElemType.isRefType()) {
     return fail("element type is not a reftype");
@@ -3298,7 +3311,7 @@ inline bool OpIter<Policy>::readArrayNewElem(uint32_t* typeIndex,
     return false;
   }
 
-  return push(RefType::fromTypeIndex(*typeIndex, false));
+  return push(RefType::fromTypeDef(&typeDef, false));
 }
 
 template <typename Policy>
@@ -3311,13 +3324,14 @@ inline bool OpIter<Policy>::readArrayGet(uint32_t* typeIndex,
     return false;
   }
 
-  const ArrayType& arrayType = env_.types->arrayType(*typeIndex);
+  const TypeDef& typeDef = env_.types->type(*typeIndex);
+  const ArrayType& arrayType = typeDef.arrayType();
 
   if (!popWithType(ValType::I32, index)) {
     return false;
   }
 
-  if (!popWithType(RefType::fromTypeIndex(*typeIndex, true), ptr)) {
+  if (!popWithType(RefType::fromTypeDef(&typeDef, true), ptr)) {
     return false;
   }
 
@@ -3343,7 +3357,8 @@ inline bool OpIter<Policy>::readArraySet(uint32_t* typeIndex, Value* val,
     return false;
   }
 
-  const ArrayType& arrayType = env_.types->arrayType(*typeIndex);
+  const TypeDef& typeDef = env_.types->type(*typeIndex);
+  const ArrayType& arrayType = typeDef.arrayType();
 
   if (!arrayType.isMutable_) {
     return fail("array is not mutable");
@@ -3357,7 +3372,7 @@ inline bool OpIter<Policy>::readArraySet(uint32_t* typeIndex, Value* val,
     return false;
   }
 
-  if (!popWithType(RefType::fromTypeIndex(*typeIndex, true), ptr)) {
+  if (!popWithType(RefType::fromTypeDef(&typeDef, true), ptr)) {
     return false;
   }
 
@@ -3372,7 +3387,8 @@ inline bool OpIter<Policy>::readArrayLen(uint32_t* typeIndex, Value* ptr) {
     return false;
   }
 
-  if (!popWithType(RefType::fromTypeIndex(*typeIndex, true), ptr)) {
+  const TypeDef& typeDef = env_.types->type(*typeIndex);
+  if (!popWithType(RefType::fromTypeDef(&typeDef, true), ptr)) {
     return false;
   }
 
@@ -3401,8 +3417,10 @@ inline bool OpIter<Policy>::readArrayCopy(int32_t* elemSize,
   // types.  Reject if:
   // * the dst array is not of mutable type
   // * the element types are incompatible
-  const ArrayType& dstArrayType = env_.types->arrayType(dstTypeIndex);
-  const ArrayType& srcArrayType = env_.types->arrayType(srcTypeIndex);
+  const TypeDef& dstTypeDef = env_.types->type(dstTypeIndex);
+  const ArrayType& dstArrayType = dstTypeDef.arrayType();
+  const TypeDef& srcTypeDef = env_.types->type(srcTypeIndex);
+  const ArrayType& srcArrayType = srcTypeDef.arrayType();
   FieldType dstElemType = dstArrayType.elementType_;
   FieldType srcElemType = srcArrayType.elementType_;
   if (!dstArrayType.isMutable_) {
@@ -3426,13 +3444,13 @@ inline bool OpIter<Policy>::readArrayCopy(int32_t* elemSize,
   if (!popWithType(ValType::I32, srcIndex)) {
     return false;
   }
-  if (!popWithType(RefType::fromTypeIndex(srcTypeIndex, true), srcArray)) {
+  if (!popWithType(RefType::fromTypeDef(&srcTypeDef, true), srcArray)) {
     return false;
   }
   if (!popWithType(ValType::I32, dstIndex)) {
     return false;
   }
-  if (!popWithType(RefType::fromTypeIndex(dstTypeIndex, true), dstArray)) {
+  if (!popWithType(RefType::fromTypeDef(&dstTypeDef, true), dstArray)) {
     return false;
   }
 
@@ -3466,7 +3484,8 @@ inline bool OpIter<Policy>::readRefCast(uint32_t* typeIndex, Value* ref) {
     return false;
   }
 
-  return push(RefType::fromTypeIndex(*typeIndex, false));
+  const TypeDef& typeDef = env_.types->type(*typeIndex);
+  return push(RefType::fromTypeDef(&typeDef, false));
 }
 
 template <typename Policy>
@@ -3489,7 +3508,8 @@ inline bool OpIter<Policy>::readBrOnCast(uint32_t* relativeDepth,
 
   // The casted to type is a non-nullable reference to the type index
   // specified as an immediate.
-  ValType castedToType(RefType::fromTypeIndex(*typeIndex, false));
+  const TypeDef& typeDef = env_.types->type(*typeIndex);
+  ValType castedToType(RefType::fromTypeDef(&typeDef, false));
 
   return checkCastedBranchValueAndPush(*relativeDepth, castedFromType,
                                        castedToType, branchTargetType, values);

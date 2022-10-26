@@ -290,17 +290,8 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
                    moduleEnv_->offsetOfFuncImportInstanceData(i));
   }
 
-  // Copy type definitions to metadata
-  if (!metadata_->types.resize(moduleEnv_->types->length())) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < moduleEnv_->types->length(); i++) {
-    const TypeDef& typeDef = (*moduleEnv_->types)[i];
-    if (!metadata_->types[i].clone(typeDef)) {
-      return false;
-    }
-  }
+  // Share type definitions with metadata
+  metadata_->types = moduleEnv_->types;
 
   // Accumulate all exported functions:
   // - explicitly marked as such;

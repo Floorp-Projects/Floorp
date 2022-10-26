@@ -226,10 +226,9 @@ class Encoder {
   [[nodiscard]] bool writeVarS64(int64_t i) { return writeVarS<int64_t>(i); }
   [[nodiscard]] bool writeValType(ValType type) {
     static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-    if (type.isTypeIndex()) {
-      return writeFixedU8(uint8_t(TypeCode::NullableRef)) &&
-             writeVarU32(type.refType().typeIndex());
-    }
+    // writeValType is only used by asm.js, which doesn't use type
+    // references
+    MOZ_RELEASE_ASSERT(!type.isTypeRef(), "NYI");
     TypeCode tc = type.packed().typeCode();
     MOZ_ASSERT(size_t(tc) < size_t(TypeCode::Limit));
     return writeFixedU8(uint8_t(tc));
@@ -492,39 +491,25 @@ class Decoder {
 
   // Value and reference types
 
-  [[nodiscard]] ValType uncheckedReadValType();
-  template <class T>
-  [[nodiscard]] bool readPackedType(uint32_t numTypes,
-                                    const FeatureArgs& features, T* type);
+  [[nodiscard]] ValType uncheckedReadValType(const TypeContext& types);
+
   template <class T>
   [[nodiscard]] bool readPackedType(const TypeContext& types,
                                     const FeatureArgs& features, T* type);
 
-  [[nodiscard]] bool readValType(uint32_t numTypes, const FeatureArgs& features,
-                                 ValType* type);
   [[nodiscard]] bool readValType(const TypeContext& types,
                                  const FeatureArgs& features, ValType* type);
 
-  [[nodiscard]] bool readFieldType(uint32_t numTypes,
-                                   const FeatureArgs& features,
-                                   FieldType* type);
   [[nodiscard]] bool readFieldType(const TypeContext& types,
                                    const FeatureArgs& features,
                                    FieldType* type);
 
-  [[nodiscard]] bool readHeapType(uint32_t numTypes,
-                                  const FeatureArgs& features, bool nullable,
-                                  RefType* type);
   [[nodiscard]] bool readHeapType(const TypeContext& types,
                                   const FeatureArgs& features, bool nullable,
                                   RefType* type);
-  [[nodiscard]] bool readRefType(uint32_t numTypes, const FeatureArgs& features,
-                                 RefType* type);
+
   [[nodiscard]] bool readRefType(const TypeContext& types,
                                  const FeatureArgs& features, RefType* type);
-  [[nodiscard]] bool validateTypeIndex(const TypeContext& types,
-                                       const FeatureArgs& features,
-                                       RefType type);
 
   // Instruction opcode
 
@@ -545,7 +530,6 @@ class Decoder {
 #endif
   [[nodiscard]] bool readRefNull(const TypeContext& types,
                                  const FeatureArgs& features, RefType* type);
-  [[nodiscard]] bool readRefNull(const FeatureArgs& features, RefType* type);
 
   // See writeBytes comment.
 
@@ -647,7 +631,7 @@ class Decoder {
 
 // Value and reference types
 
-inline ValType Decoder::uncheckedReadValType() {
+inline ValType Decoder::uncheckedReadValType(const TypeContext& types) {
   uint8_t code = uncheckedReadFixedU8();
   switch (code) {
     case uint8_t(TypeCode::FuncRef):
@@ -666,7 +650,8 @@ inline ValType Decoder::uncheckedReadValType() {
       }
 
       int32_t x = uncheckedReadVarS32();
-      return RefType::fromTypeIndex(x, nullable);
+      const TypeDef* typeDef = &types.type(x);
+      return RefType::fromTypeDef(typeDef, nullable);
     }
     default:
       return ValType::fromNonRefTypeCode(TypeCode(code));
@@ -674,7 +659,7 @@ inline ValType Decoder::uncheckedReadValType() {
 }
 
 template <class T>
-inline bool Decoder::readPackedType(uint32_t numTypes,
+inline bool Decoder::readPackedType(const TypeContext& types,
                                     const FeatureArgs& features, T* type) {
   static_assert(uint8_t(TypeCode::Limit) <= UINT8_MAX, "fits");
   uint8_t code;
@@ -706,7 +691,7 @@ inline bool Decoder::readPackedType(uint32_t numTypes,
       }
       bool nullable = code == uint8_t(TypeCode::NullableRef);
       RefType refType;
-      if (!readHeapType(numTypes, features, nullable, &refType)) {
+      if (!readHeapType(types, features, nullable, &refType)) {
         return false;
       }
       *type = refType;
@@ -736,40 +721,19 @@ inline bool Decoder::readPackedType(uint32_t numTypes,
   }
   return fail("bad type");
 }
-template <class T>
-inline bool Decoder::readPackedType(const TypeContext& types,
-                                    const FeatureArgs& features, T* type) {
-  if (!readPackedType(types.length(), features, type)) {
-    return false;
-  }
-  if (type->isTypeIndex() &&
-      !validateTypeIndex(types, features, type->refType())) {
-    return false;
-  }
-  return true;
-}
 
-inline bool Decoder::readValType(uint32_t numTypes, const FeatureArgs& features,
-                                 ValType* type) {
-  return readPackedType<ValType>(numTypes, features, type);
-}
 inline bool Decoder::readValType(const TypeContext& types,
                                  const FeatureArgs& features, ValType* type) {
   return readPackedType<ValType>(types, features, type);
 }
 
-inline bool Decoder::readFieldType(uint32_t numTypes,
-                                   const FeatureArgs& features,
-                                   FieldType* type) {
-  return readPackedType<FieldType>(numTypes, features, type);
-}
 inline bool Decoder::readFieldType(const TypeContext& types,
                                    const FeatureArgs& features,
                                    FieldType* type) {
   return readPackedType<FieldType>(types, features, type);
 }
 
-inline bool Decoder::readHeapType(uint32_t numTypes,
+inline bool Decoder::readHeapType(const TypeContext& types,
                                   const FeatureArgs& features, bool nullable,
                                   RefType* type) {
   uint8_t nextByte;
@@ -804,40 +768,18 @@ inline bool Decoder::readHeapType(uint32_t numTypes,
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
   if (features.functionReferences) {
     int32_t x;
-    if (!readVarS32(&x) || x < 0 || uint32_t(x) >= numTypes ||
+    if (!readVarS32(&x) || x < 0 || uint32_t(x) >= types.length() ||
         uint32_t(x) >= MaxTypeIndex) {
       return fail("invalid heap type index");
     }
-    *type = RefType::fromTypeIndex(x, nullable);
+    const TypeDef* typeDef = &types.type(x);
+    *type = RefType::fromTypeDef(typeDef, nullable);
     return true;
   }
 #endif
   return fail("invalid heap type");
 }
-inline bool Decoder::readHeapType(const TypeContext& types,
-                                  const FeatureArgs& features, bool nullable,
-                                  RefType* type) {
-  if (!readHeapType(types.length(), features, nullable, type)) {
-    return false;
-  }
 
-  if (type->isTypeIndex() && !validateTypeIndex(types, features, *type)) {
-    return false;
-  }
-  return true;
-}
-inline bool Decoder::readRefType(uint32_t numTypes, const FeatureArgs& features,
-                                 RefType* type) {
-  ValType valType;
-  if (!readValType(numTypes, features, &valType)) {
-    return false;
-  }
-  if (!valType.isRefType()) {
-    return fail("bad type");
-  }
-  *type = valType.refType();
-  return true;
-}
 inline bool Decoder::readRefType(const TypeContext& types,
                                  const FeatureArgs& features, RefType* type) {
   ValType valType;
@@ -849,23 +791,6 @@ inline bool Decoder::readRefType(const TypeContext& types,
   }
   *type = valType.refType();
   return true;
-}
-inline bool Decoder::validateTypeIndex(const TypeContext& types,
-                                       const FeatureArgs& features,
-                                       RefType type) {
-  MOZ_ASSERT(type.isTypeIndex());
-
-  if (features.gc && (types[type.typeIndex()].isStructType() ||
-                      types[type.typeIndex()].isArrayType())) {
-    return true;
-  }
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  if (features.functionReferences && types[type.typeIndex()].isFuncType()) {
-    return true;
-  }
-#endif
-
-  return fail("type index references an invalid type");
 }
 
 // Instruction opcode
@@ -946,10 +871,6 @@ inline bool Decoder::readV128Const(V128* value) {
 inline bool Decoder::readRefNull(const TypeContext& types,
                                  const FeatureArgs& features, RefType* type) {
   return readHeapType(types, features, true, type);
-}
-
-inline bool Decoder::readRefNull(const FeatureArgs& features, RefType* type) {
-  return readHeapType(MaxTypes, features, true, type);
 }
 
 }  // namespace wasm
