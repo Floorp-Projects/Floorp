@@ -206,12 +206,22 @@ ul.children + .tag-line::before {
   -moz-context-properties: fill, stroke;
   fill: var(--blue-50);
   fill-opacity: 1;
+  opacity: 1;
   stroke: none;
   z-index: 2;
 }
 
 .markup-tag-mutation-marker.has-mutations {
   display: block;
+}
+
+.markup-tag-mutation-marker.has-mutations.mutation-breakpoint-disabled {
+  opacity: 0.6;
+}
+
+.tag-line[selected] .markup-tag-mutation-marker.mutation-breakpoint-disabled {
+  fill: #fff;
+  stroke: none;
 }
 
 .tag-line[selected] .markup-tag-mutation-marker {
