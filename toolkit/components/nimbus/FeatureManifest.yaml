@@ -293,6 +293,14 @@ pocketNewtab:
       type: string
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.spocZoneIds
       description: CSV string of data to set the spoc content.
+    spocTopsitesAdTypes:
+      type: string
+      fallbackPref: browser.newtabpage.activity-stream.discoverystream.spocTopsitesAdTypes
+      description: CSV string of data to set the spoc content.
+    spocTopsitesZoneIds:
+      type: string
+      fallbackPref: browser.newtabpage.activity-stream.discoverystream.spocTopsitesZoneIds
+      description: CSV string of data to set the spoc content.
     spocSiteId:
       type: string
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.spocSiteId

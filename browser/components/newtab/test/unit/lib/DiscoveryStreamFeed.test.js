@@ -585,6 +585,28 @@ describe("DiscoveryStreamFeed", () => {
         7890,
       ]);
     });
+    it("should create a layout with spoc topsite position data", async () => {
+      feed.config.hardcoded_layout = true;
+      feed.store = createStore(combineReducers(reducers), {
+        Prefs: {
+          values: {
+            pocketConfig: {
+              spocTopsitesAdTypes: "1230",
+              spocTopsitesZoneIds: "4560, 7890",
+            },
+          },
+        },
+      });
+
+      await feed.loadLayout(feed.store.dispatch);
+
+      const { layout } = feed.store.getState().DiscoveryStream;
+      assert.deepEqual(layout[0].components[0].placement.ad_types, [1230]);
+      assert.deepEqual(layout[0].components[0].placement.zone_ids, [
+        4560,
+        7890,
+      ]);
+    });
     it("should create a layout with proper spoc url with a site id", async () => {
       feed.config.hardcoded_layout = true;
       feed.store = createStore(combineReducers(reducers), {
@@ -607,12 +629,18 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#updatePlacements", () => {
-    it("should fire update placements without dupes with updatePlacements", () => {
+    it("should dispatch DISCOVERY_STREAM_SPOCS_PLACEMENTS", () => {
       sandbox.spy(feed.store, "dispatch");
+      feed.store.getState = () => ({
+        Prefs: { values: { showSponsored: true } },
+      });
+      Object.defineProperty(feed, "config", {
+        get: () => ({ show_spocs: true }),
+      });
       const fakeComponents = {
         components: [
-          { placement: { name: "first" } },
-          { placement: { name: "second" } },
+          { placement: { name: "first" }, spocs: {} },
+          { placement: { name: "second" }, spocs: {} },
         ],
       };
       const fakeLayout = [fakeComponents];
@@ -623,6 +651,36 @@ describe("DiscoveryStreamFeed", () => {
       assert.calledWith(feed.store.dispatch, {
         type: "DISCOVERY_STREAM_SPOCS_PLACEMENTS",
         data: { placements: [{ name: "first" }, { name: "second" }] },
+        meta: { isStartup: false },
+      });
+    });
+    it("should dispatch DISCOVERY_STREAM_SPOCS_PLACEMENTS with prefs array", () => {
+      sandbox.spy(feed.store, "dispatch");
+      feed.store.getState = () => ({
+        Prefs: { values: { showSponsored: true, withPref: true } },
+      });
+      Object.defineProperty(feed, "config", {
+        get: () => ({ show_spocs: true }),
+      });
+      const fakeComponents = {
+        components: [
+          { placement: { name: "withPref" }, spocs: { prefs: ["withPref"] } },
+          { placement: { name: "withoutPref1" }, spocs: {} },
+          {
+            placement: { name: "withoutPref2" },
+            spocs: { prefs: ["whatever"] },
+          },
+          { placement: { name: "withoutPref3" }, spocs: { prefs: [] } },
+        ],
+      };
+      const fakeLayout = [fakeComponents];
+
+      feed.updatePlacements(feed.store.dispatch, fakeLayout);
+
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(feed.store.dispatch, {
+        type: "DISCOVERY_STREAM_SPOCS_PLACEMENTS",
+        data: { placements: [{ name: "withPref" }, { name: "withoutPref1" }] },
         meta: { isStartup: false },
       });
     });
@@ -637,14 +695,14 @@ describe("DiscoveryStreamFeed", () => {
 
   describe("#placementsForEach", () => {
     it("should forEach through placements", () => {
-      const fakeComponents = {
-        components: [
-          { placement: { name: "first" } },
-          { placement: { name: "second" } },
-        ],
-      };
-      const fakeLayout = [fakeComponents];
-      feed.updatePlacements(feed.store.dispatch, fakeLayout);
+      feed.store.getState = () => ({
+        DiscoveryStream: {
+          spocs: {
+            placements: [{ name: "first" }, { name: "second" }],
+          },
+        },
+      });
+
       let items = [];
 
       feed.placementsForEach(item => items.push(item.name));
@@ -1081,6 +1139,10 @@ describe("DiscoveryStreamFeed", () => {
       assert.calledOnce(feed.personalizationOverride);
     });
     it("should return expected data if normalizeSpocsItems returns no spoc data", async () => {
+      Object.defineProperty(feed, "showSponsoredStories", {
+        get: () => true,
+      });
+
       sandbox.stub(feed.cache, "get").returns(Promise.resolve());
       sandbox
         .stub(feed, "fetchFromEndpoint")
@@ -1089,8 +1151,8 @@ describe("DiscoveryStreamFeed", () => {
 
       const fakeComponents = {
         components: [
-          { placement: { name: "placement1" } },
-          { placement: { name: "placement2" } },
+          { placement: { name: "placement1" }, spocs: {} },
+          { placement: { name: "placement2" }, spocs: {} },
         ],
       };
       feed.updatePlacements(feed.store.dispatch, [fakeComponents]);
@@ -1113,6 +1175,9 @@ describe("DiscoveryStreamFeed", () => {
       });
     });
     it("should use title and context on spoc data", async () => {
+      Object.defineProperty(feed, "showSponsoredStories", {
+        get: () => true,
+      });
       sandbox.stub(feed.cache, "get").returns(Promise.resolve());
       sandbox.stub(feed, "fetchFromEndpoint").resolves({
         placement1: {
@@ -1126,7 +1191,7 @@ describe("DiscoveryStreamFeed", () => {
       sandbox.stub(feed.cache, "set").returns(Promise.resolve());
 
       const fakeComponents = {
-        components: [{ placement: { name: "placement1" } }],
+        components: [{ placement: { name: "placement1" }, spocs: {} }],
       };
       feed.updatePlacements(feed.store.dispatch, [fakeComponents]);
 
@@ -1183,7 +1248,46 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#showSpocs", () => {
-    it("should return false from showSpocs if user pref showSponsored is false", async () => {
+    it("should return true from showSpocs if showSponsoredStories is false", async () => {
+      Object.defineProperty(feed, "showSponsoredStories", {
+        get: () => false,
+      });
+      Object.defineProperty(feed, "showSponsoredTopsites", {
+        get: () => true,
+      });
+      assert.isTrue(feed.showSpocs);
+    });
+    it("should return true from showSpocs if showSponsoredTopsites is false", async () => {
+      Object.defineProperty(feed, "showSponsoredStories", {
+        get: () => true,
+      });
+      Object.defineProperty(feed, "showSponsoredTopsites", {
+        get: () => false,
+      });
+      assert.isTrue(feed.showSpocs);
+    });
+    it("should return true from showSpocs if both are true", async () => {
+      Object.defineProperty(feed, "showSponsoredStories", {
+        get: () => true,
+      });
+      Object.defineProperty(feed, "showSponsoredTopsites", {
+        get: () => true,
+      });
+      assert.isTrue(feed.showSpocs);
+    });
+    it("should return false from showSpocs if both are false", async () => {
+      Object.defineProperty(feed, "showSponsoredStories", {
+        get: () => false,
+      });
+      Object.defineProperty(feed, "showSponsoredTopsites", {
+        get: () => false,
+      });
+      assert.isFalse(feed.showSpocs);
+    });
+  });
+
+  describe("#showSponsoredStories", () => {
+    it("should return false from showSponsoredStories if user pref showSponsored is false", async () => {
       feed.store.getState = () => ({
         Prefs: { values: { showSponsored: false } },
       });
@@ -1191,9 +1295,9 @@ describe("DiscoveryStreamFeed", () => {
         get: () => ({ show_spocs: true }),
       });
 
-      assert.isFalse(feed.showSpocs);
+      assert.isFalse(feed.showSponsoredStories);
     });
-    it("should return false from showSpocs if DiscoveryStream pref show_spocs is false", async () => {
+    it("should return false from showSponsoredStories if DiscoveryStream pref show_spocs is false", async () => {
       feed.store.getState = () => ({
         Prefs: { values: { showSponsored: true } },
       });
@@ -1201,9 +1305,9 @@ describe("DiscoveryStreamFeed", () => {
         get: () => ({ show_spocs: false }),
       });
 
-      assert.isFalse(feed.showSpocs);
+      assert.isFalse(feed.showSponsoredStories);
     });
-    it("should return true from showSpocs if both prefs are true", async () => {
+    it("should return true from showSponsoredStories if both prefs are true", async () => {
       feed.store.getState = () => ({
         Prefs: { values: { showSponsored: true } },
       });
@@ -1211,7 +1315,94 @@ describe("DiscoveryStreamFeed", () => {
         get: () => ({ show_spocs: true }),
       });
 
-      assert.isTrue(feed.showSpocs);
+      assert.isTrue(feed.showSponsoredStories);
+    });
+  });
+
+  describe("#showSponsoredTopsites", () => {
+    it("should return false from showSponsoredTopsites if user pref showSponsoredTopSites is false", async () => {
+      feed.store.getState = () => ({
+        Prefs: { values: { showSponsoredTopSites: false } },
+      });
+      assert.isFalse(feed.showSponsoredTopsites);
+    });
+    it("should return true from showSponsoredTopsites if user pref showSponsoredTopSites is true", async () => {
+      feed.store.getState = () => ({
+        Prefs: { values: { showSponsoredTopSites: true } },
+      });
+      assert.isTrue(feed.showSponsoredTopsites);
+    });
+  });
+
+  describe("#showStories", () => {
+    it("should return false from showStories if user pref is false", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "feeds.section.topstories": false,
+            "feeds.system.topstories": true,
+          },
+        },
+      });
+      assert.isFalse(feed.showStories);
+    });
+    it("should return false from showStories if system pref is false", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "feeds.section.topstories": true,
+            "feeds.system.topstories": false,
+          },
+        },
+      });
+      assert.isFalse(feed.showStories);
+    });
+    it("should return true from showStories if both prefs are true", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "feeds.section.topstories": true,
+            "feeds.system.topstories": true,
+          },
+        },
+      });
+      assert.isTrue(feed.showStories);
+    });
+  });
+
+  describe("#showTopsites", () => {
+    it("should return false from showTopsites if user pref is false", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "feeds.topsites": false,
+            "feeds.system.topsites": true,
+          },
+        },
+      });
+      assert.isFalse(feed.showTopsites);
+    });
+    it("should return false from showTopsites if system pref is false", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "feeds.topsites": true,
+            "feeds.system.topsites": false,
+          },
+        },
+      });
+      assert.isFalse(feed.showTopsites);
+    });
+    it("should return true from showTopsites if both prefs are true", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            "feeds.topsites": true,
+            "feeds.system.topsites": true,
+          },
+        },
+      });
+      assert.isTrue(feed.showTopsites);
     });
   });
 
