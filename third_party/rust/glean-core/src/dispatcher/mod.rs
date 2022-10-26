@@ -35,7 +35,7 @@ use std::{
     thread::{self, JoinHandle},
 };
 
-use crossbeam_channel::{bounded, unbounded, SendError, Sender, TrySendError};
+use crossbeam_channel::{bounded, unbounded, SendError, Sender};
 use thiserror::Error;
 
 pub use global::*;
@@ -86,15 +86,6 @@ pub enum DispatchError {
     RecvError(#[from] crossbeam_channel::RecvError),
 }
 
-impl From<TrySendError<Command>> for DispatchError {
-    fn from(err: TrySendError<Command>) -> Self {
-        match err {
-            TrySendError::Full(_) => DispatchError::QueueFull,
-            _ => DispatchError::SendError,
-        }
-    }
-}
-
 impl<T> From<SendError<T>> for DispatchError {
     fn from(_: SendError<T>) -> Self {
         DispatchError::SendError
@@ -109,6 +100,9 @@ struct DispatchGuard {
 
     /// The number of items that were added to the queue after it filled up.
     overflow_count: Arc<AtomicUsize>,
+
+    /// The maximum pre-init queue size
+    max_queue_size: usize,
 
     /// Used to unblock the worker thread initially.
     block_sender: Sender<Blocked>,
@@ -135,20 +129,15 @@ impl DispatchGuard {
 
     fn send(&self, task: Command) -> Result<(), DispatchError> {
         if self.queue_preinit.load(Ordering::SeqCst) {
-            match self
-                .preinit_sender
-                .try_send(task)
-                .map_err(DispatchError::from)
-            {
-                Err(err @ DispatchError::QueueFull) => {
-                    // This value ends up in the `preinit_tasks_overflow` metric, but we
-                    // can't record directly there, because that would only add
-                    // the recording to an already-overflowing task queue and would be
-                    // silently dropped.
-                    self.overflow_count.fetch_add(1, Ordering::SeqCst);
-                    Err(err)
-                }
-                err => err,
+            if self.preinit_sender.len() < self.max_queue_size {
+                self.preinit_sender.send(task)?;
+                Ok(())
+            } else {
+                self.overflow_count.fetch_add(1, Ordering::SeqCst);
+                // Instead of using a bounded queue, we are handling the bounds
+                // checking ourselves. If a bounded queue were full, we would return
+                // a QueueFull DispatchError, so we do the same here.
+                Err(DispatchError::QueueFull)
             }
         } else {
             self.sender.send(task)?;
@@ -245,7 +234,7 @@ impl Dispatcher {
     /// [`flush_init`]: #method.flush_init
     pub fn new(max_queue_size: usize) -> Self {
         let (block_sender, block_receiver) = bounded(1);
-        let (preinit_sender, preinit_receiver) = bounded(max_queue_size);
+        let (preinit_sender, preinit_receiver) = unbounded();
         let (sender, mut unbounded_receiver) = unbounded();
 
         let queue_preinit = Arc::new(AtomicBool::new(true));
@@ -315,6 +304,7 @@ impl Dispatcher {
         let guard = DispatchGuard {
             queue_preinit,
             overflow_count,
+            max_queue_size,
             block_sender,
             preinit_sender,
             sender,

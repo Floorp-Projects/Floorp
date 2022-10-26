@@ -8,7 +8,11 @@ use std::sync::RwLock;
 
 use super::{DispatchError, DispatchGuard, Dispatcher};
 
+#[cfg(feature = "preinit_million_queue")]
+pub const GLOBAL_DISPATCHER_LIMIT: usize = 1000000;
+#[cfg(not(feature = "preinit_million_queue"))]
 pub const GLOBAL_DISPATCHER_LIMIT: usize = 1000;
+
 static GLOBAL_DISPATCHER: Lazy<RwLock<Option<Dispatcher>>> =
     Lazy::new(|| RwLock::new(Some(Dispatcher::new(GLOBAL_DISPATCHER_LIMIT))));
 pub static TESTING_MODE: AtomicBool = AtomicBool::new(false);

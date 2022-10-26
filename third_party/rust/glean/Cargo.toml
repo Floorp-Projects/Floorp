@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "glean"
-version = "51.5.0"
+version = "51.7.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -41,7 +41,7 @@ features = ["serde"]
 version = "0.5"
 
 [dependencies.glean-core]
-version = "51.5.0"
+version = "51.7.0"
 
 [dependencies.inherent]
 version = "1"
@@ -89,6 +89,9 @@ version = "0.5.0"
 
 [dev-dependencies.tempfile]
 version = "3.1.0"
+
+[features]
+preinit_million_queue = ["glean-core/preinit_million_queue"]
 
 [badges.circle-ci]
 branch = "main"
