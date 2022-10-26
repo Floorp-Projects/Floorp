@@ -101,10 +101,7 @@ class nsFrameList {
   // nsFrameList is a move-only class by default. Use Clone() if you really want
   // a copy of this list.
   nsFrameList(const nsFrameList& aOther) = delete;
-
-  // XXX: ideally, copy assignment should be removed because we should use move
-  // assignment to transfer the ownership.
-  nsFrameList& operator=(const nsFrameList& aOther) = default;
+  nsFrameList& operator=(const nsFrameList& aOther) = delete;
   nsFrameList Clone() const { return nsFrameList(mFirstChild, mLastChild); }
 
   /**

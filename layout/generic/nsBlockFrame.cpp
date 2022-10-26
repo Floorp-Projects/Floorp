@@ -5626,7 +5626,7 @@ void nsBlockFrame::SetOverflowOutOfFlows(nsFrameList&& aList,
   } else if (HasAnyStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS)) {
     NS_ASSERTION(aPropValue == GetProperty(OverflowOutOfFlowsProperty()),
                  "prop value mismatch");
-    *aPropValue = aList;
+    *aPropValue = std::move(aList);
   } else {
     SetProperty(OverflowOutOfFlowsProperty(),
                 new (PresShell()) nsFrameList(std::move(aList)));

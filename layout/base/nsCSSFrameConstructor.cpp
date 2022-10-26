@@ -3843,7 +3843,7 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
           childList.DestroyFrames();
         }
 
-        childList = newList;
+        childList = std::move(newList);
       }
 
       if (!(bits & FCDATA_ALLOW_GRID_FLEX_COLUMN) ||
