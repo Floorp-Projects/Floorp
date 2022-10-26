@@ -52,7 +52,7 @@ async function testMessages() {
   ok(!hud, "browser console is not open");
 
   // The test harness does override the global's console property to replace it with
-  // a Console.jsm instance (https://searchfox.org/mozilla-central/rev/618f9970972adc5a21194d39d690ec0865f26024/testing/mochitest/api.js#75-80)
+  // a Console.sys.mjs instance (https://searchfox.org/mozilla-central/rev/c5c002f81f08a73e04868e0c2bf0eb113f200b03/testing/mochitest/api.js#75-78)
   // So here we reset the console property with the native console (which is luckily
   // stored in `nativeConsole`).
   const overriddenConsole = globalThis.console;
@@ -185,7 +185,7 @@ async function testMessages() {
   );
   Services.console.logMessage(scriptErrorMessage);
 
-  // Check messages logged in content with Log.jsm
+  // Check messages logged in content with Log.sys.mjs
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     const { Log } = ChromeUtils.importESModule(
       "resource://gre/modules/Log.sys.mjs"
@@ -193,7 +193,7 @@ async function testMessages() {
     const logger = Log.repository.getLogger("TEST_LOGGER_" + Date.now());
     logger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
     logger.level = Log.Level.Info;
-    logger.info("Log.jsm content process messsage");
+    logger.info("Log.sys.mjs content process messsage");
   });
 
   // Check CSS warnings in parent process
@@ -241,7 +241,7 @@ async function testMessages() {
   await checkUniqueMessageExists(hud, "test-image.png", ".network");
   await checkUniqueMessageExists(
     hud,
-    "Log.jsm content process messsage",
+    "Log.sys.mjs content process messsage",
     ".console-api"
   );
   await checkUniqueMessageExists(
