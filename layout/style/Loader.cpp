@@ -287,6 +287,7 @@ SheetLoadData::SheetLoadData(css::Loader* aLoader, const nsAString& aTitle,
       mIsNonDocumentSheet(false),
       mIsChildSheet(aSheet->GetParentSheet()),
       mIsBeingParsed(false),
+      mIsLoading(false),
       mIsCancelled(false),
       mMustNotify(false),
       mWasAlternate(aIsAlternate == IsAlternate::Yes),
@@ -326,6 +327,7 @@ SheetLoadData::SheetLoadData(css::Loader* aLoader, nsIURI* aURI,
       mIsNonDocumentSheet(aParentData && aParentData->mIsNonDocumentSheet),
       mIsChildSheet(aSheet->GetParentSheet()),
       mIsBeingParsed(false),
+      mIsLoading(false),
       mIsCancelled(false),
       mMustNotify(false),
       mWasAlternate(false),
@@ -364,6 +366,7 @@ SheetLoadData::SheetLoadData(
       mIsNonDocumentSheet(true),
       mIsChildSheet(false),
       mIsBeingParsed(false),
+      mIsLoading(false),
       mIsCancelled(false),
       mMustNotify(false),
       mWasAlternate(false),
@@ -659,7 +662,7 @@ static nsresult VerifySheetIntegrity(const SRIMetadata& aMetadata,
 static bool AllLoadsCanceled(const SheetLoadData& aData) {
   const SheetLoadData* data = &aData;
   do {
-    if (!data->mIsCancelled) {
+    if (!data->IsCancelled()) {
       return false;
     }
   } while ((data = data->mNext));
@@ -2200,7 +2203,7 @@ void Loader::Stop() {
 
   auto arr = std::move(mPostedEvents);
   for (auto& data : arr) {
-    data->mIsCancelled = true;
+    data->Cancel();
   }
 }
 

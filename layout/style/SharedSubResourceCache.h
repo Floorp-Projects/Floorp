@@ -50,8 +50,12 @@ struct SharedSubResourceCacheLoadingValueBase {
   // Whether we're in the "loading" hash table.
   RefPtr<Derived> mNext;
 
-  bool mIsLoading = false;
-  bool mIsCancelled = false;
+  virtual bool IsLoading() const = 0;
+  virtual bool IsCancelled() const = 0;
+
+  virtual void StartLoading() = 0;
+  virtual void SetLoadCompleted() = 0;
+  virtual void Cancel() = 0;
 
   ~SharedSubResourceCacheLoadingValueBase() {
     // Do this iteratively to avoid blowing up the stack.
@@ -307,7 +311,8 @@ void SharedSubResourceCache<Traits, Derived>::CancelLoadsForLoader(
                           "incorrectly dropped on the floor");
     for (; data; data = data->mNext) {
       if (&data->Loader() == &aLoader) {
-        data->mIsCancelled = true;
+        data->Cancel();
+        MOZ_ASSERT(data->IsCancelled());
       }
     }
   }
@@ -458,10 +463,11 @@ size_t SharedSubResourceCache<Traits, Derived>::SizeOfIncludingThis(
 template <typename Traits, typename Derived>
 void SharedSubResourceCache<Traits, Derived>::LoadStarted(
     const Key& aKey, LoadingValue& aValue) {
-  MOZ_DIAGNOSTIC_ASSERT(!aValue.mIsLoading, "Already loading? How?");
+  MOZ_DIAGNOSTIC_ASSERT(!aValue.IsLoading(), "Already loading? How?");
   MOZ_DIAGNOSTIC_ASSERT(KeyFromLoadingValue(aValue).KeyEquals(aKey));
   MOZ_DIAGNOSTIC_ASSERT(!mLoading.Contains(aKey), "Load not coalesced?");
-  aValue.mIsLoading = true;
+  aValue.StartLoading();
+  MOZ_ASSERT(aValue.IsLoading(), "Check that StartLoading is effectful.");
   mLoading.InsertOrUpdate(aKey, &aValue);
 }
 
@@ -475,7 +481,7 @@ bool SharedSubResourceCache<Traits, Derived>::CompleteSubResource::Expired()
 template <typename Traits, typename Derived>
 void SharedSubResourceCache<Traits, Derived>::LoadCompleted(
     LoadingValue& aValue) {
-  if (!aValue.mIsLoading) {
+  if (!aValue.IsLoading()) {
     return;
   }
   auto key = KeyFromLoadingValue(aValue);
@@ -483,7 +489,8 @@ void SharedSubResourceCache<Traits, Derived>::LoadCompleted(
   MOZ_DIAGNOSTIC_ASSERT(value);
   MOZ_DIAGNOSTIC_ASSERT(value.value() == &aValue);
   Unused << value;
-  aValue.mIsLoading = false;
+  aValue.SetLoadCompleted();
+  MOZ_ASSERT(!aValue.IsLoading(), "Check that SetLoadCompleted is effectful.");
 }
 
 }  // namespace mozilla
