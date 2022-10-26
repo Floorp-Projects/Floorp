@@ -207,6 +207,32 @@ features:
           }
         }
 
+  cookie-banners:
+    description: Features for cookie banner handling.
+    variables:
+      sections-enabled:
+        description: "This property provides a lookup table of whether or not the given section should be enabled."
+        type: Map<CookieBannersSection, Boolean>
+        default:
+          {
+            "feature-ui": false,
+            "feature-setting-value": false,
+          }
+    defaults:
+      - channel: developer
+        value: {
+          "sections-enabled": {
+            "feature-ui": true,
+            "feature-setting-value": true,
+          }
+        }
+      - channel: nightly
+        value: {
+          "sections-enabled": {
+            "feature-ui": true,
+            "feature-setting-value": true,
+          }
+        }
   unified-search:
     description: A feature allowing user to easily search for specified results directly in the search bar.
     variables:
@@ -344,3 +370,10 @@ types:
           description: CFR for the first time you use the browse with Total Cookie Protection on the browser screen.
         tcp-feature:
           description: Controls the Total Cookie Protection feature.
+    CookieBannersSection:
+      description: The identifiers for the sections of the MR 2022.
+      variants:
+        feature-ui:
+          description: Indicates if the user interfaces should be visible.
+        feature-setting-value:
+          description: Indicates if the cookie handling setting should be enabled.

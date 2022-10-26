@@ -103,6 +103,12 @@
             android:title="@string/preferences_https_only_title" />
 
         <androidx.preference.Preference
+            android:key="@string/pref_key_cookie_banner_settings"
+            app:iconSpaceReserved="false"
+            android:title="@string/preferences_cookie_banner_reduction"
+            app:isPreferenceVisible="false" />
+
+        <androidx.preference.Preference
             android:key="@string/pref_key_tracking_protection_settings"
             app:iconSpaceReserved="false"
             android:title="@string/preference_enhanced_tracking_protection" />

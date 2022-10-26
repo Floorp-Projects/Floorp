@@ -16,6 +16,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.concept.engine.Engine.HttpsOnlyMode
+import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
@@ -40,6 +41,7 @@ import org.mozilla.fenix.components.settings.lazyFeatureFlagPreference
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.nimbus.CookieBannersSection
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.nimbus.HomeScreenSection
 import org.mozilla.fenix.nimbus.Mr2022Section
@@ -534,6 +536,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection),
         default = true,
     )
+
+    var shouldUseCookieBanner by lazyFeatureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_cookie_banner),
+        featureFlag = true,
+        default = { cookieBannersSection[CookieBannersSection.FEATURE_SETTING_VALUE] == true },
+    )
+
+    val shouldShowCookieBannerUI: Boolean
+        get() = cookieBannersSection[CookieBannersSection.FEATURE_UI] == true
 
     /**
      * Declared as a function for performance purposes. This could be declared as a variable using
@@ -1255,6 +1266,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         get() =
             FxNimbus.features.mr2022.value().sectionsEnabled
 
+    private val cookieBannersSection: Map<CookieBannersSection, Boolean>
+        get() =
+            FxNimbus.features.cookieBanners.value().sectionsEnabled
+
     private val homescreenSections: Map<HomeScreenSection, Boolean>
         get() =
             FxNimbus.features.homescreen.value().sectionsEnabled
@@ -1407,6 +1422,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             HttpsOnlyMode.ENABLED_PRIVATE_ONLY
         } else {
             HttpsOnlyMode.ENABLED
+        }
+    }
+
+    /**
+     * Get the current mode for cookie banner handling
+     */
+    fun getCookieBannerHandling(): CookieBannerHandlingMode {
+        return when (shouldUseCookieBanner) {
+            true -> CookieBannerHandlingMode.REJECT_OR_ACCEPT_ALL
+            false -> CookieBannerHandlingMode.DISABLED
         }
     }
 

@@ -6795,6 +6795,45 @@ autoplay:
       tags:
         - SitePermissions
 
+cookie_banners:
+  visited_setting:
+    type: event
+    description: A user visited the cookie banner handling screen
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1796146
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/27561
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 118
+    metadata:
+      tags:
+        - Privacy&Security
+  setting_changed:
+    type: event
+    description: |
+      A user changed their setting.
+    extra_keys:
+      cookie_banner_setting:
+        description: |
+          The new setting for cookie banners: disabled,reject_all,
+          or reject_or_accept_all.
+        type: string
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1796146
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/27561
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 118
+    metadata:
+      tags:
+        - Privacy&Security
+
 site_permissions:
   prompt_shown:
     type: event

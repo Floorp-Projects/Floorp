@@ -316,6 +316,14 @@
     <string name="preferences_add_private_browsing_shortcut">Add private browsing shortcut</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS-Only Mode</string>
+
+    <!-- Description of the cookie banner reduction setting. -->
+    <string name="preferences_cookie_banner_reduction">Cookie Banner Reduction</string>
+    <!-- Preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_option">Reduce cookie banners</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox automatically tries to reject cookie requests on cookie banners. If a reject option isn’t available, Firefox may accept all cookies to dismiss the banner.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatically attempts to connect to sites using HTTPS encryption protocol for increased security.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->

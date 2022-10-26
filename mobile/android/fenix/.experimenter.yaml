@@ -1,4 +1,12 @@
 ---
+cookie-banners:
+  description: Features for cookie banner handling.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    sections-enabled:
+      type: json
+      description: This property provides a lookup table of whether or not the given section should be enabled.
 growth-data:
   description: A feature measuring campaign growth data
   hasExposure: true

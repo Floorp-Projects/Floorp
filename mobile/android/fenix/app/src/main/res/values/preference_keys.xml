@@ -147,6 +147,10 @@
     <string name="pref_key_https_only_in_all_tabs" translatable="false">pref_key_https_only_in_all_tabs</string>
     <string name="pref_key_https_only_in_private_tabs" translatable="false">pref_key_https_only_in_private_tabs</string>
 
+    <!-- Cookie Banner Reduction Settings-->
+    <string name="pref_key_cookie_banner_settings" translatable="false">pref_key_cookie_banner_settings</string>
+    <string name="pref_key_cookie_banner" translatable="false">pref_key_cookie_banner</string>
+
     <!-- Tracking Protection Settings -->
     <string name="pref_key_etp_learn_more" translatable="false">pref_key_etp_learn_more</string>
     <string name="pref_key_tracking_protection_settings" translatable="false">pref_key_tracking_protection_settings</string>
