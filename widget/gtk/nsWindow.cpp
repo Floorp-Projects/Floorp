@@ -6045,7 +6045,10 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
           parentnsWindow->mGtkWindowRoleName.get());
       GtkWindow* parentWidget = GTK_WINDOW(parentnsWindow->GetGtkWidget());
       gtk_window_set_transient_for(GTK_WINDOW(mShell), parentWidget);
-      if (GdkIsWaylandDisplay() && gtk_window_get_modal(parentWidget)) {
+
+      // If popup parent is modal, we need to make popup modal on Wayland too.
+      if (GdkIsWaylandDisplay() && mPopupHint != ePopupTypeTooltip &&
+          gtk_window_get_modal(parentWidget)) {
         gtk_window_set_modal(GTK_WINDOW(mShell), true);
       }
     }
