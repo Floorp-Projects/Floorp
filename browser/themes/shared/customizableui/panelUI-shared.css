@@ -1895,33 +1895,22 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   color: #0060df;
 }
 
-#PanelUI-profiler {
-  /* On Linux, the popup was too wide for the content due to this rule. This is marked
-     as !important to get over the specificity of the CustomizeableUI base rules. */
-  min-width: 0 !important;
+/* In the next two rules the panel's width is set according to the
+ * profiler backdrop image when not opened from the overflow panel. */
+#customizationui-widget-panel #PanelUI-profiler {
+  min-width: 319px;
+  max-width: 319px;
 }
 
-/* This utility class styles a button as a link. */
-.PanelUI-profiler-button-link {
-  appearance: none;
-  font-size: inherit;
-  min-width: 0;
+#customizationui-widget-panel[viewId="PanelUI-profiler"] {
+  --panel-width: 319px;
+ }
+
+:where(#PanelUI-profiler) :is(description, label) {
+  margin: 0;
 }
 
-.PanelUI-profiler-button-link .button-text {
-  margin: 0; /* Cancel out the default internal margin */
-}
-
-#PanelUI-profiler description {
-  max-width: 290px;
-}
-
-/* Make the width nicely sized for when the panel is in the overflow menu area. */
-#widget-overflow #PanelUI-profiler description {
-  max-width: 347px;
-}
-
-#widget-overflow #PanelUI-profiler-header-bar {
+#widget-overflow #PanelUI-profiler-header {
   display: none;
 }
 
@@ -1938,41 +1927,43 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   background: radial-gradient(circle farthest-side at top left, #03b1f4, #0556cd);
 }
 
-#PanelUI-profiler-header-bar {
-  border-bottom: 1px solid #0003;
+#PanelUI-profiler-header[isinfocollapsed="false"] :is(button, toolbarbutton):focus-visible {
+  outline-color: currentColor;
+}
+
+#PanelUI-profiler-header[isinfocollapsed="false"] toolbarseparator {
+  border-color: #0003;
+}
+
+#PanelUI-profiler-header-bar + toolbarseparator {
+  margin-top: 0;
 }
 
 #PanelUI-profiler-header-bar label {
   margin-inline-start: 32px;
   padding: 12px;
-  font-weight: bold;
+  font-weight: 600;
   text-align: center;
 }
 
 #PanelUI-profiler-header[isinfocollapsed="true"] #PanelUI-profiler-info {
+  opacity: 0;
   pointer-events: none;
 }
 
-#PanelUI-profiler-header[isinfocollapsed="true"] #PanelUI-profiler-header-bar {
-  border-bottom: 1px solid var(--panel-separator-color);
-}
-
 #PanelUI-profiler-info {
-  height: 180px;
+  min-height: 180px;
+  padding: 0 15px 15px;
   background: top 10px right no-repeat
     url("chrome://browser/skin/profiler-popup-backdrop.png");
   opacity: 1;
 }
 
 /* The header has an attribute "animationready" that is either set to "true" or to
-   "false". When the DOM is being initialized it is set to "false" so that animatios
+   "false". When the DOM is being initialized it is set to "false" so that animations
    do not run. */
 #PanelUI-profiler-header[animationready="true"] #PanelUI-profiler-info {
   transition: margin-block-end 250ms, opacity 250ms;
-}
-
-#PanelUI-profiler-header[isinfocollapsed="true"] #PanelUI-profiler-info {
-  opacity: 0;
 }
 
 /* Override themes for the Pocket panel, because the Pocket
@@ -1985,6 +1976,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 #PanelUI-profiler-content {
   position: relative;
+  padding: calc(15px - var(--panel-separator-margin-vertical)) 15px 15px;
 }
 
 .PanelUI-profiler-toolbarbutton-container {
@@ -1994,16 +1986,16 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 .PanelUI-profiler-description-title {
   font-size: 1.3em;
-  font-weight: bold;
-  margin: 6px 15px;
+  font-weight: 600;
+  margin-block: 2px;
 }
 
 .PanelUI-profiler-description {
-  margin: 4px 15px;
+  margin-block: 4px;
 }
 
 #PanelUI-profiler-learn-more {
-  margin: 4px 15px 13px;
+  margin-top: 4px;
   color: #fff;
   text-decoration: underline;
 }
@@ -2013,28 +2005,29 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 #PanelUI-profiler-presets {
-  margin: 8px 15px;
+  margin: 8px 0;
 }
 
 #PanelUI-profiler-content-edit-settings {
-  margin: 0 15px;
   font-size: .9em;
 }
 
 .PanelUI-profiler-content-label {
-  font-weight: bold;
-  margin-inline: 15px;
-  margin-block-start: 10px;
+  font-weight: 600;
 }
 
 #PanelUI-profiler-content-description {
-  margin: 4px 15px;
+  margin-block: 4px;
   font-size: .9em;
   color: var(--panel-description-color);
 }
 
-#PanelUI-profiler-content-recording {
-  padding: 28px 16px;
+#PanelUI-profiler-content-recording:not([hidden]) {
+  display: flex;
+  place-items: center;
+  place-content: center;
+  gap: 13px;
+  padding-block: 28px;
   font-size: 1.3em;
 }
 
@@ -2042,12 +2035,8 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   width: 42px;
   list-style-image: url(chrome://devtools/skin/images/tool-profiler.svg);
   -moz-context-properties: fill;
-  fill: var(--toolbar-color);
+  fill: currentColor;
   opacity: 0.3;
-}
-
-.PanelUI-profiler-recording-label {
-  margin: 9px 13px;
 }
 
 .PanelUI-profiler-button {
@@ -2092,12 +2081,12 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 .PanelUI-profiler-buttons {
-  margin: 7px 10px 12px;
+  margin: 7px 10px 0;
 }
 
 .PanelUI-profiler-info-icon {
-  margin-inline-end: 25px;
-  margin-block-start: 20px;
+  margin-inline-end: 10px;
+  margin-block-start: 25px;
   width: 50px;
   list-style-image: url(chrome://devtools/skin/images/tool-profiler.svg);
   -moz-context-properties: fill;
@@ -2106,16 +2095,6 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 #PanelUI-profiler-presets[disabled="true"]::part(label-box) {
   opacity: 0.5;
-}
-
-/**
- * Override the specificity of `#PanelUI-profiler description`
- */
-description#PanelUI-profiler-locked {
-  padding: 16px;
-  line-height: 1.5;
-  /* Make sure this description is wider than the header's */
-  max-width: 310px;
 }
 
 /* Web-extension pop-ups */

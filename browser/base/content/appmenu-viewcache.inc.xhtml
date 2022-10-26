@@ -247,99 +247,96 @@
   </panelview>
 
   <panelview id="PanelUI-profiler">
-    <vbox id="PanelUI-profiler-container">
-      <vbox id="PanelUI-profiler-header" animationready="false">
-        <hbox id="PanelUI-profiler-header-bar">
-          <label flex="1" data-l10n-id="profiler-popup-title" />
-          <vbox class="PanelUI-profiler-toolbarbutton-container">
-            <toolbarbutton id="PanelUI-profiler-info-button"
-                          class="panel-info-button"
-                          closemenu="none"
-                          data-l10n-id="profiler-popup-reveal-description-button">
-              <image/>
-            </toolbarbutton>
-          </vbox>
-        </hbox>
-        <hbox id="PanelUI-profiler-info">
-          <vbox>
-            <hbox id="PanelUI-profiler-info-graphic" flex="1">
+    <vbox id="PanelUI-profiler-header" animationready="false">
+      <hbox id="PanelUI-profiler-header-bar">
+        <label flex="1" data-l10n-id="profiler-popup-title" />
+        <vbox class="PanelUI-profiler-toolbarbutton-container">
+          <toolbarbutton id="PanelUI-profiler-info-button"
+                        class="panel-info-button"
+                        closemenu="none"
+                        data-l10n-id="profiler-popup-reveal-description-button">
+            <image/>
+          </toolbarbutton>
+        </vbox>
+      </hbox>
+      <toolbarseparator />
+      <hbox id="PanelUI-profiler-info">
+        <vbox>
+          <hbox id="PanelUI-profiler-info-graphic" flex="1">
+            <spacer flex="1" />
+            <vbox>
               <spacer flex="1" />
-              <vbox>
-                <spacer flex="1" />
-                <image class="PanelUI-profiler-info-icon" />
-              </vbox>
-            </hbox>
-            <label class="PanelUI-profiler-description-title" data-l10n-id="profiler-popup-description-title" />
-            <description class="PanelUI-profiler-description" data-l10n-id="profiler-popup-description" />
-            <hbox>
-              <button id="PanelUI-profiler-learn-more"
-                      class="PanelUI-profiler-button-link text-link"
-                      tabindex="-1"
-                      data-l10n-id="profiler-popup-learn-more-button" />
-            </hbox>
-          </vbox>
-        </hbox>
-      </vbox>
-      <vbox id="PanelUI-profiler-content">
-        <vbox id="PanelUI-profiler-content-settings">
-          <label class="PanelUI-profiler-content-label"
-                 data-l10n-id="profiler-popup-settings" />
-          <menulist id="PanelUI-profiler-presets"
-                    flex="1"
-                    value="custom"
-                    size="large">
-            <menupopup id="PanelUI-profiler-presets-menupopup" presetsbuilt="false">
-              <!-- The rest of the values get dynamically inserted. The "presetsbuilt"
-                  attribute will get updated to "true" once the presets have been
-                  built. -->
-              <menuitem id="PanelUI-profiler-presets-custom"
-                        data-l10n-id="profiler-popup-presets-custom-label"
-                        value="custom"/>
-            </menupopup>
-          </menulist>
-          <!-- The following description gets inserted dynamically. -->
-          <description id="PanelUI-profiler-content-description" />
+              <image class="PanelUI-profiler-info-icon" />
+            </vbox>
+          </hbox>
+          <label class="PanelUI-profiler-description-title" data-l10n-id="profiler-popup-description-title" />
+          <description class="PanelUI-profiler-description" data-l10n-id="profiler-popup-description" />
           <hbox>
-            <button id="PanelUI-profiler-content-edit-settings"
+            <button id="PanelUI-profiler-learn-more"
                     class="PanelUI-profiler-button-link text-link"
-                    data-l10n-id="profiler-popup-edit-settings-button">
-            </button>
+                    tabindex="-1"
+                    data-l10n-id="profiler-popup-learn-more-button" />
           </hbox>
         </vbox>
-        <hbox id="PanelUI-profiler-content-recording">
-          <spacer flex="1" />
-          <image class="PanelUI-profiler-recording-icon" />
-          <label class="PanelUI-profiler-recording-label" data-l10n-id="profiler-popup-recording-screen" />
-          <spacer flex="1" />
-        </hbox>
-        <hbox id="PanelUI-profiler-inactive" class="PanelUI-profiler-buttons">
-          <spacer flex="1" />
-          <vbox>
-            <button data-l10n-id="profiler-popup-start-recording-button"
-                    id="PanelUI-profiler-startRecording"
-                    class="PanelUI-profiler-button PanelUI-profiler-button-primary" />
-            <label class="PanelUI-profiler-shortcut"
-                   data-l10n-id="profiler-popup-start-shortcut" />
-          </vbox>
-          <spacer flex="1" />
-        </hbox>
-        <hbox id="PanelUI-profiler-active" class="PanelUI-profiler-buttons">
-          <vbox flex="1">
-            <button data-l10n-id="profiler-popup-discard-button"
-                    class="PanelUI-profiler-button"
-                    id="PanelUI-profiler-stopAndDiscard" />
-            <label class="PanelUI-profiler-shortcut"
-                   data-l10n-id="profiler-popup-start-shortcut" />
-          </vbox>
-          <vbox flex="1">
-            <button data-l10n-id="profiler-popup-capture-button"
-                    class="PanelUI-profiler-button PanelUI-profiler-button-primary"
-                    id="PanelUI-profiler-stopAndCapture" />
-            <label data-l10n-id="profiler-popup-capture-shortcut"
-                   class="PanelUI-profiler-shortcut" />
-          </vbox>
+      </hbox>
+    </vbox>
+    <vbox id="PanelUI-profiler-content">
+      <vbox id="PanelUI-profiler-content-settings">
+        <label class="PanelUI-profiler-content-label"
+               data-l10n-id="profiler-popup-settings" />
+        <menulist id="PanelUI-profiler-presets"
+                  flex="1"
+                  value="custom"
+                  size="large">
+          <menupopup id="PanelUI-profiler-presets-menupopup" presetsbuilt="false">
+            <!-- The rest of the values get dynamically inserted. The "presetsbuilt"
+                attribute will get updated to "true" once the presets have been
+                built. -->
+            <menuitem id="PanelUI-profiler-presets-custom"
+                      data-l10n-id="profiler-popup-presets-custom-label"
+                      value="custom"/>
+          </menupopup>
+        </menulist>
+        <!-- The following description gets inserted dynamically. -->
+        <description id="PanelUI-profiler-content-description" />
+        <hbox>
+          <button id="PanelUI-profiler-content-edit-settings"
+                  class="PanelUI-profiler-button-link text-link"
+                  data-l10n-id="profiler-popup-edit-settings-button">
+          </button>
         </hbox>
       </vbox>
+      <hbox id="PanelUI-profiler-content-recording">
+        <image class="PanelUI-profiler-recording-icon" />
+        <label class="PanelUI-profiler-recording-label" data-l10n-id="profiler-popup-recording-screen" />
+      </hbox>
+      <hbox id="PanelUI-profiler-inactive" class="PanelUI-profiler-buttons">
+        <spacer flex="1" />
+        <vbox>
+          <button data-l10n-id="profiler-popup-start-recording-button"
+                  id="PanelUI-profiler-startRecording"
+                  class="PanelUI-profiler-button PanelUI-profiler-button-primary" />
+          <label class="PanelUI-profiler-shortcut"
+                 data-l10n-id="profiler-popup-start-shortcut" />
+        </vbox>
+        <spacer flex="1" />
+      </hbox>
+      <hbox id="PanelUI-profiler-active" class="PanelUI-profiler-buttons">
+        <vbox flex="1">
+          <button data-l10n-id="profiler-popup-discard-button"
+                  class="PanelUI-profiler-button"
+                  id="PanelUI-profiler-stopAndDiscard" />
+          <label class="PanelUI-profiler-shortcut"
+                 data-l10n-id="profiler-popup-start-shortcut" />
+        </vbox>
+        <vbox flex="1">
+          <button data-l10n-id="profiler-popup-capture-button"
+                  class="PanelUI-profiler-button PanelUI-profiler-button-primary"
+                  id="PanelUI-profiler-stopAndCapture" />
+          <label data-l10n-id="profiler-popup-capture-shortcut"
+                 class="PanelUI-profiler-shortcut" />
+        </vbox>
+      </hbox>
     </vbox>
   </panelview>
 
