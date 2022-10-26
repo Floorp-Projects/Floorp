@@ -20,7 +20,7 @@ git = "https://github.com/gfx-rs/wgpu"
 rev = "b752c7d2"
 #Note: "replay" shouldn't ideally be needed,
 # but it allows us to serialize everything across IPC.
-features = ["replay", "trace", "serial-pass"]
+features = ["replay", "trace", "serial-pass", "strict_asserts"]
 
 [dependencies.wgt]
 package = "wgpu-types"
