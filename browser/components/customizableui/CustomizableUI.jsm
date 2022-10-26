@@ -5033,7 +5033,7 @@ class OverflowableToolbar {
   #enabled = true;
 
   /**
-   * A reference to the the element that overflowed toolbar items will be
+   * A reference to the element that overflowed toolbar items will be
    * appended to as children upon overflow.
    *
    * @type {Element}
@@ -5041,7 +5041,7 @@ class OverflowableToolbar {
   #list = null;
 
   /**
-   * A reference to the the button that opens the overflow panel. This is also
+   * A reference to the button that opens the overflow panel. This is also
    * the element that the panel will anchor to.
    *
    * @type {Element}
@@ -5049,7 +5049,7 @@ class OverflowableToolbar {
   #chevron = null;
 
   /**
-   * A reference to the the <xul:panel> overflow panel that contains the #list
+   * A reference to the <xul:panel> overflow panel that contains the #list
    * element.
    *
    * @type {Element}
@@ -5833,6 +5833,13 @@ class OverflowableToolbar {
     // We might overflow now if an item was added, or we may be able to move
     // stuff back into the toolbar if an item was removed.
     this.#checkOverflow();
+  }
+
+  /**
+   * @returns {Boolean} whether the given node is in the overflow list.
+   */
+  isInOverflowList(node) {
+    return node.parentNode == this.#list;
   }
 
   /**
