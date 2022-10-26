@@ -77,7 +77,7 @@
     <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">ホームページ</string>
     <!-- A link where users can find more information about add-ons permissions. -->
-    <string name="mozac_feature_addons_learn_more">許可設定の詳細情報</string>
+    <string name="mozac_feature_addons_learn_more">権限の詳細情報</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">評価</string>
     <!-- The settings of the add-on. -->
@@ -107,7 +107,7 @@
     <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">詳細</string>
     <!-- Displays a page with all the permissions of an add-on. -->
-    <string name="mozac_feature_addons_permissions">許可設定</string>
+    <string name="mozac_feature_addons_permissions">権限</string>
     <!-- This is button that remove (uninstall an add-on). -->
     <string name="mozac_feature_addons_remove">削除</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
@@ -137,9 +137,9 @@
     <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
     <string name="mozac_feature_addons_updater_notification_title">%1$s が更新可能です</string>
     <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
-    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d 個の許可設定が必要です</string>
+    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d 個の権限が必要です</string>
     <!-- The content of the notification displayed when an add-on needs a new permission-->
-    <string name="mozac_feature_addons_updater_notification_content_singular">新しい許可設定が必要です</string>
+    <string name="mozac_feature_addons_updater_notification_content_singular">新しい権限が必要です</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">アドオンの更新</string>
     <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->

@@ -157,7 +157,7 @@
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Tæknin fyrir viðbætur í Firefox er að þróast. Þessar viðbætur nota undirliggjandi kerfi sem eru ekki samhæf Firefox 75 og nýrri.</string>
     <!-- This is the caption for not yet supported screen caption -->
-    <string name="mozac_feature_addons_not_yet_supported_caption2">Við erum í óða önn að hanna stuðning við upphafshlutann á ráðlögðum viðbótum.</string>
+    <string name="mozac_feature_addons_not_yet_supported_caption2">Við erum í óða önn að hanna stuðning við upphafsval á ráðlögðum forritsaukum.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Sæki og staðfesti viðbót…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
