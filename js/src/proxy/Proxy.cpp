@@ -200,6 +200,11 @@ bool Proxy::defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
     return false;
   }
   const BaseProxyHandler* handler = proxy->as<ProxyObject>().handler();
+
+  // We shouldn't be definining a private field if we are supposed to throw;
+  // this ought to have been caught by CheckPrivateField.
+  MOZ_ASSERT_IF(id.isPrivateName(), !handler->throwOnPrivateField());
+
   AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::SET, true);
   if (!policy.allowed()) {
     if (!policy.returnValue()) {
@@ -402,6 +407,14 @@ bool Proxy::hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) {
   }
   const BaseProxyHandler* handler = proxy->as<ProxyObject>().handler();
   *bp = false;  // default result if we refuse to perform this action
+
+  // If the handler is supposed to throw, we'll never have a private field so
+  // simply return, as we shouldn't throw an invalid security error when
+  // checking for the presence of a private field (WeakMap model).
+  if (id.isPrivateName() && handler->throwOnPrivateField()) {
+    return true;
+  }
+
   AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::GET, true);
   if (!policy.allowed()) {
     return policy.returnValue();
@@ -446,6 +459,10 @@ MOZ_ALWAYS_INLINE bool Proxy::getInternal(JSContext* cx, HandleObject proxy,
     return false;
   }
   const BaseProxyHandler* handler = proxy->as<ProxyObject>().handler();
+
+  // Shouldn't have gotten here, as this should have been caught earlier.
+  MOZ_ASSERT_IF(id.isPrivateName(), !handler->throwOnPrivateField());
+
   vp.setUndefined();  // default result if we refuse to perform this action
   AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::GET, true);
   if (!policy.allowed()) {
@@ -517,6 +534,10 @@ MOZ_ALWAYS_INLINE bool Proxy::setInternal(JSContext* cx, HandleObject proxy,
   }
 
   const BaseProxyHandler* handler = proxy->as<ProxyObject>().handler();
+
+  // Should have been handled already.
+  MOZ_ASSERT_IF(id.isPrivateName(), !handler->throwOnPrivateField());
+
   AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::SET, true);
   if (!policy.allowed()) {
     if (!policy.returnValue()) {
