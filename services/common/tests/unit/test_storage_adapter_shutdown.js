@@ -14,7 +14,7 @@ add_task(async function test_sqlite_shutdown() {
     path: "kinto.sqlite",
   });
 
-  // Shutdown Sqlite.jsm synchronously.
+  // Shutdown Sqlite.sys.mjs synchronously.
   Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
   AsyncShutdown.profileBeforeChange._trigger();
   Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");
