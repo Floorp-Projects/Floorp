@@ -68,19 +68,6 @@ using namespace mozilla::gfx;
 // This sets how opaque the drag image is
 #define DRAG_IMAGE_ALPHA_LEVEL 0.5
 
-// These values are copied from GtkDragResult (rather than using GtkDragResult
-// directly) so that this code can be compiled against versions of GTK+ that
-// do not have GtkDragResult.
-// GtkDragResult is available from GTK+ version 2.12.
-enum {
-  MOZ_GTK_DRAG_RESULT_SUCCESS,
-  MOZ_GTK_DRAG_RESULT_NO_TARGET,
-  MOZ_GTK_DRAG_RESULT_USER_CANCELLED,
-  MOZ_GTK_DRAG_RESULT_TIMEOUT_EXPIRED,
-  MOZ_GTK_DRAG_RESULT_GRAB_BROKEN,
-  MOZ_GTK_DRAG_RESULT_ERROR
-};
-
 #ifdef MOZ_LOGGING
 extern mozilla::LazyLogModule gWidgetDragLog;
 #  define LOGDRAGSERVICE(str, ...)                    \
@@ -1418,7 +1405,7 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
 
   uint32_t dropEffect;
 
-  if (aResult == MOZ_GTK_DRAG_RESULT_SUCCESS) {
+  if (aResult == GTK_DRAG_RESULT_SUCCESS) {
     LOGDRAGSERVICE("  drop is accepted");
     // With GTK+ versions 2.10.x and prior the drag may have been
     // cancelled (but no drag-failed signal would have been sent).
@@ -1450,7 +1437,7 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
   } else {
     LOGDRAGSERVICE("  drop action is none");
     dropEffect = DRAGDROP_ACTION_NONE;
-    if (aResult != MOZ_GTK_DRAG_RESULT_NO_TARGET) {
+    if (aResult != GTK_DRAG_RESULT_NO_TARGET) {
       LOGDRAGSERVICE("  drop is user chancelled\n");
       mUserCancelled = true;
     }
@@ -2079,13 +2066,13 @@ static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
   // GDK_DRAG_CANCEL_ERROR error code
   // (see data_source_cancelled/gdkselection-wayland.c).
   // Bug 1527976
-  if (widget::GdkIsWaylandDisplay() && aResult == MOZ_GTK_DRAG_RESULT_ERROR) {
+  if (widget::GdkIsWaylandDisplay() && aResult == GTK_DRAG_RESULT_ERROR) {
     for (GList* tmp = gdk_drag_context_list_targets(aContext); tmp;
          tmp = tmp->next) {
       GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
       GUniquePtr<gchar> name(gdk_atom_name(atom));
       if (name && !strcmp(name.get(), gTabDropType)) {
-        aResult = MOZ_GTK_DRAG_RESULT_NO_TARGET;
+        aResult = GTK_DRAG_RESULT_NO_TARGET;
         LOGDRAGSERVICESTATIC(
             "invisibleSourceDragFailed(%p): Wayland tab drop\n", aContext);
         break;
@@ -2112,7 +2099,7 @@ static void invisibleSourceDragEnd(GtkWidget* aWidget, GdkDragContext* aContext,
   nsDragService* dragService = (nsDragService*)aData;
 
   // The drag has ended.  Release the hostages!
-  dragService->SourceEndDragSession(aContext, MOZ_GTK_DRAG_RESULT_SUCCESS);
+  dragService->SourceEndDragSession(aContext, GTK_DRAG_RESULT_SUCCESS);
 }
 
 // The following methods handle responding to GTK drag signals and
