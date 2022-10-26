@@ -12704,6 +12704,16 @@
   mirror: always
   do_not_use_directly: true # Consumers should use SandboxSettings to ask.
 
+# This controls the strength of the Windows GPU process sandbox.  Changes
+# will require restart.
+# For information on what the level number means, see
+# SetSecurityLevelForGPUProcess() in
+# security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
+- name: security.sandbox.gpu.level
+  type: int32_t
+  value: 0
+  mirror: always
+
 # Enrollment preferences for the win32k experiment, set and managed by Normandy
 - name: security.sandbox.content.win32k-experiment.enrollmentStatus
   type: uint32_t
