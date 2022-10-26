@@ -454,7 +454,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
                 local.mQpSum.Construct(videoStats->qp_sum.value());
               }
               local.mTotalDecodeTime.Construct(
-                  double(videoStats->total_decode_time_ms) / 1000);
+                  double(videoStats->total_decode_time.ms()) / 1000);
               local.mTotalInterFrameDelay.Construct(
                   videoStats->total_inter_frame_delay);
               local.mTotalSquaredInterFrameDelay.Construct(
