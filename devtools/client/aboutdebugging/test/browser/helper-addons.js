@@ -86,7 +86,7 @@ function createTemporaryXPI(xpiData) {
   const manifest = Object.assign(
     {},
     {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       manifest_version: 2,
       name,
       version: "1.0",

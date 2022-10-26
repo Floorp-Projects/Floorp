@@ -1,36 +1,76 @@
-// Creates a new iframe in |doc|, calls |func| on it and appends it as a child
-// of |doc|.
+// Creates a new iframe in `doc`, calls `func` on it and appends it as a child
+// of `doc`.
 // Returns a promise that resolves to the iframe once loaded (successfully or
 // not).
-// The iframe is removed from |doc| once test |t| is done running.
+// The iframe is removed from `doc` once test `t` is done running.
 //
-// NOTE: Because iframe elements always invoke the onload event handler, even
-// in case of error, we cannot wire onerror to a promise rejection. The Promise
-// constructor requires users to resolve XOR reject the promise.
+// NOTE: There exists no interoperable way to check whether an iframe failed to
+// load, so this should only be used when the iframe is expected to load. It
+// also means we cannot wire the iframe's `error` event to a promise
+// rejection. See: https://github.com/whatwg/html/issues/125
 function appendIframeWith(t, doc, func) {
   return new Promise(resolve => {
       const child = doc.createElement("iframe");
+      t.add_cleanup(() => child.remove());
+
+      child.addEventListener("load", () => resolve(child), { once: true });
       func(child);
-      child.onload = () => { resolve(child); };
       doc.body.appendChild(child);
-      t.add_cleanup(() => { doc.body.removeChild(child); });
     });
 }
 
-// Appends a child iframe to |doc| sourced from |src|.
+// Appends a child iframe to `doc` sourced from `src`.
 //
-// See append_child_frame_with() for more details.
+// See `appendIframeWith()` for more details.
 function appendIframe(t, doc, src) {
   return appendIframeWith(t, doc, child => { child.src = src; });
 }
 
-// Register an event listener that will resolve this promise when this
+// Registers an event listener that will resolve this promise when this
 // window receives a message posted to it.
-function futureMessage() {
+//
+// `options` has the following shape:
+//
+//  {
+//    source: If specified, this function waits for the first message from the
+//      given source only, ignoring other messages.
+//
+//    filter: If specified, this function calls `filter` on each incoming
+//      message, and resolves iff it returns true.
+//  }
+//
+function futureMessage(options) {
   return new Promise(resolve => {
-      window.addEventListener("message", e => resolve(e.data));
+    window.addEventListener("message", (e) => {
+      if (options?.source && options.source !== e.source) {
+        return;
+      }
+
+      if (options?.filter && !options.filter(e.data)) {
+        return;
+      }
+
+      resolve(e.data);
+    });
   });
 };
+
+// Like `promise_test()`, but executes tests in parallel like `async_test()`.
+//
+// Cribbed from COEP tests.
+function promise_test_parallel(promise, description) {
+  async_test(test => {
+    promise(test)
+        .then(() => test.done())
+        .catch(test.step_func(error => { throw error; }));
+  }, description);
+};
+
+async function postMessageAndAwaitReply(target, message) {
+  const reply = futureMessage({ source: target });
+  target.postMessage(message, "*");
+  return await reply;
+}
 
 const Server = {
   HTTP_LOCAL: {
@@ -313,6 +353,42 @@ async function xhrTest(t, { source, target, method, expected }) {
   assert_equals(loaded, expected.loaded, "response loaded");
   assert_equals(status, expected.status, "response status");
   assert_equals(body, expected.body, "response body");
+}
+
+const IframeTestResult = {
+  SUCCESS: "loaded",
+  FAILURE: "timeout",
+};
+
+async function iframeTest(t, { source, target, expected }) {
+  // Allows running tests in parallel.
+  const uuid = token();
+
+  const targetUrl = preflightUrl(target);
+  targetUrl.searchParams.set("file", "iframed.html");
+  targetUrl.searchParams.set("iframe-uuid", uuid);
+
+  const sourceUrl =
+      resolveUrl("resources/iframer.html", sourceResolveOptions(source));
+  sourceUrl.searchParams.set("url", targetUrl);
+
+  const messagePromise = futureMessage({
+    filter: (data) => data.uuid === uuid,
+  });
+  const iframe = await appendIframe(t, document, sourceUrl);
+
+  // The grandchild frame posts a message iff it loads successfully.
+  // There exists no interoperable way to check whether an iframe failed to
+  // load, so we use a timeout.
+  // See: https://github.com/whatwg/html/issues/125
+  const result = await Promise.race([
+      messagePromise.then((data) => data.message),
+      new Promise((resolve) => {
+        t.step_timeout(() => resolve("timeout"), 500 /* ms */);
+      }),
+  ]);
+
+  assert_equals(result, expected);
 }
 
 const WebsocketTestResult = {

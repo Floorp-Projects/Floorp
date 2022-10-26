@@ -76,8 +76,8 @@
         if (v2.videoWidth == 0 && v2.videoHeight == 0) {
           info("Skipping test, insufficient time for video to start.");
         } else {
-          is(v2.videoWidth, 160, "sink width should be 160 for " + codec);
-          is(v2.videoHeight, 120, "sink height should be 120 for " + codec);
+          is(v2.videoWidth, 184, "sink width should be 184 for " + codec);
+          is(v2.videoHeight, 138, "sink height should be 138 for " + codec);
         }})
       .then(() => {
         stream.getTracks().forEach(track => track.stop());

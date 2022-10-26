@@ -9,29 +9,3 @@
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 $tags:
   - "Toolkit :: Startup and Profile System"
-
-startup:
-  run_from_dmg_install_outcome:
-    type: labeled_boolean
-    labels:
-      - root_applications_dir_missing
-      - user_accepted_launch_existing
-      - user_declined_launch_existing
-      - user_declined_install_prompt
-      - non_privileged_install_failed
-      - privileged_install_failed
-      - installed_and_relaunched
-    description: >
-      The outcome after the app detected that it was running from DMG or an app
-      translocated location and should offer to install and relaunch itself.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1743328
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1755049
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1745788
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1743328#c1
-    notification_emails:
-      - jwatt@jwatt.org
-      - mbalfanz@mozilla.com
-      - spohl@mozilla.com
-    expires: 108

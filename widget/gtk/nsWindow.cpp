@@ -1515,7 +1515,7 @@ void nsWindow::WaylandPopupHierarchyCalculatePositions() {
           NS_WARNING("Anchored popup does not match layout!");
         }
       }
-      GdkPoint parent = WaylandGetParentPosition();
+      GdkPoint parent = popup->WaylandGetParentPosition();
 
       LOG("  popup [%p] uses transformed coordinates\n", popup);
       LOG("    parent position [%d, %d]\n", parent.x, parent.y);
@@ -3585,6 +3585,11 @@ void nsWindow::SetIcon(const nsAString& aIconSpec) {
     }
 */
 LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
+  // Don't use gdk_window_get_origin() on wl_subsurface Wayland popups
+  // https://gitlab.gnome.org/GNOME/gtk/-/issues/5287
+  if (IsWaylandPopup() && !mPopupUseMoveToRect) {
+    return mBounds.TopLeft();
+  }
   nsIntPoint origin(0, 0);
   if (mGdkWindow) {
     gdk_window_get_origin(mGdkWindow, &origin.x, &origin.y);

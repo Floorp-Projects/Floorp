@@ -1,0 +1,45 @@
+[package]
+name = "tabs"
+edition = "2021"
+version = "0.1.0"
+authors = ["application-services@mozilla.com"]
+license = "MPL-2.0"
+exclude = ["/android", "/ios"]
+
+[features]
+# When used in desktop we *do not* want the full-sync implementation so desktop
+# doesn't get our crypto etc.
+# When used on mobile, for simplicity we *do* still expose the unused "bridged engine"
+# because none of the engine implementations need the crypto.
+default = []
+
+# TODO: we've enabled the "standalone-sync" feature - see the description
+# of this feature in sync15's Cargo.toml for what we should do instead.
+# (The short version here is that once tabs doesn't need to expose a `sync()`
+# method for iOS, we can kill the `full-sync` feature entirely)
+full-sync = ["sync15/standalone-sync"]
+
+[dependencies]
+anyhow = "1.0"
+error-support = { path = "../support/error" }
+interrupt-support = { path = "../support/interrupt" }
+lazy_static = "1.4"
+log = "0.4"
+rusqlite = { version = "0.27.0", features = ["bundled", "unlock_notify"] }
+serde = "1"
+serde_derive = "1"
+serde_json = "1"
+sql-support = { path = "../support/sql" }
+sync-guid = { path = "../support/guid", features = ["random"] }
+sync15 = { path = "../sync15", features = ["sync-engine"] }
+thiserror = "1.0"
+uniffi = "^0.21"
+uniffi_macros = "^0.21"
+url = "2.1" # mozilla-central can't yet take 2.2 (see bug 1734538)
+
+[dev-dependencies]
+tempfile = "3.1"
+env_logger = { version = "0.8.0", default-features = false, features = ["termcolor", "atty", "humantime"] }
+
+[build-dependencies]
+uniffi_build = { version = "^0.21", features = [ "builtin-bindgen" ]}

@@ -846,7 +846,7 @@ add_task(async function test_panel_live_reload_for_extension_without_bg_page() {
   const EXTENSION_ID = "test_local_storage_live_reload@xpcshell.mozilla.org";
   let manifest = {
     version: "1.0",
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: EXTENSION_ID,
       },
@@ -930,7 +930,7 @@ add_task(
     const EXTENSION_ID = "test_local_storage_live_reload@xpcshell.mozilla.org";
     let manifest = {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -1009,7 +1009,7 @@ add_task(
     const EXTENSION_ID =
       "test_panel_data_only_updates_for_storage_local_changes@xpcshell.mozilla.org";
     const manifest = {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },

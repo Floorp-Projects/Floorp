@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="timeout" content="long">
+  <title>Test for Bug 1783641</title>
+  <script src=/resources/testharness.js></script>
+  <script src=/resources/testharnessreport.js></script>
+  <script src="/resources/testdriver.js"></script>
+  <script src="/resources/testdriver-actions.js"></script>
+  <style>
+    .testStyle {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      padding: 0px;
+      width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1783641">Mozilla Bug 1783641</a><br />
+  <span class="testStyle" id="placeholder"></span>
+  <input class="testStyle" type="text" />
+  <div class="testStyle" contenteditable></div>
+  <textarea class="testStyle"></textarea>
+  <script>
+
+    promise_test(async t => {
+      await new Promise(resolve => { window.onload = resolve; });
+
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["editor.word_select.delete_space_after_doubleclick_selection", true],
+          ["layout.word_select.eat_space_to_next_word", false]
+        ]
+      });
+    }, "Test setup");
+    const placeHolder = document.getElementById("placeholder");
+    const deleteKey = "\uE017";
+
+    function waitForRender() {
+      return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    };
+
+    for (const selector of ["input", "div[contenteditable]", "textarea"]) {
+      const editableElement = document.querySelector(selector);
+      editableElement.focus();
+
+      /**
+       * Helper functions to set or get the value and the current selection of `editableElement`,
+       * regardless of its actual type.
+       */
+      const setValue = (aValue) => {
+        editableElement.tagName.toLowerCase() == "div"
+          ? editableElement.innerHTML = aValue
+          : editableElement.value = aValue;
+      }
+      const getValue = () => {
+        return editableElement.tagName.toLowerCase() == "div"
+          ? editableElement.innerHTML
+          : editableElement.value;
+      };
+      const getSelection = () => {
+        return editableElement.tagName.toLowerCase() == "div"
+          ? document.getSelection().toString()
+          : editableElement.value.substring(
+            editableElement.selectionStart,
+            editableElement.selectionEnd
+          );
+      };
+
+      /**
+       * Places a double click in `editableElement` at exactly the end of `aPlaceHolderText` and press delete.
+       * `aPlaceholderText` therefore should contain the same text as the value of the `editableElement`
+       * up to the point where the doubleclick should happen.
+       *
+       * If `aSelectionValue` is defined, the selection created by the double click is compared to `aSelectionValue`.
+       */
+      const doubleClickAndDelete = async (aPlaceHolderText, aSelectionValue = undefined) => {
+        placeHolder.innerHTML = aPlaceHolderText;
+        editableElement.focus();
+        await waitForRender();
+        const absInputPos = editableElement.getBoundingClientRect();
+        selectionOffset = {
+          x: placeHolder.getBoundingClientRect().width,
+          y: Math.floor(placeHolder.getBoundingClientRect().height / 2)
+        };
+        await (new test_driver.Actions()
+          // for some reason this still doesn't work:
+          // .pointerMove(Math.floor(selectionOffset.x), Math.floor(selectionOffset.y), { origin: editableElement })
+          // but this does:
+          .pointerMove(
+            Math.floor(absInputPos.x + selectionOffset.x),
+            Math.floor(absInputPos.y + selectionOffset.y),
+            { origin: "viewport" }
+          )
+          .pointerDown()
+          .pointerUp()
+          .pointerDown()
+          .pointerUp())
+          .send()
+        await waitForRender();
+        if (aSelectionValue !== undefined) {
+          assert_equals(getSelection(), aSelectionValue, "Wrong selection value!");
+        }
+        return test_driver.send_keys(editableElement, deleteKey);
+      };
+
+      promise_test(async t => {
+        setValue("one two");
+        await doubleClickAndDelete("on", "one");
+        await waitForRender();
+        assert_equals(
+          getValue(),
+          "two",
+          "The whitespace between words must be removed when a word at the beginning is selected and deleted!"
+        );
+      }, `${editableElement.tagName}: Remove word at the beginning of string should remove the whitespace in between.`);
+
+      promise_test(async t => {
+        setValue("one two");
+        await doubleClickAndDelete("one tw", "two");
+        await waitForRender();
+        assert_equals(
+          getValue(),
+          "one",
+          "The whitespace between words must be removed when a word is selected at the end of the string and deleted!"
+        );
+      }, `${editableElement.tagName}: Remove word at the end of a string should remove the whitespace in between.`);
+
+      promise_test(async t => {
+        setValue("one two three");
+        await doubleClickAndDelete("one tw", "two");
+        await waitForRender();
+        assert_equals(
+          getValue(),
+          "one three",
+          "One whitespace between words must be removed when a word is selected and deleted!"
+        );
+        await waitForRender();
+        if (editableElement.tagName.toLowerCase() == "div") {
+          document.getSelection().setBaseAndExtent(
+            editableElement.firstChild,
+            0,
+            editableElement.firstChild,
+            3
+          );
+        }
+        else {
+          editableElement.setSelectionRange(0, 3);
+        }
+        await test_driver.send_keys(editableElement, deleteKey);
+        // div[contenteditable] returns '&nbsp;three' here.
+        assert_equals(
+          getValue().replace(/&nbsp;/g, " "),
+          " three",
+          "The whitespace must not be removed when selecting a word without doubleclicking it!"
+        );
+
+      }, `${editableElement.tagName}: Remove word in the middle of a string should remove one whitespace ` +
+      "only if selection is created by double click.");
+
+      promise_test(async t => {
+        setValue("one  two three");
+        await doubleClickAndDelete("one  tw", "two");
+        await waitForRender();
+        assert_equals(
+          getValue(),
+          "one  three",
+          "One whitespace between words must be removed when a word is selected and deleted!"
+        );
+      }, `${editableElement.tagName}: Only one whitespace character should be removed when there are multiple.`);
+
+      promise_test(async t => {
+        setValue("one  two");
+        await doubleClickAndDelete("one  tw", "two");
+        await waitForRender();
+        assert_equals(
+          getValue(),
+          "one ",
+          "One whitespace character between words must be removed when a word is selected and deleted!"
+        );
+      }, `${editableElement.tagName}: Only one whitespace character should be removed when ` +
+      "there are multiple whitespaces and the deleted range is the end of the string.");
+
+      promise_test(async t => {
+        setValue("one two, three");
+        await doubleClickAndDelete("one tw", "two");
+        await waitForRender();
+        assert_equals(
+          getValue(),
+          "one, three",
+          "The whitespace in front of the selected word must be removed when punctuation follows selection!"
+        );
+      }, `${editableElement.tagName}: Removing a word before punctuation should remove the whitespace.`);
+
+      promise_test(async t => {
+        setValue("one, two");
+        await doubleClickAndDelete("one, tw", "two");
+        await waitForRender();
+        assert_equals(
+          getValue(),
+          "one,",
+          "The whitespace in front of the selected word must be removed!"
+        );
+      }, `${editableElement.tagName}: Remove a word after punctuation should remove the whitespace.`);
+
+      promise_test(async t => {
+        setValue("one\u00A0two, three"); // adds a &nbsp;
+        await doubleClickAndDelete("one tw", "two");
+        await waitForRender();
+        assert_equals(
+          getValue(),
+          "one, three",
+          "The whitespace between words must be removed when a word is selected and deleted!"
+        );
+      }, `${editableElement.tagName}: Removing a word between a &nbsp; and punctuation should remove the nbsp character.`);
+
+      if (editableElement.tagName.toLowerCase() == "div") {
+        promise_test(async t => {
+          setValue("one two<br>");
+          await doubleClickAndDelete("one tw", "two");
+          await waitForRender();
+          assert_equals(
+            getValue(),
+            "one<br>",
+            "The line break must be preserved!"
+          );
+        }, `${editableElement.tagName}: Removing a word in front of a line break should preserve the line break.`);
+      }
+      if (editableElement.tagName.toLowerCase() == "textarea") {
+        promise_test(async t => {
+          setValue("one two\n");
+          await doubleClickAndDelete("one tw", "two");
+          await waitForRender();
+          assert_equals(
+            getValue(),
+            "one\n",
+            "The line break must be preserved!"
+          );
+        }, `${editableElement.tagName}: RRemoving a word in front of a line break should preserve the line break.`);
+      }
+      promise_test(async t => {
+        setValue("one two");
+        await doubleClickAndDelete("on", "one");
+        await waitForRender();
+        assert_equals(
+          getValue(),
+          "two",
+          "The whitespace between words must be removed when a word at the beginning is selected and deleted!"
+        );
+        document.execCommand("undo", false, null);
+        assert_equals(
+          getValue(),
+          "one two",
+          "Undo action must restore the original state!"
+        );
+        document.execCommand("redo", false, null);
+        assert_equals(
+          getValue(),
+          "two",
+          "Redo action must remove the word and whitespace again!"
+        );
+      }, `${editableElement.tagName}: Undo and Redo actions should take the removed whitespace into account.`);
+    }
+  </script>
+</body>
+</html>

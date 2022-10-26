@@ -255,12 +255,14 @@ if test "$GNU_CC"; then
                   AC_MSG_RESULT([no])
                   LDFLAGS=$_SAVE_LDFLAGS)
 
-    AC_MSG_CHECKING([for --build-id=sha1 option to ld])
-    _SAVE_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS -Wl,--build-id=sha1"
-    AC_TRY_LINK(,,AC_MSG_RESULT([yes]),
-                  AC_MSG_RESULT([no])
-                  LDFLAGS=$_SAVE_LDFLAGS)
+    if test -z "$DEVELOPER_OPTIONS" -o "$OS_TARGET" = "Android"; then
+        AC_MSG_CHECKING([for --build-id=sha1 option to ld])
+        _SAVE_LDFLAGS=$LDFLAGS
+        LDFLAGS="$LDFLAGS -Wl,--build-id=sha1"
+        AC_TRY_LINK(,,AC_MSG_RESULT([yes]),
+                      AC_MSG_RESULT([no])
+                      LDFLAGS=$_SAVE_LDFLAGS)
+    fi
 
     _DEFINES_CFLAGS="-include $jsconfdefs -DMOZILLA_CLIENT"
 fi

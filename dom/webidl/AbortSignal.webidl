@@ -7,7 +7,7 @@
  * https://dom.spec.whatwg.org/#abortsignal
  */
 
-[Exposed=(Window,Worker)]
+[Exposed=*]
 interface AbortSignal : EventTarget {
   [NewObject, Throws] static AbortSignal abort(optional any reason);
   [Exposed=(Window,Worker), NewObject, Throws]

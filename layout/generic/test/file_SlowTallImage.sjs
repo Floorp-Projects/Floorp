@@ -1,6 +1,8 @@
 "use strict";
 
-let { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+let { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 // A tall 1x1000 black png.
 const IMG_BYTES = atob(

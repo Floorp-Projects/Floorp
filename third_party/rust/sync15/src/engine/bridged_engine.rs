@@ -49,6 +49,13 @@ pub trait BridgedEngine {
     /// sync.
     fn ensure_current_sync_id(&self, new_sync_id: &str) -> Result<String, Self::Error>;
 
+    /// Tells the tabs engine about recent FxA devices. A bit of a leaky abstration as it only
+    /// makes sense for tabs.
+    /// The arg is a json serialized `ClientData` struct.
+    fn prepare_for_sync(&self, _client_data: &str) -> Result<(), Self::Error> {
+        Ok(())
+    }
+
     /// Indicates that the engine is about to start syncing. This is called
     /// once per sync, and always before `store_incoming`.
     fn sync_started(&self) -> Result<(), Self::Error>;

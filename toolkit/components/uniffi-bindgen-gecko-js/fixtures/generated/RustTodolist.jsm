@@ -158,7 +158,7 @@ class ArrayBufferDataStream {
     // UniFFI Pointers are **always** 8 bytes long. That is enforced
     // by the C++ and Rust Scaffolding code.
     readPointerTodoList() {
-        const pointerId = 4; // todolist:TodoList
+        const pointerId = 6; // todolist:TodoList
         const res = UniFFIScaffolding.readPointer(pointerId, this.dataView.buffer, this.pos);
         this.pos += 8;
         return res;
@@ -168,7 +168,7 @@ class ArrayBufferDataStream {
     // UniFFI Pointers are **always** 8 bytes long. That is enforced
     // by the C++ and Rust Scaffolding code.
     writePointerTodoList(value) {
-        const pointerId = 4; // todolist:TodoList
+        const pointerId = 6; // todolist:TodoList
         UniFFIScaffolding.writePointer(pointerId, value, this.dataView.buffer, this.pos);
         this.pos += 8;
     }
@@ -287,7 +287,7 @@ class TodoList {
     const liftError = null;
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            72, // todolist:todolist_6791_TodoList_new
+            92, // todolist:todolist_aa33_TodoList_new
         )
     }
     try {
@@ -301,7 +301,7 @@ class TodoList {
     const functionCall = () => {
         FfiConverterString.checkType("todo", todo);
         return UniFFIScaffolding.callAsync(
-            73, // todolist:todolist_6791_TodoList_add_item
+            93, // todolist:todolist_aa33_TodoList_add_item
             FfiConverterTypeTodoList.lower(this),
             FfiConverterString.lower(todo),
         )
@@ -317,7 +317,7 @@ class TodoList {
     const functionCall = () => {
         FfiConverterTypeTodoEntry.checkType("entry", entry);
         return UniFFIScaffolding.callAsync(
-            74, // todolist:todolist_6791_TodoList_add_entry
+            94, // todolist:todolist_aa33_TodoList_add_entry
             FfiConverterTypeTodoList.lower(this),
             FfiConverterTypeTodoEntry.lower(entry),
         )
@@ -332,7 +332,7 @@ class TodoList {
     const liftError = null;
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            75, // todolist:todolist_6791_TodoList_get_entries
+            95, // todolist:todolist_aa33_TodoList_get_entries
             FfiConverterTypeTodoList.lower(this),
         )
     }
@@ -346,7 +346,7 @@ class TodoList {
     const liftError = null;
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            76, // todolist:todolist_6791_TodoList_get_items
+            96, // todolist:todolist_aa33_TodoList_get_items
             FfiConverterTypeTodoList.lower(this),
         )
     }
@@ -361,7 +361,7 @@ class TodoList {
     const functionCall = () => {
         FfiConverterSequenceTypeTodoEntry.checkType("entries", entries);
         return UniFFIScaffolding.callAsync(
-            77, // todolist:todolist_6791_TodoList_add_entries
+            97, // todolist:todolist_aa33_TodoList_add_entries
             FfiConverterTypeTodoList.lower(this),
             FfiConverterSequenceTypeTodoEntry.lower(entries),
         )
@@ -377,7 +377,7 @@ class TodoList {
     const functionCall = () => {
         FfiConverterSequencestring.checkType("items", items);
         return UniFFIScaffolding.callAsync(
-            78, // todolist:todolist_6791_TodoList_add_items
+            98, // todolist:todolist_aa33_TodoList_add_items
             FfiConverterTypeTodoList.lower(this),
             FfiConverterSequencestring.lower(items),
         )
@@ -392,7 +392,7 @@ class TodoList {
     const liftError = (data) => FfiConverterTypeTodoError.lift(data);
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            79, // todolist:todolist_6791_TodoList_get_last_entry
+            99, // todolist:todolist_aa33_TodoList_get_last_entry
             FfiConverterTypeTodoList.lower(this),
         )
     }
@@ -406,7 +406,7 @@ class TodoList {
     const liftError = (data) => FfiConverterTypeTodoError.lift(data);
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            80, // todolist:todolist_6791_TodoList_get_last
+            100, // todolist:todolist_aa33_TodoList_get_last
             FfiConverterTypeTodoList.lower(this),
         )
     }
@@ -420,7 +420,7 @@ class TodoList {
     const liftError = (data) => FfiConverterTypeTodoError.lift(data);
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            81, // todolist:todolist_6791_TodoList_get_first
+            101, // todolist:todolist_aa33_TodoList_get_first
             FfiConverterTypeTodoList.lower(this),
         )
     }
@@ -435,7 +435,7 @@ class TodoList {
     const functionCall = () => {
         FfiConverterString.checkType("todo", todo);
         return UniFFIScaffolding.callAsync(
-            82, // todolist:todolist_6791_TodoList_clear_item
+            102, // todolist:todolist_aa33_TodoList_clear_item
             FfiConverterTypeTodoList.lower(this),
             FfiConverterString.lower(todo),
         )
@@ -450,7 +450,7 @@ class TodoList {
     const liftError = null;
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            83, // todolist:todolist_6791_TodoList_make_default
+            103, // todolist:todolist_aa33_TodoList_make_default
             FfiConverterTypeTodoList.lower(this),
         )
     }
@@ -686,7 +686,7 @@ function getDefaultList() {
     const liftError = null;
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            84, // todolist:todolist_6791_get_default_list
+            104, // todolist:todolist_aa33_get_default_list
         )
     }
     try {
@@ -704,7 +704,7 @@ function setDefaultList(list) {
     const functionCall = () => {
         FfiConverterTypeTodoList.checkType("list", list);
         return UniFFIScaffolding.callAsync(
-            85, // todolist:todolist_6791_set_default_list
+            105, // todolist:todolist_aa33_set_default_list
             FfiConverterTypeTodoList.lower(list),
         )
     }
@@ -723,7 +723,7 @@ function createEntryWith(todo) {
     const functionCall = () => {
         FfiConverterString.checkType("todo", todo);
         return UniFFIScaffolding.callAsync(
-            86, // todolist:todolist_6791_create_entry_with
+            106, // todolist:todolist_aa33_create_entry_with
             FfiConverterString.lower(todo),
         )
     }

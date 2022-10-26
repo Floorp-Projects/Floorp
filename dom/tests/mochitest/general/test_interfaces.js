@@ -1618,8 +1618,6 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "onloadedmetadata", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "onloadend", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "onloadstart", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "onlostpointercapture", insecureContext: true },

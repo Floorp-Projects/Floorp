@@ -67,7 +67,7 @@ add_task(async function test_panel_live_reload() {
   const EXTENSION_ID = "test_panel_live_reload@xpcshell.mozilla.org";
   let manifest = {
     version: "1.0",
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: EXTENSION_ID,
       },

@@ -3190,6 +3190,11 @@ void Selection::NotifySelectionListeners() {
   }
 
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
+
+  // This flag will be set to true if a selection by double click is detected.
+  // As soon as the selection is modified, it needs to be set to false.
+  frameSelection->SetIsDoubleClickSelection(false);
+
   if (frameSelection->IsBatching()) {
     frameSelection->SetChangesDuringBatchingFlag();
     return;

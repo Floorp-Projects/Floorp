@@ -1784,6 +1784,12 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
         }
       }
 
+      // We need to be able to transform from local space into texture space.
+      Matrix invMatrix = surfacePattern.mMatrix;
+      if (!invMatrix.Invert()) {
+        break;
+      }
+
       RefPtr<WebGLTextureJS> tex;
       IntRect bounds;
       IntSize backingSize;
@@ -1988,7 +1994,7 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
       // the backing texture subrect.
       Size backingSizeF(backingSize);
       Matrix uvMatrix(aRect.width, 0.0f, 0.0f, aRect.height, aRect.x, aRect.y);
-      uvMatrix *= surfacePattern.mMatrix.Inverse();
+      uvMatrix *= invMatrix;
       uvMatrix *= Matrix(1.0f / backingSizeF.width, 0.0f, 0.0f,
                          1.0f / backingSizeF.height,
                          float(bounds.x - offset.x) / backingSizeF.width,
@@ -2306,6 +2312,14 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
   IntRect intBounds = RoundedOut(bounds).Intersect(viewport);
   if (intBounds.IsEmpty()) {
     return true;
+  }
+  // If a stroke path covers too much screen area, it is likely that most is
+  // empty space in the interior. This usually imposes too high a cost versus
+  // just rasterizing without acceleration.
+  if (aStrokeOptions &&
+      intBounds.width * intBounds.height >
+          (mViewportSize.width / 2) * (mViewportSize.height / 2)) {
+    return false;
   }
   // If the pattern is a solid color, then this will be used along with a path
   // mask to render the path, as opposed to baking the pattern into the cached

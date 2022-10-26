@@ -4623,64 +4623,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 
   // Overflow area = union(my overflow area, children's overflow areas)
   aReflowOutput.SetOverflowAreasToDesiredBounds();
-
-  // The CSS Overflow spec [1] requires that a scrollable container's
-  // scrollable overflow should include the following areas.
-  //
-  // a) "the box's own content and padding areas": we treat the *content* as
-  // the scrolled inner frame's theoretical content-box that's intrinsically
-  // sized to the union of all the flex items' margin boxes, _without_
-  // relative positioning applied. The *padding areas* is just inflation on
-  // top of the theoretical content-box by the flex container's padding.
-  //
-  // b) "the margin areas of grid item and flex item boxes for which the box
-  // establishes a containing block": a) already includes the flex items'
-  // normal-positioned margin boxes into the scrollable overflow, but their
-  // relative-positioned margin boxes should also be included because relpos
-  // children are still flex items.
-  //
-  // [1] https://drafts.csswg.org/css-overflow-3/#scrollable.
-  const bool isScrolledContent =
-      Style()->GetPseudoType() == PseudoStyleType::scrolledContent;
-  MOZ_ASSERT(
-      !isScrolledContent || aReflowInput.ComputedLogicalBorderPadding(wm) ==
-                                aReflowInput.ComputedLogicalPadding(wm),
-      "A scrolled inner frame shouldn't have any border!");
-
-  bool anyScrolledContentItem = false;
-  // Union of normal-positioned margin boxes for all the items.
-  nsRect itemMarginBoxes;
-  // Union of relative-positioned margin boxes for the relpos items only.
-  nsRect relPosItemMarginBoxes;
-  const bool useMozBoxCollapseBehavior = IsLegacyMozBox(this);
-  for (nsIFrame* f : mFrames) {
-    if (useMozBoxCollapseBehavior && f->StyleVisibility()->IsCollapse()) {
-      continue;
-    }
-    ConsiderChildOverflow(aReflowOutput.mOverflowAreas, f);
-    if (!isScrolledContent) {
-      continue;
-    }
-    if (f->IsPlaceholderFrame()) {
-      continue;
-    }
-    anyScrolledContentItem = true;
-    if (MOZ_UNLIKELY(f->IsRelativelyOrStickyPositioned())) {
-      const nsRect marginRect = f->GetMarginRectRelativeToSelf();
-      itemMarginBoxes =
-          itemMarginBoxes.Union(marginRect + f->GetNormalPosition());
-      relPosItemMarginBoxes =
-          relPosItemMarginBoxes.Union(marginRect + f->GetPosition());
-    } else {
-      itemMarginBoxes = itemMarginBoxes.Union(f->GetMarginRect());
-    }
-  }
-
-  if (anyScrolledContentItem) {
-    itemMarginBoxes.Inflate(borderPadding.GetPhysicalMargin(wm));
-    aReflowOutput.mOverflowAreas.UnionAllWith(itemMarginBoxes);
-    aReflowOutput.mOverflowAreas.UnionAllWith(relPosItemMarginBoxes);
-  }
+  UnionChildOverflow(aReflowOutput.mOverflowAreas);
 
   // Merge overflow container bounds and status.
   aReflowOutput.mOverflowAreas.UnionWith(ocBounds);
@@ -4719,6 +4662,61 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     }
   } else {
     SetProperty(SumOfChildrenBlockSizeProperty(), sumOfChildrenBlockSize);
+  }
+}
+
+void nsFlexContainerFrame::UnionChildOverflow(OverflowAreas& aOverflowAreas) {
+  // The CSS Overflow spec [1] requires that a scrollable container's
+  // scrollable overflow should include the following areas.
+  //
+  // a) "the box's own content and padding areas": we treat the *content* as
+  // the scrolled inner frame's theoretical content-box that's intrinsically
+  // sized to the union of all the flex items' margin boxes, _without_
+  // relative positioning applied. The *padding areas* is just inflation on
+  // top of the theoretical content-box by the flex container's padding.
+  //
+  // b) "the margin areas of grid item and flex item boxes for which the box
+  // establishes a containing block": a) already includes the flex items'
+  // normal-positioned margin boxes into the scrollable overflow, but their
+  // relative-positioned margin boxes should also be included because relpos
+  // children are still flex items.
+  //
+  // [1] https://drafts.csswg.org/css-overflow-3/#scrollable.
+  const bool isScrolledContent =
+      Style()->GetPseudoType() == PseudoStyleType::scrolledContent;
+  bool anyScrolledContentItem = false;
+  // Union of normal-positioned margin boxes for all the items.
+  nsRect itemMarginBoxes;
+  // Union of relative-positioned margin boxes for the relpos items only.
+  nsRect relPosItemMarginBoxes;
+  const bool useMozBoxCollapseBehavior = IsLegacyMozBox(this);
+  for (nsIFrame* f : mFrames) {
+    if (useMozBoxCollapseBehavior && f->StyleVisibility()->IsCollapse()) {
+      continue;
+    }
+    ConsiderChildOverflow(aOverflowAreas, f);
+    if (!isScrolledContent) {
+      continue;
+    }
+    if (f->IsPlaceholderFrame()) {
+      continue;
+    }
+    anyScrolledContentItem = true;
+    if (MOZ_UNLIKELY(f->IsRelativelyOrStickyPositioned())) {
+      const nsRect marginRect = f->GetMarginRectRelativeToSelf();
+      itemMarginBoxes =
+          itemMarginBoxes.Union(marginRect + f->GetNormalPosition());
+      relPosItemMarginBoxes =
+          relPosItemMarginBoxes.Union(marginRect + f->GetPosition());
+    } else {
+      itemMarginBoxes = itemMarginBoxes.Union(f->GetMarginRect());
+    }
+  }
+
+  if (anyScrolledContentItem) {
+    itemMarginBoxes.Inflate(GetUsedPadding());
+    aOverflowAreas.UnionAllWith(itemMarginBoxes);
+    aOverflowAreas.UnionAllWith(relPosItemMarginBoxes);
   }
 }
 

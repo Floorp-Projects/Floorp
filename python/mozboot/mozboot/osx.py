@@ -289,7 +289,12 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
     def ensure_clang_static_analysis_package(self):
         from mozboot import static_analysis
 
-        self.install_toolchain_static_analysis(static_analysis.MACOS_CLANG_TIDY)
+        if platform.machine() == "arm64":
+            self.install_toolchain_static_analysis(
+                static_analysis.MACOS_AARCH64_CLANG_TIDY
+            )
+        else:
+            self.install_toolchain_static_analysis(static_analysis.MACOS_CLANG_TIDY)
 
     def ensure_sccache_packages(self):
         from mozboot import sccache

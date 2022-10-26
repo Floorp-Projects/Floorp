@@ -300,3 +300,42 @@ add_task(async function test_additional_after_resolve() {
   await new TRRDNSListener("second.foo", { expectedAnswer: "1.2.3.4" });
   await new TRRDNSListener("first.foo", { expectedAnswer: "2.3.4.5" });
 });
+
+// test for Bug - 1790075
+// Crash was observed when a DNS (using TRR) reply contains an additional
+// record field and this addditional record was previously unsuccessfully
+// resolved
+add_task(async function test_additional_cached_record_override() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 2);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
+  );
+
+  await new TRRDNSListener("else.foo", { expectedAnswer: "127.0.0.1" });
+
+  await trrServer.registerDoHAnswers("something.foo", "A", {
+    answers: [
+      {
+        name: "something.foo",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "1.2.3.4",
+      },
+    ],
+    additionals: [
+      {
+        name: "else.foo",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "2.3.4.5",
+      },
+    ],
+  });
+
+  await new TRRDNSListener("something.foo", { expectedAnswer: "1.2.3.4" });
+  await new TRRDNSListener("else.foo", { expectedAnswer: "2.3.4.5" });
+});

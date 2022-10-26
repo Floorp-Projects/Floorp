@@ -26,7 +26,7 @@ dictionary AddEventListenerOptions : EventListenerOptions {
   boolean wantUntrusted;
 };
 
-[Exposed=(Window,Worker,WorkerDebugger,AudioWorklet)]
+[Exposed=*]
 interface EventTarget {
   [Throws]
   constructor();

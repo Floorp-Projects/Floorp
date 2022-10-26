@@ -50,6 +50,7 @@ jobs:
                 - linux64-rust
                 - linux64-cbindgen
                 - linux64-node
+                - linux64-pkgconf
                 - sysroot-x86_64-linux-gnu
 
     linux64-haz/debug:
@@ -74,6 +75,7 @@ jobs:
                 - linux64-cbindgen
                 - linux64-nasm
                 - linux64-node
+                - linux64-pkgconf
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
         optimization:

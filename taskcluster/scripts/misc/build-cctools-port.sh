@@ -37,8 +37,8 @@ export LD_LIBRARY_PATH=$CLANG_DIR/lib
 cd $LIBTAPI_BUILD_DIR
 
 # Values taken from build.sh
-TAPI_REPOSITORY=tapi-1000.10.8
-TAPI_VERSION=10.0.0
+TAPI_REPOSITORY=tapi-1100.0.11
+TAPI_VERSION=11.0.0
 
 INCLUDE_FIX="-I $LIBTAPI_SOURCE_DIR/src/llvm/projects/clang/include -I $PWD/projects/clang/include"
 

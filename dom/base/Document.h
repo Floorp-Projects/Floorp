@@ -5456,8 +5456,6 @@ nsresult NS_NewDOMDocument(
     nsIURI* aDocumentURI, nsIURI* aBaseURI, nsIPrincipal* aPrincipal,
     bool aLoadedAsData, nsIGlobalObject* aEventObject, DocumentFlavor aFlavor);
 
-nsresult NS_NewPluginDocument(mozilla::dom::Document** aInstancePtrResult);
-
 inline mozilla::dom::Document* nsINode::GetOwnerDocument() const {
   mozilla::dom::Document* ownerDoc = OwnerDoc();
 

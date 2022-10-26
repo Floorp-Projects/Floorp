@@ -6000,26 +6000,6 @@ startup:
     record_in_processes:
       - main
 
-  is_run_from_app_translocated_location:
-    bug_numbers:
-      - 1745788
-    description: >
-      Recorded on every run of a Firefox install on macOS, with a boolean value
-      indicating whether Firefox is being run from an app translocated location,
-      or not. This is always false when `is_run_from_dmg` is true.
-    expires: "108"
-    keyed: false
-    kind: boolean
-    notification_emails:
-      - spohl@mozilla.com
-    operating_systems:
-      - mac
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-    release_channel_collection: opt-out
-
 script.preloader:
   mainthread_recompile:
     bug_numbers:

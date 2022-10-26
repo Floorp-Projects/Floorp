@@ -2665,6 +2665,8 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
     SetProcessName("WebExtensions"_ns, nullptr, &aProfile);
   } else if (aRemoteType == PRIVILEGEDABOUT_REMOTE_TYPE) {
     SetProcessName("Privileged Content"_ns, nullptr, &aProfile);
+  } else if (aRemoteType == PRIVILEGEDMOZILLA_REMOTE_TYPE) {
+    SetProcessName("Privileged Mozilla"_ns, nullptr, &aProfile);
   } else if (remoteTypePrefix == WITH_COOP_COEP_REMOTE_TYPE) {
 #ifdef NIGHTLY_BUILD
     SetProcessName("WebCOOP+COEP Content"_ns, nullptr, &aProfile);
@@ -2692,7 +2694,8 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
       (remoteTypePrefix == FISSION_WEB_REMOTE_TYPE ||
        remoteTypePrefix == SERVICEWORKER_REMOTE_TYPE ||
        remoteTypePrefix == WITH_COOP_COEP_REMOTE_TYPE ||
-       aRemoteType == PRIVILEGEDABOUT_REMOTE_TYPE)) {
+       aRemoteType == PRIVILEGEDABOUT_REMOTE_TYPE ||
+       aRemoteType == PRIVILEGEDMOZILLA_REMOTE_TYPE)) {
     JS::DisableSpectreMitigationsAfterInit();
   }
 

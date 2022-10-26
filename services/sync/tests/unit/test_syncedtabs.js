@@ -42,7 +42,7 @@ MockTabsEngine.prototype = {
   enabled: true,
 
   getAllClients() {
-    return this.clients;
+    return Object.values(this.clients);
   },
 
   getOpenURLs() {

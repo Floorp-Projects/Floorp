@@ -7,6 +7,7 @@
 
 #include "IMMHandler.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_intl.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowDefs.h"
@@ -58,7 +59,6 @@ bool IMEHandler::sHasNativeCaretBeenRequested = false;
 
 bool IMEHandler::sIsInTSFMode = false;
 bool IMEHandler::sIsIMMEnabled = true;
-bool IMEHandler::sAssociateIMCOnlyWhenIMM_IMEActive = false;
 decltype(SetInputScopes)* IMEHandler::sSetInputScopes = nullptr;
 
 static POWER_PLATFORM_ROLE sPowerPlatformRole = PlatformRoleUnspecified;
@@ -69,11 +69,7 @@ void IMEHandler::Initialize() {
   TSFTextStore::Initialize();
   sIsInTSFMode = TSFTextStore::IsInTSFMode();
   sIsIMMEnabled =
-      !sIsInTSFMode || Preferences::GetBool("intl.tsf.support_imm", true);
-  sAssociateIMCOnlyWhenIMM_IMEActive =
-      sIsIMMEnabled &&
-      Preferences::GetBool("intl.tsf.associate_imc_only_when_imm_ime_is_active",
-                           false);
+      !sIsInTSFMode || StaticPrefs::intl_tsf_support_imm_AtStartup();
   if (!sIsInTSFMode) {
     // When full TSFTextStore is not available, try to use SetInputScopes API
     // to enable at least InputScope. Use GET_MODULE_HANDLE_EX_FLAG_PIN to
@@ -413,10 +409,7 @@ void IMEHandler::OnDestroyWindow(nsWindow* aWindow) {
 }
 
 // static
-bool IMEHandler::NeedsToAssociateIMC() {
-  return !sForceDisableCurrentIMM_IME &&
-         (!sAssociateIMCOnlyWhenIMM_IMEActive || !IsIMMActive());
-}
+bool IMEHandler::NeedsToAssociateIMC() { return !sForceDisableCurrentIMM_IME; }
 
 // static
 void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
@@ -541,31 +534,6 @@ void IMEHandler::OnKeyboardLayoutChanged() {
   if (!sIsIMMEnabled || !IsTSFAvailable()) {
     return;
   }
-
-  // We don't need to do anything when sAssociateIMCOnlyWhenIMM_IMEActive is
-  // false because IMContext won't be associated/disassociated when changing
-  // active keyboard layout/IME.
-  if (!sAssociateIMCOnlyWhenIMM_IMEActive) {
-    return;
-  }
-
-  // If there is no TSFTextStore which has focus, i.e., no editor has focus,
-  // nothing to do here.
-  nsWindow* windowBase = TSFTextStore::GetEnabledWindowBase();
-  if (!windowBase) {
-    return;
-  }
-
-  // If IME isn't available, nothing to do here.
-  InputContext inputContext = windowBase->GetInputContext();
-  if (!WinUtils::IsIMEEnabled(inputContext)) {
-    return;
-  }
-
-  // Associate or Disassociate IMC if it's necessary.
-  // Note that this does nothing if the window has already associated with or
-  // disassociated from the window.
-  AssociateIMEContext(windowBase, NeedsToAssociateIMC());
 }
 
 // static
@@ -719,9 +687,8 @@ void IMEHandler::AppendInputScopeFromType(const nsAString& aHTMLInputType,
 
 // static
 bool IMEHandler::NeedsSearchInputScope() {
-  return !(Preferences::GetBool(
-               "intl.tsf.hack.atok.search_input_scope_disabled", false) &&
-           TSFTextStore::IsATOKActive());
+  return !StaticPrefs::intl_tsf_hack_atok_search_input_scope_disabled() ||
+         !TSFTextStore::IsATOKActive();
 }
 
 // static

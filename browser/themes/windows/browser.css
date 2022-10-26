@@ -578,15 +578,6 @@ menupopup[touchmode] menuitem {
   }
 }
 
-.cui-widget-panelview[id^=PanelUI-webext-] {
-  border-radius: var(--arrowpanel-border-radius);
-}
-
-.webextension-popup-browser,
-.webextension-popup-stack {
-  border-radius: inherit;
-}
-
 #historySwipeAnimationPreviousArrow {
   background: url("chrome://browser/skin/history-swipe-arrow.svg")
               center left / 192px 192px no-repeat transparent;
