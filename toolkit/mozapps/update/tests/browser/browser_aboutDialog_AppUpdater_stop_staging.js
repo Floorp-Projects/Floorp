@@ -45,7 +45,11 @@ add_task(async function aboutDialog_AppUpdater_stop_staging() {
     },
     {
       panelId: "checkForUpdates",
+      // The update will still be in the staging state even though AppUpdater
+      // has stopped because stopping AppUpdater doesn't stop the Application
+      // Update Service from continuing with the update.
       checkActiveUpdate: { state: STATE_PENDING },
+      expectedStateOverride: Ci.nsIApplicationUpdateService.STATE_STAGING,
     },
   ]);
 
