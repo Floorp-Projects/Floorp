@@ -100,6 +100,7 @@ const USE_REMOTE_L10N_PREF =
 
 const MESSAGING_EXPERIMENTS_DEFAULT_FEATURES = [
   "cfr",
+  "fxms-message-1",
   "infobar",
   "moments-page",
   "pbNewtab",
