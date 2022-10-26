@@ -3317,7 +3317,13 @@ UpdateService.prototype = {
    */
   _attemptResume: async function AUS_attemptResume() {
     LOG("UpdateService:_attemptResume");
-    // If a download is in progress, then resume it.
+    // If a download is in progress and we aren't already downloading it, then
+    // resume it.
+    if (this.isDownloading) {
+      // There is nothing to resume. We are already downloading.
+      LOG("UpdateService:_attemptResume - already downloading.");
+      return;
+    }
     if (
       this._downloader &&
       this._downloader._patch &&
@@ -3831,7 +3837,7 @@ UpdateService.prototype = {
 
     LOG("UpdateService:_selectAndInstallUpdate - download the update");
     let success = await this.downloadUpdate(update);
-    if (!success) {
+    if (!success && !this.isDownloading) {
       LOG(
         "UpdateService:_selectAndInstallUpdate - Failed to start downloading " +
           "update. Cleaning up downloading update."
@@ -4094,7 +4100,6 @@ UpdateService.prototype = {
           "update build ID : " +
           update.buildID
       );
-      cleanupDownloadingUpdate();
       return false;
     }
     if (updateIsAtLeastAsOldAsReadyUpdate(update)) {
@@ -4114,7 +4119,6 @@ UpdateService.prototype = {
           "available update build ID : " +
           update.buildID
       );
-      cleanupDownloadingUpdate();
       return false;
     }
 
