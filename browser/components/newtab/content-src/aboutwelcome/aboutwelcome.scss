@@ -267,6 +267,20 @@ html {
       margin: auto;
       min-height: $split-screen-height;
 
+      &::before {
+        content: "";
+        position: absolute;
+        box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
+        width: $split-section-width + $split-section-width;
+        height: $split-screen-height;
+        border-radius: 8px;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto;
+      }
+
       .section-secondary,
       .section-main {
         width: $split-section-width;
@@ -459,7 +473,6 @@ html {
       .section-secondary {
         --mr-secondary-position: center center / auto 350px;
         border-radius: 8px 0 0 8px;
-        box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
         margin: auto 0 auto auto;
         display: flex;
         align-items: center;
@@ -546,6 +559,10 @@ html {
       @media only screen and (max-width: 800px) {
         flex-direction: column;
         min-height: $small-main-section-height + $small-secondary-section-height;
+        
+        &::before {
+           width: $split-section-width;
+        }
 
         .section-secondary,
         .section-main {
