@@ -13,16 +13,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1131371">Mozilla Bug 1131371</a>
 <style>
   #elemWithScrollbars { overflow: scroll }
-  #flexScrollerWithTransformedItems {
+  .flexScrollerWithTransformedItems {
     display: flex;
     overflow: hidden;
     width: 200px;
+    position: relative;
   }
-  #flexScrollerWithTransformedItems div {
+  .flexScrollerWithTransformedItems div {
     min-width: 50px;
     min-height: 50px;
     margin: 10px;
     will-change: transform;
+  }
+  .absposFlexItem {
+    left: 250px;
+    top: 0;
+    position: absolute;
   }
 </style>
 <div id="display">
@@ -32,12 +38,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
   <div id="elemWithFixedPosChild"><div style="position:fixed"></div></div>
   <div id="elemWithScrollbars"></div>
   <div id="elemWithoutScrollbars"></div>
-  <div id="flexScrollerWithTransformedItems">
+  <div class="flexScrollerWithTransformedItems">
     <div></div>
     <div></div>
     <div></div>
     <div></div>
     <div id="flexItemMovementTarget"></div>
+  </div>
+  <div class="flexScrollerWithTransformedItems">
+    <div></div>
+    <div></div>
+    <div></div>
+    <div id="flexItemMovementTarget2"></div>
+    <div class="absposFlexItem"></div>
   </div>
   <input id="inputElem">
   <textarea id="textareaElem">
@@ -72,9 +85,12 @@ const selectElem = document.getElementById("selectElem");
 const buttonElem = document.getElementById("buttonElem");
 const buttonElemWithAbsPosChild = document.getElementById("buttonElemWithAbsPosChild");
 
+for (let scroller of document.querySelectorAll(".flexScrollerWithTransformedItems")) {
+  scroller.scrollLeft = 10000;
+}
+
 const flexItemMovementTarget = document.getElementById("flexItemMovementTarget");
-const flexScrollerWithTransformedItems = document.getElementById("flexScrollerWithTransformedItems");
-flexScrollerWithTransformedItems.scrollLeft = 10000;
+const flexItemMovementTarget2 = document.getElementById("flexItemMovementTarget2");
 
 /**
  * This test verifies that certain style changes do or don't cause reflow
@@ -576,6 +592,13 @@ const gTestcases = [
   },
   {
     elem: flexItemMovementTarget,
+    beforeStyle: "transform: translateX(0)",
+    afterStyle: "transform: translateX(-100px)",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+  {
+    elem: flexItemMovementTarget2,
     beforeStyle: "transform: translateX(0)",
     afterStyle: "transform: translateX(-100px)",
     expectConstruction: false,
