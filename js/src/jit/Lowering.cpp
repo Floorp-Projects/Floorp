@@ -4605,9 +4605,10 @@ void LIRGenerator::visitMegamorphicStoreSlot(MMegamorphicStoreSlot* ins) {
 void LIRGenerator::visitMegamorphicHasProp(MMegamorphicHasProp* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->idVal()->type() == MIRType::Value);
-  auto* lir = new (alloc()) LMegamorphicHasProp(
-      useRegisterAtStart(ins->object()), useBoxAtStart(ins->idVal()),
-      tempFixed(CallTempReg0), tempFixed(CallTempReg1));
+  auto* lir = new (alloc())
+      LMegamorphicHasProp(useRegisterAtStart(ins->object()),
+                          useBoxAtStart(ins->idVal()), tempFixed(CallTempReg0),
+                          tempFixed(CallTempReg1), tempFixed(CallTempReg2));
   assignSnapshot(lir, ins->bailoutKind());
   defineReturn(lir, ins);
 }
