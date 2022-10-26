@@ -195,7 +195,7 @@ class ConsoleCallData final {
   // when the object is created from a SharedWorker, a ServiceWorker or a
   // subworker of a ChromeWorker these IDs are the type of worker and the
   // filename of the callee.
-  // In Console.jsm the ID is 'jsm'.
+  // In Console.sys.mjs the ID is 'jsm'.
   enum { eString, eNumber, eUnknown } mIDType;
 
   uint64_t mOuterIDNumber;
