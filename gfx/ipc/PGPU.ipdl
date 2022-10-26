@@ -37,6 +37,7 @@ using mozilla::gfx::Feature from "gfxFeature.h";
 using mozilla::gfx::Fallback from "gfxFallback.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::OverlayInfo from "mozilla/layers/OverlayInfo.h";
+using mozilla::layers::SwapChainInfo from "mozilla/layers/OverlayInfo.h";
 using mozilla::media::MediaCodecsSupported from "MediaCodecsSupport.h";
 using mozilla::layers::VideoBridgeSource from "mozilla/layers/VideoBridgeUtils.h";
 
@@ -160,6 +161,7 @@ child:
   async DeclareStable();
   async NotifyDeviceReset(GPUDeviceData status);
   async NotifyOverlayInfo(OverlayInfo info);
+  async NotifySwapChainInfo(SwapChainInfo info);
   async FlushMemory(nsString reason);
 
   async AddMemoryReport(MemoryReport aReport);

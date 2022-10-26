@@ -35,6 +35,18 @@ struct OverlayInfo {
   friend struct IPC::ParamTraits<OverlayInfo>;
 };
 
+struct SwapChainInfo {
+  // This constructor needed for IPDL purposes, don't use it anywhere else.
+  SwapChainInfo() = default;
+
+  explicit SwapChainInfo(bool aTearingSupported)
+      : mTearingSupported(aTearingSupported) {}
+
+  bool mTearingSupported = false;
+
+  friend struct IPC::ParamTraits<SwapChainInfo>;
+};
+
 }  // namespace layers
 }  // namespace mozilla
 

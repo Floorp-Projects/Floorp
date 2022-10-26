@@ -982,6 +982,19 @@ struct ParamTraits<mozilla::layers::OverlayInfo> {
 };
 
 template <>
+struct ParamTraits<mozilla::layers::SwapChainInfo> {
+  typedef mozilla::layers::SwapChainInfo paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mTearingSupported);
+  }
+
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mTearingSupported);
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::layers::ScrollbarLayerType>
     : public ContiguousEnumSerializerInclusive<
           mozilla::layers::ScrollbarLayerType,

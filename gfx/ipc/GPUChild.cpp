@@ -227,6 +227,12 @@ mozilla::ipc::IPCResult GPUChild::RecvNotifyOverlayInfo(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult GPUChild::RecvNotifySwapChainInfo(
+    const SwapChainInfo aInfo) {
+  gfxPlatform::GetPlatform()->SetSwapChainInfo(aInfo);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult GPUChild::RecvFlushMemory(const nsString& aReason) {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {

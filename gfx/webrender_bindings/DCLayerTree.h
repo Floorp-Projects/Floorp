@@ -132,6 +132,8 @@ class DCLayerTree {
   bool SupportsHardwareOverlays();
   DXGI_FORMAT GetOverlayFormatForSDR();
 
+  bool SupportsSwapChainTearing();
+
  protected:
   bool Initialize(HWND aHwnd, nsACString& aError);
   bool InitializeVideoOverlaySupport();
