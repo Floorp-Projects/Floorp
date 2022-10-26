@@ -512,31 +512,13 @@ class PackedType : public T {
     return tc_.bits();
   }
 
-  bool isNumber() const {
-    if (!tc_.isValid()) {
-      return false;
-    }
-    return T::isNumberTypeCode(tc_.typeCode());
-  }
+  bool isNumber() const { return T::isNumberTypeCode(tc_.typeCode()); }
 
-  bool isPacked() const {
-    if (!tc_.isValid()) {
-      return false;
-    }
-    return T::isPackedTypeCode(tc_.typeCode());
-  }
+  bool isPacked() const { return T::isPackedTypeCode(tc_.typeCode()); }
 
-  bool isVector() const {
-    if (!tc_.isValid()) {
-      return false;
-    }
-    return T::isVectorTypeCode(tc_.typeCode());
-  }
+  bool isVector() const { return T::isVectorTypeCode(tc_.typeCode()); }
 
-  bool isRefType() const {
-    MOZ_ASSERT(isValid());
-    return tc_.isRefType();
-  }
+  bool isRefType() const { return tc_.isRefType(); }
 
   bool isFuncRef() const { return tc_.typeCode() == TypeCode::FuncRef; }
 
@@ -545,24 +527,16 @@ class PackedType : public T {
   bool isEqRef() const { return tc_.typeCode() == TypeCode::EqRef; }
 
   bool isTypeIndex() const {
-    MOZ_ASSERT(isValid());
     return tc_.typeCode() == AbstractReferenceTypeIndexCode;
   }
 
-  bool isRefRepr() const {
-    MOZ_ASSERT(isValid());
-    return tc_.isRefRepr();
-  }
+  bool isRefRepr() const { return tc_.isRefRepr(); }
 
   // Returns whether the type has a default value.
-  bool isDefaultable() const {
-    MOZ_ASSERT(isValid());
-    return !(isRefType() && !isNullable());
-  }
+  bool isDefaultable() const { return !(isRefType() && !isNullable()); }
 
   // Returns whether the type has a representation in JS.
   bool isExposable() const {
-    MOZ_ASSERT(isValid());
 #if defined(ENABLE_WASM_SIMD) || defined(ENABLE_WASM_GC)
     return !(kind() == Kind::V128 || isTypeIndex());
 #else
@@ -570,20 +544,11 @@ class PackedType : public T {
 #endif
   }
 
-  bool isNullable() const {
-    MOZ_ASSERT(isValid());
-    return tc_.isNullable();
-  }
+  bool isNullable() const { return tc_.isNullable(); }
 
-  uint32_t typeIndex() const {
-    MOZ_ASSERT(isValid());
-    return tc_.typeIndex();
-  }
+  uint32_t typeIndex() const { return tc_.typeIndex(); }
 
-  Kind kind() const {
-    MOZ_ASSERT(isValid());
-    return Kind(tc_.typeCodeAbstracted());
-  }
+  Kind kind() const { return Kind(tc_.typeCodeAbstracted()); }
 
   RefType refType() const {
     MOZ_ASSERT(isRefType());
