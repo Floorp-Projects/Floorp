@@ -47,7 +47,7 @@ async def test_text_with_argument_variation(
         ("log", "info"),
         ("table", "info"),
         ("trace", "debug"),
-        ("warn", "warning"),
+        ("warn", "warn"),
     ],
 )
 async def test_level(
