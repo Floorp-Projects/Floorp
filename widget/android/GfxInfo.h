@@ -76,9 +76,6 @@ class GfxInfo : public GfxInfoBase {
   virtual uint32_t OperatingSystemVersion() override;
 
  protected:
-  OperatingSystem GetOperatingSystem() override {
-    return OperatingSystem::Android;
-  }
   virtual nsresult GetFeatureStatusImpl(
       int32_t aFeature, int32_t* aStatus, nsAString& aSuggestedDriverVersion,
       const nsTArray<GfxDriverInfo>& aDriverInfo, nsACString& aFailureId,

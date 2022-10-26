@@ -115,8 +115,6 @@ class GfxInfoBase : public nsIGfxInfo,
  protected:
   virtual ~GfxInfoBase();
 
-  virtual OperatingSystem GetOperatingSystem() = 0;
-
   virtual nsresult GetFeatureStatusImpl(
       int32_t aFeature, int32_t* aStatus, nsAString& aSuggestedDriverVersion,
       const nsTArray<GfxDriverInfo>& aDriverInfo, nsACString& aFailureId,
