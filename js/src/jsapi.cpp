@@ -1865,6 +1865,11 @@ JS_PUBLIC_API void JS::SetFilenameValidationCallback(
   js::gFilenameValidationCallback = cb;
 }
 
+JS_PUBLIC_API void JS::SetHostEnsureCanAddPrivateElementHook(
+    JSContext* cx, JS::EnsureCanAddPrivateElementOp op) {
+  cx->runtime()->canAddPrivateElement = op;
+}
+
 /*** Standard internal methods **********************************************/
 
 JS_PUBLIC_API bool JS_GetPrototype(JSContext* cx, HandleObject obj,

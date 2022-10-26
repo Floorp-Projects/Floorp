@@ -2,7 +2,7 @@
 
 ChromeUtils.importESModule("resource://gre/modules/Preferences.sys.mjs");
 
-add_task(async function() {
+add_task(async function () {
   let webnav = Services.appShell.createWindowlessBrowser(false);
 
   let docShell = webnav.docShell;
@@ -10,7 +10,16 @@ add_task(async function() {
   docShell.createAboutBlankContentViewer(null, null);
 
   let window = webnav.document.defaultView;
-  let unwrapped = Cu.waiveXrays(window);
+
+  let iframe = window.eval(`
+    iframe = document.createElement("iframe");
+    iframe.id = "iframe"
+    document.body.appendChild(iframe)
+    iframe`);
+
+
+  let unwrapped = Cu.waiveXrays(iframe);
+
 
   class Base {
     constructor(o) {
@@ -18,32 +27,21 @@ add_task(async function() {
     }
   };
 
-  var A;
-  try {
-    A = eval(`
-    (function() {
-      class A extends Base {
-        #x = 12;
-        static gx(o) {
-          return o.#x;
-        }
 
-        static sx(o, v) {
-          o.#x = v;
-        }
-      };
-      return A})()`);
-  } catch (e) {
-    Assert.equal(e instanceof SyntaxError, true);
-    Assert.equal(
-        /private fields are not currently supported/.test(e.message), true);
-    // Early return if private fields aren't enabled.
-    return;
-  }
+  class A extends Base {
+    #x = 12;
+    static gx(o) {
+      return o.#x;
+    }
 
-  new A(window);
-  Assert.equal(A.gx(window), 12);
-  A.sx(window, 'wrapped');
+    static sx(o, v) {
+      o.#x = v;
+    }
+  };
+
+  new A(iframe);
+  Assert.equal(A.gx(iframe), 12);
+  A.sx(iframe, 'wrapped');
 
   // Shouldn't tunnel past xray.
   Assert.throws(() => A.gx(unwrapped), TypeError);
@@ -51,10 +49,10 @@ add_task(async function() {
 
   new A(unwrapped);
   Assert.equal(A.gx(unwrapped), 12);
-  Assert.equal(A.gx(window), 'wrapped');
+  Assert.equal(A.gx(iframe), 'wrapped');
 
-  A.sx(window, 'modified');
+  A.sx(iframe, 'modified');
   Assert.equal(A.gx(unwrapped), 12);
   A.sx(unwrapped, 16);
-  Assert.equal(A.gx(window), 'modified');
+  Assert.equal(A.gx(iframe), 'modified');
 });

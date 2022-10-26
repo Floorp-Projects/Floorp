@@ -382,6 +382,7 @@ MSG_DEF(JSMSG_ILLEGAL_PRIVATE_FIELD,   0, JSEXN_SYNTAXERR, "private fields aren'
 MSG_DEF(JSMSG_ILLEGAL_PRIVATE_NAME,    0, JSEXN_SYNTAXERR, "private names aren't valid in this context")
 MSG_DEF(JSMSG_INVALID_PRIVATE_NAME_PRECEDENCE,    0, JSEXN_SYNTAXERR, "invalid use of private name due to operator precedence")
 MSG_DEF(JSMSG_INVALID_PRIVATE_NAME_IN_UNARY_EXPR,    0, JSEXN_SYNTAXERR, "invalid use of private name in unary expression without object reference")
+MSG_DEF(JSMSG_ILLEGAL_PRIVATE_EXOTIC,  0, JSEXN_TYPEERR, "private fields or private methods aren't allowed on this exotic object")
 MSG_DEF(JSMSG_PRIVATE_FIELD_DOUBLE,    0, JSEXN_TYPEERR, "Initializing an object twice is an error with private fields")
 MSG_DEF(JSMSG_PRIVATE_BRAND_DOUBLE,    0, JSEXN_TYPEERR, "Initializing an object twice is an error with private methods")
 MSG_DEF(JSMSG_CURLY_AFTER_ASSERT,      0, JSEXN_SYNTAXERR, "missing '{' after assert")

@@ -315,6 +315,13 @@ class JS_PUBLIC_API BaseProxyHandler {
   // normal get/set/defineField paths.
   virtual bool useProxyExpandoObjectForPrivateFields() const { return true; }
 
+  // For some exotic objects (WindowProxy, Location), we want to be able to
+  // throw rather than allow private fields on these objects.
+  //
+  // As a simplfying assumption, if throwOnPrivateFields returns true,
+  // we should also return true to useProxyExpandoObjectForPrivateFields.
+  virtual bool throwOnPrivateField() const { return false; }
+
   /*
    * [[Call]] and [[Construct]] are standard internal methods but according
    * to the spec, they are not present on every object.

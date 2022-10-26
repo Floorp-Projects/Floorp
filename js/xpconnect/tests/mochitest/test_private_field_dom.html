@@ -151,21 +151,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=????
     }
 
     if (A instanceof Function) {
+      function assertThrewInstance(f, error) {
+        var threw = true;
+        try {
+          f();
+          threw = false;
+        } catch (e) {
+          // info("Caught " + e.name);
+          is(e instanceof error, true, "Correct Error thrown");
+        }
+        is(threw, true, "Error was thrown");
+      }
+
       function testNode(node) {
         info("Testing node " + node.nodeName);
-
-        function assertThrewInstance(f, error) {
-          var threw = true;
-          try {
-            f();
-            threw = false;
-          } catch (e) {
-            // info("Caught " + e.name);
-            is(e instanceof error, true, "Correct Error thrown");
-          }
-          is(threw, true, "Error was thrown");
-        }
-
 
         assertThrewInstance(() => A.g(node), TypeError);
         assertThrewInstance(() => A.s(node, 'node'), TypeError);
@@ -191,8 +190,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=????
       const test_contents = document.getElementById('test_contents');
       testNodeRecursive(test_contents);
 
-      // Test window and prototype chain.
-      var w = window;
+      info("Checking Window");
+      // Window itself isn't allowed to host private fields, because it's
+      // a cross-origin object
+      assertThrewInstance(() => A.g(window), TypeError)
+
+      info("Checking Window Prototype Chain")
+      // However, it's prototype chain can.
+      w = Object.getPrototypeOf(window);
       while (w) {
         testNode(w);
         w = Object.getPrototypeOf(w);

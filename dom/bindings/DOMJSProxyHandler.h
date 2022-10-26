@@ -108,12 +108,6 @@ class DOMProxyHandler : public BaseDOMProxyHandler {
            JS::Handle<JS::Value> v, JS::Handle<JS::Value> receiver,
            JS::ObjectOpResult& result) const override;
 
-  // Use the DOMProxyExpando object for private fields, rather than the proxy
-  // expando object.
-  virtual bool useProxyExpandoObjectForPrivateFields() const override {
-    return false;
-  }
-
   /*
    * If assigning to proxy[id] hits a named setter with OverrideBuiltins or
    * an indexed setter, call it and set *done to true on success. Otherwise, set

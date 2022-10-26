@@ -454,6 +454,8 @@ struct JSRuntime {
   js::MainThreadData<JSDestroyPrincipalsOp> destroyPrincipals;
   js::MainThreadData<JSReadPrincipalsOp> readPrincipals;
 
+  js::MainThreadData<JS::EnsureCanAddPrivateElementOp> canAddPrivateElement;
+
   /* Optional warning reporter. */
   js::MainThreadData<JS::WarningReporter> warningReporter;
 
