@@ -539,7 +539,13 @@ function runDoorhangerUpdateTest(params, steps) {
       return step();
     }
 
-    const { notificationId, button, checkActiveUpdate, pageURLs } = step;
+    const {
+      notificationId,
+      button,
+      checkActiveUpdate,
+      pageURLs,
+      expectedStateOverride,
+    } = step;
     return (async function() {
       if (!params.popupShown && !PanelUI.isNotificationPanelOpen) {
         await BrowserTestUtils.waitForEvent(
@@ -552,6 +558,21 @@ function runDoorhangerUpdateTest(params, steps) {
         shownNotificationId,
         notificationId,
         "The right notification showed up."
+      );
+
+      let expectedState = Ci.nsIApplicationUpdateService.STATE_IDLE;
+      if (expectedStateOverride) {
+        expectedState = expectedStateOverride;
+      } else if (notificationId == "update-restart") {
+        expectedState = Ci.nsIApplicationUpdateService.STATE_PENDING;
+      }
+      let actualState = gAUS.currentState;
+      is(
+        actualState,
+        expectedState,
+        `The current update state should be ` +
+          `"${gAUS.getStateName(expectedState)}". Actual: ` +
+          `"${gAUS.getStateName(actualState)}"`
       );
 
       if (checkActiveUpdate) {
@@ -663,6 +684,7 @@ function runAboutDialogUpdateTest(params, steps) {
       downloadInfo,
       forceApply,
       noContinue,
+      expectedStateOverride,
     } = step;
     return (async function() {
       await TestUtils.waitForCondition(
@@ -703,6 +725,25 @@ function runAboutDialogUpdateTest(params, steps) {
           "The panel should be visible"
         );
       }
+
+      let expectedState = Ci.nsIApplicationUpdateService.STATE_IDLE;
+      if (expectedStateOverride) {
+        expectedState = expectedStateOverride;
+      } else if (panelId == "apply") {
+        expectedState = Ci.nsIApplicationUpdateService.STATE_PENDING;
+      } else if (panelId == "downloading") {
+        expectedState = Ci.nsIApplicationUpdateService.STATE_DOWNLOADING;
+      } else if (panelId == "applying") {
+        expectedState = Ci.nsIApplicationUpdateService.STATE_STAGING;
+      }
+      let actualState = gAUS.currentState;
+      is(
+        actualState,
+        expectedState,
+        `The current update state should be ` +
+          `"${gAUS.getStateName(expectedState)}". Actual: ` +
+          `"${gAUS.getStateName(actualState)}"`
+      );
 
       if (checkActiveUpdate) {
         let activeUpdate =
@@ -902,6 +943,7 @@ function runAboutPrefsUpdateTest(params, steps) {
       continueFile,
       downloadInfo,
       forceApply,
+      expectedStateOverride,
     } = step;
     return (async function() {
       await SpecialPowers.spawn(
@@ -952,6 +994,25 @@ function runAboutPrefsUpdateTest(params, steps) {
           }
         );
       }
+
+      let expectedState = Ci.nsIApplicationUpdateService.STATE_IDLE;
+      if (expectedStateOverride) {
+        expectedState = expectedStateOverride;
+      } else if (panelId == "apply") {
+        expectedState = Ci.nsIApplicationUpdateService.STATE_PENDING;
+      } else if (panelId == "downloading") {
+        expectedState = Ci.nsIApplicationUpdateService.STATE_DOWNLOADING;
+      } else if (panelId == "applying") {
+        expectedState = Ci.nsIApplicationUpdateService.STATE_STAGING;
+      }
+      let actualState = gAUS.currentState;
+      is(
+        actualState,
+        expectedState,
+        `The current update state should be ` +
+          `"${gAUS.getStateName(expectedState)}". Actual: ` +
+          `"${gAUS.getStateName(actualState)}"`
+      );
 
       if (checkActiveUpdate) {
         let activeUpdate =
