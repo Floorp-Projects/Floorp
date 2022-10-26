@@ -14,9 +14,8 @@ const ITEM_FLASH_DURATION = 300; // ms
 
 import { require } from "resource://devtools/shared/loader/Loader.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 const {

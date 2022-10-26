@@ -11,9 +11,7 @@ import { E10SUtils } from "resource://gre/modules/E10SUtils.sys.mjs";
 const { FeatureGate } = ChromeUtils.import(
   "resource://featuregates/FeatureGate.jsm"
 );
-const { PlacesDBUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesDBUtils.sys.mjs"
-);
+import { PlacesDBUtils } from "resource://gre/modules/PlacesDBUtils.sys.mjs";
 
 // We use a list of prefs for display to make sure we only show prefs that
 // are useful for support and won't compromise the user's privacy.  Note that

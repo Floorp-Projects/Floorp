@@ -85,6 +85,7 @@ module.exports = {
     "use-isInstance": require("./rules/use-isInstance"),
     "use-returnValue": require("../lib/rules/use-returnValue"),
     "use-services": require("../lib/rules/use-services"),
+    "use-static-import": require("../lib/rules/use-static-import"),
     "valid-ci-uses": require("../lib/rules/valid-ci-uses"),
     "valid-lazy": require("../lib/rules/valid-lazy"),
     "valid-services": require("../lib/rules/valid-services"),

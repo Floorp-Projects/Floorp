@@ -61,6 +61,12 @@ module.exports = {
       },
     },
     {
+      files: ["**/*.sys.mjs"],
+      rules: {
+        "mozilla/use-static-import": "error",
+      },
+    },
+    {
       excludedFiles: ["**/*.sys.mjs"],
       files: ["**/*.mjs"],
       rules: {
@@ -71,6 +77,7 @@ module.exports = {
     {
       files: ["**/*.mjs"],
       rules: {
+        "mozilla/use-static-import": "error",
         // This rule defaults to not allowing "use strict" in module files since
         // they are always loaded in strict mode.
         strict: "error",
