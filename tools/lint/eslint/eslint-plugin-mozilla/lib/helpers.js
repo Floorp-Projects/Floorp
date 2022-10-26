@@ -554,6 +554,21 @@ module.exports = {
     return true;
   },
 
+  isTopLevel(ancestors) {
+    for (let parent of ancestors) {
+      switch (parent.type) {
+        case "ArrowFunctionExpression":
+        case "FunctionDeclaration":
+        case "FunctionExpression":
+        case "PropertyDefinition":
+        case "StaticBlock":
+        case "BlockStatement":
+          return false;
+      }
+    }
+    return true;
+  },
+
   /**
    * Check whether `this` expression points the global this.
    *

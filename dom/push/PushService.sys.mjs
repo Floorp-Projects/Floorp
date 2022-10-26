@@ -4,9 +4,7 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
+import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 export var PushServiceWebSocket;

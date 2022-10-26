@@ -18,9 +18,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 

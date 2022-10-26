@@ -7,9 +7,7 @@ import { PushRecord } from "resource://gre/modules/PushRecord.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
+import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 import { PushCrypto } from "resource://gre/modules/PushCrypto.sys.mjs";
 
