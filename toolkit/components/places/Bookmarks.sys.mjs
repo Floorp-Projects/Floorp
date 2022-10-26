@@ -3066,7 +3066,7 @@ function validateBookmarkObject(name, input, behavior) {
  * Updates frecency for a list of URLs.
  *
  * @param db
- *        the Sqlite.jsm connection handle.
+ *        the Sqlite.sys.mjs connection handle.
  * @param urls
  *        the array of URLs to update.
  */
@@ -3097,7 +3097,7 @@ var updateFrecency = async function(db, urls) {
  * Removes any orphan annotation entries.
  *
  * @param db
- *        the Sqlite.jsm connection handle.
+ *        the Sqlite.sys.mjs connection handle.
  */
 var removeOrphanAnnotations = async function(db) {
   await db.executeCached(
@@ -3121,7 +3121,7 @@ var removeOrphanAnnotations = async function(db) {
  * Removes annotations for a given item.
  *
  * @param db
- *        the Sqlite.jsm connection handle.
+ *        the Sqlite.sys.mjs connection handle.
  * @param items
  *        The items for which to remove annotations.
  */
@@ -3147,7 +3147,7 @@ var removeAnnotationsForItems = async function(db, items) {
  * Updates lastModified for all the ancestors of a given folder GUID.
  *
  * @param db
- *        the Sqlite.jsm connection handle.
+ *        the Sqlite.sys.mjs connection handle.
  * @param folderGuid
  *        the GUID of the folder whose ancestors should be updated.
  * @param time
@@ -3196,7 +3196,7 @@ var setAncestorsLastModified = async function(
  * Remove all descendants of one or more bookmark folders.
  *
  * @param {Object} db
- *        the Sqlite.jsm connection handle.
+ *        the Sqlite.sys.mjs connection handle.
  * @param {Array} folderGuids
  *        array of folder guids.
  * @return {Array}

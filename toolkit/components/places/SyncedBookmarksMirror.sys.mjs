@@ -84,7 +84,7 @@ const DEFAULT_MAX_FRECENCIES_TO_RECALCULATE = 400;
 // Use a shared jankYielder in these functions
 XPCOMUtils.defineLazyGetter(lazy, "yieldState", () => lazy.Async.yieldState());
 
-/** Adapts a `Log.jsm` logger to a `mozIServicesLogSink`. */
+/** Adapts a `Log.sys.mjs` logger to a `mozIServicesLogSink`. */
 class LogAdapter {
   constructor(log) {
     this.log = log;
@@ -1136,7 +1136,7 @@ export class SyncedBookmarksMirror {
         if (signal.aborted) {
           cancel();
         } else {
-          // `Sqlite.jsm` callbacks swallow exceptions (bug 1387775), so we
+          // `Sqlite.sys.mjs` callbacks swallow exceptions (bug 1387775), so we
           // accumulate all rows in an array, and process them after.
           childGuidRows.push(row);
         }
