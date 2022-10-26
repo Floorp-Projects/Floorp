@@ -2367,12 +2367,24 @@ class EventManager {
             // Force this listener to be cleared.
             listener.error = true;
           }
+
           // If an attempt to prime a listener failed, ensure it is cleared now.
           // If a module is a startup blocking module, not all listeners may
           // get primed during early startup.  For that reason, we don't clear
           // persisted listeners during early startup.  At the end of background
           // execution any listeners that were not renewed will be cleared.
-          if (listener.error || (!isInStartup && !listener.primed)) {
+          //
+          // TODO(Bug 1797474): consider priming runtime.onStartup and
+          // avoid to special handling it here.
+          if (
+            listener.error ||
+            (!isInStartup &&
+              !(
+                (`${module}.${event}` === "runtime.onStartup" &&
+                  listener.added) ||
+                listener.primed
+              ))
+          ) {
             EventManager.clearPersistentListener(extension, module, event, key);
           }
         }
