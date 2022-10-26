@@ -114,9 +114,9 @@ void HTMLIFrameElement::MapAttributesIntoRule(
   // else leave it as the value set in html.css
   const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::frameborder);
   if (value && value->Type() == nsAttrValue::eEnum) {
-    int32_t frameborder = value->GetEnumValue();
-    if (NS_STYLE_FRAME_0 == frameborder || NS_STYLE_FRAME_NO == frameborder ||
-        NS_STYLE_FRAME_OFF == frameborder) {
+    auto frameborder = static_cast<FrameBorderProperty>(value->GetEnumValue());
+    if (FrameBorderProperty::No == frameborder ||
+        FrameBorderProperty::Zero == frameborder) {
       aDecls.SetPixelValueIfUnset(eCSSProperty_border_top_width, 0.0f);
       aDecls.SetPixelValueIfUnset(eCSSProperty_border_right_width, 0.0f);
       aDecls.SetPixelValueIfUnset(eCSSProperty_border_bottom_width, 0.0f);
