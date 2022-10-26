@@ -7,6 +7,7 @@
 #ifndef mozilla_ipc_AsyncBlockers_h
 #define mozilla_ipc_AsyncBlockers_h
 
+#include "mozilla/MozPromise.h"
 #include "mozilla/ThreadSafety.h"
 #include "nsTArray.h"
 
