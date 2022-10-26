@@ -631,6 +631,11 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCache(
 
   if (aUpdateType == CacheUpdateType::Initial && !aData.IsEmpty()) {
     RemoteAccessible* target = GetAccessible(aData.ElementAt(0).ID());
+    if (!target) {
+      MOZ_ASSERT_UNREACHABLE("No remote found for initial cache push!");
+      return IPC_OK();
+    }
+
     ProxyShowHideEvent(target, target->RemoteParent(), true, false);
 
     if (nsCoreUtils::AccEventObserversExist()) {
