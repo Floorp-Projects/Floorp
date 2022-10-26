@@ -759,6 +759,7 @@ nsresult nsHttpTransaction::ReadSegments(nsAHttpSegmentReader* reader,
 
   if (m0RTTInProgress && (mEarlyDataDisposition == EARLY_NONE) &&
       NS_SUCCEEDED(rv) && (*countRead > 0)) {
+    LOG(("mEarlyDataDisposition = EARLY_SENT"));
     mEarlyDataDisposition = EARLY_SENT;
   }
 
@@ -2952,6 +2953,7 @@ void nsHttpTransaction::GetNetworkAddresses(NetAddr& self, NetAddr& peer,
 }
 
 bool nsHttpTransaction::Do0RTT() {
+  LOG(("nsHttpTransaction::Do0RTT"));
   mEarlyDataWasAvailable = true;
   if (mRequestHead->IsSafeMethod() && !mDoNotTryEarlyData &&
       (!mConnection || !mConnection->IsProxyConnectInProgress())) {

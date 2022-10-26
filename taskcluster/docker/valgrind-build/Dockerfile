@@ -59,4 +59,8 @@ RUN apt-get update && apt-get install \
     libxt6-dbgsym \
     libxxf86vm1-dbg \
     valgrind-dbg \
+    xvfb \
     zlib1g-dbgsym
+
+# %include taskcluster/docker/recipes/xvfb.sh
+COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh

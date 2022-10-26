@@ -11,9 +11,11 @@
 #include "mozilla/dom/IdentityNetworkHelpers.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/WindowGlobalChild.h"
+#include "mozilla/Components.h"
 #include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsEffectiveTLDService.h"
+#include "nsIIdentityCredentialPromptService.h"
 #include "nsITimer.h"
 #include "nsIXPConnect.h"
 #include "nsNetUtil.h"
@@ -136,31 +138,48 @@ IdentityCredential::DiscoverFromExternalSource(
 // static
 RefPtr<IdentityCredential::GetIPCIdentityCredentialPromise>
 IdentityCredential::DiscoverFromExternalSourceInMainProcess(
-    nsIPrincipal* aPrincipal,
+    nsIPrincipal* aPrincipal, CanonicalBrowsingContext* aBrowsingContext,
     const IdentityCredentialRequestOptions& aOptions) {
   MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aBrowsingContext);
 
-  // Make sure we have exactly one provider.
+  // Make sure we have providers.
   if (!aOptions.mProviders.WasPassed() ||
-      aOptions.mProviders.Value().Length() != 1) {
+      aOptions.mProviders.Value().Length() < 1) {
     return IdentityCredential::GetIPCIdentityCredentialPromise::CreateAndReject(
         NS_ERROR_DOM_NOT_ALLOWED_ERR, __func__);
   }
 
-  // Get that provider
-  IdentityProvider provider(aOptions.mProviders.Value()[0]);
+  nsCOMPtr<nsIPrincipal> principal(aPrincipal);
+  RefPtr<CanonicalBrowsingContext> browsingContext(aBrowsingContext);
 
-  return IdentityCredential::CreateCredential(aPrincipal, provider);
+  // Have the user choose a provider.
+  return PromptUserToSelectProvider(aBrowsingContext,
+                                    aOptions.mProviders.Value())
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [principal, browsingContext](const IdentityProvider& provider) {
+            return IdentityCredential::CreateCredential(
+                principal, browsingContext, provider);
+          },
+          [](nsresult error) {
+            return IdentityCredential::GetIPCIdentityCredentialPromise::
+                CreateAndReject(error, __func__);
+          });
 }
 
 // static
 RefPtr<IdentityCredential::GetIPCIdentityCredentialPromise>
 IdentityCredential::CreateCredential(nsIPrincipal* aPrincipal,
+                                     BrowsingContext* aBrowsingContext,
                                      const IdentityProvider& aProvider) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aBrowsingContext);
 
   nsCOMPtr<nsIPrincipal> argumentPrincipal = aPrincipal;
+  RefPtr<BrowsingContext> browsingContext(aBrowsingContext);
 
   return IdentityCredential::CheckRootManifest(aPrincipal, aProvider)
       ->Then(
@@ -190,21 +209,34 @@ IdentityCredential::CreateCredential(nsIPrincipal* aPrincipal,
           })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [argumentPrincipal, aProvider](
+          [argumentPrincipal, browsingContext, aProvider](
               const Tuple<IdentityInternalManifest, IdentityAccountList>&
                   promiseResult) {
             IdentityInternalManifest currentManifest;
             IdentityAccountList accountList;
             Tie(currentManifest, accountList) = promiseResult;
-            // Bug 1782088: We currently just use the first account
             if (!accountList.mAccounts.WasPassed() ||
                 accountList.mAccounts.Value().Length() == 0) {
-              return IdentityCredential::GetTokenPromise::CreateAndReject(
+              return IdentityCredential::GetAccountPromise::CreateAndReject(
                   NS_ERROR_FAILURE, __func__);
             }
-            return IdentityCredential::FetchToken(
-                argumentPrincipal, aProvider, currentManifest,
-                accountList.mAccounts.Value()[0]);
+            return PromptUserToSelectAccount(browsingContext, accountList,
+                                             currentManifest);
+          },
+          [](nsresult error) {
+            return IdentityCredential::GetAccountPromise::CreateAndReject(
+                error, __func__);
+          })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [argumentPrincipal,
+           aProvider](const Tuple<IdentityInternalManifest, IdentityAccount>&
+                          promiseResult) {
+            IdentityInternalManifest currentManifest;
+            IdentityAccount account;
+            Tie(currentManifest, account) = promiseResult;
+            return IdentityCredential::FetchToken(argumentPrincipal, aProvider,
+                                                  currentManifest, account);
           },
           [](nsresult error) {
             return IdentityCredential::GetTokenPromise::CreateAndReject(
@@ -224,7 +256,8 @@ IdentityCredential::CreateCredential(nsIPrincipal* aPrincipal,
             return IdentityCredential::GetIPCIdentityCredentialPromise::
                 CreateAndResolve(credential, __func__);
           },
-          [](nsresult error) {
+          [browsingContext](nsresult error) {
+            CloseUserInterface(browsingContext);
             return IdentityCredential::GetIPCIdentityCredentialPromise::
                 CreateAndReject(error, __func__);
           });
@@ -371,8 +404,8 @@ IdentityCredential::FetchAccountList(
   // Build the principal to use for this connection
   // This is an expanded principal! It has the cookies of the IDP because it
   // subsumes the constituent principals. It also has no serializable origin,
-  // so it won't send an Origin header even though this is a CORS mode request.
-  // It accomplishes this without being a SystemPrincipal too.
+  // so it won't send an Origin header even though this is a CORS mode
+  // request. It accomplishes this without being a SystemPrincipal too.
   nsCOMPtr<nsIURI> idpURI;
   nsresult rv = NS_NewURI(getter_AddRefs(idpURI), configLocation);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -515,6 +548,130 @@ RefPtr<IdentityCredential::GetTokenPromise> IdentityCredential::FetchToken(
         return IdentityCredential::GetTokenPromise::CreateAndReject(error,
                                                                     __func__);
       });
+}
+
+// static
+RefPtr<IdentityCredential::GetIdentityProviderPromise>
+IdentityCredential::PromptUserToSelectProvider(
+    BrowsingContext* aBrowsingContext,
+    const Sequence<IdentityProvider>& aProviders) {
+  MOZ_ASSERT(aBrowsingContext);
+  RefPtr<IdentityCredential::GetIdentityProviderPromise::Private>
+      resultPromise =
+          new IdentityCredential::GetIdentityProviderPromise::Private(__func__);
+
+  if (NS_WARN_IF(!aBrowsingContext)) {
+    resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+    return resultPromise;
+  }
+
+  nsresult error;
+  nsCOMPtr<nsIIdentityCredentialPromptService> icPromptService =
+      mozilla::components::IdentityCredentialPromptService::Service(&error);
+  if (NS_WARN_IF(!icPromptService)) {
+    resultPromise->Reject(error, __func__);
+    return resultPromise;
+  }
+
+  nsCOMPtr<nsIXPConnectWrappedJS> wrapped = do_QueryInterface(icPromptService);
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(wrapped->GetJSObjectGlobal()))) {
+    resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+    return resultPromise;
+  }
+
+  JS::Rooted<JS::Value> providersJS(jsapi.cx());
+  bool success = ToJSValue(jsapi.cx(), aProviders, &providersJS);
+  if (NS_WARN_IF(!success)) {
+    resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+    return resultPromise;
+  }
+
+  RefPtr<Promise> showPromptPromise;
+  icPromptService->ShowProviderPrompt(aBrowsingContext, providersJS,
+                                      getter_AddRefs(showPromptPromise));
+
+  RefPtr<DomPromiseListener> listener = new DomPromiseListener(
+      [resultPromise](JSContext* aCx, JS::Handle<JS::Value> aValue) {
+        IdentityProvider result;
+        bool success = result.Init(aCx, aValue);
+        if (!success) {
+          resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+          return;
+        }
+        resultPromise->Resolve(result, __func__);
+      },
+      [resultPromise](nsresult aRv) { resultPromise->Reject(aRv, __func__); });
+  showPromptPromise->AppendNativeHandler(listener);
+
+  return resultPromise;
+}
+
+// static
+RefPtr<IdentityCredential::GetAccountPromise>
+IdentityCredential::PromptUserToSelectAccount(
+    BrowsingContext* aBrowsingContext, const IdentityAccountList& aAccounts,
+    const IdentityInternalManifest& aManifest) {
+  MOZ_ASSERT(aBrowsingContext);
+  RefPtr<IdentityCredential::GetAccountPromise::Private> resultPromise =
+      new IdentityCredential::GetAccountPromise::Private(__func__);
+
+  if (NS_WARN_IF(!aBrowsingContext)) {
+    resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+    return resultPromise;
+  }
+
+  nsresult error;
+  nsCOMPtr<nsIIdentityCredentialPromptService> icPromptService =
+      mozilla::components::IdentityCredentialPromptService::Service(&error);
+  if (NS_WARN_IF(!icPromptService)) {
+    resultPromise->Reject(error, __func__);
+    return resultPromise;
+  }
+
+  nsCOMPtr<nsIXPConnectWrappedJS> wrapped = do_QueryInterface(icPromptService);
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(wrapped->GetJSObjectGlobal()))) {
+    resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+    return resultPromise;
+  }
+
+  JS::Rooted<JS::Value> accountsJS(jsapi.cx());
+  bool success = ToJSValue(jsapi.cx(), aAccounts, &accountsJS);
+  if (NS_WARN_IF(!success)) {
+    resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+    return resultPromise;
+  }
+
+  RefPtr<Promise> showPromptPromise;
+  icPromptService->ShowAccountListPrompt(aBrowsingContext, accountsJS,
+                                         getter_AddRefs(showPromptPromise));
+
+  RefPtr<DomPromiseListener> listener = new DomPromiseListener(
+      [resultPromise, aManifest](JSContext* aCx, JS::Handle<JS::Value> aValue) {
+        IdentityAccount result;
+        bool success = result.Init(aCx, aValue);
+        if (!success) {
+          resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+          return;
+        }
+        resultPromise->Resolve(MakeTuple(aManifest, result), __func__);
+      },
+      [resultPromise](nsresult aRv) { resultPromise->Reject(aRv, __func__); });
+  showPromptPromise->AppendNativeHandler(listener);
+
+  return resultPromise;
+}
+
+// static
+void IdentityCredential::CloseUserInterface(BrowsingContext* aBrowsingContext) {
+  nsresult error;
+  nsCOMPtr<nsIIdentityCredentialPromptService> icPromptService =
+      mozilla::components::IdentityCredentialPromptService::Service(&error);
+  if (NS_WARN_IF(!icPromptService)) {
+    return;
+  }
+  icPromptService->Close(aBrowsingContext);
 }
 
 }  // namespace mozilla::dom

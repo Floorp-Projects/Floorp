@@ -423,7 +423,7 @@ add_task(async function testPageInfoMediaSaveAs() {
         let preview = pageInfo.document.getElementById("thepreviewimage");
         let mediaType = pageInfo.gImageView.data[i][1]; // COL_IMAGE_TYPE
         if (mediaType == "Image") {
-          await BrowserTestUtils.waitForEvent(preview, "loadend");
+          await BrowserTestUtils.waitForEvent(preview, "load");
         } else if (mediaType == "Video") {
           await BrowserTestUtils.waitForEvent(preview, "canplaythrough");
         }

@@ -14,7 +14,7 @@
   /* Set default fill for icons in the identity popup.
      Individual icons can override this. */
   fill: currentColor;
-  --horizontal-padding: 1.78em;
+  --horizontal-padding: calc(var(--arrowpanel-menuitem-padding-inline) * 2);
   --vertical-section-padding: 0.9em;
   --height-offset: 0px;
   font: menu;
@@ -89,7 +89,9 @@
 }
 
 #protections-popup[toast] #protections-popup-mainView > :not(#protections-popup-mainView-panel-header-section),
-#protections-popup[toast] #protections-popup-main-header-label {
+#protections-popup[toast] #protections-popup-mainView-panel-header-section > :not(#protections-popup-mainView-panel-header),
+#protections-popup[toast] #protections-popup-mainView-panel-header > :is(.panel-info-button, #protections-popup-main-header-label) {
+  /* Hide all elements in the panel except for the toast descriptions */
   display: none;
 }
 
@@ -148,39 +150,14 @@
   padding-inline: 1.25em;
 }
 
-#protections-popup-content {
-  background-repeat: no-repeat;
-  background-position: 1em 1em;
-  background-size: 24px auto;
-  -moz-context-properties: fill;
-  padding: 0.5em 0 1em;
-  padding-inline: calc(2em + 24px) 1em;
-}
-
-#protections-popup-content:-moz-locale-dir(rtl) {
-  background-position: calc(100% - 1em) 1em;
-}
-
 /* CONTENT */
 
-.protections-popup-footer-button,
-.protections-popup-category,
-.protections-popup-empty-label,
-.tracking-protection-button,
-.protections-popup-cookiesView-list-header,
-.protections-popup-list-item > label,
-#protections-popup-mainView-panel-header > label,
-#protections-popup-mainView-panel-header > description,
-#protections-popup-trackersView > .panel-header,
-#protections-popup-sendReportView > .panel-header,
-.protections-popup-category-label,
-.protections-popup-category-state-label,
-#protections-popup-content > description,
-.protections-popup-footer-button-label,
-#protections-popup-footer-protection-type-label,
-#protections-popup-trackers-blocked-counter-description,
-#protections-popup-sendReportView-heading > description {
+:where(#protections-popup) :is(description, label) {
   margin: 0;
+}
+
+#protections-popup:not([infoMessageShowing]) #protections-popup-mainView-panel-header-section + toolbarseparator {
+  display: none;
 }
 
 #permission-popup-mainView-panel-header,
@@ -231,18 +208,6 @@
 #identity-popup-mainView-panel-header-span,
 #permission-popup-mainView-panel-header-span {
   margin-top: 4px;
-}
-
-#protections-popup[toast] #protections-popup-info-button {
-  display: none;
-}
-
-#protections-popup-info-button {
-  margin-inline-end: 10px;
-}
-
-#protections-popup-info-button > image {
-  fill-opacity: 1;
 }
 
 #permission-popup-permissions-content > description,
@@ -404,16 +369,13 @@ description#identity-popup-content-verifier,
 /* CONTENT BLOCKING / TRACKING PROTECTION */
 
 #protections-popup-sendReportView-heading,
-#protections-popup-sendReportView-body {
+#protections-popup-sendReportView-body,
+#protections-popup-siteNotWorkingView-body {
   padding: var(--vertical-section-padding) var(--horizontal-padding);
 }
 
 .protections-popup-sendReportView-collection-section {
   margin-bottom: 16px;
-}
-
-#protections-popup-sendReportView-body {
-  border-top: 1px solid var(--panel-separator-color);
 }
 
 #protections-popup-sendReportView-collection-url {
@@ -426,8 +388,8 @@ description#identity-popup-content-verifier,
   height: 120px;
 }
 
-#protections-popup-sendReportView label {
-  margin-inline-start: 0;
+.protections-popup-sendReportView-collection-section label {
+  margin-bottom: 2px;
 }
 
 #protections-popup-sendReportView-report-error {
@@ -435,24 +397,11 @@ description#identity-popup-content-verifier,
   color: #d74345;
 }
 
-.protections-popup-footer-button,
-.protections-popup-category {
-  /* Overwrite toolbarbutton styles */
-  appearance: none;
-  border-radius: 2px;
-  padding: 0 var(--horizontal-padding);
-}
-
-.protections-popup-category:hover,
-.protections-popup-footer-button:hover,
 #protections-popup-not-blocking-section-why:hover,
 #protections-popup-show-report-stack:hover > .protections-popup-footer-button {
   background-color: var(--panel-item-hover-bgcolor);
 }
 
-.protections-popup-category:hover:active,
-.protections-popup-footer-button:hover:active,
-#protections-popup-not-blocking-section-why:hover:active,
 #protections-popup-show-report-stack:hover:active > .protections-popup-footer-button {
   background-color: var(--panel-item-active-bgcolor);
 }
@@ -471,7 +420,6 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-empty-label {
-  margin-inline-start: 0;
   color: var(--panel-description-color);
 }
 
@@ -497,9 +445,7 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-list {
-  padding: 5px 24px;
-  -moz-box-flex: 1;
-  overflow: auto;
+  padding: 5px 16px !important; /* override panelUI-shared.css */
 }
 
 .protections-popup-list-item {
@@ -529,17 +475,12 @@ description#identity-popup-content-verifier,
   color: var(--panel-description-color);
 }
 
-#protections-popup-content {
-  padding: 0;
-  margin: 0 0 var(--vertical-section-padding);
+.protections-popup-section-header {
+  color: var(--panel-description-color);
 }
 
-#protections-popup-blocking-section-header,
-#protections-popup-not-blocking-section-header,
-#protections-popup-not-found-section-header {
-  margin: 0;
-  padding: var(--vertical-section-padding) var(--horizontal-padding);
-  color: var(--panel-description-color);
+:root[uidensity="compact"] .protections-popup-section-header {
+  margin-block: 4px;
 }
 
 #tracking-protection-container > tooltip {
@@ -554,40 +495,16 @@ description#identity-popup-content-verifier,
  * are assigned rows 8-12, with the headers taking rows 1 and 7.
  */
 
-#protections-popup-category-list {
-  padding: 0;
-  margin: 0;
-}
-
 #protections-popup-no-trackers-found-description:not([hidden]) ~ #protections-popup-content {
   display: none;
 }
 
-#protections-popup-not-blocking-section-description {
-  flex: -moz-available;
-  margin: 0;
-}
-
 #protections-popup-not-blocking-section-why {
-  margin: 0;
+  border-radius: 2px;
 }
 
 #protections-popup-not-blocking-section-why:hover {
   outline: 4px solid var(--panel-item-hover-bgcolor);
-  text-decoration: none;
-}
-
-#protections-popup-not-blocking-section-why:hover:active {
-  outline-color: var(--panel-item-active-bgcolor);
-}
-
-.protections-popup-category.notFound {
-  color: var(--panel-description-color);
-  fill: var(--panel-description-color);
-}
-
-.protections-popup-category.notFound:hover {
-  background: none;
 }
 
 .trackers-icon {
@@ -612,8 +529,6 @@ description#identity-popup-content-verifier,
 
 /* PERMISSIONS */
 
-.protections-popup-footer-button,
-.protections-popup-category,
 .permission-popup-permission-item {
   min-height: 24px;
 }
@@ -651,14 +566,9 @@ description#identity-popup-content-verifier,
   margin-inline-start: calc(16px + 8px);
 }
 
-.protections-popup-category-icon,
 .permission-popup-permission-icon {
   width: 16px;
   height: 16px;
-}
-
-.protections-popup-category-label {
-  margin-inline-start: 1em;
 }
 
 .permission-popup-permission-label,
@@ -672,14 +582,9 @@ description#identity-popup-content-verifier,
   margin-inline-start: calc(16px + 3px + 10px);
 }
 
-.protections-popup-category-state-label,
 .permission-popup-permission-state-label {
   margin-inline-end: 5px;
   text-align: end;
-}
-
-#protections-popup[hasException] .protections-popup-category-state-label {
-  visibility: hidden;
 }
 
 .permission-popup-permission-remove-button {
@@ -731,34 +636,10 @@ description#identity-popup-content-verifier,
   display: revert;
 }
 
-#protections-popup-siteNotWorkingView-header,
-#protections-popup-tp-switch-section {
-  padding: var(--vertical-section-padding) var(--horizontal-padding);
-}
-
-#protections-popup-siteNotWorkingView-body > label,
-.protections-popup-tp-switch-label-box > label {
-  margin-inline: 0;
-}
-
-
-
-#protections-popup-siteNotWorkingView-header {
-  border-bottom: 1px solid var(--panel-separator-color);
-}
-
-#protections-popup-siteNotWorkingView-body {
-  padding: var(--vertical-section-padding) var(--horizontal-padding);
-}
-
-#protections-popup-siteNotWorkingView-body,
 .protections-popup-tp-switch-label-box,
 .protections-popup-tp-switch-box {
   min-height: 40px;
   -moz-box-pack: center;
-  /* This is needed in order to make 'position' working for the badge alongside
-     the TP switch toggle.*/
-  position: relative;
 }
 
 /* This is needed in order to show a correct height if the 'Site not working?'
@@ -843,16 +724,13 @@ description#identity-popup-content-verifier,
   opacity: 1;
 }
 
-#protections-popup-trackers-blocked-counter-description {
-  color: var(--panel-description-color);
-}
-
+#protections-popup-trackers-blocked-counter-description,
 #protections-popup-footer-protection-type-label {
   color: var(--panel-description-color);
 }
 
 .protections-popup-description > description {
-  margin: 10px 24px;
+  margin: 10px 16px;
 }
 
 #protections-popup:not([milestone]) #protections-popup-milestones,
@@ -860,33 +738,27 @@ description#identity-popup-content-verifier,
   display: none;
 }
 
-#protections-popup-milestones {
-  margin: 0 calc(var(--horizontal-padding) * 0.5) var(--vertical-section-padding);
-  /* Override .protections-popup-section */
-  border-top: none;
-  background-color: var(--arrowpanel-dimmed);
-  border-radius: var(--arrowpanel-menuitem-padding);
-}
-
 #protections-popup-milestones-content {
-  appearance: none;
-  padding: var(--vertical-section-padding) calc(var(--horizontal-padding) * 0.5);
-  margin: 0;
-  border-radius: var(--arrowpanel-menuitem-padding);
+  background-color: var(--panel-banner-item-background-color);
 }
 
-#protections-popup-milestones-content:hover,
-#protections-popup-milestones-content:-moz-focusring {
-  background-color: var(--arrowpanel-dimmed);
+/* The padding-block for menuitems is set to 0 in compact mode which, with the
+ * shield icon being bigger than a usual menuitem, makes the item look crowded
+ * even for compact mode. */
+:root[uidensity="compact"] #protections-popup-milestones-content {
+  padding-block: 4px;
+}
+
+#protections-popup-milestones-content:hover {
+  background-color: var(--panel-banner-item-hover-bgcolor);
 }
 
 #protections-popup-milestones-content:hover:active {
-  background-color: var(--arrowpanel-dimmed-further);
+  background-color: var(--panel-banner-item-active-bgcolor);
 }
 
 #protections-popup-milestones-text {
   font-weight: 600;
-  margin: 0;
 }
 
 #protections-popup-milestones-illustration {
@@ -954,28 +826,11 @@ description#identity-popup-content-verifier,
   padding-inline: 12px 6px;
 }
 
-.protections-popup-footer-button,
-.protections-popup-category {
-  min-height: 32px;
-  border-radius: var(--arrowpanel-menuitem-border-radius);
-}
-
-#protections-popup-footer {
-  padding: var(--panel-subview-body-padding);
-}
-
-#protections-popup-blocking-section-header,
-#protections-popup-not-blocking-section-header,
-#protections-popup-not-found-section-header,
+.protections-popup-section-header,
 #protections-popup-tp-switch-section,
-.protections-popup-category,
-.protections-popup-footer-button {
+#protections-popup-siteNotWorkingView-header {
   padding: var(--arrowpanel-menuitem-padding);
   margin: var(--arrowpanel-menuitem-margin);
-}
-
-#protections-popup-footer-protection-type-label {
-  margin-inline-end: 0;
 }
 
 .identity-popup-expander:focus-visible,
@@ -988,12 +843,6 @@ description#identity-popup-content-verifier,
   .permission-popup-permission-remove-button > .button-box {
     appearance: none;
   }
-}
-
-.protections-popup-category:focus-visible,
-.protections-popup-footer-button:focus-visible {
-  outline: var(--focus-outline);
-  background: none;
 }
 
 .protections-popup-tp-switch:focus-visible {
@@ -1012,14 +861,6 @@ description#identity-popup-content-verifier,
   color: var(--panel-description-color);
 }
 
-.protections-popup-description > description {
-  margin: 10px 16px;
-}
-
-.protections-popup-list {
-  padding: 5px 16px;
-}
-
 /** Shim-allow warning and indicator icons **/
 
 .protections-popup-shim-allow-hint {
@@ -1028,7 +869,7 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-shim-allow-hint-icon,
-.protections-popup-list-host-shim-allow-indicator{
+.protections-popup-list-host-shim-allow-indicator {
   -moz-context-properties: fill;
   background-image: url("chrome://global/skin/icons/info-filled.svg");
   background-repeat: no-repeat;

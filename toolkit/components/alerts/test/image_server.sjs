@@ -1,6 +1,8 @@
 const CC = Components.Constructor;
 
-let { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+let { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 const LocalFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 

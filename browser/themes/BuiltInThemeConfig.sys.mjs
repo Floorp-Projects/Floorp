@@ -388,7 +388,7 @@ export const BuiltInThemeConfig = new Map([
   [
     "activist-bold-colorway@mozilla.org",
     {
-      version: "1.1.1",
+      version: "1.1.2",
       path: "resource://builtin-themes/colorways/2022activist/bold/",
       collection: "independent-voices",
       l10nId: {
@@ -430,7 +430,7 @@ export const BuiltInThemeConfig = new Map([
   [
     "dreamer-bold-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.1.1",
       path: "resource://builtin-themes/colorways/2022dreamer/bold/",
       collection: "independent-voices",
       l10nId: {

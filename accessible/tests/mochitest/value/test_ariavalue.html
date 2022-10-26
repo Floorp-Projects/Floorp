@@ -24,6 +24,14 @@
         testValue(`${role}_vtvn`, "juice", 6, 0, 100, 0);
       }
 
+      testValue("spinbutton_default", "", 0, 0, 0, 0);
+      testValue("spinbutton_min1max50", "", 0, 1, 50, 0);
+      testValue("spinbutton_max200", "", 0, 0, 200, 0);
+      testValue("spinbutton_min10", "", 0, 10, 0, 0);
+      testValue("spinbutton_vt", "juice", 0, 0, 0, 0);
+      testValue("spinbutton_vn", "6", 6, 0, 0, 0);
+      testValue("spinbutton_vtvn", "juice", 6, 0, 0, 0);
+
       SimpleTest.finish();
     }
 
@@ -63,6 +71,15 @@
   <div id="scrollbar_vt" role="scrollbar" aria-valuetext="juice">orange scrollbar</div>
   <div id="scrollbar_vn" role="scrollbar" aria-valuenow="6">chocolate scrollbar</div>
   <div id="scrollbar_vtvn" role="scrollbar" aria-valuetext="juice" aria-valuenow="6">apple scrollbar</div>
+
+  <!-- ARIA spinbuttons -->
+  <div id="spinbutton_default" role="spinbutton">vanilla spinbutton</div>
+  <div id="spinbutton_min1max50" role="spinbutton" aria-valuemin="1" aria-valuemax="50">banana spinbutton</div>
+  <div id="spinbutton_max200" role="spinbutton" aria-valuemax="200">cherry spinbutton</div>
+  <div id="spinbutton_min10" role="spinbutton" aria-valuemin="10">strawberry spinbutton</div>
+  <div id="spinbutton_vt" role="spinbutton" aria-valuetext="juice">orange spinbutton</div>
+  <div id="spinbutton_vn" role="spinbutton" aria-valuenow="6">chocolate spinbutton</div>
+  <div id="spinbutton_vtvn" role="spinbutton" aria-valuetext="juice" aria-valuenow="6">apple spinbutton</div>
 </body>
 
 </html>

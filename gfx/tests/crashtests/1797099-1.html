@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const canvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'canvas')
+        const context = canvas.getContext('2d')
+        const pattern = context.createPattern(canvas, 'no-repeat')
+        context.fillStyle = pattern
+        pattern.setTransform({
+          'c': 1.510601806598101,
+          'd': 0,
+        })
+        context.fillRect(1024, 512, 32, 32767)
+      })
+    </script>
+</head>
+</html>

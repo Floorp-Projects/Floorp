@@ -16,6 +16,7 @@
 #include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WindowContext.h"
+#include "mozilla/intl/Localization.h"
 #include "mozilla/MediaManager.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "MediaTrackConstraints.h"
@@ -31,9 +32,10 @@ using ConstDeviceSetPromise = MediaManager::ConstDeviceSetPromise;
 using LocalDeviceSetPromise = MediaManager::LocalDeviceSetPromise;
 using LocalMediaDeviceSetRefCnt = MediaManager::LocalMediaDeviceSetRefCnt;
 using MediaDeviceSetRefCnt = MediaManager::MediaDeviceSetRefCnt;
+using mozilla::intl::Localization;
 
 MediaDevices::MediaDevices(nsPIDOMWindowInner* aWindow)
-    : DOMEventTargetHelper(aWindow) {}
+    : DOMEventTargetHelper(aWindow), mDefaultOutputLabel(VoidString()) {}
 
 MediaDevices::~MediaDevices() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -267,11 +269,23 @@ RefPtr<MediaDeviceSetRefCnt> MediaDevices::FilterExposedDevices(
         if (!haveDefaultOutput && !outputIsDefault) {
           // Insert a virtual default device so that the first enumerated
           // device is the default output.
+          if (mDefaultOutputLabel.IsVoid()) {
+            mDefaultOutputLabel.SetIsVoid(false);
+            AutoTArray<nsCString, 1> resourceIds{"dom/media.ftl"_ns};
+            RefPtr l10n = Localization::Create(resourceIds, /*sync*/ true);
+            nsAutoCString translation;
+            IgnoredErrorResult rv;
+            l10n->FormatValueSync("default-audio-output-device-label"_ns, {},
+                                  translation, rv);
+            if (!rv.Failed()) {
+              AppendUTF8toUTF16(translation, mDefaultOutputLabel);
+            }
+          }
           RefPtr info = new AudioDeviceInfo(
-              nullptr, u""_ns, u""_ns, u""_ns, CUBEB_DEVICE_TYPE_OUTPUT,
-              CUBEB_DEVICE_STATE_ENABLED, CUBEB_DEVICE_PREF_ALL,
-              CUBEB_DEVICE_FMT_ALL, CUBEB_DEVICE_FMT_S16NE, 2, 44100, 44100,
-              44100, 128, 128);
+              nullptr, mDefaultOutputLabel, u""_ns, u""_ns,
+              CUBEB_DEVICE_TYPE_OUTPUT, CUBEB_DEVICE_STATE_ENABLED,
+              CUBEB_DEVICE_PREF_ALL, CUBEB_DEVICE_FMT_ALL,
+              CUBEB_DEVICE_FMT_S16NE, 2, 44100, 44100, 44100, 128, 128);
           exposed->AppendElement(
               new MediaDevice(new MediaEngineFake(), info, u""_ns));
         }

@@ -72,25 +72,6 @@ const CUSTOM_FUNCTIONS = {
     browser.webRequest.onHeadersReceived.removeListener(listener);
     delete injection.data.listener;
   },
-  pdk5fix: injection => {
-    const { urls, types } = injection.data;
-    const listener = (injection.data.listener = ({ requestId }) => {
-      replaceStringInRequest(
-        requestId,
-        "VideoContextChromeAndroid",
-        "VideoContextAndroid"
-      );
-      return {};
-    });
-    browser.webRequest.onBeforeRequest.addListener(listener, { urls, types }, [
-      "blocking",
-    ]);
-  },
-  pdk5fixDisable: injection => {
-    const { listener } = injection.data;
-    browser.webRequest.onBeforeRequest.removeListener(listener);
-    delete injection.data.listener;
-  },
   runScriptBeforeRequest: injection => {
     const { bug, message, request, script, types } = injection;
     const warning = `${message} See https://bugzilla.mozilla.org/show_bug.cgi?id=${bug} for details.`;

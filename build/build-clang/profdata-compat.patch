@@ -1,0 +1,57 @@
+https://reviews.llvm.org/D118653 added an optional section to the prof
+format, such that the output of the `llvm-profdata merge` is not readable
+by an older LLVM, such as the one in rustc. Technically speaking,
+the compatibility can be preserved, which we do here.
+
+Alternatively, we could revert that change, but other changes have piled
+up, making a revert more difficult.
+
+diff --git a/llvm/lib/ProfileData/InstrProfWriter.cpp b/llvm/lib/ProfileData/InstrProfWriter.cpp
+index cd4e8900c963..e553d765bad0 100644
+--- a/llvm/lib/ProfileData/InstrProfWriter.cpp
++++ b/llvm/lib/ProfileData/InstrProfWriter.cpp
+@@ -346,7 +346,9 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
+   // Write the header.
+   IndexedInstrProf::Header Header;
+   Header.Magic = IndexedInstrProf::Magic;
+-  Header.Version = IndexedInstrProf::ProfVersion::CurrentVersion;
++  Header.Version = static_cast<bool>(ProfileKind & InstrProfKind::MemProf)
++                       ? IndexedInstrProf::ProfVersion::CurrentVersion
++                       : IndexedInstrProf::ProfVersion::Version7;
+   if (static_cast<bool>(ProfileKind & InstrProfKind::IRInstrumentation))
+     Header.Version |= VARIANT_MASK_IR_PROF;
+   if (static_cast<bool>(ProfileKind & InstrProfKind::ContextSensitive))
+@@ -382,7 +384,8 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
+   uint64_t MemProfSectionOffset = OS.tell();
+   // Reserve space for the MemProf table field to be patched later if this
+   // profile contains memory profile information.
+-  OS.write(0);
++  if (static_cast<bool>(ProfileKind & InstrProfKind::MemProf))
++    OS.write(0);
+ 
+   // Reserve space to write profile summary data.
+   uint32_t NumEntries = ProfileSummaryBuilder::DefaultCutoffs.size();
+@@ -482,8 +485,6 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
+   PatchItem PatchItems[] = {
+       // Patch the Header.HashOffset field.
+       {HashTableStartFieldOffset, &HashTableStart, 1},
+-      // Patch the Header.MemProfOffset (=0 for profiles without MemProf data).
+-      {MemProfSectionOffset, &MemProfSectionStart, 1},
+       // Patch the summary data.
+       {SummaryOffset, reinterpret_cast<uint64_t *>(TheSummary.get()),
+        (int)(SummarySize / sizeof(uint64_t))},
+@@ -492,6 +493,14 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
+ 
+   OS.patch(PatchItems, sizeof(PatchItems) / sizeof(*PatchItems));
+ 
++  if (static_cast<bool>(ProfileKind & InstrProfKind::MemProf)) {
++    PatchItem PatchItems[] = {
++        // Patch the Header.MemProfOffset (=0 for profiles without MemProf
++        // data).
++        {MemProfSectionOffset, &MemProfSectionStart, 1},
++    };
++    OS.patch(PatchItems, sizeof(PatchItems) / sizeof(*PatchItems));
++  }
+   for (const auto &I : FunctionData)
+     for (const auto &F : I.getValue())
+       if (Error E = validateRecord(F.second))

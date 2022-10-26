@@ -172,7 +172,7 @@ class ScaffoldingCallHandler {
       } else {
         // The conversion failed, return an error and don't continue
         return mozilla::Err(result.unwrapErr() +
-                            nsPrintfCString(" (arg %ld)", I));
+                            nsPrintfCString(" (arg %zu)", I));
       }
     }
   }

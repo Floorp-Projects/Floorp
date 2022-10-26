@@ -33,7 +33,7 @@ add_task(async function test_local_addon_update() {
   let xpi1 = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: { id },
       },
     },
@@ -60,7 +60,7 @@ add_task(async function test_local_addon_update() {
   let xpi2 = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: { id },
       },
     },
@@ -99,7 +99,7 @@ add_task(async function test_newurl_addon_update() {
   let xpi1 = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: { id },
       },
     },
@@ -109,7 +109,7 @@ add_task(async function test_newurl_addon_update() {
   let xpi2 = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: { id },
       },
     },

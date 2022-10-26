@@ -356,8 +356,7 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   /**
    * Method to fire an event once we know what's going on with the image load.
    *
-   * @param aEventType "loadstart", "loadend", "load", or "error" depending on
-   *                   how things went
+   * @param aEventType "load", or "error" depending on how things went
    * @param aIsCancelable true if event is cancelable.
    */
   nsresult FireEvent(const nsAString& aEventType, bool aIsCancelable = false);

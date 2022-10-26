@@ -1078,6 +1078,7 @@ panelview .toolbarbutton-1,
 
 #protections-popup-mainView .subviewbutton-nav:not(.notFound)::after,
 #identity-popup-mainView .subviewbutton-nav::after,
+#identity-credential-notification .subviewbutton-nav::after,
 .widget-overflow-list .subviewbutton-nav::after,
 .PanelUI-subView .subviewbutton-nav::after {
   -moz-context-properties: fill, fill-opacity;
@@ -1089,6 +1090,7 @@ panelview .toolbarbutton-1,
 
 #protections-popup-mainView .subviewbutton-nav:not(.notFound):-moz-locale-dir(rtl)::after,
 #identity-popup-mainView .subviewbutton-nav:-moz-locale-dir(rtl)::after,
+#identity-credential-notification .subviewbutton-nav:-moz-locale-dir(rtl)::after,
 .widget-overflow-list .subviewbutton-nav:-moz-locale-dir(rtl)::after,
 .PanelUI-subView .subviewbutton-nav:-moz-locale-dir(rtl)::after {
   content: url(chrome://global/skin/icons/arrow-left.svg);
@@ -1278,7 +1280,6 @@ panelview .toolbarbutton-1 {
 #widget-overflow-mainView > .panel-subview-body > toolbarseparator,
 .PanelUI-subView toolbarseparator,
 #permission-popup-mainView > toolbarseparator,
-#protections-popup-multiView toolbarseparator,
 #identity-popup-mainView toolbarseparator,
 #identity-popup-securityView > toolbarseparator,
 #editBookmarkPanel toolbarseparator,
@@ -1715,8 +1716,6 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
   height: 260px;
   overflow: hidden;
   transition: margin-bottom .25s;
-  border-top: 1px solid var(--panel-separator-color);
-  box-sizing: border-box;
 }
 
 #protections-popup #messaging-system-message-container[disabled] {
@@ -1745,11 +1744,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
 }
 
 #protections-popup-message:-moz-locale-dir(rtl) {
-  background-position: top left;
-}
-
-#protections-popup-message > .whatsNew-message-body > .text-link {
-  text-decoration: underline;
+  background-position-x: left;
 }
 
 #protections-popup-message .protections-popup-content {
@@ -1889,11 +1884,6 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 #protections-popup-message .text-link {
   color: inherit;
   font-weight: 600;
-}
-
-#protections-popup-message .text-link:hover {
-  text-decoration: underline;
-  cursor: pointer;
 }
 
 #PanelUI-whatsNew .text-link:hover {
@@ -2126,4 +2116,19 @@ description#PanelUI-profiler-locked {
   line-height: 1.5;
   /* Make sure this description is wider than the header's */
   max-width: 310px;
+}
+
+/* Web-extension pop-ups */
+
+.cui-widget-panelview[id^=PanelUI-webext-] {
+  border-radius: var(--arrowpanel-border-radius);
+}
+
+.webextension-popup-browser,
+.webextension-popup-stack {
+  border-radius: inherit;
+}
+
+.webextension-popup-stack {
+  position: relative;
 }

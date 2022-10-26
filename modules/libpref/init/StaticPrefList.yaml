@@ -3664,10 +3664,17 @@
   value: false
   mirror: always
 
-# pref controls `identity` credentials being exposed
+# pref controls `identity` credentials timeout for testing
 - name: dom.security.credentialmanagement.identity.wait_for_timeout
   type: bool
   value: true
+  mirror: always
+
+# pref controls `identity` credential UI for testing. When true, UI is not shown and
+# the first option in the account and provider lists are chosen
+- name: dom.security.credentialmanagement.identity.select_first_in_ui_lists
+  type: bool
+  value: false
   mirror: always
 
 # Whether or not selection events on text controls are enabled.
@@ -4802,6 +4809,17 @@
 - name: editor.positioning.enabled_by_default
   type: bool
   value: false
+  mirror: always
+
+# Controls if a double click word selection also deletes one adjacent whitespace
+# (if feasible). This mimics native behaviour on MacOS.
+- name: editor.word_select.delete_space_after_doubleclick_selection
+  type: bool
+#ifdef XP_MACOSX
+  value: true
+#else
+  value: false
+#endif
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -6857,12 +6875,177 @@
   mirror: always
 
 #ifdef XP_WIN
+  # Whether making Gecko TSF-aware or only working with IMM.  TSF is a modern
+  # IME API set of Windows which replaces IMM APIs.  Unless you can avoid the
+  # problem which you see with enabling TSF, you shouldn't change this pref
+  # to false since IMM handler is now not maintained nor tested with latest
+  # Windows.  If you need to change this pref to false, please file a bug to
+  # <https://bugzilla.mozilla.org>.
+  # Restart required to apply this pref change.
+-   name: intl.tsf.enabled
+    type: bool
+    value: true
+    mirror: once
+
+  # Whether Gecko creates or does not create native caret for legacy ATOK
+  # (2011 - 2015).
+-   name: intl.tsf.hack.atok.create_native_caret
+    type: bool
+    value: true
+    mirror: always
+
+  # Whether Gecko returns available composition string rect or TS_E_NOLAYOUT
+  # from ITextStoreACP::GetTextExt() when the specified range is same as the
+  # range of composition string but some character rects in it are still dirty
+  # if and only if ATOK is active TIP.
+  # Note that this is ignored if active ATOK is or older than 2016 and
+  # create_native_caret is true.
+-   name: intl.tsf.hack.atok.do_not_return_no_layout_error_of_composition_string
+    type: bool
+    value: true
+    mirror: always
+
+  # Whether Gecko sets input scope of ATOK to "search" or never does it.
+  # When "search" is set to the input scope, ATOK may stop their suggestions.
+  # To avoid it, turn this pref on, or changing the settings in ATOK.
+  # Note that if you enable this pref and you use the touch keyboard for touch
+  # screens, you cannot access some specific features for a "search" input
+  # field.
+-   name: intl.tsf.hack.atok.search_input_scope_disabled
+    type: bool
+    value: false
+    mirror: always
+
+  # Whether Gecko returns caret rect before composition string or TS_E_NOLAYOUT
+  # from ITextStoreACP::GetTextExt() when the specified range is larger than
+  # composition start offset if and only if Free ChangJie is active TIP.
+-   name: intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error
+    type: bool
+    value: true
+    mirror: always
+
+  # Whether Gecko returns available composition string rect or TS_E_NOLAYOUT
+  # from ITextStoreACP::GetTextExt() when the specified range is same as the
+  # range of composition string but some character rects in it are still dirty
+  # if and only if Japanist 10 is active TIP.
+-   name: intl.tsf.hack.japanist10.do_not_return_no_layout_error_of_composition_string
+    type: bool
+    value: true
+    mirror: always
+
+  # Whether Gecko returns previous character rect or TS_E_NOLAYOUT from
+  # ITfContextView::GetTextExt() when the specified range is the first
+  # character of selected clause of composition string if and only if Japanese TIP
+  # of Microsoft is active.
+-   name: intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_char
+    type: bool
+    value: true
+    mirror: always
+
+  # Whether Gecko returns previous character rect or TS_E_NOLAYOUT from
+  # ITfContextView::GetTextExt() when the specified range is the caret of
+  # composition string if and only if Japanese TIP of Microsoft is active.
+-   name: intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_caret
+    type: bool
+    value: true
+    mirror: always
+
+  # Whether Gecko returns caret rect before composition string or TS_E_NOLAYOUT
+  # from ITfContextView::GetTextExt() when the specified range is larger than
+  # composition start offset if and only Simplified Chinese TIP of Microsoft
+  # is active.
+-   name: intl.tsf.hack.ms_simplified_chinese.do_not_return_no_layout_error
+    type: bool
+    value: true
+    mirror: always
+
+  # Whether Geckos hacks ITextStoreACP::QueryInsert() or not.  The method should
+  # return new selection after specified length text is inserted at specified
+  # range.  However, Microsoft Pinyin and Microsoft Wubi expect that the result
+  # is same as specified range.  If following prefs are true,
+  # ITextStoreACP::QueryInsert() returns specified range only when one of the
+  # TIPs is active.
+-   name: intl.tsf.hack.ms_simplified_chinese.query_insert_result
+    type: bool
+    value: true
+    mirror: always
+
+  # Whether Gecko returns caret rect before composition string or TS_E_NOLAYOUT
+  # from ITfContextView::GetTextExt() when the specified range is larger than
+  # composition start offset if and only Traditional Chinese TIP of Microsoft
+  # is active.
+-   name: intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error
+    type: bool
+    value: true
+    mirror: always
+
+  # Whether Geckos hacks ITextStoreACP::QueryInsert() or not.  The method should
+  # return new selection after specified length text is inserted at specified
+  # range.  However, Microsoft ChangJie and Microsoft Quick expect that the
+  # result is same as specified range.  If following prefs are true,
+  # ITextStoreACP::QueryInsert() returns specified range only when one of the
+  # TIPs is active.
+-   name: intl.tsf.hack.ms_traditional_chinese.query_insert_result
+    type: bool
+    value: true
+    mirror: always
+
+  # Whether Gecko sets input scope of the URL bar to IS_DEFAULT when black
+  # listed IMEs are active or does not.  If you use tablet mode mainly and you
+  # want to use touch keyboard for URL when you set focus to the URL bar, you
+  # can set this to false.  Then, you'll see, e.g., ".com" key on the keyboard.
+  # However, if you set this to false, such IMEs set its open state to "closed"
+  # when you set focus to the URL bar.  I.e., input mode is automatically
+  # changed to English input mode.
+  # Known buggy IME list:
+  #   - Microsoft IME for Japanese
+  #   - Google Japanese Input
+  #   - Microsoft Bopomofo
+  #   - Microsoft ChangJie
+  #   - Microsoft Phonetic
+  #   - Microsoft Quick
+  #   - Microsoft New ChangJie
+  #   - Microsoft New Phonetic
+  #   - Microsoft New Quick
+  #   - Microsoft Pinyin
+  #   - Microsoft Pinyin New Experience Input Style
+  #   - Microsoft Wubi
+  #   - Microsoft IME for Korean (except on Win7)
+  #   - Microsoft Old Hangul
+-   name: intl.ime.hack.set_input_scope_of_url_bar_to_default
+    type: bool
+    value: true
+    mirror: always
+
+  # On Windows 10 Build 17643 (an Insider Preview build of RS5), Microsoft
+  # have fixed the caller of ITextACPStore::GetTextExt() to return
+  # TS_E_NOLAYOUT to TIP as-is, rather than converting to E_FAIL.
+  # Therefore, if TIP supports asynchronous layout computation perfectly, we
+  # can return TS_E_NOLAYOUT and TIP waits next OnLayoutChange()
+  # notification.  However, some TIPs still have some bugs of asynchronous
+  # layout support.  We keep hacking the result of GetTextExt() like running
+  # on Windows 10, however, there could be unknown TIP bugs if we stop
+  # hacking the result.  So, user can stop checking build ID to make Gecko
+  # hack the result forcibly.
+-   name: intl.tsf.hack.allow_to_stop_hacking_on_build_17643_or_later
+    type: bool
+    value: @IS_EARLY_BETA_OR_EARLIER@
+    mirror: always
+
   # If true, automatically extend selection to cluster boundaries when
   # TSF/TIP requests to select from/by middle of a cluster.
 -   name: intl.tsf.hack.extend_setting_selection_range_to_cluster_boundaries
     type: bool
     value: @IS_NOT_EARLY_BETA_OR_EARLIER@
     mirror: always
+
+  # Whether Gecko supports IMM even if TSF is enabled.  This pref exists
+  # only for check TSF behavior of new versions.  Therefore, users should
+  # not set this to false for daily use.
+-   name: intl.tsf.support_imm
+    type: bool
+    value: true
+    mirror: once
 
   # If true, TSF and TIP (IME) can retrieve URL of the document containing
   # the focused element.  When this is set to true, Gecko exposes the spec
@@ -6900,6 +7083,7 @@
   type: bool
   value: false
   mirror: always
+
 
 #if defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
 # Whether text input without keyboard press nor IME composition should cause a
@@ -13811,7 +13995,13 @@
 
 - name: webgl.out-of-process
   type: RelaxedAtomicBool
+#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX)
   value: true
+#elif defined(ANDROID) && defined(NIGHTLY_BUILD)
+  value: true
+#else
+  value: false
+#endif
   mirror: always
 
 - name: webgl.out-of-process.worker

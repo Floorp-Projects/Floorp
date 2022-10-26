@@ -666,8 +666,18 @@ JSObject* mozJSModuleLoader::GetSharedGlobal(JSContext* aCx) {
 nsresult mozJSModuleLoader::LoadSingleModuleScript(
     ComponentModuleLoader* aModuleLoader, JSContext* aCx,
     JS::loader::ModuleLoadRequest* aRequest, MutableHandleScript aScriptOut) {
+  nsAutoCString spec;
+  nsresult rv = aRequest->mURI->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AUTO_PROFILER_MARKER_TEXT(
+      "ChromeUtils.importESModule static import", JS,
+      MarkerOptions(MarkerStack::Capture(),
+                    MarkerInnerWindowIdFromJSContext(aCx)),
+      spec);
+
   ModuleLoaderInfo info(aRequest);
-  nsresult rv = info.EnsureResolvedURI();
+  rv = info.EnsureResolvedURI();
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIFile> sourceFile;

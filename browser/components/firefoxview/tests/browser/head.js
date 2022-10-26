@@ -60,12 +60,6 @@ const syncedTabsData1 = [
   },
 ];
 
-function promiseSyncReady() {
-  let service = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
-    .wrappedJSObject;
-  return service.whenLoaded();
-}
-
 async function clearAllParentTelemetryEvents() {
   // Clear everything.
   await TestUtils.waitForCondition(() => {
@@ -238,13 +232,6 @@ function setupSyncFxAMocks({ fxaDevices = null, state, syncEnabled = true }) {
       syncEnabled,
     };
   });
-  sandbox
-    .stub(Weave.Service.clientsEngine, "getClientByFxaDeviceId")
-    .callsFake(fxaDeviceId => {
-      let target = gMockFxaDevices.find(c => c.id == fxaDeviceId);
-      return target ? target.clientRecord : null;
-    });
-  sandbox.stub(Weave.Service.clientsEngine, "getClientType").returns("desktop");
 
   return sandbox;
 }

@@ -726,14 +726,15 @@ impl SceneBuilderThread {
             if let Ok(SceneSwapResult::Complete(resume_tx)) = swap_result {
                 resume_tx.send(()).ok();
             }
-        } else if !have_resources_updates.is_empty() {
+        } else {
             Telemetry::cancel_sceneswap_time(timer_id);
-            if let Some(ref hooks) = self.hooks {
-                hooks.post_resource_update(&have_resources_updates);
+            if !have_resources_updates.is_empty() {
+                if let Some(ref hooks) = self.hooks {
+                    hooks.post_resource_update(&have_resources_updates);
+                }
+            } else if let Some(ref hooks) = self.hooks {
+                hooks.post_empty_scene_build();
             }
-        } else if let Some(ref hooks) = self.hooks {
-            Telemetry::cancel_sceneswap_time(timer_id);
-            hooks.post_empty_scene_build();
         }
     }
 

@@ -161,6 +161,7 @@ class ProtectionCategory {
       return false;
     }
     this.categoryItem.classList.toggle("blocked", this.enabled);
+    this.categoryItem.classList.toggle("subviewbutton-nav", this.enabled);
     return true;
   }
 
@@ -1630,6 +1631,10 @@ var gProtectionsHandler = {
       blocker.categoryItem.classList.toggle(
         "notFound",
         !blocker.isDetected(event)
+      );
+      blocker.categoryItem.classList.toggle(
+        "subviewbutton-nav",
+        blocker.isDetected(event)
       );
     }
 

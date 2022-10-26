@@ -58,9 +58,14 @@ impl<E> ErrorHandling<E> {
 
     // Convenience functions for the most common error reports
 
-    /// Add reporting to an ErrorHandling instance and also log an Error
+    /// log a warning
     pub fn log_warning(self) -> Self {
         self.log(log::Level::Warn)
+    }
+
+    /// log an info
+    pub fn log_info(self) -> Self {
+        self.log(log::Level::Info)
     }
 
     /// Add reporting to an ErrorHandling instance and also log an Error

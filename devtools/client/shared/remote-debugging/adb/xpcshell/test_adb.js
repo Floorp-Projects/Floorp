@@ -67,7 +67,7 @@ add_task(async function testNoAdbExtension() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       version: (extension_version++).toString(),
-      applications: {
+      browser_specific_settings: {
         gecko: { id: "not-adb@mozilla.org" },
       },
     },
@@ -85,7 +85,7 @@ add_task(async function testNoAdbJSON() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       version: (extension_version++).toString(),
-      applications: {
+      browser_specific_settings: {
         // The extension id here and in later test cases should match the
         // corresponding prefrece value.
         gecko: { id: "adb@mozilla.org" },
@@ -105,7 +105,7 @@ add_task(async function testNoTargetBinaries() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       version: (extension_version++).toString(),
-      applications: {
+      browser_specific_settings: {
         gecko: { id: "adb@mozilla.org" },
       },
     },
@@ -126,7 +126,7 @@ add_task(async function testExtract() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       version: (extension_version++).toString(),
-      applications: {
+      browser_specific_settings: {
         gecko: { id: "adb@mozilla.org" },
       },
     },
@@ -157,7 +157,7 @@ add_task(
     const extension = ExtensionTestUtils.loadExtension({
       manifest: {
         version: (extension_version++).toString(),
-        applications: {
+        browser_specific_settings: {
           gecko: { id: "adb@mozilla.org" },
         },
       },
@@ -205,7 +205,7 @@ add_task(
     const extension = ExtensionTestUtils.loadExtension({
       manifest: {
         version: (extension_version++).toString(),
-        applications: {
+        browser_specific_settings: {
           gecko: { id: "adb@mozilla.org" },
         },
       },

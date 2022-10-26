@@ -107,8 +107,8 @@ let SyncedTabsInternal = {
     let engine = Weave.Service.engineManager.get("tabs");
 
     let ntabs = 0;
-
-    for (let client of Object.values(engine.getAllClients())) {
+    let clientTabList = await engine.getAllClients();
+    for (let client of clientTabList) {
       if (!Weave.Service.clientsEngine.remoteClientExists(client.id)) {
         continue;
       }

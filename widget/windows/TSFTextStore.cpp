@@ -51,8 +51,6 @@ static const GUID sGUID_PROP_URL = {
 namespace mozilla {
 namespace widget {
 
-static const char* kPrefNameEnableTSF = "intl.tsf.enable";
-
 /**
  * TSF related code should log its behavior even on release build especially
  * in the interface methods.
@@ -1742,58 +1740,6 @@ bool TSFStaticSink::IsTIPCategoryKeyboard(REFCLSID aTextService, LANGID aLangID,
 }
 
 /******************************************************************/
-/* TSFPreference                                                  */
-/******************************************************************/
-
-class TSFPrefs final {
- public:
-#define DECL_AND_IMPL_BOOL_PREF(aPref, aName, aDefaultValue)                  \
-  static bool aName() {                                                       \
-    static bool s##aName##Value = Preferences::GetBool(aPref, aDefaultValue); \
-    return s##aName##Value;                                                   \
-  }
-
-  DECL_AND_IMPL_BOOL_PREF("intl.ime.hack.set_input_scope_of_url_bar_to_default",
-                          ShouldSetInputScopeOfURLBarToDefault, true)
-  DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.allow_to_stop_hacking_on_build_17643_or_later",
-      AllowToStopHackingOnBuild17643OrLater, false)
-  DECL_AND_IMPL_BOOL_PREF("intl.tsf.hack.atok.create_native_caret",
-                          NeedToCreateNativeCaretForLegacyATOK, true)
-  DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.atok.do_not_return_no_layout_error_of_composition_string",
-      DoNotReturnNoLayoutErrorToATOKOfCompositionString, true)
-  DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.japanist10."
-      "do_not_return_no_layout_error_of_composition_string",
-      DoNotReturnNoLayoutErrorToJapanist10OfCompositionString, true)
-  DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.ms_simplified_chinese.do_not_return_no_layout_error",
-      DoNotReturnNoLayoutErrorToMSSimplifiedTIP, true)
-  DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error",
-      DoNotReturnNoLayoutErrorToMSTraditionalTIP, true)
-  DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error",
-      DoNotReturnNoLayoutErrorToFreeChangJie, true)
-  DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_"
-      "char",
-      DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar, true)
-  DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_caret",
-      DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret, true)
-  DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.ms_simplified_chinese.query_insert_result",
-      NeedToHackQueryInsertForMSSimplifiedTIP, true)
-  DECL_AND_IMPL_BOOL_PREF(
-      "intl.tsf.hack.ms_traditional_chinese.query_insert_result",
-      NeedToHackQueryInsertForMSTraditionalTIP, true)
-
-#undef DECL_AND_IMPL_BOOL_PREF
-};
-
-/******************************************************************/
 /* TSFTextStore                                                   */
 /******************************************************************/
 
@@ -2735,9 +2681,11 @@ TSFTextStore::QueryInsert(LONG acpTestStart, LONG acpTestEnd, ULONG cch,
   // XXX need to adjust to cluster boundary
   // Assume we are given good offsets for now
   if (IsWin8OrLater() && mComposition.isNothing() &&
-      ((TSFPrefs::NeedToHackQueryInsertForMSTraditionalTIP() &&
+      ((StaticPrefs::
+            intl_tsf_hack_ms_traditional_chinese_query_insert_result() &&
         TSFStaticSink::IsMSChangJieOrMSQuickActive()) ||
-       (TSFPrefs::NeedToHackQueryInsertForMSSimplifiedTIP() &&
+       (StaticPrefs::
+            intl_tsf_hack_ms_simplified_chinese_query_insert_result() &&
         TSFStaticSink::IsMSPinyinOrMSWubiActive()))) {
     MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p   TSFTextStore::QueryInsert() WARNING using different "
@@ -3903,7 +3851,7 @@ bool TSFTextStore::ShouldSetInputScopeOfURLBarToDefault() {
   //      However, if it's installed on Win7 and has not been updated yet
   //      after the OS is upgraded to Win8 or later, it's still an IMM-IME.
   //      Therefore, we also need to check with IMMHandler here.
-  if (!TSFPrefs::ShouldSetInputScopeOfURLBarToDefault()) {
+  if (!StaticPrefs::intl_ime_hack_set_input_scope_of_url_bar_to_default()) {
     return false;
   }
 
@@ -4633,7 +4581,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd,
   // even if we'll create native caret later, we need to creat it here with
   // current information.
   if (!IMEHandler::IsA11yHandlingNativeCaret() &&
-      TSFPrefs::NeedToCreateNativeCaretForLegacyATOK() &&
+      StaticPrefs::intl_tsf_hack_atok_create_native_caret() &&
       TSFStaticSink::IsATOKReferringNativeCaretActive() &&
       mComposition.isSome() &&
       mComposition->IsOffsetInRangeOrEndOffset(acpStart) &&
@@ -4682,7 +4630,8 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
   // If TSF does not have the bug, we need to hack only with a few TIPs.
   static const bool sAlllowToStopHackingIfFine =
       IsWindows10BuildOrLater(17643) &&
-      TSFPrefs::AllowToStopHackingOnBuild17643OrLater();
+      StaticPrefs::
+          intl_tsf_hack_allow_to_stop_hacking_on_build_17643_or_later();
 
   // We need to compute active TIP now.  This may take a couple of milliseconds,
   // however, it'll be cached, so, must be faster than check active TIP every
@@ -4702,7 +4651,8 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       // available, we should use it as the result.
       // Note that according to bug 1609675, MS-IME for Japanese itself does
       // not handle TS_E_NOLAYOUT correctly at least on Build 18363.657 (1909).
-      if (TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar() &&
+      if (StaticPrefs::
+              intl_tsf_hack_ms_japanese_ime_do_not_return_no_layout_error_at_first_char() &&
           aACPStart < aACPEnd) {
         aACPEnd = aACPStart;
         break;
@@ -4716,7 +4666,8 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       // nearest character rect.
       // (Let's return true if there is no selection which must be not expected
       // by MS-IME nor TSF.)
-      if (TSFPrefs::DoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret() &&
+      if (StaticPrefs::
+              intl_tsf_hack_ms_japanese_ime_do_not_return_no_layout_error_at_caret() &&
           aACPStart == aACPEnd && selectionForTSF.isSome() &&
           (!selectionForTSF->HasRange() ||
            (selectionForTSF->Collapsed() &&
@@ -4790,14 +4741,15 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       // If we'll create native caret where we paint our caret.  Then, ATOK
       // will refer native caret.  So, we don't need to hack anything in
       // this case.
-      if (TSFPrefs::NeedToCreateNativeCaretForLegacyATOK()) {
+      if (StaticPrefs::intl_tsf_hack_atok_create_native_caret()) {
         MOZ_ASSERT(TSFStaticSink::IsATOKReferringNativeCaretActive());
         return false;
       }
       [[fallthrough]];
     case TextInputProcessorID::eATOK2016:
     case TextInputProcessorID::eATOKUnknown:
-      if (!TSFPrefs::DoNotReturnNoLayoutErrorToATOKOfCompositionString()) {
+      if (!StaticPrefs::
+              intl_tsf_hack_atok_do_not_return_no_layout_error_of_composition_string()) {
         return false;
       }
       // If the range is in the composition string, we should return rectangle
@@ -4815,8 +4767,8 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
     // where we know.  This is Japanist's bug.  So, even after build 17643,
     // we need this hack.
     case TextInputProcessorID::eJapanist10:
-      if (!TSFPrefs::
-              DoNotReturnNoLayoutErrorToJapanist10OfCompositionString()) {
+      if (!StaticPrefs::
+              intl_tsf_hack_japanist10_do_not_return_no_layout_error_of_composition_string()) {
         return false;
       }
       if (!mContentForTSF->LatestCompositionRange()->IsOffsetInRangeOrEndOffset(
@@ -4833,7 +4785,8 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       if (sAlllowToStopHackingIfFine) {
         return false;
       }
-      if (!TSFPrefs::DoNotReturnNoLayoutErrorToFreeChangJie()) {
+      if (!StaticPrefs::
+              intl_tsf_hack_free_chang_jie_do_not_return_no_layout_error()) {
         return false;
       }
       aACPEnd = mContentForTSF->LatestCompositionRange()->StartOffset();
@@ -4848,7 +4801,8 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
       [[fallthrough]];
     case TextInputProcessorID::eMicrosoftChangJie:
       if (!IsWin8OrLater() ||
-          !TSFPrefs::DoNotReturnNoLayoutErrorToMSTraditionalTIP()) {
+          !StaticPrefs::
+              intl_tsf_hack_ms_traditional_chinese_do_not_return_no_layout_error()) {
         return false;
       }
       aACPEnd = mContentForTSF->LatestCompositionRange()->StartOffset();
@@ -4865,7 +4819,8 @@ bool TSFTextStore::MaybeHackNoErrorLayoutBugs(LONG& aACPStart, LONG& aACPEnd) {
     case TextInputProcessorID::eMicrosoftPinyin:
     case TextInputProcessorID::eMicrosoftWubi:
       if (!IsWin8OrLater() ||
-          !TSFPrefs::DoNotReturnNoLayoutErrorToMSSimplifiedTIP()) {
+          !StaticPrefs::
+              intl_tsf_hack_ms_simplified_chinese_do_not_return_no_layout_error()) {
         return false;
       }
       aACPEnd = mContentForTSF->LatestCompositionRange()->StartOffset();
@@ -6807,7 +6762,7 @@ void TSFTextStore::Initialize() {
     return;
   }
 
-  bool enableTsf = Preferences::GetBool(kPrefNameEnableTSF, false);
+  const bool enableTsf = StaticPrefs::intl_tsf_enabled_AtStartup();
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("  TSFTextStore::Initialize(), TSF is %s",
            enableTsf ? "enabled" : "disabled"));

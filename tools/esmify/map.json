@@ -41,6 +41,8 @@
     "browser/components/pocket/content/pktApi.jsm",
   "chrome://pocket/content/pktTelemetry.jsm":
     "browser/components/pocket/content/pktTelemetry.jsm",
+  "chrome://remote/content/server/HTTPD.jsm":
+    "netwerk/test/httpserver/httpd.js",
   "resource:///actors/ASRouterChild.jsm":
     "browser/components/newtab/actors/ASRouterChild.jsm",
   "resource:///actors/ASRouterParent.jsm":
@@ -606,6 +608,8 @@
     "browser/components/newtab/lib/DownloadsManager.jsm",
   "resource://activity-stream/lib/FaviconFeed.jsm":
     "browser/components/newtab/lib/FaviconFeed.jsm",
+  "resource://activity-stream/lib/FeatureCalloutMessages.jsm":
+    "browser/components/newtab/lib/FeatureCalloutMessages.jsm",
   "resource://activity-stream/lib/FilterAdult.jsm":
     "browser/components/newtab/lib/FilterAdult.jsm",
   "resource://activity-stream/lib/HighlightsFeed.jsm":
@@ -823,10 +827,10 @@
     "toolkit/actors/BrowserElementChild.jsm",
   "resource://gre/actors/BrowserElementParent.jsm":
     "toolkit/actors/BrowserElementParent.jsm",
-  "resource://gre/actors/ClipboardReadTextPasteChild.jsm":
-    "toolkit/actors/ClipboardReadTextPasteChild.jsm",
-  "resource://gre/actors/ClipboardReadTextPasteParent.jsm":
-    "toolkit/actors/ClipboardReadTextPasteParent.jsm",
+  "resource://gre/actors/ClipboardReadPasteChild.jsm":
+    "toolkit/actors/ClipboardReadPasteChild.jsm",
+  "resource://gre/actors/ClipboardReadPasteParent.jsm":
+    "toolkit/actors/ClipboardReadPasteParent.jsm",
   "resource://gre/actors/ContentMetaChild.jsm":
     "toolkit/actors/ContentMetaChild.jsm",
   "resource://gre/actors/ContentMetaParent.jsm":
@@ -835,6 +839,10 @@
     "toolkit/actors/ControllersChild.jsm",
   "resource://gre/actors/ControllersParent.jsm":
     "toolkit/actors/ControllersParent.jsm",
+  "resource://gre/actors/CookieBannerChild.jsm.jsm":
+    "toolkit/components/cookiebanners/CookieBannerChild.jsm.jsm",
+  "resource://gre/actors/CookieBannerParent.jsm":
+    "toolkit/components/cookiebanners/CookieBannerParent.jsm",
   "resource://gre/actors/DateTimePickerChild.jsm":
     "toolkit/actors/DateTimePickerChild.jsm",
   "resource://gre/actors/DateTimePickerParent.jsm":
@@ -1078,6 +1086,8 @@
     "toolkit/components/extensions/ExtensionPreferencesManager.jsm",
   "resource://gre/modules/ExtensionProcessScript.jsm":
     "toolkit/components/extensions/ExtensionProcessScript.jsm",
+  "resource://gre/modules/ExtensionScriptingStore.jsm":
+    "toolkit/components/extensions/ExtensionScriptingStore.jsm",
   "resource://gre/modules/ExtensionSearchHandler.jsm":
     "toolkit/components/places/ExtensionSearchHandler.jsm",
   "resource://gre/modules/ExtensionSettingsStore.jsm":
@@ -1208,6 +1218,8 @@
     "mobile/android/modules/geckoview/GeckoViewTab.jsm",
   "resource://gre/modules/GeckoViewTelemetry.jsm":
     "mobile/android/modules/geckoview/GeckoViewTelemetry.jsm",
+  "resource://gre/modules/GeckoViewTestUtils.jsm":
+    "mobile/android/modules/geckoview/GeckoViewTestUtils.jsm",
   "resource://gre/modules/GeckoViewWebExtension.jsm":
     "mobile/android/modules/geckoview/GeckoViewWebExtension.jsm",
   "resource://gre/modules/Geometry.jsm": "toolkit/modules/Geometry.jsm",
@@ -2072,10 +2084,14 @@
     "toolkit/components/backgroundtasks/tests/BackgroundTask_shouldprocessupdates.jsm",
   "resource://testing-common/backgroundtasks/BackgroundTask_wait.jsm":
     "toolkit/components/backgroundtasks/tests/BackgroundTask_wait.jsm",
+  "resource://testing-common/cookie_filtering_helper.jsm":
+    "netwerk/test/browser/cookie_filtering_helper.jsm",
   "resource://testing-common/dom/quota/test/modules/ModuleLoader.jsm":
     "dom/quota/test/modules/system/ModuleLoader.jsm",
   "resource://testing-common/dom/quota/test/modules/StorageUtils.jsm":
     "dom/quota/test/modules/system/StorageUtils.jsm",
+  "resource://testing-common/dom/quota/test/modules/WorkerDriver.jsm":
+    "dom/quota/test/modules/system/WorkerDriver.jsm",
   "resource://testing-common/early_hint_preload_test_helper.jsm":
     "netwerk/test/browser/early_hint_preload_test_helper.jsm",
   "resource://testing-common/httpd.js": "netwerk/test/httpserver/httpd.js",
