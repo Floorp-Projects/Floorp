@@ -219,7 +219,6 @@ bool CrossProcessPaint::Start(dom::WindowGlobalParent* aRoot,
   RefPtr<CrossProcessPaint> resolver =
       new CrossProcessPaint(aScale, rootId, aFlags);
   RefPtr<CrossProcessPaint::ResolvePromise> promise;
-
   if (aRoot->IsInProcess()) {
     RefPtr<dom::WindowGlobalChild> childActor = aRoot->GetChildActor();
     if (!childActor) {
@@ -240,7 +239,7 @@ bool CrossProcessPaint::Start(dom::WindowGlobalParent* aRoot,
   }
 
   promise->Then(
-      GetCurrentSerialEventTarget(), __func__,
+      GetMainThreadSerialEventTarget(), __func__,
       [promise = RefPtr{aPromise}, rootId](ResolvedFragmentMap&& aFragments) {
         RefPtr<RecordedDependentSurface> root = aFragments.Get(rootId);
         CPP_LOG("Resolved all fragments.\n");
