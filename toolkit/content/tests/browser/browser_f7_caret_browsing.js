@@ -298,3 +298,70 @@ add_task(async function toggleCheckboxWantCaretBrowsing() {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+// Test for bug 1743878: Many repeated modal caret-browsing dialogs, if you
+// accidentally hold down F7 for a few seconds
+add_task(async function testF7SpamDoesNotOpenDialogs() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  registerCleanupFunction(() => BrowserTestUtils.removeTab(tab));
+
+  let promiseGotKey = promiseCaretPromptOpened();
+  hitF7();
+  let prompt = await promiseGotKey;
+  let doc = prompt.document;
+  let dialog = doc.getElementById("commonDialog");
+
+  let promiseDialogUnloaded = BrowserTestUtils.waitForEvent(prompt, "unload");
+
+  // Listen for an additional prompt to open, which should not happen.
+  let promiseDialogOrTimeout = () =>
+    Promise.race([
+      promiseCaretPromptOpened(),
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      new Promise(resolve => setTimeout(resolve, 100)),
+    ]);
+
+  let openedPromise = promiseDialogOrTimeout();
+
+  // Hit F7 two more times: once to test that _awaitingToggleCaretBrowsingPrompt
+  // is applied, and again to test that its value isn't somehow reset by
+  // pressing F7 while the dialog is open.
+  for (let i = 0; i < 2; i++) {
+    await new Promise(resolve =>
+      SimpleTest.executeSoon(() => {
+        hitF7();
+        resolve();
+      })
+    );
+  }
+
+  // Say no:
+  dialog.cancelDialog();
+  await promiseDialogUnloaded;
+  info("Dialog unloaded");
+
+  let openedDialog = await openedPromise;
+  ok(!openedDialog, "No additional dialog should have opened.");
+
+  // If the test fails, clean up any dialogs we erroneously opened so they don't
+  // interfere with other tests.
+  let extraDialogs = 0;
+  while (openedDialog) {
+    extraDialogs += 1;
+    let doc = openedDialog.document;
+    let dialog = doc.getElementById("commonDialog");
+    openedPromise = promiseDialogOrTimeout();
+    dialog.cancelDialog();
+    openedDialog = await openedPromise;
+  }
+  if (extraDialogs) {
+    info(`Closed ${extraDialogs} extra dialogs.`);
+  }
+
+  // Either way, we now have an extra observer, so clean it up.
+  gCaretPromptOpeningObserver();
+
+  Services.prefs.setBoolPref(kPrefShortcutEnabled, true);
+  Services.prefs.setBoolPref(kPrefWarnOnEnable, true);
+  Services.prefs.setBoolPref(kPrefCaretBrowsingOn, false);
+});
