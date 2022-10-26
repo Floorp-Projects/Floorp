@@ -81,11 +81,11 @@ TabCapturerWebrtc::~TabCapturerWebrtc() {
         for (const auto& req : mRequests) {
           req->Disconnect();
         }
+        mMainThreadWorker->BeginShutdown();
       })));
-  mMainThreadWorker->BeginShutdown();
   // Block until the worker has run all pending tasks, since mCallback must
   // outlive them, and libwebrtc only guarantees mCallback outlives us.
-  mMainThreadWorker->AwaitIdle();
+  mMainThreadWorker->AwaitShutdownAndIdle();
 }
 
 bool TabCapturerWebrtc::GetSourceList(
