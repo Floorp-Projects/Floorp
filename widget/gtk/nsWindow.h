@@ -875,6 +875,8 @@ class nsWindow final : public nsBaseWidget {
 
 #ifdef MOZ_LOGGING
   void LogPopupHierarchy();
+  void LogPopupAnchorHints(int aHints);
+  void LogPopupGravity(GdkGravity aGravity);
 #endif
 
   // mPopupPosition is the original popup position/size from layout, set by

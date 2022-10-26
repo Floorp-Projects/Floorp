@@ -2331,6 +2331,44 @@ static ResolvedPopupMargin ResolveMargin(nsMenuPopupFrame* aFrame,
   return {margin, offset};
 }
 
+#ifdef MOZ_LOGGING
+void nsWindow::LogPopupAnchorHints(int aHints) {
+  static struct hints_ {
+    int hint;
+    char name[100];
+  } hints[] = {
+      {GDK_ANCHOR_FLIP_X, "GDK_ANCHOR_FLIP_X"},
+      {GDK_ANCHOR_FLIP_Y, "GDK_ANCHOR_FLIP_Y"},
+      {GDK_ANCHOR_SLIDE_X, "GDK_ANCHOR_SLIDE_X"},
+      {GDK_ANCHOR_SLIDE_Y, "GDK_ANCHOR_SLIDE_Y"},
+      {GDK_ANCHOR_RESIZE_X, "GDK_ANCHOR_RESIZE_X"},
+      {GDK_ANCHOR_RESIZE_Y, "GDK_ANCHOR_RESIZE_X"},
+  };
+
+  LOG("  PopupAnchorHints");
+  for (const auto& hint : hints) {
+    if (hint.hint & aHints) {
+      LOG("    %s", hint.name);
+    }
+  }
+}
+
+void nsWindow::LogPopupGravity(GdkGravity aGravity) {
+  static char gravity[][100]{"NONE",
+                             "GDK_GRAVITY_NORTH_WEST",
+                             "GDK_GRAVITY_NORTH",
+                             "GDK_GRAVITY_NORTH_EAST",
+                             "GDK_GRAVITY_WEST",
+                             "GDK_GRAVITY_CENTER",
+                             "GDK_GRAVITY_EAST",
+                             "GDK_GRAVITY_SOUTH_WEST",
+                             "GDK_GRAVITY_SOUTH",
+                             "GDK_GRAVITY_SOUTH_EAST",
+                             "GDK_GRAVITY_STATIC"};
+  LOG("    %s", gravity[aGravity]);
+}
+#endif
+
 const nsWindow::WaylandPopupMoveToRectParams
 nsWindow::WaylandPopupGetPositionFromLayout() {
   LOG("nsWindow::WaylandPopupGetPositionFromLayout\n");
@@ -2654,7 +2692,20 @@ void nsWindow::WaylandPopupMoveImpl() {
   }
   mWaitingForMoveToRectCallback = true;
 
-  LOG("  call move-to-rect");
+#ifdef MOZ_LOGGING
+  if (LOG_ENABLED()) {
+    LOG("  Call move-to-rect");
+    LOG("  Anchor rect [%d, %d] -> [%d x %d]", gtkAnchorRect.x, gtkAnchorRect.y,
+        gtkAnchorRect.width, gtkAnchorRect.height);
+    LOG("  Offset [%d, %d]", offset.x, offset.y);
+    LOG("  AnchorType");
+    LogPopupGravity(mPopupMoveToRectParams.mAnchorRectType);
+    LOG("  PopupAnchorType");
+    LogPopupGravity(mPopupMoveToRectParams.mPopupAnchorType);
+    LogPopupAnchorHints(mPopupMoveToRectParams.mHints);
+  }
+#endif
+
   sGdkWindowMoveToRect(gdkWindow, &gtkAnchorRect,
                        mPopupMoveToRectParams.mAnchorRectType,
                        mPopupMoveToRectParams.mPopupAnchorType,
