@@ -110,7 +110,7 @@ struct gfxFontStyle {
   // font matching occurs.
 
   // -- list of value tags for specific alternate features
-  mozilla::StyleVariantAlternatesList variantAlternates;
+  mozilla::StyleFontVariantAlternates variantAlternates;
 
   // -- object used to look these up once the font is matched
   RefPtr<gfxFontFeatureValueSet> featureValueLookup;

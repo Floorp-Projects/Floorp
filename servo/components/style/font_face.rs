@@ -15,10 +15,8 @@ use crate::str::CssStringWriter;
 use crate::values::computed::font::{FamilyName, FontStretch};
 use crate::values::generics::font::FontStyle as GenericFontStyle;
 #[cfg(feature = "gecko")]
-use crate::values::specified::font::SpecifiedFontFeatureSettings;
+use crate::values::specified::font::{FontFeatureSettings, FontVariationSettings};
 use crate::values::specified::font::SpecifiedFontStyle;
-#[cfg(feature = "gecko")]
-use crate::values::specified::font::SpecifiedFontVariationSettings;
 use crate::values::specified::font::{
     AbsoluteFontWeight, FontStretch as SpecifiedFontStretch, MetricsOverride,
 };
@@ -738,10 +736,10 @@ font_face_descriptors! {
         "unicode-range" unicode_range / mUnicodeRange: Vec<UnicodeRange>,
 
         /// The feature settings of this font face.
-        "font-feature-settings" feature_settings / mFontFeatureSettings: SpecifiedFontFeatureSettings,
+        "font-feature-settings" feature_settings / mFontFeatureSettings: FontFeatureSettings,
 
         /// The variation settings of this font face.
-        "font-variation-settings" variation_settings / mFontVariationSettings: SpecifiedFontVariationSettings,
+        "font-variation-settings" variation_settings / mFontVariationSettings: FontVariationSettings,
 
         /// The language override of this font face.
         "font-language-override" language_override / mFontLanguageOverride: font_language_override::SpecifiedValue,

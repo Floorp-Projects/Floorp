@@ -573,7 +573,7 @@ cbindgen-types = [
     { gecko = "StyleGenericGridTemplateComponent", servo = "crate::values::generics::grid::GridTemplateComponent" },
     { gecko = "StyleTextEmphasisStyle", servo = "crate::values::computed::text::TextEmphasisStyle" },
     { gecko = "StyleTextEmphasisPosition", servo = "crate::values::computed::TextEmphasisPosition" },
-    { gecko = "StyleVariantAlternatesList", servo = "crate::values::specified::font::VariantAlternatesList" },
+    { gecko = "StyleFontVariantAlternates", servo = "crate::values::specified::font::FontVariantAlternates" },
     { gecko = "StyleSVGPaintOrder", servo = "crate::values::specified::svg::SVGPaintOrder" },
     { gecko = "StyleClipRectOrAuto", servo = "crate::values::computed::ClipRectOrAuto" },
     { gecko = "StyleCounterReset", servo = "crate::values::computed::CounterReset" },
