@@ -1134,8 +1134,9 @@ void nsWindow::RemovePopupFromHierarchyList() {
 // as a workaround just fool around and place the popup temporary to 0,0.
 bool nsWindow::WaylandPopupRemoveNegativePosition(int* aX, int* aY) {
   // https://gitlab.gnome.org/GNOME/gtk/-/issues/4071 applies to temporary
-  // windows only, i.e. tooltips & DND windows.
-  if (mPopupType != ePopupTypeTooltip) {
+  // windows only
+  GdkWindow* window = gtk_widget_get_window(mShell);
+  if (!window || gdk_window_get_window_type(window) != GDK_WINDOW_TEMP) {
     return false;
   }
 
