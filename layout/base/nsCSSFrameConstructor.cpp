@@ -542,12 +542,17 @@ inline void SetInitialSingleChild(nsContainerFrame* aParent, nsIFrame* aFrame) {
 // Structure used when constructing formatting object trees. Contains
 // state information needed for absolutely positioned elements
 namespace mozilla {
-struct AbsoluteFrameList : public nsFrameList {
+struct AbsoluteFrameList final : public nsFrameList {
   // containing block for absolutely positioned elements
   nsContainerFrame* containingBlock;
 
-  explicit AbsoluteFrameList(nsContainerFrame* aContainingBlock)
+  explicit AbsoluteFrameList(nsContainerFrame* aContainingBlock = nullptr)
       : containingBlock(aContainingBlock) {}
+
+  // Transfer frames in aOther to this list. aOther becomes empty after this
+  // operation.
+  AbsoluteFrameList(AbsoluteFrameList&& aOther) = default;
+  AbsoluteFrameList& operator=(AbsoluteFrameList&& aOther) = default;
 
 #ifdef DEBUG
   // XXXbz Does this need a debug-only assignment operator that nulls out the
@@ -568,22 +573,24 @@ struct AbsoluteFrameList : public nsFrameList {
 class MOZ_STACK_CLASS nsFrameConstructorSaveState {
  public:
   typedef nsIFrame::ChildListID ChildListID;
-  nsFrameConstructorSaveState();
   ~nsFrameConstructorSaveState();
 
  private:
-  AbsoluteFrameList* mList;      // pointer to struct whose data we save/restore
-  AbsoluteFrameList mSavedList;  // copy of original data
+  // Pointer to struct whose data we save/restore.
+  AbsoluteFrameList* mList = nullptr;
 
-  // The name of the child list in which our frames would belong
-  ChildListID mChildListID;
-  nsFrameConstructorState* mState;
+  // Copy of original frame list. This can be the original absolute list or a
+  // float list. If we're saving the abs-pos state for a transformed element,
+  // i.e. when mSavedFixedPosIsAbsPos is true, this is the original fixed list.
+  AbsoluteFrameList mSavedList;
 
-  // State used only when we're saving the abs-pos state for a transformed
-  // element.
-  AbsoluteFrameList mSavedFixedList;
+  // The name of the child list in which our frames would belong.
+  ChildListID mChildListID = kPrincipalList;
+  nsFrameConstructorState* mState = nullptr;
 
-  bool mSavedFixedPosIsAbsPos;
+  // Only used when saving an absolute list. See the description of
+  // nsFrameConstructorState::mFixedPosIsAbsPos for its meaning.
+  bool mSavedFixedPosIsAbsPos = false;
 
   friend class nsFrameConstructorState;
 };
@@ -857,7 +864,6 @@ void nsFrameConstructorState::PushAbsoluteContainingBlock(
   MOZ_ASSERT(!!aNewAbsoluteContainingBlock == !!aPositionedFrame,
              "We should have both or none");
   aSaveState.mList = &mAbsoluteList;
-  aSaveState.mSavedList = mAbsoluteList;
   aSaveState.mChildListID = nsIFrame::kAbsoluteList;
   aSaveState.mState = this;
   aSaveState.mSavedFixedPosIsAbsPos = mFixedPosIsAbsPos;
@@ -865,8 +871,11 @@ void nsFrameConstructorState::PushAbsoluteContainingBlock(
   if (mFixedPosIsAbsPos) {
     // Since we're going to replace mAbsoluteList, we need to save it into
     // mFixedList now (and save the current value of mFixedList).
-    aSaveState.mSavedFixedList = mFixedList;
-    mFixedList = mAbsoluteList;
+    aSaveState.mSavedList = std::move(mFixedList);
+    mFixedList = std::move(mAbsoluteList);
+  } else {
+    // Otherwise, we just save mAbsoluteList.
+    aSaveState.mSavedList = std::move(mAbsoluteList);
   }
 
   mAbsoluteList = AbsoluteFrameList(aNewAbsoluteContainingBlock);
@@ -916,7 +925,7 @@ void nsFrameConstructorState::PushFloatContainingBlock(
       "We should not push a frame that is supposed to _suppress_ "
       "floats as a float containing block!");
   aSaveState.mList = &mFloatedList;
-  aSaveState.mSavedList = mFloatedList;
+  aSaveState.mSavedList = std::move(mFloatedList);
   aSaveState.mChildListID = nsIFrame::kFloatList;
   aSaveState.mState = this;
   mFloatedList = AbsoluteFrameList(aNewFloatContainingBlock);
@@ -1298,39 +1307,27 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
   MOZ_ASSERT(aFrameList.IsEmpty(), "How did that happen?");
 }
 
-nsFrameConstructorSaveState::nsFrameConstructorSaveState()
-    : mList(nullptr),
-      mSavedList(nullptr),
-      mChildListID(kPrincipalList),
-      mState(nullptr),
-      mSavedFixedList(nullptr),
-      mSavedFixedPosIsAbsPos(false) {}
-
 nsFrameConstructorSaveState::~nsFrameConstructorSaveState() {
   // Restore the state
   if (mList) {
-    NS_ASSERTION(mState, "Can't have mList set without having a state!");
+    MOZ_ASSERT(mState, "Can't have mList set without having a state!");
     mState->ProcessFrameInsertions(*mList, mChildListID);
-    *mList = mSavedList;
-#ifdef DEBUG
-    // We've transferred the child list, so drop the pointer we held to it.
-    // Note that this only matters for the assert in ~AbsoluteFrameList.
-    mSavedList.Clear();
-#endif
-    if (mList == &mState->mAbsoluteList) {
+
+    if (mSavedFixedPosIsAbsPos) {
+      MOZ_ASSERT(mList == &mState->mAbsoluteList);
       mState->mFixedPosIsAbsPos = mSavedFixedPosIsAbsPos;
-      if (mSavedFixedPosIsAbsPos) {
-        // mAbsoluteList was moved to mFixedList, so move mFixedList back
-        // and repair the old mFixedList now.
-        mState->mAbsoluteList = mState->mFixedList;
-        mState->mFixedList = mSavedFixedList;
-#ifdef DEBUG
-        mSavedFixedList.Clear();
-#endif
-      }
+      // mAbsoluteList was moved to mFixedList, so move mFixedList back
+      // and repair the old mFixedList now.
+      mState->mAbsoluteList = std::move(mState->mFixedList);
+      mState->mFixedList = std::move(mSavedList);
+    } else {
+      *mList = std::move(mSavedList);
     }
-    NS_ASSERTION(!mList->LastChild() || !mList->LastChild()->GetNextSibling(),
-                 "Something corrupted our list");
+
+    MOZ_ASSERT(mSavedList.IsEmpty(),
+               "Frames in mSavedList should've moved back into mState!");
+    MOZ_ASSERT(!mList->LastChild() || !mList->LastChild()->GetNextSibling(),
+               "Something corrupted our list!");
   }
 }
 
