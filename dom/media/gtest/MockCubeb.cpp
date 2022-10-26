@@ -179,12 +179,35 @@ MockCubebStream::~MockCubebStream() = default;
 int MockCubebStream::Start() {
   NotifyStateChanged(CUBEB_STATE_STARTED);
   mStreamStop = false;
-  MonitorAutoLock lock(mFrozenStartMonitor);
   if (mFrozenStart) {
+    // We need to grab mFrozenStartMonitor before returning to avoid races in
+    // the calling code -- it controls when to mFrozenStartMonitor.Notify().
+    // TempData helps facilitate this by holding what's needed to block the
+    // calling thread until the background thread has grabbed the lock.
+    struct TempData {
+      NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TempData)
+      static_assert(HasThreadSafeRefCnt::value,
+                    "Silence a -Wunused-local-typedef warning");
+      Monitor mMonitor{"MockCubebStream::Start::TempData::mMonitor"};
+      bool mFinished = false;
+
+     private:
+      ~TempData() = default;
+    };
+    auto temp = MakeRefPtr<TempData>();
+    MonitorAutoLock lock(temp->mMonitor);
     NS_DispatchBackgroundTask(NS_NewRunnableFunction(
         "MockCubebStream::WaitForThawBeforeStart",
-        [this, self = RefPtr<SmartMockCubebStream>(mSelf)] {
+        [temp, this, self = RefPtr<SmartMockCubebStream>(mSelf)]() mutable {
           MonitorAutoLock lock(mFrozenStartMonitor);
+          {
+            // Unblock MockCubebStream::Start now that we have locked the frozen
+            // start monitor.
+            MonitorAutoLock tempLock(temp->mMonitor);
+            temp->mFinished = true;
+            temp->mMonitor.Notify();
+            temp = nullptr;
+          }
           while (mFrozenStart) {
             mFrozenStartMonitor.Wait();
           }
@@ -192,6 +215,9 @@ int MockCubebStream::Start() {
             MockCubeb::AsMock(context)->StartStream(mSelf);
           }
         }));
+    while (!temp->mFinished) {
+      temp->mMonitor.Wait();
+    }
     return CUBEB_OK;
   }
   MockCubeb::AsMock(context)->StartStream(this);
