@@ -86,7 +86,7 @@ function toFluentID(str) {
     .toLowerCase();
 }
 
-// Each property in this object corresponds to a property in Troubleshoot.jsm's
+// Each property in this object corresponds to a property in Troubleshoot.sys.mjs's
 // snapshot data.  Each function is passed its property's corresponding data,
 // and it's the function's job to update the page with it.
 var snapshotFormatters = {
@@ -604,7 +604,7 @@ var snapshotFormatters = {
     // graphics-failures-tbody tbody
     if ("failures" in data) {
       // If indices is there, it should be the same length as failures,
-      // (see Troubleshoot.jsm) but we check anyway:
+      // (see Troubleshoot.sys.mjs) but we check anyway:
       if ("indices" in data && data.failures.length == data.indices.length) {
         let combined = [];
         for (let i = 0; i < data.failures.length; i++) {

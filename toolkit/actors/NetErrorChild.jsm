@@ -13,7 +13,7 @@ class NetErrorChild extends RemotePageChild {
   actorCreated() {
     super.actorCreated();
 
-    // If you add a new function, remember to add it to RemotePageAccessManager.jsm
+    // If you add a new function, remember to add it to RemotePageAccessManager.sys.mjs
     // to allow content-privileged about:neterror or about:certerror to use it.
     const exportableFunctions = [
       "RPMGetAppBuildID",

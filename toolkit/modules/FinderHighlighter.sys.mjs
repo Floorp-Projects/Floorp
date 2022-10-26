@@ -157,10 +157,10 @@ function mockAnonymousContentNode(domNode) {
 let gWindows = new WeakMap();
 
 /**
- * FinderHighlighter class that is used by Finder.jsm to take care of the
+ * FinderHighlighter class that is used by Finder.sys.mjs to take care of the
  * 'Highlight All' feature, which can highlight all find occurrences in a page.
  *
- * @param {Finder} finder Finder.jsm instance
+ * @param {Finder} finder Finder.sys.mjs instance
  * @param {boolean} useTop check and use top-level windows for rectangle
  *                         computation, if possible.
  */
@@ -818,7 +818,7 @@ FinderHighlighter.prototype = {
    * Utility; returns the bounds of the page relative to the viewport.
    * If the pages is part of a frameset or inside an iframe of any kind, its
    * offset is accounted for.
-   * Geometry.jsm takes care of the DOMRect calculations.
+   * Geometry.sys.mjs takes care of the DOMRect calculations.
    *
    * @param  {nsIDOMWindow} window          Window to read the boundary rect from
    * @param  {Boolean}      [includeScroll] Whether to ignore the scroll offset,
