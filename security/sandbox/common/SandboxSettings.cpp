@@ -157,6 +157,10 @@ int GetEffectiveSocketProcessSandboxLevel() {
   return level;
 }
 
+int GetEffectiveGpuSandboxLevel() {
+  return StaticPrefs::security_sandbox_gpu_level();
+}
+
 #if defined(XP_MACOSX)
 int ClampFlashSandboxLevel(const int aLevel) {
   const int minLevel = 0;

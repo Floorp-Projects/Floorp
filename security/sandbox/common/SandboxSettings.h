@@ -22,6 +22,7 @@ namespace mozilla {
 // MOZ_DISABLE_CONTENT_SANDBOX is set.
 int GetEffectiveContentSandboxLevel();
 int GetEffectiveSocketProcessSandboxLevel();
+int GetEffectiveGpuSandboxLevel();
 
 // Checks whether the effective content sandbox level is > 0.
 bool IsContentSandboxEnabled();
