@@ -3114,6 +3114,18 @@
     "n_buckets": 50,
     "description": "The time spent from dns resolution to connect start, in milliseconds, keyed by protocol version and the classOfService flags"
   },
+  "NETWORK_RESPONSE_END_PARENT_TO_CONTENT_MS" :{
+    "record_in_processes": ["content"],
+    "products": [ "firefox", "fennec" ],
+    "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
+    "bug_numbers": [1795775],
+    "expires_in_version": "never",
+    "keyed": true,
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 50,
+    "description": "The time spent relaying response completion from the socket thread of the parent process to the content process, in milliseconds, keyed by the classOfService flags"
+  },
   "HTTP_AUTH_DIALOG_STATS_3": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
