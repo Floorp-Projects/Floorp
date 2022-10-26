@@ -7,9 +7,12 @@
 #ifndef mozilla_StreamBufferSource_h
 #define mozilla_StreamBufferSource_h
 
+#include <cstddef>
+#include "ErrorList.h"
 #include "mozilla/MemoryReporting.h"
-#include "nsString.h"
+#include "mozilla/Span.h"
 #include "nsISupportsImpl.h"
+#include "nsString.h"
 
 namespace mozilla {
 
