@@ -98,9 +98,8 @@ add_task(async function() {
   let btn = createDummyXULButton(testWidgetId, "test");
   CustomizableUI.ensureWidgetPlacedInWindow(testWidgetId, window);
 
-  is(
-    btn.parentNode.id,
-    navbar.overflowable._list.id,
+  ok(
+    navbar.overflowable.isInOverflowList(btn),
     "New XUL widget should be placed inside overflow of toolbar"
   );
   is(
@@ -167,9 +166,8 @@ add_task(async function() {
   let btn = createDummyXULButton(testWidgetId, "test");
   CustomizableUI.ensureWidgetPlacedInWindow(testWidgetId, window);
 
-  is(
-    btn.parentNode.id,
-    navbar.overflowable._list.id,
+  ok(
+    navbar.overflowable.isInOverflowList(btn),
     "New XUL widget should be placed inside overflow of toolbar"
   );
   is(
@@ -237,9 +235,8 @@ add_task(async function() {
   let btn = createDummyXULButton(testWidgetId, "test");
   CustomizableUI.ensureWidgetPlacedInWindow(testWidgetId, window);
 
-  is(
-    btn.parentNode.id,
-    navbar.overflowable._list.id,
+  ok(
+    navbar.overflowable.isInOverflowList(btn),
     "New XUL widget should be placed inside overflow of toolbar"
   );
   is(
@@ -339,9 +336,8 @@ add_task(async function() {
   let btn = createDummyXULButton(testWidgetId, "test");
   CustomizableUI.ensureWidgetPlacedInWindow(testWidgetId, window);
 
-  is(
-    btn.parentNode.id,
-    navbar.overflowable._list.id,
+  ok(
+    navbar.overflowable.isInOverflowList(btn),
     "New XUL widget should be placed inside overflow of toolbar"
   );
   is(
