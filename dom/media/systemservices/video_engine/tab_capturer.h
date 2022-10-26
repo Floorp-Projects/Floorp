@@ -16,13 +16,15 @@
 
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
-#include "nsThreadUtils.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/TaskQueue.h"
+#include "nsDeque.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 
+class CaptureFrameRequest;
 class TabCapturedHandler;
 
 class TabCapturerWebrtc : public webrtc::DesktopCapturer {
@@ -30,6 +32,7 @@ class TabCapturerWebrtc : public webrtc::DesktopCapturer {
   ~TabCapturerWebrtc();
 
  public:
+  friend class CaptureFrameRequest;
   friend class TabCapturedHandler;
 
   explicit TabCapturerWebrtc(const webrtc::DesktopCaptureOptions& options);
@@ -53,9 +56,16 @@ class TabCapturerWebrtc : public webrtc::DesktopCapturer {
   using CapturePromise = MozPromise<RefPtr<dom::ImageBitmap>, nsresult, true>;
   RefPtr<CapturePromise> CaptureFrameNow();
 
+  // Helper that checks for overrun requests. Returns true if aRequest had not
+  // been dropped.
+  bool CompleteRequest(CaptureFrameRequest* aRequest);
+
   const RefPtr<TaskQueue> mMainThreadWorker;
   webrtc::DesktopCapturer::Callback* mCallback = nullptr;
   uint64_t mBrowserId = 0;
+
+  // mMainThreadWorker only
+  nsRefPtrDeque<CaptureFrameRequest> mRequests;
 };
 
 }  // namespace mozilla

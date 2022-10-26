@@ -45,6 +45,30 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
+class CaptureFrameRequest {
+  using CapturePromise = TabCapturerWebrtc::CapturePromise;
+
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CaptureFrameRequest)
+
+  CaptureFrameRequest() : mCaptureTime(TimeStamp::Now()) {}
+
+  operator MozPromiseRequestHolder<CapturePromise>&() { return mRequest; }
+
+  void Complete() { mRequest.Complete(); }
+  void Disconnect() { mRequest.Disconnect(); }
+  bool Exists() { return mRequest.Exists(); }
+
+ protected:
+  virtual ~CaptureFrameRequest() = default;
+
+ public:
+  const TimeStamp mCaptureTime;
+
+ private:
+  MozPromiseRequestHolder<CapturePromise> mRequest;
+};
+
 TabCapturerWebrtc::TabCapturerWebrtc(
     const webrtc::DesktopCaptureOptions& options)
     : mMainThreadWorker(
@@ -52,6 +76,12 @@ TabCapturerWebrtc::TabCapturerWebrtc(
                             "TabCapturerWebrtc::mMainThreadWorker")) {}
 
 TabCapturerWebrtc::~TabCapturerWebrtc() {
+  MOZ_ALWAYS_SUCCEEDS(
+      mMainThreadWorker->Dispatch(NS_NewRunnableFunction(__func__, [this] {
+        for (const auto& req : mRequests) {
+          req->Disconnect();
+        }
+      })));
   mMainThreadWorker->BeginShutdown();
   // Block until the worker has run all pending tasks, since mCallback must
   // outlive them, and libwebrtc only guarantees mCallback outlives us.
@@ -86,10 +116,19 @@ void TabCapturerWebrtc::Start(webrtc::DesktopCapturer::Callback* callback) {
 }
 
 void TabCapturerWebrtc::CaptureFrame() {
-  InvokeAsync(mMainThreadWorker, __func__, [&] { return CaptureFrameNow(); })
+  auto request = MakeRefPtr<CaptureFrameRequest>();
+  InvokeAsync(mMainThreadWorker, __func__,
+              [this, request]() mutable {
+                mRequests.PushFront(request.forget());
+                return CaptureFrameNow();
+              })
       ->Then(
           mMainThreadWorker, __func__,
-          [&](const RefPtr<dom::ImageBitmap>& aBitmap) {
+          [this, request](const RefPtr<dom::ImageBitmap>& aBitmap) {
+            if (!CompleteRequest(request)) {
+              return;
+            }
+
             UniquePtr<dom::ImageBitmapCloneData> data = aBitmap->ToCloneData();
             webrtc::DesktopSize size(data->mPictureRect.Width(),
                                      data->mPictureRect.Height());
@@ -109,10 +148,15 @@ void TabCapturerWebrtc::CaptureFrame() {
             mCallback->OnCaptureResult(webrtc::DesktopCapturer::Result::SUCCESS,
                                        std::move(frame));
           },
-          [&](nsresult aRv) {
+          [this, request](nsresult aRv) {
+            if (!CompleteRequest(request)) {
+              return;
+            }
+
             mCallback->OnCaptureResult(
                 webrtc::DesktopCapturer::Result::ERROR_TEMPORARY, nullptr);
-          });
+          })
+      ->Track(*request);
 }
 
 bool TabCapturerWebrtc::IsOccluded(const webrtc::DesktopVector& pos) {
@@ -169,6 +213,29 @@ class TabCapturedHandler final : public dom::PromiseNativeHandler {
 };
 
 NS_IMPL_ISUPPORTS0(TabCapturedHandler)
+
+bool TabCapturerWebrtc::CompleteRequest(CaptureFrameRequest* aRequest) {
+  MOZ_ASSERT(mMainThreadWorker->IsOnCurrentThread());
+  if (!aRequest->Exists()) {
+    // Request was disconnected or overrun
+    return false;
+  }
+  while (CaptureFrameRequest* req = mRequests.Peek()) {
+    if (req->mCaptureTime > aRequest->mCaptureTime) {
+      break;
+    }
+    // Pop the request before calling the callback, in case it could mutate
+    // mRequests, now or in the future.
+    RefPtr<CaptureFrameRequest> dropMe = mRequests.Pop();
+    req->Complete();
+    if (req->mCaptureTime < aRequest->mCaptureTime) {
+      mCallback->OnCaptureResult(
+          webrtc::DesktopCapturer::Result::ERROR_TEMPORARY, nullptr);
+    }
+  }
+  MOZ_DIAGNOSTIC_ASSERT(!aRequest->Exists());
+  return true;
+}
 
 auto TabCapturerWebrtc::CaptureFrameNow() -> RefPtr<CapturePromise> {
   MOZ_ASSERT(NS_IsMainThread());
