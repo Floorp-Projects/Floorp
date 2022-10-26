@@ -7,7 +7,7 @@
 //! The [`log`] crate provides a single logging API that abstracts over the
 //! actual logging implementation.  This module uses the logging API
 //! to provide a log implementation that shares many aesthetical traits with
-//! [Log.jsm] from Gecko.
+//! [Log.sys.mjs] from Gecko.
 //!
 //! Using the [`error!`], [`warn!`], [`info!`], [`debug!`], and
 //! [`trace!`] macros from `log` will output a timestamp field, followed by the
@@ -22,7 +22,7 @@
 //! and `Level::Config` becomes `log::Level::Debug`.
 //!
 //! [`log`]: https://docs.rs/log/newest/log/
-//! [Log.jsm]: https://developer.mozilla.org/en/docs/Mozilla/JavaScript_code_modules/Log.jsm
+//! [Log.sys.mjs]: https://searchfox.org/mozilla-central/source/toolkit/modules/Log.sys.mjs
 //! [`error!`]: https://docs.rs/log/newest/log/macro.error.html
 //! [`warn!`]: https://docs.rs/log/newest/log/macro.warn.html
 //! [`info!`]: https://docs.rs/log/newest/log/macro.info.html
@@ -49,9 +49,9 @@ const LOGGED_TARGETS: &[&str] = &[
     "webdriver",
 ];
 
-/// Logger levels from [Log.jsm].
+/// Logger levels from [Log.sys.mjs].
 ///
-/// [Log.jsm]: https://developer.mozilla.org/en/docs/Mozilla/JavaScript_code_modules/Log.jsm
+/// [Log.sys.mjs]: https://searchfox.org/mozilla-central/source/toolkit/modules/Log.sys.mjs
 #[repr(usize)]
 #[derive(Clone, Copy, Eq, Debug, Hash, PartialEq)]
 pub enum Level {
