@@ -401,18 +401,17 @@ enum class StylePositionProperty : uint8_t {
   Sticky,
 };
 
-// FRAME/FRAMESET/IFRAME specific values including backward compatibility.
-// Boolean values with the same meaning (e.g. 1 & yes) may need to be
-// distinguished for correct mode processing
-#define NS_STYLE_FRAME_YES 0
-#define NS_STYLE_FRAME_NO 1
-#define NS_STYLE_FRAME_0 2
-#define NS_STYLE_FRAME_1 3
-#define NS_STYLE_FRAME_ON 4
-#define NS_STYLE_FRAME_OFF 5
-#define NS_STYLE_FRAME_AUTO 6
-#define NS_STYLE_FRAME_SCROLL 7
-#define NS_STYLE_FRAME_NOSCROLL 8
+enum class FrameBorderProperty : uint8_t { Yes, No, One, Zero };
+
+enum class ScrollingAttribute : uint8_t {
+  Yes,
+  No,
+  On,
+  Off,
+  Scroll,
+  Noscroll,
+  Auto
+};
 
 // See nsStyleList
 #define NS_STYLE_LIST_STYLE_CUSTOM -1  // for @counter-style
