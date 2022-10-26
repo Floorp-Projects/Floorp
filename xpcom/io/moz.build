@@ -103,6 +103,7 @@ EXPORTS.mozilla += [
     "StreamBufferSink.h",
     "StreamBufferSinkImpl.h",
     "StreamBufferSource.h",
+    "StreamBufferSourceImpl.h",
 ]
 
 UNIFIED_SOURCES += [
