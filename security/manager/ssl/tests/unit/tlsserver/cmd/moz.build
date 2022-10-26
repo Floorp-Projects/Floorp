@@ -9,7 +9,6 @@ GeckoSimplePrograms(
         "BadCertAndPinningServer",
         "DelegatedCredentialsServer",
         "EncryptedClientHelloServer",
-        "FaultyServer",
         "GenerateOCSPResponse",
         "OCSPStaplingServer",
         "SanctionsTestServer",
@@ -17,14 +16,14 @@ GeckoSimplePrograms(
     linkage=None,
 )
 
-DEFINES["NSS_USE_STATIC_LIBS"] = True
-
 LOCAL_INCLUDES += [
-    "../../../../../../nss/lib/ssl",
     "../lib",
 ]
 
 USE_LIBS += [
+    "mozpkix",
+    "nspr",
+    "nss",
     "tlsserver",
 ]
 

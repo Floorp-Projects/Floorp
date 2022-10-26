@@ -35,7 +35,6 @@ TEST_HARNESS_BINS = [
     "BadCertAndPinningServer",
     "DelegatedCredentialsServer",
     "EncryptedClientHelloServer",
-    "FaultyServer",
     "GenerateOCSPResponse",
     "OCSPStaplingServer",
     "SanctionsTestServer",
