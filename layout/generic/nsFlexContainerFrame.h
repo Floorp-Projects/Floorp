@@ -185,6 +185,10 @@ class nsFlexContainerFrame final : public nsContainerFrame,
     return true;
   }
 
+  // Unions the child overflow from our in-flow children.
+  void UnionInFlowChildOverflow(mozilla::OverflowAreas&);
+
+  // Unions the child overflow from all our children, including out of flows.
   void UnionChildOverflow(mozilla::OverflowAreas&) final;
 
   // nsContainerFrame overrides

@@ -4623,7 +4623,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 
   // Overflow area = union(my overflow area, children's overflow areas)
   aReflowOutput.SetOverflowAreasToDesiredBounds();
-  UnionChildOverflow(aReflowOutput.mOverflowAreas);
+  UnionInFlowChildOverflow(aReflowOutput.mOverflowAreas);
 
   // Merge overflow container bounds and status.
   aReflowOutput.mOverflowAreas.UnionWith(ocBounds);
@@ -4665,7 +4665,8 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   }
 }
 
-void nsFlexContainerFrame::UnionChildOverflow(OverflowAreas& aOverflowAreas) {
+void nsFlexContainerFrame::UnionInFlowChildOverflow(
+    OverflowAreas& aOverflowAreas) {
   // The CSS Overflow spec [1] requires that a scrollable container's
   // scrollable overflow should include the following areas.
   //
@@ -4718,6 +4719,13 @@ void nsFlexContainerFrame::UnionChildOverflow(OverflowAreas& aOverflowAreas) {
     aOverflowAreas.UnionAllWith(itemMarginBoxes);
     aOverflowAreas.UnionAllWith(relPosItemMarginBoxes);
   }
+}
+
+void nsFlexContainerFrame::UnionChildOverflow(OverflowAreas& aOverflowAreas) {
+  UnionInFlowChildOverflow(aOverflowAreas);
+  // Union with child frames, skipping the principal list since we already
+  // handled those above.
+  nsLayoutUtils::UnionChildOverflow(this, aOverflowAreas, {kPrincipalList});
 }
 
 void nsFlexContainerFrame::CalculatePackingSpace(
