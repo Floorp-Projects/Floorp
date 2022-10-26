@@ -173,7 +173,7 @@ class ScriptModule extends Module {
   }
 
   #getRealmFromSandboxName(sandboxName) {
-    if (sandboxName === null) {
+    if (sandboxName === null || sandboxName === "") {
       return this.#defaultRealm;
     }
 

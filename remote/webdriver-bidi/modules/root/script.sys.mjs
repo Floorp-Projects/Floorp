@@ -285,7 +285,8 @@ class ScriptModule extends Module {
    * @property {string} context
    *     The browsing context id, associated with the realm.
    * @property {string=} sandbox
-   *     The name of the sandbox.
+   *     The name of the sandbox. If the value is null or empty
+   *     string, the default realm will be returned.
    * @property {RealmType.Window} type
    *     The window realm type.
    */
