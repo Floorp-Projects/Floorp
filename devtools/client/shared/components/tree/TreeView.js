@@ -345,14 +345,14 @@ define(function(require, exports, module) {
 
     // eslint-disable-next-line complexity
     onKeyDown(event) {
-      const keyEligibleForFirstLetterNavigation =
-        event.key.length === 1 &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !event.altKey;
+      const keyEligibleForFirstLetterNavigation = event.key.length === 1;
       if (
-        !SUPPORTED_KEYS.includes(event.key) &&
-        !keyEligibleForFirstLetterNavigation
+        (!SUPPORTED_KEYS.includes(event.key) &&
+          !keyEligibleForFirstLetterNavigation) ||
+        event.shiftKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey
       ) {
         return;
       }
@@ -413,14 +413,12 @@ define(function(require, exports, module) {
             this.selectRow(firstRow, { alignTo: "top" });
           }
           break;
-
         case "End":
           const lastRow = rows[rows.length - 1];
           if (lastRow) {
             this.selectRow(lastRow, { alignTo: "bottom" });
           }
           break;
-
         case "Enter":
         case " ":
           // On space or enter make selected row active. This means keyboard

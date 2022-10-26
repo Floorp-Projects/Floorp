@@ -62,7 +62,7 @@ add_task(async function() {
       ".jsonPanelBox .panelContent"
     );
     ok(scroller.scrollTop > 0, "Not scrolled to the top.");
-    // Synthetize up arrow key to select first row.
+    // Synthesize up arrow key to select first row.
     content.document.querySelector(".treeTable").focus();
   });
   await BrowserTestUtils.synthesizeKey("VK_UP", {}, tab.linkedBrowser);
@@ -92,7 +92,7 @@ add_task(async function() {
   await clickJsonNode(".treeRow:first-child");
   await assertRowSelected(1);
 
-  // Synthetize multiple down arrow keydowns to select following rows.
+  // Synthesize multiple down arrow keydowns to select following rows.
   await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     content.document.querySelector(".treeTable").focus();
   });
@@ -105,12 +105,22 @@ add_task(async function() {
     await assertRowSelected(i);
   }
 
-  // Now synthetize the keyup, this shouldn't change selected row.
+  // Now synthesize the keyup, this shouldn't change selected row.
   await BrowserTestUtils.synthesizeKey(
     "VK_DOWN",
     { type: "keyup" },
     tab.linkedBrowser
   );
+  await wait(500);
+  await assertRowSelected(numRows - 1);
+
+  // Finally, synthesize keydown with a modifier, this also shouldn't change selected row.
+  await BrowserTestUtils.synthesizeKey(
+    "VK_DOWN",
+    { type: "keydown", shiftKey: true },
+    tab.linkedBrowser
+  );
+  await wait(500);
   await assertRowSelected(numRows - 1);
 });
 
