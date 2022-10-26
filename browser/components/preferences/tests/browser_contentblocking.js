@@ -1,9 +1,7 @@
 /* eslint-env webextensions */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Preferences",
-  "resource://gre/modules/Preferences.jsm"
+const { Preferences } = ChromeUtils.importESModule(
+  "resource://gre/modules/Preferences.sys.mjs"
 );
 
 const TP_PREF = "privacy.trackingprotection.enabled";

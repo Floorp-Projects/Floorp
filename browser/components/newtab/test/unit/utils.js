@@ -116,7 +116,7 @@ export class FakensIPrefBranch {
 FakensIPrefBranch.prototype.prefs = {};
 
 /**
- * Very simple fake for the most basic semantics of Preferences.jsm.
+ * Very simple fake for the most basic semantics of Preferences.sys.mjs.
  * Extends FakensIPrefBranch.
  */
 export class FakePrefs extends FakensIPrefBranch {
@@ -136,7 +136,7 @@ export class FakePrefs extends FakensIPrefBranch {
 }
 
 /**
- * Slimmed down version of toolkit/modules/EventEmitter.jsm
+ * Slimmed down version of toolkit/modules/EventEmitter.sys.mjs
  */
 export function EventEmitter() {}
 EventEmitter.decorate = function(objectToDecorate) {
