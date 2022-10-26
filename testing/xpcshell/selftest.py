@@ -294,8 +294,8 @@ function run_test () {
 # A test for asynchronous cleanup functions
 ASYNC_CLEANUP = """
 function run_test() {
-  let { PromiseUtils } = ChromeUtils.import(
-    "resource://gre/modules/PromiseUtils.jsm"
+  let { PromiseUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/PromiseUtils.sys.mjs"
   );
 
   // The list of checkpoints in the order we encounter them.
