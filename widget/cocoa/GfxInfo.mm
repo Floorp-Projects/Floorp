@@ -426,8 +426,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
   return *sDriverInfo;
 }
 
-OperatingSystem GfxInfo::GetOperatingSystem() { return OSXVersionToOperatingSystem(mOSXVersion); }
-
 nsresult GfxInfo::GetFeatureStatusImpl(int32_t aFeature, int32_t* aStatus,
                                        nsAString& aSuggestedDriverVersion,
                                        const nsTArray<GfxDriverInfo>& aDriverInfo,

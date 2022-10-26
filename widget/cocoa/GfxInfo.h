@@ -67,7 +67,6 @@ class GfxInfo : public GfxInfoBase {
  protected:
   virtual ~GfxInfo() {}
 
-  OperatingSystem GetOperatingSystem() override;
   virtual nsresult GetFeatureStatusImpl(
       int32_t aFeature, int32_t* aStatus, nsAString& aSuggestedDriverVersion,
       const nsTArray<GfxDriverInfo>& aDriverInfo, nsACString& aFailureId,
