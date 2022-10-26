@@ -518,7 +518,7 @@ add_task(async function test_addonsWatch_NotInterestingChange() {
   let themeXpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       theme: {},
-      browser_specific_settings: { gecko: { id: THEME_ID } },
+      applications: { gecko: { id: THEME_ID } },
     },
   });
   let themeAddon = (await AddonTestUtils.promiseInstallFile(themeXpi)).addon;
@@ -526,7 +526,7 @@ add_task(async function test_addonsWatch_NotInterestingChange() {
   let dictXpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       dictionaries: {},
-      browser_specific_settings: { gecko: { id: DICT_ID } },
+      applications: { gecko: { id: DICT_ID } },
     },
   });
   let dictAddon = (await AddonTestUtils.promiseInstallFile(dictXpi)).addon;
@@ -637,7 +637,7 @@ add_task(async function test_addons() {
       name: "XPI Telemetry WebExtension Add-on Test",
       description: "A webextension addon.",
       version: "1.0",
-      browser_specific_settings: {
+      applications: {
         gecko: {
           id: WEBEXTENSION_ADDON_ID,
         },

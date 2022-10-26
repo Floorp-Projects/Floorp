@@ -407,7 +407,7 @@ add_task(async function checkAddonsInfo() {
 
   const xpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
-      browser_specific_settings: { gecko: { id: FAKE_ID } },
+      applications: { gecko: { id: FAKE_ID } },
       name: FAKE_NAME,
       version: FAKE_VERSION,
     },

@@ -36,7 +36,7 @@ const XPI = AddonTestUtils.createTempWebExtensionFile({
   manifest: {
     name: "Test 1",
     description: "Test Description",
-    browser_specific_settings: { gecko: { id: ADDON_ID } },
+    applications: { gecko: { id: ADDON_ID } },
   },
 });
 

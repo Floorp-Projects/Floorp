@@ -99,7 +99,7 @@ add_task(async function test_extension_no_longer_specifies_engine() {
     useAddonManager: "permanent",
     manifest: {
       version: "2.0",
-      browser_specific_settings: {
+      applications: {
         gecko: {
           id: "example@tests.mozilla.org",
         },

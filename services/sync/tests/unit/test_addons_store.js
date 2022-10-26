@@ -51,7 +51,7 @@ add_task(async function setupSystemAddon() {
 
   let xpi = await AddonTestUtils.createTempWebExtensionFile({
     manifest: {
-      browser_specific_settings: { gecko: { id: SYSTEM_ADDON_ID } },
+      applications: { gecko: { id: SYSTEM_ADDON_ID } },
     },
   });
 
@@ -68,7 +68,7 @@ const ID3 = "addon3@tests.mozilla.org";
 const ADDONS = {
   test_addon1: {
     manifest: {
-      browser_specific_settings: {
+      applications: {
         gecko: {
           id: ID1,
           update_url: "http://example.com/data/test_install.json",
@@ -79,13 +79,13 @@ const ADDONS = {
 
   test_addon2: {
     manifest: {
-      browser_specific_settings: { gecko: { id: ID2 } },
+      applications: { gecko: { id: ID2 } },
     },
   },
 
   test_addon3: {
     manifest: {
-      browser_specific_settings: {
+      applications: {
         gecko: {
           id: ID3,
           strict_max_version: "0",
