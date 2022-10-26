@@ -148,6 +148,9 @@ bool DCLayerTree::Initialize(HWND aHwnd, nsACString& aError) {
     sGpuOverlayInfo = MakeUnique<GpuOverlayInfo>();
   }
 
+  // Initialize SwapChainInfo
+  SupportsSwapChainTearing();
+
   mCompositionTarget->SetRoot(mRootVisual);
   // Set interporation mode to nearest, to ensure 1:1 sampling.
   // By default, a visual inherits the interpolation mode of the parent visual.
@@ -755,6 +758,40 @@ bool DCLayerTree::EnsureVideoProcessor(const gfx::IntSize& aInputSize,
 
 bool DCLayerTree::SupportsHardwareOverlays() {
   return sGpuOverlayInfo->mSupportsHardwareOverlays;
+}
+
+bool DCLayerTree::SupportsSwapChainTearing() {
+  RefPtr<ID3D11Device> device = mDevice;
+  static const bool supported = [device] {
+    RefPtr<IDXGIDevice> dxgiDevice;
+    RefPtr<IDXGIAdapter> adapter;
+    device->QueryInterface((IDXGIDevice**)getter_AddRefs(dxgiDevice));
+    dxgiDevice->GetAdapter(getter_AddRefs(adapter));
+
+    RefPtr<IDXGIFactory5> dxgiFactory;
+    HRESULT hr = adapter->GetParent(
+        IID_PPV_ARGS((IDXGIFactory5**)getter_AddRefs(dxgiFactory)));
+    if (FAILED(hr)) {
+      return false;
+    }
+
+    BOOL presentAllowTearing = FALSE;
+    hr = dxgiFactory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING,
+                                          &presentAllowTearing,
+                                          sizeof(presentAllowTearing));
+    if (FAILED(hr)) {
+      return false;
+    }
+
+    if (auto* gpuParent = gfx::GPUParent::GetSingleton()) {
+      gpuParent->NotifySwapChainInfo(
+          layers::SwapChainInfo(!!presentAllowTearing));
+    } else if (XRE_IsParentProcess()) {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    }
+    return !!presentAllowTearing;
+  }();
+  return supported;
 }
 
 DXGI_FORMAT DCLayerTree::GetOverlayFormatForSDR() {

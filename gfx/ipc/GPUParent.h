@@ -40,6 +40,7 @@ class GPUParent final : public PGPUParent {
             const char* aParentBuildID);
   void NotifyDeviceReset();
   void NotifyOverlayInfo(layers::OverlayInfo aInfo);
+  void NotifySwapChainInfo(layers::SwapChainInfo aInfo);
 
   mozilla::ipc::IPCResult RecvInit(nsTArray<GfxVarUpdate>&& vars,
                                    const DevicePrefs& devicePrefs,

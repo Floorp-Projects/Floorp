@@ -445,6 +445,7 @@ gfxPlatform::gfxPlatform()
       mCMSInfoCollector(this, &gfxPlatform::GetCMSSupportInfo),
       mDisplayInfoCollector(this, &gfxPlatform::GetDisplayInfo),
       mOverlayInfoCollector(this, &gfxPlatform::GetOverlayInfo),
+      mSwapChainInfoCollector(this, &gfxPlatform::GetSwapChainInfo),
       mCompositorBackend(layers::LayersBackend::LAYERS_NONE),
       mScreenDepth(0) {
   mAllowDownloadableFonts = UNINITIALIZED_VALUE;
@@ -3409,6 +3410,23 @@ void gfxPlatform::GetOverlayInfo(mozilla::widget::InfoObject& aObj) {
                         toString(mOverlayInfo.ref().mRgb10a2Overlay));
 
   aObj.DefineProperty("OverlaySupport", NS_ConvertUTF8toUTF16(value));
+}
+
+void gfxPlatform::GetSwapChainInfo(mozilla::widget::InfoObject& aObj) {
+  if (mSwapChainInfo.isNothing()) {
+    return;
+  }
+
+  auto toString = [](bool aTearingSupported) -> const char* {
+    if (aTearingSupported) {
+      return "Supported";
+    }
+    return "Not Supported";
+  };
+
+  nsPrintfCString value("%s", toString(mSwapChainInfo.ref().mTearingSupported));
+
+  aObj.DefineProperty("SwapChainTearingSupport", NS_ConvertUTF8toUTF16(value));
 }
 
 class FrameStatsComparator {

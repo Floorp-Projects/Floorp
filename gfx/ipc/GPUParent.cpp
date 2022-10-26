@@ -242,6 +242,17 @@ void GPUParent::NotifyOverlayInfo(layers::OverlayInfo aInfo) {
   Unused << SendNotifyOverlayInfo(aInfo);
 }
 
+void GPUParent::NotifySwapChainInfo(layers::SwapChainInfo aInfo) {
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "gfx::GPUParent::NotifySwapChainInfo", [aInfo]() -> void {
+          GPUParent::GetSingleton()->NotifySwapChainInfo(aInfo);
+        }));
+    return;
+  }
+  Unused << SendNotifySwapChainInfo(aInfo);
+}
+
 mozilla::ipc::IPCResult GPUParent::RecvInit(
     nsTArray<GfxVarUpdate>&& vars, const DevicePrefs& devicePrefs,
     nsTArray<LayerTreeIdMapping>&& aMappings,
