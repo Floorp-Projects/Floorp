@@ -1675,12 +1675,30 @@ void LocalAccessible::Value(nsString& aValue) const {
 
 double LocalAccessible::MaxValue() const {
   double checkValue = AttrNumericValue(nsGkAtoms::aria_valuemax);
-  return IsNaN(checkValue) && !NativeHasNumericValue() ? 100 : checkValue;
+  if (IsNaN(checkValue) && !NativeHasNumericValue()) {
+    // aria-valuemax isn't present and this element doesn't natively provide a
+    // maximum value. Use the ARIA default.
+    const nsRoleMapEntry* roleMap = ARIARoleMap();
+    if (roleMap && roleMap->role == roles::SPINBUTTON) {
+      return UnspecifiedNaN<double>();
+    }
+    return 100;
+  }
+  return checkValue;
 }
 
 double LocalAccessible::MinValue() const {
   double checkValue = AttrNumericValue(nsGkAtoms::aria_valuemin);
-  return IsNaN(checkValue) && !NativeHasNumericValue() ? 0 : checkValue;
+  if (IsNaN(checkValue) && !NativeHasNumericValue()) {
+    // aria-valuemin isn't present and this element doesn't natively provide a
+    // minimum value. Use the ARIA default.
+    const nsRoleMapEntry* roleMap = ARIARoleMap();
+    if (roleMap && roleMap->role == roles::SPINBUTTON) {
+      return UnspecifiedNaN<double>();
+    }
+    return 0;
+  }
+  return checkValue;
 }
 
 double LocalAccessible::Step() const {
@@ -1690,6 +1708,12 @@ double LocalAccessible::Step() const {
 double LocalAccessible::CurValue() const {
   double checkValue = AttrNumericValue(nsGkAtoms::aria_valuenow);
   if (IsNaN(checkValue) && !NativeHasNumericValue()) {
+    // aria-valuenow isn't present and this element doesn't natively provide a
+    // current value. Use the ARIA default.
+    const nsRoleMapEntry* roleMap = ARIARoleMap();
+    if (roleMap && roleMap->role == roles::SPINBUTTON) {
+      return UnspecifiedNaN<double>();
+    }
     double minValue = MinValue();
     return minValue + ((MaxValue() - minValue) / 2);
   }
