@@ -136,7 +136,7 @@ sctp_os_timer_stop(sctp_os_timer_t *c)
 	/*
 	 * Don't attempt to delete a callout that's not on the queue.
 	 */
-	if (!(c->c_flags & SCTP_CALLOUT_PENDING)) {
+	if ((c->c_flags & SCTP_CALLOUT_PENDING) == 0) {
 		c->c_flags &= ~SCTP_CALLOUT_ACTIVE;
 		SCTP_TIMERQ_UNLOCK();
 		return (0);

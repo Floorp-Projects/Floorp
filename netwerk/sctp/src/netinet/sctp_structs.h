@@ -34,7 +34,7 @@
 
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_structs.h 362106 2020-06-12 16:31:13Z tuexen $");
+__FBSDID("$FreeBSD$");
 #endif
 
 #ifndef _NETINET_SCTP_STRUCTS_H_
@@ -65,14 +65,12 @@ struct sctp_timer {
 	uint32_t stopped_from;
 };
 
-
 struct sctp_foo_stuff {
 	struct sctp_inpcb *inp;
 	uint32_t        lineno;
 	uint32_t        ticks;
 	int             updown;
 };
-
 
 /*
  * This is the information we track on each interface that we know about from
@@ -137,6 +135,26 @@ struct sctp_mcore_ctrl {
 #endif
 #endif
 
+/* This struct is here to cut out the compatiabilty
+ * pad that bulks up both the inp and stcb. The non
+ * pad portion MUST stay in complete sync with
+ * sctp_sndrcvinfo... i.e. if sinfo_xxxx is added
+ * this must be done here too.
+ */
+struct sctp_nonpad_sndrcvinfo {
+	uint16_t sinfo_stream;
+	uint16_t sinfo_ssn;
+	uint16_t sinfo_flags;
+	uint32_t sinfo_ppid;
+	uint32_t sinfo_context;
+	uint32_t sinfo_timetolive;
+	uint32_t sinfo_tsn;
+	uint32_t sinfo_cumtsn;
+	sctp_assoc_t sinfo_assoc_id;
+	uint16_t sinfo_keynumber;
+	uint16_t sinfo_keynumber_valid;
+};
+
 struct sctp_iterator {
 	TAILQ_ENTRY(sctp_iterator) sctp_nxt_itr;
 #if defined(__FreeBSD__) && !defined(__Userspace__)
@@ -163,13 +181,12 @@ struct sctp_iterator {
 #define SCTP_ITERATOR_DO_ALL_INP	0x00000001
 #define SCTP_ITERATOR_DO_SINGLE_INP	0x00000002
 
-
 TAILQ_HEAD(sctpiterators, sctp_iterator);
 
 struct sctp_copy_all {
 	struct sctp_inpcb *inp;	/* ep */
 	struct mbuf *m;
-	struct sctp_sndrcvinfo sndrcv;
+	struct sctp_nonpad_sndrcvinfo sndrcv;
 	ssize_t sndlen;
 	int cnt_sent;
 	int cnt_failed;
@@ -292,7 +309,6 @@ struct rtcc_cc {
 	uint8_t  rtt_set_this_sack; /* Flag saying this sack had RTT calc on it */
 	uint8_t  last_inst_ind; /* Last saved inst indication */
 };
-
 
 struct sctp_nets {
 	TAILQ_ENTRY(sctp_nets) sctp_next;	/* next link */
@@ -436,7 +452,6 @@ struct sctp_nets {
 #endif
 };
 
-
 struct sctp_data_chunkrec {
 	uint32_t tsn;		/* the TSN of this transmit */
 	uint32_t mid;		/* the message identifier of this transmit */
@@ -474,7 +489,6 @@ struct chk_id {
 	uint8_t id;
 	uint8_t can_take_data;
 };
-
 
 struct sctp_tmit_chunk {
 	union {
@@ -561,6 +575,7 @@ struct sctp_queued_to_read {	/* sinfo structure Pluse more */
  * the user is in the explict MSG_EOR mode
  * and wrote some data, but has not completed
  * sending.
+ * ss_next and scheduled are only used by the FCFS stream scheduler.
  */
 struct sctp_stream_queue_pending {
 	struct mbuf *data;
@@ -584,6 +599,8 @@ struct sctp_stream_queue_pending {
 	uint8_t  sender_all_done;
 	uint8_t  put_last_out;
 	uint8_t  discard_rest;
+	uint8_t  processing;
+	bool scheduled;
 };
 
 /*
@@ -603,6 +620,19 @@ struct sctp_stream_in {
 TAILQ_HEAD(sctpwheel_listhead, sctp_stream_out);
 TAILQ_HEAD(sctplist_listhead, sctp_stream_queue_pending);
 
+/*
+ * This union holds all data necessary for
+ * different stream schedulers.
+ */
+struct scheduling_data {
+	struct sctp_stream_out *locked_on_sending;
+	/* circular looking for output selection */
+	struct sctp_stream_out *last_out_stream;
+	union {
+		struct sctpwheel_listhead wheel;
+		struct sctplist_listhead list;
+	} out;
+};
 
 /* Round-robin schedulers */
 struct ss_rr {
@@ -627,27 +657,16 @@ struct ss_fb {
 };
 
 /*
- * This union holds all data necessary for
- * different stream schedulers.
- */
-struct scheduling_data {
-	struct sctp_stream_out *locked_on_sending;
-	/* circular looking for output selection */
-	struct sctp_stream_out *last_out_stream;
-	union {
-		struct sctpwheel_listhead wheel;
-		struct sctplist_listhead list;
-	} out;
-};
-
-/*
  * This union holds all parameters per stream
  * necessary for different stream schedulers.
  */
-union scheduling_parameters {
-	struct ss_rr rr;
-	struct ss_prio prio;
-	struct ss_fb fb;
+struct scheduling_parameters {
+	union {
+		struct ss_rr rr;
+		struct ss_prio prio;
+		struct ss_fb fb;
+	} ss;
+	bool scheduled;
 };
 
 /* States for outgoing streams */
@@ -657,12 +676,10 @@ union scheduling_parameters {
 #define SCTP_STREAM_RESET_PENDING    0x03
 #define SCTP_STREAM_RESET_IN_FLIGHT  0x04
 
-#define SCTP_MAX_STREAMS_AT_ONCE_RESET 200
-
 /* This struct is used to track the traffic on outbound streams */
 struct sctp_stream_out {
 	struct sctp_streamhead outqueue;
-	union scheduling_parameters ss_params;
+	struct scheduling_parameters ss_params;
 	uint32_t chunks_on_queues;      /* send queue and sent queue */
 #if defined(SCTP_DETAILED_STR_STATS)
 	uint32_t abandoned_unsent[SCTP_PR_SCTP_MAX + 1];
@@ -681,6 +698,8 @@ struct sctp_stream_out {
 	uint8_t last_msg_incomplete;
 	uint8_t state;
 };
+
+#define SCTP_MAX_STREAMS_AT_ONCE_RESET 200
 
 /* used to keep track of the addresses yet to try to add/delete */
 TAILQ_HEAD(sctp_asconf_addrhead, sctp_asconf_addr);
@@ -728,26 +747,6 @@ struct sctp_fs_spec_log {
 	uint8_t decr;
 };
 
-/* This struct is here to cut out the compatiabilty
- * pad that bulks up both the inp and stcb. The non
- * pad portion MUST stay in complete sync with
- * sctp_sndrcvinfo... i.e. if sinfo_xxxx is added
- * this must be done here too.
- */
-struct sctp_nonpad_sndrcvinfo {
-	uint16_t sinfo_stream;
-	uint16_t sinfo_ssn;
-	uint16_t sinfo_flags;
-	uint32_t sinfo_ppid;
-	uint32_t sinfo_context;
-	uint32_t sinfo_timetolive;
-	uint32_t sinfo_tsn;
-	uint32_t sinfo_cumtsn;
-	sctp_assoc_t sinfo_assoc_id;
-	uint16_t sinfo_keynumber;
-	uint16_t sinfo_keynumber_valid;
-};
-
 /*
  * JRS - Structure to hold function pointers to the functions responsible
  * for congestion control.
@@ -787,16 +786,15 @@ struct sctp_cc_functions {
  * for stream scheduling.
  */
 struct sctp_ss_functions {
-	void (*sctp_ss_init)(struct sctp_tcb *stcb, struct sctp_association *asoc,
-		int holds_lock);
+	void (*sctp_ss_init)(struct sctp_tcb *stcb, struct sctp_association *asoc);
 	void (*sctp_ss_clear)(struct sctp_tcb *stcb, struct sctp_association *asoc,
-		int clear_values, int holds_lock);
+		bool clear_values);
 	void (*sctp_ss_init_stream)(struct sctp_tcb *stcb, struct sctp_stream_out *strq, struct sctp_stream_out *with_strq);
 	void (*sctp_ss_add_to_stream)(struct sctp_tcb *stcb, struct sctp_association *asoc,
-		struct sctp_stream_out *strq, struct sctp_stream_queue_pending *sp, int holds_lock);
-	int (*sctp_ss_is_empty)(struct sctp_tcb *stcb, struct sctp_association *asoc);
+		struct sctp_stream_out *strq, struct sctp_stream_queue_pending *sp);
+	bool (*sctp_ss_is_empty)(struct sctp_tcb *stcb, struct sctp_association *asoc);
 	void (*sctp_ss_remove_from_stream)(struct sctp_tcb *stcb, struct sctp_association *asoc,
-		struct sctp_stream_out *strq, struct sctp_stream_queue_pending *sp, int holds_lock);
+		struct sctp_stream_out *strq, struct sctp_stream_queue_pending *sp);
 	struct sctp_stream_out* (*sctp_ss_select_stream)(struct sctp_tcb *stcb,
 		struct sctp_nets *net, struct sctp_association *asoc);
 	void (*sctp_ss_scheduled)(struct sctp_tcb *stcb, struct sctp_nets *net,
@@ -807,7 +805,7 @@ struct sctp_ss_functions {
 		struct sctp_stream_out *strq, uint16_t *value);
 	int (*sctp_ss_set_value)(struct sctp_tcb *stcb, struct sctp_association *asoc,
 		struct sctp_stream_out *strq, uint16_t value);
-	int (*sctp_ss_is_user_msgs_incomplete)(struct sctp_tcb *stcb, struct sctp_association *asoc);
+	bool (*sctp_ss_is_user_msgs_incomplete)(struct sctp_tcb *stcb, struct sctp_association *asoc);
 };
 
 /* used to save ASCONF chunks for retransmission */
@@ -920,7 +918,6 @@ struct sctp_association {
 	/* last place I got a control from */
 	struct sctp_nets *last_control_chunk_from;
 
-
 	/*
 	 * wait to the point the cum-ack passes req->send_reset_at_tsn for
 	 * any req on the list.
@@ -983,7 +980,6 @@ struct sctp_association {
 
 	/* Original seq number I used ??questionable to keep?? */
 	uint32_t init_seq_number;
-
 
 	/* The Advanced Peer Ack Point, as required by the PR-SCTP */
 	/* (A1 in Section 4.2) */
