@@ -59,11 +59,9 @@ class AddToHomescreenDialogFragment : DialogFragment() {
         warning.visibility = if (blockingEnabled) View.GONE else View.VISIBLE
 
         val editableTitle = dialogView.findViewById<EditText>(R.id.edit_title)
-        editableTitle.requestFocus()
 
         if (!TextUtils.isEmpty(title)) {
             editableTitle.setText(title)
-            editableTitle.setSelection(title!!.length)
         }
 
         setButtons(dialogView, editableTitle, url, blockingEnabled, requestDesktop, title)
