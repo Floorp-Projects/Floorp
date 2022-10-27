@@ -17,7 +17,7 @@ module.exports = MozillaFormatter;
 function MozillaFormatter(runner) {
   mocha.reporters.Base.call(this, runner);
   var passes = 0;
-  var failures = 0;
+  var failures = [];
 
   runner.on("start", () => {
     console.log("SUITE-START | eslint-plugin-mozilla");
@@ -30,7 +30,7 @@ function MozillaFormatter(runner) {
   });
 
   runner.on("fail", function(test, err) {
-    failures++;
+    failures.push(test);
     // Replace any newlines in the title.
     let title = test.title.replace(/\n/g, "|");
     console.log(
@@ -38,13 +38,20 @@ function MozillaFormatter(runner) {
         err.message
       }`
     );
+    mocha.reporters.Base.list([test]);
   });
 
   runner.on("end", function() {
+    // Space the results out visually with an additional blank line.
+    console.log("");
     console.log("INFO | Result summary:");
     console.log(`INFO | Passed: ${passes}`);
-    console.log(`INFO | Failed: ${failures}`);
+    console.log(`INFO | Failed: ${failures.length}`);
     console.log("SUITE-END");
-    process.exit(failures);
+    // Space the failures out visually with an additional blank line.
+    console.log("");
+    console.log("Failure summary:");
+    mocha.reporters.Base.list(failures);
+    process.exit(failures.length);
   });
 }
