@@ -16,12 +16,12 @@ import org.mozilla.fenix.utils.AccessibilityGridLayoutManager
 
 class TopSiteViewHolder(
     view: View,
-    store: AppStore,
+    appStore: AppStore,
     viewLifecycleOwner: LifecycleOwner,
     interactor: TopSiteInteractor,
 ) : RecyclerView.ViewHolder(view) {
 
-    private val topSitesAdapter = TopSitesAdapter(store, viewLifecycleOwner, interactor)
+    private val topSitesAdapter = TopSitesAdapter(appStore, viewLifecycleOwner, interactor)
     val binding = ComponentTopSitesBinding.bind(view)
 
     init {

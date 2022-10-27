@@ -12,12 +12,12 @@ import org.mozilla.fenix.ext.sort
 import org.mozilla.fenix.utils.Settings
 
 class DefaultTopSitesView(
-    val store: AppStore,
+    val appStore: AppStore,
     val settings: Settings,
 ) : TopSitesView {
 
     override fun displayTopSites(topSites: List<TopSite>) {
-        store.dispatch(
+        appStore.dispatch(
             AppAction.TopSitesChange(
                 if (!settings.showContileFeature) {
                     topSites

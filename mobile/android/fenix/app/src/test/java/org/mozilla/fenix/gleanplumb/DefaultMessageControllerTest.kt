@@ -36,19 +36,19 @@ class DefaultMessageControllerTest {
     private val activity: HomeActivity = mockk(relaxed = true)
     private val storageNimbus: NimbusMessagingStorage = mockk(relaxed = true)
     private lateinit var controller: DefaultMessageController
-    private val store: AppStore = mockk(relaxed = true)
+    private val appStore: AppStore = mockk(relaxed = true)
 
     @Before
     fun setup() {
         controller = DefaultMessageController(
             messagingStorage = storageNimbus,
-            appStore = store,
+            appStore = appStore,
             homeActivity = activity,
         )
     }
 
     @Test
-    fun `WHEN calling onMessagePressed THEN update the store and handle the action`() {
+    fun `WHEN calling onMessagePressed THEN update the app store and handle the action`() {
         val customController = spyk(controller)
         val message = mockMessage()
         every { customController.handleAction(any()) } returns mockk()
@@ -63,7 +63,7 @@ class DefaultMessageControllerTest {
         assertEquals(message.id, event.single().extra!!["message_key"])
         assertEquals("uuid", event.single().extra!!["action_uuid"])
         verify { customController.handleAction(any()) }
-        verify { store.dispatch(MessageClicked(message)) }
+        verify { appStore.dispatch(MessageClicked(message)) }
     }
 
     @Test
@@ -99,7 +99,7 @@ class DefaultMessageControllerTest {
         val event = Messaging.messageDismissed.testGetValue()!!
         assertEquals(1, event.size)
         assertEquals(message.id, event.single().extra!!["message_key"])
-        verify { store.dispatch(AppAction.MessagingAction.MessageDismissed(message)) }
+        verify { appStore.dispatch(AppAction.MessagingAction.MessageDismissed(message)) }
     }
 
     private fun mockMessage(data: MessageData = MessageData()) = Message(

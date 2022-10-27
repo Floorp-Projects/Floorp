@@ -44,7 +44,7 @@ class MessagingMiddlewareTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
     private val coroutineScope = coroutinesTestRule.scope
-    private lateinit var store: AppStore
+    private lateinit var appStore: AppStore
     private lateinit var middleware: MessagingMiddleware
     private lateinit var messagingStorage: NimbusMessagingStorage
     private lateinit var middlewareContext: MiddlewareContext<AppState, AppAction>
@@ -54,10 +54,10 @@ class MessagingMiddlewareTest {
 
     @Before
     fun setUp() {
-        store = mockk(relaxed = true)
+        appStore = mockk(relaxed = true)
         messagingStorage = mockk(relaxed = true)
         middlewareContext = mockk(relaxed = true)
-        every { middlewareContext.store } returns store
+        every { middlewareContext.store } returns appStore
 
         middleware = MessagingMiddleware(
             messagingStorage,
@@ -73,7 +73,7 @@ class MessagingMiddlewareTest {
 
         middleware.invoke(middlewareContext, {}, Restore)
 
-        verify { store.dispatch(UpdateMessages(messages)) }
+        verify { appStore.dispatch(UpdateMessages(messages)) }
     }
 
     @Test

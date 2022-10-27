@@ -24,19 +24,19 @@ class TopSiteViewHolderTest {
     private lateinit var binding: ComponentTopSitesBinding
     private lateinit var lifecycleOwner: LifecycleOwner
     private lateinit var interactor: TopSiteInteractor
-    private lateinit var store: AppStore
+    private lateinit var appStore: AppStore
 
     @Before
     fun setup() {
         binding = ComponentTopSitesBinding.inflate(LayoutInflater.from(testContext))
         interactor = mockk(relaxed = true)
         lifecycleOwner = mockk(relaxed = true)
-        store = mockk(relaxed = true)
+        appStore = mockk(relaxed = true)
     }
 
     @Test
     fun `binds list of top sites`() {
-        TopSiteViewHolder(binding.root, store, lifecycleOwner, interactor).bind(
+        TopSiteViewHolder(binding.root, appStore, lifecycleOwner, interactor).bind(
             listOf(
                 TopSite.Default(
                     id = 1L,

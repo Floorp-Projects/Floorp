@@ -17,7 +17,7 @@ import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 import org.mozilla.fenix.home.topsites.TopSitePagerViewHolder.Companion.TOP_SITES_PER_PAGE
 
 class TopSitesPagerAdapter(
-    private val store: AppStore,
+    private val appStore: AppStore,
     private val viewLifecycleOwner: LifecycleOwner,
     private val interactor: TopSiteInteractor,
 ) : ListAdapter<List<TopSite>, TopSiteViewHolder>(TopSiteListDiffCallback) {
@@ -25,7 +25,7 @@ class TopSitesPagerAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TopSiteViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(TopSiteViewHolder.LAYOUT_ID, parent, false)
-        return TopSiteViewHolder(view, store, viewLifecycleOwner, interactor)
+        return TopSiteViewHolder(view, appStore, viewLifecycleOwner, interactor)
     }
 
     override fun onBindViewHolder(

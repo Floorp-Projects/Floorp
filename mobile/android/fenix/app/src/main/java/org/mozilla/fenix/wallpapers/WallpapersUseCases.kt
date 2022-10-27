@@ -26,7 +26,7 @@ import java.util.Date
  * Contains use cases related to the wallpaper feature.
  *
  * @param context Used for various file and configuration checks.
- * @param store Will receive dispatches of metadata updates like the currently selected wallpaper.
+ * @param appStore Will receive dispatches of metadata updates like the currently selected wallpaper.
  * @param client Handles downloading wallpapers and their metadata.
  * @param storageRootDirectory The top level app-local storage directory.
  * @param currentLocale The locale currently being used on the device.
@@ -38,7 +38,7 @@ import java.util.Date
  */
 class WallpapersUseCases(
     context: Context,
-    store: AppStore,
+    appStore: AppStore,
     client: Client,
     storageRootDirectory: File,
     currentLocale: String,
@@ -54,7 +54,7 @@ class WallpapersUseCases(
                 selectWallpaper::invoke,
             )
             DefaultInitializeWallpaperUseCase(
-                store = store,
+                appStore = appStore,
                 downloader = downloader,
                 fileManager = fileManager,
                 metadataFetcher = metadataFetcher,
@@ -66,7 +66,7 @@ class WallpapersUseCases(
             val fileManager = LegacyWallpaperFileManager(storageRootDirectory)
             val downloader = LegacyWallpaperDownloader(context, client)
             LegacyInitializeWallpaperUseCase(
-                store = store,
+                appStore = appStore,
                 downloader = downloader,
                 fileManager = fileManager,
                 settings = context.settings(),
@@ -90,9 +90,9 @@ class WallpapersUseCases(
     }
     val selectWallpaper: SelectWallpaperUseCase by lazy {
         if (FeatureFlags.wallpaperV2Enabled) {
-            DefaultSelectWallpaperUseCase(context.settings(), store, fileManager, downloader)
+            DefaultSelectWallpaperUseCase(context.settings(), appStore, fileManager, downloader)
         } else {
-            LegacySelectWallpaperUseCase(context.settings(), store)
+            LegacySelectWallpaperUseCase(context.settings(), appStore)
         }
     }
 
@@ -109,7 +109,7 @@ class WallpapersUseCases(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal class LegacyInitializeWallpaperUseCase(
-        private val store: AppStore,
+        private val appStore: AppStore,
         private val downloader: LegacyWallpaperDownloader,
         private val fileManager: LegacyWallpaperFileManager,
         private val settings: Settings,
@@ -119,7 +119,7 @@ class WallpapersUseCases(
 
         /**
          * Downloads the currently available wallpaper metadata from a remote source.
-         * Updates the [store] with that metadata and with the selected wallpaper found in storage.
+         * Updates the [appStore] with that metadata and with the selected wallpaper found in storage.
          * Removes any unused promotional or time-limited assets from local storage.
          * Should usually be called early the app's lifetime to ensure that metadata and thumbnails
          * are available as soon as they are needed.
@@ -131,7 +131,7 @@ class WallpapersUseCases(
             withContext(Dispatchers.IO) {
                 val dispatchedCurrent = Wallpaper.getCurrentWallpaperFromSettings(settings)?.let {
                     // Dispatch this ASAP so the home screen can render.
-                    store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(it))
+                    appStore.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(it))
                     true
                 } ?: false
                 val availableWallpapers = possibleWallpapers.getAvailableWallpapers()
@@ -145,9 +145,9 @@ class WallpapersUseCases(
                     possibleWallpapers,
                 )
                 downloadAllRemoteWallpapers(availableWallpapers)
-                store.dispatch(AppAction.WallpaperAction.UpdateAvailableWallpapers(availableWallpapers))
+                appStore.dispatch(AppAction.WallpaperAction.UpdateAvailableWallpapers(availableWallpapers))
                 if (!dispatchedCurrent) {
-                    store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(currentWallpaper))
+                    appStore.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(currentWallpaper))
                 }
             }
         }
@@ -237,7 +237,7 @@ class WallpapersUseCases(
     @Suppress("LongParameterList")
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal class DefaultInitializeWallpaperUseCase(
-        private val store: AppStore,
+        private val appStore: AppStore,
         private val downloader: WallpaperDownloader,
         private val fileManager: WallpaperFileManager,
         private val metadataFetcher: WallpaperMetadataFetcher,
@@ -247,7 +247,7 @@ class WallpapersUseCases(
     ) : InitializeWallpapersUseCase {
         override suspend fun invoke() {
             Wallpaper.getCurrentWallpaperFromSettings(settings)?.let {
-                store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(it))
+                appStore.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(it))
             }
             val currentWallpaperName = if (settings.shouldMigrateLegacyWallpaper) {
                 val migratedWallpaperName =
@@ -267,7 +267,7 @@ class WallpapersUseCases(
 
             // Dispatching this early will make it accessible to the home screen ASAP. If it has been
             // dispatched above, we may still need to update other metadata about it.
-            store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(currentWallpaper))
+            appStore.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(currentWallpaper))
 
             fileManager.clean(
                 currentWallpaper,
@@ -280,7 +280,7 @@ class WallpapersUseCases(
             }
 
             val defaultIncluded = listOf(Wallpaper.Default) + wallpapersWithUpdatedThumbnailState
-            store.dispatch(AppAction.WallpaperAction.UpdateAvailableWallpapers(defaultIncluded))
+            appStore.dispatch(AppAction.WallpaperAction.UpdateAvailableWallpapers(defaultIncluded))
         }
 
         private fun Wallpaper.isExpired(): Boolean = when (this) {
@@ -445,10 +445,10 @@ class WallpapersUseCases(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal class LegacySelectWallpaperUseCase(
         private val settings: Settings,
-        private val store: AppStore,
+        private val appStore: AppStore,
     ) : SelectWallpaperUseCase {
         /**
-         * Select a new wallpaper. Storage and the store will be updated appropriately.
+         * Select a new wallpaper. Storage and the app store will be updated appropriately.
          *
          * @param wallpaper The selected wallpaper.
          */
@@ -457,7 +457,7 @@ class WallpapersUseCases(
             settings.currentWallpaperTextColor = wallpaper.textColor ?: 0
             settings.currentWallpaperCardColorLight = wallpaper.cardColorLight ?: 0
             settings.currentWallpaperCardColorDark = wallpaper.cardColorDark ?: 0
-            store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(wallpaper))
+            appStore.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(wallpaper))
             return Wallpaper.ImageFileState.Downloaded
         }
     }
@@ -465,12 +465,12 @@ class WallpapersUseCases(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal class DefaultSelectWallpaperUseCase(
         private val settings: Settings,
-        private val store: AppStore,
+        private val appStore: AppStore,
         private val fileManager: WallpaperFileManager,
         private val downloader: WallpaperDownloader,
     ) : SelectWallpaperUseCase {
         /**
-         * Select a new wallpaper. Storage and the store will be updated appropriately.
+         * Select a new wallpaper. Storage and the app store will be updated appropriately.
          *
          * @param wallpaper The selected wallpaper.
          */
@@ -496,11 +496,11 @@ class WallpapersUseCases(
             settings.currentWallpaperTextColor = wallpaper.textColor ?: 0L
             settings.currentWallpaperCardColorLight = wallpaper.cardColorLight ?: 0L
             settings.currentWallpaperCardColorDark = wallpaper.cardColorDark ?: 0L
-            store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(wallpaper))
+            appStore.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(wallpaper))
         }
 
         private fun dispatchDownloadState(wallpaper: Wallpaper, downloadState: Wallpaper.ImageFileState) {
-            store.dispatch(AppAction.WallpaperAction.UpdateWallpaperDownloadState(wallpaper, downloadState))
+            appStore.dispatch(AppAction.WallpaperAction.UpdateWallpaperDownloadState(wallpaper, downloadState))
         }
     }
 }

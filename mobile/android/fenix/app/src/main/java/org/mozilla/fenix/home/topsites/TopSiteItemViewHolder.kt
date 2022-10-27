@@ -39,7 +39,7 @@ import org.mozilla.fenix.utils.view.ViewHolder
 @SuppressLint("ClickableViewAccessibility")
 class TopSiteItemViewHolder(
     view: View,
-    store: AppStore,
+    appStore: AppStore,
     private val viewLifecycleOwner: LifecycleOwner,
     private val interactor: TopSiteInteractor,
 ) : ViewHolder(view) {
@@ -78,7 +78,7 @@ class TopSiteItemViewHolder(
             true
         }
 
-        store.flowScoped(viewLifecycleOwner) { flow ->
+        appStore.flowScoped(viewLifecycleOwner) { flow ->
             flow.map { state -> state.wallpaperState }
                 .ifChanged()
                 .collect { currentState ->

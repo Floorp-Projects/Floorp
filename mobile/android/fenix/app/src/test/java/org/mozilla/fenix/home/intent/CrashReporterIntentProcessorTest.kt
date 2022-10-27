@@ -23,25 +23,25 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
 class CrashReporterIntentProcessorTest {
-    private val store: AppStore = mockk(relaxed = true)
+    private val appStore: AppStore = mockk(relaxed = true)
     private val navController: NavController = mockk()
     private val out: Intent = mockk()
 
     @Test
     fun `GIVEN a blank Intent WHEN processing it THEN do nothing and return false`() {
-        val processor = CrashReporterIntentProcessor(store)
+        val processor = CrashReporterIntentProcessor(appStore)
 
         val result = processor.process(Intent(), navController, out)
 
         assertFalse(result)
         verify { navController wasNot Called }
         verify { out wasNot Called }
-        verify { store wasNot Called }
+        verify { appStore wasNot Called }
     }
 
     @Test
     fun `GIVEN a crash Intent WHEN processing it THEN update crash details and return true`() {
-        val processor = CrashReporterIntentProcessor(store)
+        val processor = CrashReporterIntentProcessor(appStore)
         val intent = Intent()
         val crash = mockk<NativeCodeCrash>(relaxed = true)
 
@@ -54,7 +54,7 @@ class CrashReporterIntentProcessorTest {
             assertTrue(result)
             verify { navController wasNot Called }
             verify { out wasNot Called }
-            verify { store.dispatch(AppAction.AddNonFatalCrash(crash)) }
+            verify { appStore.dispatch(AppAction.AddNonFatalCrash(crash)) }
         }
     }
 }

@@ -19,13 +19,13 @@ import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 
 class TopSitePagerViewHolder(
     view: View,
-    store: AppStore,
+    appStore: AppStore,
     viewLifecycleOwner: LifecycleOwner,
     interactor: TopSiteInteractor,
 ) : RecyclerView.ViewHolder(view) {
 
     private val binding = ComponentTopSitesPagerBinding.bind(view)
-    private val topSitesPagerAdapter = TopSitesPagerAdapter(store, viewLifecycleOwner, interactor)
+    private val topSitesPagerAdapter = TopSitesPagerAdapter(appStore, viewLifecycleOwner, interactor)
     private val pageIndicator = binding.pageIndicator
     private var currentPage = 0
 

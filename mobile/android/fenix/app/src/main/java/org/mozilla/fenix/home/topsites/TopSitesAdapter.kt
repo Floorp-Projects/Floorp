@@ -15,14 +15,14 @@ import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 import org.mozilla.fenix.perf.StartupTimeline
 
 class TopSitesAdapter(
-    private val store: AppStore,
+    private val appStore: AppStore,
     private val viewLifecycleOwner: LifecycleOwner,
     private val interactor: TopSiteInteractor,
 ) : ListAdapter<TopSite, TopSiteItemViewHolder>(TopSitesDiffCallback) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TopSiteItemViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(TopSiteItemViewHolder.LAYOUT_ID, parent, false)
-        return TopSiteItemViewHolder(view, store, viewLifecycleOwner, interactor)
+        return TopSiteItemViewHolder(view, appStore, viewLifecycleOwner, interactor)
     }
 
     override fun onBindViewHolder(holder: TopSiteItemViewHolder, position: Int) {

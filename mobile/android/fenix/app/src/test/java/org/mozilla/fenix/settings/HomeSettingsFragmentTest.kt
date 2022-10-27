@@ -45,7 +45,7 @@ internal class HomeSettingsFragmentTest {
     private lateinit var appPrefs: SharedPreferences
     private lateinit var appPrefsEditor: SharedPreferences.Editor
     private lateinit var pocketService: PocketStoriesService
-    private lateinit var store: AppStore
+    private lateinit var appStore: AppStore
 
     @Before
     fun setup() {
@@ -60,10 +60,10 @@ internal class HomeSettingsFragmentTest {
             every { preferences } returns appPrefs
         }
         every { any<Context>().settings() } returns appSettings
-        store = mockk(relaxed = true)
+        appStore = mockk(relaxed = true)
         pocketService = mockk(relaxed = true)
         every { any<Context>().components } returns mockk {
-            every { appStore } returns store
+            every { appStore } returns this@HomeSettingsFragmentTest.appStore
             every { core.pocketStoriesService } returns pocketService
         }
 
@@ -149,6 +149,6 @@ internal class HomeSettingsFragmentTest {
         assertTrue(result)
         verify { appPrefsEditor.putBoolean(testContext.getString(R.string.pref_key_pocket_sponsored_stories), false) }
         verify { pocketService.deleteProfile() }
-        verify { store.dispatch(AppAction.PocketSponsoredStoriesChange(emptyList())) }
+        verify { appStore.dispatch(AppAction.PocketSponsoredStoriesChange(emptyList())) }
     }
 }

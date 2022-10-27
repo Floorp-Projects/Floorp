@@ -254,7 +254,7 @@ class HomeFragment : Fragment() {
         if (requireContext().settings().isExperimentationEnabled) {
             messagingFeature.set(
                 feature = MessagingFeature(
-                    store = requireComponents.appStore,
+                    appStore = requireComponents.appStore,
                 ),
                 owner = viewLifecycleOwner,
                 view = binding.root,
@@ -265,7 +265,7 @@ class HomeFragment : Fragment() {
             topSitesFeature.set(
                 feature = TopSitesFeature(
                     view = DefaultTopSitesView(
-                        store = components.appStore,
+                        appStore = components.appStore,
                         settings = components.settings,
                     ),
                     storage = components.core.topSitesStorage,

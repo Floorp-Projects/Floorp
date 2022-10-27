@@ -12,11 +12,11 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction
 /**
  * A message observer that updates the provided.
  */
-class MessagingFeature(val store: AppStore) : LifecycleAwareFeature {
+class MessagingFeature(val appStore: AppStore) : LifecycleAwareFeature {
 
     override fun start() {
         if (FeatureFlags.messagingFeature) {
-            store.dispatch(MessagingAction.Evaluate)
+            appStore.dispatch(MessagingAction.Evaluate)
         }
     }
 

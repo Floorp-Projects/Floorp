@@ -14,14 +14,14 @@ import org.mozilla.fenix.components.AppStore
 class AppActionTest {
 
     private val capture = CaptureActionsMiddleware<AppState, AppAction>()
-    private val store = AppStore(middlewares = listOf(capture))
+    private val appStore = AppStore(middlewares = listOf(capture))
 
     @Test
     fun `WHEN UpdateInactiveExpanded is dispatched THEN update inactiveTabsExpanded`() {
-        assertFalse(store.state.inactiveTabsExpanded)
+        assertFalse(appStore.state.inactiveTabsExpanded)
 
-        store.dispatch(AppAction.UpdateInactiveExpanded(true)).joinBlocking()
+        appStore.dispatch(AppAction.UpdateInactiveExpanded(true)).joinBlocking()
 
-        assertTrue(store.state.inactiveTabsExpanded)
+        assertTrue(appStore.state.inactiveTabsExpanded)
     }
 }
