@@ -541,8 +541,7 @@ NON_IDL_EVENT(audioprocess, eAudioProcess, EventNameType_None, eBasicEventClass)
 
 NON_IDL_EVENT(complete, eAudioComplete, EventNameType_None, eBasicEventClass)
 
-NON_IDL_EVENT(scrollend, eScrollend,
-              (EventNameType_HTMLXUL | EventNameType_SVGSVG), eBasicEventClass)
+EVENT(scrollend, eScrollend, EventNameType_All, eBasicEventClass)
 
 #ifdef DEFINED_FORWARDED_EVENT
 #  undef DEFINED_FORWARDED_EVENT
