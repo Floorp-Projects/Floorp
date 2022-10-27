@@ -1,5 +1,7 @@
 /* eslint-env webextensions */
 
+"use strict";
+
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
 );
@@ -131,12 +133,12 @@ add_task(async function testContentBlockingMainCategory() {
   let always = doc.querySelector(
     "#trackingProtectionMenu > menupopup > menuitem[value=always]"
   );
-  let private = doc.querySelector(
+  let privateElement = doc.querySelector(
     "#trackingProtectionMenu > menupopup > menuitem[value=private]"
   );
   menu.selectedItem = always;
   ok(
-    !private.selected,
+    !privateElement.selected,
     "The Only in private windows item should not be selected"
   );
   ok(always.selected, "The Always item should be selected");
@@ -170,7 +172,7 @@ add_task(async function testContentBlockingMainCategory() {
     await promise;
     is(tpCheckbox.checked, i % 2 == 0, "The checkbox should now be unchecked");
     is(
-      private.selected,
+      privateElement.selected,
       i % 2 == 0,
       "The Only in private windows item should be selected by default, when the checkbox is checked"
     );

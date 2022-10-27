@@ -5,6 +5,8 @@
 // This test makes sure that the window title changes correctly while switching
 // from and to private browsing mode.
 
+"use strict";
+
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -75,8 +77,8 @@ add_task(async function test() {
     ]);
   }
 
-  function openWin(private) {
-    return BrowserTestUtils.openNewBrowserWindow({ private });
+  function openWin(isPrivate) {
+    return BrowserTestUtils.openNewBrowserWindow({ private: isPrivate });
   }
   await testTabTitle(
     await openWin(false),

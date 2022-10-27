@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 /**
  * Checks that restoring the last browser window in session is actually
  * working.
@@ -148,8 +150,9 @@ let setupTest = async function(options, testFunction) {
     Services.obs.addObserver(observer, o);
   }
 
-  let private = options.private || false;
-  let newWin = await promiseNewWindowLoaded({ private });
+  let newWin = await promiseNewWindowLoaded({
+    private: options.private || false,
+  });
 
   await injectTestTabs(newWin);
 
