@@ -1197,7 +1197,7 @@ function testCrossOriginCredentials() {
   return finalPromise;
 }
 
-function testModeNoCorsCredentials() {
+function testModeNoCorsCredentials(withoutORB) {
   var cookieStr = "type=chocolatechip";
   var tests = [
     {
@@ -1222,19 +1222,19 @@ function testModeNoCorsCredentials() {
       withCred: "include",
     },
     {
-      pass: 1,
+      pass: withoutORB,
       cookie: cookieStr,
       withCred: "omit",
       status: 500,
     },
     {
-      pass: 1,
+      pass: withoutORB,
       cookie: cookieStr,
       withCred: "same-origin",
       status: 500,
     },
     {
-      pass: 1,
+      pass: withoutORB,
       noCookie: 1,
       withCred: "include",
       status: 500,
@@ -1304,6 +1304,7 @@ function testModeNoCorsCredentials() {
     var request = makeRequest(test);
     fetch(request).then(
       function(res) {
+        ok(test.pass, "Expected test to pass " + JSON.stringify(test));
         testResponse(res, test).then(function() {
           if (i < tests.length - 1) {
             runATest(tests, i + 1);
@@ -1871,7 +1872,22 @@ function runTest() {
     .then(testModeCors)
     .then(testSameOriginCredentials)
     .then(testCrossOriginCredentials)
-    .then(testModeNoCorsCredentials)
+    .then(function() {
+      return SpecialPowers.pushPrefEnv({
+        set: [["browser.opaqueResponseBlocking", false]],
+      });
+    })
+    .then(() => {
+      return testModeNoCorsCredentials(1); // Without ORB
+    })
+    .then(function() {
+      return SpecialPowers.pushPrefEnv({
+        set: [["browser.opaqueResponseBlocking", true]],
+      });
+    })
+    .then(() => {
+      return testModeNoCorsCredentials(0); // With ORB
+    })
     .then(testCORSRedirects)
     .then(testNoCORSRedirects)
     .then(testReferrer);

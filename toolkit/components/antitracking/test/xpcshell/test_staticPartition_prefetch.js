@@ -8,6 +8,12 @@ const { CookieXPCShellUtils } = ChromeUtils.import(
   "resource://testing-common/CookieXPCShellUtils.jsm"
 );
 
+// Small red image.
+const IMG_BYTES = atob(
+  "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
+    "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+);
+
 let gHints = 0;
 
 CookieXPCShellUtils.init(this);
@@ -69,9 +75,7 @@ add_task(async () => {
     response.setHeader("Cache-Control", "max-age=10000", false);
     response.setStatusLine(metadata.httpVersion, 200, "OK");
     response.setHeader("Content-Type", "image/png", false);
-    var body =
-      "iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVQImWP4z8AAQTAamQkAhpcI+DeMzFcAAAAASUVORK5CYII=";
-    response.bodyOutputStream.write(body, body.length);
+    response.write(IMG_BYTES);
   });
 
   server.registerPathHandler("/prefetch", (metadata, response) => {

@@ -3,6 +3,12 @@
 
 "use strict";
 
+// Small red image.
+const IMG_BYTES = atob(
+  "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
+    "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+);
+
 function handleRequest(request, response) {
   let mimeType = request.queryString.match(/type=([a-z]*)/)[1];
   switch (mimeType) {
@@ -16,7 +22,7 @@ function handleRequest(request, response) {
       break;
     case "png":
       response.setHeader("Content-Type", "image/png");
-      response.write("");
+      response.write(IMG_BYTES);
       break;
     case "html":
       response.setHeader("Content-Type", "text/html");
