@@ -652,11 +652,26 @@ uint16_t PivotRadioNameRule::Match(Accessible* aAcc) {
   }
 
   if (remote->IsHTMLRadioButton()) {
-    nsString currName = remote->GetCachedHTMLRadioNameAttribute();
+    nsString currName = remote->GetCachedHTMLNameAttribute();
     if (!currName.IsEmpty() && mName.Equals(currName)) {
       result |= nsIAccessibleTraversalRule::FILTER_MATCH;
     }
   }
 
   return result;
+}
+
+// MustPruneSameDocRule
+
+uint16_t MustPruneSameDocRule::Match(Accessible* aAcc) {
+  if (!aAcc) {
+    return nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+  }
+
+  if (nsAccUtils::MustPrune(aAcc) || aAcc->IsOuterDoc()) {
+    return nsIAccessibleTraversalRule::FILTER_MATCH |
+           nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+  }
+
+  return nsIAccessibleTraversalRule::FILTER_MATCH;
 }

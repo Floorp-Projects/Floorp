@@ -693,6 +693,43 @@ Relation RemoteAccessibleBase<Derived>::RelationByType(
     return Relation();
   }
 
+  if (aType == RelationType::LINKS_TO && Role() == roles::LINK) {
+    Pivot p = Pivot(mDoc);
+    nsString href;
+    Value(href);
+    if (!href.IsEmpty()) {
+      // `Value` will give us the entire URL, we're only interested in the ID
+      // after the hash. Split that part out.
+      for (auto s : href.Split('#')) {
+        href = s;
+      }
+      MustPruneSameDocRule rule;
+      Accessible* nameMatch = nullptr;
+      for (Accessible* match = p.Next(mDoc, rule); match;
+           match = p.Next(match, rule)) {
+        nsString currID;
+        match->DOMNodeID(currID);
+        MOZ_ASSERT(match->IsRemote());
+        if (href.Equals(currID)) {
+          return Relation(match->AsRemote());
+        }
+        if (!nameMatch) {
+          nsString currName = match->AsRemote()->GetCachedHTMLNameAttribute();
+          if (match->TagName() == nsGkAtoms::a && href.Equals(currName)) {
+            // If we find an element with a matching ID, we should return
+            // that, but if we don't we should return the first anchor with
+            // a matching name. To avoid doing two traversals, store the first
+            // name match here.
+            nameMatch = match;
+          }
+        }
+      }
+      return nameMatch ? Relation(nameMatch->AsRemote()) : Relation();
+    }
+
+    return Relation();
+  }
+
   // Handle ARIA tree, treegrid parent/child relations. Each of these cases
   // relies on cached group info. To find the parent of an accessible, use the
   // unified conceptual parent.
@@ -1007,15 +1044,13 @@ RemoteAccessibleBase<Derived>::GetCachedARIAAttributes() const {
 }
 
 template <class Derived>
-nsString RemoteAccessibleBase<Derived>::GetCachedHTMLRadioNameAttribute()
-    const {
+nsString RemoteAccessibleBase<Derived>::GetCachedHTMLNameAttribute() const {
   if (mCachedFields) {
     if (auto maybeName =
-            mCachedFields->GetAttribute<nsString>(nsGkAtoms::radioLabel)) {
+            mCachedFields->GetAttribute<nsString>(nsGkAtoms::attributeName)) {
       return *maybeName;
     }
   }
-
   return nsString();
 }
 

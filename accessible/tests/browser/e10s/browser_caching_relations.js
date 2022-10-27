@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+requestLongerTimeout(2);
 
 /* import-globals-from ../../mochitest/relations.js */
 loadScripts({ name: "relations.js", dir: MOCHITESTS_DIR });
@@ -358,21 +359,28 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `
-  <a id="link" href="#item">
+  <a id="link" href="#item">a</a>
   <div id="item">hello</div>
-  <div id="item2">world</div>`,
+  <div id="item2">world</div>
+  <a id="link2" href="#anchor">b</a>
+  <a id="namedLink" name="anchor">c</a>`,
   async function(browser, accDoc) {
     const link = findAccessibleChildByID(accDoc, "link");
+    const link2 = findAccessibleChildByID(accDoc, "link2");
+    const namedLink = findAccessibleChildByID(accDoc, "namedLink");
     const item = findAccessibleChildByID(accDoc, "item");
     const item2 = findAccessibleChildByID(accDoc, "item2");
 
     await testCachedRelation(link, RELATION_LINKS_TO, item);
+    await testCachedRelation(link2, RELATION_LINKS_TO, namedLink);
 
     await invokeContentTask(browser, [], () => {
       content.document.getElementById("link").href = "";
+      content.document.getElementById("namedLink").name = "newName";
     });
 
     await testCachedRelation(link, RELATION_LINKS_TO, null);
+    await testCachedRelation(link2, RELATION_LINKS_TO, null);
 
     await invokeContentTask(browser, [], () => {
       content.document.getElementById("link").href = "#item2";

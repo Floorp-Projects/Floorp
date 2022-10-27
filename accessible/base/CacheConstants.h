@@ -81,7 +81,6 @@ static constexpr RelationData kRelationTypeAtoms[] = {
      Some(RelationType::DESCRIPTION_FOR)},
     {nsGkAtoms::aria_flowto, nullptr, RelationType::FLOWS_TO,
      Some(RelationType::FLOWS_FROM)},
-    {nsGkAtoms::link, nullptr, RelationType::LINKS_TO, Nothing()},
 };
 
 }  // namespace a11y
