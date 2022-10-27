@@ -354,7 +354,16 @@ NetworkGeolocationProvider.prototype = {
     this.started = false;
   },
 
-  setHighAccuracy(enable) {},
+  setHighAccuracy(enable) {
+    // Mochitest wants to check this value
+    if (Services.prefs.getBoolPref("geo.provider.testing")) {
+      Services.obs.notifyObservers(
+        null,
+        "testing-geolocation-high-accuracy",
+        enable
+      );
+    }
+  },
 
   onChange(accessPoints) {
     // we got some wifi data, rearm the timer.
