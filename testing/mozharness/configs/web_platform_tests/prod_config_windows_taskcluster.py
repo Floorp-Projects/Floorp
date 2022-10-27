@@ -95,6 +95,17 @@ config = {
             "enabled": True,
         },
         {
+            "name": "create scrollbars always show key",
+            "cmd": [
+                "powershell",
+                "-command",
+                "New-ItemProperty -Path 'HKCU:\Control Panel\Accessibility' -Name 'DynamicScrollbars' -Value 0",
+            ],
+            "architectures": ["32bit", "64bit"],
+            "halt_on_failure": False,
+            "enabled": True,
+        },
+        {
             "name": "hide windows taskbar",
             "cmd": [
                 "powershell",
