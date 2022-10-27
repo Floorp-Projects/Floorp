@@ -2,19 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["MigrationUtils", "MigratorPrototype"];
-
 const TOPIC_WILL_IMPORT_BOOKMARKS =
   "initial-migration-will-import-default-bookmarks";
 const TOPIC_DID_IMPORT_BOOKMARKS =
   "initial-migration-did-import-default-bookmarks";
 const TOPIC_PLACES_DEFAULTS_FINISHED = "places-browser-init-complete";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import AppConstants from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -104,7 +98,7 @@ function getL10n() {
  * 5. Implement getResources(aProfile) (see below).
  * 6. For startup-only migrators, override |startupOnlyMigrator|.
  */
-var MigratorPrototype = {
+export var MigratorPrototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIBrowserProfileMigrator"]),
 
   /**
@@ -516,7 +510,7 @@ var MigratorPrototype = {
   },
 };
 
-var MigrationUtils = Object.seal({
+export var MigrationUtils = Object.seal({
   resourceTypes: {
     COOKIES: Ci.nsIBrowserProfileMigrator.COOKIES,
     HISTORY: Ci.nsIBrowserProfileMigrator.HISTORY,

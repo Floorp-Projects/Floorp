@@ -2,16 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["MSMigrationUtils"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { MigrationUtils } = ChromeUtils.import(
-  "resource:///modules/MigrationUtils.jsm"
-);
+import { MigrationUtils } from "resource:///modules/MigrationUtils.sys.mjs";
 
 const lazy = {};
 
@@ -975,7 +968,7 @@ WindowsVaultFormPasswords.prototype = {
   },
 };
 
-var MSMigrationUtils = {
+export var MSMigrationUtils = {
   MIGRATION_TYPE_IE: 1,
   MIGRATION_TYPE_EDGE: 2,
   CtypesKernelHelpers,

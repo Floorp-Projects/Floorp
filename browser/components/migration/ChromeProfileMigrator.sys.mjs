@@ -4,36 +4,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const AUTH_TYPE = {
   SCHEME_HTML: 0,
   SCHEME_BASIC: 1,
   SCHEME_DIGEST: 2,
 };
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { MigratorPrototype, MigrationUtils } = ChromeUtils.import(
-  "resource:///modules/MigrationUtils.jsm"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+
+import {
+  MigratorPrototype,
+  MigrationUtils,
+} from "resource:///modules/MigrationUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  Qihoo360seMigrationUtils: "resource:///modules/360seMigrationUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  Qihoo360seMigrationUtils: "resource:///modules/360seMigrationUtils.jsm",
 });
 
 /**
@@ -77,7 +74,7 @@ function convertBookmarks(items, errorAccumulator) {
   return itemsToInsert;
 }
 
-function ChromeProfileMigrator() {
+export function ChromeProfileMigrator() {
   this._chromeUserDataPathSuffix = "Chrome";
 }
 
@@ -515,13 +512,13 @@ ChromeProfileMigrator.prototype._GetPasswordsResource = async function(
       let crypto;
       try {
         if (AppConstants.platform == "win") {
-          let { ChromeWindowsLoginCrypto } = ChromeUtils.import(
-            "resource:///modules/ChromeWindowsLoginCrypto.jsm"
+          let { ChromeWindowsLoginCrypto } = ChromeUtils.importESModule(
+            "resource:///modules/ChromeWindowsLoginCrypto.sys.mjs"
           );
           crypto = new ChromeWindowsLoginCrypto(_chromeUserDataPathSuffix);
         } else if (AppConstants.platform == "macosx") {
-          let { ChromeMacOSLoginCrypto } = ChromeUtils.import(
-            "resource:///modules/ChromeMacOSLoginCrypto.jsm"
+          let { ChromeMacOSLoginCrypto } = ChromeUtils.importESModule(
+            "resource:///modules/ChromeMacOSLoginCrypto.sys.mjs"
           );
           crypto = new ChromeMacOSLoginCrypto(
             _keychainServiceName,
@@ -628,7 +625,7 @@ ChromeProfileMigrator.prototype.classID = Components.ID(
 /**
  *  Chromium migration
  **/
-function ChromiumProfileMigrator() {
+export function ChromiumProfileMigrator() {
   this._chromeUserDataPathSuffix = "Chromium";
   this._keychainServiceName = "Chromium Safe Storage";
   this._keychainAccountName = "Chromium";
@@ -645,17 +642,11 @@ ChromiumProfileMigrator.prototype.classID = Components.ID(
   "{8cece922-9720-42de-b7db-7cef88cb07ca}"
 );
 
-var EXPORTED_SYMBOLS = [
-  "ChromeProfileMigrator",
-  "ChromiumProfileMigrator",
-  "BraveProfileMigrator",
-];
-
 /**
  * Chrome Canary
  * Not available on Linux
  **/
-function CanaryProfileMigrator() {
+export function CanaryProfileMigrator() {
   this._chromeUserDataPathSuffix = "Canary";
 }
 CanaryProfileMigrator.prototype = Object.create(
@@ -669,14 +660,10 @@ CanaryProfileMigrator.prototype.classID = Components.ID(
   "{4bf85aa5-4e21-46ca-825f-f9c51a5e8c76}"
 );
 
-if (AppConstants.platform == "win" || AppConstants.platform == "macosx") {
-  EXPORTED_SYMBOLS.push("CanaryProfileMigrator");
-}
-
 /**
  * Chrome Dev - Linux only (not available in Mac and Windows)
  */
-function ChromeDevMigrator() {
+export function ChromeDevMigrator() {
   this._chromeUserDataPathSuffix = "Chrome Dev";
 }
 ChromeDevMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
@@ -686,10 +673,6 @@ ChromeDevMigrator.prototype.contractID =
 ChromeDevMigrator.prototype.classID = Components.ID(
   "{7370a02a-4886-42c3-a4ec-d48c726ec30a}"
 );
-
-if (AppConstants.platform != "win" && AppConstants.platform != "macosx") {
-  EXPORTED_SYMBOLS.push("ChromeDevMigrator");
-}
 
 function ChromeBetaMigrator() {
   this._chromeUserDataPathSuffix = "Chrome Beta";
@@ -702,15 +685,12 @@ ChromeBetaMigrator.prototype.classID = Components.ID(
   "{47f75963-840b-4950-a1f0-d9c1864f8b8e}"
 );
 
-if (AppConstants.platform != "macosx") {
-  EXPORTED_SYMBOLS.push("ChromeBetaMigrator");
-}
-
-function BraveProfileMigrator() {
+export function BraveProfileMigrator() {
   this._chromeUserDataPathSuffix = "Brave";
   this._keychainServiceName = "Brave Browser Safe Storage";
   this._keychainAccountName = "Brave Browser";
 }
+
 BraveProfileMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
 BraveProfileMigrator.prototype.classDescription = "Brave Browser Migrator";
 BraveProfileMigrator.prototype.contractID =
@@ -719,7 +699,7 @@ BraveProfileMigrator.prototype.classID = Components.ID(
   "{4071880a-69e4-4c83-88b4-6c589a62801d}"
 );
 
-function ChromiumEdgeMigrator() {
+export function ChromiumEdgeMigrator() {
   this._chromeUserDataPathSuffix = "Edge";
   this._keychainServiceName = "Microsoft Edge Safe Storage";
   this._keychainAccountName = "Microsoft Edge";
@@ -733,7 +713,7 @@ ChromiumEdgeMigrator.prototype.classID = Components.ID(
   "{3c7f6b7c-baa9-4338-acfa-04bf79f1dcf1}"
 );
 
-function ChromiumEdgeBetaMigrator() {
+export function ChromiumEdgeBetaMigrator() {
   this._chromeUserDataPathSuffix = "Edge Beta";
   this._keychainServiceName = "Microsoft Edge Safe Storage";
   this._keychainAccountName = "Microsoft Edge";
@@ -749,11 +729,7 @@ ChromiumEdgeBetaMigrator.prototype.classID = Components.ID(
   "{0fc3d48a-c1c3-4871-b58f-a8b47d1555fb}"
 );
 
-if (AppConstants.platform == "macosx" || AppConstants.platform == "win") {
-  EXPORTED_SYMBOLS.push("ChromiumEdgeMigrator", "ChromiumEdgeBetaMigrator");
-}
-
-function Chromium360seMigrator() {
+export function Chromium360seMigrator() {
   this._chromeUserDataPathSuffix = "360 SE";
 }
 Chromium360seMigrator.prototype = Object.create(
@@ -766,7 +742,3 @@ Chromium360seMigrator.prototype.contractID =
 Chromium360seMigrator.prototype.classID = Components.ID(
   "{2e1a182e-ce4f-4dc9-a22c-d4125b931552}"
 );
-
-if (AppConstants.platform == "win") {
-  EXPORTED_SYMBOLS.push("Chromium360seMigrator");
-}
