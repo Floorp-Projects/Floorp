@@ -132,7 +132,7 @@ function Saved(props) {
             url={`https://${pockethost}/a?${utmParams}`}
             source="view_list"
           >
-            <span data-l10n-id="pocket-panel-header-my-list"></span>
+            <span data-l10n-id="pocket-panel-header-my-saves"></span>
           </Button>
         </Header>
         <hr />
@@ -183,7 +183,7 @@ function Saved(props) {
         {removedStatus === "removed" && (
           <h3
             className="header_large header_center"
-            data-l10n-id="pocket-panel-saved-removed"
+            data-l10n-id="pocket-panel-saved-removed-updated"
           />
         )}
         {removedStatus === "error" && (

@@ -141,7 +141,7 @@ function Home(props) {
             url={`https://${pockethost}/a?${utmParams}`}
             source="home_view_list"
           >
-            <span data-l10n-id="pocket-panel-header-my-list" />
+            <span data-l10n-id="pocket-panel-header-my-saves" />
           </Button>
         </Header>
         <hr />

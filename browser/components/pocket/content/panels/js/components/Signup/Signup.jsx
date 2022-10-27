@@ -33,7 +33,7 @@ function Signup(props) {
                 className="header_medium"
                 data-l10n-id="pocket-panel-signup-cta-a-fix"
               />
-              <p data-l10n-id="pocket-panel-signup-cta-b" />
+              <p data-l10n-id="pocket-panel-signup-cta-b-updated" />
             </div>
             <div className="stp_signup_content_wrapper">
               <hr />
@@ -57,7 +57,7 @@ function Signup(props) {
             />
             <p data-l10n-id="pocket-panel-signup-cta-b-short" />
             <strong>
-              <p data-l10n-id="pocket-panel-signup-cta-c" />
+              <p data-l10n-id="pocket-panel-signup-cta-c-updated" />
             </strong>
           </div>
         )}

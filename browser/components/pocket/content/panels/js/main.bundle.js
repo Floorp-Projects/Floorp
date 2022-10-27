@@ -377,7 +377,7 @@ function Home(props) {
     url: `https://${pockethost}/a?${utmParams}`,
     source: "home_view_list"
   }, /*#__PURE__*/react.createElement("span", {
-    "data-l10n-id": "pocket-panel-header-my-list"
+    "data-l10n-id": "pocket-panel-header-my-saves"
   }))), /*#__PURE__*/react.createElement("hr", null), recentSavesSection, /*#__PURE__*/react.createElement("hr", null), pockethost && locale?.startsWith("en") && topics?.length && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("h3", {
     className: "header_medium"
   }, "Explore popular topics:"), /*#__PURE__*/react.createElement(PopularTopics_PopularTopics, {
@@ -503,7 +503,7 @@ function Signup(props) {
     className: "header_medium",
     "data-l10n-id": "pocket-panel-signup-cta-a-fix"
   }), /*#__PURE__*/react.createElement("p", {
-    "data-l10n-id": "pocket-panel-signup-cta-b"
+    "data-l10n-id": "pocket-panel-signup-cta-b-updated"
   })), /*#__PURE__*/react.createElement("div", {
     className: "stp_signup_content_wrapper"
   }, /*#__PURE__*/react.createElement("hr", null)), /*#__PURE__*/react.createElement("div", {
@@ -520,7 +520,7 @@ function Signup(props) {
   }), /*#__PURE__*/react.createElement("p", {
     "data-l10n-id": "pocket-panel-signup-cta-b-short"
   }), /*#__PURE__*/react.createElement("strong", null, /*#__PURE__*/react.createElement("p", {
-    "data-l10n-id": "pocket-panel-signup-cta-c"
+    "data-l10n-id": "pocket-panel-signup-cta-c-updated"
   }))), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("span", {
     className: "stp_button_wide"
   }, /*#__PURE__*/react.createElement(Button_Button, {
@@ -872,7 +872,7 @@ function Saved(props) {
     url: `https://${pockethost}/a?${utmParams}`,
     source: "view_list"
   }, /*#__PURE__*/react.createElement("span", {
-    "data-l10n-id": "pocket-panel-header-my-list"
+    "data-l10n-id": "pocket-panel-header-my-saves"
   }))), /*#__PURE__*/react.createElement("hr", null), !removedStatus && savedStatus === "success" && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("h3", {
     className: "header_large header_flex"
   }, /*#__PURE__*/react.createElement("span", {
@@ -904,7 +904,7 @@ function Saved(props) {
     "data-l10n-id": "pocket-panel-saved-processing-remove"
   }), removedStatus === "removed" && /*#__PURE__*/react.createElement("h3", {
     className: "header_large header_center",
-    "data-l10n-id": "pocket-panel-saved-removed"
+    "data-l10n-id": "pocket-panel-saved-removed-updated"
   }), removedStatus === "error" && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("h3", {
     className: "header_large",
     "data-l10n-id": "pocket-panel-saved-error-remove"
