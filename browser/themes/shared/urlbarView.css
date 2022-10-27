@@ -425,6 +425,10 @@
   margin-inline: 1.8em 0;
 }
 
+.urlbarView-row:is([dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help {
+  display: none;
+}
+
 .urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help[selected] {
   outline-offset: var(--focus-outline-offset);
 }
