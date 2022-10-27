@@ -80,7 +80,7 @@ describe("Discovery Stream <TopSites>", () => {
       shim: { impression: "1011" },
     };
     const data = { spocs: [topSiteSpoc] };
-    const resultSpocLeft = {
+    const resultSpocFirst = {
       customScreenshotURL: "foobar",
       type: "SPOC",
       label: "bar",
@@ -94,7 +94,7 @@ describe("Discovery Stream <TopSites>", () => {
       },
       pos: 0,
     };
-    const resultSpocRight = {
+    const resultSpocForth = {
       customScreenshotURL: "foobar",
       type: "SPOC",
       label: "bar",
@@ -106,7 +106,7 @@ describe("Discovery Stream <TopSites>", () => {
       shim: {
         impression: "1011",
       },
-      pos: 7,
+      pos: 4,
     };
     const pinnedSite = {
       label: "pinnedSite",
@@ -119,8 +119,8 @@ describe("Discovery Stream <TopSites>", () => {
     });
 
     it("Should return null if no data or no TopSites", () => {
-      assert.isNull(insertSpocContent(defaultTopSites, {}, "right"));
-      assert.isNull(insertSpocContent({}, data, "right"));
+      assert.isNull(insertSpocContent(defaultTopSites, {}, 1));
+      assert.isNull(insertSpocContent({}, data, 1));
     });
 
     it("Should return null if an organic SPOC topsite exists", () => {
@@ -128,7 +128,7 @@ describe("Discovery Stream <TopSites>", () => {
         rows: [...defaultTopSiteRows, topSiteSpoc],
       };
 
-      assert.isNull(insertSpocContent(topSitesWithOrganicSpoc, data, "right"));
+      assert.isNull(insertSpocContent(topSitesWithOrganicSpoc, data, 1));
     });
 
     it("Should return next spoc if the first SPOC is an existing organic top site", () => {
@@ -152,7 +152,7 @@ describe("Discovery Stream <TopSites>", () => {
       const result = insertSpocContent(
         topSitesWithOrganicSpoc,
         extraSpocData,
-        "right"
+        5
       );
 
       const availableSpoc = {
@@ -167,7 +167,7 @@ describe("Discovery Stream <TopSites>", () => {
         shim: {
           impression: "1011",
         },
-        pos: 7,
+        pos: 5,
       };
       const expectedResult = {
         rows: [...topSitesWithOrganicSpoc.rows, availableSpoc],
@@ -176,71 +176,33 @@ describe("Discovery Stream <TopSites>", () => {
       assert.deepEqual(result, expectedResult);
     });
 
-    it("should add to end of row if the row is not full and alignment is right", () => {
-      const result = insertSpocContent(defaultTopSites, data, "right");
+    it("should add spoc to the 4th position", () => {
+      const result = insertSpocContent(defaultTopSites, data, 4);
 
       const expectedResult = {
-        rows: [...defaultTopSiteRows, resultSpocRight],
+        rows: [...defaultTopSiteRows, resultSpocForth],
       };
       assert.deepEqual(result, expectedResult);
     });
 
-    it("should add to front of row if the row is not full and alignment is left", () => {
-      const result = insertSpocContent(defaultTopSites, data, "left");
+    it("should add to first position", () => {
+      const result = insertSpocContent(defaultTopSites, data, 0);
       assert.deepEqual(result, {
-        rows: [resultSpocLeft, ...defaultTopSiteRows],
+        rows: [resultSpocFirst, ...defaultTopSiteRows],
       });
     });
 
-    it("should add to first available in the front row if alignment is left and there are pins", () => {
+    it("should add to first position even if there are pins", () => {
       const topSiteRowsWithPins = [
         pinnedSite,
         pinnedSite,
         ...defaultTopSiteRows,
       ];
 
-      const result = insertSpocContent(
-        { rows: topSiteRowsWithPins },
-        data,
-        "left"
-      );
+      const result = insertSpocContent({ rows: topSiteRowsWithPins }, data, 0);
 
       assert.deepEqual(result, {
-        rows: [pinnedSite, pinnedSite, resultSpocLeft, ...defaultTopSiteRows],
-      });
-    });
-
-    it("should add to first available in the next row if alignment is right and there are all pins in the front row", () => {
-      const pinnedArray = new Array(8).fill(pinnedSite);
-      const result = insertSpocContent({ rows: pinnedArray }, data, "right");
-
-      assert.deepEqual(result, {
-        rows: [...pinnedArray, resultSpocRight],
-      });
-    });
-
-    it("should add to first available in the current row if alignment is right and there are some pins in the front row", () => {
-      const pinnedArray = new Array(6).fill(pinnedSite);
-      const topSite = { label: "foo" };
-
-      const rowsWithPins = [topSite, topSite, ...pinnedArray];
-
-      const result = insertSpocContent({ rows: rowsWithPins }, data, "right");
-
-      assert.deepEqual(result, {
-        rows: [topSite, resultSpocRight, ...pinnedArray, topSite],
-      });
-    });
-
-    it("should preserve the indices of pinned items", () => {
-      const topSite = { label: "foo" };
-      const rowsWithPins = [pinnedSite, topSite, topSite, pinnedSite];
-
-      const result = insertSpocContent({ rows: rowsWithPins }, data, "left");
-
-      // Pinned items should retain in Index 0 and Index 3 like defined in rowsWithPins
-      assert.deepEqual(result, {
-        rows: [pinnedSite, resultSpocLeft, topSite, pinnedSite, topSite],
+        rows: [resultSpocFirst, pinnedSite, pinnedSite, ...defaultTopSiteRows],
       });
     });
   });
