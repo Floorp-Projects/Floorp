@@ -1,5 +1,7 @@
 /* eslint max-len: ["error", 80] */
 
+"use strict";
+
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
@@ -896,8 +898,8 @@ add_task(async function testSitePermission() {
   checkLabel(row, "updates");
 
   // Private browsing.
-  let private = rows.shift();
-  checkLabel(private, "private-browsing");
+  let privateRow = rows.shift();
+  checkLabel(privateRow, "private-browsing");
 
   let help = rows.shift();
   ok(help.classList.contains("addon-detail-help-row"), "There's a help row");
