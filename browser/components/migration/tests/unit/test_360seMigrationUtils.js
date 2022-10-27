@@ -1,7 +1,7 @@
 "use strict";
 
-const { Qihoo360seMigrationUtils } = ChromeUtils.import(
-  "resource:///modules/360seMigrationUtils.jsm"
+const { Qihoo360seMigrationUtils } = ChromeUtils.importESModule(
+  "resource:///modules/360seMigrationUtils.sys.mjs"
 );
 
 const parentPath = do_get_file("AppData/Roaming/360se6/User Data").path;

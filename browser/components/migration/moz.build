@@ -17,11 +17,11 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "migration"
 
 EXTRA_JS_MODULES += [
-    "ChromeMigrationUtils.jsm",
-    "ChromeProfileMigrator.jsm",
-    "FirefoxProfileMigrator.jsm",
-    "MigrationUtils.jsm",
-    "ProfileMigrator.jsm",
+    "ChromeMigrationUtils.sys.mjs",
+    "ChromeProfileMigrator.sys.mjs",
+    "FirefoxProfileMigrator.sys.mjs",
+    "MigrationUtils.sys.mjs",
+    "ProfileMigrator.sys.mjs",
 ]
 
 if CONFIG["OS_ARCH"] == "WINNT":
@@ -33,12 +33,12 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "nsIEHistoryEnumerator.cpp",
     ]
     EXTRA_JS_MODULES += [
-        "360seMigrationUtils.jsm",
-        "ChromeWindowsLoginCrypto.jsm",
-        "EdgeProfileMigrator.jsm",
-        "ESEDBReader.jsm",
-        "IEProfileMigrator.jsm",
-        "MSMigrationUtils.jsm",
+        "360seMigrationUtils.sys.mjs",
+        "ChromeWindowsLoginCrypto.sys.mjs",
+        "EdgeProfileMigrator.sys.mjs",
+        "ESEDBReader.sys.mjs",
+        "IEProfileMigrator.sys.mjs",
+        "MSMigrationUtils.sys.mjs",
     ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
@@ -46,8 +46,8 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "nsKeychainMigrationUtils.h",
     ]
     EXTRA_JS_MODULES += [
-        "ChromeMacOSLoginCrypto.jsm",
-        "SafariProfileMigrator.jsm",
+        "ChromeMacOSLoginCrypto.sys.mjs",
+        "SafariProfileMigrator.sys.mjs",
     ]
     SOURCES += [
         "nsKeychainMigrationUtils.mm",

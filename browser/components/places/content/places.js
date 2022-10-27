@@ -13,6 +13,7 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 );
 ChromeUtils.defineESModuleGetters(this, {
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.sys.mjs",
+  MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   PlacesBackups: "resource://gre/modules/PlacesBackups.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
@@ -31,11 +32,7 @@ XPCOMUtils.defineLazyScriptGetter(
 var { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "MigrationUtils",
-  "resource:///modules/MigrationUtils.jsm"
-);
+
 ChromeUtils.defineModuleGetter(
   this,
   "DownloadUtils",

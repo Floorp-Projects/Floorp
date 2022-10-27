@@ -2,16 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["Qihoo360seMigrationUtils"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { MigrationUtils } = ChromeUtils.import(
-  "resource:///modules/MigrationUtils.jsm"
-);
+import { MigrationUtils } from "resource:///modules/MigrationUtils.sys.mjs";
 
 const lazy = {};
 
@@ -122,7 +115,7 @@ Bookmarks.prototype = {
   },
 };
 
-var Qihoo360seMigrationUtils = {
+export var Qihoo360seMigrationUtils = {
   async getAlternativeBookmarks({ bookmarksPath, localState }) {
     let lastModificationDate = new Date(0);
     let path = bookmarksPath;

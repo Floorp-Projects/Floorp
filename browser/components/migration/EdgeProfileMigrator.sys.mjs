@@ -2,31 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
-  "resource:///modules/MigrationUtils.jsm"
-);
-const { MSMigrationUtils } = ChromeUtils.import(
-  "resource:///modules/MSMigrationUtils.jsm"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+import {
+  MigrationUtils,
+  MigratorPrototype,
+} from "resource:///modules/MigrationUtils.sys.mjs";
+import { MSMigrationUtils } from "resource:///modules/MSMigrationUtils.sys.mjs";
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  ESEDBReader: "resource:///modules/ESEDBReader.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ESEDBReader",
-  "resource:///modules/ESEDBReader.jsm"
-);
 
 const kEdgeRegistryRoot =
   "SOFTWARE\\Classes\\Local Settings\\Software\\" +
@@ -477,7 +469,7 @@ EdgeBookmarksMigrator.prototype = {
   },
 };
 
-function EdgeProfileMigrator() {
+export function EdgeProfileMigrator() {
   this.wrappedJSObject = this;
 }
 
@@ -570,5 +562,3 @@ EdgeProfileMigrator.prototype.contractID =
 EdgeProfileMigrator.prototype.classID = Components.ID(
   "{62e8834b-2d17-49f5-96ff-56344903a2ae}"
 );
-
-var EXPORTED_SYMBOLS = ["EdgeProfileMigrator"];
