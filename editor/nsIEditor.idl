@@ -7,13 +7,8 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
-interface nsIURI;
-interface nsIContent;
 interface nsISelectionController;
 interface nsIDocumentStateListener;
-interface nsIOutputStream;
-interface nsITransactionManager;
-interface nsITransaction;
 interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
@@ -189,15 +184,6 @@ interface nsIEditor  : nsISupports
   void incrementModificationCount(in long aModCount);
 
   /* ------------ Transaction methods -------------- */
-
-  /**
-   * Retruns the transaction manager which is managed by the editor.
-   * Note that this is deprecated and temporarily available for comm-central.
-   * Therefore, don't use this in new code, and if you want to do something
-   * which is not available with nsIEditor, please file a bug for requesting
-   * new API.
-   */
-  readonly attribute nsITransactionManager transactionManager;
 
   /** turn the undo system on or off
     * @param aEnable  if PR_TRUE, the undo system is turned on if available

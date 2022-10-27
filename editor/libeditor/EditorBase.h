@@ -56,7 +56,6 @@ class nsIPrincipal;
 class nsISupports;
 class nsITransferable;
 class nsITransaction;
-class nsITransactionListener;
 class nsIWidget;
 class nsRange;
 
