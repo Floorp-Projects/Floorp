@@ -176,6 +176,14 @@ class SettingsSubMenuSearchRobot {
 
     fun verifyDefaultSearchEngine(searchEngineName: String) = assertDefaultSearchEngine(searchEngineName)
 
+    fun verifyThreeDotButtonIsNotDisplayed(searchEngineName: String) = assertThreeDotButtonIsNotDisplayed(searchEngineName)
+
+    fun verifyAddSearchEngineListContains(vararg searchEngines: String) {
+        for (searchEngine in searchEngines) {
+            assertEngineListContains(searchEngine)
+        }
+    }
+
     fun saveNewSearchEngine() {
         addSearchEngineSaveButton().click()
         assertTrue(
@@ -250,6 +258,13 @@ class SettingsSubMenuSearchRobot {
             UiSelector().resourceId("org.mozilla.fenix.debug:id/overflow_menu"),
         ).waitForExists(waitingTime)
         threeDotMenu(searchEngineName).click()
+    }
+
+    fun deleteMultipleSearchEngines(vararg searchEngines: String) {
+        for (searchEngine in searchEngines) {
+            openEngineOverflowMenu(searchEngine)
+            clickDeleteSearchEngine()
+        }
     }
 
     fun clickEdit() = onView(withText("Edit")).click()
@@ -366,6 +381,9 @@ private fun assertDefaultSearchEngine(searchEngineName: String) =
 private fun assertEngineListDoesNotContain(searchEngineName: String) {
     onView(withId(R.id.search_engine_group)).check(matches(not(hasDescendant(withText(searchEngineName)))))
 }
+
+private fun assertThreeDotButtonIsNotDisplayed(searchEngineName: String) =
+    threeDotMenu(searchEngineName).check(matches(not(isDisplayed())))
 
 private fun threeDotMenu(searchEngineName: String) =
     onView(

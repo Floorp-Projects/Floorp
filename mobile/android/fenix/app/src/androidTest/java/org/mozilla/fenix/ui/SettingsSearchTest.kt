@@ -343,4 +343,31 @@ class SettingsSearchTest {
             verifyDefaultSearchEngine("Bing")
         }
     }
+
+    // Expected for en-us defaults
+    @Test
+    fun deleteAllSearchEnginesTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            deleteMultipleSearchEngines(
+                "Google",
+                "Bing",
+                "Amazon.com",
+                "DuckDuckGo",
+                "eBay",
+            )
+            verifyDefaultSearchEngine("Wikipedia")
+            verifyThreeDotButtonIsNotDisplayed("Wikipedia")
+            openAddSearchEngineMenu()
+            verifyAddSearchEngineListContains(
+                "Google",
+                "Bing",
+                "Amazon.com",
+                "DuckDuckGo",
+                "eBay",
+            )
+        }
+    }
 }
