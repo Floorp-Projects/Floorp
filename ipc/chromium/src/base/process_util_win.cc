@@ -92,80 +92,9 @@ void CloseProcessHandle(ProcessHandle process) {
   DCHECK(ok);
 }
 
-// Helper for GetProcId()
-bool GetProcIdViaGetProcessId(ProcessHandle process, DWORD* id) {
-  // Dynamically get a pointer to GetProcessId().
-  typedef DWORD(WINAPI * GetProcessIdFunction)(HANDLE);
-  static GetProcessIdFunction GetProcessIdPtr = NULL;
-  static bool initialize_get_process_id = true;
-  if (initialize_get_process_id) {
-    initialize_get_process_id = false;
-    HMODULE kernel32_handle = GetModuleHandle(L"kernel32.dll");
-    if (!kernel32_handle) {
-      NOTREACHED();
-      return false;
-    }
-    GetProcessIdPtr = reinterpret_cast<GetProcessIdFunction>(
-        GetProcAddress(kernel32_handle, "GetProcessId"));
-  }
-  if (!GetProcessIdPtr) return false;
-  // Ask for the process ID.
-  *id = (*GetProcessIdPtr)(process);
-  return true;
-}
-
-// Helper for GetProcId()
-bool GetProcIdViaNtQueryInformationProcess(ProcessHandle process, DWORD* id) {
-  // Dynamically get a pointer to NtQueryInformationProcess().
-  typedef NTSTATUS(WINAPI * NtQueryInformationProcessFunction)(
-      HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
-  static NtQueryInformationProcessFunction NtQueryInformationProcessPtr = NULL;
-  static bool initialize_query_information_process = true;
-  if (initialize_query_information_process) {
-    initialize_query_information_process = false;
-    // According to nsylvain, ntdll.dll is guaranteed to be loaded, even though
-    // the Windows docs seem to imply that you should LoadLibrary() it.
-    HMODULE ntdll_handle = GetModuleHandle(L"ntdll.dll");
-    if (!ntdll_handle) {
-      NOTREACHED();
-      return false;
-    }
-    NtQueryInformationProcessPtr =
-        reinterpret_cast<NtQueryInformationProcessFunction>(
-            GetProcAddress(ntdll_handle, "NtQueryInformationProcess"));
-  }
-  if (!NtQueryInformationProcessPtr) return false;
-  // Ask for the process ID.
-  PROCESS_BASIC_INFORMATION info;
-  ULONG bytes_returned;
-  NTSTATUS status = (*NtQueryInformationProcessPtr)(
-      process, ProcessBasicInformation, &info, sizeof info, &bytes_returned);
-  if (!SUCCEEDED(status) || (bytes_returned != (sizeof info))) return false;
-
-  *id = static_cast<DWORD>(info.UniqueProcessId);
-  return true;
-}
-
 ProcessId GetProcId(ProcessHandle process) {
-  // Get a handle to |process| that has PROCESS_QUERY_INFORMATION rights.
-  HANDLE current_process = GetCurrentProcess();
-  HANDLE process_with_query_rights;
-  if (DuplicateHandle(current_process, process, current_process,
-                      &process_with_query_rights, PROCESS_QUERY_INFORMATION,
-                      false, 0)) {
-    // Try to use GetProcessId(), if it exists.  Fall back on
-    // NtQueryInformationProcess() otherwise (< Win XP SP1).
-    DWORD id;
-    bool success =
-        GetProcIdViaGetProcessId(process_with_query_rights, &id) ||
-        GetProcIdViaNtQueryInformationProcess(process_with_query_rights, &id);
-    CloseHandle(process_with_query_rights);
-    if (success) return id;
-  }
-
-  // We're screwed.
-  NOTREACHED();
-  return 0;
+  // This returns 0 if we have insufficient rights to query the process handle.
+  return GetProcessId(process);
 }
 
 // from sandbox_policy_base.cc in a later version of the chromium ipc code...
