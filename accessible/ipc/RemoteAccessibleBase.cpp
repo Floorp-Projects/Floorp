@@ -724,6 +724,38 @@ Relation RemoteAccessibleBase<Derived>::RelationByType(
     return Relation();
   }
 
+  if (aType == RelationType::MEMBER_OF) {
+    Relation rel = Relation();
+    if (IsARIARole(nsGkAtoms::radio)) {
+      // ARIA radio buttons should be grouped by their radio group
+      // parent, if one exists.
+      RemoteAccessible* currParent = RemoteParent();
+      while (currParent && currParent->Role() != roles::RADIO_GROUP) {
+        currParent = currParent->RemoteParent();
+      }
+
+      if (currParent && currParent->Role() == roles::RADIO_GROUP) {
+        // If we found a radiogroup parent, search for all
+        // roles::RADIOBUTTON children and add them to our relation.
+        // This search will include the radio button this method
+        // was called from, which is expected.
+        Pivot p = Pivot(currParent);
+        PivotRoleRule rule(roles::RADIOBUTTON);
+        Accessible* match = p.Next(currParent, rule);
+        while (match) {
+          MOZ_ASSERT(match->IsRemote(),
+                     "We should only be traversing the remote tree.");
+          rel.AppendTarget(match->AsRemote());
+          match = p.Next(match, rule);
+        }
+      }
+    }
+    // By webkit's standard, aria radio buttons do not get grouped
+    // if they lack a group parent, so we return an empty
+    // relation here if the above check fails.
+    return rel;
+  }
+
   Relation rel;
   if (!mCachedFields) {
     return rel;
