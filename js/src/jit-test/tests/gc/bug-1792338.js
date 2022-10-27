@@ -9,6 +9,6 @@ enqueueMark('set-color-gray');
 enqueueMark(newGlobal({newCompartment: true}));
 enqueueMark('set-color-black');
 enqueueMark({});
-setMarkStackLimit(1);
+gcparam("markStackLimit", 1);
 gc();
 gc();
