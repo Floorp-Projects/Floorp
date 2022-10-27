@@ -1,3 +1,5 @@
+"use strict";
+
 function ok(a, msg) {
   dump("OK: " + !!a + "  =>  " + a + " " + msg + "\n");
   postMessage({ type: "status", status: !!a, msg: a + ": " + msg });
@@ -599,15 +601,6 @@ function promiseResolveNestedPromise() {
       ok(false, "This should not be called");
     }
   );
-}
-
-function promiseRejectNoHandler() {
-  // This test only checks that the code that reports unhandled errors in the
-  // Promises implementation does not crash or leak.
-  var promise = new Promise(function(res, rej) {
-    noSuchMethod();
-  });
-  runTest();
 }
 
 function promiseUtilitiesDefined() {
