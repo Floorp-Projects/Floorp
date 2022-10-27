@@ -3,20 +3,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-/* eslint-disable mozilla/balanced-listeners */
-
-// libc is exported for tests. It is imported into this file lower down,
-// from the shared scripts loaded via loadSubScript.
-var EXPORTED_SYMBOLS = ["SubprocessImpl", "libc"];
+import {
+  BaseProcess,
+  PromiseWorker,
+} from "resource://gre/modules/subprocess/subprocess_common.sys.mjs";
 
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-const { BaseProcess, PromiseWorker } = ChromeUtils.import(
-  "resource://gre/modules/subprocess/subprocess_common.jsm"
-);
 
-var obj = {};
+var obj = { ctypes };
 Services.scriptloader.loadSubScript(
   "resource://gre/modules/subprocess/subprocess_shared.js",
   obj
@@ -26,7 +21,10 @@ Services.scriptloader.loadSubScript(
   obj
 );
 
-const { SubprocessConstants, libc, LIBC } = obj;
+const { SubprocessConstants, LIBC } = obj;
+
+// libc is exported for tests.
+export var libc = obj.libc;
 
 class UnixPromiseWorker extends PromiseWorker {
   constructor(...args) {
@@ -202,4 +200,4 @@ var SubprocessUnix = {
   },
 };
 
-var SubprocessImpl = SubprocessUnix;
+export var SubprocessImpl = SubprocessUnix;

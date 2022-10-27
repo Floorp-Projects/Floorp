@@ -10,36 +10,22 @@
  * differs drastically.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["Subprocess", "getSubprocessImplForTest"];
-
-/* exported Subprocess */
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { SubprocessConstants } = ChromeUtils.import(
-  "resource://gre/modules/subprocess/subprocess_common.jsm"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { SubprocessConstants } from "resource://gre/modules/subprocess/subprocess_common.sys.mjs";
 
 const lazy = {};
 
 if (AppConstants.platform == "win") {
-  ChromeUtils.defineModuleGetter(
-    lazy,
-    "SubprocessImpl",
-    "resource://gre/modules/subprocess/subprocess_win.jsm"
-  );
+  ChromeUtils.defineESModuleGetters(lazy, {
+    SubprocessImpl: "resource://gre/modules/subprocess/subprocess_win.sys.mjs",
+  });
 } else {
   // Ignore the "duplicate" definitions here as this are also defined
   // in the "win" block above.
   // eslint-disable-next-line mozilla/valid-lazy
-  ChromeUtils.defineModuleGetter(
-    lazy,
-    "SubprocessImpl",
-    "resource://gre/modules/subprocess/subprocess_unix.jsm"
-  );
+  ChromeUtils.defineESModuleGetters(lazy, {
+    SubprocessImpl: "resource://gre/modules/subprocess/subprocess_unix.sys.mjs",
+  });
 }
 
 function encodeEnvVar(name, value) {
@@ -63,7 +49,7 @@ function platformSupportsDisclaimedSpawn() {
  * Allows for creation of and communication with OS-level sub-processes.
  * @namespace
  */
-var Subprocess = {
+export var Subprocess = {
   /**
    * Launches a process, and returns a handle to it.
    *
@@ -209,6 +195,6 @@ var Subprocess = {
 Object.assign(Subprocess, SubprocessConstants);
 Object.freeze(Subprocess);
 
-function getSubprocessImplForTest() {
+export function getSubprocessImplForTest() {
   return lazy.SubprocessImpl;
 }

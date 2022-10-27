@@ -3,24 +3,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-/* eslint-disable mozilla/balanced-listeners */
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import {
+  BaseProcess,
+  PromiseWorker,
+} from "resource://gre/modules/subprocess/subprocess_common.sys.mjs";
 
-// libc and win32 are exported for tests. It is imported into this file lower
-// down, from the shared scripts loaded via loadSubScript.
-var EXPORTED_SYMBOLS = ["SubprocessImpl", "libc", "win32"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { BaseProcess, PromiseWorker } = ChromeUtils.import(
-  "resource://gre/modules/subprocess/subprocess_common.jsm"
-);
 
 const lazy = {};
 
@@ -31,7 +22,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIEnvironment"
 );
 
-var obj = {};
+var obj = { ctypes };
 Services.scriptloader.loadSubScript(
   "resource://gre/modules/subprocess/subprocess_shared.js",
   obj
@@ -41,7 +32,11 @@ Services.scriptloader.loadSubScript(
   obj
 );
 
-const { SubprocessConstants, libc, win32 } = obj;
+const { SubprocessConstants } = obj;
+
+// libc and win32 are exported for tests.
+export const libc = obj.libc;
+export const win32 = obj.win32;
 
 class WinPromiseWorker extends PromiseWorker {
   constructor(...args) {
@@ -190,4 +185,4 @@ var SubprocessWin = {
   },
 };
 
-var SubprocessImpl = SubprocessWin;
+export var SubprocessImpl = SubprocessWin;
