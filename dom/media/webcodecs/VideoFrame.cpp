@@ -1179,10 +1179,16 @@ VideoFrame::VideoFrame(const VideoFrame& aOther)
   MOZ_ASSERT(mParent);
 }
 
-nsIGlobalObject* VideoFrame::GetParentObject() const { return mParent.get(); }
+nsIGlobalObject* VideoFrame::GetParentObject() const {
+  AssertIsOnOwningThread();
+
+  return mParent.get();
+}
 
 JSObject* VideoFrame::WrapObject(JSContext* aCx,
                                  JS::Handle<JSObject*> aGivenProto) {
+  AssertIsOnOwningThread();
+
   return VideoFrame_Binding::Wrap(aCx, this, aGivenProto);
 }
 
