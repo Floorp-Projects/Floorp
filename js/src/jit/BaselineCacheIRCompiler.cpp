@@ -1275,10 +1275,6 @@ bool BaselineCacheIRCompiler::emitMathRandomResult(uint32_t rngOffset) {
   masm.randomDouble(scratch1, scratchFloat, scratch2,
                     output.valueReg().toRegister64());
 
-  if (js::SupportDifferentialTesting()) {
-    masm.zeroDouble(scratchFloat);
-  }
-
   masm.boxDouble(scratchFloat, output.valueReg(), scratchFloat);
   return true;
 }

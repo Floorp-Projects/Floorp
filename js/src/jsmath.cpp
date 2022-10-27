@@ -25,7 +25,6 @@
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
 #include "js/PropertySpec.h"
-#include "util/DifferentialTesting.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 #include "vm/Time.h"
@@ -520,11 +519,7 @@ double js::math_random_impl(JSContext* cx) {
 
 static bool math_random(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  if (js::SupportDifferentialTesting()) {
-    args.rval().setDouble(0);
-  } else {
-    args.rval().setDouble(math_random_impl(cx));
-  }
+  args.rval().setDouble(math_random_impl(cx));
   return true;
 }
 
