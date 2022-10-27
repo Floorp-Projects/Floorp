@@ -74,7 +74,16 @@ class PowerMeterChannel final : public BaseProfilerCount {
       mLabel = "Power: DRAM";
       mDescription = mChannelName.get();
     } else {
-      mLabel = mChannelName.get();
+      unsigned int coreId;
+      if (sscanf(mChannelName.get(), "RAPL_Package0_Core%u_CORE", &coreId) ==
+          1) {
+        mLabelString = "Power: CPU core ";
+        mLabelString.AppendInt(coreId);
+        mLabel = mLabelString.get();
+        mDescription = mChannelName.get();
+      } else {
+        mLabel = mChannelName.get();
+      }
     }
   }
 
@@ -106,6 +115,10 @@ class PowerMeterChannel final : public BaseProfilerCount {
  private:
   int64_t mCounter;
   nsCString mChannelName;
+
+  // Used as a storage when the label can not be a literal string.
+  nsCString mLabelString;
+
   ULONGLONG mPreviousValue;
   ULONGLONG mPreviousTime;
   bool mIsSampleNew;
