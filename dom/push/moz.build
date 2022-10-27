@@ -21,15 +21,10 @@ EXTRA_JS_MODULES += [
 ]
 
 if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
-    # Everything but Fennec.
+    # Everything but GeckoView.
     EXTRA_JS_MODULES += [
         "PushServiceHttp2.sys.mjs",
         "PushServiceWebSocket.sys.mjs",
-    ]
-else:
-    # Fennec only.
-    EXTRA_JS_MODULES += [
-        "PushServiceAndroidGCM.sys.mjs",
     ]
 
 XPCOM_MANIFESTS += [
