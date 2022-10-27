@@ -12711,7 +12711,11 @@
 # security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
 - name: security.sandbox.gpu.level
   type: int32_t
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+  value: 1
+#else
   value: 0
+#endif
   mirror: always
 
 # Enrollment preferences for the win32k experiment, set and managed by Normandy
