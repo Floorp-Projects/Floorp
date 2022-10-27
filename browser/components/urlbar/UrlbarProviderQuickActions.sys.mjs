@@ -210,7 +210,6 @@ class ProviderQuickActions extends UrlbarProvider {
           tag: "a",
           attributes: {
             "data-key": "onboarding-button",
-            role: "button",
             class: "urlbarView-button urlbarView-button-help",
             "data-l10n-id": "quickactions-learn-more",
           },
