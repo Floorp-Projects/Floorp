@@ -1313,9 +1313,9 @@ nsFrameConstructorSaveState::~nsFrameConstructorSaveState() {
     MOZ_ASSERT(mState, "Can't have mList set without having a state!");
     mState->ProcessFrameInsertions(*mList, mChildListID);
 
-    mState->mFixedPosIsAbsPos = mSavedFixedPosIsAbsPos;
     if (mSavedFixedPosIsAbsPos) {
       MOZ_ASSERT(mList == &mState->mAbsoluteList);
+      mState->mFixedPosIsAbsPos = mSavedFixedPosIsAbsPos;
       // mAbsoluteList was moved to mFixedList, so move mFixedList back
       // and repair the old mFixedList now.
       mState->mAbsoluteList = std::move(mState->mFixedList);
