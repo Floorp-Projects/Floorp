@@ -522,11 +522,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
    */
   js::ContextData<int32_t> suppressGC;
 
-#ifdef FUZZING_JS_FUZZILLI
-  uint32_t executionHash;
-  uint32_t executionHashInputs;
-#endif
-
 #ifdef DEBUG
   js::ContextData<size_t> noNurseryAllocationCheck;
 

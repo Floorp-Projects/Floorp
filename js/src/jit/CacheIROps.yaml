@@ -2921,12 +2921,3 @@
   args:
     val: ValId
     mustBeRecovered: BoolImm
-
-#ifdef FUZZING_JS_FUZZILLI
-- name: FuzzilliHashResult
-  shared: true
-  transpile: true
-  cost_estimate: 4
-  args:
-    val: ValId
-#endif

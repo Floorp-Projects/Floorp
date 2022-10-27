@@ -22,7 +22,6 @@
 #include "jit/TrialInlining.h"
 #include "jit/TypeData.h"
 #include "jit/WarpBuilder.h"
-#include "util/DifferentialTesting.h"
 #include "vm/BuiltinObjectKind.h"
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
@@ -188,8 +187,7 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   HashNumber hash = icScript->hash();
   if (outerScript_->jitScript()->hasFailedICHash()) {
     HashNumber oldHash = outerScript_->jitScript()->getFailedICHash();
-    MOZ_ASSERT_IF(hash == oldHash && !js::SupportDifferentialTesting(),
-                  cx_->hadResourceExhaustion());
+    MOZ_ASSERT_IF(hash == oldHash, cx_->hadResourceExhaustion());
   }
   snapshot->setICHash(hash);
 #endif
