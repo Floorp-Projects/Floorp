@@ -18,7 +18,7 @@ add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.widget.inNavBar", true],
-      ["browser.urlbar.showSearchTerms", true],
+      ["browser.urlbar.showSearchTerms.shouldShow", true],
     ],
   });
 
@@ -55,6 +55,16 @@ function assertSearchStringIsNotInUrlbar(searchString) {
     gURLBar.getAttribute("pageproxystate"),
     "valid",
     "Pageproxystate should be valid"
+  );
+  Assert.equal(
+    gBrowser.selectedBrowser.showingSearchTerms,
+    false,
+    "showingSearchTerms should be false"
+  );
+  Assert.notEqual(
+    gBrowser.userTypedValue,
+    searchString,
+    `${searchString} should not be the user typed value`
   );
 }
 

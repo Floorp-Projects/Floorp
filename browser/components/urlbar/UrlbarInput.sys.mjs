@@ -334,17 +334,19 @@ export class UrlbarInput {
     dueToSessionRestore = false,
     dontShowSearchTerms = false
   ) {
-    if (
-      !dontShowSearchTerms &&
-      lazy.UrlbarPrefs.get("showSearchTerms") &&
-      !lazy.UrlbarPrefs.get("browser.search.widget.inNavBar") &&
-      this.window.gBrowser.userTypedValue == null
-    ) {
-      let term = this._getSearchTermIfDefaultSerpUrl(
-        this.window.gBrowser.selectedBrowser.originalURI ?? uri
-      );
-      if (term) {
-        this.window.gBrowser.userTypedValue = term;
+    if (!dontShowSearchTerms && this.window.gBrowser.userTypedValue == null) {
+      this.window.gBrowser.selectedBrowser.showingSearchTerms = false;
+      if (
+        lazy.UrlbarPrefs.get("showSearchTerms.shouldShow") &&
+        !lazy.UrlbarPrefs.get("browser.search.widget.inNavBar")
+      ) {
+        let term = this._getSearchTermIfDefaultSerpUrl(
+          this.window.gBrowser.selectedBrowser.originalURI ?? uri
+        );
+        if (term) {
+          this.window.gBrowser.userTypedValue = term;
+          this.window.gBrowser.selectedBrowser.showingSearchTerms = true;
+        }
       }
     }
 
@@ -2466,6 +2468,11 @@ export class UrlbarInput {
       // necessary; the intent is the same regardless of whether the user is
       // in search mode when they do a key-modified click/enter on a one-off.
       source = "urlbar-searchmode";
+    } else if (
+      this.window.gBrowser.selectedBrowser.showingSearchTerms &&
+      !isOneOff
+    ) {
+      source = "urlbar-persisted";
     }
 
     lazy.BrowserSearchTelemetry.recordSearch(
@@ -2625,7 +2632,8 @@ export class UrlbarInput {
     // No point in setting these because we'll handleRevert() a few rows below.
     if (openUILinkWhere == "current") {
       this.value =
-        lazy.UrlbarPrefs.get("showSearchTerms") && resultDetails?.searchTerm
+        lazy.UrlbarPrefs.get("showSearchTerms.shouldShow") &&
+        resultDetails?.searchTerm
           ? resultDetails.searchTerm
           : url;
       browser.userTypedValue = this.value;

@@ -104,6 +104,7 @@
       this._inPermitUnload = new WeakSet();
 
       this._originalURI = null;
+      this._showingSearchTerms = false;
 
       /**
        * These are managed by the tabbrowser:
@@ -232,6 +233,8 @@
       this._documentURI = null;
 
       this._originalURI = null;
+
+      this._showingSearchTerms = false;
 
       this._documentContentType = null;
 
@@ -726,6 +729,14 @@
 
     get originalURI() {
       return this._originalURI;
+    }
+
+    set showingSearchTerms(val) {
+      this._showingSearchTerms = !!val;
+    }
+
+    get showingSearchTerms() {
+      return this._showingSearchTerms;
     }
 
     _wrapURIChangeCall(fn) {
