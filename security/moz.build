@@ -131,8 +131,9 @@ sandbox_vars = {
     # with linker scripts.
     "COMPILE_FLAGS": {
         "VISIBILITY": [],
-        # XXX: We should fix these warnings.
-        "WARNINGS_AS_ERRORS": [],
+        "WARNINGS_CFLAGS": [
+            f for f in CONFIG["WARNINGS_CFLAGS"] if f != "-Wsign-compare"
+        ],
     },
     # NSS' build system doesn't currently build NSS with PGO.
     # We could probably do so, but not without a lot of
