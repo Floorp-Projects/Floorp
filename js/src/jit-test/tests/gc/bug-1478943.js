@@ -1,3 +1,3 @@
 gczeal(0);
-gcparam("markStackLimit", 1);
+setMarkStackLimit(1);
 startgc(1);

@@ -130,10 +130,8 @@ class MarkStack {
     TaggedPtr ptr_;
   };
 
-  explicit MarkStack(size_t maxCapacity = DefaultCapacity);
+  explicit MarkStack();
   ~MarkStack();
-
-  static const size_t DefaultCapacity = SIZE_MAX;
 
   // The unit for MarkStack::capacity() is mark stack entries.
   size_t capacity() { return stack().length(); }
@@ -143,8 +141,9 @@ class MarkStack {
   [[nodiscard]] bool init(bool incrementalGCEnabled);
   [[nodiscard]] bool setStackCapacity(bool incrementalGCEnabled);
 
-  size_t maxCapacity() const { return maxCapacity_; }
+#ifdef JS_GC_ZEAL
   void setMaxCapacity(size_t maxCapacity);
+#endif
 
   template <typename T>
   [[nodiscard]] bool push(T* ptr);
@@ -192,17 +191,19 @@ class MarkStack {
   const TaggedPtr& peekPtr() const;
   [[nodiscard]] bool pushTaggedPtr(Tag tag, Cell* ptr);
 
-  // Index of the top of the stack.
-  MainThreadOrGCTaskData<size_t> topIndex_;
-
-  // The maximum stack capacity to grow to.
-  MainThreadOrGCTaskData<size_t> maxCapacity_;
-
   // Vector containing allocated stack memory. Unused beyond topIndex_.
   MainThreadOrGCTaskData<StackVector> stack_;
 
+  // Index of the top of the stack.
+  MainThreadOrGCTaskData<size_t> topIndex_;
+
+#ifdef JS_GC_ZEAL
+  // The maximum stack capacity to grow to.
+  MainThreadOrGCTaskData<size_t> maxCapacity_{SIZE_MAX};
+#endif
+
 #ifdef DEBUG
-  mutable size_t iteratorCount_;
+  mutable size_t iteratorCount_ = 0;
 #endif
 };
 
@@ -233,8 +234,9 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
   explicit GCMarker(JSRuntime* rt);
   [[nodiscard]] bool init();
 
+#ifdef JS_GC_ZEAL
   void setMaxCapacity(size_t maxCap) { stack.setMaxCapacity(maxCap); }
-  size_t maxCapacity() const { return stack.maxCapacity(); }
+#endif
 
   bool isActive() const { return state != MarkingState::NotActive; }
 
