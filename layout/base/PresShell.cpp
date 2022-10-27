@@ -3784,7 +3784,7 @@ bool PresShell::ScrollFrameIntoView(
     const nsPoint pos = aFrame->GetPosition();
     const nsPoint normalPos = aFrame->GetNormalPosition();
     if (pos == normalPos) {
-      return; // Frame is not stuck.
+      return;  // Frame is not stuck.
     }
     // If we're targetting a sticky element, make sure not to apply
     // scroll-padding on the direction we're stuck.

@@ -391,9 +391,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
     return false;
   }
 
-  void ShowWithPositionedEvent() {
-    mPopupState = ePopupPositioning;
-  }
+  void ShowWithPositionedEvent() { mPopupState = ePopupPositioning; }
 
   // Checks for the anchor to change and either moves or hides the popup
   // accordingly. The original position of the anchor should be supplied as
