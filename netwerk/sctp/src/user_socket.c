@@ -115,8 +115,8 @@ usrsctp_init(uint16_t port,
 
 void
 usrsctp_init_nothreads(uint16_t port,
-		       int (*conn_output)(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df),
-		       void (*debug_printf)(const char *format, ...))
+                       int (*conn_output)(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df),
+                       void (*debug_printf)(const char *format, ...))
 {
 	init_sync();
 	sctp_init(port, conn_output, debug_printf, 0);
@@ -251,7 +251,7 @@ sofree(struct socket *so)
 
 	ACCEPT_LOCK_ASSERT();
 	SOCK_LOCK_ASSERT(so);
-	/* SS_NOFDREF unset in accept call.  this condition seems irrelevent
+	/* SS_NOFDREF unset in accept call.  this condition seems irrelevant
 	 *  for __Userspace__...
 	 */
 	if (so->so_count != 0 ||
@@ -296,7 +296,7 @@ sofree(struct socket *so)
 	 * necessary from sorflush().
 	 *
 	 * Notice that the socket buffer and kqueue state are torn down
-	 * before calling pru_detach.  This means that protocols shold not
+	 * before calling pru_detach.  This means that protocols should not
 	 * assume they can perform socket wakeups, etc, in their detach code.
 	 */
 	sodealloc(so);
@@ -1324,11 +1324,11 @@ struct socket *
 usrsctp_socket(int domain, int type, int protocol,
 	       int (*receive_cb)(struct socket *sock, union sctp_sockstore addr, void *data,
                                  size_t datalen, struct sctp_rcvinfo, int flags, void *ulp_info),
-	       int (*send_cb)(struct socket *sock, uint32_t sb_free),
+	       int (*send_cb)(struct socket *sock, uint32_t sb_free, void *ulp_info),
 	       uint32_t sb_threshold,
 	       void *ulp_info)
 {
-	struct socket *so;
+	struct socket *so = NULL;
 
 	if ((protocol == IPPROTO_SCTP) && (SCTP_BASE_VAR(sctp_pcb_initialized) == 0)) {
 		errno = EPROTONOSUPPORT;
@@ -1878,7 +1878,7 @@ soconnect(struct socket *so, struct sockaddr *nam)
 	 * Otherwise, if connected, try to disconnect first.  This allows
 	 * user to disconnect by connecting to, e.g., a null address.
 	 */
-	if (so->so_state & (SS_ISCONNECTED|SS_ISCONNECTING) && (error = sodisconnect(so))) {
+	if (so->so_state & (SS_ISCONNECTED|SS_ISCONNECTING) && (sodisconnect(so) != 0)) {
 		error = EISCONN;
 	} else {
 		/*
@@ -2210,7 +2210,7 @@ usrsctp_getsockopt(struct socket *so, int level, int option_name,
 				int *buf_size;
 
 				buf_size = (int *)option_value;
-				*buf_size = so->so_rcv.sb_hiwat;;
+				*buf_size = so->so_rcv.sb_hiwat;
 				*option_len = (socklen_t)sizeof(int);
 				return (0);
 			}
@@ -2695,22 +2695,26 @@ usrsctp_getpaddrs(struct socket *so, sctp_assoc_t id, struct sockaddr **raddrs)
 {
 	struct sctp_getaddresses *addrs;
 	struct sockaddr *sa;
-	sctp_assoc_t asoc;
 	caddr_t lim;
 	socklen_t opt_len;
+	uint32_t size_of_addresses;
 	int cnt;
 
 	if (raddrs == NULL) {
 		errno = EFAULT;
 		return (-1);
 	}
-	asoc = id;
-	opt_len = (socklen_t)sizeof(sctp_assoc_t);
-	if (usrsctp_getsockopt(so, IPPROTO_SCTP, SCTP_GET_REMOTE_ADDR_SIZE, &asoc, &opt_len) != 0) {
-		return (-1);
+	/* When calling getsockopt(), the value contains the assoc_id. */
+	size_of_addresses = (uint32_t)id;
+	opt_len = (socklen_t)sizeof(uint32_t);
+	if (usrsctp_getsockopt(so, IPPROTO_SCTP, SCTP_GET_REMOTE_ADDR_SIZE, &size_of_addresses, &opt_len) != 0) {
+		if (errno == ENOENT) {
+			return (0);
+		} else {
+			return (-1);
+		}
 	}
-	/* size required is returned in 'asoc' */
-	opt_len = (socklen_t)((size_t)asoc + sizeof(struct sctp_getaddresses));
+	opt_len = (socklen_t)((size_t)size_of_addresses + sizeof(struct sctp_getaddresses));
 	addrs = calloc(1, (size_t)opt_len);
 	if (addrs == NULL) {
 		errno = ENOMEM;
@@ -2770,10 +2774,10 @@ int
 usrsctp_getladdrs(struct socket *so, sctp_assoc_t id, struct sockaddr **raddrs)
 {
 	struct sctp_getaddresses *addrs;
-	caddr_t lim;
 	struct sockaddr *sa;
-	size_t size_of_addresses;
+	caddr_t lim;
 	socklen_t opt_len;
+	uint32_t size_of_addresses;
 	int cnt;
 
 	if (raddrs == NULL) {
@@ -2781,13 +2785,8 @@ usrsctp_getladdrs(struct socket *so, sctp_assoc_t id, struct sockaddr **raddrs)
 		return (-1);
 	}
 	size_of_addresses = 0;
-	opt_len = (socklen_t)sizeof(int);
+	opt_len = (socklen_t)sizeof(uint32_t);
 	if (usrsctp_getsockopt(so, IPPROTO_SCTP, SCTP_GET_LOCAL_ADDR_SIZE, &size_of_addresses, &opt_len) != 0) {
-		errno = ENOMEM;
-		return (-1);
-	}
-	if (size_of_addresses == 0) {
-		errno = ENOTCONN;
 		return (-1);
 	}
 	opt_len = (socklen_t)(size_of_addresses + sizeof(struct sctp_getaddresses));
@@ -2800,8 +2799,11 @@ usrsctp_getladdrs(struct socket *so, sctp_assoc_t id, struct sockaddr **raddrs)
 	/* Now lets get the array of addresses */
 	if (usrsctp_getsockopt(so, IPPROTO_SCTP, SCTP_GET_LOCAL_ADDRESSES, addrs, &opt_len) != 0) {
 		free(addrs);
-		errno = ENOMEM;
 		return (-1);
+	}
+	if (size_of_addresses == 0) {
+		free(addrs);
+		return (0);
 	}
 	*raddrs = &addrs->addr[0].sa;
 	cnt = 0;
@@ -2850,14 +2852,13 @@ usrsctp_freeladdrs(struct sockaddr *addrs)
 #ifdef INET
 void
 sctp_userspace_ip_output(int *result, struct mbuf *o_pak,
-                         sctp_route_t *ro, void *stcb,
+                         sctp_route_t *ro, void *inp,
                          uint32_t vrf_id)
 {
 	struct mbuf *m;
 	struct mbuf *m_orig;
 	int iovcnt;
 	int len;
-	int send_count;
 	struct ip *ip;
 	struct udphdr *udp;
 	struct sockaddr_in dst;
@@ -2930,16 +2931,13 @@ sctp_userspace_ip_output(int *result, struct mbuf *o_pak,
 		m_adj(m, sizeof(struct ip) + sizeof(struct udphdr));
 	}
 
-	send_count = 0;
 	for (iovcnt = 0; m != NULL && iovcnt < MAXLEN_MBUF_CHAIN; m = m->m_next, iovcnt++) {
 #if !defined(_WIN32)
 		send_iovec[iovcnt].iov_base = (caddr_t)m->m_data;
 		send_iovec[iovcnt].iov_len = SCTP_BUF_LEN(m);
-		send_count += send_iovec[iovcnt].iov_len;
 #else
 		send_iovec[iovcnt].buf = (caddr_t)m->m_data;
 		send_iovec[iovcnt].len = SCTP_BUF_LEN(m);
-		send_count += send_iovec[iovcnt].len;
 #endif
 	}
 
@@ -2995,14 +2993,13 @@ free_mbuf:
 
 #if defined(INET6)
 void sctp_userspace_ip6_output(int *result, struct mbuf *o_pak,
-                                            struct route_in6 *ro, void *stcb,
+                                            struct route_in6 *ro, void *inp,
                                             uint32_t vrf_id)
 {
 	struct mbuf *m;
 	struct mbuf *m_orig;
 	int iovcnt;
 	int len;
-	int send_count;
 	struct ip6_hdr *ip6;
 	struct udphdr *udp;
 	struct sockaddr_in6 dst;
@@ -3073,19 +3070,16 @@ void sctp_userspace_ip6_output(int *result, struct mbuf *o_pak,
 	if (use_udp_tunneling) {
 		m_adj(m, sizeof(struct ip6_hdr) + sizeof(struct udphdr));
 	} else {
-	  m_adj(m, sizeof(struct ip6_hdr));
+		m_adj(m, sizeof(struct ip6_hdr));
 	}
 
-	send_count = 0;
 	for (iovcnt = 0; m != NULL && iovcnt < MAXLEN_MBUF_CHAIN; m = m->m_next, iovcnt++) {
 #if !defined(_WIN32)
 		send_iovec[iovcnt].iov_base = (caddr_t)m->m_data;
 		send_iovec[iovcnt].iov_len = SCTP_BUF_LEN(m);
-		send_count += send_iovec[iovcnt].iov_len;
 #else
 		send_iovec[iovcnt].buf = (caddr_t)m->m_data;
 		send_iovec[iovcnt].len = SCTP_BUF_LEN(m);
-		send_count += send_iovec[iovcnt].len;
 #endif
 	}
 	if (m != NULL) {
@@ -3297,7 +3291,7 @@ usrsctp_conninput(void *addr, const void *buffer, size_t length, uint8_t ecn_bit
 	struct mbuf *m, *mm;
 	struct sctphdr *sh;
 	struct sctp_chunkhdr *ch;
-	int remaining;
+	int remaining, offset;
 
 	SCTP_STAT_INCR(sctps_recvpackets);
 	SCTP_STAT_INCR_COUNTER64(sctps_inpackets);
@@ -3327,17 +3321,19 @@ usrsctp_conninput(void *addr, const void *buffer, size_t length, uint8_t ecn_bit
 	}
 	KASSERT(remaining == 0, ("usrsctp_conninput: %zu bytes left", remaining));
 	m_copyback(m, 0, (int)length, (caddr_t)buffer);
-	if (SCTP_BUF_LEN(m) < (int)(sizeof(struct sctphdr) + sizeof(struct sctp_chunkhdr))) {
-		if ((m = m_pullup(m, sizeof(struct sctphdr) + sizeof(struct sctp_chunkhdr))) == NULL) {
+	offset = sizeof(struct sctphdr) + sizeof(struct sctp_chunkhdr);
+	if (SCTP_BUF_LEN(m) < offset) {
+		if ((m = m_pullup(m, offset)) == NULL) {
 			SCTP_STAT_INCR(sctps_hdrops);
 			return;
 		}
 	}
-	sh = mtod(m, struct sctphdr *);;
+	sh = mtod(m, struct sctphdr *);
 	ch = (struct sctp_chunkhdr *)((caddr_t)sh + sizeof(struct sctphdr));
+	offset -= sizeof(struct sctp_chunkhdr);
 	src.sconn_port = sh->src_port;
 	dst.sconn_port = sh->dest_port;
-	sctp_common_input_processing(&m, 0, sizeof(struct sctphdr), (int)length,
+	sctp_common_input_processing(&m, 0, offset, (int)length,
 	                             (struct sockaddr *)&src,
 	                             (struct sockaddr *)&dst,
 	                             sh, ch,

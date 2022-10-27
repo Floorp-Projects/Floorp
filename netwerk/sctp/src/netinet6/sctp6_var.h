@@ -34,7 +34,7 @@
 
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet6/sctp6_var.h 317457 2017-04-26 19:26:40Z tuexen $");
+__FBSDID("$FreeBSD$");
 #endif
 
 #ifndef _NETINET6_SCTP6_VAR_H_
@@ -70,7 +70,7 @@ void sctp6_ctlinput(int, struct sockaddr *, void *, struct ifnet * SCTP_UNUSED);
 #else
 void sctp6_ctlinput(int, struct sockaddr *, void *);
 #endif
-#if !((defined(__FreeBSD__) || defined(__APPLE__))  && !defined(__Userspace__))
+#if !((defined(__FreeBSD__) || defined(__APPLE__)) && !defined(__Userspace__))
 extern void in6_sin_2_v4mapsin6(struct sockaddr_in *, struct sockaddr_in6 *);
 extern void in6_sin6_2_sin(struct sockaddr_in *, struct sockaddr_in6 *);
 extern void in6_sin6_2_sin_in_sock(struct sockaddr *);

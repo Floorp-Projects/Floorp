@@ -52,6 +52,7 @@
 #include "user_environment.h"
 typedef CRITICAL_SECTION userland_mutex_t;
 #if WINVER < 0x0600
+typedef CRITICAL_SECTION userland_rwlock_t;
 enum {
 	C_SIGNAL = 0,
 	C_BROADCAST = 1,
@@ -72,6 +73,7 @@ void WakeAllXPConditionVariable(userland_cond_t *);
 #define SleepConditionVariableCS(cond, mtx, time) SleepXPConditionVariable(cond, mtx)
 #define WakeAllConditionVariable(cond) WakeAllXPConditionVariable(cond)
 #else
+typedef SRWLOCK userland_rwlock_t;
 #define DeleteConditionVariable(cond)
 typedef CONDITION_VARIABLE userland_cond_t;
 #endif
@@ -283,10 +285,15 @@ typedef char* caddr_t;
 
 #else /* !defined(Userspace_os_Windows) */
 #include <sys/socket.h>
-#if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__linux__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__native_client__) || defined(__Fuchsia__)
-#include <pthread.h>
+
+#if defined(__EMSCRIPTEN__) && !defined(__EMSCRIPTEN_PTHREADS__)
+#error "Unsupported build configuration."
 #endif
+
+#include <pthread.h>
+
 typedef pthread_mutex_t userland_mutex_t;
+typedef pthread_rwlock_t userland_rwlock_t;
 typedef pthread_cond_t userland_cond_t;
 typedef pthread_t userland_thread_t;
 #endif
@@ -509,7 +516,7 @@ struct sx {int dummy;};
 #if !defined(_WIN32)
 #include <netinet/ip6.h>
 #endif
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__linux__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__linux__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(_WIN32) || defined(__EMSCRIPTEN__)
 #include "user_ip6_var.h"
 #else
 #include <netinet6/ip6_var.h>
@@ -876,13 +883,11 @@ static inline void sctp_userspace_rtfree(sctp_rtentry_t *rt)
 /*************************/
 /*      MTU              */
 /*************************/
-int sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af);
+int sctp_userspace_get_mtu_from_ifn(uint32_t if_index);
 
-#define SCTP_GATHER_MTU_FROM_IFN_INFO(ifn, ifn_index, af) sctp_userspace_get_mtu_from_ifn(ifn_index, af)
+#define SCTP_GATHER_MTU_FROM_IFN_INFO(ifn, ifn_index) sctp_userspace_get_mtu_from_ifn(ifn_index)
 
 #define SCTP_GATHER_MTU_FROM_ROUTE(sctp_ifa, sa, rt) ((rt != NULL) ? rt->rt_rmx.rmx_mtu : 0)
-
-#define SCTP_GATHER_MTU_FROM_INTFC(sctp_ifn) (sctp_ifn->ifn_mtu)
 
 #define SCTP_SET_MTU_OF_ROUTE(sa, rt, mtu) do { \
                                               if (rt != NULL) \
@@ -955,6 +960,8 @@ int sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af);
 
 /* wakeup a socket */
 #define SCTP_SOWAKEUP(so)	wakeup(&(so)->so_timeo, so)
+/* number of bytes ready to read */
+#define SCTP_SBAVAIL(sb)	(sb)->sb_cc
 /* clear the socket buffer state */
 #define SCTP_SB_CLEAR(sb)	\
 	(sb).sb_cc = 0;		\
@@ -1034,13 +1041,13 @@ extern void sctp_userspace_ip_output(int *result, struct mbuf *o_pak,
                                      sctp_route_t *ro, void *stcb,
                                      uint32_t vrf_id);
 
-#define SCTP_IP_OUTPUT(result, o_pak, ro, stcb, vrf_id) sctp_userspace_ip_output(&result, o_pak, ro, stcb, vrf_id);
+#define SCTP_IP_OUTPUT(result, o_pak, ro, inp, vrf_id) sctp_userspace_ip_output(&result, o_pak, ro, inp, vrf_id);
 
 #if defined(INET6)
 extern void sctp_userspace_ip6_output(int *result, struct mbuf *o_pak,
                                       struct route_in6 *ro, void *stcb,
                                       uint32_t vrf_id);
-#define SCTP_IP6_OUTPUT(result, o_pak, ro, ifp, stcb, vrf_id) sctp_userspace_ip6_output(&result, o_pak, ro, stcb, vrf_id);
+#define SCTP_IP6_OUTPUT(result, o_pak, ro, ifp, inp, vrf_id) sctp_userspace_ip6_output(&result, o_pak, ro, inp, vrf_id);
 #endif
 
 
@@ -1132,7 +1139,7 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header, int how, int a
 
 #define SCTP_IS_LISTENING(inp) ((inp->sctp_flags & SCTP_PCB_FLAGS_ACCEPTING) != 0)
 
-#if defined(__APPLE__) || defined(__DragonFly__) || defined(__linux__) || defined(__native_client__) || defined(__NetBSD__) || defined(_WIN32) || defined(__Fuchsia__)
+#if defined(__APPLE__) || defined(__DragonFly__) || defined(__linux__) || defined(__native_client__) || defined(__NetBSD__) || defined(_WIN32) || defined(__Fuchsia__) || defined(__EMSCRIPTEN__)
 int
 timingsafe_bcmp(const void *, const void *, size_t);
 #endif

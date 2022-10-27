@@ -319,7 +319,8 @@ static RefPtr<DataChannelConnection> GetConnectionFromSocket(
 // Called when the buffer empties to the threshold value.  This is called
 // from SctpDtlsInput() through the sctp stack.  SctpDtlsInput() calls
 // usrsctp_conninput() under lock
-static int threshold_event(struct socket* sock, uint32_t sb_free) {
+static int threshold_event(struct socket* sock, uint32_t sb_free,
+                           void* ulp_info) {
   RefPtr<DataChannelConnection> connection = GetConnectionFromSocket(sock);
   connection->mLock.AssertCurrentThreadOwns();
   if (connection) {
