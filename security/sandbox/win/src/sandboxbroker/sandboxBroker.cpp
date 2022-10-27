@@ -566,8 +566,9 @@ static bool CanUseJob() {
   return false;
 }
 
-// Returns a dynamic code mitigation flag that is compatible with system
-// libraries MSAudDecMFT.dll and msmpeg2vdec.dll.
+// Returns the most strict dynamic code mitigation flag that is compatible with
+// system libraries MSAudDecMFT.dll and msmpeg2vdec.dll. This depends on the
+// Windows version and the architecture. See bug 1783223 comment 27.
 //
 // Use the result with SetDelayedProcessMitigations. Using non-delayed ACG
 // results in incompatibility with third-party antivirus software, the Windows
@@ -580,6 +581,12 @@ static sandbox::MitigationFlags DynamicCodeFlagForSystemMediaLibraries() {
       return sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
     }
 #endif  // _M_X64
+
+#ifdef NIGHTLY_BUILD
+    if (IsWin10AnniversaryUpdateOrLater()) {
+      return sandbox::MITIGATION_DYNAMIC_CODE_DISABLE_WITH_OPT_OUT;
+    }
+#endif  // NIGHTLY_BUILD
 
     return sandbox::MitigationFlags{};
   }();
