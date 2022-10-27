@@ -1002,7 +1002,12 @@ InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest) {
     GetCallback(mProgressSink);
   }
 
-  if (EnsureOpaqueResponseIsAllowed() == OpaqueResponseAllowed::No) {
+  if (mLoadInfo->GetServiceWorkerTaintingSynthesized()) {
+    // It looks like only succeeded synthesized response can
+    // reach to here.
+    // No need to do any further checks
+    mCheckIsOpaqueResponseAllowedAfterSniff = false;
+  } else if (EnsureOpaqueResponseIsAllowed() == OpaqueResponseAllowed::No) {
     mChannelBlockedByOpaqueResponse = true;
     return NS_ERROR_FAILURE;
   }
