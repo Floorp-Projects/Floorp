@@ -84,13 +84,7 @@ async function run_test() {
     Assert.equal(failureId.value, "");
 
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_OPENGL_LAYERS);
-    if (OS == "Android") {
-      // OpenGL layers are never blocklisted on Android, despite an entry in test_gfxBlacklist.json.
-      // https://searchfox.org/mozilla-central/rev/c1ec9ecbbc7eac698923ffd18c8594aa3e2e9da0/widget/android/GfxInfo.cpp#431-437
-      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
-    } else {
-      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
-    }
+    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
     status = gfxInfo.getFeatureStatus(
       Ci.nsIGfxInfo.FEATURE_WEBGL_OPENGL,
