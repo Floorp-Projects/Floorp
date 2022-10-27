@@ -50,9 +50,13 @@ NS_IMETHODIMP
 MIDIPermissionRequest::GetTypes(nsIArray** aTypes) {
   NS_ENSURE_ARG_POINTER(aTypes);
   nsTArray<nsString> options;
-  // NB: We always request midi-sysex, and the base |midi| permission is unused.
-  // This could be cleaned up at some point.
-  options.AppendElement(u"sysex"_ns);
+
+  // The previous implementation made no differences between midi and
+  // midi-sysex. The check on the SitePermsAddonProvider pref should be removed
+  // at the same time as the old implementation.
+  if (mNeedsSysex || !StaticPrefs::dom_sitepermsaddon_provider_enabled()) {
+    options.AppendElement(u"sysex"_ns);
+  }
   return nsContentPermissionUtils::CreatePermissionArray(mType, options,
                                                          aTypes);
 }
@@ -96,23 +100,24 @@ MIDIPermissionRequest::Run() {
     return NS_OK;
   }
 
-  // Both the spec and our original implementation of WebMIDI have two
-  // conceptual permission levels: with and without sysex functionality.
-  // However, our current implementation just has one level, and requires the
-  // more-powerful |midi-sysex| permission irrespective of the mode requested in
-  // requestMIDIAccess.
-  constexpr auto kPermName = "midi-sysex"_ns;
+  nsCString permName = "midi"_ns;
+  // The previous implementation made no differences between midi and
+  // midi-sysex. The check on the SitePermsAddonProvider pref should be removed
+  // at the same time as the old implementation.
+  if (mNeedsSysex || !StaticPrefs::dom_sitepermsaddon_provider_enabled()) {
+    permName.Append("-sysex");
+  }
 
   // First, check for an explicit allow/deny. Note that we want to support
   // granting a permission on the base domain and then using it on a subdomain,
   // which is why we use the non-"Exact" variants of these APIs. See bug
   // 1757218.
-  if (nsContentUtils::IsSitePermAllow(mPrincipal, kPermName)) {
+  if (nsContentUtils::IsSitePermAllow(mPrincipal, permName)) {
     Allow(JS::UndefinedHandleValue);
     return NS_OK;
   }
 
-  if (nsContentUtils::IsSitePermDeny(mPrincipal, kPermName)) {
+  if (nsContentUtils::IsSitePermDeny(mPrincipal, permName)) {
     Cancel();
     return NS_OK;
   }
@@ -121,7 +126,7 @@ MIDIPermissionRequest::Run() {
   // auto-deny (except for localhost).
   if (StaticPrefs::dom_webmidi_gated() &&
       !StaticPrefs::dom_sitepermsaddon_provider_enabled() &&
-      !nsContentUtils::HasSitePerm(mPrincipal, kPermName) &&
+      !nsContentUtils::HasSitePerm(mPrincipal, permName) &&
       !mPrincipal->GetIsLoopbackHost()) {
     Cancel();
     return NS_OK;
