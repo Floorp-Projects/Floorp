@@ -4,9 +4,7 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-const { Subprocess } = ChromeUtils.import(
-  "resource://gre/modules/Subprocess.jsm"
-);
+import { Subprocess } from "resource://gre/modules/Subprocess.sys.mjs";
 
 function getFirefoxExecutableFilename() {
   if (AppConstants.platform === "win") {

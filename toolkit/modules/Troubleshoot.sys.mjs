@@ -452,8 +452,9 @@ var dataProviders = {
     let Subprocess;
     try {
       // Subprocess is not available in all builds
-      Subprocess = ChromeUtils.import("resource://gre/modules/Subprocess.jsm")
-        .Subprocess;
+      Subprocess = ChromeUtils.importESModule(
+        "resource://gre/modules/Subprocess.sys.mjs"
+      ).Subprocess;
     } catch (ex) {
       done({});
       return;

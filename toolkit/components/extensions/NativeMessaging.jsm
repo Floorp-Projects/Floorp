@@ -24,11 +24,14 @@ const {
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Subprocess: "resource://gre/modules/Subprocess.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   NativeManifests: "resource://gre/modules/NativeManifests.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  Subprocess: "resource://gre/modules/Subprocess.jsm",
 });
 
 // For a graceful shutdown (i.e., when the extension is unloaded or when it

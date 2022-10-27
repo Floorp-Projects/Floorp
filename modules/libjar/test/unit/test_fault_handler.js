@@ -23,8 +23,8 @@ function wrapInputStream(input) {
   return wrapper;
 }
 
-const { Subprocess } = ChromeUtils.import(
-  "resource://gre/modules/Subprocess.jsm"
+const { Subprocess } = ChromeUtils.importESModule(
+  "resource://gre/modules/Subprocess.sys.mjs"
 );
 
 const XPI_NAME = "testjar.xpi";

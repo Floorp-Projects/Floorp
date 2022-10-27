@@ -3,9 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Subprocess } = ChromeUtils.import(
-  "resource://gre/modules/Subprocess.jsm"
-);
+import { Subprocess } from "resource://gre/modules/Subprocess.sys.mjs";
 
 export async function runBackgroundTask(commandLine) {
   let sentinel = commandLine.getArgument(0);

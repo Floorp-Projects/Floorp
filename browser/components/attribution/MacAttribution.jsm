@@ -24,11 +24,9 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Subprocess",
-  "resource://gre/modules/Subprocess.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Subprocess: "resource://gre/modules/Subprocess.sys.mjs",
+});
 
 /**
  * Get the location of the user's macOS quarantine database.

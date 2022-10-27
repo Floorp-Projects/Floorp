@@ -6,8 +6,8 @@
  * They should all result in the same installation hash.
  */
 
-const { Subprocess } = ChromeUtils.import(
-  "resource://gre/modules/Subprocess.jsm"
+const { Subprocess } = ChromeUtils.importESModule(
+  "resource://gre/modules/Subprocess.sys.mjs"
 );
 
 const XRE = Cc["@mozilla.org/xre/directory-provider;1"].getService(
