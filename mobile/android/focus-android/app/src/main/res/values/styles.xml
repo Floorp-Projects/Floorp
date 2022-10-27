@@ -75,8 +75,7 @@
 
     <style name="AddToHomeScreenSiteTitle" parent="Widget.AppCompat.EditText">
         <item name="android:textSize">20sp</item>
-        <!-- Setting textVisiblePassword as inputType removes the line below the text-->
-        <item name="android:inputType">text|textVisiblePassword</item>
+        <item name="android:inputType">text</item>
         <item name="android:textColor">@color/primaryText</item>
         <item name="android:textCursorDrawable">@null</item>
     </style>
