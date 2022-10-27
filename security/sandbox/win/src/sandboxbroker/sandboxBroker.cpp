@@ -1129,6 +1129,13 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
   mitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
                 sandbox::MITIGATION_DLL_SEARCH_ORDER;
 
+// FIXME: When this goes to Release, add a preference that can disable the
+//        mitigation!
+#ifdef NIGHTLY_BUILD
+  // The RDD process depends on msmpeg2vdec.dll.
+  mitigations |= DynamicCodeFlagForSystemMediaLibraries();
+#endif  // NIGHTLY_BUILD
+
   if (exceptionModules.isNothing()) {
     mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
   }
