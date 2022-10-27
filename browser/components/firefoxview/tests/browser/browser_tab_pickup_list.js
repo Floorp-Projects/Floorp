@@ -70,6 +70,11 @@ const syncedTabsData5 = [
   },
 ];
 
+const NO_TABS_EVENTS = [
+  ["firefoxview", "entered", "firefoxview", undefined],
+  ["firefoxview", "synced_tabs", "tabs", undefined, { count: "0" }],
+];
+
 const TAB_PICKUP_EVENT = [
   ["firefoxview", "entered", "firefoxview", undefined],
   ["firefoxview", "synced_tabs", "tabs", undefined, { count: "1" }],
@@ -270,6 +275,7 @@ add_task(async function test_empty_list_items() {
 });
 
 add_task(async function test_empty_list() {
+  await clearAllParentTelemetryEvents();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
@@ -293,6 +299,25 @@ add_task(async function test_empty_list() {
         .querySelector("#synced-tabs-placeholder")
         .classList.contains("empty-container"),
       "collapsible container should have correct styling when the list is empty"
+    );
+
+    await TestUtils.waitForCondition(
+      () => {
+        let events = Services.telemetry.snapshotEvents(
+          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+          false
+        ).parent;
+        return events && events.length >= 2;
+      },
+      "Waiting for entered and synced_tabs firefoxview telemetry events.",
+      200,
+      100
+    );
+
+    TelemetryTestUtils.assertEvents(
+      NO_TABS_EVENTS,
+      { category: "firefoxview" },
+      { clear: true, process: "parent" }
     );
 
     syncedTabsMock.returns(mockTabs2);

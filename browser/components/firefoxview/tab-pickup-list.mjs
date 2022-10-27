@@ -125,6 +125,7 @@ class TabPickupList extends HTMLElement {
     }
 
     if (!syncedTabs.length) {
+      this.sendTabTelemetry(0);
       this.togglePlaceholderVisibility(true);
       this.tabsList.hidden = true;
       return;
