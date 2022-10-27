@@ -450,17 +450,6 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
 
   MOZ_COUNT_DTOR(GeckoChildProcessHost);
 
-  if (mChildProcessHandle != 0) {
-    ProcessWatcher::EnsureProcessTerminated(
-        mChildProcessHandle
-#ifdef NS_FREE_PERMANENT_DATA
-        // If we're doing leak logging, shutdown can be slow.
-        ,
-        false  // don't "force"
-#endif
-    );
-  }
-
 #if defined(MOZ_WIDGET_COCOA)
   if (mChildTask != MACH_PORT_NULL)
     mach_port_deallocate(mach_task_self(), mChildTask);
@@ -474,7 +463,18 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
     CrashReporter::DeregisterChildCrashAnnotationFileDescriptor(
         mChildProcessHandle);
 #endif
+
+    ProcessWatcher::EnsureProcessTerminated(
+        mChildProcessHandle
+#ifdef NS_FREE_PERMANENT_DATA
+        // If we're doing leak logging, shutdown can be slow.
+        ,
+        false  // don't "force"
+#endif
+    );
+    mChildProcessHandle = 0;
   }
+
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
   if (mSandboxBroker) {
     mSandboxBroker->Shutdown();
