@@ -9,7 +9,7 @@
 
 dictionary PerformanceObserverInit {
   sequence<DOMString> entryTypes;
-	DOMString type;
+  DOMString type;
   boolean buffered;
   [Pref="dom.enable_event_timing"]
   DOMHighResTimeStamp durationThreshold;

@@ -67,7 +67,7 @@ interface nsIWebVTTParserWrapper : nsISupports
    *               fragment.
    */
   DocumentFragment convertCueToDOMTree(in mozIDOMWindow window,
-				       in nsISupports cue);
+                                       in nsISupports cue);
 
 
   /**

@@ -11,7 +11,7 @@ enum SecurityPolicyViolationEventDisposition
 interface SecurityPolicyViolationEvent : Event
 {
     constructor(DOMString type,
-		optional SecurityPolicyViolationEventInit eventInitDict = {});
+                optional SecurityPolicyViolationEventInit eventInitDict = {});
 
     readonly attribute DOMString      documentURI;
     readonly attribute DOMString      referrer;
