@@ -3269,6 +3269,9 @@ class nsContentUtils {
     return sInnerOrOuterWindowCount;
   }
 
+  // Return an anonymized URI so that it can be safely exposed publicly.
+  static nsresult AnonymizeURI(nsIURI* aURI, nsCString& aAnonymizedURI);
+
   /**
    * Serializes a JSON-like JS::Value into a string.
    *

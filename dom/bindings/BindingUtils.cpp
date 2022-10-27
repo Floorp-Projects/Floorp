@@ -4112,18 +4112,9 @@ void ReportDeprecation(nsIGlobalObject* aGlobal, nsIURI* aURI,
   // as the spec may be arbitrarily long and we would like to avoid
   // copying it.
   nsAutoCString specOrScheme;
-  nsresult rv;
-  if (aURI->SchemeIs("data")) {
-    specOrScheme.Assign("data:..."_ns);
-  } else {
-    // Anonymize the URL.
-    // Strip the URL of any possible username/password and make it ready to be
-    // presented in the UI.
-    nsCOMPtr<nsIURI> exposableURI = net::nsIOService::CreateExposableURI(aURI);
-    rv = exposableURI->GetSpec(specOrScheme);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
+  nsresult rv = nsContentUtils::AnonymizeURI(aURI, specOrScheme);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
   }
 
   nsAutoString type;

@@ -115,6 +115,7 @@
 #define APPLICATION_VND_WORDPROSSING_OPENXML \
   "application/vnd.wordprocessing-openxml"
 #define APPLICATION_XPROTOBUF "application/x-protobuf"
+#define APPLICATION_XPROTOBUFFER "application/x-protobuffer"
 
 #define AUDIO_BASIC "audio/basic"
 #define AUDIO_OGG "audio/ogg"
@@ -130,6 +131,7 @@
 #define AUDIO_MATROSKA "audio/x-matroska"
 #define AUDIO_AAC "audio/aac"
 #define AUDIO_MPEG_TS "audio/mp2t"
+#define AUDIO_MPEG_URL "audio/mpegurl"
 
 #define BINARY_OCTET_STREAM "binary/octet-stream"
 

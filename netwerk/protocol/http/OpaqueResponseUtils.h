@@ -9,11 +9,21 @@
 #define mozilla_net_OpaqueResponseUtils_h
 
 #include "nsIContentPolicy.h"
+#include "nsIStreamListener.h"
 
-namespace mozilla {
+#include "mozilla/Variant.h"
+#include "mozilla/Logging.h"
 
-namespace net {
+#include "nsCOMPtr.h"
+#include "nsString.h"
+#include "nsTArray.h"
 
+class nsIContentSniffer;
+static mozilla::LazyLogModule gORBLog("ORB");
+
+namespace mozilla::net {
+
+class HttpBaseChannel;
 class nsHttpResponseHead;
 
 enum class OpaqueResponseBlockedReason : uint32_t {
@@ -33,7 +43,36 @@ Result<std::tuple<int64_t, int64_t, int64_t>, nsresult>
 ParseContentRangeHeaderString(const nsAutoCString& aRangeStr);
 
 bool IsFirstPartialResponse(nsHttpResponseHead& aResponseHead);
-}  // namespace net
-}  // namespace mozilla
+
+void LogORBError(nsILoadInfo* aLoadInfo, nsIURI* aURI);
+
+class OpaqueResponseBlocker final : public nsIStreamListener {
+  enum class State { Sniffing, Allowed, Blocked };
+
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER;
+
+  OpaqueResponseBlocker(nsIStreamListener* aNext, HttpBaseChannel* aChannel);
+
+  void AllowResponse();
+  void BlockResponse(HttpBaseChannel* aChannel, nsresult aReason);
+ private:
+  virtual ~OpaqueResponseBlocker() = default;
+
+  void MaybeORBSniff(nsIRequest* aRequest);
+
+  void ResolveAndSendPending(HttpBaseChannel* aChannel, State aState,
+                             nsresult aStatus);
+
+  nsCOMPtr<nsIStreamListener> mNext;
+
+  State mState = State::Sniffing;
+  nsresult mStatus = NS_OK;
+  bool mCheckIsOpaqueResponseAllowedAfterSniff = true;
+};
+
+}  // namespace mozilla::net
 
 #endif  // mozilla_net_OpaqueResponseUtils_h
