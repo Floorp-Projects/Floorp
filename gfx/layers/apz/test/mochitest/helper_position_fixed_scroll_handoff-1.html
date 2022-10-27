@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>APZ overscroll handoff for fixed elements</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+#main {
+  height: 100%;
+  overflow: auto;
+}
+
+#spacer  {
+  height: 5000px;
+}
+
+#fixed {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  background: red;
+  overflow: auto;
+}
+
+#long {
+  height: 250px;
+  width: 50%;
+  position: absolute;
+  background: green;
+  top: 0;
+  left: 25%;
+}
+  </style>
+</head>
+<body>
+  <div id="main">
+    <div id="spacer">
+    </div>
+    <div id="fixed">
+      <div id="long">
+      </div>
+    </div>
+  </div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  // Scroll to the bottom of the fixed position element that should not
+  // allow overscroll handoff.
+  fixed.scrollTop = fixed.scrollHeight;
+
+  // After scrolling to bottom tick the refresh driver.
+  await promiseFrame();
+
+  info("Start: fixed=" + fixed.scrollTop + " main=" + main.scrollTop);
+
+  // Async scroll the fixed element by 200 pixels using the mouse-wheel.
+  // This should not handoff the overscroll.
+  await promiseMoveMouseAndScrollWheelOver(fixed, 50, 50, false, 200);
+
+  // Make sure scrolling that has happened is propagated to the main thread.
+  await promiseApzFlushedRepaints();
+
+  // Try another gesture to ensure the overscroll handoff runs.
+  await promiseMoveMouseAndScrollWheelOver(fixed, 50, 50, false, 200);
+  await promiseApzFlushedRepaints();
+
+  info("After scroll: fixed=" + fixed.scrollTop + " main=" + main.scrollTop);
+
+  // Ensure that the main element has not scrolled.
+  is(main.scrollTop, 0, "The overscroll should not handoff");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>
