@@ -27,6 +27,12 @@ add_setup(async function() {
     await SpecialPowers.removePermission("midi-sysex", {
       url: PAGE_WITH_IFRAMES_URL,
     });
+    await SpecialPowers.removePermission("midi", {
+      url: EXAMPLE_COM_URL,
+    });
+    await SpecialPowers.removePermission("midi", {
+      url: PAGE_WITH_IFRAMES_URL,
+    });
     await SpecialPowers.removePermission("install", {
       url: EXAMPLE_COM_URL,
     });
