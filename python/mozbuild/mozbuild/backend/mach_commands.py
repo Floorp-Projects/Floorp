@@ -8,6 +8,7 @@ import argparse
 import logging
 import os
 import subprocess
+import sys
 
 from mozbuild import build_commands
 
@@ -166,6 +167,7 @@ def setup_vscode(command_context, vscode_cmd):
     clang_tidy_cfg = ClangTidyConfig(command_context.topsrcdir)
 
     cargo_check_command = [
+        sys.executable,
         mozpath.join(command_context.topsrcdir, "mach"),
         "--log-no-times",
         "cargo",
