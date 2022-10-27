@@ -10,8 +10,8 @@ const kIPStartup = Ci.nsIProfileStartup;
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-const { MigrationUtils } = ChromeUtils.importESModule(
-  "resource:///modules/MigrationUtils.sys.mjs"
+const { MigrationUtils } = ChromeUtils.import(
+  "resource:///modules/MigrationUtils.jsm"
 );
 
 /**

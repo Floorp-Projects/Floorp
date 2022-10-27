@@ -8,7 +8,7 @@ const {
   COLUMN_TYPES,
   declareESEFunction,
   loadLibraries,
-} = ChromeUtils.importESModule("resource:///modules/ESEDBReader.sys.mjs");
+} = ChromeUtils.import("resource:///modules/ESEDBReader.jsm");
 
 let gESEInstanceCounter = 1;
 

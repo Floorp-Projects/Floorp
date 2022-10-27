@@ -1,7 +1,7 @@
 "use strict";
 
-const { ChromeMigrationUtils } = ChromeUtils.importESModule(
-  "resource:///modules/ChromeMigrationUtils.sys.mjs"
+const { ChromeMigrationUtils } = ChromeUtils.import(
+  "resource:///modules/ChromeMigrationUtils.jsm"
 );
 
 // Setup chrome user data path for all platforms.

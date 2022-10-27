@@ -2,13 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
+"use strict";
 
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
+);
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-import {
-  MigrationUtils,
-  MigratorPrototype,
-} from "resource:///modules/MigrationUtils.sys.mjs";
+const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
+  "resource:///modules/MigrationUtils.jsm"
+);
 
 const lazy = {};
 
@@ -358,7 +360,7 @@ SearchStrings.prototype = {
   },
 };
 
-export function SafariProfileMigrator() {}
+function SafariProfileMigrator() {}
 
 SafariProfileMigrator.prototype = Object.create(MigratorPrototype);
 
@@ -490,3 +492,5 @@ SafariProfileMigrator.prototype.contractID =
 SafariProfileMigrator.prototype.classID = Components.ID(
   "{4b609ecf-60b2-4655-9df4-dc149e474da1}"
 );
+
+var EXPORTED_SYMBOLS = ["SafariProfileMigrator"];
