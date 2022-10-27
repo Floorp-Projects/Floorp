@@ -3245,7 +3245,8 @@ CLEANUP:
 /* {{{ s_mp_add_d(mp, d) */
 
 /* Add d to |mp| in place                                                 */
-mp_err s_mp_add_d(mp_int *mp, mp_digit d) /* unsigned digit addition */
+mp_err
+s_mp_add_d(mp_int *mp, mp_digit d) /* unsigned digit addition */
 {
 #if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
     mp_word w, k = 0;
@@ -3302,7 +3303,8 @@ CLEANUP:
 /* {{{ s_mp_sub_d(mp, d) */
 
 /* Subtract d from |mp| in place, assumes |mp| > d                        */
-mp_err s_mp_sub_d(mp_int *mp, mp_digit d) /* unsigned digit subtract */
+mp_err
+s_mp_sub_d(mp_int *mp, mp_digit d) /* unsigned digit subtract */
 {
 #if !defined(MP_NO_MP_WORD) && !defined(MP_NO_SUB_WORD)
     mp_word w, b = 0;
@@ -3509,7 +3511,8 @@ CLEANUP:
 /* {{{ s_mp_add(a, b) */
 
 /* Compute a = |a| + |b|                                                  */
-mp_err s_mp_add(mp_int *a, const mp_int *b) /* magnitude addition      */
+mp_err
+s_mp_add(mp_int *a, const mp_int *b) /* magnitude addition      */
 {
 #if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
     mp_word w = 0;
@@ -3772,7 +3775,8 @@ s_mp_add_offset(mp_int *a, mp_int *b, mp_size offset)
 /* {{{ s_mp_sub(a, b) */
 
 /* Compute a = |a| - |b|, assumes |a| >= |b|                              */
-mp_err s_mp_sub(mp_int *a, const mp_int *b) /* magnitude subtract      */
+mp_err
+s_mp_sub(mp_int *a, const mp_int *b) /* magnitude subtract      */
 {
     mp_digit *pa, *pb, *limit;
 #if !defined(MP_NO_MP_WORD) && !defined(MP_NO_SUB_WORD)
@@ -4238,9 +4242,10 @@ s_mp_sqr(mp_int *a)
   Compute a = a / b and b = a mod b.  Assumes b > a.
  */
 
-mp_err s_mp_div(mp_int *rem,  /* i: dividend, o: remainder */
-                mp_int *div,  /* i: divisor                */
-                mp_int *quot) /* i: 0;        o: quotient  */
+mp_err
+s_mp_div(mp_int *rem,  /* i: dividend, o: remainder */
+         mp_int *div,  /* i: divisor                */
+         mp_int *quot) /* i: 0;        o: quotient  */
 {
     mp_int part, t;
     mp_digit q_msd;

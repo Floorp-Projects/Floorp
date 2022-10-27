@@ -35,17 +35,16 @@ static secuPWData pwdata = { PW_NONE, 0 };
 
 SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
 
-SEC_ASN1Template CERTSignatureDataTemplate[] =
-    {
-      { SEC_ASN1_SEQUENCE,
-        0, NULL, sizeof(CERTSignedData) },
-      { SEC_ASN1_INLINE,
-        offsetof(CERTSignedData, signatureAlgorithm),
-        SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-      { SEC_ASN1_BIT_STRING,
-        offsetof(CERTSignedData, signature) },
-      { 0 }
-    };
+SEC_ASN1Template CERTSignatureDataTemplate[] = {
+    { SEC_ASN1_SEQUENCE,
+      0, NULL, sizeof(CERTSignedData) },
+    { SEC_ASN1_INLINE,
+      offsetof(CERTSignedData, signatureAlgorithm),
+      SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
+    { SEC_ASN1_BIT_STRING,
+      offsetof(CERTSignedData, signature) },
+    { 0 }
+};
 
 static void
 Usage(char *progName)

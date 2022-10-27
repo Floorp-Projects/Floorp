@@ -61,7 +61,7 @@ struct dirent {
 #else
     char d_name[MAXNAMLEN + 1]; /* garentee null termination */
     char d_attribute;           /* .. extension .. */
-    unsigned long d_size; /* .. extension .. */
+    unsigned long d_size;       /* .. extension .. */
 #endif
 };
 

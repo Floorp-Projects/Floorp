@@ -147,4 +147,4 @@ TEST_F(Utf8Test, Utf8Length) {
 
   nss_DestroyErrorStack();
 }
-}
+}  // namespace nss_test

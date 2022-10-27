@@ -295,7 +295,7 @@ CERT_FinishExtensions(void *exthandle)
         goto loser;
     }
 
-/* put extensions in owner object and update its version number */
+    /* put extensions in owner object and update its version number */
 
 #ifdef OLD
     switch (handle->type) {

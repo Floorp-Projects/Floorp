@@ -245,7 +245,7 @@ NSS_EXTERN CK_RV
 nssCKFWCryptoOperation_DigestKey(
     NSSCKFWCryptoOperation *fwOperation,
     NSSCKFWObject *fwObject /* Key */
-    )
+)
 {
     NSSCKMDObject *mdObject;
 

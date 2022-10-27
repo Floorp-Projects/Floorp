@@ -196,7 +196,7 @@ sec_pkcs7_encoder_start_encrypt(SEC_PKCS7ContentInfo *cinfo,
         PORT_ArenaUnmark(cinfo->poolp, mark);
         mark = NULL; /* good one; do not want to release */
     }
-/* fallthru */
+    /* fallthru */
 
 loser:
     if (arena) {

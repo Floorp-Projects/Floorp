@@ -32,22 +32,30 @@ Building NSS
    To install prerequisites on different platforms, one can run the following
    commands:
 
-   On Linux:
+   **On Linux:**
 
    .. code:: notranslate
 
       sudo apt install mercurial git ninja-build python3-pip
       python3 -m pip install gyp-next
 
-   On MacOS:
+   **On MacOS:**
 
    .. code:: notranslate
 
       brew install mercurial git ninja python3-pip
       python3 -m pip install gyp-next
 
+   It is also necessary to make sure that a `python` (not just `python3`)
+   executable is in the path.
+   The Homebrew Python installation has the necessary symlink but may require
+   explicit adding to the PATH variable, for example like this:
 
-   On Windows:
+   .. code:: notranslate
+
+      export PATH="/opt/homebrew/opt/python/libexec/bin:$PATH"
+
+   **On Windows:**
 
    .. code:: notranslate
 

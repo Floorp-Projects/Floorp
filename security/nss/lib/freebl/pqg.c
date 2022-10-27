@@ -342,7 +342,7 @@ addToSeed(const SECItem *seed,
     CHECK_MPI_OK(mp_init(&modulus));
     SECITEM_TO_MPINT(*seed, &s); /* s = seed */
     /* seed += addend */
-    if (addend < MP_DIGIT_MAX) {
+    if (sizeof(addend) < sizeof(mp_digit) || addend < MP_DIGIT_MAX) {
         CHECK_MPI_OK(mp_add_d(&s, (mp_digit)addend, &s));
     } else {
         CHECK_MPI_OK(mp_init(&tmp));

@@ -5,7 +5,7 @@ LABEL maintainer="Martin Thomson <martin.thomson@gmail.com>"
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     ca-certificates \
-    clang-format-3.9 \
+    clang-format-10 \
     locales \
     python-dev \
     python-pip \
@@ -19,7 +19,7 @@ RUN pip install mercurial==6.1.1
 
 
 RUN update-alternatives --install /usr/bin/clang-format \
-    clang-format $(which clang-format-3.9) 10
+    clang-format $(which clang-format-10) 10
 
 ENV SHELL /bin/bash
 ENV USER worker

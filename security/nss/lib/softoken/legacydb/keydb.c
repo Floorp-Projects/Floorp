@@ -1180,13 +1180,12 @@ typedef struct NSSLowPasswordDataParamStr {
     SECItem iter;
 } NSSLowPasswordDataParam;
 
-static const SEC_ASN1Template NSSLOWPasswordParamTemplate[] =
-    {
-      { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLowPasswordDataParam) },
-      { SEC_ASN1_OCTET_STRING, offsetof(NSSLowPasswordDataParam, salt) },
-      { SEC_ASN1_INTEGER, offsetof(NSSLowPasswordDataParam, iter) },
-      { 0 }
-    };
+static const SEC_ASN1Template NSSLOWPasswordParamTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLowPasswordDataParam) },
+    { SEC_ASN1_OCTET_STRING, offsetof(NSSLowPasswordDataParam, salt) },
+    { SEC_ASN1_INTEGER, offsetof(NSSLowPasswordDataParam, iter) },
+    { 0 }
+};
 struct LGEncryptedDataInfoStr {
     SECAlgorithmID algorithm;
     SECItem encryptedData;

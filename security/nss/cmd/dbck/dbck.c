@@ -1129,27 +1129,25 @@ enum {
     opt_KeepExpired
 };
 
-static secuCommandFlag dbck_commands[] =
-    {
-      { /* cmd_Debug,    */ 'D', PR_FALSE, 0, PR_FALSE },
-      { /* cmd_LongUsage,*/ 'H', PR_FALSE, 0, PR_FALSE },
-      { /* cmd_Recover,  */ 'R', PR_FALSE, 0, PR_FALSE }
-    };
+static secuCommandFlag dbck_commands[] = {
+    { /* cmd_Debug,    */ 'D', PR_FALSE, 0, PR_FALSE },
+    { /* cmd_LongUsage,*/ 'H', PR_FALSE, 0, PR_FALSE },
+    { /* cmd_Recover,  */ 'R', PR_FALSE, 0, PR_FALSE }
+};
 
-static secuCommandFlag dbck_options[] =
-    {
-      { /* opt_KeepAll,           */ 'a', PR_FALSE, 0, PR_FALSE },
-      { /* opt_CertDir,           */ 'd', PR_TRUE, 0, PR_FALSE },
-      { /* opt_Dumpfile,          */ 'f', PR_TRUE, 0, PR_FALSE },
-      { /* opt_InputDB,           */ 'i', PR_TRUE, 0, PR_FALSE },
-      { /* opt_OutputDB,          */ 'o', PR_TRUE, 0, PR_FALSE },
-      { /* opt_Mailfile,          */ 'm', PR_FALSE, 0, PR_FALSE },
-      { /* opt_Prompt,            */ 'p', PR_FALSE, 0, PR_FALSE },
-      { /* opt_KeepRedundant,     */ 'r', PR_FALSE, 0, PR_FALSE },
-      { /* opt_KeepNoSMimeProfile,*/ 's', PR_FALSE, 0, PR_FALSE },
-      { /* opt_Verbose,           */ 'v', PR_FALSE, 0, PR_FALSE },
-      { /* opt_KeepExpired,       */ 'x', PR_FALSE, 0, PR_FALSE }
-    };
+static secuCommandFlag dbck_options[] = {
+    { /* opt_KeepAll,           */ 'a', PR_FALSE, 0, PR_FALSE },
+    { /* opt_CertDir,           */ 'd', PR_TRUE, 0, PR_FALSE },
+    { /* opt_Dumpfile,          */ 'f', PR_TRUE, 0, PR_FALSE },
+    { /* opt_InputDB,           */ 'i', PR_TRUE, 0, PR_FALSE },
+    { /* opt_OutputDB,          */ 'o', PR_TRUE, 0, PR_FALSE },
+    { /* opt_Mailfile,          */ 'm', PR_FALSE, 0, PR_FALSE },
+    { /* opt_Prompt,            */ 'p', PR_FALSE, 0, PR_FALSE },
+    { /* opt_KeepRedundant,     */ 'r', PR_FALSE, 0, PR_FALSE },
+    { /* opt_KeepNoSMimeProfile,*/ 's', PR_FALSE, 0, PR_FALSE },
+    { /* opt_Verbose,           */ 'v', PR_FALSE, 0, PR_FALSE },
+    { /* opt_KeepExpired,       */ 'x', PR_FALSE, 0, PR_FALSE }
+};
 
 #define CERT_DB_FMT "%s/cert%s.db"
 

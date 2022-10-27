@@ -76,8 +76,7 @@ const IkeTestVector kIkeSha256ProofVectors[] = {
      "8c332ee006064c9b"   // Nr
      "40dac39e1e1a8640"   // SPIi
      "8619a1cf9a6e4c07",  // SPIr
-     0,
-     132, true},
+     0, 132, true},
     {9, IkeTestType::ikePlus,
      "5f00d1bd2c58ec224b1e6b71fa0f19a1faa7a193952c444411b47c1a9d8ba6fe", "", "",
      "0b137d669b0947d7d026d593f0305ad401ff0c471357d695778a9c7f4b4869ec", "", "",
@@ -87,8 +86,7 @@ const IkeTestVector kIkeSha256ProofVectors[] = {
      "8c332ee006064c9b"   // Nr
      "40dac39e1e1a8640"   // SPIi
      "8619a1cf9a6e4c07",  // SPIr
-     0,
-     32, true},
+     0, 32, true},
     {10, IkeTestType::ikePlus,
      "5f00d1bd2c58ec224b1e6b71fa0f19a1faa7a193952c444411b47c1a9d8ba6fe", "", "",
      "0b137d669b0947d7d026d593f0305a", "", "",
@@ -98,8 +96,7 @@ const IkeTestVector kIkeSha256ProofVectors[] = {
      "8c332ee006064c9b"   // Nr
      "40dac39e1e1a8640"   // SPIi
      "8619a1cf9a6e4c07",  // SPIr
-     0,
-     15, true},
+     0, 15, true},
     // these vectors are self-generated
     {11, IkeTestType::ikeV1AppB,
      "5f00d1bd2c58ec224b1e6b71fa0f19a1faa7a193952c444411b47c1a9d8ba6fe", "", "",

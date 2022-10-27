@@ -509,7 +509,7 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
             max = cipher_votes[mapi];
         }
     }
-/* if no common cipher was found, chosen_cipher stays at the default */
+    /* if no common cipher was found, chosen_cipher stays at the default */
 
 done:
     if (poolp != NULL)

@@ -34,7 +34,7 @@ RUN apt-get update \
     pkg-config \
     valgrind \
     zlib1g-dev \
-    clang-format-3.9 \
+    clang-format-10 \
     sqlite3 \ 
     libabigail-dev \
     abigail-tools \
@@ -56,7 +56,7 @@ RUN apt-get update \
  && apt-get autoremove -y && apt-get clean -y
 
 RUN update-alternatives --install /usr/bin/clang-format \
-    clang-format $(which clang-format-3.9) 10
+    clang-format $(which clang-format-10) 10
 
 ENV SHELL /bin/bash
 ENV USER worker

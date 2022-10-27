@@ -149,7 +149,7 @@ static const char *const flag_names[] = {
 };
 
 static int /* bool */
-    formatKind(unsigned long kind, char *buf)
+formatKind(unsigned long kind, char *buf)
 {
     int i;
     unsigned long k = kind & SEC_ASN1_TAGNUM_MASK;

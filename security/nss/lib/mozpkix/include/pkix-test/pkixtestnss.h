@@ -42,7 +42,7 @@ TestKeyPair* CreateTestKeyPair(const TestPublicKeyAlgorithm publicKeyAlg,
                                const ScopedSECKEYPublicKey& publicKey,
                                const ScopedSECKEYPrivateKey& privateKey);
 }
-}
-}  // namespace mozilla::pkix::test
+}  // namespace pkix
+}  // namespace mozilla
 
 #endif  // mozilla_pkix_test_pkixtestnss_h

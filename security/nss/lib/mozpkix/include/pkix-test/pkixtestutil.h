@@ -408,8 +408,8 @@ class OCSPResponseContext final {
 };
 
 ByteString CreateEncodedOCSPResponse(OCSPResponseContext& context);
-}
-}
-}  // namespace mozilla::pkix::test
+}  // namespace test
+}  // namespace pkix
+}  // namespace mozilla
 
 #endif  // mozilla_pkix_test_pkixtestutil_h

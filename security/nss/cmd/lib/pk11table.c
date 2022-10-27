@@ -52,11 +52,11 @@ const int constTypeCount = sizeof(_constTypeString) / sizeof(_constTypeString[0]
 
 #define mkEntry(x, t)              \
     {                              \
-        #x, x, Const##t, ConstNone \
+#x, x, Const##t, ConstNone \
     }
 #define mkEntry2(x, t, t2)         \
     {                              \
-        #x, x, Const##t, Const##t2 \
+#x, x, Const##t, Const##t2 \
     }
 
 const Constant _consts[] = {

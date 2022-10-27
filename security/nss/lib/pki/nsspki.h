@@ -115,7 +115,7 @@ NSSCertificate_Validate(
     NSSTime *timeOpt, /* NULL for "now" */
     NSSUsage *usage,
     NSSPolicies *policiesOpt /* NULL for none */
-    );
+);
 
 /*
  * NSSCertificate_ValidateCompletely
@@ -135,15 +135,15 @@ NSSCertificate_Validate(
  */
 
 NSS_EXTERN void ** /* void *[] */
-    NSSCertificate_ValidateCompletely(
-        NSSCertificate *c,
-        NSSTime *timeOpt, /* NULL for "now" */
-        NSSUsage *usage,
-        NSSPolicies *policiesOpt, /* NULL for none */
-        void **rvOpt,             /* NULL for allocate */
-        PRUint32 rvLimit,         /* zero for no limit */
-        NSSArena *arenaOpt        /* NULL for heap */
-        );
+NSSCertificate_ValidateCompletely(
+    NSSCertificate *c,
+    NSSTime *timeOpt, /* NULL for "now" */
+    NSSUsage *usage,
+    NSSPolicies *policiesOpt, /* NULL for none */
+    void **rvOpt,             /* NULL for allocate */
+    PRUint32 rvLimit,         /* zero for no limit */
+    NSSArena *arenaOpt        /* NULL for heap */
+);
 
 /*
  * NSSCertificate_ValidateAndDiscoverUsagesAndPolicies
@@ -675,7 +675,7 @@ NSS_EXTERN NSSPublicKey *
 NSSPrivateKey_FindPublicKey(
     NSSPrivateKey *vk
     /* { don't need the callback here, right? } */
-    );
+);
 
 /*
  * NSSPrivateKey_CreateCryptoContext
@@ -1363,7 +1363,7 @@ NSSTrustDomain_FindBestTokenForAlgorithms(
     NSSTrustDomain *td,
     NSSOID *algorithms[],   /* may be null-terminated */
     PRUint32 nAlgorithmsOpt /* limits the array if nonzero */
-    );
+);
 
 /*
  * NSSTrustDomain_Login
@@ -1470,7 +1470,7 @@ NSSTrustDomain_FindBestCertificateByNickname(
     NSSTime *timeOpt, /* NULL for "now" */
     NSSUsage *usage,
     NSSPolicies *policiesOpt /* NULL for none */
-    );
+);
 
 /*
  * NSSTrustDomain_FindCertificatesByNickname
@@ -2001,7 +2001,7 @@ NSSCryptoContext_FindBestCertificateByNickname(
     NSSTime *timeOpt, /* NULL for "now" */
     NSSUsage *usage,
     NSSPolicies *policiesOpt /* NULL for none */
-    );
+);
 
 /*
  * NSSCryptoContext_FindCertificatesByNickname

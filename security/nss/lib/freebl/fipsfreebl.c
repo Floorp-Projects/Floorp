@@ -46,7 +46,8 @@ static void INIT_FUNCTION bl_startup_tests(void);
 #if defined(XP_WIN) && !defined(NSS_NO_INIT_SUPPORT)
 #include <windows.h>
 
-BOOL WINAPI DllMain(
+BOOL WINAPI
+DllMain(
     HINSTANCE hinstDLL, // handle to DLL module
     DWORD fdwReason,    // reason for calling function
     LPVOID lpReserved)  // reserved
@@ -282,12 +283,10 @@ static SECStatus
 freebl_fips_AES_PowerUpSelfTest(int aes_key_size)
 {
     /* AES Known Key (up to 256-bits). */
-    static const PRUint8 aes_known_key[] =
-        { "AES-128 RIJNDAELLEADNJIR 821-SEA" };
+    static const PRUint8 aes_known_key[] = { "AES-128 RIJNDAELLEADNJIR 821-SEA" };
 
     /* AES-CBC Known Initialization Vector (128-bits). */
-    static const PRUint8 aes_cbc_known_initialization_vector[] =
-        { "SecurityytiruceS" };
+    static const PRUint8 aes_cbc_known_initialization_vector[] = { "SecurityytiruceS" };
 
     /* AES Known Plaintext (128-bits). (blocksize is 128-bits) */
     static const PRUint8 aes_known_plaintext[] = { "NetscapeepacsteN" };
@@ -1524,7 +1523,7 @@ freebl_fips_ECDH_Test(ECParams *ecparams)
         0x16, 0xf3, 0x85, 0xa2, 0x41, 0xf3, 0x7f, 0xc4,
         0x0b, 0x56, 0x47, 0xee, 0xa7, 0x74, 0xb9, 0xdb,
         0xe1, 0xfa, 0x22, 0xe9, 0x04, 0xf1, 0xb6, 0x12,
-        0x4b, 0x44, 0x8a, 0xbb, 0xbc, 0x08, 0x2b, 0xa7,
+        0x4b, 0x44, 0x8a, 0xbb, 0xbc, 0x08, 0x2b, 0xa7
     };
 
     SECItem ecdh_priv_2, ecdh_pub_1;
@@ -1607,7 +1606,8 @@ freebl_fips_EC_PowerUpSelfTest()
         0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07
     };
     static const ECParams ec_known_P256_Params = {
-        NULL, ec_params_named,                                               /* arena, type */
+        NULL,
+        ec_params_named,                                                     /* arena, type */
                                                                              /* fieldID */
         { 256, ec_field_GFp,                                                 /* size and type */
           { { siBuffer, (unsigned char *)p256_prime, sizeof(p256_prime) } }, /* u.prime */
@@ -1642,7 +1642,7 @@ freebl_fips_EC_PowerUpSelfTest()
         0xa7, 0xd2, 0x20, 0xdd, 0x45, 0xf9, 0x2b, 0xdd,
         0xda, 0x98, 0x99, 0x5b, 0x1c, 0x02, 0x3a, 0x27,
         0x8b, 0x7d, 0xb6, 0xed, 0x0e, 0xe0, 0xa7, 0xac,
-        0xaa, 0x36, 0x2c, 0xfa, 0x1a, 0xdf, 0x0d, 0xe1,
+        0xaa, 0x36, 0x2c, 0xfa, 0x1a, 0xdf, 0x0d, 0xe1
     };
 
     ECParams ecparams;

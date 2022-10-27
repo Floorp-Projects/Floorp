@@ -121,4 +121,4 @@ TEST_F(ECLTest, TestECDH_DeriveP521) {
       SECSuccess);
 }
 
-}  // nss_test
+}  // namespace nss_test

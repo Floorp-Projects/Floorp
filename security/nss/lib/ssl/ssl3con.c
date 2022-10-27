@@ -233,125 +233,123 @@ static const /*SSL3ClientCertificateType */ PRUint8 certificate_types[] = {
 
 static SSL3Statistics ssl3stats;
 
-static const ssl3KEADef kea_defs[] =
-    {
-      /* indexed by SSL3KeyExchangeAlgorithm */
-      /* kea            exchKeyType signKeyType authKeyType ephemeral  oid */
-      { kea_null, ssl_kea_null, nullKey, ssl_auth_null, PR_FALSE, 0 },
-      { kea_rsa, ssl_kea_rsa, nullKey, ssl_auth_rsa_decrypt, PR_FALSE, SEC_OID_TLS_RSA },
-      { kea_dh_dss, ssl_kea_dh, dsaKey, ssl_auth_dsa, PR_FALSE, SEC_OID_TLS_DH_DSS },
-      { kea_dh_rsa, ssl_kea_dh, rsaKey, ssl_auth_rsa_sign, PR_FALSE, SEC_OID_TLS_DH_RSA },
-      { kea_dhe_dss, ssl_kea_dh, dsaKey, ssl_auth_dsa, PR_TRUE, SEC_OID_TLS_DHE_DSS },
-      { kea_dhe_rsa, ssl_kea_dh, rsaKey, ssl_auth_rsa_sign, PR_TRUE, SEC_OID_TLS_DHE_RSA },
-      { kea_dh_anon, ssl_kea_dh, nullKey, ssl_auth_null, PR_TRUE, SEC_OID_TLS_DH_ANON },
-      { kea_ecdh_ecdsa, ssl_kea_ecdh, nullKey, ssl_auth_ecdh_ecdsa, PR_FALSE, SEC_OID_TLS_ECDH_ECDSA },
-      { kea_ecdhe_ecdsa, ssl_kea_ecdh, ecKey, ssl_auth_ecdsa, PR_TRUE, SEC_OID_TLS_ECDHE_ECDSA },
-      { kea_ecdh_rsa, ssl_kea_ecdh, nullKey, ssl_auth_ecdh_rsa, PR_FALSE, SEC_OID_TLS_ECDH_RSA },
-      { kea_ecdhe_rsa, ssl_kea_ecdh, rsaKey, ssl_auth_rsa_sign, PR_TRUE, SEC_OID_TLS_ECDHE_RSA },
-      { kea_ecdh_anon, ssl_kea_ecdh, nullKey, ssl_auth_null, PR_TRUE, SEC_OID_TLS_ECDH_ANON },
-      { kea_ecdhe_psk, ssl_kea_ecdh_psk, nullKey, ssl_auth_psk, PR_TRUE, SEC_OID_TLS_ECDHE_PSK },
-      { kea_dhe_psk, ssl_kea_dh_psk, nullKey, ssl_auth_psk, PR_TRUE, SEC_OID_TLS_DHE_PSK },
-      { kea_tls13_any, ssl_kea_tls13_any, nullKey, ssl_auth_tls13_any, PR_TRUE, SEC_OID_TLS13_KEA_ANY },
-    };
+static const ssl3KEADef kea_defs[] = {
+    /* indexed by SSL3KeyExchangeAlgorithm */
+    /* kea            exchKeyType signKeyType authKeyType ephemeral  oid */
+    { kea_null, ssl_kea_null, nullKey, ssl_auth_null, PR_FALSE, 0 },
+    { kea_rsa, ssl_kea_rsa, nullKey, ssl_auth_rsa_decrypt, PR_FALSE, SEC_OID_TLS_RSA },
+    { kea_dh_dss, ssl_kea_dh, dsaKey, ssl_auth_dsa, PR_FALSE, SEC_OID_TLS_DH_DSS },
+    { kea_dh_rsa, ssl_kea_dh, rsaKey, ssl_auth_rsa_sign, PR_FALSE, SEC_OID_TLS_DH_RSA },
+    { kea_dhe_dss, ssl_kea_dh, dsaKey, ssl_auth_dsa, PR_TRUE, SEC_OID_TLS_DHE_DSS },
+    { kea_dhe_rsa, ssl_kea_dh, rsaKey, ssl_auth_rsa_sign, PR_TRUE, SEC_OID_TLS_DHE_RSA },
+    { kea_dh_anon, ssl_kea_dh, nullKey, ssl_auth_null, PR_TRUE, SEC_OID_TLS_DH_ANON },
+    { kea_ecdh_ecdsa, ssl_kea_ecdh, nullKey, ssl_auth_ecdh_ecdsa, PR_FALSE, SEC_OID_TLS_ECDH_ECDSA },
+    { kea_ecdhe_ecdsa, ssl_kea_ecdh, ecKey, ssl_auth_ecdsa, PR_TRUE, SEC_OID_TLS_ECDHE_ECDSA },
+    { kea_ecdh_rsa, ssl_kea_ecdh, nullKey, ssl_auth_ecdh_rsa, PR_FALSE, SEC_OID_TLS_ECDH_RSA },
+    { kea_ecdhe_rsa, ssl_kea_ecdh, rsaKey, ssl_auth_rsa_sign, PR_TRUE, SEC_OID_TLS_ECDHE_RSA },
+    { kea_ecdh_anon, ssl_kea_ecdh, nullKey, ssl_auth_null, PR_TRUE, SEC_OID_TLS_ECDH_ANON },
+    { kea_ecdhe_psk, ssl_kea_ecdh_psk, nullKey, ssl_auth_psk, PR_TRUE, SEC_OID_TLS_ECDHE_PSK },
+    { kea_dhe_psk, ssl_kea_dh_psk, nullKey, ssl_auth_psk, PR_TRUE, SEC_OID_TLS_DHE_PSK },
+    { kea_tls13_any, ssl_kea_tls13_any, nullKey, ssl_auth_tls13_any, PR_TRUE, SEC_OID_TLS13_KEA_ANY },
+};
 
 /* must use ssl_LookupCipherSuiteDef to access */
-static const ssl3CipherSuiteDef cipher_suite_defs[] =
-    {
-      /*  cipher_suite                    bulk_cipher_alg mac_alg key_exchange_alg prf_hash */
-      /*  Note that the prf_hash_alg is the hash function used by the PRF, see sslimpl.h.  */
+static const ssl3CipherSuiteDef cipher_suite_defs[] = {
+    /*  cipher_suite                    bulk_cipher_alg mac_alg key_exchange_alg prf_hash */
+    /*  Note that the prf_hash_alg is the hash function used by the PRF, see sslimpl.h.  */
 
-      { TLS_NULL_WITH_NULL_NULL, cipher_null, ssl_mac_null, kea_null, ssl_hash_none },
-      { TLS_RSA_WITH_NULL_MD5, cipher_null, ssl_mac_md5, kea_rsa, ssl_hash_none },
-      { TLS_RSA_WITH_NULL_SHA, cipher_null, ssl_mac_sha, kea_rsa, ssl_hash_none },
-      { TLS_RSA_WITH_NULL_SHA256, cipher_null, ssl_hmac_sha256, kea_rsa, ssl_hash_sha256 },
-      { TLS_RSA_WITH_RC4_128_MD5, cipher_rc4, ssl_mac_md5, kea_rsa, ssl_hash_none },
-      { TLS_RSA_WITH_RC4_128_SHA, cipher_rc4, ssl_mac_sha, kea_rsa, ssl_hash_none },
-      { TLS_RSA_WITH_DES_CBC_SHA, cipher_des, ssl_mac_sha, kea_rsa, ssl_hash_none },
-      { TLS_RSA_WITH_3DES_EDE_CBC_SHA, cipher_3des, ssl_mac_sha, kea_rsa, ssl_hash_none },
-      { TLS_DHE_DSS_WITH_DES_CBC_SHA, cipher_des, ssl_mac_sha, kea_dhe_dss, ssl_hash_none },
-      { TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA,
-        cipher_3des, ssl_mac_sha, kea_dhe_dss, ssl_hash_none },
-      { TLS_DHE_DSS_WITH_RC4_128_SHA, cipher_rc4, ssl_mac_sha, kea_dhe_dss, ssl_hash_none },
-      { TLS_DHE_RSA_WITH_DES_CBC_SHA, cipher_des, ssl_mac_sha, kea_dhe_rsa, ssl_hash_none },
-      { TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA,
-        cipher_3des, ssl_mac_sha, kea_dhe_rsa, ssl_hash_none },
+    { TLS_NULL_WITH_NULL_NULL, cipher_null, ssl_mac_null, kea_null, ssl_hash_none },
+    { TLS_RSA_WITH_NULL_MD5, cipher_null, ssl_mac_md5, kea_rsa, ssl_hash_none },
+    { TLS_RSA_WITH_NULL_SHA, cipher_null, ssl_mac_sha, kea_rsa, ssl_hash_none },
+    { TLS_RSA_WITH_NULL_SHA256, cipher_null, ssl_hmac_sha256, kea_rsa, ssl_hash_sha256 },
+    { TLS_RSA_WITH_RC4_128_MD5, cipher_rc4, ssl_mac_md5, kea_rsa, ssl_hash_none },
+    { TLS_RSA_WITH_RC4_128_SHA, cipher_rc4, ssl_mac_sha, kea_rsa, ssl_hash_none },
+    { TLS_RSA_WITH_DES_CBC_SHA, cipher_des, ssl_mac_sha, kea_rsa, ssl_hash_none },
+    { TLS_RSA_WITH_3DES_EDE_CBC_SHA, cipher_3des, ssl_mac_sha, kea_rsa, ssl_hash_none },
+    { TLS_DHE_DSS_WITH_DES_CBC_SHA, cipher_des, ssl_mac_sha, kea_dhe_dss, ssl_hash_none },
+    { TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA,
+      cipher_3des, ssl_mac_sha, kea_dhe_dss, ssl_hash_none },
+    { TLS_DHE_DSS_WITH_RC4_128_SHA, cipher_rc4, ssl_mac_sha, kea_dhe_dss, ssl_hash_none },
+    { TLS_DHE_RSA_WITH_DES_CBC_SHA, cipher_des, ssl_mac_sha, kea_dhe_rsa, ssl_hash_none },
+    { TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA,
+      cipher_3des, ssl_mac_sha, kea_dhe_rsa, ssl_hash_none },
 
-      /* New TLS cipher suites */
-      { TLS_RSA_WITH_AES_128_CBC_SHA, cipher_aes_128, ssl_mac_sha, kea_rsa, ssl_hash_none },
-      { TLS_RSA_WITH_AES_128_CBC_SHA256, cipher_aes_128, ssl_hmac_sha256, kea_rsa, ssl_hash_sha256 },
-      { TLS_DHE_DSS_WITH_AES_128_CBC_SHA, cipher_aes_128, ssl_mac_sha, kea_dhe_dss, ssl_hash_none },
-      { TLS_DHE_RSA_WITH_AES_128_CBC_SHA, cipher_aes_128, ssl_mac_sha, kea_dhe_rsa, ssl_hash_none },
-      { TLS_DHE_RSA_WITH_AES_128_CBC_SHA256, cipher_aes_128, ssl_hmac_sha256, kea_dhe_rsa, ssl_hash_sha256 },
-      { TLS_RSA_WITH_AES_256_CBC_SHA, cipher_aes_256, ssl_mac_sha, kea_rsa, ssl_hash_none },
-      { TLS_RSA_WITH_AES_256_CBC_SHA256, cipher_aes_256, ssl_hmac_sha256, kea_rsa, ssl_hash_sha256 },
-      { TLS_DHE_DSS_WITH_AES_256_CBC_SHA, cipher_aes_256, ssl_mac_sha, kea_dhe_dss, ssl_hash_none },
-      { TLS_DHE_RSA_WITH_AES_256_CBC_SHA, cipher_aes_256, ssl_mac_sha, kea_dhe_rsa, ssl_hash_none },
-      { TLS_DHE_RSA_WITH_AES_256_CBC_SHA256, cipher_aes_256, ssl_hmac_sha256, kea_dhe_rsa, ssl_hash_sha256 },
-      { TLS_DHE_RSA_WITH_AES_256_GCM_SHA384, cipher_aes_256_gcm, ssl_mac_aead, kea_dhe_rsa, ssl_hash_sha384 },
+    /* New TLS cipher suites */
+    { TLS_RSA_WITH_AES_128_CBC_SHA, cipher_aes_128, ssl_mac_sha, kea_rsa, ssl_hash_none },
+    { TLS_RSA_WITH_AES_128_CBC_SHA256, cipher_aes_128, ssl_hmac_sha256, kea_rsa, ssl_hash_sha256 },
+    { TLS_DHE_DSS_WITH_AES_128_CBC_SHA, cipher_aes_128, ssl_mac_sha, kea_dhe_dss, ssl_hash_none },
+    { TLS_DHE_RSA_WITH_AES_128_CBC_SHA, cipher_aes_128, ssl_mac_sha, kea_dhe_rsa, ssl_hash_none },
+    { TLS_DHE_RSA_WITH_AES_128_CBC_SHA256, cipher_aes_128, ssl_hmac_sha256, kea_dhe_rsa, ssl_hash_sha256 },
+    { TLS_RSA_WITH_AES_256_CBC_SHA, cipher_aes_256, ssl_mac_sha, kea_rsa, ssl_hash_none },
+    { TLS_RSA_WITH_AES_256_CBC_SHA256, cipher_aes_256, ssl_hmac_sha256, kea_rsa, ssl_hash_sha256 },
+    { TLS_DHE_DSS_WITH_AES_256_CBC_SHA, cipher_aes_256, ssl_mac_sha, kea_dhe_dss, ssl_hash_none },
+    { TLS_DHE_RSA_WITH_AES_256_CBC_SHA, cipher_aes_256, ssl_mac_sha, kea_dhe_rsa, ssl_hash_none },
+    { TLS_DHE_RSA_WITH_AES_256_CBC_SHA256, cipher_aes_256, ssl_hmac_sha256, kea_dhe_rsa, ssl_hash_sha256 },
+    { TLS_DHE_RSA_WITH_AES_256_GCM_SHA384, cipher_aes_256_gcm, ssl_mac_aead, kea_dhe_rsa, ssl_hash_sha384 },
 
-      { TLS_RSA_WITH_SEED_CBC_SHA, cipher_seed, ssl_mac_sha, kea_rsa, ssl_hash_none },
+    { TLS_RSA_WITH_SEED_CBC_SHA, cipher_seed, ssl_mac_sha, kea_rsa, ssl_hash_none },
 
-      { TLS_RSA_WITH_CAMELLIA_128_CBC_SHA, cipher_camellia_128, ssl_mac_sha, kea_rsa, ssl_hash_none },
-      { TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA,
-        cipher_camellia_128, ssl_mac_sha, kea_dhe_dss, ssl_hash_none },
-      { TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA,
-        cipher_camellia_128, ssl_mac_sha, kea_dhe_rsa, ssl_hash_none },
-      { TLS_RSA_WITH_CAMELLIA_256_CBC_SHA, cipher_camellia_256, ssl_mac_sha, kea_rsa, ssl_hash_none },
-      { TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA,
-        cipher_camellia_256, ssl_mac_sha, kea_dhe_dss, ssl_hash_none },
-      { TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA,
-        cipher_camellia_256, ssl_mac_sha, kea_dhe_rsa, ssl_hash_none },
+    { TLS_RSA_WITH_CAMELLIA_128_CBC_SHA, cipher_camellia_128, ssl_mac_sha, kea_rsa, ssl_hash_none },
+    { TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA,
+      cipher_camellia_128, ssl_mac_sha, kea_dhe_dss, ssl_hash_none },
+    { TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA,
+      cipher_camellia_128, ssl_mac_sha, kea_dhe_rsa, ssl_hash_none },
+    { TLS_RSA_WITH_CAMELLIA_256_CBC_SHA, cipher_camellia_256, ssl_mac_sha, kea_rsa, ssl_hash_none },
+    { TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA,
+      cipher_camellia_256, ssl_mac_sha, kea_dhe_dss, ssl_hash_none },
+    { TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA,
+      cipher_camellia_256, ssl_mac_sha, kea_dhe_rsa, ssl_hash_none },
 
-      { TLS_DHE_RSA_WITH_AES_128_GCM_SHA256, cipher_aes_128_gcm, ssl_mac_aead, kea_dhe_rsa, ssl_hash_sha256 },
-      { TLS_RSA_WITH_AES_128_GCM_SHA256, cipher_aes_128_gcm, ssl_mac_aead, kea_rsa, ssl_hash_sha256 },
+    { TLS_DHE_RSA_WITH_AES_128_GCM_SHA256, cipher_aes_128_gcm, ssl_mac_aead, kea_dhe_rsa, ssl_hash_sha256 },
+    { TLS_RSA_WITH_AES_128_GCM_SHA256, cipher_aes_128_gcm, ssl_mac_aead, kea_rsa, ssl_hash_sha256 },
 
-      { TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, cipher_aes_128_gcm, ssl_mac_aead, kea_ecdhe_rsa, ssl_hash_sha256 },
-      { TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, cipher_aes_128_gcm, ssl_mac_aead, kea_ecdhe_ecdsa, ssl_hash_sha256 },
-      { TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384, cipher_aes_256_gcm, ssl_mac_aead, kea_ecdhe_ecdsa, ssl_hash_sha384 },
-      { TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, cipher_aes_256_gcm, ssl_mac_aead, kea_ecdhe_rsa, ssl_hash_sha384 },
-      { TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384, cipher_aes_256, ssl_hmac_sha384, kea_ecdhe_ecdsa, ssl_hash_sha384 },
-      { TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384, cipher_aes_256, ssl_hmac_sha384, kea_ecdhe_rsa, ssl_hash_sha384 },
-      { TLS_DHE_DSS_WITH_AES_128_GCM_SHA256, cipher_aes_128_gcm, ssl_mac_aead, kea_dhe_dss, ssl_hash_sha256 },
-      { TLS_DHE_DSS_WITH_AES_128_CBC_SHA256, cipher_aes_128, ssl_hmac_sha256, kea_dhe_dss, ssl_hash_sha256 },
-      { TLS_DHE_DSS_WITH_AES_256_CBC_SHA256, cipher_aes_256, ssl_hmac_sha256, kea_dhe_dss, ssl_hash_sha256 },
-      { TLS_DHE_DSS_WITH_AES_256_GCM_SHA384, cipher_aes_256_gcm, ssl_mac_aead, kea_dhe_dss, ssl_hash_sha384 },
-      { TLS_RSA_WITH_AES_256_GCM_SHA384, cipher_aes_256_gcm, ssl_mac_aead, kea_rsa, ssl_hash_sha384 },
+    { TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, cipher_aes_128_gcm, ssl_mac_aead, kea_ecdhe_rsa, ssl_hash_sha256 },
+    { TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, cipher_aes_128_gcm, ssl_mac_aead, kea_ecdhe_ecdsa, ssl_hash_sha256 },
+    { TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384, cipher_aes_256_gcm, ssl_mac_aead, kea_ecdhe_ecdsa, ssl_hash_sha384 },
+    { TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, cipher_aes_256_gcm, ssl_mac_aead, kea_ecdhe_rsa, ssl_hash_sha384 },
+    { TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384, cipher_aes_256, ssl_hmac_sha384, kea_ecdhe_ecdsa, ssl_hash_sha384 },
+    { TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384, cipher_aes_256, ssl_hmac_sha384, kea_ecdhe_rsa, ssl_hash_sha384 },
+    { TLS_DHE_DSS_WITH_AES_128_GCM_SHA256, cipher_aes_128_gcm, ssl_mac_aead, kea_dhe_dss, ssl_hash_sha256 },
+    { TLS_DHE_DSS_WITH_AES_128_CBC_SHA256, cipher_aes_128, ssl_hmac_sha256, kea_dhe_dss, ssl_hash_sha256 },
+    { TLS_DHE_DSS_WITH_AES_256_CBC_SHA256, cipher_aes_256, ssl_hmac_sha256, kea_dhe_dss, ssl_hash_sha256 },
+    { TLS_DHE_DSS_WITH_AES_256_GCM_SHA384, cipher_aes_256_gcm, ssl_mac_aead, kea_dhe_dss, ssl_hash_sha384 },
+    { TLS_RSA_WITH_AES_256_GCM_SHA384, cipher_aes_256_gcm, ssl_mac_aead, kea_rsa, ssl_hash_sha384 },
 
-      { TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256, cipher_chacha20, ssl_mac_aead, kea_dhe_rsa, ssl_hash_sha256 },
+    { TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256, cipher_chacha20, ssl_mac_aead, kea_dhe_rsa, ssl_hash_sha256 },
 
-      { TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256, cipher_chacha20, ssl_mac_aead, kea_ecdhe_rsa, ssl_hash_sha256 },
-      { TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256, cipher_chacha20, ssl_mac_aead, kea_ecdhe_ecdsa, ssl_hash_sha256 },
+    { TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256, cipher_chacha20, ssl_mac_aead, kea_ecdhe_rsa, ssl_hash_sha256 },
+    { TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256, cipher_chacha20, ssl_mac_aead, kea_ecdhe_ecdsa, ssl_hash_sha256 },
 
-      { TLS_ECDH_ECDSA_WITH_NULL_SHA, cipher_null, ssl_mac_sha, kea_ecdh_ecdsa, ssl_hash_none },
-      { TLS_ECDH_ECDSA_WITH_RC4_128_SHA, cipher_rc4, ssl_mac_sha, kea_ecdh_ecdsa, ssl_hash_none },
-      { TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA, cipher_3des, ssl_mac_sha, kea_ecdh_ecdsa, ssl_hash_none },
-      { TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA, cipher_aes_128, ssl_mac_sha, kea_ecdh_ecdsa, ssl_hash_none },
-      { TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA, cipher_aes_256, ssl_mac_sha, kea_ecdh_ecdsa, ssl_hash_none },
+    { TLS_ECDH_ECDSA_WITH_NULL_SHA, cipher_null, ssl_mac_sha, kea_ecdh_ecdsa, ssl_hash_none },
+    { TLS_ECDH_ECDSA_WITH_RC4_128_SHA, cipher_rc4, ssl_mac_sha, kea_ecdh_ecdsa, ssl_hash_none },
+    { TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA, cipher_3des, ssl_mac_sha, kea_ecdh_ecdsa, ssl_hash_none },
+    { TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA, cipher_aes_128, ssl_mac_sha, kea_ecdh_ecdsa, ssl_hash_none },
+    { TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA, cipher_aes_256, ssl_mac_sha, kea_ecdh_ecdsa, ssl_hash_none },
 
-      { TLS_ECDHE_ECDSA_WITH_NULL_SHA, cipher_null, ssl_mac_sha, kea_ecdhe_ecdsa, ssl_hash_none },
-      { TLS_ECDHE_ECDSA_WITH_RC4_128_SHA, cipher_rc4, ssl_mac_sha, kea_ecdhe_ecdsa, ssl_hash_none },
-      { TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA, cipher_3des, ssl_mac_sha, kea_ecdhe_ecdsa, ssl_hash_none },
-      { TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA, cipher_aes_128, ssl_mac_sha, kea_ecdhe_ecdsa, ssl_hash_none },
-      { TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256, cipher_aes_128, ssl_hmac_sha256, kea_ecdhe_ecdsa, ssl_hash_sha256 },
-      { TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA, cipher_aes_256, ssl_mac_sha, kea_ecdhe_ecdsa, ssl_hash_none },
+    { TLS_ECDHE_ECDSA_WITH_NULL_SHA, cipher_null, ssl_mac_sha, kea_ecdhe_ecdsa, ssl_hash_none },
+    { TLS_ECDHE_ECDSA_WITH_RC4_128_SHA, cipher_rc4, ssl_mac_sha, kea_ecdhe_ecdsa, ssl_hash_none },
+    { TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA, cipher_3des, ssl_mac_sha, kea_ecdhe_ecdsa, ssl_hash_none },
+    { TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA, cipher_aes_128, ssl_mac_sha, kea_ecdhe_ecdsa, ssl_hash_none },
+    { TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256, cipher_aes_128, ssl_hmac_sha256, kea_ecdhe_ecdsa, ssl_hash_sha256 },
+    { TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA, cipher_aes_256, ssl_mac_sha, kea_ecdhe_ecdsa, ssl_hash_none },
 
-      { TLS_ECDH_RSA_WITH_NULL_SHA, cipher_null, ssl_mac_sha, kea_ecdh_rsa, ssl_hash_none },
-      { TLS_ECDH_RSA_WITH_RC4_128_SHA, cipher_rc4, ssl_mac_sha, kea_ecdh_rsa, ssl_hash_none },
-      { TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA, cipher_3des, ssl_mac_sha, kea_ecdh_rsa, ssl_hash_none },
-      { TLS_ECDH_RSA_WITH_AES_128_CBC_SHA, cipher_aes_128, ssl_mac_sha, kea_ecdh_rsa, ssl_hash_none },
-      { TLS_ECDH_RSA_WITH_AES_256_CBC_SHA, cipher_aes_256, ssl_mac_sha, kea_ecdh_rsa, ssl_hash_none },
+    { TLS_ECDH_RSA_WITH_NULL_SHA, cipher_null, ssl_mac_sha, kea_ecdh_rsa, ssl_hash_none },
+    { TLS_ECDH_RSA_WITH_RC4_128_SHA, cipher_rc4, ssl_mac_sha, kea_ecdh_rsa, ssl_hash_none },
+    { TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA, cipher_3des, ssl_mac_sha, kea_ecdh_rsa, ssl_hash_none },
+    { TLS_ECDH_RSA_WITH_AES_128_CBC_SHA, cipher_aes_128, ssl_mac_sha, kea_ecdh_rsa, ssl_hash_none },
+    { TLS_ECDH_RSA_WITH_AES_256_CBC_SHA, cipher_aes_256, ssl_mac_sha, kea_ecdh_rsa, ssl_hash_none },
 
-      { TLS_ECDHE_RSA_WITH_NULL_SHA, cipher_null, ssl_mac_sha, kea_ecdhe_rsa, ssl_hash_none },
-      { TLS_ECDHE_RSA_WITH_RC4_128_SHA, cipher_rc4, ssl_mac_sha, kea_ecdhe_rsa, ssl_hash_none },
-      { TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA, cipher_3des, ssl_mac_sha, kea_ecdhe_rsa, ssl_hash_none },
-      { TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA, cipher_aes_128, ssl_mac_sha, kea_ecdhe_rsa, ssl_hash_none },
-      { TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256, cipher_aes_128, ssl_hmac_sha256, kea_ecdhe_rsa, ssl_hash_sha256 },
-      { TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA, cipher_aes_256, ssl_mac_sha, kea_ecdhe_rsa, ssl_hash_none },
+    { TLS_ECDHE_RSA_WITH_NULL_SHA, cipher_null, ssl_mac_sha, kea_ecdhe_rsa, ssl_hash_none },
+    { TLS_ECDHE_RSA_WITH_RC4_128_SHA, cipher_rc4, ssl_mac_sha, kea_ecdhe_rsa, ssl_hash_none },
+    { TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA, cipher_3des, ssl_mac_sha, kea_ecdhe_rsa, ssl_hash_none },
+    { TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA, cipher_aes_128, ssl_mac_sha, kea_ecdhe_rsa, ssl_hash_none },
+    { TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256, cipher_aes_128, ssl_hmac_sha256, kea_ecdhe_rsa, ssl_hash_sha256 },
+    { TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA, cipher_aes_256, ssl_mac_sha, kea_ecdhe_rsa, ssl_hash_none },
 
-      { TLS_AES_128_GCM_SHA256, cipher_aes_128_gcm, ssl_mac_aead, kea_tls13_any, ssl_hash_sha256 },
-      { TLS_CHACHA20_POLY1305_SHA256, cipher_chacha20, ssl_mac_aead, kea_tls13_any, ssl_hash_sha256 },
-      { TLS_AES_256_GCM_SHA384, cipher_aes_256_gcm, ssl_mac_aead, kea_tls13_any, ssl_hash_sha384 },
-    };
+    { TLS_AES_128_GCM_SHA256, cipher_aes_128_gcm, ssl_mac_aead, kea_tls13_any, ssl_hash_sha256 },
+    { TLS_CHACHA20_POLY1305_SHA256, cipher_chacha20, ssl_mac_aead, kea_tls13_any, ssl_hash_sha256 },
+    { TLS_AES_256_GCM_SHA384, cipher_aes_256_gcm, ssl_mac_aead, kea_tls13_any, ssl_hash_sha384 },
+};
 
 static const CK_MECHANISM_TYPE auth_alg_defs[] = {
     CKM_INVALID_MECHANISM, /* ssl_auth_null */
@@ -1003,7 +1001,7 @@ ssl3_config_match_init(sslSocket *ss)
             }
         }
     }
-    PORT_Assert(numPresent > 0 || numEnabled == 0);
+    PORT_AssertArg(numPresent > 0 || numEnabled == 0);
     if (numPresent == 0) {
         PORT_SetError(SSL_ERROR_NO_CIPHERS_SUPPORTED);
     }
@@ -7093,7 +7091,7 @@ ssl3_HandleServerHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
         /* Disable this check while we are on draft DTLS 1.3 versions. */
         && !IS_DTLS(ss)
 #endif
-            ) {
+    ) {
         rv = ssl_CheckServerRandom(ss);
         if (rv != SECSuccess) {
             desc = illegal_parameter;

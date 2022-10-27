@@ -3408,4 +3408,4 @@ static const DhTestVector DH_TEST_VECTORS[] = {
      CLASS_8192}
 #endif
 };
-};
+};  // namespace nss_test

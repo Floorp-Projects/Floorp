@@ -109,4 +109,4 @@ TEST_F(Alg1485Test, BrokenOIDTest) {
   EXPECT_EQ(0, strncmp("OID.UNSUPPORTED", result, 15));
   PR_smprintf_free(result);
 }
-}
+}  // namespace nss_test

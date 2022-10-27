@@ -1558,8 +1558,8 @@ class BeforeFinished13 : public PacketFilter {
                   SSLInt_SetMTU(server_.lock()->ssl_fd(), input.len() - 1));
         return DROP;
 
-      // Packet 2 is the first part of the server's retransmitted first
-      // flight.  Keep that.
+        // Packet 2 is the first part of the server's retransmitted first
+        // flight.  Keep that.
 
       case 3:
         // Packet 3 is the second part of the server's retransmitted first

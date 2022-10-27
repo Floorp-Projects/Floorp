@@ -90,22 +90,20 @@ enum {
     opt_DebugInfo
 };
 
-static secuCommandFlag signver_commands[] =
-    {
-      { /* cmd_DisplayAllPCKS7Info*/ 'A', PR_FALSE, 0, PR_FALSE },
-      { /* cmd_VerifySignedObj  */ 'V', PR_FALSE, 0, PR_FALSE }
-    };
+static secuCommandFlag signver_commands[] = {
+    { /* cmd_DisplayAllPCKS7Info*/ 'A', PR_FALSE, 0, PR_FALSE },
+    { /* cmd_VerifySignedObj  */ 'V', PR_FALSE, 0, PR_FALSE }
+};
 
-static secuCommandFlag signver_options[] =
-    {
-      { /* opt_ASCII            */ 'a', PR_FALSE, 0, PR_FALSE },
-      { /* opt_CertDir          */ 'd', PR_TRUE, 0, PR_FALSE },
-      { /* opt_InputDataFile    */ 'i', PR_TRUE, 0, PR_FALSE },
-      { /* opt_OutputFile       */ 'o', PR_TRUE, 0, PR_FALSE },
-      { /* opt_InputSigFile     */ 's', PR_TRUE, 0, PR_FALSE },
-      { /* opt_PrintWhyFailure  */ 'v', PR_FALSE, 0, PR_FALSE },
-      { /* opt_DebugInfo                */ 0, PR_FALSE, 0, PR_FALSE, "debug" }
-    };
+static secuCommandFlag signver_options[] = {
+    { /* opt_ASCII            */ 'a', PR_FALSE, 0, PR_FALSE },
+    { /* opt_CertDir          */ 'd', PR_TRUE, 0, PR_FALSE },
+    { /* opt_InputDataFile    */ 'i', PR_TRUE, 0, PR_FALSE },
+    { /* opt_OutputFile       */ 'o', PR_TRUE, 0, PR_FALSE },
+    { /* opt_InputSigFile     */ 's', PR_TRUE, 0, PR_FALSE },
+    { /* opt_PrintWhyFailure  */ 'v', PR_FALSE, 0, PR_FALSE },
+    { /* opt_DebugInfo                */ 0, PR_FALSE, 0, PR_FALSE, "debug" }
+};
 
 int
 main(int argc, char **argv)

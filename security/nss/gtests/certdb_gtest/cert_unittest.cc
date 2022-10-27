@@ -44,4 +44,4 @@ TEST_F(CertTest, GetCertDerBad) {
   EXPECT_EQ(SECFailure, CERT_GetCertificateDer(nullptr, &der));
   EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
 }
-}
+}  // namespace nss_test

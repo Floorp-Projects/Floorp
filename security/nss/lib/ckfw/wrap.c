@@ -222,13 +222,14 @@ NSSCKFWC_Finalize(
 
 loser:
     switch (error) {
-        PRInt32 remainingInstances;
-        case CKR_OK:
+        case CKR_OK: {
+            PRInt32 remainingInstances;
             remainingInstances = PR_ATOMIC_DECREMENT(&liveInstances);
             if (!remainingInstances) {
                 nssArena_Shutdown();
             }
             break;
+        }
         case CKR_CRYPTOKI_NOT_INITIALIZED:
         case CKR_FUNCTION_FAILED:
         case CKR_GENERAL_ERROR:

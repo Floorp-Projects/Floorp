@@ -54,15 +54,14 @@ enum {
     opt_Debug
 };
 
-static secuCommandFlag validation_options[] =
-    {
-      { /* opt_CertDir        */ 'd', PR_TRUE, 0, PR_FALSE },
-      { /* opt_TokenName      */ 'h', PR_TRUE, 0, PR_FALSE },
-      { /* opt_SlotPWFile     */ 'k', PR_TRUE, 0, PR_FALSE },
-      { /* opt_SlotPW         */ 'K', PR_TRUE, 0, PR_FALSE },
-      { /* opt_DBPrefix       */ 'P', PR_TRUE, 0, PR_FALSE },
-      { /* opt_Debug          */ 'v', PR_FALSE, 0, PR_FALSE }
-    };
+static secuCommandFlag validation_options[] = {
+    { /* opt_CertDir        */ 'd', PR_TRUE, 0, PR_FALSE },
+    { /* opt_TokenName      */ 'h', PR_TRUE, 0, PR_FALSE },
+    { /* opt_SlotPWFile     */ 'k', PR_TRUE, 0, PR_FALSE },
+    { /* opt_SlotPW         */ 'K', PR_TRUE, 0, PR_FALSE },
+    { /* opt_DBPrefix       */ 'P', PR_TRUE, 0, PR_FALSE },
+    { /* opt_Debug          */ 'v', PR_FALSE, 0, PR_FALSE }
+};
 
 void
 dump_Raw(char *label, CK_ATTRIBUTE *attr)

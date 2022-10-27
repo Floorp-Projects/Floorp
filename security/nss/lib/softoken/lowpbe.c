@@ -29,24 +29,22 @@ SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
  * based upon the additions in PKCS 12.  This should eventually be moved
  * if RSA updates PKCS 5.
  */
-static const SEC_ASN1Template NSSPKCS5PBEParameterTemplate[] =
-    {
-      { SEC_ASN1_SEQUENCE,
-        0, NULL, sizeof(NSSPKCS5PBEParameter) },
-      { SEC_ASN1_OCTET_STRING,
-        offsetof(NSSPKCS5PBEParameter, salt) },
-      { SEC_ASN1_INTEGER,
-        offsetof(NSSPKCS5PBEParameter, iteration) },
-      { 0 }
-    };
+static const SEC_ASN1Template NSSPKCS5PBEParameterTemplate[] = {
+    { SEC_ASN1_SEQUENCE,
+      0, NULL, sizeof(NSSPKCS5PBEParameter) },
+    { SEC_ASN1_OCTET_STRING,
+      offsetof(NSSPKCS5PBEParameter, salt) },
+    { SEC_ASN1_INTEGER,
+      offsetof(NSSPKCS5PBEParameter, iteration) },
+    { 0 }
+};
 
-static const SEC_ASN1Template NSSPKCS5PKCS12V2PBEParameterTemplate[] =
-    {
-      { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSPKCS5PBEParameter) },
-      { SEC_ASN1_OCTET_STRING, offsetof(NSSPKCS5PBEParameter, salt) },
-      { SEC_ASN1_INTEGER, offsetof(NSSPKCS5PBEParameter, iteration) },
-      { 0 }
-    };
+static const SEC_ASN1Template NSSPKCS5PKCS12V2PBEParameterTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSPKCS5PBEParameter) },
+    { SEC_ASN1_OCTET_STRING, offsetof(NSSPKCS5PBEParameter, salt) },
+    { SEC_ASN1_INTEGER, offsetof(NSSPKCS5PBEParameter, iteration) },
+    { 0 }
+};
 
 /* PKCS5 v2 */
 
@@ -57,31 +55,29 @@ struct nsspkcs5V2PBEParameterStr {
 
 typedef struct nsspkcs5V2PBEParameterStr nsspkcs5V2PBEParameter;
 
-static const SEC_ASN1Template NSSPKCS5V2PBES2ParameterTemplate[] =
-    {
-      { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(nsspkcs5V2PBEParameter) },
-      { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
-        offsetof(nsspkcs5V2PBEParameter, keyParams),
-        SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-      { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
-        offsetof(nsspkcs5V2PBEParameter, algParams),
-        SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-      { 0 }
-    };
+static const SEC_ASN1Template NSSPKCS5V2PBES2ParameterTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(nsspkcs5V2PBEParameter) },
+    { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
+      offsetof(nsspkcs5V2PBEParameter, keyParams),
+      SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
+    { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
+      offsetof(nsspkcs5V2PBEParameter, algParams),
+      SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
+    { 0 }
+};
 
-static const SEC_ASN1Template NSSPKCS5V2PBEParameterTemplate[] =
-    {
-      { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSPKCS5PBEParameter) },
-      /* this is really a choice, but since we don't understand any other
+static const SEC_ASN1Template NSSPKCS5V2PBEParameterTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSPKCS5PBEParameter) },
+    /* this is really a choice, but since we don't understand any other
        * choice, just inline it. */
-      { SEC_ASN1_OCTET_STRING, offsetof(NSSPKCS5PBEParameter, salt) },
-      { SEC_ASN1_INTEGER, offsetof(NSSPKCS5PBEParameter, iteration) },
-      { SEC_ASN1_INTEGER, offsetof(NSSPKCS5PBEParameter, keyLength) },
-      { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
-        offsetof(NSSPKCS5PBEParameter, prfAlg),
-        SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-      { 0 }
-    };
+    { SEC_ASN1_OCTET_STRING, offsetof(NSSPKCS5PBEParameter, salt) },
+    { SEC_ASN1_INTEGER, offsetof(NSSPKCS5PBEParameter, iteration) },
+    { SEC_ASN1_INTEGER, offsetof(NSSPKCS5PBEParameter, keyLength) },
+    { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
+      offsetof(NSSPKCS5PBEParameter, prfAlg),
+      SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
+    { 0 }
+};
 
 SECStatus
 nsspkcs5_HashBuf(const SECHashObject *hashObj, unsigned char *dest,
@@ -1770,8 +1766,7 @@ sftk_fips_pbkdf_PowerUpSelfTests(void)
     unsigned char iteration_count = 5;
     unsigned char keyLen = 64;
     char *inKeyData = TEST_KEY;
-    static const unsigned char saltData[] =
-        { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
+    static const unsigned char saltData[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
     static const unsigned char pbkdf_known_answer[] = {
         0x31, 0xf0, 0xe5, 0x39, 0x9f, 0x39, 0xb9, 0x29,
         0x68, 0xac, 0xf2, 0xe9, 0x53, 0x9b, 0xb4, 0x9c,

@@ -438,7 +438,8 @@ const std::vector<uint8_t> kTestCertWithOtherKeyDER = {
 // If there are no certs at all, we'll get back a null list.
 TEST_F(PK11GetCertsMatchingPrivateKeyTest, TestNoCertsAtAll) {
   SECItem private_key_info = {
-      siBuffer, const_cast<unsigned char*>(kTestPrivateKeyInfoDER.data()),
+      siBuffer,
+      const_cast<unsigned char*>(kTestPrivateKeyInfoDER.data()),
       (unsigned int)kTestPrivateKeyInfoDER.size(),
   };
   SECKEYPrivateKey* priv_key = nullptr;
@@ -455,7 +456,8 @@ TEST_F(PK11GetCertsMatchingPrivateKeyTest, TestNoCertsAtAll) {
 // If there are no certs for the private key, we'll get back a null list.
 TEST_F(PK11GetCertsMatchingPrivateKeyTest, TestNoCertsForKey) {
   SECItem private_key_info = {
-      siBuffer, const_cast<unsigned char*>(kTestPrivateKeyInfoDER.data()),
+      siBuffer,
+      const_cast<unsigned char*>(kTestPrivateKeyInfoDER.data()),
       (unsigned int)kTestPrivateKeyInfoDER.size(),
   };
   SECKEYPrivateKey* priv_key = nullptr;
@@ -502,7 +504,8 @@ void CheckCertListForSubjects(
 // We should only get back certs that actually match the private key.
 TEST_F(PK11GetCertsMatchingPrivateKeyTest, TestOneCertForKey) {
   SECItem private_key_info = {
-      siBuffer, const_cast<unsigned char*>(kTestPrivateKeyInfoDER.data()),
+      siBuffer,
+      const_cast<unsigned char*>(kTestPrivateKeyInfoDER.data()),
       (unsigned int)kTestPrivateKeyInfoDER.size(),
   };
   SECKEYPrivateKey* priv_key = nullptr;
@@ -536,7 +539,8 @@ TEST_F(PK11GetCertsMatchingPrivateKeyTest, TestOneCertForKey) {
 // We should be able to get back all certs that match the private key.
 TEST_F(PK11GetCertsMatchingPrivateKeyTest, TestTwoCertsForKey) {
   SECItem private_key_info = {
-      siBuffer, const_cast<unsigned char*>(kTestPrivateKeyInfoDER.data()),
+      siBuffer,
+      const_cast<unsigned char*>(kTestPrivateKeyInfoDER.data()),
       (unsigned int)kTestPrivateKeyInfoDER.size(),
   };
   SECKEYPrivateKey* priv_key = nullptr;

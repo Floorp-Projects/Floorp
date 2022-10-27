@@ -106,7 +106,7 @@ inline SECItem UnsafeMapInputToSECItem(Input input) {
                 "input.GetLength() must fit in a SECItem");
   return result;
 }
-}
-}  // namespace mozilla::pkix
+}  // namespace pkix
+}  // namespace mozilla
 
 #endif  // mozilla_pkix_pkixnss_h

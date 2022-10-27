@@ -2047,11 +2047,10 @@ sftkdb_reconcileTrustEntry(PLArenaPool *arena, CK_ATTRIBUTE *target,
     return SFTKDB_DROP_ATTRIBUTE;
 }
 
-const CK_ATTRIBUTE_TYPE sftkdb_trustList[] =
-    { CKA_TRUST_SERVER_AUTH, CKA_TRUST_CLIENT_AUTH,
-      CKA_TRUST_CODE_SIGNING, CKA_TRUST_EMAIL_PROTECTION,
-      CKA_TRUST_IPSEC_TUNNEL, CKA_TRUST_IPSEC_USER,
-      CKA_TRUST_TIME_STAMPING };
+const CK_ATTRIBUTE_TYPE sftkdb_trustList[] = { CKA_TRUST_SERVER_AUTH, CKA_TRUST_CLIENT_AUTH,
+                                               CKA_TRUST_CODE_SIGNING, CKA_TRUST_EMAIL_PROTECTION,
+                                               CKA_TRUST_IPSEC_TUNNEL, CKA_TRUST_IPSEC_USER,
+                                               CKA_TRUST_TIME_STAMPING };
 
 #define SFTK_TRUST_TEMPLATE_COUNT \
     (sizeof(sftkdb_trustList) / sizeof(sftkdb_trustList[0]))

@@ -261,7 +261,7 @@ inline size_t DigestAlgorithmToSizeInBytes(DigestAlgorithm digestAlgorithm) {
       MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
   }
 }
-}
-}  // namespace mozilla::pkix
+}  // namespace pkix
+}  // namespace mozilla
 
 #endif  // mozilla_pkix_pkixutil_h

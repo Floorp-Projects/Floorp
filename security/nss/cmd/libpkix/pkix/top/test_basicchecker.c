@@ -218,13 +218,13 @@ test_basicchecker(int argc, char *argv[])
     testNameChainingFail(dirName, goodInput, diffInput, dateAscii);
     testDateFail(dirName, goodInput, diffInput);
 
-/*
+    /*
          * XXX
          * since the signature check is done last, we need to create
          * certs whose name chaining passes, but their signatures fail;
          * we currently don't have any such certs.
          */
-/* testSignatureFail(goodInput, diffInput, dateAscii); */
+    /* testSignatureFail(goodInput, diffInput, dateAscii); */
 
 cleanup:
 

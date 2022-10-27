@@ -515,13 +515,12 @@ enum {
     opt_Tests
 };
 
-static secuCommandFlag populate_options[] =
-    {
-      { /* opt_Exponent   */ 'e', PR_TRUE, 0, PR_FALSE },
-      { /* opt_KeySize    */ 'k', PR_TRUE, 0, PR_FALSE },
-      { /* opt_Repeat     */ 'r', PR_TRUE, 0, PR_FALSE },
-      { /* opt_Tests      */ 't', PR_TRUE, 0, PR_FALSE },
-    };
+static secuCommandFlag populate_options[] = {
+    { /* opt_Exponent   */ 'e', PR_TRUE, 0, PR_FALSE },
+    { /* opt_KeySize    */ 'k', PR_TRUE, 0, PR_FALSE },
+    { /* opt_Repeat     */ 'r', PR_TRUE, 0, PR_FALSE },
+    { /* opt_Tests      */ 't', PR_TRUE, 0, PR_FALSE },
+};
 
 int
 is_delimiter(char c)

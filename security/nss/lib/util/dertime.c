@@ -81,8 +81,8 @@ DER_TimeToUTCTime(SECItem *dst, PRTime gmttime)
 }
 
 static SECStatus /* forward */
-    der_TimeStringToTime(PRTime *dst, const char *string, int generalized,
-                         const char **endptr);
+der_TimeStringToTime(PRTime *dst, const char *string, int generalized,
+                     const char **endptr);
 
 #define GEN_STRING 2 /* TimeString is a GeneralizedTime */
 #define UTC_STRING 0 /* TimeString is a UTCTime         */

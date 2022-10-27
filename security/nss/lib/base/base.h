@@ -649,7 +649,7 @@ extern const NSSError NSS_ERROR_INVALID_STRING;
 NSS_EXTERN NSSUTF8 *nssUTF8_Create(NSSArena *arenaOpt, nssStringType type,
                                    const void *inputString,
                                    PRUint32 size /* in bytes, not characters */
-                                   );
+);
 
 extern const NSSError NSS_ERROR_INVALID_POINTER;
 extern const NSSError NSS_ERROR_NO_MEMORY;

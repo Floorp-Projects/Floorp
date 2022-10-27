@@ -238,9 +238,12 @@ ChaCha20_Xor(unsigned char *output, const unsigned char *block, unsigned int len
     return SECFailure;
 #else
     // ChaCha has a 64 octet block, with a 32-bit block counter.
-    if (sizeof(len) > 4 && len >= (1ULL << (6 + 32))) {
-        PORT_SetError(SEC_ERROR_INPUT_LEN);
-        return SECFailure;
+    if (sizeof(len) > 4) {
+        unsigned long long len_ull = len;
+        if (len_ull >= (1ULL << (6 + 32))) {
+            PORT_SetError(SEC_ERROR_INPUT_LEN);
+            return SECFailure;
+        }
     }
     ChaCha20Xor(output, (uint8_t *)block, len, (uint8_t *)k,
                 (uint8_t *)nonce, ctr);
@@ -264,9 +267,12 @@ ChaCha20Poly1305_Seal(const ChaCha20Poly1305Context *ctx, unsigned char *output,
         return SECFailure;
     }
     // ChaCha has a 64 octet block, with a 32-bit block counter.
-    if (sizeof(inputLen) > 4 && inputLen >= (1ULL << (6 + 32))) {
-        PORT_SetError(SEC_ERROR_INPUT_LEN);
-        return SECFailure;
+    if (sizeof(inputLen) > 4) {
+        unsigned long long inputLen_ull = inputLen;
+        if (inputLen_ull >= (1ULL << (6 + 32))) {
+            PORT_SetError(SEC_ERROR_INPUT_LEN);
+            return SECFailure;
+        }
     }
     if (maxOutputLen < inputLen + ctx->tagLen) {
         PORT_SetError(SEC_ERROR_OUTPUT_LEN);
@@ -401,9 +407,12 @@ ChaCha20Poly1305_Encrypt(const ChaCha20Poly1305Context *ctx,
         return SECFailure;
     }
     // ChaCha has a 64 octet block, with a 32-bit block counter.
-    if (sizeof(inputLen) > 4 && inputLen >= (1ULL << (6 + 32))) {
-        PORT_SetError(SEC_ERROR_INPUT_LEN);
-        return SECFailure;
+    if (sizeof(inputLen) > 4) {
+        unsigned long long inputLen_ull = inputLen;
+        if (inputLen_ull >= (1ULL << (6 + 32))) {
+            PORT_SetError(SEC_ERROR_INPUT_LEN);
+            return SECFailure;
+        }
     }
     if (maxOutputLen < inputLen) {
         PORT_SetError(SEC_ERROR_OUTPUT_LEN);
@@ -458,9 +467,12 @@ ChaCha20Poly1305_Decrypt(const ChaCha20Poly1305Context *ctx,
         return SECFailure;
     }
     // ChaCha has a 64 octet block, with a 32-bit block counter.
-    if (sizeof(inputLen) > 4 && inputLen >= (1ULL << (6 + 32))) {
-        PORT_SetError(SEC_ERROR_INPUT_LEN);
-        return SECFailure;
+    if (sizeof(inputLen) > 4) {
+        unsigned long long inputLen_ull = inputLen;
+        if (inputLen_ull >= (1ULL << (6 + 32))) {
+            PORT_SetError(SEC_ERROR_INPUT_LEN);
+            return SECFailure;
+        }
     }
 
     uint32_t res = 1;

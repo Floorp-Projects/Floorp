@@ -527,8 +527,8 @@ Result SignedData(Reader& input, /*out*/ Reader& tbs,
 
 // Parses an ECDSASigValue (RFC 5480) into its components r and s.
 Result ECDSASigValue(Input ecdsaSignature, /*out*/ Input& r, /*out*/ Input& s);
-}
-}
-}  // namespace mozilla::pkix::der
+}  // namespace der
+}  // namespace pkix
+}  // namespace mozilla
 
 #endif  // mozilla_pkix_pkixder_h

@@ -321,7 +321,7 @@ SHA256_Compress_Generic(SHA256Context *ctx)
     const vec_u8 shifthalf = (vec_u8)vec_splats(8 << 3);
     const vec_u8 bswap4 = (vec_u8){
         3, 2, 1, 0, 7, 6, 5, 4, 11,
-        10, 9, 8, 15, 14, 13, 12,
+        10, 9, 8, 15, 14, 13, 12
     };
     unsigned i;
 

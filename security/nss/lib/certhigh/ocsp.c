@@ -2599,7 +2599,7 @@ ocsp_DecodeResponseBytes(PLArenaPool *arena, ocspResponseBytes *rbytes)
             rbytes->decodedResponse.basic = basicResponse;
         } break;
 
-        /*
+            /*
 	 * Add new/future response types here.
 	 */
 

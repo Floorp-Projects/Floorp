@@ -317,7 +317,7 @@ addCertToDB(certDBEntryCert *certEntry, dbRestoreInfo *info,
     /*  Determine if cert is S/MIME and get its email if so.  */
     email = IsEmailCert(oldCert);
 
-/*
+    /*
         XXX  Just create empty profiles?
     if (email) {
         SECItem *profile = CERT_FindSMimeProfile(oldCert);

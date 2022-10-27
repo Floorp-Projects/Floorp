@@ -23,4 +23,4 @@ TEST_F(DHTest, DhGenParamSuccessTest16) { TestGenParamSuccess(16); }
 TEST_F(DHTest, DhGenParamSuccessTest224) { TestGenParamSuccess(224); }
 TEST_F(DHTest, DhGenParamSuccessTest256) { TestGenParamSuccess(256); }
 
-}  // nss_test
+}  // namespace nss_test

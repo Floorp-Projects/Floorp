@@ -350,8 +350,7 @@ sslMutex_Init(sslMutex *pMutex, int shared)
     SECStatus retvalue;
 #endif
     HANDLE hMutex;
-    SECURITY_ATTRIBUTES attributes =
-        { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
+    SECURITY_ATTRIBUTES attributes = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
 
     PR_ASSERT(pMutex != 0 && (pMutex->u.sslMutx == 0 ||
                               pMutex->u.sslMutx ==
@@ -504,7 +503,7 @@ sslMutex_Lock(sslMutex *pMutex)
         case WAIT_IO_COMPLETION:
 #endif
         default: /* should never happen. nothing we can do. */
-            PR_ASSERT(!("WaitForSingleObject returned invalid value."));
+            PR_ASSERT(PR_FALSE && "WaitForSingleObject returned invalid value.");
             PORT_SetError(PR_UNKNOWN_ERROR);
             rv = SECFailure;
             break;
@@ -613,7 +612,7 @@ sslMutex_Init(sslMutex* pMutex, int shared)
     if (!shared) {
         return single_process_sslMutex_Init(pMutex);
     }
-    PORT_Assert(!("sslMutex_Init not implemented for multi-process applications !"));
+    PORT_Assert(PR_FALSE && "sslMutex_Init not implemented for multi-process applications !");
     PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return SECFailure;
 }
@@ -625,7 +624,7 @@ sslMutex_Destroy(sslMutex* pMutex, PRBool processLocal)
     if (PR_FALSE == pMutex->isMultiProcess) {
         return single_process_sslMutex_Destroy(pMutex);
     }
-    PORT_Assert(!("sslMutex_Destroy not implemented for multi-process applications !"));
+    PORT_Assert(PR_FALSE && "sslMutex_Destroy not implemented for multi-process applications !");
     PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return SECFailure;
 }
@@ -637,7 +636,7 @@ sslMutex_Unlock(sslMutex* pMutex)
     if (PR_FALSE == pMutex->isMultiProcess) {
         return single_process_sslMutex_Unlock(pMutex);
     }
-    PORT_Assert(!("sslMutex_Unlock not implemented for multi-process applications !"));
+    PORT_Assert(PR_FALSE && "sslMutex_Unlock not implemented for multi-process applications !");
     PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return SECFailure;
 }
@@ -649,7 +648,7 @@ sslMutex_Lock(sslMutex* pMutex)
     if (PR_FALSE == pMutex->isMultiProcess) {
         return single_process_sslMutex_Lock(pMutex);
     }
-    PORT_Assert(!("sslMutex_Lock not implemented for multi-process applications !"));
+    PORT_Assert(PR_FALSE && "sslMutex_Lock not implemented for multi-process applications !");
     PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return SECFailure;
 }

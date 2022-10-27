@@ -22,9 +22,9 @@ class Pkcs11ModuleTest : public ::testing::Test {
   Pkcs11ModuleTest() {}
 
   void SetUp() override {
-    ASSERT_EQ(SECSuccess, SECMOD_AddNewModule("Pkcs11ModuleTest", DLL_PREFIX
-                                              "pkcs11testmodule." DLL_SUFFIX,
-                                              0, 0))
+    ASSERT_EQ(SECSuccess, SECMOD_AddNewModule(
+                              "Pkcs11ModuleTest",
+                              DLL_PREFIX "pkcs11testmodule." DLL_SUFFIX, 0, 0))
         << PORT_ErrorToName(PORT_GetError());
   }
 
@@ -134,9 +134,9 @@ class Pkcs11NonAsciiTest : public ::testing::Test {
     BOOL result = CopyFileW(originalModuleName, nonAsciiModuleName, TRUE);
     ASSERT_TRUE(result);
     ASSERT_EQ(SECSuccess,
-              SECMOD_AddNewModule("Pkcs11NonAsciiTest", DLL_PREFIX
-                                  "pkcs11testmodule\xE2\x99\xA5." DLL_SUFFIX,
-                                  0, 0))
+              SECMOD_AddNewModule(
+                  "Pkcs11NonAsciiTest",
+                  DLL_PREFIX "pkcs11testmodule\xE2\x99\xA5." DLL_SUFFIX, 0, 0))
         << PORT_ErrorToName(PORT_GetError());
   }
 

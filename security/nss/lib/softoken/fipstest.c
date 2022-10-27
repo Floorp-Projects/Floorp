@@ -40,7 +40,8 @@ static void INIT_FUNCTION sftk_startup_tests(void);
 #if defined(XP_WIN) && !defined(NSS_NO_INIT_SUPPORT)
 #include <windows.h>
 
-BOOL WINAPI DllMain(
+BOOL WINAPI
+DllMain(
     HINSTANCE hinstDLL, // handle to DLL module
     DWORD fdwReason,    // reason for calling function
     LPVOID lpReserved)  // reserved
