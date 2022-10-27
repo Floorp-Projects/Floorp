@@ -1567,18 +1567,13 @@ MarkStack::~MarkStack() {
   MOZ_ASSERT(iteratorCount_ == 0);
 }
 
-bool MarkStack::init(bool incrementalGCEnabled) {
+bool MarkStack::init() {
   MOZ_ASSERT(isEmpty());
-  return setStackCapacity(incrementalGCEnabled);
+  return resetStackCapacity();
 }
 
-bool MarkStack::setStackCapacity(bool incrementalGCEnabled) {
-  size_t capacity;
-  if (incrementalGCEnabled) {
-    capacity = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
-  } else {
-    capacity = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
-  }
+bool MarkStack::resetStackCapacity() {
+  size_t capacity = MARK_STACK_BASE_CAPACITY;
 
 #ifdef JS_GC_ZEAL
   capacity = std::min(capacity, maxCapacity_.ref());
@@ -1600,6 +1595,14 @@ void MarkStack::setMaxCapacity(size_t maxCapacity) {
   }
 }
 #endif
+
+void MarkStack::clear() {
+  // Fall back to the smaller initial capacity so we don't hold on to excess
+  // memory between GCs.
+  stack().clearAndFree();
+  std::ignore = resetStackCapacity();
+  topIndex_ = 0;
+}
 
 inline MarkStack::TaggedPtr* MarkStack::topPtr() { return &stack()[topIndex_]; }
 
@@ -1744,10 +1747,7 @@ GCMarker::GCMarker(JSRuntime* rt)
 {
 }
 
-bool GCMarker::init() {
-  bool incrementalGCEnabled = runtime()->gc.isIncrementalGCEnabled();
-  return stack.init(incrementalGCEnabled);
-}
+bool GCMarker::init() { return stack.init(); }
 
 bool GCMarker::isDrained() { return isMarkStackEmpty() && !delayedMarkingList; }
 

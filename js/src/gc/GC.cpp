@@ -465,7 +465,6 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       nursery_(this),
       storeBuffer_(rt, nursery()),
       lastAllocRateUpdateTime(TimeStamp::Now()) {
-  marker.setIncrementalGCEnabled(incrementalGCEnabled);
 }
 
 using CharRange = mozilla::Range<const char>;
@@ -1231,7 +1230,6 @@ void GCRuntime::setMarkStackLimit(size_t limit, AutoLockGC& lock) {
 
 void GCRuntime::setIncrementalGCEnabled(bool enabled) {
   incrementalGCEnabled = enabled;
-  marker.setIncrementalGCEnabled(enabled);
 }
 
 void GCRuntime::updateHelperThreadCount() {
