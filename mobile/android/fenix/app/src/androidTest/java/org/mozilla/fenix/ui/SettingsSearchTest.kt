@@ -327,4 +327,20 @@ class SettingsSearchTest {
             verifyEngineListContains("Bing")
         }
     }
+
+    // Expected for en-us defaults
+    @Test
+    fun deleteDefaultSearchEngineTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            verifyEngineListContains("Google")
+            verifyDefaultSearchEngine("Google")
+            openEngineOverflowMenu("Google")
+            clickDeleteSearchEngine()
+            verifyEngineListDoesNotContain("Google")
+            verifyDefaultSearchEngine("Bing")
+        }
+    }
 }
