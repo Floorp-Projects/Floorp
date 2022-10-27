@@ -14,9 +14,12 @@ if (typeof Components !== "undefined") {
 
 /* exported LIBC, Win, createPipe, libc, win32 */
 
-// This file is loaded into the same scope as subprocess_win.jsm
+// ctypes is either already available in the chrome worker scope, or defined
+// in scope via loadSubScript.
+/* global ctypes */
+
+// This file is loaded into the same scope as subprocess_shared.js.
 /* import-globals-from subprocess_shared.js */
-/* import-globals-from subprocess_win.jsm */
 
 const LIBC = OS.Constants.libc;
 
