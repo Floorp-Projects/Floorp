@@ -191,8 +191,14 @@ if (AppConstants.MOZ_UPDATER) {
   }
 }
 
-XPCOMUtils.defineLazyGetter(this, "gIsPackagedApp", () => {
-  return Services.sysinfo.getProperty("isPackagedApp");
+XPCOMUtils.defineLazyGetter(this, "gHasWinPackageId", () => {
+  let hasWinPackageId = false;
+  try {
+    hasWinPackageId = Services.sysinfo.getProperty("hasWinPackageId");
+  } catch (_ex) {
+    // The hasWinPackageId property doesn't exist; assume it would be false.
+  }
+  return hasWinPackageId;
 });
 
 // A promise that resolves when the list of application handlers is loaded.
@@ -630,7 +636,7 @@ var gMainPane = {
       let updateDisabled =
         Services.policies && !Services.policies.isAllowed("appUpdate");
 
-      if (gIsPackagedApp) {
+      if (gHasWinPackageId) {
         // When we're running inside an app package, there's no point in
         // displaying any update content here, and it would get confusing if we
         // did, because our updater is not enabled.
@@ -1867,7 +1873,7 @@ var gMainPane = {
     if (
       AppConstants.MOZ_UPDATER &&
       (!Services.policies || Services.policies.isAllowed("appUpdate")) &&
-      !gIsPackagedApp
+      !gHasWinPackageId
     ) {
       let radiogroup = document.getElementById("updateRadioGroup");
 
@@ -1887,7 +1893,7 @@ var gMainPane = {
     if (
       AppConstants.MOZ_UPDATER &&
       (!Services.policies || Services.policies.isAllowed("appUpdate")) &&
-      !gIsPackagedApp
+      !gHasWinPackageId
     ) {
       let radiogroup = document.getElementById("updateRadioGroup");
       let updateAutoValue = radiogroup.value == "true";
@@ -1927,7 +1933,7 @@ var gMainPane = {
       // properly if per-installation prefs aren't supported.
       UpdateUtils.PER_INSTALLATION_PREFS_SUPPORTED &&
       (!Services.policies || Services.policies.isAllowed("appUpdate")) &&
-      !gIsPackagedApp &&
+      !gHasWinPackageId &&
       !UpdateUtils.appUpdateSettingIsLocked("app.update.background.enabled")
     );
   },

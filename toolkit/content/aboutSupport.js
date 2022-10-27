@@ -44,7 +44,13 @@ window.addEventListener("load", function onload(event) {
     populateActionBox();
     setupEventListeners();
 
-    if (Services.sysinfo.getProperty("isPackagedApp")) {
+    let hasWinPackageId = false;
+    try {
+      hasWinPackageId = Services.sysinfo.getProperty("hasWinPackageId");
+    } catch (_ex) {
+      // The hasWinPackageId property doesn't exist; assume it would be false.
+    }
+    if (hasWinPackageId) {
       $("update-dir-row").hidden = true;
       $("update-history-row").hidden = true;
     }
