@@ -2381,30 +2381,31 @@ int DataChannelConnection::ReceiveCallback(
   ASSERT_WEBRTC(!NS_IsMainThread());
   DC_DEBUG(("In ReceiveCallback"));
 
-  if (!data) {
-    DC_DEBUG(("ReceiveCallback: SCTP has finished shutting down"));
-  } else {
-    bool locked = false;
-    if (!IsSTSThread()) {
-      mLock.Lock();
-      locked = true;
-    } else {
-      mLock.AssertCurrentThreadOwns();
-    }
-    if (flags & MSG_NOTIFICATION) {
-      HandleNotification(static_cast<union sctp_notification*>(data), datalen);
-    } else {
-      HandleMessage(data, datalen, ntohl(rcv.rcv_ppid), rcv.rcv_sid, flags);
-    }
-    if (locked) {
-      mLock.Unlock();
-    }
-    // sctp allocates 'data' with malloc(), and expects the receiver to free
-    // it (presumably with free).
-    // XXX future optimization: try to deliver messages without an internal
-    // alloc/copy, and if so delay the free until later.
-    free(data);
-  }
+  // libusrsctp just went reentrant on us. Put a stop to this.
+  mSTS->Dispatch(NS_NewRunnableFunction(
+      "DataChannelConnection::ReceiveCallback",
+      [data, datalen, rcv, flags, this,
+       self = RefPtr<DataChannelConnection>(this)]() mutable {
+        if (!data) {
+          DC_DEBUG(("ReceiveCallback: SCTP has finished shutting down"));
+        } else {
+          mLock.Lock();
+          if (flags & MSG_NOTIFICATION) {
+            HandleNotification(static_cast<union sctp_notification*>(data),
+                               datalen);
+          } else {
+            HandleMessage(data, datalen, ntohl(rcv.rcv_ppid), rcv.rcv_sid,
+                          flags);
+          }
+          mLock.Unlock();
+          // sctp allocates 'data' with malloc(), and expects the receiver to
+          // free it (presumably with free).
+          // XXX future optimization: try to deliver messages without an
+          // internal alloc/copy, and if so delay the free until later.
+          free(data);
+        }
+      }));
+
   // usrsctp defines the callback as returning an int, but doesn't use it
   return 1;
 }
