@@ -196,3 +196,33 @@ mac64-chromedriver-106:
         url: https://chromedriver.storage.googleapis.com/106.0.5249.61/chromedriver_mac64.zip
         sha256: 0a43128e9eb990bdf9c7445cb80c70cf8a9686778a07bbbc8164c8515334671e
         size: 8474552
+
+win32-chromedriver-107:
+    description: "Win32 chromedriver v107"
+    fetch:
+        type: static-url
+        artifact-name: chromedriver_win32_107.tar.zst
+        add-prefix: "107"
+        url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_win32.zip
+        sha256: e1ea6a8ae5e123daf2ade7200a5d7edccd1cfb28c38ec447685f788bab4ed0de
+        size: 6776586
+
+linux64-chromedriver-107:
+    description: "Linux64 chromedriver v107"
+    fetch:
+        type: static-url
+        artifact-name: chromedriver_linux64_107.tar.zst
+        add-prefix: "107"
+        url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
+        sha256: 502f124092160cbfde42705cb24aad8b48b4b5c6c22b440a34d83034019d408f
+        size: 7612689
+
+mac64-chromedriver-107:
+    description: "Mac64 chromedriver v107"
+    fetch:
+        type: static-url
+        artifact-name: chromedriver_mac64_107.tar.zst
+        add-prefix: "107"
+        url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_mac64.zip
+        sha256: 3a1e597791ea186e831911b280620c49381bb59910969cda9a9432f27b2a8d2b
+        size: 8821733
