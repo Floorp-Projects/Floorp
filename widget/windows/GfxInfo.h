@@ -71,6 +71,8 @@ class GfxInfo : public GfxInfoBase {
   GfxInfo(GfxInfo&&) = delete;
   GfxInfo& operator=(GfxInfo&&) = delete;
 
+  OperatingSystem GetOperatingSystem() override;
+
   nsresult GetFeatureStatusImpl(int32_t aFeature, int32_t* aStatus,
                                 nsAString& aSuggestedDriverVersion,
                                 const nsTArray<GfxDriverInfo>& aDriverInfo,
