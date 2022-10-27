@@ -1,26 +1,27 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+var EXPORTED_SYMBOLS = ["ChromeMigrationUtils"];
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
+  MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
 });
 
 const S100NS_FROM1601TO1970 = 0x19db1ded53e8000;
 const S100NS_PER_MS = 10;
 
-export var ChromeMigrationUtils = {
+var ChromeMigrationUtils = {
   // Supported browsers with importable logins.
   CONTEXTUAL_LOGIN_IMPORT_BROWSERS: ["chrome", "chromium-edge", "chromium"],
 

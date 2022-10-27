@@ -2,15 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 /**
  * Class to handle encryption and decryption of logins stored in Chrome/Chromium
  * on Windows.
  */
 
-import { ChromeMigrationUtils } from "resource:///modules/ChromeMigrationUtils.sys.mjs";
+var EXPORTED_SYMBOLS = ["ChromeWindowsLoginCrypto"];
 
+const { ChromeMigrationUtils } = ChromeUtils.import(
+  "resource:///modules/ChromeMigrationUtils.jsm"
+);
 const { OSCrypto } = ChromeUtils.import("resource://gre/modules/OSCrypto.jsm");
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 /**
  * These constants should match those from Chromium.
@@ -30,7 +37,7 @@ const gTextEncoder = new TextEncoder();
  * into code which uses that. The algorithms here are
  * specific to what is needed for Chrome login storage on Windows.
  */
-export class ChromeWindowsLoginCrypto {
+class ChromeWindowsLoginCrypto {
   /**
    * @param {string} userDataPathSuffix
    */

@@ -2,9 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+"use strict";
 
+var EXPORTED_SYMBOLS = [
+  "ESEDBReader",
+  // The items below are exported for test purposes.
+  "ESE",
+  "KERNEL",
+  "gLibs",
+  "COLUMN_TYPES",
+  "declareESEFunction",
+  "loadLibraries",
+];
+
+const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 const lazy = {};
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
@@ -27,8 +41,7 @@ let gESEInstanceCounter = 0;
 const MAX_STR_LENGTH = 64 * 1024;
 
 // Kernel-related types:
-export const KERNEL = {};
-
+const KERNEL = {};
 KERNEL.FILETIME = new ctypes.StructType("FILETIME", [
   { dwLowDateTime: ctypes.uint32_t },
   { dwHighDateTime: ctypes.uint32_t },
@@ -45,7 +58,7 @@ KERNEL.SYSTEMTIME = new ctypes.StructType("SYSTEMTIME", [
 ]);
 
 // DB column types, cribbed from the ESE header
-export var COLUMN_TYPES = {
+var COLUMN_TYPES = {
   JET_coltypBit: 1 /* True, False, or NULL */,
   JET_coltypUnsignedByte: 2 /* 1-byte integer, unsigned */,
   JET_coltypShort: 3 /* 2-byte integer, signed */,
@@ -73,8 +86,7 @@ function getColTypeName(numericValue) {
 }
 
 // All type constants and method wrappers go on this object:
-export const ESE = {};
-
+const ESE = {};
 ESE.JET_ERR = ctypes.long;
 ESE.JET_PCWSTR = ctypes.char16_t.ptr;
 // The ESE header calls this JET_API_PTR, but because it isn't ever used as a
@@ -107,7 +119,7 @@ ESE.JET_COLUMNDEF = new ctypes.StructType("JET_COLUMNDEF", [
 let gOpenDBs = new Map();
 
 // Track open libraries
-export let gLibs = {};
+let gLibs = {};
 
 function convertESEError(errorCode) {
   switch (errorCode) {
@@ -167,7 +179,7 @@ function handleESEError(
   };
 }
 
-export function declareESEFunction(methodName, ...args) {
+function declareESEFunction(methodName, ...args) {
   let declaration = ["Jet" + methodName, ctypes.winapi_abi, ESE.JET_ERR].concat(
     args
   );
@@ -305,7 +317,7 @@ function unloadLibraries() {
   delete gLibs.kernel;
 }
 
-export function loadLibraries() {
+function loadLibraries() {
   Services.obs.addObserver(unloadLibraries, "xpcom-shutdown");
   gLibs.ese = ctypes.open("esent.dll");
   gLibs.kernel = ctypes.open("kernel32.dll");
@@ -766,7 +778,7 @@ ESEDB.prototype = {
   },
 };
 
-export let ESEDBReader = {
+let ESEDBReader = {
   openDB(rootDir, dbFile, logDir) {
     let dbFilePath = dbFile.path;
     if (gOpenDBs.has(dbFilePath)) {

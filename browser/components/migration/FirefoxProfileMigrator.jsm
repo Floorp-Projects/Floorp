@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 /*
  * Migrates from a Firefox profile in a lossy manner in order to clean up a
  * user's profile.  Data is only migrated where the benefits outweigh the
@@ -11,10 +13,9 @@
  * from the source profile.
  */
 
-import {
-  MigrationUtils,
-  MigratorPrototype,
-} from "resource:///modules/MigrationUtils.sys.mjs";
+const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
+  "resource:///modules/MigrationUtils.jsm"
+);
 
 const lazy = {};
 
@@ -30,7 +31,7 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
-export function FirefoxProfileMigrator() {
+function FirefoxProfileMigrator() {
   this.wrappedJSObject = this; // for testing...
 }
 
@@ -375,3 +376,5 @@ FirefoxProfileMigrator.prototype.contractID =
 FirefoxProfileMigrator.prototype.classID = Components.ID(
   "{91185366-ba97-4438-acba-48deaca63386}"
 );
+
+var EXPORTED_SYMBOLS = ["FirefoxProfileMigrator"];

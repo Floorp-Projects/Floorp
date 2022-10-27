@@ -2,12 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 /**
  * Class to handle encryption and decryption of logins stored in Chrome/Chromium
  * on macOS.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+var EXPORTED_SYMBOLS = ["ChromeMacOSLoginCrypto"];
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const lazy = {};
 
@@ -65,7 +71,7 @@ const IV = new Uint8Array(kCCBlockSizeAES128).fill(32);
  * relies on OS encryption key storage in Keychain. The algorithms here are
  * specific to what is needed for Chrome login storage on macOS.
  */
-export class ChromeMacOSLoginCrypto {
+class ChromeMacOSLoginCrypto {
   /**
    * @param {string} serviceName of the Keychain Item to use to derive a key.
    * @param {string} accountName of the Keychain Item to use to derive a key.

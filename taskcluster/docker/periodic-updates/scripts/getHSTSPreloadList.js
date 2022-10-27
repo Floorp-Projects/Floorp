@@ -268,7 +268,7 @@ function shouldRetry(response) {
   );
 }
 
-// Copied from browser/components/migration/MigrationUtils.sys.mjs
+// Copied from browser/components/migration/MigrationUtils.jsm
 function spinResolve(promise) {
   if (!(promise instanceof Promise)) {
     return promise;
