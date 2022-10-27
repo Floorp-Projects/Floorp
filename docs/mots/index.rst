@@ -1241,10 +1241,11 @@ The JAR handling code (protocol handler, stream implementation, and zipreader/zi
 
     * - Owner(s)
       -
-        | `vgosu <https://people.mozilla.org/s?query=vgosu>`__
+        | `Valentin Gosu (valentin) <https://people.mozilla.org/s?query=valentin>`__
     * - Peer(s)
       -
         | `Kershaw Chang (kershaw) <https://people.mozilla.org/s?query=kershaw>`__
+        | `Randell Jesup (jesup) <https://people.mozilla.org/s?query=jesup>`__
     * - Owner(s) Emeritus
       - Taras Glek, Michael Wu, Aaron Klotz
     * - Peer(s) Emeritus
@@ -1484,6 +1485,7 @@ The Mozilla Networking Library
     * - Peer(s)
       -
         | `Kershaw Chang (kershaw) <https://people.mozilla.org/s?query=kershaw>`__
+        | `Randell Jesup (jesup) <https://people.mozilla.org/s?query=jesup>`__
     * - Owner(s) Emeritus
       - Dragana Damjanovic, Patrick McManus, Christian Biesinger
     * - Peer(s) Emeritus
