@@ -5,7 +5,6 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsITransportSecurityInfo;
 interface nsISimpleEnumerator;
 
 [ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
@@ -47,7 +46,8 @@ interface nsISiteSecurityService : nsISupports
 {
     const uint32_t Success = 0;
     const uint32_t ERROR_UNKNOWN = 1;
-    const uint32_t ERROR_UNTRUSTWORTHY_CONNECTION = 2;
+    // ERROR_UNTRUSTWORTHY_CONNECTION was 2 (the caller is now responsible for
+    // checking this)
     const uint32_t ERROR_COULD_NOT_PARSE_HEADER = 3;
     const uint32_t ERROR_NO_MAX_AGE = 4;
     const uint32_t ERROR_MULTIPLE_MAX_AGES = 5;
@@ -70,10 +70,11 @@ interface nsISiteSecurityService : nsISupports
      * https://tools.ietf.org/html/rfc6797
      * and allows a host to specify that future HTTP requests should be
      * upgraded to HTTPS.
+     * The caller is responsible for first determining that the header was
+     * delivered via a trustworthy connection (namely, https with no errors).
      *
      * @param aSourceURI the URI of the resource with the HTTP header.
      * @param aHeader the HTTP response header specifying security data.
-     * @param aSecInfo the TransportSecurityInfo of the current channel.
      * @param aOriginAttributes the origin attributes that isolate this origin,
      *                          (note that this implementation does not isolate
      *                          by userContextId because of the risk of man-in-
@@ -93,7 +94,6 @@ interface nsISiteSecurityService : nsISupports
     [binaryname(ProcessHeader), noscript, must_use]
     void processHeaderNative(in nsIURI aSourceURI,
                              in ACString aHeader,
-                             in nsITransportSecurityInfo aSecInfo,
                              in const_OriginAttributesRef aOriginAttributes,
                              [optional] out unsigned long long aMaxAge,
                              [optional] out boolean aIncludeSubdomains,
@@ -103,7 +103,6 @@ interface nsISiteSecurityService : nsISupports
      must_use]
     void processHeader(in nsIURI aSourceURI,
                        in ACString aHeader,
-                       in nsITransportSecurityInfo aSecInfo,
                        [optional] in jsval aOriginAttributes,
                        [optional] out unsigned long long aMaxAge,
                        [optional] out boolean aIncludeSubdomains,

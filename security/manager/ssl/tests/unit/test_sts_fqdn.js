@@ -16,10 +16,7 @@ function run_test() {
   // These cases are only relevant as long as bug 1118522 hasn't been fixed.
   ok(!SSService.isSecureURI(uri2));
 
-  let secInfo = Cc[
-    "@mozilla.org/security/transportsecurityinfo;1"
-  ].createInstance(Ci.nsITransportSecurityInfo);
-  SSService.processHeader(uri, "max-age=1000;includeSubdomains", secInfo);
+  SSService.processHeader(uri, "max-age=1000;includeSubdomains");
   ok(SSService.isSecureURI(uri));
   ok(SSService.isSecureURI(uri1));
   ok(SSService.isSecureURI(uri2));

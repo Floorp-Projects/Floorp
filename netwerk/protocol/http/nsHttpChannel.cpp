@@ -1776,9 +1776,6 @@ nsresult nsHttpChannel::ProcessFailedProxyConnect(uint32_t httpStatus) {
 static void GetSTSConsoleErrorTag(uint32_t failureResult,
                                   nsAString& consoleErrorTag) {
   switch (failureResult) {
-    case nsISiteSecurityService::ERROR_UNTRUSTWORTHY_CONNECTION:
-      consoleErrorTag = u"STSUntrustworthyConnection"_ns;
-      break;
     case nsISiteSecurityService::ERROR_COULD_NOT_PARSE_HEADER:
       consoleErrorTag = u"STSCouldNotParseHeader"_ns;
       break;
@@ -1822,6 +1819,23 @@ nsresult nsHttpChannel::ProcessHSTSHeader(nsITransportSecurityInfo* aSecInfo) {
     return rv;
   }
 
+  if (!aSecInfo) {
+    LOG(("nsHttpChannel::ProcessHSTSHeader: no securityInfo?"));
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsITransportSecurityInfo::OverridableErrorCategory overridableErrorCategory;
+  rv = aSecInfo->GetOverridableErrorCategory(&overridableErrorCategory);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (overridableErrorCategory !=
+      nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET) {
+    LOG(
+        ("nsHttpChannel::ProcessHSTSHeader: untrustworthy connection - not "
+         "processing header"));
+    return NS_ERROR_FAILURE;
+  }
+
   nsISiteSecurityService* sss = gHttpHandler->GetSSService();
   NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
 
@@ -1832,8 +1846,8 @@ nsresult nsHttpChannel::ProcessHSTSHeader(nsITransportSecurityInfo* aSecInfo) {
   }
 
   uint32_t failureResult;
-  rv = sss->ProcessHeader(mURI, securityHeader, aSecInfo, originAttributes,
-                          nullptr, nullptr, &failureResult);
+  rv = sss->ProcessHeader(mURI, securityHeader, originAttributes, nullptr,
+                          nullptr, &failureResult);
   if (NS_FAILED(rv)) {
     nsAutoString consoleErrorCategory(u"Invalid HSTS Headers"_ns);
     nsAutoString consoleErrorTag;

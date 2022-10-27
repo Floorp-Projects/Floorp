@@ -53,42 +53,27 @@ function checkSiteSecurityStateAttrs(entries) {
   }
 }
 
-function add_tests() {
+function run_test() {
   sss.clearAll();
 
   for (const testcase of TESTCASES) {
-    add_connection_test(
-      testcase.hostname,
-      PRErrorCodeSuccess,
-      undefined,
-      function insertEntry(secInfo) {
-        const uri = Services.io.newURI(`https://${testcase.hostname}`);
+    const uri = Services.io.newURI(`https://${testcase.hostname}`);
 
-        // MaxAge is in seconds.
-        let maxAge = Math.round((testcase.expireTime - Date.now()) / 1000);
-        let header = `max-age=${maxAge}`;
-        if (testcase.includeSubdomains) {
-          header += "; includeSubdomains";
-        }
-        sss.processHeader(uri, header, secInfo);
-      }
-    );
+    // MaxAge is in seconds.
+    let maxAge = Math.round((testcase.expireTime - Date.now()) / 1000);
+    let header = `max-age=${maxAge}`;
+    if (testcase.includeSubdomains) {
+      header += "; includeSubdomains";
+    }
+    sss.processHeader(uri, header);
   }
 
-  add_task(() => {
-    let hstsEntries = getEntries();
+  let hstsEntries = getEntries();
 
-    checkSiteSecurityStateAttrs(hstsEntries);
+  checkSiteSecurityStateAttrs(hstsEntries);
 
-    sss.clearAll();
-    hstsEntries = getEntries();
+  sss.clearAll();
+  hstsEntries = getEntries();
 
-    equal(hstsEntries.length, 0, "Should clear all HSTS entries");
-  });
-}
-
-function run_test() {
-  add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
-  add_tests();
-  run_next_test();
+  equal(hstsEntries.length, 0, "Should clear all HSTS entries");
 }
