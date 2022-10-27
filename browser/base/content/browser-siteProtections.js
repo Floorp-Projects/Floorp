@@ -458,7 +458,6 @@ let TrackingProtection = new (class TrackingProtection extends ProtectionCategor
     // still show the panel. To reduce the confusion, tell the user that we have
     // not detected any tracker.
     if (!items.childNodes.length) {
-      let emptyBox = document.createXULElement("vbox");
       let emptyImage = document.createXULElement("image");
       emptyImage.classList.add("protections-popup-trackersView-empty-image");
       emptyImage.classList.add("trackers-icon");
@@ -469,9 +468,8 @@ let TrackingProtection = new (class TrackingProtection extends ProtectionCategor
         "contentBlocking.trackersView.empty.label"
       );
 
-      emptyBox.appendChild(emptyImage);
-      emptyBox.appendChild(emptyLabel);
-      items.appendChild(emptyBox);
+      items.appendChild(emptyImage);
+      items.appendChild(emptyLabel);
 
       this.subViewList.classList.add("empty");
     } else {
