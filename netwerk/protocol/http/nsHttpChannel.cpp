@@ -1528,6 +1528,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
   // cross-origin responses with CORS headers as possible that are not either
   // Javascript or media to avoid leaking their contents through side channels.
   if (EnsureOpaqueResponseIsAllowed() == OpaqueResponseAllowed::No) {
+    mChannelBlockedByOpaqueResponse = true;
     return NS_ERROR_FAILURE;
   }
 
@@ -1585,6 +1586,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     auto isAllowedOrErr = EnsureOpaqueResponseIsAllowedAfterSniff();
     if (isAllowedOrErr.isErr() ||
         isAllowedOrErr.inspect() == OpaqueResponseAllowed::No) {
+      mChannelBlockedByOpaqueResponse = true;
       return NS_ERROR_FAILURE;
     }
   }
@@ -5582,6 +5584,12 @@ nsresult nsHttpChannel::CancelInternal(nsresult status) {
     StoreChannelClassifierCancellationPending(0);
   }
 
+  // We don't want the content process to see any header values
+  // when the request is blocked by ORB
+  if (mChannelBlockedByOpaqueResponse && mCachedOpaqueResponseBlockingPref) {
+    mResponseHead->ClearHeaders();
+  }
+
   mEarlyHintObserver = nullptr;
   mCanceled = true;
   mStatus = NS_FAILED(status) ? status : NS_ERROR_ABORT;
@@ -7673,6 +7681,9 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
 
   RemoveAsNonTailRequest();
 
+  if (mChannelBlockedByOpaqueResponse && mCachedOpaqueResponseBlockingPref) {
+    mResponseHead->ClearHeaders();
+  }
   // If a preferred alt-data type was set, this signals the consumer is
   // interested in reading and/or writing the alt-data representation.
   // We need to hold a reference to the cache entry in case the listener calls

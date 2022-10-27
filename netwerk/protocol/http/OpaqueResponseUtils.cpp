@@ -368,6 +368,7 @@ void OpaqueResponseBlocker::BlockResponse(HttpBaseChannel* aChannel,
   LOGORB("Sniffer is done, block response, this=%p", this);
   mState = State::Blocked;
   mStatus = aReason;
+  aChannel->SetChannelBlockedByOpaqueResponse();
   aChannel->CancelWithReason(mStatus,
                              "OpaqueResponseBlocker::BlockResponse"_ns);
 }

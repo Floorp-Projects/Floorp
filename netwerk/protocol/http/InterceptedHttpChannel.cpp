@@ -1003,6 +1003,7 @@ InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest) {
   }
 
   if (EnsureOpaqueResponseIsAllowed() == OpaqueResponseAllowed::No) {
+    mChannelBlockedByOpaqueResponse = true;
     return NS_ERROR_FAILURE;
   }
 
@@ -1013,6 +1014,7 @@ InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest) {
   auto isAllowedOrErr = EnsureOpaqueResponseIsAllowedAfterSniff();
   if (isAllowedOrErr.isErr() ||
       isAllowedOrErr.inspect() == OpaqueResponseAllowed::No) {
+    mChannelBlockedByOpaqueResponse = true;
     return NS_ERROR_FAILURE;
   }
 

@@ -1169,6 +1169,11 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
     responseHead = &cleanedUpResponseHead;
   }
 
+  if (chan && chan->ChannelBlockedByOpaqueResponse() &&
+      chan->CachedOpaqueResponseBlockingPref()) {
+    responseHead->ClearHeaders();
+  }
+
   chan->GetIsResolvedByTRR(&args.isResolvedByTRR());
   chan->GetAllRedirectsSameOrigin(&args.allRedirectsSameOrigin());
   chan->GetCrossOriginOpenerPolicy(&args.openerPolicy());

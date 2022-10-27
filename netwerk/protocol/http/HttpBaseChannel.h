@@ -535,6 +535,12 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // https://fetch.spec.whatwg.org/#concept-request-tainted-origin
   bool HasRedirectTaintedOrigin() { return LoadTaintedOriginFlag(); }
 
+  bool ChannelBlockedByOpaqueResponse() {
+    return mChannelBlockedByOpaqueResponse;
+  }
+  bool CachedOpaqueResponseBlockingPref() const {
+    return mCachedOpaqueResponseBlockingPref;
+  }
  protected:
   nsresult GetTopWindowURI(nsIURI* aURIBeingLoaded, nsIURI** aTopWindowURI);
 
@@ -624,11 +630,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   void BlockOpaqueResponseAfterSniff();
   void AllowOpaqueResponseAfterSniff();
-
-  bool CachedOpaqueResponseBlockingPref() const {
-    return mCachedOpaqueResponseBlockingPref;
+  void SetChannelBlockedByOpaqueResponse() {
+    mChannelBlockedByOpaqueResponse = true;
   }
-
   bool Http3Allowed() const;
 
   friend class OpaqueResponseBlocker;
@@ -913,6 +917,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   const bool mCachedOpaqueResponseBlockingPref;
   bool mBlockOpaqueResponseAfterSniff;
   bool mCheckIsOpaqueResponseAllowedAfterSniff;
+  bool mChannelBlockedByOpaqueResponse;
+
   bool mDummyChannelForImageCache;
 
   // clang-format off
