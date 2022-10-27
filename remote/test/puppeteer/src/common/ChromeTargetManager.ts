@@ -15,7 +15,7 @@
  */
 
 import Protocol from 'devtools-protocol';
-import {assert} from './assert.js';
+import {assert} from '../util/assert.js';
 import {CDPSession, Connection} from './Connection.js';
 import {EventEmitter} from './EventEmitter.js';
 import {Target} from './Target.js';
@@ -317,11 +317,12 @@ export class ChromeTargetManager extends EventEmitter implements TargetManager {
     ) {
       this.#finishInitializationIfReady(targetInfo.targetId);
       await silentDetach();
-      if (parentSession instanceof CDPSession) {
-        const target = this.#targetFactory(targetInfo);
-        this.#attachedTargetsByTargetId.set(targetInfo.targetId, target);
-        this.emit(TargetManagerEmittedEvents.TargetAvailable, target);
+      if (this.#attachedTargetsByTargetId.has(targetInfo.targetId)) {
+        return;
       }
+      const target = this.#targetFactory(targetInfo);
+      this.#attachedTargetsByTargetId.set(targetInfo.targetId, target);
+      this.emit(TargetManagerEmittedEvents.TargetAvailable, target);
       return;
     }
 

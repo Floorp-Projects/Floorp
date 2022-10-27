@@ -1,13 +1,9 @@
 import {Protocol} from 'devtools-protocol';
-import {assert} from './assert.js';
-import {CDPSession} from './Connection.js';
+import {assert} from '../util/assert.js';
 import {ExecutionContext} from './ExecutionContext.js';
-import {Frame, FrameManager} from './FrameManager.js';
-import {
-  MAIN_WORLD,
-  PUPPETEER_WORLD,
-  WaitForSelectorOptions,
-} from './IsolatedWorld.js';
+import {Frame} from './Frame.js';
+import {FrameManager} from './FrameManager.js';
+import {WaitForSelectorOptions} from './IsolatedWorld.js';
 import {
   BoundingBox,
   BoxModel,
@@ -19,7 +15,7 @@ import {
 } from './JSHandle.js';
 import {Page, ScreenshotOptions} from './Page.js';
 import {getQueryHandlerAndSelector} from './QueryHandler.js';
-import {EvaluateFunc, NodeFor} from './types.js';
+import {EvaluateFunc, HandleFor, NodeFor} from './types.js';
 import {KeyInput} from './USKeyboardLayout.js';
 import {debugError, isString} from './util.js';
 
@@ -71,24 +67,29 @@ export class ElementHandle<
   ElementType extends Node = Element
 > extends JSHandle<ElementType> {
   #frame: Frame;
-  #page: Page;
-  #frameManager: FrameManager;
 
   /**
    * @internal
    */
   constructor(
     context: ExecutionContext,
-    client: CDPSession,
     remoteObject: Protocol.Runtime.RemoteObject,
-    frame: Frame,
-    page: Page,
-    frameManager: FrameManager
+    frame: Frame
   ) {
-    super(context, client, remoteObject);
+    super(context, remoteObject);
     this.#frame = frame;
-    this.#page = page;
-    this.#frameManager = frameManager;
+  }
+
+  get #frameManager(): FrameManager {
+    return this.#frame._frameManager;
+  }
+
+  get #page(): Page {
+    return this.#frame.page();
+  }
+
+  get frame(): Frame {
+    return this.#frame;
   }
 
   /**
@@ -228,13 +229,24 @@ export class ElementHandle<
   ): Promise<Awaited<ReturnType<Func>>> {
     const {updatedSelector, queryHandler} =
       getQueryHandlerAndSelector(selector);
-    assert(queryHandler.queryAllArray);
-    const arrayHandle = (await queryHandler.queryAllArray(
+    assert(
+      queryHandler.queryAll,
+      'Cannot handle queries for a multiple element with the given selector'
+    );
+    const handles = (await queryHandler.queryAll(
       this,
       updatedSelector
-    )) as JSHandle<Array<NodeFor<Selector>>>;
-    const result = await arrayHandle.evaluate(pageFunction, ...args);
-    await arrayHandle.dispose();
+    )) as Array<HandleFor<NodeFor<Selector>>>;
+    const elements = await this.evaluateHandle((_, ...elements) => {
+      return elements;
+    }, ...handles);
+    const [result] = await Promise.all([
+      elements.evaluate(pageFunction, ...args),
+      ...handles.map(handle => {
+        return handle.dispose();
+      }),
+    ]);
+    await elements.dispose();
     return result;
   }
 
@@ -291,27 +303,16 @@ export class ElementHandle<
    */
   async waitForSelector<Selector extends string>(
     selector: Selector,
-    options: Exclude<WaitForSelectorOptions, 'root'> = {}
+    options: WaitForSelectorOptions = {}
   ): Promise<ElementHandle<NodeFor<Selector>> | null> {
-    const frame = this.executionContext().frame();
-    assert(frame);
-    const adoptedRoot = await frame.worlds[PUPPETEER_WORLD].adoptHandle(this);
-    const handle = await frame.worlds[PUPPETEER_WORLD].waitForSelector(
-      selector,
-      {
-        ...options,
-        root: adoptedRoot,
-      }
-    );
-    await adoptedRoot.dispose();
-    if (!handle) {
-      return null;
-    }
-    const result = (await frame.worlds[MAIN_WORLD].adoptHandle(
-      handle
-    )) as ElementHandle<NodeFor<Selector>>;
-    await handle.dispose();
-    return result;
+    const {updatedSelector, queryHandler} =
+      getQueryHandlerAndSelector(selector);
+    assert(queryHandler.waitFor, 'Query handler does not support waiting');
+    return (await queryHandler.waitFor(
+      this,
+      updatedSelector,
+      options
+    )) as ElementHandle<NodeFor<Selector>> | null;
   }
 
   /**

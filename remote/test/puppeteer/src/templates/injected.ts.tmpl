@@ -1,0 +1,10 @@
+import {createDeferredPromise} from '../util/DeferredPromise.js';
+
+declare global {
+  const InjectedUtil: {
+    createDeferredPromise: typeof createDeferredPromise;
+  };
+}
+
+/** @internal */
+export const source = SOURCE_CODE;

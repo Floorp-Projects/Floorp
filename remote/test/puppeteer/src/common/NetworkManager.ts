@@ -16,18 +16,15 @@
 
 import {Protocol} from 'devtools-protocol';
 import {ProtocolMapping} from 'devtools-protocol/types/protocol-mapping.js';
-import {assert} from './assert.js';
+import {assert} from '../util/assert.js';
 import {EventEmitter} from './EventEmitter.js';
-import {Frame} from './FrameManager.js';
+import {Frame} from './Frame.js';
 import {HTTPRequest} from './HTTPRequest.js';
 import {HTTPResponse} from './HTTPResponse.js';
 import {FetchRequestId, NetworkEventManager} from './NetworkEventManager.js';
-import {
-  debugError,
-  isString,
-  createDeferredPromiseWithTimer,
-  DeferredPromise,
-} from './util.js';
+import {debugError, isString} from './util.js';
+import {DeferredPromise} from '../util/DeferredPromise.js';
+import {createDebuggableDeferredPromise} from '../util/DebuggableDeferredPromise.js';
 
 /**
  * @public
@@ -145,9 +142,8 @@ export class NetworkManager extends EventEmitter {
     if (this.#deferredInitPromise) {
       return this.#deferredInitPromise;
     }
-    this.#deferredInitPromise = createDeferredPromiseWithTimer<void>(
-      'NetworkManager initialization timed out',
-      30000
+    this.#deferredInitPromise = createDebuggableDeferredPromise(
+      'NetworkManager initialization timed out'
     );
     const init = Promise.all([
       this.#ignoreHTTPSErrors

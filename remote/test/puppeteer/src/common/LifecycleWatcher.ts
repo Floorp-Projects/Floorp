@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-import {assert} from './assert.js';
+import {assert} from '../util/assert.js';
 import {
   addEventListener,
   PuppeteerEventListener,
   removeEventListeners,
+} from './util.js';
+import {
   DeferredPromise,
   createDeferredPromise,
-} from './util.js';
+} from '../util/DeferredPromise.js';
 import {TimeoutError} from './Errors.js';
-import {
-  FrameManager,
-  Frame,
-  FrameManagerEmittedEvents,
-} from './FrameManager.js';
+import {FrameManager, FrameManagerEmittedEvents} from './FrameManager.js';
+import {Frame} from './Frame.js';
 import {HTTPRequest} from './HTTPRequest.js';
 import {HTTPResponse} from './HTTPResponse.js';
 import {NetworkManagerEmittedEvents} from './NetworkManager.js';
@@ -180,9 +179,10 @@ export class LifecycleWatcher {
       return;
     }
     this.#navigationRequest = request;
-    this.#navigationResponseReceived?.reject(
-      new Error('New navigation request was received')
-    );
+    // Resolve previous navigation response in case there are multiple
+    // navigation requests reported by the backend. This generally should not
+    // happen by it looks like it's possible.
+    this.#navigationResponseReceived?.resolve();
     this.#navigationResponseReceived = createDeferredPromise();
     if (request.response() !== null) {
       this.#navigationResponseReceived?.resolve();

@@ -698,6 +698,9 @@
   "ignoreHTTPSErrors Response.securityDetails Network redirects should report SecurityDetails (ignorehttpserrors.spec.js)": [
     "PASS", "FAIL"
   ],
+  "InjectedUtil tests should work (injected.spec.js)": [
+    "PASS"
+  ],
   "input tests input should upload the file (input.spec.js)": [
     "SKIP"
   ],
@@ -924,7 +927,7 @@
     "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch userDataDir option should restore cookies (launcher.spec.js)": [
-    "SKIP"
+    "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should return the default arguments (launcher.spec.js)": [
     "PASS"
@@ -1095,9 +1098,6 @@
     "FAIL"
   ],
   "navigation Page.goto should fail when navigating to bad SSL after redirects (navigation.spec.js)": [
-    "PASS"
-  ],
-  "navigation Page.goto should throw if networkidle is passed as an option (navigation.spec.js)": [
     "PASS"
   ],
   "navigation Page.goto should fail when main resources failed to load (navigation.spec.js)": [
@@ -2174,6 +2174,9 @@
     "FAIL"
   ],
   "Screenshots Page.screenshot should clip rect (screenshot.spec.js)": [
+    "FAIL"
+  ],
+  "Screenshots Page.screenshot should use scale for clip (screenshot.spec.js)": [
     "FAIL"
   ],
   "Screenshots Page.screenshot should get screenshot bigger than the viewport (screenshot.spec.js)": [

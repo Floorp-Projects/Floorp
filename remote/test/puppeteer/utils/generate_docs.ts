@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-import {readFileSync, writeFileSync} from 'fs';
-import {join} from 'path';
-import {chdir} from 'process';
+import {readFile, rm, writeFile} from 'fs/promises';
 import semver from 'semver';
-import {versionsPerRelease} from '../versions.js';
-import versionsArchived from '../website/versionsArchived.json';
-
-// eslint-disable-next-line import/extensions
-import {generateDocs} from './internal/custom_markdown_action';
+import {generateDocs} from './internal/custom_markdown_action.js';
+import {job} from './internal/job.js';
+import {spawnAndLog} from './internal/util.js';
 
 function getOffsetAndLimit(
   sectionName: string,
@@ -49,56 +45,73 @@ function spliceIntoSection(
   return lines.join('\n');
 }
 
-// Change to root directory
-chdir(join(__dirname, '..'));
+(async () => {
+  const job1 = job('', async ({inputs, outputs}) => {
+    const content = await readFile(inputs[0]!, 'utf-8');
+    const sectionContent = `
+---
+sidebar_position: 1
+---
+`;
+    await writeFile(outputs[0]!, sectionContent + content);
+  })
+    .inputs(['README.md'])
+    .outputs(['docs/index.md'])
+    .build();
 
-// README
-{
-  const content = readFileSync('README.md', 'utf-8');
-  const sectionContent = `
- ---
- sidebar_position: 1
- ---
+  // Chrome Versions
+  const job2 = job('', async ({inputs, outputs}) => {
+    let content = await readFile(inputs[2]!, {encoding: 'utf8'});
+    const {versionsPerRelease} = await import(inputs[0]!);
+    const versionsArchived = JSON.parse(await readFile(inputs[1]!, 'utf8'));
 
- `;
-  writeFileSync('docs/index.md', sectionContent + content);
-}
-
-// Chrome Versions
-{
-  const filename = 'docs/chromium-support.md';
-  let content = readFileSync(filename, {encoding: 'utf8'});
-
-  // Generate versions
-  const buffer: string[] = [];
-  for (const [chromiumVersion, puppeteerVersion] of versionsPerRelease) {
-    if (puppeteerVersion === 'NEXT') {
-      continue;
+    // Generate versions
+    const buffer: string[] = [];
+    for (const [chromiumVersion, puppeteerVersion] of versionsPerRelease) {
+      if (puppeteerVersion === 'NEXT') {
+        continue;
+      }
+      if (versionsArchived.includes(puppeteerVersion.substring(1))) {
+        buffer.push(
+          `  * Chromium ${chromiumVersion} - [Puppeteer ${puppeteerVersion}](https://github.com/puppeteer/puppeteer/blob/${puppeteerVersion}/docs/api/index.md)`
+        );
+      } else if (semver.lt(puppeteerVersion, '15.0.0')) {
+        buffer.push(
+          `  * Chromium ${chromiumVersion} - [Puppeteer ${puppeteerVersion}](https://github.com/puppeteer/puppeteer/blob/${puppeteerVersion}/docs/api.md)`
+        );
+      } else if (semver.gte(puppeteerVersion, '15.3.0')) {
+        buffer.push(
+          `  * Chromium ${chromiumVersion} - [Puppeteer ${puppeteerVersion}](https://pptr.dev/${puppeteerVersion.slice(
+            1
+          )})`
+        );
+      } else {
+        buffer.push(
+          `  * Chromium ${chromiumVersion} - Puppeteer ${puppeteerVersion}`
+        );
+      }
     }
-    if (versionsArchived.includes(puppeteerVersion.substring(1))) {
-      buffer.push(
-        `  * Chromium ${chromiumVersion} - [Puppeteer ${puppeteerVersion}](https://github.com/puppeteer/puppeteer/blob/${puppeteerVersion}/docs/api/index.md)`
-      );
-    } else if (semver.lt(puppeteerVersion, '15.0.0')) {
-      buffer.push(
-        `  * Chromium ${chromiumVersion} - [Puppeteer ${puppeteerVersion}](https://github.com/puppeteer/puppeteer/blob/${puppeteerVersion}/docs/api.md)`
-      );
-    } else if (semver.gte(puppeteerVersion, '15.3.0')) {
-      buffer.push(
-        `  * Chromium ${chromiumVersion} - [Puppeteer ${puppeteerVersion}](https://pptr.dev/${puppeteerVersion.slice(
-          1
-        )})`
-      );
-    } else {
-      buffer.push(
-        `  * Chromium ${chromiumVersion} - Puppeteer ${puppeteerVersion}`
-      );
-    }
-  }
-  content = spliceIntoSection('version', content, buffer.join('\n'));
+    content = spliceIntoSection('version', content, buffer.join('\n'));
 
-  writeFileSync(filename, content);
-}
+    await writeFile(outputs[0]!, content);
+  })
+    .inputs([
+      'versions.js',
+      'website/versionsArchived.json',
+      'docs/chromium-support.md',
+    ])
+    .outputs(['docs/chromium-support.md'])
+    .build();
 
-// Generate documentation
-generateDocs('docs/puppeteer.api.json', 'docs/api');
+  await Promise.all([job1, job2]);
+
+  // Generate documentation
+  job('', async ({inputs, outputs}) => {
+    await rm(outputs[0]!, {recursive: true, force: true});
+    generateDocs(inputs[0]!, outputs[0]!);
+    spawnAndLog('prettier', '--ignore-path', 'none', '--write', 'docs');
+  })
+    .inputs(['docs/puppeteer.api.json'])
+    .outputs(['docs/api'])
+    .build();
+})();

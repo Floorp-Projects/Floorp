@@ -433,32 +433,29 @@ describe('Page', function () {
         })
       ).toEqual(['prompt', 'denied', 'granted', 'prompt']);
     });
-    it(
-      'should isolate permissions between browser contexts',
-      async () => {
-        const {page, server, context, browser} = getTestState();
+    it('should isolate permissions between browser contexts', async () => {
+      const {page, server, context, browser} = getTestState();
 
-        await page.goto(server.EMPTY_PAGE);
-        const otherContext = await browser.createIncognitoBrowserContext();
-        const otherPage = await otherContext.newPage();
-        await otherPage.goto(server.EMPTY_PAGE);
-        expect(await getPermission(page, 'geolocation')).toBe('prompt');
-        expect(await getPermission(otherPage, 'geolocation')).toBe('prompt');
+      await page.goto(server.EMPTY_PAGE);
+      const otherContext = await browser.createIncognitoBrowserContext();
+      const otherPage = await otherContext.newPage();
+      await otherPage.goto(server.EMPTY_PAGE);
+      expect(await getPermission(page, 'geolocation')).toBe('prompt');
+      expect(await getPermission(otherPage, 'geolocation')).toBe('prompt');
 
-        await context.overridePermissions(server.EMPTY_PAGE, []);
-        await otherContext.overridePermissions(server.EMPTY_PAGE, [
-          'geolocation',
-        ]);
-        expect(await getPermission(page, 'geolocation')).toBe('denied');
-        expect(await getPermission(otherPage, 'geolocation')).toBe('granted');
+      await context.overridePermissions(server.EMPTY_PAGE, []);
+      await otherContext.overridePermissions(server.EMPTY_PAGE, [
+        'geolocation',
+      ]);
+      expect(await getPermission(page, 'geolocation')).toBe('denied');
+      expect(await getPermission(otherPage, 'geolocation')).toBe('granted');
 
-        await context.clearPermissionOverrides();
-        expect(await getPermission(page, 'geolocation')).toBe('prompt');
-        expect(await getPermission(otherPage, 'geolocation')).toBe('granted');
+      await context.clearPermissionOverrides();
+      expect(await getPermission(page, 'geolocation')).toBe('prompt');
+      expect(await getPermission(otherPage, 'geolocation')).toBe('granted');
 
-        await otherContext.close();
-      }
-    );
+      await otherContext.close();
+    });
     it('should grant persistent-storage', async () => {
       const {page, server, context} = getTestState();
 
@@ -1630,7 +1627,7 @@ describe('Page', function () {
         error = error_ as Error;
       }
       expect(error.message).toBe(
-        'Provide an object with a `url`, `path` or `content` property'
+        'Exactly one of `url`, `path`, or `content` must be specified.'
       );
     });
 
@@ -1692,7 +1689,7 @@ describe('Page', function () {
     });
 
     it('should throw an error if loading from url fail', async () => {
-      const {page, server} = getTestState();
+      const {page, server, isFirefox} = getTestState();
 
       await page.goto(server.EMPTY_PAGE);
       let error!: Error;
@@ -1701,7 +1698,11 @@ describe('Page', function () {
       } catch (error_) {
         error = error_ as Error;
       }
-      expect(error.message).toBe('Loading script from /nonexistfile.js failed');
+      if (isFirefox) {
+        expect(error.message).toBeTruthy();
+      } else {
+        expect(error.message).toContain('Could not load script');
+      }
     });
 
     it('should work with a path', async () => {
@@ -1796,7 +1797,7 @@ describe('Page', function () {
         error = error_ as Error;
       }
       expect(error.message).toBe(
-        'Provide an object with a `url`, `path` or `content` property'
+        'Exactly one of `url`, `path`, or `content` must be specified.'
       );
     });
 
@@ -1814,7 +1815,7 @@ describe('Page', function () {
     });
 
     it('should throw an error if loading from url fail', async () => {
-      const {page, server} = getTestState();
+      const {page, server, isFirefox} = getTestState();
 
       await page.goto(server.EMPTY_PAGE);
       let error!: Error;
@@ -1823,7 +1824,11 @@ describe('Page', function () {
       } catch (error_) {
         error = error_ as Error;
       }
-      expect(error.message).toBe('Loading style from /nonexistfile.js failed');
+      if (isFirefox) {
+        expect(error.message).toBeTruthy();
+      } else {
+        expect(error.message).toContain('Could not load style');
+      }
     });
 
     it('should work with a path', async () => {
@@ -1849,7 +1854,7 @@ describe('Page', function () {
         path: path.join(__dirname, '../assets/injectedstyle.css'),
       });
       const styleHandle = (await page.$('style'))!;
-      const styleContent = await page.evaluate((style: HTMLStyleElement) => {
+      const styleContent = await page.evaluate(style => {
         return style.innerHTML;
       }, styleHandle);
       expect(styleContent).toContain(path.join('assets', 'injectedstyle.css'));
@@ -1870,21 +1875,18 @@ describe('Page', function () {
       ).toBe('rgb(0, 128, 0)');
     });
 
-    it(
-      'should throw when added with content to the CSP page',
-      async () => {
-        const {page, server} = getTestState();
+    it('should throw when added with content to the CSP page', async () => {
+      const {page, server} = getTestState();
 
-        await page.goto(server.PREFIX + '/csp.html');
-        let error!: Error;
-        await page
-          .addStyleTag({content: 'body { background-color: green; }'})
-          .catch(error_ => {
-            return (error = error_);
-          });
-        expect(error).toBeTruthy();
-      }
-    );
+      await page.goto(server.PREFIX + '/csp.html');
+      let error!: Error;
+      await page
+        .addStyleTag({content: 'body { background-color: green; }'})
+        .catch(error_ => {
+          return (error = error_);
+        });
+      expect(error).toBeTruthy();
+    });
 
     it('should throw when added with URL to the CSP page', async () => {
       const {page, server} = getTestState();
@@ -1953,23 +1955,20 @@ describe('Page', function () {
       ]);
       expect(nonCachedRequest.headers['if-modified-since']).toBe(undefined);
     });
-    it(
-      'should stay disabled when toggling request interception on/off',
-      async () => {
-        const {page, server} = getTestState();
+    it('should stay disabled when toggling request interception on/off', async () => {
+      const {page, server} = getTestState();
 
-        await page.setCacheEnabled(false);
-        await page.setRequestInterception(true);
-        await page.setRequestInterception(false);
+      await page.setCacheEnabled(false);
+      await page.setRequestInterception(true);
+      await page.setRequestInterception(false);
 
-        await page.goto(server.PREFIX + '/cached/one-style.html');
-        const [nonCachedRequest] = await Promise.all([
-          server.waitForRequest('/cached/one-style.html'),
-          page.reload(),
-        ]);
-        expect(nonCachedRequest.headers['if-modified-since']).toBe(undefined);
-      }
-    );
+      await page.goto(server.PREFIX + '/cached/one-style.html');
+      const [nonCachedRequest] = await Promise.all([
+        server.waitForRequest('/cached/one-style.html'),
+        page.reload(),
+      ]);
+      expect(nonCachedRequest.headers['if-modified-since']).toBe(undefined);
+    });
   });
 
   describe('printing to PDF', function () {
@@ -2214,29 +2213,26 @@ describe('Page', function () {
       expect(error.message).toContain('Values must be strings');
     });
     // @see https://github.com/puppeteer/puppeteer/issues/3327
-    it(
-      'should work when re-defining top-level Event class',
-      async () => {
-        const {page, server} = getTestState();
+    it('should work when re-defining top-level Event class', async () => {
+      const {page, server} = getTestState();
 
-        await page.goto(server.PREFIX + '/input/select.html');
+      await page.goto(server.PREFIX + '/input/select.html');
+      await page.evaluate(() => {
+        // @ts-expect-error Expected.
+        return (window.Event = undefined);
+      });
+      await page.select('select', 'blue');
+      expect(
         await page.evaluate(() => {
-          // @ts-expect-error Expected.
-          return (window.Event = undefined);
-        });
-        await page.select('select', 'blue');
-        expect(
-          await page.evaluate(() => {
-            return (globalThis as any).result.onInput;
-          })
-        ).toEqual(['blue']);
-        expect(
-          await page.evaluate(() => {
-            return (globalThis as any).result.onChange;
-          })
-        ).toEqual(['blue']);
-      }
-    );
+          return (globalThis as any).result.onInput;
+        })
+      ).toEqual(['blue']);
+      expect(
+        await page.evaluate(() => {
+          return (globalThis as any).result.onChange;
+        })
+      ).toEqual(['blue']);
+    });
   });
 
   describe('Page.Events.Close', function () {
