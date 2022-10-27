@@ -6757,6 +6757,44 @@ void LIRGenerator::visitWasmStoreObjectDataRefField(
   add(new (alloc()) LKeepAliveObject(useKeepalive(ins->obj())), ins);
 }
 
+#ifdef FUZZING_JS_FUZZILLI
+void LIRGenerator::visitFuzzilliHash(MFuzzilliHash* ins) {
+  MDefinition* value = ins->getOperand(0);
+
+  if (value->type() == MIRType::Undefined || value->type() == MIRType::Null) {
+    define(new (alloc()) LFuzzilliHashT(LAllocation(), temp(), tempDouble()),
+           ins);
+  } else if (value->type() == MIRType::Int32 ||
+             value->type() == MIRType::Double ||
+             value->type() == MIRType::Float32 ||
+             value->type() == MIRType::Boolean ||
+             value->type() == MIRType::BigInt) {
+    define(new (alloc())
+               LFuzzilliHashT(useRegister(value), temp(), tempDouble()),
+           ins);
+  } else if (value->type() == MIRType::Object) {
+    LFuzzilliHashT* lir =
+        new (alloc()) LFuzzilliHashT(useRegister(value), temp(), tempDouble());
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+  } else if (value->type() == MIRType::Value) {
+    LFuzzilliHashV* lir =
+        new (alloc()) LFuzzilliHashV(useBox(value), temp(), tempDouble());
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+  } else {
+    define(new (alloc()) LInteger(0), ins);
+  }
+}
+
+void LIRGenerator::visitFuzzilliHashStore(MFuzzilliHashStore* ins) {
+  MDefinition* value = ins->getOperand(0);
+  MOZ_ASSERT(value->type() == MIRType::Int32);
+  add(new (alloc()) LFuzzilliHashStore(useRegister(value), temp(), temp()),
+      ins);
+}
+#endif
+
 static_assert(!std::is_polymorphic_v<LIRGenerator>,
               "LIRGenerator should not have any virtual methods");
 

@@ -41,6 +41,7 @@
 #include "js/Object.h"  // JS::GetBuiltinClass
 #include "js/PropertySpec.h"
 #include "js/Wrapper.h"
+#include "util/DifferentialTesting.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/DateObject.h"
@@ -1517,6 +1518,10 @@ static bool date_parse(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static ClippedTime NowAsMillis(JSContext* cx) {
+  if (js::SupportDifferentialTesting()) {
+    return TimeClip(0);
+  }
+
   double now = PRMJ_Now();
   bool clampAndJitter = cx->realm()->behaviors().clampAndJitterTime();
   if (clampAndJitter && sReduceMicrosecondTimePrecisionCallback) {
