@@ -11,7 +11,7 @@ add_task(async function test_perf_observers_cors() {
       permissions: ["http://b.example.com/"],
       content_scripts: [
         {
-          matches: ["http://a.example.com/file_sample.html"],
+          matches: ["http://a.example.com/data/file_sample.html"],
           js: ["cs.js"],
         },
       ],
@@ -33,21 +33,21 @@ add_task(async function test_perf_observers_cors() {
         b.rel = "stylesheet";
 
         // Simulate page including a cross-origin resource from b.example.com.
-        b.wrappedJSObject.href = "http://b.example.com/file_download.txt";
+        b.wrappedJSObject.href = "http://b.example.com/data/file_download.txt";
         document.head.appendChild(b);
 
         let c = document.createElement("link");
         c.rel = "stylesheet";
 
         // Simulate page including a cross-origin resource from c.example.com.
-        c.wrappedJSObject.href = "http://c.example.com/file_download.txt";
+        c.wrappedJSObject.href = "http://c.example.com/data/file_download.txt";
         document.head.appendChild(c);
       },
     },
   });
 
   let page = await ExtensionTestUtils.loadContentPage(
-    "http://a.example.com/file_sample.html"
+    "http://a.example.com/data/file_sample.html"
   );
   await extension.startup();
 
@@ -60,7 +60,7 @@ add_task(async function test_perf_observers_cors() {
 
   ok(b.url.startsWith("http://b."), "Observed resource from b.example.com");
   ok(b.time > 0, "connectionEnd available from b.example.com");
-  equal(b.size, 428, "encodedBodySize available from b.example.com");
+  equal(b.size, 46, "encodedBodySize available from b.example.com");
 
   ok(c.url.startsWith("http://c."), "Observed resource from c.example.com");
   equal(c.time, 0, "connectionEnd == 0 from c.example.com");
