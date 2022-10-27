@@ -31,7 +31,7 @@ jobs:
           path: work
           ref: "releases/${{ steps.ac-version-for-fenix-beta.outputs.major-ac-version }}.0"
       - name: "Sync Strings"
-        uses: mozilla-mobile/sync-strings-action@1.0.2
+        uses: mozilla-mobile/sync-strings-action@1.0.3
         with:
           src: main
           dst: work
