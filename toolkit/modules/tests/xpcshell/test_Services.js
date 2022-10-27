@@ -1,16 +1,18 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * This file tests the Services global variable.
  */
 
 // Globals
 
-function checkService(service, interface) {
-  info("Checking that Services." + service + " is an " + interface);
+function checkService(service, interfaceObj) {
+  info("Checking that Services." + service + " is an " + interfaceObj);
   Assert.ok(service in Services);
-  Assert.ok(Services[service] instanceof interface);
+  Assert.ok(Services[service] instanceof interfaceObj);
 }
 
 // Tests
