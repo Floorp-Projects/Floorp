@@ -112,22 +112,21 @@
 #include "nsISupports.h"               // for nsISupports
 #include "nsISupportsUtils.h"          // for NS_ADDREF, NS_IF_ADDREF
 #include "nsITransferable.h"           // for nsITransferable
-#include "nsITransactionManager.h"
-#include "nsIWeakReference.h"  // for nsISupportsWeakReference
-#include "nsIWidget.h"         // for nsIWidget, IMEState, etc.
-#include "nsPIDOMWindow.h"     // for nsPIDOMWindow
-#include "nsPresContext.h"     // for nsPresContext
-#include "nsRange.h"           // for nsRange
-#include "nsReadableUtils.h"   // for EmptyString, ToNewCString
-#include "nsString.h"          // for nsAutoString, nsString, etc.
-#include "nsStringFwd.h"       // for nsString
-#include "nsStyleConsts.h"     // for StyleDirection::Rtl, etc.
-#include "nsStyleStruct.h"     // for nsStyleDisplay, nsStyleText, etc.
-#include "nsStyleStructFwd.h"  // for nsIFrame::StyleUIReset, etc.
-#include "nsStyleUtil.h"       // for nsStyleUtil
-#include "nsTextNode.h"        // for nsTextNode
-#include "nsThreadUtils.h"     // for nsRunnable
-#include "prtime.h"            // for PR_Now
+#include "nsIWeakReference.h"          // for nsISupportsWeakReference
+#include "nsIWidget.h"                 // for nsIWidget, IMEState, etc.
+#include "nsPIDOMWindow.h"             // for nsPIDOMWindow
+#include "nsPresContext.h"             // for nsPresContext
+#include "nsRange.h"                   // for nsRange
+#include "nsReadableUtils.h"           // for EmptyString, ToNewCString
+#include "nsString.h"                  // for nsAutoString, nsString, etc.
+#include "nsStringFwd.h"               // for nsString
+#include "nsStyleConsts.h"             // for StyleDirection::Rtl, etc.
+#include "nsStyleStruct.h"             // for nsStyleDisplay, nsStyleText, etc.
+#include "nsStyleStructFwd.h"          // for nsIFrame::StyleUIReset, etc.
+#include "nsStyleUtil.h"               // for nsStyleUtil
+#include "nsTextNode.h"                // for nsTextNode
+#include "nsThreadUtils.h"             // for nsRunnable
+#include "prtime.h"                    // for PR_Now
 
 class nsIOutputStream;
 class nsITransferable;
@@ -944,18 +943,6 @@ NS_IMETHODIMP EditorBase::ClearUndoRedoXPCOM() {
   if (MOZ_UNLIKELY(!ClearUndoRedo())) {
     return NS_ERROR_FAILURE;  // We're handling a transaction
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP EditorBase::GetTransactionManager(
-    nsITransactionManager** aTransactionManager) {
-  if (NS_WARN_IF(!aTransactionManager)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  if (NS_WARN_IF(!mTransactionManager)) {
-    return NS_ERROR_FAILURE;
-  }
-  *aTransactionManager = do_AddRef(mTransactionManager).take();
   return NS_OK;
 }
 
