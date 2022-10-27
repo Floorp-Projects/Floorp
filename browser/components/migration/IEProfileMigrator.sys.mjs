@@ -2,21 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const kLoginsKey =
   "Software\\Microsoft\\Internet Explorer\\IntelliForms\\Storage2";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
-  "resource:///modules/MigrationUtils.jsm"
-);
-const { MSMigrationUtils } = ChromeUtils.import(
-  "resource:///modules/MSMigrationUtils.jsm"
-);
+import {
+  MigrationUtils,
+  MigratorPrototype,
+} from "resource:///modules/MigrationUtils.sys.mjs";
+import { MSMigrationUtils } from "resource:///modules/MSMigrationUtils.sys.mjs";
 
 const lazy = {};
 
@@ -353,7 +349,7 @@ IE7FormPasswords.prototype = {
   },
 };
 
-function IEProfileMigrator() {
+export function IEProfileMigrator() {
   this.wrappedJSObject = this; // export this to be able to use it in the unittest.
 }
 
@@ -408,5 +404,3 @@ IEProfileMigrator.prototype.contractID =
 IEProfileMigrator.prototype.classID = Components.ID(
   "{3d2532e3-4932-4774-b7ba-968f5899d3a4}"
 );
-
-var EXPORTED_SYMBOLS = ["IEProfileMigrator"];

@@ -216,8 +216,8 @@ add_task(async function setup() {
     accountName: "TESTING Chrome",
   };
   if (AppConstants.platform == "macosx") {
-    let { ChromeMacOSLoginCrypto } = ChromeUtils.import(
-      "resource:///modules/ChromeMacOSLoginCrypto.jsm"
+    let { ChromeMacOSLoginCrypto } = ChromeUtils.importESModule(
+      "resource:///modules/ChromeMacOSLoginCrypto.sys.mjs"
     );
     loginCrypto = new ChromeMacOSLoginCrypto(
       mockMacOSKeychain.serviceName,
@@ -234,8 +234,8 @@ add_task(async function setup() {
       "Login Data",
     ];
   } else if (AppConstants.platform == "win") {
-    let { ChromeWindowsLoginCrypto } = ChromeUtils.import(
-      "resource:///modules/ChromeWindowsLoginCrypto.jsm"
+    let { ChromeWindowsLoginCrypto } = ChromeUtils.importESModule(
+      "resource:///modules/ChromeWindowsLoginCrypto.sys.mjs"
     );
     loginCrypto = new ChromeWindowsLoginCrypto("Chrome");
     dirSvcPath = "AppData/Local/";
