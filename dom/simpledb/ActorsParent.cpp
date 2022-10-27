@@ -20,6 +20,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/FixedBufferOutputStream.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
@@ -37,7 +38,6 @@
 #include "mozilla/dom/quota/ClientImpl.h"
 #include "mozilla/dom/quota/DirectoryLock.h"
 #include "mozilla/dom/quota/FileStreams.h"
-#include "mozilla/dom/quota/MemoryOutputStream.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
@@ -396,7 +396,7 @@ class SeekOp final : public ConnectionOperationBase {
 class ReadOp final : public ConnectionOperationBase {
   const SDBRequestReadParams mParams;
 
-  RefPtr<MemoryOutputStream> mOutputStream;
+  RefPtr<FixedBufferOutputStream> mOutputStream;
 
  public:
   ReadOp(Connection* aConnection, const SDBRequestParams& aParams);
@@ -1459,7 +1459,11 @@ bool ReadOp::Init() {
     return false;
   }
 
-  mOutputStream = MemoryOutputStream::Create(mParams.size());
+  if (NS_WARN_IF(mParams.size() > std::numeric_limits<std::size_t>::max())) {
+    return false;
+  }
+
+  mOutputStream = FixedBufferOutputStream::Create(mParams.size(), fallible);
   if (NS_WARN_IF(!mOutputStream)) {
     return false;
   }
@@ -1524,7 +1528,7 @@ nsresult ReadOp::DoDatabaseWork(
 }
 
 void ReadOp::GetResponse(SDBRequestResponse& aResponse) {
-  aResponse = SDBRequestReadResponse(mOutputStream->Data());
+  aResponse = SDBRequestReadResponse(nsCString(mOutputStream->WrittenData()));
 }
 
 WriteOp::WriteOp(Connection* aConnection, const SDBRequestParams& aParams)
