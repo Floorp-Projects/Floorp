@@ -121,7 +121,7 @@ floorp-legacy =
 floorp-fluentUI =
  .label = fluentUI
  
- floorp-fluerialUI =
+floorp-fluerialUI =
  .label = Floorp Fluerial UI
 
 floorp-gnomeUI =
