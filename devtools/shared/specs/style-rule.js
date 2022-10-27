@@ -52,6 +52,15 @@ const styleRuleSpec = generateActorSpec({
       },
       response: RetVal("modifiedStylesReturn"),
     },
+    getQueryContainerForNode: {
+      request: {
+        ancestorRuleIndex: Arg(0, "number"),
+        node: Arg(1, "domnode"),
+      },
+      response: {
+        node: RetVal("nullable:domnode"),
+      },
+    },
   },
 });
 
