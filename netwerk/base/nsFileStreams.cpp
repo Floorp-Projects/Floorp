@@ -25,6 +25,7 @@
 #include "nsLiteralString.h"
 #include "nsSocketTransport2.h"  // for ErrorAccordingToNSPR()
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/RandomAccessStreamParams.h"
 #include "mozilla/Unused.h"
 #include "mozilla/FileUtils.h"
 #include "nsNetCID.h"
@@ -899,6 +900,72 @@ nsFileRandomAccessStream::GetOutputStream(nsIOutputStream** aOutputStream) {
 nsIInputStream* nsFileRandomAccessStream::InputStream() { return this; }
 
 nsIOutputStream* nsFileRandomAccessStream::OutputStream() { return this; }
+
+RandomAccessStreamParams nsFileRandomAccessStream::Serialize() {
+  FileRandomAccessStreamParams params;
+
+  if (NS_SUCCEEDED(DoPendingOpen())) {
+    MOZ_ASSERT(mFD);
+    FileHandleType fd = FileHandleType(PR_FileDesc2NativeHandle(mFD));
+    MOZ_ASSERT(fd, "This should never be null!");
+
+    params.fileDescriptor() = FileDescriptor(fd);
+
+    Close();
+  } else {
+    NS_WARNING(
+        "This file has not been opened (or could not be opened). "
+        "Sending an invalid file descriptor to the other process!");
+
+    params.fileDescriptor() = FileDescriptor();
+  }
+
+  int32_t behaviorFlags = mBehaviorFlags;
+
+  // The receiving process (or thread) is going to have an open file
+  // descriptor automatically so transferring this flag is meaningless.
+  behaviorFlags &= ~nsIFileInputStream::DEFER_OPEN;
+
+  params.behaviorFlags() = behaviorFlags;
+
+  return params;
+}
+
+bool nsFileRandomAccessStream::Deserialize(
+    RandomAccessStreamParams& aStreamParams) {
+  MOZ_ASSERT(!mFD, "Already have a file descriptor?!");
+  MOZ_ASSERT(mState == nsFileStreamBase::eUnitialized, "Deferring open?!");
+
+  if (aStreamParams.type() !=
+      RandomAccessStreamParams::TFileRandomAccessStreamParams) {
+    NS_WARNING("Received unknown parameters from the other process!");
+    return false;
+  }
+
+  const FileRandomAccessStreamParams& params =
+      aStreamParams.get_FileRandomAccessStreamParams();
+
+  const FileDescriptor& fd = params.fileDescriptor();
+
+  if (fd.IsValid()) {
+    auto rawFD = fd.ClonePlatformHandle();
+    PRFileDesc* fileDesc = PR_ImportFile(PROsfd(rawFD.release()));
+    if (!fileDesc) {
+      NS_WARNING("Failed to import file handle!");
+      return false;
+    }
+    mFD = fileDesc;
+    mState = eOpened;
+  } else {
+    NS_WARNING("Received an invalid file descriptor!");
+    mState = eError;
+    mErrorValue = NS_ERROR_FILE_NOT_FOUND;
+  }
+
+  mBehaviorFlags = params.behaviorFlags();
+
+  return true;
+}
 
 NS_IMETHODIMP
 nsFileRandomAccessStream::Init(nsIFile* file, int32_t ioFlags, int32_t perm,

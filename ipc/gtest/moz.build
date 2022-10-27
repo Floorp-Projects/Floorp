@@ -10,6 +10,7 @@ SOURCES += [
     "TestBigBuffer.cpp",
     "TestDataPipe.cpp",
     "TestLogging.cpp",
+    "TestRandomAccessStreamUtils.cpp",
     "TestSharedMemory.cpp",
 ]
 

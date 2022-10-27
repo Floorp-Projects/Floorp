@@ -9,6 +9,15 @@
 interface nsIInputStream;
 interface nsIOutputStream;
 
+%{C++
+namespace mozilla::ipc {
+class RandomAccessStreamParams;
+}  // namespace mozilla::ipc
+%}
+
+native RandomAccessStreamParams(mozilla::ipc::RandomAccessStreamParams);
+[ref] native RandomAccessStreamParamsRef(mozilla::ipc::RandomAccessStreamParams);
+
 /**
  * nsIRandomAccessStream
  *
@@ -45,4 +54,8 @@ interface nsIRandomAccessStream : nsISeekableStream
    * Like getOutputStream but infallible.
    */
   [notxpcom, nostdcall] nsIOutputStream outputStream();
+
+  [notxpcom, nostdcall] RandomAccessStreamParams serialize();
+
+  [notxpcom, nostdcall] bool deserialize(inout RandomAccessStreamParamsRef params);
 };

@@ -51,6 +51,7 @@ EXPORTS.mozilla.ipc += [
     "ProtocolMessageUtils.h",
     "ProtocolUtils.h",
     "ProtocolUtilsFwd.h",
+    "RandomAccessStreamUtils.h",
     "ScopedPort.h",
     "ScopedXREEmbed.h",
     "SerializedStructuredCloneBuffer.h",
@@ -178,6 +179,7 @@ UNIFIED_SOURCES += [
     "ProcessChild.cpp",
     "ProcessUtils_common.cpp",
     "ProtocolUtils.cpp",
+    "RandomAccessStreamUtils.cpp",
     "ScopedPort.cpp",
     "ScopedXREEmbed.cpp",
     "SerializedStructuredCloneBuffer.cpp",
@@ -237,6 +239,7 @@ IPDL_SOURCES = [
     "PBackgroundTest.ipdl",
     "PIdleScheduler.ipdl",
     "ProtocolTypes.ipdlh",
+    "RandomAccessStreamParams.ipdlh",
     "URIParams.ipdlh",
 ]
 
