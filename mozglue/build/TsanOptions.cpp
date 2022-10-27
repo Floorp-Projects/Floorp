@@ -151,12 +151,7 @@ extern "C" const char* __tsan_default_suppressions() {
          // Likely benign write-write race in libevent to set a sticky boolean
          // flag to true.
          "race:event_debug_mode_too_late\n"
-         // Bug 1648606 - permanent
-         // No Upstream Bug Filed!
-         //
-         // Race on some flag being checking in libusrsctp.
-         "race:sctp_close\n"
-         "race:sctp_iterator_work\n"
+
          // Bug 1653618 - permanent
          // Upstream Bug: https://github.com/sctplab/usrsctp/issues/507
          //
@@ -168,6 +163,10 @@ extern "C" const char* __tsan_default_suppressions() {
          //
          // Likely benign race in libusrsctp allocator during a free.
          "race:system_base_info\n"
+         // Benign lock-order-inversion in libusrsctp
+         // No upstream bug filed!
+         "deadlock:sctp_add_to_readq\n"
+
          // Bug 1153409 - permanent
          // No Upstream Bug Filed!
          //
