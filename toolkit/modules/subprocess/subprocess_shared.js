@@ -7,6 +7,10 @@
 
 /* exported ArrayBuffer_transfer, Library, SubprocessConstants */
 
+// ctypes is either already available in the chrome worker scope, or defined
+// in scope via loadSubScript.
+/* global ctypes */
+
 /**
  * Returns a new ArrayBuffer whose contents have been taken from the `buffer`'s
  * data and then is either truncated or zero-extended by `size`. If `size` is
