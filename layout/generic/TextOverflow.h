@@ -27,27 +27,39 @@ namespace css {
  * Usage:
  *  1. allocate an object using WillProcessLines
  *  2. then call ProcessLine for each line you are building display lists for
+ *
+ * Note that this class is non-reassignable; we don't want to be making
+ * arbitrary copies. (But we do have a move constructor, since that's required
+ * in order to be stored in Maybe<>).
  */
 class TextOverflow final {
- public:
+ private:
   /**
-   * Allocate an object for text-overflow processing.
+   * Private constructor, for internal use only. Client code should call
+   * WillProcessLines(), which is basically the factory function for
+   * TextOverflow instances.
+   */
+  TextOverflow(nsDisplayListBuilder* aBuilder, nsBlockFrame*);
+
+ public:
+  ~TextOverflow() = default;
+
+  /**
+   * Allocate an object for text-overflow processing. (Factory function.)
    * @return nullptr if no processing is necessary.  The caller owns the object.
    */
   static Maybe<TextOverflow> WillProcessLines(nsDisplayListBuilder* aBuilder,
                                               nsBlockFrame*);
 
   /**
-   * Constructor, which client code SHOULD NOT use directly. Instead, clients
-   * should call WillProcessLines(), which is basically the factory function
-   * for TextOverflow instances.
+   * This is a factory-constructed non-reassignable class, so we delete nearly
+   * all constructors and reassignment operators.  We only provide a
+   * move-constructor, because that's required for Maybe<TextOverflow> to work
+   * (and that's what our factory method returns).
    */
-  TextOverflow(nsDisplayListBuilder* aBuilder, nsBlockFrame*);
-
-  TextOverflow() = delete;
-  ~TextOverflow() = default;
   TextOverflow(TextOverflow&&) = default;
 
+  TextOverflow() = delete;
   TextOverflow(const TextOverflow&) = delete;
   TextOverflow& operator=(const TextOverflow&) = delete;
   TextOverflow& operator=(TextOverflow&&) = delete;
