@@ -67,7 +67,7 @@
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">Доступ да гісторыі аглядання</string>
     <!-- Description for devtools permission. -->
-    <string name="mozac_feature_addons_permissions_devtools_description">Пашырыць прылады распрацоўшчыка для доступу да дадзеных у адкрытых картках</string>
+    <string name="mozac_feature_addons_permissions_devtools_description">Дазвол інструментам распрацоўшчыка атрымліваць доступ да вашых дадзеных у адкрытых укладках</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Версія</string>
     <!-- The authors of an add-on. -->
