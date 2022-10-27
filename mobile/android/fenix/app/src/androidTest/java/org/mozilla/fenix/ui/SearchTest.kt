@@ -124,7 +124,7 @@ class SearchTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openSearchSubMenu {
-            enableShowSearchShortcuts()
+            toggleShowSearchShortcuts()
         }.goBack {
         }.goBack {
         }.openSearch {
@@ -147,7 +147,7 @@ class SearchTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openSearchSubMenu {
-            enableShowSearchShortcuts()
+            toggleShowSearchShortcuts()
         }.goBack {
         }.goBack {
         }.openSearch {

@@ -19,6 +19,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -28,10 +29,8 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withSubstring
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
@@ -41,10 +40,12 @@ import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
+import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.SPEECH_RECOGNITION
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.isPackageInstalled
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -94,13 +95,98 @@ class SearchRobot {
     }
 
     fun verifySearchEngineButton() = assertSearchButton()
-    fun verifySearchWithText() = assertSearchWithText()
-    fun verifySearchEngineResults(rule: ComposeTestRule, searchSuggestion: String, searchEngineName: String) =
-        assertSearchEngineResults(rule, searchSuggestion, searchEngineName)
-    fun verifySearchEngineSuggestionResults(rule: ComposeTestRule, searchSuggestion: String) =
-        assertSearchEngineSuggestionResults(rule, searchSuggestion)
-    fun verifyNoSuggestionsAreDisplayed(rule: ComposeTestRule, searchSuggestion: String) =
-        assertNoSuggestionsAreDisplayed(rule, searchSuggestion)
+
+    fun verifySearchEngineResults(rule: ComposeTestRule, searchSuggestion: String, searchEngineName: String) {
+        rule.waitUntil(waitingTime, waitForSearchSuggestions(rule, searchSuggestion, searchEngineName))
+        rule.onNodeWithText(searchSuggestion).assertIsDisplayed()
+    }
+
+    fun verifySearchEngineSuggestionResults(rule: ComposeTestRule, searchSuggestion: String) {
+        rule.waitForIdle()
+        for (i in 1..RETRY_COUNT) {
+            try {
+                assertTrue(
+                    mDevice.findObject(UiSelector().textContains(searchSuggestion))
+                        .waitForExists(waitingTime),
+                )
+                break
+            } catch (e: AssertionError) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    expandSearchSuggestionsList()
+                }
+            }
+        }
+    }
+
+    fun verifyFirefoxSuggestResults(rule: ComposeTestRule, searchSuggestion: String) {
+        rule.waitForIdle()
+        for (i in 1..RETRY_COUNT) {
+            try {
+                rule.onNodeWithTag("mozac.awesomebar.suggestions")
+                    .performScrollToNode(hasText(searchSuggestion))
+                    .assertExists()
+                break
+            } catch (e: AssertionError) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    expandSearchSuggestionsList()
+                }
+            }
+        }
+    }
+
+    fun verifyNoSuggestionsAreDisplayed(rule: ComposeTestRule, searchSuggestion: String) {
+        rule.waitForIdle()
+
+        assertFalse(
+            mDevice.findObject(UiSelector().textContains(searchSuggestion))
+                .waitForExists(waitingTime),
+        )
+    }
+
+    fun verifyAllowSuggestionsInPrivateModeDialog() {
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().text(getStringResource(R.string.search_suggestions_onboarding_title)),
+            ).waitForExists(waitingTime),
+        )
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().text(getStringResource(R.string.search_suggestions_onboarding_text)),
+            ).exists(),
+        )
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().text("Learn more"),
+            ).exists(),
+        )
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().text(getStringResource(R.string.search_suggestions_onboarding_allow_button)),
+            ).exists(),
+        )
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().text(getStringResource(R.string.search_suggestions_onboarding_do_not_allow_button)),
+            ).exists(),
+        )
+    }
+
+    fun denySuggestionsInPrivateMode() {
+        mDevice.findObject(
+            UiSelector().text(getStringResource(R.string.search_suggestions_onboarding_do_not_allow_button)),
+        ).click()
+    }
+
+    fun allowSuggestionsInPrivateMode() {
+        mDevice.findObject(
+            UiSelector().text(getStringResource(R.string.search_suggestions_onboarding_allow_button)),
+        ).click()
+    }
+
     fun verifySearchSettings() = assertSearchSettings()
     fun verifySearchBarEmpty() = assertSearchBarEmpty()
 
@@ -226,10 +312,24 @@ class SearchRobot {
     }
 
     fun expandSearchSuggestionsList() {
+        onView(allOf(withId(R.id.search_wrapper))).perform(
+            closeSoftKeyboard(),
+        )
         awesomeBar.swipeUp(2)
     }
 
-    fun verifyPastedToolbarText(expectedText: String) = assertPastedToolbarText(expectedText)
+    fun verifyTypedToolbarText(expectedText: String) {
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar"))
+            .waitForExists(waitingTime)
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_url_view"))
+            .waitForExists(waitingTime)
+        onView(
+            allOf(
+                withText(expectedText),
+                withId(R.id.mozac_browser_toolbar_edit_url_view),
+            ),
+        ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    }
 
     class Transition {
         private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
@@ -300,11 +400,6 @@ private fun clearButton() =
 
 private fun searchWrapper() = mDevice.findObject(UiSelector().resourceId("$packageName:id/search_wrapper"))
 
-private fun assertSearchEngineResults(rule: ComposeTestRule, searchSuggestion: String, searchEngineName: String) {
-    rule.waitUntil(waitingTime, waitForSearchSuggestions(rule, searchSuggestion, searchEngineName))
-    rule.onNodeWithText(searchSuggestion).assertIsDisplayed()
-}
-
 private fun waitForSearchSuggestions(rule: ComposeTestRule, searchSuggestion: String, searchEngineName: String): () -> Boolean =
     {
         rule.waitForIdle()
@@ -312,24 +407,6 @@ private fun waitForSearchSuggestions(rule: ComposeTestRule, searchSuggestion: St
         rule.onAllNodesWithTag("mozac.awesomebar.suggestion").assertAny(hasText(searchSuggestion) and hasText(searchEngineName))
         mDevice.findObject(UiSelector().textContains(searchSuggestion)).waitForExists(waitingTime)
     }
-
-private fun assertSearchEngineSuggestionResults(rule: ComposeTestRule, searchResult: String) {
-    rule.waitForIdle()
-
-    assertTrue(
-        mDevice.findObject(UiSelector().textContains(searchResult))
-            .waitForExists(waitingTime),
-    )
-}
-
-private fun assertNoSuggestionsAreDisplayed(rule: ComposeTestRule, searchTerm: String) {
-    rule.waitForIdle()
-
-    assertFalse(
-        mDevice.findObject(UiSelector().textContains(searchTerm))
-            .waitForExists(waitingTime),
-    )
-}
 
 private fun assertSearchView() =
     assertTrue(
@@ -462,25 +539,7 @@ private fun assertDefaultSearchEngine(expectedText: String) =
         ).waitForExists(waitingTime),
     )
 
-private fun assertPastedToolbarText(expectedText: String) {
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar"))
-        .waitForExists(waitingTime)
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_url_view"))
-        .waitForExists(waitingTime)
-    onView(
-        allOf(
-            withSubstring(expectedText),
-            withId(R.id.mozac_browser_toolbar_edit_url_view),
-        ),
-    ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-}
-
 private val awesomeBar =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"))
 
 private val voiceSearchButton = mDevice.findObject(UiSelector().description("Voice search"))
-
-private val searchSuggestionsList =
-    UiScrollable(
-        UiSelector().className("android.widget.ScrollView"),
-    )

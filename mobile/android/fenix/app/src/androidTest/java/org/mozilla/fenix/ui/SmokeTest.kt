@@ -862,7 +862,7 @@ class SmokeTest {
             clickClearButton()
             longClickToolbar()
             clickPasteText()
-            verifyPastedToolbarText("content")
+            verifyTypedToolbarText("content")
         }
     }
 
@@ -881,7 +881,8 @@ class SmokeTest {
             clickClearButton()
             longClickToolbar()
             clickPasteText()
-            verifyPastedToolbarText("Page content: 1")
+            // with Select all, some white space is copied over, so we need to include that too
+            verifyTypedToolbarText("  Page content: 1 ")
         }
     }
 

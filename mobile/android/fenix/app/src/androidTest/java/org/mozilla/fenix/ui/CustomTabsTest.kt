@@ -147,7 +147,7 @@ class CustomTabsTest {
             clickClearButton()
             longClickToolbar()
             clickPasteText()
-            verifyPastedToolbarText(customTabPage.url.toString())
+            verifyTypedToolbarText(customTabPage.url.toString())
         }
     }
 

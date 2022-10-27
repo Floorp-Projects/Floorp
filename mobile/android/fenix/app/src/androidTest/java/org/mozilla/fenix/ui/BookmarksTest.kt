@@ -218,7 +218,7 @@ class BookmarksTest {
             clickClearButton()
             longClickToolbar()
             clickPasteText()
-            verifyPastedToolbarText(defaultWebPage.url.toString())
+            verifyTypedToolbarText(defaultWebPage.url.toString())
         }
     }
 

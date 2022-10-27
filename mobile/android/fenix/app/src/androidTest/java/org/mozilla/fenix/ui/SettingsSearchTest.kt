@@ -12,6 +12,8 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
+import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.helpers.TestHelper.setTextToClipBoard
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -47,6 +49,11 @@ class SettingsSearchTest {
             verifySearchToolbar()
             verifyDefaultSearchEngineHeader()
             verifySearchEngineList()
+            verifyShowSearchSuggestions()
+            verifyShowSearchShortcuts()
+            verifySearchBrowsingHistory()
+            verifySearchBookmarks()
+            verifyShowClipboardSuggestionsDefault()
         }
     }
 
@@ -65,7 +72,27 @@ class SettingsSearchTest {
     }
 
     @Test
-    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
+    fun toggleSearchAutocomplete() {
+        homeScreen {
+        }.openSearch {
+            typeSearch("mo")
+            verifyTypedToolbarText("monster.com")
+            typeSearch("moz")
+            verifyTypedToolbarText("mozilla.org")
+        }.dismissSearchBar {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            toggleAutocomplete()
+        }.goBack {
+        }.goBack {
+        }.openSearch {
+            typeSearch("moz")
+            verifyTypedToolbarText("moz")
+        }
+    }
+
+    @Test
     fun toggleSearchBookmarksAndHistoryTest() {
         // Bookmarks 2 websites, toggles the bookmarks and history search settings off,
         // then verifies if the websites do not show in the suggestions.
@@ -93,8 +120,9 @@ class SettingsSearchTest {
         }.openSearch {
             typeSearch("test")
             expandSearchSuggestionsList()
-            verifySearchEngineSuggestionResults(activityTestRule, "Test_Page_1")
-            verifySearchEngineSuggestionResults(activityTestRule, "Test_Page_2")
+            verifyFirefoxSuggestResults(activityTestRule, "Firefox Suggest")
+            verifyFirefoxSuggestResults(activityTestRule, "Test_Page_1")
+            verifyFirefoxSuggestResults(activityTestRule, "Test_Page_2")
         }.dismissSearchBar {
         }.openThreeDotMenu {
         }.openSettings {
@@ -110,6 +138,7 @@ class SettingsSearchTest {
         }.openSearch {
             typeSearch("test")
             expandSearchSuggestionsList()
+            verifyNoSuggestionsAreDisplayed(activityTestRule, "Firefox Suggest")
             verifyNoSuggestionsAreDisplayed(activityTestRule, "Test_Page_1")
             verifyNoSuggestionsAreDisplayed(activityTestRule, "Test_Page_2")
         }
@@ -192,7 +221,48 @@ class SettingsSearchTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openSearchSubMenu {
-            disableShowSearchSuggestions()
+            toggleShowSearchSuggestions()
+        }.goBack {
+        }.goBack {
+        }.openSearch {
+            typeSearch("mozilla")
+            verifyNoSuggestionsAreDisplayed(activityTestRule, "mozilla firefox")
+        }
+    }
+
+    // Tests the "Don't allow" option from private mode search suggestions onboarding dialog
+    @Test
+    fun blockSearchSuggestionsInPrivateModeOnboardingTest() {
+        homeScreen {
+            togglePrivateBrowsingModeOnOff()
+        }.openSearch {
+            typeSearch("mozilla")
+            verifyAllowSuggestionsInPrivateModeDialog()
+            denySuggestionsInPrivateMode()
+            verifyNoSuggestionsAreDisplayed(activityTestRule, "mozilla firefox")
+        }.dismissSearchBar {
+            togglePrivateBrowsingModeOnOff()
+        }.openSearch {
+            typeSearch("mozilla")
+            verifySearchEngineSuggestionResults(activityTestRule, "mozilla firefox")
+        }
+    }
+
+    // Tests the "Allow" option from private mode search suggestions onboarding dialog
+    @Test
+    fun allowSearchSuggestionsInPrivateModeOnboardingTest() {
+        homeScreen {
+            togglePrivateBrowsingModeOnOff()
+        }.openSearch {
+            typeSearch("mozilla")
+            verifyAllowSuggestionsInPrivateModeDialog()
+            allowSuggestionsInPrivateMode()
+            verifySearchEngineSuggestionResults(activityTestRule, "mozilla firefox")
+        }.dismissSearchBar {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            toggleShowSuggestionsInPrivateSessions()
         }.goBack {
         }.goBack {
         }.openSearch {
@@ -218,6 +288,28 @@ class SettingsSearchTest {
         homeScreen {
         }.openSearch {
             verifyVoiceSearchButtonVisibility(false)
+        }
+    }
+
+    @Test
+    fun toggleShowClipboardSuggestionsTest() {
+        val link = "https://www.mozilla.org/en-US/"
+        setTextToClipBoard(appContext, link)
+
+        homeScreen {
+        }.openNavigationToolbar {
+            verifyClipboardSuggestionsAreDisplayed(link, true)
+        }.visitLinkFromClipboard {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            verifyShowClipboardSuggestionsDefault()
+            toggleClipboardSuggestion()
+            exitMenu()
+        }
+        homeScreen {
+        }.openNavigationToolbar {
+            verifyClipboardSuggestionsAreDisplayed(link, false)
         }
     }
 }

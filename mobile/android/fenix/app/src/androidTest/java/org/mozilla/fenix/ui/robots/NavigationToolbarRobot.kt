@@ -28,10 +28,12 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.not
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -53,8 +55,6 @@ class NavigationToolbarRobot {
     fun verifyCloseReaderViewDetected(visible: Boolean = false) =
         assertCloseReaderViewDetected(visible)
 
-    fun typeSearchTerm(searchTerm: String) = awesomeBar().setText(searchTerm)
-
     fun toggleReaderView() {
         mDevice.findObject(
             UiSelector()
@@ -63,6 +63,33 @@ class NavigationToolbarRobot {
             .waitForExists(waitingTime)
 
         readerViewToggle().click()
+    }
+
+    fun verifyClipboardSuggestionsAreDisplayed(link: String, shouldBeDisplayed: Boolean) {
+        when (shouldBeDisplayed) {
+            true -> {
+                assertTrue(
+                    mDevice.findObject(UiSelector().resourceId("$packageName:id/fill_link_from_clipboard"))
+                        .waitForExists(waitingTime),
+                )
+
+                assertTrue(
+                    mDevice.findObject(UiSelector().resourceId("$packageName:id/clipboard_url").text(link))
+                        .waitForExists(waitingTime),
+                )
+            }
+            false -> {
+                assertFalse(
+                    mDevice.findObject(UiSelector().resourceId("$packageName:id/fill_link_from_clipboard"))
+                        .waitForExists(waitingTime),
+                )
+
+                assertFalse(
+                    mDevice.findObject(UiSelector().resourceId("$packageName:id/clipboard_url").text(link))
+                        .waitForExists(waitingTime),
+                )
+            }
+        }
     }
 
     class Transition {
@@ -151,14 +178,12 @@ class NavigationToolbarRobot {
         }
 
         fun visitLinkFromClipboard(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            mDevice.waitNotNull(
-                Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_clear_view")),
-                waitingTime,
-            )
-            clearAddressBar().click()
+            if (clearAddressBar().waitForExists(waitingTimeShort)) {
+                clearAddressBar().click()
+            }
 
             mDevice.waitNotNull(
-                Until.findObject(By.res("org.mozilla.fenix.debug:id/clipboard_title")),
+                Until.findObject(By.res("$packageName:id/clipboard_title")),
                 waitingTime,
             )
 
@@ -166,7 +191,7 @@ class NavigationToolbarRobot {
             // See for mor information https://github.com/mozilla-mobile/fenix/issues/22271
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
                 mDevice.waitNotNull(
-                    Until.findObject(By.res("org.mozilla.fenix.debug:id/clipboard_url")),
+                    Until.findObject(By.res("$packageName:id/clipboard_url")),
                     waitingTime,
                 )
             }
@@ -286,7 +311,9 @@ private fun threeDotButton() = onView(withId(R.id.mozac_browser_toolbar_menu))
 private fun tabTrayButton() = onView(withId(R.id.tab_button))
 private fun fillLinkButton() = onView(withId(R.id.fill_link_from_clipboard))
 private fun clearAddressBar() =
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_clear_view"))
+    mDevice.findObject(
+        UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_clear_view"),
+    )
 private fun goBackButton() = mDevice.pressBack()
 private fun readerViewToggle() =
     onView(withParent(withId(R.id.mozac_browser_toolbar_page_actions)))

@@ -9,6 +9,8 @@ package org.mozilla.fenix.helpers
 import android.app.ActivityManager
 import android.app.PendingIntent
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -43,6 +45,8 @@ import androidx.test.uiautomator.UiObjectNotFoundException
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import java.util.Locale
+import java.util.regex.Pattern
 import junit.framework.AssertionFailedError
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.support.ktx.android.content.appName
@@ -63,8 +67,6 @@ import org.mozilla.fenix.helpers.idlingresource.NetworkConnectionIdlingResource
 import org.mozilla.fenix.ui.robots.BrowserRobot
 import org.mozilla.fenix.utils.IntentUtils
 import org.mozilla.gecko.util.ThreadUtils
-import java.util.Locale
-import java.util.regex.Pattern
 
 object TestHelper {
 
@@ -417,5 +419,15 @@ object TestHelper {
             "updateConfiguration",
             Configuration::class.java,
         ).invoke(am, config)
+    }
+
+    /**
+     * Creates clipboard data.
+     */
+    fun setTextToClipBoard(context: Context, message: String) {
+        val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipData = ClipData.newPlainText("label", message)
+
+        clipBoard.setPrimaryClip(clipData)
     }
 }
