@@ -56,7 +56,6 @@
 #include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
 #include "gc/Allocator.h"
 #include "gc/GC.h"
-#include "gc/GCLock.h"
 #include "gc/Zone.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Disassemble.h"
@@ -759,6 +758,12 @@ static bool GCParameter(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   uint32_t value = floor(d);
+  if (param == JSGC_MARK_STACK_LIMIT && JS::IsIncrementalGCInProgress(cx)) {
+    JS_ReportErrorASCII(
+        cx, "attempt to set markStackLimit while a GC is in progress");
+    return false;
+  }
+
   bool ok = cx->runtime()->gc.setParameter(param, value);
   if (!ok) {
     JS_ReportErrorASCII(cx, "Parameter value out of range");
@@ -2159,8 +2164,9 @@ static bool InternalConst(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (JS_LinearStringEqualsLiteral(linear, "MARK_STACK_BASE_CAPACITY")) {
-    args.rval().setNumber(uint32_t(js::MARK_STACK_BASE_CAPACITY));
+  if (JS_LinearStringEqualsLiteral(linear,
+                                   "INCREMENTAL_MARK_STACK_BASE_CAPACITY")) {
+    args.rval().setNumber(uint32_t(js::INCREMENTAL_MARK_STACK_BASE_CAPACITY));
   } else {
     JS_ReportErrorASCII(cx, "unknown const name");
     return false;
@@ -2387,7 +2393,7 @@ static bool CurrentGC(JSContext* cx, unsigned argc, Value* vp) {
   }
 
 #  ifdef DEBUG
-  val = Int32Value(gc.testMarkQueuePos());
+  val = Int32Value(gc.marker.queuePos);
   if (!JS_DefineProperty(cx, result, "queuePos", val, JSPROP_ENUMERATE)) {
     return false;
   }
@@ -2414,33 +2420,6 @@ static bool DeterministicGC(JSContext* cx, unsigned argc, Value* vp) {
 static bool DumpGCArenaInfo(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   js::gc::DumpArenaInfo();
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool SetMarkStackLimit(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (args.length() != 1) {
-    RootedObject callee(cx, &args.callee());
-    ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
-    return false;
-  }
-
-  int32_t value;
-  if (!ToInt32(cx, args[0], &value) || value <= 0) {
-    JS_ReportErrorASCII(cx, "Bad argument to SetMarkStackLimit");
-    return false;
-  }
-
-  if (JS::IsIncrementalGCInProgress(cx)) {
-    JS_ReportErrorASCII(
-        cx, "Attempt to set markStackLimit while a GC is in progress");
-    return false;
-  }
-
-  JSRuntime* runtime = cx->runtime();
-  AutoLockGC lock(runtime);
-  runtime->gc.setMarkStackLimit(value, lock);
   args.rval().setUndefined();
   return true;
 }
@@ -6871,19 +6850,20 @@ static bool SetGCCallback(JSContext* cx, unsigned argc, Value* vp) {
 #ifdef DEBUG
 static bool EnqueueMark(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  gc::GCRuntime* gc = &cx->runtime()->gc;
+
+  auto& queue = cx->runtime()->gc.marker.markQueue;
 
   if (args.get(0).isString()) {
     RootedString val(cx, args[0].toString());
     if (!val->ensureLinear(cx)) {
       return false;
     }
-    if (!gc->appendTestMarkQueue(StringValue(val))) {
+    if (!queue.append(StringValue(val))) {
       JS_ReportOutOfMemory(cx);
       return false;
     }
   } else if (args.get(0).isObject()) {
-    if (!gc->appendTestMarkQueue(args[0])) {
+    if (!queue.append(args[0])) {
       JS_ReportOutOfMemory(cx);
       return false;
     }
@@ -6899,7 +6879,7 @@ static bool EnqueueMark(JSContext* cx, unsigned argc, Value* vp) {
 static bool GetMarkQueue(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  const auto& queue = cx->runtime()->gc.getTestMarkQueue();
+  auto& queue = cx->runtime()->gc.marker.markQueue.get();
 
   RootedObject result(cx, JS::NewArrayObject(cx, queue.length()));
   if (!result) {
@@ -6922,7 +6902,7 @@ static bool GetMarkQueue(JSContext* cx, unsigned argc, Value* vp) {
 static bool ClearMarkQueue(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  cx->runtime()->gc.clearTestMarkQueue();
+  cx->runtime()->gc.marker.markQueue.clear();
   args.rval().setUndefined();
   return true;
 }
@@ -8398,12 +8378,6 @@ gc::ZealModeHelpText),
 "dumpGCArenaInfo()",
 "  Prints information about the different GC things and how they are arranged\n"
 "  in arenas.\n"),
-
-    JS_FN_HELP("setMarkStackLimit", SetMarkStackLimit, 1, 0,
-"markStackLimit(limit)",
-"  Sets a limit on the number of words used for the mark stack. Used to test OOM"
-"  handling during marking.\n"),
-
 #endif
 
     JS_FN_HELP("gcstate", GCState, 0, 0,

@@ -1,4 +1,4 @@
 gczeal(0);
 gc();
 verifyprebarriers();
-setMarkStackLimit(5);
+gcparam('markStackLimit', 5);
