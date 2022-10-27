@@ -16,6 +16,7 @@ import multiprocessing
 import os
 import pathlib
 import random
+import re
 import stat
 import subprocess
 import sys
@@ -572,6 +573,14 @@ def git_checkout_archive(
     if repo.startswith('https://github.com/'):
         if not include_dot_git and not _github_submodule_required(repo, commit):
             log("Using github archive service to speedup archive creation")
+            # Always log sha1 info, either from commit or resolved from repo.
+            if re.match(r"^[a-fA-F0-9]{40}$", commit):
+                revision = commit
+            else:
+                ref_output = subprocess.check_output(["git", "ls-remote", repo,
+                                                      'refs/heads/' + commit])
+                revision, _ = ref_output.decode().split(maxsplit=1)
+            log("Fetching revision {}".format(revision))
             return _git_checkout_github_archive(dest_path, repo, commit, prefix)
 
     with tempfile.TemporaryDirectory() as td:
