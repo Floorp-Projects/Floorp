@@ -348,7 +348,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   RefPtr<const AccAttributes> GetCachedTextAttributes();
   RefPtr<const AccAttributes> GetCachedARIAAttributes() const;
 
-  nsString GetCachedHTMLRadioNameAttribute() const;
+  nsString GetCachedHTMLNameAttribute() const;
 
   virtual HyperTextAccessibleBase* AsHyperTextBase() override {
     return IsHyperText() ? static_cast<HyperTextAccessibleBase*>(this)

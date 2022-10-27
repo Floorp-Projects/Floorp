@@ -1369,7 +1369,6 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
 
   if (aAttribute == nsGkAtoms::href) {
     mDoc->QueueCacheUpdate(this, CacheDomain::Value);
-    mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
   }
 
   if (aAttribute == nsGkAtoms::aria_controls ||
@@ -1431,6 +1430,13 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
 
   if (aAttribute == nsGkAtoms::accesskey) {
     mDoc->QueueCacheUpdate(this, CacheDomain::Actions);
+  }
+
+  if (aAttribute == nsGkAtoms::name &&
+      (mContent && mContent->IsHTMLElement(nsGkAtoms::a))) {
+    // If an anchor's name changed, it's possible a LINKS_TO relation
+    // also changed. Push a cache update for Relations.
+    mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
   }
 }
 
@@ -3618,18 +3624,21 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   }
 
   if (aCacheDomain & CacheDomain::Relations && mContent) {
-    if (IsHTMLRadioButton()) {
+    if (IsHTMLRadioButton() ||
+        (mContent->IsElement() &&
+         mContent->AsElement()->IsHTMLElement(nsGkAtoms::a))) {
       // HTML radio buttons with the same name should be grouped
       // and returned together when their MEMBER_OF relation is
-      // requested. We cache the name attribute, if it exists, here.
+      // requested. Computing LINKS_TO also requires we cache `name` on
+      // anchor elements.
       nsString name;
       mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
       if (!name.IsEmpty()) {
-        fields->SetAttribute(nsGkAtoms::radioLabel, std::move(name));
+        fields->SetAttribute(nsGkAtoms::attributeName, std::move(name));
       } else if (aUpdateType != CacheUpdateType::Initial) {
         // It's possible we used to have a name and it's since been
         // removed. Send a delete entry.
-        fields->SetAttribute(nsGkAtoms::radioLabel, DeleteEntry());
+        fields->SetAttribute(nsGkAtoms::attributeName, DeleteEntry());
       }
     }
 
@@ -3646,10 +3655,6 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
                 dom::HTMLLabelElement::FromNode(mContent)) {
           rel.AppendTarget(mDoc, labelEl->GetControl());
         }
-      } else if (data.mType == RelationType::LINKS_TO) {
-        // This has no implicit relation, so it's safe to call RelationByType
-        // directly.
-        rel = RelationByType(RelationType::LINKS_TO);
       } else {
         // We use an IDRefsIterator here instead of calling RelationByType
         // directly because we only want to cache explicit relations. Implicit

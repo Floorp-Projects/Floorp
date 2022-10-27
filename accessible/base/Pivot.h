@@ -136,6 +136,16 @@ class PivotRadioNameRule : public PivotRule {
   const nsString& mName;
 };
 
+/**
+ * This rule doesn't search iframes. Subtrees that should be
+ * pruned by way of nsAccUtils::MustPrune are also not searched.
+ */
+
+class MustPruneSameDocRule : public PivotRule {
+ public:
+  virtual uint16_t Match(Accessible* aAcc) override;
+};
+
 }  // namespace a11y
 }  // namespace mozilla
 
