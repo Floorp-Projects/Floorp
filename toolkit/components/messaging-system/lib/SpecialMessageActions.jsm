@@ -188,6 +188,7 @@ const SpecialMessageActions = {
       "browser.startup.homepage",
       "browser.privateWindowSeparation.enabled",
       "browser.firefox-view.feature-tour",
+      "browser.pdfjs.feature-tour",
     ];
 
     if (!allowedPrefs.includes(pref.name)) {
