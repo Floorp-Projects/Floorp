@@ -2741,7 +2741,7 @@ pref("browser.firefox-view.view-count", 0);
 
 // If the user has seen the pdf.js feature tour this value reflects the tour
 // message id, the id of the last screen they saw, and whether they completed the tour
-pref("browser.pdfjs.feature-tour", "{\"message\":\"PDF_JS_FEATURE_TOUR\",\"screen\":\"\",\"complete\":false}");
+pref("browser.pdfjs.feature-tour", "{\"screen\":\"FEATURE_CALLOUT_1\",\"complete\":false}");
 
 // Enables cookie banner handling in Nightly in Private Browsing Mode. See
 // StaticPrefList.yaml for a description of the prefs.
