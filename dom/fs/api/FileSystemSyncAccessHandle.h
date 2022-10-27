@@ -32,19 +32,9 @@ class FileSystemManager;
 class MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer;
 class Promise;
 
-namespace fs {
-class FileSystemRequestHandler;
-}  // namespace fs
-
 class FileSystemSyncAccessHandle final : public nsISupports,
                                          public nsWrapperCache {
  public:
-  FileSystemSyncAccessHandle(nsIGlobalObject* aGlobal,
-                             RefPtr<FileSystemManager>& aManager,
-                             RefPtr<FileSystemAccessHandleChild> aActor,
-                             const fs::FileSystemEntryMetadata& aMetadata,
-                             fs::FileSystemRequestHandler* aRequestHandler);
-
   FileSystemSyncAccessHandle(nsIGlobalObject* aGlobal,
                              RefPtr<FileSystemManager>& aManager,
                              RefPtr<FileSystemAccessHandleChild> aActor,
@@ -88,8 +78,6 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   RefPtr<FileSystemAccessHandleChild> mActor;
 
   const fs::FileSystemEntryMetadata mMetadata;
-
-  const UniquePtr<fs::FileSystemRequestHandler> mRequestHandler;
 };
 
 }  // namespace dom
