@@ -13,7 +13,7 @@ var urls = [
   [
     "data:application/octet-stream,foo bar",
     "application/octet-stream",
-    "foo bar",
+    "foobar",
   ],
   [
     "data:application/octet-stream,foo%20bar",
