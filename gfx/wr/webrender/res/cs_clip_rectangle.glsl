@@ -221,6 +221,11 @@ void main(void) {
 // both ways of operating - the uniform radius fast-path and the varying radius
 // slow-path.
 void swgl_drawSpanR8() {
+    // Perspective is not supported.
+    if (swgl_interpStep(vLocalPos).w != 0.0) {
+        return;
+    }
+
     // If the span is completely outside the Z-range and clipped out, just
     // output clear so we don't need to consider invalid W in the rest of the
     // shader.
