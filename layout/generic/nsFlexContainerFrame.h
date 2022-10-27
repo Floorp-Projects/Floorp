@@ -454,8 +454,7 @@ class nsFlexContainerFrame final : public nsContainerFrame,
                          const FlexboxAxisTracker& aAxisTracker,
                          nscoord aMainGapSize,
                          nsTArray<nsIFrame*>& aPlaceholders,
-                         nsTArray<FlexLine>& aLines,
-                         bool& aHasCollapsedItems);
+                         nsTArray<FlexLine>& aLines, bool& aHasCollapsedItems);
 
   /**
    * Generates and returns a FlexLayoutResult that contains the FlexLines and

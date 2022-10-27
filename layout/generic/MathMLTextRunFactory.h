@@ -30,7 +30,7 @@ class MathMLTextRunFactory : public nsTransformingTextRunFactory {
                               gfxMissingFontRecorder* aMFR) override;
   enum {
     // Style effects which may override single character <mi> behaviour
-    MATH_FONT_FEATURE_DTLS = 0x4,    // font feature dtls should be set
+    MATH_FONT_FEATURE_DTLS = 0x4,  // font feature dtls should be set
   };
 
  protected:
