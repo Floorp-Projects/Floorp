@@ -224,6 +224,7 @@ HttpBaseChannel::HttpBaseChannel()
           StaticPrefs::browser_opaqueResponseBlocking()),
       mBlockOpaqueResponseAfterSniff(false),
       mCheckIsOpaqueResponseAllowedAfterSniff(false),
+      mChannelBlockedByOpaqueResponse(false),
       mDummyChannelForImageCache(false) {
   StoreApplyConversion(true);
   StoreAllowSTS(true);
