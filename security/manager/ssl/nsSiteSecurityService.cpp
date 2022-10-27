@@ -17,7 +17,6 @@
 #include "nsCOMArray.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISocketProvider.h"
-#include "nsITransportSecurityInfo.h"
 #include "nsIURI.h"
 #include "nsNSSComponent.h"
 #include "nsNetUtil.h"
@@ -423,9 +422,9 @@ bool nsSiteSecurityService::HostIsIPAddress(const nsCString& hostname) {
 NS_IMETHODIMP
 nsSiteSecurityService::ProcessHeaderScriptable(
     nsIURI* aSourceURI, const nsACString& aHeader,
-    nsITransportSecurityInfo* aSecInfo, JS::Handle<JS::Value> aOriginAttributes,
-    uint64_t* aMaxAge, bool* aIncludeSubdomains, uint32_t* aFailureResult,
-    JSContext* aCx, uint8_t aArgc) {
+    JS::Handle<JS::Value> aOriginAttributes, uint64_t* aMaxAge,
+    bool* aIncludeSubdomains, uint32_t* aFailureResult, JSContext* aCx,
+    uint8_t aArgc) {
   OriginAttributes originAttributes;
   if (aArgc > 0) {
     if (!aOriginAttributes.isObject() ||
@@ -433,14 +432,13 @@ nsSiteSecurityService::ProcessHeaderScriptable(
       return NS_ERROR_INVALID_ARG;
     }
   }
-  return ProcessHeader(aSourceURI, aHeader, aSecInfo, originAttributes, aMaxAge,
+  return ProcessHeader(aSourceURI, aHeader, originAttributes, aMaxAge,
                        aIncludeSubdomains, aFailureResult);
 }
 
 NS_IMETHODIMP
 nsSiteSecurityService::ProcessHeader(nsIURI* aSourceURI,
                                      const nsACString& aHeader,
-                                     nsITransportSecurityInfo* aSecInfo,
                                      const OriginAttributes& aOriginAttributes,
                                      uint64_t* aMaxAge,
                                      bool* aIncludeSubdomains,
@@ -448,15 +446,13 @@ nsSiteSecurityService::ProcessHeader(nsIURI* aSourceURI,
   if (aFailureResult) {
     *aFailureResult = nsISiteSecurityService::ERROR_UNKNOWN;
   }
-  NS_ENSURE_ARG(aSecInfo);
   return ProcessHeaderInternal(aSourceURI, PromiseFlatCString(aHeader),
-                               aSecInfo, aOriginAttributes, aMaxAge,
-                               aIncludeSubdomains, aFailureResult);
+                               aOriginAttributes, aMaxAge, aIncludeSubdomains,
+                               aFailureResult);
 }
 
 nsresult nsSiteSecurityService::ProcessHeaderInternal(
     nsIURI* aSourceURI, const nsCString& aHeader,
-    nsITransportSecurityInfo* aSecInfo,
     const OriginAttributes& aOriginAttributes, uint64_t* aMaxAge,
     bool* aIncludeSubdomains, uint32_t* aFailureResult) {
   if (aFailureResult) {
@@ -468,22 +464,6 @@ nsresult nsSiteSecurityService::ProcessHeaderInternal(
 
   if (aIncludeSubdomains != nullptr) {
     *aIncludeSubdomains = false;
-  }
-
-  if (aSecInfo) {
-    nsITransportSecurityInfo::OverridableErrorCategory overridableErrorCategory;
-    nsresult rv =
-        aSecInfo->GetOverridableErrorCategory(&overridableErrorCategory);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (overridableErrorCategory !=
-        nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET) {
-      SSSLOG(("SSS: discarding header from untrustworthy connection"));
-      if (aFailureResult) {
-        *aFailureResult =
-            nsISiteSecurityService::ERROR_UNTRUSTWORTHY_CONNECTION;
-      }
-      return NS_ERROR_FAILURE;
-    }
   }
 
   nsAutoCString host;

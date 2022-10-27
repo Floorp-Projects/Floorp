@@ -14,9 +14,6 @@ Observer.prototype = {
 };
 
 var gObserver = new Observer();
-var secInfo = Cc[
-  "@mozilla.org/security/transportsecurityinfo;1"
-].createInstance(Ci.nsITransportSecurityInfo);
 
 function cleanup() {
   Services.obs.removeObserver(gObserver, "last-pb-context-exited");
@@ -101,12 +98,12 @@ function test_part1() {
   let subDomainUri = Services.io.newURI(
     "https://subdomain.includesubdomains.preloaded.test"
   );
-  gSSService.processHeader(uri, "max-age=0", secInfo);
+  gSSService.processHeader(uri, "max-age=0");
   ok(!gSSService.isSecureURI(uri));
   ok(!gSSService.isSecureURI(subDomainUri));
   // check that processing another header (with max-age non-zero) will
   // re-enable a site's sts status
-  gSSService.processHeader(uri, "max-age=1000", secInfo);
+  gSSService.processHeader(uri, "max-age=1000");
   ok(gSSService.isSecureURI(uri));
   // but this time include subdomains was not set, so test for that
   ok(!gSSService.isSecureURI(subDomainUri));
@@ -117,7 +114,7 @@ function test_part1() {
   uri = Services.io.newURI(
     "https://subdomain.noincludesubdomains.preloaded.test"
   );
-  gSSService.processHeader(uri, "max-age=0", secInfo);
+  gSSService.processHeader(uri, "max-age=0");
   ok(
     gSSService.isSecureURI(
       Services.io.newURI("https://noincludesubdomains.preloaded.test")
@@ -128,7 +125,7 @@ function test_part1() {
   uri = Services.io.newURI(
     "https://subdomain.includesubdomains.preloaded.test"
   );
-  gSSService.processHeader(uri, "max-age=0", secInfo);
+  gSSService.processHeader(uri, "max-age=0");
   // we received a header with "max-age=0", so we have "no information"
   // regarding the sts state of subdomain.includesubdomains.preloaded.test specifically,
   // but it is actually still an STS host, because of the preloaded
@@ -161,7 +158,7 @@ function test_part1() {
     )
   );
 
-  gSSService.processHeader(uri, "max-age=1000", secInfo);
+  gSSService.processHeader(uri, "max-age=1000");
   // Here's what we have now:
   // |-- includesubdomains.preloaded.test (in preload list, includes subdomains) IS sts host
   //     |-- subdomain.includesubdomains.preloaded.test (include subdomains is false) IS sts host
@@ -193,7 +190,7 @@ function test_part1() {
   // (sanity check first - this should be in the preload list)
   uri = Services.io.newURI("https://includesubdomains2.preloaded.test");
   ok(gSSService.isSecureURI(uri));
-  gSSService.processHeader(uri, "max-age=1", secInfo);
+  gSSService.processHeader(uri, "max-age=1");
   do_timeout(1250, function() {
     ok(!gSSService.isSecureURI(uri));
     run_next_test();
@@ -212,33 +209,18 @@ function test_private_browsing1() {
   ok(gSSService.isSecureURI(uri, PRIVATE_ORIGIN_ATTRIBUTES));
   ok(gSSService.isSecureURI(subDomainUri, PRIVATE_ORIGIN_ATTRIBUTES));
 
-  gSSService.processHeader(
-    uri,
-    "max-age=0",
-    secInfo,
-    PRIVATE_ORIGIN_ATTRIBUTES
-  );
+  gSSService.processHeader(uri, "max-age=0", PRIVATE_ORIGIN_ATTRIBUTES);
   ok(!gSSService.isSecureURI(uri, PRIVATE_ORIGIN_ATTRIBUTES));
   ok(!gSSService.isSecureURI(subDomainUri, PRIVATE_ORIGIN_ATTRIBUTES));
 
   // check adding it back in
-  gSSService.processHeader(
-    uri,
-    "max-age=1000",
-    secInfo,
-    PRIVATE_ORIGIN_ATTRIBUTES
-  );
+  gSSService.processHeader(uri, "max-age=1000", PRIVATE_ORIGIN_ATTRIBUTES);
   ok(gSSService.isSecureURI(uri, PRIVATE_ORIGIN_ATTRIBUTES));
   // but no includeSubdomains this time
   ok(!gSSService.isSecureURI(subDomainUri, PRIVATE_ORIGIN_ATTRIBUTES));
 
   // do the hokey-pokey...
-  gSSService.processHeader(
-    uri,
-    "max-age=0",
-    secInfo,
-    PRIVATE_ORIGIN_ATTRIBUTES
-  );
+  gSSService.processHeader(uri, "max-age=0", PRIVATE_ORIGIN_ATTRIBUTES);
   ok(!gSSService.isSecureURI(uri, PRIVATE_ORIGIN_ATTRIBUTES));
   ok(!gSSService.isSecureURI(subDomainUri, PRIVATE_ORIGIN_ATTRIBUTES));
 
@@ -250,12 +232,7 @@ function test_private_browsing1() {
   // (sanity check first - this should be in the preload list)
   uri = Services.io.newURI("https://includesubdomains2.preloaded.test");
   ok(gSSService.isSecureURI(uri, PRIVATE_ORIGIN_ATTRIBUTES));
-  gSSService.processHeader(
-    uri,
-    "max-age=1",
-    secInfo,
-    PRIVATE_ORIGIN_ATTRIBUTES
-  );
+  gSSService.processHeader(uri, "max-age=1", PRIVATE_ORIGIN_ATTRIBUTES);
   do_timeout(1250, function() {
     ok(!gSSService.isSecureURI(uri, PRIVATE_ORIGIN_ATTRIBUTES));
     // Simulate leaving private browsing mode

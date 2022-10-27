@@ -33,14 +33,10 @@ function test() {
   function doTest(aIsPrivateMode, aWindow, aCallback) {
     BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser).then(
       () => {
-        let secInfo = Cc[
-          "@mozilla.org/security/transportsecurityinfo;1"
-        ].createInstance(Ci.nsITransportSecurityInfo);
         uri = aWindow.Services.io.newURI("https://localhost/img.png");
         gSSService.processHeader(
           uri,
           "max-age=1000",
-          secInfo,
           originAttributes(aIsPrivateMode)
         );
         ok(

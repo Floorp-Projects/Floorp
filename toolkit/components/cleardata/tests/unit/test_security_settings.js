@@ -28,11 +28,8 @@ function addSecurityInfo({ host, topLevelBaseDomain, originAttributes = {} }) {
   let attrs = getOAWithPartitionKey({ topLevelBaseDomain }, originAttributes);
 
   let uri = Services.io.newURI(`https://${host}`);
-  let secInfo = Cc[
-    "@mozilla.org/security/transportsecurityinfo;1"
-  ].createInstance(Ci.nsITransportSecurityInfo);
 
-  gSSService.processHeader(uri, "max-age=1000;", secInfo, attrs);
+  gSSService.processHeader(uri, "max-age=1000;", attrs);
 
   cars.rememberDecisionScriptable(host, attrs, serverCert, clientCert);
 }

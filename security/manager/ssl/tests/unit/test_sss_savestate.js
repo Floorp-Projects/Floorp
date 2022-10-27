@@ -113,14 +113,7 @@ function process_headers() {
     let maxAge = "max-age=" + (i + 31536000);
     // have every other URI set includeSubdomains
     let includeSubdomains = uriIndex % 2 == 1 ? "; includeSubdomains" : "";
-    let secInfo = Cc[
-      "@mozilla.org/security/transportsecurityinfo;1"
-    ].createInstance(Ci.nsITransportSecurityInfo);
-    SSService.processHeader(
-      uris[uriIndex],
-      maxAge + includeSubdomains,
-      secInfo
-    );
+    SSService.processHeader(uris[uriIndex], maxAge + includeSubdomains);
   }
 }
 
