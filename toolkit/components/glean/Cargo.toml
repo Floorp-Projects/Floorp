@@ -24,3 +24,5 @@ thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 disable_upload = []
 # Letting us know we're compiling with Gecko symbols.
 with_gecko = ["fog/with_gecko"]
+# Opt into a larger preinit queue
+million_queue = ["glean/preinit_million_queue"]

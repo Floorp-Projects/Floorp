@@ -65,6 +65,9 @@ gkrust_features += ['glean_with_gecko']
 if not CONFIG['MOZILLA_OFFICIAL']:
     gkrust_features += ['glean_disable_upload']
 
+if CONFIG['OS_TARGET'] != 'Android':
+    gkrust_features += ['glean_million_queue']
+
 if CONFIG['MOZ_ENABLE_DBUS']:
     gkrust_features += ['with_dbus']
 

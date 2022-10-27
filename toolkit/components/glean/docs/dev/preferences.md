@@ -68,3 +68,14 @@ This mode can be overridden at runtime in two ways:
 including builds distributed by Linux distributions.
 It tends to not be set on local developer builds.
 See [bug 1680025](https://bugzilla.mozilla.org/show_bug.cgi?id=1680025) for details.
+
+`OS_TARGET`
+
+If not set to `'Android'` we set a `glean_million_queue` Rust feature
+([see gkrust-features.mozbuild][gkrust-features])
+which, when passed to the Glean SDK,
+opts us into a preinit queue that doesn't discard tasks until there are 10^6 of them.
+
+See [bug 1797494](https://bugzilla.mozilla.org/show_bug.cgi?id=1797494) for details.
+
+[gkrust-features]: https://searchfox.org/mozilla-central/source/toolkit/library/rust/gkrust-features.mozbuild
