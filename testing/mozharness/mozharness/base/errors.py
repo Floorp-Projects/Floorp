@@ -94,6 +94,7 @@ RustErrorList = [
     {"regex": re.compile(r"""error\[E\d+\]:"""), "level": ERROR},
     {"substr": r"""error: Could not compile""", "level": ERROR},
     {"substr": r"""error: aborting due to previous error""", "level": ERROR},
+    {"substr": r"""thread 'main' panicked at""", "level": ERROR},
 ]
 
 # We may need to have various MakefileErrorLists for differing amounts of
