@@ -102,21 +102,16 @@ class MOZ_STACK_CLASS gfxOTSContext : public ots::OTSContext {
     // Whether to preserve color bitmap glyphs
     mKeepColorBitmaps =
         StaticPrefs::gfx_downloadable_fonts_keep_color_bitmaps();
+    // Whether to preserve SVG glyphs (which can be expensive in Core Text,
+    // so better to drop them if we're not going to render them anyhow).
+    mKeepSVG = StaticPrefs::gfx_font_rendering_opentype_svg_enabled();
   }
 
   virtual ots::TableAction GetTableAction(uint32_t aTag) override {
-    // Preserve Graphite and SVG tables,
-    // and possibly OTL and Variation tables (depending on prefs)
+    // Pass through or validate OTL and Variation tables, depending on prefs.
     if ((!mCheckOTLTables && (aTag == TRUETYPE_TAG('G', 'D', 'E', 'F') ||
                               aTag == TRUETYPE_TAG('G', 'P', 'O', 'S') ||
                               aTag == TRUETYPE_TAG('G', 'S', 'U', 'B')))) {
-      return ots::TABLE_ACTION_PASSTHRU;
-    }
-    if (aTag == TRUETYPE_TAG('S', 'V', 'G', ' ')) {
-      return ots::TABLE_ACTION_PASSTHRU;
-    }
-    if (mKeepColorBitmaps && (aTag == TRUETYPE_TAG('C', 'B', 'D', 'T') ||
-                              aTag == TRUETYPE_TAG('C', 'B', 'L', 'C'))) {
       return ots::TABLE_ACTION_PASSTHRU;
     }
     auto isVariationTable = [](uint32_t aTag) -> bool {
@@ -134,6 +129,14 @@ class MOZ_STACK_CLASS gfxOTSContext : public ots::OTSContext {
     }
     if (!gfxPlatform::HasVariationFontSupport() && isVariationTable(aTag)) {
       return ots::TABLE_ACTION_DROP;
+    }
+    // Preserve SVG table if OpenType-SVG rendering is enabled.
+    if (aTag == TRUETYPE_TAG('S', 'V', 'G', ' ')) {
+      return mKeepSVG ? ots::TABLE_ACTION_PASSTHRU : ots::TABLE_ACTION_DROP;
+    }
+    if (mKeepColorBitmaps && (aTag == TRUETYPE_TAG('C', 'B', 'D', 'T') ||
+                              aTag == TRUETYPE_TAG('C', 'B', 'L', 'C'))) {
+      return ots::TABLE_ACTION_PASSTHRU;
     }
     return ots::TABLE_ACTION_DEFAULT;
   }
@@ -169,6 +172,7 @@ class MOZ_STACK_CLASS gfxOTSContext : public ots::OTSContext {
   bool mCheckOTLTables;
   bool mCheckVariationTables;
   bool mKeepColorBitmaps;
+  bool mKeepSVG;
 };
 
 #endif /* GFX_OTS_UTILS_H */
