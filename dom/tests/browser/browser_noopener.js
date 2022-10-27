@@ -1,3 +1,5 @@
+"use strict";
+
 const TESTS = [
   { id: "#test1", name: "", opener: true, newWindow: false },
   { id: "#test2", name: "", opener: false, newWindow: false },
@@ -27,11 +29,13 @@ const OPEN_NEWTAB = 3;
 
 const NOOPENER_NEWPROC_PREF = "dom.noopener.newprocess.enabled";
 
-async function doTests(private, container) {
+async function doTests(usePrivate, container) {
   let alwaysNewWindow =
     SpecialPowers.getIntPref(OPEN_NEWWINDOW_PREF) == OPEN_NEWWINDOW;
 
-  let window = await BrowserTestUtils.openNewBrowserWindow({ private });
+  let window = await BrowserTestUtils.openNewBrowserWindow({
+    private: usePrivate,
+  });
 
   let tabOpenOptions = {};
   if (container) {
@@ -39,7 +43,7 @@ async function doTests(private, container) {
   }
 
   for (let test of TESTS) {
-    const testid = `${test.id} (private=${private}, container=${container}, alwaysNewWindow=${alwaysNewWindow})`;
+    const testid = `${test.id} (private=${usePrivate}, container=${container}, alwaysNewWindow=${alwaysNewWindow})`;
     let originalTab = BrowserTestUtils.addTab(
       window.gBrowser,
       TEST_URL,
@@ -71,7 +75,7 @@ async function doTests(private, container) {
       let window = await waitFor;
       is(
         PrivateBrowsingUtils.isWindowPrivate(window),
-        private,
+        usePrivate,
         "Private status should match for " + testid
       );
       tab = window.gBrowser.selectedTab;
