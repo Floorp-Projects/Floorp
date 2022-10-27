@@ -9,6 +9,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsWindow.h"
+#include "SurfaceViewWrapperSupport.h"
 
 namespace mozilla {
 namespace widget {
@@ -81,6 +82,13 @@ bool AndroidCompositorWidget::OnResumeComposition() {
   if (!mSurface) {
     gfxCriticalError() << "OnResumeComposition called with null Surface";
     return false;
+  }
+
+  // If our Surface is in an abandoned state then we will never succesfully
+  // create an EGL Surface, and will eventually crash. Better to explicitly
+  // crash now.
+  if (SurfaceViewWrapperSupport::IsSurfaceAbandoned(mSurface)) {
+    MOZ_CRASH("Compositor resumed with abandoned Surface");
   }
 
   return true;
