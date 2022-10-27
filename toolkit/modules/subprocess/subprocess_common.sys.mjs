@@ -3,7 +3,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
 /* eslint-disable mozilla/balanced-listeners */
 
@@ -24,9 +23,8 @@ Services.scriptloader.loadSubScript(
   obj
 );
 
-const { SubprocessConstants, ArrayBuffer_transfer } = obj;
-
-var EXPORTED_SYMBOLS = ["BaseProcess", "PromiseWorker", "SubprocessConstants"];
+const { ArrayBuffer_transfer } = obj;
+export const SubprocessConstants = obj.SubprocessConstants;
 
 const BUFFER_SIZE = 32768;
 
@@ -37,7 +35,7 @@ let nextResponseId = 0;
  * resolves when the message has been received and the operation it triggers is
  * complete.
  */
-class PromiseWorker extends ChromeWorker {
+export class PromiseWorker extends ChromeWorker {
   constructor(url) {
     super(url);
 
@@ -53,7 +51,7 @@ class PromiseWorker extends ChromeWorker {
 
     this.shutdown = this.shutdown.bind(this);
     lazy.AsyncShutdown.webWorkersShutdown.addBlocker(
-      "Subprocess.jsm: Shut down IO worker",
+      "Subprocess.sys.mjs: Shut down IO worker",
       this.shutdown
     );
   }
@@ -563,7 +561,7 @@ class InputPipe extends Pipe {
 /**
  * Represents a currently-running process, and allows interaction with it.
  */
-class BaseProcess {
+export class BaseProcess {
   /**
    * @param {PromiseWorker} worker
    *        The worker instance which owns the process.
