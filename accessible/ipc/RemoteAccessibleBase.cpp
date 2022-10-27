@@ -1007,6 +1007,19 @@ RemoteAccessibleBase<Derived>::GetCachedARIAAttributes() const {
 }
 
 template <class Derived>
+nsString RemoteAccessibleBase<Derived>::GetCachedHTMLRadioNameAttribute()
+    const {
+  if (mCachedFields) {
+    if (auto maybeName =
+            mCachedFields->GetAttribute<nsString>(nsGkAtoms::radioLabel)) {
+      return *maybeName;
+    }
+  }
+
+  return nsString();
+}
+
+template <class Derived>
 uint64_t RemoteAccessibleBase<Derived>::State() {
   uint64_t state = 0;
   if (mCachedFields) {

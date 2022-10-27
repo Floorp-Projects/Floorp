@@ -634,3 +634,29 @@ uint16_t LocalAccInSameDocRule::Match(Accessible* aAcc) {
   }
   return nsIAccessibleTraversalRule::FILTER_MATCH;
 }
+
+// Radio Button Name Rule
+
+PivotRadioNameRule::PivotRadioNameRule(const nsString& aName) : mName(aName) {}
+
+uint16_t PivotRadioNameRule::Match(Accessible* aAcc) {
+  uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
+  RemoteAccessible* remote = aAcc->AsRemote();
+  if (!remote || !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // We need the cache to be able to fetch the name attribute below.
+    return result;
+  }
+
+  if (nsAccUtils::MustPrune(aAcc) || aAcc->IsOuterDoc()) {
+    result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+  }
+
+  if (remote->IsHTMLRadioButton()) {
+    nsString currName = remote->GetCachedHTMLRadioNameAttribute();
+    if (!currName.IsEmpty() && mName.Equals(currName)) {
+      result |= nsIAccessibleTraversalRule::FILTER_MATCH;
+    }
+  }
+
+  return result;
+}

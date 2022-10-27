@@ -5,6 +5,7 @@
 
 #include "HTMLFormControlAccessible.h"
 
+#include "CacheConstants.h"
 #include "DocAccessible-inl.h"
 #include "LocalAccessible-inl.h"
 #include "nsAccUtils.h"
@@ -88,6 +89,20 @@ uint64_t HTMLRadioButtonAccessible::NativeState() const {
 void HTMLRadioButtonAccessible::GetPositionAndSetSize(int32_t* aPosInSet,
                                                       int32_t* aSetSize) {
   Unused << ComputeGroupAttributes(aPosInSet, aSetSize);
+}
+
+void HTMLRadioButtonAccessible::DOMAttributeChanged(
+    int32_t aNameSpaceID, nsAtom* aAttribute, int32_t aModType,
+    const nsAttrValue* aOldValue, uint64_t aOldState) {
+  if (aAttribute == nsGkAtoms::name) {
+    // If our name changed, it's possible our MEMBER_OF relation
+    // also changed. Push a cache update for Relations.
+    mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
+  } else {
+    // Otherwise, handle this attribute change the way our parent
+    // class wants us to handle it.
+    RadioButtonAccessible::DOMAttributeChanged(aNameSpaceID, aAttribute, aModType, aOldValue, aOldState);
+  }
 }
 
 Relation HTMLRadioButtonAccessible::ComputeGroupAttributes(

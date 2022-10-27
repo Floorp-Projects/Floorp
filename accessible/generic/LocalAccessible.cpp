@@ -3618,6 +3618,21 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   }
 
   if (aCacheDomain & CacheDomain::Relations && mContent) {
+    if (IsHTMLRadioButton()) {
+      // HTML radio buttons with the same name should be grouped
+      // and returned together when their MEMBER_OF relation is
+      // requested. We cache the name attribute, if it exists, here.
+      nsString name;
+      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
+      if (!name.IsEmpty()) {
+        fields->SetAttribute(nsGkAtoms::radioLabel, std::move(name));
+      } else if (aUpdateType != CacheUpdateType::Initial) {
+        // It's possible we used to have a name and it's since been
+        // removed. Send a delete entry.
+        fields->SetAttribute(nsGkAtoms::radioLabel, DeleteEntry());
+      }
+    }
+
     for (auto const& data : kRelationTypeAtoms) {
       nsTArray<uint64_t> ids;
       nsStaticAtom* const relAtom = data.mAtom;
