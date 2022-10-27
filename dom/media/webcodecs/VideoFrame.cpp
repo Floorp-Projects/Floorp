@@ -36,6 +36,7 @@
 #include "mozilla/gfx/Swizzle.h"
 #include "nsLayoutUtils.h"
 #include "nsIPrincipal.h"
+#include "nsIURI.h"
 
 namespace mozilla::dom {
 
@@ -255,6 +256,15 @@ class NV12BufferReader final : public YUVBufferReaderBase {
  * The followings are helpers defined in
  * https://w3c.github.io/webcodecs/#videoframe-algorithms
  */
+static bool IsSameOrigin(nsIGlobalObject* aGlobal, nsIURI* aURI) {
+  MOZ_ASSERT(aGlobal);
+
+  nsIPrincipal* principal = aGlobal->PrincipalOrNull();
+  // If VideoFrames is created in worker, then it's from the same origin. In
+  // this case, principal or aURI is null. Otherwise, check the origin.
+  return !principal || !aURI || principal->IsSameOrigin(aURI);
+}
+
 static bool IsSameOrigin(nsIGlobalObject* aGlobal, const VideoFrame& aFrame) {
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aFrame.GetParentObject());
@@ -1801,7 +1811,11 @@ void VideoFrame::Close() {
 JSObject* VideoFrame::ReadStructuredClone(JSContext* aCx,
                                           nsIGlobalObject* aGlobal,
                                           JSStructuredCloneReader* aReader,
-                                          RefPtr<layers::Image>& aImage) {
+                                          const VideoFrameImageData& aData) {
+  if (!IsSameOrigin(aGlobal, aData.mURI.get())) {
+    return nullptr;
+  }
+
   VideoPixelFormat format;
   if (NS_WARN_IF(!JS_ReadBytes(aReader, &format, 1))) {
     return nullptr;
@@ -1881,7 +1895,7 @@ JSObject* VideoFrame::ReadStructuredClone(JSContext* aCx,
   }
 
   RefPtr<VideoFrame> frame = MakeAndAddRef<VideoFrame>(
-      aGlobal, aImage, format, gfx::IntSize(codedWidth, codedHeight),
+      aGlobal, aData.mImage, format, gfx::IntSize(codedWidth, codedHeight),
       gfx::IntRect(visibleX, visibleY, visibleWidth, visibleHeight),
       gfx::IntSize(displayWidth, displayHeight), std::move(duration),
       std::move(timestamp), colorSpace);
@@ -1939,11 +1953,14 @@ bool VideoFrame::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
                                : VideoTransferCharacteristics::EndGuard_);
 
   // Indexing the image and send the index to the receiver.
-  const uint32_t index = aHolder->Images().Length();
+  const uint32_t index = aHolder->VideoFrameImages().Length();
   RefPtr<layers::Image> image(mResource->mImage.get());
   // The serialization is limited to the same process scope so it's ok to
   // serialize a reference instead of a copy.
-  aHolder->Images().AppendElement(image.forget());
+  nsIPrincipal* principal = mParent->PrincipalOrNull();
+  nsCOMPtr<nsIURI> uri = principal ? principal->GetURI() : nullptr;
+  aHolder->VideoFrameImages().AppendElement(
+      VideoFrameImageData{image.forget(), uri});
 
   return !(
       NS_WARN_IF(!JS_WriteUint32Pair(aWriter, SCTAG_DOM_VIDEOFRAME, index)) ||
