@@ -15,9 +15,7 @@
  */
 
 import {Protocol} from 'devtools-protocol';
-import {assert} from './assert.js';
 import {CDPSession} from './Connection.js';
-import {Frame} from './FrameManager.js';
 import {IsolatedWorld} from './IsolatedWorld.js';
 import {JSHandle} from './JSHandle.js';
 import {EvaluateFunc, HandleFor} from './types.js';
@@ -35,8 +33,6 @@ export const EVALUATION_SCRIPT_URL = 'pptr://__puppeteer_evaluation_script__';
 const SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m;
 
 /**
- * @deprecated Do not use directly.
- *
  * Represents a context for JavaScript execution.
  *
  * @example
@@ -55,6 +51,8 @@ const SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m;
  * @remarks
  * Besides pages, execution contexts can be found in
  * {@link WebWorker | workers}.
+ *
+ * @internal
  */
 export class ExecutionContext {
   /**
@@ -86,18 +84,6 @@ export class ExecutionContext {
     this._world = world;
     this._contextId = contextPayload.id;
     this._contextName = contextPayload.name;
-  }
-
-  /**
-   * @returns The frame associated with this execution context.
-   *
-   * @remarks
-   * Not every execution context is associated with a frame. For example,
-   * {@link WebWorker | workers} have execution contexts that are not associated
-   * with frames.
-   */
-  frame(): Frame | null {
-    return this._world ? this._world.frame() : null;
   }
 
   /**
@@ -355,61 +341,24 @@ export class ExecutionContext {
       }
       return {value: arg};
     }
-
-    function rewriteError(error: Error): Protocol.Runtime.EvaluateResponse {
-      if (error.message.includes('Object reference chain is too long')) {
-        return {result: {type: 'undefined'}};
-      }
-      if (error.message.includes("Object couldn't be returned by value")) {
-        return {result: {type: 'undefined'}};
-      }
-
-      if (
-        error.message.endsWith('Cannot find context with specified id') ||
-        error.message.endsWith('Inspected target navigated or closed')
-      ) {
-        throw new Error(
-          'Execution context was destroyed, most likely because of a navigation.'
-        );
-      }
-      throw error;
-    }
-  }
-
-  /**
-   * Iterates through the JavaScript heap and finds all the objects with the
-   * given prototype.
-   *
-   * @example
-   *
-   * ```ts
-   * // Create a Map object
-   * await page.evaluate(() => (window.map = new Map()));
-   * // Get a handle to the Map object prototype
-   * const mapPrototype = await page.evaluateHandle(() => Map.prototype);
-   * // Query all map instances into an array
-   * const mapInstances = await page.queryObjects(mapPrototype);
-   * // Count amount of map objects in heap
-   * const count = await page.evaluate(maps => maps.length, mapInstances);
-   * await mapInstances.dispose();
-   * await mapPrototype.dispose();
-   * ```
-   *
-   * @param prototypeHandle - a handle to the object prototype
-   * @returns A handle to an array of objects with the given prototype.
-   */
-  async queryObjects<Prototype>(
-    prototypeHandle: JSHandle<Prototype>
-  ): Promise<HandleFor<Prototype[]>> {
-    assert(!prototypeHandle.disposed, 'Prototype JSHandle is disposed!');
-    const remoteObject = prototypeHandle.remoteObject();
-    assert(
-      remoteObject.objectId,
-      'Prototype JSHandle must not be referencing primitive value'
-    );
-    const response = await this._client.send('Runtime.queryObjects', {
-      prototypeObjectId: remoteObject.objectId,
-    });
-    return createJSHandle(this, response.objects) as HandleFor<Prototype[]>;
   }
 }
+
+const rewriteError = (error: Error): Protocol.Runtime.EvaluateResponse => {
+  if (error.message.includes('Object reference chain is too long')) {
+    return {result: {type: 'undefined'}};
+  }
+  if (error.message.includes("Object couldn't be returned by value")) {
+    return {result: {type: 'undefined'}};
+  }
+
+  if (
+    error.message.endsWith('Cannot find context with specified id') ||
+    error.message.endsWith('Inspected target navigated or closed')
+  ) {
+    throw new Error(
+      'Execution context was destroyed, most likely because of a navigation.'
+    );
+  }
+  throw error;
+};

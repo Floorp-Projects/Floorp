@@ -18,8 +18,8 @@ import expect from 'expect';
 import http from 'http';
 import os from 'os';
 import {
-  describeFailsFirefox,
   getTestState,
+  describeFailsFirefox,
   itFailsWindows,
 } from './mocha-utils.js';
 import type {Server, IncomingMessage, ServerResponse} from 'http';
@@ -125,7 +125,7 @@ describeFailsFirefox('request proxy', () => {
     const response = (await page.goto(emptyPageUrl))!;
 
     expect(response.ok()).toBe(true);
-    console.log('test',{proxiedRequestUrls, emptyPageUrl})
+
     expect(proxiedRequestUrls).toEqual([emptyPageUrl]);
   });
 

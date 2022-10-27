@@ -15,7 +15,7 @@
  */
 
 import {Protocol} from 'devtools-protocol';
-import {assert} from './assert.js';
+import {assert} from '../util/assert.js';
 import {CDPSession} from './Connection.js';
 import type {ElementHandle} from './ElementHandle.js';
 import {ExecutionContext} from './ExecutionContext.js';
@@ -78,7 +78,6 @@ export class JSHandle<T = unknown> {
    */
   [__JSHandleSymbol]?: T;
 
-  #client: CDPSession;
   #disposed = false;
   #context: ExecutionContext;
   #remoteObject: Protocol.Runtime.RemoteObject;
@@ -87,7 +86,7 @@ export class JSHandle<T = unknown> {
    * @internal
    */
   get client(): CDPSession {
-    return this.#client;
+    return this.#context._client;
   }
 
   /**
@@ -102,16 +101,14 @@ export class JSHandle<T = unknown> {
    */
   constructor(
     context: ExecutionContext,
-    client: CDPSession,
     remoteObject: Protocol.Runtime.RemoteObject
   ) {
     this.#context = context;
-    this.#client = client;
     this.#remoteObject = remoteObject;
   }
 
   /**
-   * @returns The execution context the handle belongs to.
+   * @internal
    */
   executionContext(): ExecutionContext {
     return this.#context;
@@ -196,7 +193,7 @@ export class JSHandle<T = unknown> {
     assert(this.#remoteObject.objectId);
     // We use Runtime.getProperties rather than iterative building because the
     // iterative approach might create a distorted snapshot.
-    const response = await this.#client.send('Runtime.getProperties', {
+    const response = await this.client.send('Runtime.getProperties', {
       objectId: this.#remoteObject.objectId,
       ownProperties: true,
     });
@@ -247,7 +244,7 @@ export class JSHandle<T = unknown> {
       return;
     }
     this.#disposed = true;
-    await releaseObject(this.#client, this.#remoteObject);
+    await releaseObject(this.client, this.#remoteObject);
   }
 
   /**
@@ -279,11 +276,11 @@ export class JSHandle<T = unknown> {
  */
 export interface Offset {
   /**
-   * x-offset for the clickable point relative to the top-left corder of the border box.
+   * x-offset for the clickable point relative to the top-left corner of the border box.
    */
   x: number;
   /**
-   * y-offset for the clickable point relative to the top-left corder of the border box.
+   * y-offset for the clickable point relative to the top-left corner of the border box.
    */
   y: number;
 }
@@ -307,7 +304,7 @@ export interface ClickOptions {
    */
   clickCount?: number;
   /**
-   * Offset for the clickable point relative to the top-left corder of the border box.
+   * Offset for the clickable point relative to the top-left corner of the border box.
    */
   offset?: Offset;
 }

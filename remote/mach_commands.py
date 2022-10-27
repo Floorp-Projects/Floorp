@@ -710,6 +710,12 @@ def install_puppeteer(command_context, product, ci):
 
     command = "ci" if ci else "install"
     npm(command, cwd=os.path.join(command_context.topsrcdir, puppeteer_dir), env=env)
+    npm(
+        "run",
+        "build:dev",
+        cwd=os.path.join(command_context.topsrcdir, puppeteer_dir),
+        env=env,
+    )
 
 
 def exit(code, error=None):

@@ -2,6 +2,65 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [17.1.2](https://github.com/puppeteer/puppeteer/compare/v17.1.1...v17.1.2) (2022-09-07)
+
+
+### Bug Fixes
+
+* add missing code coverage ranges that span only a single character ([#8911](https://github.com/puppeteer/puppeteer/issues/8911)) ([0c577b9](https://github.com/puppeteer/puppeteer/commit/0c577b9bf8855dc0ccb6098cd43a25c528f6d7f5))
+* add Page.getDefaultTimeout getter ([#8903](https://github.com/puppeteer/puppeteer/issues/8903)) ([3240095](https://github.com/puppeteer/puppeteer/commit/32400954c50cbddc48468ad118c3f8a47653b9d3)), closes [#8901](https://github.com/puppeteer/puppeteer/issues/8901)
+* don't detect project root for puppeteer-core ([#8907](https://github.com/puppeteer/puppeteer/issues/8907)) ([b4f5ea1](https://github.com/puppeteer/puppeteer/commit/b4f5ea1167a60c870194c70d22f5372ada5b7c4c)), closes [#8896](https://github.com/puppeteer/puppeteer/issues/8896)
+* support scale for screenshot clips ([#8908](https://github.com/puppeteer/puppeteer/issues/8908)) ([260e428](https://github.com/puppeteer/puppeteer/commit/260e4282275ab1d05c86e5643e2a02c01f269a9c)), closes [#5329](https://github.com/puppeteer/puppeteer/issues/5329)
+* work around a race in waitForFileChooser ([#8905](https://github.com/puppeteer/puppeteer/issues/8905)) ([053d960](https://github.com/puppeteer/puppeteer/commit/053d960fb593e514e7914d7da9af436afc39a12f)), closes [#6040](https://github.com/puppeteer/puppeteer/issues/6040)
+
+## [17.1.1](https://github.com/puppeteer/puppeteer/compare/v17.1.0...v17.1.1) (2022-09-05)
+
+
+### Bug Fixes
+
+* restore deferred promise debugging ([#8895](https://github.com/puppeteer/puppeteer/issues/8895)) ([7b42250](https://github.com/puppeteer/puppeteer/commit/7b42250c7bb91ac873307acda493726ffc4c54a8))
+
+## [17.1.0](https://github.com/puppeteer/puppeteer/compare/v17.0.0...v17.1.0) (2022-09-02)
+
+
+### Features
+
+* **chromium:** roll to Chromium 106.0.5249.0 (r1036745) ([#8869](https://github.com/puppeteer/puppeteer/issues/8869)) ([6e9a47a](https://github.com/puppeteer/puppeteer/commit/6e9a47a6faa06d241dec0bcf7bcdf49370517008))
+
+
+### Bug Fixes
+
+* allow getting a frame from an elementhandle ([#8875](https://github.com/puppeteer/puppeteer/issues/8875)) ([3732757](https://github.com/puppeteer/puppeteer/commit/3732757450b4363041ccbacc3b236289a156abb0))
+* typos in documentation ([#8858](https://github.com/puppeteer/puppeteer/issues/8858)) ([8d95a9b](https://github.com/puppeteer/puppeteer/commit/8d95a9bc920b98820aa655ad4eb2d8fd9b2b893a))
+* use the timeout setting in waitForFileChooser ([#8856](https://github.com/puppeteer/puppeteer/issues/8856)) ([f477b46](https://github.com/puppeteer/puppeteer/commit/f477b46f212da9206102da695697760eea539f05))
+
+## [17.0.0](https://github.com/puppeteer/puppeteer/compare/v16.2.0...v17.0.0) (2022-08-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove `root` from `WaitForSelectorOptions` (#8848)
+* internalize execution context (#8844)
+
+### Bug Fixes
+
+* allow multiple navigations to happen in LifecycleWatcher ([#8826](https://github.com/puppeteer/puppeteer/issues/8826)) ([341b669](https://github.com/puppeteer/puppeteer/commit/341b669a5e45ecbb9ffb0f28c45b520660f27ad2)), closes [#8811](https://github.com/puppeteer/puppeteer/issues/8811)
+* internalize execution context ([#8844](https://github.com/puppeteer/puppeteer/issues/8844)) ([2f33237](https://github.com/puppeteer/puppeteer/commit/2f33237d0443de77d58dca4454b0c9a1d2b57d03))
+* remove `root` from `WaitForSelectorOptions` ([#8848](https://github.com/puppeteer/puppeteer/issues/8848)) ([1155c8e](https://github.com/puppeteer/puppeteer/commit/1155c8eac85b176c3334cc3d98adfe7d943dfbe6))
+* remove deferred promise timeouts ([#8835](https://github.com/puppeteer/puppeteer/issues/8835)) ([202ffce](https://github.com/puppeteer/puppeteer/commit/202ffce0aa4f34dba35fbb8e7d740af16efee35f)), closes [#8832](https://github.com/puppeteer/puppeteer/issues/8832)
+
+## [16.2.0](https://github.com/puppeteer/puppeteer/compare/v16.1.1...v16.2.0) (2022-08-18)
+
+
+### Features
+
+* add Khmer (Cambodian) language support ([#8809](https://github.com/puppeteer/puppeteer/issues/8809)) ([34f8737](https://github.com/puppeteer/puppeteer/commit/34f873721804d57a5faf3eab8ef50340c69ed180))
+
+
+### Bug Fixes
+
+* handle service workers in extensions ([#8807](https://github.com/puppeteer/puppeteer/issues/8807)) ([2a0eefb](https://github.com/puppeteer/puppeteer/commit/2a0eefb99f0ae00dacc9e768a253308c0d18a4c3)), closes [#8800](https://github.com/puppeteer/puppeteer/issues/8800)
+
 ## [16.1.1](https://github.com/puppeteer/puppeteer/compare/v16.1.0...v16.1.1) (2022-08-16)
 
 

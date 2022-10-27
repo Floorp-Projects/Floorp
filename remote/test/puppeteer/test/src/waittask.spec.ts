@@ -15,7 +15,7 @@
  */
 
 import expect from 'expect';
-import {isErrorLike} from '../../lib/cjs/puppeteer/common/util.js';
+import {isErrorLike} from '../../lib/cjs/puppeteer/util/ErrorLike.js';
 import {
   getTestState,
   setupTestBrowserHooks,
@@ -476,7 +476,7 @@ describe('waittask specs', function () {
         await otherFrame.evaluate(addElement, 'div');
         await page.evaluate(addElement, 'div');
         const eHandle = await watchdog;
-        expect(eHandle?.executionContext().frame()).toBe(page.mainFrame());
+        expect(eHandle?.frame).toBe(page.mainFrame());
       }
     );
 
@@ -491,7 +491,7 @@ describe('waittask specs', function () {
       await frame1.evaluate(addElement, 'div');
       await frame2.evaluate(addElement, 'div');
       const eHandle = await waitForSelectorPromise;
-      expect(eHandle?.executionContext().frame()).toBe(frame2);
+      expect(eHandle?.frame).toBe(frame2);
     });
 
     it('should throw when frame is detached', async () => {
@@ -748,7 +748,7 @@ describe('waittask specs', function () {
       await frame1.evaluate(addElement, 'div');
       await frame2.evaluate(addElement, 'div');
       const eHandle = await waitForXPathPromise;
-      expect(eHandle?.executionContext().frame()).toBe(frame2);
+      expect(eHandle?.frame).toBe(frame2);
     });
     it('should throw when frame is detached', async () => {
       const {page, server} = getTestState();

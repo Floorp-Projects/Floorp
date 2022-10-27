@@ -51,6 +51,22 @@ describe('Screenshots', function () {
       });
       expect(screenshot).toBeGolden('screenshot-clip-rect.png');
     });
+    it('should use scale for clip', async () => {
+      const {page, server} = getTestState();
+
+      await page.setViewport({width: 500, height: 500});
+      await page.goto(server.PREFIX + '/grid.html');
+      const screenshot = await page.screenshot({
+        clip: {
+          x: 50,
+          y: 100,
+          width: 150,
+          height: 100,
+          scale: 2,
+        },
+      });
+      expect(screenshot).toBeGolden('screenshot-clip-rect-scale2.png');
+    });
     it(
       'should get screenshot bigger than the viewport',
       async () => {

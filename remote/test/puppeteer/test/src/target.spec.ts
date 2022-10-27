@@ -99,13 +99,10 @@ describe('Target', function () {
         return window.open(url);
       }, server.CROSS_PROCESS_PREFIX + '/empty.html'),
     ]);
-
     expect(otherPage!.url()).toEqual(
       server.CROSS_PROCESS_PREFIX + '/empty.html'
     );
     expect(page).not.toEqual(otherPage);
-
-    await otherPage!.close();
   });
   it(
     'should report when a new page is created and closed',

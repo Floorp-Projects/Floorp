@@ -16,7 +16,7 @@
 
 import expect from 'expect';
 import {CDPSession} from '../../lib/cjs/puppeteer/common/Connection.js';
-import {Frame} from '../../lib/cjs/puppeteer/common/FrameManager.js';
+import {Frame} from '../../lib/cjs/puppeteer/common/Frame.js';
 import {
   getTestState,
   setupTestBrowserHooks,
@@ -41,8 +41,8 @@ describe('Frame specs', function () {
       expect(context1).toBeTruthy();
       expect(context2).toBeTruthy();
       expect(context1 !== context2).toBeTruthy();
-      expect(context1.frame()).toBe(frame1);
-      expect(context2.frame()).toBe(frame2);
+      expect(context1._world?.frame()).toBe(frame1);
+      expect(context2._world?.frame()).toBe(frame2);
 
       await Promise.all([
         context1.evaluate(() => {
