@@ -40,6 +40,7 @@ class OffscreenCanvas;
 class OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer;
 class Promise;
 class SVGImageElement;
+class StructuredCloneHolder;
 class VideoColorSpace;
 class VideoFrame;
 enum class VideoPixelFormat : uint8_t;
@@ -137,12 +138,12 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   void Close();
 
   // [Serializable] implementations: {Read, Write}StructuredClone
-  static already_AddRefed<VideoFrame> ReadStructuredClone(
-      JSContext* aCx, nsIGlobalObject* aGlobal,
-      JSStructuredCloneReader* aReader);
+  static JSObject* ReadStructuredClone(JSContext* aCx, nsIGlobalObject* aGlobal,
+                                       JSStructuredCloneReader* aReader,
+                                       RefPtr<layers::Image>& aImage);
 
-  bool WriteStructuredClone(JSContext* aCx,
-                            JSStructuredCloneWriter* aWriter) const;
+  bool WriteStructuredClone(JSStructuredCloneWriter* aWriter,
+                            StructuredCloneHolder* aHolder) const;
 
  public:
   // A VideoPixelFormat wrapper providing utilities for VideoFrame.
