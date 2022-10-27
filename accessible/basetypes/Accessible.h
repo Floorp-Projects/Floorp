@@ -501,6 +501,8 @@ class Accessible {
 
   bool IsHTMLOptGroup() const { return mType == eHTMLOptGroupType; }
 
+  bool IsHTMLRadioButton() const { return mType == eHTMLRadioButtonType; }
+
   bool IsHTMLTable() const { return mType == eHTMLTableType; }
   bool IsHTMLTableRow() const { return mType == eHTMLTableRowType; }
 
