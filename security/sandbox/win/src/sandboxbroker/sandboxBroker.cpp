@@ -566,6 +566,26 @@ static bool CanUseJob() {
   return false;
 }
 
+// Returns a dynamic code mitigation flag that is compatible with system
+// libraries MSAudDecMFT.dll and msmpeg2vdec.dll.
+//
+// Use the result with SetDelayedProcessMitigations. Using non-delayed ACG
+// results in incompatibility with third-party antivirus software, the Windows
+// internal Shim Engine mechanism, parts of our own DLL blocklist code, and
+// AddressSanitizer initialization code. See bug 1783223.
+static sandbox::MitigationFlags DynamicCodeFlagForSystemMediaLibraries() {
+  static auto dynamicCodeFlag = []() {
+#ifdef _M_X64
+    if (IsWin10CreatorsUpdateOrLater()) {
+      return sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
+    }
+#endif  // _M_X64
+
+    return sandbox::MitigationFlags{};
+  }();
+  return dynamicCodeFlag;
+}
+
 static sandbox::ResultCode SetJobLevel(sandbox::TargetPolicy* aPolicy,
                                        sandbox::JobLevel aJobLevel,
                                        uint32_t aUiExceptions) {
@@ -1359,26 +1379,18 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
 
   mitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
                 sandbox::MITIGATION_DLL_SEARCH_ORDER;
-  // TODO: Bug 1766432 - Investigate why this crashes in MSAudDecMFT.dll during
-  // Utility AudioDecoder process startup only on 32-bits systems.
-  //
-  // Investigate also why it crashes (no idea where exactly) for MinGW64 builds
-  // on 32 and 64 archs
-  //
-  // TODO: Bug 1773005 - AAC seems to not work on Windows < 1703
-  if (aSandbox != mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF
+
+  if (aSandbox == mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF) {
+    // The audio decoder process depends on MsAudDecMFT.dll.
+    mitigations |= DynamicCodeFlagForSystemMediaLibraries();
+  }
 #ifdef MOZ_WMF_MEDIA_ENGINE
-      && aSandbox != mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM
-#endif
-  ) {
+  // No ACG on CDM utility processes.
+  else if (aSandbox == mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+  }
+#endif  // MOZ_WMF_MEDIA_ENGINE
+  else {
     mitigations |= sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
-  } else {
-    if (IsWin10CreatorsUpdateOrLater() &&
-        aSandbox == mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF) {
-#if defined(_M_X64)
-      mitigations |= sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
-#endif  // defined(_M_X64)
-    }
   }
 
   if (exceptionModules.isNothing()) {
