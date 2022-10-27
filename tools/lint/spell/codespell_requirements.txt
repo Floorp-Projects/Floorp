@@ -4,7 +4,7 @@
 #
 #    pip-compile --generate-hashes tools/lint/spell/codespell_requirements.in
 #
-codespell==2.2.1 \
-    --hash=sha256:0c53a70f466952706407383d87142a78f319a0e18602802c4aadd3d93158bfc6 \
-    --hash=sha256:569b67e5e5c3ade02a1e23f6bbc56c64b608a3ab48ddd943ece0a03e6c346ed1
+codespell==2.2.2 \
+    --hash=sha256:87dfcd9bdc9b3cb8b067b37f0af22044d7a84e28174adfc8eaa203056b7f9ecc \
+    --hash=sha256:c4d00c02b5a2a55661f00d5b4b3b5a710fa803ced9a9d7e45438268b099c319c
     # via -r tools/lint/spell/codespell_requirements.in
