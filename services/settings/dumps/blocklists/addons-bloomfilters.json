@@ -3,6 +3,74 @@
     {
       "stash": {
         "blocked": [
+          "{05b317e7-448b-43e7-8357-a0edb28e8c39}:0.0.118"
+        ],
+        "unblocked": []
+      },
+      "schema": 1666793397412,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1666809307591,
+      "id": "fb4382c7-8c91-4ce8-b8b2-859786a7c761",
+      "last_modified": 1666809440582
+    },
+    {
+      "stash": {
+        "blocked": [
+          "sp@GetEmailAccessHere:1.2.0",
+          "sp@QuickForms:1.0.0",
+          "sp@GetEmailAccessHere:1.0.1",
+          "sp@MapsAndDirectionsPlus:2.1.0",
+          "sp@MapsAndDirectionsPlus:2.0.1",
+          "sp@QuickForms:1.1.2",
+          "sp@QuickForms:1.1.3",
+          "sp@MapsAndDirectionsPlus:2021.11.24",
+          "sp@MapsAndDrivingDirections:1.0.2",
+          "sp@MapsAndDirectionsPlus:1.0.0",
+          "sp@GetEmailAccessHere:1.1.2",
+          "sp@GetEmailAccessHere:1.0.0",
+          "sp@QuickForms:1.1.0",
+          "sp@MapsAndDirectionsPlus:2.0.0",
+          "sp@GetEmailAccessHere:1.2.1",
+          "sp@MapsAndDrivingDirections:1.0.0",
+          "webext@AccessTvStreaming:1.0.2",
+          "sp@QuickForms:1.0.1",
+          "sp@GamesPlayer:2021.11.24",
+          "sp@QuickForms:1.2.0",
+          "sp@QuickForms:2021.11.24",
+          "webext@AccessTvStreaming:2021.11.24",
+          "sp@QuickForms:1.1.1",
+          "sp@GetEmailAccessHere:2021.11.24",
+          "webext@AccessTvStreaming:1.0.1",
+          "sp@GamesPlayer:1.0.0",
+          "webext@AccessTvStreaming:1.0.0",
+          "sp@QuickForms:1.1.4",
+          "sp@GetEmailAccessHere:1.0.2",
+          "sp@MapsAndDrivingDirections:1.0.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1666701441214,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1666787707469,
+      "id": "8e3e4801-b66f-46d0-8d46-d49fd0a2faaa",
+      "last_modified": 1666787843187
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{d8d619e8-bca3-464f-803f-4459ada243d5}:0.2.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1666628238245,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1666701307307,
+      "id": "0a29fcc5-1255-4edb-83be-a1097e113532",
+      "last_modified": 1666701441079
+    },
+    {
+      "stash": {
+        "blocked": [
           "{13136230-8576-4f1d-be14-e707b0c6f39f}:2.0.0",
           "{13136230-8576-4f1d-be14-e707b0c6f39f}:5.3.0"
         ],
@@ -2309,5 +2377,5 @@
       "last_modified": 1656333551168
     }
   ],
-  "timestamp": 1666204638208
+  "timestamp": 1666809440582
 }
