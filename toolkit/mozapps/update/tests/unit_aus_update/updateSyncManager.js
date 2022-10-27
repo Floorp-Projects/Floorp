@@ -7,8 +7,8 @@
 // b) starting a second copy of the same binary and making sure we can tell we
 //    are no longer the only one that's opened it.
 
-const { Subprocess } = ChromeUtils.import(
-  "resource://gre/modules/Subprocess.jsm"
+const { Subprocess } = ChromeUtils.importESModule(
+  "resource://gre/modules/Subprocess.sys.mjs"
 );
 
 // Save off the real GRE directory and binary path before we register our

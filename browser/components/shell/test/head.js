@@ -1,7 +1,7 @@
 "use strict";
 
-const { Subprocess } = ChromeUtils.import(
-  "resource://gre/modules/Subprocess.jsm"
+const { Subprocess } = ChromeUtils.importESModule(
+  "resource://gre/modules/Subprocess.sys.mjs"
 );
 
 const TEMP_DIR = Services.dirsvc.get("TmpD", Ci.nsIFile).path;

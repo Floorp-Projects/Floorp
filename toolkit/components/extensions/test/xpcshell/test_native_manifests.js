@@ -10,8 +10,8 @@ const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
 const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
-const { Subprocess } = ChromeUtils.import(
-  "resource://gre/modules/Subprocess.jsm"
+const { Subprocess } = ChromeUtils.importESModule(
+  "resource://gre/modules/Subprocess.sys.mjs"
 );
 const { NativeApp } = ChromeUtils.import(
   "resource://gre/modules/NativeMessaging.jsm"
@@ -27,17 +27,13 @@ if (AppConstants.platform == "win") {
   registerCleanupFunction(() => {
     registry.shutdown();
   });
-  ChromeUtils.defineModuleGetter(
-    this,
-    "SubprocessImpl",
-    "resource://gre/modules/subprocess/subprocess_win.jsm"
-  );
+  ChromeUtils.defineESModuleGetters(this, {
+    SubprocessImpl: "resource://gre/modules/subprocess/subprocess_win.sys.mjs",
+  });
 } else {
-  ChromeUtils.defineModuleGetter(
-    this,
-    "SubprocessImpl",
-    "resource://gre/modules/subprocess/subprocess_unix.jsm"
-  );
+  ChromeUtils.defineESModuleGetters(this, {
+    SubprocessImpl: "resource://gre/modules/subprocess/subprocess_unix.sys.mjs",
+  });
 }
 
 const REGPATH = "Software\\Mozilla\\NativeMessagingHosts";
