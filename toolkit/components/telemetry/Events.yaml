@@ -704,7 +704,8 @@ navigation:
   search:
     objects: ["about_home", "about_newtab", "contextmenu", "oneoff",
               "suggestion", "alias", "enter", "searchbar", "urlbar",
-              "urlbar_handoff", "urlbar_searchmode", "webextension"]
+              "urlbar_handoff", "urlbar_persisted", "urlbar_searchmode",
+              "webextension"]
     release_channel_collection: opt-out
     products:
       - "firefox"

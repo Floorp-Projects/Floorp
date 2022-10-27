@@ -14,7 +14,7 @@ add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.widget.inNavBar", false],
-      ["browser.urlbar.showSearchTerms", true],
+      ["browser.urlbar.showSearchTerms.shouldShow", true],
     ],
   });
 

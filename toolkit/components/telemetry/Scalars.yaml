@@ -506,6 +506,24 @@ browser.engagement.navigation:
     record_in_processes:
       - 'main'
 
+  urlbar_persisted:
+    bug_numbers:
+      - 1779471
+    description: >
+      The count of URI loads triggered in a subsession from the urlbar after the
+      search term was shown in the urlbar, broken down by the originating action.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
   urlbar_searchmode:
     bug_numbers:
       - 1654680
@@ -5135,6 +5153,23 @@ browser.search.content:
     record_in_processes:
       - 'main'
 
+  urlbar_persisted:
+    bug_numbers:
+      - 1779471
+    description: >
+      Records counts for in-content searches where the search was most likely started from the urlbar after the search term was shown in the urlbar. The key format is <provider>:[tagged|tagged-follow-on|organic]:[code|none]
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
   urlbar_searchmode:
     bug_numbers:
       - 1089670
@@ -5373,6 +5408,23 @@ browser.search.withads:
     record_in_processes:
       - 'main'
 
+  urlbar_persisted:
+    bug_numbers:
+      - 1779471
+    description: >
+      Records counts of SERP pages with adverts displayed where the search was started from the urlbar after the search term was shown in the urlbar. The key format is ‘<provider>:<tagged|organic>’
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
   urlbar_searchmode:
     bug_numbers:
       - 1664847
@@ -5567,6 +5619,23 @@ browser.search.adclicks:
     description: >
       The count URI loads triggered in a subsession from the urlbar via handoff,
       broken down by the originating action.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  urlbar_persisted:
+    bug_numbers:
+      - 1779471
+    description: >
+      Records clicks of adverts on SERP pages where the search was started from the urlbar after the search term was shown in the urlbar. The key format is ‘<provider>:<tagged|organic>’
     expires: never
     kind: uint
     keyed: true

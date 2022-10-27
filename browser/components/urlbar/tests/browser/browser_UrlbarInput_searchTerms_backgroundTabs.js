@@ -12,7 +12,7 @@ const SEARCH_STRING = "chocolate cake";
 
 add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.showSearchTerms", true]],
+    set: [["browser.urlbar.showSearchTerms.shouldShow", true]],
   });
 
   await SearchTestUtils.installSearchExtension({
@@ -46,6 +46,11 @@ function assertSearchStringIsInUrlbar(searchString) {
     gURLBar.getAttribute("pageproxystate"),
     "invalid",
     "Pageproxystate should be invalid"
+  );
+  Assert.equal(
+    gBrowser.selectedBrowser.showingSearchTerms,
+    true,
+    "showingSearchTerms should be true"
   );
 }
 

@@ -11,10 +11,7 @@ const SEARCH_STRING = "chocolate cake";
 
 add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.search.widget.inNavBar", false],
-      ["browser.urlbar.showSearchTerms", true],
-    ],
+    set: [["browser.urlbar.showSearchTerms.shouldShow", true]],
   });
 
   await SearchTestUtils.installSearchExtension({
@@ -78,6 +75,15 @@ add_task(async function non_default_search() {
     "valid",
     "Pageproxystate should be valid"
   );
-
+  Assert.equal(
+    gBrowser.userTypedValue,
+    null,
+    "There should not be a userTypedValue for a search on a non-default search engine"
+  );
+  Assert.equal(
+    gBrowser.selectedBrowser.showingSearchTerms,
+    false,
+    "showingSearchTerms should be false"
+  );
   BrowserTestUtils.removeTab(tab);
 });

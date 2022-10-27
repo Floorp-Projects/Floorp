@@ -69,6 +69,11 @@ browser.engagement.navigation.*
 
     - ``urlbar``  Except search mode.
     - ``urlbar_handoff`` Used when searching from about:newtab.
+    - ``urlbar_persisted`` When `browser.urlbar.showSearchTerms.shouldShow` is `true`, and the
+      search bar is disabled, and a user conducts a search with their default search engine, the
+      terms used for the search will persist in the urlbar. When a user does a search with the
+      default search engine from the urlbar, and then from the context of the SERP, does
+      another search using the urlbar with their default search engine, this SAP will be used.
     - ``urlbar_searchmode``  Used when the Urlbar is in search mode.
     - ``searchbar``
     - ``about_home``
@@ -123,6 +128,11 @@ browser.search.content.*
 
   - ``urlbar``  Except search mode.
   - ``urlbar_handoff`` Used when searching from about:newtab.
+  - ``urlbar_persisted`` When `browser.urlbar.showSearchTerms.shouldShow` is `true`, and the
+    search bar is disabled, and a user conducts a search with their default search engine, the
+    terms used for the search will persist in the urlbar. When a user does a search with the
+    default search engine from the urlbar, and then from the context of the SERP, does
+    another search using the urlbar with their default search engine, this SAP will be used.
   - ``urlbar_searchmode``  Used when the Urlbar is in search mode.
   - ``searchbar``
   - ``about_home``
