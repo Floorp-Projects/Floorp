@@ -270,7 +270,7 @@ interface nsISelectionController : nsISelectionDisplay
   /** ScrollLine will scroll line up or down dependent on the boolean
    *  @param aForward scroll forward or backwards in selection
    */
-	  void scrollLine(in boolean forward);
+    void scrollLine(in boolean forward);
 
   /** ScrollCharacter will scroll right or left dependent on the boolean
    *  @param aRight if true will scroll right. if not will scroll left.

@@ -11,14 +11,14 @@ interface nsIDOMXULCommandDispatcher;
 [scriptable, uuid(f36e3ec1-9197-4ad8-8d4c-d3b1927fd6df)]
 interface nsIControllers : nsISupports
 {
-	nsIController getControllerForCommand(in string command);
+    nsIController getControllerForCommand(in string command);
 
-	void insertControllerAt(in unsigned long index, in nsIController controller);
-	nsIController removeControllerAt(in unsigned long index);
-	nsIController getControllerAt(in unsigned long index);
+    void insertControllerAt(in unsigned long index, in nsIController controller);
+    nsIController removeControllerAt(in unsigned long index);
+    nsIController getControllerAt(in unsigned long index);
 
     void appendController(in nsIController controller);
-	void removeController(in nsIController controller);
+    void removeController(in nsIController controller);
 
     /*
         Return an ID for this controller which is unique to this
@@ -30,5 +30,5 @@ interface nsIControllers : nsISupports
     */
     nsIController getControllerById(in unsigned long controllerID);
 
-	unsigned long getControllerCount();
+    unsigned long getControllerCount();
 };

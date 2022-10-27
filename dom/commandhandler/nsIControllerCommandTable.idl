@@ -57,7 +57,7 @@ interface nsIControllerCommandTable : nsISupports
    * @param aCommandName    the name of the command to test
    * @param aCommandRefCon  the command context data
    */
-	boolean isCommandEnabled(in string aCommandName, in nsISupports aCommandRefCon);
+  boolean isCommandEnabled(in string aCommandName, in nsISupports aCommandRefCon);
 
   /**
    * Tell the command to update its state (if it is a state updating command)
@@ -65,7 +65,7 @@ interface nsIControllerCommandTable : nsISupports
    * @param aCommandName    the name of the command to update
    * @param aCommandRefCon  the command context data
    */
-	void  updateCommandState(in string aCommandName, in nsISupports aCommandRefCon);
+  void  updateCommandState(in string aCommandName, in nsISupports aCommandRefCon);
 
   /**
    * Get whether the named command is supported.
@@ -73,7 +73,7 @@ interface nsIControllerCommandTable : nsISupports
    * @param aCommandName    the name of the command to test
    * @param aCommandRefCon  the command context data
    */
-	boolean supportsCommand(in string aCommandName, in nsISupports aCommandRefCon);
+  boolean supportsCommand(in string aCommandName, in nsISupports aCommandRefCon);
 
   /**
    * Execute the named command.
@@ -82,12 +82,12 @@ interface nsIControllerCommandTable : nsISupports
    * @param aCommandRefCon  the command context data
    */
   [can_run_script]
-	void    doCommand(in string aCommandName, in nsISupports aCommandRefCon);
+  void    doCommand(in string aCommandName, in nsISupports aCommandRefCon);
 
   [can_run_script]
-	void    doCommandParams(in string aCommandName, in nsICommandParams aParam, in nsISupports aCommandRefCon);
+  void    doCommandParams(in string aCommandName, in nsICommandParams aParam, in nsISupports aCommandRefCon);
 
-	void    getCommandState(in string aCommandName, in nsICommandParams aParam, in nsISupports aCommandRefCon);
+  void    getCommandState(in string aCommandName, in nsICommandParams aParam, in nsISupports aCommandRefCon);
 
   Array<ACString> getSupportedCommands();
 

@@ -137,7 +137,7 @@ enum ContentScriptRunAt {
 interface WebExtensionContentScript : MozDocumentMatcher {
   [Throws]
   constructor(WebExtensionPolicy extension,
-	      WebExtensionContentScriptInit options);
+              WebExtensionContentScriptInit options);
 
   /**
    * The earliest point in the load cycle at which this script should run. For
