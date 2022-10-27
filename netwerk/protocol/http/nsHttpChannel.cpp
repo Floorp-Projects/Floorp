@@ -1527,10 +1527,8 @@ nsresult nsHttpChannel::CallOnStartRequest() {
   // are the checks for Opaque Response Blocking to ensure that we block as many
   // cross-origin responses with CORS headers as possible that are not either
   // Javascript or media to avoid leaking their contents through side channels.
-  if (!EnsureOpaqueResponseIsAllowed()) {
-    // XXXtt: Return an error code or make the response body null.
-    // We silence the error result now because we only want to get how many
-    // response will get allowed or blocked by ORB.
+  if (EnsureOpaqueResponseIsAllowed() == OpaqueResponseAllowed::No) {
+    return NS_ERROR_FAILURE;
   }
 
   // Allow consumers to override our content type
@@ -1585,10 +1583,9 @@ nsresult nsHttpChannel::CallOnStartRequest() {
   // EnsureOpaqueResponseIsAllowedAfterSniff immediately.
   if (!unknownDecoderStarted) {
     auto isAllowedOrErr = EnsureOpaqueResponseIsAllowedAfterSniff();
-    if (isAllowedOrErr.isErr() || !isAllowedOrErr.inspect()) {
-      // XXXtt: Return an error code or make the response body null.
-      // We silence the error result now because we only want to get how many
-      // response will get allowed or blocked by ORB.
+    if (isAllowedOrErr.isErr() ||
+        isAllowedOrErr.inspect() == OpaqueResponseAllowed::No) {
+      return NS_ERROR_FAILURE;
     }
   }
 
@@ -7823,15 +7820,6 @@ nsHttpChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
     nsresult rv =
         mListener->OnDataAvailable(this, input, mLogicalOffset, count);
     if (NS_SUCCEEDED(rv)) {
-      auto isAllowedOrErr = EnsureOpaqueResponseIsAllowedAfterSniff();
-      if (isAllowedOrErr.isErr() || !isAllowedOrErr.inspect()) {
-        // XXXechuang:
-        // Return an error code or make the response body null here is too late
-        // some content data had already transferred to children processes.
-        // Currently, it is okay for collecting the correct telemetry data for
-        // further steps. But we should make sure all blocking should be done
-        // when implementing the real blocking.
-      }
       // by contract mListener must read all of "count" bytes, but
       // nsInputStreamPump is tolerant to seekable streams that violate that
       // and it will redeliver incompletely read data. So we need to do
@@ -9524,24 +9512,25 @@ void nsHttpChannel::DisableIsOpaqueResponseAllowedAfterSniffCheck(
         MOZ_ASSERT(isInitialRequest);
 
         if (!isInitialRequest) {
-          mBlockOpaqueResponseAfterSniff = true;
+          BlockOpaqueResponseAfterSniff();
           return;
         }
 
         if (mResponseHead->Status() != 200 && mResponseHead->Status() != 206) {
-          mBlockOpaqueResponseAfterSniff = true;
+          BlockOpaqueResponseAfterSniff();
           return;
         }
 
         if (mResponseHead->Status() == 206 &&
             !IsFirstPartialResponse(*mResponseHead)) {
-          mBlockOpaqueResponseAfterSniff = true;
+          BlockOpaqueResponseAfterSniff();
           return;
         }
       }
     }
 
     mCheckIsOpaqueResponseAllowedAfterSniff = false;
+    AllowOpaqueResponseAfterSniff();
   }
 }
 
