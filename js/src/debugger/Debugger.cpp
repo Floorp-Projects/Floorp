@@ -57,6 +57,7 @@
 #include "jit/BaselineJIT.h"           // for FinishDiscardBaselineScript
 #include "jit/Invalidation.h"         // for RecompileInfoVector
 #include "jit/JitContext.h"           // for JitContext
+#include "jit/JitOptions.h"           // for fuzzingSafe
 #include "jit/JitScript.h"            // for JitScript
 #include "jit/JSJitFrameIter.h"       // for InlineFrameIterator
 #include "jit/RematerializedFrame.h"  // for RematerializedFrame
@@ -5955,6 +5956,13 @@ bool Debugger::CallData::findObjects() {
 
   if (!query.findObjects()) {
     return false;
+  }
+
+  // Returning internal objects (such as self-hosting intrinsics) to JS is not
+  // fuzzing-safe. We still want to call parseQuery/findObjects when fuzzing so
+  // just clear the Vector here.
+  if (fuzzingSafe) {
+    query.objects.clear();
   }
 
   size_t length = query.objects.length();
