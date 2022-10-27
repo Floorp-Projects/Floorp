@@ -797,13 +797,15 @@ nsresult Connection::initialize(nsIFileURL* aFileURL,
   nsAutoCString query;
   rv = aFileURL->GetQuery(query);
   NS_ENSURE_SUCCESS(rv, rv);
+
   const char* const vfs =
-      URLParams::Parse(query,
-                       [](const nsAString& aName, const nsAString& aValue) {
-                         return aName.EqualsLiteral("key");
-                       })
+      !URLParams::Parse(query,
+                        [](const nsAString& aName, const nsAString& aValue) {
+                          return !aName.EqualsLiteral("key");
+                        })
           ? GetObfuscatingVFSName()
           : GetTelemetryVFSName(exclusive);
+
   int srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, vfs);
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
