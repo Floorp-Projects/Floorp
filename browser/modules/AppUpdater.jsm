@@ -443,7 +443,12 @@ class AppUpdater {
   // may not be, and we don't have a good way to tell the difference from here,
   // so we err to the side of less confusion for unmanaged users.
   get #updateDisabledByPackage() {
-    return Services.sysinfo.getProperty("isPackagedApp");
+    try {
+      return Services.sysinfo.getProperty("hasWinPackageId");
+    } catch (_ex) {
+      // The hasWinPackageId property doesn't exist; assume it would be false.
+    }
+    return false;
   }
 
   // true when updating in background is enabled.
