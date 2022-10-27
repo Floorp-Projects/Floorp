@@ -13,6 +13,7 @@
 #include "builtin/Promise.h"       // js::AsyncFunctionAwait
 #include "builtin/RegExp.h"
 #include "builtin/String.h"
+#include "builtin/TestingFunctions.h"
 #include "jit/BaselineIC.h"
 #include "jit/Ion.h"
 #include "jit/IonIC.h"
@@ -31,6 +32,14 @@
 
 namespace js {
 namespace jit {
+
+#ifdef FUZZING_JS_FUZZILLI
+#  define VMFUNCTION_FUZZILLI_LIST(_)             \
+    _(FuzzilliHashObject, js::FuzzilliHashObject) \
+    _(FuzzilliHashObjectInl, js::FuzzilliHashObjectInl)
+#else
+#  define VMFUNCTION_FUZZILLI_LIST(_)
+#endif
 
 // List of all VM functions to be used with callVM. Each entry stores the name
 // (must be unique, used for the VMFunctionId enum and profiling) and the C++
@@ -139,6 +148,7 @@ namespace jit {
   _(FinishBoundFunctionInit, JSFunction::finishBoundFunctionInit)              \
   _(FreshenLexicalEnv, js::jit::FreshenLexicalEnv)                             \
   _(FunWithProtoOperation, js::FunWithProtoOperation)                          \
+  VMFUNCTION_FUZZILLI_LIST(_)                                                  \
   _(GeneratorThrowOrReturn, js::jit::GeneratorThrowOrReturn)                   \
   _(GetAndClearException, js::GetAndClearException)                            \
   _(GetFirstDollarIndexRaw, js::GetFirstDollarIndexRaw)                        \

@@ -5355,6 +5355,21 @@ bool WarpCacheIRTranspiler::emitCloseIterScriptedResult(ObjOperandId iterId,
   return true;
 }
 
+#ifdef FUZZING_JS_FUZZILLI
+bool WarpCacheIRTranspiler::emitFuzzilliHashResult(ValOperandId valId) {
+  MDefinition* input = getOperand(valId);
+
+  auto* hash = MFuzzilliHash::New(alloc(), input);
+  add(hash);
+
+  auto* store = MFuzzilliHashStore::New(alloc(), hash);
+  addEffectful(store);
+  pushResult(constant(UndefinedValue()));
+
+  return resumeAfter(store);
+}
+#endif
+
 static void MaybeSetImplicitlyUsed(uint32_t numInstructionIdsBefore,
                                    MDefinition* input) {
   // When building MIR from bytecode, for each MDefinition that's an operand to

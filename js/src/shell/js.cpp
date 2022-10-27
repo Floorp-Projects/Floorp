@@ -14,6 +14,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/RandomNum.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
@@ -1676,6 +1677,10 @@ static void ReportCantOpenErrorUnknownEncoding(JSContext* cx,
       return false;
     }
   }
+#ifdef FUZZING_JS_FUZZILLI
+  fprintf(stderr, "executionHash is 0x%x with %d inputs\n", cx->executionHash,
+          cx->executionHashInputs);
+#endif
   return true;
 }
 
@@ -3510,6 +3515,44 @@ static bool DummyPreserveWrapperCallback(JSContext* cx, HandleObject obj) {
 static bool DummyHasReleasedWrapperCallback(HandleObject obj) { return true; }
 
 #ifdef FUZZING_JS_FUZZILLI
+static bool fuzzilli_hash(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+
+  if (argc != 1) {
+    return true;
+  }
+  uint32_t hash;
+  JS::Handle<JS::Value> v = args.get(0);
+  if (v.isInt32()) {
+    int32_t i = v.toInt32();
+    hash = FuzzilliHashDouble((double)i);
+  } else if (v.isDouble()) {
+    double d = v.toDouble();
+    d = JS::CanonicalizeNaN(d);
+    hash = FuzzilliHashDouble(d);
+  } else if (v.isNull()) {
+    hash = FuzzilliHashDouble(1.0);
+  } else if (v.isUndefined()) {
+    hash = FuzzilliHashDouble(2.0);
+  } else if (v.isBoolean()) {
+    hash = FuzzilliHashDouble(3.0 + v.toBoolean());
+  } else if (v.isBigInt()) {
+    JS::BigInt* bigInt = v.toBigInt();
+    hash = FuzzilliHashBigInt(bigInt);
+  } else if (v.isObject()) {
+    JSObject& obj = v.toObject();
+    FuzzilliHashObject(cx, &obj);
+    return true;
+  } else {
+    hash = 0;
+  }
+
+  cx->executionHashInputs += 1;
+  cx->executionHash = mozilla::RotateLeft(cx->executionHash + hash, 1);
+  return true;
+}
+
 // We have to assume that the fuzzer will be able to call this function e.g. by
 // enumerating the properties of the global object and eval'ing them. As such
 // this function is implemented in a way that requires passing some magic value
@@ -3571,6 +3614,12 @@ static bool Fuzzilli(JSContext* cx, unsigned argc, Value* vp) {
     }
     fprintf(fzliout, "%s\n", bytes.get());
     fflush(fzliout);
+  } else if (StringEqualsAscii(operation, "FUZZILLI_RANDOM")) {
+    // This is an entropy source which can be called during fuzzing.
+    // Its currently used to tests whether Fuzzilli detects non-deterministic
+    // behavior.
+    args.rval().setInt32(static_cast<uint32_t>(mozilla::RandomUint64OrDie()));
+    return true;
   }
 
   args.rval().setUndefined();
@@ -9338,6 +9387,22 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 // clang-format on
 
 // clang-format off
+#ifdef FUZZING_JS_FUZZILLI
+static const JSFunctionSpec shell_function_fuzzilli_hash[] = {
+    JS_INLINABLE_FN("fuzzilli_hash", fuzzilli_hash, 1, 0, FuzzilliHash),
+    JS_FS_END
+};
+#endif
+// clang-format on
+
+// clang-format off
+static const JSFunctionSpecWithHelp diff_testing_unsafe_functions[] = {
+
+    JS_FS_HELP_END
+};
+// clang-format on
+
+// clang-format off
 static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
     JS_FN_HELP("getSelfHostedValue", GetSelfHostedValue, 1, 0,
 "getSelfHostedValue()",
@@ -10229,6 +10294,11 @@ static JSObject* NewGlobalObject(JSContext* cx, JS::RealmOptions& options,
         !JS_DefineProfilingFunctions(cx, glob)) {
       return nullptr;
     }
+#ifdef FUZZING_JS_FUZZILLI
+    if (!JS_DefineFunctions(cx, glob, shell_function_fuzzilli_hash)) {
+      return nullptr;
+    }
+#endif
     if (!js::DefineTestingFunctions(cx, glob, fuzzingSafe,
                                     disableOOMFunctions)) {
       return nullptr;
@@ -10250,32 +10320,39 @@ static JSObject* NewGlobalObject(JSContext* cx, JS::RealmOptions& options,
       return nullptr;
     }
 
-    RootedObject performanceObj(cx, JS_NewObject(cx, nullptr));
-    if (!performanceObj) {
-      return nullptr;
-    }
-    if (!JS_DefineFunctionsWithHelp(cx, performanceObj,
-                                    performance_functions)) {
-      return nullptr;
-    }
-    RootedObject mozMemoryObj(cx, JS_NewObject(cx, nullptr));
-    if (!mozMemoryObj) {
-      return nullptr;
-    }
-    RootedObject gcObj(cx, gc::NewMemoryInfoObject(cx));
-    if (!gcObj) {
-      return nullptr;
-    }
-    if (!JS_DefineProperty(cx, glob, "performance", performanceObj,
-                           JSPROP_ENUMERATE)) {
-      return nullptr;
-    }
-    if (!JS_DefineProperty(cx, performanceObj, "mozMemory", mozMemoryObj,
-                           JSPROP_ENUMERATE)) {
-      return nullptr;
-    }
-    if (!JS_DefineProperty(cx, mozMemoryObj, "gc", gcObj, JSPROP_ENUMERATE)) {
-      return nullptr;
+    if (!js::SupportDifferentialTesting()) {
+      if (!JS_DefineFunctionsWithHelp(cx, glob,
+                                      diff_testing_unsafe_functions)) {
+        return nullptr;
+      }
+
+      RootedObject performanceObj(cx, JS_NewObject(cx, nullptr));
+      if (!performanceObj) {
+        return nullptr;
+      }
+      if (!JS_DefineFunctionsWithHelp(cx, performanceObj,
+                                      performance_functions)) {
+        return nullptr;
+      }
+      RootedObject mozMemoryObj(cx, JS_NewObject(cx, nullptr));
+      if (!mozMemoryObj) {
+        return nullptr;
+      }
+      RootedObject gcObj(cx, gc::NewMemoryInfoObject(cx));
+      if (!gcObj) {
+        return nullptr;
+      }
+      if (!JS_DefineProperty(cx, glob, "performance", performanceObj,
+                             JSPROP_ENUMERATE)) {
+        return nullptr;
+      }
+      if (!JS_DefineProperty(cx, performanceObj, "mozMemory", mozMemoryObj,
+                             JSPROP_ENUMERATE)) {
+        return nullptr;
+      }
+      if (!JS_DefineProperty(cx, mozMemoryObj, "gc", gcObj, JSPROP_ENUMERATE)) {
+        return nullptr;
+      }
     }
 
     /* Initialize FakeDOMObject. */
@@ -11247,9 +11324,18 @@ static int Shell(JSContext* cx, OptionParser* op) {
       fflush(stdout);
       fflush(stderr);
       // Send return code to parent and reset edge counters.
-      int status = (result & 0xff) << 8;
-      MOZ_RELEASE_ASSERT(write(REPRL_CWFD, &status, 4) == 4);
+      struct {
+        int status;
+        uint32_t execHash;
+        uint32_t execHashInputs;
+      } s;
+      s.status = (result & 0xff) << 8;
+      s.execHash = cx->executionHash;
+      s.execHashInputs = cx->executionHashInputs;
+      MOZ_RELEASE_ASSERT(write(REPRL_CWFD, &s, 12) == 12);
       __sanitizer_cov_reset_edgeguards();
+      cx->executionHash = 1;
+      cx->executionHashInputs = 0;
     }
 #endif
 

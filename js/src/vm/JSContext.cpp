@@ -373,6 +373,10 @@ void js::ReportOversizedAllocation(JSContext* cx, const unsigned errorNumber) {
 }
 
 void js::ReportAllocationOverflow(JSContext* cx) {
+  if (js::SupportDifferentialTesting()) {
+    fprintf(stderr, "ReportAllocationOverflow called\n");
+  }
+
   if (!cx) {
     return;
   }
@@ -999,6 +1003,10 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
 #endif
       dtoaState(this, nullptr),
       suppressGC(this, 0),
+#ifdef FUZZING_JS_FUZZILLI
+      executionHash(1),
+      executionHashInputs(0),
+#endif
 #ifdef DEBUG
       noNurseryAllocationCheck(this, 0),
       disableStrictProxyCheckingCount(this, 0),

@@ -282,6 +282,9 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::ObjectIsPrototypeOf:
     case InlinableNative::ObjectToString:
     case InlinableNative::TypedArrayConstructor:
+#ifdef FUZZING_JS_FUZZILLI
+    case InlinableNative::FuzzilliHash:
+#endif
       // Default to false for most natives.
       return false;
 

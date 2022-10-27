@@ -2834,3 +2834,11 @@
 
 - name: WasmStoreObjectDataRefField
   gen_boilerplate: false
+
+#ifdef FUZZING_JS_FUZZILLI
+- name: FuzzilliHash
+  gen_boilerplate: false
+
+- name: FuzzilliHashStore
+  gen_boilerplate: false
+#endif
