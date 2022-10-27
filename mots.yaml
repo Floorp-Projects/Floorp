@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-10-27T15:14:39.980828'
+updated_at: '2022-10-27T22:15:27.063089'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -838,10 +838,6 @@ people:
     bmo_id: 415378
     name: Valentin Gosu
     nick: valentin
-  - &vgosu
-    bmo_id: 449469
-    name: ''
-    nick: vgosu
   - &Waldo
     bmo_id: 83595
     name: Jeff Walden
@@ -1885,9 +1881,10 @@ modules:
       components:
         - 'Core::Networking: JAR'
     owners:
-      - *vgosu
+      - *valentin
     peers:
       - *kershaw
+      - *jesup
     machine_name: core_libjar
 
   - name: 'Core: MathML'
@@ -2092,6 +2089,7 @@ modules:
       - *valentin
     peers:
       - *kershaw
+      - *jesup
     machine_name: core_necko
 
   - name: 'Core: NodeJS usage, tools, and style'
@@ -3678,5 +3676,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 22f5367a37520fbb8e8bc6a5033e8a72be5a9c7b
-  export: 66835bf98898c1f879e942be2232f9be4f5e3d7a
+  config: adfe032d8b254770a3cf53f7c23473aa5b29e71f
+  export: 0ff6d5f7a629ae1bfa90109bbd40fc64d0e0db37
