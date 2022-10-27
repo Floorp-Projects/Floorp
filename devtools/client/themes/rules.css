@@ -712,6 +712,11 @@ ul.ruleview-rule-ancestor-data {
   max-width: max-content;
 }
 
+.ruleview-rule-ancestor-data li button.open-inspector {
+  /* There's a space character after the button, so add a 1ch margin-inline-start to be consistent */
+  margin-inline: 1ch 0;
+}
+
 .ruleview-selectorcontainer {
   word-wrap: break-word;
   cursor: text;

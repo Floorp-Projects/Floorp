@@ -1212,9 +1212,9 @@ function checkCSSVariableOutput(
  * @returns {HTMLElement}
  */
 function getRuleViewAncestorRulesDataElementByIndex(view, ruleIndex) {
-  return view.styleDocument.querySelector(
-    `.ruleview-rule:nth-of-type(${ruleIndex + 1}) .ruleview-rule-ancestor-data`
-  );
+  return view.styleDocument
+    .querySelectorAll(`.ruleview-rule`)
+    [ruleIndex]?.querySelector(`.ruleview-rule-ancestor-data`);
 }
 
 /**
