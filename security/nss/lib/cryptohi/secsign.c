@@ -338,35 +338,33 @@ SEC_SignDataWithAlgorithmID(SECItem *res, const unsigned char *buf, int len,
 
 /************************************************************************/
 
-DERTemplate CERTSignedDataTemplate[] =
-    {
-      { DER_SEQUENCE,
-        0, NULL, sizeof(CERTSignedData) },
-      { DER_ANY,
-        offsetof(CERTSignedData, data) },
-      { DER_INLINE,
-        offsetof(CERTSignedData, signatureAlgorithm),
-        SECAlgorithmIDTemplate },
-      { DER_BIT_STRING,
-        offsetof(CERTSignedData, signature) },
-      { 0 }
-    };
+DERTemplate CERTSignedDataTemplate[] = {
+    { DER_SEQUENCE,
+      0, NULL, sizeof(CERTSignedData) },
+    { DER_ANY,
+      offsetof(CERTSignedData, data) },
+    { DER_INLINE,
+      offsetof(CERTSignedData, signatureAlgorithm),
+      SECAlgorithmIDTemplate },
+    { DER_BIT_STRING,
+      offsetof(CERTSignedData, signature) },
+    { 0 }
+};
 
 SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
 
-const SEC_ASN1Template CERT_SignedDataTemplate[] =
-    {
-      { SEC_ASN1_SEQUENCE,
-        0, NULL, sizeof(CERTSignedData) },
-      { SEC_ASN1_ANY,
-        offsetof(CERTSignedData, data) },
-      { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
-        offsetof(CERTSignedData, signatureAlgorithm),
-        SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-      { SEC_ASN1_BIT_STRING,
-        offsetof(CERTSignedData, signature) },
-      { 0 }
-    };
+const SEC_ASN1Template CERT_SignedDataTemplate[] = {
+    { SEC_ASN1_SEQUENCE,
+      0, NULL, sizeof(CERTSignedData) },
+    { SEC_ASN1_ANY,
+      offsetof(CERTSignedData, data) },
+    { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
+      offsetof(CERTSignedData, signatureAlgorithm),
+      SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
+    { SEC_ASN1_BIT_STRING,
+      offsetof(CERTSignedData, signature) },
+    { 0 }
+};
 
 SEC_ASN1_CHOOSER_IMPLEMENT(CERT_SignedDataTemplate)
 
@@ -431,7 +429,7 @@ sec_DerSignData(PLArenaPool *arena, SECItem *result,
 
     /* DER encode the signed data object */
     rv = DER_Encode(arena, result, CERTSignedDataTemplate, &sd);
-/* FALL THROUGH */
+    /* FALL THROUGH */
 
 loser:
     PORT_Free(it.data);

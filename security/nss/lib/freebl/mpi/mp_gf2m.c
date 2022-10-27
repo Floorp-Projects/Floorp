@@ -7,11 +7,10 @@
 #include "mplogic.h"
 #include "mpi-priv.h"
 
-const mp_digit mp_gf2m_sqr_tb[16] =
-    {
-      0, 1, 4, 5, 16, 17, 20, 21,
-      64, 65, 68, 69, 80, 81, 84, 85
-    };
+const mp_digit mp_gf2m_sqr_tb[16] = {
+    0, 1, 4, 5, 16, 17, 20, 21,
+    64, 65, 68, 69, 80, 81, 84, 85
+};
 
 /* Multiply two binary polynomials mp_digits a, b.
  * Result is a polynomial with degree < 2 * MP_DIGIT_BITS - 1.

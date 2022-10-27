@@ -1136,9 +1136,10 @@ class HelloRetryRequestAgentTest : public TlsAgentTestClient {
 
     hrr_data.Allocate(len + 6);
     size_t i = 0;
-    i = hrr_data.Write(i, variant_ == ssl_variant_datagram
-                              ? SSL_LIBRARY_VERSION_DTLS_1_2_WIRE
-                              : SSL_LIBRARY_VERSION_TLS_1_2,
+    i = hrr_data.Write(i,
+                       variant_ == ssl_variant_datagram
+                           ? SSL_LIBRARY_VERSION_DTLS_1_2_WIRE
+                           : SSL_LIBRARY_VERSION_TLS_1_2,
                        2);
     i = hrr_data.Write(i, ssl_hello_retry_random,
                        sizeof(ssl_hello_retry_random));
@@ -1150,9 +1151,10 @@ class HelloRetryRequestAgentTest : public TlsAgentTestClient {
     // Now the supported version.
     i = hrr_data.Write(i, ssl_tls13_supported_versions_xtn, 2);
     i = hrr_data.Write(i, 2, 2);
-    i = hrr_data.Write(i, (variant_ == ssl_variant_datagram)
-                              ? (0x7f00 | DTLS_1_3_DRAFT_VERSION)
-                              : SSL_LIBRARY_VERSION_TLS_1_3,
+    i = hrr_data.Write(i,
+                       (variant_ == ssl_variant_datagram)
+                           ? (0x7f00 | DTLS_1_3_DRAFT_VERSION)
+                           : SSL_LIBRARY_VERSION_TLS_1_3,
                        2);
     if (len) {
       hrr_data.Write(i, body, len);

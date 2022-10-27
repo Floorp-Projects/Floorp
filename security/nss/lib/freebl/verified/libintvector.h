@@ -738,12 +738,8 @@ typedef vector128_8 vector128;
 #define Lib_IntVector_Intrinsics_vec128_rotate_right32(x0, x1) \
     (Lib_IntVector_Intrinsics_vec128_rotate_left32(x0, (uint32_t)(32 - (x1))))
 
-#define Lib_IntVector_Intrinsics_vec128_rotate_right_lanes32(x0, x1)                                                                                          \
-    ((vector128)(vec_perm((vector128)(x0), (vector128){}, (vector128_8){                                                                                      \
-                                                              (x1 % 4) * 4 + 0, (x1 % 4) * 4 + 1, (x1 % 4) * 4 + 2, (x1 % 4) * 4 + 3,                         \
-                                                              ((x1 + 1) % 4) * 4 + 0, ((x1 + 1) % 4) * 4 + 1, ((x1 + 1) % 4) * 4 + 2, ((x1 + 1) % 4) * 4 + 3, \
-                                                              ((x1 + 2) % 4) * 4 + 0, ((x1 + 2) % 4) * 4 + 1, ((x1 + 2) % 4) * 4 + 2, ((x1 + 2) % 4) * 4 + 3, \
-                                                              ((x1 + 3) % 4) * 4 + 0, ((x1 + 3) % 4) * 4 + 1, ((x1 + 3) % 4) * 4 + 2, ((x1 + 3) % 4) * 4 + 3 })))
+#define Lib_IntVector_Intrinsics_vec128_rotate_right_lanes32(x0, x1) \
+    ((vector128)(vec_perm((vector128)(x0), (vector128){}, (vector128_8){ (x1 % 4) * 4 + 0, (x1 % 4) * 4 + 1, (x1 % 4) * 4 + 2, (x1 % 4) * 4 + 3, ((x1 + 1) % 4) * 4 + 0, ((x1 + 1) % 4) * 4 + 1, ((x1 + 1) % 4) * 4 + 2, ((x1 + 1) % 4) * 4 + 3, ((x1 + 2) % 4) * 4 + 0, ((x1 + 2) % 4) * 4 + 1, ((x1 + 2) % 4) * 4 + 2, ((x1 + 2) % 4) * 4 + 3, ((x1 + 3) % 4) * 4 + 0, ((x1 + 3) % 4) * 4 + 1, ((x1 + 3) % 4) * 4 + 2, ((x1 + 3) % 4) * 4 + 3 })))
 
 #define Lib_IntVector_Intrinsics_vec128_shift_left64(x0, x1)                         \
     (((vector128)((vector128_64)vec_rli((vector128_64)(x0), (unsigned long)(x1)))) & \

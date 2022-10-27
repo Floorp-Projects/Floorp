@@ -142,11 +142,8 @@ STUB_DECLARE(int, PORT_GetError_Util, (void));
 STUB_DECLARE(PLArenaPool *, PORT_NewArena_Util, (unsigned long chunksize));
 STUB_DECLARE(void, PORT_SetError_Util, (int value));
 STUB_DECLARE(void *, PORT_ZAlloc_Util, (size_t len));
-STUB_DECLARE(void *, PORT_ZAllocAligned_Util, (size_t bytes, size_t alignment,
-                                               void **mem));
-STUB_DECLARE(void *, PORT_ZAllocAlignedOffset_Util, (size_t bytes,
-                                                     size_t alignment,
-                                                     size_t offset));
+STUB_DECLARE(void *, PORT_ZAllocAligned_Util, (size_t bytes, size_t alignment, void **mem));
+STUB_DECLARE(void *, PORT_ZAllocAlignedOffset_Util, (size_t bytes, size_t alignment, size_t offset));
 STUB_DECLARE(void, PORT_ZFree_Util, (void *ptr, size_t len));
 
 STUB_DECLARE(void, PR_Assert, (const char *s, const char *file, PRIntn ln));
@@ -156,31 +153,24 @@ STUB_DECLARE(PRStatus, PR_Close, (PRFileDesc * fd));
 STUB_DECLARE(void, PR_DestroyLock, (PRLock * lock));
 STUB_DECLARE(void, PR_DestroyCondVar, (PRCondVar * cvar));
 STUB_DECLARE(void, PR_Free, (void *ptr));
-STUB_DECLARE(char *, PR_GetLibraryFilePathname, (const char *name,
-                                                 PRFuncPtr addr));
+STUB_DECLARE(char *, PR_GetLibraryFilePathname, (const char *name, PRFuncPtr addr));
 STUB_DECLARE(PRFileDesc *, PR_ImportPipe, (PROsfd osfd));
 STUB_DECLARE(void, PR_Lock, (PRLock * lock));
 STUB_DECLARE(PRCondVar *, PR_NewCondVar, (PRLock * lock));
 STUB_DECLARE(PRLock *, PR_NewLock, (void));
 STUB_DECLARE(PRStatus, PR_NotifyCondVar, (PRCondVar * cvar));
 STUB_DECLARE(PRStatus, PR_NotifyAllCondVar, (PRCondVar * cvar));
-STUB_DECLARE(PRFileDesc *, PR_Open, (const char *name, PRIntn flags,
-                                     PRIntn mode));
+STUB_DECLARE(PRFileDesc *, PR_Open, (const char *name, PRIntn flags, PRIntn mode));
 STUB_DECLARE(PRInt32, PR_Read, (PRFileDesc * fd, void *buf, PRInt32 amount));
-STUB_DECLARE(PROffset32, PR_Seek, (PRFileDesc * fd, PROffset32 offset,
-                                   PRSeekWhence whence));
+STUB_DECLARE(PROffset32, PR_Seek, (PRFileDesc * fd, PROffset32 offset, PRSeekWhence whence));
 STUB_DECLARE(PRStatus, PR_Sleep, (PRIntervalTime ticks));
 STUB_DECLARE(PRStatus, PR_Unlock, (PRLock * lock));
-STUB_DECLARE(PRStatus, PR_WaitCondVar, (PRCondVar * cvar,
-                                        PRIntervalTime timeout));
+STUB_DECLARE(PRStatus, PR_WaitCondVar, (PRCondVar * cvar, PRIntervalTime timeout));
 STUB_DECLARE(char *, PR_GetEnvSecure, (const char *));
 
-STUB_DECLARE(SECItem *, SECITEM_AllocItem_Util, (PLArenaPool * arena,
-                                                 SECItem *item, unsigned int len));
-STUB_DECLARE(SECComparison, SECITEM_CompareItem_Util, (const SECItem *a,
-                                                       const SECItem *b));
-STUB_DECLARE(SECStatus, SECITEM_CopyItem_Util, (PLArenaPool * arena,
-                                                SECItem *to, const SECItem *from));
+STUB_DECLARE(SECItem *, SECITEM_AllocItem_Util, (PLArenaPool * arena, SECItem *item, unsigned int len));
+STUB_DECLARE(SECComparison, SECITEM_CompareItem_Util, (const SECItem *a, const SECItem *b));
+STUB_DECLARE(SECStatus, SECITEM_CopyItem_Util, (PLArenaPool * arena, SECItem *to, const SECItem *from));
 STUB_DECLARE(void, SECITEM_FreeItem_Util, (SECItem * zap, PRBool freeit));
 STUB_DECLARE(void, SECITEM_ZfreeItem_Util, (SECItem * zap, PRBool freeit));
 STUB_DECLARE(SECOidTag, SECOID_FindOIDTag_Util, (const SECItem *oid));
@@ -293,6 +283,13 @@ PR_Free_stub(void *ptr)
     STUB_SAFE_CALL1(PR_Free, ptr);
     return free(ptr);
 }
+
+/* we have defensive returns after abort(), which is marked noreturn on some
+ * platforms, making the compiler legitimately complain. */
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code-return"
+#endif
 
 /*
  * arenas
@@ -640,6 +637,10 @@ SECOID_FindOIDTag_stub(const SECItem *oid)
     abort();
     return SEC_OID_UNKNOWN;
 }
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 extern void
 SECITEM_ZfreeItem_stub(SECItem *zap, PRBool freeit)

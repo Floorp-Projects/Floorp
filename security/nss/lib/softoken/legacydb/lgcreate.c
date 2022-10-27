@@ -26,11 +26,9 @@ lg_createCertObject(SDB *sdb, CK_OBJECT_HANDLE *handle,
     SECItem derCert;
     NSSLOWCERTCertificate *cert;
     NSSLOWCERTCertTrust *trust = NULL;
-    NSSLOWCERTCertTrust userTrust =
-        { CERTDB_USER, CERTDB_USER, CERTDB_USER };
-    NSSLOWCERTCertTrust defTrust =
-        { CERTDB_TRUSTED_UNKNOWN,
-          CERTDB_TRUSTED_UNKNOWN, CERTDB_TRUSTED_UNKNOWN };
+    NSSLOWCERTCertTrust userTrust = { CERTDB_USER, CERTDB_USER, CERTDB_USER };
+    NSSLOWCERTCertTrust defTrust = { CERTDB_TRUSTED_UNKNOWN,
+                                     CERTDB_TRUSTED_UNKNOWN, CERTDB_TRUSTED_UNKNOWN };
     char *label = NULL;
     char *email = NULL;
     SECStatus rv;

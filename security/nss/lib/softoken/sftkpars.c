@@ -62,10 +62,12 @@ sftk_parseTokenParameters(char *param, sftk_token_parameters *parsed)
         NSSUTIL_HANDLE_STRING_ARG(index, parsed->tokdes, "tokenDescription=", ;)
         NSSUTIL_HANDLE_STRING_ARG(index, parsed->updtokdes, "updateTokenDescription=", ;)
         NSSUTIL_HANDLE_STRING_ARG(index, parsed->slotdes, "slotDescription=", ;)
-        NSSUTIL_HANDLE_STRING_ARG(index, tmp, "minPWLen=",
-                                  if (tmp) { parsed->minPW=atoi(tmp); PORT_Free(tmp); tmp = NULL; })
-        NSSUTIL_HANDLE_STRING_ARG(index, tmp, "flags=",
-                                  if (tmp) { sftk_parseTokenFlags(param,parsed); PORT_Free(tmp); tmp = NULL; })
+        NSSUTIL_HANDLE_STRING_ARG(
+            index, tmp, "minPWLen=",
+            if (tmp) { parsed->minPW=atoi(tmp); PORT_Free(tmp); tmp = NULL; })
+        NSSUTIL_HANDLE_STRING_ARG(
+            index, tmp, "flags=",
+            if (tmp) { sftk_parseTokenFlags(param,parsed); PORT_Free(tmp); tmp = NULL; })
         NSSUTIL_HANDLE_FINAL_ARG(index)
     }
     return CKR_OK;
@@ -154,10 +156,12 @@ sftk_parseParameters(char *param, sftk_parameters *parsed, PRBool isFIPS)
         NSSUTIL_HANDLE_STRING_ARG(index, pupdtokdes, "updateTokenDescription=", ;)
         NSSUTIL_HANDLE_STRING_ARG(index, minPW, "minPWLen=", ;)
 
-        NSSUTIL_HANDLE_STRING_ARG(index, tmp, "flags=",
-                                  if (tmp) { sftk_parseFlags(param,parsed); PORT_Free(tmp); tmp = NULL; })
-        NSSUTIL_HANDLE_STRING_ARG(index, tmp, "tokens=",
-                                  if (tmp) { sftk_parseTokens(tmp,parsed); PORT_Free(tmp); tmp = NULL; })
+        NSSUTIL_HANDLE_STRING_ARG(
+            index, tmp, "flags=",
+            if (tmp) { sftk_parseFlags(param,parsed); PORT_Free(tmp); tmp = NULL; })
+        NSSUTIL_HANDLE_STRING_ARG(
+            index, tmp, "tokens=",
+            if (tmp) { sftk_parseTokens(tmp,parsed); PORT_Free(tmp); tmp = NULL; })
         NSSUTIL_HANDLE_FINAL_ARG(index)
     }
     if (parsed->tokens == NULL) {

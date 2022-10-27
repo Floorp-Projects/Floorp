@@ -755,7 +755,9 @@ jar_listzip(JAR *jar, JAR_FILE fp)
             ZZ_AppendLink(jar->phy, ent);
             pos = phy->offset + phy->length;
         } else if (sigVal == CSIG) {
+#if defined(XP_UNIX)
             unsigned int attr = 0;
+#endif
             if (JAR_FREAD(fp, Central, sizeof *Central) != sizeof *Central) {
                 /* apparently truncated archive */
                 err = JAR_ERR_CORRUPT;

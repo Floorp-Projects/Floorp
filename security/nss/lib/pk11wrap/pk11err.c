@@ -130,12 +130,12 @@ PK11_MapError(CK_RV rv)
 
 #else
 
-    /* clang-format off */
+            /* clang-format off */
     default :
         break;
-/* clang-format on */
-}
-return SEC_ERROR_UNKNOWN_PKCS11_ERROR;
+            /* clang-format on */
+    }
+    return SEC_ERROR_UNKNOWN_PKCS11_ERROR;
 }
 
 #endif

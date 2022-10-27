@@ -3370,8 +3370,7 @@ sec_pkcs12_decoder_create_cert(SEC_PKCS12DecoderContext *p12dcx,
 
     oid = SECOID_FindOIDByTag(SEC_OID_PKCS12_V1_CERT_BAG_ID);
     certBag = PORT_ArenaZNew(p12dcx->arena, sec_PKCS12SafeBag);
-    if (!certBag || !oid || (SECITEM_CopyItem(p12dcx->arena,
-                                              &certBag->safeBagType, &oid->oid) != SECSuccess)) {
+    if (!certBag || !oid || (SECITEM_CopyItem(p12dcx->arena, &certBag->safeBagType, &oid->oid) != SECSuccess)) {
         return NULL;
     }
 

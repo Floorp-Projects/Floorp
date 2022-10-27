@@ -539,39 +539,37 @@ enum {
     opt_NoiseFile
 };
 
-static secuCommandFlag symKeyUtil_commands[] =
-    {
-      { /* cmd_CreateNewKey        */ 'K', PR_FALSE, 0, PR_FALSE },
-      { /* cmd_DeleteKey           */ 'D', PR_FALSE, 0, PR_FALSE },
-      { /* cmd_ImportKey           */ 'I', PR_FALSE, 0, PR_FALSE },
-      { /* cmd_ExportKey           */ 'E', PR_FALSE, 0, PR_FALSE },
-      { /* cmd_WrapKey             */ 'W', PR_FALSE, 0, PR_FALSE },
-      { /* cmd_UnwrapKey           */ 'U', PR_FALSE, 0, PR_FALSE },
-      { /* cmd_MoveKey             */ 'M', PR_FALSE, 0, PR_FALSE },
-      { /* cmd_ListKeys            */ 'L', PR_FALSE, 0, PR_FALSE },
-      { /* cmd_PrintHelp           */ 'H', PR_FALSE, 0, PR_FALSE },
-    };
+static secuCommandFlag symKeyUtil_commands[] = {
+    { /* cmd_CreateNewKey        */ 'K', PR_FALSE, 0, PR_FALSE },
+    { /* cmd_DeleteKey           */ 'D', PR_FALSE, 0, PR_FALSE },
+    { /* cmd_ImportKey           */ 'I', PR_FALSE, 0, PR_FALSE },
+    { /* cmd_ExportKey           */ 'E', PR_FALSE, 0, PR_FALSE },
+    { /* cmd_WrapKey             */ 'W', PR_FALSE, 0, PR_FALSE },
+    { /* cmd_UnwrapKey           */ 'U', PR_FALSE, 0, PR_FALSE },
+    { /* cmd_MoveKey             */ 'M', PR_FALSE, 0, PR_FALSE },
+    { /* cmd_ListKeys            */ 'L', PR_FALSE, 0, PR_FALSE },
+    { /* cmd_PrintHelp           */ 'H', PR_FALSE, 0, PR_FALSE },
+};
 
-static secuCommandFlag symKeyUtil_options[] =
-    {
-      { /* opt_CertDir             */ 'd', PR_TRUE, 0, PR_FALSE },
-      { /* opt_PasswordFile        */ 'f', PR_TRUE, 0, PR_FALSE },
-      { /* opt_TargetToken         */ 'g', PR_TRUE, 0, PR_FALSE },
-      { /* opt_TokenName           */ 'h', PR_TRUE, 0, PR_FALSE },
-      { /* opt_KeyID               */ 'i', PR_TRUE, 0, PR_FALSE },
-      { /* opt_KeyIDFile           */ 'j', PR_TRUE, 0, PR_FALSE },
-      { /* opt_KeyType             */ 't', PR_TRUE, 0, PR_FALSE },
-      { /* opt_Nickname            */ 'n', PR_TRUE, 0, PR_FALSE },
-      { /* opt_KeyFile             */ 'k', PR_TRUE, 0, PR_FALSE },
-      { /* opt_Password            */ 'p', PR_TRUE, 0, PR_FALSE },
-      { /* opt_dbPrefix            */ 'P', PR_TRUE, 0, PR_FALSE },
-      { /* opt_RW                  */ 'r', PR_FALSE, 0, PR_FALSE },
-      { /* opt_KeySize             */ 's', PR_TRUE, 0, PR_FALSE },
-      { /* opt_WrapKeyName         */ 'w', PR_TRUE, 0, PR_FALSE },
-      { /* opt_WrapKeyID           */ 'x', PR_TRUE, 0, PR_FALSE },
-      { /* opt_WrapKeyIDFile       */ 'y', PR_TRUE, 0, PR_FALSE },
-      { /* opt_NoiseFile           */ 'z', PR_TRUE, 0, PR_FALSE },
-    };
+static secuCommandFlag symKeyUtil_options[] = {
+    { /* opt_CertDir             */ 'd', PR_TRUE, 0, PR_FALSE },
+    { /* opt_PasswordFile        */ 'f', PR_TRUE, 0, PR_FALSE },
+    { /* opt_TargetToken         */ 'g', PR_TRUE, 0, PR_FALSE },
+    { /* opt_TokenName           */ 'h', PR_TRUE, 0, PR_FALSE },
+    { /* opt_KeyID               */ 'i', PR_TRUE, 0, PR_FALSE },
+    { /* opt_KeyIDFile           */ 'j', PR_TRUE, 0, PR_FALSE },
+    { /* opt_KeyType             */ 't', PR_TRUE, 0, PR_FALSE },
+    { /* opt_Nickname            */ 'n', PR_TRUE, 0, PR_FALSE },
+    { /* opt_KeyFile             */ 'k', PR_TRUE, 0, PR_FALSE },
+    { /* opt_Password            */ 'p', PR_TRUE, 0, PR_FALSE },
+    { /* opt_dbPrefix            */ 'P', PR_TRUE, 0, PR_FALSE },
+    { /* opt_RW                  */ 'r', PR_FALSE, 0, PR_FALSE },
+    { /* opt_KeySize             */ 's', PR_TRUE, 0, PR_FALSE },
+    { /* opt_WrapKeyName         */ 'w', PR_TRUE, 0, PR_FALSE },
+    { /* opt_WrapKeyID           */ 'x', PR_TRUE, 0, PR_FALSE },
+    { /* opt_WrapKeyIDFile       */ 'y', PR_TRUE, 0, PR_FALSE },
+    { /* opt_NoiseFile           */ 'z', PR_TRUE, 0, PR_FALSE },
+};
 
 int
 main(int argc, char **argv)

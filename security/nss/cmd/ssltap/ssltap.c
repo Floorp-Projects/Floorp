@@ -945,7 +945,7 @@ print_sslv2(DataBufferList *s, unsigned char *recordBuf, unsigned int recordLen)
             }
             PR_fprintf(PR_STDOUT, "}\n");
             break;
-        /* end of V2 CLientHello Parsing */
+            /* end of V2 CLientHello Parsing */
 
         case 2: /* Client Master Key  */
         {
@@ -1019,8 +1019,7 @@ print_sslv2(DataBufferList *s, unsigned char *recordBuf, unsigned int recordLen)
                 for (p =
                          0;
                      p < len; p += 2) {
-                    PR_fprintf(PR_STDOUT, "0x%04x ", (PRUint32)(GET_SHORT((pos +
-                                                                           p))));
+                    PR_fprintf(PR_STDOUT, "0x%04x ", (PRUint32)(GET_SHORT((pos + p))));
                 }
                 PR_fprintf(PR_STDOUT, "   }\n"); /* End of connection id */
             }
@@ -1644,8 +1643,7 @@ print_ssl3_handshake(unsigned char *recordBuf,
                                        "               data = { couldn't save file '%s' }\n",
                                        certFileName);
                         } else {
-                            PR_Write(cfd, (hsdata +
-                                           pos),
+                            PR_Write(cfd, (hsdata + pos),
                                      certlength);
                             PR_fprintf(PR_STDOUT,
                                        "               data = { saved in file '%s' }\n",
@@ -1679,8 +1677,7 @@ print_ssl3_handshake(unsigned char *recordBuf,
                 for (w =
                          0;
                      w < reqLength; w++) {
-                    PR_fprintf(PR_STDOUT, " %02x", hsdata[pos +
-                                                          1 + w]);
+                    PR_fprintf(PR_STDOUT, " %02x", hsdata[pos + 1 + w]);
                 }
                 pos += 1 + reqLength;
                 PR_fprintf(PR_STDOUT, " }\n");

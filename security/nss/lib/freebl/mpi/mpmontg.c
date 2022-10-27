@@ -723,10 +723,11 @@ mp_set_safe_modexp(int value)
  * mp_ints that use less than nDigits digits are logically padded with zeros
  * while being stored in the weaved array.
  */
-mp_err mpi_to_weave(const mp_int *bignums,
-                    mp_digit *weaved,
-                    mp_size nDigits,  /* in each mp_int of input */
-                    mp_size nBignums) /* in the entire source array */
+mp_err
+mpi_to_weave(const mp_int *bignums,
+             mp_digit *weaved,
+             mp_size nDigits,  /* in each mp_int of input */
+             mp_size nBignums) /* in the entire source array */
 {
     mp_size i;
     mp_digit *endDest = weaved + (nDigits * nBignums);
@@ -765,11 +766,12 @@ mp_err mpi_to_weave(const mp_int *bignums,
  * Every read accesses every element of the weaved array, in order to
  * avoid timing attacks based on patterns of memory accesses.
  */
-mp_err weave_to_mpi(mp_int *a,              /* out, result */
-                    const mp_digit *weaved, /* in, byte matrix */
-                    mp_size index,          /* which column to read */
-                    mp_size nDigits,        /* number of mp_digits in each bignum */
-                    mp_size nBignums)       /* width of the matrix */
+mp_err
+weave_to_mpi(mp_int *a,              /* out, result */
+             const mp_digit *weaved, /* in, byte matrix */
+             mp_size index,          /* which column to read */
+             mp_size nDigits,        /* number of mp_digits in each bignum */
+             mp_size nBignums)       /* width of the matrix */
 {
     /* these are indices, but need to be the same size as mp_digit
      * because of the CONST_TIME operations */

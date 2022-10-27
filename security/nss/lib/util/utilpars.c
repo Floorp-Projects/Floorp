@@ -585,7 +585,7 @@ struct nssutilArgSlotFlagTable {
 
 #define NSSUTIL_ARG_ENTRY(arg, flag) \
     {                                \
-        #arg, sizeof(#arg) - 1, flag \
+#arg, sizeof(#arg) - 1, flag \
     }
 static struct nssutilArgSlotFlagTable nssutil_argSlotFlagTable[] = {
     NSSUTIL_ARG_ENTRY(RSA, SECMOD_RSA_FLAG),

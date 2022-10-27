@@ -38,8 +38,8 @@ void Pkcs11KeyPairGenerator::GenerateKey(ScopedSECKEYPrivateKey* priv_key,
   ScopedSECKEYPrivateKey priv_tmp(
       PK11_GenerateKeyPair(slot.get(), mech_, params->get(), &pub_tmp, PR_FALSE,
                            sensitive ? PR_TRUE : PR_FALSE, nullptr));
-  ASSERT_NE(nullptr, priv_tmp) << "PK11_GenerateKeyPair failed: "
-                               << PORT_ErrorToName(PORT_GetError());
+  ASSERT_NE(nullptr, priv_tmp)
+      << "PK11_GenerateKeyPair failed: " << PORT_ErrorToName(PORT_GetError());
   ASSERT_NE(nullptr, pub_tmp);
 
   priv_key->swap(priv_tmp);

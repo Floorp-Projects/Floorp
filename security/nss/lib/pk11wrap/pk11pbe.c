@@ -51,54 +51,50 @@ typedef struct sec_pkcs5V2ParameterStr sec_pkcs5V2Parameter;
  * based upon the additions in PKCS 12.  This should eventually be moved
  * if RSA updates PKCS 5.
  */
-const SEC_ASN1Template SEC_PKCS5PBEParameterTemplate[] =
-    {
-      { SEC_ASN1_SEQUENCE,
-        0, NULL, sizeof(SEC_PKCS5PBEParameter) },
-      { SEC_ASN1_OCTET_STRING,
-        offsetof(SEC_PKCS5PBEParameter, salt) },
-      { SEC_ASN1_INTEGER,
-        offsetof(SEC_PKCS5PBEParameter, iteration) },
-      { 0 }
-    };
+const SEC_ASN1Template SEC_PKCS5PBEParameterTemplate[] = {
+    { SEC_ASN1_SEQUENCE,
+      0, NULL, sizeof(SEC_PKCS5PBEParameter) },
+    { SEC_ASN1_OCTET_STRING,
+      offsetof(SEC_PKCS5PBEParameter, salt) },
+    { SEC_ASN1_INTEGER,
+      offsetof(SEC_PKCS5PBEParameter, iteration) },
+    { 0 }
+};
 
-const SEC_ASN1Template SEC_V2PKCS12PBEParameterTemplate[] =
-    {
-      { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SEC_PKCS5PBEParameter) },
-      { SEC_ASN1_OCTET_STRING, offsetof(SEC_PKCS5PBEParameter, salt) },
-      { SEC_ASN1_INTEGER, offsetof(SEC_PKCS5PBEParameter, iteration) },
-      { 0 }
-    };
+const SEC_ASN1Template SEC_V2PKCS12PBEParameterTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SEC_PKCS5PBEParameter) },
+    { SEC_ASN1_OCTET_STRING, offsetof(SEC_PKCS5PBEParameter, salt) },
+    { SEC_ASN1_INTEGER, offsetof(SEC_PKCS5PBEParameter, iteration) },
+    { 0 }
+};
 
 SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
 
 /* SECOID_PKCS5_PBKDF2 */
-const SEC_ASN1Template SEC_PKCS5V2PBEParameterTemplate[] =
-    {
-      { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SEC_PKCS5PBEParameter) },
-      /* This is really a choice, but since we only understand this
+const SEC_ASN1Template SEC_PKCS5V2PBEParameterTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SEC_PKCS5PBEParameter) },
+    /* This is really a choice, but since we only understand this
      * choice, just inline it */
-      { SEC_ASN1_OCTET_STRING, offsetof(SEC_PKCS5PBEParameter, salt) },
-      { SEC_ASN1_INTEGER, offsetof(SEC_PKCS5PBEParameter, iteration) },
-      { SEC_ASN1_INTEGER | SEC_ASN1_OPTIONAL,
-        offsetof(SEC_PKCS5PBEParameter, keyLength) },
-      { SEC_ASN1_POINTER | SEC_ASN1_XTRN | SEC_ASN1_OPTIONAL,
-        offsetof(SEC_PKCS5PBEParameter, pPrfAlgId),
-        SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-      { 0 }
-    };
+    { SEC_ASN1_OCTET_STRING, offsetof(SEC_PKCS5PBEParameter, salt) },
+    { SEC_ASN1_INTEGER, offsetof(SEC_PKCS5PBEParameter, iteration) },
+    { SEC_ASN1_INTEGER | SEC_ASN1_OPTIONAL,
+      offsetof(SEC_PKCS5PBEParameter, keyLength) },
+    { SEC_ASN1_POINTER | SEC_ASN1_XTRN | SEC_ASN1_OPTIONAL,
+      offsetof(SEC_PKCS5PBEParameter, pPrfAlgId),
+      SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
+    { 0 }
+};
 
 /* SEC_OID_PKCS5_PBES2, SEC_OID_PKCS5_PBMAC1 */
-const SEC_ASN1Template SEC_PKCS5V2ParameterTemplate[] =
-    {
-      { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SEC_PKCS5PBEParameter) },
-      { SEC_ASN1_INLINE | SEC_ASN1_XTRN, offsetof(sec_pkcs5V2Parameter, pbeAlgId),
-        SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-      { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
-        offsetof(sec_pkcs5V2Parameter, cipherAlgId),
-        SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-      { 0 }
-    };
+const SEC_ASN1Template SEC_PKCS5V2ParameterTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SEC_PKCS5PBEParameter) },
+    { SEC_ASN1_INLINE | SEC_ASN1_XTRN, offsetof(sec_pkcs5V2Parameter, pbeAlgId),
+      SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
+    { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
+      offsetof(sec_pkcs5V2Parameter, cipherAlgId),
+      SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
+    { 0 }
+};
 
 /*
  * maps a PBE algorithm to a crypto algorithm. for PKCS12 and PKCS5v1

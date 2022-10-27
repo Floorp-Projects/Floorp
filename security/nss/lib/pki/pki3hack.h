@@ -103,7 +103,7 @@ nssTrustDomain_FindBestCertificateByNicknameForToken(
     NSSTime *timeOpt, /* NULL for "now" */
     NSSUsage *usage,
     NSSPolicies *policiesOpt /* NULL for none */
-    );
+);
 
 /* This function is being put here because it is a hack for
  * PK11_FindCertsFromNickname.

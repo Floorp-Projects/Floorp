@@ -15,13 +15,12 @@ typedef struct {
     SECItem s;
 } DSA_ASN1Signature;
 
-const SEC_ASN1Template DSA_SignatureTemplate[] =
-    {
-      { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(DSA_ASN1Signature) },
-      { SEC_ASN1_INTEGER, offsetof(DSA_ASN1Signature, r) },
-      { SEC_ASN1_INTEGER, offsetof(DSA_ASN1Signature, s) },
-      { 0 }
-    };
+const SEC_ASN1Template DSA_SignatureTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(DSA_ASN1Signature) },
+    { SEC_ASN1_INTEGER, offsetof(DSA_ASN1Signature, r) },
+    { SEC_ASN1_INTEGER, offsetof(DSA_ASN1Signature, s) },
+    { 0 }
+};
 
 /* Input is variable length multi-byte integer, MSB first (big endian).
 ** Most signficant bit of first byte is NOT treated as a sign bit.

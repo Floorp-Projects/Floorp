@@ -301,8 +301,7 @@ main(int argc, char **argv)
 
     if (keySizeInBits > 1024 || qSizeInBits != 0) {
         rv = PK11_PQG_ParamGenV2((unsigned)keySizeInBits,
-                                 (unsigned)qSizeInBits, (unsigned)(g /
-                                                                   8),
+                                 (unsigned)qSizeInBits, (unsigned)(g / 8),
                                  &pqgParams, &pqgVerify);
     } else if (g) {
         rv = PK11_PQG_ParamGenSeedLen((unsigned)j, (unsigned)(g / 8),

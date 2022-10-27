@@ -188,7 +188,7 @@ static const unsigned int FATAL_ERROR_FLAG = 0x800;
                    SEC_ERROR_LIBRARY_FAILURE)                                  \
   MOZILLA_PKIX_MAP(FATAL_ERROR_NO_MEMORY, FATAL_ERROR_FLAG | 4,                \
                    SEC_ERROR_NO_MEMORY)                                        \
-/* nothing here */
+  /* nothing here */
 
 enum class Result {
 #define MOZILLA_PKIX_MAP(name, value, nss_name) name = value,
@@ -213,7 +213,7 @@ inline Result NotReached(const char* /*explanation*/, Result result) {
   assert(false);
   return result;
 }
-}
-}  // namespace mozilla::pkix
+}  // namespace pkix
+}  // namespace mozilla
 
 #endif  // mozilla_pkix_Result_h

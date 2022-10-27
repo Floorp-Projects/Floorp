@@ -223,18 +223,17 @@ enum {
     opt_NoDH
 };
 
-static secuCommandFlag options[] =
-    {
-      { /* opt_CertDir          */ 'd', PR_TRUE, 0, PR_FALSE },
-      { /* opt_KeySize          */ 'k', PR_TRUE, 0, PR_FALSE },
-      { /* opt_ECCurve          */ 'C', PR_TRUE, 0, PR_FALSE },
-      { /* opt_PWFile           */ 'f', PR_TRUE, 0, PR_FALSE },
-      { /* opt_PWString         */ 'p', PR_TRUE, 0, PR_FALSE },
-      { /* opt_NORSA            */ 'r', PR_TRUE, 0, PR_FALSE },
-      { /* opt_NoDSA            */ 'D', PR_TRUE, 0, PR_FALSE },
-      { /* opt_NoDH             */ 'h', PR_TRUE, 0, PR_FALSE },
-      { /* opt_NoEC             */ 'e', PR_TRUE, 0, PR_FALSE },
-    };
+static secuCommandFlag options[] = {
+    { /* opt_CertDir          */ 'd', PR_TRUE, 0, PR_FALSE },
+    { /* opt_KeySize          */ 'k', PR_TRUE, 0, PR_FALSE },
+    { /* opt_ECCurve          */ 'C', PR_TRUE, 0, PR_FALSE },
+    { /* opt_PWFile           */ 'f', PR_TRUE, 0, PR_FALSE },
+    { /* opt_PWString         */ 'p', PR_TRUE, 0, PR_FALSE },
+    { /* opt_NORSA            */ 'r', PR_TRUE, 0, PR_FALSE },
+    { /* opt_NoDSA            */ 'D', PR_TRUE, 0, PR_FALSE },
+    { /* opt_NoDH             */ 'h', PR_TRUE, 0, PR_FALSE },
+    { /* opt_NoEC             */ 'e', PR_TRUE, 0, PR_FALSE },
+};
 
 int
 main(int argc, char **argv)

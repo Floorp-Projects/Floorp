@@ -196,7 +196,7 @@ ec_GFp_pt_mul_aff(const mp_int *n, const mp_int *px, const mp_int *py,
         }
     }
 #else /* double and add/subtract method from \
-               * standard */
+       * standard */
     /* k3 = 3 * k */
     MP_CHECKOK(mp_set_int(&k3, 3));
     MP_CHECKOK(mp_mul(&k, &k3, &k3));

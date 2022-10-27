@@ -231,7 +231,7 @@ ssl3_GatherData(sslSocket *ss, sslGather *gs, int flags, ssl2Gather *ssl2gs)
                     break; /* End this case.  Continue around the loop. */
                 }
 
-            /* FALL THROUGH if (gs->remainder == 0) as we just received
+                /* FALL THROUGH if (gs->remainder == 0) as we just received
                  * an empty record and there's really no point in calling
                  * ssl_DefRecv() with buf=NULL and len=0. */
 

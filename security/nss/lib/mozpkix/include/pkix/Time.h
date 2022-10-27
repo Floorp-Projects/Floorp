@@ -136,7 +136,7 @@ class Duration final {
 
   uint64_t durationInSeconds;
 };
-}
-}  // namespace mozilla::pkix
+}  // namespace pkix
+}  // namespace mozilla
 
 #endif  // mozilla_pkix_Time_h

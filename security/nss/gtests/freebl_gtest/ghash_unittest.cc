@@ -52,4 +52,4 @@ TEST_P(GHashTest, KAT_Sftw) { TestGHash(GetParam(), true); }
 INSTANTIATE_TEST_SUITE_P(NISTTestVector, GHashTest,
                          ::testing::ValuesIn(kGcmKatValues));
 
-}  // nss_test
+}  // namespace nss_test

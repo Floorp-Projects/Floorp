@@ -1211,8 +1211,7 @@ nssCKFWToken_GetUTCTime(
 
         if (D > dims[M - 1])
             goto badtime; /* per-month check */
-        if ((2 == M) && (((Y % 4) || !(Y % 100)) &&
-                         (Y % 400)) &&
+        if ((2 == M) && (((Y % 4) || !(Y % 100)) && (Y % 400)) &&
             (D > 28))
             goto badtime; /* leap years */
 

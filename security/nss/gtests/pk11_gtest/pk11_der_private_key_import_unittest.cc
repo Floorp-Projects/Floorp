@@ -95,9 +95,10 @@ class DERPrivateKeyImportTest : public ::testing::Test {
         std::to_string(rand());
     SECItem item = {siBuffer, const_cast<unsigned char*>(data.data()),
                     static_cast<unsigned int>(data.size())};
-    SECItem nick = {siBuffer, reinterpret_cast<unsigned char*>(
-                                  const_cast<char*>(nick_str.data())),
-                    static_cast<unsigned int>(nick_str.length())};
+    SECItem nick = {
+        siBuffer,
+        reinterpret_cast<unsigned char*>(const_cast<char*>(nick_str.data())),
+        static_cast<unsigned int>(nick_str.length())};
 
     ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
     EXPECT_TRUE(slot);

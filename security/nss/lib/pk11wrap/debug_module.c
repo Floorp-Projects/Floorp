@@ -714,16 +714,14 @@ print_attr_value(CK_ATTRIBUTE_PTR attr)
         case CKA_WRAP:
             if (attr->ulValueLen > 0 && attr->pValue) {
                 CK_BBOOL tf = *((CK_BBOOL *)attr->pValue);
-                PR_LOG(modlog, 4, (fmt_s_s_d,
-                                   atype, tf ? "CK_TRUE" : "CK_FALSE", attr->ulValueLen));
+                PR_LOG(modlog, 4, (fmt_s_s_d, atype, tf ? "CK_TRUE" : "CK_FALSE", attr->ulValueLen));
                 break;
             }
         case CKA_CLASS:
             if (attr->ulValueLen > 0 && attr->pValue) {
                 CK_OBJECT_CLASS objClass = *((CK_OBJECT_CLASS *)attr->pValue);
                 get_obj_class(objClass, valstr, sizeof valstr);
-                PR_LOG(modlog, 4, (fmt_s_s_d,
-                                   atype, valstr, attr->ulValueLen));
+                PR_LOG(modlog, 4, (fmt_s_s_d, atype, valstr, attr->ulValueLen));
                 break;
             }
         case CKA_TRUST_CLIENT_AUTH:
@@ -733,16 +731,14 @@ print_attr_value(CK_ATTRIBUTE_PTR attr)
             if (attr->ulValueLen > 0 && attr->pValue) {
                 CK_TRUST trust = *((CK_TRUST *)attr->pValue);
                 get_trust_val(trust, valstr, sizeof valstr);
-                PR_LOG(modlog, 4, (fmt_s_s_d,
-                                   atype, valstr, attr->ulValueLen));
+                PR_LOG(modlog, 4, (fmt_s_s_d, atype, valstr, attr->ulValueLen));
                 break;
             }
         case CKA_KEY_TYPE:
             if (attr->ulValueLen > 0 && attr->pValue) {
                 CK_KEY_TYPE keyType = *((CK_KEY_TYPE *)attr->pValue);
                 get_key_type(keyType, valstr, sizeof valstr);
-                PR_LOG(modlog, 4, (fmt_s_s_d,
-                                   atype, valstr, attr->ulValueLen));
+                PR_LOG(modlog, 4, (fmt_s_s_d, atype, valstr, attr->ulValueLen));
                 break;
             }
         case CKA_PIXEL_X:
@@ -770,16 +766,14 @@ print_attr_value(CK_ATTRIBUTE_PTR attr)
             if (attr->ulValueLen > 0 && attr->pValue) {
                 len = PR_MIN(attr->ulValueLen + 1, sizeof valstr);
                 PR_snprintf(valstr, len, "%s", attr->pValue);
-                PR_LOG(modlog, 4, (fmt_s_qsq_d,
-                                   atype, valstr, attr->ulValueLen));
+                PR_LOG(modlog, 4, (fmt_s_qsq_d, atype, valstr, attr->ulValueLen));
                 break;
             }
         case CKA_PROFILE_ID:
             if (attr->ulValueLen > 0 && attr->pValue) {
                 CK_PROFILE_ID profile = *((CK_PROFILE_ID *)attr->pValue);
                 get_profile_val(profile, valstr, sizeof valstr);
-                PR_LOG(modlog, 4, (fmt_s_s_d,
-                                   atype, valstr, attr->ulValueLen));
+                PR_LOG(modlog, 4, (fmt_s_s_d, atype, valstr, attr->ulValueLen));
                 break;
             }
         case CKA_ISSUER:
@@ -792,8 +786,7 @@ print_attr_value(CK_ATTRIBUTE_PTR attr)
                 derName.len = attr->ulValueLen;
                 asciiName = CERT_DerNameToAscii(&derName);
                 if (asciiName) {
-                    PR_LOG(modlog, 4, (fmt_s_s_d,
-                                       atype, asciiName, attr->ulValueLen));
+                    PR_LOG(modlog, 4, (fmt_s_s_d, atype, asciiName, attr->ulValueLen));
                     PORT_Free(asciiName);
                     break;
                 }
@@ -814,8 +807,7 @@ print_attr_value(CK_ATTRIBUTE_PTR attr)
                 if (!len) { /* entire string is printable */
                     len = PR_MIN(attr->ulValueLen + 1, sizeof valstr);
                     PR_snprintf(valstr, len, "%s", attr->pValue);
-                    PR_LOG(modlog, 4, (fmt_s_qsq_d,
-                                       atype, valstr, attr->ulValueLen));
+                    PR_LOG(modlog, 4, (fmt_s_qsq_d, atype, valstr, attr->ulValueLen));
                     break;
                 }
                 /* else fall through and treat like a binary buffer */
@@ -832,15 +824,13 @@ print_attr_value(CK_ATTRIBUTE_PTR attr)
 
                 hexBuf = CERT_Hexify(&attrBuf, PR_FALSE);
                 if (hexBuf) {
-                    PR_LOG(modlog, 4, (fmt_s_s_d,
-                                       atype, hexBuf, attr->ulValueLen));
+                    PR_LOG(modlog, 4, (fmt_s_s_d, atype, hexBuf, attr->ulValueLen));
                     PORT_Free(hexBuf);
                     break;
                 }
                 /* else fall through and show only the address. :( */
             }
-            PR_LOG(modlog, 4, ("    %s = [0x%p] [%d]",
-                               atype, attr->pValue, attr->ulValueLen));
+            PR_LOG(modlog, 4, ("    %s = [0x%p] [%d]", atype, attr->pValue, attr->ulValueLen));
             break;
     }
 }
@@ -1118,15 +1108,10 @@ NSSDBGC_GetInfo(
     rv = module_functions->C_GetInfo(pInfo);
     nssdbg_finish_time(FUNC_C_GETINFO, start);
     if (rv == CKR_OK) {
-        PR_LOG(modlog, 4, ("  cryptoki version: %d.%d",
-                           pInfo->cryptokiVersion.major,
-                           pInfo->cryptokiVersion.minor));
+        PR_LOG(modlog, 4, ("  cryptoki version: %d.%d", pInfo->cryptokiVersion.major, pInfo->cryptokiVersion.minor));
         PR_LOG(modlog, 4, (fmt_manufacturerID, pInfo->manufacturerID));
-        PR_LOG(modlog, 4, ("  library description = \"%.32s\"",
-                           pInfo->libraryDescription));
-        PR_LOG(modlog, 4, ("  library version: %d.%d",
-                           pInfo->libraryVersion.major,
-                           pInfo->libraryVersion.minor));
+        PR_LOG(modlog, 4, ("  library description = \"%.32s\"", pInfo->libraryDescription));
+        PR_LOG(modlog, 4, ("  library version: %d.%d", pInfo->libraryVersion.major, pInfo->libraryVersion.minor));
     }
     log_rv(rv);
     return rv;
@@ -1187,19 +1172,11 @@ NSSDBGC_GetSlotInfo(
     rv = module_functions->C_GetSlotInfo(slotID, pInfo);
     nssdbg_finish_time(FUNC_C_GETSLOTINFO, start);
     if (rv == CKR_OK) {
-        PR_LOG(modlog, 4, ("  slotDescription = \"%.64s\"",
-                           pInfo->slotDescription));
+        PR_LOG(modlog, 4, ("  slotDescription = \"%.64s\"", pInfo->slotDescription));
         PR_LOG(modlog, 4, (fmt_manufacturerID, pInfo->manufacturerID));
-        PR_LOG(modlog, 4, ("  flags = %s %s %s",
-                           pInfo->flags & CKF_HW_SLOT ? "CKF_HW_SLOT" : "",
-                           pInfo->flags & CKF_REMOVABLE_DEVICE ? "CKF_REMOVABLE_DEVICE" : "",
-                           pInfo->flags & CKF_TOKEN_PRESENT ? "CKF_TOKEN_PRESENT" : ""));
-        PR_LOG(modlog, 4, (fmt_hwVersion,
-                           pInfo->hardwareVersion.major,
-                           pInfo->hardwareVersion.minor));
-        PR_LOG(modlog, 4, (fmt_fwVersion,
-                           pInfo->firmwareVersion.major,
-                           pInfo->firmwareVersion.minor));
+        PR_LOG(modlog, 4, ("  flags = %s %s %s", pInfo->flags & CKF_HW_SLOT ? "CKF_HW_SLOT" : "", pInfo->flags & CKF_REMOVABLE_DEVICE ? "CKF_REMOVABLE_DEVICE" : "", pInfo->flags & CKF_TOKEN_PRESENT ? "CKF_TOKEN_PRESENT" : ""));
+        PR_LOG(modlog, 4, (fmt_hwVersion, pInfo->hardwareVersion.major, pInfo->hardwareVersion.minor));
+        PR_LOG(modlog, 4, (fmt_fwVersion, pInfo->firmwareVersion.major, pInfo->firmwareVersion.minor));
     }
     log_rv(rv);
     return rv;
@@ -1223,23 +1200,12 @@ NSSDBGC_GetTokenInfo(
         PR_LOG(modlog, 4, (fmt_manufacturerID, pInfo->manufacturerID));
         PR_LOG(modlog, 4, ("  model = \"%.16s\"", pInfo->model));
         PR_LOG(modlog, 4, ("  serial = \"%.16s\"", pInfo->serialNumber));
-        PR_LOG(modlog, 4, ("  flags = %s %s %s %s",
-                           pInfo->flags & CKF_RNG ? "CKF_RNG" : "",
-                           pInfo->flags & CKF_WRITE_PROTECTED ? "CKF_WRITE_PROTECTED" : "",
-                           pInfo->flags & CKF_LOGIN_REQUIRED ? "CKF_LOGIN_REQUIRED" : "",
-                           pInfo->flags & CKF_USER_PIN_INITIALIZED ? "CKF_USER_PIN_INIT" : ""));
-        PR_LOG(modlog, 4, ("  maxSessions = %u, Sessions = %u",
-                           pInfo->ulMaxSessionCount, pInfo->ulSessionCount));
-        PR_LOG(modlog, 4, ("  maxRwSessions = %u, RwSessions = %u",
-                           pInfo->ulMaxRwSessionCount,
-                           pInfo->ulRwSessionCount));
+        PR_LOG(modlog, 4, ("  flags = %s %s %s %s", pInfo->flags & CKF_RNG ? "CKF_RNG" : "", pInfo->flags & CKF_WRITE_PROTECTED ? "CKF_WRITE_PROTECTED" : "", pInfo->flags & CKF_LOGIN_REQUIRED ? "CKF_LOGIN_REQUIRED" : "", pInfo->flags & CKF_USER_PIN_INITIALIZED ? "CKF_USER_PIN_INIT" : ""));
+        PR_LOG(modlog, 4, ("  maxSessions = %u, Sessions = %u", pInfo->ulMaxSessionCount, pInfo->ulSessionCount));
+        PR_LOG(modlog, 4, ("  maxRwSessions = %u, RwSessions = %u", pInfo->ulMaxRwSessionCount, pInfo->ulRwSessionCount));
         /* ignore Max & Min Pin Len, Public and Private Memory */
-        PR_LOG(modlog, 4, (fmt_hwVersion,
-                           pInfo->hardwareVersion.major,
-                           pInfo->hardwareVersion.minor));
-        PR_LOG(modlog, 4, (fmt_fwVersion,
-                           pInfo->firmwareVersion.major,
-                           pInfo->firmwareVersion.minor));
+        PR_LOG(modlog, 4, (fmt_hwVersion, pInfo->hardwareVersion.major, pInfo->hardwareVersion.minor));
+        PR_LOG(modlog, 4, (fmt_fwVersion, pInfo->firmwareVersion.major, pInfo->firmwareVersion.minor));
     }
     log_rv(rv);
     return rv;
@@ -1441,9 +1407,7 @@ NSSDBGC_GetSessionInfo(
     if (rv == CKR_OK) {
         PR_LOG(modlog, 4, (fmt_slotID, pInfo->slotID));
         log_state(pInfo->state);
-        PR_LOG(modlog, 4, ("  flags = %s %s",
-                           pInfo->flags & CKF_RW_SESSION ? "CKF_RW_SESSION" : "",
-                           pInfo->flags & CKF_SERIAL_SESSION ? "CKF_SERIAL_SESSION" : ""));
+        PR_LOG(modlog, 4, ("  flags = %s %s", pInfo->flags & CKF_RW_SESSION ? "CKF_RW_SESSION" : "", pInfo->flags & CKF_SERIAL_SESSION ? "CKF_SERIAL_SESSION" : ""));
         PR_LOG(modlog, 4, ("  deviceError = 0x%x", pInfo->ulDeviceError));
     }
     log_rv(rv);
@@ -1728,8 +1692,7 @@ NSSDBGC_FindObjects(
     nssdbg_finish_time(FUNC_C_FINDOBJECTS, start);
     PR_LOG(modlog, 4, ("  *pulObjectCount = 0x%x", *pulObjectCount));
     for (i = 0; i < *pulObjectCount; i++) {
-        PR_LOG(modlog, 4, ("  phObject[%d] = 0x%x%s", i, phObject[i],
-                           phObject[i] ? "" : fmt_invalid_handle));
+        PR_LOG(modlog, 4, ("  phObject[%d] = 0x%x%s", i, phObject[i], phObject[i] ? "" : fmt_invalid_handle));
     }
     log_rv(rv);
     return rv;

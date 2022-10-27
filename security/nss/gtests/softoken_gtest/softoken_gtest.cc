@@ -606,8 +606,8 @@ SECStatus test_dh_value(const PQGParams *params, const SECItem *pub_key_value,
   if ((genFailOK) && ((priv_key.get() == nullptr) || (pub_tmp == nullptr))) {
     return SECFailure;
   }
-  EXPECT_NE(nullptr, priv_key.get()) << "PK11_GenerateKeyPair failed: "
-                                     << PORT_ErrorToName(PORT_GetError());
+  EXPECT_NE(nullptr, priv_key.get())
+      << "PK11_GenerateKeyPair failed: " << PORT_ErrorToName(PORT_GetError());
   EXPECT_NE(nullptr, pub_tmp);
   if ((priv_key.get() == nullptr) || (pub_tmp == nullptr)) return SECFailure;
   ScopedSECKEYPublicKey pub_key(pub_tmp);

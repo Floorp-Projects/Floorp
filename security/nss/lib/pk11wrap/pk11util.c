@@ -452,8 +452,10 @@ SECMOD_DeleteModule(const char *name, int *type)
 SECStatus
 SECMOD_DeleteInternalModule(const char *name)
 {
+#ifndef NSS_FIPS_DISABLED
     SECMODModuleList *mlp;
     SECMODModuleList **mlpp;
+#endif
     SECStatus rv = SECFailure;
 
     if (SECMOD_GetSystemFIPSEnabled() || pendingModule) {
@@ -468,8 +470,7 @@ SECMOD_DeleteInternalModule(const char *name)
 #ifdef NSS_FIPS_DISABLED
     PORT_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR);
     return rv;
-#endif
-
+#else
     SECMOD_GetWriteLock(moduleLock);
     for (mlpp = &modules, mlp = modules;
          mlp != NULL; mlpp = &mlp->next, mlp = *mlpp) {
@@ -541,6 +542,7 @@ SECMOD_DeleteInternalModule(const char *name)
         internalModule = newModule; /* adopt the module */
     }
     return rv;
+#endif
 }
 
 SECStatus

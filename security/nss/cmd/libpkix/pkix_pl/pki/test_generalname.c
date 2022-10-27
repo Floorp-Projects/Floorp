@@ -106,7 +106,7 @@ test_generalname(int argc, char *argv[])
     diffInput = "1.2.840.115349";
     testNameType(PKIX_OID_NAME, goodInput, diffInput, goodInput);
 
-/*
+    /*
          * We don't support creating PKIX_EDIPARTY_NAME,
          * PKIX_IP_NAME, OTHER_NAME, X400_ADDRESS from strings
          */

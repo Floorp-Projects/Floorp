@@ -45,7 +45,7 @@ load128_le(uint8_t *b)
     return _mm_loadu_si128((__m128i *)b);
 #else
     return (
-        (FStar_UInt128_uint128){.low = load64_le(b), .high = load64_le(b + 8) });
+        (FStar_UInt128_uint128){ .low = load64_le(b), .high = load64_le(b + 8) });
 #endif
 }
 
@@ -64,7 +64,7 @@ load128_be(uint8_t *b)
 #if HAS_OPTIMIZED
     return _mm_set_epi64x(h, l);
 #else
-    return ((FStar_UInt128_uint128){.low = l, .high = h });
+    return ((FStar_UInt128_uint128){ .low = l, .high = h });
 #endif
 }
 
@@ -181,7 +181,7 @@ FStar_UInt128_logand(FStar_UInt128_uint128 a, FStar_UInt128_uint128 b)
     return _mm_and_si128(a, b);
 #else
     return (
-        (FStar_UInt128_uint128){.low = a.low & b.low, .high = a.high & b.high });
+        (FStar_UInt128_uint128){ .low = a.low & b.low, .high = a.high & b.high });
 #endif
 }
 
@@ -192,7 +192,7 @@ FStar_UInt128_logxor(FStar_UInt128_uint128 a, FStar_UInt128_uint128 b)
     return _mm_xor_si128(a, b);
 #else
     return (
-        (FStar_UInt128_uint128){.low = a.low ^ b.low, .high = a.high ^ b.high });
+        (FStar_UInt128_uint128){ .low = a.low ^ b.low, .high = a.high ^ b.high });
 #endif
 }
 
@@ -203,7 +203,7 @@ FStar_UInt128_logor(FStar_UInt128_uint128 a, FStar_UInt128_uint128 b)
     return _mm_or_si128(a, b);
 #else
     return (
-        (FStar_UInt128_uint128){.low = a.low | b.low, .high = a.high | b.high });
+        (FStar_UInt128_uint128){ .low = a.low | b.low, .high = a.high | b.high });
 #endif
 }
 
@@ -213,7 +213,7 @@ FStar_UInt128_lognot(FStar_UInt128_uint128 a)
 #if HAS_OPTIMIZED
     return _mm_andnot_si128(a, a);
 #else
-    return ((FStar_UInt128_uint128){.low = ~a.low, .high = ~a.high });
+    return ((FStar_UInt128_uint128){ .low = ~a.low, .high = ~a.high });
 #endif
 }
 
@@ -245,8 +245,8 @@ FStar_UInt128_shift_left_small(FStar_UInt128_uint128 a, uint32_t s)
 inline static FStar_UInt128_uint128
 FStar_UInt128_shift_left_large(FStar_UInt128_uint128 a, uint32_t s)
 {
-    return ((FStar_UInt128_uint128){.low = (uint64_t)0U,
-                                    .high = a.low << s - FStar_UInt128_u32_64 });
+    return ((FStar_UInt128_uint128){ .low = (uint64_t)0U,
+                                     .high = a.low << s - FStar_UInt128_u32_64 });
 }
 
 inline static FStar_UInt128_uint128
@@ -296,8 +296,8 @@ FStar_UInt128_shift_right_small(FStar_UInt128_uint128 a, uint32_t s)
 inline static FStar_UInt128_uint128
 FStar_UInt128_shift_right_large(FStar_UInt128_uint128 a, uint32_t s)
 {
-    return ((FStar_UInt128_uint128){.low = a.high >> s - FStar_UInt128_u32_64,
-                                    .high = (uint64_t)0U });
+    return ((FStar_UInt128_uint128){ .low = a.high >> s - FStar_UInt128_u32_64,
+                                     .high = (uint64_t)0U });
 }
 
 inline static FStar_UInt128_uint128
@@ -368,10 +368,10 @@ FStar_UInt128_eq_mask(FStar_UInt128_uint128 a, FStar_UInt128_uint128 b)
     return _mm_and_si128(ret64, s64);
 #else
     return (
-        (FStar_UInt128_uint128){.low = FStar_UInt64_eq_mask(a.low, b.low) &
-                                       FStar_UInt64_eq_mask(a.high, b.high),
-                                .high = FStar_UInt64_eq_mask(a.low, b.low) &
-                                        FStar_UInt64_eq_mask(a.high, b.high) });
+        (FStar_UInt128_uint128){ .low = FStar_UInt64_eq_mask(a.low, b.low) &
+                                        FStar_UInt64_eq_mask(a.high, b.high),
+                                 .high = FStar_UInt64_eq_mask(a.low, b.low) &
+                                         FStar_UInt64_eq_mask(a.high, b.high) });
 #endif
 }
 
@@ -426,7 +426,7 @@ FStar_UInt128_uint64_to_uint128(uint64_t a)
 #if HAS_OPTIMIZED
     return _mm_set_epi64x(0, a);
 #else
-    return ((FStar_UInt128_uint128){.low = a, .high = (uint64_t)0U });
+    return ((FStar_UInt128_uint128){ .low = a, .high = (uint64_t)0U });
 #endif
 }
 

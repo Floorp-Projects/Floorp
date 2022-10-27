@@ -619,7 +619,7 @@ NSS_CMSSignedData_ImportCerts(NSSCMSSignedData *sigd, CERTCertDBHandle *certdb,
 
     rv = SECSuccess;
 
-/* XXX CRL handling */
+    /* XXX CRL handling */
 
 done:
     if (sigd->signerInfos != NULL) {

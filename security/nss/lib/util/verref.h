@@ -28,7 +28,7 @@
 #endif
 {
     extern const char NSS_VERSION_VARIABLE[];
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
     __attribute__((unused))
 #endif
     volatile const char _nss_version_c = NSS_VERSION_VARIABLE[0];

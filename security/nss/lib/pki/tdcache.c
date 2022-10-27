@@ -58,8 +58,7 @@ log_item_dump(const char *msg, NSSItem *it)
 static void
 log_cert_ref(const char *msg, NSSCertificate *c)
 {
-    PR_LOG(s_log, PR_LOG_DEBUG, ("%s: %s", msg,
-                                 (c->nickname) ? c->nickname : c->email));
+    PR_LOG(s_log, PR_LOG_DEBUG, ("%s: %s", msg, (c->nickname) ? c->nickname : c->email));
     log_item_dump("\tserial", &c->serial);
     log_item_dump("\tsubject", &c->subject);
 }

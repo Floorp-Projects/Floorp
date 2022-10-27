@@ -88,7 +88,7 @@ loader_LoadLibInReferenceDir(const char* referencePath, const char* name)
                                                         * on Windows even if PATH is not set. Requires NSPR 4.8.1 . */
                                                        | PR_LD_ALT_SEARCH_PATH
 #endif
-                                          );
+            );
             PORT_Free(fullName);
         }
     }

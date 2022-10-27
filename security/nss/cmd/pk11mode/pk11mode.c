@@ -96,8 +96,7 @@ int MODE = FIPSMODE;
 CK_BBOOL true = CK_TRUE;
 CK_BBOOL false = CK_FALSE;
 static const CK_BYTE PLAINTEXT[] = { "Firefox  Rules!" };
-static const CK_BYTE PLAINTEXT_PAD[] =
-    { "Firefox and thunderbird rule the world!" };
+static const CK_BYTE PLAINTEXT_PAD[] = { "Firefox and thunderbird rule the world!" };
 CK_ULONG NUMTESTS = 0;
 
 static const char *slotFlagName[] = {

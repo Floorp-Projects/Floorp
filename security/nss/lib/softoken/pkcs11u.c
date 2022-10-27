@@ -904,7 +904,7 @@ sftk_AddAttributeType(SFTKObject *object, CK_ATTRIBUTE_TYPE type,
 static SECItem *
 sftk_lookupTokenKeyByHandle(SFTKSlot *slot, CK_OBJECT_HANDLE handle)
 {
-    return (SECItem *)PL_HashTableLookup(slot->tokObjHashTable, (void *)handle);
+    return (SECItem *)PL_HashTableLookup(slot->tokObjHashTable, (void *)(uintptr_t)handle);
 }
 
 /*

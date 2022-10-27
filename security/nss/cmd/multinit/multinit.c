@@ -37,78 +37,76 @@ enum optionNames {
     opt_last
 };
 
-static const secuCommandFlag options_init[] =
-    {
-      { /* opt_liborder */ 'o', PR_TRUE, "1M2zmi", PR_TRUE, "order" },
-      { /* opt_mainDB */ 'd', PR_TRUE, 0, PR_FALSE, "main_db" },
-      { /* opt_lib1DB */ '1', PR_TRUE, 0, PR_FALSE, "lib1_db" },
-      { /* opt_lib2DB */ '2', PR_TRUE, 0, PR_FALSE, "lib2_db" },
-      { /* opt_mainRO */ 'r', PR_FALSE, 0, PR_FALSE, "main_readonly" },
-      { /* opt_lib1RO */ 0, PR_FALSE, 0, PR_FALSE, "lib1_readonly" },
-      { /* opt_lib2RO */ 0, PR_FALSE, 0, PR_FALSE, "lib2_readonly" },
-      { /* opt_mainCMD */ 'c', PR_TRUE, 0, PR_FALSE, "main_command" },
-      { /* opt_lib1CMD */ 0, PR_TRUE, 0, PR_FALSE, "lib1_command" },
-      { /* opt_lib2CMD */ 0, PR_TRUE, 0, PR_FALSE, "lib2_command" },
-      { /* opt_mainTokNam */ 't', PR_TRUE, 0, PR_FALSE, "main_token_name" },
-      { /* opt_lib1TokNam */ 0, PR_TRUE, 0, PR_FALSE, "lib1_token_name" },
-      { /* opt_lib2TokNam */ 0, PR_TRUE, 0, PR_FALSE, "lib2_token_name" },
-      { /* opt_oldStype */ 's', PR_FALSE, 0, PR_FALSE, "oldStype" },
-      { /* opt_verbose */ 'v', PR_FALSE, 0, PR_FALSE, "verbose" },
-      { /* opt_summary */ 'z', PR_FALSE, 0, PR_FALSE, "summary" },
-      { /* opt_help */ 'h', PR_FALSE, 0, PR_FALSE, "help" }
-    };
+static const secuCommandFlag options_init[] = {
+    { /* opt_liborder */ 'o', PR_TRUE, "1M2zmi", PR_TRUE, "order" },
+    { /* opt_mainDB */ 'd', PR_TRUE, 0, PR_FALSE, "main_db" },
+    { /* opt_lib1DB */ '1', PR_TRUE, 0, PR_FALSE, "lib1_db" },
+    { /* opt_lib2DB */ '2', PR_TRUE, 0, PR_FALSE, "lib2_db" },
+    { /* opt_mainRO */ 'r', PR_FALSE, 0, PR_FALSE, "main_readonly" },
+    { /* opt_lib1RO */ 0, PR_FALSE, 0, PR_FALSE, "lib1_readonly" },
+    { /* opt_lib2RO */ 0, PR_FALSE, 0, PR_FALSE, "lib2_readonly" },
+    { /* opt_mainCMD */ 'c', PR_TRUE, 0, PR_FALSE, "main_command" },
+    { /* opt_lib1CMD */ 0, PR_TRUE, 0, PR_FALSE, "lib1_command" },
+    { /* opt_lib2CMD */ 0, PR_TRUE, 0, PR_FALSE, "lib2_command" },
+    { /* opt_mainTokNam */ 't', PR_TRUE, 0, PR_FALSE, "main_token_name" },
+    { /* opt_lib1TokNam */ 0, PR_TRUE, 0, PR_FALSE, "lib1_token_name" },
+    { /* opt_lib2TokNam */ 0, PR_TRUE, 0, PR_FALSE, "lib2_token_name" },
+    { /* opt_oldStype */ 's', PR_FALSE, 0, PR_FALSE, "oldStype" },
+    { /* opt_verbose */ 'v', PR_FALSE, 0, PR_FALSE, "verbose" },
+    { /* opt_summary */ 'z', PR_FALSE, 0, PR_FALSE, "summary" },
+    { /* opt_help */ 'h', PR_FALSE, 0, PR_FALSE, "help" }
+};
 
-static const commandDescript options_des[] =
-    {
-      { /* opt_liborder */ PR_FALSE, "initOrder",
-        " Specifies the order of NSS initialization and shutdown. Order is\n"
-        " given as a string where each character represents either an init or\n"
-        " a shutdown of the main program or one of the 2 test libraries\n"
-        " (library 1 and library 2). The valid characters are as follows:\n"
-        "   M Init the main program\n   1 Init library 1\n"
-        "   2 Init library 2\n"
-        "   m Shutdown the main program\n   i Shutdown library 1\n"
-        "   z Shutdown library 2\n" },
-      { /* opt_mainDB */ PR_TRUE, "nss_db",
-        " Specified the directory to open the nss database for the main\n"
-        " program. Must be specified if \"M\" is given in the order string\n" },
-      { /* opt_lib1DB */ PR_FALSE, "nss_db",
-        " Specified the directory to open the nss database for library 1.\n"
-        " Must be specified if \"1\" is given in the order string\n" },
-      { /* opt_lib2DB */ PR_FALSE, "nss_db",
-        " Specified the directory to open the nss database for library 2.\n"
-        " Must be specified if \"2\" is given in the order string\n" },
-      { /* opt_mainRO */ PR_FALSE, NULL,
-        " Open the main program's database read only.\n" },
-      { /* opt_lib1RO */ PR_FALSE, NULL,
-        " Open library 1's database read only.\n" },
-      { /* opt_lib2RO */ PR_FALSE, NULL,
-        " Open library 2's database read only.\n" },
-      { /* opt_mainCMD */ PR_FALSE, "nss_command",
-        " Specifies the NSS command to execute in the main program.\n"
-        " Valid commands are: \n"
-        "   key_slot, list_slots, list_certs, add_cert, none.\n"
-        " Default is \"none\".\n" },
-      { /* opt_lib1CMD */ PR_FALSE, "nss_command",
-        " Specifies the NSS command to execute in library 1.\n" },
-      { /* opt_lib2CMD */ PR_FALSE, "nss_command",
-        " Specifies the NSS command to execute in library 2.\n" },
-      { /* opt_mainTokNam */ PR_FALSE, "token_name",
-        " Specifies the name of PKCS11 token for the main program's "
-        "database.\n" },
-      { /* opt_lib1TokNam */ PR_FALSE, "token_name",
-        " Specifies the name of PKCS11 token for library 1's database.\n" },
-      { /* opt_lib2TokNam */ PR_FALSE, "token_name",
-        " Specifies the name of PKCS11 token for library 2's database.\n" },
-      { /* opt_oldStype */ PR_FALSE, NULL,
-        " Use NSS_Shutdown rather than NSS_ShutdownContext in the main\n"
-        " program.\n" },
-      { /* opt_verbose */ PR_FALSE, NULL,
-        " Noisily output status to standard error\n" },
-      { /* opt_summarize */ PR_FALSE, NULL,
-        "report a summary of the test results\n" },
-      { /* opt_help */ PR_FALSE, NULL, " give this message\n" }
-    };
+static const commandDescript options_des[] = {
+    { /* opt_liborder */ PR_FALSE, "initOrder",
+      " Specifies the order of NSS initialization and shutdown. Order is\n"
+      " given as a string where each character represents either an init or\n"
+      " a shutdown of the main program or one of the 2 test libraries\n"
+      " (library 1 and library 2). The valid characters are as follows:\n"
+      "   M Init the main program\n   1 Init library 1\n"
+      "   2 Init library 2\n"
+      "   m Shutdown the main program\n   i Shutdown library 1\n"
+      "   z Shutdown library 2\n" },
+    { /* opt_mainDB */ PR_TRUE, "nss_db",
+      " Specified the directory to open the nss database for the main\n"
+      " program. Must be specified if \"M\" is given in the order string\n" },
+    { /* opt_lib1DB */ PR_FALSE, "nss_db",
+      " Specified the directory to open the nss database for library 1.\n"
+      " Must be specified if \"1\" is given in the order string\n" },
+    { /* opt_lib2DB */ PR_FALSE, "nss_db",
+      " Specified the directory to open the nss database for library 2.\n"
+      " Must be specified if \"2\" is given in the order string\n" },
+    { /* opt_mainRO */ PR_FALSE, NULL,
+      " Open the main program's database read only.\n" },
+    { /* opt_lib1RO */ PR_FALSE, NULL,
+      " Open library 1's database read only.\n" },
+    { /* opt_lib2RO */ PR_FALSE, NULL,
+      " Open library 2's database read only.\n" },
+    { /* opt_mainCMD */ PR_FALSE, "nss_command",
+      " Specifies the NSS command to execute in the main program.\n"
+      " Valid commands are: \n"
+      "   key_slot, list_slots, list_certs, add_cert, none.\n"
+      " Default is \"none\".\n" },
+    { /* opt_lib1CMD */ PR_FALSE, "nss_command",
+      " Specifies the NSS command to execute in library 1.\n" },
+    { /* opt_lib2CMD */ PR_FALSE, "nss_command",
+      " Specifies the NSS command to execute in library 2.\n" },
+    { /* opt_mainTokNam */ PR_FALSE, "token_name",
+      " Specifies the name of PKCS11 token for the main program's "
+      "database.\n" },
+    { /* opt_lib1TokNam */ PR_FALSE, "token_name",
+      " Specifies the name of PKCS11 token for library 1's database.\n" },
+    { /* opt_lib2TokNam */ PR_FALSE, "token_name",
+      " Specifies the name of PKCS11 token for library 2's database.\n" },
+    { /* opt_oldStype */ PR_FALSE, NULL,
+      " Use NSS_Shutdown rather than NSS_ShutdownContext in the main\n"
+      " program.\n" },
+    { /* opt_verbose */ PR_FALSE, NULL,
+      " Noisily output status to standard error\n" },
+    { /* opt_summarize */ PR_FALSE, NULL,
+      "report a summary of the test results\n" },
+    { /* opt_help */ PR_FALSE, NULL, " give this message\n" }
+};
 
 /*
  * output our short help (table driven). (does not exit).

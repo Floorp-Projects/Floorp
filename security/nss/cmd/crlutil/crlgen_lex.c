@@ -1279,7 +1279,7 @@ input()
                     /* Reset buffer status. */
                     yyrestart(yyin);
 
-                /* fall through */
+                    /* fall through */
 
                 case EOB_ACT_END_OF_FILE: {
                     if (yywrap())

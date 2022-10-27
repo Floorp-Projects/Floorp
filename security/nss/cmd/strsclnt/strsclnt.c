@@ -550,7 +550,7 @@ lockedVars_WaitForDone(lockedVars *lv)
 }
 
 int /* returns count */
-    lockedVars_AddToCount(lockedVars *lv, int addend)
+lockedVars_AddToCount(lockedVars *lv, int addend)
 {
     int rv;
 

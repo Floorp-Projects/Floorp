@@ -250,8 +250,10 @@ static PRUint32 ssl_max_sid_cache_locks = MAX_SID_CACHE_LOCKS;
 /* forward static function declarations */
 static PRUint32 SIDindex(cacheDesc *cache, const PRIPv6Addr *addr, PRUint8 *s,
                          unsigned nl);
+#if defined(XP_UNIX)
 static SECStatus LaunchLockPoller(cacheDesc *cache);
 static SECStatus StopLockPoller(cacheDesc *cache);
+#endif
 
 struct inheritanceStr {
     PRUint32 cacheMemSize;

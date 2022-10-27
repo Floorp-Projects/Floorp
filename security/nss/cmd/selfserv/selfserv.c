@@ -906,7 +906,7 @@ lockedVars_WaitForDone(lockedVars *lv)
 }
 
 int /* returns count */
-    lockedVars_AddToCount(lockedVars *lv, int addend)
+lockedVars_AddToCount(lockedVars *lv, int addend)
 {
     int rv;
 
@@ -1986,7 +1986,7 @@ loser:
 static SECStatus
 configureEchWithData(PRFileDesc *model_sock)
 {
-/* The input should be a Base64-encoded ECHKey struct:
+    /* The input should be a Base64-encoded ECHKey struct:
      *  struct {
      *     opaque pkcs8_ech_keypair<0..2^16-1>;
      *     ECHConfigs configs<0..2^16>; // draft-ietf-tls-esni-09

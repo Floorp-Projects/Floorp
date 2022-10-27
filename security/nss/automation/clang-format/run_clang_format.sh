@@ -54,7 +54,7 @@ for dir in "${dirs[@]}"; do
         if [ "${#c}" == "1" ]; then
             depth+=(-maxdepth 1)
         fi
-        find "$dir" "${depth[@]}" -type f \( -name '*.[ch]' -o -name '*.cc' \) -exec clang-format -i {} \+
+        find "$dir" "${depth[@]}" -type f \( -name '*.[ch]' -o -name '*.cc' \) -exec clang-format -sort-includes=false -i {} \+
     fi
 done
 

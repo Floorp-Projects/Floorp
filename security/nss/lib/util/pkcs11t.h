@@ -1476,7 +1476,7 @@ typedef CK_CALLBACK_FUNCTION(CK_RV, CK_NOTIFY)(
     CK_SESSION_HANDLE hSession, /* the session's handle */
     CK_NOTIFICATION event,
     CK_VOID_PTR pApplication /* passed to C_OpenSession */
-    );
+);
 
 /* CK_FUNCTION_LIST is a structure holding a PKCS #11 spec
  * version and pointers of appropriate types to all the
@@ -1510,24 +1510,24 @@ typedef CK_INTERFACE_PTR CK_PTR CK_INTERFACE_PTR_PTR;
  * mutex object */
 typedef CK_CALLBACK_FUNCTION(CK_RV, CK_CREATEMUTEX)(
     CK_VOID_PTR_PTR ppMutex /* location to receive ptr to mutex */
-    );
+);
 
 /* CK_DESTROYMUTEX is an application callback for destroying a
  * mutex object */
 typedef CK_CALLBACK_FUNCTION(CK_RV, CK_DESTROYMUTEX)(
     CK_VOID_PTR pMutex /* pointer to mutex */
-    );
+);
 
 /* CK_LOCKMUTEX is an application callback for locking a mutex */
 typedef CK_CALLBACK_FUNCTION(CK_RV, CK_LOCKMUTEX)(
     CK_VOID_PTR pMutex /* pointer to mutex */
-    );
+);
 
 /* CK_UNLOCKMUTEX is an application callback for unlocking a
  * mutex */
 typedef CK_CALLBACK_FUNCTION(CK_RV, CK_UNLOCKMUTEX)(
     CK_VOID_PTR pMutex /* pointer to mutex */
-    );
+);
 
 /* CK_C_INITIALIZE_ARGS provides the optional arguments to
  * C_Initialize */

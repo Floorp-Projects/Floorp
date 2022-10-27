@@ -32,9 +32,8 @@ typedef struct {
     int iv;
 } pk11MechanismData;
 
-static pk11MechanismData pk11_default =
-    { CKM_GENERIC_SECRET_KEY_GEN, CKK_GENERIC_SECRET,
-      CKM_FAKE_RANDOM, CKM_FAKE_RANDOM, 8, 8 };
+static pk11MechanismData pk11_default = { CKM_GENERIC_SECRET_KEY_GEN, CKK_GENERIC_SECRET,
+                                          CKM_FAKE_RANDOM, CKM_FAKE_RANDOM, 8, 8 };
 static pk11MechanismData *pk11_MechanismTable = NULL;
 static int pk11_MechTableSize = 0;
 static int pk11_MechEntrySize = 0;

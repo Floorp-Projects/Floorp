@@ -119,4 +119,4 @@ TEST_P(Pkcs11AESKeyWrapTest, TestVectors) { WrapUnwrap(GetParam()); }
 
 INSTANTIATE_TEST_SUITE_P(Pkcs11WycheproofAESKWTest, Pkcs11AESKeyWrapTest,
                          ::testing::ValuesIn(kWycheproofAesKWVectors));
-} /* nss_test */
+}  // namespace nss_test

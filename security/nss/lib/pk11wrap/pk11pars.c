@@ -1179,54 +1179,60 @@ secmod_ParseModuleSpecForTokens(PRBool convert, PRBool isFIPS,
         NSSUTIL_HANDLE_STRING_ARG(moduleSpec, target, "tokens=",
                                   modulePrev = moduleSpec;
                                   /* skip copying */)
-        NSSUTIL_HANDLE_STRING_ARG(moduleSpec, tmp, "cryptoTokenDescription=",
-                                  if (convert) { modulePrev = moduleSpec; });
-        NSSUTIL_HANDLE_STRING_ARG(moduleSpec, tmp, "cryptoSlotDescription=",
-                                  if (convert) { modulePrev = moduleSpec; });
-        NSSUTIL_HANDLE_STRING_ARG(moduleSpec, tmp, "dbTokenDescription=",
-                                  if (convert) {
-                                      modulePrev = moduleSpec;
-                                      if (!isFIPS) {
-                                          newSpecPtr = secmod_doDescCopy(newSpecPtr,
-                                                                         &newSpec, &newSpecLen,
-                                                                         SECMOD_TOKEN_DESCRIPTION,
-                                                                         sizeof(SECMOD_TOKEN_DESCRIPTION) - 1,
-                                                                         tmp);
-                                      }
-                                  });
-        NSSUTIL_HANDLE_STRING_ARG(moduleSpec, tmp, "dbSlotDescription=",
-                                  if (convert) {
-                                      modulePrev = moduleSpec; /* skip copying */
-                                      if (!isFIPS) {
-                                          newSpecPtr = secmod_doDescCopy(newSpecPtr,
-                                                                         &newSpec, &newSpecLen,
-                                                                         SECMOD_SLOT_DESCRIPTION,
-                                                                         sizeof(SECMOD_SLOT_DESCRIPTION) - 1,
-                                                                         tmp);
-                                      }
-                                  });
-        NSSUTIL_HANDLE_STRING_ARG(moduleSpec, tmp, "FIPSTokenDescription=",
-                                  if (convert) {
-                                      modulePrev = moduleSpec; /* skip copying */
-                                      if (isFIPS) {
-                                          newSpecPtr = secmod_doDescCopy(newSpecPtr,
-                                                                         &newSpec, &newSpecLen,
-                                                                         SECMOD_TOKEN_DESCRIPTION,
-                                                                         sizeof(SECMOD_TOKEN_DESCRIPTION) - 1,
-                                                                         tmp);
-                                      }
-                                  });
-        NSSUTIL_HANDLE_STRING_ARG(moduleSpec, tmp, "FIPSSlotDescription=",
-                                  if (convert) {
-                                      modulePrev = moduleSpec; /* skip copying */
-                                      if (isFIPS) {
-                                          newSpecPtr = secmod_doDescCopy(newSpecPtr,
-                                                                         &newSpec, &newSpecLen,
-                                                                         SECMOD_SLOT_DESCRIPTION,
-                                                                         sizeof(SECMOD_SLOT_DESCRIPTION) - 1,
-                                                                         tmp);
-                                      }
-                                  });
+        NSSUTIL_HANDLE_STRING_ARG(
+            moduleSpec, tmp, "cryptoTokenDescription=",
+            if (convert) { modulePrev = moduleSpec; })
+        NSSUTIL_HANDLE_STRING_ARG(
+            moduleSpec, tmp, "cryptoSlotDescription=",
+            if (convert) { modulePrev = moduleSpec; })
+        NSSUTIL_HANDLE_STRING_ARG(
+            moduleSpec, tmp, "dbTokenDescription=",
+            if (convert) {
+                modulePrev = moduleSpec;
+                if (!isFIPS) {
+                    newSpecPtr = secmod_doDescCopy(newSpecPtr,
+                                                   &newSpec, &newSpecLen,
+                                                   SECMOD_TOKEN_DESCRIPTION,
+                                                   sizeof(SECMOD_TOKEN_DESCRIPTION) - 1,
+                                                   tmp);
+                }
+            })
+        NSSUTIL_HANDLE_STRING_ARG(
+            moduleSpec, tmp, "dbSlotDescription=",
+            if (convert) {
+                modulePrev = moduleSpec; /* skip copying */
+                if (!isFIPS) {
+                    newSpecPtr = secmod_doDescCopy(newSpecPtr,
+                                                   &newSpec, &newSpecLen,
+                                                   SECMOD_SLOT_DESCRIPTION,
+                                                   sizeof(SECMOD_SLOT_DESCRIPTION) - 1,
+                                                   tmp);
+                }
+            })
+        NSSUTIL_HANDLE_STRING_ARG(
+            moduleSpec, tmp, "FIPSTokenDescription=",
+            if (convert) {
+                modulePrev = moduleSpec; /* skip copying */
+                if (isFIPS) {
+                    newSpecPtr = secmod_doDescCopy(newSpecPtr,
+                                                   &newSpec, &newSpecLen,
+                                                   SECMOD_TOKEN_DESCRIPTION,
+                                                   sizeof(SECMOD_TOKEN_DESCRIPTION) - 1,
+                                                   tmp);
+                }
+            })
+        NSSUTIL_HANDLE_STRING_ARG(
+            moduleSpec, tmp, "FIPSSlotDescription=",
+            if (convert) {
+                modulePrev = moduleSpec; /* skip copying */
+                if (isFIPS) {
+                    newSpecPtr = secmod_doDescCopy(newSpecPtr,
+                                                   &newSpec, &newSpecLen,
+                                                   SECMOD_SLOT_DESCRIPTION,
+                                                   sizeof(SECMOD_SLOT_DESCRIPTION) - 1,
+                                                   tmp);
+                }
+            })
         NSSUTIL_HANDLE_FINAL_ARG(moduleSpec)
         SECMOD_SPEC_COPY(newSpecPtr, modulePrev, moduleSpec);
     }

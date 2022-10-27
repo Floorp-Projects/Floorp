@@ -195,12 +195,17 @@ class EncryptDeriveTest
 
 TEST_P(EncryptDeriveTest, Test) { TestEncryptDerive(); }
 
-static const CK_MECHANISM_TYPE kEncryptDeriveMechanisms[] = {
-    CKM_DES3_ECB, CKM_DES3_CBC, CKM_AES_ECB, CKM_AES_ECB, CKM_AES_CBC,
-    CKM_CAMELLIA_ECB, CKM_CAMELLIA_CBC
+static const CK_MECHANISM_TYPE kEncryptDeriveMechanisms[] = {CKM_DES3_ECB,
+                                                             CKM_DES3_CBC,
+                                                             CKM_AES_ECB,
+                                                             CKM_AES_ECB,
+                                                             CKM_AES_CBC,
+                                                             CKM_CAMELLIA_ECB,
+                                                             CKM_CAMELLIA_CBC
 #ifndef NSS_DISABLE_DEPRECATED_SEED
-    ,
-    CKM_SEED_ECB, CKM_SEED_CBC
+                                                             ,
+                                                             CKM_SEED_ECB,
+                                                             CKM_SEED_CBC
 #endif
 };
 

@@ -36,10 +36,10 @@ static SECStatus GetBytes(const ScopedPK11Context& ctx, size_t len) {
 }
 
 TEST(Pkcs11CipherOp, SingleCtxMultipleUnalignedCipherOps) {
-  ScopedNSSInitContext globalctx(NSS_InitContext(
-      "", "", "", "", NULL, NSS_INIT_READONLY | NSS_INIT_NOCERTDB |
-                                NSS_INIT_NOMODDB | NSS_INIT_FORCEOPEN |
-                                NSS_INIT_NOROOTINIT));
+  ScopedNSSInitContext globalctx(
+      NSS_InitContext("", "", "", "", NULL,
+                      NSS_INIT_READONLY | NSS_INIT_NOCERTDB | NSS_INIT_NOMODDB |
+                          NSS_INIT_FORCEOPEN | NSS_INIT_NOROOTINIT));
   ASSERT_TRUE(globalctx);
 
   const CK_MECHANISM_TYPE cipher = CKM_AES_CTR;
@@ -76,10 +76,10 @@ TEST(Pkcs11CipherOp, SingleCtxMultipleUnalignedCipherOps) {
 // PK11_CipherOp operation is calling the C_EncryptUpdate function for
 // which multi-part is disabled for ChaCha20 in counter mode.
 void ChachaMulti(CK_MECHANISM_TYPE cipher, SECItem* param) {
-  ScopedNSSInitContext globalctx(NSS_InitContext(
-      "", "", "", "", NULL, NSS_INIT_READONLY | NSS_INIT_NOCERTDB |
-                                NSS_INIT_NOMODDB | NSS_INIT_FORCEOPEN |
-                                NSS_INIT_NOROOTINIT));
+  ScopedNSSInitContext globalctx(
+      NSS_InitContext("", "", "", "", NULL,
+                      NSS_INIT_READONLY | NSS_INIT_NOCERTDB | NSS_INIT_NOMODDB |
+                          NSS_INIT_FORCEOPEN | NSS_INIT_NOROOTINIT));
   ASSERT_TRUE(globalctx);
 
   ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
@@ -119,9 +119,7 @@ TEST(Pkcs11CipherOp, ChachaMulti) {
   for (size_t i = 0; i < 16; i++) {
     iv_bytes[i] = i;
   }
-  CK_CHACHA20_PARAMS chacha_params = {
-      iv_bytes, 32, iv_bytes + 4, 96,
-  };
+  CK_CHACHA20_PARAMS chacha_params = {iv_bytes, 32, iv_bytes + 4, 96};
   SECItem param_item = {siBuffer, reinterpret_cast<uint8_t*>(&chacha_params),
                         sizeof(chacha_params)};
 
