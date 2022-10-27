@@ -59,21 +59,11 @@ namespace mozilla::dom {
 FileSystemSyncAccessHandle::FileSystemSyncAccessHandle(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
     RefPtr<FileSystemAccessHandleChild> aActor,
-    const fs::FileSystemEntryMetadata& aMetadata,
-    fs::FileSystemRequestHandler* aRequestHandler)
+    const fs::FileSystemEntryMetadata& aMetadata)
     : mGlobal(aGlobal),
       mManager(aManager),
       mActor(std::move(aActor)),
-      mMetadata(aMetadata),
-      mRequestHandler(aRequestHandler) {}
-
-FileSystemSyncAccessHandle::FileSystemSyncAccessHandle(
-    nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-    RefPtr<FileSystemAccessHandleChild> aActor,
-    const fs::FileSystemEntryMetadata& aMetadata)
-    : FileSystemSyncAccessHandle(aGlobal, aManager, std::move(aActor),
-                                 aMetadata,
-                                 new fs::FileSystemRequestHandler()) {
+      mMetadata(aMetadata) {
   LOG(("Created SyncAccessHandle %p for fd %p", this,
        mActor->MutableFileDescPtr()));
 }
