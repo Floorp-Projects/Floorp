@@ -361,9 +361,8 @@ var gPermissionManager = {
     website.setAttribute("disabled", disabledByPolicy);
     website.setAttribute("class", "website-name-value");
     website.setAttribute("value", permission.origin);
-    hbox.setAttribute("width", "0");
     hbox.setAttribute("class", "website-name");
-    hbox.setAttribute("style", "-moz-box-flex: 3");
+    hbox.setAttribute("style", "-moz-box-flex: 3; width: 0");
     hbox.appendChild(website);
     row.appendChild(hbox);
 
@@ -376,9 +375,8 @@ var gPermissionManager = {
         capability,
         this._getCapabilityL10nId(permission.capability)
       );
-      hbox.setAttribute("width", "0");
       hbox.setAttribute("class", "website-name");
-      hbox.setAttribute("style", "-moz-box-flex: 1");
+      hbox.setAttribute("style", "-moz-box-flex: 1; width: 0");
       hbox.appendChild(capability);
       row.appendChild(hbox);
     }

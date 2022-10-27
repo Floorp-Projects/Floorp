@@ -10,6 +10,7 @@
 
 #permissionsBox {
   min-height: 18em;
+  contain: size;
 }
 
 #siteCol,
