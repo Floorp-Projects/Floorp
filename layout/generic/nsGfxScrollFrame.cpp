@@ -4166,18 +4166,8 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   {
-    // Note that setting the current scroll parent id here means that positioned
-    // children of this scroll info layer will pick up the scroll info layer as
-    // their scroll handoff parent. This is intentional because that is what
-    // happens for positioned children of scroll layers, and we want to maintain
-    // consistent behaviour between scroll layers and scroll info layers.
-    nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(
-        aBuilder,
-        couldBuildLayer && mScrolledFrame->GetContent()
-            ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
-            : aBuilder->GetCurrentScrollParentId());
-
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+
     // If we're building an async zoom container, clip the contents inside
     // to the layout viewport (scrollPortClip). The composition bounds clip
     // (clipRect) will be applied to the zoom container itself in
@@ -4310,13 +4300,13 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     if (aBuilder->IsPaintingToWindow()) {
       mIsParentToActiveScrollFrames =
           ShouldActivateAllScrollFrames()
-              ? idSetter.GetContainsNonMinimalDisplayPort()
-              : idSetter.ShouldForceLayerForScrollParent();
+              ? asrSetter.GetContainsNonMinimalDisplayPort()
+              : asrSetter.ShouldForceLayerForScrollParent();
     }
-    if (idSetter.ShouldForceLayerForScrollParent()) {
+    if (asrSetter.ShouldForceLayerForScrollParent()) {
       // Note that forcing layerization of scroll parents follows the scroll
       // handoff chain which is subject to the out-of-flow-frames caveat noted
-      // above (where the idSetter variable is created).
+      // above (where the asrSetter variable is created).
       MOZ_ASSERT(couldBuildLayer && mScrolledFrame->GetContent() &&
                  aBuilder->IsPaintingToWindow());
       if (!mWillBuildScrollableLayer) {
