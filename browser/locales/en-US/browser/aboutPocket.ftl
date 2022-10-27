@@ -20,14 +20,13 @@ pocket-panel-saved-page-removed = Page Removed
 pocket-panel-saved-page-saved = Saved to { -pocket-brand-name }
 pocket-panel-saved-page-saved-b = Saved to { -pocket-brand-name }!
 pocket-panel-saved-processing-remove = Removing Page…
-pocket-panel-saved-removed = Page Removed from My List
+pocket-panel-saved-removed-updated = Page Removed from Saves
 pocket-panel-saved-processing-tags = Adding tags…
 pocket-panel-saved-remove-page = Remove Page
 pocket-panel-saved-save-tags = Save
 pocket-panel-saved-saving-tags = Saving…
 pocket-panel-saved-suggested-tags = Suggested Tags
 pocket-panel-saved-tags-saved = Tags Added
-pocket-panel-signup-view-list = View List
 
 # This is displayed above a field where the user can add tags
 pocket-panel-signup-add-tags = Add Tags:
@@ -45,13 +44,12 @@ pocket-panel-signup-tagline-story-one = Click the { -pocket-brand-name } Button 
 pocket-panel-signup-tagline-story-two = View in { -pocket-brand-name } on any device, any time.
 
 pocket-panel-signup-cta-a-fix = Your save button for the internet
-pocket-panel-signup-cta-b = Click the { -pocket-brand-name } button to save articles, videos, and links. View your list on any device, any time.
+pocket-panel-signup-cta-b-updated = Click the { -pocket-brand-name } button to save articles, videos, and links. View your saves on any device, any time.
 pocket-panel-signup-cta-b-short = Click the { -pocket-brand-name } button to save articles, videos, and links.
-pocket-panel-signup-cta-c = View your list on any device, any time.
+pocket-panel-signup-cta-c-updated = View your saves on any device, any time.
 
 ## about:pocket-home panel
 
-pocket-panel-home-my-list = My List
 pocket-panel-home-welcome-back = Welcome Back
 pocket-panel-home-paragraph = You can use { -pocket-brand-name } to explore and save webpages, articles, videos, podcasts, or get back to what you’ve been reading.
 pocket-panel-home-explore-popular-topics = Explore Popular Topics
@@ -65,7 +63,7 @@ pocket-panel-home-new-user-message = See your recent saves here.
 
 ## Pocket panel header component
 
-pocket-panel-header-my-list = View My List
+pocket-panel-header-my-saves = View My Saves
 pocket-panel-header-sign-in = Sign In
 
 ## Pocket panel buttons
