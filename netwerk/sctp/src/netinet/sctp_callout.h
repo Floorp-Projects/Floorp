@@ -95,6 +95,11 @@ int sctp_os_timer_stop(sctp_os_timer_t *);
 void sctp_handle_tick(uint32_t);
 
 #define SCTP_OS_TIMER_INIT	sctp_os_timer_init
+/*
+ * NOTE: The next two shouldn't be called directly outside of sctp_timer_start()
+ * and sctp_timer_stop(), since they don't handle incrementing/decrementing
+ * relevant reference counts.
+ */
 #define SCTP_OS_TIMER_START	sctp_os_timer_start
 #define SCTP_OS_TIMER_STOP	sctp_os_timer_stop
 /* MT FIXME: Is the following correct? */
