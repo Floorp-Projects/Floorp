@@ -1894,15 +1894,21 @@ JSObject* VideoFrame::ReadStructuredClone(JSContext* aCx,
         static_cast<VideoTransferCharacteristics>(colorSpaceTransfer));
   }
 
-  RefPtr<VideoFrame> frame = MakeAndAddRef<VideoFrame>(
-      aGlobal, aData.mImage, format, gfx::IntSize(codedWidth, codedHeight),
-      gfx::IntRect(visibleX, visibleY, visibleWidth, visibleHeight),
-      gfx::IntSize(displayWidth, displayHeight), std::move(duration),
-      std::move(timestamp), colorSpace);
-
   JS::Rooted<JS::Value> value(aCx, JS::NullValue());
-  if (!GetOrCreateDOMReflector(aCx, frame, &value)) {
-    return nullptr;
+  // To avoid a rooting hazard error from returning a raw JSObject* before
+  // running the RefPtr destructor, RefPtr needs to be destructed before
+  // returning the raw JSObject*, which is why the RefPtr<VideoFrame> is created
+  // in the scope below. Otherwise, the static analysis infers the RefPtr cannot
+  // be safely destructed while the unrooted return JSObject* is on the stack.
+  {
+    RefPtr<VideoFrame> frame = MakeAndAddRef<VideoFrame>(
+        aGlobal, aData.mImage, format, gfx::IntSize(codedWidth, codedHeight),
+        gfx::IntRect(visibleX, visibleY, visibleWidth, visibleHeight),
+        gfx::IntSize(displayWidth, displayHeight), std::move(duration),
+        std::move(timestamp), colorSpace);
+    if (!GetOrCreateDOMReflector(aCx, frame, &value) || !value.isObject()) {
+      return nullptr;
+    }
   }
   return value.toObjectOrNull();
 }
