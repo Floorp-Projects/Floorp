@@ -58,6 +58,11 @@
         SpecialPowers.Services.perms.DENY_ACTION,
         document
       );
+      await SpecialPowers.addPermission(
+        "midi",
+        SpecialPowers.Services.perms.DENY_ACTION,
+        document
+      );
       for (let sysex of [false, true]) {
         try {
           await navigator.requestMIDIAccess({ sysex });
@@ -87,7 +92,11 @@
         SpecialPowers.Services.perms.ALLOW_ACTION,
         document
       );
-
+      await SpecialPowers.addPermission(
+        "midi",
+        SpecialPowers.Services.perms.ALLOW_ACTION,
+        document
+      );
       // Gated permission should allow access after addon inserted permission.
       for (let sysex of [false, true]) {
         try {
@@ -107,6 +116,7 @@
 
       // Remove the permission.
       await SpecialPowers.removePermission("midi-sysex", document);
+      await SpecialPowers.removePermission("midi", document);
 
       SimpleTest.finish();
     }
