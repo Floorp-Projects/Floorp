@@ -20,7 +20,6 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 ChromeUtils.defineESModuleGetters(lazy, {
   PushCrypto: "resource://gre/modules/PushCrypto.sys.mjs",
-  PushServiceAndroidGCM: "resource://gre/modules/PushServiceAndroidGCM.sys.mjs",
   pushBroadcastService: "resource://gre/modules/PushBroadcastService.sys.mjs",
 });
 
@@ -34,7 +33,7 @@ const CONNECTION_PROTOCOLS = (function() {
     ));
     return [PushServiceWebSocket, PushServiceHttp2];
   }
-  return [lazy.PushServiceAndroidGCM];
+  return [];
 })();
 
 XPCOMUtils.defineLazyGetter(lazy, "console", () => {
