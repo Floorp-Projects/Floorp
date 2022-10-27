@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<head>
+  <title>APZ overscroll handoff for fixed elements</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+<style>
+html, body {
+  margin: 0;
+}
+#scrolled {
+  overflow: auto;
+  background: blue;
+  width: 400px;
+  height: 400px;
+}
+.spacer {
+  height: 2000px;
+}
+#fixed {
+  position: fixed;
+  background: red;
+  top: 0;
+  left: 0;
+}
+#subframe {
+  overflow: auto;
+  width: 200px;
+  height: 200px;
+}
+</style>
+</head>
+<div id="scrolled">
+  <div id="fixed">
+    <div>
+      <div id="subframe">
+        <div id="firstspacer" class="spacer"></div>
+      </div>
+    </div>
+  </div>
+  <div id="secondspacer" class="spacer"></div>
+</div>
+<script type="application/javascript">
+
+async function test() {
+  // Scroll to the bottom of the fixed position element that should not
+  // allow overscroll handoff.
+  subframe.scrollTop = subframe.scrollHeight;
+
+  // After scrolling to bottom tick the refresh driver.
+  await promiseFrame();
+
+  info("Before scroll: subframe=" + subframe.scrollTop + " scrolled=" +
+         scrolled.scrollTop);
+
+  // Async scroll the fixed element by 200 pixels using the mouse-wheel.
+  // This should not handoff the overscroll.
+  await promiseMoveMouseAndScrollWheelOver(subframe, 50, 50, false, 200);
+
+  // Make sure scrolling that has happened is propagated to the main thread.
+  await promiseApzFlushedRepaints();
+
+  // Try another gesture to ensure the overscroll handoff runs.
+  await promiseMoveMouseAndScrollWheelOver(subframe, 50, 50, false, 200);
+  await promiseApzFlushedRepaints();
+
+  info("After scroll: subframe=" + subframe.scrollTop + " scrolled=" +
+         scrolled.scrollTop);
+
+  // Ensure that the scrolled element has not scrolled.
+  is(scrolled.scrollTop, 0, "scrolled: The overscroll should not handoff");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>

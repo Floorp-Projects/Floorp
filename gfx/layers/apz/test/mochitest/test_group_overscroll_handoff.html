@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests for overscroll handoff</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+var prefs = [
+  // turn off smooth scrolling so that we don't have to wait for
+  // APZ animations to finish before sampling the scroll offset
+  ["general.smoothScroll", false],
+  ["apz.test.mac.synth_wheel_input", true],
+  // ensure that any mouse movement will trigger a new wheel transaction,
+  // because in this test we move the mouse a bunch and want to recalculate
+  // the target APZC after each such movement.
+  ["mousewheel.transaction.ignoremovedelay", 0],
+  ["mousewheel.transaction.timeout", 0],
+];
+
+var subtests = [
+  {"file": "helper_position_fixed_scroll_handoff-1.html", prefs},
+  {"file": "helper_position_fixed_scroll_handoff-2.html", prefs},
+  {"file": "helper_position_fixed_scroll_handoff-3.html", prefs},
+  {"file": "helper_position_fixed_scroll_handoff-4.html", prefs},
+  {"file": "helper_position_sticky_scroll_handoff.html", prefs},
+  {"file": "helper_wheelevents_handoff_on_iframe.html", "prefs": prefs},
+  {"file": "helper_wheelevents_handoff_on_non_scrollable_iframe.html", "prefs": prefs},
+];
+
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>
