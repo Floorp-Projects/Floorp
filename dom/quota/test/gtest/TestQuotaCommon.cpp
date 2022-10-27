@@ -198,18 +198,26 @@ TEST(QuotaCommon_Try, Success_NoErr_DiagnosticAssertUnreachable)
 
 TEST(QuotaCommon_Try, Success_CustomErr_CustomLambda)
 {
-  bool tryDidNotReturn = false;
+#define SUBTEST(...)                                                 \
+  {                                                                  \
+    bool tryDidNotReturn = false;                                    \
+                                                                     \
+    nsresult rv = [&tryDidNotReturn]() -> nsresult {                 \
+      QM_TRY(MOZ_TO_RESULT(NS_OK), [](__VA_ARGS__) { return aRv; }); \
+                                                                     \
+      tryDidNotReturn = true;                                        \
+                                                                     \
+      return NS_OK;                                                  \
+    }();                                                             \
+                                                                     \
+    EXPECT_TRUE(tryDidNotReturn);                                    \
+    EXPECT_EQ(rv, NS_OK);                                            \
+  }
 
-  nsresult rv = [&tryDidNotReturn]() -> nsresult {
-    QM_TRY(MOZ_TO_RESULT(NS_OK), [](const char*, nsresult aRv) { return aRv; });
+  SUBTEST(const char*, nsresult aRv);
+  SUBTEST(nsresult aRv);
 
-    tryDidNotReturn = true;
-
-    return NS_OK;
-  }();
-
-  EXPECT_TRUE(tryDidNotReturn);
-  EXPECT_EQ(rv, NS_OK);
+#undef SUBTEST
 }
 
 TEST(QuotaCommon_Try, Success_WithCleanup)
@@ -265,19 +273,27 @@ TEST(QuotaCommon_Try, Failure_CustomErr)
 
 TEST(QuotaCommon_Try, Failure_CustomErr_CustomLambda)
 {
-  bool tryDidNotReturn = false;
+#define SUBTEST(...)                                           \
+  {                                                            \
+    bool tryDidNotReturn = false;                              \
+                                                               \
+    nsresult rv = [&tryDidNotReturn]() -> nsresult {           \
+      QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE),                  \
+             [](__VA_ARGS__) { return NS_ERROR_UNEXPECTED; }); \
+                                                               \
+      tryDidNotReturn = true;                                  \
+                                                               \
+      return NS_OK;                                            \
+    }();                                                       \
+                                                               \
+    EXPECT_FALSE(tryDidNotReturn);                             \
+    EXPECT_EQ(rv, NS_ERROR_UNEXPECTED);                        \
+  }
 
-  nsresult rv = [&tryDidNotReturn]() -> nsresult {
-    QM_TRY(MOZ_TO_RESULT(NS_ERROR_FAILURE),
-           [](const char* aFunc, nsresult) { return NS_ERROR_UNEXPECTED; });
+  SUBTEST(const char* aFunc, nsresult);
+  SUBTEST(nsresult rv);
 
-    tryDidNotReturn = true;
-
-    return NS_OK;
-  }();
-
-  EXPECT_FALSE(tryDidNotReturn);
-  EXPECT_EQ(rv, NS_ERROR_UNEXPECTED);
+#undef SUBTEST
 }
 
 TEST(QuotaCommon_Try, Failure_NoErr)
@@ -572,20 +588,28 @@ TEST(QuotaCommon_TryInspect, Success_NoErr_AssertUnreachable)
 
 TEST(QuotaCommon_TryInspect, Success_CustomErr_CustomLambda)
 {
-  bool tryInspectDidNotReturn = false;
+#define SUBTEST(...)                                                 \
+  {                                                                  \
+    bool tryInspectDidNotReturn = false;                             \
+                                                                     \
+    nsresult rv = [&tryInspectDidNotReturn]() -> nsresult {          \
+      QM_TRY_INSPECT(const auto& x, (Result<int32_t, nsresult>{42}), \
+                     [](__VA_ARGS__) { return aRv; });               \
+      EXPECT_EQ(x, 42);                                              \
+                                                                     \
+      tryInspectDidNotReturn = true;                                 \
+                                                                     \
+      return NS_OK;                                                  \
+    }();                                                             \
+                                                                     \
+    EXPECT_TRUE(tryInspectDidNotReturn);                             \
+    EXPECT_EQ(rv, NS_OK);                                            \
+  }
 
-  nsresult rv = [&tryInspectDidNotReturn]() -> nsresult {
-    QM_TRY_INSPECT(const auto& x, (Result<int32_t, nsresult>{42}),
-                   [](const char*, nsresult aRv) { return aRv; });
-    EXPECT_EQ(x, 42);
+  SUBTEST(const char*, nsresult aRv);
+  SUBTEST(nsresult aRv);
 
-    tryInspectDidNotReturn = true;
-
-    return NS_OK;
-  }();
-
-  EXPECT_TRUE(tryInspectDidNotReturn);
-  EXPECT_EQ(rv, NS_OK);
+#undef SUBTEST
 }
 
 TEST(QuotaCommon_TryInspect, Success_WithCleanup)
@@ -648,21 +672,29 @@ TEST(QuotaCommon_TryInspect, Failure_CustomErr)
 
 TEST(QuotaCommon_TryInspect, Failure_CustomErr_CustomLambda)
 {
-  bool tryInspectDidNotReturn = false;
+#define SUBTEST(...)                                                     \
+  {                                                                      \
+    bool tryInspectDidNotReturn = false;                                 \
+                                                                         \
+    nsresult rv = [&tryInspectDidNotReturn]() -> nsresult {              \
+      QM_TRY_INSPECT(const auto& x,                                      \
+                     (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}), \
+                     [](__VA_ARGS__) { return NS_ERROR_UNEXPECTED; });   \
+      Unused << x;                                                       \
+                                                                         \
+      tryInspectDidNotReturn = true;                                     \
+                                                                         \
+      return NS_OK;                                                      \
+    }();                                                                 \
+                                                                         \
+    EXPECT_FALSE(tryInspectDidNotReturn);                                \
+    EXPECT_EQ(rv, NS_ERROR_UNEXPECTED);                                  \
+  }
 
-  nsresult rv = [&tryInspectDidNotReturn]() -> nsresult {
-    QM_TRY_INSPECT(const auto& x,
-                   (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}),
-                   [](const char*, nsresult) { return NS_ERROR_UNEXPECTED; });
-    Unused << x;
+  SUBTEST(const char*, nsresult);
+  SUBTEST(nsresult);
 
-    tryInspectDidNotReturn = true;
-
-    return NS_OK;
-  }();
-
-  EXPECT_FALSE(tryInspectDidNotReturn);
-  EXPECT_EQ(rv, NS_ERROR_UNEXPECTED);
+#undef SUBTEST
 }
 
 TEST(QuotaCommon_TryInspect, Failure_NoErr)
@@ -1010,17 +1042,25 @@ TEST(QuotaCommon_TryReturn, Success_CustomErr_AssertUnreachable)
 
 TEST(QuotaCommon_TryReturn, Success_CustomErr_CustomLambda)
 {
-  bool tryReturnDidNotReturn = false;
+#define SUBTEST(...)                                                \
+  {                                                                 \
+    bool tryReturnDidNotReturn = false;                             \
+                                                                    \
+    auto res = [&tryReturnDidNotReturn]() -> Result<Ok, nsresult> { \
+      QM_TRY_RETURN(MOZ_TO_RESULT(NS_OK),                           \
+                    [](__VA_ARGS__) { return Err(aRv); });          \
+                                                                    \
+      tryReturnDidNotReturn = true;                                 \
+    }();                                                            \
+                                                                    \
+    EXPECT_FALSE(tryReturnDidNotReturn);                            \
+    EXPECT_TRUE(res.isOk());                                        \
+  }
 
-  auto res = [&tryReturnDidNotReturn]() -> Result<Ok, nsresult> {
-    QM_TRY_RETURN(MOZ_TO_RESULT(NS_OK),
-                  [](const char*, nsresult aRv) { return Err(aRv); });
+  SUBTEST(const char*, nsresult aRv);
+  SUBTEST(nsresult aRv);
 
-    tryReturnDidNotReturn = true;
-  }();
-
-  EXPECT_FALSE(tryReturnDidNotReturn);
-  EXPECT_TRUE(res.isOk());
+#undef SUBTEST
 }
 
 TEST(QuotaCommon_TryReturn, Success_WithCleanup)
@@ -1091,19 +1131,26 @@ TEST(QuotaCommon_TryReturn, Failure_CustomErr)
 
 TEST(QuotaCommon_TryReturn, Failure_CustomErr_CustomLambda)
 {
-  bool tryReturnDidNotReturn = false;
+#define SUBTEST(...)                                                       \
+  {                                                                        \
+    bool tryReturnDidNotReturn = false;                                    \
+                                                                           \
+    auto res = [&tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {   \
+      QM_TRY_RETURN((Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}),    \
+                    [](__VA_ARGS__) { return Err(NS_ERROR_UNEXPECTED); }); \
+                                                                           \
+      tryReturnDidNotReturn = true;                                        \
+    }();                                                                   \
+                                                                           \
+    EXPECT_FALSE(tryReturnDidNotReturn);                                   \
+    EXPECT_TRUE(res.isErr());                                              \
+    EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);                       \
+  }
 
-  auto res = [&tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
-    QM_TRY_RETURN(
-        (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}),
-        [](const char*, nsresult) { return Err(NS_ERROR_UNEXPECTED); });
+  SUBTEST(const char*, nsresult);
+  SUBTEST(nsresult);
 
-    tryReturnDidNotReturn = true;
-  }();
-
-  EXPECT_FALSE(tryReturnDidNotReturn);
-  EXPECT_TRUE(res.isErr());
-  EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
+#undef SUBTEST
 }
 
 TEST(QuotaCommon_TryReturn, Failure_WithCleanup)

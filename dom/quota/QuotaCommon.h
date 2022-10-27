@@ -416,6 +416,12 @@ class NotNull;
  * QM_TRY/QM_TRY_UNWRAP/QM_TRY_INSPECT/QM_FAIL even in void functions.
  * However, QM_TRY(Task(), ) would look odd so it's recommended to use a dummy
  * define QM_VOID that evaluates to nothing instead: QM_TRY(Task(), QM_VOID)
+ *
+ * Custom return values can be static or dynamically generated using functions
+ * with one of these signatures:
+ *   auto(const char* aFunc, const char* aExpr);
+ *   auto(const char* aFunc, const T& aRv);
+ *   auto(const T& aRc);
  */
 
 #define QM_VOID
@@ -1448,6 +1454,8 @@ auto HandleCustomRetVal(const char* aFunc, const char* aExpr, const T& aRv,
   } else if constexpr (std::is_invocable<CustomRetVal, const char*,
                                          const T&>::value) {
     return aCustomRetVal(aFunc, aRv);
+  } else if constexpr (std::is_invocable<CustomRetVal, const T&>::value) {
+    return aCustomRetVal(aRv);
   } else {
     return std::forward<CustomRetVal>(aCustomRetVal);
   }
