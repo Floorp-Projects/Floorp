@@ -178,6 +178,10 @@ appUpdater.prototype = {
       case AppUpdater.STATUS.NEVER_CHECKED:
         this.selectPanel("checkForUpdates");
         break;
+      case AppUpdater.STATUS.NO_UPDATER:
+      default:
+        this.selectPanel("noUpdater");
+        break;
     }
   },
 
