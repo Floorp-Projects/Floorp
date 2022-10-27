@@ -148,6 +148,11 @@ void main(void) {
 // so that we can commit entire spans of texture within this nine-patch region
 // instead of having to do the work of mapping per fragment.
 void swgl_drawSpanR8() {
+    // Perspective is not supported.
+    if (swgl_interpStep(vLocalPos).w != 0.0) {
+        return;
+    }
+
     // If the span is completely outside the Z-range and clipped out, just
     // output clear so we don't need to consider invalid W in the rest of the
     // shader.
