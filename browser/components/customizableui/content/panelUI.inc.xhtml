@@ -64,6 +64,38 @@
   </menupopup>
 </panel>
 
+<html:template id="unified-extensions-panel-template">
+  <panel id="unified-extensions-panel"
+         class="panel-no-padding"
+         role="group"
+         type="arrow"
+         noautofocus="true"
+         position="bottomright topright"
+         hidden="true">
+    <panelmultiview mainViewId="unified-extensions-view">
+      <panelview id="unified-extensions-view"
+                 class="cui-widget-panelview">
+        <vbox class="unified-extensions-panel-header">
+          <html:h1 data-l10n-id="unified-extensions-header-title"/>
+        </vbox>
+
+        <toolbarseparator />
+
+        <vbox class="panel-subview-body unified-extensions-list">
+          <!-- active visible extensions go here -->
+        </vbox>
+
+        <toolbarseparator />
+
+        <toolbarbutton id="unified-extensions-manage-extensions"
+                       class="subviewbutton panel-subview-footer-button unified-extensions-manage-extensions"
+                       data-l10n-id="unified-extensions-manage-extensions"
+                       oncommand="BrowserOpenAddonsMgr('addons://list/extension');" />
+      </panelview>
+    </panelmultiview>
+  </panel>
+</html:template>
+
 <html:template id="panicButtonNotificationTemplate">
   <panel id="panic-button-success-notification"
          type="arrow"

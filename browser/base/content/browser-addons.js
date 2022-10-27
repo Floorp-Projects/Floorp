@@ -1520,8 +1520,23 @@ var gUnifiedExtensions = {
     }
   },
 
+  _panel: null,
+  get panel() {
+    // Lazy load the unified-extensions-panel panel the first time we need to display it.
+    if (!this._panel) {
+      let template = document.getElementById(
+        "unified-extensions-panel-template"
+      );
+      template.replaceWith(template.content);
+      this._panel = document.getElementById("unified-extensions-panel");
+      CustomizableUI.addPanelCloseListeners(this._panel);
+    }
+    return this._panel;
+  },
+
   async togglePanel(aEvent) {
     if (!CustomizationHandler.isCustomizing()) {
+      let panel = this.panel;
       // The button should directly open `about:addons` when there is no active
       // extension to show in the panel.
       if ((await this.getActiveExtensions()).length === 0) {
@@ -1551,10 +1566,13 @@ var gUnifiedExtensions = {
       }
 
       if (this._button.open) {
-        PanelMultiView.hidePopup(this._listView.closest("panel"));
+        PanelMultiView.hidePopup(panel);
         this._button.open = false;
       } else {
-        PanelUI.showSubView("unified-extensions-view", this._button, aEvent);
+        panel.hidden = false;
+        PanelMultiView.openPopup(panel, this._button, {
+          triggerEvent: aEvent,
+        });
       }
     }
 

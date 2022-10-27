@@ -126,7 +126,8 @@
 
 #BMB_bookmarksPopup menupopup,
 .cui-widget-panel,
-#widget-overflow {
+#widget-overflow,
+#unified-extensions-panel {
   font: menu;
 }
 
@@ -1279,6 +1280,7 @@ panelview .toolbarbutton-1 {
 #widget-overflow-mainView > toolbarseparator,
 #widget-overflow-mainView > .panel-subview-body > toolbarseparator,
 .PanelUI-subView toolbarseparator,
+#unified-extensions-panel toolbarseparator,
 #permission-popup-mainView > toolbarseparator,
 #identity-popup-mainView toolbarseparator,
 #identity-popup-securityView > toolbarseparator,
