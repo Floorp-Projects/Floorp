@@ -458,7 +458,8 @@ Infrastructure and tools used to generate, submit and process crash reports. Thi
       -
         | `Kris Wright (KrisWright) <https://people.mozilla.org/s?query=KrisWright>`__
         | `Calixte Denizet (calixte) <https://people.mozilla.org/s?query=calixte>`__
-        | `Aria Beingessner (Gankra) <https://people.mozilla.org/s?query=Gankra>`__
+    * - Peer(s) Emeritus
+      - Aria Beingessner
     * - Includes
       -
         | `toolkit/crashreporter/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=toolkit/crashreporter/\*\*/\*>`__

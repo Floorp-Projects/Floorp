@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-10-26T16:08:31.117344'
+updated_at: '2022-10-27T15:14:39.980828'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -320,10 +320,6 @@ people:
     bmo_id: 417288
     name: Nathan Froyd
     nick: froydnj
-  - &Gankra
-    bmo_id: 452386
-    name: Aria Beingessner
-    nick: Gankra
   - &gbrown
     bmo_id: 411471
     name: Geoff Brown
@@ -1223,6 +1219,8 @@ modules:
       - ipc/glue/CrashReporter/**/*
       - mobile/android/geckoview/src/main/java/org/mozilla/geckoview/CrashReporter.java
     meta:
+      peers_emeritus:
+        - Aria Beingessner
       group: dev-platform
       url: https://firefox-source-docs.mozilla.org/toolkit/crashreporter/crashreporter/index.html
       components:
@@ -1232,7 +1230,6 @@ modules:
     peers:
       - *KrisWright
       - *calixte
-      - *Gankra
     machine_name: core_crash_reporting
 
   - name: 'Core: C++/Rust usage, tools, and style'
@@ -3681,5 +3678,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: dd05ad6c67fbd5baea1cafadf3a91355fc11b305
-  export: 5814374023f580461c6234907480b7c401e6da1d
+  config: 22f5367a37520fbb8e8bc6a5033e8a72be5a9c7b
+  export: 66835bf98898c1f879e942be2232f9be4f5e3d7a
