@@ -8,7 +8,7 @@ const TOPIC_DID_IMPORT_BOOKMARKS =
   "initial-migration-did-import-default-bookmarks";
 const TOPIC_PLACES_DEFAULTS_FINISHED = "places-browser-init-complete";
 
-import AppConstants from "resource://gre/modules/AppConstants.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
