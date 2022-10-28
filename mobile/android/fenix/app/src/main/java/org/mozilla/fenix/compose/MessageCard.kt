@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.compose
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -27,26 +28,27 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.mozilla.experiments.nimbus.StringHolder
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.button.PrimaryButton
-import org.mozilla.fenix.gleanplumb.Message
-import org.mozilla.fenix.nimbus.MessageData
-import org.mozilla.fenix.nimbus.StyleData
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 /**
  * Message Card.
  *
- * @param message [Message] that holds a representation of GleanPlum message from Nimbus.
+ * @param messageText The message card's body text to be displayed.
+ * @param titleText An optional title of message card. If the title is blank or null is provided,
+ * the title will not be shown.
+ * @param buttonText An optional button text of the message card. If the button text is blank or null is provided,
+ * the button won't be shown.
  * @param onClick Invoked when user clicks on the message card.
  * @param onCloseButtonClick Invoked when user clicks on close button to remove message.
  */
 @Suppress("LongMethod")
 @Composable
 fun MessageCard(
-    message: Message,
+    messageText: String,
+    titleText: String? = null,
+    buttonText: String? = null,
     onClick: () -> Unit,
     onCloseButtonClick: () -> Unit,
 ) {
@@ -54,7 +56,7 @@ fun MessageCard(
         modifier = Modifier
             .padding(vertical = 16.dp)
             .then(
-                if (message.data.buttonLabel.isNullOrBlank()) {
+                if (buttonText.isNullOrBlank()) {
                     Modifier.clickable(onClick = onClick)
                 } else {
                     Modifier
@@ -68,13 +70,12 @@ fun MessageCard(
                 .padding(all = 16.dp)
                 .fillMaxWidth(),
         ) {
-            val title = message.data.title
-            if (!title.isNullOrBlank()) {
+            if (!titleText.isNullOrBlank()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        text = title,
+                        text = titleText,
                         modifier = Modifier.weight(1f),
                         color = FirefoxTheme.colors.textPrimary,
                         overflow = TextOverflow.Ellipsis,
@@ -97,7 +98,7 @@ fun MessageCard(
                 }
 
                 Text(
-                    text = message.data.text,
+                    text = messageText,
                     modifier = Modifier.fillMaxWidth(),
                     fontSize = 14.sp,
                     color = FirefoxTheme.colors.textSecondary,
@@ -107,7 +108,7 @@ fun MessageCard(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        text = message.data.text,
+                        text = messageText,
                         modifier = Modifier.weight(1f),
                         fontSize = 14.sp,
                         color = FirefoxTheme.colors.textPrimary,
@@ -128,12 +129,11 @@ fun MessageCard(
                 }
             }
 
-            val buttonLabel = message.data.buttonLabel
-            if (!buttonLabel.isNullOrBlank()) {
+            if (!buttonText.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 PrimaryButton(
-                    text = buttonLabel,
+                    text = buttonText,
                     onClick = onClick,
                 )
             }
@@ -142,28 +142,18 @@ fun MessageCard(
 }
 
 @Composable
-@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun MessageCardPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
-        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+    FirefoxTheme {
+        Box(
+            Modifier
+                .background(FirefoxTheme.colors.layer1)
+                .padding(all = 16.dp),
+        ) {
             MessageCard(
-                message = Message(
-                    id = "end-",
-                    data = MessageData(
-                        title = StringHolder(
-                            R.string.bookmark_empty_title_error,
-                            "Title",
-                        ),
-                        text = StringHolder(
-                            R.string.default_browser_experiment_card_text,
-                            "description",
-                        ),
-                    ),
-                    action = "action",
-                    style = StyleData(),
-                    triggers = listOf("trigger"),
-                    metadata = Message.Metadata("end-"),
-                ),
+                messageText = stringResource(id = R.string.default_browser_experiment_card_text),
+                titleText = stringResource(id = R.string.bookmark_empty_title_error),
                 onClick = {},
                 onCloseButtonClick = {},
             )
@@ -172,24 +162,17 @@ private fun MessageCardPreview() {
 }
 
 @Composable
-@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun MessageCardWithoutTitlePreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
-        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+    FirefoxTheme {
+        Box(
+            modifier = Modifier
+                .background(FirefoxTheme.colors.layer1)
+                .padding(all = 16.dp),
+        ) {
             MessageCard(
-                message = Message(
-                    id = "end-",
-                    data = MessageData(
-                        text = StringHolder(
-                            R.string.default_browser_experiment_card_text,
-                            "description",
-                        ),
-                    ),
-                    action = "action",
-                    style = StyleData(),
-                    triggers = listOf("trigger"),
-                    metadata = Message.Metadata("end-"),
-                ),
+                messageText = stringResource(id = R.string.default_browser_experiment_card_text),
                 onClick = {},
                 onCloseButtonClick = {},
             )
@@ -198,29 +181,19 @@ private fun MessageCardWithoutTitlePreview() {
 }
 
 @Composable
-@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun MessageCardWithButtonLabelPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
-        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+    FirefoxTheme {
+        Box(
+            modifier = Modifier
+                .background(FirefoxTheme.colors.layer1)
+                .padding(all = 16.dp),
+        ) {
             MessageCard(
-                message = Message(
-                    id = "end-",
-                    data = MessageData(
-                        buttonLabel = StringHolder(R.string.preferences_set_as_default_browser, ""),
-                        title = StringHolder(
-                            R.string.bookmark_empty_title_error,
-                            "Title",
-                        ),
-                        text = StringHolder(
-                            R.string.default_browser_experiment_card_text,
-                            "description",
-                        ),
-                    ),
-                    action = "action",
-                    style = StyleData(),
-                    triggers = listOf("trigger"),
-                    metadata = Message.Metadata("end-"),
-                ),
+                messageText = stringResource(id = R.string.default_browser_experiment_card_text),
+                titleText = stringResource(id = R.string.bookmark_empty_title_error),
+                buttonText = stringResource(id = R.string.preferences_set_as_default_browser),
                 onClick = {},
                 onCloseButtonClick = {},
             )
