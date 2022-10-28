@@ -34,7 +34,6 @@ interface nsIGfxInfo : nsISupports
    * These are valid across all platforms.
    */
   readonly attribute AString ContentBackend;
-  readonly attribute boolean WebRenderEnabled;
   readonly attribute boolean isHeadless;
   readonly attribute unsigned long TargetFrameRate;
   readonly attribute ACString CodecSupportInfo;

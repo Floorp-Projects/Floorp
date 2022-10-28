@@ -4,13 +4,6 @@
 
 "use strict";
 
-loader.lazyRequireGetter(
-  this,
-  "isWebRenderEnabled",
-  "resource://devtools/server/actors/utils/accessibility.js",
-  true
-);
-
 const {
   accessibility: {
     SIMULATION_TYPE: { PROTANOPIA },
@@ -77,11 +70,8 @@ add_task(async function() {
   );
 
   const simulator = accessibility.simulatorFront;
-
   if (!simulator) {
-    ok(!isWebRenderEnabled(window), "Web render is disabled.");
-
-    // If web render is disabled, we can't test the simulator actor, so return early
+    ok(false, "Missing simulator actor.");
     return;
   }
 

@@ -1839,12 +1839,6 @@ nsresult GfxInfoBase::GetActiveCrashGuards(JSContext* aCx,
 }
 
 NS_IMETHODIMP
-GfxInfoBase::GetWebRenderEnabled(bool* aWebRenderEnabled) {
-  *aWebRenderEnabled = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 GfxInfoBase::GetTargetFrameRate(uint32_t* aTargetFrameRate) {
   *aTargetFrameRate = gfxPlatform::TargetFrameRate();
   return NS_OK;

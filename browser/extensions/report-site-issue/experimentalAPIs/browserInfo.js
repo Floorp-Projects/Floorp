@@ -13,13 +13,6 @@ function isTelemetryEnabled() {
   );
 }
 
-function isWebRenderEnabled() {
-  return (
-    Services.prefs.getBoolPref("gfx.webrender.all", false) ||
-    Services.prefs.getBoolPref("gfx.webrender.enabled", false)
-  );
-}
-
 this.browserInfo = class extends ExtensionAPI {
   getAPI(context) {
     return {
