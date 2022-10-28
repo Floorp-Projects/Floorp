@@ -124,21 +124,6 @@ void EnumerateThreadWindows(F&& f)
 
 namespace widget {
 
-// Windows message debugging data
-struct EventMsgInfo {
-  const char* mStr;
-  UINT mId;
-  std::function<nsAutoCString(WPARAM, LPARAM, bool)> mParamInfoFn;
-  std::function<void(nsAutoCString&, WPARAM, const char*, bool)> mWParamInfoFn;
-  const char* mWParamName;
-  std::function<void(nsAutoCString&, LPARAM, const char*, bool)> mLParamInfoFn;
-  const char* mLParamName;
-  void LogParameters(nsAutoCString& str, WPARAM wParam, LPARAM lParam,
-                     bool isPreCall);
-};
-extern std::unordered_map<UINT, EventMsgInfo> gAllEvents;
-extern mozilla::HashSet<UINT> gEventsToLogOriginalParams;
-
 // More complete QS definitions for MsgWaitForMultipleObjects() and
 // GetQueueStatus() that include newer win8 specific defines.
 
@@ -249,6 +234,13 @@ class WinUtils {
 
   static bool HasSystemMetricsForDpi();
   static int GetSystemMetricsForDpi(int nIndex, UINT dpi);
+
+  /**
+   * @param msg Windows event message
+   * @return User-friendly event name, or nullptr if no
+   *         match is found.
+   */
+  static const char* WinEventToEventName(UINT msg);
 
   /**
    * @param aHdc HDC for printer
