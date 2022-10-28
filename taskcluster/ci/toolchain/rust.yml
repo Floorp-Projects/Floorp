@@ -25,6 +25,19 @@ linux64-rust-1.61:
         ]
         toolchain-alias: linux64-rust-toolchain
 
+linux64-rust-1.63:
+    treeherder:
+        symbol: TL(rust-1.63)
+    run:
+        arguments: [
+            '--channel', '1.63.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+            '--target', 'wasm32-wasi',
+        ]
+        toolchain-alias: linux64-rust-base
+
 linux64-rust-1.64:
     treeherder:
         symbol: TL(rust)
