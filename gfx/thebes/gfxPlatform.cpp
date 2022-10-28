@@ -925,20 +925,17 @@ void gfxPlatform::Init() {
   gPlatform->InitWindowOcclusionConfig();
   gPlatform->InitBackdropFilterConfig();
 
+#if defined(XP_WIN)
   // When using WebRender, we defer initialization of the D3D11 devices until
   // the (rare) cases where they're used. Note that the GPU process where
   // WebRender runs doesn't initialize gfxPlatform and performs explicit
   // initialization of the bits it needs.
-  if (!UseWebRender()
-#if defined(XP_WIN)
-      || (UseWebRender() && XRE_IsParentProcess() &&
-          !gfxConfig::IsEnabled(Feature::GPU_PROCESS) &&
-          StaticPrefs::
-              gfx_webrender_enabled_no_gpu_process_with_angle_win_AtStartup())
-#endif
-  ) {
+  if (XRE_IsParentProcess() && !gfxConfig::IsEnabled(Feature::GPU_PROCESS) &&
+      StaticPrefs::
+          gfx_webrender_enabled_no_gpu_process_with_angle_win_AtStartup()) {
     gPlatform->EnsureDevicesInitialized();
   }
+#endif
 
   if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
     GPUProcessManager* gpu = GPUProcessManager::Get();
@@ -1014,7 +1011,7 @@ void gfxPlatform::Init() {
   }
 
   RegisterStrongMemoryReporter(new GfxMemoryImageReporter());
-  if (XRE_IsParentProcess() && UseWebRender()) {
+  if (XRE_IsParentProcess()) {
     RegisterStrongAsyncMemoryReporter(new WebRenderMemoryReporter());
   }
 
@@ -1189,9 +1186,6 @@ bool gfxPlatform::IsHeadless() {
 }
 
 /* static */
-bool gfxPlatform::UseWebRender() { return gfx::gfxVars::UseWebRender(); }
-
-/* static */
 bool gfxPlatform::UseRemoteCanvas() {
   return XRE_IsContentProcess() && gfx::gfxVars::RemoteCanvasEnabled();
 }
@@ -1310,7 +1304,7 @@ void gfxPlatform::InitLayersIPC() {
       widget::WinWindowOcclusionTracker::Ensure();
     }
 #endif
-    if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS) && UseWebRender()) {
+    if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
       RemoteTextureMap::Init();
       if (gfxVars::UseCanvasRenderThread()) {
         gfx::CanvasRenderThread::Start();
@@ -2107,8 +2101,8 @@ void gfxPlatform::InitializeCMS() {
     nsTArray<uint8_t> outputProfileData =
         gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfileData();
     if (!outputProfileData.IsEmpty()) {
-      gCMSOutputProfile = qcms_profile_from_memory_curves_only(outputProfileData.Elements(),
-                                                               outputProfileData.Length());
+      gCMSOutputProfile = qcms_profile_from_memory_curves_only(
+          outputProfileData.Elements(), outputProfileData.Length());
     }
   }
 
@@ -2602,9 +2596,7 @@ void gfxPlatform::InitWebRenderConfig() {
     // The parent process runs through all the real decision-making code
     // later in this function. For other processes we still want to report
     // the state of the feature for crash reports.
-    if (gfxVars::UseWebRender()) {
-      reporter.SetSuccessful();
-    }
+    reporter.SetSuccessful();
     return;
   }
 
@@ -2642,9 +2634,6 @@ void gfxPlatform::InitWebRenderConfig() {
   Preferences::RegisterPrefixCallbackAndCall(SwapIntervalPrefChangeCallback,
                                              "gfx.swap-interval");
 
-  // gfxFeature is not usable in the GPU process, so we use gfxVars to transmit
-  // this feature
-  gfxVars::SetUseWebRender(true);
   reporter.SetSuccessful();
 
   Preferences::RegisterPrefixCallbackAndCall(WebRenderDebugPrefChangeCallback,
@@ -2807,7 +2796,7 @@ void gfxPlatform::InitWebRenderConfig() {
   }
 
   if (Preferences::GetBool("gfx.webrender.flip-sequential", false)) {
-    if (UseWebRender() && gfxVars::UseWebRenderANGLE()) {
+    if (gfxVars::UseWebRenderANGLE()) {
       gfxVars::SetUseWebRenderFlipSequentialWin(true);
     }
   }
@@ -2878,8 +2867,6 @@ void gfxPlatform::InitHardwareVideoConfig() {
 }
 
 void gfxPlatform::InitWebGLConfig() {
-  // Depends on InitWebRenderConfig() for UseWebRender().
-
   if (!XRE_IsParentProcess()) return;
 
   const nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
@@ -3561,7 +3548,7 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
   if (StaticPrefs::gfx_webrender_fallback_software_d3d11_AtStartup() &&
       swglFallbackAllowed && gfxVars::AllowSoftwareWebRenderD3D11() &&
       gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING) &&
-      gfxVars::UseWebRender() && !gfxVars::UseSoftwareWebRender()) {
+      !gfxVars::UseSoftwareWebRender()) {
     // Fallback to Software WebRender + D3D11 compositing.
     gfxCriticalNote << "Fallback WR to SW-WR + D3D11";
     gfxVars::SetUseSoftwareWebRender(true);
@@ -3586,15 +3573,6 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
   if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     gfxConfig::GetFeature(Feature::D3D11_COMPOSITING)
         .ForceDisable(aStatus, aMessage, aFailureId);
-
-    if (StaticPrefs::gfx_webrender_fallback_software_AtStartup() &&
-        swglFallbackAllowed && !gfxVars::UseWebRender()) {
-      // Fallback from D3D11 to Software WebRender.
-      gfxCriticalNote << "Fallback D3D11 to SW-WR";
-      gfxVars::SetUseWebRender(true);
-      gfxVars::SetUseSoftwareWebRender(true);
-      return true;
-    }
   }
 #endif
 
@@ -3607,12 +3585,6 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
   }
 #endif
 
-  if (!gfxVars::UseWebRender()) {
-    // We were not using WebRender in the first place, and we have disabled
-    // all forms of accelerated compositing.
-    return false;
-  }
-
   if (StaticPrefs::gfx_webrender_fallback_software_AtStartup() &&
       swglFallbackAllowed && !gfxVars::UseSoftwareWebRender()) {
     // Fallback from WebRender to Software WebRender.
@@ -3620,8 +3592,6 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
     gfxVars::SetUseSoftwareWebRender(true);
     return true;
   }
-
-  MOZ_ASSERT(gfxVars::UseWebRender());
 
   if (!gfxVars::UseSoftwareWebRender()) {
     // Software WebRender may be disabled due to a startup issue with the
@@ -3648,15 +3618,13 @@ void gfxPlatform::DisableGPUProcess() {
   gfxVars::SetRemoteCanvasEnabled(false);
 
   RemoteTextureMap::Init();
-  if (gfxVars::UseWebRender()) {
-    if (gfxVars::UseCanvasRenderThread()) {
-      gfx::CanvasRenderThread::Start();
-    }
-    // We need to initialize the parent process to prepare for WebRender if we
-    // did not end up disabling it, despite losing the GPU process.
-    wr::RenderThread::Start(GPUProcessManager::Get()->AllocateNamespace());
-    image::ImageMemoryReporter::InitForWebRender();
+  if (gfxVars::UseCanvasRenderThread()) {
+    gfx::CanvasRenderThread::Start();
   }
+  // We need to initialize the parent process to prepare for WebRender if we
+  // did not end up disabling it, despite losing the GPU process.
+  wr::RenderThread::Start(GPUProcessManager::Get()->AllocateNamespace());
+  image::ImageMemoryReporter::InitForWebRender();
 }
 
 void gfxPlatform::FetchAndImportContentDeviceData() {

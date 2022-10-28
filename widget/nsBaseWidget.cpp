@@ -1349,20 +1349,13 @@ already_AddRefed<WebRenderLayerManager> nsBaseWidget::CreateCompositorSession(
     gpu->EnsureGPUReady();
 
     // If widget type does not supports acceleration, we may be allowed to use
-    // software WebRender instead. If not, then we use ClientLayerManager even
-    // when gfxVars::UseWebRender() is true. WebRender could coexist only with
-    // BasicCompositor.
+    // software WebRender instead.
     bool supportsAcceleration = WidgetTypeSupportsAcceleration();
-    bool enableWR;
-    bool enableSWWR;
+    bool enableSWWR = true;
     if (supportsAcceleration ||
         StaticPrefs::gfx_webrender_unaccelerated_widget_force()) {
-      enableWR = gfx::gfxVars::UseWebRender();
       enableSWWR = gfx::gfxVars::UseSoftwareWebRender();
-    } else {
-      enableWR = enableSWWR = gfx::gfxVars::UseWebRender();
     }
-    MOZ_RELEASE_ASSERT(enableWR);
     bool enableAPZ = UseAPZ();
     CompositorOptions options(enableAPZ, enableSWWR);
 

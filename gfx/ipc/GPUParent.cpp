@@ -273,9 +273,7 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
     // processes this happens in gfxPlatform::InitWebRenderConfig.
     ScopedGfxFeatureReporter reporter("WR",
                                       gfxPlatform::WebRenderPrefEnabled());
-    if (gfxVars::UseWebRender()) {
-      reporter.SetSuccessful();
-    }
+    reporter.SetSuccessful();
   }
 
   for (const LayerTreeIdMapping& map : aMappings) {
@@ -299,14 +297,12 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
       }
     }
   }
-  if (gfxVars::UseWebRender()) {
-    DeviceManagerDx::Get()->CreateDirectCompositionDevice();
-    // Ensure to initialize GfxInfo
-    nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
-    Unused << gfxInfo;
+  DeviceManagerDx::Get()->CreateDirectCompositionDevice();
+  // Ensure to initialize GfxInfo
+  nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+  Unused << gfxInfo;
 
-    Factory::EnsureDWriteFactory();
-  }
+  Factory::EnsureDWriteFactory();
 #endif
 
 #if defined(MOZ_WIDGET_GTK)
@@ -335,15 +331,13 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
   // Ensure we have an FT library for font instantiation.
   // This would normally be set by gfxPlatform::Init().
   // Since we bypass that, we must do it here instead.
-  if (gfxVars::UseWebRender()) {
-    FT_Library library = Factory::NewFTLibrary();
-    MOZ_ASSERT(library);
-    Factory::SetFTLibrary(library);
+  FT_Library library = Factory::NewFTLibrary();
+  MOZ_ASSERT(library);
+  Factory::SetFTLibrary(library);
 
-    // true to match gfxPlatform::FontHintingEnabled(). We must hardcode
-    // this value because we do not have a gfxPlatform instance.
-    SkInitCairoFT(true);
-  }
+  // true to match gfxPlatform::FontHintingEnabled(). We must hardcode
+  // this value because we do not have a gfxPlatform instance.
+  SkInitCairoFT(true);
 
   // Ensure that GfxInfo::Init is called on the main thread.
   nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
@@ -371,22 +365,11 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
 #endif
 
   // Make sure to do this *after* we update gfxVars above.
-  if (gfxVars::UseWebRender()) {
-    if (gfxVars::UseCanvasRenderThread()) {
-      gfx::CanvasRenderThread::Start();
-    }
-    wr::RenderThread::Start(aWrNamespace);
-    image::ImageMemoryReporter::InitForWebRender();
+  if (gfxVars::UseCanvasRenderThread()) {
+    gfx::CanvasRenderThread::Start();
   }
-#ifdef XP_WIN
-  else {
-    if (gfxVars::UseDoubleBufferingWithCompositor()) {
-      // This is needed to avoid freezing the window on a device crash on double
-      // buffering, see bug 1549674.
-      widget::WinCompositorWindowThread::Start();
-    }
-  }
-#endif
+  wr::RenderThread::Start(aWrNamespace);
+  image::ImageMemoryReporter::InitForWebRender();
 
   VRManager::ManagerInit();
   // Send a message to the UI process that we're done.
