@@ -144,6 +144,13 @@ interface nsIInterceptedChannel : nsISupports
     [noscript]
     void SetFetchHandlerFinish(in TimeStamp aTimeStamp);
 
+    /**
+     * This method indicates if the ServiceWorker Interception is reset to
+     * network or not.
+     */
+    [noscript]
+    bool GetIsReset();
+
 %{C++
     already_AddRefed<nsIConsoleReportCollector>
     GetConsoleReportCollector()
@@ -187,6 +194,14 @@ interface nsIInterceptedChannel : nsISupports
           }
         }
       }
+    }
+
+    bool
+    IsReset()
+    {
+      bool result;
+      GetIsReset(&result);
+      return result;
     }
 %}
 

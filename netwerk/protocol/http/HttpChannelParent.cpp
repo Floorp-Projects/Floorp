@@ -1678,8 +1678,11 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
     // We only want to hide the special internal redirect from nsHttpChannel
     // to InterceptedHttpChannel.  We want to allow through internal redirects
     // initiated from the InterceptedHttpChannel even if they are to another
-    // InterceptedHttpChannel.
-    if (!oldIntercepted && newIntercepted) {
+    // InterceptedHttpChannel, except the interception reset, since
+    // corresponding HttpChannelChild/Parent objects can be reused for reset
+    // case.
+    if ((!oldIntercepted && newIntercepted) ||
+        (oldIntercepted && !newIntercepted && oldIntercepted->IsReset())) {
       // We need to move across the reserved and initial client information
       // to the new channel.  Normally this would be handled by the child
       // ClientChannelHelper, but that is not notified of this redirect since
@@ -1699,15 +1702,15 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
         newLoadInfo->SetInitialClientInfo(initialClientInfo.ref());
       }
 
-      // Re-link the HttpChannelParent to the new InterceptedHttpChannel.
+      // Re-link the HttpChannelParent to the new channel.
       nsCOMPtr<nsIChannel> linkedChannel;
       rv = NS_LinkRedirectChannels(mRedirectChannelId, this,
                                    getter_AddRefs(linkedChannel));
       NS_ENSURE_SUCCESS(rv, rv);
       MOZ_ASSERT(linkedChannel == newChannel);
 
-      // We immediately store the InterceptedHttpChannel as our nested
-      // mChannel.  None of the redirect IPC messaging takes place.
+      // We immediately store the channel as our nested mChannel.
+      // None of the redirect IPC messaging takes place.
       mChannel = do_QueryObject(newChannel);
 
       callback->OnRedirectVerifyCallback(NS_OK);
