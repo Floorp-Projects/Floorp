@@ -8,11 +8,9 @@
 
 #include "EditAggregateTransaction.h"
 
-#include "EditorBase.h"
 #include "EditorForwards.h"
 
-#include "mozilla/RefPtr.h"
-
+#include "mozilla/RangeBoundary.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"
 #include "nsIEditor.h"
@@ -75,42 +73,37 @@ class DeleteRangeTransaction final : public EditAggregateTransaction {
       nsRange& aRange) const;
 
   /**
-   * AppendTransactionsToDeleteIn() creates a DeleteTextTransaction or some
+   * CreateTxnsToDeleteBetween() creates a DeleteTextTransaction or some
    * DeleteNodeTransactions to remove text or nodes between aStart and aEnd
    * and appends the created transactions to the array.
    *
-   * @param aRangeToDelete      Must be positioned, valid and in same container.
+   * @param aStart      Must be set and valid point.
+   * @param aEnd        Must be set and valid point.  Additionally, the
+   *                    container must be same as aStart's container.
+   *                    And of course, this must not be before aStart in
+   *                    the DOM tree order.
    * @return            Returns NS_OK in most cases.
    *                    When the arguments are invalid, returns
    *                    NS_ERROR_INVALID_ARG.
    *                    When mEditorBase isn't available, returns
-   *                    NS_ERROR_NOT_AVAILABLE.
+   *                    NS_ERROR_NOT_AVAIALBLE.
    *                    When created DeleteTextTransaction cannot do its
    *                    transaction, returns NS_ERROR_FAILURE.
    *                    Note that even if one of created DeleteNodeTransaction
    *                    cannot do its transaction, this returns NS_OK.
    */
-  nsresult AppendTransactionsToDeleteIn(
-      const EditorRawDOMRange& aRangeToDelete);
+  nsresult CreateTxnsToDeleteBetween(const RawRangeBoundary& aStart,
+                                     const RawRangeBoundary& aEnd);
+
+  nsresult CreateTxnsToDeleteNodesBetween(nsRange* aRangeToDelete);
 
   /**
-   * AppendTransactionsToDeleteNodesWhoseEndBoundaryIn() creates
-   * DeleteNodeTransaction instances to remove nodes whose end is in the range
-   * (in other words, its end tag is in the range if it's an element) and append
-   * them to the array.
-   *
-   * @param aRangeToDelete      Must be positioned and valid.
-   */
-  nsresult AppendTransactionsToDeleteNodesWhoseEndBoundaryIn(
-      const EditorRawDOMRange& aRangeToDelete);
-
-  /**
-   * AppendTransactionToDeleteText() creates a DeleteTextTransaction to delete
+   * CreateTxnsToDeleteContent() creates a DeleteTextTransaction to delete
    * text between start of aPoint.GetContainer() and aPoint or aPoint and end of
    * aPoint.GetContainer() and appends the created transaction to the array.
    *
-   * @param aMaybePointInText   Must be set and valid.  If the point is not
-   *                            in a text node, this method does nothing.
+   * @param aPoint      Must be set and valid point.  If the container is not
+   *                    a data node, this method does nothing.
    * @param aAction     If nsIEditor::eNext, this method creates a transaction
    *                    to delete text from aPoint to the end of the data node.
    *                    Otherwise, this method creates a transaction to delete
@@ -119,15 +112,14 @@ class DeleteRangeTransaction final : public EditAggregateTransaction {
    *                    When the arguments are invalid, returns
    *                    NS_ERROR_INVALID_ARG.
    *                    When mEditorBase isn't available, returns
-   *                    NS_ERROR_NOT_AVAILABLE.
+   *                    NS_ERROR_NOT_AVAIALBLE.
    *                    When created DeleteTextTransaction cannot do its
    *                    transaction, returns NS_ERROR_FAILURE.
    *                    Note that even if no character will be deleted,
    *                    this returns NS_OK.
    */
-  nsresult AppendTransactionToDeleteText(
-      const EditorRawDOMPoint& aMaybePointInText,
-      nsIEditor::EDirection aAction);
+  nsresult CreateTxnsToDeleteContent(const RawRangeBoundary& aPoint,
+                                     nsIEditor::EDirection aAction);
 
   // The editor for this transaction.
   RefPtr<EditorBase> mEditorBase;

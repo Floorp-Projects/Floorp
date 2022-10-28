@@ -125,58 +125,38 @@ NS_IMETHODIMP DeleteRangeTransaction::DoTransaction() {
   MaybeExtendDeletingRangeWithSurroundingWhitespace(*rangeToDelete);
 
   // build the child transactions
-  // XXX We should move this to the constructor.  Then, we don't need to make
-  //     this class has mRangeToDelete with nullptr since transaction instances
-  //     may be created a lot and live long.
-  {
-    EditorRawDOMRange extendedRange(*rangeToDelete);
-    MOZ_ASSERT(extendedRange.IsPositionedAndValid());
+  const RangeBoundary& startRef = rangeToDelete->StartRef();
+  const RangeBoundary& endRef = rangeToDelete->EndRef();
+  MOZ_ASSERT(startRef.IsSetAndValid());
+  MOZ_ASSERT(endRef.IsSetAndValid());
 
-    if (extendedRange.InSameContainer()) {
-      // the selection begins and ends in the same node
-      nsresult rv = AppendTransactionsToDeleteIn(extendedRange);
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "DeleteRangeTransaction::AppendTransactionsToDeleteIn() failed");
-        return rv;
-      }
-    } else {
-      // If the range ends at end of a node, we may need to extend the range to
-      // make ContentSubtreeIterator iterates close tag of the unnecessary nodes
-      // in AppendTransactionsToDeleteNodesEntirelyIn.
-      for (EditorRawDOMPoint endOfRange = extendedRange.EndRef();
-           endOfRange.IsInContentNode() && endOfRange.IsEndOfContainer() &&
-           endOfRange.GetContainer() != extendedRange.StartRef().GetContainer();
-           endOfRange = extendedRange.EndRef()) {
-        extendedRange.SetEnd(
-            EditorRawDOMPoint::After(*endOfRange.ContainerAs<nsIContent>()));
-      }
-
-      // the selection ends in a different node from where it started.  delete
-      // the relevant content in the start node
-      nsresult rv = AppendTransactionToDeleteText(extendedRange.StartRef(),
-                                                  nsIEditor::eNext);
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "DeleteRangeTransaction::AppendTransactionToDeleteText() failed");
-        return rv;
-      }
-      // delete the intervening nodes
-      rv = AppendTransactionsToDeleteNodesWhoseEndBoundaryIn(extendedRange);
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "DeleteRangeTransaction::"
-            "AppendTransactionsToDeleteNodesWhoseEndBoundaryIn() failed");
-        return rv;
-      }
-      // delete the relevant content in the end node
-      rv = AppendTransactionToDeleteText(extendedRange.EndRef(),
-                                         nsIEditor::ePrevious);
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "DeleteRangeTransaction::AppendTransactionToDeleteText() failed");
-        return rv;
-      }
+  if (startRef.Container() == endRef.Container()) {
+    // the selection begins and ends in the same node
+    nsresult rv = CreateTxnsToDeleteBetween(startRef.AsRaw(), endRef.AsRaw());
+    if (NS_FAILED(rv)) {
+      NS_WARNING("DeleteRangeTransaction::CreateTxnsToDeleteBetween() failed");
+      return rv;
+    }
+  } else {
+    // the selection ends in a different node from where it started.  delete
+    // the relevant content in the start node
+    nsresult rv = CreateTxnsToDeleteContent(startRef.AsRaw(), nsIEditor::eNext);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("DeleteRangeTransaction::CreateTxnsToDeleteContent() failed");
+      return rv;
+    }
+    // delete the intervening nodes
+    rv = CreateTxnsToDeleteNodesBetween(rangeToDelete);
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween() failed");
+      return rv;
+    }
+    // delete the relevant content in the end node
+    rv = CreateTxnsToDeleteContent(endRef.AsRaw(), nsIEditor::ePrevious);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("DeleteRangeTransaction::CreateTxnsToDeleteContent() failed");
+      return rv;
     }
   }
 
@@ -198,8 +178,7 @@ NS_IMETHODIMP DeleteRangeTransaction::DoTransaction() {
   }
 
   OwningNonNull<EditorBase> editorBase = *mEditorBase;
-  rv = editorBase->CollapseSelectionTo(
-      EditorRawDOMPoint(rangeToDelete->StartRef()));
+  rv = editorBase->CollapseSelectionTo(EditorRawDOMPoint(startRef));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::CollapseSelectionTo() failed");
   return rv;
@@ -243,19 +222,20 @@ NS_IMETHODIMP DeleteRangeTransaction::RedoTransaction() {
   return rv;
 }
 
-nsresult DeleteRangeTransaction::AppendTransactionsToDeleteIn(
-    const EditorRawDOMRange& aRangeToDelete) {
-  if (NS_WARN_IF(!aRangeToDelete.IsPositionedAndValid())) {
+nsresult DeleteRangeTransaction::CreateTxnsToDeleteBetween(
+    const RawRangeBoundary& aStart, const RawRangeBoundary& aEnd) {
+  if (NS_WARN_IF(!aStart.IsSetAndValid()) ||
+      NS_WARN_IF(!aEnd.IsSetAndValid()) ||
+      NS_WARN_IF(aStart.Container() != aEnd.Container())) {
     return NS_ERROR_INVALID_ARG;
   }
-  MOZ_ASSERT(aRangeToDelete.InSameContainer());
 
   if (NS_WARN_IF(!mEditorBase)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   // see what kind of node we have
-  if (Text* textNode = aRangeToDelete.StartRef().GetContainerAs<Text>()) {
+  if (Text* textNode = Text::FromNode(aStart.Container())) {
     if (mEditorBase->IsHTMLEditor() &&
         NS_WARN_IF(
             !EditorUtils::IsEditableContent(*textNode, EditorType::HTML))) {
@@ -264,18 +244,20 @@ nsresult DeleteRangeTransaction::AppendTransactionsToDeleteIn(
     }
     // if the node is a chardata node, then delete chardata content
     uint32_t textLengthToDelete;
-    if (aRangeToDelete.Collapsed()) {
+    if (aStart == aEnd) {
       textLengthToDelete = 1;
     } else {
       textLengthToDelete =
-          aRangeToDelete.EndRef().Offset() - aRangeToDelete.StartRef().Offset();
+          *aEnd.Offset(RawRangeBoundary::OffsetFilter::kValidOffsets) -
+          *aStart.Offset(RawRangeBoundary::OffsetFilter::kValidOffsets);
       MOZ_DIAGNOSTIC_ASSERT(textLengthToDelete > 0);
     }
 
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
-        DeleteTextTransaction::MaybeCreate(*mEditorBase, *textNode,
-                                           aRangeToDelete.StartRef().Offset(),
-                                           textLengthToDelete);
+        DeleteTextTransaction::MaybeCreate(
+            *mEditorBase, *textNode,
+            *aStart.Offset(RawRangeBoundary::OffsetFilter::kValidOffsets),
+            textLengthToDelete);
     // If the text node isn't editable, it should be never undone/redone.
     // So, the transaction shouldn't be recorded.
     if (!deleteTextTransaction) {
@@ -295,8 +277,8 @@ nsresult DeleteRangeTransaction::AppendTransactionsToDeleteIn(
   // specified range's nodes as far as possible.
   // XXX This is super expensive.  Probably, we should make
   //     DeleteNodeTransaction() can treat multiple siblings.
-  for (nsIContent* child = aRangeToDelete.StartRef().GetChild();
-       child && child != aRangeToDelete.EndRef().GetChild();
+  for (nsIContent* child = aStart.GetChildAtOffset();
+       child && child != aEnd.GetChildAtOffset();
        child = child->GetNextSibling()) {
     if (NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(*child))) {
       continue;  // Should we abort?
@@ -314,9 +296,9 @@ nsresult DeleteRangeTransaction::AppendTransactionsToDeleteIn(
   return NS_OK;
 }
 
-nsresult DeleteRangeTransaction::AppendTransactionToDeleteText(
-    const EditorRawDOMPoint& aMaybePointInText, nsIEditor::EDirection aAction) {
-  if (NS_WARN_IF(!aMaybePointInText.IsSetAndValid())) {
+nsresult DeleteRangeTransaction::CreateTxnsToDeleteContent(
+    const RawRangeBoundary& aPoint, nsIEditor::EDirection aAction) {
+  if (NS_WARN_IF(!aPoint.IsSetAndValid())) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -324,19 +306,19 @@ nsresult DeleteRangeTransaction::AppendTransactionToDeleteText(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (!aMaybePointInText.IsInTextNode()) {
+  Text* textNode = Text::FromNode(aPoint.Container());
+  if (!textNode) {
     return NS_OK;
   }
 
-  // If the node is a text node, then delete text before or after the point.
-  Text& textNode = *aMaybePointInText.ContainerAs<Text>();
+  // If the node is a chardata node, then delete chardata content
   uint32_t startOffset, numToDelete;
   if (nsIEditor::eNext == aAction) {
-    startOffset = aMaybePointInText.Offset();
-    numToDelete = textNode.TextDataLength() - startOffset;
+    startOffset = *aPoint.Offset(RawRangeBoundary::OffsetFilter::kValidOffsets);
+    numToDelete = aPoint.Container()->Length() - startOffset;
   } else {
     startOffset = 0;
-    numToDelete = aMaybePointInText.Offset();
+    numToDelete = *aPoint.Offset(RawRangeBoundary::OffsetFilter::kValidOffsets);
   }
 
   if (!numToDelete) {
@@ -344,12 +326,13 @@ nsresult DeleteRangeTransaction::AppendTransactionToDeleteText(
   }
 
   RefPtr<DeleteTextTransaction> deleteTextTransaction =
-      DeleteTextTransaction::MaybeCreate(*mEditorBase, textNode, startOffset,
+      DeleteTextTransaction::MaybeCreate(*mEditorBase, *textNode, startOffset,
                                          numToDelete);
+  NS_WARNING_ASSERTION(deleteTextTransaction,
+                       "DeleteTextTransaction::MaybeCreate() failed");
   // If the text node isn't editable, it should be never undone/redone.
   // So, the transaction shouldn't be recorded.
-  if (MOZ_UNLIKELY(!deleteTextTransaction)) {
-    NS_WARNING("DeleteTextTransaction::MaybeCreate() failed");
+  if (!deleteTextTransaction) {
     return NS_ERROR_FAILURE;
   }
   DebugOnly<nsresult> rvIgnored = AppendChild(deleteTextTransaction);
@@ -359,16 +342,14 @@ nsresult DeleteRangeTransaction::AppendTransactionToDeleteText(
   return NS_OK;
 }
 
-nsresult
-DeleteRangeTransaction::AppendTransactionsToDeleteNodesWhoseEndBoundaryIn(
-    const EditorRawDOMRange& aRangeToDelete) {
+nsresult DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween(
+    nsRange* aRangeToDelete) {
   if (NS_WARN_IF(!mEditorBase)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   ContentSubtreeIterator subtreeIter;
-  nsresult rv = subtreeIter.Init(aRangeToDelete.StartRef().ToRawRangeBoundary(),
-                                 aRangeToDelete.EndRef().ToRawRangeBoundary());
+  nsresult rv = subtreeIter.Init(aRangeToDelete);
   if (NS_FAILED(rv)) {
     NS_WARNING("ContentSubtreeIterator::Init() failed");
     return rv;
