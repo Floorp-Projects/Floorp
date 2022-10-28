@@ -32,10 +32,10 @@ Search probes relevant to front-end searches
 
 The Address Bar is an integral part of search and has `additional telemetry of its own`_.
 
-BrowserSearchTelemetry.jsm
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+BrowserSearchTelemetry.sys.mjs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This telemetry is handled by `BrowserSearchTelemetry.jsm`_.
+This telemetry is handled by `BrowserSearchTelemetry.sys.mjs`_.
 
 SEARCH_COUNTS - SAP usage
   This histogram tracks search engines and Search Access Points. It is augmented
@@ -106,10 +106,10 @@ navigation.search (OBSOLETE)
   it's more or less equivalent to browser.engagement.navigation, but can also
   report the picked search engine.
 
-SearchSERPTelemetry.jsm
-~~~~~~~~~~~~~~~~~~~~~~~
+SearchSERPTelemetry.sys.mjs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This telemetry is handled by `SearchSERPTelemetry.jsm and the associated parent/child actors`_.
+This telemetry is handled by `SearchSERPTelemetry.sys.mjs and the associated parent/child actors`_.
 
 SEARCH_COUNTS - SERP results
   This histogram records search counts for visits to SERP in-content pages.
@@ -168,5 +168,5 @@ browser.search.ad_clicks
   ``<provider>:<sap|organic>``.
 
 .. _additional telemetry of its own: /browser/urlbar/telemetry.html
-.. _SearchSERPTelemetry.jsm and the associated parent/child actors: https://searchfox.org/mozilla-central/search?q=&path=SearchSERPTelemetry*.jsm&case=false&regexp=false
-.. _BrowserSearchTelemetry.jsm: https://searchfox.org/mozilla-central/source/browser/components/search/BrowserSearchTelemetry.jsm
+.. _SearchSERPTelemetry.sys.mjs and the associated parent/child actors: https://searchfox.org/mozilla-central/search?q=&path=SearchSERPTelemetry*.sys.mjs&case=false&regexp=false
+.. _BrowserSearchTelemetry: https://searchfox.org/mozilla-central/source/browser/components/search/BrowserSearchTelemetry.sys.mjs
