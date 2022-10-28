@@ -42,6 +42,7 @@
 .onboardingContainer.featureCallout .screen[pos=callout] .welcome-text h2 {
   font-size: 0.8em;
   margin: 0;
+  color: ButtonText;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .welcome-text h1 {
   font-weight: bold;
@@ -63,23 +64,36 @@
   border-radius: 4px;
   padding-block: 0 24px;
   width: 25em;
+  background-color: #FFF;
+}
+@media (prefers-color-scheme: dark) {
+  .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content {
+    background-color: #1c1b22;
+  }
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps {
   align-self: baseline;
   margin: -38px 30px -30px;
   padding-block: 0;
 }
+.onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps .indicator {
+  border: 3px solid ButtonText;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps .indicator.current {
+  border-color: LinkText;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps .indicator.current, .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps.progress-bar .indicator.complete {
+  border-color: LinkText;
+}
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .dismiss-button {
+  font-size: 1em;
   margin-block: 25px -45px;
   z-index: 1;
+  background-color: #FFF;
 }
-@media (prefers-contrast) {
+@media (prefers-color-scheme: dark) {
   .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .dismiss-button {
-    background-color: var(--in-content-button-background);
-  }
-  .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .dismiss-button:hover {
-    background-color: var(--in-content-primary-button-background);
-    color: var(--in-content-primary-button-text-color);
+    background-color: #1c1b22;
   }
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons {
@@ -95,24 +109,66 @@
   font-weight: bold;
   float: inline-end;
   margin-inline: 10px 30px;
-  background-color: var(--in-content-button-background);
-  color: var(--in-content-button-text-color);
+  padding: 4px 16px;
+  font-size: 0.8em;
+  line-height: 16px;
+  min-height: 32px;
+  background-color: rgba(207, 207, 216, 0.33);
 }
-.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover {
-  background-color: var(--in-content-button-background-hover);
-}
-@media (prefers-contrast) {
+@media (prefers-color-scheme: dark) {
   .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary {
-    color: var(--in-content-button-text-color);
-    border: 1px solid var(--in-content-button-border-color);
-  }
-  .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover {
-    background-color: var(--in-content-primary-button-background);
-    color: var(--in-content-primary-button-text-color);
+    background-color: #2b2a33;
   }
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta {
   float: inline-end;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
+.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button {
+  border-radius: 4px;
+  border: 0;
+  cursor: pointer;
+  color: ButtonText;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover,
+.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button:hover {
+  background-color: #e8e3e4;
+}
+@media (prefers-color-scheme: dark) {
+  .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
+.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button {
+    background-color: #2b2a33;
+  }
+  .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover,
+.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button:hover {
+    background-color: #363434;
+  }
+}
+@media (prefers-contrast) {
+  .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
+.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button {
+    border: 1px solid ButtonText;
+    background-color: #FFF;
+  }
+}
+@media (prefers-contrast) and (prefers-color-scheme: dark) {
+  .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
+.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button {
+    background-color: #1c1b22;
+  }
+}
+@media (prefers-contrast) {
+  .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover,
+.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button:hover {
+    background-color: ButtonText;
+    color: #FFF;
+  }
+}
+@media (prefers-contrast) and (prefers-color-scheme: dark) {
+  .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover,
+.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button:hover {
+    color: #1c1b22;
+  }
 }
 .onboardingContainer.featureCallout.callout-arrow::before, .onboardingContainer.featureCallout.callout-arrow::after {
   content: "";
@@ -125,8 +181,13 @@
   transform: rotate(315deg);
 }
 .onboardingContainer.featureCallout.callout-arrow::before {
-  background-color: var(--in-content-page-background);
   z-index: 2147483647;
+  background-color: #FFF;
+}
+@media (prefers-color-scheme: dark) {
+  .onboardingContainer.featureCallout.callout-arrow::before {
+    background-color: #1c1b22;
+  }
 }
 .onboardingContainer.featureCallout.callout-arrow::after {
   background: transparent;

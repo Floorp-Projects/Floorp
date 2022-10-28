@@ -1,4 +1,11 @@
 $max-z-index: 2147483647;
+// Explicitly define these colors as the CSS variables used in aboutwelcome.scss are unavailable in the browser chrome context.
+$button-background: rgba(207, 207, 216, 0.33);
+$button-background-dark: rgba(43, 42, 51, 1);
+$button-hover-background: rgb(232, 227, 228);
+$button-hover-background-dark: rgb(54, 52, 52);
+$background: #FFF;
+$background-dark: rgb(28, 27, 34);
 
 .onboardingContainer.featureCallout {
   position: absolute;
@@ -56,6 +63,7 @@ $max-z-index: 2147483647;
         h2 {
           font-size: 0.8em;
           margin: 0;
+          color: ButtonText;
         }
 
         h1 {
@@ -83,24 +91,38 @@ $max-z-index: 2147483647;
           border-radius: 4px;
           padding-block: 0 24px;
           width: 25em;
+          background-color: $background;
+          @media (prefers-color-scheme: dark) {
+            background-color: $background-dark;
+          }
 
           .steps {
             align-self: baseline;
             margin: -38px 30px -30px;
             padding-block: 0;
+
+            .indicator {
+              // using border will show up in Windows High Contrast Mode to improve accessibility.
+              border: 3px solid ButtonText;
+
+              &.current {
+                border-color: LinkText;
+              }
+            }
+
+            & .indicator.current,
+            &.progress-bar .indicator.complete {
+              border-color: LinkText;
+            }
           }
 
           .dismiss-button {
+            font-size: 1em;
             margin-block: 25px -45px;
             z-index: 1;
-
-            @media (prefers-contrast) {
-              background-color: var(--in-content-button-background);
-
-              &:hover {
-                background-color: var(--in-content-primary-button-background);
-                color: var(--in-content-primary-button-text-color);
-              }
+            background-color: $background;
+            @media (prefers-color-scheme: dark) {
+              background-color: $background-dark;
             }
           }
         }
@@ -120,26 +142,55 @@ $max-z-index: 2147483647;
           font-weight: bold;
           float: inline-end;
           margin-inline: 10px 30px;
-          background-color: var(--in-content-button-background);
-          color: var(--in-content-button-text-color);
+          padding: 4px 16px;
+          font-size: 0.8em;
+          line-height: 16px;
+          min-height: 32px;
+          background-color: $button-background;
 
-          &:hover {
-            background-color: var(--in-content-button-background-hover);
-          }
-
-          @media (prefers-contrast) {
-            color: var(--in-content-button-text-color);
-            border: 1px solid var(--in-content-button-border-color);
-
-            &:hover {
-              background-color: var(--in-content-primary-button-background);
-              color: var(--in-content-primary-button-text-color);
-            }
+          @media (prefers-color-scheme: dark) {
+            background-color: $button-background-dark;
           }
         }
 
         .secondary-cta {
           float: inline-end;
+        }
+      }
+
+      .action-buttons .primary,
+      .main-content .dismiss-button {
+        border-radius: 4px;
+        border: 0;
+        cursor: pointer;
+        color: ButtonText;
+
+        &:hover {
+          background-color: $button-hover-background;
+        }
+
+        @media (prefers-color-scheme: dark) {
+          background-color: $button-background-dark;
+
+          &:hover {
+            background-color: $button-hover-background-dark;
+          }
+        }
+
+        @media (prefers-contrast) {
+          border: 1px solid ButtonText;
+          background-color: $background;
+          @media (prefers-color-scheme: dark) {
+            background-color: $background-dark;
+          }
+
+          &:hover {
+            background-color: ButtonText;
+            color: $background;
+            @media (prefers-color-scheme: dark) {
+              color: $background-dark;
+            }
+          }
         }
       }
     }
@@ -166,8 +217,11 @@ $max-z-index: 2147483647;
 
   // color for all arrow foreground
   &.callout-arrow::before {
-    background-color: var(--in-content-page-background);
     z-index: $max-z-index;
+    background-color: $background;
+    @media (prefers-color-scheme: dark) {
+      background-color: $background-dark;
+    }
   }
 
   // styles for all arrow backgrounds

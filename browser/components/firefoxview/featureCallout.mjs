@@ -195,14 +195,14 @@ function _positionCallout() {
     // while needed space should be the space necessary to fit the callout container
     top: {
       availableSpace:
-        document.documentElement.offsetHeight -
+        document.documentElement.clientHeight -
         getOffset(parentEl).top -
-        parentEl.offsetHeight,
-      neededSpace: container.offsetHeight - overlap,
+        parentEl.clientHeight,
+      neededSpace: container.clientHeight - overlap,
       position() {
         // Point to an element above the callout
         let containerTop =
-          getOffset(parentEl).top + parentEl.offsetHeight - overlap;
+          getOffset(parentEl).top + parentEl.clientHeight - overlap;
         container.style.top = `${Math.max(0, containerTop)}px`;
         container.classList.add("arrow-top");
         centerHorizontally(container, parentEl);
@@ -210,11 +210,11 @@ function _positionCallout() {
     },
     bottom: {
       availableSpace: getOffset(parentEl).top,
-      neededSpace: container.offsetHeight - overlap,
+      neededSpace: container.clientHeight - overlap,
       position() {
         // Point to an element below the callout
         let containerTop =
-          getOffset(parentEl).top - container.offsetHeight + overlap;
+          getOffset(parentEl).top - container.clientHeight + overlap;
         container.style.top = `${Math.max(0, containerTop)}px`;
         container.classList.add("arrow-bottom");
         centerHorizontally(container, parentEl);
@@ -222,11 +222,11 @@ function _positionCallout() {
     },
     right: {
       availableSpace: getOffset(parentEl).left,
-      neededSpace: container.offsetWidth - overlap,
+      neededSpace: container.clientWidth - overlap,
       position() {
         // Point to an element to the right of the callout
         let containerLeft =
-          getOffset(parentEl).left - container.offsetWidth + overlap;
+          getOffset(parentEl).left - container.clientWidth + overlap;
         container.style.left = `${Math.max(0, containerLeft)}px`;
         container.style.top = `${getOffset(parentEl).top}px`;
         container.classList.add("arrow-inline-end");
@@ -234,12 +234,12 @@ function _positionCallout() {
     },
     left: {
       availableSpace:
-        document.documentElement.offsetWidth - getOffset(parentEl).right,
-      neededSpace: container.offsetWidth - overlap,
+        document.documentElement.clientWidth - getOffset(parentEl).right,
+      neededSpace: container.clientWidth - overlap,
       position() {
         // Point to an element to the left of the callout
         let containerLeft =
-          getOffset(parentEl).left + parentEl.offsetWidth - overlap;
+          getOffset(parentEl).left + parentEl.clientWidth - overlap;
         container.style.left = `${Math.max(0, containerLeft)}px`;
         container.style.top = `${getOffset(parentEl).top}px`;
         container.classList.add("arrow-inline-start");
@@ -249,11 +249,8 @@ function _positionCallout() {
       position() {
         // Point to an element above and at the end of the callout
         let containerTop =
-          getOffset(parentEl).top + parentEl.offsetHeight - overlap;
-        container.style.top = `${Math.max(
-          container.offsetHeight - overlap,
-          containerTop
-        )}px`;
+          getOffset(parentEl).top + parentEl.clientHeight - overlap;
+        container.style.top = `${Math.max(0, containerTop)}px`;
         alignEnd(container, parentEl);
         container.classList.add(RTL ? "arrow-top-start" : "arrow-top-end");
       },
@@ -305,9 +302,9 @@ function _positionCallout() {
   }
 
   function centerHorizontally() {
-    let sideOffset = (parentEl.offsetWidth - container.offsetWidth) / 2;
+    let sideOffset = (parentEl.clientWidth - container.clientWidth) / 2;
     let containerSide = RTL
-      ? document.documentElement.offsetWidth -
+      ? document.documentElement.clientWidth -
         getOffset(parentEl).right +
         sideOffset
       : getOffset(parentEl).left + sideOffset;
@@ -318,8 +315,8 @@ function _positionCallout() {
     let containerSide = RTL
       ? parentEl.getBoundingClientRect().left
       : parentEl.getBoundingClientRect().left +
-        parentEl.offsetWidth -
-        container.offsetWidth;
+        parentEl.clientWidth -
+        container.clientWidth;
     container.style.left = `${Math.max(containerSide, 0)}px`;
   }
 
