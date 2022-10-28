@@ -275,11 +275,7 @@ void gfxPlatformGtk::InitWebRenderConfig() {
                        "FEATURE_FAILURE_DISABLE_RELEASE_OR_BETA"_ns);
 #else
   if (feature.IsEnabled()) {
-    if (!(gfxConfig::IsEnabled(Feature::WEBRENDER) ||
-          gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE))) {
-      feature.ForceDisable(FeatureStatus::Unavailable, "WebRender disabled",
-                           "FEATURE_FAILURE_WR_DISABLED"_ns);
-    } else if (!IsWaylandDisplay()) {
+    if (!IsWaylandDisplay()) {
       feature.ForceDisable(FeatureStatus::Unavailable,
                            "Wayland support missing",
                            "FEATURE_FAILURE_NO_WAYLAND"_ns);
