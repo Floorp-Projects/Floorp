@@ -204,28 +204,6 @@ class MarkStack {
 #ifdef DEBUG
   mutable size_t iteratorCount_;
 #endif
-
-  friend class MarkStackIter;
-};
-
-class MarkStackIter {
-  MarkStack& stack_;
-  size_t pos_;
-
- public:
-  explicit MarkStackIter(MarkStack& stack);
-  ~MarkStackIter();
-
-  bool done() const;
-  MarkStack::Tag peekTag() const;
-  MarkStack::TaggedPtr peekPtr() const;
-  MarkStack::SlotsOrElementsRange peekSlotsOrElementsRange() const;
-  void next();
-  void nextPtr();
-  void nextArray();
-
- private:
-  size_t position() const;
 };
 
 } /* namespace gc */

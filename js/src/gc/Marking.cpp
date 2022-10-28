@@ -1716,51 +1716,6 @@ size_t MarkStack::sizeOfExcludingThis(
   return stack().sizeOfExcludingThis(mallocSizeOf);
 }
 
-MarkStackIter::MarkStackIter(MarkStack& stack)
-    : stack_(stack), pos_(stack.position()) {
-#ifdef DEBUG
-  stack.iteratorCount_++;
-#endif
-}
-
-MarkStackIter::~MarkStackIter() {
-#ifdef DEBUG
-  MOZ_ASSERT(stack_.iteratorCount_);
-  stack_.iteratorCount_--;
-#endif
-}
-
-inline size_t MarkStackIter::position() const { return pos_; }
-
-inline bool MarkStackIter::done() const { return position() == 0; }
-
-inline MarkStack::TaggedPtr MarkStackIter::peekPtr() const {
-  MOZ_ASSERT(!done());
-  return stack_.stack()[pos_ - 1];
-}
-
-inline MarkStack::Tag MarkStackIter::peekTag() const { return peekPtr().tag(); }
-
-inline void MarkStackIter::nextPtr() {
-  MOZ_ASSERT(!done());
-  MOZ_ASSERT(!TagIsRangeTag(peekTag()));
-  pos_--;
-}
-
-inline void MarkStackIter::next() {
-  if (TagIsRangeTag(peekTag())) {
-    nextArray();
-  } else {
-    nextPtr();
-  }
-}
-
-inline void MarkStackIter::nextArray() {
-  MOZ_ASSERT(TagIsRangeTag(peekTag()));
-  MOZ_ASSERT(position() >= ValueRangeWords);
-  pos_ -= ValueRangeWords;
-}
-
 /*** GCMarker ***************************************************************/
 
 /*
