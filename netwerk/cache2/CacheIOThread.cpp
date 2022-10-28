@@ -99,8 +99,6 @@ class BlockingIOWatcher {
   void InitThread();
   // If there is a blocking operation being handled on the IO
   // thread, this is called on the main thread during shutdown.
-  // Waits for notification from the IO thread for up to two seconds.
-  // If that times out, it attempts to cancel the IO operation.
   void WatchAndCancel(Monitor& aMonitor);
   // Called by the IO thread after each operation has been
   // finished (after each Run() call).  This wakes the main
@@ -155,25 +153,13 @@ void BlockingIOWatcher::WatchAndCancel(Monitor& aMonitor) {
     }
   }
 
-  LOG(("Blocking IO operation pending on IO thread, waiting..."));
-
-  // It seems wise to use the I/O lag time as a maximum time to wait
-  // for an operation to finish.  When that times out and cancelation
-  // succeeds, there will be no other IO operation permitted.  By default
-  // this is two seconds.
-  uint32_t maxLag =
-      std::min<uint32_t>(5, CacheObserver::MaxShutdownIOLag()) * 1000;
-
-  DWORD result = ::WaitForSingleObject(mEvent, maxLag);
-  if (result == WAIT_TIMEOUT) {
-    LOG(("CacheIOThread: Attempting to cancel a long blocking IO operation"));
-    BOOL result = ::CancelSynchronousIo(thread);
-    if (result) {
-      LOG(("  cancelation signal succeeded"));
-    } else {
-      DWORD error = GetLastError();
-      LOG(("  cancelation signal failed with GetLastError=%lu", error));
-    }
+  LOG(("CacheIOThread: Attempting to cancel a long blocking IO operation"));
+  BOOL result = ::CancelSynchronousIo(thread);
+  if (result) {
+    LOG(("  cancelation signal succeeded"));
+  } else {
+    DWORD error = GetLastError();
+    LOG(("  cancelation signal failed with GetLastError=%lu", error));
   }
 }
 

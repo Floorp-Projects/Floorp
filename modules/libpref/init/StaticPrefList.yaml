@@ -1028,12 +1028,23 @@
   value: 40 * 1024
   mirror: always
 
+
 # Number of seconds the cache spends writing pending data and closing files
 # after shutdown has been signalled. Past that time data is not written and
 # files are left open for the OS to clean up.
 - name: browser.cache.max_shutdown_io_lag
   type: RelaxedAtomicUint32
   value: 2
+  mirror: always
+
+# After the max_shutdown_io_lag has passed, we will attempt to cancel
+# blocking IO (on windows). The CacheIOThread may pick up more blocking
+# tasks so we want to cancel those too. The main thread will be woken
+# up every shutdown_io_time_between_cancellations_ms to cancel the IO
+# on the other thread.
+- name: browser.cache.shutdown_io_time_between_cancellations_ms
+  type: RelaxedAtomicUint32
+  value: 5
   mirror: always
 
 # A percentage limit for media content type in the disk cache. When some entries
