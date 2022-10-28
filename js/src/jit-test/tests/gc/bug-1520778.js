@@ -1,6 +1,6 @@
 // |jit-test| error: ReferenceError
 gczeal(0);
-gcparam("markStackLimit", 1);
+setMarkStackLimit(1);
 var g = newGlobal({
     newCompartment: true
 });

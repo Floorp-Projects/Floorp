@@ -38,7 +38,6 @@ testChangeParam("maxBytes");
 testChangeParam("incrementalGCEnabled");
 testChangeParam("perZoneGCEnabled");
 testChangeParam("sliceTimeBudgetMS");
-testChangeParam("markStackLimit");
 testChangeParam("highFrequencyTimeLimit");
 testChangeParam("smallHeapSizeMax");
 testChangeParam("largeHeapSizeMin");

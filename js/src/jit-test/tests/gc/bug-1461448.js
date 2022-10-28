@@ -21,7 +21,7 @@ evaluate(`
   var gw = dbg.addDebuggee(g);
 `);
 lfOffThreadGlobal.offThreadCompileToStencil(`
-  gcparam("markStackLimit", 1);
+  setMarkStackLimit(1);
   grayRoot()[0] = "foo";
 `);
 var stencil = lfOffThreadGlobal.finishOffThreadStencil();

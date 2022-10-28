@@ -49,7 +49,6 @@ class TenuredChunk;
   _("unusedChunks", JSGC_UNUSED_CHUNKS, false)                             \
   _("totalChunks", JSGC_TOTAL_CHUNKS, false)                               \
   _("sliceTimeBudgetMS", JSGC_SLICE_TIME_BUDGET_MS, true)                  \
-  _("markStackLimit", JSGC_MARK_STACK_LIMIT, true)                         \
   _("highFrequencyTimeLimit", JSGC_HIGH_FREQUENCY_TIME_LIMIT, true)        \
   _("smallHeapSizeMax", JSGC_SMALL_HEAP_SIZE_MAX, true)                    \
   _("largeHeapSizeMin", JSGC_LARGE_HEAP_SIZE_MIN, true)                    \
