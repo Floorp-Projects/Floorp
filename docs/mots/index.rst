@@ -536,13 +536,12 @@ Windows dynamic linker instrumentation and blocking
 
     * - Owner(s)
       -
-        | `Toshihito Kikuchi (toshi) <https://people.mozilla.org/s?query=toshi>`__
+        | `David Parks (handyman) <https://people.mozilla.org/s?query=handyman>`__
     * - Peer(s)
       -
-        | `David Parks (handyman) <https://people.mozilla.org/s?query=handyman>`__
         | `Molly Howell (mhowell) <https://people.mozilla.org/s?query=mhowell>`__
     * - Owner(s) Emeritus
-      - Aaron Klotz
+      - Aaron Klotz, Toshihito Kikuchi
     * - Includes
       -
         | `toolkit/xre/dllservices/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=toolkit/xre/dllservices/\*\*/\*>`__
@@ -1017,14 +1016,13 @@ Native message-passing between threads and processes
         | `Nika Layzell (nika) <https://people.mozilla.org/s?query=nika>`__
     * - Peer(s)
       -
-        | `Jim Mathies (jimm) <https://people.mozilla.org/s?query=jimm>`__
         | `Jed Davis (jld) <https://people.mozilla.org/s?query=jld>`__
         | `Andrew McCreight (mccr8) <https://people.mozilla.org/s?query=mccr8>`__
         | `David Parks (handyman) <https://people.mozilla.org/s?query=handyman>`__
     * - Owner(s) Emeritus
       - Chris Jones, Bill McCloskey, Jed Davis
     * - Peer(s) Emeritus
-      - Benjamin Smedberg, Ben Turner, David Anderson, Kan-Ru Chen, Bevis Tseng, Ben Kelly
+      - Benjamin Smedberg, Ben Turner, David Anderson, Kan-Ru Chen, Bevis Tseng, Ben Kelly, Jim Mathies
     * - Includes
       -
         | `ipc/glue/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=ipc/glue/\*\*/\*>`__
@@ -1457,11 +1455,10 @@ Integration with Microsoft Distributed COM
     * - Owner(s)
       -
         | `James Teh (Jamie) <https://people.mozilla.org/s?query=Jamie>`__
-    * - Peer(s)
-      -
-        | `Jim Mathies (jimm) <https://people.mozilla.org/s?query=jimm>`__
     * - Owner(s) Emeritus
       - Aaron Klotz
+    * - Peer(s) Emeritus
+      - Jim Mathies
     * - Includes
       -
         | `ipc/mscom/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=ipc/mscom/\*\*/\*>`__
@@ -1641,10 +1638,9 @@ NPAPI Plugin support.
 
     * - Owner(s)
       -
-        | `Jim Mathies (jimm) <https://people.mozilla.org/s?query=jimm>`__
-    * - Peer(s)
-      -
         | `David Parks (handyman) <https://people.mozilla.org/s?query=handyman>`__
+    * - Owner(s) Emeritus
+      - Jim Mathies
     * - Peer(s) Emeritus
       - Josh Aas, John Schoenick, Robert O'Callahan, Johnny Stenback, Benjamin Smedberg
     * - Includes
@@ -1825,12 +1821,10 @@ Sandboxing for the Windows platform
     * - Peer(s)
       -
         | `David Parks (handyman) <https://people.mozilla.org/s?query=handyman>`__
-        | `Jim Mathies (jimm) <https://people.mozilla.org/s?query=jimm>`__
-        | `Toshihito Kikuchi (toshi) <https://people.mozilla.org/s?query=toshi>`__
     * - Owner(s) Emeritus
       - Tim Abraldes (https://mozillians.org/en-US/u/TimAbraldes)
     * - Peer(s) Emeritus
-      - Brian Bondy, Aaron Klotz
+      - Brian Bondy, Aaron Klotz, Jim Mathies, Toshihito Kikuchi
     * - Includes
       -
         | `security/sandbox/win/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=security/sandbox/win/\*\*/\*>`__
@@ -2374,9 +2368,9 @@ Top level Widget
 
     * - Owner(s)
       -
-        | `Jim Mathies (jimm) <https://people.mozilla.org/s?query=jimm>`__
+        | `Stephen A Pohl (spohl) <https://people.mozilla.org/s?query=spohl>`__
     * - Owner(s) Emeritus
-      - Vladimir Vukicevic, Robert O'Callahan
+      - Vladimir Vukicevic, Robert O'Callahan, Jim Mathies
     * - Peer(s) Emeritus
       - Stuart Parmenter
     * - Includes
@@ -2491,14 +2485,15 @@ Windows widget support
 
     * - Owner(s)
       -
-        | `Jim Mathies (jimm) <https://people.mozilla.org/s?query=jimm>`__
+        | `Chris Martin (cmartin) <https://people.mozilla.org/s?query=cmartin>`__
     * - Peer(s)
       -
-        | `Chris Martin (cmartin) <https://people.mozilla.org/s?query=cmartin>`__
-        | `Toshihito Kikuchi (toshi) <https://people.mozilla.org/s?query=toshi>`__
+        | `David Parks (handyman) <https://people.mozilla.org/s?query=handyman>`__
         | `Molly Howell (mhowell) <https://people.mozilla.org/s?query=mhowell>`__
+    * - Owner(s) Emeritus
+      - Jim Mathies
     * - Peer(s) Emeritus
-      - Rob Strong, Vladimir Vukicevic, Brad Lassey, Brian Bondy, Christian Biesinger, Doug Turner, Josh 'timeless' Soref, Rob Arnold, Aaron Klotz, Neil Rashbrook
+      - Rob Strong, Vladimir Vukicevic, Brad Lassey, Brian Bondy, Christian Biesinger, Doug Turner, Josh 'timeless' Soref, Rob Arnold, Aaron Klotz, Neil Rashbrook, Toshihito Kikuchi
     * - Includes
       -
         | `widget/windows/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=widget/windows/\*\*/\*>`__
@@ -2994,12 +2989,12 @@ Windows process for bootstrapping the browser process.
 
     * - Owner(s)
       -
-        | `Toshihito Kikuchi (toshi) <https://people.mozilla.org/s?query=toshi>`__
+        | `Molly Howell (mhowell) <https://people.mozilla.org/s?query=mhowell>`__
     * - Peer(s)
       -
         | `Molly Howell (mhowell) <https://people.mozilla.org/s?query=mhowell>`__
     * - Owner(s) Emeritus
-      - Aaron Klotz
+      - Aaron Klotz, Toshihito Kikuchi
     * - Includes
       -
         | `browser/app/winlauncher/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/app/winlauncher/\*\*/\*>`__
