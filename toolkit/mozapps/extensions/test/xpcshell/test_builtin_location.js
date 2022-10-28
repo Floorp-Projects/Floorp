@@ -14,7 +14,7 @@ AddonTestUtils.createAppInfo(
 async function getWrapper(id, hidden) {
   let wrapper = await installBuiltinExtension({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       hidden,
     },
     background() {
@@ -106,7 +106,7 @@ add_task(async function test_builtin_update() {
 
   let wrapper = await installBuiltinExtension({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       version: "1.0",
     },
     background() {
@@ -120,7 +120,7 @@ add_task(async function test_builtin_update() {
   // Change the built-in
   await setupBuiltinExtension({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       version: "2.0",
     },
     background() {

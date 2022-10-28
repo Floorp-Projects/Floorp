@@ -68,7 +68,7 @@ add_task(async function run_test_5() {
 add_task(async function run_test_6() {
   let xpi = await createTempWebExtensionFile({
     manifest: {
-      applications: { gecko: { id: "invalid" } },
+      browser_specific_settings: { gecko: { id: "invalid" } },
     },
   });
   let install = await AddonManager.getInstallForFile(xpi);

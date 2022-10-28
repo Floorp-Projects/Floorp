@@ -13,7 +13,7 @@ add_task(async function test_shutdown_barriers() {
 
   let xpi = await createTempWebExtensionFile({
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       version: VERSION,
     },
   });

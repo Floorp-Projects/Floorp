@@ -750,7 +750,7 @@ add_task(async function ensureCanSync_clearAll() {
     useAddonManager: "temporary",
     manifest: {
       permissions: ["storage"],
-      applications: { gecko: { id: extensionId } },
+      browser_specific_settings: { gecko: { id: extensionId } },
     },
   });
 
@@ -1730,7 +1730,7 @@ add_task(async function test_storage_sync_on_no_active_context() {
     useAddonManager: "temporary",
     manifest: {
       permissions: ["storage"],
-      applications: { gecko: { id: extensionId } },
+      browser_specific_settings: { gecko: { id: extensionId } },
     },
     files: {
       "ext-page.html": `<!DOCTYPE html>

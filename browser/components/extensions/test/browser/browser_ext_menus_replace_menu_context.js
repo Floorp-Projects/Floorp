@@ -188,7 +188,7 @@ add_task(async function overrideContext_with_context() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: "@menu-test-extension" } },
+      browser_specific_settings: { gecko: { id: "@menu-test-extension" } },
       permissions: ["menus", "menus.overrideContext", "tabs", "bookmarks"],
     },
     files: {
@@ -248,7 +248,7 @@ add_task(async function overrideContext_with_context() {
 
   let otherExtension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: "@other-test-extension" } },
+      browser_specific_settings: { gecko: { id: "@other-test-extension" } },
       permissions: ["menus", "bookmarks", "activeTab"],
     },
     background,

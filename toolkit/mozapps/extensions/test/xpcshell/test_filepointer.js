@@ -55,7 +55,7 @@ add_task(async function test_new_pointer_install() {
   await promiseWriteWebExtension(target, {
     manifest: {
       version: "1.0",
-      applications: { gecko: { id: ID1 } },
+      browser_specific_settings: { gecko: { id: ID1 } },
     },
   });
   await promiseWritePointer(ID1);
@@ -82,7 +82,7 @@ add_task(async function test_addon_over_pointer() {
   let xpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: { gecko: { id: ID1 } },
+      browser_specific_settings: { gecko: { id: ID1 } },
     },
   });
 
@@ -164,7 +164,7 @@ add_task(async function test_bad_pointer_id() {
   await promiseWriteWebExtension(dir.path, {
     manifest: {
       version: "1.0",
-      applications: { gecko: { id: ID2 } },
+      browser_specific_settings: { gecko: { id: ID2 } },
     },
   });
   setExtensionModifiedTime(dir, dir.lastModifiedTime - 5000);
@@ -192,7 +192,7 @@ add_task(async function test_remove_pointer() {
   await promiseWriteWebExtension(dir.path, {
     manifest: {
       version: "1.0",
-      applications: { gecko: { id: ID1 } },
+      browser_specific_settings: { gecko: { id: ID1 } },
     },
   });
 
@@ -231,7 +231,7 @@ add_task(async function test_replace_pointer() {
   await promiseWriteWebExtension(OS.Path.join(profileDir.path, ID1), {
     manifest: {
       version: "2.0",
-      applications: { gecko: { id: ID1 } },
+      browser_specific_settings: { gecko: { id: ID1 } },
     },
   });
 
@@ -258,7 +258,7 @@ add_task(async function test_change_pointer_sources() {
   await promiseWriteWebExtension(dir.path, {
     manifest: {
       version: "2.0",
-      applications: { gecko: { id: ID1 } },
+      browser_specific_settings: { gecko: { id: ID1 } },
     },
   });
   setExtensionModifiedTime(dir, dir.lastModifiedTime - 5000);
@@ -278,7 +278,7 @@ add_task(async function test_remove_pointer_target() {
   await promiseWriteWebExtension(target, {
     manifest: {
       version: "1.0",
-      applications: { gecko: { id: ID1 } },
+      browser_specific_settings: { gecko: { id: ID1 } },
     },
   });
   await promiseWritePointer(ID1);
@@ -306,7 +306,7 @@ add_task(async function test_new_relative_pointer() {
   await promiseWriteWebExtension(target, {
     manifest: {
       version: "1.0",
-      applications: { gecko: { id: ID1 } },
+      browser_specific_settings: { gecko: { id: ID1 } },
     },
   });
   await promiseWriteRelativePointer(ID1);

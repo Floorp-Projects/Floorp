@@ -137,11 +137,11 @@ async function testShowHideEvent({
     await BrowserTestUtils.switchTab(gBrowser, testTab);
   }
 
-  let useAddonManager, applications;
+  let useAddonManager, browser_specific_settings;
   const action = manifest_version < 3 ? "browser_action" : "action";
   // hook up AOM so event pages in MV3 work.
   if (manifest_version > 2) {
-    applications = { gecko: { id } };
+    browser_specific_settings = { gecko: { id } };
     useAddonManager = "temporary";
   }
   let extension = ExtensionTestUtils.loadExtension({
@@ -149,7 +149,7 @@ async function testShowHideEvent({
     useAddonManager,
     manifest: {
       manifest_version,
-      applications,
+      browser_specific_settings,
       page_action: {},
       [action]: {
         default_popup: "popup.html",

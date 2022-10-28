@@ -40,7 +40,7 @@ add_task(async function test_management_get_self_complete() {
   const hostPermissions = ["*://example.org/*", "https://foo.example.org/*"];
 
   let manifest = {
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id,
         update_url: "https://updates.mozilla.com/",
@@ -104,7 +104,7 @@ add_task(async function test_management_get_self_complete() {
   );
   equal(
     extInfo.updateUrl,
-    manifest.applications.gecko.update_url,
+    manifest.browser_specific_settings.gecko.update_url,
     "getSelf returned the expected updateUrl"
   );
   ok(
@@ -148,7 +148,7 @@ add_task(async function test_management_get_self_minimal() {
   const id = "get_self_test_minimal@tests.mozilla.com";
 
   let manifest = {
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id,
       },
@@ -198,7 +198,7 @@ add_task(async function test_management_get_self_permanent() {
   const id = "get_self_test_permanent@tests.mozilla.com";
 
   let manifest = {
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id,
       },

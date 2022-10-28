@@ -71,7 +71,7 @@ add_task(async function test_cookies() {
   let addon = await promiseInstallWebExtension({
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
           update_url: "http://example.com/update",

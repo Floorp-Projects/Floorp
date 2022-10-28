@@ -27,7 +27,7 @@ add_task(async function() {
     },
     manifest: {
       permissions: ["geckoProfiler"],
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "profilertest@mozilla.com",
         },

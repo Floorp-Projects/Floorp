@@ -215,7 +215,7 @@ add_task(async function test_happy_path() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       optional_permissions: ["nativeMessaging"],
     },
     useAddonManager: "temporary",
@@ -289,7 +289,7 @@ async function simpleTest(app) {
   let extension = ExtensionTestUtils.loadExtension({
     background: `(${background})(${JSON.stringify(app)});`,
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       permissions: ["nativeMessaging"],
     },
   });
@@ -322,7 +322,7 @@ async function testBrokenApp({
       });
     },
     manifest: {
-      applications: { gecko: { id: extensionId } },
+      browser_specific_settings: { gecko: { id: extensionId } },
       permissions: ["nativeMessaging"],
     },
   });
@@ -440,7 +440,7 @@ add_task(async function test_sendNativeMessage() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       permissions: ["nativeMessaging"],
     },
   });
@@ -500,7 +500,7 @@ add_task(async function test_disconnect() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       permissions: ["nativeMessaging"],
     },
   });
@@ -553,7 +553,7 @@ add_task(async function test_write_limit() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       permissions: ["nativeMessaging"],
     },
   });
@@ -605,7 +605,7 @@ add_task(async function test_read_limit() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       permissions: ["nativeMessaging"],
     },
   });
@@ -689,7 +689,7 @@ add_task(async function test_child_process() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       permissions: ["nativeMessaging"],
     },
   });
@@ -741,7 +741,7 @@ add_task(async function test_stderr() {
     let extension = ExtensionTestUtils.loadExtension({
       background,
       manifest: {
-        applications: { gecko: { id: ID } },
+        browser_specific_settings: { gecko: { id: ID } },
         permissions: ["nativeMessaging"],
       },
     });
@@ -791,7 +791,7 @@ add_task(async function test_multiple_connects() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       permissions: ["nativeMessaging"],
     },
   });
@@ -832,7 +832,7 @@ add_task(async function test_connect_native_from_content_script() {
           matches: ["http://example.com/dummy"],
         },
       ],
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       permissions: ["nativeMessaging"],
     },
     files: {
@@ -861,7 +861,7 @@ async function startupExtensionAndRequestPermission() {
   const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       optional_permissions: ["nativeMessaging"],
       background: { persistent: false },
     },

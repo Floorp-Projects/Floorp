@@ -93,7 +93,7 @@ add_task(async function test_startup_default_theme_moved() {
 
   let themeDef = {
     manifest: {
-      applications: { gecko: { id: TEST_ADDON_ID } },
+      browser_specific_settings: { gecko: { id: TEST_ADDON_ID } },
       version: "1.1",
       theme: {},
     },
@@ -153,7 +153,7 @@ add_task(async function test_startup_builtin_not_foreign() {
 
   let themeDef = {
     manifest: {
-      applications: { gecko: { id: TEST_ADDON_ID } },
+      browser_specific_settings: { gecko: { id: TEST_ADDON_ID } },
       version: "1.1",
       theme: {},
     },

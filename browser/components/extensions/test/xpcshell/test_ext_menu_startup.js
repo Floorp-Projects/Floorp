@@ -31,7 +31,7 @@ function getExtension(id, background, useAddonManager) {
   return ExtensionTestUtils.loadExtension({
     useAddonManager,
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       permissions: ["menus"],
       background: { persistent: false },
     },

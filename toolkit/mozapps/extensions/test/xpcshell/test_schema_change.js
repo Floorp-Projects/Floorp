@@ -32,7 +32,7 @@ add_task(async function run_tests() {
     manifest: {
       name: "Test Add-on",
       version: "1.0",
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
     },
   });
 
@@ -40,7 +40,7 @@ add_task(async function run_tests() {
     manifest: {
       name: "Test Add-on 2",
       version: "2.0",
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
     },
   });
 
@@ -135,7 +135,7 @@ add_task(async function embedder_disabled_stays_disabled() {
     manifest: {
       name: "Test Add-on",
       version: "1.0",
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
     },
   });
 

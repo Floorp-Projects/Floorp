@@ -15,7 +15,7 @@ add_task(async function test_softblock() {
     manifest: {
       name: "Softblocked add-on",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "softblock1@tests.mozilla.org",
           strict_min_version: "2",

@@ -19,7 +19,7 @@ add_task(async function test_update_new_id() {
   await promiseInstallWebExtension({
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
           update_url: "http://example.com/update.json",
@@ -31,7 +31,9 @@ add_task(async function test_update_new_id() {
   let xpi = await createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: { gecko: { id: "differentid@tests.mozilla.org" } },
+      browser_specific_settings: {
+        gecko: { id: "differentid@tests.mozilla.org" },
+      },
     },
   });
 

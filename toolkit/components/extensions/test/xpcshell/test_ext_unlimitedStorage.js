@@ -38,7 +38,7 @@ add_task(async function test_unlimitedStorage_restored_on_app_startup() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["unlimitedStorage"],
-      applications: {
+      browser_specific_settings: {
         gecko: { id },
       },
     },
@@ -116,7 +116,7 @@ add_task(async function test_unlimitedStorage_removed_on_update() {
     background,
     manifest: {
       permissions: ["unlimitedStorage", "storage"],
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       version: "1",
     },
     useAddonManager: "permanent",
@@ -143,7 +143,7 @@ add_task(async function test_unlimitedStorage_removed_on_update() {
     background,
     manifest: {
       permissions: ["storage"],
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       version: "2",
     },
     useAddonManager: "permanent",
@@ -181,7 +181,7 @@ add_task(async function test_unlimitedStorage_origin_attributes() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["unlimitedStorage"],
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
   });
 

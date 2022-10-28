@@ -48,7 +48,7 @@ add_task(async function test_inline_options_uninstall() {
 
   let extension = await loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: { id: "inline_options_uninstall@tests.mozilla.org" },
       },
       options_ui: {

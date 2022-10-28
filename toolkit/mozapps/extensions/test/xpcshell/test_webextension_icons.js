@@ -112,7 +112,7 @@ add_task(async function() {
     name: "Web Extension Name",
     version: "1.0",
     manifest_version: 2,
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: ID,
       },
@@ -130,7 +130,7 @@ add_task(async function() {
     name: "Web Extension Name",
     version: "1.0",
     manifest_version: 2,
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: ID,
       },
@@ -151,7 +151,7 @@ add_task(async function() {
     name: "Web Extension Name",
     version: "1.0",
     manifest_version: 2,
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: ID,
       },
@@ -169,7 +169,7 @@ add_task(async function() {
     name: "Web Extension Name",
     version: "1.0",
     manifest_version: 2,
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: ID,
       },
@@ -191,7 +191,7 @@ add_task(async function() {
     name: "Web Extension Name",
     version: "1.0",
     manifest_version: 2,
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: ID,
       },
@@ -202,7 +202,7 @@ add_task(async function() {
     name: "Web Extension Name",
     version: "1.0",
     manifest_version: 2,
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: ID,
       },

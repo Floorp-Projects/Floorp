@@ -57,7 +57,7 @@ add_task(async function test_settings_validated() {
   let xpi = await AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "1.0",
-      applications: { gecko: { id: "test@mochi" } },
+      browser_specific_settings: { gecko: { id: "test@mochi" } },
       chrome_url_overrides: {
         newtab: "/newtab",
       },
@@ -142,7 +142,7 @@ add_task(async function test_settings_validated_safemode() {
   let xpi = await AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "1.0",
-      applications: { gecko: { id: "test@mochi" } },
+      browser_specific_settings: { gecko: { id: "test@mochi" } },
       chrome_url_overrides: {
         newtab: "/newtab",
       },

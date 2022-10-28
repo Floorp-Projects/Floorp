@@ -726,7 +726,7 @@ add_task(async function test_tabs_event_page() {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: "eventpage@tabs" } },
+      browser_specific_settings: { gecko: { id: "eventpage@tabs" } },
       permissions: ["tabs"],
       background: { persistent: false },
     },

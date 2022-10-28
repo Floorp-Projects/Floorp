@@ -10,7 +10,7 @@ add_task(async function extension_startup_early_error() {
   const EXTENSION_ID = "@extension-with-package-error";
   let extension = ExtensionTestCommon.generate({
     manifest: {
-      applications: { gecko: { id: EXTENSION_ID } },
+      browser_specific_settings: { gecko: { id: EXTENSION_ID } },
     },
   });
 

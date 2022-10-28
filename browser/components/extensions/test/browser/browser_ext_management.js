@@ -52,7 +52,7 @@ add_task(async function test_management_install() {
       manifest_version: 2,
       name: "Tigers Matter",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "tiger@persona.beard",
         },
@@ -75,7 +75,7 @@ add_task(async function test_management_install() {
       manifest_version: 2,
       name: "Tigers Don't Matter",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "other@web.extension",
         },

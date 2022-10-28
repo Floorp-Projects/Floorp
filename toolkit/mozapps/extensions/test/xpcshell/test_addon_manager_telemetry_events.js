@@ -93,7 +93,7 @@ add_task(async function test_basic_telemetry_events() {
   const EXTENSION_ID = "basic@test.extension";
 
   const manifest = {
-    applications: { gecko: { id: EXTENSION_ID } },
+    browser_specific_settings: { gecko: { id: EXTENSION_ID } },
   };
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -248,7 +248,7 @@ add_task(async function test_update_telemetry_events() {
   const testAddon = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
           update_url: updateUrl,
@@ -260,7 +260,7 @@ add_task(async function test_update_telemetry_events() {
   const testUserRequestedUpdate = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
           update_url: updateUrl,
@@ -271,7 +271,7 @@ add_task(async function test_update_telemetry_events() {
   const testAppRequestedUpdate = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "2.1",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
           update_url: updateUrl,
@@ -549,7 +549,7 @@ add_task(async function test_no_telemetry_events_on_internal_sources() {
   // and expect it to do not appear in the collected telemetry events.
   let internalExtension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: INTERNAL_EXTENSION_ID } },
+      browser_specific_settings: { gecko: { id: INTERNAL_EXTENSION_ID } },
     },
     useAddonManager: "permanent",
     amInstallTelemetryInfo: { source: "internal" },
@@ -684,7 +684,7 @@ add_task(async function test_collect_attribution_data_for_amo() {
       useAddonManager: "permanent",
       manifest: {
         version: "1.0",
-        applications: { gecko: { id: addonId } },
+        browser_specific_settings: { gecko: { id: addonId } },
       },
       amInstallTelemetryInfo: {
         ...FAKE_INSTALL_TELEMETRY_INFO,

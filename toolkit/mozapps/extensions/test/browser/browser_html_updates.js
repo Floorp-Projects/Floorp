@@ -37,7 +37,7 @@ add_task(async function testChangeAutoUpdates() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     // Use permanent so the add-on can be updated.
     useAddonManager: "permanent",
@@ -178,7 +178,7 @@ async function setupExtensionWithUpdate(
   let baseManifest = {
     name: "Updates",
     icons: { "48": "an-icon.png" },
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id,
         update_url: serverHost + updatesPath,
@@ -796,7 +796,7 @@ add_task(async function testNoUpdateAvailableOnUnrelatedAddonCards() {
     useAddonManager: "temporary",
     manifest: {
       name: "TestAddonNoUpdate",
-      applications: { gecko: { id: idNoUpdate } },
+      browser_specific_settings: { gecko: { id: idNoUpdate } },
     },
   });
   await extensionNoUpdate.startup();

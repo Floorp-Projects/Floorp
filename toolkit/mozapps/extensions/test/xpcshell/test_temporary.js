@@ -47,7 +47,7 @@ add_task(async function setup() {
       manifest: {
         name: "Test",
         version: `${n}.0`,
-        applications: { gecko: { id: ID } },
+        browser_specific_settings: { gecko: { id: ID } },
       },
     });
   }
@@ -165,7 +165,7 @@ add_task(async function test_replace_temporary() {
         manifest: {
           name: "Test",
           version: newversion,
-          applications: { gecko: { id: ID } },
+          browser_specific_settings: { gecko: { id: ID } },
         },
       });
 
@@ -310,7 +310,7 @@ add_task(async function test_samefile() {
     manifest: {
       version: "1.0",
       name: "Test WebExtension 1 (temporary)",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
         },
@@ -338,7 +338,7 @@ add_task(async function test_samefile() {
     manifest: {
       version: "2.0",
       name: "Test WebExtension 1 (temporary)",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
         },
@@ -369,7 +369,7 @@ add_task(async function test_samefile() {
 add_task(async function test_replace_permanent() {
   await promiseInstallWebExtension({
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       version: "1.0",
       name: "Test Bootstrap 1",
     },
@@ -383,7 +383,7 @@ add_task(async function test_replace_permanent() {
 
   let files = ExtensionTestCommon.generateFiles({
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       version: "2.0",
       name: "Test Bootstrap 1 (temporary)",
     },
@@ -478,7 +478,7 @@ add_task(async function test_replace_temporary() {
 
   let files = ExtensionTestCommon.generateFiles({
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       version: "1.0",
     },
   });
@@ -490,7 +490,7 @@ add_task(async function test_replace_temporary() {
   // gets marked as an upgrade.
   files = ExtensionTestCommon.generateFiles({
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       version: "2.0",
     },
   });
@@ -539,7 +539,7 @@ add_task(async function test_replace_temporary_downgrade() {
 
   let files = ExtensionTestCommon.generateFiles({
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       version: "1.0",
     },
   });
@@ -551,7 +551,7 @@ add_task(async function test_replace_temporary_downgrade() {
   // it gets marked as a downgrade.
   files = ExtensionTestCommon.generateFiles({
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       version: "0.8",
     },
   });
@@ -599,7 +599,7 @@ add_task(async function test_replace_same_version() {
 
   let files = ExtensionTestCommon.generateFiles({
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       version: "1.0",
     },
   });
@@ -680,7 +680,7 @@ add_task(async function test_replace_permanent_disabled() {
 
   let files = ExtensionTestCommon.generateFiles({
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       name: "Test",
       version: "2.0",
     },

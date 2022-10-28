@@ -130,7 +130,7 @@ async function run_install_recommended_telemetry_test(taarRecommended) {
       manifest: {
         name: "A fake recommended extension",
         description: "Test disco taar telemetry",
-        applications: { gecko: { id: extensionId } },
+        browser_specific_settings: { gecko: { id: extensionId } },
         permissions: ["<all_urls>"],
       },
     },
@@ -147,7 +147,7 @@ async function run_install_recommended_telemetry_test(taarRecommended) {
       manifest: {
         name: "A fake recommended theme",
         description: "Test disco taar telemetry",
-        applications: { gecko: { id: themeId } },
+        browser_specific_settings: { gecko: { id: themeId } },
         theme: {
           colors: {
             tab_selected: "red",

@@ -112,7 +112,7 @@ let getExtension = () => {
 
     manifest: {
       permissions: ["geckoProfiler"],
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "profilertest@mozilla.com",
         },

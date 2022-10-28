@@ -11,7 +11,7 @@ const ID3 = "addon3@tests.mozilla.org";
 async function createWebExtension(details) {
   let options = {
     manifest: {
-      applications: { gecko: { id: details.id } },
+      browser_specific_settings: { gecko: { id: details.id } },
 
       name: details.name,
 
@@ -76,7 +76,7 @@ add_task(async function test_getNewSideload_on_invalid_extension() {
 
   let xpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
-      applications: { gecko: { id: "@invalid-extension" } },
+      browser_specific_settings: { gecko: { id: "@invalid-extension" } },
       name: "Invalid Extension",
     },
   });

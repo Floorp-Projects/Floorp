@@ -24,7 +24,7 @@ add_task(async function test_sw_api_request_handling_local_process_api() {
       background: {
         service_worker: "sw.js",
       },
-      applications: { gecko: { id: "test-bg-sw@mochi.test" } },
+      browser_specific_settings: { gecko: { id: "test-bg-sw@mochi.test" } },
     },
     files: {
       "page.html": "<!DOCTYPE html><body></body>",
@@ -101,7 +101,7 @@ add_task(async function test_sw_api_request_handling_main_process_api() {
         service_worker: "sw.js",
       },
       permissions: ["alarms"],
-      applications: { gecko: { id: "test-bg-sw@mochi.test" } },
+      browser_specific_settings: { gecko: { id: "test-bg-sw@mochi.test" } },
     },
     files: {
       "page.html": "<!DOCTYPE html><body></body>",
@@ -145,7 +145,9 @@ add_task(async function test_sw_api_request_bgsw_runtime_onMessage() {
         service_worker: "sw.js",
       },
       permissions: [],
-      applications: { gecko: { id: "test-bg-sw-on-message@mochi.test" } },
+      browser_specific_settings: {
+        gecko: { id: "test-bg-sw-on-message@mochi.test" },
+      },
     },
     files: {
       "page.html": '<!DOCTYPE html><script src="page.js"></script>',
@@ -196,7 +198,9 @@ add_task(async function test_sw_api_request_bgsw_runtime_sendMessage() {
         service_worker: "sw.js",
       },
       permissions: [],
-      applications: { gecko: { id: "test-bg-sw-sendMessage@mochi.test" } },
+      browser_specific_settings: {
+        gecko: { id: "test-bg-sw-sendMessage@mochi.test" },
+      },
     },
     files: {
       "page.html": '<!DOCTYPE html><script src="page.js"></script>',
@@ -252,7 +256,7 @@ add_task(async function test_sw_api_request_bgsw_connnect_runtime_port() {
         service_worker: "sw.js",
       },
       permissions: [],
-      applications: { gecko: { id: "test-bg-sw@mochi.test" } },
+      browser_specific_settings: { gecko: { id: "test-bg-sw@mochi.test" } },
     },
     files: {
       "page.html": '<!DOCTYPE html><script src="page.js"></script>',
@@ -347,7 +351,9 @@ add_task(async function test_sw_api_request_bgsw_runtime_onConnect() {
         service_worker: "sw.js",
       },
       permissions: [],
-      applications: { gecko: { id: "test-bg-sw-onConnect@mochi.test" } },
+      browser_specific_settings: {
+        gecko: { id: "test-bg-sw-onConnect@mochi.test" },
+      },
     },
     files: {
       "page.html": '<!DOCTYPE html><script src="page.js"></script>',
@@ -413,7 +419,7 @@ add_task(async function test_sw_runtime_lastError() {
       background: {
         service_worker: "sw.js",
       },
-      applications: { gecko: { id: "test-bg-sw@mochi.test" } },
+      browser_specific_settings: { gecko: { id: "test-bg-sw@mochi.test" } },
     },
     files: {
       "page.html": "<!DOCTYPE html><body></body>",

@@ -128,7 +128,7 @@ const createExtensions = (
     ExtensionTestUtils.loadExtension({
       manifest: {
         name: "default-extension-name",
-        applications: {
+        browser_specific_settings: {
           gecko: { id: `@ext-${extensionsCreated++}` },
         },
         ...manifestData,

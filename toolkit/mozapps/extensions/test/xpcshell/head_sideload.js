@@ -67,7 +67,7 @@ async function createWebExtension(id, version, dir) {
   let xpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version,
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
   });
   await AddonTestUtils.manuallyInstall(xpi, dir);

@@ -24,7 +24,7 @@ function makeExtension(id, content_scripts) {
     manifest: {
       manifest_version: 3,
 
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       content_scripts,
 
       permissions: ["scripting"],

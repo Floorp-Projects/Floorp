@@ -137,7 +137,7 @@ add_task(async function test_no_migration_for_newly_installed_extensions() {
     useAddonManager: "temporary",
     manifest: {
       permissions: ["storage"],
-      applications: { gecko: { id: EXTENSION_ID } },
+      browser_specific_settings: { gecko: { id: EXTENSION_ID } },
     },
     async background() {
       const data = await browser.storage.local.get();
@@ -179,7 +179,7 @@ add_task(async function test_data_migration_on_keep_storage_on_uninstall() {
     useAddonManager: "temporary",
     manifest: {
       permissions: ["storage"],
-      applications: { gecko: { id: EXTENSION_ID } },
+      browser_specific_settings: { gecko: { id: EXTENSION_ID } },
     },
     async background() {
       const storedData = await browser.storage.local.get();
@@ -273,7 +273,7 @@ add_task(async function test_storage_local_data_migration() {
     useAddonManager: "temporary",
     manifest: {
       permissions: ["storage"],
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -430,7 +430,7 @@ add_task(async function test_extensionId_trimmed_in_telemetry_event() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["storage"],
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -514,7 +514,7 @@ add_task(async function test_storage_local_corrupted_data_migration() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["storage"],
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -605,7 +605,7 @@ add_task(async function test_storage_local_data_migration_failure() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["storage"],
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -659,7 +659,7 @@ add_task(async function test_migration_aborted_on_shutdown() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["storage"],
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -736,7 +736,7 @@ async function test_quota_exceeded_while_migrating_data() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["storage"],
-      applications: { gecko: { id: EXT_ID } },
+      browser_specific_settings: { gecko: { id: EXT_ID } },
     },
     background() {
       browser.test.onMessage.addListener(async (msg, dataSize) => {

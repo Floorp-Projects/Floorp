@@ -46,7 +46,7 @@ add_task(async function test_permissions_on_startup() {
   let extensionId = "@permissionTest";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: { id: extensionId },
       },
       permissions: ["tabs"],
@@ -857,7 +857,7 @@ async function test_permissions_prompt(manifest_version) {
       manifest_version,
       version: "2.0",
 
-      applications: { gecko: { id: extension.id } },
+      browser_specific_settings: { gecko: { id: extension.id } },
 
       permissions: PERMS,
       host_permissions: ORIGINS,

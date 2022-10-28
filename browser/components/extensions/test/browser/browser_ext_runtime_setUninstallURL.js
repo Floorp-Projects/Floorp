@@ -9,7 +9,7 @@ let { ExtensionTestCommon } = ChromeUtils.import(
 
 async function makeAndInstallXPI(id, backgroundScript, loadedURL) {
   let xpi = ExtensionTestCommon.generateXPI({
-    manifest: { applications: { gecko: { id } } },
+    manifest: { browser_specific_settings: { gecko: { id } } },
     background: backgroundScript,
   });
   SimpleTest.registerCleanupFunction(function cleanupXPI() {

@@ -34,7 +34,7 @@ add_task(async function test_migrated_permission_to_optional() {
   let extensionData = {
     manifest: {
       version: "1.0",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       permissions: [
         "webRequest",
         "tabs",
@@ -106,7 +106,7 @@ add_task(async function test_required_permissions_removed() {
       browser.privacy.services.passwordSavingEnabled.set({ value: false });
     },
     manifest: {
-      applications: { gecko: { id: "pref-test@test" } },
+      browser_specific_settings: { gecko: { id: "pref-test@test" } },
       permissions: ["tabs", "browserSettings", "privacy", "http://test.com/*"],
     },
     useAddonManager: "permanent",
@@ -156,7 +156,7 @@ add_task(async function test_granted_permissions_removed() {
     // "tabs" is never granted, it is included to exercise the removal code
     // that called during the upgrade.
     manifest: {
-      applications: { gecko: { id: "pref-test@test" } },
+      browser_specific_settings: { gecko: { id: "pref-test@test" } },
       optional_permissions: [
         "tabs",
         "browserSettings",
@@ -195,7 +195,7 @@ add_task(async function test_addon_to_theme_update() {
   let id = "theme-test@test";
   let extData = {
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       version: "1.0",
       optional_permissions: ["tabs"],
     },
@@ -220,7 +220,7 @@ add_task(async function test_addon_to_theme_update() {
 
   await extension.upgrade({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       version: "2.0",
       theme: {
         images: {

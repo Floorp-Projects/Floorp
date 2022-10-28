@@ -20,12 +20,12 @@ add_task(async function test_contentscript_create_iframe() {
       );
 
       let {
-        applications: {
+        browser_specific_settings: {
           gecko: { id: expectedManifestGeckoId },
         },
       } = chrome.runtime.getManifest();
       let {
-        applications: {
+        browser_specific_settings: {
           gecko: { id: actualManifestGeckoId },
         },
       } = manifest;
@@ -37,7 +37,7 @@ add_task(async function test_contentscript_create_iframe() {
       );
 
       let {
-        applications: {
+        browser_specific_settings: {
           gecko: { id: testGetManifestGeckoId },
         },
       } = testGetManifest;
@@ -79,7 +79,7 @@ add_task(async function test_contentscript_create_iframe() {
   const ID = "contentscript@tests.mozilla.org";
   let extensionData = {
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       content_scripts: [
         {
           matches: ["http://example.com/data/file_sample.html"],

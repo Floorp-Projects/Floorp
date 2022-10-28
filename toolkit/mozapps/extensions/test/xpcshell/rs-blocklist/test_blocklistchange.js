@@ -562,7 +562,7 @@ add_task(async function setup() {
         manifest: {
           name: "Test",
           version: `${version}.0`,
-          applications: {
+          browser_specific_settings: {
             gecko: {
               id,
               // This file is generated below, as updateJson.

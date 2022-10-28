@@ -679,7 +679,7 @@ add_task(
     let extension = ExtensionTestUtils.loadExtension({
       useAddonManager: "permanent",
       manifest: {
-        applications: { gecko: { id: "eventpage@test" } },
+        browser_specific_settings: { gecko: { id: "eventpage@test" } },
         background: { persistent: false },
       },
       background() {
@@ -1116,7 +1116,7 @@ add_task(
       useAddonManager: "permanent",
       manifest: {
         version: "1.0",
-        applications: {
+        browser_specific_settings: {
           gecko: { id },
         },
         background: { persistent: false },
@@ -1182,7 +1182,7 @@ add_task(
       useAddonManager: "permanent",
       manifest: {
         version: "2.0",
-        applications: {
+        browser_specific_settings: {
           gecko: { id, update_url: `http://example.com/test_update.json` },
         },
         background: { persistent: false },

@@ -28,7 +28,7 @@ function backgroundScript() {
 
 const ID = "test-webextension@mozilla.com";
 let extensionData = {
-  manifest: { applications: { gecko: { id: ID } } },
+  manifest: { browser_specific_settings: { gecko: { id: ID } } },
   background: backgroundScript,
 };
 

@@ -105,7 +105,7 @@ const ADDONS = [
         page: "options.html",
       },
 
-      applications: {
+      browser_specific_settings: {
         gecko: { id: TEST_ADDON_ID },
       },
     },
@@ -116,7 +116,7 @@ const ADDONS = [
       name: "und Language Pack",
       version: "1.0",
       manifest_version: 2,
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "langpack-und@test.mozilla.org",
         },

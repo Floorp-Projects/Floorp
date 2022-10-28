@@ -33,7 +33,7 @@ add_task(async function test_non_ascii_path() {
   let xpi1 = await AddonTestUtils.createTempWebExtensionFile({
     id: ID1,
     manifest: {
-      applications: { gecko: { id: ID1 } },
+      browser_specific_settings: { gecko: { id: ID1 } },
     },
   });
 
@@ -41,7 +41,7 @@ add_task(async function test_non_ascii_path() {
   let xpi2 = await AddonTestUtils.createTempWebExtensionFile({
     id: ID2,
     manifest: {
-      applications: { gecko: { id: ID2 } },
+      browser_specific_settings: { gecko: { id: ID2 } },
     },
   });
 

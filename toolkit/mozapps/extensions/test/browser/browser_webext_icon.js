@@ -55,7 +55,7 @@ add_task(async function test_addon_icon() {
   const extensionDefinition = {
     useAddonManager: "temporary",
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: { id },
       },
       icons,

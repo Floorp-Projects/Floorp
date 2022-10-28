@@ -17,7 +17,7 @@ registerCleanupFunction(() => {
 async function installExtension() {
   return promiseInstallWebExtension({
     manifest: {
-      applications: { gecko: { id: ADDON_ID } },
+      browser_specific_settings: { gecko: { id: ADDON_ID } },
     },
   });
 }

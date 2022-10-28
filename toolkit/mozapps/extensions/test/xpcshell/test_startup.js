@@ -16,7 +16,7 @@ function createWebExtensionXPI(id, version) {
   return createTempWebExtensionFile({
     manifest: {
       version,
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
   });
 }

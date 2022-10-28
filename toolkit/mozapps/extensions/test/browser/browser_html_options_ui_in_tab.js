@@ -14,7 +14,7 @@ async function testOptionsInTab({ id, options_ui_options }) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Prefs extension",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       options_ui: {
         page: "options.html",
         ...options_ui_options,
@@ -104,7 +104,7 @@ add_task(async function testNoPreferences() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "No Prefs extension",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     useAddonManager: "temporary",
   });

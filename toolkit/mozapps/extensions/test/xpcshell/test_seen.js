@@ -31,7 +31,7 @@ add_task(async function() {
       manifest: {
         name: "Test",
         version: `${n}.0`,
-        applications: { gecko: { id: ID } },
+        browser_specific_settings: { gecko: { id: ID } },
       },
     });
   }

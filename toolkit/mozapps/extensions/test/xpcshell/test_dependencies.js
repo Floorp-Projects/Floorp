@@ -61,7 +61,7 @@ add_task(async function setup() {
 
   for (let addon of ADDONS) {
     let manifest = {
-      applications: { gecko: { id: addon.id } },
+      browser_specific_settings: { gecko: { id: addon.id } },
       permissions: addon.dependencies,
     };
 

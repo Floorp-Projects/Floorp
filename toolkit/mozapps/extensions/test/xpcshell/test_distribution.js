@@ -34,7 +34,7 @@ async function writeDistroAddon(version) {
   let xpi = await createTempWebExtensionFile({
     manifest: {
       version,
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
     },
   });
   xpi.copyTo(distroDir, `${ID}.xpi`);

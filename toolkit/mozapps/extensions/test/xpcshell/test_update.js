@@ -62,7 +62,7 @@ add_task(async function setup() {
       manifest: {
         name: info.name,
         version: info.version,
-        applications: { gecko: { id: info.id } },
+        browser_specific_settings: { gecko: { id: info.id } },
       },
     });
     testserver.registerFile(`/addons/${name}.xpi`, XPIS[name]);
@@ -79,7 +79,7 @@ add_task(async function test_apply_update() {
     manifest: {
       name: "Test Addon 1",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon1@tests.mozilla.org",
           update_url: `http://example.com/data/${updateFile}`,
@@ -229,7 +229,7 @@ add_task(async function test_compat_update() {
     manifest: {
       name: "Test Addon 2",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon2@tests.mozilla.org",
           update_url: "http://example.com/data/" + updateFile,
@@ -271,7 +271,7 @@ add_task(async function test_no_compat() {
   await promiseInstallWebExtension({
     manifest: {
       name: "Test Addon 3",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon3@tests.mozilla.org",
           update_url: `http://example.com/data/${updateFile}`,
@@ -341,7 +341,7 @@ add_task(async function test_background_update() {
     manifest: {
       name: "Test Addon 1",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon1@tests.mozilla.org",
           update_url: `http://example.com/data/${updateFile}`,
@@ -411,7 +411,7 @@ const PARAM_ADDONS = {
     manifest: {
       name: "Test Addon 1",
       version: "5.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon1@tests.mozilla.org",
           update_url: `http://example.com/data/param_test.json${PARAMS}`,
@@ -434,7 +434,7 @@ const PARAM_ADDONS = {
     manifest: {
       name: "Test Addon 2",
       version: "67.0.5b1",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon2@tests.mozilla.org",
           update_url: "http://example.com/data/param_test.json" + PARAMS,
@@ -461,7 +461,7 @@ const PARAM_ADDONS = {
     manifest: {
       name: "Test Addon 3",
       version: "1.3+",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon3@tests.mozilla.org",
           update_url: `http://example.com/data/param_test.json${PARAMS}`,
@@ -481,7 +481,7 @@ const PARAM_ADDONS = {
     manifest: {
       name: "Test Addon 4",
       version: "0.5ab6",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon4@tests.mozilla.org",
           update_url: `http://example.com/data/param_test.json${PARAMS}`,
@@ -504,7 +504,7 @@ const PARAM_ADDONS = {
     manifest: {
       name: "Test Addon 5",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon5@tests.mozilla.org",
           update_url: `http://example.com/data/param_test.json${PARAMS}`,
@@ -528,7 +528,7 @@ const PARAM_ADDONS = {
     manifest: {
       name: "Test Addon 6",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon6@tests.mozilla.org",
           update_url: `http://example.com/data/param_test.json${PARAMS}`,
@@ -551,7 +551,7 @@ const PARAM_ADDONS = {
     manifest: {
       name: "Test Addon 1",
       version: "5.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "blocklist2@tests.mozilla.org",
           update_url: `http://example.com/data/param_test.json${PARAMS}`,
@@ -660,7 +660,7 @@ add_task(async function test_manifest_compat() {
     manifest: {
       name: "Test Addon 1",
       version: "5.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon4@tests.mozilla.org",
           update_url: `http://example.com/data/${updateFile}`,
@@ -702,7 +702,7 @@ add_task(async function test_no_auto_update() {
     manifest: {
       name: "Test Addon 1",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon1@tests.mozilla.org",
           update_url: `http://example.com/data/${updateFile}`,
@@ -715,7 +715,7 @@ add_task(async function test_no_auto_update() {
     manifest: {
       name: "Test Addon 8",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon8@tests.mozilla.org",
           update_url: `http://example.com/data/${updateFile}`,
@@ -806,7 +806,7 @@ add_task(async function run_test_locked_install() {
     manifest: {
       name: "Test Addon 13",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon13@tests.mozilla.org",
           update_url: "http://example.com/data/test_update.json",

@@ -46,7 +46,7 @@ function createExtensions(manifestExtras) {
     ExtensionTestUtils.loadExtension({
       manifest: {
         name: "Test extension",
-        applications: {
+        browser_specific_settings: {
           gecko: { id: `test-${extensionsCreated++}@mochi.test` },
         },
         icons: {
@@ -65,7 +65,7 @@ add_task(async function testExtensionList() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test extension",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       icons: {
         32: "test-icon.png",
       },
@@ -180,7 +180,7 @@ add_task(async function testExtensionList() {
   const extension2 = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test extension 2",
-      applications: { gecko: { id: "test-2@mochi.test" } },
+      browser_specific_settings: { gecko: { id: "test-2@mochi.test" } },
       icons: {
         32: "test-icon.png",
       },
@@ -234,7 +234,7 @@ add_task(async function testExtensionList() {
   const themeXpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       name: "My theme",
-      applications: { gecko: { id: "theme@mochi.test" } },
+      browser_specific_settings: { gecko: { id: "theme@mochi.test" } },
       theme: {},
     },
   });
@@ -248,7 +248,7 @@ add_task(async function testExtensionList() {
   const xpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       name: "Test extension 3",
-      applications: { gecko: { id: "test-3@mochi.test" } },
+      browser_specific_settings: { gecko: { id: "test-3@mochi.test" } },
       icons: {
         32: "test-icon.png",
       },
@@ -345,7 +345,7 @@ add_task(async function testMouseSupport() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test extension",
-      applications: { gecko: { id: "test@mochi.test" } },
+      browser_specific_settings: { gecko: { id: "test@mochi.test" } },
     },
     useAddonManager: "temporary",
   });
@@ -376,7 +376,7 @@ add_task(async function testKeyboardSupport() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test extension",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     useAddonManager: "temporary",
   });
@@ -476,7 +476,7 @@ add_task(async function testOpenDetailFromNameKeyboard() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Detail extension",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     useAddonManager: "temporary",
   });
@@ -598,7 +598,7 @@ add_task(async function testExtensionReordering() {
 add_task(async function testThemeList() {
   let theme = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: "theme@mochi.test" } },
+      browser_specific_settings: { gecko: { id: "theme@mochi.test" } },
       name: "My theme",
       theme: {},
     },
@@ -819,7 +819,7 @@ add_task(async function testOnlyTypeIsShown() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test extension",
-      applications: { gecko: { id: "test@mochi.test" } },
+      browser_specific_settings: { gecko: { id: "test@mochi.test" } },
     },
     useAddonManager: "temporary",
   });
@@ -864,7 +864,7 @@ add_task(async function testExtensionGenericIcon() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test extension",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     useAddonManager: "temporary",
   });
@@ -967,7 +967,7 @@ add_task(async function testDisabledDimming() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Disable me",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     useAddonManager: "temporary",
   });

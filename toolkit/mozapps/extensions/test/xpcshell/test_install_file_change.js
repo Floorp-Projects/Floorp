@@ -18,7 +18,7 @@ async function createXPIWithID(addonId, version = "1.0") {
   let xpiFile = await createTempWebExtensionFile({
     manifest: {
       version,
-      applications: { gecko: { id: addonId } },
+      browser_specific_settings: { gecko: { id: addonId } },
     },
   });
   return xpiFile;
@@ -91,7 +91,7 @@ async function do_test_update_with_file_replaced(wantPostponeTest) {
   await promiseInstallWebExtension({
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ADDON_ID,
           update_url: `http://example.com/update-${ADDON_ID}.json`,
@@ -106,7 +106,7 @@ async function do_test_update_with_file_replaced(wantPostponeTest) {
     await createTempWebExtensionFile({
       manifest: {
         version: "2.0",
-        applications: { gecko: { id: ADDON_ID } },
+        browser_specific_settings: { gecko: { id: ADDON_ID } },
       },
     })
   );

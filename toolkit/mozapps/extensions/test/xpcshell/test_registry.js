@@ -29,11 +29,11 @@ let registry;
 
 add_task(async function setup() {
   xpi1 = await createTempWebExtensionFile({
-    manifest: { applications: { gecko: { id: ID1 } } },
+    manifest: { browser_specific_settings: { gecko: { id: ID1 } } },
   });
 
   xpi2 = await createTempWebExtensionFile({
-    manifest: { applications: { gecko: { id: ID2 } } },
+    manifest: { browser_specific_settings: { gecko: { id: ID2 } } },
   });
 
   registry = new MockRegistry();

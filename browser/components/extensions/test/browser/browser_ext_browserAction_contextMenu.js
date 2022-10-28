@@ -180,7 +180,7 @@ add_task(async function browseraction_contextmenu_manage_extension() {
   let buttonId = `${makeWidgetId(id)}-browser-action`;
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: { id },
       },
       browser_action: {},
@@ -457,7 +457,7 @@ add_task(async function browseraction_contextmenu_remove_extension() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name,
-      applications: {
+      browser_specific_settings: {
         gecko: { id },
       },
       browser_action: {},
@@ -602,7 +602,7 @@ add_task(async function browseraction_contextmenu_report_extension() {
     manifest: {
       name,
       author: "Bad author",
-      applications: {
+      browser_specific_settings: {
         gecko: { id },
       },
       browser_action: {},

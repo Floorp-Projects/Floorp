@@ -31,7 +31,7 @@ async function writeDistroAddons(version) {
   let xpi = await createTempWebExtensionFile({
     manifest: {
       version,
-      applications: { gecko: { id: enUSID } },
+      browser_specific_settings: { gecko: { id: enUSID } },
     },
   });
   xpi.copyTo(enUSDistroDir, `${enUSID}.xpi`);
@@ -39,7 +39,7 @@ async function writeDistroAddons(version) {
   xpi = await createTempWebExtensionFile({
     manifest: {
       version,
-      applications: { gecko: { id: deDEID } },
+      browser_specific_settings: { gecko: { id: deDEID } },
     },
   });
   xpi.copyTo(deDEDistroDir, `${deDEID}.xpi`);
@@ -47,7 +47,7 @@ async function writeDistroAddons(version) {
   xpi = await createTempWebExtensionFile({
     manifest: {
       version,
-      applications: { gecko: { id: esESID } },
+      browser_specific_settings: { gecko: { id: esESID } },
     },
   });
   xpi.copyTo(esESDistroDir, `${esESID}.xpi`);

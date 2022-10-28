@@ -17,7 +17,7 @@ add_task(async function test_1() {
       description: "__MSG_description__",
       default_locale: "en",
 
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon1@tests.mozilla.org",
         },

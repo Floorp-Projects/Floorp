@@ -91,7 +91,7 @@ const ADDONS = {
       name: "und Language Pack",
       version: "1.0",
       manifest_version: 2,
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
           strict_min_version: "58.0",
@@ -122,7 +122,7 @@ const ADDONS = {
 // clone the extension so we can create an update.
 const langpack_update = JSON.parse(JSON.stringify(ADDONS.langpack_1));
 langpack_update["manifest.json"].version = "2.0";
-langpack_update["manifest.json"].applications.gecko = {
+langpack_update["manifest.json"].browser_specific_settings.gecko = {
   id: ID,
   strict_min_version: "60.0",
   strict_max_version: "60.*",

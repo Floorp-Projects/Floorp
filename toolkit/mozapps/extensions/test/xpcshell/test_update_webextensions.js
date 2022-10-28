@@ -63,7 +63,7 @@ var checkUpdates = async function(
 
   let id = uuidGenerator.generateUUID().number;
   provide(aData, "addon.id", id);
-  provide(aData, "addon.manifest.applications.gecko.id", id);
+  provide(aData, "addon.manifest.browser_specific_settings.gecko.id", id);
 
   let updatePath = `/updates/${id}.json`.replace(/[{}]/g, "");
   let updateUrl = `http://localhost:${gPort}${updatePath}`;
@@ -73,15 +73,20 @@ var checkUpdates = async function(
     addons: { [id]: addonData },
   };
 
-  provide(aData, "addon.manifest.applications.gecko.update_url", updateUrl);
+  provide(
+    aData,
+    "addon.manifest.browser_specific_settings.gecko.update_url",
+    updateUrl
+  );
   let awaitInstall = promiseInstallWebExtension(aData.addon);
 
   for (let version of Object.keys(aData.updates)) {
     let update = aData.updates[version];
     update.version = version;
 
+    // Create an add-on manifest based on what's in the current `update`.
     provide(update, "addon.id", id);
-    provide(update, "addon.manifest.applications.gecko.id", id);
+    provide(update, "addon.manifest.browser_specific_settings.gecko.id", id);
     let addon = update.addon;
 
     delete update.addon;
@@ -122,7 +127,7 @@ add_task(async function checkUpdateMetadata() {
     addon: {
       manifest: {
         version: "1.0",
-        applications: { gecko: { strict_max_version: "45" } },
+        browser_specific_settings: { gecko: { strict_max_version: "45" } },
       },
     },
     updates: {
@@ -180,7 +185,7 @@ add_task(async function checkIllegalUpdateURL() {
   for (let url of URLS) {
     let { messages } = await promiseConsoleOutput(() => {
       let addonFile = createTempWebExtensionFile({
-        manifest: { applications: { gecko: { update_url: url } } },
+        manifest: { browser_specific_settings: { gecko: { update_url: url } } },
       });
 
       return AddonManager.getInstallForFile(addonFile).then(install => {

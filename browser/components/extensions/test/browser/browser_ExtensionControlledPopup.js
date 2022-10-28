@@ -59,7 +59,7 @@ add_task(async function testExtensionControlledPopup() {
   let id = "ext-controlled@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       name: "Ext Controlled",
     },
     // We need to be able to find the extension using AddonManager.

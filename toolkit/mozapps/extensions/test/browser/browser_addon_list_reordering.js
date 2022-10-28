@@ -86,7 +86,7 @@ add_task(async function testReordering() {
     ExtensionTestUtils.loadExtension({
       manifest: {
         name: id,
-        applications: { gecko: { id } },
+        browser_specific_settings: { gecko: { id } },
       },
       useAddonManager: "temporary",
     })

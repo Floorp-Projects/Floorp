@@ -52,7 +52,7 @@ add_task(async function test_tab_options_privileges() {
     useAddonManager: "temporary",
 
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       permissions: ["tabs"],
       options_ui: {
         page: "options.html",

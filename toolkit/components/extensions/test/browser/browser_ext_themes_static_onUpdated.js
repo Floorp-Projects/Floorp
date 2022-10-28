@@ -89,7 +89,7 @@ add_task(async function test_on_updated_eventpage() {
   const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: "watcher@mochitest" } },
+      browser_specific_settings: { gecko: { id: "watcher@mochitest" } },
       background: { persistent: false },
     },
     background() {

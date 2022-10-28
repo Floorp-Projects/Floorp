@@ -162,7 +162,7 @@ add_task(async function testLocalStorage() {
     useAddonManager: "permanent",
     manifest: {
       name: "Open tabs",
-      applications: { gecko: { id: "open-tabs@tests.mozilla.org" }, },
+      browser_specific_settings: { gecko: { id: "open-tabs@tests.mozilla.org" }, },
       permissions: ["cookies"],
     },
     async background() {
@@ -220,7 +220,7 @@ add_task(async function testLocalStorage() {
     background,
     manifest: {
       name: "Test Extension",
-      applications: { gecko: { id: "localStorage@tests.mozilla.org" } },
+      browser_specific_settings: { gecko: { id: "localStorage@tests.mozilla.org" } },
       permissions: ["browsingData", "tabs"],
       content_scripts: [
         {
@@ -262,7 +262,7 @@ add_task(async function test_browserData_on_aboutnewtab_and_file_data() {
       browser.test.sendMessage("done");
     },
     manifest: {
-      applications: { gecko: { id: "indexed-db-file@test.mozilla.org" } },
+      browser_specific_settings: { gecko: { id: "indexed-db-file@test.mozilla.org" } },
       permissions: ["browsingData"],
     },
   });
@@ -308,7 +308,7 @@ add_task(async function test_browserData_should_not_remove_extension_data() {
       browser.test.sendMessage("done", window.localStorage.getItem("key"));
     },
     manifest: {
-      applications: { gecko: { id: "extension-data@tests.mozilla.org" } },
+      browser_specific_settings: { gecko: { id: "extension-data@tests.mozilla.org" } },
       permissions: ["browsingData"],
     },
   });

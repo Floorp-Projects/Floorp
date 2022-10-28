@@ -86,7 +86,7 @@ add_task(async function test_overrides_update_removal() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -142,7 +142,7 @@ add_task(async function test_overrides_update_removal() {
 
   extensionInfo.manifest = {
     version: "2.0",
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: EXTENSION_ID,
       },
@@ -187,7 +187,7 @@ add_task(async function test_overrides_update_adding() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -220,7 +220,7 @@ add_task(async function test_overrides_update_adding() {
 
   extensionInfo.manifest = {
     version: "2.0",
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: EXTENSION_ID,
       },
@@ -286,7 +286,7 @@ add_task(async function test_overrides_update_homepage_change() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -314,7 +314,7 @@ add_task(async function test_overrides_update_homepage_change() {
 
   extensionInfo.manifest = {
     version: "2.0",
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: EXTENSION_ID,
       },
@@ -396,7 +396,7 @@ add_task(async function test_default_search_prompts() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },

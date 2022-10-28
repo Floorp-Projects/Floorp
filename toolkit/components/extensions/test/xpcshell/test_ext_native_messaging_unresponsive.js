@@ -65,7 +65,7 @@ add_task(async function test_unresponsive_native_app() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       permissions: ["nativeMessaging"],
     },
   });

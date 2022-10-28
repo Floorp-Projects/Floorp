@@ -98,7 +98,7 @@ function waitForAddonEnabled(addon) {
 // Default test extension data for newtab.
 const extensionData = {
   manifest: {
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: "newtaburl@mochi.test",
       },
@@ -141,7 +141,7 @@ add_task(async function test_new_tab_ignore_settings() {
   let extensionId = "newtabignore@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: extensionId } },
+      browser_specific_settings: { gecko: { id: extensionId } },
       browser_action: { default_popup: "ignore.html" },
       chrome_url_overrides: { newtab: "ignore.html" },
     },
@@ -218,7 +218,7 @@ add_task(async function test_new_tab_keep_settings() {
   let manifest = {
     version: "1.0",
     name: "New Tab Add-on",
-    applications: { gecko: { id: extensionId } },
+    browser_specific_settings: { gecko: { id: extensionId } },
     chrome_url_overrides: { newtab: "newtab.html" },
   };
   let extension = ExtensionTestUtils.loadExtension({
@@ -338,7 +338,7 @@ add_task(async function test_new_tab_restore_settings() {
   let extensionId = "newtabrestore@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: extensionId } },
+      browser_specific_settings: { gecko: { id: extensionId } },
       chrome_url_overrides: { newtab: "restore.html" },
     },
     files: { "restore.html": '<h1 id="extension-new-tab">New Tab!</h1>' },
@@ -419,7 +419,7 @@ add_task(async function test_new_tab_restore_settings_multiple() {
   let extensionOneId = "newtabrestoreone@mochi.test";
   let extensionOne = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: extensionOneId } },
+      browser_specific_settings: { gecko: { id: extensionOneId } },
       chrome_url_overrides: { newtab: "restore-one.html" },
     },
     files: {
@@ -432,7 +432,7 @@ add_task(async function test_new_tab_restore_settings_multiple() {
   let extensionTwoId = "newtabrestoretwo@mochi.test";
   let extensionTwo = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: extensionTwoId } },
+      browser_specific_settings: { gecko: { id: extensionTwoId } },
       chrome_url_overrides: { newtab: "restore-two.html" },
     },
     files: { "restore-two.html": '<h1 id="extension-new-tab">New Tab!</h1>' },
@@ -725,7 +725,7 @@ add_task(async function test_newtab_from_extension() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "newtaburl@mochi.test",
         },

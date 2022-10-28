@@ -54,7 +54,7 @@ add_task(async function setup() {
     manifest: {
       name: "Test",
       version: "1.0",
-      applications: { gecko: { id: "cancel@test" } },
+      browser_specific_settings: { gecko: { id: "cancel@test" } },
     },
   });
   testserver.registerFile(`/addons/test.xpi`, xpi);

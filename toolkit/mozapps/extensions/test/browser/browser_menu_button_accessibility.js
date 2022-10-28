@@ -56,7 +56,7 @@ add_task(async function testCardMoreOptionsButton() {
   let id = "more-options-button@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     useAddonManager: "temporary",
   });

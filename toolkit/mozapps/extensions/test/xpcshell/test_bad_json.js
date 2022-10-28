@@ -14,7 +14,7 @@ add_task(async function() {
   await promiseInstallWebExtension({
     manifest: {
       version: "2.0",
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
     },
   });
 

@@ -136,7 +136,7 @@ add_task(async function unsigned_not_blocked() {
   let unsignedAddonFile = createTempWebExtensionFile({
     manifest: {
       version: UNSIGNED_ADDON_VERSION,
-      applications: { gecko: { id: UNSIGNED_ADDON_ID } },
+      browser_specific_settings: { gecko: { id: UNSIGNED_ADDON_ID } },
     },
   });
 

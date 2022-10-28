@@ -27,7 +27,7 @@ add_task(async function test_validation() {
   await Assert.rejects(
     promiseInstallWebExtension({
       manifest: {
-        applications: {
+        browser_specific_settings: {
           gecko: { id: "en-US-no-dic@dictionaries.mozilla.org" },
         },
         dictionaries: {
@@ -41,7 +41,7 @@ add_task(async function test_validation() {
   await Assert.rejects(
     promiseInstallWebExtension({
       manifest: {
-        applications: {
+        browser_specific_settings: {
           gecko: { id: "en-US-no-aff@dictionaries.mozilla.org" },
         },
         dictionaries: {
@@ -58,7 +58,9 @@ add_task(async function test_validation() {
 
   let addon = await promiseInstallWebExtension({
     manifest: {
-      applications: { gecko: { id: "en-US-1@dictionaries.mozilla.org" } },
+      browser_specific_settings: {
+        gecko: { id: "en-US-1@dictionaries.mozilla.org" },
+      },
       dictionaries: {
         "en-US": "en-US.dic",
       },
@@ -72,7 +74,9 @@ add_task(async function test_validation() {
 
   let addon2 = await promiseInstallWebExtension({
     manifest: {
-      applications: { gecko: { id: "en-US-2@dictionaries.mozilla.org" } },
+      browser_specific_settings: {
+        gecko: { id: "en-US-2@dictionaries.mozilla.org" },
+      },
       dictionaries: {
         "en-US": "dictionaries/en-US.dic",
       },
@@ -175,7 +179,9 @@ add_task(async function test_registration() {
 
   let addon = await promiseInstallWebExtension({
     manifest: {
-      applications: { gecko: { id: "en-US@dictionaries.mozilla.org" } },
+      browser_specific_settings: {
+        gecko: { id: "en-US@dictionaries.mozilla.org" },
+      },
       dictionaries: {
         "en-US": "en-US.dic",
       },

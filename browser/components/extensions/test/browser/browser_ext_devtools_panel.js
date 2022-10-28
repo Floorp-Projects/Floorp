@@ -251,7 +251,7 @@ add_task(async function test_devtools_page_panels_create() {
     useAddonManager: "temporary",
     manifest: {
       devtools_page: "devtools_page.html",
-      applications: {
+      browser_specific_settings: {
         gecko: { id: EXTENSION_ID },
       },
     },

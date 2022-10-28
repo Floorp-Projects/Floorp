@@ -54,14 +54,14 @@ add_task(async function setup() {
     manifest: {
       name: "Blocked add-on-1 with to-be-reset prefs",
       version: "1.0",
-      applications: { gecko: { id: "block1@tests.mozilla.org" } },
+      browser_specific_settings: { gecko: { id: "block1@tests.mozilla.org" } },
     },
   });
   await promiseInstallWebExtension({
     manifest: {
       name: "Blocked add-on-2 with to-be-reset prefs",
       version: "1.0",
-      applications: { gecko: { id: "block2@tests.mozilla.org" } },
+      browser_specific_settings: { gecko: { id: "block2@tests.mozilla.org" } },
     },
   });
 

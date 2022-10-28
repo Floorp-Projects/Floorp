@@ -57,7 +57,7 @@ add_task(async function setup() {
     manifest: {
       name: "Mozilla Corp.",
       version: "1.0",
-      applications: { gecko: { id: "block1@tests.mozilla.org" } },
+      browser_specific_settings: { gecko: { id: "block1@tests.mozilla.org" } },
     },
   });
 
@@ -67,7 +67,7 @@ add_task(async function setup() {
       name: "Moz-addon",
       version: "1.0",
       homepage_url: "https://www.extension.dangerous.com/",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "block2@tests.mozilla.org",
           update_url: "https://www.extension.dangerous.com/update.json",
@@ -83,7 +83,7 @@ add_task(async function setup() {
       name: "Moz-addon",
       version: "1.0",
       homepage_url: "https://www.extension.dangerous.com/",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "block3@tests.mozilla.org",
           update_url: "https://www.extension.dangerous.com/update.json",

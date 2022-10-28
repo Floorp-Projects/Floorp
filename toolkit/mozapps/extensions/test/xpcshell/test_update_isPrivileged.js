@@ -65,7 +65,7 @@ async function runInstallAndUpdate({
   let extensionData = {
     useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: extensionId } },
+      browser_specific_settings: { gecko: { id: extensionId } },
       version: "1.1",
     },
   };

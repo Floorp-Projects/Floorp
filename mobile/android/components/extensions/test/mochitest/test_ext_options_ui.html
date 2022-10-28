@@ -92,7 +92,7 @@ add_task(async function test_options_ui_iframe_height() {
   const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {id: addonID},
       },
       name: "Options UI Extension",
@@ -223,7 +223,7 @@ add_task(async function test_options_ui_open_aboutaddons_details() {
     useAddonManager: "temporary",
     background,
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {id: addonID},
       },
       name: "Options UI open addon details Extension",
@@ -298,7 +298,7 @@ add_task(async function test_options_ui_open_in_tab() {
     useAddonManager: "temporary",
     background,
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {id: addonID},
       },
       name: "Options UI open_in_tab Extension",
@@ -422,7 +422,7 @@ add_task(async function test_options_ui_on_disable_and_enable() {
   const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {id: addonID},
       },
       name: "Options UI open addon details Extension",

@@ -78,7 +78,7 @@ async function test_moz_extension_svg_context_fill({
 
   let extDefinition = {
     manifest: {
-      applications: { gecko: { id: addonId } },
+      browser_specific_settings: { gecko: { id: addonId } },
     },
     background() {
       browser.test.sendMessage("svg-url", browser.runtime.getURL("context-fill-fallback-red.svg"));

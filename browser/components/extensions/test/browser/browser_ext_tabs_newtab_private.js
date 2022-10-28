@@ -67,7 +67,7 @@ async function promiseUpdatePrivatePermission(allowed, extension) {
 add_task(async function test_new_tab_private() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "@private-newtab",
         },

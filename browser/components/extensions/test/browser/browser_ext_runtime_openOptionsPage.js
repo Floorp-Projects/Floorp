@@ -70,7 +70,9 @@ add_task(async function run_test_inline_options() {
 
   let extension = await loadExtension({
     manifest: {
-      applications: { gecko: { id: "inline_options@tests.mozilla.org" } },
+      browser_specific_settings: {
+        gecko: { id: "inline_options@tests.mozilla.org" },
+      },
       options_ui: {
         page: "options.html",
       },
@@ -268,7 +270,9 @@ add_task(async function test_tab_options() {
 
   let extension = await loadExtension({
     manifest: {
-      applications: { gecko: { id: "tab_options@tests.mozilla.org" } },
+      browser_specific_settings: {
+        gecko: { id: "tab_options@tests.mozilla.org" },
+      },
       options_ui: {
         page: "options.html",
         open_in_tab: true,
@@ -413,7 +417,9 @@ add_task(async function test_options_no_manifest() {
 
   let extension = await loadExtension({
     manifest: {
-      applications: { gecko: { id: "no_options@tests.mozilla.org" } },
+      browser_specific_settings: {
+        gecko: { id: "no_options@tests.mozilla.org" },
+      },
     },
 
     async background() {

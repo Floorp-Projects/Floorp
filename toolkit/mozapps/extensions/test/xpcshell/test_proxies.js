@@ -88,7 +88,7 @@ async function run_proxy_tests() {
     let files = ExtensionTestCommon.generateFiles({
       manifest: {
         name: addon.id,
-        applications: { gecko: { id: addon.id } },
+        browser_specific_settings: { gecko: { id: addon.id } },
       },
     });
     let path = OS.Path.join(gTmpD.path, addon.id);
@@ -191,7 +191,7 @@ async function run_symlink_tests() {
   addonDirectory.append(ID);
 
   let files = ExtensionTestCommon.generateFiles({
-    manifest: { applications: { gecko: { id: ID } } },
+    manifest: { browser_specific_settings: { gecko: { id: ID } } },
   });
   await AddonTestUtils.promiseWriteFilesToDir(addonDirectory.path, files);
 

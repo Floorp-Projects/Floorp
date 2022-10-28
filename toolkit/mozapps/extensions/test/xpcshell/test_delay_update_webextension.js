@@ -46,7 +46,7 @@ const ADDONS = {
       manifest_version: 2,
       name: "Delay Upgrade",
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: { id: COMPLETE_ID },
       },
     },
@@ -56,7 +56,7 @@ const ADDONS = {
       manifest_version: 2,
       name: "Delay Upgrade",
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: { id: DEFER_ID },
       },
     },
@@ -66,7 +66,7 @@ const ADDONS = {
       manifest_version: 2,
       name: "Delay Upgrade",
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: STAGED_ID,
           update_url: `http://example.com/data/test_delay_updates_staged.json`,
@@ -81,7 +81,7 @@ const ADDONS = {
       manifest_version: 2,
       name: "Delay Upgrade",
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: STAGED_NO_UPDATE_URL_ID,
           strict_min_version: "1",
@@ -95,7 +95,7 @@ const ADDONS = {
       manifest_version: 2,
       name: "Delay Upgrade",
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: { id: IGNORE_ID },
       },
     },
@@ -116,7 +116,7 @@ add_task(async function delay_updates_ignore() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: IGNORE_ID,
           update_url: `http://example.com/data/test_delay_updates_ignore.json`,
@@ -198,7 +198,7 @@ add_task(async function delay_updates_complete() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: COMPLETE_ID,
           update_url: `http://example.com/data/test_delay_updates_complete.json`,
@@ -265,7 +265,7 @@ add_task(async function delay_updates_defer() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: DEFER_ID,
           update_url: `http://example.com/data/test_delay_updates_defer.json`,
@@ -363,7 +363,7 @@ add_task(async function delay_updates_staged() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: STAGED_ID,
           update_url: `http://example.com/data/test_delay_updates_staged.json`,
@@ -435,7 +435,7 @@ add_task(async function delay_updates_staged_no_update_url() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: STAGED_NO_UPDATE_URL_ID,
           update_url: `http://example.com/data/test_delay_updates_staged.json`,
@@ -505,7 +505,7 @@ add_task(async function runtime_reload() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: NOUPDATE_ID,
           update_url: `http://example.com/data/test_no_update.json`,

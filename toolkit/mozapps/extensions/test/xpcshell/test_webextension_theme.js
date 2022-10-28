@@ -37,7 +37,7 @@ add_task(async function setup_to_default_browserish_state() {
       name: "Web Extension Name",
       version: "1.0",
       theme: { images: { theme_frame: "example.png" } },
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: THEME_IDS[0],
         },
@@ -305,7 +305,7 @@ add_task(async function test_builtin_theme_permissions() {
 
   let themeDef = {
     manifest: {
-      applications: { gecko: { id: ADDON_ID } },
+      browser_specific_settings: { gecko: { id: ADDON_ID } },
       version: "1.0",
       theme: {},
     },

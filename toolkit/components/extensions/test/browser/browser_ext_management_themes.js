@@ -118,7 +118,7 @@ add_task(async function test_management_themes() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: TEST_ID,
         },

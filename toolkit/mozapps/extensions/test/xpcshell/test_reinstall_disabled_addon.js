@@ -10,7 +10,7 @@ const ADDONS = {
     description: "Test 1 addon description",
     manifest_version: 2,
     version: "1.0",
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: ID,
       },
@@ -21,7 +21,7 @@ const ADDONS = {
     description: "Test 1 addon description",
     manifest_version: 2,
     version: "2.0",
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: ID,
       },

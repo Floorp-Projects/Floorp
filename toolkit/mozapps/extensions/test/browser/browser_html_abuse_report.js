@@ -684,7 +684,7 @@ add_task(async function test_abusereport_from_browserAction_remove() {
     manifest: {
       ...BASE_TEST_MANIFEST,
       browser_action: {},
-      applications: { gecko: { id: EXT_ID } },
+      browser_specific_settings: { gecko: { id: EXT_ID } },
     },
   });
   const addon = await AddonManager.installTemporaryAddon(xpiFile);

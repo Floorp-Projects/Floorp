@@ -46,7 +46,7 @@ ChromeUtils.defineModuleGetter(
 );
 
 let BASE_MANIFEST = Object.freeze({
-  applications: Object.freeze({
+  browser_specific_settings: Object.freeze({
     gecko: Object.freeze({
       id: "test@web.ext",
     }),
@@ -529,7 +529,7 @@ class InstallableWrapper extends AOMExtensionWrapper {
     let { addonData } = this;
     if (addonData && addonData.incognitoOverride) {
       try {
-        let { id } = addonData.manifest.applications.gecko;
+        let { id } = addonData.manifest.browser_specific_settings.gecko;
         if (id) {
           return lazy.ExtensionTestCommon.setIncognitoOverride({
             id,

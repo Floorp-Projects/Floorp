@@ -42,7 +42,7 @@ add_task(async function testPageActionTelemetry() {
     ...extensionOptions,
     manifest: {
       ...extensionOptions.manifest,
-      applications: {
+      browser_specific_settings: {
         gecko: { id: EXTENSION_ID1 },
       },
     },
@@ -51,7 +51,7 @@ add_task(async function testPageActionTelemetry() {
     ...extensionOptions,
     manifest: {
       ...extensionOptions.manifest,
-      applications: {
+      browser_specific_settings: {
         gecko: { id: EXTENSION_ID2 },
       },
     },

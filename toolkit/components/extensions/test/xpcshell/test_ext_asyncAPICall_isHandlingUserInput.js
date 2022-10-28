@@ -81,7 +81,7 @@ add_task(
   async function test_propagated_isHandlingUserInput_on_async_api_methods_calls() {
     const extension = ExtensionTestUtils.loadExtension({
       manifest: {
-        applications: { gecko: { id: "@test-ext" } },
+        browser_specific_settings: { gecko: { id: "@test-ext" } },
       },
       background() {
         browser.test.onMessage.addListener(async (msg, args) => {

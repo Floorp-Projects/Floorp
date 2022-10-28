@@ -38,7 +38,7 @@ add_task(async function testInlineOptions() {
   let id = "inline@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       options_ui: {
         page: "options.html",
       },
@@ -175,7 +175,7 @@ add_task(async function testCardRerender() {
   let id = "rerender@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       options_ui: {
         page: "options.html",
       },
@@ -282,7 +282,7 @@ add_task(async function testRemovedOnDisable() {
   let id = "disable@mochi.test";
   const xpiFile = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       options_ui: {
         page: "options.html",
       },
@@ -349,7 +349,7 @@ add_task(async function testUpgradeTemporary() {
   async function loadExtension(version) {
     let extension = ExtensionTestUtils.loadExtension({
       manifest: {
-        applications: { gecko: { id } },
+        browser_specific_settings: { gecko: { id } },
         version,
         options_ui: {
           page: "options.html",
@@ -423,7 +423,7 @@ add_task(async function testReloadExtension() {
   let id = "reload@mochi.test";
   let xpiFile = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       options_ui: {
         page: "options.html",
       },
@@ -478,7 +478,7 @@ async function testOptionsZoom(type = "full") {
   let zoomProp = `${type}Zoom`;
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       options_ui: {
         page: "options.html",
       },
