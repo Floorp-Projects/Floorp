@@ -14,6 +14,7 @@
 #include "ErrorList.h"
 #include "js/StructuredClone.h"
 #include "mozIStorageConnection.h"
+#include "mozilla/dom/quota/Assertions.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ProfilerLabels.h"
