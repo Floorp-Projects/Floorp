@@ -338,15 +338,6 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
 
   bool isDrained();
 
-  // The mark queue is a testing-only feature for controlling mark ordering and
-  // yield timing.
-  enum MarkQueueProgress {
-    QueueYielded,   // End this incremental GC slice, if possible
-    QueueComplete,  // Done with the queue
-    QueueSuspended  // Continue the GC without ending the slice
-  };
-  MarkQueueProgress processMarkQueue();
-
   enum ShouldReportMarkTime : bool {
     ReportMarkTime = true,
     DontReportMarkTime = false
@@ -379,7 +370,16 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
   template <typename T>
   void markImplicitEdges(T* oldThing);
 
+  bool isRegularMarking() const {
+    return state == MarkingState::RegularMarking;
+  }
   bool isWeakMarking() const { return state == MarkingState::WeakMarking; }
+
+  bool isMarkStackEmpty() { return stack.isEmpty(); }
+
+  bool hasBlackEntries() const { return stack.position() > grayPosition; }
+
+  bool hasGrayEntries() const { return grayPosition > 0 && !stack.isEmpty(); }
 
  private:
 #ifdef DEBUG
@@ -429,13 +429,8 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
   inline void pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
                              size_t start, size_t end);
 
-  bool isMarkStackEmpty() { return stack.isEmpty(); }
-
-  bool hasBlackEntries() const { return stack.position() > grayPosition; }
-
-  bool hasGrayEntries() const { return grayPosition > 0 && !stack.isEmpty(); }
-
-  inline void processMarkStackTop(SliceBudget& budget);
+  void processMarkStackTop(SliceBudget& budget);
+  friend class gc::GCRuntime;
 
   void markDelayedChildren(gc::Arena* arena);
   void markAllDelayedChildren(ShouldReportMarkTime reportTime);
@@ -492,9 +487,6 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
    */
   MainThreadOrGCTaskData<bool> checkAtomMarking;
 
-  /* The test marking queue might want to be marking a particular color. */
-  mozilla::Maybe<js::gc::MarkColor> queueMarkColor;
-
   /*
    * If this is true, all marked objects must belong to a compartment being
    * GCed. This is used to look for compartment bugs.
@@ -509,21 +501,6 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
    */
   MainThreadOrGCTaskData<Compartment*> tracingCompartment;
   MainThreadOrGCTaskData<Zone*> tracingZone;
-
-  /*
-   * List of objects to mark at the beginning of a GC. May also contains string
-   * directives to change mark color or wait until different phases of the GC.
-   *
-   * This is a WeakCache because not everything in this list is guaranteed to
-   * end up marked (eg if you insert an object from an already-processed sweep
-   * group in the middle of an incremental GC). Also, the mark queue is not
-   * used during shutdown GCs. In either case, unmarked objects may need to be
-   * discarded.
-   */
-  JS::WeakCache<GCVector<HeapPtr<JS::Value>, 0, SystemAllocPolicy>> markQueue;
-
-  /* Position within the test mark queue. */
-  size_t queuePos;
 #endif  // DEBUG
 };
 
