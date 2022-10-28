@@ -159,13 +159,13 @@ add_task(async function test_network_markers_service_worker_use() {
       expectedFiles.length,
       "There should be as many stop markers in the content process as requested files."
     );
-    // Note: the redirect markers do not seem to be forwarded to the content
-    // process for the top level navigation.
-    // See Bug 1692879.
+    // Note: there will no redirect markers in the content process for
+    // ServiceWorker fallbacks request to network.
+    // See Bug 1793940.
     Assert.equal(
       contentRedirectMarkers.length,
-      expectedFiles.length - 1,
-      "There should be as one less redirect markers in the content process than requested files."
+      0,
+      "There should be no redirect markers in the content process than requested files."
     );
 
     for (const [i, expectedFile] of expectedFiles.entries()) {
@@ -179,9 +179,6 @@ add_task(async function test_network_markers_service_worker_use() {
         marker => marker.data.URI === expectedFile
       );
       const parentStopMarker = parentStopMarkers.find(
-        marker => marker.data.URI === expectedFile
-      );
-      const contentRedirectMarker = contentRedirectMarkers.find(
         marker => marker.data.URI === expectedFile
       );
       const contentStopMarker = contentStopMarkers.find(
@@ -292,11 +289,6 @@ add_task(async function test_network_markers_service_worker_use() {
           ...commonRedirectProperties,
           innerWindowID: Expect.number(),
           redirectId: parentStopMarker.data.id,
-        });
-        Assert.objectContainsOnly(contentRedirectMarker.data, {
-          ...commonRedirectProperties,
-          innerWindowID: Expect.number(),
-          redirectId: contentStopMarker.data.id,
         });
       }
     }

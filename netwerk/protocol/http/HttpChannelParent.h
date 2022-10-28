@@ -122,6 +122,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter(
       Endpoint<extensions::PStreamFilterParent>&& aParentEndpoint,
       Endpoint<extensions::PStreamFilterChild>&& aChildEndpoint);
+  [[nodiscard]] RefPtr<GenericPromise> DetachStreamFilters();
 
  protected:
   // used to connect redirected-to channel in parent with just created
