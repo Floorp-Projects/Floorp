@@ -25,12 +25,24 @@
 // Enable IS_VK_DOWN debug output
 //#define DEBUG_VK
 
-// Main event loop debug output flags
-#define SHOW_REPEAT_EVENTS true
-#define SHOW_MOUSEMOVE_EVENTS false
+// RAII-style class to log before and after an event is handled.
+class PrintEvent final {
+ public:
+  PrintEvent(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT retValue);
+  void SetResult(bool result) { mResult = mozilla::Some(result); }
+  ~PrintEvent();
 
-void PrintEvent(UINT msg, uint64_t wParam, uint64_t lParam, uint64_t retValue,
-                bool result, bool aShowAllEvents, bool aShowMouseMoves);
+ private:
+  bool PrintEventInternal();
+  const UINT mMsg;
+  const WPARAM mWParam;
+  const LPARAM mLParam;
+  const LRESULT mRetValue;
+  mozilla::Maybe<long> mEventCounter;
+  // not const because it will be set after the event is handled
+  mozilla::Maybe<bool> mResult;
+  bool mShouldLogPostCall;
+};
 
 #if defined(POPUP_ROLLUP_DEBUG_OUTPUT)
 typedef struct {

@@ -5171,13 +5171,11 @@ bool nsWindow::ExternalHandlerProcessMessage(UINT aMessage, WPARAM& aWParam,
 // we can log aRetValue.
 bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
                               LRESULT* aRetValue) {
+  // For some events we might change the parameter values, so log
+  // before and after we process them.
+  PrintEvent printEvent(msg, wParam, lParam, *aRetValue);
   bool result = ProcessMessageInternal(msg, wParam, lParam, aRetValue);
-
-  // SHOW_REPEAT_EVENTS indicates whether to show all (repeating) events,
-  // SHOW_MOUSEMOVE_EVENTS indicates whether to show mouse move events.
-  // See nsWindowDbg for details.
-  PrintEvent(msg, wParam, lParam, *aRetValue, result, SHOW_REPEAT_EVENTS,
-             SHOW_MOUSEMOVE_EVENTS);
+  printEvent.SetResult(result);
 
   return result;
 }
