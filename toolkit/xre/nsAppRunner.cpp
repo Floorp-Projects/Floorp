@@ -2231,7 +2231,7 @@ static void DumpHelp() {
 }
 
 static inline void DumpVersion() {
-  if (gAppData->vendor) {
+  if (gAppData->vendor && *gAppData->vendor) {
     printf("%s ", (const char*)gAppData->vendor);
   }
   printf("%s ", (const char*)gAppData->name);
@@ -2240,14 +2240,14 @@ static inline void DumpVersion() {
   // For example, for beta, we would display 42.0b2 instead of 42.0
   printf("%s", MOZ_STRINGIFY(MOZ_APP_VERSION_DISPLAY));
 
-  if (gAppData->copyright) {
+  if (gAppData->copyright && *gAppData->copyright) {
     printf(", %s", (const char*)gAppData->copyright);
   }
   printf("\n");
 }
 
 static inline void DumpFullVersion() {
-  if (gAppData->vendor) {
+  if (gAppData->vendor && *gAppData->vendor) {
     printf("%s ", (const char*)gAppData->vendor);
   }
   printf("%s ", (const char*)gAppData->name);
@@ -2258,7 +2258,7 @@ static inline void DumpFullVersion() {
 
   printf("%s ", (const char*)gAppData->buildID);
   printf("%s ", (const char*)PlatformBuildID());
-  if (gAppData->copyright) {
+  if (gAppData->copyright && *gAppData->copyright) {
     printf(", %s", (const char*)gAppData->copyright);
   }
   printf("\n");
