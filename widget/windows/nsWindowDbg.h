@@ -44,6 +44,31 @@ class PrintEvent final {
   bool mShouldLogPostCall;
 };
 
+namespace mozilla::widget {
+
+nsAutoCString DefaultParamInfoFn(uint64_t wParam, uint64_t lParam,
+                                 bool firstCall);
+
+struct EnumValueAndName {
+  uint64_t mFlag;
+  const char* mName;
+};
+
+// Appends to str a description of the flags passed in.
+// flagsAndNames is a list of flag values with a string description
+// for each one. These are processed in order, so if there are
+// flag values that are combination of individual values (for example
+// something like WS_OVERLAPPEDWINDOW) they need to come first
+// in the flagsAndNames array.
+// A 0 flag value will only be written if the flags input is exactly
+// 0, and it must come last in the flagsAndNames array.
+// Returns whether any info was appended to str.
+bool AppendFlagsInfo(nsAutoCString& str, uint64_t flags,
+                     const nsTArray<EnumValueAndName>& flagsAndNames,
+                     const char* name);
+
+}  // namespace mozilla::widget
+
 #if defined(POPUP_ROLLUP_DEBUG_OUTPUT)
 typedef struct {
   char* mStr;

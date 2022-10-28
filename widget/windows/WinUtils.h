@@ -125,10 +125,17 @@ void EnumerateThreadWindows(F&& f)
 namespace widget {
 
 // Windows message debugging data
-typedef struct {
+struct EventMsgInfo {
   const char* mStr;
   UINT mId;
-} EventMsgInfo;
+  std::function<nsAutoCString(WPARAM, LPARAM, bool)> mParamInfoFn;
+  std::function<void(nsAutoCString&, WPARAM, const char*, bool)> mWParamInfoFn;
+  const char* mWParamName;
+  std::function<void(nsAutoCString&, LPARAM, const char*, bool)> mLParamInfoFn;
+  const char* mLParamName;
+  void LogParameters(nsAutoCString& str, WPARAM wParam, LPARAM lParam,
+                     bool isPreCall);
+};
 extern std::unordered_map<UINT, EventMsgInfo> gAllEvents;
 extern mozilla::HashSet<UINT> gEventsToLogOriginalParams;
 
