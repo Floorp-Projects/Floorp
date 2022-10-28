@@ -56,7 +56,8 @@ static Matrix ComputeRotationMatrix(gfxFloat aRotatedWidth,
         Matrix::Translation(-aRotatedWidth / 2.0, -aRotatedHeight / 2.0);
   }
 
-  Matrix rotation = Matrix::Rotation(gfx::Float(aDegrees / 180.0 * M_PI));
+  auto angle = static_cast<double>(aDegrees) / 180.0 * M_PI;
+  Matrix rotation = Matrix::Rotation(static_cast<gfx::Float>(angle));
   Matrix shiftLeftTopToOrigin =
       Matrix::Translation(aRotatedWidth / 2.0, aRotatedHeight / 2.0);
   return shiftVideoCenterToOrigin * rotation * shiftLeftTopToOrigin;

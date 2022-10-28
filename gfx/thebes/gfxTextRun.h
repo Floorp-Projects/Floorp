@@ -1035,7 +1035,7 @@ class gfxFontGroup final : public gfxTextRunFactory {
   // initialized mUnderlineOffset. The value should be lower value of
   // first font's metrics and the bad font's metrics. Otherwise, this
   // returns from first font's metrics.
-  enum { UNDERLINE_OFFSET_NOT_SET = INT16_MAX };
+  static constexpr gfxFloat UNDERLINE_OFFSET_NOT_SET = INT16_MAX;
   gfxFloat GetUnderlineOffset();
 
   already_AddRefed<gfxFont> FindFontForChar(uint32_t ch, uint32_t prevCh,

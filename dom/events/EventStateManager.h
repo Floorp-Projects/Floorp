@@ -339,7 +339,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * larger than this value, the computed scroll amount isn't rounded down to
    * the page width or height.
    */
-  enum { MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL = 1000 };
+  static constexpr double MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL =
+      1000.0;
 
   /**
    * HandleMiddleClickPaste() handles middle mouse button event as pasting
