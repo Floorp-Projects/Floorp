@@ -13,7 +13,7 @@ loadScripts({ name: "text.js", dir: MOCHITESTS_DIR });
 addAccessibleTask(
   `
 <textarea id="textarea"
-          style="scrollbar-width: none;"
+          style="scrollbar-width: none; font-family: 'Liberation Mono', monospace;"
           cols="6">ab cd e</textarea>
 <textarea id="empty"></textarea>
   `,
