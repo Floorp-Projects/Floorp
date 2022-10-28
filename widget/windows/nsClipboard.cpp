@@ -15,6 +15,9 @@
 #include <thread>
 #include <chrono>
 
+#ifdef ACCESSIBILITY
+#  include "mozilla/a11y/Compatibility.h"
+#endif
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_clipboard.h"
 #include "nsArrayUtils.h"
@@ -481,6 +484,10 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
   if (nullptr == mTransferable) {
     return NS_ERROR_FAILURE;
   }
+
+#ifdef ACCESSIBILITY
+  a11y::Compatibility::SuppressA11yForClipboardCopy();
+#endif
 
   IDataObject* dataObj;
   if (NS_SUCCEEDED(CreateNativeDataObject(mTransferable, &dataObj,

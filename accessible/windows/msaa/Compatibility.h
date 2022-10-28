@@ -77,6 +77,9 @@ class Compatibility {
   static bool IsModuleVersionLessThan(HMODULE aModuleHandle,
                                       unsigned long long aVersion);
 
+  static void SuppressA11yForClipboardCopy();
+  static bool IsA11ySuppressedForClipboardCopy();
+
  private:
   Compatibility();
   Compatibility(const Compatibility&);

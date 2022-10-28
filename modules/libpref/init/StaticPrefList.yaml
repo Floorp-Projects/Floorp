@@ -228,6 +228,18 @@
 #endif
   mirror: once
 
+# Whether to avoid accessibility activation on Windows shortly after clipboard
+# copy.
+#
+# Possible values are:
+#  * 0: never
+#  * 1: always
+#  * 2 (or others): when needed
+- name: accessibility.windows.suppress-after-clipboard-copy
+  type: uint32_t
+  value: 2
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "alerts."
 #---------------------------------------------------------------------------
