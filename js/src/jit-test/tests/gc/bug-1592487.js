@@ -11,7 +11,7 @@ try {
 try {} catch (e) {}
 try {
     try {
-        setMarkStackLimit(1);
+        gcparam("markStackLimit", 1);
     } catch (e) {}
 } catch (e) {}
 try {

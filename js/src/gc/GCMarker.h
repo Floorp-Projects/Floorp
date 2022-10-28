@@ -21,7 +21,8 @@ namespace js {
 class SliceBudget;
 class WeakMapBase;
 
-static const size_t MARK_STACK_BASE_CAPACITY = 4096;
+static const size_t NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY = 4096;
+static const size_t INCREMENTAL_MARK_STACK_BASE_CAPACITY = 32768;
 
 enum class SlotsOrElementsKind { Elements, FixedSlots, DynamicSlots };
 
@@ -129,20 +130,21 @@ class MarkStack {
     TaggedPtr ptr_;
   };
 
-  explicit MarkStack();
+  explicit MarkStack(size_t maxCapacity = DefaultCapacity);
   ~MarkStack();
+
+  static const size_t DefaultCapacity = SIZE_MAX;
 
   // The unit for MarkStack::capacity() is mark stack entries.
   size_t capacity() { return stack().length(); }
 
   size_t position() const { return topIndex_; }
 
-  [[nodiscard]] bool init();
-  [[nodiscard]] bool resetStackCapacity();
+  [[nodiscard]] bool init(bool incrementalGCEnabled);
+  [[nodiscard]] bool setStackCapacity(bool incrementalGCEnabled);
 
-#ifdef JS_GC_ZEAL
+  size_t maxCapacity() const { return maxCapacity_; }
   void setMaxCapacity(size_t maxCapacity);
-#endif
 
   template <typename T>
   [[nodiscard]] bool push(T* ptr);
@@ -161,7 +163,13 @@ class MarkStack {
   TaggedPtr popPtr();
   SlotsOrElementsRange popSlotsOrElementsRange();
 
-  void clear();
+  void clear() {
+    // Fall back to the smaller initial capacity so we don't hold on to excess
+    // memory between GCs.
+    stack().clearAndFree();
+    (void)stack().resize(NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY);
+    topIndex_ = 0;
+  }
 
   void poisonUnused();
 
@@ -184,20 +192,40 @@ class MarkStack {
   const TaggedPtr& peekPtr() const;
   [[nodiscard]] bool pushTaggedPtr(Tag tag, Cell* ptr);
 
-  // Vector containing allocated stack memory. Unused beyond topIndex_.
-  MainThreadOrGCTaskData<StackVector> stack_;
-
   // Index of the top of the stack.
   MainThreadOrGCTaskData<size_t> topIndex_;
 
-#ifdef JS_GC_ZEAL
   // The maximum stack capacity to grow to.
-  MainThreadOrGCTaskData<size_t> maxCapacity_{SIZE_MAX};
-#endif
+  MainThreadOrGCTaskData<size_t> maxCapacity_;
+
+  // Vector containing allocated stack memory. Unused beyond topIndex_.
+  MainThreadOrGCTaskData<StackVector> stack_;
 
 #ifdef DEBUG
-  mutable size_t iteratorCount_ = 0;
+  mutable size_t iteratorCount_;
 #endif
+
+  friend class MarkStackIter;
+};
+
+class MarkStackIter {
+  MarkStack& stack_;
+  size_t pos_;
+
+ public:
+  explicit MarkStackIter(MarkStack& stack);
+  ~MarkStackIter();
+
+  bool done() const;
+  MarkStack::Tag peekTag() const;
+  MarkStack::TaggedPtr peekPtr() const;
+  MarkStack::SlotsOrElementsRange peekSlotsOrElementsRange() const;
+  void next();
+  void nextPtr();
+  void nextArray();
+
+ private:
+  size_t position() const;
 };
 
 } /* namespace gc */
@@ -227,9 +255,8 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
   explicit GCMarker(JSRuntime* rt);
   [[nodiscard]] bool init();
 
-#ifdef JS_GC_ZEAL
   void setMaxCapacity(size_t maxCap) { stack.setMaxCapacity(maxCap); }
-#endif
+  size_t maxCapacity() const { return stack.maxCapacity(); }
 
   bool isActive() const { return state != MarkingState::NotActive; }
 
@@ -311,12 +338,26 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
 
   bool isDrained();
 
+  // The mark queue is a testing-only feature for controlling mark ordering and
+  // yield timing.
+  enum MarkQueueProgress {
+    QueueYielded,   // End this incremental GC slice, if possible
+    QueueComplete,  // Done with the queue
+    QueueSuspended  // Continue the GC without ending the slice
+  };
+  MarkQueueProgress processMarkQueue();
+
   enum ShouldReportMarkTime : bool {
     ReportMarkTime = true,
     DontReportMarkTime = false
   };
   [[nodiscard]] bool markUntilBudgetExhausted(
       SliceBudget& budget, ShouldReportMarkTime reportTime = ReportMarkTime);
+
+  void setIncrementalGCEnabled(bool enabled) {
+    // Ignore failure to resize the stack and keep using the existing stack.
+    (void)stack.setStackCapacity(enabled);
+  }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
@@ -338,16 +379,7 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
   template <typename T>
   void markImplicitEdges(T* oldThing);
 
-  bool isRegularMarking() const {
-    return state == MarkingState::RegularMarking;
-  }
   bool isWeakMarking() const { return state == MarkingState::WeakMarking; }
-
-  bool isMarkStackEmpty() { return stack.isEmpty(); }
-
-  bool hasBlackEntries() const { return stack.position() > grayPosition; }
-
-  bool hasGrayEntries() const { return grayPosition > 0 && !stack.isEmpty(); }
 
  private:
 #ifdef DEBUG
@@ -397,8 +429,13 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
   inline void pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
                              size_t start, size_t end);
 
-  void processMarkStackTop(SliceBudget& budget);
-  friend class gc::GCRuntime;
+  bool isMarkStackEmpty() { return stack.isEmpty(); }
+
+  bool hasBlackEntries() const { return stack.position() > grayPosition; }
+
+  bool hasGrayEntries() const { return grayPosition > 0 && !stack.isEmpty(); }
+
+  inline void processMarkStackTop(SliceBudget& budget);
 
   void markDelayedChildren(gc::Arena* arena);
   void markAllDelayedChildren(ShouldReportMarkTime reportTime);
@@ -455,6 +492,9 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
    */
   MainThreadOrGCTaskData<bool> checkAtomMarking;
 
+  /* The test marking queue might want to be marking a particular color. */
+  mozilla::Maybe<js::gc::MarkColor> queueMarkColor;
+
   /*
    * If this is true, all marked objects must belong to a compartment being
    * GCed. This is used to look for compartment bugs.
@@ -469,6 +509,21 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
    */
   MainThreadOrGCTaskData<Compartment*> tracingCompartment;
   MainThreadOrGCTaskData<Zone*> tracingZone;
+
+  /*
+   * List of objects to mark at the beginning of a GC. May also contains string
+   * directives to change mark color or wait until different phases of the GC.
+   *
+   * This is a WeakCache because not everything in this list is guaranteed to
+   * end up marked (eg if you insert an object from an already-processed sweep
+   * group in the middle of an incremental GC). Also, the mark queue is not
+   * used during shutdown GCs. In either case, unmarked objects may need to be
+   * discarded.
+   */
+  JS::WeakCache<GCVector<HeapPtr<JS::Value>, 0, SystemAllocPolicy>> markQueue;
+
+  /* Position within the test mark queue. */
+  size_t queuePos;
 #endif  // DEBUG
 };
 
