@@ -70,11 +70,13 @@ function shift(set) {
 class HiddenBrowserManager {
   /**
    * The hidden frame if one has been created.
+   *
    * @type {HiddenFrame | null}
    */
   #frame = null;
   /**
    * The number of hidden browser elements currently in use.
+   *
    * @type {number}
    */
   #browsers = 0;
@@ -277,24 +279,28 @@ export const PageDataService = new (class PageDataService extends EventEmitter {
 
   /**
    * The number of currently running background fetches.
+   *
    * @type {number}
    */
   #backgroundFetches = 0;
 
   /**
    * The list of urls waiting to be loaded in the background.
+   *
    * @type {Set<string>}
    */
   #backgroundQueue = new Set();
 
   /**
    * Tracks whether the user is currently idle.
+   *
    * @type {boolean}
    */
   #userIsIdle = false;
 
   /**
    * A manager for hidden browsers.
+   *
    * @type {HiddenBrowserManager}
    */
   #browserManager = new HiddenBrowserManager();
@@ -303,7 +309,7 @@ export const PageDataService = new (class PageDataService extends EventEmitter {
    * A map of hidden browsers to a resolve function that should be passed the
    * actor that was created for the browser.
    *
-   * @type {WeakMap<Browser, (actor: PageDataParent) => void>}
+   * @type {WeakMap<Browser, function(PageDataParent): void>}
    */
   #backgroundBrowsers = new WeakMap();
 

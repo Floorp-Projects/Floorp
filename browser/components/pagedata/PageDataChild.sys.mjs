@@ -27,6 +27,7 @@ export class PageDataChild extends JSWindowActorChild {
   #isContentWindowPrivate = true;
   /**
    * Used to debounce notifications about a page being ready.
+   *
    * @type {Timer | null}
    */
   #deferTimer = null;

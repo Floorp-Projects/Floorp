@@ -325,6 +325,7 @@ function collectMicrodataItems(document) {
 function collectJsonLDItems(document) {
   /**
    * The root items.
+   *
    * @type {Item[]}
    */
   let items = [];
