@@ -4,7 +4,15 @@
 
 import { loader } from "resource://devtools/shared/loader/Loader.sys.mjs";
 import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
-import { WatcherRegistry } from "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs";
+
+const { WatcherRegistry } = ChromeUtils.importESModule(
+  "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs",
+  {
+    // WatcherRegistry needs to be a true singleton and loads ActorManagerParent
+    // which also has to be a true singleton.
+    loadInDevToolsLoader: false,
+  }
+);
 
 const lazy = {};
 
