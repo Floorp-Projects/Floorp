@@ -30,21 +30,8 @@ namespace jit {
 
 class JitCode;
 
-struct IcStubCodeMapGCPolicy {
-  static bool traceWeak(JSTracer* trc, uint32_t*,
-                        WeakHeapPtr<JitCode*>* value) {
-    return TraceWeakEdge(trc, value, "traceWeak");
-  }
-};
-
 class JitRealm {
   friend class JitActivation;
-
-  // Map ICStub keys to ICStub shared code objects.
-  using ICStubCodeMap =
-      GCHashMap<uint32_t, WeakHeapPtr<JitCode*>, DefaultHasher<uint32_t>,
-                ZoneAllocPolicy, IcStubCodeMapGCPolicy>;
-  ICStubCodeMap* stubCodes_;
 
   // The JitRealm stores stubs to concatenate strings inline and perform RegExp
   // calls inline. These bake in zone and realm specific pointers and can't be
@@ -82,27 +69,9 @@ class JitRealm {
   }
 
  public:
-  JitCode* getStubCode(uint32_t key) {
-    ICStubCodeMap::Ptr p = stubCodes_->lookup(key);
-    if (p) {
-      return p->value();
-    }
-    return nullptr;
-  }
-  [[nodiscard]] bool putStubCode(JSContext* cx, uint32_t key,
-                                 Handle<JitCode*> stubCode) {
-    MOZ_ASSERT(stubCode);
-    if (!stubCodes_->putNew(key, stubCode.get())) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-    return true;
-  }
-
   JitRealm();
-  ~JitRealm();
 
-  [[nodiscard]] bool initialize(JSContext* cx, bool zoneHasNurseryStrings);
+  void initialize(bool zoneHasNurseryStrings);
 
   // Initialize code stubs only used by Ion, not Baseline.
   [[nodiscard]] bool ensureIonStubsExist(JSContext* cx) {

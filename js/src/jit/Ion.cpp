@@ -265,19 +265,10 @@ uint8_t* JitRuntime::allocateIonOsrTempData(size_t size) {
 
 void JitRuntime::freeIonOsrTempData() { ionOsrTempData_.ref().reset(); }
 
-JitRealm::JitRealm()
-    : stubCodes_(nullptr), initialStringHeap(gc::TenuredHeap) {}
+JitRealm::JitRealm() : initialStringHeap(gc::TenuredHeap) {}
 
-JitRealm::~JitRealm() { js_delete(stubCodes_); }
-
-bool JitRealm::initialize(JSContext* cx, bool zoneHasNurseryStrings) {
-  stubCodes_ = cx->new_<ICStubCodeMap>(cx->zone());
-  if (!stubCodes_) {
-    return false;
-  }
+void JitRealm::initialize(bool zoneHasNurseryStrings) {
   setStringsCanBeInNursery(zoneHasNurseryStrings);
-
-  return true;
 }
 
 template <typename T>
@@ -399,8 +390,6 @@ void JitRealm::traceWeak(JSTracer* trc, JS::Realm* realm) {
   // Any outstanding compilations should have been cancelled by the GC.
   MOZ_ASSERT(!HasOffThreadIonCompile(realm));
 
-  stubCodes_->traceWeak(trc);
-
   for (WeakHeapPtr<JitCode*>& stub : stubs_) {
     TraceWeakEdge(trc, &stub, "JitRealm::stubs_");
   }
@@ -500,11 +489,7 @@ void JitZone::traceWeak(JSTracer* trc) {
 }
 
 size_t JitRealm::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-  size_t n = mallocSizeOf(this);
-  if (stubCodes_) {
-    n += stubCodes_->shallowSizeOfIncludingThis(mallocSizeOf);
-  }
-  return n;
+  return mallocSizeOf(this);
 }
 
 void JitZone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
