@@ -3152,6 +3152,12 @@ toolbar#nav-bar {
                 "verify": options.verify,
                 "verify_fission": options.verify_fission,
                 "webgl_ipc": self.extraPrefs.get("webgl.out-of-process", False),
+                "wmfme": (
+                    self.extraPrefs.get("media.wmf.media-engine.enabled", False)
+                    and self.extraPrefs.get(
+                        "media.wmf.media-engine.channel-decoder.enabled", False
+                    )
+                ),
                 "xorigin": options.xOriginTests,
                 "condprof": options.conditionedProfile,
             }
