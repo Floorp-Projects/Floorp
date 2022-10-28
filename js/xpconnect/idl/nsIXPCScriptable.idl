@@ -73,9 +73,9 @@ interface nsIXPCScriptable : nsISupports
                      in JSObjectPtr globalObj, out JSObjectPtr parentObj);
 
     boolean newEnumerate(in nsIXPConnectWrappedNative wrapper,
-                        in JSContextPtr cx, in JSObjectPtr obj,
-                        in JSMutableHandleIdVector properties,
-                        in boolean enumerableOnly);
+                         in JSContextPtr cx, in JSObjectPtr obj,
+                         in JSMutableHandleIdVector properties,
+                         in boolean enumerableOnly);
 
     boolean resolve(in nsIXPConnectWrappedNative wrapper,
                     in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
@@ -85,16 +85,16 @@ interface nsIXPCScriptable : nsISupports
                     in JSGCContextPtr gcx, in JSObjectPtr obj);
 
     boolean call(in nsIXPConnectWrappedNative wrapper,
-                in JSContextPtr cx, in JSObjectPtr obj,
-                in JSCallArgsRef args);
+                 in JSContextPtr cx, in JSObjectPtr obj,
+                 in JSCallArgsRef args);
 
     boolean construct(in nsIXPConnectWrappedNative wrapper,
-                     in JSContextPtr cx, in JSObjectPtr obj,
-                     in JSCallArgsRef args);
+                      in JSContextPtr cx, in JSObjectPtr obj,
+                      in JSCallArgsRef args);
 
     boolean hasInstance(in nsIXPConnectWrappedNative wrapper,
-                       in JSContextPtr cx, in JSObjectPtr obj,
-                       in jsval val, out boolean bp);
+                        in JSContextPtr cx, in JSObjectPtr obj,
+                        in jsval val, out boolean bp);
 
 %{ C++
     #define GET_IT(f_, c_) \
