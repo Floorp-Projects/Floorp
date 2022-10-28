@@ -2393,7 +2393,7 @@ static bool CurrentGC(JSContext* cx, unsigned argc, Value* vp) {
   }
 
 #  ifdef DEBUG
-  val = Int32Value(gc.marker.queuePos);
+  val = Int32Value(gc.testMarkQueuePos());
   if (!JS_DefineProperty(cx, result, "queuePos", val, JSPROP_ENUMERATE)) {
     return false;
   }
@@ -6850,20 +6850,19 @@ static bool SetGCCallback(JSContext* cx, unsigned argc, Value* vp) {
 #ifdef DEBUG
 static bool EnqueueMark(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  auto& queue = cx->runtime()->gc.marker.markQueue;
+  gc::GCRuntime* gc = &cx->runtime()->gc;
 
   if (args.get(0).isString()) {
     RootedString val(cx, args[0].toString());
     if (!val->ensureLinear(cx)) {
       return false;
     }
-    if (!queue.append(StringValue(val))) {
+    if (!gc->appendTestMarkQueue(StringValue(val))) {
       JS_ReportOutOfMemory(cx);
       return false;
     }
   } else if (args.get(0).isObject()) {
-    if (!queue.append(args[0])) {
+    if (!gc->appendTestMarkQueue(args[0])) {
       JS_ReportOutOfMemory(cx);
       return false;
     }
@@ -6879,7 +6878,7 @@ static bool EnqueueMark(JSContext* cx, unsigned argc, Value* vp) {
 static bool GetMarkQueue(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  auto& queue = cx->runtime()->gc.marker.markQueue.get();
+  const auto& queue = cx->runtime()->gc.getTestMarkQueue();
 
   RootedObject result(cx, JS::NewArrayObject(cx, queue.length()));
   if (!result) {
@@ -6902,7 +6901,7 @@ static bool GetMarkQueue(JSContext* cx, unsigned argc, Value* vp) {
 static bool ClearMarkQueue(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  cx->runtime()->gc.marker.markQueue.clear();
+  cx->runtime()->gc.clearTestMarkQueue();
   args.rval().setUndefined();
   return true;
 }

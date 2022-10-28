@@ -499,6 +499,12 @@ IncrementalProgress GCRuntime::markWeakReferences(
       mozilla::MakeScopeExit([&] { marker.leaveWeakMarkingMode(); });
 
   if (marker.enterWeakMarkingMode()) {
+    // If there was an 'enter-weak-marking-mode' token in the queue, then it
+    // and everything after it will still be in the queue so we can process
+    // them now.
+    while (processTestMarkQueue() == QueueYielded) {
+    };
+
     // Do not rely on the information about not-yet-marked weak keys that have
     // been collected by barriers. Clear out the gcEphemeronEdges entries and
     // rebuild the full table. Note that this a cross-zone operation; delegate
@@ -664,7 +670,7 @@ bool Zone::findSweepGroupEdges(Zone* atomsZone) {
   return WeakMapBase::findSweepGroupEdgesForZone(this);
 }
 
-static bool AddEdgesForMarkQueue(GCMarker& marker) {
+bool GCRuntime::addEdgesForMarkQueue() {
 #ifdef DEBUG
   // For testing only.
   //
@@ -675,8 +681,8 @@ static bool AddEdgesForMarkQueue(GCMarker& marker) {
   // follow the sweep group ordering. These objects will wait until their sweep
   // group comes up, or will be skipped if their sweep group is already past.
   JS::Zone* prevZone = nullptr;
-  for (size_t i = 0; i < marker.markQueue.length(); i++) {
-    Value val = marker.markQueue[i].get();
+  for (size_t i = 0; i < testMarkQueue.length(); i++) {
+    Value val = testMarkQueue[i].get();
     if (!val.isObject()) {
       continue;
     }
@@ -703,7 +709,7 @@ bool GCRuntime::findSweepGroupEdges() {
     }
   }
 
-  if (!AddEdgesForMarkQueue(marker)) {
+  if (!addEdgesForMarkQueue()) {
     return false;
   }
 
