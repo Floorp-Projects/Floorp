@@ -11541,6 +11541,12 @@
   value: 32 * 1024 * 1024
   mirror: always
 
+# Should be removed if no breakage occurs. See bug 1797846
+- name: network.url.strip-data-url-whitespace
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Force remapping of remote port numbers to allow reaching local testing
 # servers or port forwarders listening on non-standard ports.  Note that
 # this is not changing the origin URL in the addressbar, only internally
