@@ -362,6 +362,7 @@ def setup_browsertime(config, tasks):
                 "win32-chromedriver-103",
                 "win32-chromedriver-104",
                 "win32-chromedriver-105",
+                "win32-chromedriver-106",
                 "win32-chromedriver-107",
             ],
             "windows.*-64.*": [
