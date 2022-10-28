@@ -4,13 +4,15 @@
 
 "use strict";
 
+var { loader, require } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/Loader.sys.mjs"
+);
+
 var {
-  loader,
-  require,
   useDistinctSystemPrincipalLoader,
   releaseDistinctSystemPrincipalLoader,
 } = ChromeUtils.importESModule(
-  "resource://devtools/shared/loader/Loader.sys.mjs"
+  "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
 );
 
 // Require this module to setup core modules
