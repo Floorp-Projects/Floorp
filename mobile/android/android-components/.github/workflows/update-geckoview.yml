@@ -23,9 +23,7 @@ permissions:
   contents: write
   pull-requests: write
 
-on:
-  schedule:
-    - cron: '*/15 * * * *'
+on: workflow_dispatch
 
 jobs:
   main:
