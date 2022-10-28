@@ -169,6 +169,6 @@ See the above repository for updates as well as full license text. */
   .tabbrowser-tab{
     display: none;
   }
-  #tabs-newtab-button {
+  #tabs-newtab-button, #new-tab-button, #alltabs-button {
     display: none;
   }
