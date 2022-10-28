@@ -2712,7 +2712,6 @@ name = "ipcclientcerts-static"
 version = "0.1.0"
 dependencies = [
  "byteorder",
- "once_cell",
  "pkcs11-bindings",
  "rsclientcerts",
  "sha2",
