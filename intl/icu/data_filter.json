@@ -1,4 +1,5 @@
 {
+    "collationUCAData": "implicithan",
     "featureFilters": {
         "brkitr_dictionaries": {
             "filterType": "exclude"
