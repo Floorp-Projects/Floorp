@@ -6,13 +6,11 @@
 #![allow(non_snake_case)]
 
 extern crate byteorder;
-extern crate once_cell;
 extern crate pkcs11_bindings;
 #[macro_use]
 extern crate rsclientcerts;
 extern crate sha2;
 
-use once_cell::sync::OnceCell;
 use pkcs11_bindings::*;
 use rsclientcerts::manager::{Manager, SlotType};
 use std::ffi::{c_void, CStr};
@@ -52,7 +50,7 @@ type SignFunction = extern "C" fn(
 
 /// The singleton `Manager` that handles state with respect to PKCS #11. Only one thread
 /// may use it at a time, but there is no restriction on which threads may use it.
-static mut MANAGER: OnceCell<Mutex<Option<Manager<Backend>>>> = OnceCell::new();
+static MANAGER: Mutex<Option<Manager<Backend>>> = Mutex::new(None);
 
 // Obtaining a handle on the manager is a two-step process. First the mutex must be locked, which
 // (if successful), results in a mutex guard object. We must then get a mutable refence to the
@@ -63,11 +61,9 @@ static mut MANAGER: OnceCell<Mutex<Option<Manager<Backend>>>> = OnceCell::new();
 //   let manager = manager_guard_to_manager!(manager_guard);
 macro_rules! try_to_get_manager_guard {
     () => {
-        unsafe {
-            match MANAGER.get_or_init(|| Mutex::new(None)).lock() {
-                Ok(maybe_manager) => maybe_manager,
-                Err(_) => return CKR_DEVICE_ERROR,
-            }
+        match MANAGER.lock() {
+            Ok(maybe_manager) => maybe_manager,
+            Err(_) => return CKR_DEVICE_ERROR,
         }
     };
 }
@@ -119,8 +115,11 @@ extern "C" fn C_Finalize(_pReserved: CK_VOID_PTR) -> CK_RV {
     // Drop the manager. When C_Finalize is called, there should be only one
     // reference to this module (which is going away), so there shouldn't be
     // any concurrency issues.
-    let _ = unsafe { MANAGER.take() };
-    CKR_OK
+    let mut manager_guard = try_to_get_manager_guard!();
+    match manager_guard.take() {
+        Some(_) => CKR_OK,
+        None => CKR_CRYPTOKI_NOT_INITIALIZED,
+    }
 }
 
 // The specification mandates that these strings be padded with spaces to the appropriate length.
