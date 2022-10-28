@@ -155,13 +155,12 @@ Result<std::pair<nsID, nsCOMPtr<nsISupports>>, nsresult> BodyStartWriteStream(
   QM_TRY_INSPECT(const auto& tmpFile,
                  BodyIdToFile(aBaseDir, id, BODY_FILE_TMP));
 
-  QM_TRY_INSPECT(
-      const auto& fileStream,
+  QM_TRY_UNWRAP(
+      nsCOMPtr<nsIOutputStream> fileStream,
       CreateFileOutputStream(PERSISTENCE_TYPE_DEFAULT, aDirectoryMetadata,
                              Client::DOMCACHE, tmpFile.get()));
 
-  const auto compressed =
-      MakeRefPtr<SnappyCompressOutputStream>(fileStream.get());
+  const auto compressed = MakeRefPtr<SnappyCompressOutputStream>(fileStream);
 
   const nsCOMPtr<nsIEventTarget> target =
       do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
@@ -202,18 +201,15 @@ nsresult BodyFinalizeWrite(nsIFile& aBaseDir, const nsID& aId) {
   return NS_OK;
 }
 
-Result<NotNull<nsCOMPtr<nsIInputStream>>, nsresult> BodyOpen(
+Result<MovingNotNull<nsCOMPtr<nsIInputStream>>, nsresult> BodyOpen(
     const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile& aBaseDir,
     const nsID& aId) {
   QM_TRY_INSPECT(const auto& finalFile,
                  BodyIdToFile(aBaseDir, aId, BODY_FILE_FINAL));
 
-  QM_TRY_RETURN(
-      CreateFileInputStream(PERSISTENCE_TYPE_DEFAULT, aDirectoryMetadata,
-                            Client::DOMCACHE, finalFile.get())
-          .map([](NotNull<RefPtr<FileInputStream>>&& stream) {
-            return WrapNotNullUnchecked(nsCOMPtr<nsIInputStream>{stream.get()});
-          }));
+  QM_TRY_RETURN(CreateFileInputStream(PERSISTENCE_TYPE_DEFAULT,
+                                      aDirectoryMetadata, Client::DOMCACHE,
+                                      finalFile.get()));
 }
 
 nsresult BodyMaybeUpdatePaddingSize(
