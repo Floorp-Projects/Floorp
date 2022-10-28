@@ -93,8 +93,17 @@ void CloseProcessHandle(ProcessHandle process) {
 }
 
 ProcessId GetProcId(ProcessHandle process) {
+  if (process == base::kInvalidProcessHandle || process == nullptr) {
+    return 0;
+  }
   // This returns 0 if we have insufficient rights to query the process handle.
-  return GetProcessId(process);
+  // Invalid handles or non-process handles will cause a diagnostic assert.
+  ProcessId result = GetProcessId(process);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  CHECK(result != 0 || GetLastError() != ERROR_INVALID_HANDLE)
+  << "process handle = " << process;
+#endif
+  return result;
 }
 
 // from sandbox_policy_base.cc in a later version of the chromium ipc code...
