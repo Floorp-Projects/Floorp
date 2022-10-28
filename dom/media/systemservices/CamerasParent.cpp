@@ -341,8 +341,7 @@ bool CamerasParent::SetupEngine(CaptureEngine aCapEngine) {
         break;
       default:
         LOG("Invalid webrtc Video engine");
-        MOZ_CRASH();
-        break;
+        return false;
     }
 
     engine = VideoEngine::Create(captureDeviceType);
