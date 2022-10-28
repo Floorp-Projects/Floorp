@@ -20,11 +20,11 @@ namespace mozilla {
 namespace net {
 
 namespace detail {
-// A class keeping platform specific information needed to watch and
+// A class keeping platform specific information needed to
 // cancel any long blocking synchronous IO.  Must be predeclared here
 // since including windows.h breaks stuff with number of macro definition
 // conflicts.
-class BlockingIOWatcher;
+class NativeThreadHandle;
 }  // namespace detail
 
 class CacheIOThread final : public nsIThreadObserver {
@@ -115,7 +115,7 @@ class CacheIOThread final : public nsIThreadObserver {
   PRThread* mThread{nullptr};
   // Only set in Init(), before the thread is started, which reads it but never
   // writes
-  UniquePtr<detail::BlockingIOWatcher> mBlockingIOWatcher;
+  UniquePtr<detail::NativeThreadHandle> mNativeThreadHandle;
   Atomic<nsIThread*> mXPCOMThread{nullptr};
   Atomic<uint32_t, Relaxed> mLowestLevelWaiting{LAST_LEVEL};
   uint32_t mCurrentlyExecutingLevel{0};
