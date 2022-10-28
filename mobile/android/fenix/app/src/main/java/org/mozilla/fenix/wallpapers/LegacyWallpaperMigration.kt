@@ -97,6 +97,7 @@ class LegacyWallpaperMigration(
             }
         } catch (e: IOException) {
             Logger.error("Failed to migrate legacy wallpaper", e)
+            settings.shouldMigrateLegacyWallpaperCardColors = false
         }
 
         // Delete the remaining legacy files
@@ -106,9 +107,41 @@ class LegacyWallpaperMigration(
         return@withContext migratedWallpaperName
     }
 
+    /**
+     * Helper function used to migrate a legacy wallpaper's card colors that previously did not exist.
+     */
+    fun migrateExpiredWallpaperCardColors() {
+        // The card colors should NOT be migrated if the file migration was ran prior to these
+        // changes and it failed. We can verify this by checking [settings.currentWallpaperTextColor],
+        // since this is only initialized for legacy wallpapers in
+        // [LegacyWallpaperMigration.migrateLegacyWallpaper].
+        if (settings.currentWallpaperTextColor != 0L) {
+            when (settings.currentWallpaperName) {
+                TURNING_RED_MEI_WALLPAPER_NAME -> {
+                    settings.currentWallpaperCardColorLight =
+                        TURNING_RED_MEI_WALLPAPER_CARD_COLOR_LIGHT.toLong(radix = 16)
+                    settings.currentWallpaperCardColorDark =
+                        TURNING_RED_MEI_WALLPAPER_CARD_COLOR_DARK.toLong(radix = 16)
+                }
+                TURNING_RED_PANDA_WALLPAPER_NAME -> {
+                    settings.currentWallpaperCardColorLight =
+                        TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_LIGHT.toLong(radix = 16)
+                    settings.currentWallpaperCardColorDark =
+                        TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_DARK.toLong(radix = 16)
+                }
+            }
+        }
+
+        settings.shouldMigrateLegacyWallpaperCardColors = false
+    }
+
     companion object {
         const val TURNING_RED_MEI_WALLPAPER_NAME = "mei"
         const val TURNING_RED_PANDA_WALLPAPER_NAME = "panda"
         const val TURNING_RED_WALLPAPER_TEXT_COLOR = "FFFBFBFE"
+        const val TURNING_RED_MEI_WALLPAPER_CARD_COLOR_LIGHT = "FFFDE9C3"
+        const val TURNING_RED_MEI_WALLPAPER_CARD_COLOR_DARK = "FF532906"
+        const val TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_LIGHT = "FFFFEDF1"
+        const val TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_DARK = "FF611B28"
     }
 }

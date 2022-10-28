@@ -249,6 +249,7 @@ class WallpapersUseCases(
             Wallpaper.getCurrentWallpaperFromSettings(settings)?.let {
                 appStore.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(it))
             }
+
             val currentWallpaperName = if (settings.shouldMigrateLegacyWallpaper) {
                 val migratedWallpaperName =
                     migrationHelper.migrateLegacyWallpaper(settings.currentWallpaperName)
@@ -258,6 +259,11 @@ class WallpapersUseCases(
             } else {
                 settings.currentWallpaperName
             }
+
+            if (settings.shouldMigrateLegacyWallpaperCardColors) {
+                migrationHelper.migrateExpiredWallpaperCardColors()
+            }
+
             val possibleWallpapers = metadataFetcher.downloadWallpaperList().filter {
                 !it.isExpired() && it.isAvailableInLocale()
             }

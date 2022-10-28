@@ -9,6 +9,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
+import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import mozilla.components.service.glean.testing.GleanTestRule
@@ -17,14 +18,19 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.utils.Settings
-import java.util.Calendar
-import java.util.Date
+import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_DARK
+import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_LIGHT
+import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_PANDA_WALLPAPER_NAME
+import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_WALLPAPER_TEXT_COLOR
+import java.io.File
+import java.util.*
 import kotlin.random.Random
 
 @RunWith(AndroidJUnit4::class)
@@ -47,12 +53,14 @@ class WallpapersUseCasesTest {
         every { currentWallpaperCardColorDark = any() } just Runs
         every { shouldMigrateLegacyWallpaper } returns false
         every { shouldMigrateLegacyWallpaper = any() } just Runs
+        every { shouldMigrateLegacyWallpaperCardColors } returns false
+        every { shouldMigrateLegacyWallpaperCardColors = any() } just Runs
     }
     private val mockLegacyDownloader = mockk<LegacyWallpaperDownloader>(relaxed = true)
     private val mockLegacyFileManager = mockk<LegacyWallpaperFileManager> {
         every { clean(any(), any()) } just runs
     }
-    private val mockMigrationHelper = mockk<LegacyWallpaperMigration>(relaxed = true)
+    private lateinit var mockMigrationHelper: LegacyWallpaperMigration
 
     private val mockMetadataFetcher = mockk<WallpaperMetadataFetcher>()
     private val mockDownloader = mockk<WallpaperDownloader> {
@@ -60,6 +68,20 @@ class WallpapersUseCasesTest {
     }
     private val mockFileManager = mockk<WallpaperFileManager> {
         coEvery { clean(any(), any()) } returns mockk()
+    }
+
+    private val mockFolder: File = mockk()
+    private val downloadWallpaper: (Wallpaper) -> Wallpaper.ImageFileState = mockk(relaxed = true)
+
+    @Before
+    fun setup() {
+        mockMigrationHelper = spyk(
+            LegacyWallpaperMigration(
+                storageRootDirectory = mockFolder,
+                settings = mockSettings,
+                downloadWallpaper,
+            ),
+        )
     }
 
     @Test
@@ -132,7 +154,7 @@ class WallpapersUseCasesTest {
     }
 
     @Test
-    fun `GIVEN leagacy use case and wallpapers that expired and an expired one is selected WHEN invoking initialize use case THEN selected wallpaper is not filtered out`() = runTest {
+    fun `GIVEN legacy use case and wallpapers that expired and an expired one is selected WHEN invoking initialize use case THEN selected wallpaper is not filtered out`() = runTest {
         val fakeRemoteWallpapers = listOf("first", "second", "third").map { name ->
             makeFakeRemoteWallpaper(TimeRelation.LATER, name)
         }
@@ -349,6 +371,37 @@ class WallpapersUseCasesTest {
         appStore.waitUntilIdle()
         assertTrue(appStore.state.wallpaperState.availableWallpapers.contains(expectedWallpaper))
         assertEquals(expiredWallpaper, appStore.state.wallpaperState.currentWallpaper)
+    }
+
+    @Test
+    fun `GIVEN wallpapers that expired and an expired one is selected and card colors have not been migrated WHEN invoking initialize use case THEN migrate card colors`() = runTest {
+        val fakeRemoteWallpapers = listOf("first", "second", "third").map { name ->
+            makeFakeRemoteWallpaper(TimeRelation.LATER, name)
+        }
+        val expiredWallpaper = makeFakeRemoteWallpaper(TimeRelation.BEFORE, TURNING_RED_PANDA_WALLPAPER_NAME)
+        val allWallpapers = listOf(expiredWallpaper) + fakeRemoteWallpapers
+        every { mockSettings.currentWallpaperName } returns TURNING_RED_PANDA_WALLPAPER_NAME
+        every { mockSettings.shouldMigrateLegacyWallpaperCardColors } returns true
+        every { mockSettings.currentWallpaperTextColor } returns TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
+        coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns expiredWallpaper
+        coEvery { mockMetadataFetcher.downloadWallpaperList() } returns allWallpapers
+        coEvery { mockDownloader.downloadThumbnail(any()) } returns Wallpaper.ImageFileState.Downloaded
+
+        WallpapersUseCases.DefaultInitializeWallpaperUseCase(
+            appStore,
+            mockDownloader,
+            mockFileManager,
+            mockMetadataFetcher,
+            mockMigrationHelper,
+            mockSettings,
+            "en-US",
+        ).invoke()
+
+        appStore.waitUntilIdle()
+
+        verify { mockMigrationHelper.migrateExpiredWallpaperCardColors() }
+        verify { mockSettings.currentWallpaperCardColorLight = TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_LIGHT.toLong(radix = 16) }
+        verify { mockSettings.currentWallpaperCardColorDark = TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_DARK.toLong(radix = 16) }
     }
 
     @Test
