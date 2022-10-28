@@ -17176,8 +17176,9 @@ nsresult DeleteDatabaseOp::VersionChangeOp::RunOnIOThread() {
   }
 
   if (mDeleteDatabaseOp->mInPrivateBrowsing) {
-    MOZ_ASSERT(
-        gIndexedDBCipherKeyManager->Remove(mDeleteDatabaseOp->mDatabaseId));
+    DebugOnly<bool> ok =
+        gIndexedDBCipherKeyManager->Remove(mDeleteDatabaseOp->mDatabaseId);
+    MOZ_ASSERT(ok);
   }
 
   rv = mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
