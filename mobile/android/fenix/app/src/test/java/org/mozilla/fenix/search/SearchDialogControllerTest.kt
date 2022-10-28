@@ -272,6 +272,29 @@ class SearchDialogControllerTest {
     }
 
     @Test
+    fun `GIVEN show search shortcuts setting is enabled AND unified search is enabled WHEN query is empty THEN do not show search shortcuts`() {
+        val text = ""
+        every { settings.shouldShowSearchShortcuts } returns true
+        every { settings.showUnifiedSearchFeature } returns true
+
+        createController().handleTextChanged(text)
+
+        verify { store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(false)) }
+    }
+
+    @Test
+    fun `GIVEN show search shortcuts setting is enabled AND unified search is enabled WHEN query is url THEN do not show search shortcuts`() {
+        val text = "mozilla.org"
+        every { store.state.url } returns "mozilla.org"
+        every { settings.shouldShowSearchShortcuts } returns true
+        every { settings.showUnifiedSearchFeature } returns true
+
+        createController().handleTextChanged(text)
+
+        verify { store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(false)) }
+    }
+
+    @Test
     fun `do not show search shortcuts when setting enabled AND query non-empty`() {
         val text = "mozilla"
 

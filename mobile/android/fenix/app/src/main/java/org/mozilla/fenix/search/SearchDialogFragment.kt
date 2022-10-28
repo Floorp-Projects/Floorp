@@ -296,7 +296,12 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             flow.map { state -> state.search }
                 .ifChanged()
                 .collect { search ->
-                    store.dispatch(SearchFragmentAction.UpdateSearchState(search))
+                    store.dispatch(
+                        SearchFragmentAction.UpdateSearchState(
+                            search,
+                            showUnifiedSearchFeature,
+                        ),
+                    )
 
                     updateSearchSelectorMenu(search.searchEngines)
                 }

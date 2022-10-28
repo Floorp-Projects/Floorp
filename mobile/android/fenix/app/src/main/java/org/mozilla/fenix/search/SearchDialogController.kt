@@ -144,7 +144,8 @@ class SearchDialogController(
         fragmentStore.dispatch(SearchFragmentAction.UpdateQuery(text))
         fragmentStore.dispatch(
             SearchFragmentAction.ShowSearchShortcutEnginePicker(
-                (textMatchesCurrentUrl || textMatchesCurrentSearch || text.isEmpty()) &&
+                !settings.showUnifiedSearchFeature &&
+                    (textMatchesCurrentUrl || textMatchesCurrentSearch || text.isEmpty()) &&
                     settings.shouldShowSearchShortcuts,
             ),
         )

@@ -50,6 +50,7 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         val showSearchShortcuts =
             requirePreference<SwitchPreference>(R.string.pref_key_show_search_engine_shortcuts).apply {
                 isChecked = context.settings().shouldShowSearchShortcuts
+                isVisible = !context.settings().showUnifiedSearchFeature
             }
 
         val showHistorySuggestions =

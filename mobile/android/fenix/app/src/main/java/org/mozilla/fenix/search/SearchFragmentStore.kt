@@ -212,8 +212,9 @@ sealed class SearchFragmentAction : Action {
 
     /**
      * Updates the local `SearchFragmentState` from the global `SearchState` in `BrowserStore`.
+     * If the unified search is enabled, then search shortcuts should not be shown.
      */
-    data class UpdateSearchState(val search: SearchState) : SearchFragmentAction()
+    data class UpdateSearchState(val search: SearchState, val isUnifiedSearchEnabled: Boolean) : SearchFragmentAction()
 }
 
 /**
@@ -304,7 +305,8 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
             state.copy(
                 defaultEngine = action.search.selectedOrDefaultSearchEngine,
                 areShortcutsAvailable = action.search.searchEngines.size > 1,
-                showSearchShortcuts = state.url.isEmpty() &&
+                showSearchShortcuts = !action.isUnifiedSearchEnabled &&
+                    state.url.isEmpty() &&
                     state.showSearchShortcutsSetting &&
                     action.search.searchEngines.size > 1,
                 searchEngineSource = when (state.searchEngineSource) {

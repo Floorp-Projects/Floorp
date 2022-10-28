@@ -268,7 +268,7 @@ class SearchFragmentStoreTest {
 
         store.dispatch(
             SearchFragmentAction.UpdateSearchState(
-                SearchState(
+                search = SearchState(
                     region = RegionState("US", "US"),
                     regionSearchEngines = listOf(
                         SearchEngine("engine-a", "Engine A", mockk(), type = SearchEngine.Type.BUNDLED),
@@ -293,6 +293,7 @@ class SearchFragmentStoreTest {
                     userSelectedSearchEngineId = null,
                     userSelectedSearchEngineName = null,
                 ),
+                isUnifiedSearchEnabled = false,
             ),
         )
 
@@ -327,7 +328,7 @@ class SearchFragmentStoreTest {
 
         store.dispatch(
             SearchFragmentAction.UpdateSearchState(
-                SearchState(
+                search = SearchState(
                     region = RegionState("US", "US"),
                     regionSearchEngines = listOf(
                         SearchEngine("engine-a", "Engine A", mockk(), type = SearchEngine.Type.BUNDLED),
@@ -352,6 +353,7 @@ class SearchFragmentStoreTest {
                     userSelectedSearchEngineId = null,
                     userSelectedSearchEngineName = null,
                 ),
+                isUnifiedSearchEnabled = false,
             ),
         )
 
@@ -366,6 +368,43 @@ class SearchFragmentStoreTest {
         assertTrue(store.state.searchEngineSource is SearchEngineSource.Default)
         assertNotNull(store.state.searchEngineSource.searchEngine)
         assertEquals("Engine B", store.state.searchEngineSource.searchEngine!!.name)
+    }
+
+    @Test
+    fun `GIVEN unified search is enabled WHEN updating the SearchFragmentState from SearchState THEN disable search shortcuts`() {
+        val store = SearchFragmentStore(
+            emptyDefaultState(
+                searchEngineSource = SearchEngineSource.None,
+                areShortcutsAvailable = false,
+                defaultEngine = null,
+                showSearchShortcutsSetting = false,
+            ),
+        )
+
+        assertFalse(store.state.showSearchShortcuts)
+
+        store.dispatch(
+            SearchFragmentAction.UpdateSearchState(
+                search = SearchState(
+                    region = RegionState("US", "US"),
+                    regionSearchEngines = listOf(
+                        SearchEngine("engine-a", "Engine A", mockk(), type = SearchEngine.Type.BUNDLED),
+                        SearchEngine("engine-b", "Engine B", mockk(), type = SearchEngine.Type.BUNDLED),
+                    ),
+                    customSearchEngines = listOf(),
+                    additionalSearchEngines = listOf(),
+                    additionalAvailableSearchEngines = listOf(),
+                    hiddenSearchEngines = listOf(),
+                    regionDefaultSearchEngineId = "engine-b",
+                    userSelectedSearchEngineId = null,
+                    userSelectedSearchEngineName = null,
+                ),
+                isUnifiedSearchEnabled = true,
+            ),
+        )
+        store.waitUntilIdle()
+
+        assertFalse(store.state.showSearchShortcuts)
     }
 
     private fun emptyDefaultState(
