@@ -160,6 +160,10 @@ appUpdater.prototype = {
       case AppUpdater.STATUS.INTERNAL_ERROR:
         this.selectPanel("internalError");
         break;
+      case AppUpdater.STATUS.NO_UPDATER:
+      default:
+        this.selectPanel("noUpdater");
+        break;
     }
   },
 
