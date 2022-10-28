@@ -376,12 +376,6 @@ class TextInputSelectionController final : public nsSupportsWeakReference,
   NS_IMETHOD ScrollPage(bool aForward) override;
   NS_IMETHOD ScrollLine(bool aForward) override;
   NS_IMETHOD ScrollCharacter(bool aRight) override;
-  NS_IMETHOD CheckVisibility(nsINode* node, int16_t startOffset,
-                             int16_t EndOffset, bool* _retval) override;
-  virtual nsresult CheckVisibilityContent(nsIContent* aNode,
-                                          int16_t aStartOffset,
-                                          int16_t aEndOffset,
-                                          bool* aRetval) override;
   void SelectionWillTakeFocus() override;
   void SelectionWillLoseFocus() override;
 
@@ -779,37 +773,6 @@ void TextInputSelectionController::SelectionWillLoseFocus() {
       shell->FrameSelectionWillLoseFocus(*mFrameSelection);
     }
   }
-}
-
-NS_IMETHODIMP
-TextInputSelectionController::CheckVisibility(nsINode* node,
-                                              int16_t startOffset,
-                                              int16_t EndOffset,
-                                              bool* _retval) {
-  if (!mPresShellWeak) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  nsresult rv;
-  nsCOMPtr<nsISelectionController> presShell =
-      do_QueryReferent(mPresShellWeak, &rv);
-  if (!presShell) {
-    return NS_ERROR_FAILURE;
-  }
-  return presShell->CheckVisibility(node, startOffset, EndOffset, _retval);
-}
-
-nsresult TextInputSelectionController::CheckVisibilityContent(
-    nsIContent* aNode, int16_t aStartOffset, int16_t aEndOffset,
-    bool* aRetval) {
-  if (!mPresShellWeak) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  nsCOMPtr<nsISelectionController> presShell = do_QueryReferent(mPresShellWeak);
-  if (NS_WARN_IF(!presShell)) {
-    return NS_ERROR_FAILURE;
-  }
-  return presShell->CheckVisibilityContent(aNode, aStartOffset, aEndOffset,
-                                           aRetval);
 }
 
 /*****************************************************************************

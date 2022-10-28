@@ -38,6 +38,7 @@
 #include "nsString.h"            // for nsAutoString
 #include "nsStyledElement.h"
 #include "nsTextFragment.h"  // for nsTextFragment
+#include "nsTextFrame.h"     // for nsTextFrame
 
 namespace mozilla {
 
@@ -451,39 +452,23 @@ bool HTMLEditUtils::IsVisibleTextNode(const Text& aText) {
 
 bool HTMLEditUtils::IsInVisibleTextFrames(nsPresContext* aPresContext,
                                           const Text& aText) {
+  // TODO(dholbert): aPresContext is now unused; maybe we can remove it, here
+  // and in IsEmptyNode?  We do use it as a signal (implicitly here,
+  // more-explicitly in IsEmptyNode) that we are in a "SafeToAskLayout" case...
+  // If/when we remove it, we should be sure we're not losing that signal of
+  // strictness, since this function here does absolutely need to query layout.
   MOZ_ASSERT(aPresContext);
-
-  nsIFrame* frame = aText.GetPrimaryFrame();
-  if (!frame) {
-    return false;
-  }
-
-  nsCOMPtr<nsISelectionController> selectionController;
-  nsresult rv = frame->GetSelectionController(
-      aPresContext, getter_AddRefs(selectionController));
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "nsIFrame::GetSelectionController() failed");
-  if (NS_FAILED(rv) || !selectionController) {
-    return false;
-  }
 
   if (!aText.TextDataLength()) {
     return false;
   }
 
-  // Ask the selection controller for information about whether any of the
-  // data in the node is really rendered.  This is really something that
-  // frames know about, but we aren't supposed to talk to frames.  So we put
-  // a call in the selection controller interface, since it's already in bed
-  // with frames anyway.  (This is a fix for bug 22227, and a partial fix for
-  // bug 46209.)
-  bool isVisible = false;
-  rv = selectionController->CheckVisibilityContent(
-      const_cast<Text*>(&aText), 0, aText.TextDataLength(), &isVisible);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "nsISelectionController::CheckVisibilityContent() failed");
-  return NS_SUCCEEDED(rv) && isVisible;
+  nsTextFrame* textFrame = do_QueryFrame(aText.GetPrimaryFrame());
+  if (!textFrame) {
+    return false;
+  }
+
+  return textFrame->HasVisibleText();
 }
 
 Element* HTMLEditUtils::GetElementOfImmediateBlockBoundary(

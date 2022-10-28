@@ -335,7 +335,7 @@ class HTMLEditUtils final {
   static bool IsVisibleTextNode(const Text& aText);
 
   /**
-   * IsInVisibleTextFrames() returns true if all text in aText is in visible
+   * IsInVisibleTextFrames() returns true if any text in aText is in visible
    * text frames.  Callers have to guarantee that there is no pending reflow.
    */
   static bool IsInVisibleTextFrames(nsPresContext* aPresContext,

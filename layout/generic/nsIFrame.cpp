@@ -9210,11 +9210,6 @@ bool nsIFrame::BreakWordBetweenPunctuation(const PeekWordState* aState,
   return aState->mSeenNonPunctuationSinceWhitespace;
 }
 
-nsresult nsIFrame::CheckVisibility(nsPresContext*, int32_t, int32_t, bool,
-                                   bool*, bool*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 std::pair<nsIFrame*, nsIFrame*> nsIFrame::GetContainingBlockForLine(
     bool aLockScroll) const {
   const nsIFrame* parentFrame = this;

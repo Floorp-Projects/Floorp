@@ -8489,27 +8489,17 @@ nsIFrame::FrameSearchResult nsTextFrame::PeekOffsetWord(
   return CONTINUE;
 }
 
-// TODO this needs to be deCOMtaminated with the interface fixed in
-// nsIFrame.h, but we won't do that until the old textframe is gone.
-nsresult nsTextFrame::CheckVisibility(nsPresContext* aContext,
-                                      int32_t aStartIndex, int32_t aEndIndex,
-                                      bool aRecurse, bool* aFinished,
-                                      bool* aRetval) {
-  if (!aRetval) return NS_ERROR_NULL_POINTER;
-
+bool nsTextFrame::HasVisibleText() {
   // Text in the range is visible if there is at least one character in the
   // range that is not skipped and is mapped by this frame (which is the primary
   // frame) or one of its continuations.
   for (nsTextFrame* f = this; f; f = f->GetNextContinuation()) {
     int32_t dummyOffset = 0;
     if (f->PeekOffsetNoAmount(true, &dummyOffset) == FOUND) {
-      *aRetval = true;
-      return NS_OK;
+      return true;
     }
   }
-
-  *aRetval = false;
-  return NS_OK;
+  return false;
 }
 
 std::pair<int32_t, int32_t> nsTextFrame::GetOffsets() const {

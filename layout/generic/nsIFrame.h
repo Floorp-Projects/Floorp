@@ -3926,28 +3926,6 @@ class nsIFrame : public nsQueryFrame {
 
  public:
   /**
-   * Called to see if the children of the frame are visible from indexstart to
-   * index end. This does not change any state. Returns true only if the indexes
-   * are valid and any of the children are visible. For textframes this index
-   * is the character index. If aStart = aEnd result will be false.
-   *
-   * @param aStart start index of first child from 0-N (number of children)
-   *
-   * @param aEnd end index of last child from 0-N
-   *
-   * @param aRecurse should this frame talk to siblings to get to the contents
-   * other children?
-   *
-   * @param aFinished did this frame have the aEndIndex? or is there more work
-   * to do
-   *
-   * @param _retval return value true or false. false = range is not rendered.
-   */
-  virtual nsresult CheckVisibility(nsPresContext* aContext, int32_t aStartIndex,
-                                   int32_t aEndIndex, bool aRecurse,
-                                   bool* aFinished, bool* _retval);
-
-  /**
    * Called to tell a frame that one of its child frames is dirty (i.e.,
    * has the NS_FRAME_IS_DIRTY *or* NS_FRAME_HAS_DIRTY_CHILDREN bit
    * set).  This should always set the NS_FRAME_HAS_DIRTY_CHILDREN on
