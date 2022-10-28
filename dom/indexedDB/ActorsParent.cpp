@@ -14989,19 +14989,19 @@ already_AddRefed<nsISupports> MutableFile::CreateStream(bool aReadOnly) {
   nsCOMPtr<nsISupports> result;
 
   if (aReadOnly) {
-    QM_TRY_INSPECT(
-        const auto& stream,
+    QM_TRY_UNWRAP(
+        nsCOMPtr<nsIInputStream> stream,
         CreateFileInputStream(persistenceType, originMetadata, Client::IDB,
                               mFile, -1, -1, nsIFileInputStream::DEFER_OPEN),
         nullptr);
-    result = NS_ISUPPORTS_CAST(nsIFileInputStream*, stream.get());
+    result = stream;
   } else {
-    QM_TRY_INSPECT(const auto& stream,
-                   CreateFileRandomAccessStream(
-                       persistenceType, originMetadata, Client::IDB, mFile, -1,
-                       -1, nsIFileRandomAccessStream::DEFER_OPEN),
-                   nullptr);
-    result = NS_ISUPPORTS_CAST(nsIFileRandomAccessStream*, stream.get());
+    QM_TRY_UNWRAP(nsCOMPtr<nsIRandomAccessStream> stream,
+                  CreateFileRandomAccessStream(
+                      persistenceType, originMetadata, Client::IDB, mFile, -1,
+                      -1, nsIFileRandomAccessStream::DEFER_OPEN),
+                  nullptr);
+    result = stream;
   }
 
   return result.forget();
@@ -21493,13 +21493,10 @@ nsresult FileHelper::CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
   QM_TRY(MOZ_TO_RESULT(aJournalFile.Create(nsIFile::NORMAL_FILE_TYPE, 0644)));
 
   // Now try to copy the stream.
-  QM_TRY_UNWRAP(auto fileOutputStream,
+  QM_TRY_UNWRAP(nsCOMPtr<nsIOutputStream> fileOutputStream,
                 CreateFileOutputStream(mFileManager->Type(),
                                        mFileManager->OriginMetadata(),
-                                       Client::IDB, &aFile)
-                    .map([](NotNull<RefPtr<FileOutputStream>>&& stream) {
-                      return nsCOMPtr<nsIOutputStream>{stream.get()};
-                    }));
+                                       Client::IDB, &aFile));
 
   AutoTArray<char, kFileCopyBufferSize> buffer;
   const auto actualOutputStream =

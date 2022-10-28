@@ -120,17 +120,19 @@ class FileRandomAccessStream
   virtual ~FileRandomAccessStream() { Close(); }
 };
 
-Result<NotNull<RefPtr<FileInputStream>>, nsresult> CreateFileInputStream(
+Result<MovingNotNull<nsCOMPtr<nsIInputStream>>, nsresult> CreateFileInputStream(
     PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags = -1,
     int32_t aPerm = -1, int32_t aBehaviorFlags = 0);
 
-Result<NotNull<RefPtr<FileOutputStream>>, nsresult> CreateFileOutputStream(
-    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
-    Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags = -1,
-    int32_t aPerm = -1, int32_t aBehaviorFlags = 0);
+Result<MovingNotNull<nsCOMPtr<nsIOutputStream>>, nsresult>
+CreateFileOutputStream(PersistenceType aPersistenceType,
+                       const OriginMetadata& aOriginMetadata,
+                       Client::Type aClientType, nsIFile* aFile,
+                       int32_t aIOFlags = -1, int32_t aPerm = -1,
+                       int32_t aBehaviorFlags = 0);
 
-Result<NotNull<RefPtr<FileRandomAccessStream>>, nsresult>
+Result<MovingNotNull<nsCOMPtr<nsIRandomAccessStream>>, nsresult>
 CreateFileRandomAccessStream(PersistenceType aPersistenceType,
                              const OriginMetadata& aOriginMetadata,
                              Client::Type aClientType, nsIFile* aFile,
