@@ -35,15 +35,20 @@ class Promise;
 class FileSystemSyncAccessHandle final : public nsISupports,
                                          public nsWrapperCache {
  public:
-  FileSystemSyncAccessHandle(nsIGlobalObject* aGlobal,
-                             RefPtr<FileSystemManager>& aManager,
-                             RefPtr<FileSystemAccessHandleChild> aActor,
-                             const fs::FileSystemEntryMetadata& aMetadata);
+  FileSystemSyncAccessHandle(
+      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
+      RefPtr<FileSystemAccessHandleChild> aActor,
+      const ::mozilla::ipc::FileDescriptor& aFileDescriptor,
+      const fs::FileSystemEntryMetadata& aMetadata);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(FileSystemSyncAccessHandle)
 
+  void LastRelease();
+
   void ClearActor();
+
+  void Close();
 
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
@@ -77,7 +82,11 @@ class FileSystemSyncAccessHandle final : public nsISupports,
 
   RefPtr<FileSystemAccessHandleChild> mActor;
 
+  PRFileDesc* mFileDesc;
+
   const fs::FileSystemEntryMetadata mMetadata;
+
+  bool mClosed;
 };
 
 }  // namespace dom

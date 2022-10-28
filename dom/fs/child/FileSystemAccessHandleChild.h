@@ -15,15 +15,16 @@ class FileSystemSyncAccessHandle;
 
 class FileSystemAccessHandleChild : public PFileSystemAccessHandleChild {
  public:
-  explicit FileSystemAccessHandleChild(const FileDescriptor& aFileDescriptor);
+  FileSystemAccessHandleChild();
 
   NS_INLINE_DECL_REFCOUNTING(FileSystemAccessHandleChild, override)
 
+  FileSystemSyncAccessHandle* MutableAccessHandlePtr() const {
+    MOZ_ASSERT(mAccessHandle);
+    return mAccessHandle;
+  }
+
   void SetAccessHandle(FileSystemSyncAccessHandle* aAccessHandle);
-
-  PRFileDesc* MutableFileDescPtr() const;
-
-  void Close();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -31,10 +32,8 @@ class FileSystemAccessHandleChild : public PFileSystemAccessHandleChild {
   virtual ~FileSystemAccessHandleChild();
 
   // Use a weak ref so actor does not hold DOM object alive past content use.
-  // The weak reference is cleared in FileSystemSyncAccessHandle destructor.
+  // The weak reference is cleared in FileSystemSyncAccessHandle::LastRelease.
   FileSystemSyncAccessHandle* MOZ_NON_OWNING_REF mAccessHandle;
-
-  PRFileDesc* mFileDesc;
 };
 
 }  // namespace mozilla::dom

@@ -159,13 +159,13 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
 
   autoUnlock.release();
 
-  if (!SendPFileSystemAccessHandleConstructor(accessHandleParent,
-                                              fileDescriptor)) {
+  if (!SendPFileSystemAccessHandleConstructor(accessHandleParent)) {
     aResolver(NS_ERROR_FAILURE);
     return IPC_OK();
   }
 
-  aResolver(FileSystemGetAccessHandleResponse(accessHandleParent));
+  aResolver(FileSystemAccessHandleProperties(fileDescriptor, accessHandleParent,
+                                             nullptr));
   return IPC_OK();
 }
 

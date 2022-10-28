@@ -59,19 +59,23 @@ namespace mozilla::dom {
 FileSystemSyncAccessHandle::FileSystemSyncAccessHandle(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
     RefPtr<FileSystemAccessHandleChild> aActor,
+    const ::mozilla::ipc::FileDescriptor& aFileDescriptor,
     const fs::FileSystemEntryMetadata& aMetadata)
     : mGlobal(aGlobal),
       mManager(aManager),
       mActor(std::move(aActor)),
-      mMetadata(aMetadata) {
-  LOG(("Created SyncAccessHandle %p for fd %p", this,
-       mActor->MutableFileDescPtr()));
+      mFileDesc(nullptr),
+      mMetadata(aMetadata),
+      mClosed(false) {
+  auto rawFD = aFileDescriptor.ClonePlatformHandle();
+  mFileDesc = PR_ImportFile(PROsfd(rawFD.release()));
+
+  LOG(("Created SyncAccessHandle %p for fd %p", this, mFileDesc));
 }
 
 FileSystemSyncAccessHandle::~FileSystemSyncAccessHandle() {
-  if (mActor) {
-    mActor->Close();
-  }
+  MOZ_ASSERT(!mActor);
+  MOZ_ASSERT(mClosed);
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemSyncAccessHandle)
@@ -80,22 +84,50 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemSyncAccessHandle)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FileSystemSyncAccessHandle)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystemSyncAccessHandle)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(FileSystemSyncAccessHandle,
+                                                   LastRelease())
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(FileSystemSyncAccessHandle)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FileSystemSyncAccessHandle)
   // Don't unlink mManager!
+
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+
+  tmp->Close();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(FileSystemSyncAccessHandle)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+void FileSystemSyncAccessHandle::LastRelease() {
+  Close();
+
+  if (mActor) {
+    PFileSystemAccessHandleChild::Send__delete__(mActor);
+    MOZ_ASSERT(!mActor);
+  }
+}
+
 void FileSystemSyncAccessHandle::ClearActor() {
   MOZ_ASSERT(mActor);
 
   mActor = nullptr;
+}
+
+void FileSystemSyncAccessHandle::Close() {
+  if (mClosed) {
+    return;
+  }
+
+  LOG(("%p: Closing", mFileDesc));
+
+  mClosed = true;
+
+  PR_Close(mFileDesc);
+  mFileDesc = nullptr;
+
+  mActor->SendClose();
 }
 
 // WebIDL Boilerplate
@@ -114,12 +146,10 @@ JSObject* FileSystemSyncAccessHandle::WrapObject(
 uint64_t FileSystemSyncAccessHandle::Read(
     const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
     const FileSystemReadWriteOptions& aOptions, ErrorResult& aRv) {
-  if (!mActor) {
+  if (mClosed) {
     aRv.ThrowInvalidStateError("SyncAccessHandle is closed");
     return 0;
   }
-
-  PRFileDesc* fileDesc = mActor->MutableFileDescPtr();
 
   // read directly from filehandle, blocking
 
@@ -128,8 +158,8 @@ uint64_t FileSystemSyncAccessHandle::Read(
   if (aOptions.mAt.WasPassed()) {
     at = aOptions.mAt.Value();
   }
-  LOG(("%p: Seeking to %" PRIu64, fileDesc, at));
-  int64_t where = PR_Seek64(fileDesc, (PROffset64)at, PR_SEEK_SET);
+  LOG(("%p: Seeking to %" PRIu64, mFileDesc, at));
+  int64_t where = PR_Seek64(mFileDesc, (PROffset64)at, PR_SEEK_SET);
   if (where == -1) {
     LOG(("Read at %" PRIu64 " failed to seek (errno %d)", at, errno));
     return 0;
@@ -159,12 +189,12 @@ uint64_t FileSystemSyncAccessHandle::Read(
   }
   // for read starting past the end of the file, return 0, which should happen
   // automatically
-  LOG(("%p: Reading %zu bytes", fileDesc, length));
+  LOG(("%p: Reading %zu bytes", mFileDesc, length));
   // Unfortunately, PR_Read() is limited to int32
   uint64_t result = 0;
   while (length > 0) {
     PRInt32 iter_len = (length > PR_INT32_MAX) ? PR_INT32_MAX : length;
-    PRInt32 temp = PR_Read(fileDesc, data, iter_len);
+    PRInt32 temp = PR_Read(mFileDesc, data, iter_len);
     if (temp == -1 || temp == 0 /* EOF*/) {
       return result;  // per spec, 2.6.1 #11
     }
@@ -177,12 +207,10 @@ uint64_t FileSystemSyncAccessHandle::Read(
 uint64_t FileSystemSyncAccessHandle::Write(
     const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
     const FileSystemReadWriteOptions& aOptions, ErrorResult& aRv) {
-  if (!mActor) {
+  if (mClosed) {
     aRv.ThrowInvalidStateError("SyncAccessHandle is closed");
     return 0;
   }
-
-  PRFileDesc* fileDesc = mActor->MutableFileDescPtr();
 
   // Write directly from filehandle, blocking
 
@@ -191,8 +219,8 @@ uint64_t FileSystemSyncAccessHandle::Write(
   if (aOptions.mAt.WasPassed()) {
     at = aOptions.mAt.Value();
   }
-  LOG(("%p: Seeking to %" PRIu64, fileDesc, at));
-  int64_t where = PR_Seek64(fileDesc, (PROffset64)at, PR_SEEK_SET);
+  LOG(("%p: Seeking to %" PRIu64, mFileDesc, at));
+  int64_t where = PR_Seek64(mFileDesc, (PROffset64)at, PR_SEEK_SET);
   if (where == -1) {
     LOG(("Write at %" PRIu64 " failed to seek (errno %d)", at, errno));
     return 0;
@@ -221,12 +249,12 @@ uint64_t FileSystemSyncAccessHandle::Write(
     LOG(("Impossible write source"));
     return 0;
   }
-  LOG(("%p: Writing %zu bytes", fileDesc, length));
+  LOG(("%p: Writing %zu bytes", mFileDesc, length));
   // Unfortunately, PR_Write() is limited to int32
   uint64_t result = 0;
   while (length > 0) {
     PRInt32 iter_len = (length > PR_INT32_MAX) ? PR_INT32_MAX : length;
-    PRInt32 temp = PR_Write(fileDesc, data, iter_len);
+    PRInt32 temp = PR_Write(mFileDesc, data, iter_len);
     if (temp == -1) {
       return result;  // per spec, 2.6.2 #13
     }
@@ -243,16 +271,14 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::Truncate(
     return nullptr;
   }
 
-  if (!mActor) {
+  if (mClosed) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
-  PRFileDesc* fileDesc = mActor->MutableFileDescPtr();
-
   // truncate filehandle (can extend with 0's)
-  LOG_DEBUG(("%p: Truncate to %" PRIu64, fileDesc, aSize));
-  if (NS_WARN_IF(NS_FAILED(TruncFile(fileDesc, aSize)))) {
+  LOG_DEBUG(("%p: Truncate to %" PRIu64, mFileDesc, aSize));
+  if (NS_WARN_IF(NS_FAILED(TruncFile(mFileDesc, aSize)))) {
     promise->MaybeReject(NS_ErrorAccordingToNSPR());
   } else {
     promise->MaybeResolveWithUndefined();
@@ -268,19 +294,17 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::GetSize(
     return nullptr;
   }
 
-  if (!mActor) {
+  if (mClosed) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
-  PRFileDesc* fileDesc = mActor->MutableFileDescPtr();
-
   // get current size of filehandle
   PRFileInfo64 info;
-  if (PR_GetOpenFileInfo64(fileDesc, &info) == PR_FAILURE) {
+  if (PR_GetOpenFileInfo64(mFileDesc, &info) == PR_FAILURE) {
     promise->MaybeReject(NS_ERROR_FAILURE);
   } else {
-    LOG_DEBUG(("%p: GetSize %" PRIu64, fileDesc, info.size));
+    LOG_DEBUG(("%p: GetSize %" PRIu64, mFileDesc, info.size));
     promise->MaybeResolve(int64_t(info.size));
   }
 
@@ -294,16 +318,14 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::Flush(
     return nullptr;
   }
 
-  if (!mActor) {
+  if (mClosed) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
-  PRFileDesc* fileDesc = mActor->MutableFileDescPtr();
-
   // flush filehandle
-  LOG_DEBUG(("%p: Flush", fileDesc));
-  int32_t cnt = PR_Sync(fileDesc);
+  LOG_DEBUG(("%p: Flush", mFileDesc));
+  int32_t cnt = PR_Sync(mFileDesc);
   if (cnt == -1) {
     promise->MaybeReject(NS_ErrorAccordingToNSPR());
   } else {
@@ -320,14 +342,7 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::Close(
     return nullptr;
   }
 
-  if (mActor) {
-    PRFileDesc* fileDesc = mActor->MutableFileDescPtr();
-
-    LOG(("%p: Closing", fileDesc));
-
-    mActor->Close();
-    MOZ_ASSERT(!mActor);
-  }
+  Close();
 
   promise->MaybeResolveWithUndefined();
 

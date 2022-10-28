@@ -8,6 +8,7 @@
 #define DOM_FS_PARENT_FILESYSTEMACCESSHANDLEPARENT_H_
 
 #include "mozilla/dom/FileSystemTypes.h"
+#include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/PFileSystemAccessHandleParent.h"
 
 namespace mozilla::dom {
@@ -21,14 +22,22 @@ class FileSystemAccessHandleParent : public PFileSystemAccessHandleParent {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemAccessHandleParent, override)
 
+  mozilla::ipc::IPCResult RecvClose();
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
   virtual ~FileSystemAccessHandleParent();
 
+  bool IsClosed() const { return mClosed; }
+
+  void Close();
+
   const RefPtr<FileSystemManagerParent> mManager;
 
   const fs::EntryId mEntryId;
+
+  FlippedOnce<false> mClosed;
 };
 
 }  // namespace mozilla::dom

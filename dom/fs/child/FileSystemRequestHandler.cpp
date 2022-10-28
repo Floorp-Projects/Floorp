@@ -94,11 +94,13 @@ RefPtr<FileSystemSyncAccessHandle> MakeResolution(
     const RefPtr<FileSystemSyncAccessHandle>& /* aReturns */,
     const FileSystemEntryMetadata& aMetadata,
     RefPtr<FileSystemManager>& aManager) {
-  auto* const actor = static_cast<FileSystemAccessHandleChild*>(
-      aResponse.get_PFileSystemAccessHandleChild());
+  const auto& properties = aResponse.get_FileSystemAccessHandleProperties();
 
-  RefPtr<FileSystemSyncAccessHandle> result =
-      new FileSystemSyncAccessHandle(aGlobal, aManager, actor, aMetadata);
+  auto* const actor =
+      static_cast<FileSystemAccessHandleChild*>(properties.accessHandleChild());
+
+  RefPtr<FileSystemSyncAccessHandle> result = new FileSystemSyncAccessHandle(
+      aGlobal, aManager, actor, properties.fileDescriptor(), aMetadata);
 
   actor->SetAccessHandle(result);
 
