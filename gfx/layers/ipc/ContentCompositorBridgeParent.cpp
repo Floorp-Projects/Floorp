@@ -431,6 +431,9 @@ ContentCompositorBridgeParent::RecvReleasePCanvasParent() {
 UniquePtr<SurfaceDescriptor>
 ContentCompositorBridgeParent::LookupSurfaceDescriptorForClientTexture(
     const int64_t aTextureId) {
+  MOZ_RELEASE_ASSERT(mCanvasTranslator,
+                     "mCanvasTranslator hasn't been created.");
+
   return mCanvasTranslator->WaitForSurfaceDescriptor(aTextureId);
 }
 
