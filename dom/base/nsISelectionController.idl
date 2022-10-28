@@ -276,16 +276,6 @@ interface nsISelectionController : nsISelectionDisplay
    *  @param aRight if true will scroll right. if not will scroll left.
    */
     void scrollCharacter(in boolean right);
-
-  /** CheckVisibility will return true if textnode and offsets are actually rendered
-   *  in the current precontext.
-   *  @param aNode textNode to test
-   *  @param aStartOffset  offset in dom to first char of textnode to test
-   *  @param aEndOffset    offset in dom to last char of textnode to test
-   *  @param aReturnBool   boolean returned TRUE if visible FALSE if not
-   */
-    boolean checkVisibility(in Node node, in short startOffset, in short endOffset);
-    [noscript,nostdcall] boolean checkVisibilityContent(in nsIContent node, in short startOffset, in short endOffset);
 };
 %{ C++
    #define NS_ISELECTIONCONTROLLER_CID \

@@ -342,9 +342,8 @@ class nsTextFrame : public nsIFrame {
                                    PeekWordState* aState,
                                    bool aTrimSpaces) final;
 
-  nsresult CheckVisibility(nsPresContext* aContext, int32_t aStartIndex,
-                           int32_t aEndIndex, bool aRecurse, bool* aFinished,
-                           bool* _retval) final;
+  // Helper method that editor code uses to test for visibility.
+  [[nodiscard]] bool HasVisibleText();
 
   // Flags for aSetLengthFlags
   enum { ALLOW_FRAME_CREATION_AND_DESTRUCTION = 0x01 };
