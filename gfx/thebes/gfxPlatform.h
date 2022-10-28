@@ -232,8 +232,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   static bool IsHeadless();
 
-  static bool UseWebRender();
-
   static bool UseRemoteCanvas();
 
   static bool IsBackendAccelerated(

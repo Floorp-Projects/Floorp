@@ -438,10 +438,7 @@ void gfxWindowsPlatform::InitAcceleration() {
 
 void gfxWindowsPlatform::InitWebRenderConfig() {
   gfxPlatform::InitWebRenderConfig();
-
-  if (gfxVars::UseWebRender()) {
-    UpdateBackendPrefs();
-  }
+  UpdateBackendPrefs();
 }
 
 bool gfxWindowsPlatform::CanUseHardwareVideoDecoding() {
@@ -510,11 +507,6 @@ BackendPrefsData gfxWindowsPlatform::GetBackendPrefs() const {
   if (gfxConfig::IsEnabled(Feature::DIRECT2D)) {
     data.mCanvasBitmask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     data.mCanvasDefault = BackendType::DIRECT2D1_1;
-    // We do not use d2d for content when WebRender is used.
-    if (!gfxVars::UseWebRender()) {
-      data.mContentBitmask |= BackendTypeBit(BackendType::DIRECT2D1_1);
-      data.mContentDefault = BackendType::DIRECT2D1_1;
-    }
   }
   return data;
 }
@@ -592,7 +584,7 @@ mozilla::gfx::BackendType gfxWindowsPlatform::GetPreferredCanvasBackend() {
   mozilla::gfx::BackendType backend = gfxPlatform::GetPreferredCanvasBackend();
 
   if (backend == BackendType::DIRECT2D1_1) {
-    if (gfx::gfxVars::UseWebRender() && !gfx::gfxVars::UseWebRenderANGLE()) {
+    if (!gfx::gfxVars::UseWebRenderANGLE()) {
       // We can't have D2D without ANGLE when WebRender is enabled, so fallback
       // to Skia.
       return BackendType::SKIA;

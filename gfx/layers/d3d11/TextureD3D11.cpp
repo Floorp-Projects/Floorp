@@ -605,14 +605,10 @@ void D3D11TextureData::GetDXGIResource(IDXGIResource** aOutResource) {
 }
 
 TextureFlags D3D11TextureData::GetTextureFlags() const {
-  TextureFlags flags = TextureFlags::NO_FLAGS;
   // With WebRender, resource open happens asynchronously on RenderThread.
   // During opening the resource on host side, TextureClient needs to be alive.
   // With WAIT_HOST_USAGE_END, keep TextureClient alive during host side usage.
-  if (gfx::gfxVars::UseWebRender()) {
-    flags |= TextureFlags::WAIT_HOST_USAGE_END;
-  }
-  return flags;
+  return TextureFlags::WAIT_HOST_USAGE_END;
 }
 
 DXGIYCbCrTextureData* DXGIYCbCrTextureData::Create(
@@ -746,14 +742,10 @@ void DXGIYCbCrTextureData::Deallocate(LayersIPCChannel*) {
 }
 
 TextureFlags DXGIYCbCrTextureData::GetTextureFlags() const {
-  TextureFlags flags = TextureFlags::NO_FLAGS;
   // With WebRender, resource open happens asynchronously on RenderThread.
   // During opening the resource on host side, TextureClient needs to be alive.
   // With WAIT_HOST_USAGE_END, keep TextureClient alive during host side usage.
-  if (gfx::gfxVars::UseWebRender()) {
-    flags |= TextureFlags::WAIT_HOST_USAGE_END;
-  }
-  return flags;
+  return TextureFlags::WAIT_HOST_USAGE_END;
 }
 
 already_AddRefed<TextureHost> CreateTextureHostD3D11(
@@ -884,10 +876,6 @@ bool DXGITextureHostD3D11::LockInternal() {
 }
 
 already_AddRefed<gfx::DataSourceSurface> DXGITextureHostD3D11::GetAsSurface() {
-  if (!gfxVars::UseWebRender()) {
-    return nullptr;
-  }
-
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
@@ -1772,7 +1760,7 @@ bool SyncObjectD3D11ClientContentDevice::IsSyncObjectValid() {
   }
 
   // Update mDevice if the ContentDevice initialization is detected.
-  if (!mContentDevice && dev && NS_IsMainThread() && gfxVars::UseWebRender()) {
+  if (!mContentDevice && dev && NS_IsMainThread()) {
     mContentDevice = dev;
   }
 

@@ -586,10 +586,6 @@ bool GPUProcessManager::FallbackFromAcceleration(wr::WebRenderError aError,
 
 bool GPUProcessManager::DisableWebRenderConfig(wr::WebRenderError aError,
                                                const nsCString& aMsg) {
-  if (!gfx::gfxVars::UseWebRender()) {
-    return false;
-  }
-
   // If we have a stable compositor process, this may just be due to an OOM or
   // bad driver state. In that case, we should consider restarting the GPU
   // process, or simulating a device reset to teardown the compositors to
@@ -658,13 +654,6 @@ void GPUProcessManager::NotifyWebRenderError(wr::WebRenderError aError) {
 }
 
 bool GPUProcessManager::OnDeviceReset(bool aTrackThreshold) {
-#ifdef XP_WIN
-  // Disable double buffering when device reset happens.
-  if (!gfxVars::UseWebRender() && gfxVars::UseDoubleBufferingWithCompositor()) {
-    gfxVars::SetUseDoubleBufferingWithCompositor(false);
-  }
-#endif
-
   // Ignore resets for thresholding if requested.
   if (!aTrackThreshold) {
     return false;
