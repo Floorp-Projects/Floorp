@@ -3,7 +3,7 @@
   "name": "actions",
   "version": "1.0",
   "description": "Defines Page and Browser actions",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "actions@tests.mozilla.org"
     }

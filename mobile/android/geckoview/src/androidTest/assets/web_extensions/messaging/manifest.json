@@ -6,7 +6,7 @@
   "icons": {
     "48": "icons/border-48.png"
   },
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "messaging@tests.mozilla.org"
     }

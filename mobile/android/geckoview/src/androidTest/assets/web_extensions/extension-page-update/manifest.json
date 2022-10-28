@@ -5,7 +5,7 @@
   "background": {
     "scripts": ["background-script.js"]
   },
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "extension-page-update@tests.mozilla.org"
     }

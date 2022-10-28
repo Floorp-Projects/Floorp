@@ -3,7 +3,7 @@
   "name": "openOptionsPage-1",
   "version": "1.0",
   "description": "Opens options page in a new tab.",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "openoptionspage1@tests.mozilla.org"
     }

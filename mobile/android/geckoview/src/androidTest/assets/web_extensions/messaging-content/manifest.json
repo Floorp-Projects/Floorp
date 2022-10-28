@@ -3,7 +3,7 @@
   "name": "messaging",
   "version": "1.0",
   "description": "Test messaging between app and web extension",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "messaging-content@tests.mozilla.org"
     }

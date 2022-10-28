@@ -1,5 +1,5 @@
 {
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "set-tab-active-2@tests.mozilla.org"
     }

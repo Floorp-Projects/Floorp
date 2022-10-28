@@ -3,7 +3,7 @@
   "name": "openOptionsPage-2",
   "version": "1.0",
   "description": "Opens options page via delegate.",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "openoptionspage2@tests.mozilla.org"
     }
