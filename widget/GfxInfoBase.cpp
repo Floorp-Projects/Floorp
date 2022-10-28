@@ -1840,7 +1840,7 @@ nsresult GfxInfoBase::GetActiveCrashGuards(JSContext* aCx,
 
 NS_IMETHODIMP
 GfxInfoBase::GetWebRenderEnabled(bool* aWebRenderEnabled) {
-  *aWebRenderEnabled = gfxVars::UseWebRender();
+  *aWebRenderEnabled = true;
   return NS_OK;
 }
 

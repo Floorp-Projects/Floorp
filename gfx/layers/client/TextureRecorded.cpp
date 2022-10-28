@@ -6,7 +6,6 @@
 
 #include "TextureRecorded.h"
 
-#include "mozilla/gfx/gfxVars.h"
 #include "RecordedCanvasEventImpl.h"
 
 namespace mozilla {
@@ -114,13 +113,9 @@ void RecordedTextureData::OnForwardedToHost() {
 }
 
 TextureFlags RecordedTextureData::GetTextureFlags() const {
-  TextureFlags flags = TextureFlags::NO_FLAGS;
   // With WebRender, resource open happens asynchronously on RenderThread.
   // Use WAIT_HOST_USAGE_END to keep TextureClient alive during host side usage.
-  if (gfx::gfxVars::UseWebRender()) {
-    flags |= TextureFlags::WAIT_HOST_USAGE_END;
-  }
-  return flags;
+  return TextureFlags::WAIT_HOST_USAGE_END;
 }
 
 }  // namespace layers

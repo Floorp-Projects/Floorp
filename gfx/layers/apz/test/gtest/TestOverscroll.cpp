@@ -68,10 +68,6 @@ class APZCOverscrollTester : public APZCBasicTester {
 
   ScrollableLayerGuid CreateSimpleRootScrollableForWebRender() {
     ScrollableLayerGuid guid;
-    if (!gfx::gfxVars::UseWebRender()) {
-      return guid;
-    }
-
     guid.mScrollId = ScrollableLayerGuid::START_SCROLL_ID;
     guid.mLayersId = LayersId{0};
 
@@ -1349,11 +1345,6 @@ TEST_F(
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCOverscrollTester, OverscrollByPanGesturesInterruptedByReflowZoom) {
-  if (!gfx::gfxVars::UseWebRender()) {
-    // This test is only available with WebRender.
-    return;
-  }
-
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
   SCOPED_GFX_PREF_INT("mousewheel.with_control.action", 3);  // reflow zoom.
 
