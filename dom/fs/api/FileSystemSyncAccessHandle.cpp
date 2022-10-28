@@ -7,14 +7,23 @@
 #include "FileSystemSyncAccessHandle.h"
 
 #include "fs/FileSystemRequestHandler.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/FixedBufferOutputStream.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/dom/FileSystemAccessHandleChild.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemSyncAccessHandleBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnionTypes.h"
-#include "private/pprio.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
+#include "nsNetCID.h"
+#include "nsStreamUtils.h"
+#include "nsStringStream.h"
 
 namespace mozilla {
 
@@ -26,51 +35,78 @@ LazyLogModule gOPFSLog("OPFS");
 #define LOG_DEBUG(args) \
   MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
 
-/**
- * TODO: Duplicated from netwerk/cache2/CacheFileIOManager.cpp
- * Please remove after bug 1286601 is fixed,
- * https://bugzilla.mozilla.org/show_bug.cgi?id=1286601
- */
-static nsresult TruncFile(PRFileDesc* aFD, int64_t aEOF) {
-#if defined(XP_UNIX)
-  if (ftruncate(PR_FileDesc2NativeHandle(aFD), aEOF) != 0) {
-    NS_ERROR("ftruncate failed");
-    return NS_ERROR_FAILURE;
-  }
-#elif defined(XP_WIN)
-  int64_t cnt = PR_Seek64(aFD, aEOF, PR_SEEK_SET);
-  if (cnt == -1) {
-    return NS_ERROR_FAILURE;
-  }
-  if (!SetEndOfFile((HANDLE)PR_FileDesc2NativeHandle(aFD))) {
-    NS_ERROR("SetEndOfFile failed");
-    return NS_ERROR_FAILURE;
-  }
-#else
-  MOZ_ASSERT(false, "Not implemented!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
+namespace mozilla::dom {
+
+namespace {
+
+const uint32_t kStreamCopyBlockSize = 1024 * 1024;
+
+nsresult AsyncCopy(nsIInputStream* aSource, nsIOutputStream* aSink,
+                   const nsAsyncCopyMode aMode, const bool aCloseSource,
+                   const bool aCloseSink,
+                   std::function<void(uint32_t)>&& aProgressCallback,
+                   std::function<void(nsresult)>&& aCompleteCallback) {
+  QM_TRY_INSPECT(const auto& ioTarget,
+                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIEventTarget>,
+                                         MOZ_SELECT_OVERLOAD(do_GetService),
+                                         NS_STREAMTRANSPORTSERVICE_CONTRACTID));
+
+  struct CallbackClosure {
+    CallbackClosure(std::function<void(uint32_t)>&& aProgressCallback,
+                    std::function<void(nsresult)>&& aCompleteCallback) {
+      mProgressCallbackWrapper = MakeUnique<std::function<void(uint32_t)>>(
+          [progressCallback = std::move(aProgressCallback)](uint32_t count) {
+            progressCallback(count);
+          });
+
+      mCompleteCallbackWrapper = MakeUnique<std::function<void(nsresult)>>(
+          [completeCallback = std::move(aCompleteCallback)](nsresult rv) {
+            completeCallback(rv);
+          });
+    }
+
+    UniquePtr<std::function<void(uint32_t)>> mProgressCallbackWrapper;
+    UniquePtr<std::function<void(nsresult)>> mCompleteCallbackWrapper;
+  };
+
+  auto* callbackClosure = new CallbackClosure(std::move(aProgressCallback),
+                                              std::move(aCompleteCallback));
+
+  QM_TRY(
+      MOZ_TO_RESULT(NS_AsyncCopy(
+          aSource, aSink, ioTarget, aMode, kStreamCopyBlockSize,
+          [](void* aClosure, nsresult aRv) {
+            auto* callbackClosure = static_cast<CallbackClosure*>(aClosure);
+            (*callbackClosure->mCompleteCallbackWrapper)(aRv);
+            delete callbackClosure;
+          },
+          callbackClosure, aCloseSource, aCloseSink, /* aCopierCtx */ nullptr,
+          [](void* aClosure, uint32_t aCount) {
+            auto* callbackClosure = static_cast<CallbackClosure*>(aClosure);
+            (*callbackClosure->mProgressCallbackWrapper)(aCount);
+          })),
+      [callbackClosure](nsresult rv) {
+        delete callbackClosure;
+        return rv;
+      });
 
   return NS_OK;
 }
 
-namespace mozilla::dom {
+}  // namespace
 
 FileSystemSyncAccessHandle::FileSystemSyncAccessHandle(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
     RefPtr<FileSystemAccessHandleChild> aActor,
-    const ::mozilla::ipc::FileDescriptor& aFileDescriptor,
+    nsCOMPtr<nsIRandomAccessStream> aStream,
     const fs::FileSystemEntryMetadata& aMetadata)
     : mGlobal(aGlobal),
       mManager(aManager),
       mActor(std::move(aActor)),
-      mFileDesc(nullptr),
+      mStream(std::move(aStream)),
       mMetadata(aMetadata),
       mClosed(false) {
-  auto rawFD = aFileDescriptor.ClonePlatformHandle();
-  mFileDesc = PR_ImportFile(PROsfd(rawFD.release()));
-
-  LOG(("Created SyncAccessHandle %p for fd %p", this, mFileDesc));
+  LOG(("Created SyncAccessHandle %p for stream %p", this, mStream.get()));
 }
 
 FileSystemSyncAccessHandle::~FileSystemSyncAccessHandle() {
@@ -120,12 +156,12 @@ void FileSystemSyncAccessHandle::Close() {
     return;
   }
 
-  LOG(("%p: Closing", mFileDesc));
+  LOG(("%p: Closing", mStream.get()));
 
   mClosed = true;
 
-  PR_Close(mFileDesc);
-  mFileDesc = nullptr;
+  mStream->OutputStream()->Close();
+  mStream = nullptr;
 
   mActor->SendClose();
 }
@@ -146,122 +182,13 @@ JSObject* FileSystemSyncAccessHandle::WrapObject(
 uint64_t FileSystemSyncAccessHandle::Read(
     const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
     const FileSystemReadWriteOptions& aOptions, ErrorResult& aRv) {
-  if (mClosed) {
-    aRv.ThrowInvalidStateError("SyncAccessHandle is closed");
-    return 0;
-  }
-
-  // read directly from filehandle, blocking
-
-  // Handle seek before read ('at')
-  uint64_t at = 0;  // Spec says default for at is 0 (2.6)
-  if (aOptions.mAt.WasPassed()) {
-    at = aOptions.mAt.Value();
-  }
-  LOG(("%p: Seeking to %" PRIu64, mFileDesc, at));
-  int64_t where = PR_Seek64(mFileDesc, (PROffset64)at, PR_SEEK_SET);
-  if (where == -1) {
-    LOG(("Read at %" PRIu64 " failed to seek (errno %d)", at, errno));
-    return 0;
-  }
-  if (where != (int64_t)at) {
-    LOG(("Read at %" PRIu64 " failed to seek (%" PRId64 " instead)", at,
-         where));
-    return 0;
-  }
-
-  uint8_t* data;
-  size_t length;
-  if (aBuffer.IsArrayBuffer()) {
-    const ArrayBuffer& buffer = aBuffer.GetAsArrayBuffer();
-    buffer.ComputeState();
-    data = buffer.Data();
-    length = buffer.Length();
-  } else if (aBuffer.IsArrayBufferView()) {
-    const ArrayBufferView& buffer = aBuffer.GetAsArrayBufferView();
-    buffer.ComputeState();
-    data = buffer.Data();
-    length = buffer.Length();
-  } else {
-    // really impossible
-    LOG(("Impossible read source"));
-    return 0;
-  }
-  // for read starting past the end of the file, return 0, which should happen
-  // automatically
-  LOG(("%p: Reading %zu bytes", mFileDesc, length));
-  // Unfortunately, PR_Read() is limited to int32
-  uint64_t result = 0;
-  while (length > 0) {
-    PRInt32 iter_len = (length > PR_INT32_MAX) ? PR_INT32_MAX : length;
-    PRInt32 temp = PR_Read(mFileDesc, data, iter_len);
-    if (temp == -1 || temp == 0 /* EOF*/) {
-      return result;  // per spec, 2.6.1 #11
-    }
-    result += temp;
-    length -= temp;
-  }
-  return result;
+  return ReadOrWrite(aBuffer, aOptions, /* aRead */ true, aRv);
 }
 
 uint64_t FileSystemSyncAccessHandle::Write(
     const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
     const FileSystemReadWriteOptions& aOptions, ErrorResult& aRv) {
-  if (mClosed) {
-    aRv.ThrowInvalidStateError("SyncAccessHandle is closed");
-    return 0;
-  }
-
-  // Write directly from filehandle, blocking
-
-  // Handle seek before write ('at')
-  uint64_t at = 0;  // Spec says default for at is 0 (2.6)
-  if (aOptions.mAt.WasPassed()) {
-    at = aOptions.mAt.Value();
-  }
-  LOG(("%p: Seeking to %" PRIu64, mFileDesc, at));
-  int64_t where = PR_Seek64(mFileDesc, (PROffset64)at, PR_SEEK_SET);
-  if (where == -1) {
-    LOG(("Write at %" PRIu64 " failed to seek (errno %d)", at, errno));
-    return 0;
-  }
-  if (where != (int64_t)at) {
-    LOG(("Write at %" PRIu64 " failed to seek (%" PRId64 " instead)", at,
-         where));
-    return 0;
-  }
-
-  // if we seek past the end of the file and write, it implicitly extends it
-  // with 0's
-  const uint8_t* data;
-  size_t length;
-  if (aBuffer.IsArrayBuffer()) {
-    const ArrayBuffer& buffer = aBuffer.GetAsArrayBuffer();
-    buffer.ComputeState();
-    data = buffer.Data();
-    length = buffer.Length();
-  } else if (aBuffer.IsArrayBufferView()) {
-    const ArrayBufferView& buffer = aBuffer.GetAsArrayBufferView();
-    buffer.ComputeState();
-    data = buffer.Data();
-    length = buffer.Length();
-  } else {
-    LOG(("Impossible write source"));
-    return 0;
-  }
-  LOG(("%p: Writing %zu bytes", mFileDesc, length));
-  // Unfortunately, PR_Write() is limited to int32
-  uint64_t result = 0;
-  while (length > 0) {
-    PRInt32 iter_len = (length > PR_INT32_MAX) ? PR_INT32_MAX : length;
-    PRInt32 temp = PR_Write(mFileDesc, data, iter_len);
-    if (temp == -1) {
-      return result;  // per spec, 2.6.2 #13
-    }
-    result += temp;
-    length -= temp;
-  }
-  return result;
+  return ReadOrWrite(aBuffer, aOptions, /* aRead */ false, aRv);
 }
 
 already_AddRefed<Promise> FileSystemSyncAccessHandle::Truncate(
@@ -276,14 +203,22 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::Truncate(
     return promise.forget();
   }
 
-  // truncate filehandle (can extend with 0's)
-  LOG_DEBUG(("%p: Truncate to %" PRIu64, mFileDesc, aSize));
-  if (NS_WARN_IF(NS_FAILED(TruncFile(mFileDesc, aSize)))) {
-    promise->MaybeReject(NS_ErrorAccordingToNSPR());
-  } else {
-    promise->MaybeResolveWithUndefined();
-  }
+  auto rejectAndReturn = [&promise](const nsresult rv) {
+    promise->MaybeReject(rv);
+    return promise.forget();
+  };
 
+  LOG_DEBUG(("%p: Truncate to %" PRIu64, mStream.get(), aSize));
+
+  QM_TRY(MOZ_TO_RESULT(mStream->Seek(nsISeekableStream::NS_SEEK_SET, aSize)),
+         rejectAndReturn);
+
+  // XXX FileQuotaStream::SetEOF needs to be updated to support extension of
+  // files. See bug 1797913.
+
+  QM_TRY(MOZ_TO_RESULT(mStream->SetEOF()), rejectAndReturn);
+
+  promise->MaybeResolveWithUndefined();
   return promise.forget();
 }
 
@@ -299,15 +234,21 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::GetSize(
     return promise.forget();
   }
 
-  // get current size of filehandle
-  PRFileInfo64 info;
-  if (PR_GetOpenFileInfo64(mFileDesc, &info) == PR_FAILURE) {
-    promise->MaybeReject(NS_ERROR_FAILURE);
-  } else {
-    LOG_DEBUG(("%p: GetSize %" PRIu64, mFileDesc, info.size));
-    promise->MaybeResolve(int64_t(info.size));
-  }
+  auto rejectAndReturn = [&promise](const nsresult rv) {
+    promise->MaybeReject(rv);
+    return promise.forget();
+  };
 
+  nsCOMPtr<nsIFileMetadata> fileMetadata = do_QueryInterface(mStream);
+  MOZ_ASSERT(fileMetadata);
+
+  QM_TRY_INSPECT(const auto& size,
+                 MOZ_TO_RESULT_INVOKE_MEMBER(fileMetadata, GetSize),
+                 rejectAndReturn);
+
+  LOG_DEBUG(("%p: GetSize %" PRIu64, mStream.get(), size));
+
+  promise->MaybeResolve(size);
   return promise.forget();
 }
 
@@ -323,15 +264,16 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::Flush(
     return promise.forget();
   }
 
-  // flush filehandle
-  LOG_DEBUG(("%p: Flush", mFileDesc));
-  int32_t cnt = PR_Sync(mFileDesc);
-  if (cnt == -1) {
-    promise->MaybeReject(NS_ErrorAccordingToNSPR());
-  } else {
-    promise->MaybeResolve(NS_OK);
-  }
+  auto rejectAndReturn = [&promise](const nsresult rv) {
+    promise->MaybeReject(rv);
+    return promise.forget();
+  };
 
+  LOG_DEBUG(("%p: Flush", mStream.get()));
+
+  QM_TRY(MOZ_TO_RESULT(mStream->OutputStream()->Flush()), rejectAndReturn);
+
+  promise->MaybeResolveWithUndefined();
   return promise.forget();
 }
 
@@ -345,8 +287,111 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::Close(
   Close();
 
   promise->MaybeResolveWithUndefined();
-
   return promise.forget();
+}
+
+uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
+    const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
+    const FileSystemReadWriteOptions& aOptions, const bool aRead,
+    ErrorResult& aRv) {
+  if (mClosed) {
+    aRv.ThrowInvalidStateError("SyncAccessHandle is closed");
+    return 0;
+  }
+
+  auto throwAndReturn = [&aRv](const nsresult rv) {
+    aRv.Throw(rv);
+    return 0;
+  };
+
+  // Handle seek before read ('at')
+  const auto at = [&aOptions]() -> uint64_t {
+    if (aOptions.mAt.WasPassed()) {
+      return aOptions.mAt.Value();
+    }
+    // Spec says default for at is 0 (2.6)
+    return 0;
+  }();
+
+  const auto offset = CheckedInt<int64_t>(at);
+  QM_TRY(MOZ_TO_RESULT(offset.isValid()), throwAndReturn);
+
+  LOG(("%p: Seeking to %" PRIu64, mStream.get(), offset.value()));
+
+  QM_TRY(MOZ_TO_RESULT(
+             mStream->Seek(nsISeekableStream::NS_SEEK_SET, offset.value())),
+         throwAndReturn);
+
+  const auto dataSpan = [&aBuffer]() {
+    if (aBuffer.IsArrayBuffer()) {
+      const ArrayBuffer& buffer = aBuffer.GetAsArrayBuffer();
+      buffer.ComputeState();
+      return Span{buffer.Data(), buffer.Length()};
+    }
+    MOZ_ASSERT(aBuffer.IsArrayBufferView());
+    const ArrayBufferView& buffer = aBuffer.GetAsArrayBufferView();
+    buffer.ComputeState();
+    return Span{buffer.Data(), buffer.Length()};
+  }();
+
+  nsCOMPtr<nsIInputStream> inputStream;
+  nsCOMPtr<nsIOutputStream> outputStream;
+
+  if (aRead) {
+    LOG(("%p: Reading %zu bytes", mStream.get(), dataSpan.Length()));
+
+    inputStream = mStream->InputStream();
+
+    outputStream = FixedBufferOutputStream::Create(AsWritableChars(dataSpan));
+  } else {
+    LOG(("%p: Writing %zu bytes", mStream.get(), dataSpan.Length()));
+
+    QM_TRY(MOZ_TO_RESULT(NS_NewByteInputStream(getter_AddRefs(inputStream),
+                                               AsChars(dataSpan),
+                                               NS_ASSIGNMENT_DEPEND)),
+           throwAndReturn);
+
+    outputStream = mStream->OutputStream();
+  }
+
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+
+  AutoSyncLoopHolder syncLoop(workerPrivate, Canceling);
+
+  nsCOMPtr<nsISerialEventTarget> syncLoopTarget =
+      syncLoop.GetSerialEventTarget();
+
+  QM_TRY(MOZ_TO_RESULT(syncLoopTarget), [&aRv](nsresult) {
+    aRv.ThrowInvalidStateError("Worker is shutting down");
+    return 0;
+  });
+
+  uint64_t totalCount = 0;
+
+  QM_TRY(MOZ_TO_RESULT(AsyncCopy(
+             inputStream, outputStream,
+             aRead ? NS_ASYNCCOPY_VIA_WRITESEGMENTS
+                   : NS_ASYNCCOPY_VIA_READSEGMENTS,
+             /* aCloseSource */ !aRead, /* aCloseSink */ aRead,
+             [&totalCount](uint32_t count) { totalCount += count; },
+             [syncLoopTarget](nsresult rv) {
+               InvokeAsync(syncLoopTarget, __func__, [syncLoopTarget]() {
+                 WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+                 MOZ_ASSERT(workerPrivate);
+
+                 workerPrivate->AssertIsOnWorkerThread();
+
+                 workerPrivate->StopSyncLoop(syncLoopTarget, true);
+
+                 return BoolPromise::CreateAndResolve(true, __func__);
+               });
+             })),
+         throwAndReturn);
+
+  MOZ_ALWAYS_TRUE(syncLoop.Run());
+
+  return totalCount;
 }
 
 }  // namespace mozilla::dom
