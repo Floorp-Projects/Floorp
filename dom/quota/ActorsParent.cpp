@@ -7,6 +7,7 @@
 #include "ActorsParent.h"
 
 // Local includes
+#include "CanonicalQuotaObject.h"
 #include "ClientUsageArray.h"
 #include "Flatten.h"
 #include "FirstInitializationAttemptsImpl.h"
@@ -16,7 +17,6 @@
 #include "OriginInfo.h"
 #include "QuotaCommon.h"
 #include "QuotaManager.h"
-#include "QuotaObject.h"
 #include "ScopedLogExtraInfo.h"
 #include "UsageInfo.h"
 
@@ -3017,7 +3017,7 @@ uint64_t QuotaManager::CollectOriginsForEviction(
                         });
 
         if (!match) {
-          MOZ_ASSERT(!originInfo->mQuotaObjects.Count(),
+          MOZ_ASSERT(!originInfo->mCanonicalQuotaObjects.Count(),
                      "Inactive origin shouldn't have open files!");
           aInactiveOriginInfos.InsertElementSorted(
               originInfo, OriginInfoAccessTimeComparator());
@@ -4005,7 +4005,7 @@ void QuotaManager::UnloadQuota() {
         }
 
         for (const auto& originInfo : groupInfo->mOriginInfos) {
-          MOZ_ASSERT(!originInfo->mQuotaObjects.Count());
+          MOZ_ASSERT(!originInfo->mCanonicalQuotaObjects.Count());
 
           if (!originInfo->mDirectoryExists) {
             continue;
@@ -4138,17 +4138,17 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     // We need this extra raw pointer because we can't assign to the smart
     // pointer directly since QuotaObject::AddRef would try to acquire the same
     // mutex.
-    const NotNull<QuotaObject*> quotaObject =
-        originInfo->mQuotaObjects.LookupOrInsertWith(path, [&] {
+    const NotNull<CanonicalQuotaObject*> canonicalQuotaObject =
+        originInfo->mCanonicalQuotaObjects.LookupOrInsertWith(path, [&] {
           // Create a new QuotaObject. The hashtable is not responsible to
           // delete the QuotaObject.
-          return WrapNotNullUnchecked(
-              new QuotaObject(originInfo, aClientType, path, fileSize));
+          return WrapNotNullUnchecked(new CanonicalQuotaObject(
+              originInfo, aClientType, path, fileSize));
         });
 
     // Addref the QuotaObject and move the ownership to the result. This must
     // happen before we unlock!
-    result = quotaObject->LockedAddRef();
+    result = canonicalQuotaObject->LockedAddRef();
   }
 
   if (aFileSizeOut) {

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "QuotaObject.h"
+#include "CanonicalQuotaObject.h"
 
 #include "GroupInfo.h"
 #include "GroupInfoPair.h"
@@ -17,22 +17,20 @@
 
 namespace mozilla::dom::quota {
 
-void QuotaObject::AddRef() {
+NS_IMETHODIMP_(MozExternalRefCountType) CanonicalQuotaObject::AddRef() {
   QuotaManager* quotaManager = QuotaManager::Get();
   if (!quotaManager) {
     NS_ERROR("Null quota manager, this shouldn't happen, possible leak!");
 
-    ++mRefCnt;
-
-    return;
+    return ++mRefCnt;
   }
 
   MutexAutoLock lock(quotaManager->mQuotaMutex);
 
-  ++mRefCnt;
+  return ++mRefCnt;
 }
 
-void QuotaObject::Release() {
+NS_IMETHODIMP_(MozExternalRefCountType) CanonicalQuotaObject::Release() {
   QuotaManager* quotaManager = QuotaManager::Get();
   if (!quotaManager) {
     NS_ERROR("Null quota manager, this shouldn't happen, possible leak!");
@@ -41,9 +39,10 @@ void QuotaObject::Release() {
     if (count == 0) {
       mRefCnt = 1;
       delete this;
+      return 0;
     }
 
-    return;
+    return mRefCnt;
   }
 
   {
@@ -52,18 +51,19 @@ void QuotaObject::Release() {
     --mRefCnt;
 
     if (mRefCnt > 0) {
-      return;
+      return mRefCnt;
     }
 
     if (mOriginInfo) {
-      mOriginInfo->mQuotaObjects.Remove(mPath);
+      mOriginInfo->mCanonicalQuotaObjects.Remove(mPath);
     }
   }
 
   delete this;
+  return 0;
 }
 
-bool QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate) {
+bool CanonicalQuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate) {
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
@@ -72,7 +72,7 @@ bool QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate) {
   return LockedMaybeUpdateSize(aSize, aTruncate);
 }
 
-bool QuotaObject::IncreaseSize(int64_t aDelta) {
+bool CanonicalQuotaObject::IncreaseSize(int64_t aDelta) {
   MOZ_ASSERT(aDelta >= 0);
 
   QuotaManager* quotaManager = QuotaManager::Get();
@@ -86,7 +86,7 @@ bool QuotaObject::IncreaseSize(int64_t aDelta) {
   return LockedMaybeUpdateSize(size, /* aTruncate */ false);
 }
 
-void QuotaObject::DisableQuotaCheck() {
+void CanonicalQuotaObject::DisableQuotaCheck() {
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
@@ -95,7 +95,7 @@ void QuotaObject::DisableQuotaCheck() {
   mQuotaCheckDisabled = true;
 }
 
-void QuotaObject::EnableQuotaCheck() {
+void CanonicalQuotaObject::EnableQuotaCheck() {
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
@@ -104,7 +104,8 @@ void QuotaObject::EnableQuotaCheck() {
   mQuotaCheckDisabled = false;
 }
 
-bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
+bool CanonicalQuotaObject::LockedMaybeUpdateSize(int64_t aSize,
+                                                 bool aTruncate) {
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 

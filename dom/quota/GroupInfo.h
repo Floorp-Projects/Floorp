@@ -20,10 +20,10 @@ class GroupInfoPair;
 class OriginInfo;
 
 class GroupInfo final {
+  friend class CanonicalQuotaObject;
   friend class GroupInfoPair;
   friend class OriginInfo;
   friend class QuotaManager;
-  friend class QuotaObject;
 
  public:
   GroupInfo(GroupInfoPair* aGroupInfoPair, PersistenceType aPersistenceType)

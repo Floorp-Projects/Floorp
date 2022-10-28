@@ -63,6 +63,7 @@ class PrincipalInfo;
 
 namespace mozilla::dom::quota {
 
+class CanonicalQuotaObject;
 class ClientUsageArray;
 class ClientDirectoryLock;
 class DirectoryLockImpl;
@@ -75,10 +76,10 @@ class QuotaObject;
 class UniversalDirectoryLock;
 
 class QuotaManager final : public BackgroundThreadObject {
+  friend class CanonicalQuotaObject;
   friend class DirectoryLockImpl;
   friend class GroupInfo;
   friend class OriginInfo;
-  friend class QuotaObject;
 
   using PrincipalInfo = mozilla::ipc::PrincipalInfo;
   using DirectoryLockTable =
