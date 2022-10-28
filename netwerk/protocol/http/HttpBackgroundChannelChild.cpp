@@ -445,6 +445,19 @@ IPCResult HttpBackgroundChannelChild::RecvAttachStreamFilter(
   return IPC_OK();
 }
 
+IPCResult HttpBackgroundChannelChild::RecvDetachStreamFilters() {
+  LOG(("HttpBackgroundChannelChild::RecvDetachStreamFilters [this=%p]\n",
+       this));
+  MOZ_ASSERT(OnSocketThread());
+
+  if (NS_WARN_IF(!mChannelChild)) {
+    return IPC_OK();
+  }
+
+  mChannelChild->ProcessDetachStreamFilters();
+  return IPC_OK();
+}
+
 void HttpBackgroundChannelChild::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("HttpBackgroundChannelChild::ActorDestroy[this=%p]\n", this));
   // This function might be called during shutdown phase, so OnSocketThread()

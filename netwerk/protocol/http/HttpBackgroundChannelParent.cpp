@@ -481,6 +481,16 @@ auto HttpBackgroundChannelParent::AttachStreamFilter(
                                                 __func__);
 }
 
+auto HttpBackgroundChannelParent::DetachStreamFilters()
+    -> RefPtr<GenericPromise> {
+  LOG(("HttpBackgroundChannelParent::DetachStreamFilters [this=%p]\n", this));
+  if (NS_WARN_IF(!mIPCOpened) || !SendDetachStreamFilters()) {
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  return GenericPromise::CreateAndResolve(true, __func__);
+}
+
 void HttpBackgroundChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("HttpBackgroundChannelParent::ActorDestroy [this=%p]\n", this));
   AssertIsInMainProcess();

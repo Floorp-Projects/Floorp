@@ -376,7 +376,9 @@ nsresult InterceptedHttpChannel::StartPump() {
 }
 
 nsresult InterceptedHttpChannel::OpenRedirectChannel() {
-  INTERCEPTED_LOG(("InterceptedHttpChannel::OpenRedirectChannel [%p]", this));
+  INTERCEPTED_LOG(
+      ("InterceptedHttpChannel::OpenRedirectChannel [%p], mRedirectChannel: %p",
+       this, mRedirectChannel.get()));
   nsresult rv = NS_OK;
 
   if (NS_FAILED(mStatus)) {

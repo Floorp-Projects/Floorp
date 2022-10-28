@@ -96,6 +96,8 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
       Endpoint<extensions::PStreamFilterParent>&& aParentEndpoint,
       Endpoint<extensions::PStreamFilterChild>&& aChildEndpoint);
 
+  [[nodiscard]] RefPtr<GenericPromise> DetachStreamFilters();
+
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

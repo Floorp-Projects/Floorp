@@ -91,6 +91,8 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
   IPCResult RecvAttachStreamFilter(
       Endpoint<extensions::PStreamFilterParent>&& aEndpoint);
 
+  IPCResult RecvDetachStreamFilters();
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void CreateDataBridge();

@@ -6,6 +6,7 @@
 
 #include "StreamFilterParent.h"
 
+#include "HttpChannelChild.h"
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentParent.h"
@@ -158,10 +159,36 @@ void StreamFilterParent::Attach(nsIChannel* aChannel,
                                           std::move(aEndpoint)),
       NS_DISPATCH_NORMAL);
 
+  // If aChannel is a HttpChannelChild, ask HttpChannelChild to hold a weak
+  // reference on this StreamFilterParent. Such that HttpChannelChild has a
+  // chance to disconnect this StreamFilterParent if internal redirection
+  // happens, i.e. ServiceWorker fallback redirection.
+  RefPtr<net::HttpChannelChild> channelChild = do_QueryObject(aChannel);
+  if (channelChild) {
+    channelChild->RegisterStreamFilter(self);
+  }
+
   self->Init(aChannel);
 
   // IPC owns this reference now.
   Unused << self.forget();
+}
+
+void StreamFilterParent::Disconnect(const nsACString& aReason) {
+  AssertIsMainThread();
+  MOZ_DIAGNOSTIC_ASSERT(mBeforeOnStartRequest);
+
+  mDisconnected = true;
+
+  nsAutoCString reason(aReason);
+
+  RefPtr<StreamFilterParent> self(this);
+  RunOnActorThread(FUNC, [self, reason] {
+    if (self->IPCActive()) {
+      self->mState = State::Disconnected;
+      self->CheckResult(self->SendError(reason));
+    }
+  });
 }
 
 void StreamFilterParent::Bind(ParentEndpoint&& aEndpoint) {
@@ -513,6 +540,7 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
   //
   // For ALL redirections, we will disconnect this listener.  Extensions
   // will create a new filter if they need it.
+  mBeforeOnStartRequest = false;
   if (aRequest != mChannel) {
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
     nsCOMPtr<nsILoadInfo> loadInfo = channel ? channel->LoadInfo() : nullptr;
