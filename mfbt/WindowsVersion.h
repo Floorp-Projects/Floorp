@@ -204,6 +204,12 @@ inline bool IsWin7AndPre2000Compatible() {
   return info.dwMajorVersion < 5;
 }
 
+// Whether we're a Windows 11 build with "Suggested actions" feature which
+// causes hangs. See bug 1774285.
+MOZ_ALWAYS_INLINE bool NeedsWindows11SuggestedActionsWorkaround() {
+  return IsWindows10BuildOrLater(22621);
+}
+
 }  // namespace mozilla
 
 #endif /* mozilla_WindowsVersion_h */
