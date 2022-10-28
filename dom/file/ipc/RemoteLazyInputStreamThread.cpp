@@ -47,7 +47,8 @@ class ThreadInitializeRunnable final : public Runnable {
 
 }  // namespace
 
-NS_IMPL_ISUPPORTS(RemoteLazyInputStreamThread, nsIObserver, nsIEventTarget)
+NS_IMPL_ISUPPORTS(RemoteLazyInputStreamThread, nsIObserver, nsIEventTarget,
+                  nsISerialEventTarget, nsIDirectTaskDispatcher)
 
 bool RLISThreadIsInOrBeyondShutdown() {
   // ShutdownPhase::XPCOMShutdownThreads matches
@@ -180,6 +181,46 @@ RemoteLazyInputStreamThread::RegisterShutdownTask(nsITargetShutdownTask*) {
 NS_IMETHODIMP
 RemoteLazyInputStreamThread::UnregisterShutdownTask(nsITargetShutdownTask*) {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+RemoteLazyInputStreamThread::DispatchDirectTask(
+    already_AddRefed<nsIRunnable> aRunnable) {
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+
+  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
+
+  nsCOMPtr<nsIDirectTaskDispatcher> dispatcher = do_QueryInterface(mThread);
+
+  if (dispatcher) {
+    return dispatcher->DispatchDirectTask(runnable.forget());
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP RemoteLazyInputStreamThread::DrainDirectTasks() {
+  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
+
+  nsCOMPtr<nsIDirectTaskDispatcher> dispatcher = do_QueryInterface(mThread);
+
+  if (dispatcher) {
+    return dispatcher->DrainDirectTasks();
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP RemoteLazyInputStreamThread::HaveDirectTasks(bool* aValue) {
+  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
+
+  nsCOMPtr<nsIDirectTaskDispatcher> dispatcher = do_QueryInterface(mThread);
+
+  if (dispatcher) {
+    return dispatcher->HaveDirectTasks(aValue);
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 bool IsOnDOMFileThread() {
