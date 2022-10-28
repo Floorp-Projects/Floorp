@@ -109,7 +109,7 @@ function join(base, ...paths) {
 // @see https://searchfox.org/mozilla-central/rev/0948667bc62415d48abff27e1405fb4ab4d65d75/js/xpconnect/idl/xpccomponents.idl#127-245
 function Sandbox(options) {
   // Normalize options and rename to match `Cu.Sandbox` expectations.
-  const sandboxOptions = {
+  options = {
     // This will allow exposing Components as well as Cu, Ci and Cr.
     wantComponents: true,
 
@@ -149,7 +149,7 @@ function Sandbox(options) {
     freshCompartment: options.freshCompartment || false,
   };
 
-  return Cu.Sandbox(systemPrincipal, sandboxOptions);
+  return Cu.Sandbox(systemPrincipal, options);
 }
 
 // This allows defining some modules in AMD format while retaining CommonJS
@@ -180,14 +180,14 @@ function load(loader, module) {
     properties.define = define;
   }
 
-  // Create a new object in the shared global of the loader, that will be used
-  // as the scope object for this particular module.
-  const scopeFromSharedGlobal = new loader.sharedGlobal.Object();
-  Object.assign(scopeFromSharedGlobal, properties);
+  // Create a new object in this sandbox, that will be used as
+  // the scope object for this particular module
+  const sandbox = new loader.sharedGlobalSandbox.Object();
+  Object.assign(sandbox, properties);
 
   const originalExports = module.exports;
   try {
-    Services.scriptloader.loadSubScript(module.uri, scopeFromSharedGlobal);
+    Services.scriptloader.loadSubScript(module.uri, sandbox);
   } catch (error) {
     // loadSubScript sometime throws string errors, which includes no stack.
     // At least provide the current stack by re-throwing a real Error object.
@@ -538,30 +538,24 @@ function Loader(options) {
     modules[uri] = module;
   }
 
-  let sharedGlobal;
-  if (options.sharedGlobal) {
-    sharedGlobal = options.sharedGlobal;
-  } else {
-    // Create the unique sandbox we will be using for all modules,
-    // so that we prevent creating a new compartment per module.
-    // The side effect is that all modules will share the same
-    // global objects.
-    sharedGlobal = Sandbox({
-      name: options.sandboxName || "DevTools",
-      invisibleToDebugger: options.invisibleToDebugger || false,
-      prototype: options.sandboxPrototype || globals,
-      freshCompartment: options.freshCompartment,
-    });
-  }
+  // Create the unique sandbox we will be using for all modules,
+  // so that we prevent creating a new compartment per module.
+  // The side effect is that all modules will share the same
+  // global objects.
+  const sharedGlobalSandbox = Sandbox({
+    name: options.sandboxName || "DevTools",
+    invisibleToDebugger: options.invisibleToDebugger || false,
+    prototype: options.sandboxPrototype || globals,
+    freshCompartment: options.freshCompartment,
+  });
 
-  if (options.sharedGlobal || options.sandboxPrototype) {
-    // If we were given a sharedGlobal or a sandboxPrototype, we have to define
-    // the globals on the shared global directly. Note that this will not work
-    // for callers who depend on being able to add globals after the loader was
-    // created.
+  if (options.sandboxPrototype) {
+    // If we were given a sandboxPrototype, we have to define the globals on
+    // the sandbox directly. Note that this will not work for callers who
+    // depend on being able to add globals after the loader was created.
     for (const name of getOwnIdentifiers(globals)) {
       Object.defineProperty(
-        sharedGlobal,
+        sharedGlobalSandbox,
         name,
         Object.getOwnPropertyDescriptor(globals, name)
       );
@@ -578,7 +572,7 @@ function Loader(options) {
     mappingCache: { enumerable: false, value: new Map() },
     // Map of module objects indexed by module URIs.
     modules: { enumerable: false, value: modules },
-    sharedGlobal: { enumerable: false, value: sharedGlobal },
+    sharedGlobalSandbox: { enumerable: false, value: sharedGlobalSandbox },
     supportAMDModules: {
       enumerable: false,
       value: options.supportAMDModules || false,
