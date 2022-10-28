@@ -1269,7 +1269,8 @@ bool GfxInfoBase::DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
 }
 
 bool GfxInfoBase::IsFeatureAllowlisted(int32_t aFeature) const {
-  return aFeature == nsIGfxInfo::FEATURE_VIDEO_OVERLAY ||
+  return aFeature == nsIGfxInfo::FEATURE_WEBRENDER ||
+         aFeature == nsIGfxInfo::FEATURE_VIDEO_OVERLAY ||
          aFeature == nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY;
 }
 
@@ -1769,12 +1770,20 @@ void GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {
       gfxConfig::GetFeature(gfx::Feature::GPU_PROCESS);
   InitFeatureObject(aCx, aObj, "gpuProcess", gpuProcess, &obj);
 
+  gfx::FeatureState& wrQualified =
+      gfxConfig::GetFeature(gfx::Feature::WEBRENDER_QUALIFIED);
+  InitFeatureObject(aCx, aObj, "wrQualified", wrQualified, &obj);
+
   gfx::FeatureState& webrender = gfxConfig::GetFeature(gfx::Feature::WEBRENDER);
   InitFeatureObject(aCx, aObj, "webrender", webrender, &obj);
 
   gfx::FeatureState& wrCompositor =
       gfxConfig::GetFeature(gfx::Feature::WEBRENDER_COMPOSITOR);
   InitFeatureObject(aCx, aObj, "wrCompositor", wrCompositor, &obj);
+
+  gfx::FeatureState& wrSoftware =
+      gfxConfig::GetFeature(gfx::Feature::WEBRENDER_SOFTWARE);
+  InitFeatureObject(aCx, aObj, "wrSoftware", wrSoftware, &obj);
 
   gfx::FeatureState& openglCompositing =
       gfxConfig::GetFeature(gfx::Feature::OPENGL_COMPOSITING);
@@ -1835,6 +1844,12 @@ nsresult GfxInfoBase::GetActiveCrashGuards(JSContext* aCx,
         }
       });
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfoBase::GetWebRenderEnabled(bool* aWebRenderEnabled) {
+  *aWebRenderEnabled = gfxVars::UseWebRender();
   return NS_OK;
 }
 

@@ -31,6 +31,7 @@ const char* GetLayersBackendName(LayersBackend aBackend) {
     case LayersBackend::LAYERS_NONE:
       return "none";
     case LayersBackend::LAYERS_WR:
+      MOZ_ASSERT(gfx::gfxVars::UseWebRender());
       if (gfx::gfxVars::UseSoftwareWebRender()) {
 #ifdef XP_WIN
         if (gfx::gfxVars::AllowSoftwareWebRenderD3D11() &&

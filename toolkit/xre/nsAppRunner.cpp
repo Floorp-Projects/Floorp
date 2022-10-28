@@ -736,6 +736,16 @@ nsIXULRuntime::ContentWin32kLockdownState GetLiveWin32kLockdownState() {
     }
   }
 
+  // Win32k Lockdown requires WebRender, but WR is not currently guaranteed
+  // on all computers. It can also fail to initialize and fallback to
+  // non-WR render path.
+  //
+  // We don't want a situation where "Win32k Lockdown + No WR" occurs
+  // without the user explicitly requesting unsupported behavior.
+  if (!gfx::gfxVars::UseWebRender()) {
+    return nsIXULRuntime::ContentWin32kLockdownState::MissingWebRender;
+  }
+
   // Non-native theming is required as well
   if (!StaticPrefs::widget_non_native_theme_enabled()) {
     return nsIXULRuntime::ContentWin32kLockdownState::MissingNonNativeTheming;
