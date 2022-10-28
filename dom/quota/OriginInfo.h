@@ -13,13 +13,13 @@
 
 namespace mozilla::dom::quota {
 
+class CanonicalQuotaObject;
 class GroupInfo;
-class QuotaObject;
 
 class OriginInfo final {
+  friend class CanonicalQuotaObject;
   friend class GroupInfo;
   friend class QuotaManager;
-  friend class QuotaObject;
 
  public:
   OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
@@ -73,7 +73,7 @@ class OriginInfo final {
   ~OriginInfo() {
     MOZ_COUNT_DTOR(OriginInfo);
 
-    MOZ_ASSERT(!mQuotaObjects.Count());
+    MOZ_ASSERT(!mCanonicalQuotaObjects.Count());
   }
 
   void LockedDecreaseUsage(Client::Type aClientType, int64_t aSize);
@@ -95,7 +95,8 @@ class OriginInfo final {
 
   bool IsExtensionOrigin() { return mIsExtension; }
 
-  nsTHashMap<nsStringHashKey, NotNull<QuotaObject*>> mQuotaObjects;
+  nsTHashMap<nsStringHashKey, NotNull<CanonicalQuotaObject*>>
+      mCanonicalQuotaObjects;
   ClientUsageArray mClientUsages;
   GroupInfo* mGroupInfo;
   const nsCString mOrigin;

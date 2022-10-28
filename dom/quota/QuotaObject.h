@@ -4,85 +4,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_quota_quotaobject_h__
-#define mozilla_dom_quota_quotaobject_h__
+#ifndef DOM_QUOTA_QUOTAOBJECT_H_
+#define DOM_QUOTA_QUOTAOBJECT_H_
 
-// Local includes
-#include "Client.h"
-
-// Global includes
-#include <cstdint>
-#include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/dom/quota/Assertions.h"
-#include "nsCOMPtr.h"
-#include "nsISupports.h"
-#include "nsStringFwd.h"
-
-// XXX Avoid including this here by moving function bodies to the cpp file.
-#include "mozilla/dom/quota/QuotaCommon.h"
+#include "nsISupportsImpl.h"
 
 namespace mozilla::dom::quota {
 
-class OriginInfo;
-class QuotaManager;
-
 class QuotaObject {
-  friend class OriginInfo;
-  friend class QuotaManager;
-
-  class StoragePressureRunnable;
-
  public:
-  void AddRef();
+  virtual ~QuotaObject() = default;
 
-  void Release();
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  const nsAString& Path() const { return mPath; }
+  virtual const nsAString& Path() const = 0;
 
-  [[nodiscard]] bool MaybeUpdateSize(int64_t aSize, bool aTruncate);
+  [[nodiscard]] virtual bool MaybeUpdateSize(int64_t aSize, bool aTruncate) = 0;
 
-  bool IncreaseSize(int64_t aDelta);
+  virtual bool IncreaseSize(int64_t aDelta) = 0;
 
-  void DisableQuotaCheck();
+  virtual void DisableQuotaCheck() = 0;
 
-  void EnableQuotaCheck();
-
- private:
-  QuotaObject(OriginInfo* aOriginInfo, Client::Type aClientType,
-              const nsAString& aPath, int64_t aSize)
-      : mOriginInfo(aOriginInfo),
-        mPath(aPath),
-        mSize(aSize),
-        mClientType(aClientType),
-        mQuotaCheckDisabled(false),
-        mWritingDone(false) {
-    MOZ_COUNT_CTOR(QuotaObject);
-  }
-
-  MOZ_COUNTED_DTOR(QuotaObject)
-
-  already_AddRefed<QuotaObject> LockedAddRef() {
-    AssertCurrentThreadOwnsQuotaMutex();
-
-    ++mRefCnt;
-
-    RefPtr<QuotaObject> result = dont_AddRef(this);
-    return result.forget();
-  }
-
-  bool LockedMaybeUpdateSize(int64_t aSize, bool aTruncate);
-
-  mozilla::ThreadSafeAutoRefCnt mRefCnt;
-
-  OriginInfo* mOriginInfo;
-  nsString mPath;
-  int64_t mSize;
-  Client::Type mClientType;
-  bool mQuotaCheckDisabled;
-  bool mWritingDone;
+  virtual void EnableQuotaCheck() = 0;
 };
 
 }  // namespace mozilla::dom::quota
 
-#endif  // mozilla_dom_quota_quotaobject_h__
+#endif  // DOM_QUOTA_QUOTAOBJECT_H_
