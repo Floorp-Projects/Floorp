@@ -22,13 +22,7 @@ const TOPSTORIES_PREF =
 add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     // Highlights are preffed off by default.
-    set: [
-      [HIGHLIGHTS_PREF, true],
-      [
-        "browser.newtabpage.activity-stream.discoverystream.endpointSpocsClear",
-        "",
-      ],
-    ],
+    set: [[HIGHLIGHTS_PREF, true]],
   });
 
   registerCleanupFunction(async () => {
