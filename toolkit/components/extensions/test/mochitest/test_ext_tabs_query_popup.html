@@ -15,7 +15,7 @@
 async function test_query(query) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "current-window@tests.mozilla.org",
         }

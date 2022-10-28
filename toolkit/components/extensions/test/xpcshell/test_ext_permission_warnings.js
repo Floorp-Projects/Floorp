@@ -761,7 +761,7 @@ add_task(
         useAddonManager: "permanent",
         manifest: {
           permissions: ["mozillaAddons", "resource://x/", "about:reader*"],
-          applications: { gecko: { id } },
+          browser_specific_settings: { gecko: { id } },
         },
         background() {},
       });
@@ -785,7 +785,9 @@ add_task(
     let generatedExt = ExtensionTestCommon.generate({
       manifest: {
         permissions: ["mozillaAddons", "resource://x/", "about:reader*"],
-        applications: { gecko: { id: "extension-data@mochi.test" } },
+        browser_specific_settings: {
+          gecko: { id: "extension-data@mochi.test" },
+        },
       },
     });
 

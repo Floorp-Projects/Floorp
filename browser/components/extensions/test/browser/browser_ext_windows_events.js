@@ -155,7 +155,7 @@ add_task(async function test_windows_event_page() {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: "eventpage@windows" } },
+      browser_specific_settings: { gecko: { id: "eventpage@windows" } },
       background: { persistent: false },
     },
     background() {

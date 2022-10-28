@@ -460,7 +460,7 @@ add_task(async function delay_updates_settings_after_restart() {
       manifest_version: 2,
       name: "Delay Upgrade",
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: { id: SETTINGS_ID },
       },
       permissions: ["browserSettings"],
@@ -477,7 +477,7 @@ add_task(async function delay_updates_settings_after_restart() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: SETTINGS_ID,
           update_url: `http://example.com/test_update.json`,

@@ -160,7 +160,7 @@ add_task(async function test_eventpage_nonblocking() {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       permissions: ["webRequest", "http://example.com/"],
       background: { persistent: false },
     },
@@ -288,7 +288,7 @@ add_task(async function test_persistent_listener_after_sideload_upgrade() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       permissions: ["webRequest", "webRequestBlocking", "http://example.com/"],
     },
 
@@ -395,7 +395,7 @@ add_task(
       useAddonManager: "permanent",
       manifest: {
         version: "1.0",
-        applications: { gecko: { id } },
+        browser_specific_settings: { gecko: { id } },
         permissions: [
           "webRequest",
           "webRequestBlocking",
@@ -496,7 +496,7 @@ add_task(async function test_persistent_listener_after_staged_upgrade() {
     useAddonManager: "permanent",
     manifest: {
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: { id, update_url: `http://example.com/test_update.json` },
       },
       permissions: ["http://example.com/"],
@@ -662,7 +662,7 @@ add_task(async function test_persistent_listener_after_permission_removal() {
     useAddonManager: "permanent",
     manifest: {
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: { id, update_url: `http://example.com/test_remove.json` },
       },
       permissions: ["tabs", "http://example.com/"],
@@ -684,7 +684,7 @@ add_task(async function test_persistent_listener_after_permission_removal() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: { id, update_url: `http://example.com/test_remove.json` },
       },
       permissions: ["webRequest", "webRequestBlocking", "http://example.com/"],

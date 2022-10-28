@@ -34,7 +34,7 @@ add_task(async function test_storage_local_set_quota_exceeded_error() {
   const extensionDef = {
     manifest: {
       permissions: ["storage"],
-      applications: { gecko: { id: EXT_ID } },
+      browser_specific_settings: { gecko: { id: EXT_ID } },
     },
     async background() {
       const data = new Array(1000 * 1024).fill("x").join("");

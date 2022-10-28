@@ -40,7 +40,7 @@ add_task(async function test_flush_restartless_install() {
     manifest: {
       name: "Cache Flush Test",
       version: "2.0",
-      applications: { gecko: { id: "addon2@tests.mozilla.org" } },
+      browser_specific_settings: { gecko: { id: "addon2@tests.mozilla.org" } },
     },
   });
 

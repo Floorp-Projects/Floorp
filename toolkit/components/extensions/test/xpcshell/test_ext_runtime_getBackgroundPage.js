@@ -143,7 +143,7 @@ add_task(
         background: {
           service_worker: "sw.js",
         },
-        applications: { gecko: { id: "test-bg-sw@mochi.test" } },
+        browser_specific_settings: { gecko: { id: "test-bg-sw@mochi.test" } },
       },
 
       files: {

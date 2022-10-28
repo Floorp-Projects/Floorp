@@ -37,7 +37,7 @@ const ADDONS = [
         page: "options.html",
       },
 
-      applications: {
+      browser_specific_settings: {
         gecko: { id: "test_AddonRepository_1@tests.mozilla.org" },
       },
     },
@@ -47,7 +47,7 @@ const ADDONS = [
       name: "XPI Add-on 2",
       version: "1.2",
       theme: {},
-      applications: {
+      browser_specific_settings: {
         gecko: { id: "test_AddonRepository_2@tests.mozilla.org" },
       },
     },
@@ -60,7 +60,7 @@ const ADDONS = [
         32: "icon.png",
       },
       theme: {},
-      applications: {
+      browser_specific_settings: {
         gecko: { id: "test_AddonRepository_3@tests.mozilla.org" },
       },
     },
@@ -70,7 +70,9 @@ const ADDONS = [
   },
 ];
 
-const ADDON_IDS = ADDONS.map(addon => addon.manifest.applications.gecko.id);
+const ADDON_IDS = ADDONS.map(
+  addon => addon.manifest.browser_specific_settings.gecko.id
+);
 const ADDON_FILES = ADDONS.map(addon =>
   AddonTestUtils.createTempWebExtensionFile(addon)
 );

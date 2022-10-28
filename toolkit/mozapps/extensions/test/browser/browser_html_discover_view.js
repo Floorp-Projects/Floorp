@@ -362,7 +362,7 @@ add_task(async function install_from_discopane() {
     manifest: {
       name: "My Awesome Add-on",
       description: "Test extension install button",
-      applications: { gecko: { id: FIRST_EXTENSION_ID } },
+      browser_specific_settings: { gecko: { id: FIRST_EXTENSION_ID } },
       permissions: ["<all_urls>"],
     },
   });
@@ -374,7 +374,7 @@ add_task(async function install_from_discopane() {
     manifest: {
       name: "My Fancy Theme",
       description: "Test theme install button",
-      applications: { gecko: { id: FIRST_THEME_ID } },
+      browser_specific_settings: { gecko: { id: FIRST_THEME_ID } },
       theme: {
         colors: {
           tab_selected: "red",

@@ -21,7 +21,7 @@ const ADDONS = {
   test_undoincompatible: {
     manifest: {
       name: "Incompatible Addon",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "incompatible@tests.mozilla.org",
           strict_min_version: "2",
@@ -33,7 +33,7 @@ const ADDONS = {
   test_undouninstall1: {
     manifest: {
       name: "Test Bootstrap 1",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "undouninstall1@tests.mozilla.org",
         },

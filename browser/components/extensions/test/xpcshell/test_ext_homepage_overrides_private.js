@@ -86,7 +86,7 @@ add_task(async function test_overrides_private() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -116,7 +116,7 @@ add_task(async function test_overrides_private() {
 
   extensionInfo.manifest = {
     version: "2.0",
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: EXTENSION_ID,
       },

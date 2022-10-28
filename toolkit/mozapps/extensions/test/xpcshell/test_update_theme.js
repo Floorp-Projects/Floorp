@@ -24,7 +24,7 @@ add_task(async function test_update_of_disabled_theme() {
     // startup of a test extension.
     let xpi = AddonTestUtils.createTempWebExtensionFile({
       manifest: {
-        applications: { gecko: { id } },
+        browser_specific_settings: { gecko: { id } },
         version,
         theme: {},
       },
@@ -57,7 +57,7 @@ add_task(async function test_builtin_location_migration() {
 
   let themeDef = {
     manifest: {
-      applications: { gecko: { id: ADDON_ID } },
+      browser_specific_settings: { gecko: { id: ADDON_ID } },
       version: "1.0",
       theme: {},
     },

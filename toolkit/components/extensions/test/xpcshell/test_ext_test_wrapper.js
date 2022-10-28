@@ -25,7 +25,7 @@ add_task(async function setup_wrapper() {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: TEST_ADDON_ID } },
+      browser_specific_settings: { gecko: { id: TEST_ADDON_ID } },
     },
     background() {
       browser.test.sendMessage("started_up");

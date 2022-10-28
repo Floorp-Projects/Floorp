@@ -144,11 +144,11 @@ add_task(async function test_multiple_extensions_overriding_newtab_page() {
   let ext1 = ExtensionTestUtils.loadExtension(extObj);
 
   extObj.manifest.chrome_url_overrides = { newtab: NEWTAB_URI_2 };
-  extObj.manifest.applications = { gecko: { id: EXT_2_ID } };
+  extObj.manifest.browser_specific_settings = { gecko: { id: EXT_2_ID } };
   let ext2 = ExtensionTestUtils.loadExtension(extObj);
 
   extObj.manifest.chrome_url_overrides = { newtab: NEWTAB_URI_3 };
-  extObj.manifest.applications.gecko.id = EXT_3_ID;
+  extObj.manifest.browser_specific_settings.gecko.id = EXT_3_ID;
   extObj.incognitoOverride = "spanning";
   let ext3 = ExtensionTestUtils.loadExtension(extObj);
 
@@ -295,7 +295,7 @@ add_task(async function test_temporary_installation() {
 
   let permanent = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: { id: ID },
       },
       chrome_url_overrides: {
@@ -313,7 +313,7 @@ add_task(async function test_temporary_installation() {
 
   let temporary = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: { id: ID },
       },
       chrome_url_overrides: {

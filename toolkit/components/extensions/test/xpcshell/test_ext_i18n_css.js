@@ -67,7 +67,7 @@ let extensionData = {
   },
 
   manifest: {
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: "i18n_css@mochi.test",
       },

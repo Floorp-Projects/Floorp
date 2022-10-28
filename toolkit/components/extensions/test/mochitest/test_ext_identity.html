@@ -44,7 +44,7 @@ add_task(async function test_noPermission() {
 add_task(async function test_getRedirectURL() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "identity@mozilla.org",
         },
@@ -261,7 +261,7 @@ function background_launchWebAuthFlow({
 add_task(async function test_autoRedirect() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "identity@mozilla.org",
         },
@@ -279,7 +279,7 @@ add_task(async function test_autoRedirect() {
 add_task(async function test_autoRedirect_noRedirectURI() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "identity@mozilla.org",
         },
@@ -298,7 +298,7 @@ add_task(async function test_autoRedirect_noRedirectURI() {
 add_task(async function test_noRedirect() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "identity@mozilla.org",
         },
@@ -320,7 +320,7 @@ add_task(async function test_noRedirect() {
 add_task(async function test_interaction() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "identity@mozilla.org",
         },
@@ -339,7 +339,7 @@ add_task(async function test_interaction() {
 add_task(async function test_auto303Redirect() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "identity@mozilla.org",
         },
@@ -357,7 +357,7 @@ add_task(async function test_auto303Redirect() {
 add_task(async function test_loopbackRedirectURI() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "identity@mozilla.org",
         },

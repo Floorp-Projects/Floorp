@@ -53,7 +53,7 @@ add_task(async function checkCompatibility() {
 
   let id = "test@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
-    manifest: { applications: { gecko: { id } } },
+    manifest: { browser_specific_settings: { gecko: { id } } },
     useAddonManager: "temporary",
   });
   await extension.startup();
@@ -99,7 +99,7 @@ add_task(async function checkSecurity() {
 
   let id = "test-security@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
-    manifest: { applications: { gecko: { id } } },
+    manifest: { browser_specific_settings: { gecko: { id } } },
     useAddonManager: "temporary",
   });
   await extension.startup();
@@ -139,7 +139,7 @@ add_task(async function checkSafeMode() {
 
   let id = "test-safemode@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
-    manifest: { applications: { gecko: { id } } },
+    manifest: { browser_specific_settings: { gecko: { id } } },
     useAddonManager: "temporary",
   });
   await extension.startup();

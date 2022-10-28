@@ -21,7 +21,7 @@ add_task(async function() {
     manifest: {
       name: "Test disabling hidden add-ons, non-hidden add-on case.",
       version: "1.0",
-      applications: { gecko: { id: NORMAL_ID } },
+      browser_specific_settings: { gecko: { id: NORMAL_ID } },
     },
   });
 
@@ -64,7 +64,7 @@ add_task(async function() {
     manifest: {
       name: "Test disabling hidden add-ons, hidden system add-on case.",
       version: "1.0",
-      applications: { gecko: { id: SYSTEM_ID } },
+      browser_specific_settings: { gecko: { id: SYSTEM_ID } },
     },
   });
   xpi.copyTo(distroDir, `${SYSTEM_ID}.xpi`);

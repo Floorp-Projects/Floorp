@@ -64,7 +64,7 @@ function createTestExtension({
 
   const manifest = {
     name: "Test Pending Update",
-    applications: {
+    browser_specific_settings: {
       gecko: { id, update_url },
     },
     version: "1",

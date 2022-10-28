@@ -11,7 +11,7 @@ AddonTestUtils.registerJSON(testserver, "/update.json", {
   addons: {
     [ID]: {
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           strict_min_version: "4",
           strict_max_version: "6",

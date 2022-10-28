@@ -86,7 +86,7 @@ function clearAbuseReportState() {
 async function installTestExtension(overrideOptions = {}) {
   const extOptions = {
     manifest: {
-      applications: { gecko: { id: ADDON_ID } },
+      browser_specific_settings: { gecko: { id: ADDON_ID } },
       name: "Test Extension",
     },
     useAddonManager: "permanent",
@@ -459,7 +459,7 @@ add_task(async function test_error_recent_submit() {
 
   const { extension: extension2 } = await installTestExtension({
     manifest: {
-      applications: { gecko: { id: ADDON_ID2 } },
+      browser_specific_settings: { gecko: { id: ADDON_ID2 } },
       name: "Test Extension2",
     },
   });
@@ -695,7 +695,7 @@ add_task(async function test_truncated_string_properties() {
     manifest: {
       name: generateString(400),
       description: generateString(400),
-      applications: { gecko: { id: LONG_STRINGS_ADDON_ID } },
+      browser_specific_settings: { gecko: { id: LONG_STRINGS_ADDON_ID } },
     },
   });
 
@@ -744,14 +744,14 @@ add_task(async function test_report_recommended() {
   const { extension: nonRecommended } = await installTestExtension({
     manifest: {
       name: "Fake non recommended addon",
-      applications: { gecko: { id: NON_RECOMMENDED_ADDON_ID } },
+      browser_specific_settings: { gecko: { id: NON_RECOMMENDED_ADDON_ID } },
     },
   });
 
   const { extension: recommended } = await installTestExtension({
     manifest: {
       name: "Fake recommended addon",
-      applications: { gecko: { id: RECOMMENDED_ADDON_ID } },
+      browser_specific_settings: { gecko: { id: RECOMMENDED_ADDON_ID } },
     },
     files: {
       "mozilla-recommendation.json": {

@@ -424,7 +424,9 @@ add_task(async function test_serviceworkermanager_wake_for_api_event_helper() {
       background: {
         service_worker: "sw.js",
       },
-      applications: { gecko: { id: "test-bg-sw-wakeup@mochi.test" } },
+      browser_specific_settings: {
+        gecko: { id: "test-bg-sw-wakeup@mochi.test" },
+      },
     },
     files: {
       "sw.js": `
@@ -456,7 +458,7 @@ add_task(async function test_serviceworkermanager_wake_for_api_event_helper() {
         browser.runtime.onInstalled.addListener(fakeListener01);
         browser.runtime.onInstalled.removeListener(fakeListener01);
         // Removing the same listener more than ones should make any
-        // difference, and it shouldn't trigger any assertion in 
+        // difference, and it shouldn't trigger any assertion in
         // debug builds.
         browser.runtime.onInstalled.removeListener(fakeListener01);
 

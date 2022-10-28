@@ -68,7 +68,7 @@ function makeExtension(id, otherId) {
   let extensionData = {
     background: `(${backgroundScript})(${args})`,
     manifest: {
-      "applications": {"gecko": {id}},
+      browser_specific_settings: {gecko: {id}},
     },
   };
 

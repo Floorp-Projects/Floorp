@@ -119,7 +119,7 @@ function getSystemAddonXPI(num, version) {
         manifest: {
           name: `System Add-on ${num}`,
           version,
-          applications: {
+          browser_specific_settings: {
             gecko: {
               id: `system${num}@tests.mozilla.org`,
             },

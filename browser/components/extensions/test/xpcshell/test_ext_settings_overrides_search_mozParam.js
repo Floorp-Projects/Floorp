@@ -197,7 +197,7 @@ add_task(async function test_extension_setting_moz_params_fail() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: { id: "test1@mochitest" },
       },
       chrome_settings_overrides: {

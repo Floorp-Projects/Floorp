@@ -21,7 +21,7 @@ add_task(async function isPrivileged_at_install() {
     let addon = await promiseInstallWebExtension({
       manifest: {
         permissions: ["mozillaAddons"],
-        applications: { gecko: { id: ADDON_ID_PRIVILEGED } },
+        browser_specific_settings: { gecko: { id: ADDON_ID_PRIVILEGED } },
       },
     });
     ok(addon.isPrivileged, "Add-on is privileged");
@@ -32,7 +32,7 @@ add_task(async function isPrivileged_at_install() {
     let addon = await promiseInstallWebExtension({
       manifest: {
         permissions: ["mozillaAddons"],
-        applications: { gecko: { id: ADDON_ID_NO_PRIV } },
+        browser_specific_settings: { gecko: { id: ADDON_ID_NO_PRIV } },
       },
     });
     ok(!addon.isPrivileged, "Add-on is not privileged");

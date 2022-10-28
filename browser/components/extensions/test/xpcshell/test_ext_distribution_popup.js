@@ -25,7 +25,7 @@ add_task(async function testDistributionPopup() {
   );
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: distExtId } },
+      browser_specific_settings: { gecko: { id: distExtId } },
       name: "Ext Distribution",
     },
   });
@@ -33,7 +33,7 @@ add_task(async function testDistributionPopup() {
   let userExtId = "ext-user@mochi.test";
   let userExtension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: userExtId } },
+      browser_specific_settings: { gecko: { id: userExtId } },
       name: "Ext User Installed",
     },
   });

@@ -32,7 +32,7 @@ server.registerFile(
       manifest_version: 2,
       name: "Install Origins test",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "origins@example.com",
         },
@@ -49,7 +49,7 @@ server.registerFile(
       manifest_version: 2,
       name: "Install Origins sitepermission test",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "sitepermission@example.com",
         },
@@ -67,7 +67,7 @@ server.registerFile(
       manifest_version: 2,
       name: "Install Origins sitepermission public suffix test",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "sitepermission-suffix@github.io",
         },
@@ -85,7 +85,7 @@ server.registerFile(
       manifest_version: 2,
       name: "Install Origins test",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "two_origins@example.com",
         },
@@ -102,7 +102,7 @@ server.registerFile(
       manifest_version: 2,
       name: "Install Origins test",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "no_origins@example.com",
         },
@@ -118,7 +118,7 @@ server.registerFile(
       manifest_version: 2,
       name: "Install Origins test",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "no_origins@example.com",
         },
@@ -135,7 +135,7 @@ server.registerFile(
       manifest_version: 3,
       name: "Install Origins test",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "v3_origins@example.com",
         },
@@ -152,7 +152,7 @@ server.registerFile(
       manifest_version: 3,
       name: "Install Origins test",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "v3_no_origins@example.com",
         },

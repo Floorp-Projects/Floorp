@@ -66,7 +66,7 @@ add_task(async function test_paged_api() {
   for (let i = 0; i <= MAX_ADDON; i++) {
     await promiseInstallWebExtension({
       manifest: {
-        applications: { gecko: { id: id(i) } },
+        browser_specific_settings: { gecko: { id: id(i) } },
       },
     });
   }

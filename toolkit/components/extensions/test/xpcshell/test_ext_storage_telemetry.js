@@ -93,7 +93,7 @@ async function test_telemetry_background() {
     ...baseExtInfo,
     manifest: {
       ...baseManifest,
-      applications: {
+      browser_specific_settings: {
         gecko: { id: EXTENSION_ID1 },
       },
     },
@@ -102,7 +102,7 @@ async function test_telemetry_background() {
     ...baseExtInfo,
     manifest: {
       ...baseManifest,
-      applications: {
+      browser_specific_settings: {
         gecko: { id: EXTENSION_ID2 },
       },
     },

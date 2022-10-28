@@ -82,7 +82,7 @@ async function checkMessageState(id, addonType, expected) {
 add_task(async function testNoMessageExtension() {
   let id = "no-message@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
-    manifest: { applications: { gecko: { id } } },
+    manifest: { browser_specific_settings: { gecko: { id } } },
     useAddonManager: "temporary",
   });
   await extension.startup();

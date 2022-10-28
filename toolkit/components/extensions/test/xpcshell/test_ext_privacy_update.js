@@ -92,7 +92,7 @@ add_task(async function test_privacy_update() {
   let webExtensionFile = createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -110,7 +110,7 @@ add_task(async function test_privacy_update() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
           update_url: `http://localhost:${port}/test_update.json`,

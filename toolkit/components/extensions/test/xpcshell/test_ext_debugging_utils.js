@@ -119,7 +119,7 @@ add_task(async function testExtensionDebuggingUtilsCleanup() {
 add_task(async function testExtensionDebuggingUtilsAddonReloaded() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "test-reloaded@test.mozilla.com",
         },
@@ -164,7 +164,7 @@ add_task(async function testExtensionDebuggingUtilsAddonReloaded() {
   // conditions similar to an addon reloaded while the Addon Debugger is opened.
   extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "test-reloaded@test.mozilla.com",
         },
@@ -216,7 +216,7 @@ add_task(async function testExtensionDebuggingUtilsAddonReloaded() {
 add_task(async function testExtensionDebuggingUtilsWithMultipleAddons() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "test-addon-1@test.mozilla.com",
         },
@@ -228,7 +228,7 @@ add_task(async function testExtensionDebuggingUtilsWithMultipleAddons() {
   });
   let anotherExtension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "test-addon-2@test.mozilla.com",
         },

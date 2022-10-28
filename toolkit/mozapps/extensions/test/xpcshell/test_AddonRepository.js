@@ -18,7 +18,7 @@ const ADDONS = [
     manifest: {
       name: "XPI Add-on 1",
       version: "1.1",
-      applications: {
+      browser_specific_settings: {
         gecko: { id: "test_AddonRepository_1@tests.mozilla.org" },
       },
     },
@@ -28,7 +28,7 @@ const ADDONS = [
       name: "XPI Add-on 2",
       version: "1.2",
       theme: {},
-      applications: {
+      browser_specific_settings: {
         gecko: { id: "test_AddonRepository_2@tests.mozilla.org" },
       },
     },
@@ -38,7 +38,7 @@ const ADDONS = [
       name: "XPI Add-on 3",
       version: "1.3",
       theme: {},
-      applications: {
+      browser_specific_settings: {
         gecko: { id: "test_AddonRepository_3@tests.mozilla.org" },
       },
     },

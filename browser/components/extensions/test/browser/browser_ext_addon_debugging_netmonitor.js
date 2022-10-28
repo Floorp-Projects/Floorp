@@ -109,7 +109,7 @@ add_task(async function test_addon_debugging_netmonitor_panel() {
     useAddonManager: "temporary",
     manifest: {
       permissions: ["http://mochi.test/"],
-      applications: {
+      browser_specific_settings: {
         gecko: { id: EXTENSION_ID },
       },
     },

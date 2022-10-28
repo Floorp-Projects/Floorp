@@ -135,7 +135,7 @@ add_task(async function test_upgrade_default_position_engine() {
           search_url: "https://example.com/?q={searchTerms}",
         },
       },
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "testengine@mozilla.com",
         },
@@ -164,7 +164,7 @@ add_task(async function test_upgrade_default_position_engine() {
           search_url: "https://example.com/?q={searchTerms}",
         },
       },
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "testengine@mozilla.com",
         },

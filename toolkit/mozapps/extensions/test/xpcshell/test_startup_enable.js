@@ -10,7 +10,7 @@ add_task(async function test_startup_enable() {
 
   await promiseInstallWebExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
           strict_min_version: "1",

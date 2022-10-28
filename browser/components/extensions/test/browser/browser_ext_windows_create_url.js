@@ -5,7 +5,7 @@
 add_task(async function testWindowCreate() {
   let pageExt = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: "page@mochitest" } },
+      browser_specific_settings: { gecko: { id: "page@mochitest" } },
       protocol_handlers: [
         {
           protocol: "ext+foo",

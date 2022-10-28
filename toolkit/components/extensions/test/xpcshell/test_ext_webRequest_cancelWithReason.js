@@ -11,7 +11,7 @@ server.registerPathHandler("/dummy", (request, response) => {
 add_task(async function test_cancel_with_reason() {
   let ext = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: "cancel@test" } },
+      browser_specific_settings: { gecko: { id: "cancel@test" } },
       permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
     },
 

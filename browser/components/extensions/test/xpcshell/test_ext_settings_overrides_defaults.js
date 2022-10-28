@@ -156,7 +156,7 @@ add_task(async function test_extension_overriding_app_provided_default() {
 
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "test@thirdparty.example.com",
         },

@@ -23,7 +23,7 @@ add_task(async function testMonochromaticList() {
   const themeXpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       name: "Monochromatic Theme",
-      applications: { gecko: { id: kTestThemeId } },
+      browser_specific_settings: { gecko: { id: kTestThemeId } },
       theme: {},
     },
   });
@@ -146,7 +146,7 @@ add_task(async function testExpiredThemes() {
   const themeXpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       name: "Monochromatic Theme",
-      applications: { gecko: { id: kTestThemeId } },
+      browser_specific_settings: { gecko: { id: kTestThemeId } },
       theme: {},
     },
   });

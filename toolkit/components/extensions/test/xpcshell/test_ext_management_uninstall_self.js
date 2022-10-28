@@ -12,7 +12,7 @@ const { MockRegistrar } = ChromeUtils.import(
 const id = "uninstall_self_test@tests.mozilla.com";
 
 const manifest = {
-  applications: {
+  browser_specific_settings: {
     gecko: {
       id,
     },

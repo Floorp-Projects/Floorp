@@ -357,7 +357,7 @@ add_task(async function test_web_accessible_resources_v3_by_id() {
   await _test_web_accessible_resources({
     manifest: {
       manifest_version: 3,
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "extension_wac@mochitest",
         },
@@ -508,7 +508,7 @@ add_task(async function test_web_accessible_resources_extensions_MV2() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: "this-mv2@mochitest" } },
+      browser_specific_settings: { gecko: { id: "this-mv2@mochitest" } },
     },
     background,
     files: {

@@ -10,7 +10,7 @@ add_task(async function test_sessions_tab_value_private() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "exampleextension@mozilla.org",
         },

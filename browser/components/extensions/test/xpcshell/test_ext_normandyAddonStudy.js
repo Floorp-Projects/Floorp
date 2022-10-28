@@ -28,7 +28,7 @@ function createExtension(backgroundScript, permissions, isPrivileged = true) {
   let extensionData = {
     background: backgroundScript,
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "test@shield.mozilla.com",
         },

@@ -33,12 +33,12 @@ add_task(async function setup() {
     manifest: {
       name: "Test 1",
       version: VERSION,
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
     },
   });
   let wrapper = await installBuiltinExtension({
     manifest: {
-      applications: { gecko: { id: BUILTIN_ID } },
+      browser_specific_settings: { gecko: { id: BUILTIN_ID } },
     },
   });
 

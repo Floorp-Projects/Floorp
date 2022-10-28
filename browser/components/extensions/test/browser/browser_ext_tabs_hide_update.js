@@ -50,7 +50,7 @@ function getExtension() {
   let extdata = {
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
         },
@@ -87,7 +87,7 @@ add_task(async function test_tabs_update() {
   let extdata = {
     manifest: {
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
         },
@@ -101,7 +101,7 @@ add_task(async function test_tabs_update() {
   // Test that update does hide tabs when tabHide permission is removed.
   extdata.manifest = {
     version: "3.0",
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: ID,
       },

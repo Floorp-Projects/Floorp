@@ -58,7 +58,7 @@ add_task(async function test_implicit_id_temp() {
 add_task(async function test_invalid_extension_install_errors() {
   const manifest = {
     name: "invalid",
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: "invalid@tests.mozilla.org",
       },
@@ -271,7 +271,7 @@ add_task(async function test_strict_min_max() {
 
   // bad max good min
   let apps = {
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: addonId,
         strict_min_version: "1",
@@ -301,7 +301,7 @@ add_task(async function test_strict_min_max() {
 
   // bad min good max
   apps = {
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: addonId,
         strict_min_version: "2",
@@ -331,7 +331,7 @@ add_task(async function test_strict_min_max() {
 
   // bad both
   apps = {
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: addonId,
         strict_min_version: "2",
@@ -361,7 +361,7 @@ add_task(async function test_strict_min_max() {
 
   // bad only min
   apps = {
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: addonId,
         strict_min_version: "2",
@@ -390,7 +390,7 @@ add_task(async function test_strict_min_max() {
 
   // bad only max
   apps = {
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: addonId,
         strict_max_version: "1",
@@ -419,7 +419,7 @@ add_task(async function test_strict_min_max() {
 
   // good both
   apps = {
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: addonId,
         strict_min_version: "1",
@@ -444,7 +444,7 @@ add_task(async function test_strict_min_max() {
   // good only min
   let newId = "strict_min_only@tests.mozilla.org";
   apps = {
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: newId,
         strict_min_version: "1",
@@ -469,7 +469,7 @@ add_task(async function test_strict_min_max() {
   // good only max
   newId = "strict_max_only@tests.mozilla.org";
   apps = {
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: newId,
         strict_max_version: "2",
@@ -495,7 +495,7 @@ add_task(async function test_strict_min_max() {
   for (let version of ["0.*", "0.*.0"]) {
     newId = "strict_min_star@tests.mozilla.org";
     let minStarApps = {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: newId,
           strict_min_version: version,
@@ -523,7 +523,7 @@ add_task(async function test_strict_min_max() {
   // incompatible extension but with compatibility checking off
   newId = "checkCompatibility@tests.mozilla.org";
   apps = {
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: newId,
         strict_max_version: "1",
@@ -671,7 +671,9 @@ add_task(async function test_duplicate_bss() {
   const manifest = {
     manifest_version: 2,
     version: "1.0",
-    applications: { gecko: { id: "unexepected@tests.mozilla.org" } },
+    applications: {
+      gecko: { id: "unexpected@tests.mozilla.org" },
+    },
     browser_specific_settings: {
       gecko: { id: ID },
     },

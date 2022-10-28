@@ -96,7 +96,7 @@ async function checkRecommendedBadge(id, badges = []) {
 add_task(async function testNotRecommended() {
   let id = "not-recommended@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
-    manifest: { applications: { gecko: { id } } },
+    manifest: { browser_specific_settings: { gecko: { id } } },
     useAddonManager: "temporary",
   });
   await extension.startup();

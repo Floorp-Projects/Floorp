@@ -15,12 +15,14 @@ add_task(async function setup() {
 
   await promiseInstallWebExtension({
     manifest: {
-      applications: { gecko: { id: "enabled@tests.mozilla.org" } },
+      browser_specific_settings: { gecko: { id: "enabled@tests.mozilla.org" } },
     },
   });
   await promiseInstallWebExtension({
     manifest: {
-      applications: { gecko: { id: "disabled@tests.mozilla.org" } },
+      browser_specific_settings: {
+        gecko: { id: "disabled@tests.mozilla.org" },
+      },
     },
   });
 
@@ -118,7 +120,7 @@ add_task(async function install_bootstrap() {
 
   await promiseInstallWebExtension({
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
     },
   });
   let addon = await promiseAddonByID(ID);

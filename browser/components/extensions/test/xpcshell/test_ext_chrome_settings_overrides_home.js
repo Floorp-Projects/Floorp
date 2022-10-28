@@ -167,7 +167,7 @@ add_task(async function test_overriding_homepage_locale() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "homepage@example.com",
         },

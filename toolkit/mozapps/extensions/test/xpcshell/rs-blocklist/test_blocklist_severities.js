@@ -118,7 +118,7 @@ function createAddon(addon) {
     manifest: {
       name: addon.name,
       version: addon.version,
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: addon.id,
           strict_min_version: addon.appVersion,

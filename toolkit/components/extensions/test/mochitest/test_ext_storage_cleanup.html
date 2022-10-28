@@ -129,7 +129,7 @@ async function test_uninstall({extensionId, writeData, readData, assertResults})
   let extension = ExtensionTestUtils.loadExtension({
     background: writeData,
     manifest: {
-      applications: {gecko: {id: extensionId}},
+      browser_specific_settings: {gecko: {id: extensionId}},
       permissions: ["storage"],
     },
     useAddonManager: "temporary",
@@ -149,7 +149,7 @@ async function test_uninstall({extensionId, writeData, readData, assertResults})
   extension = ExtensionTestUtils.loadExtension({
     background: readData,
     manifest: {
-      applications: {gecko: {id: extensionId}},
+      browser_specific_settings: {gecko: {id: extensionId}},
       permissions: ["storage"],
     },
     useAddonManager: "temporary",
@@ -166,7 +166,7 @@ async function test_uninstall({extensionId, writeData, readData, assertResults})
   extension = ExtensionTestUtils.loadExtension({
     background: readData,
     manifest: {
-      applications: {gecko: {id: extensionId}},
+      browser_specific_settings: {gecko: {id: extensionId}},
       permissions: ["storage"],
     },
     useAddonManager: "temporary",

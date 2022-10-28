@@ -218,7 +218,7 @@ add_task(async function testOpenDetailView() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     useAddonManager: "temporary",
   });
@@ -226,7 +226,7 @@ add_task(async function testOpenDetailView() {
   let extension2 = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test",
-      applications: { gecko: { id: id2 } },
+      browser_specific_settings: { gecko: { id: id2 } },
     },
     useAddonManager: "temporary",
   });
@@ -330,7 +330,7 @@ add_task(async function testDetailOperations() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     useAddonManager: "temporary",
   });
@@ -931,7 +931,7 @@ add_task(async function testPrivateBrowsingExtension() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "My PB extension",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     useAddonManager: "permanent",
   });
@@ -1112,7 +1112,7 @@ add_task(async function testExternalUninstall() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Remove me",
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     useAddonManager: "temporary",
   });
@@ -1148,7 +1148,7 @@ add_task(async function testExternalThemeUninstall() {
   let id = "remove-theme@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       name: "Remove theme",
       theme: {},
     },
@@ -1186,7 +1186,7 @@ add_task(async function testPrivateBrowsingAllowedListView() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Allowed PB extension",
-      applications: { gecko: { id: "allowed@mochi.test" } },
+      browser_specific_settings: { gecko: { id: "allowed@mochi.test" } },
     },
     useAddonManager: "permanent",
   });

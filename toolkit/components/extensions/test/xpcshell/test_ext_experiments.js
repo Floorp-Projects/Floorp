@@ -284,7 +284,9 @@ add_task(async function test_unbundled_experiments() {
     isPrivileged: true,
 
     manifest: {
-      applications: { gecko: { id: "crunk@experiments.addons.mozilla.org" } },
+      browser_specific_settings: {
+        gecko: { id: "crunk@experiments.addons.mozilla.org" },
+      },
 
       experiment_apis: {
         crunk: {

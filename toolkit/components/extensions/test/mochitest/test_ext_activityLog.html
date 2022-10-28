@@ -20,7 +20,7 @@ add_task(async function test_api() {
   let unlogged = ExtensionTestUtils.loadExtension({
     isPrivileged: true,
     manifest: {
-      applications: { gecko: { id: "unlogged@tests.mozilla.org" } },
+      browser_specific_settings: { gecko: { id: "unlogged@tests.mozilla.org" } },
       permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
     },
     background() {
@@ -39,7 +39,7 @@ add_task(async function test_api() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: "watched@tests.mozilla.org" } },
+      browser_specific_settings: { gecko: { id: "watched@tests.mozilla.org" } },
       permissions: [
         "tabs",
         "tabHide",
@@ -357,7 +357,7 @@ add_task(async function test_api() {
   let logger = ExtensionTestUtils.loadExtension({
     isPrivileged: true,
     manifest: {
-      applications: { gecko: { id: "watcher@tests.mozilla.org" } },
+      browser_specific_settings: { gecko: { id: "watcher@tests.mozilla.org" } },
       permissions: ["activityLog"],
     },
     background: `(${backgroundScript})("${URL}", "${extensionUrl}")`,

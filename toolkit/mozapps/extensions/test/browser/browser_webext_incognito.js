@@ -150,7 +150,7 @@ add_task(async function test_badge_and_toggle_incognito() {
       {
         useAddonManager: "temporary",
         manifest: {
-          applications: {
+          browser_specific_settings: {
             gecko: { id: "@test-default" },
           },
         },
@@ -161,7 +161,7 @@ add_task(async function test_badge_and_toggle_incognito() {
       {
         useAddonManager: "temporary",
         manifest: {
-          applications: {
+          browser_specific_settings: {
             gecko: { id: "@test-override" },
           },
         },
@@ -173,7 +173,7 @@ add_task(async function test_badge_and_toggle_incognito() {
       {
         useAddonManager: "permanent",
         manifest: {
-          applications: {
+          browser_specific_settings: {
             gecko: { id: "@test-override-permanent" },
           },
         },
@@ -185,7 +185,7 @@ add_task(async function test_badge_and_toggle_incognito() {
       {
         useAddonManager: "temporary",
         manifest: {
-          applications: {
+          browser_specific_settings: {
             gecko: { id: "@test-not-allowed" },
           },
           incognito: "not_allowed",
@@ -294,7 +294,9 @@ add_task(async function test_addon_preferences_button() {
         useAddonManager: "temporary",
         manifest: {
           name: "Extension with inline options",
-          applications: { gecko: { id: "test-inline-options@mozilla.com" } },
+          browser_specific_settings: {
+            gecko: { id: "test-inline-options@mozilla.com" },
+          },
           options_ui: { page: "options.html", open_in_tab: false },
         },
       },
@@ -305,7 +307,9 @@ add_task(async function test_addon_preferences_button() {
         useAddonManager: "temporary",
         manifest: {
           name: "Extension with options page in a new tab",
-          applications: { gecko: { id: "test-newtab-options@mozilla.com" } },
+          browser_specific_settings: {
+            gecko: { id: "test-newtab-options@mozilla.com" },
+          },
           options_ui: { page: "options.html", open_in_tab: true },
         },
       },
@@ -317,7 +321,9 @@ add_task(async function test_addon_preferences_button() {
         manifest: {
           name: "Extension not allowed in PB windows",
           incognito: "not_allowed",
-          applications: { gecko: { id: "test-not-allowed@mozilla.com" } },
+          browser_specific_settings: {
+            gecko: { id: "test-not-allowed@mozilla.com" },
+          },
           options_ui: { page: "options.html", open_in_tab: true },
         },
       },
@@ -459,7 +465,7 @@ add_task(async function test_addon_postinstall_incognito_hidden_checkbox() {
     {
       manifest: {
         name: "Extension incognito default opt-in",
-        applications: {
+        browser_specific_settings: {
           gecko: { id: "ext-incognito-default-opt-in@mozilla.com" },
         },
       },
@@ -467,7 +473,7 @@ add_task(async function test_addon_postinstall_incognito_hidden_checkbox() {
     {
       manifest: {
         name: "Extension incognito not_allowed",
-        applications: {
+        browser_specific_settings: {
           gecko: { id: "ext-incognito-not-allowed@mozilla.com" },
         },
         incognito: "not_allowed",
@@ -476,7 +482,9 @@ add_task(async function test_addon_postinstall_incognito_hidden_checkbox() {
     {
       manifest: {
         name: "Static Theme",
-        applications: { gecko: { id: "static-theme@mozilla.com" } },
+        browser_specific_settings: {
+          gecko: { id: "static-theme@mozilla.com" },
+        },
         theme: {
           colors: {
             frame: "#FFFFFF",
@@ -488,7 +496,7 @@ add_task(async function test_addon_postinstall_incognito_hidden_checkbox() {
     {
       manifest: {
         name: "Dictionary",
-        applications: { gecko: { id: "dictionary@mozilla.com" } },
+        browser_specific_settings: { gecko: { id: "dictionary@mozilla.com" } },
         dictionaries: {
           und: "dictionaries/und.dic",
         },
@@ -501,7 +509,7 @@ add_task(async function test_addon_postinstall_incognito_hidden_checkbox() {
     {
       manifest: {
         name: "Langpack",
-        applications: { gecko: { id: "langpack@mozilla.com" } },
+        browser_specific_settings: { gecko: { id: "langpack@mozilla.com" } },
         langpack_id: "und",
         languages: {
           und: {
@@ -516,7 +524,7 @@ add_task(async function test_addon_postinstall_incognito_hidden_checkbox() {
   ];
 
   for (let definition of TEST_ADDONS) {
-    let { id } = definition.manifest.applications.gecko;
+    let { id } = definition.manifest.browser_specific_settings.gecko;
     info(
       `Testing incognito checkbox visibility on ${id} post install notification`
     );

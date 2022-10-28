@@ -12,7 +12,7 @@ const ADDONS = {
       name: "Web Extension Name",
       version: "1.0",
       manifest_version: 2,
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
         },
@@ -132,7 +132,7 @@ add_task(async function test_reload_to_invalid_version_fails() {
     description: "test invalid_version_cannot_be_reloaded",
     manifest_version: 2,
     version: "1.0",
-    applications: {
+    browser_specific_settings: {
       gecko: {
         id: addonId,
       },
@@ -155,8 +155,8 @@ add_task(async function test_reload_to_invalid_version_fails() {
   addonDir.remove(true);
 
   // update the manifest to make the add-on version incompatible, so the reload will reject
-  manifest.applications.gecko.strict_min_version = "1";
-  manifest.applications.gecko.strict_max_version = "1";
+  manifest.browser_specific_settings.gecko.strict_min_version = "1";
+  manifest.browser_specific_settings.gecko.strict_max_version = "1";
   manifest.version = "2.0";
 
   addonDir = await promiseWriteWebManifestForExtension(

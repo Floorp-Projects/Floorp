@@ -82,7 +82,7 @@ add_task(async function testIdentityIndicationNewTab() {
     },
     manifest: {
       name: "Test Extension",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "@newtab",
         },

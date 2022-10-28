@@ -134,7 +134,7 @@ add_task(async function test_should_fire_on_addon_update() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
           update_url: `http://localhost:${port}/test_update.json`,
@@ -162,7 +162,7 @@ add_task(async function test_should_fire_on_addon_update() {
   let webExtensionFile = createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -228,7 +228,7 @@ add_task(async function test_should_fire_on_browser_update() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -300,7 +300,7 @@ add_task(async function test_should_not_fire_on_reload() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -340,7 +340,7 @@ add_task(async function test_should_not_fire_on_restart() {
     useAddonManager: "permanent",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -382,7 +382,7 @@ add_task(async function test_temporary_installation() {
     useAddonManager: "temporary",
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },
@@ -417,7 +417,7 @@ add_task(
       useAddonManager: "permanent",
       manifest: {
         version: "1.0",
-        applications: {
+        browser_specific_settings: {
           gecko: {
             id: EXTENSION_ID,
           },

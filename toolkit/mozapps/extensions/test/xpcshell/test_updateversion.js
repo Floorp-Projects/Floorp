@@ -11,7 +11,7 @@ async function serverRegisterUpdate({ id, version, actualVersion }) {
   let xpi = await createTempWebExtensionFile({
     manifest: {
       version: actualVersion,
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
   });
 
@@ -34,7 +34,7 @@ add_task(async function test_update_version_mismatch() {
   await promiseInstallWebExtension({
     manifest: {
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
           update_url: "http://example.com/update.json",
@@ -79,7 +79,7 @@ add_task(async function test_update_version_empty() {
   await promiseInstallWebExtension({
     manifest: {
       version: "0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
           update_url: "http://example.com/update.json",

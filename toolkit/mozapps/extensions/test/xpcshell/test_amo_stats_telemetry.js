@@ -54,7 +54,7 @@ add_task(async function test_ping_payload_and_environment() {
       manifest: {
         name,
         version,
-        applications: { gecko: { id } },
+        browser_specific_settings: { gecko: { id } },
       },
       useAddonManager: "permanent",
     });

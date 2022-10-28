@@ -99,7 +99,7 @@ add_task(async function test_management_permission() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "management@test",
         },
@@ -121,7 +121,7 @@ add_task(async function test_management_permission() {
   // The listener will make the test fail if fired.
   let ext2 = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "on-installed@test",
         },
@@ -142,7 +142,7 @@ add_task(async function test_management_getAll() {
 
   function getManifest(id) {
     return {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id,
         },
@@ -253,7 +253,7 @@ add_task(
     let testExt = ExtensionTestUtils.loadExtension({
       useAddonManager: "permanent",
       manifest: {
-        applications: { gecko: { id: "test-ext@mochitest" } },
+        browser_specific_settings: { gecko: { id: "test-ext@mochitest" } },
       },
       background() {},
     });

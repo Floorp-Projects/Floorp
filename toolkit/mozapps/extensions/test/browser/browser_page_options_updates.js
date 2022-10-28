@@ -80,7 +80,7 @@ add_task(async function testResetUpdateStates() {
   let id = "update-state@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     useAddonManager: "permanent",
   });

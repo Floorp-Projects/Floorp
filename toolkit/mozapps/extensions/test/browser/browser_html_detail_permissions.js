@@ -24,7 +24,7 @@ async function getExtensions({ manifest_version = 2 } = {}) {
       manifest: {
         manifest_version,
         name: "Test add-on 0",
-        applications: { gecko: { id: "addon0@mochi.test" } },
+        browser_specific_settings: { gecko: { id: "addon0@mochi.test" } },
         permissions: ["alarms", "contextMenus"],
       },
       background,
@@ -34,7 +34,7 @@ async function getExtensions({ manifest_version = 2 } = {}) {
       manifest: {
         manifest_version,
         name: "Test add-on 1",
-        applications: { gecko: { id: "addon1@mochi.test" } },
+        browser_specific_settings: { gecko: { id: "addon1@mochi.test" } },
         permissions: ["alarms", "contextMenus", "tabs", "webNavigation"],
         // Note: for easier testing, we merge host_permissions into permissions
         // when loading mv2 extensions, see ExtensionTestCommon.generateFiles.
@@ -47,7 +47,7 @@ async function getExtensions({ manifest_version = 2 } = {}) {
       manifest: {
         manifest_version,
         name: "Test add-on 2",
-        applications: { gecko: { id: "addon2@mochi.test" } },
+        browser_specific_settings: { gecko: { id: "addon2@mochi.test" } },
         permissions: ["alarms", "contextMenus"],
         optional_permissions: ["http://mochi.test/*"],
       },
@@ -59,7 +59,7 @@ async function getExtensions({ manifest_version = 2 } = {}) {
         manifest_version,
         name: "Test add-on 3",
         version: "1.0",
-        applications: { gecko: { id: "addon3@mochi.test" } },
+        browser_specific_settings: { gecko: { id: "addon3@mochi.test" } },
         permissions: ["tabs"],
         optional_permissions: ["webNavigation", "<all_urls>"],
       },
@@ -70,7 +70,7 @@ async function getExtensions({ manifest_version = 2 } = {}) {
       manifest: {
         manifest_version,
         name: "Test add-on 4",
-        applications: { gecko: { id: "addon4@mochi.test" } },
+        browser_specific_settings: { gecko: { id: "addon4@mochi.test" } },
         optional_permissions: ["tabs", "webNavigation"],
       },
       background,
@@ -80,7 +80,7 @@ async function getExtensions({ manifest_version = 2 } = {}) {
       manifest: {
         manifest_version,
         name: "Test add-on 5",
-        applications: { gecko: { id: "addon5@mochi.test" } },
+        browser_specific_settings: { gecko: { id: "addon5@mochi.test" } },
         optional_permissions: ["*://*/*"],
       },
       background,
@@ -91,7 +91,7 @@ async function getExtensions({ manifest_version = 2 } = {}) {
       manifest: {
         manifest_version,
         name: "Privileged add-on 6",
-        applications: { gecko: { id: "priv6@mochi.test" } },
+        browser_specific_settings: { gecko: { id: "priv6@mochi.test" } },
         optional_permissions: [
           "file://*/*",
           "about:reader*",
@@ -108,7 +108,7 @@ async function getExtensions({ manifest_version = 2 } = {}) {
       manifest: {
         manifest_version,
         name: "Test add-on 7",
-        applications: { gecko: { id: "addon7@mochi.test" } },
+        browser_specific_settings: { gecko: { id: "addon7@mochi.test" } },
         optional_permissions: ["<all_urls>", "*://*/*", "file://*/*"],
       },
       background,
@@ -118,7 +118,7 @@ async function getExtensions({ manifest_version = 2 } = {}) {
       manifest: {
         manifest_version,
         name: "Test add-on 8",
-        applications: { gecko: { id: "addon8@mochi.test" } },
+        browser_specific_settings: { gecko: { id: "addon8@mochi.test" } },
         optional_permissions: ["*://*/*", "file://*/*", "<all_urls>"],
       },
       background,
@@ -128,7 +128,7 @@ async function getExtensions({ manifest_version = 2 } = {}) {
       manifest: {
         manifest_version,
         name: "Test add-on 6",
-        applications: { gecko: { id: "other@mochi.test" } },
+        browser_specific_settings: { gecko: { id: "other@mochi.test" } },
         optional_permissions: [
           "tabs",
           "webNavigation",
@@ -521,7 +521,7 @@ add_task(async function testPermissionsViewStates() {
     manifest: {
       name: "Test add-on 3",
       version: "1.0",
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       permissions: ["tabs"],
       optional_permissions: ["webNavigation", "<all_urls>"],
     },
@@ -560,7 +560,7 @@ add_task(async function testPermissionsViewStates() {
     manifest: {
       name: "Test add-on 3",
       version: "2.0",
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       optional_permissions: ["webNavigation"],
     },
     useAddonManager: "permanent",

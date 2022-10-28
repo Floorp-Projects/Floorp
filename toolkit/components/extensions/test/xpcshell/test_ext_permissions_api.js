@@ -217,7 +217,7 @@ add_task(async function test_geo_permissions() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      applications: { gecko: { id: "geo-test@test" } },
+      browser_specific_settings: { gecko: { id: "geo-test@test" } },
       optional_permissions: ["geolocation"],
     },
     useAddonManager: "permanent",
@@ -263,7 +263,7 @@ add_task(async function test_geo_permissions() {
   // We should not have geo permission after this upgrade.
   await extension.upgrade({
     manifest: {
-      applications: { gecko: { id: "geo-test@test" } },
+      browser_specific_settings: { gecko: { id: "geo-test@test" } },
     },
     useAddonManager: "permanent",
   });

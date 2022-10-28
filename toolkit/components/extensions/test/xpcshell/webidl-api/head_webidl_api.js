@@ -256,7 +256,7 @@ async function runExtensionAPITest(
       background: {
         service_worker: "test-sw.js",
       },
-      applications: {
+      browser_specific_settings: {
         gecko: { id: extensionId },
       },
     },

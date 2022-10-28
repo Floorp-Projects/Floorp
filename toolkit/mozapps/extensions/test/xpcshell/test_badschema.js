@@ -16,7 +16,7 @@ const ADDONS = {
   "addon1@tests.mozilla.org": {
     manifest: {
       name: "Test 1",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon1@tests.mozilla.org",
           strict_min_version: "2",
@@ -36,7 +36,7 @@ const ADDONS = {
     manifest: {
       name: "Test 2",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon2@tests.mozilla.org",
         },
@@ -57,7 +57,7 @@ const ADDONS = {
     manifest: {
       name: "Test 3",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon3@tests.mozilla.org",
           update_url: "http://example.com/data/test_corrupt.json",
@@ -79,7 +79,7 @@ const ADDONS = {
     manifest: {
       name: "Test 4",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon4@tests.mozilla.org",
           update_url: "http://example.com/data/test_corrupt.json",
@@ -104,7 +104,7 @@ const ADDONS = {
     manifest: {
       name: "Test 5",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon5@tests.mozilla.org",
           strict_min_version: "1",
@@ -126,7 +126,7 @@ const ADDONS = {
       name: "Theme 1",
       version: "1.0",
       theme: { images: { theme_frame: "example.png" } },
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "theme1@tests.mozilla.org",
         },
@@ -146,7 +146,7 @@ const ADDONS = {
       name: "Theme 2",
       version: "1.0",
       theme: { images: { theme_frame: "example.png" } },
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "theme2@tests.mozilla.org",
         },

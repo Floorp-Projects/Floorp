@@ -16,7 +16,7 @@ add_task(async function() {
       frame.src = "page.html";
       document.body.appendChild(frame);
     },
-    manifest: { applications: { gecko: { id: ID1 } } },
+    manifest: { browser_specific_settings: { gecko: { id: ID1 } } },
     files: {
       "page.js": function() {
         browser.runtime.onMessage.addListener((msg, sender) => {
@@ -35,7 +35,7 @@ add_task(async function() {
         browser.test.sendMessage("received-external", { msg, sender });
       });
     },
-    manifest: { applications: { gecko: { id: ID2 } } },
+    manifest: { browser_specific_settings: { gecko: { id: ID2 } } },
   });
 
   await Promise.all([extension1.startup(), extension2.startup()]);

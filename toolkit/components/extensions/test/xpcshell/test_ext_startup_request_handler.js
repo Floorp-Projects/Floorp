@@ -16,7 +16,7 @@ add_task(async function test_startup_request_handler() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
     },
 
     files: {

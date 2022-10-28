@@ -29,7 +29,7 @@ function createFileWithRecommendations(id, recommendation) {
   }
   return AddonTestUtils.createTempWebExtensionFile({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     files,
   });
@@ -145,7 +145,7 @@ add_task(async function test_temporary_directory() {
   const id = "temporary-dir@test.web.extension";
   let files = ExtensionTestCommon.generateFiles({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     files: {
       [RECOMMENDATION_FILE_NAME]: {
@@ -174,7 +174,7 @@ add_task(async function test_builtin() {
   const id = "builtin@test.web.extension";
   let extension = await installBuiltinExtension({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
     },
     background: `browser.test.sendMessage("started");`,
     files: {
@@ -196,7 +196,7 @@ add_task(async function test_theme() {
   const id = "theme@test.web.extension";
   let xpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       theme: {},
     },
     files: {

@@ -65,7 +65,7 @@ add_task(async function test_extension_privileged_not_allowed() {
   let extensionData = {
     manifest: {
       version: "1.0",
-      applications: { gecko: { id: addonId } },
+      browser_specific_settings: { gecko: { id: addonId } },
       incognito: "not_allowed",
     },
     useAddonManager: "permanent",
@@ -94,7 +94,7 @@ add_task(async function test_extension_upgrade_not_allowed() {
   let extensionData = {
     manifest: {
       version: "1.0",
-      applications: { gecko: { id: addonId } },
+      browser_specific_settings: { gecko: { id: addonId } },
       incognito: "spanning",
     },
     useAddonManager: "permanent",

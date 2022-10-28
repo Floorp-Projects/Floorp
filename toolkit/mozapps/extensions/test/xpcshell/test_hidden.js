@@ -13,7 +13,7 @@ add_task(async function setup() {
 add_task(async function test_hidden() {
   let xpi1 = createTempWebExtensionFile({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "privileged@tests.mozilla.org",
         },
@@ -26,7 +26,7 @@ add_task(async function test_hidden() {
 
   let xpi2 = createTempWebExtensionFile({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "unprivileged@tests.mozilla.org",
         },
@@ -64,7 +64,7 @@ add_task(async function test_hidden() {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
     manifest: {
-      applications: { gecko: { id: "privileged@but-temporary" } },
+      browser_specific_settings: { gecko: { id: "privileged@but-temporary" } },
       hidden: true,
     },
   });

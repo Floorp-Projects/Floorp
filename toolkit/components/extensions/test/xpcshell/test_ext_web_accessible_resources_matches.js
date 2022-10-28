@@ -245,7 +245,7 @@ async function pageScript() {
 add_task(async function test_web_accessible_resources_extensions() {
   let other = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: "other@mochitest" } },
+      browser_specific_settings: { gecko: { id: "other@mochitest" } },
     },
     files: {
       "page.js": pageScript,
@@ -260,7 +260,7 @@ add_task(async function test_web_accessible_resources_extensions() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       manifest_version: 3,
-      applications: { gecko: { id: "this@mochitest" } },
+      browser_specific_settings: { gecko: { id: "this@mochitest" } },
       web_accessible_resources: [
         {
           resources: ["/image.png"],
@@ -331,7 +331,7 @@ add_task(async function test_web_accessible_resources_inaccessible() {
     temporarilyInstalled: true,
     manifest: {
       manifest_version: 3,
-      applications: { gecko: { id: "web@mochitest" } },
+      browser_specific_settings: { gecko: { id: "web@mochitest" } },
       content_scripts: [
         {
           matches: ["http://example.com/data/*"],

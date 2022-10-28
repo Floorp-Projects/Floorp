@@ -103,7 +103,9 @@ add_task(async function test_networkStatus() {
   mockNetworkStatusService.register();
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: "networkstatus@tests.mozilla.org" } },
+      browser_specific_settings: {
+        gecko: { id: "networkstatus@tests.mozilla.org" },
+      },
       permissions: ["networkStatus"],
     },
     isPrivileged: true,
@@ -176,7 +178,7 @@ add_task(
       temporarilyInstalled: true,
       isPrivileged: false,
       manifest: {
-        applications: {
+        browser_specific_settings: {
           gecko: { id: "networkstatus-permission@tests.mozilla.org" },
         },
         permissions: ["networkStatus"],

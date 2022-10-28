@@ -141,7 +141,7 @@ add_task(async function testRecentUpdatesList() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "New extension",
-      applications: { gecko: { id: "new@mochi.test" } },
+      browser_specific_settings: { gecko: { id: "new@mochi.test" } },
     },
     useAddonManager: "temporary",
   });

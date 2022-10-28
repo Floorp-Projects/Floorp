@@ -206,7 +206,7 @@ add_task(async function test_extension_setting_default_engine_external() {
   async function startExtension(win = window) {
     let extension = ExtensionTestUtils.loadExtension({
       manifest: {
-        applications: {
+        browser_specific_settings: {
           gecko: {
             id: EXTENSION1_ID,
           },
@@ -529,7 +529,7 @@ add_task(async function test_user_changing_default_engine() {
 add_task(async function test_user_change_with_disabling() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION1_ID,
         },
@@ -602,7 +602,7 @@ add_task(async function test_user_change_with_disabling() {
 add_task(async function test_two_addons_with_first_disabled_before_second() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION1_ID,
         },
@@ -620,7 +620,7 @@ add_task(async function test_two_addons_with_first_disabled_before_second() {
 
   let ext2 = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION2_ID,
         },
@@ -690,7 +690,7 @@ add_task(async function test_two_addons_with_first_disabled_before_second() {
 add_task(async function test_two_addons_with_first_disabled() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION1_ID,
         },
@@ -708,7 +708,7 @@ add_task(async function test_two_addons_with_first_disabled() {
 
   let ext2 = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION2_ID,
         },
@@ -778,7 +778,7 @@ add_task(async function test_two_addons_with_first_disabled() {
 add_task(async function test_two_addons_with_second_disabled() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION1_ID,
         },
@@ -796,7 +796,7 @@ add_task(async function test_two_addons_with_second_disabled() {
 
   let ext2 = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION2_ID,
         },

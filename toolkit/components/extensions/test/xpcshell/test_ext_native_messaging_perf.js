@@ -104,7 +104,7 @@ add_task(async function test_round_trip_perf() {
       });
     },
     manifest: {
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
       permissions: ["nativeMessaging"],
     },
   });

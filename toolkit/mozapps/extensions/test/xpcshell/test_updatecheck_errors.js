@@ -25,7 +25,7 @@ add_task(async function() {
     manifest: {
       name: "Test Addon 1",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon1@tests.mozilla.org",
           update_url: "http://example.com/data/test_missing.json",

@@ -377,7 +377,7 @@ add_task(async function test_omnibox_event_page() {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: "eventpage@omnibox" } },
+      browser_specific_settings: { gecko: { id: "eventpage@omnibox" } },
       omnibox: {
         keyword: keyword,
       },

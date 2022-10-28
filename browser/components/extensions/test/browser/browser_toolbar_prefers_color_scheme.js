@@ -14,7 +14,7 @@ async function testTheme(description, toolbar, content, themeManifestData) {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "dummy@mochi.test",
         },

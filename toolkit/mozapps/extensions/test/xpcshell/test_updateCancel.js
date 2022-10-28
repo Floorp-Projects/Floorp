@@ -80,7 +80,7 @@ add_task(async function cancel_during_check() {
     manifest: {
       name: "Test Addon 1",
       version: "1.0",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "addon1@tests.mozilla.org",
           update_url: "http://example.com/data/test_update.json",

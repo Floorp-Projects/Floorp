@@ -40,7 +40,7 @@ add_task(async function test_startupCache_write_byteLength() {
   const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: ADDON_ID } },
+      browser_specific_settings: { gecko: { id: ADDON_ID } },
     },
   });
 

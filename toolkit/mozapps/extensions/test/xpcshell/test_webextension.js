@@ -13,7 +13,7 @@ const ADDONS = {
       name: "Web Extension Name",
       version: "1.0",
       manifest_version: 2,
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "webextension1@tests.mozilla.org",
         },
@@ -32,7 +32,7 @@ const ADDONS = {
       version: "1.0",
       manifest_version: 2,
       default_locale: "en",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "webextension3@tests.mozilla.org",
         },
@@ -155,7 +155,7 @@ add_task(async function test_2() {
       name: "Web Extension Name",
       version: "1.0",
       manifest_version: 2,
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
         },
@@ -220,7 +220,7 @@ add_task(async function test_3() {
     {
       name: "Web Extension Name",
       manifest_version: 2,
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
         },
@@ -247,7 +247,7 @@ add_task(async function test_4() {
       name: "Web Extension Name",
       version: "1.0",
       manifest_version: 1,
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
         },
@@ -274,7 +274,7 @@ add_task(async function test_options_ui() {
   const extensionId = "webextension@tests.mozilla.org";
   let addon = await promiseInstallWebExtension({
     manifest: {
-      applications: { gecko: { id: extensionId } },
+      browser_specific_settings: { gecko: { id: extensionId } },
       options_ui: {
         page: "options.html",
       },
@@ -295,7 +295,7 @@ add_task(async function test_options_ui() {
   const ID2 = "webextension2@tests.mozilla.org";
   addon = await promiseInstallWebExtension({
     manifest: {
-      applications: { gecko: { id: ID2 } },
+      browser_specific_settings: { gecko: { id: ID2 } },
       options_ui: {
         page: "options.html",
         open_in_tab: true,
@@ -319,7 +319,7 @@ add_task(async function test_options_ui() {
 add_task(async function test_experiments_dependencies() {
   let addon = await promiseInstallWebExtension({
     manifest: {
-      applications: { gecko: { id: "meh@experiment" } },
+      browser_specific_settings: { gecko: { id: "meh@experiment" } },
       permissions: ["experiments.meh"],
     },
   });
@@ -416,7 +416,7 @@ add_task(async function test_invalid_developer_does_not_override() {
           author: creator,
           homepage_url: homepageURL,
           developer,
-          applications: { gecko: { id } },
+          browser_specific_settings: { gecko: { id } },
           ...manifestProps,
         },
         files,
@@ -505,7 +505,7 @@ add_task(async function test_theme_upgrade() {
     manifest: {
       version: "1.0",
       name: "Test WebExtension 1 (temporary)",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
         },
@@ -528,7 +528,7 @@ add_task(async function test_theme_upgrade() {
     manifest: {
       version: "2.0",
       name: "Test WebExtension 1 (temporary)",
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: ID,
         },
@@ -609,7 +609,7 @@ add_task(async function test_developer_properties() {
         },
         author: "Will be overridden by developer",
         homepage_url: "https://will.be.overridden",
-        applications: { gecko: { id } },
+        browser_specific_settings: { gecko: { id } },
         ...manifestProps,
       },
       files,

@@ -387,7 +387,7 @@ add_task(async function test_commands_event_page() {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: "eventpage@commands" } },
+      browser_specific_settings: { gecko: { id: "eventpage@commands" } },
       background: { persistent: false },
       commands: {
         "toggle-feature": {

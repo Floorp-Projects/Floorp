@@ -37,7 +37,7 @@ add_task(async function test_storage_managed_policy() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {
+      browser_specific_settings: {
         gecko: { id: "test-storage-managed-policy@mozilla.com" },
       },
       permissions: ["storage"],

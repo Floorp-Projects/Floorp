@@ -72,7 +72,7 @@ async function testLoadManifest({ location, expectPrivileged }) {
   location ??= getInstallLocation({});
   let xpi = await AddonTestUtils.createTempWebExtensionFile({
     manifest: {
-      applications: { gecko: { id: "@with-privileged-perm" } },
+      browser_specific_settings: { gecko: { id: "@with-privileged-perm" } },
       permissions: ["mozillaAddons", "cookies"],
     },
   });

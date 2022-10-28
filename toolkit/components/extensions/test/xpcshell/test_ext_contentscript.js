@@ -58,7 +58,9 @@ add_task(async function test_contentscript_runAt() {
 
   let extensionData = {
     manifest: {
-      applications: { gecko: { id: "contentscript@tests.mozilla.org" } },
+      browser_specific_settings: {
+        gecko: { id: "contentscript@tests.mozilla.org" },
+      },
       content_scripts: [
         {
           matches: ["http://*/*/file_sample.html"],
@@ -162,7 +164,9 @@ add_task(async function test_contentscript_window_open() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: "contentscript@tests.mozilla.org" } },
+      browser_specific_settings: {
+        gecko: { id: "contentscript@tests.mozilla.org" },
+      },
       content_scripts: [
         {
           matches: ["<all_urls>"],

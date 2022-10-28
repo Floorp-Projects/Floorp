@@ -30,7 +30,7 @@ async function test_background_storagePersist(EXTENSION_ID) {
 
     manifest: {
       permissions: ["storage", "unlimitedStorage"],
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: EXTENSION_ID,
         },

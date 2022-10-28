@@ -35,7 +35,7 @@ add_task(async function setup() {
       createTempWebExtensionFile({
         manifest: {
           name: info.name,
-          applications: { gecko: { id: info.id } },
+          browser_specific_settings: { gecko: { id: info.id } },
         },
       })
     )

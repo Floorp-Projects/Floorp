@@ -17,7 +17,7 @@ add_task(async function test_update_theme_to_extension() {
     manifest: {
       version: "1.0",
       theme: {},
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: THEME_ID,
           update_url: "http://example.com/update.json",
@@ -29,7 +29,7 @@ add_task(async function test_update_theme_to_extension() {
   let xpi = await createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: { gecko: { id: THEME_ID } },
+      browser_specific_settings: { gecko: { id: THEME_ID } },
     },
   });
 

@@ -243,14 +243,14 @@ add_setup(async function() {
   xpi1 = await AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "1.0",
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
     },
   });
 
   xpi2 = await AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: { gecko: { id: ID } },
+      browser_specific_settings: { gecko: { id: ID } },
     },
   });
 

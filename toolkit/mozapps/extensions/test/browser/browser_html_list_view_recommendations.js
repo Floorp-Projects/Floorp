@@ -109,7 +109,7 @@ async function installAddon({ card, recommendedList, manifestExtra = {} }) {
   );
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: { gecko: { id: card.addonId } },
+      browser_specific_settings: { gecko: { id: card.addonId } },
       ...manifestExtra,
     },
     useAddonManager: "temporary",
