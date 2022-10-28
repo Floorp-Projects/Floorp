@@ -9,22 +9,30 @@ const { isWindowGlobalPartOfContext } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs"
 );
 const { WatcherRegistry } = ChromeUtils.importESModule(
-  "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs",
-  {
-    // WatcherRegistry needs to be a true singleton and loads ActorManagerParent
-    // which also has to be a true singleton.
-    loadInDevToolsLoader: false,
-  }
+  "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs"
 );
 const Targets = require("resource://devtools/server/actors/targets/index.js");
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  NetworkObserver:
+loader.lazyGetter(lazy, "NetworkObserver", () => {
+  const {
+    NetworkObserver,
+  } = ChromeUtils.importESModule(
     "resource://devtools/server/actors/network-monitor/NetworkObserver.sys.mjs",
-  NetworkUtils:
+    { loadInDevToolsLoader: loader.invisibleToDebugger }
+  );
+  return NetworkObserver;
+});
+
+loader.lazyGetter(lazy, "NetworkUtils", () => {
+  const {
+    NetworkUtils,
+  } = ChromeUtils.importESModule(
     "resource://devtools/server/actors/network-monitor/utils/NetworkUtils.sys.mjs",
+    { loadInDevToolsLoader: loader.invisibleToDebugger }
+  );
+  return NetworkUtils;
 });
 
 loader.lazyRequireGetter(

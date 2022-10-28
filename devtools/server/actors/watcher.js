@@ -11,12 +11,7 @@ const { TargetActorRegistry } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs"
 );
 const { WatcherRegistry } = ChromeUtils.importESModule(
-  "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs",
-  {
-    // WatcherRegistry needs to be a true singleton and loads ActorManagerParent
-    // which also has to be a true singleton.
-    loadInDevToolsLoader: false,
-  }
+  "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs"
 );
 const Targets = require("resource://devtools/server/actors/targets/index.js");
 const { getAllBrowsingContextsForContext } = ChromeUtils.importESModule(

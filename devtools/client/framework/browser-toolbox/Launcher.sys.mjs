@@ -11,11 +11,11 @@ const BROWSER_TOOLBOX_WINDOW_URL =
 const CHROME_DEBUGGER_PROFILE_NAME = "chrome_debugger_profile";
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { require } from "resource://devtools/shared/loader/Loader.sys.mjs";
 import {
+  require,
   useDistinctSystemPrincipalLoader,
   releaseDistinctSystemPrincipalLoader,
-} from "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs";
+} from "resource://devtools/shared/loader/Loader.sys.mjs";
 import { Subprocess } from "resource://gre/modules/Subprocess.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 

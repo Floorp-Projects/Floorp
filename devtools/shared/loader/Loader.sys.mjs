@@ -13,6 +13,38 @@ import { requireRawId } from "resource://devtools/shared/loader/loader-plugin-ra
 
 var gNextLoaderID = 0;
 
+// When debugging system principal resources (JSMs, chrome documents, ...)
+// We have to load DevTools actors in another system principal global.
+// That's mostly because of spidermonkey's Debugger API which requires
+// debuggee and debugger to be in distinct principals.
+//
+// We try to hold a single instance of this special loader via this API.
+//
+// @param requester object
+//        Object/instance which is using the loader.
+//        The same requester object should be passed to release method.
+var systemLoader = null;
+var systemLoaderRequesters = new Set();
+
+export function useDistinctSystemPrincipalLoader(requester) {
+  if (!systemLoader) {
+    systemLoader = new DevToolsLoader({
+      invisibleToDebugger: true,
+    });
+    systemLoaderRequesters.clear();
+  }
+  systemLoaderRequesters.add(requester);
+  return systemLoader;
+}
+
+export function releaseDistinctSystemPrincipalLoader(requester) {
+  systemLoaderRequesters.delete(requester);
+  if (systemLoaderRequesters.size == 0) {
+    systemLoader.destroy();
+    systemLoader = null;
+  }
+}
+
 /**
  * The main devtools API. The standard instance of this loader is exported as
  * |loader| below, but if a fresh copy of the loader is needed, then a new
@@ -31,23 +63,11 @@ var gNextLoaderID = 0;
  *        We use this in order to debug modules loaded in this shared system
  *        compartment. The debugger actor has to be running in a distinct
  *        compartment than the context it is debugging.
- * @param useDevToolsLoaderGlobal boolean
- *        If true, the loader will reuse the current global to load other
- *        modules instead of creating a sandbox with custom options. Cannot be
- *        used with invisibleToDebugger and/or freshCompartment.
- *        TODO: This should ultimately replace invisibleToDebugger.
  */
 export function DevToolsLoader({
   invisibleToDebugger = false,
   freshCompartment = false,
-  useDevToolsLoaderGlobal = false,
 } = {}) {
-  if (useDevToolsLoaderGlobal && (invisibleToDebugger || freshCompartment)) {
-    throw new Error(
-      "Loader cannot use invisibleToDebugger or freshCompartment if useDevToolsLoaderGlobal is true"
-    );
-  }
-
   const paths = {
     // This resource:// URI is only registered when running DAMP tests.
     // This is done by: testing/talos/talos/tests/devtools/addon/api.js
@@ -67,12 +87,8 @@ export function DevToolsLoader({
     "toolkit/locales": "chrome://global/locale",
   };
 
-  const sharedGlobal = useDevToolsLoaderGlobal
-    ? Cu.getGlobalForObject({})
-    : undefined;
   this.loader = new Loader({
     paths,
-    sharedGlobal,
     invisibleToDebugger,
     freshCompartment,
     sandboxName: "DevTools (Module loader)",
@@ -146,7 +162,7 @@ export function DevToolsLoader({
 
   // Register custom globals to the current loader instance
   Object.defineProperties(
-    this.loader.sharedGlobal,
+    this.loader.globals,
     Object.getOwnPropertyDescriptors(globals)
   );
 
