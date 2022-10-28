@@ -50,6 +50,7 @@
 #ifdef MOZ_WIDGET_GTK
 #  include <gtk/gtk.h>
 #  include <dlfcn.h>
+#  include "mozilla/WidgetUtilsGtk.h"
 #endif
 
 #if defined(XP_LINUX) && !defined(ANDROID)
@@ -934,9 +935,7 @@ nsresult nsSystemInfo::Init() {
     }
   }
 
-  rv = SetPropertyAsBool(NS_ConvertASCIItoUTF16("hasWindowsTouchInterface"),
-                         false);
-  NS_ENSURE_SUCCESS(rv, rv);
+  SetPropertyAsBool(u"isPackagedApp"_ns, false);
 
   // Additional informations not available through PR_GetSystemInfo.
   SetInt32Property(u"pagesize"_ns, PR_GetPageSize());
@@ -977,14 +976,20 @@ nsresult nsSystemInfo::Init() {
     return rv;
   }
 
-  rv = SetPropertyAsBool(u"hasWinPackageId"_ns,
-                         widget::WinUtils::HasPackageIdentity());
+  boolean hasPackageIdentity = widget::WinUtils::HasPackageIdentity();
+
+  rv = SetPropertyAsBool(u"hasWinPackageId"_ns, hasPackageIdentity);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = SetPropertyAsAString(u"winPackageFamilyName"_ns,
                             widget::WinUtils::GetPackageFamilyName());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = SetPropertyAsBool(u"isPackagedApp"_ns, hasPackageIdentity);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1088,6 +1093,11 @@ nsresult nsSystemInfo::Init() {
 #  endif
 
   rv = SetPropertyAsACString(u"secondaryLibrary"_ns, secondaryLibrary);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  rv = SetPropertyAsBool(u"isPackagedApp"_ns,
+                         widget::IsRunningUnderFlatpakOrSnap());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
