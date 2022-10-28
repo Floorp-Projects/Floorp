@@ -5,6 +5,8 @@
 "use strict";
 
 module.exports = {
+  extends: ["plugin:mozilla/valid-jsdoc"],
+
   rules: {
     "mozilla/var-only-at-top-level": "error",
     "require-jsdoc": [
@@ -17,24 +19,6 @@ module.exports = {
           ArrowFunctionExpression: false,
           FunctionExpression: false,
         },
-      },
-    ],
-    "valid-jsdoc": [
-      "error",
-      {
-        prefer: {
-          return: "returns",
-        },
-        preferType: {
-          Boolean: "boolean",
-          Number: "number",
-          String: "string",
-          Object: "object",
-          bool: "boolean",
-        },
-        requireParamDescription: true,
-        requireReturn: false,
-        requireReturnDescription: false,
       },
     ],
     "no-unused-expressions": "error",

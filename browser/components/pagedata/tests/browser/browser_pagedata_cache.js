@@ -30,7 +30,7 @@ const TEST_URL =
  *
  * @param {string} url
  *   The url to load.
- * @param {function} task
+ * @param {Function} task
  *   The task to run. May return a promise.
  */
 async function withBrowserInNewWindow(url, task) {
