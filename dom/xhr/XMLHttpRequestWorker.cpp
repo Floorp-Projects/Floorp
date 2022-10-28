@@ -1654,11 +1654,11 @@ void XMLHttpRequestWorker::SendInternal(const BodyExtractorBase* aBody,
   AutoUnpinXHR autoUnpin(this);
   Maybe<AutoSyncLoopHolder> autoSyncLoop;
 
-  nsCOMPtr<nsIEventTarget> syncLoopTarget;
+  nsCOMPtr<nsISerialEventTarget> syncLoopTarget;
   bool isSyncXHR = mProxy->mIsSyncXHR;
   if (isSyncXHR) {
     autoSyncLoop.emplace(mWorkerPrivate, Canceling);
-    syncLoopTarget = autoSyncLoop->GetEventTarget();
+    syncLoopTarget = autoSyncLoop->GetSerialEventTarget();
     if (!syncLoopTarget) {
       aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return;

@@ -361,7 +361,7 @@ class WorkerSameThreadRunnable : public WorkerRunnable {
 class WorkerMainThreadRunnable : public Runnable {
  protected:
   WorkerPrivate* mWorkerPrivate;
-  nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
+  nsCOMPtr<nsISerialEventTarget> mSyncLoopTarget;
   const nsCString mTelemetryKey;
 
   explicit WorkerMainThreadRunnable(WorkerPrivate* aWorkerPrivate,
