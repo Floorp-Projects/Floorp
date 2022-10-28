@@ -28,7 +28,7 @@ try {
       customLoader = false;
     if (content.document.nodePrincipal.isSystemPrincipal) {
       const { useDistinctSystemPrincipalLoader } = ChromeUtils.importESModule(
-        "resource://devtools/shared/loader/Loader.sys.mjs"
+        "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
       );
       loader = useDistinctSystemPrincipalLoader(chromeGlobal);
       customLoader = true;
@@ -183,7 +183,7 @@ try {
         const {
           releaseDistinctSystemPrincipalLoader,
         } = ChromeUtils.importESModule(
-          "resource://devtools/shared/loader/Loader.sys.mjs"
+          "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
         );
         releaseDistinctSystemPrincipalLoader(chromeGlobal);
       }

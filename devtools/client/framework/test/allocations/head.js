@@ -16,7 +16,7 @@ let tracker, releaseTrackerLoader;
     useDistinctSystemPrincipalLoader,
     releaseDistinctSystemPrincipalLoader,
   } = ChromeUtils.importESModule(
-    "resource://devtools/shared/loader/Loader.sys.mjs"
+    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
   );
 
   const requester = {};
@@ -90,12 +90,15 @@ async function startRecordingAllocations({
       gBrowser.selectedBrowser,
       [DEBUG_ALLOCATIONS],
       async debug_allocations => {
+        const { DevToolsLoader } = ChromeUtils.importESModule(
+          "resource://devtools/shared/loader/Loader.sys.mjs"
+        );
+
         const {
-          DevToolsLoader,
           useDistinctSystemPrincipalLoader,
           releaseDistinctSystemPrincipalLoader,
         } = ChromeUtils.importESModule(
-          "resource://devtools/shared/loader/Loader.sys.mjs"
+          "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
         );
 
         const requester = {};
