@@ -5,6 +5,7 @@
 include protocol PFileSystemAccessHandle;
 
 include IPCBlob;
+include RandomAccessStreamParams;
 
 using mozilla::dom::fs::ContentType from "mozilla/dom/FileSystemTypes.h";
 using mozilla::dom::fs::EntryId from "mozilla/dom/FileSystemTypes.h";
@@ -128,7 +129,7 @@ struct FileSystemGetAccessHandleRequest
 
 struct FileSystemAccessHandleProperties
 {
-  FileDescriptor fileDescriptor;
+  RandomAccessStreamParams streamParams;
   PFileSystemAccessHandle accessHandle;
 };
 

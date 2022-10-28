@@ -20,10 +20,6 @@ extern LazyLogModule gOPFSLog;
 
 class ErrorResult;
 
-namespace ipc {
-class FileDescriptor;
-}  // namespace ipc
-
 namespace dom {
 
 class FileSystemAccessHandleChild;
@@ -35,11 +31,11 @@ class Promise;
 class FileSystemSyncAccessHandle final : public nsISupports,
                                          public nsWrapperCache {
  public:
-  FileSystemSyncAccessHandle(
-      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-      RefPtr<FileSystemAccessHandleChild> aActor,
-      const ::mozilla::ipc::FileDescriptor& aFileDescriptor,
-      const fs::FileSystemEntryMetadata& aMetadata);
+  FileSystemSyncAccessHandle(nsIGlobalObject* aGlobal,
+                             RefPtr<FileSystemManager>& aManager,
+                             RefPtr<FileSystemAccessHandleChild> aActor,
+                             nsCOMPtr<nsIRandomAccessStream> aStream,
+                             const fs::FileSystemEntryMetadata& aMetadata);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(FileSystemSyncAccessHandle)
@@ -76,13 +72,18 @@ class FileSystemSyncAccessHandle final : public nsISupports,
  private:
   virtual ~FileSystemSyncAccessHandle();
 
+  uint64_t ReadOrWrite(
+      const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
+      const FileSystemReadWriteOptions& aOptions, const bool aRead,
+      ErrorResult& aRv);
+
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
   RefPtr<FileSystemManager> mManager;
 
   RefPtr<FileSystemAccessHandleChild> mActor;
 
-  PRFileDesc* mFileDesc;
+  nsCOMPtr<nsIRandomAccessStream> mStream;
 
   const fs::FileSystemEntryMetadata mMetadata;
 

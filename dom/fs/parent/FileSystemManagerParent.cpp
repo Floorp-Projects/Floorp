@@ -18,7 +18,8 @@
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/ipc/FileDescriptorUtils.h"
+#include "mozilla/ipc/RandomAccessStreamUtils.h"
+#include "nsNetUtil.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -145,14 +146,12 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
     }
   }
 
-  FILE* fileHandle;
-  QM_TRY(MOZ_TO_RESULT(file->OpenANSIFileDesc("r+", &fileHandle)), IPC_OK(),
-         reportError);
+  QM_TRY_UNWRAP(nsCOMPtr<nsIRandomAccessStream> stream,
+                NS_NewLocalFileRandomAccessStream(file), IPC_OK(), reportError);
 
-  LOG(("Opened"));
-
-  FileDescriptor fileDescriptor =
-      mozilla::ipc::FILEToFileDescriptor(fileHandle);
+  RandomAccessStreamParams streamParams =
+      mozilla::ipc::SerializeRandomAccessStream(
+          WrapMovingNotNullUnchecked(std::move(stream)));
 
   auto accessHandleParent =
       MakeRefPtr<FileSystemAccessHandleParent>(this, aRequest.entryId());
@@ -164,7 +163,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
     return IPC_OK();
   }
 
-  aResolver(FileSystemAccessHandleProperties(fileDescriptor, accessHandleParent,
+  aResolver(FileSystemAccessHandleProperties(streamParams, accessHandleParent,
                                              nullptr));
   return IPC_OK();
 }
