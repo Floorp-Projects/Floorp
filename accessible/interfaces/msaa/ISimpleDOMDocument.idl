@@ -79,5 +79,5 @@ interface ISimpleDOMDocument : IUnknown
   );
   [propput] HRESULT alternateViewMediaTypes(
     [in] BSTR * commaSeparatedMediaTypes
-	);
+  );
 }
