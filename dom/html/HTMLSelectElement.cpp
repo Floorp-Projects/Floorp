@@ -566,9 +566,9 @@ void HTMLSelectElement::GetType(nsAString& aType) {
   }
 }
 
-#define MAX_DYNAMIC_SELECT_LENGTH 10000
-
 void HTMLSelectElement::SetLength(uint32_t aLength, ErrorResult& aRv) {
+  constexpr uint32_t kMaxDynamicSelectLength = 100000;
+
   uint32_t curlen = Length();
 
   if (curlen > aLength) {  // Remove extra options
@@ -576,15 +576,15 @@ void HTMLSelectElement::SetLength(uint32_t aLength, ErrorResult& aRv) {
       Remove(i - 1);
     }
   } else if (aLength > curlen) {
-    if (aLength > MAX_DYNAMIC_SELECT_LENGTH) {
+    if (aLength > kMaxDynamicSelectLength) {
       nsAutoString strOptionsLength;
       strOptionsLength.AppendInt(aLength);
 
       nsAutoString strLimit;
-      strLimit.AppendInt(MAX_DYNAMIC_SELECT_LENGTH);
+      strLimit.AppendInt(kMaxDynamicSelectLength);
 
       nsContentUtils::ReportToConsole(
-          nsIScriptError::warningFlag, "DOM"_ns, GetOwnerDocument(),
+          nsIScriptError::warningFlag, "DOM"_ns, OwnerDoc(),
           nsContentUtils::eDOM_PROPERTIES,
           "SelectOptionsLengthAssignmentWarning", {strOptionsLength, strLimit});
       return;
