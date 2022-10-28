@@ -2009,21 +2009,20 @@ void GCMarker::delayMarkingChildren(Cell* cell) {
     markLaterArenas++;
 #endif
   }
-  JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
-  MarkColor colorToMark =
-      TraceKindCanBeMarkedGray(kind) ? markColor() : MarkColor::Black;
-  if (!arena->hasDelayedMarking(colorToMark)) {
-    arena->setHasDelayedMarking(colorToMark, true);
+
+  if (!arena->hasDelayedMarking(markColor())) {
+    arena->setHasDelayedMarking(markColor(), true);
     delayedMarkingWorkAdded = true;
   }
 }
 
 void GCMarker::markDelayedChildren(Arena* arena) {
   JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
-  MOZ_ASSERT_IF(markColor() == MarkColor::Gray, TraceKindCanBeMarkedGray(kind));
+  MarkColor colorToCheck =
+      TraceKindCanBeMarkedGray(kind) ? markColor() : MarkColor::Black;
 
   for (ArenaCellIterUnderGC cell(arena); !cell.done(); cell.next()) {
-    if (cell->isMarked(markColor())) {
+    if (cell->isMarked(colorToCheck)) {
       JS::TraceChildren(this, JS::GCCellPtr(cell, kind));
     }
   }
