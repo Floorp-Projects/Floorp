@@ -263,6 +263,8 @@ struct SweepingTracer final : public GenericTracerImpl<SweepingTracer> {
 };
 
 class GCRuntime {
+  friend GCMarker::MarkQueueProgress GCMarker::processMarkQueue();
+
  public:
   explicit GCRuntime(JSRuntime* rt);
   [[nodiscard]] bool init(uint32_t maxbytes);
@@ -288,6 +290,7 @@ class GCRuntime {
 
   [[nodiscard]] bool addRoot(Value* vp, const char* name);
   void removeRoot(Value* vp);
+  void setMarkStackLimit(size_t limit, AutoLockGC& lock);
 
   [[nodiscard]] bool setParameter(JSGCParamKey key, uint32_t value);
   [[nodiscard]] bool setParameter(JSGCParamKey key, uint32_t value,
@@ -393,7 +396,6 @@ class GCRuntime {
   bool selectForMarking(JSObject* object);
   void clearSelectedForMarking();
   void setDeterministic(bool enable);
-  void setMarkStackLimit(size_t limit, AutoLockGC& lock);
 #endif
 
   uint64_t nextCellUniqueId() {
@@ -636,14 +638,6 @@ class GCRuntime {
 
   void updateAllocationRates();
 
-#ifdef DEBUG
-  const GCVector<HeapPtr<JS::Value>, 0, SystemAllocPolicy>& getTestMarkQueue()
-      const;
-  [[nodiscard]] bool appendTestMarkQueue(const JS::Value& value);
-  void clearTestMarkQueue();
-  size_t testMarkQueuePos() const;
-#endif
-
  private:
   enum IncrementalResult { ResetIncremental = 0, Ok };
 
@@ -782,21 +776,11 @@ class GCRuntime {
   IncrementalProgress markAllWeakReferences();
   void markAllGrayReferences(gcstats::PhaseKind phase);
 
-  // The mark queue is a testing-only feature for controlling mark ordering and
-  // yield timing.
-  enum MarkQueueProgress {
-    QueueYielded,   // End this incremental GC slice, if possible
-    QueueComplete,  // Done with the queue
-    QueueSuspended  // Continue the GC without ending the slice
-  };
-  MarkQueueProgress processTestMarkQueue();
-
   // GC Sweeping. Implemented in Sweeping.cpp.
   void beginSweepPhase(JS::GCReason reason, AutoGCSession& session);
   void dropStringWrappers();
   void groupZonesForSweeping(JS::GCReason reason);
   [[nodiscard]] bool findSweepGroupEdges();
-  [[nodiscard]] bool addEdgesForMarkQueue();
   void getNextSweepGroup();
   void resetGrayList(Compartment* comp);
   IncrementalProgress beginMarkingSweepGroup(JS::GCContext* gcx,
@@ -1027,6 +1011,7 @@ class GCRuntime {
   mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> numArenasFreeCommitted;
   MainThreadData<VerifyPreTracer*> verifyPreData;
 
+ private:
   MainThreadData<mozilla::TimeStamp> lastGCStartTime_;
   MainThreadData<mozilla::TimeStamp> lastGCEndTime_;
 
@@ -1047,6 +1032,7 @@ class GCRuntime {
 
   mozilla::Atomic<JS::GCReason, mozilla::ReleaseAcquire> majorGCTriggerReason;
 
+ private:
   /* Incremented at the start of every minor GC. */
   MainThreadData<uint64_t> minorGCNumber;
 
@@ -1147,26 +1133,6 @@ class GCRuntime {
   MainThreadOrGCTaskData<IncrementalProgress> sweepMarkResult;
 
 #ifdef DEBUG
-  /*
-   * List of objects to mark at the beginning of a GC for testing purposes. May
-   * also contain string directives to change mark color or wait until different
-   * phases of the GC.
-   *
-   * This is a WeakCache because not everything in this list is guaranteed to
-   * end up marked (eg if you insert an object from an already-processed sweep
-   * group in the middle of an incremental GC). Also, the mark queue is not
-   * used during shutdown GCs. In either case, unmarked objects may need to be
-   * discarded.
-   */
-  JS::WeakCache<GCVector<HeapPtr<JS::Value>, 0, SystemAllocPolicy>>
-      testMarkQueue;
-
-  /* Position within the test mark queue. */
-  size_t queuePos;
-
-  /* The test marking queue might want to be marking a particular color. */
-  mozilla::Maybe<js::gc::MarkColor> queueMarkColor;
-
   // During gray marking, delay AssertCellIsNotGray checks by
   // recording the cell pointers here and checking after marking has
   // finished.
@@ -1307,6 +1273,7 @@ class GCRuntime {
    */
   MainThreadData<SortedArenaList> incrementalSweepList;
 
+ private:
   MainThreadData<Nursery> nursery_;
 
   // The store buffer used to track tenured to nursery edges for generational
