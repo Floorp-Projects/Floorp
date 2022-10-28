@@ -126,10 +126,10 @@ interface nsIParserUtils : nsISupports
    * @param element the context node for the fragment parsing algorithm
    */
   DocumentFragment parseFragment(in AString fragment,
-				 in unsigned long flags,
-				 in boolean isXML,
-				 in nsIURI baseURI,
-				 in Element element);
+                                 in unsigned long flags,
+                                 in boolean isXML,
+                                 in nsIURI baseURI,
+                                 in Element element);
 
 };
 

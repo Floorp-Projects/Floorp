@@ -6,28 +6,28 @@
 
 #include "nsISupports.idl"
 /*
- *	This defines the interface for a test object.
+ * This defines the interface for a test object.
  *
  */
 
 [scriptable, uuid(42fbd9f6-b12d-47ef-b7a1-02d73c11fe53)]
 interface nsIXPCTestObjectReadOnly : nsISupports {
-	readonly attribute string  strReadOnly;
-	readonly attribute boolean boolReadOnly;
-	readonly attribute short   shortReadOnly;
-	readonly attribute long    longReadOnly;
-	readonly attribute float   floatReadOnly;
-	readonly attribute char    charReadOnly;
-	readonly attribute PRTime  timeReadOnly;
+    readonly attribute string  strReadOnly;
+    readonly attribute boolean boolReadOnly;
+    readonly attribute short   shortReadOnly;
+    readonly attribute long    longReadOnly;
+    readonly attribute float   floatReadOnly;
+    readonly attribute char    charReadOnly;
+    readonly attribute PRTime  timeReadOnly;
 };
 
 [scriptable, uuid(f07529b0-a479-4954-aba5-ab3142c6b1cb)]
 interface nsIXPCTestObjectReadWrite : nsISupports {
-	attribute string  stringProperty;
-	attribute boolean booleanProperty;
-	attribute short   shortProperty;
-	attribute long    longProperty;
-	attribute float   floatProperty;
-	attribute char    charProperty;
-	attribute PRTime  timeProperty;
+    attribute string  stringProperty;
+    attribute boolean booleanProperty;
+    attribute short   shortProperty;
+    attribute long    longProperty;
+    attribute float   floatProperty;
+    attribute char    charProperty;
+    attribute PRTime  timeProperty;
 };

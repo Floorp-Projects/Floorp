@@ -15,8 +15,8 @@
 [scriptable, uuid(8B042E24-6F87-11d3-B3C8-00805F8A6670)]
 interface nsITextToSubURI : nsISupports
 {
-	ACString ConvertAndEscape(in ACString charset, in AString text);
-	AString UnEscapeAndConvert(in ACString charset, in ACString text);
+  ACString ConvertAndEscape(in ACString charset, in AString text);
+  AString UnEscapeAndConvert(in ACString charset, in ACString text);
 
   /**
    * Unescapes the given URI fragment (for UI purpose only)

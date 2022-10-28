@@ -45,5 +45,5 @@ interface nsIStreamTransportService : nsISupports
 interface nsIInputAvailableCallback : nsISupports
 {
   void onInputAvailableComplete(in unsigned long long available,
-			        in nsresult available_return_code);
+                                in nsresult available_return_code);
 };

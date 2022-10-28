@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 /*
- *	This defines the interface for a test object.
+ * This defines the interface for a test object.
  *
  */
 

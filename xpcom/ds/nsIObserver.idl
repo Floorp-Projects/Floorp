@@ -31,8 +31,8 @@ interface nsIObserver : nsISupports {
     *                    subject event.
     */
     void observe( in nsISupports aSubject,
-				  in string      aTopic,
-				  in wstring     aData );
+                  in string      aTopic,
+                  in wstring     aData );
 
 };
 

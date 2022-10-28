@@ -65,7 +65,7 @@ interface nsIEditingSession : nsISupports
   /**
    *  Get the editor for this window. May return null
    */
-	nsIEditor getEditorForWindow(in mozIDOMWindowProxy window);
+  nsIEditor getEditorForWindow(in mozIDOMWindowProxy window);
 
   /**
    *   Destroy editor and related support objects

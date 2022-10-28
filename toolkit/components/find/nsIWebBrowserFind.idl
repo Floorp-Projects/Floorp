@@ -38,7 +38,7 @@ interface nsIWebBrowserFind : nsISupports
      *
      * @return  Whether an occurrence was found
      */
-	boolean		findNext();
+    boolean findNext();
 
     /**
      * searchString

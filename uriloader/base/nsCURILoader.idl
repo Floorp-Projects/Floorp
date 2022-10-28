@@ -13,8 +13,8 @@ nsIURILoader
 */
 
 %{ C++
-#define NS_CONTENT_HANDLER_CONTRACTID               "@mozilla.org/uriloader/content-handler;1"
-#define NS_CONTENT_HANDLER_CONTRACTID_PREFIX	     NS_CONTENT_HANDLER_CONTRACTID "?type="
+#define NS_CONTENT_HANDLER_CONTRACTID         "@mozilla.org/uriloader/content-handler;1"
+#define NS_CONTENT_HANDLER_CONTRACTID_PREFIX  NS_CONTENT_HANDLER_CONTRACTID "?type="
 
 /**
  * A category where content listeners can register. The name of the entry must

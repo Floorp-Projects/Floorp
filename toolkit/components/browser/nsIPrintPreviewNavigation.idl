@@ -22,14 +22,14 @@ interface nsIPrintPreviewNavigation  : nsISupports
    *
    * Return - PR_TRUE if success
    */
-  boolean	nextPage();
+  boolean nextPage();
 
   /**
    * Preview the previous Page
    *
    * Return - PR_TRUE if success
    */
-  boolean	previousPage();
+  boolean previousPage();
 
   /**
    * Go to a page to preview
@@ -37,7 +37,7 @@ interface nsIPrintPreviewNavigation  : nsISupports
    * aPageNumber - Page to go preview
    * Return - PR_TRUE if success
    */
-  boolean	goToPage(unsigned long aPageNumber);
+  boolean goToPage(unsigned long aPageNumber);
 
 
   /**
@@ -46,7 +46,7 @@ interface nsIPrintPreviewNavigation  : nsISupports
    * aNumPages - number of pages to skip including the current page. Neg. goes back
    * Return - true if success
    */
-  boolean	skipPages(long aNumPages);
+  boolean skipPages(long aNumPages);
 
 
 };
