@@ -243,3 +243,40 @@ void Compatibility::GetHumanReadableConsumersStr(nsAString& aResult) {
     }
   }
 }
+
+// Time when SuppressA11yForClipboardCopy() was called, as returned by
+// ::GetTickCount().
+static DWORD sA11yClipboardCopySuppressionStartTime = 0;
+
+/* static */
+void Compatibility::SuppressA11yForClipboardCopy() {
+  // Bug 1774285: Windows Suggested Actions (introduced in Windows 11 22H2)
+  // might walk the a11y tree using UIA whenever anything is copied to the
+  // clipboard. This causes an unacceptable hang, particularly when the cache
+  // is disabled.
+  bool doSuppress = [&] {
+    switch (
+        StaticPrefs::accessibility_windows_suppress_after_clipboard_copy()) {
+      case 0:
+        return false;
+      case 1:
+        return true;
+      default:
+        return NeedsWindows11SuggestedActionsWorkaround();
+    }
+  }();
+
+  if (doSuppress) {
+    sA11yClipboardCopySuppressionStartTime = ::GetTickCount();
+  }
+}
+
+/* static */
+bool Compatibility::IsA11ySuppressedForClipboardCopy() {
+  constexpr DWORD kSuppressTimeout = 1000;  // ms
+  if (!sA11yClipboardCopySuppressionStartTime) {
+    return false;
+  }
+  return ::GetTickCount() - sA11yClipboardCopySuppressionStartTime <
+         kSuppressTimeout;
+}
