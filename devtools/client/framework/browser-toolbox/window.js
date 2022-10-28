@@ -4,7 +4,12 @@
 
 "use strict";
 
-var { loader, require, DevToolsLoader } = ChromeUtils.importESModule(
+var {
+  loader,
+  require,
+  useDistinctSystemPrincipalLoader,
+  releaseDistinctSystemPrincipalLoader,
+} = ChromeUtils.importESModule(
   "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 
@@ -260,15 +265,16 @@ async function openToolbox(commands) {
   }
 }
 
+let releaseTestLoader = null;
 function installTestingServer() {
   // Install a DevToolsServer in this process and inform the server of its
   // location. Tests operating on the browser toolbox run in the server
   // (the firefox parent process) and can connect to this new server using
   // initBrowserToolboxTask(), allowing them to evaluate scripts here.
 
-  const testLoader = new DevToolsLoader({
-    invisibleToDebugger: true,
-  });
+  const requester = {};
+  const testLoader = useDistinctSystemPrincipalLoader(requester);
+  releaseTestLoader = () => releaseDistinctSystemPrincipalLoader(requester);
   const { DevToolsServer } = testLoader.require(
     "resource://devtools/server/devtools-server.js"
   );
@@ -319,6 +325,10 @@ function updateBadgeText(paused) {
 function onUnload() {
   window.removeEventListener("unload", onUnload);
   gToolbox.destroy();
+  if (releaseTestLoader) {
+    releaseTestLoader();
+    releaseTestLoader = null;
+  }
 }
 
 function quitApp() {
