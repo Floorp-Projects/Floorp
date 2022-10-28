@@ -450,6 +450,23 @@ static void RepeatedlyTryOleSetClipboard(IDataObject* aDataObj) {
   RepeatedlyTry(::OleSetClipboard, LogOleSetClipboardResult, aDataObj);
 }
 
+static bool ShouldFlushClipboardAfterWriting() {
+  switch (StaticPrefs::widget_windows_sync_clipboard_flush()) {
+    case 0:
+      return false;
+    case 1:
+      return true;
+    default:
+      // Bug 1774285: Windows Suggested Actions (introduced in Windows 11 22H2)
+      // walks the entire a11y tree using UIA if something is placed on the
+      // clipboard using delayed rendering. (The OLE clipboard always uses
+      // delayed rendering.) This a11y tree walk causes an unacceptable hang,
+      // particularly when the a11y cache is disabled. We choose the lesser of
+      // the two performance/memory evils here and force immediate rendering.
+      return NeedsWindows11SuggestedActionsWorkaround();
+  }
+}
+
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
   MOZ_LOG(gWin32ClipboardLog, LogLevel::Debug, ("%s", __FUNCTION__));
@@ -470,6 +487,9 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
                                           nullptr))) {  // this add refs dataObj
     RepeatedlyTryOleSetClipboard(dataObj);
     dataObj->Release();
+    if (ShouldFlushClipboardAfterWriting()) {
+      RepeatedlyTry(::OleFlushClipboard, [](HRESULT) {});
+    }
   } else {
     // Clear the native clipboard
     RepeatedlyTryOleSetClipboard(nullptr);
