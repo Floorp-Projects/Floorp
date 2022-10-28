@@ -26,14 +26,12 @@ namespace gfx {
   _(DIRECT_DRAW, Feature, "DirectDraw")                                      \
   _(GPU_PROCESS, Feature, "GPU Process")                                     \
   _(WEBRENDER, Feature, "WebRender")                                         \
-  _(WEBRENDER_QUALIFIED, Feature, "WebRender qualified")                     \
   _(WEBRENDER_COMPOSITOR, Feature, "WebRender native compositor")            \
   _(WEBRENDER_PARTIAL, Feature, "WebRender partial present")                 \
   _(WEBRENDER_SHADER_CACHE, Feature, "WebRender shader disk cache")          \
   _(WEBRENDER_OPTIMIZED_SHADERS, Feature, "WebRender optimized shaders")     \
   _(WEBRENDER_ANGLE, Feature, "WebRender ANGLE")                             \
   _(WEBRENDER_DCOMP_PRESENT, Feature, "WebRender DirectComposition")         \
-  _(WEBRENDER_SOFTWARE, Feature, "WebRender software fallback")              \
   _(OMTP, Feature, "Off Main Thread Painting")                               \
   _(WEBGPU, Feature, "WebGPU")                                               \
   _(X11_EGL, Feature, "X11 EGL")                                             \

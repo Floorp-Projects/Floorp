@@ -19,14 +19,12 @@ class gfxConfigManager {
  public:
   gfxConfigManager()
       : mFeatureWr(nullptr),
-        mFeatureWrQualified(nullptr),
         mFeatureWrCompositor(nullptr),
         mFeatureWrAngle(nullptr),
         mFeatureWrDComp(nullptr),
         mFeatureWrPartial(nullptr),
         mFeatureWrShaderCache(nullptr),
         mFeatureWrOptimizedShaders(nullptr),
-        mFeatureWrSoftware(nullptr),
         mFeatureHwCompositing(nullptr),
         mFeatureD3D11HwAngle(nullptr),
         mFeatureD3D11Compositing(nullptr),
@@ -62,14 +60,12 @@ class gfxConfigManager {
   nsCOMPtr<nsIGfxInfo> mGfxInfo;
 
   FeatureState* mFeatureWr;
-  FeatureState* mFeatureWrQualified;
   FeatureState* mFeatureWrCompositor;
   FeatureState* mFeatureWrAngle;
   FeatureState* mFeatureWrDComp;
   FeatureState* mFeatureWrPartial;
   FeatureState* mFeatureWrShaderCache;
   FeatureState* mFeatureWrOptimizedShaders;
-  FeatureState* mFeatureWrSoftware;
 
   FeatureState* mFeatureHwCompositing;
   FeatureState* mFeatureD3D11HwAngle;
