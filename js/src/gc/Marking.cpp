@@ -1101,6 +1101,8 @@ void GCMarker::traverse(BaseScript* thing) {
 }
 }  // namespace js
 
+template void js::GCMarker::markAndTraverse<JSObject>(JSObject* thing);
+
 #ifdef DEBUG
 void GCMarker::setCheckAtomMarking(bool check) {
   MOZ_ASSERT(check != checkAtomMarking);
@@ -1186,137 +1188,6 @@ static inline void CallTraceHook(JSTracer* trc, JSObject* obj) {
     AutoSetTracingSource asts(trc, obj);
     clasp->doTrace(trc, obj);
   }
-}
-
-GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
-#ifdef DEBUG
-  if (markQueue.empty()) {
-    return QueueComplete;
-  }
-
-  GCRuntime& gcrt = runtime()->gc;
-  if (queueMarkColor == mozilla::Some(MarkColor::Gray) &&
-      gcrt.state() != State::Sweep) {
-    return QueueSuspended;
-  }
-
-  // If the queue wants to be gray marking, but we've pushed a black object
-  // since set-color-gray was processed, then we can't switch to gray and must
-  // again wait until gray marking is possible.
-  //
-  // Remove this code if the restriction against marking gray during black is
-  // relaxed.
-  if (queueMarkColor == mozilla::Some(MarkColor::Gray) && hasBlackEntries()) {
-    return QueueSuspended;
-  }
-
-  // If the queue wants to be marking a particular color, switch to that color.
-  // In any case, restore the mark color to whatever it was when we entered
-  // this function.
-  bool willRevertToGray = markColor() == MarkColor::Gray;
-  AutoSetMarkColor autoRevertColor(*this, queueMarkColor.valueOr(markColor()));
-
-  // Process the mark queue by taking each object in turn, pushing it onto the
-  // mark stack, and processing just the top element with processMarkStackTop
-  // without recursing into reachable objects.
-  while (queuePos < markQueue.length()) {
-    Value val = markQueue[queuePos++].get();
-    if (val.isObject()) {
-      JSObject* obj = &val.toObject();
-      JS::Zone* zone = obj->zone();
-      if (!zone->isGCMarking() || obj->isMarkedAtLeast(markColor())) {
-        continue;
-      }
-
-      // If we have started sweeping, obey sweep group ordering. But note that
-      // we will first be called during the initial sweep slice, when the sweep
-      // group indexes have not yet been computed. In that case, we can mark
-      // freely.
-      if (gcrt.state() == State::Sweep && gcrt.initialState != State::Sweep) {
-        if (zone->gcSweepGroupIndex < gcrt.getCurrentSweepGroupIndex()) {
-          // Too late. This must have been added after we started collecting,
-          // and we've already processed its sweep group. Skip it.
-          continue;
-        }
-        if (zone->gcSweepGroupIndex > gcrt.getCurrentSweepGroupIndex()) {
-          // Not ready yet. Wait until we reach the object's sweep group.
-          queuePos--;
-          return QueueSuspended;
-        }
-      }
-
-      if (markColor() == MarkColor::Gray && zone->isGCMarkingBlackOnly()) {
-        // Have not yet reached the point where we can mark this object, so
-        // continue with the GC.
-        queuePos--;
-        return QueueSuspended;
-      }
-
-      if (markColor() == MarkColor::Black && willRevertToGray) {
-        // If we put any black objects on the stack, we wouldn't be able to
-        // return to gray marking. So delay the marking until we're back to
-        // black marking.
-        queuePos--;
-        return QueueSuspended;
-      }
-
-      // Mark the object and push it onto the stack.
-      size_t oldPosition = stack.position();
-      markAndTraverse(obj);
-
-      // If we overflow the stack here and delay marking, then we won't be
-      // testing what we think we're testing.
-      if (stack.position() == oldPosition) {
-        MOZ_ASSERT(obj->asTenured().arena()->onDelayedMarkingList());
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        oomUnsafe.crash("Overflowed stack while marking test queue");
-      }
-
-      // Process just the one object that is now on top of the mark stack,
-      // possibly pushing more stuff onto the stack.
-      SliceBudget unlimited = SliceBudget::unlimited();
-      processMarkStackTop(unlimited);
-    } else if (val.isString()) {
-      JSLinearString* str = &val.toString()->asLinear();
-      if (js::StringEqualsLiteral(str, "yield") && gcrt.isIncrementalGc()) {
-        return QueueYielded;
-      } else if (js::StringEqualsLiteral(str, "enter-weak-marking-mode") ||
-                 js::StringEqualsLiteral(str, "abort-weak-marking-mode")) {
-        if (state == MarkingState::RegularMarking) {
-          // We can't enter weak marking mode at just any time, so instead
-          // we'll stop processing the queue and continue on with the GC. Once
-          // we enter weak marking mode, we can continue to the rest of the
-          // queue. Note that we will also suspend for aborting, and then abort
-          // the earliest following weak marking mode.
-          queuePos--;
-          return QueueSuspended;
-        }
-        if (js::StringEqualsLiteral(str, "abort-weak-marking-mode")) {
-          abortLinearWeakMarking();
-        }
-      } else if (js::StringEqualsLiteral(str, "drain")) {
-        auto unlimited = SliceBudget::unlimited();
-        MOZ_RELEASE_ASSERT(
-            markUntilBudgetExhausted(unlimited, DontReportMarkTime));
-      } else if (js::StringEqualsLiteral(str, "set-color-gray")) {
-        queueMarkColor = mozilla::Some(MarkColor::Gray);
-        if (gcrt.state() != State::Sweep || hasBlackEntries()) {
-          // Cannot mark gray yet, so continue with the GC.
-          queuePos--;
-          return QueueSuspended;
-        }
-        setMarkColor(MarkColor::Gray);
-      } else if (js::StringEqualsLiteral(str, "set-color-black")) {
-        queueMarkColor = mozilla::Some(MarkColor::Black);
-        setMarkColor(MarkColor::Black);
-      } else if (js::StringEqualsLiteral(str, "unset-color")) {
-        queueMarkColor.reset();
-      }
-    }
-  }
-#endif
-
-  return QueueComplete;
 }
 
 static gcstats::PhaseKind GrayMarkingPhaseForCurrentPhase(
@@ -1914,9 +1785,7 @@ GCMarker::GCMarker(JSRuntime* rt)
       ,
       markLaterArenas(0),
       checkAtomMarking(true),
-      strictCompartmentChecking(false),
-      markQueue(rt),
-      queuePos(0)
+      strictCompartmentChecking(false)
 #endif
 {
 }
@@ -1932,11 +1801,6 @@ void GCMarker::start() {
   MOZ_ASSERT(state == MarkingState::NotActive);
   state = MarkingState::RegularMarking;
   markColor_ = MarkColor::Black;
-
-#ifdef DEBUG
-  queuePos = 0;
-  queueMarkColor.reset();
-#endif
 
   MOZ_ASSERT(!delayedMarkingList);
   MOZ_ASSERT(markLaterArenas == 0);
@@ -2066,12 +1930,6 @@ bool GCMarker::enterWeakMarkingMode() {
   // during the following gcEphemeronEdges scan will itself be looked up in
   // gcEphemeronEdges and marked according to ephemeron rules.
   state = MarkingState::WeakMarking;
-
-  // If there was an 'enter-weak-marking-mode' token in the queue, then it
-  // and everything after it will still be in the queue so we can process
-  // them now.
-  while (processMarkQueue() == QueueYielded) {
-  };
 
   return true;
 }
