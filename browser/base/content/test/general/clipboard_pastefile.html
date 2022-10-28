@@ -15,15 +15,8 @@ function checkPasteHelper(event) {
       return "Invalid type for types; got" + type;
   }
 
-  for (let type of dt.mozTypesAt(0)) {
-    if (type != "Files" && type != "application/x-moz-file")
-      return "Invalid type for mozTypesAt; got" + type;
-  }
-
   if (dt.getData("text/plain"))
     return "text/plain found with getData";
-  if (dt.mozGetDataAt("text/plain", 0))
-    return "text/plain found with mozGetDataAt";
 
   return "Passed";
 }
