@@ -120,9 +120,11 @@ class RecentlyClosedTabsList extends HTMLElement {
   openTabAndUpdate(event) {
     event.preventDefault();
     const item = event.target.closest(".closed-tab-li");
-    let index = [...this.tabsList.children].indexOf(item);
+    // only used for telemetry
+    const position = [...this.tabsList.children].indexOf(item) + 1;
+    const closedId = item.dataset.tabid;
 
-    lazy.SessionStore.undoCloseTab(getWindow(), index);
+    lazy.SessionStore.undoCloseById(closedId);
     this.tabsList.removeChild(item);
 
     // record telemetry
@@ -138,7 +140,7 @@ class RecentlyClosedTabsList extends HTMLElement {
       "tabs",
       null,
       {
-        position: (++index).toString(),
+        position: position.toString(),
         delta: deltaSeconds.toString(),
       }
     );
