@@ -12,6 +12,7 @@ DIRS += [
 ]
 
 EXTRA_JS_MODULES += [
+    "MerinoClient.sys.mjs",
     "QuickActionsLoaderDefault.sys.mjs",
     "UrlbarController.sys.mjs",
     "UrlbarEventBufferer.sys.mjs",
@@ -53,6 +54,7 @@ EXTRA_JS_MODULES += [
 ]
 
 TESTING_JS_MODULES += [
+    "tests/quicksuggest/MerinoTestUtils.sys.mjs",
     "tests/quicksuggest/QuickSuggestTestUtils.sys.mjs",
     "tests/UrlbarTestUtils.sys.mjs",
 ]

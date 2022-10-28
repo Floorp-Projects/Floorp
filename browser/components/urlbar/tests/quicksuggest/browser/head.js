@@ -30,6 +30,13 @@ XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
   return module;
 });
 
+XPCOMUtils.defineLazyGetter(this, "MerinoTestUtils", () => {
+  const { MerinoTestUtils: Utils } = ChromeUtils.importESModule(
+    "resource://testing-common/MerinoTestUtils.sys.mjs"
+  );
+  return new Utils(this);
+});
+
 registerCleanupFunction(async () => {
   // Ensure the popup is always closed at the end of each test to avoid
   // interfering with the next test.
