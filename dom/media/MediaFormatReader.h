@@ -376,6 +376,9 @@ class MediaFormatReader final
           mNumOfConsecutiveRDDOrGPUCrashes(0),
           mMaxConsecutiveRDDOrGPUCrashes(
               StaticPrefs::media_rdd_process_max_crashes()),
+          mNumOfConsecutiveUtilityCrashes(0),
+          mMaxConsecutiveUtilityCrashes(
+              StaticPrefs::media_utility_process_max_crashes()),
           mFirstFrameTime(Some(media::TimeUnit::Zero())),
           mNumSamplesInput(0),
           mNumSamplesOutput(0),
@@ -467,9 +470,13 @@ class MediaFormatReader final
     uint32_t mNumOfConsecutiveDecodingError;
     uint32_t mMaxConsecutiveDecodingError;
 
-    // Track RDD process crashes and fail when we hit the limit.
+    // Track RDD or GPU process crashes and fail when we hit the limit.
     uint32_t mNumOfConsecutiveRDDOrGPUCrashes;
     uint32_t mMaxConsecutiveRDDOrGPUCrashes;
+
+    // Track Utility process crashes and fail when we hit the limit.
+    uint32_t mNumOfConsecutiveUtilityCrashes;
+    uint32_t mMaxConsecutiveUtilityCrashes;
 
     // Set when we haven't yet decoded the first frame.
     // Cleared once the first frame has been decoded.
@@ -497,6 +504,13 @@ class MediaFormatReader final
         // if we have too many, or if warnings should be treated as errors.
         return mNumOfConsecutiveRDDOrGPUCrashes >
                    mMaxConsecutiveRDDOrGPUCrashes ||
+               StaticPrefs::media_playback_warnings_as_errors();
+      } else if (mError.ref() ==
+                 NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_UTILITY_ERR) {
+        bool tooManyConsecutiveCrashes =
+            mNumOfConsecutiveUtilityCrashes > mMaxConsecutiveUtilityCrashes;
+        // TODO: Telemetry?
+        return tooManyConsecutiveCrashes ||
                StaticPrefs::media_playback_warnings_as_errors();
       } else {
         // All other error types are fatal

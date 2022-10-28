@@ -9613,6 +9613,13 @@
 #endif
   mirror: always
 
+# Specifies how many times we restart Utility process after crash till we give
+# up.
+- name: media.utility-process.max-crashes
+  type: RelaxedAtomicInt32
+  value: 2
+  mirror: always
+
 #ifdef MOZ_FFMPEG
 - name: media.utility-ffmpeg.enabled
   type: RelaxedAtomicBool
