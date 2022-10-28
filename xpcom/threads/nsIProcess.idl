@@ -57,7 +57,7 @@ interface nsIProcess : nsISupports
    * @param count      The length of the args array.
    */
   void runw(in boolean blocking, [array, size_is(count)] in wstring args,
-	    in unsigned long count);
+            in unsigned long count);
 
   /**
    * Executes the file this object was initialized with optionally calling
@@ -71,8 +71,8 @@ interface nsIProcess : nsISupports
    * @param holdWeak   Whether to use a weak reference to hold the observer.
    */
   void runwAsync([array, size_is(count)] in wstring args,
-		 in unsigned long count,
-		 [optional] in nsIObserver observer, [optional] in boolean holdWeak);
+                 in unsigned long count,
+                 [optional] in nsIObserver observer, [optional] in boolean holdWeak);
 
   /**
    * When set to true the process will not open a new window when started and

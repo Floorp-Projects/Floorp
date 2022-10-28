@@ -103,7 +103,7 @@ interface nsIObserverService : nsISupports
      *
      * @param aTopic   : The notification topic or subject.
      */
-	nsISimpleEnumerator enumerateObservers( in string aTopic );
+    nsISimpleEnumerator enumerateObservers( in string aTopic );
 
 
 };

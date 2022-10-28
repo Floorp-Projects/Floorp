@@ -211,7 +211,7 @@ interface nsILoginManager : nsISupports {
    * @return An array of nsILoginInfo objects.
    */
   Array<nsILoginInfo> findLogins(in AString aOrigin, in AString aActionOrigin,
-				 in AString aHttpRealm);
+                                 in AString aHttpRealm);
 
   /**
    * Search for logins matching the specified criteria, as with

@@ -146,7 +146,7 @@ interface nsIGleanTimingDistribution : nsISupports
    * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
-	jsval testGetValue([optional] in ACString aPingName);
+  jsval testGetValue([optional] in ACString aPingName);
 
   /**
    * **Test-only API**
@@ -172,7 +172,7 @@ interface nsIGleanMemoryDistribution : nsISupports
    * Notes: Values bigger than 1 Terabyte (2^40 bytes) are truncated and an
    * InvalidValue error is recorded.
    */
-	void accumulate(in uint64_t aSample);
+  void accumulate(in uint64_t aSample);
 
   /**
    * **Test-only API**
@@ -192,7 +192,7 @@ interface nsIGleanMemoryDistribution : nsISupports
    * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
-	jsval testGetValue([optional] in ACString aPingName);
+  jsval testGetValue([optional] in ACString aPingName);
 };
 
 [scriptable, uuid(45cc016f-c1d5-4d54-aaa5-a802cf65f23b)]
@@ -257,7 +257,7 @@ interface nsIGleanPing : nsISupports
    * @param aReason - Optional. The reason the ping is being submitted.
    *                  Must match one of the configured `reason_codes`.
    */
-	void submit([optional] in ACString aReason);
+  void submit([optional] in ACString aReason);
 
   /**
    * **Test-only API**
