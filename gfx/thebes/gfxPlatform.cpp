@@ -2614,8 +2614,6 @@ void gfxPlatform::InitWebRenderConfig() {
   manager.ConfigureWebRender();
 
   bool hasHardware = gfxConfig::IsEnabled(Feature::WEBRENDER);
-  bool hasSoftware = gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE);
-  bool hasWebRender = hasHardware || hasSoftware;
 
 #ifdef MOZ_WIDGET_GTK
   // We require a hardware driver to back the GL context unless the user forced
@@ -2628,64 +2626,61 @@ void gfxPlatform::InitWebRenderConfig() {
 
 #ifdef XP_WIN
   if (gfxConfig::IsEnabled(Feature::WEBRENDER_ANGLE)) {
-    gfxVars::SetUseWebRenderANGLE(hasWebRender);
+    gfxVars::SetUseWebRenderANGLE(true);
   }
 #endif
 
   if (gfxConfig::IsEnabled(Feature::WEBRENDER_SHADER_CACHE)) {
-    gfxVars::SetUseWebRenderProgramBinaryDisk(hasWebRender);
+    gfxVars::SetUseWebRenderProgramBinaryDisk(true);
   }
 
   gfxVars::SetUseWebRenderOptimizedShaders(
       gfxConfig::IsEnabled(Feature::WEBRENDER_OPTIMIZED_SHADERS));
 
-  gfxVars::SetUseSoftwareWebRender(!hasHardware && hasSoftware);
+  gfxVars::SetUseSoftwareWebRender(!hasHardware);
 
   Preferences::RegisterPrefixCallbackAndCall(SwapIntervalPrefChangeCallback,
                                              "gfx.swap-interval");
 
   // gfxFeature is not usable in the GPU process, so we use gfxVars to transmit
   // this feature
-  if (hasWebRender) {
-    gfxVars::SetUseWebRender(true);
-    reporter.SetSuccessful();
+  gfxVars::SetUseWebRender(true);
+  reporter.SetSuccessful();
 
-    Preferences::RegisterPrefixCallbackAndCall(WebRenderDebugPrefChangeCallback,
-                                               WR_DEBUG_PREF);
+  Preferences::RegisterPrefixCallbackAndCall(WebRenderDebugPrefChangeCallback,
+                                             WR_DEBUG_PREF);
 
-    RegisterWebRenderBoolParamCallback();
+  RegisterWebRenderBoolParamCallback();
 
-    Preferences::RegisterPrefixCallbackAndCall(
-        WebRendeProfilerUIPrefChangeCallback,
-        "gfx.webrender.debug.profiler-ui");
-    Preferences::RegisterCallback(
-        WebRenderQualityPrefChangeCallback,
-        nsDependentCString(
-            StaticPrefs::
-                GetPrefName_gfx_webrender_quality_force_subpixel_aa_where_possible()));
+  Preferences::RegisterPrefixCallbackAndCall(
+      WebRendeProfilerUIPrefChangeCallback, "gfx.webrender.debug.profiler-ui");
+  Preferences::RegisterCallback(
+      WebRenderQualityPrefChangeCallback,
+      nsDependentCString(
+          StaticPrefs::
+              GetPrefName_gfx_webrender_quality_force_subpixel_aa_where_possible()));
 
-    Preferences::RegisterCallback(
-        WebRenderBatchingPrefChangeCallback,
-        nsDependentCString(
-            StaticPrefs::GetPrefName_gfx_webrender_batching_lookback()));
+  Preferences::RegisterCallback(
+      WebRenderBatchingPrefChangeCallback,
+      nsDependentCString(
+          StaticPrefs::GetPrefName_gfx_webrender_batching_lookback()));
 
-    Preferences::RegisterCallbackAndCall(
-        WebRenderBlobTileSizePrefChangeCallback,
-        nsDependentCString(
-            StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size()));
+  Preferences::RegisterCallbackAndCall(
+      WebRenderBlobTileSizePrefChangeCallback,
+      nsDependentCString(
+          StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size()));
 
-    Preferences::RegisterCallbackAndCall(
-        WebRenderUploadThresholdPrefChangeCallback,
-        nsDependentCString(
-            StaticPrefs::GetPrefName_gfx_webrender_batched_upload_threshold()));
+  Preferences::RegisterCallbackAndCall(
+      WebRenderUploadThresholdPrefChangeCallback,
+      nsDependentCString(
+          StaticPrefs::GetPrefName_gfx_webrender_batched_upload_threshold()));
 
-    if (WebRenderResourcePathOverride()) {
-      CrashReporter::AnnotateCrashReport(
-          CrashReporter::Annotation::IsWebRenderResourcePathOverridden, true);
-    }
-
-    UpdateForceSubpixelAAWherePossible();
+  if (WebRenderResourcePathOverride()) {
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::IsWebRenderResourcePathOverridden, true);
   }
+
+  UpdateForceSubpixelAAWherePossible();
 
 #ifdef XP_WIN
   if (gfxConfig::IsEnabled(Feature::WEBRENDER_DCOMP_PRESENT)) {
@@ -3565,7 +3560,6 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
   // fallback from WebRender to Software WebRender + D3D11 compositing.
   if (StaticPrefs::gfx_webrender_fallback_software_d3d11_AtStartup() &&
       swglFallbackAllowed && gfxVars::AllowSoftwareWebRenderD3D11() &&
-      gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE) &&
       gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING) &&
       gfxVars::UseWebRender() && !gfxVars::UseSoftwareWebRender()) {
     // Fallback to Software WebRender + D3D11 compositing.
@@ -3594,9 +3588,7 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
         .ForceDisable(aStatus, aMessage, aFailureId);
 
     if (StaticPrefs::gfx_webrender_fallback_software_AtStartup() &&
-        swglFallbackAllowed &&
-        gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE) &&
-        !gfxVars::UseWebRender()) {
+        swglFallbackAllowed && !gfxVars::UseWebRender()) {
       // Fallback from D3D11 to Software WebRender.
       gfxCriticalNote << "Fallback D3D11 to SW-WR";
       gfxVars::SetUseWebRender(true);
@@ -3622,9 +3614,7 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
   }
 
   if (StaticPrefs::gfx_webrender_fallback_software_AtStartup() &&
-      swglFallbackAllowed &&
-      gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE) &&
-      !gfxVars::UseSoftwareWebRender()) {
+      swglFallbackAllowed && !gfxVars::UseSoftwareWebRender()) {
     // Fallback from WebRender to Software WebRender.
     gfxCriticalNote << "Fallback WR to SW-WR";
     gfxVars::SetUseSoftwareWebRender(true);

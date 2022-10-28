@@ -597,7 +597,7 @@ nsresult GfxInfo::GetFeatureStatusImpl(
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         aFailureId = "FEATURE_FAILURE_POWERVR_FENCE_SYNC_CRASH";
       } else {
-        *aStatus = nsIGfxInfo::FEATURE_ALLOW_QUALIFIED;
+        *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
       }
       return NS_OK;
     }

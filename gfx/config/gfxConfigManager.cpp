@@ -77,7 +77,6 @@ void gfxConfigManager::Init() {
   mGfxInfo = components::GfxInfo::Service();
 
   mFeatureWr = &gfxConfig::GetFeature(Feature::WEBRENDER);
-  mFeatureWrQualified = &gfxConfig::GetFeature(Feature::WEBRENDER_QUALIFIED);
   mFeatureWrCompositor = &gfxConfig::GetFeature(Feature::WEBRENDER_COMPOSITOR);
   mFeatureWrAngle = &gfxConfig::GetFeature(Feature::WEBRENDER_ANGLE);
   mFeatureWrDComp = &gfxConfig::GetFeature(Feature::WEBRENDER_DCOMP_PRESENT);
@@ -86,7 +85,6 @@ void gfxConfigManager::Init() {
       &gfxConfig::GetFeature(Feature::WEBRENDER_SHADER_CACHE);
   mFeatureWrOptimizedShaders =
       &gfxConfig::GetFeature(Feature::WEBRENDER_OPTIMIZED_SHADERS);
-  mFeatureWrSoftware = &gfxConfig::GetFeature(Feature::WEBRENDER_SOFTWARE);
 
   mFeatureHwCompositing = &gfxConfig::GetFeature(Feature::HW_COMPOSITING);
 #ifdef XP_WIN
@@ -112,47 +110,23 @@ void gfxConfigManager::ConfigureFromBlocklist(long aFeature,
   if (!NS_SUCCEEDED(mGfxInfo->GetFeatureStatus(aFeature, blockId, &status))) {
     aFeatureState->Disable(FeatureStatus::BlockedNoGfxInfo, "gfxInfo is broken",
                            "FEATURE_FAILURE_NO_GFX_INFO"_ns);
-
-  } else {
-    if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
-      aFeatureState->Disable(FeatureStatus::Blocklisted,
-                             "Blocklisted by gfxInfo", blockId);
-    }
-  }
-}
-
-void gfxConfigManager::ConfigureWebRenderQualified() {
-  MOZ_ASSERT(mFeatureWrQualified);
-  MOZ_ASSERT(mFeatureWrCompositor);
-
-  mFeatureWrQualified->EnableByDefault();
-
-  nsCString failureId;
-  int32_t status;
-  if (NS_FAILED(mGfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRENDER,
-                                           failureId, &status))) {
-    mFeatureWrQualified->Disable(FeatureStatus::BlockedNoGfxInfo,
-                                 "gfxInfo is broken",
-                                 "FEATURE_FAILURE_WR_NO_GFX_INFO"_ns);
     return;
   }
 
   switch (status) {
+    case nsIGfxInfo::FEATURE_STATUS_OK:
     case nsIGfxInfo::FEATURE_ALLOW_ALWAYS:
+      break;
     case nsIGfxInfo::FEATURE_ALLOW_QUALIFIED:
+      MOZ_ASSERT_UNREACHABLE("Allowing only qualified, but needs experiment?");
       break;
     case nsIGfxInfo::FEATURE_DENIED:
-      mFeatureWrQualified->Disable(FeatureStatus::Denied, "Not on allowlist",
-                                   failureId);
+      aFeatureState->Disable(FeatureStatus::Denied, "Not on allowlist",
+                             blockId);
       break;
     default:
-      mFeatureWrQualified->Disable(FeatureStatus::Blocklisted,
-                                   "No qualified hardware", failureId);
-      break;
-    case nsIGfxInfo::FEATURE_STATUS_OK:
-      MOZ_ASSERT_UNREACHABLE("We should still be rolling out WebRender!");
-      mFeatureWrQualified->Disable(FeatureStatus::Blocked,
-                                   "Not controlled by rollout", failureId);
+      aFeatureState->Disable(FeatureStatus::Blocklisted,
+                             "Blocklisted by gfxInfo", blockId);
       break;
   }
 }
@@ -160,14 +134,12 @@ void gfxConfigManager::ConfigureWebRenderQualified() {
 void gfxConfigManager::ConfigureWebRender() {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(mFeatureWr);
-  MOZ_ASSERT(mFeatureWrQualified);
   MOZ_ASSERT(mFeatureWrCompositor);
   MOZ_ASSERT(mFeatureWrAngle);
   MOZ_ASSERT(mFeatureWrDComp);
   MOZ_ASSERT(mFeatureWrPartial);
   MOZ_ASSERT(mFeatureWrShaderCache);
   MOZ_ASSERT(mFeatureWrOptimizedShaders);
-  MOZ_ASSERT(mFeatureWrSoftware);
   MOZ_ASSERT(mFeatureHwCompositing);
   MOZ_ASSERT(mFeatureGPUProcess);
 
@@ -196,15 +168,12 @@ void gfxConfigManager::ConfigureWebRender() {
   }
 
   mFeatureWr->EnableByDefault();
-  mFeatureWrSoftware->EnableByDefault();
-  ConfigureWebRenderQualified();
 
   // envvar works everywhere; note that we need this for testing in CI.
   // Prior to bug 1523788, the `prefEnabled` check was only done on Nightly,
   // so as to prevent random users from easily enabling WebRender on
   // unqualified hardware in beta/release.
   if (mWrSoftwareForceEnabled) {
-    MOZ_ASSERT(mFeatureWrSoftware->IsEnabled());
     mFeatureWr->UserDisable("User force-enabled software WR",
                             "FEATURE_FAILURE_USER_FORCE_ENABLED_SW_WR"_ns);
   } else if (mWrEnvForceEnabled) {
@@ -213,12 +182,7 @@ void gfxConfigManager::ConfigureWebRender() {
     mFeatureWr->UserForceEnable("Force enabled by pref");
   }
 
-  if (!mFeatureWrQualified->IsEnabled()) {
-    // No qualified hardware. If we haven't allowed software fallback,
-    // then we need to disable WR.
-    mFeatureWr->Disable(FeatureStatus::Disabled, "Not qualified",
-                        "FEATURE_FAILURE_NOT_QUALIFIED"_ns);
-  }
+  ConfigureFromBlocklist(nsIGfxInfo::FEATURE_WEBRENDER, mFeatureWr);
 
   // HW_COMPOSITING being disabled implies interfacing with the GPU might break
   if (!mFeatureHwCompositing->IsEnabled()) {
@@ -246,10 +210,6 @@ void gfxConfigManager::ConfigureWebRender() {
         mFeatureWrAngle->ForceDisable(
             FeatureStatus::UnavailableNoGpuProcess, "GPU Process is disabled",
             "FEATURE_FAILURE_GPU_PROCESS_DISABLED"_ns);
-      } else if (!mFeatureWr->IsEnabled() && !mFeatureWrSoftware->IsEnabled()) {
-        mFeatureWrAngle->ForceDisable(FeatureStatus::Unavailable,
-                                      "WebRender disabled",
-                                      "FEATURE_FAILURE_WR_DISABLED"_ns);
       }
     } else {
       mFeatureWrAngle->Disable(FeatureStatus::Disabled, "ANGLE is not forced",
