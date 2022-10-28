@@ -44,7 +44,7 @@ function makePlainExtension(version, name = "Plain") {
     manifest: {
       name,
       version,
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "plainengine@search.mozilla.org",
         },
@@ -102,7 +102,7 @@ function makeMultiLocaleExtension(version) {
     manifest: {
       name: "__MSG_searchName__",
       version,
-      applications: {
+      browser_specific_settings: {
         gecko: {
           id: "multilocale@search.mozilla.org",
         },
