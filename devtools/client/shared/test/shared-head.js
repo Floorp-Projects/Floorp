@@ -35,7 +35,7 @@ if (DEBUG_ALLOCATIONS) {
     useDistinctSystemPrincipalLoader,
     releaseDistinctSystemPrincipalLoader,
   } = ChromeUtils.importESModule(
-    "resource://devtools/shared/loader/Loader.sys.mjs"
+    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
   );
   const requester = {};
   const loader = useDistinctSystemPrincipalLoader(requester);
