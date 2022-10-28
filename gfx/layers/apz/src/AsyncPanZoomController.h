@@ -903,12 +903,11 @@ class AsyncPanZoomController {
       RepaintUpdateType aUpdateType = RepaintUpdateType::eUserAction);
 
   /**
-   * Send the provided metrics to Gecko to trigger a repaint. This function
-   * may filter duplicate calls with the same metrics. This function must be
-   * called on the main thread.
+   * Send Metrics() to Gecko to trigger a repaint. This function may filter
+   * duplicate calls with the same metrics. This function must be called on the
+   * main thread.
    */
-  void RequestContentRepaint(const FrameMetrics& aFrameMetrics,
-                             const ParentLayerPoint& aVelocity,
+  void RequestContentRepaint(const ParentLayerPoint& aVelocity,
                              const ScreenMargin& aDisplayportMargins,
                              RepaintUpdateType aUpdateType);
 
