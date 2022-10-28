@@ -214,6 +214,14 @@ bool LazyInstantiator::IsBlockedInjection() {
  * @return true if we should instantiate a11y
  */
 bool LazyInstantiator::ShouldInstantiate(const DWORD aClientTid) {
+  if (Compatibility::IsA11ySuppressedForClipboardCopy()) {
+    // Bug 1774285: Windows Suggested Actions (introduced in Windows 11 22H2)
+    // walks the entire a11y tree using UIA whenever anything is copied to the
+    // clipboard. This causes an unacceptable hang, particularly when the cache
+    // is disabled. Don't allow a11y to be instantiated by this.
+    return false;
+  }
+
   if (!aClientTid) {
     // aClientTid == 0 implies that this is either an in-process call, or else
     // we failed to retrieve information about the remote caller.
