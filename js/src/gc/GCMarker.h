@@ -21,8 +21,7 @@ namespace js {
 class SliceBudget;
 class WeakMapBase;
 
-static const size_t NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY = 4096;
-static const size_t INCREMENTAL_MARK_STACK_BASE_CAPACITY = 32768;
+static const size_t MARK_STACK_BASE_CAPACITY = 4096;
 
 enum class SlotsOrElementsKind { Elements, FixedSlots, DynamicSlots };
 
@@ -138,8 +137,8 @@ class MarkStack {
 
   size_t position() const { return topIndex_; }
 
-  [[nodiscard]] bool init(bool incrementalGCEnabled);
-  [[nodiscard]] bool setStackCapacity(bool incrementalGCEnabled);
+  [[nodiscard]] bool init();
+  [[nodiscard]] bool resetStackCapacity();
 
 #ifdef JS_GC_ZEAL
   void setMaxCapacity(size_t maxCapacity);
@@ -162,13 +161,7 @@ class MarkStack {
   TaggedPtr popPtr();
   SlotsOrElementsRange popSlotsOrElementsRange();
 
-  void clear() {
-    // Fall back to the smaller initial capacity so we don't hold on to excess
-    // memory between GCs.
-    stack().clearAndFree();
-    (void)stack().resize(NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY);
-    topIndex_ = 0;
-  }
+  void clear();
 
   void poisonUnused();
 
@@ -324,11 +317,6 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
   };
   [[nodiscard]] bool markUntilBudgetExhausted(
       SliceBudget& budget, ShouldReportMarkTime reportTime = ReportMarkTime);
-
-  void setIncrementalGCEnabled(bool enabled) {
-    // Ignore failure to resize the stack and keep using the existing stack.
-    (void)stack.setStackCapacity(enabled);
-  }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
