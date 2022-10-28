@@ -84,6 +84,10 @@
         <item>Mozilla/5.0 (iPhone; CPU OS 10_15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Mobile/14E304 Safari/605.1.15</item>
     </string-array>
 
+    <string name="key_cookie_banner_handling">cookie_banner_handling</string>
+    <string name="key_cookie_banner_handling_pb">cookie_banner_handling_pb</string>
+    <string name="cookie_banner_handling_default">disabled</string>
+    <string name="cookie_banner_handling_pb_default">reject_accept_all</string>
     <string name="key_enhanced_tracking_protection">enhanced_tracking_protection</string>
     <string name="enhanced_tracking_protection_default">standard</string>
     <string-array name="enhanced_tracking_protection_display_names">
@@ -95,6 +99,16 @@
         <item>disabled</item>
         <item>standard</item>
         <item>strict</item>
+    </string-array>
+    <string-array name="cookie_banner_handling_names">
+        <item>Disabled</item>
+        <item>Enabled (reject all)</item>
+        <item>Enabled (reject or accept all)</item>
+    </string-array>
+    <string-array name="cookie_banner_handling_values">
+        <item>disabled</item>
+        <item>reject_all</item>
+        <item>reject_accept_all</item>
     </string-array>
 
     <string name="key_preferred_color_scheme">preferred_color_scheme</string>

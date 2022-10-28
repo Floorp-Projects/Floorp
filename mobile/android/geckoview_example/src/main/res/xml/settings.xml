@@ -12,6 +12,20 @@
         app:entries="@array/enhanced_tracking_protection_display_names"
         app:entryValues="@array/enhanced_tracking_protection_values"
         app:defaultValue="@string/enhanced_tracking_protection_default"/>
+    <ListPreference
+        app:key="@string/key_cookie_banner_handling"
+        app:title="Cookie Banner Handling"
+        app:summary="%s"
+        app:entries="@array/cookie_banner_handling_names"
+        app:entryValues="@array/cookie_banner_handling_values"
+        app:defaultValue="@string/cookie_banner_handling_default"/>
+    <ListPreference
+        app:key="@string/key_cookie_banner_handling_pb"
+        app:title="Cookie Banner Handling Private mode"
+        app:summary="%s"
+        app:entries="@array/cookie_banner_handling_names"
+        app:entryValues="@array/cookie_banner_handling_values"
+        app:defaultValue="@string/cookie_banner_handling_pb_default"/>
     <SwitchPreferenceCompat
         app:key="@string/key_dfpi"
         app:title="Enable Dynamic FPI"
