@@ -230,10 +230,10 @@ class RecentlyClosedTabsList extends HTMLElement {
     title.textContent = `${tab.title}`;
     title.classList.add("closed-tab-li-title");
 
-    const favicon = createFaviconElement(tab.image);
-    li.append(favicon);
-
     const targetURI = this.getTabStateValue(tab, "url");
+    const image = tab.image;
+    const favicon = createFaviconElement(image, targetURI);
+    li.append(favicon);
 
     const urlElement = document.createElement("span");
     urlElement.classList.add("closed-tab-li-url");

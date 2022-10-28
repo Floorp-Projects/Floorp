@@ -45,10 +45,10 @@ export function convertTimestamp(
   return formattedTime;
 }
 
-export function createFaviconElement(image) {
+export function createFaviconElement(image, targetURI = "") {
   const imageUrl = image
     ? lazy.PlacesUIUtils.getImageURL(image)
-    : "chrome://global/skin/icons/defaultFavicon.svg";
+    : `page-icon:${targetURI}`;
   let favicon = document.createElement("div");
 
   favicon.style.backgroundImage = `url('${imageUrl}')`;
