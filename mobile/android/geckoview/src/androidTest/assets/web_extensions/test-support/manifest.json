@@ -3,7 +3,7 @@
   "name": "Test support",
   "version": "1.0",
   "description": "Helper script for GeckoView tests",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "test-support@tests.mozilla.org"
      }

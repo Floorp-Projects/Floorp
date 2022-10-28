@@ -3,7 +3,7 @@
   "name": "messaging",
   "version": "1.0",
   "description": "Creates and removes a tab.",
-  "applications" : {
+  "browser_specific_settings" : {
     "gecko": {
       "id": "tabs-create-remove@tests.mozilla.org"
     }

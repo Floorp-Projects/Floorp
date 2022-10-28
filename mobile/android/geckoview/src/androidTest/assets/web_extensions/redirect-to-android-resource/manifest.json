@@ -3,7 +3,7 @@
   "description": "Redirects script requests from trackers.html to moz-extension:-resource packaged in the APK (resource://android/...)",
   "manifest_version": 2,
   "version": "1",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "redirect-to-android-resource@tests.mozilla.org"
     }

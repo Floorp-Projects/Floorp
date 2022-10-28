@@ -3,7 +3,7 @@
   "name": "messaging",
   "version": "1.0",
   "description": "Creates a tab with a contextual identity.",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "tabs-create-2@tests.mozilla.org"
     }
