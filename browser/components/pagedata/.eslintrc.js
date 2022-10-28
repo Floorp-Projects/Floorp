@@ -5,22 +5,10 @@
 "use strict";
 
 module.exports = {
-  extends: ["plugin:mozilla/valid-jsdoc"],
+  extends: ["plugin:mozilla/require-jsdoc", "plugin:mozilla/valid-jsdoc"],
 
   rules: {
     "mozilla/var-only-at-top-level": "error",
-    "require-jsdoc": [
-      "error",
-      {
-        require: {
-          FunctionDeclaration: true,
-          MethodDefinition: true,
-          ClassDeclaration: true,
-          ArrowFunctionExpression: false,
-          FunctionExpression: false,
-        },
-      },
-    ],
     "no-unused-expressions": "error",
   },
 };
