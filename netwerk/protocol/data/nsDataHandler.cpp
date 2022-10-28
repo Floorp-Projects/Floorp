@@ -12,9 +12,6 @@
 #include "plstr.h"
 #include "nsSimpleURI.h"
 #include "mozilla/dom/MimeType.h"
-#include "mozilla/StaticPrefs_network.h"
-
-using namespace mozilla;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -62,8 +59,7 @@ nsDataHandler::GetProtocolFlags(uint32_t* result) {
   // Strip whitespace unless this is text, where whitespace is important
   // Don't strip escaped whitespace though (bug 391951)
   nsresult rv;
-  if (base64 || (StaticPrefs::network_url_strip_data_url_whitespace() &&
-                 strncmp(contentType.get(), "text/", 5) != 0 &&
+  if (base64 || (strncmp(contentType.get(), "text/", 5) != 0 &&
                  contentType.Find("xml") == kNotFound)) {
     // it's ascii encoded binary, don't let any spaces in
     rv = NS_MutateURI(new mozilla::net::nsSimpleURI::Mutator())
