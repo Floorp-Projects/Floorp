@@ -201,7 +201,9 @@ function test()
             }
         }
 
-        gcparam('markStackLimit', 200);
+        if (typeof setMarkStackLimit === 'function') {
+            setMarkStackLimit(200);
+        }
         var forceOverflow = [ buffer ];
         for (let i = 0; i < 1000; i++) {
             forceOverflow = [ forceOverflow ];
