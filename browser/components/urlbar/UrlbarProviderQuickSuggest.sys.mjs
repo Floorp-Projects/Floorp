@@ -5,7 +5,6 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import {
-  SkippableTimer,
   TaskQueue,
   UrlbarProvider,
   UrlbarUtils,
@@ -14,6 +13,7 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
@@ -33,20 +33,7 @@ const TIMESTAMP_TEMPLATE = "%YYYYMMDDHH%";
 const TIMESTAMP_LENGTH = 10;
 const TIMESTAMP_REGEXP = /^\d{10}$/;
 
-const MERINO_PARAMS = {
-  CLIENT_VARIANTS: "client_variants",
-  PROVIDERS: "providers",
-  QUERY: "q",
-  SEQUENCE_NUMBER: "seq",
-  SESSION_ID: "sid",
-};
-
-const MERINO_SESSION_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-
 const IMPRESSION_COUNTERS_RESET_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
-
-const TELEMETRY_MERINO_LATENCY = "FX_URLBAR_MERINO_LATENCY_MS";
-const TELEMETRY_MERINO_RESPONSE = "FX_URLBAR_MERINO_RESPONSE";
 
 const TELEMETRY_REMOTE_SETTINGS_LATENCY =
   "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS";
@@ -179,13 +166,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   get TELEMETRY_SCALARS() {
     return { ...TELEMETRY_SCALARS };
-  }
-
-  /**
-   * @returns {object} An object mapping from mnemonics to Merino search params.
-   */
-  get MERINO_PARAMS() {
-    return { ...MERINO_PARAMS };
   }
 
   /**
@@ -496,8 +476,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
     // user's privacy, we don't keep it around between engagements. It wouldn't
     // hurt to do this on start too, it's just not necessary if we always do it
     // on end.
-    if (this._merinoSessionID && state != "start") {
-      this._resetMerinoSessionID();
+    if (state != "start") {
+      this._merino?.resetSession();
     }
 
     // Per spec, we count impressions only when the user picks a result, i.e.,
@@ -743,7 +723,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
   cancelQuery(queryContext) {
     // Cancel the Merino timeout timer so it doesn't fire and record a timeout.
     // If it's already canceled or has fired, this is a no-op.
-    this._merinoTimeoutTimer?.cancel();
+    this._merino?.cancelTimeoutTimer();
 
     // Don't abort the Merino fetch if one is ongoing. By design we allow
     // fetches to finish so we can record their latency.
@@ -859,173 +839,30 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   response.
    */
   async _fetchMerinoSuggestions(queryContext, searchString) {
-    let instance = this.queryInstance;
-
-    // Set up the Merino session ID and related state. The session ID is a UUID
-    // without leading and trailing braces.
-    if (!this._merinoSessionID) {
-      let uuid = Services.uuid.generateUUID().toString();
-      this._merinoSessionID = uuid.substring(1, uuid.length - 1);
-      this._merinoSequenceNumber = 0;
-      this._merinoSessionTimer?.cancel();
-
-      // Per spec, for the user's privacy, the session should time out and a new
-      // session ID should be used if the engagement does not end soon.
-      this._merinoSessionTimer = new SkippableTimer({
-        name: "Merino session timeout",
-        time: this._merinoSessionTimeoutMs,
-        logger: this.logger,
-        callback: () => this._resetMerinoSessionID(),
-      });
+    if (!this._merino) {
+      this._merino = new lazy.MerinoClient();
     }
 
-    // Get the endpoint URL. It's empty by default when running tests so they
-    // don't hit the network.
-    let endpointString = lazy.UrlbarPrefs.get("merinoEndpointURL");
-    if (!endpointString) {
-      return null;
-    }
-    let url;
-    try {
-      url = new URL(endpointString);
-    } catch (error) {
-      this.logger.error("Could not make Merino endpoint URL: " + error);
-      return null;
-    }
-    url.searchParams.set(MERINO_PARAMS.QUERY, searchString);
-    url.searchParams.set(MERINO_PARAMS.SESSION_ID, this._merinoSessionID);
-    url.searchParams.set(
-      MERINO_PARAMS.SEQUENCE_NUMBER,
-      this._merinoSequenceNumber
-    );
-    this._merinoSequenceNumber++;
-
-    let clientVariants = lazy.UrlbarPrefs.get("merinoClientVariants");
-    if (clientVariants) {
-      url.searchParams.set(MERINO_PARAMS.CLIENT_VARIANTS, clientVariants);
-    }
-
-    let providers = lazy.UrlbarPrefs.get("merinoProviders");
-    if (providers) {
-      url.searchParams.set(MERINO_PARAMS.PROVIDERS, providers);
-    } else if (
+    let providers;
+    if (
       !lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") &&
-      !lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored")
+      !lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored") &&
+      !lazy.UrlbarPrefs.get("merinoProviders")
     ) {
-      // Data collection is enabled but suggestions are not. Set the providers
-      // param to an empty string to tell Merino not to fetch any suggestions.
-      url.searchParams.set(MERINO_PARAMS.PROVIDERS, "");
+      // Data collection is enabled but suggestions are not. Use an empty list
+      // of providers to tell Merino not to fetch any suggestions.
+      providers = [];
     }
 
-    let responseHistogram = Services.telemetry.getHistogramById(
-      TELEMETRY_MERINO_RESPONSE
-    );
-    let maybeRecordResponse = category => {
-      responseHistogram?.add(category);
-      responseHistogram = null;
-    };
+    let suggestions = await this._merino.fetch({
+      providers,
+      query: searchString,
+    });
 
-    // Set up the timeout timer.
-    let timeout = lazy.UrlbarPrefs.get("merinoTimeoutMs");
-    let timer = (this._merinoTimeoutTimer = new SkippableTimer({
-      name: "Merino timeout",
-      time: timeout,
-      logger: this.logger,
-      callback: () => {
-        // The fetch timed out.
-        this.logger.info(`Merino fetch timed out (timeout = ${timeout}ms)`);
-        maybeRecordResponse("timeout");
-      },
-    }));
-
-    // If there's an ongoing fetch, abort it so there's only one at a time. By
-    // design we do not abort fetches on timeout or when the query is canceled
-    // so we can record their latency.
-    try {
-      this._merinoFetchController?.abort();
-    } catch (error) {
-      this.logger.error("Could not abort Merino fetch: " + error);
-    }
-
-    // Do the fetch.
-    let response;
-    let controller = (this._merinoFetchController = new AbortController());
-    TelemetryStopwatch.start(TELEMETRY_MERINO_LATENCY, queryContext);
-    await Promise.race([
-      timer.promise,
-      (async () => {
-        try {
-          // Canceling the timer below resolves its promise, which can resolve
-          // the outer promise created by `Promise.race`. This inner async
-          // function happens not to await anything after canceling the timer,
-          // but if it did, `timer.promise` could win the race and resolve the
-          // outer promise without a value. For that reason, we declare
-          // `response` in the outer scope and set it here instead of returning
-          // the response from this inner function and assuming it will also be
-          // returned by `Promise.race`.
-          response = await fetch(url, { signal: controller.signal });
-          TelemetryStopwatch.finish(TELEMETRY_MERINO_LATENCY, queryContext);
-          maybeRecordResponse(response.ok ? "success" : "http_error");
-        } catch (error) {
-          TelemetryStopwatch.cancel(TELEMETRY_MERINO_LATENCY, queryContext);
-          if (error.name != "AbortError") {
-            this.logger.error("Could not fetch Merino endpoint: " + error);
-            maybeRecordResponse("network_error");
-          }
-        } finally {
-          // Now that the fetch is done, cancel the timeout timer so it doesn't
-          // fire and record a timeout. If it already fired, which it would have
-          // on timeout, or was already canceled, this is a no-op.
-          timer.cancel();
-          if (controller == this._merinoFetchController) {
-            this._merinoFetchController = null;
-          }
-        }
-      })(),
-    ]);
-    if (timer == this._merinoTimeoutTimer) {
-      this._merinoTimeoutTimer = null;
-    }
-    if (instance != this.queryInstance) {
-      return null;
-    }
-
-    // Get the response body as an object.
-    let body;
-    try {
-      body = await response?.json();
-      if (instance != this.queryInstance) {
-        return null;
-      }
-    } catch (error) {
-      this.logger.error("Could not get Merino response as JSON: " + error);
-    }
-
-    if (!body?.suggestions?.length) {
-      return null;
-    }
-
-    let { suggestions, request_id } = body;
-    if (!Array.isArray(suggestions)) {
-      this.logger.error("Unexpected Merino response: " + JSON.stringify(body));
-      return null;
-    }
-
-    return suggestions.map(suggestion => ({
+    return suggestions?.map(suggestion => ({
       ...suggestion,
-      request_id,
       source: QUICK_SUGGEST_SOURCE.MERINO,
     }));
-  }
-
-  /**
-   * Resets the Merino session ID and related state.
-   */
-  _resetMerinoSessionID() {
-    this._merinoSessionID = null;
-    this._merinoSequenceNumber = 0;
-    this._merinoSessionTimer?.cancel();
-    this._merinoSessionTimer = null;
   }
 
   /**
@@ -1639,11 +1476,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
   // Whether blocked digests are currently being updated.
   _updatingBlockedDigests = false;
 
-  // State related to the current Merino session.
-  _merinoSessionID = null;
-  _merinoSequenceNumber = 0;
-  _merinoSessionTimer = null;
-  _merinoSessionTimeoutMs = MERINO_SESSION_TIMEOUT_MS;
+  // The Merino client.
+  _merino = null;
 }
 
 export var UrlbarProviderQuickSuggest = new ProviderQuickSuggest();
