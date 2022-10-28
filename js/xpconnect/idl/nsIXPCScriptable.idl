@@ -28,7 +28,7 @@ interface nsIXPConnectWrappedNative;
 [ptr] native JSGCContextPtr(JS::GCContext);
 [ref] native JSCallArgsRef(const JS::CallArgs);
 [ptr] native JSClassPtr(const JSClass);
-      native JSMutableHandleIdVector(JS::MutableHandleIdVector);
+      native JSMutableHandleIdVector(JS::MutableHandleVector<JS::PropertyKey>);
 
 %{ C++
     // nsIXPCScriptable flags (only 32 bits available!). They are defined via
