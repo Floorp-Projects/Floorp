@@ -1560,15 +1560,7 @@ inline MarkStack::TaggedPtr MarkStack::SlotsOrElementsRange::ptr() const {
   return ptr_;
 }
 
-MarkStack::MarkStack(size_t maxCapacity)
-    : topIndex_(0),
-      maxCapacity_(maxCapacity)
-#ifdef DEBUG
-      ,
-      iteratorCount_(0)
-#endif
-{
-}
+MarkStack::MarkStack() { MOZ_ASSERT(isEmpty()); }
 
 MarkStack::~MarkStack() {
   MOZ_ASSERT(isEmpty());
@@ -1588,13 +1580,14 @@ bool MarkStack::setStackCapacity(bool incrementalGCEnabled) {
     capacity = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
   }
 
-  if (capacity > maxCapacity_) {
-    capacity = maxCapacity_;
-  }
+#ifdef JS_GC_ZEAL
+  capacity = std::min(capacity, maxCapacity_.ref());
+#endif
 
   return resize(capacity);
 }
 
+#ifdef JS_GC_ZEAL
 void MarkStack::setMaxCapacity(size_t maxCapacity) {
   MOZ_ASSERT(maxCapacity != 0);
   MOZ_ASSERT(isEmpty());
@@ -1606,6 +1599,7 @@ void MarkStack::setMaxCapacity(size_t maxCapacity) {
     (void)resize(maxCapacity_);
   }
 }
+#endif
 
 inline MarkStack::TaggedPtr* MarkStack::topPtr() { return &stack()[topIndex_]; }
 
@@ -1684,7 +1678,12 @@ inline bool MarkStack::ensureSpace(size_t count) {
 }
 
 MOZ_NEVER_INLINE bool MarkStack::enlarge(size_t count) {
-  size_t newCapacity = std::min(maxCapacity_.ref(), capacity() * 2);
+  size_t newCapacity = capacity() * 2;
+
+#ifdef JS_GC_ZEAL
+  newCapacity = std::min(newCapacity, maxCapacity_.ref());
+#endif
+
   if (newCapacity < capacity() + count) {
     return false;
   }

@@ -288,7 +288,6 @@ class GCRuntime {
 
   [[nodiscard]] bool addRoot(Value* vp, const char* name);
   void removeRoot(Value* vp);
-  void setMarkStackLimit(size_t limit, AutoLockGC& lock);
 
   [[nodiscard]] bool setParameter(JSGCParamKey key, uint32_t value);
   [[nodiscard]] bool setParameter(JSGCParamKey key, uint32_t value,
@@ -394,6 +393,7 @@ class GCRuntime {
   bool selectForMarking(JSObject* object);
   void clearSelectedForMarking();
   void setDeterministic(bool enable);
+  void setMarkStackLimit(size_t limit, AutoLockGC& lock);
 #endif
 
   uint64_t nextCellUniqueId() {
