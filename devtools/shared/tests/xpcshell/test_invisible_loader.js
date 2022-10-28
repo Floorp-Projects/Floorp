@@ -15,6 +15,10 @@ addDebuggerToGlobal(globalThis);
 function run_test() {
   visible_loader();
   invisible_loader();
+  // TODO: invisibleToDebugger should be deprecated in favor of
+  // useDistinctSystemPrincipalLoader, but we might move out from the loader
+  // to using only standard imports instead.
+  distinct_system_principal_loader();
 }
 
 function visible_loader() {
@@ -24,7 +28,7 @@ function visible_loader() {
   loader.require("resource://devtools/shared/indentation.js");
 
   const dbg = new Debugger();
-  const sandbox = loader.loader.sharedGlobalSandbox;
+  const sandbox = loader.loader.sharedGlobal;
 
   try {
     dbg.addDebuggee(sandbox);
@@ -41,7 +45,7 @@ function invisible_loader() {
   loader.require("resource://devtools/shared/indentation.js");
 
   const dbg = new Debugger();
-  const sandbox = loader.loader.sharedGlobalSandbox;
+  const sandbox = loader.loader.sharedGlobal;
 
   try {
     dbg.addDebuggee(sandbox);
@@ -49,4 +53,28 @@ function invisible_loader() {
   } catch (e) {
     Assert.ok(true);
   }
+}
+
+function distinct_system_principal_loader() {
+  const {
+    useDistinctSystemPrincipalLoader,
+    releaseDistinctSystemPrincipalLoader,
+  } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
+  );
+
+  const requester = {};
+  const loader = useDistinctSystemPrincipalLoader(requester);
+  loader.require("resource://devtools/shared/indentation.js");
+
+  const dbg = new Debugger();
+  const sandbox = loader.loader.sharedGlobal;
+
+  try {
+    dbg.addDebuggee(sandbox);
+    do_throw("debugger added invisible value");
+  } catch (e) {
+    Assert.ok(true);
+  }
+  releaseDistinctSystemPrincipalLoader(requester);
 }

@@ -14,14 +14,9 @@ const {
 
 const lazy = {};
 
-loader.lazyGetter(lazy, "NetworkObserver", () => {
-  const {
-    NetworkObserver,
-  } = ChromeUtils.importESModule(
+ChromeUtils.defineESModuleGetters(lazy, {
+  NetworkObserver:
     "resource://devtools/server/actors/network-monitor/NetworkObserver.sys.mjs",
-    { loadInDevToolsLoader: loader.invisibleToDebugger }
-  );
-  return NetworkObserver;
 });
 
 loader.lazyRequireGetter(
