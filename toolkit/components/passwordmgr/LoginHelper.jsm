@@ -17,6 +17,10 @@ const EXPORTED_SYMBOLS = ["LoginHelper"];
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+const { Logic } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginManager.shared.mjs"
+);
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
@@ -1309,19 +1313,7 @@ const LoginHelper = {
       return false;
     }
 
-    let fieldType = element.hasAttribute("type")
-      ? element.getAttribute("type").toLowerCase()
-      : element.type;
-    if (
-      !(
-        fieldType == "text" ||
-        fieldType == "email" ||
-        fieldType == "url" ||
-        fieldType == "tel" ||
-        fieldType == "number" ||
-        fieldType == "search"
-      )
-    ) {
+    if (!Logic.inputTypeIsCompatibleWithUsername(element)) {
       return false;
     }
 
@@ -1356,7 +1348,7 @@ const LoginHelper = {
     // This is copied from 'loginFormAttrRegex' in NewPasswordModel.jsm
     const loginExpr = /login|log in|log on|log-on|sign in|sigin|sign\/in|sign-in|sign on|sign-on/i;
 
-    if (this._elementAttrsMatchRegex(formElement, loginExpr)) {
+    if (Logic.elementAttrsMatchRegex(formElement, loginExpr)) {
       return true;
     }
 
@@ -1381,8 +1373,8 @@ const LoginHelper = {
     }
 
     if (
-      this._elementAttrsMatchRegex(element, expr) ||
-      this._hasLabelMatchingRegex(element, expr)
+      Logic.elementAttrsMatchRegex(element, expr) ||
+      Logic.hasLabelMatchingRegex(element, expr)
     ) {
       return true;
     }
@@ -1403,8 +1395,8 @@ const LoginHelper = {
     const expr = /search|code/i;
 
     if (
-      this._elementAttrsMatchRegex(element, expr) ||
-      this._hasLabelMatchingRegex(element, expr)
+      Logic.elementAttrsMatchRegex(element, expr) ||
+      Logic.hasLabelMatchingRegex(element, expr)
     ) {
       return true;
     }
@@ -1434,45 +1426,10 @@ const LoginHelper = {
     }
 
     if (
-      this._elementAttrsMatchRegex(element, expr) ||
-      this._hasLabelMatchingRegex(element, expr)
+      Logic.elementAttrsMatchRegex(element, expr) ||
+      Logic.hasLabelMatchingRegex(element, expr)
     ) {
       return true;
-    }
-
-    return false;
-  },
-
-  /**
-   * Test whether the element has the keyword in its attributes.
-   * The tested attributes include id, name, className, and placeholder.
-   */
-  _elementAttrsMatchRegex(element, regex) {
-    if (
-      regex.test(element.id) ||
-      regex.test(element.name) ||
-      regex.test(element.className)
-    ) {
-      return true;
-    }
-
-    let placeholder = element.getAttribute("placeholder");
-    if (placeholder && regex.test(placeholder)) {
-      return true;
-    }
-    return false;
-  },
-
-  /**
-   * Test whether associated labels of the element have the keyword.
-   * This is a simplified rule of hasLabelMatchingRegex in NewPasswordModel.jsm
-   * Consider changing it if this is not good enough.
-   */
-  _hasLabelMatchingRegex(element, regex) {
-    if (element.labels !== null && element.labels.length) {
-      if (regex.test(element.labels[0].textContent)) {
-        return true;
-      }
     }
 
     return false;
