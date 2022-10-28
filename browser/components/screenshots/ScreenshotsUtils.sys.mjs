@@ -26,14 +26,20 @@ export class ScreenshotsComponentParent extends JSWindowActorParent {
         await ScreenshotsUtils.closePanel(browser);
         break;
       case "Screenshots:CopyScreenshot":
-        await ScreenshotsUtils.closePanel(browser, true);
+        await ScreenshotsUtils.closePanel(browser);
         let copyBox = message.data;
         ScreenshotsUtils.copyToClipboard(copyBox, browser);
         break;
       case "Screenshots:DownloadScreenshot":
-        await ScreenshotsUtils.closePanel(browser, true);
+        await ScreenshotsUtils.closePanel(browser);
         let { title, downloadBox } = message.data;
         ScreenshotsUtils.download(title, downloadBox, browser);
+        break;
+      case "Screenshots:ShowPanel":
+        ScreenshotsUtils.createOrDisplayButtons(browser);
+        break;
+      case "Screenshots:HidePanel":
+        ScreenshotsUtils.closePanel(browser);
         break;
     }
   }
@@ -42,7 +48,7 @@ export class ScreenshotsComponentParent extends JSWindowActorParent {
     // When restoring a crashed tab the browser is null
     let browser = this.browsingContext.topFrameElement;
     if (browser) {
-      ScreenshotsUtils.closePanel(browser, false);
+      ScreenshotsUtils.closePanel(browser);
     }
   }
 }
@@ -88,12 +94,12 @@ export var ScreenshotsUtils = {
           // if dialog box is found then the buttons are hidden and we return early
           // else no dialog box is found and we need to toggle the buttons
           // or if retry because the dialog box was closed and we need to show the panel
-          this.togglePreview(browser);
+          this.togglePanelAndOverlay(browser);
         }
         break;
       case "screenshots-take-screenshot":
         // need to close the preview because screenshot was taken
-        this.closePanel(browser);
+        this.closePanel(browser, true);
 
         // init UI as a tab dialog box
         let dialogBox = gBrowser.getTabDialogBox(browser);
@@ -150,9 +156,9 @@ export var ScreenshotsUtils = {
    * @param browser The current browser
    * @param {bool} closeOverlay Whether or not to
    * send a message to the child to close the overly.
-   * Defaults to true. Will be false when called from didDestroy.
+   * Defaults to false. Will be false when called from didDestroy.
    */
-  async closePanel(browser, closeOverlay = true) {
+  async closePanel(browser, closeOverlay = false) {
     let buttonsPanel = browser.ownerDocument.querySelector(
       "#screenshotsPagePanel"
     );
@@ -166,15 +172,18 @@ export var ScreenshotsUtils = {
   },
   /**
    * If the buttons panel exists and is open we will hide both the panel
-   * popup and the overlay.
+   * and the overlay. If the overlay is showing, we will hide the overlay.
    * Otherwise create or display the buttons.
    * @param browser The current browser.
    */
-  togglePreview(browser) {
+  async togglePanelAndOverlay(browser) {
     let buttonsPanel = browser.ownerDocument.querySelector(
       "#screenshotsPagePanel"
     );
-    if (buttonsPanel && buttonsPanel.state !== "closed") {
+    let isOverlayShowing = await this.getActor(browser).sendQuery(
+      "Screenshots:isOverlayShowing"
+    );
+    if (buttonsPanel && (isOverlayShowing || buttonsPanel.state !== "closed")) {
       buttonsPanel.hidePopup();
       let actor = this.getActor(browser);
       return actor.sendQuery("Screenshots:HideOverlay");
