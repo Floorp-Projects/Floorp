@@ -73,7 +73,7 @@ function installTestTheme(id) {
     manifest: {
       name,
       description,
-      applications: { gecko: { id } },
+      browser_specific_settings: { gecko: { id } },
       theme:
         id === MOCK_DARK_THEME_ID
           ? { properties: { color_scheme: "dark" } }

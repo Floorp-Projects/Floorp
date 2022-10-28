@@ -75,7 +75,7 @@ this.withWebExtension = function(
           name: "normandy_fixture",
           version: "1.0",
           description: "Dummy test fixture that's a webextension",
-          applications: {
+          browser_specific_settings: {
             gecko: { id: addonId },
           },
         },
