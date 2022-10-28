@@ -125,19 +125,12 @@
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
-    <string name="recent_tabs_header">Revenir in</string>
+    <string name="recent_tabs_header">Saltar retro</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Monstrar toto</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description_2">Monstrar tote le recente button de schedas</string>
-    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
-        The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Tu recerca de \&quot;%1$s\&quot;</string>
-
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d sitos</string>
+    <string name="recent_tabs_show_all_content_description_2">Button pro monstrar tote le schedas recente</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Vider tote le schedas synchronisate</string>
@@ -460,7 +453,7 @@
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
-    <string name="customize_toggle_jump_back_in">Revenir hic</string>
+    <string name="customize_toggle_jump_back_in">Saltar retro</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">Marcapaginas recente</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
@@ -492,12 +485,6 @@
     <string name="wallpaper_select_error_snackbar_message">Impossibile cambiar fundo</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">Pro saper plus</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Cambia le fundo toccante le logo de Firefox in le pagina initial</string>
-
-    <!-- This is the accessibility content description for the wallpapers functionality. Users are
-    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logo Firefox, button cambiar le fundo</string>
 
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">%s classic</string>
@@ -699,10 +686,6 @@
     <string name="tab_view_list">Lista</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Grillia</string>
-    <!-- Option for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Cercar gruppos</string>
-    <!-- Summary text for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Aggruppar sitos associate</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Clauder le schedas</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -794,7 +777,7 @@
 
 
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
-    <string name="tab_tray_multiselect_menu_item_bookmark">Marcapaginas</string>
+    <string name="tab_tray_multiselect_menu_item_bookmark">Adder al marcapaginas</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_close">Clauder</string>
     <!-- Content description for tabs tray multiselect share button -->
@@ -863,18 +846,6 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Nulle chronologia hic</string>
 
-    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Synchronisate ab altere apparatos</string>
-    <!-- The page title for browsing history coming from other devices. -->
-    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Ab altere apparatos</string>
-
-    <!-- The synced history sign in dialog message -->
-    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Accede pro vider le chronologia synchronisate de tu altere apparatos.</string>
-    <!-- The synced history sign in dialog button text -->
-    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Acceder</string>
-    <!-- The synced history sign in dialog create a new account link -->
-    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>O crea un conto Firefox pro initiar a synchronisar</u>]]></string>
-
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Discargamentos removite</string>
@@ -931,7 +902,7 @@
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d seligite</string>
     <!-- Bookmark editing screen title -->
-    <string name="edit_bookmark_fragment_title">Rediger le marcapaginas</string>
+    <string name="edit_bookmark_fragment_title">Modificar marcapagina</string>
     <!-- Bookmark folder editing screen title -->
     <string name="edit_bookmark_folder_fragment_title">Modificar dossier</string>
     <!-- Bookmark sign in button message -->
