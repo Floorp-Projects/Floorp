@@ -76,26 +76,6 @@ function removeSheetForBackgroundCalculation(win) {
 }
 
 /**
- * Helper function that determines if web render is enabled.
- *
- * @param  {Window}  win
- *         Window to be tested.
- * @return {Boolean}
- *         True if web render is enabled, false otherwise.
- */
-function isWebRenderEnabled(win) {
-  try {
-    return win.windowUtils && win.windowUtils.layerManagerType === "WebRender";
-  } catch (e) {
-    // Sometimes nsIDOMWindowUtils::layerManagerType fails unexpectedly (see bug
-    // 1596428).
-    console.warn(e);
-  }
-
-  return false;
-}
-
-/**
  * Get role attribute for an accessible object if specified for its
  * corresponding DOMNode.
  *
@@ -118,6 +98,5 @@ function getAriaRoles(accessible) {
 
 exports.getAriaRoles = getAriaRoles;
 exports.isDefunct = isDefunct;
-exports.isWebRenderEnabled = isWebRenderEnabled;
 exports.loadSheetForBackgroundCalculation = loadSheetForBackgroundCalculation;
 exports.removeSheetForBackgroundCalculation = removeSheetForBackgroundCalculation;

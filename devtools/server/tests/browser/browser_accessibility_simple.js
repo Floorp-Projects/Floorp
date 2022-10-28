@@ -4,13 +4,6 @@
 
 "use strict";
 
-loader.lazyRequireGetter(
-  this,
-  "isWebRenderEnabled",
-  "resource://devtools/server/actors/utils/accessibility.js",
-  true
-);
-
 const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
 
 function checkAccessibilityState(accessibility, parentAccessibility, expected) {
@@ -48,20 +41,12 @@ add_task(async function() {
   );
 
   const a11ySimulator = accessibility.simulatorFront;
-  const webRenderEnabled = isWebRenderEnabled(window);
+  ok(accessibility.simulatorFront, "Accessible simulator was initialized");
   is(
-    !!a11ySimulator,
-    webRenderEnabled,
-    `The SimulatorFront was${webRenderEnabled ? "" : " not"} returned.`
+    a11ySimulator,
+    accessibility.simulatorFront,
+    "The SimulatorFront was returned"
   );
-  if (webRenderEnabled) {
-    ok(accessibility.simulatorFront, "Accessible simulator was initialized");
-    is(
-      a11ySimulator,
-      accessibility.simulatorFront,
-      "The SimulatorFront was returned"
-    );
-  }
 
   checkAccessibilityState(accessibility, parentAccessibility, {
     enabled: false,
