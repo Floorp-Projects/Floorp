@@ -86,7 +86,7 @@
   MOZ_THREAD_ANNOTATION_ATTRIBUTE__(lock_returned(x))
 
 // Document if a class/type is a lockable type (such as the Mutex class).
-#define MOZ_CAPABILITY MOZ_THREAD_ANNOTATION_ATTRIBUTE__(lockable)
+#define MOZ_CAPABILITY(x) MOZ_THREAD_ANNOTATION_ATTRIBUTE__(capability(x))
 
 // Document if a class is a scoped lockable type (such as the MutexLock class).
 #define MOZ_SCOPED_CAPABILITY MOZ_THREAD_ANNOTATION_ATTRIBUTE__(scoped_lockable)

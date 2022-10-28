@@ -38,7 +38,7 @@ namespace mozilla {
 namespace mscom {
 namespace detail {
 
-class MOZ_CAPABILITY LiveSet final {
+class MOZ_CAPABILITY("mutex") LiveSet final {
  public:
   LiveSet() : mMutex("mozilla::mscom::LiveSet::mMutex") {}
 

@@ -38,7 +38,7 @@ OS_EXPORT OS_NOTHROW OS_NONNULL_ALL void os_unfair_lock_lock_with_options(
 // places, because they require malloc()ed memory, which causes bootstrapping
 // issues in some cases.  We also can't use constructors, because for statics,
 // they would fire after the first use of malloc, resetting the locks.
-struct MOZ_CAPABILITY Mutex {
+struct MOZ_CAPABILITY("mutex") Mutex {
 #if defined(XP_WIN)
   CRITICAL_SECTION mMutex;
 #elif defined(XP_DARWIN)
@@ -148,7 +148,7 @@ struct MOZ_CAPABILITY Mutex {
 // Ideally, we'd use the same type of locks everywhere, but SRWLocks
 // everywhere incur a performance penalty. See bug 1418389.
 #if defined(XP_WIN)
-struct MOZ_CAPABILITY StaticMutex {
+struct MOZ_CAPABILITY("mutex") StaticMutex {
   SRWLOCK mMutex;
 
   inline void Lock() MOZ_CAPABILITY_ACQUIRE() {

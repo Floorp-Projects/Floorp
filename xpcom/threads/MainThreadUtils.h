@@ -37,7 +37,7 @@ namespace mozilla {
  * If you want a thread-safety-analysis capability for a non-main thread,
  * consider using the `EventTargetCapability` type.
  */
-class MOZ_CAPABILITY MainThreadCapability final {};
+class MOZ_CAPABILITY("main thread") MainThreadCapability final {};
 constexpr MainThreadCapability sMainThreadCapability;
 
 #  ifdef DEBUG

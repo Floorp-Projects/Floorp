@@ -66,7 +66,8 @@
 
 #include "prthread.h"
 
-class MOZ_CAPABILITY TraceLogMutex : private mozilla::detail::MutexImpl {
+class MOZ_CAPABILITY("mutex") TraceLogMutex
+    : private mozilla::detail::MutexImpl {
  public:
   explicit TraceLogMutex() : ::mozilla::detail::MutexImpl(){};
 

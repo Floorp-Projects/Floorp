@@ -20,7 +20,7 @@ namespace mozilla {
 
 // Default reader locking strategy, using a mutex to ensure that concurrent
 // PopAll calls won't overlap.
-class MOZ_CAPABILITY MultiWriterQueueReaderLocking_Mutex {
+class MOZ_CAPABILITY("mutex") MultiWriterQueueReaderLocking_Mutex {
  public:
   MultiWriterQueueReaderLocking_Mutex()
       : mMutex("MultiWriterQueueReaderLocking_Mutex") {}
@@ -33,7 +33,7 @@ class MOZ_CAPABILITY MultiWriterQueueReaderLocking_Mutex {
 
 // Reader non-locking strategy, trusting that PopAll will never be called
 // concurrently (e.g., by only calling it from a specific thread).
-class MOZ_CAPABILITY MultiWriterQueueReaderLocking_None {
+class MOZ_CAPABILITY("dummy lock") MultiWriterQueueReaderLocking_None {
  public:
 #ifndef DEBUG
   void Lock() MOZ_CAPABILITY_ACQUIRE(){};

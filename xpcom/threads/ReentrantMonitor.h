@@ -34,7 +34,8 @@ namespace mozilla {
  * When possible, use ReentrantMonitorAutoEnter to hold this monitor within a
  * scope, instead of calling Enter/Exit directly.
  **/
-class MOZ_CAPABILITY ReentrantMonitor : BlockingResourceBase {
+class MOZ_CAPABILITY("reentrant monitor") ReentrantMonitor
+    : BlockingResourceBase {
  public:
   /**
    * ReentrantMonitor

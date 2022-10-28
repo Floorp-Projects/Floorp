@@ -28,7 +28,7 @@ namespace IOInterposer {
  * positives.
  */
 
-class MOZ_CAPABILITY Monitor {
+class MOZ_CAPABILITY("monitor") Monitor {
  public:
   Monitor() : mLock(PR_NewLock()), mCondVar(PR_NewCondVar(mLock)) {}
 
@@ -82,7 +82,7 @@ class MOZ_SCOPED_CAPABILITY MonitorAutoUnlock {
   Monitor& mMonitor;
 };
 
-class MOZ_CAPABILITY Mutex {
+class MOZ_CAPABILITY("mutex") Mutex {
  public:
   Mutex() : mPRLock(PR_NewLock()) {}
 

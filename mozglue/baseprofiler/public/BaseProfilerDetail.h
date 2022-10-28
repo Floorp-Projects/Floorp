@@ -22,7 +22,8 @@ namespace baseprofiler {
 namespace detail {
 
 // Thin shell around mozglue PlatformMutex, for Base Profiler internal use.
-class MOZ_CAPABILITY BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
+class MOZ_CAPABILITY("mutex") BaseProfilerMutex
+    : private ::mozilla::detail::MutexImpl {
  public:
   BaseProfilerMutex() : ::mozilla::detail::MutexImpl() {}
   explicit BaseProfilerMutex(const char* aName)

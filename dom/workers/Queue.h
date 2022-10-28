@@ -51,7 +51,7 @@ struct StorageWithTArray {
   static void Compact(StorageType& aStorage) { aStorage.Compact(); }
 };
 
-class MOZ_CAPABILITY LockingWithMutex {
+class MOZ_CAPABILITY("mutex") LockingWithMutex {
   mozilla::Mutex mMutex;
 
  protected:

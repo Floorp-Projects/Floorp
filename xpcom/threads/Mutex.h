@@ -34,8 +34,8 @@ namespace mozilla {
  * include leak checking.  Sometimes you want to intentionally "leak" a mutex
  * until shutdown; in these cases, OffTheBooksMutex is for you.
  */
-class MOZ_CAPABILITY OffTheBooksMutex : public detail::MutexImpl,
-                                        BlockingResourceBase {
+class MOZ_CAPABILITY("mutex") OffTheBooksMutex : public detail::MutexImpl,
+                                                 BlockingResourceBase {
  public:
   /**
    * @param aName A name which can reference this lock
