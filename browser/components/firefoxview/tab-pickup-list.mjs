@@ -189,7 +189,7 @@ class TabPickupList extends HTMLElement {
     title.textContent = tab.title;
     title.classList.add("synced-tab-li-title");
 
-    const favicon = createFaviconElement(tab.icon);
+    const favicon = createFaviconElement(tab.icon, targetURI);
 
     const lastUsedMs = tab.lastUsed * 1000;
     const time = document.createElement("span");
