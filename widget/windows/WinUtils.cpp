@@ -412,6 +412,13 @@ std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
     ENTRY(WM_GETTITLEBARINFOEX),
     {0x0, {nullptr, 0x0}}};
 #undef ENTRY
+// Using this so we can initialize this with nice syntax instead of having
+// to add them one at a time to the mozilla::HashSet.
+const UINT eventsToLogOriginalParams[] = {
+    WM_WINDOWPOSCHANGING, WM_SIZING,        WM_STYLECHANGING,
+    WM_GETTEXT,           WM_GETMINMAXINFO, WM_MEASUREITEM,
+};
+mozilla::HashSet<UINT> gEventsToLogOriginalParams;
 
 #ifdef MOZ_PLACES
 NS_IMPL_ISUPPORTS(myDownloadObserver, nsIDownloadObserver)
@@ -475,6 +482,12 @@ void WinUtils::Initialize() {
 
   if (IsWin8OrLater()) {
     sHasPackageIdentity = mozilla::HasPackageIdentity();
+  }
+
+  MOZ_ASSERT(gEventsToLogOriginalParams.reserve(
+      MOZ_ARRAY_LENGTH(eventsToLogOriginalParams)));
+  for (UINT eventToLogOriginalParam : eventsToLogOriginalParams) {
+    MOZ_ASSERT(gEventsToLogOriginalParams.putNew(eventToLogOriginalParam));
   }
 }
 

@@ -38,6 +38,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/HalScreenConfiguration.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "mozilla/WindowsDpiAwareness.h"
@@ -129,6 +130,7 @@ typedef struct {
   UINT mId;
 } EventMsgInfo;
 extern std::unordered_map<UINT, EventMsgInfo> gAllEvents;
+extern mozilla::HashSet<UINT> gEventsToLogOriginalParams;
 
 // More complete QS definitions for MsgWaitForMultipleObjects() and
 // GetQueueStatus() that include newer win8 specific defines.
