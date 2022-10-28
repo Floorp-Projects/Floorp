@@ -2,6 +2,10 @@
 // event.clipboardData.
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.events.dataTransfer.mozFile.enabled", true]],
+  });
+
   var input = document.createElement("input");
   document.documentElement.appendChild(input);
 
