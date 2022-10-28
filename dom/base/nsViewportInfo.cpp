@@ -29,13 +29,14 @@ void nsViewportInfo::ConstrainViewportValues() {
 static const float& MinOrMax(const float& aA, const float& aB,
                              const float& (*aMinOrMax)(const float&,
                                                        const float&)) {
-  MOZ_ASSERT(
-      aA != nsViewportInfo::ExtendToZoom && aA != nsViewportInfo::DeviceSize &&
-      aB != nsViewportInfo::ExtendToZoom && aB != nsViewportInfo::DeviceSize);
-  if (aA == nsViewportInfo::Auto) {
+  MOZ_ASSERT(aA != nsViewportInfo::kExtendToZoom &&
+             aA != nsViewportInfo::kDeviceSize &&
+             aB != nsViewportInfo::kExtendToZoom &&
+             aB != nsViewportInfo::kDeviceSize);
+  if (aA == nsViewportInfo::kAuto) {
     return aB;
   }
-  if (aB == nsViewportInfo::Auto) {
+  if (aB == nsViewportInfo::kAuto) {
     return aA;
   }
   return aMinOrMax(aA, aB);
