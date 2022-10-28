@@ -1702,6 +1702,13 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
         newLoadInfo->SetInitialClientInfo(initialClientInfo.ref());
       }
 
+      // If this is ServiceWorker fallback redirect, info HttpChannelChild to
+      // detach StreamFilters. Otherwise StreamFilters will be attached twice
+      // on the same HttpChannelChild when opening the new nsHttpChannel.
+      if (oldIntercepted) {
+        Unused << DetachStreamFilters();
+      }
+
       // Re-link the HttpChannelParent to the new channel.
       nsCOMPtr<nsIChannel> linkedChannel;
       rv = NS_LinkRedirectChannels(mRedirectChannelId, this,
@@ -2003,6 +2010,20 @@ auto HttpChannelParent::AttachStreamFilter(
   return InvokeAsync(mBgParent->GetBackgroundTarget(), mBgParent.get(),
                      __func__, &HttpBackgroundChannelParent::AttachStreamFilter,
                      std::move(aParentEndpoint), std::move(aChildEndpoint));
+}
+
+auto HttpChannelParent::DetachStreamFilters() -> RefPtr<GenericPromise> {
+  LOG(("HttpChannelParent::DeattachStreamFilter [this=%p]", this));
+  MOZ_ASSERT(!mAfterOnStartRequestBegun);
+
+  if (NS_WARN_IF(mIPCClosed)) {
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  MOZ_ASSERT(mBgParent);
+  return InvokeAsync(mBgParent->GetBackgroundTarget(), mBgParent.get(),
+                     __func__,
+                     &HttpBackgroundChannelParent::DetachStreamFilters);
 }
 
 void HttpChannelParent::SetCookie(nsCString&& aCookie) {
