@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Form History / Attribute change with datalist entries: Bug 1767250</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="content">
+
+  <form>
+    <input list="suggest" type="button" name="input" id="input" />
+    <datalist id="suggest">
+      <option value="Mozilla">
+      <option value="Firefox">
+      <option value="Thunderbird">
+    </datalist>
+  </form>
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const { TestUtils } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+
+const input = document.getElementById("input");
+
+add_task(async function test_dropdown_shown_when_type_attribute_changed() {
+  input.addEventListener("click", () => input.setAttribute("type", "text"));
+
+  is(input.type, "button", "Input type is initially button.");
+
+  synthesizeMouseAtCenter(input, {button: input, type: "mousedown"}, window);
+  synthesizeMouseAtCenter(input, {button: input, type: "mouseup"}, window);
+
+  await SimpleTest.promiseWaitForCondition(() => input.type === "text", "Input type changed to text.");
+
+  is(document.activeElement, input, "Text input is focused.");
+  // In the course of fixing Bug 1767250, we discovered that the focus ring was not shown although the element was focused.
+  // We decided to refer fixing this to a later bug,  This is tracked in Bug 1788698.
+  // ok(input.matches(":focus-visible"), "Outer focus ring is shown.");
+
+  // We should wait until the next tick/frame, otherwise the popup is not shown.
+  await TestUtils.waitForTick();
+  const promisePopupShown = promiseACShown();
+  synthesizeKey("KEY_ArrowDown");
+  await promisePopupShown;
+
+  isDeeply(getMenuEntries(), ["Mozilla", "Firefox", "Thunderbird"], "Datalist shown after changing input type from button to text.");
+  input.removeEventListener("click", () => input.setAttribute("type", "text"));
+
+});
+
+</script>
+</pre>
+</body>
+</html>
