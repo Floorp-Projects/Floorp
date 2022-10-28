@@ -89,6 +89,7 @@ class InterceptedHttpChannel final
   nsCString mResumeEntityId;
   nsString mStatusHost;
   Atomic<bool> mCallingStatusAndProgress;
+  bool mInterceptionReset{false};
 
   /**
    *  InterceptionTimeStamps is used to record the time stamps of the
