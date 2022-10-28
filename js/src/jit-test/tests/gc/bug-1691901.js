@@ -1,4 +1,4 @@
 gczeal(0);
 enableShellAllocationMetadataBuilder();
-gcparam("markStackLimit",1);
+setMarkStackLimit(1);
 Function('gc()'.replace(/x/))();

@@ -130,14 +130,6 @@ typedef enum JSGCParamKey {
   JSGC_SLICE_TIME_BUDGET_MS = 9,
 
   /**
-   * Maximum size the GC mark stack can grow to.
-   *
-   * Pref: none
-   * Default: MarkStack::DefaultCapacity
-   */
-  JSGC_MARK_STACK_LIMIT = 10,
-
-  /**
    * The "do we collect?" decision depends on various parameters and can be
    * summarised as:
    *

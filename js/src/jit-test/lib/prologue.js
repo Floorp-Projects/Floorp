@@ -16,7 +16,8 @@ for (const name of ["gczeal",
                     "selectforgc",
                     "verifyprebarriers",
                     "verifypostbarriers",
-                    "gcPreserveCode"]) {
+                    "gcPreserveCode",
+                    "setMarkStackLimit"]) {
     const present = name in this;
     if (!present) {
         this[name] = function() {};

@@ -825,10 +825,12 @@ bool GCRuntime::init(uint32_t maxbytes) {
 
     MOZ_ALWAYS_TRUE(tunables.setParameter(JSGC_MAX_BYTES, maxbytes));
 
+#ifdef JS_GC_ZEAL
     const char* size = getenv("JSGC_MARK_STACK_LIMIT");
     if (size) {
       setMarkStackLimit(atoi(size), lock);
     }
+#endif
 
     if (!nursery().init(lock)) {
       return false;
@@ -1008,12 +1010,6 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
     case JSGC_SLICE_TIME_BUDGET_MS:
       defaultTimeBudgetMS_ = value;
       break;
-    case JSGC_MARK_STACK_LIMIT:
-      if (value == 0) {
-        return false;
-      }
-      setMarkStackLimit(value, lock);
-      break;
     case JSGC_INCREMENTAL_GC_ENABLED:
       setIncrementalGCEnabled(value != 0);
       break;
@@ -1075,9 +1071,6 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
   switch (key) {
     case JSGC_SLICE_TIME_BUDGET_MS:
       defaultTimeBudgetMS_ = TuningDefaults::DefaultTimeBudgetMS;
-      break;
-    case JSGC_MARK_STACK_LIMIT:
-      setMarkStackLimit(MarkStack::DefaultCapacity, lock);
       break;
     case JSGC_INCREMENTAL_GC_ENABLED:
       setIncrementalGCEnabled(TuningDefaults::IncrementalGCEnabled);
@@ -1157,8 +1150,6 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       MOZ_RELEASE_ASSERT(defaultTimeBudgetMS_ >= 0);
       MOZ_RELEASE_ASSERT(defaultTimeBudgetMS_ <= UINT32_MAX);
       return uint32_t(defaultTimeBudgetMS_);
-    case JSGC_MARK_STACK_LIMIT:
-      return marker.maxCapacity();
     case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
       return tunables.highFrequencyThreshold().ToMilliseconds();
     case JSGC_SMALL_HEAP_SIZE_MAX:
@@ -1229,12 +1220,14 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
   }
 }
 
+#ifdef JS_GC_ZEAL
 void GCRuntime::setMarkStackLimit(size_t limit, AutoLockGC& lock) {
   MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
   AutoUnlockGC unlock(lock);
   AutoStopVerifyingBarriers pauseVerification(rt, false);
   marker.setMaxCapacity(limit);
 }
+#endif
 
 void GCRuntime::setIncrementalGCEnabled(bool enabled) {
   incrementalGCEnabled = enabled;
