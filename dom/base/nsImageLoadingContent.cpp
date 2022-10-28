@@ -1180,16 +1180,16 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
     TrackImage(req);
     ResetAnimationIfNeeded();
 
-    // Handle cases when we just ended up with a pending request but it's
-    // already done.  In that situation we have to synchronously switch that
-    // request to being the current request, because websites depend on that
-    // behavior.
-    if (req == mPendingRequest) {
-      uint32_t pendingLoadStatus;
-      rv = req->GetImageStatus(&pendingLoadStatus);
-      if (NS_SUCCEEDED(rv) &&
-          (pendingLoadStatus & imgIRequest::STATUS_LOAD_COMPLETE)) {
-        MakePendingRequestCurrent();
+    // Handle cases when we just ended up with a request but it's already done.
+    // In that situation we have to synchronously switch that request to being
+    // the current request, because websites depend on that behavior.
+    {
+      uint32_t loadStatus;
+      if (NS_SUCCEEDED(req->GetImageStatus(&loadStatus)) &&
+          (loadStatus & imgIRequest::STATUS_LOAD_COMPLETE)) {
+        if (req == mPendingRequest) {
+          MakePendingRequestCurrent();
+        }
         MOZ_ASSERT(mCurrentRequest,
                    "How could we not have a current request here?");
 
