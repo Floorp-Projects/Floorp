@@ -2159,9 +2159,8 @@ static bool InternalConst(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (JS_LinearStringEqualsLiteral(linear,
-                                   "INCREMENTAL_MARK_STACK_BASE_CAPACITY")) {
-    args.rval().setNumber(uint32_t(js::INCREMENTAL_MARK_STACK_BASE_CAPACITY));
+  if (JS_LinearStringEqualsLiteral(linear, "MARK_STACK_BASE_CAPACITY")) {
+    args.rval().setNumber(uint32_t(js::MARK_STACK_BASE_CAPACITY));
   } else {
     JS_ReportErrorASCII(cx, "unknown const name");
     return false;
