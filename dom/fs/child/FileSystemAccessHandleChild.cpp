@@ -11,12 +11,8 @@
 
 namespace mozilla::dom {
 
-FileSystemAccessHandleChild::FileSystemAccessHandleChild(
-    const ::mozilla::ipc::FileDescriptor& aFileDescriptor)
-    : mAccessHandle(nullptr) {
-  auto rawFD = aFileDescriptor.ClonePlatformHandle();
-  mFileDesc = PR_ImportFile(PROsfd(rawFD.release()));
-}
+FileSystemAccessHandleChild::FileSystemAccessHandleChild()
+    : mAccessHandle(nullptr) {}
 
 FileSystemAccessHandleChild::~FileSystemAccessHandleChild() = default;
 
@@ -28,27 +24,7 @@ void FileSystemAccessHandleChild::SetAccessHandle(
   mAccessHandle = aAccessHandle;
 }
 
-PRFileDesc* FileSystemAccessHandleChild::MutableFileDescPtr() const {
-  MOZ_ASSERT(mFileDesc);
-
-  return mFileDesc;
-}
-
-void FileSystemAccessHandleChild::Close() {
-  MOZ_ASSERT(mFileDesc);
-
-  PR_Close(mFileDesc);
-  mFileDesc = nullptr;
-
-  PFileSystemAccessHandleChild::Send__delete__(this);
-}
-
 void FileSystemAccessHandleChild::ActorDestroy(ActorDestroyReason aWhy) {
-  if (mFileDesc) {
-    PR_Close(mFileDesc);
-    mFileDesc = nullptr;
-  }
-
   if (mAccessHandle) {
     mAccessHandle->ClearActor();
     mAccessHandle = nullptr;

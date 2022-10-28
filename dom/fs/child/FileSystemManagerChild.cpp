@@ -7,13 +7,13 @@
 #include "FileSystemManagerChild.h"
 
 #include "FileSystemAccessHandleChild.h"
+#include "mozilla/dom/FileSystemSyncAccessHandle.h"
 
 namespace mozilla::dom {
 
 already_AddRefed<PFileSystemAccessHandleChild>
-FileSystemManagerChild::AllocPFileSystemAccessHandleChild(
-    const FileDescriptor& aFileDescriptor) {
-  return MakeAndAddRef<FileSystemAccessHandleChild>(aFileDescriptor);
+FileSystemManagerChild::AllocPFileSystemAccessHandleChild() {
+  return MakeAndAddRef<FileSystemAccessHandleChild>();
 }
 
 ::mozilla::ipc::IPCResult FileSystemManagerChild::RecvCloseAll(
@@ -23,7 +23,8 @@ FileSystemManagerChild::AllocPFileSystemAccessHandleChild(
   // blobs are closed.
   for (const auto& item : ManagedPFileSystemAccessHandleChild()) {
     auto* child = static_cast<FileSystemAccessHandleChild*>(item);
-    child->Close();
+
+    child->MutableAccessHandlePtr()->Close();
   }
 
   aResolver(NS_OK);

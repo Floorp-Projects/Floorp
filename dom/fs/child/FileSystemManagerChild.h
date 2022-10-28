@@ -17,7 +17,7 @@ class FileSystemManagerChild : public PFileSystemManagerChild {
   NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(FileSystemManagerChild, Destroy())
 
   already_AddRefed<PFileSystemAccessHandleChild>
-  AllocPFileSystemAccessHandleChild(const FileDescriptor& aFileDescriptor);
+  AllocPFileSystemAccessHandleChild();
 
   ::mozilla::ipc::IPCResult RecvCloseAll(CloseAllResolver&& aResolver);
 

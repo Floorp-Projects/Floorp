@@ -126,10 +126,16 @@ struct FileSystemGetAccessHandleRequest
   EntryId entryId;
 };
 
+struct FileSystemAccessHandleProperties
+{
+  FileDescriptor fileDescriptor;
+  PFileSystemAccessHandle accessHandle;
+};
+
 union FileSystemGetAccessHandleResponse
 {
   nsresult;
-  PFileSystemAccessHandle;
+  FileSystemAccessHandleProperties;
 };
 
 /**
@@ -382,7 +388,7 @@ async protocol PFileSystemManager
       returns (uint64_t aQuotaGranted);
 
  child:
-  async PFileSystemAccessHandle(FileDescriptor fileDescriptor);
+  async PFileSystemAccessHandle();
 
   async CloseAll()
       returns(nsresult rv);

@@ -12,6 +12,8 @@ async protocol PFileSystemAccessHandle
   manager PFileSystemManager;
 
  parent:
+  async Close();
+
   async __delete__();
 };
 
