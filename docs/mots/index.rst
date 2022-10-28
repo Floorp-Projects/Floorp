@@ -3199,6 +3199,7 @@ The search service, address bar and address bar autocomplete.
         | `Dale Harvey (daleharvey) <https://people.mozilla.org/s?query=daleharvey>`__
         | `Marco Bonardo (mak) <https://people.mozilla.org/s?query=mak>`__
         | `Dão Gottwald (dao) <https://people.mozilla.org/s?query=dao>`__
+        | `Mandy Cheang (mcheang) <https://people.mozilla.org/s?query=mcheang>`__
     * - Peer(s) Emeritus
       - Michael de Boer
     * - Includes
