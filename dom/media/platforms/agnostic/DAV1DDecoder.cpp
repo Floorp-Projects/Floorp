@@ -10,7 +10,6 @@
 #include "ImageContainer.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "nsThreadUtils.h"
 #include "VideoUtils.h"
 
@@ -209,13 +208,6 @@ int DAV1DDecoder::GetPicture(DecodedData& aData, MediaResult& aResult) {
   if ((*picture).p.layout == DAV1D_PIXEL_LAYOUT_I400) {
     return 0;
   }
-
-#ifdef ANDROID
-  if (!gfxVars::UseWebRender() && (*picture).p.bpc != 8) {
-    aResult = MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR, __func__);
-    return -1;
-  }
-#endif
 
   RefPtr<VideoData> v = ConstructImage(*picture);
   if (!v) {

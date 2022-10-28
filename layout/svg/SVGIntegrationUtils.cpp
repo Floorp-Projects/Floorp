@@ -18,7 +18,6 @@
 #include "gfxContext.h"
 #include "SVGPaintServerFrame.h"
 #include "mozilla/gfx/Point.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/CSSClipPathInstance.h"
 #include "mozilla/FilterInstance.h"
 #include "mozilla/StaticPrefs_layers.h"
@@ -1101,13 +1100,8 @@ bool SVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(nsIFrame* aFrame) {
 bool SVGIntegrationUtils::UsesSVGEffectsNotSupportedInCompositor(
     nsIFrame* aFrame) {
   // WebRender supports masks / clip-paths and some filters in the compositor.
-  // Non-WebRender doesn't support any SVG effects in the compositor.
   if (aFrame->StyleEffects()->HasFilters()) {
-    return !gfx::gfxVars::UseWebRender() ||
-           !SVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(aFrame);
-  }
-  if (SVGIntegrationUtils::UsingMaskOrClipPathForFrame(aFrame)) {
-    return !gfx::gfxVars::UseWebRender();
+    return !SVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(aFrame);
   }
   return false;
 }
