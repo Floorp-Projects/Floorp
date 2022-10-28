@@ -85,10 +85,10 @@ class WorkerThread;
 // SharedMutex is a small wrapper around an (internal) reference-counted Mutex
 // object. It exists to avoid changing a lot of code to use Mutex* instead of
 // Mutex&.
-class MOZ_CAPABILITY SharedMutex {
+class MOZ_CAPABILITY("mutex") SharedMutex {
   using Mutex = mozilla::Mutex;
 
-  class MOZ_CAPABILITY RefCountedMutex final : public Mutex {
+  class MOZ_CAPABILITY("mutex") RefCountedMutex final : public Mutex {
    public:
     explicit RefCountedMutex(const char* aName) : Mutex(aName) {}
 

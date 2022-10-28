@@ -26,7 +26,8 @@ namespace mozilla {
  * initialized to 0 in order to initialize mMutex.  It is only safe to use
  * StaticMutex as a global or static variable.
  */
-class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS MOZ_CAPABILITY StaticMutex {
+class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS MOZ_CAPABILITY("mutex")
+    StaticMutex {
  public:
   // In debug builds, check that mMutex is initialized for us as we expect by
   // the compiler.  In non-debug builds, don't declare a constructor so that

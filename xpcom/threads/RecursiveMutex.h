@@ -18,7 +18,8 @@
 
 namespace mozilla {
 
-class MOZ_CAPABILITY RecursiveMutex : public BlockingResourceBase {
+class MOZ_CAPABILITY("recursive mutex") RecursiveMutex
+    : public BlockingResourceBase {
  public:
   explicit RecursiveMutex(const char* aName);
   ~RecursiveMutex();

@@ -13,7 +13,8 @@
 
 namespace mozilla {
 
-class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS MOZ_CAPABILITY StaticMonitor {
+class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS MOZ_CAPABILITY("monitor")
+    StaticMonitor {
  public:
   // In debug builds, check that mMutex is initialized for us as we expect by
   // the compiler.  In non-debug builds, don't declare a constructor so that
