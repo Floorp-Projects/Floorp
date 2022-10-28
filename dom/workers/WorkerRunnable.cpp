@@ -555,7 +555,7 @@ void WorkerMainThreadRunnable::Dispatch(WorkerStatus aFailStatus,
 
   AutoSyncLoopHolder syncLoop(mWorkerPrivate, aFailStatus);
 
-  mSyncLoopTarget = syncLoop.GetEventTarget();
+  mSyncLoopTarget = syncLoop.GetSerialEventTarget();
   if (!mSyncLoopTarget) {
     // SyncLoop creation can fail if the worker is shutting down.
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);

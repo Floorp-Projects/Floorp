@@ -244,7 +244,8 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
   NS_ASSERTION(!aScriptURLs.IsEmpty(), "Bad arguments!");
 
   AutoSyncLoopHolder syncLoop(aWorkerPrivate, Canceling);
-  nsCOMPtr<nsIEventTarget> syncLoopTarget = syncLoop.GetEventTarget();
+  nsCOMPtr<nsISerialEventTarget> syncLoopTarget =
+      syncLoop.GetSerialEventTarget();
   if (!syncLoopTarget) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
