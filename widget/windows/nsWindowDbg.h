@@ -25,6 +25,21 @@
 // Enable IS_VK_DOWN debug output
 //#define DEBUG_VK
 
+namespace mozilla::widget {
+// Windows message debugging data
+struct EventMsgInfo {
+  const char* mStr;
+  UINT mId;
+  std::function<nsAutoCString(WPARAM, LPARAM, bool)> mParamInfoFn;
+  std::function<void(nsAutoCString&, WPARAM, const char*, bool)> mWParamInfoFn;
+  const char* mWParamName;
+  std::function<void(nsAutoCString&, LPARAM, const char*, bool)> mLParamInfoFn;
+  const char* mLParamName;
+  void LogParameters(nsAutoCString& str, WPARAM wParam, LPARAM lParam,
+                     bool isPreCall);
+};
+extern std::unordered_map<UINT, EventMsgInfo> gAllEvents;
+
 // RAII-style class to log before and after an event is handled.
 class PrintEvent final {
  public:
@@ -43,11 +58,6 @@ class PrintEvent final {
   mozilla::Maybe<bool> mResult;
   bool mShouldLogPostCall;
 };
-
-namespace mozilla::widget {
-
-nsAutoCString DefaultParamInfoFn(uint64_t wParam, uint64_t lParam,
-                                 bool firstCall);
 
 struct EnumValueAndName {
   uint64_t mFlag;
