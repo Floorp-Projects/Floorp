@@ -72,9 +72,28 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace widget {
 
+// Window message with default wParam/lParam logging
 #define ENTRY(_msg)       \
   {                       \
     _msg, { #_msg, _msg } \
+  }
+// Window message with no parameters
+#define ENTRY_WITH_NO_PARAM_INFO(_msg)      \
+  {                                         \
+    _msg, { #_msg, _msg, EmptyParamInfoFn } \
+  }
+// Window message with custom parameter logging functions
+#define ENTRY_WITH_CUSTOM_PARAM_INFO(_msg, paramInfoFn) \
+  {                                                     \
+    _msg, { #_msg, _msg, paramInfoFn }                  \
+  }
+// Window message with separate custom wParam and lParam logging functions
+#define ENTRY_WITH_SPLIT_PARAM_INFOS(_msg, wParamInfoFn, wParamName,           \
+                                     lParamInfoFn, lParamName)                 \
+  {                                                                            \
+    _msg, {                                                                    \
+#      _msg, _msg, nullptr, wParamInfoFn, wParamName, lParamInfoFn, lParamName \
+    }                                                                          \
   }
 std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
     ENTRY(WM_NULL),
@@ -412,6 +431,9 @@ std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
     ENTRY(WM_GETTITLEBARINFOEX),
     {0x0, {nullptr, 0x0}}};
 #undef ENTRY
+#undef ENTRY_WITH_NO_PARAM_INFO
+#undef ENTRY_WITH_CUSTOM_PARAM_INFO
+#undef ENTRY_WITH_SPLIT_PARAM_INFO
 // Using this so we can initialize this with nice syntax instead of having
 // to add them one at a time to the mozilla::HashSet.
 const UINT eventsToLogOriginalParams[] = {
