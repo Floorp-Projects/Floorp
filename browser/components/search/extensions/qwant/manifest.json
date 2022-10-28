@@ -1,7 +1,7 @@
 {
   "name": "Qwant",
   "manifest_version": 2,
-  "version": "1.2",
+  "version": "1.3",
   "applications": {
     "gecko": {
       "id": "qwant@search.mozilla.org"
@@ -16,6 +16,7 @@
   ],
   "chrome_settings_overrides": {
     "search_provider": {
+      "keyword": "@qwant",
       "name": "Qwant",
       "search_url": "https://www.qwant.com/",
       "search_url_get_params": "client=brz-moz&q={searchTerms}",
