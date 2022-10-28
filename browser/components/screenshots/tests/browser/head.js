@@ -62,10 +62,21 @@ class ScreenshotsHelper {
     button.click();
   }
 
+  async waitForPanel() {
+    return BrowserTestUtils.waitForCondition(async () => {
+      return gBrowser.selectedBrowser.ownerDocument.querySelector(
+        "#screenshotsPagePanel"
+      );
+    });
+  }
+
   async waitForOverlay() {
     let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
       "#screenshotsPagePanel"
     );
+    if (!panel) {
+      panel = await this.waitForPanel();
+    }
     await BrowserTestUtils.waitForMutationCondition(
       panel,
       { attributes: true },
@@ -208,6 +219,26 @@ class ScreenshotsHelper {
     let manager = currDialogBox.getTabDialogManager();
     let dialogs = manager.hasDialogs && manager.dialogs;
     return dialogs[0];
+  }
+
+  assertPanelVisible() {
+    let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
+      "#screenshotsPagePanel"
+    );
+    Assert.ok(
+      BrowserTestUtils.is_visible(panel),
+      "Screenshots panel is visible"
+    );
+  }
+
+  assertPanelNotVisible() {
+    let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
+      "#screenshotsPagePanel"
+    );
+    Assert.ok(
+      BrowserTestUtils.is_hidden(panel),
+      "Screenshots panel is not visible"
+    );
   }
 
   /**
