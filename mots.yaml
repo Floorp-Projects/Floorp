@@ -1284,12 +1284,12 @@ modules:
     meta:
       owners_emeritus:
         - Aaron Klotz
+        - *toshi
       components:
         - Core::DLL Services
     owners:
-      - *toshi
-    peers:
       - *handyman
+    peers:
       - *mhowell
     machine_name: core_dll_services
 
@@ -1672,13 +1672,13 @@ modules:
         - Kan-Ru Chen
         - Bevis Tseng
         - Ben Kelly
+        - *jimm
       group: dev-platform
       components:
         - Core::IPC
     owners:
       - *nika
     peers:
-      - *jimm
       - *jld
       - *mccr8
       - *handyman
@@ -2032,13 +2032,13 @@ modules:
     meta:
       owners_emeritus:
         - Aaron Klotz
+      peers_emeritus:
+        - *jimm
       group: dev-platform
       components:
         - 'Core::IPC: MSCOM'
     owners:
       - *Jamie
-    peers:
-      - *jimm
     machine_name: core_mscom
 
   - name: 'Core: Necko'
@@ -2193,6 +2193,8 @@ modules:
       - dom/plugins/**/*
       - modules/plugin/**/*
     meta:
+      owners_emeritus:
+        - *jimm
       peers_emeritus:
         - Josh Aas
         - John Schoenick
@@ -2203,8 +2205,6 @@ modules:
       components:
         - Core::Plug-ins
     owners:
-      - *jimm
-    peers:
       - *handyman
     machine_name: core_plugins
 
@@ -2328,6 +2328,8 @@ modules:
       peers_emeritus:
         - Brian Bondy
         - Aaron Klotz
+        - *jimm
+        - *toshi
       group: dev-platform
       url: 'https://wiki.mozilla.org/Security/Sandbox '
       components:
@@ -2336,8 +2338,6 @@ modules:
       - *bobowen
     peers:
       - *handyman
-      - *jimm
-      - *toshi
     machine_name: core_sandboxing_windows
 
   - name: 'Core: security'
@@ -2725,6 +2725,7 @@ modules:
       owners_emeritus:
         - Vladimir Vukicevic
         - Robert O'Callahan
+        - *jimm
       peers_emeritus:
         - Stuart Parmenter
       group: dev-platform
@@ -2733,7 +2734,7 @@ modules:
         - Core::Widget
         - 'Core::Printing: Setup'
     owners:
-      - *jimm
+      - *spohl
     machine_name: core_widget
 
   - name: 'Core: Widget - Android'
@@ -2805,6 +2806,8 @@ modules:
     includes:
       - widget/windows/**/*
     meta:
+      owners_emeritus:
+        - *jimm
       peers_emeritus:
         - Rob Strong
         - Vladimir Vukicevic
@@ -2816,14 +2819,14 @@ modules:
         - Rob Arnold
         - Aaron Klotz
         - Neil Rashbrook
+        - *toshi
       group: dev-platform
       components:
         - 'Core::Widget: Win32'
     owners:
-      - *jimm
-    peers:
       - *cmartin
-      - *toshi
+    peers:
+      - *handyman
       - *mhowell
     machine_name: core_widget_windows
 
@@ -3184,10 +3187,11 @@ modules:
         meta:
           owners_emeritus:
             - Aaron Klotz
+            - *toshi
           components:
             - Firefox::Launcher Process
         owners:
-          - *toshi
+          - *mhowell
         peers:
           - *mhowell
         machine_name: launcher_process
