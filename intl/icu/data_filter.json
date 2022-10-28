@@ -159,7 +159,9 @@
             ],
             "rules": [
                 "-/UCARules",
-                "-/collations/*/Sequence"
+                "-/collations/*/Sequence",
+                "-/collations/big5han",
+                "-/collations/gb2312han"
             ]
         },
         {
