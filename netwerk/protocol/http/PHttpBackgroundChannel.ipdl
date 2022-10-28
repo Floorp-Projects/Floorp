@@ -67,6 +67,8 @@ child:
 
   async AttachStreamFilter(Endpoint<PStreamFilterParent> aEndpoint);
 
+  async DetachStreamFilters();
+
   async __delete__();
 
 };
