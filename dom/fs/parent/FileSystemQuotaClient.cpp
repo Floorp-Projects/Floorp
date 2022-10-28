@@ -7,6 +7,7 @@
 #include "FileSystemQuotaClient.h"
 
 #include "mozilla/dom/FileSystemDataManager.h"
+#include "mozilla/dom/quota/Assertions.h"
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/UsageInfo.h"
 #include "mozilla/ipc/BackgroundParent.h"

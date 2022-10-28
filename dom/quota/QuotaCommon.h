@@ -1251,12 +1251,6 @@ class BackgroundThreadObject {
   explicit BackgroundThreadObject(nsISerialEventTarget* aOwningThread);
 };
 
-void AssertIsOnIOThread();
-
-void AssertCurrentThreadOwnsQuotaMutex();
-
-bool IsOnIOThread();
-
 MOZ_COLD void ReportInternalError(const char* aFile, uint32_t aLine,
                                   const char* aStr);
 

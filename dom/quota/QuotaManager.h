@@ -20,6 +20,7 @@
 #include "mozilla/Result.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/dom/quota/Assertions.h"
 #include "mozilla/dom/quota/CommonMetadata.h"
 #include "mozilla/dom/quota/ForwardDecls.h"
 #include "mozilla/dom/quota/InitializationTypes.h"

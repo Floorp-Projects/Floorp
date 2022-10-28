@@ -10,6 +10,7 @@
 #include "mozilla/dom/cache/DBSchema.h"
 #include "mozilla/dom/cache/FileUtils.h"
 #include "mozilla/dom/cache/QuotaClient.h"
+#include "mozilla/dom/quota/Assertions.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/net/nsFileProtocolHandler.h"

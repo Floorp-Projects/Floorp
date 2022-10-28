@@ -14,6 +14,7 @@
 #include <cstdint>
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/quota/Assertions.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"

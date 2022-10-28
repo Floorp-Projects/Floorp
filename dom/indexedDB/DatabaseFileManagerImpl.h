@@ -13,6 +13,7 @@
 #include "ActorsParentCommon.h"
 
 // global includes
+#include "mozilla/dom/quota/Assertions.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "nsIFile.h"
 #include "nsString.h"
