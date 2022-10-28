@@ -18,6 +18,7 @@
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/SVGDocument.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
@@ -971,7 +972,13 @@ VectorImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
   // - We are using a DrawTargetRecording because we prefer the drawing commands
   //   in general to the rasterized surface. This allows blob images to avoid
   //   rasterized SVGs with WebRender.
-  if (aContext->GetDrawTarget()->GetBackendType() == BackendType::RECORDING) {
+  // - The size exceeds what we are willing to cache as a rasterized surface.
+  //   We don't do this for WebRender because the performance of the fallback
+  //   path is quite bad and upscaling the SVG from the clamped size is better
+  //   than bringing the browser to a crawl.
+  if (aContext->GetDrawTarget()->GetBackendType() == BackendType::RECORDING ||
+      (!gfxVars::UseWebRender() &&
+       aSize != SurfaceCache::ClampVectorSize(aSize))) {
     aFlags |= FLAG_BYPASS_SURFACE_CACHE;
   }
 

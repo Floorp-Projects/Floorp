@@ -7,6 +7,7 @@
 #include "SharedSurfacesChild.h"
 #include "SharedSurfacesParent.h"
 #include "CompositorManagerChild.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -170,7 +171,7 @@ nsresult SharedSurfacesChild::ShareInternal(SourceSurfaceSharedData* aSurface,
   MOZ_ASSERT(aUserData);
 
   CompositorManagerChild* manager = CompositorManagerChild::GetInstance();
-  if (NS_WARN_IF(!manager || !manager->CanSend())) {
+  if (NS_WARN_IF(!manager || !manager->CanSend() || !gfxVars::UseWebRender())) {
     // We cannot try to share the surface, most likely because the GPU process
     // crashed. Ideally, we would retry when it is ready, but the handles may be
     // a scarce resource, which can cause much more serious problems if we run
