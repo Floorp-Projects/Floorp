@@ -126,29 +126,22 @@ UINT nsClipboard::GetFormat(const char* aMimeStr, bool aMapHTMLMime) {
 
 //-------------------------------------------------------------------------
 // static
-nsresult nsClipboard::CreateNativeDataObject(nsITransferable* aTransferable,
-                                             IDataObject** aDataObj,
-                                             nsIURI* uri) {
-  if (nullptr == aTransferable) {
+nsresult nsClipboard::CreateNativeDataObject(
+    nsITransferable* aTransferable, IDataObject** aDataObj, nsIURI* aUri,
+    MightNeedToFlush* aMightNeedToFlush) {
+  MOZ_ASSERT(aTransferable);
+  if (!aTransferable) {
     return NS_ERROR_FAILURE;
   }
 
-  // Create our native DataObject that implements
-  // the OLE IDataObject interface
-  nsDataObj* dataObj = new nsDataObj(uri);
-
-  if (!dataObj) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  dataObj->AddRef();
+  // Create our native DataObject that implements the OLE IDataObject interface
+  RefPtr<nsDataObj> dataObj = new nsDataObj(aUri);
 
   // Now set it up with all the right data flavors & enums
-  nsresult res = SetupNativeDataObject(aTransferable, dataObj);
-  if (NS_OK == res) {
-    *aDataObj = dataObj;
-  } else {
-    dataObj->Release();
+  nsresult res =
+      SetupNativeDataObject(aTransferable, dataObj, aMightNeedToFlush);
+  if (NS_SUCCEEDED(res)) {
+    dataObj.forget(aDataObj);
   }
   return res;
 }
@@ -177,13 +170,26 @@ static nsresult StoreValueInDataObject(nsDataObj* aObj,
 }
 
 //-------------------------------------------------------------------------
-nsresult nsClipboard::SetupNativeDataObject(nsITransferable* aTransferable,
-                                            IDataObject* aDataObj) {
-  if (nullptr == aTransferable || nullptr == aDataObj) {
+nsresult nsClipboard::SetupNativeDataObject(
+    nsITransferable* aTransferable, IDataObject* aDataObj,
+    MightNeedToFlush* aMightNeedToFlush) {
+  MOZ_ASSERT(aTransferable);
+  MOZ_ASSERT(aDataObj);
+  if (!aTransferable || !aDataObj) {
     return NS_ERROR_FAILURE;
   }
 
-  nsDataObj* dObj = static_cast<nsDataObj*>(aDataObj);
+  auto* dObj = static_cast<nsDataObj*>(aDataObj);
+
+  if (aMightNeedToFlush) {
+    *aMightNeedToFlush = MightNeedToFlush::No;
+  }
+
+  auto MarkAsPotentiallyNeedingToFlush = [&] {
+    if (aMightNeedToFlush) {
+      *aMightNeedToFlush = MightNeedToFlush::Yes;
+    }
+  };
 
   // Now give the Transferable to the DataObject
   // for getting the data out of it
@@ -218,6 +224,7 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable* aTransferable,
       FORMATETC textFE;
       SET_FORMATETC(textFE, CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
       dObj->AddDataFlavor(kTextMime, &textFE);
+      MarkAsPotentiallyNeedingToFlush();
     } else if (flavorStr.EqualsLiteral(kHTMLMime)) {
       // if we find text/html, also advertise win32's html flavor (which we will
       // convert on our own in nsDataObj::GetText().
@@ -225,6 +232,7 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable* aTransferable,
       SET_FORMATETC(htmlFE, GetHtmlClipboardFormat(), 0, DVASPECT_CONTENT, -1,
                     TYMED_HGLOBAL);
       dObj->AddDataFlavor(kHTMLMime, &htmlFE);
+      MarkAsPotentiallyNeedingToFlush();
     } else if (flavorStr.EqualsLiteral(kURLMime)) {
       // if we're a url, in addition to also being text, we need to register
       // the "file" flavors so that the win32 shell knows to create an internet
@@ -247,6 +255,7 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable* aTransferable,
       SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_INETURLW), 0,
                     DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
       dObj->AddDataFlavor(kURLMime, &shortcutFE);
+      MarkAsPotentiallyNeedingToFlush();
     } else if (flavorStr.EqualsLiteral(kPNGImageMime) ||
                flavorStr.EqualsLiteral(kJPEGImageMime) ||
                flavorStr.EqualsLiteral(kJPGImageMime) ||
@@ -481,7 +490,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
   mIgnoreEmptyNotification = true;
 
   // make sure we have a good transferable
-  if (nullptr == mTransferable) {
+  if (!mTransferable) {
     return NS_ERROR_FAILURE;
   }
 
@@ -489,12 +498,14 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
   a11y::Compatibility::SuppressA11yForClipboardCopy();
 #endif
 
-  IDataObject* dataObj;
-  if (NS_SUCCEEDED(CreateNativeDataObject(mTransferable, &dataObj,
-                                          nullptr))) {  // this add refs dataObj
+  RefPtr<IDataObject> dataObj;
+  auto mightNeedToFlush = MightNeedToFlush::No;
+  if (NS_SUCCEEDED(CreateNativeDataObject(mTransferable,
+                                          getter_AddRefs(dataObj), nullptr,
+                                          &mightNeedToFlush))) {
     RepeatedlyTryOleSetClipboard(dataObj);
-    dataObj->Release();
-    if (ShouldFlushClipboardAfterWriting()) {
+    if (mightNeedToFlush == MightNeedToFlush::Yes &&
+        ShouldFlushClipboardAfterWriting()) {
       RepeatedlyTry(::OleFlushClipboard, [](HRESULT) {});
     }
   } else {

@@ -40,10 +40,13 @@ class nsClipboard : public nsBaseClipboard, public nsIObserver {
   NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override;
 
   // Internal Native Routines
+  enum class MightNeedToFlush : bool { No, Yes };
   static nsresult CreateNativeDataObject(nsITransferable* aTransferable,
-                                         IDataObject** aDataObj, nsIURI* uri);
+                                         IDataObject** aDataObj, nsIURI* aUri,
+                                         MightNeedToFlush* = nullptr);
   static nsresult SetupNativeDataObject(nsITransferable* aTransferable,
-                                        IDataObject* aDataObj);
+                                        IDataObject* aDataObj,
+                                        MightNeedToFlush* = nullptr);
   static nsresult GetDataFromDataObject(IDataObject* aDataObject, UINT anIndex,
                                         nsIWidget* aWindow,
                                         nsITransferable* aTransferable);
