@@ -363,10 +363,6 @@
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">Izberite želeni iskalnik:</string>
 
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Prikazuj namige na začetnem zaslonu</string>
-
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Dodaj iskalnik</string>
 
@@ -515,6 +511,13 @@
     <!-- Onboarding second screen: Title -->
     <!-- %1$s will be replaced by the app short name(Focus) -->
     <string name="onboarding_second_screen_title">%1$s ni kot drugi brskalniki</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Za dodatno zasebnost izbrišemo vašo zgodovino, ko zaprete aplikacijo.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Nastavite %1$s kot privzeti brskalnik, ki naj ščiti vaše podatke vsakič, ko odprete povezavo.</string>
 
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">Nastavi kot privzeti brskalnik</string>
@@ -782,10 +785,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Oddaljeno razhroščevanje preko USB/Wi-Fi</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">Odkleni %1$s</string>
-
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">Odkleni</string>
 
@@ -794,13 +793,6 @@
 
     <!-- Subtitle text for biometric prompt pop-up -->
     <string name="biometric_prompt_subtitle">Za nadaljevanje trenutne seje aplikacije lahko uporabite svoj prstni odtis.</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">Za nadaljevanje se dotaknite čitalnika prstnih odtisov.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">Nova seja</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -842,11 +834,6 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Ali stran deluje nepravilno?\n Poskusite izklopiti zaščito pred sledenjem</string>
 
-    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Ali na strani manjka vsebina ali se čudno obnaša?\n
-    Poskusite izklopiti izboljšano zaščito pred sledenjem</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Nastavite si hiter dostop do priljubljenih strani%1$s Meni > Dodaj na domači zaslon]]></string>
@@ -864,28 +851,8 @@ The new line here must be kept as the second half of the string is clickable for
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Odprite povezavo v novem zavihku\n Pridržite prst na katerikoli povezavi na strani</string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-      %1$s is a placeholder for the app name. -->
-    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Si želite ogledati polno različico strani?\n
-        Preklopite na stran za namizja v meniju %1$s</string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Izključi namige na začetnem zaslonu</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Želite obdržati zaščito pred sledenjem izključeno za spletno mesto, ki mu zaupate?\n
-        Dodajte ga na seznam dovoljenih v nastavitvah
-    </string>
-
-    <!-- Tip displayed on the home view about the changes in the new release.
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Da, imamo nov svež videz!\n Preberite več o tej in drugih posodobitvah brskalnika %1$s.</string>
-
-    <!-- Tip displayed on the home view about shortcuts
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Ustvarite si bližnjice do strani, ki jih največkrat obiščete:\n
-    V meniju %1$s izberite Dodaj med bližnjice</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Odprt nov zavihek</string>
@@ -1007,8 +974,6 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Videti je, da vam je to spletno mesto poskušalo slediti. Kliknite ščit za nastavitve spletnega mesta in statistiko zavračanja sledilcev.</string>
-
     <string name="cfr_for_toolbar_shield_icon2">Imamo jih! Temu spletnemu mestu smo preprečili vohunjenje za vami. Če želite videti, kaj blokiramo, tapnite ščit.</string>
 
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
@@ -1023,7 +988,6 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Zapri</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Znebite se svojih osebnih podatkov, zgodovine brskanja in drugih podatkov te seje z dotikom gumba za smeti. Poskusite!</string>
     <string name="cfr_for_toolbar_delete_icon2">Tapnite tukaj, da vse vržete v smeti – zgodovino, piškotke, vse – in začnete na novo v novem zavihku.</string>
 
     <!-- Promote SearchWidget Dialog -->
