@@ -7,7 +7,7 @@
     <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
     <string name="mozac_feature_prompts_no_more_dialogs">ਇਸ ਸਫ਼ੇ ਨੂੰ ਹੋਰ ਡਾਈਲਾਗ ਬਣਾਉਣ ਤੋਂ ਰੋਕੋ</string>
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
-    <string name="mozac_feature_prompts_set_date">ਨਿਯਤ ਕਰੋ</string>
+    <string name="mozac_feature_prompts_set_date">ਸੈੱਟ ਕਰੋ</string>
     <!-- Text for a button that clears the selected input in the date/time picker. -->
     <string name="mozac_feature_prompts_clear">ਸਾਫ਼ ਕਰੋ</string>
     <!-- Text for the title of an authentication dialog. -->
