@@ -49,7 +49,7 @@ Ensure you've checked the following items for installation:
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Install `MozillaBuild
-<https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`_.
+<https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`_.
 
 Accept the default installation directory.
 Windows may prompt you to "reinstall with the correct settings", which you
