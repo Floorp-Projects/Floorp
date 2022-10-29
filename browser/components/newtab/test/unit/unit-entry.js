@@ -230,6 +230,15 @@ const TEST_GLOBAL = {
       },
     },
     "@mozilla.org/updates/update-checker;1": { createInstance() {} },
+    "@mozilla.org/widget/useridleservice;1": {
+      getService() {
+        return {
+          idleTime: 0,
+          addIdleObserver() {},
+          removeIdleObserver() {},
+        };
+      },
+    },
     "@mozilla.org/streamConverters;1": {
       getService() {
         return this;
@@ -266,6 +275,8 @@ const TEST_GLOBAL = {
     registerCallback: (id, init, uninit) => {},
     unregisterCallback: id => {},
   },
+  setTimeout: window.setTimeout.bind(window),
+  clearTimeout: window.clearTimeout.bind(window),
   fetch() {},
   // eslint-disable-next-line object-shorthand
   Image: function() {}, // NB: This is a function/constructor

@@ -18,6 +18,7 @@ describe("ASRouterTriggerListeners", () => {
   );
   const openArticleURLListener = ASRouterTriggerListeners.get("openArticleURL");
   const nthTabClosedListener = ASRouterTriggerListeners.get("nthTabClosed");
+  const idleListener = ASRouterTriggerListeners.get("activityAfterIdle");
   const hosts = ["www.mozilla.com", "www.mozilla.org"];
 
   const regionFake = {
@@ -372,6 +373,68 @@ describe("ASRouterTriggerListeners", () => {
 
       it("should remove event listeners from all existing browser windows", () => {
         assert.calledOnce(existingWindow.removeEventListener);
+      });
+    });
+  });
+
+  describe("activityAfterIdle", () => {
+    let addObsStub;
+    let removeObsStub;
+    describe("#init", () => {
+      beforeEach(() => {
+        addObsStub = sandbox.stub(global.Services.obs, "addObserver");
+        sandbox.stub(global.Services.wm, "getEnumerator").returns([]);
+        idleListener.init(triggerHandler);
+      });
+      afterEach(() => {
+        idleListener.uninit();
+      });
+
+      it("should set ._initialized to true and save the triggerHandler", () => {
+        assert.ok(idleListener._initialized);
+        assert.equal(idleListener._triggerHandler, triggerHandler);
+      });
+
+      it("if already initialised, it should only update the trigger handler", () => {
+        const newTriggerHandler = () => {};
+        idleListener.init(newTriggerHandler);
+        assert.ok(idleListener._initialized);
+        assert.equal(idleListener._triggerHandler, newTriggerHandler);
+      });
+
+      it("should add observers for idle and activity", () => {
+        assert.called(addObsStub);
+      });
+
+      it("should add event listeners to all existing browser windows", () => {
+        assert.called(existingWindow.addEventListener);
+      });
+    });
+
+    describe("#uninit", () => {
+      beforeEach(async () => {
+        removeObsStub = sandbox.stub(global.Services.obs, "removeObserver");
+        sandbox.stub(global.Services.wm, "getEnumerator").returns([]);
+        idleListener.init(triggerHandler);
+        idleListener.uninit();
+      });
+      it("should set ._initialized to false and clear the triggerHandler and timestamps", () => {
+        assert.notOk(idleListener._initialized);
+        assert.equal(idleListener._triggerHandler, null);
+        assert.equal(idleListener._quietSince, null);
+      });
+
+      it("should do nothing if already uninitialised", () => {
+        idleListener.uninit();
+        assert.notOk(idleListener._initialized);
+      });
+
+      it("should remove observers for idle and activity", () => {
+        assert.called(removeObsStub);
+      });
+
+      it("should remove event listeners from all existing browser windows", () => {
+        assert.called(existingWindow.removeEventListener);
       });
     });
   });

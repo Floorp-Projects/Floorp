@@ -251,6 +251,18 @@
           "additionalProperties": false,
           "required": ["id"],
           "description": "Happens when the user closes n or more tabs in a session"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": ["activityAfterIdle"]
+            }
+          },
+          "additionalProperties": false,
+          "required": ["id"],
+          "description": "Happens when the user resumes activity after n milliseconds of inactivity (keyboard/mouse interactions and audio playback all count as activity)"
         }
       ]
     }

@@ -13,6 +13,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -733,6 +735,156 @@ const ASRouterTriggerListeners = new Map([
           this._closedTabs = 0;
         }
       },
+    },
+  ],
+  [
+    "activityAfterIdle",
+    {
+      id: "activityAfterIdle",
+      _initialized: false,
+      _triggerHandler: null,
+      _idleService: null,
+      // Optimization - only report idle state after one minute of idle time.
+      // This represents a minimum idleForMilliseconds of 60000.
+      _idleThreshold: 60,
+      _idleSince: null,
+      _quietSince: null,
+      // Fire the trigger 2 seconds after activity resumes to ensure user is
+      // actively using the browser when it fires.
+      _triggerDelay: 2000,
+      _triggerTimeout: null,
+      _listenedEvents: ["TabClose", "TabAttrModified"],
+      // When the OS goes to sleep or the process is suspended, we want to drop
+      // the idle time, since the time between sleep and wake is expected to be
+      // very long (e.g. overnight). Otherwise, this would trigger on the first
+      // activity after waking/resuming, counting sleep as idle time. This
+      // basically means each session starts with a fresh idle time.
+      _observedTopics: [
+        "sleep_notification",
+        "suspend_process_notification",
+        "wake_notification",
+        "resume_process_notification",
+        "mac_app_activate",
+      ],
+
+      get _soundPlaying() {
+        return [...Services.wm.getEnumerator("navigator:browser")].some(win =>
+          win.gBrowser?.tabs.some(tab => tab.soundPlaying)
+        );
+      },
+      init(triggerHandler) {
+        this._triggerHandler = triggerHandler;
+        // Instantiate this here instead of with a lazy service getter so we can
+        // stub it in tests (otherwise we'd have to wait up to 6 minutes for an
+        // idle notification in certain test environments).
+        if (!this._idleService) {
+          this._idleService = Cc[
+            "@mozilla.org/widget/useridleservice;1"
+          ].getService(Ci.nsIUserIdleService);
+        }
+        if (!this._initialized) {
+          this._idleService.addIdleObserver(this, this._idleThreshold);
+          for (let topic of this._observedTopics) {
+            Services.obs.addObserver(this, topic);
+          }
+          lazy.EveryWindow.registerCallback(
+            this.id,
+            win => {
+              for (let ev of this._listenedEvents) {
+                win.addEventListener(ev, this);
+              }
+            },
+            win => {
+              for (let ev of this._listenedEvents) {
+                win.removeEventListener(ev, this);
+              }
+            }
+          );
+          // If user has already been idle for 1 minute, set the idle time
+          // manually since the idle service won't notify for a long time.
+          let { idleTime } = this._idleService;
+          if (idleTime && idleTime / (60 * 1000) >= 1) {
+            this._idleSince = Date.now() - idleTime;
+          }
+          // Set the quiet time manually for the same reason.
+          if (!this._soundPlaying) {
+            this._quietSince = Date.now();
+          }
+          this._initialized = true;
+        }
+      },
+      observe(subject, topic, data) {
+        if (this._initialized) {
+          switch (topic) {
+            case "idle":
+              this._idleSince = Date.now() - subject.idleTime;
+              break;
+            case "active":
+              // Trigger when user returns from being idle.
+              this._onActive();
+            // fall through
+            default:
+              // OS/process notifications
+              this._idleSince = null;
+          }
+        }
+      },
+      handleEvent(event) {
+        if (this._initialized) {
+          switch (event.type) {
+            case "TabAttrModified":
+              // Listen for DOMAudioPlayback* events.
+              if (!event.detail?.changed?.includes("soundplaying")) {
+                break;
+              }
+            // fall through
+            case "TabClose":
+              // Maybe update time if a tab closes with sound playing.
+              if (this._soundPlaying) {
+                this._quietSince = null;
+              } else if (!this._quietSince) {
+                this._quietSince = Date.now();
+              }
+          }
+        }
+      },
+      _onActive() {
+        if (this._idleSince && this._quietSince) {
+          const browser = Services.wm.getMostRecentBrowserWindow();
+          if (browser) {
+            // Number of ms since the last user interaction/audio playback
+            const idleForMilliseconds =
+              Date.now() - Math.min(this._idleSince, this._quietSince);
+            this._triggerTimeout = lazy.setTimeout(() => {
+              this._triggerHandler(browser.gBrowser.selectedBrowser, {
+                id: this.id,
+                context: { idleForMilliseconds },
+              });
+              this._triggerTimeout = null;
+            }, this._triggerDelay);
+          }
+        }
+      },
+      uninit() {
+        if (this._initialized) {
+          this._idleService.removeIdleObserver(this, this._idleThreshold);
+          for (let topic of this._observedTopics) {
+            Services.obs.removeObserver(this, topic);
+          }
+          lazy.EveryWindow.unregisterCallback(this.id);
+          lazy.clearTimeout(this._triggerTimeout);
+          this._triggerTimeout = null;
+          this._initialized = false;
+          this._triggerHandler = null;
+          this._idleSince = null;
+          this._quietSince = null;
+        }
+      },
+
+      QueryInterface: ChromeUtils.generateQI([
+        "nsIObserver",
+        "nsISupportsWeakReference",
+      ]),
     },
   ],
 ]);
