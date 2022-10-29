@@ -1418,7 +1418,7 @@ void TextNodeCorrespondenceRecorder::TraverseAndRecord(nsIFrame* aFrame) {
  * Note that any text frames that are empty -- whose ContentLength() is 0 --
  * will be skipped over.
  */
-class TextFrameIterator {
+class MOZ_STACK_CLASS TextFrameIterator {
  public:
   /**
    * Constructs a TextFrameIterator for the specified SVGTextFrame
@@ -1927,7 +1927,7 @@ TextRenderedRun TextRenderedRunIterator::First() {
 /**
  * Iterator for characters within an SVGTextFrame.
  */
-class CharIterator {
+class MOZ_STACK_CLASS CharIterator {
   using Range = gfxTextRun::Range;
 
  public:

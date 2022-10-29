@@ -558,7 +558,7 @@ class nsTextFrame : public nsIFrame {
     virtual void NotifySelectionDecorationLinePathEmitted() {}
   };
 
-  struct PaintTextParams {
+  struct MOZ_STACK_CLASS PaintTextParams {
     gfxContext* context;
     Point framePt;
     LayoutDeviceRect dirtyRect;
