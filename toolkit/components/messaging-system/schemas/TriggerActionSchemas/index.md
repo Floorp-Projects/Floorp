@@ -140,11 +140,26 @@ Happens when navigating to about:firefoxview or other about pages with Feature C
 Happens when the user closes n or more tabs in a session
 
 ```js
-// Register a message with the following trigger id and
+// Register a message with the following trigger and
 // include the tabsClosedCount context variable in the targeting.
 // Here, the message triggers after two or more tabs are closed.
 {
-  id: "nthTabClosed",
+  trigger: { id: "nthTabClosed" },
   targeting: "tabsClosedCount >= 2"
+}
+```
+
+### `activityAfterIdle`
+
+Happens when the user resumes activity after n milliseconds of inactivity. Keyboard/mouse interactions and audio playback count as activity. The idle timer is reset when the OS is put to sleep or wakes from sleep.
+
+No params or patterns. The `idleForMilliseconds` context variable is available in targeting. This value represents the number of milliseconds since the last user interaction or audio playback. `60000` is the minimum value for this variable (1 minute). In the following example, the message triggers when the user returns after at least 20 minutes of inactivity.
+
+```js
+// Register a message with the following trigger and include
+// the idleForMilliseconds context variable in the targeting.
+{
+  trigger: { id: "activityAfterIdle" },
+  targeting: "idleForMilliseconds >= 1200000"
 }
 ```

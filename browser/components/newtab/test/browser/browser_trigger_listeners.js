@@ -135,3 +135,46 @@ add_task(async function test_nthTabClosed() {
 
   Assert.ok(handlerStub.notCalled, "Not called after uninit");
 });
+
+add_task(async function test_activityAfterIdle() {
+  const mockIdleService = {
+    _observers: new Set(),
+    _fireObservers(state) {
+      for (let observer of this._observers.values()) {
+        observer.observe(this, state, null);
+      }
+    },
+    QueryInterface: ChromeUtils.generateQI(["nsIUserIdleService"]),
+    idleTime: 1200000,
+    addIdleObserver(observer, time) {
+      this._observers.add(observer);
+    },
+    removeIdleObserver(observer, time) {
+      this._observers.delete(observer);
+    },
+  };
+
+  const idleTrigger = ASRouterTriggerListeners.get("activityAfterIdle");
+  idleTrigger.uninit();
+
+  const sandbox = sinon.createSandbox();
+  const handlerStub = sandbox.stub();
+  sandbox.stub(idleTrigger, "_triggerDelay").value(0);
+  sandbox.stub(idleTrigger, "_idleService").value(mockIdleService);
+  registerCleanupFunction(() => sandbox.restore());
+
+  idleTrigger.init(handlerStub);
+
+  mockIdleService._fireObservers("idle");
+  await TestUtils.waitForTick();
+  Assert.ok(handlerStub.notCalled, "Not called when idle");
+
+  mockIdleService._fireObservers("active");
+  await BrowserTestUtils.waitForCondition(
+    () => handlerStub.calledOnce,
+    "Called once after idle"
+  );
+
+  idleTrigger.uninit();
+  sandbox.restore();
+});
