@@ -76,7 +76,7 @@ add_task(async function() {
   /* eslint-disable mozilla/no-arbitrary-setTimeout */
   await new Promise(r => setTimeout(r, 1000));
 
-  is(gDevTools._toolboxes.size, 0, "No toolbox has been opened");
+  is(gDevTools._toolboxesPerCommands.size, 0, "No toolbox has been opened");
 
   info("Open the context menu for the content page.");
   const contextMenu = win.document.getElementById("contentAreaContextMenu");
