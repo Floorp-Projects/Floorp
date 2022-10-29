@@ -394,6 +394,10 @@ void nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::
   // Set the builder's mCurrentActiveScrolledRoot.
   mBuilder->mCurrentActiveScrolledRoot = aActiveScrolledRoot;
 
+  // Update the current scroll parent id to match the new
+  // active scrolled root.
+  UpdateCurrentScrollParentId();
+
   // We also need to adjust the builder's mCurrentContainerASR.
   // mCurrentContainerASR needs to be an ASR that all the container's
   // contents have finite bounds with respect to. If aActiveScrolledRoot
