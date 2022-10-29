@@ -2,10 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
-
 /**
  * Return the path to the definitions file for the scalars.
  */
@@ -98,7 +94,7 @@ add_task(
     // Let's write to the definition file to also cover the file
     // loading part.
     const FILE_PATH = getDefinitionsPath();
-    await CommonUtils.writeJSON(DYNAMIC_SCALAR_SPEC, FILE_PATH);
+    await IOUtils.writeJSON(FILE_PATH, DYNAMIC_SCALAR_SPEC);
 
     // Start TelemetryController to trigger loading the specs.
     await TelemetryController.testReset();

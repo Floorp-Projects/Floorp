@@ -9,9 +9,6 @@
  * in other files might interfere with the other tests.
  */
 
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
 const { TelemetryStorage } = ChromeUtils.import(
   "resource://gre/modules/TelemetryStorage.jsm"
 );
@@ -153,7 +150,7 @@ add_task(async function test_abortedSession_canary_clientid() {
   );
 
   // Set clientID in aborted-session ping to canary value
-  let abortedPing = await CommonUtils.readJSON(ABORTED_FILE);
+  let abortedPing = await IOUtils.readJSON(ABORTED_FILE);
   abortedPing.clientId = TelemetryUtils.knownClientID;
   OS.File.writeAtomic(ABORTED_FILE, JSON.stringify(abortedPing), {
     encoding: "utf-8",
