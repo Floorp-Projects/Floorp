@@ -1112,12 +1112,12 @@ class TextNodeIterator {
   /**
    * The root under which all Text will be iterated over.
    */
-  nsIContent* mRoot;
+  nsIContent* const mRoot;
 
   /**
    * The node rooting the subtree to track.
    */
-  nsIContent* mSubtree;
+  nsIContent* const mSubtree;
 
   /**
    * The current node during iteration.
@@ -1536,12 +1536,12 @@ class MOZ_STACK_CLASS TextFrameIterator {
   /**
    * The root frame we are iterating through.
    */
-  SVGTextFrame* mRootFrame;
+  SVGTextFrame* const mRootFrame;
 
   /**
    * The frame for the subtree we are also interested in tracking.
    */
-  const nsIFrame* mSubtree;
+  const nsIFrame* const mSubtree;
 
   /**
    * The current value of the iterator.
@@ -2134,7 +2134,7 @@ class MOZ_STACK_CLASS CharIterator {
   /**
    * The subtree we were constructed with.
    */
-  nsIContent* mSubtree;
+  nsIContent* const mSubtree;
 #endif
 
   /**
@@ -2468,9 +2468,9 @@ class SVGTextDrawPathCallbacks final : public nsTextFrame::DrawPathCallbacks {
    */
   void StrokeGeometry();
 
-  SVGTextFrame* mSVGTextFrame;
+  SVGTextFrame* const mSVGTextFrame;
   gfxContext& mContext;
-  nsTextFrame* mFrame;
+  nsTextFrame* const mFrame;
   const gfxMatrix& mCanvasTM;
   imgDrawingParams& mImgParams;
 
