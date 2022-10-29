@@ -513,7 +513,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
 
   hasToolboxOpened(win) {
     const tab = win.gBrowser.selectedTab;
-    for (const commands of gDevTools._toolboxes.keys()) {
+    for (const commands of gDevTools._toolboxesPerCommands.keys()) {
       if (commands.descriptorFront.localTab == tab) {
         return true;
       }
@@ -614,7 +614,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     BrowserMenus.removeMenus(win.document);
 
     // Destroy toolboxes for closed window
-    for (const [commands, toolbox] of gDevTools._toolboxes) {
+    for (const [commands, toolbox] of gDevTools._toolboxesPerCommands) {
       if (
         commands.descriptorFront.localTab?.ownerDocument?.defaultView == win
       ) {
