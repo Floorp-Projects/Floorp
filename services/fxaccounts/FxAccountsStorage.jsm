@@ -19,9 +19,6 @@ const {
   FXA_PWDMGR_SECURE_FIELDS,
   log,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
 
 // A helper function so code can check what fields are able to be stored by
 // the storage manager without having a reference to a manager instance.
@@ -457,7 +454,7 @@ JSONStorage.prototype = {
     );
     let start = Date.now();
     return IOUtils.makeDirectory(this.baseDir, { ignoreExisting: true })
-      .then(CommonUtils.writeJSON.bind(null, contents, this.path))
+      .then(IOUtils.writeJSON.bind(null, this.path, contents))
       .then(result => {
         log.trace(
           "finished write of json user data - took",
@@ -470,7 +467,7 @@ JSONStorage.prototype = {
   get() {
     log.trace("starting fetch of json user data");
     let start = Date.now();
-    return CommonUtils.readJSON(this.path).then(result => {
+    return IOUtils.readJSON(this.path).then(result => {
       log.trace("finished fetch of json user data - took", Date.now() - start);
       return result;
     });

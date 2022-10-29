@@ -10,8 +10,6 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"
 );
-const lazy = {};
-ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 var CommonUtils = {
   /*
@@ -423,33 +421,6 @@ var CommonUtils = {
     let len = b64.length;
     let over = len % 4;
     return over ? atob(b64.substr(0, len - over)) : atob(b64);
-  },
-
-  /**
-   * Parses a JSON file from disk using OS.File and promises.
-   *
-   * @param path the file to read. Will be passed to `OS.File.read()`.
-   * @return a promise that resolves to the JSON contents of the named file.
-   */
-  readJSON(path) {
-    return lazy.OS.File.read(path, { encoding: "utf-8" }).then(data => {
-      return JSON.parse(data);
-    });
-  },
-
-  /**
-   * Write a JSON object to the named file using OS.File and promises.
-   *
-   * @param contents a JS object. Will be serialized.
-   * @param path the path of the file to write.
-   * @return a promise, as produced by OS.File.writeAtomic.
-   */
-  writeJSON(contents, path) {
-    let data = JSON.stringify(contents);
-    return lazy.OS.File.writeAtomic(path, data, {
-      encoding: "utf-8",
-      tmpPath: path + ".tmp",
-    });
   },
 
   /**

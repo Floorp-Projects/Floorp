@@ -8,9 +8,6 @@
  * checked in the second request.
  */
 
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 const { TelemetryController } = ChromeUtils.import(
   "resource://gre/modules/TelemetryController.jsm"
@@ -793,7 +790,7 @@ add_task(async function test_sendNewProfile() {
     subsessionId: null,
     profileSubsessionCounter: 3785,
   };
-  await CommonUtils.writeJSON(sessionState, stateFilePath);
+  await IOUtils.writeJSON(stateFilePath, sessionState);
   await TelemetryController.testReset();
   await TelemetryController.testShutdown();
 
