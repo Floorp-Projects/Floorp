@@ -156,7 +156,8 @@ TEST_F(TestAsyncBlockers, Register_WaitUntilClear_0s) {
   PROCESS_EVENTS_UNTIL(done);
 }
 
-#if !defined(ANDROID) && !(defined(XP_DARWIN) && !defined(MOZ_DEBUG))
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED) && !defined(ANDROID) && \
+    !(defined(XP_DARWIN) && !defined(MOZ_DEBUG))
 static void DisableCrashReporter() {
   nsCOMPtr<nsICrashReporter> crashreporter =
       do_GetService("@mozilla.org/toolkit/crash-reporter;1");
@@ -176,6 +177,7 @@ static void DeregisterEmpty_Test() {
 TEST_F(TestAsyncBlockers, DeregisterEmpty) {
   ASSERT_DEATH_IF_SUPPORTED(DeregisterEmpty_Test(), "");
 }
-#endif  // !defined(ANDROID) && !(defined(XP_DARWIN) && !defined(MOZ_DEBUG))
+#endif  // defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED) && !defined(ANDROID) &&
+        // !(defined(XP_DARWIN) && !defined(MOZ_DEBUG))
 
 #undef PROCESS_EVENTS_UNTIL
