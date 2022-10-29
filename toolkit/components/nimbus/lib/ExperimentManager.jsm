@@ -424,28 +424,25 @@ class _ExperimentManager {
      */
     const features = featuresCompat(branch);
     for (let feature of features) {
-      let experiment = this.store.getExperimentForFeature(feature?.featureId);
-      let rollout = this.store.getRolloutForFeature(feature?.featureId);
-      if (experiment) {
+      const isRollout = recipe.isRollout ?? false;
+      let enrollment = isRollout
+        ? this.store.getRolloutForFeature(feature?.featureId)
+        : this.store.getExperimentForFeature(feature?.featureId);
+      if (enrollment) {
         lazy.log.debug(
-          `Existing experiment found for the same feature ${feature.featureId}, unenrolling.`
+          `Existing ${
+            isRollout ? "rollout" : "experiment"
+          } found for the same feature ${feature.featureId}, unenrolling.`
         );
 
-        this.unenroll(experiment.slug, source);
-      }
-      if (rollout) {
-        lazy.log.debug(
-          `Existing experiment found for the same feature ${feature.featureId}, unenrolling.`
-        );
-
-        this.unenroll(rollout.slug, source);
+        this.unenroll(enrollment.slug, source);
       }
     }
 
     recipe.userFacingName = `${recipe.userFacingName} - Forced enrollment`;
 
     const slug = `optin-${recipe.slug}`;
-    const experiment = this._enroll(
+    const enrollment = this._enroll(
       {
         ...recipe,
         slug,
@@ -457,7 +454,7 @@ class _ExperimentManager {
 
     Services.obs.notifyObservers(null, "nimbus:force-enroll", slug);
 
-    return experiment;
+    return enrollment;
   }
 
   /**
