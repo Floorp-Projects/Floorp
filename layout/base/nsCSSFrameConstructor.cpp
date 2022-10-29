@@ -4068,7 +4068,6 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
 
   static constexpr FrameConstructionDataByTag sXULTagData[] = {
       SIMPLE_XUL_CREATE(image, NS_NewImageBoxFrame),
-      SIMPLE_XUL_CREATE(spacer, NS_NewLeafBoxFrame),
       SIMPLE_XUL_CREATE(treechildren, NS_NewTreeBodyFrame),
       SIMPLE_XUL_CREATE(treecol, NS_NewTreeColFrame),
       SIMPLE_TAG_CHAIN(button, nsCSSFrameConstructor::FindXULButtonData),
