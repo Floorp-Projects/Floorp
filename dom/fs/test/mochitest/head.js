@@ -49,6 +49,14 @@ async function run_test_in_worker(script) {
   await runTestInWorker(script, base, listener);
 }
 
+// XXX This can be removed once we use <profile>/storage. See bug 1798015.
+async function removeAllEntries() {
+  const root = await navigator.storage.getDirectory();
+  for await (const value of root.values()) {
+    root.removeEntry(value.name, { recursive: true });
+  }
+}
+
 add_setup(async function() {
   const { setStoragePrefs, clearStoragesForOrigin } = await import(
     "/tests/dom/quota/test/modules/StorageUtils.js"
@@ -59,6 +67,8 @@ add_setup(async function() {
   await setStoragePrefs(optionalPrefsToSet);
 
   SimpleTest.registerCleanupFunction(async function() {
+    await removeAllEntries();
+
     await clearStoragesForOrigin(SpecialPowers.wrap(document).nodePrincipal);
   });
 });
