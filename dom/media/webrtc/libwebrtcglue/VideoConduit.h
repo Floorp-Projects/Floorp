@@ -7,7 +7,6 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/DataMutex.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StateMirroring.h"
@@ -440,8 +439,7 @@ class WebrtcVideoConduit
 
   // Written only on the Call thread. Guarded by mMutex, except for reads on the
   // Call thread. Calls can happen under mMutex on any thread.
-  DataMutex<RefPtr<rtc::RefCountedObject<VideoStreamFactory>>>
-      mVideoStreamFactory;
+  RefPtr<rtc::RefCountedObject<VideoStreamFactory>> mVideoStreamFactory;
 
   // Call thread only.
   webrtc::VideoReceiveStream::Config mRecvStreamConfig;
