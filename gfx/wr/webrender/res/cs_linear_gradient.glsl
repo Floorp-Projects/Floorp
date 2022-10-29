@@ -59,9 +59,8 @@ void swgl_drawSpanRGBA8() {
         return;
     }
 
-    float offset = dot(v_pos, v_scale_dir) - v_start_offset.x;
-    swgl_commitLinearGradientRGBA8(sGpuCache, address, GRADIENT_ENTRIES, v_gradient_repeat.x != 0.0,
-                                   offset);
+    swgl_commitLinearGradientRGBA8(sGpuCache, address, GRADIENT_ENTRIES, false, v_gradient_repeat.x != 0.0,
+                                   v_pos, v_scale_dir, v_start_offset.x);
 }
 #endif
 
