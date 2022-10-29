@@ -51,7 +51,7 @@ enum class StyleHyphens : uint8_t;
  * Callback for Draw() to use when drawing text with mode
  * DrawMode::GLYPH_PATH.
  */
-struct gfxTextRunDrawCallbacks {
+struct MOZ_STACK_CLASS gfxTextRunDrawCallbacks {
   /**
    * Constructs a new DrawCallbacks object.
    *
