@@ -398,7 +398,7 @@ var PrintEventHandler = {
     await window._initialized;
 
     // This seems like it should be handled automatically but it isn't.
-    Services.prefs.setStringPref("print_printer", settings.printerName);
+    PSSVC.saveLastUsedPrinterNameToPrefs(settings.printerName);
 
     try {
       // We'll provide our own progress indicator.
@@ -795,7 +795,7 @@ var PrintEventHandler = {
   },
 
   saveSettingsToPrefs(flags) {
-    PSSVC.savePrintSettingsToPrefs(this.settings, true, flags);
+    PSSVC.savePrintSettingsToPrefs(this.settings, flags);
   },
 
   /**

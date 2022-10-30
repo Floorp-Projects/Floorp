@@ -93,7 +93,6 @@ interface nsIPrintSettingsService : nsISupports
    * If a PrinterName is there, then it saves the items qualified for that Printer
    *
    * aPS - PrintSettings to have its settings saved
-   * aUsePrinterNamePrefix - indicates whether to use the printer name as a prefix
    * aFlags - indicates which prefs to save, see nsIPrintSettings.idl for the const values.
    *
    * Items not written:
@@ -102,7 +101,12 @@ interface nsIPrintSettingsService : nsISupports
    *   printSilent, shrinkToFit, numCopies
    *
    */
-  void savePrintSettingsToPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);
+  void savePrintSettingsToPrefs(in nsIPrintSettings aPrintSettings, in unsigned long aFlags);
+
+  /**
+   * Saves the given printer name as the last used printer name.
+   */
+  void saveLastUsedPrinterNameToPrefs(in AString aPrinterName);
 
   /**
    * Given some nsIPrintSettings,
