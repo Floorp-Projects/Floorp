@@ -115,8 +115,8 @@ var PrintUtils = {
     );
     if (!PSSVC.lastUsedPrinterName) {
       if (printSettings.printerName) {
-        PSSVC.saveLastUsedPrinterNameToPrefs(printSettings.printerName);
-        PSSVC.savePrintSettingsToPrefs(
+        PSSVC.maybeSaveLastUsedPrinterNameToPrefs(printSettings.printerName);
+        PSSVC.maybeSavePrintSettingsToPrefs(
           printSettings,
           Ci.nsIPrintSettings.kInitSaveAll
         );
@@ -352,8 +352,8 @@ var PrintUtils = {
         var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
           Ci.nsIPrintSettingsService
         );
-        PSSVC.saveLastUsedPrinterNameToPrefs(settings.printerName);
-        PSSVC.savePrintSettingsToPrefs(
+        PSSVC.maybeSaveLastUsedPrinterNameToPrefs(settings.printerName);
+        PSSVC.maybeSavePrintSettingsToPrefs(
           settings,
           Ci.nsIPrintSettings.kInitSaveAll
         );
