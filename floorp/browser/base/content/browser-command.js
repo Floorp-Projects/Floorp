@@ -98,9 +98,13 @@ function setSidebarMode() {
     const sidebar2elem = document.getElementById("sidebar2");
     const wibpanel_usercontext = Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${webpanel_id}.usercontext`, undefined);
     const panelWidth = Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${modeValuePref}`, undefined);
+    const globalPanelWidth = Services.prefs.getIntPref("floorp.browser.sidebar2.global.webpanel.width", undefined);
 
-    if(panelWidth !== "" || panelWidth !== undefined || panelWidth !== null){
+    if(panelWidth !== 0){
       document.getElementById("sidebar2-box").setAttribute("width", panelWidth);
+    }
+    else if(globalPanelWidth !== "0"){
+      document.getElementById("sidebar2-box").setAttribute("width", globalPanelWidth);
     }
 
     switch (modeValuePref) {
@@ -140,7 +144,7 @@ function setSidebarMode() {
           browserManagerSidebarWebpanel.setAttribute("tooltip", "aHTMLTooltip");
           browserManagerSidebarWebpanel.setAttribute("disableglobalhistory", "true");
           browserManagerSidebarWebpanel.setAttribute("messagemanagergroup", "webext-browsers");
-          browserManagerSidebarWebpanel.setAttribute("context", "contentAreaContextMenu");
+          browserManagerSidebarWebpanel.setAttribute("context", "");
           browserManagerSidebarWebpanel.setAttribute("webextension-view-type", "sidebar");
           browserManagerSidebarWebpanel.setAttribute("autocompletepopup", "PopupAutoComplete");
           browserManagerSidebarWebpanel.setAttribute("initialBrowsingContextGroupId", "40");
@@ -269,6 +273,10 @@ function setSidebarIconView() {
 function keepSidebar2boxWidth() {
   const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode");
   Services.prefs.setIntPref(`floorp.browser.sidebar2.width.mode${pref}`, document.getElementById("sidebar2-box").width);
+}
+
+function keepSidebar2boxWidthForGlobal() {
+  Services.prefs.setIntPref("floorp.browser.sidebar2.global.webpanel.width", document.getElementById("sidebar2-box").width);
 }
 
 function getSelectedNode(){

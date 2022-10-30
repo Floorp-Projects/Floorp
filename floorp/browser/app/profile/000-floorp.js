@@ -98,9 +98,11 @@ pref("floorp.browser.sidebar2.customurl18", "");
 pref("floorp.browser.sidebar2.customurl19", "");
 
 pref("floorp.browser.sidebar2.width.mode0", 600);	
+pref("floorp.browser.sidebar2.width.mode1", 415);
+pref("floorp.browser.sidebar2.width.mode2", 415);
 pref("floorp.browser.sidebar2.width.mode3", 415);
 pref("floorp.browser.sidebar2.width.mode4", 415);
-pref("floorp.browser.sidebar2.width.mode5", 450);
+pref("floorp.browser.sidebar2.global.webpanel.width", 400);
 
 //container tab for sidebar2 webpanel
 pref("floorp.browser.sidebar2.customurl0.usercontext", 0);
