@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html style="writing-mode: vertical-rl;"  class="reftest-wait">
+  <script>
+    function go() {
+      x.style.paddingRight='900%';
+      setTimeout(done, 0);
+    }
+    function done() {
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+    <body onload="go()">
+        <div style="transition-delay: 1ms;" id="x"></div>
+        <div style="position: relative; display: table-header-group;">
+            <div style="float: right; padding-top: 153%;"></div>
+        </div>
+    </body>
+</html>
