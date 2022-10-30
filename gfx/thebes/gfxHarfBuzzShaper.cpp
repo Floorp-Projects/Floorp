@@ -1355,6 +1355,7 @@ bool gfxHarfBuzzShaper::ShapeText(DrawTarget* aDrawTarget,
   // For CJK script, match kerning and proportional-alternates (palt) features
   // (and their vertical counterparts) as per spec:
   // https://learn.microsoft.com/en-us/typography/opentype/spec/features_pt#tag-palt
+  // and disable kerning by default (for font-kerning:auto).
   if (gfxTextRun::IsCJKScript(aScript)) {
     hb_tag_t kern =
         aVertical ? HB_TAG('v', 'k', 'r', 'n') : HB_TAG('k', 'e', 'r', 'n');
@@ -1367,11 +1368,14 @@ bool gfxHarfBuzzShaper::ShapeText(DrawTarget* aDrawTarget,
     };
     constexpr auto NoIndex = nsTArray<hb_feature_t>::NoIndex;
     nsTArray<hb_feature_t>::index_type i = features.IndexOf(kern, 0, Cmp());
-    // If kerning was enabled (i.e. the kern feature is not explicitly present,
-    // in which case harfbuzz will apply it by default, or the feature is
-    // explicitly enabled), we also turn on proportional alternates, as per the
-    // OpenType feature registry.
-    if (i == NoIndex || features[i].value) {
+    if (i == NoIndex) {
+      // Kerning was not explicitly set; override harfbuzz's default to disable
+      // it.
+      features.AppendElement(hb_feature_t{kern, 0, HB_FEATURE_GLOBAL_START,
+                                          HB_FEATURE_GLOBAL_END});
+    } else if (features[i].value) {
+      // If kerning was explicitly enabled), we also turn on proportional
+      // alternates, as per the OpenType feature registry.
       if (features.IndexOf(alt, 0, Cmp()) == NoIndex) {
         features.AppendElement(hb_feature_t{alt, 1, HB_FEATURE_GLOBAL_START,
                                             HB_FEATURE_GLOBAL_END});
