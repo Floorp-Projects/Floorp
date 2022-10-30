@@ -583,6 +583,9 @@ bool Gecko_IsInServoTraversal();
 // Returns true if we're currently on the main thread.
 bool Gecko_IsMainThread();
 
+// Returns true if we're currently on a DOM worker thread.
+bool Gecko_IsDOMWorkerThread();
+
 // Media feature helpers.
 //
 // Defined in nsMediaFeatures.cpp.
