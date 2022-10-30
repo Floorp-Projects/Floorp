@@ -196,7 +196,7 @@ void nsFontFaceLoader::LoadTimerCallback(nsITimer* aTimer, void* aClosure) {
   // before, we mark this entry as "loading slowly", so the fallback
   // font will be used in the meantime, and tell the context to refresh.
   if (updateUserFontSet) {
-    nsTArray<gfxUserFontSet*> fontSets;
+    nsTArray<RefPtr<gfxUserFontSet>> fontSets;
     ufe->GetUserFontSets(fontSets);
     for (gfxUserFontSet* fontSet : fontSets) {
       nsPresContext* ctx = FontFaceSetImpl::GetPresContextFor(fontSet);
@@ -308,7 +308,7 @@ nsresult nsFontFaceLoader::FontLoadComplete() {
   }
 
   // when new font loaded, need to reflow
-  nsTArray<gfxUserFontSet*> fontSets;
+  nsTArray<RefPtr<gfxUserFontSet>> fontSets;
   mUserFontEntry->GetUserFontSets(fontSets);
   for (gfxUserFontSet* fontSet : fontSets) {
     nsPresContext* ctx = FontFaceSetImpl::GetPresContextFor(fontSet);
