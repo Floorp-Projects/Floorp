@@ -1160,7 +1160,7 @@
     <string name="url_copied">URL copiada</string>
 
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text_1">Aquò es un exemple de tèxt. Aquí es una demotracion de coma apareisserà lo tèxt quand aumentatz o redusissètz la talha amb aqueste paramètre.</string>
+    <string name="accessibility_text_size_sample_text_1">Aquò es un exemple de tèxt. Aquí es una demostracion de coma apareisserà lo tèxt quand aumentatz o redusissètz la talha amb aqueste paramètre.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Va venir lo tèxt dels sites mai grand o mai pichon</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
