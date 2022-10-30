@@ -122,8 +122,7 @@ nsPrintDialogServiceX::ShowPrintDialog(mozIDOMWindowProxy* aParent, bool aHaveSe
 
   // Save settings unless saving is pref'd off
   if (Preferences::GetBool("print.save_print_settings", false)) {
-    printSettingsSvc->SavePrintSettingsToPrefs(settingsX, true,
-                                               nsIPrintSettings::kInitSaveNativeData);
+    printSettingsSvc->SavePrintSettingsToPrefs(settingsX, nsIPrintSettings::kInitSaveNativeData);
   }
 
   return NS_OK;
@@ -167,7 +166,7 @@ nsPrintDialogServiceX::ShowPageSetupDialog(mozIDOMWindowProxy* aParent,
       uint32_t flags = nsIPrintSettings::kInitSaveNativeData |
                        nsIPrintSettings::kInitSavePaperSize |
                        nsIPrintSettings::kInitSaveOrientation | nsIPrintSettings::kInitSaveScaling;
-      printSettingsService->SavePrintSettingsToPrefs(aNSSettings, true, flags);
+      printSettingsService->SavePrintSettingsToPrefs(aNSSettings, flags);
     }
     return NS_OK;
   }

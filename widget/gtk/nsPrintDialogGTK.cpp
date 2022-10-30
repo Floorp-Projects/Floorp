@@ -599,10 +599,9 @@ nsPrintDialogServiceGTK::ShowPageSetupDialog(mozIDOMWindowProxy* aParent,
 
   if (psService)
     psService->SavePrintSettingsToPrefs(
-        aNSSettings, true,
-        nsIPrintSettings::kInitSaveOrientation |
-            nsIPrintSettings::kInitSavePaperSize |
-            nsIPrintSettings::kInitSaveUnwriteableMargins);
+        aNSSettings, nsIPrintSettings::kInitSaveOrientation |
+                         nsIPrintSettings::kInitSavePaperSize |
+                         nsIPrintSettings::kInitSaveUnwriteableMargins);
 
   return NS_OK;
 }
