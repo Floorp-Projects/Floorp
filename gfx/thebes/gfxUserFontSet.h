@@ -754,7 +754,7 @@ class gfxUserFontEntry : public gfxFontEntry {
   // Clears and then adds to aResult all of the user font sets that this user
   // font entry has been added to.  This will at least include mFontSet, the
   // owner of this user font entry.
-  virtual void GetUserFontSets(nsTArray<gfxUserFontSet*>& aResult);
+  virtual void GetUserFontSets(nsTArray<RefPtr<gfxUserFontSet>>& aResult);
 
   // Calls IncrementGeneration() on all user font sets that contain this
   // user font entry.

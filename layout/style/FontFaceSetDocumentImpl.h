@@ -27,6 +27,9 @@ class FontFaceSetDocumentImpl final : public FontFaceSetImpl,
   void Destroy() override;
 
   bool IsOnOwningThread() override;
+#ifdef DEBUG
+  void AssertIsOnOwningThread() override;
+#endif
   void DispatchToOwningThread(const char* aName,
                               std::function<void()>&& aFunc) override;
 

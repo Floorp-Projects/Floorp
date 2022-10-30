@@ -172,11 +172,7 @@ void FontFaceSetImpl::FindMatchingFontFaces(const nsACString& aFont,
     for (gfxFontEntry* e : entries) {
       FontFaceImpl::Entry* entry = static_cast<FontFaceImpl::Entry*>(e);
       if (HasAnyCharacterInUnicodeRange(entry, aText)) {
-        for (FontFaceImpl* f : entry->GetFontFaces()) {
-          if (FontFace* owner = f->GetOwner()) {
-            matchingFaces.Insert(owner);
-          }
-        }
+        entry->FindFontFaceOwners(matchingFaces);
       }
     }
   }

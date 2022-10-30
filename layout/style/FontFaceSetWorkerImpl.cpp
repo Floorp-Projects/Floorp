@@ -178,6 +178,20 @@ bool FontFaceSetWorkerImpl::IsOnOwningThread() {
   return mWorkerRef->Private()->IsOnCurrentThread();
 }
 
+#ifdef DEBUG
+void FontFaceSetWorkerImpl::AssertIsOnOwningThread() {
+  RecursiveMutexAutoLock lock(mMutex);
+  if (mWorkerRef) {
+    MOZ_ASSERT(mWorkerRef->Private()->IsOnCurrentThread());
+  } else {
+    // Asserting during cycle collection if we are tearing down the worker is
+    // difficult. The only other thread that uses FontFace(Set)Impl objects is
+    // the main thread (if created from a worker).
+    MOZ_ASSERT(!NS_IsMainThread());
+  }
+}
+#endif
+
 void FontFaceSetWorkerImpl::DispatchToOwningThread(
     const char* aName, std::function<void()>&& aFunc) {
   RecursiveMutexAutoLock lock(mMutex);

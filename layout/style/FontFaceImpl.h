@@ -10,10 +10,12 @@
 #include "mozilla/dom/FontFaceBinding.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "gfxUserFontSet.h"
 #include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
+#include "nsTHashSet.h"
 
 class gfxFontFaceBufferSource;
 struct RawServoFontFaceRule;
@@ -58,21 +60,33 @@ class FontFaceImpl final {
                            aStyle, aFeatureSettings, aVariationSettings,
                            aLanguageOverride, aUnicodeRanges, aFontDisplay,
                            aRangeFlags, aAscentOverride, aDescentOverride,
-                           aLineGapOverride, aSizeAdjust) {}
+                           aLineGapOverride, aSizeAdjust),
+          mMutex("FontFaceImpl::Entry::mMutex") {}
 
-    virtual void SetLoadState(UserFontLoadState aLoadState) override;
-    virtual void GetUserFontSets(nsTArray<gfxUserFontSet*>& aResult) override;
-    const AutoTArray<FontFaceImpl*, 1>& GetFontFaces() { return mFontFaces; }
+    void SetLoadState(UserFontLoadState aLoadState) override;
+    void GetUserFontSets(nsTArray<RefPtr<gfxUserFontSet>>& aResult) override;
+    void FindFontFaceOwners(nsTHashSet<FontFace*>& aOwners);
 
    protected:
+    Mutex mMutex;
+
     // The FontFace objects that use this user font entry.  We need to store
     // an array of these, not just a single pointer, since the user font
     // cache can return the same entry for different FontFaces that have
     // the same descriptor values and come from the same origin.
-    AutoTArray<FontFaceImpl*, 1> mFontFaces;
+    AutoTArray<FontFaceImpl*, 1> mFontFaces MOZ_GUARDED_BY(mMutex);
   };
 
-  FontFace* GetOwner() const { return mOwner; }
+#ifdef DEBUG
+  void AssertIsOnOwningThread() const;
+#else
+  void AssertIsOnOwningThread() const {}
+#endif
+
+  FontFace* GetOwner() const {
+    AssertIsOnOwningThread();
+    return mOwner;
+  }
 
   static already_AddRefed<FontFaceImpl> CreateForRule(
       FontFace* aOwner, FontFaceSetImpl* aFontFaceSet,
@@ -222,6 +236,7 @@ class FontFaceImpl final {
   void GetDesc(nsCSSFontDesc aDescID, nsACString& aResult) const;
 
   RawServoFontFaceRule* GetData() const {
+    AssertIsOnOwningThread();
     return HasRule() ? mRule : mDescriptors;
   }
 

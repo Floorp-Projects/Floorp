@@ -107,6 +107,12 @@ void FontFaceSetDocumentImpl::Destroy() {
 
 bool FontFaceSetDocumentImpl::IsOnOwningThread() { return NS_IsMainThread(); }
 
+#ifdef DEBUG
+void FontFaceSetDocumentImpl::AssertIsOnOwningThread() {
+  MOZ_ASSERT(NS_IsMainThread());
+}
+#endif
+
 void FontFaceSetDocumentImpl::DispatchToOwningThread(
     const char* aName, std::function<void()>&& aFunc) {
   class FontFaceSetDocumentRunnable final : public Runnable {
