@@ -83,6 +83,11 @@ class FontFaceSetImpl : public nsISupports, public gfxUserFontSet {
  public:
   virtual void Destroy();
   virtual bool IsOnOwningThread() = 0;
+#ifdef DEBUG
+  virtual void AssertIsOnOwningThread() = 0;
+#else
+  void AssertIsOnOwningThread() {}
+#endif
   virtual void DispatchToOwningThread(const char* aName,
                                       std::function<void()>&& aFunc) = 0;
 
