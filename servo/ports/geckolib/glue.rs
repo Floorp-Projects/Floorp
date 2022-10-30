@@ -113,7 +113,7 @@ use style::properties::{SourcePropertyDeclaration, StyleBuilder};
 use style::rule_cache::RuleCacheConditions;
 use style::rule_tree::{CascadeLevel, StrongRuleNode};
 use style::selector_parser::PseudoElementCascadeType;
-use style::shared_lock::{Locked, SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard};
+use style::shared_lock::{Locked, SharedRwLock, SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard};
 use style::string_cache::{Atom, WeakAtom};
 use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::import_rule::ImportSheet;
@@ -215,6 +215,16 @@ unsafe fn dummy_url_data() -> &'static UrlExtraData {
 #[allow(dead_code)]
 fn is_main_thread() -> bool {
     unsafe { bindings::Gecko_IsMainThread() }
+}
+
+#[allow(dead_code)]
+fn is_dom_worker_thread() -> bool {
+    unsafe { bindings::Gecko_IsDOMWorkerThread() }
+}
+
+thread_local! {
+    /// Thread-local style data for DOM workers
+    static DOM_WORKER_RWLOCK: SharedRwLock = SharedRwLock::new();
 }
 
 #[allow(dead_code)]
@@ -2064,14 +2074,34 @@ pub extern "C" fn Servo_StyleSheet_GetSourceURL(
     }
 }
 
+fn with_maybe_worker_shared_lock<R>(func: impl FnOnce(&SharedRwLock) -> R) -> R {
+    if is_dom_worker_thread() {
+        DOM_WORKER_RWLOCK.with(func)
+    } else {
+        func(&GLOBAL_STYLE_DATA.shared_lock)
+    }
+}
+
 fn read_locked_arc<T, R, F>(raw: &<Locked<T> as HasFFI>::FFIType, func: F) -> R
 where
     Locked<T>: HasArcFFI,
     F: FnOnce(&T) -> R,
 {
+    debug_assert!(!is_dom_worker_thread());
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     func(Locked::<T>::as_arc(&raw).read_with(&guard))
+}
+
+fn read_locked_arc_worker<T, R, F>(raw: &<Locked<T> as HasFFI>::FFIType, func: F) -> R
+where
+    Locked<T>: HasArcFFI,
+    F: FnOnce(&T) -> R,
+{
+    with_maybe_worker_shared_lock(|lock| {
+        let guard = lock.read();
+        func(Locked::<T>::as_arc(&raw).read_with(&guard))
+    })
 }
 
 #[cfg(debug_assertions)]
@@ -2090,6 +2120,7 @@ where
     Locked<T>: HasArcFFI,
     F: FnOnce(&T) -> R,
 {
+    debug_assert!(!is_dom_worker_thread());
     func(Locked::<T>::as_arc(&raw).read_unchecked())
 }
 
@@ -2098,9 +2129,21 @@ where
     Locked<T>: HasArcFFI,
     F: FnOnce(&mut T) -> R,
 {
+    debug_assert!(!is_dom_worker_thread());
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let mut guard = global_style_data.shared_lock.write();
     func(Locked::<T>::as_arc(&raw).write_with(&mut guard))
+}
+
+fn write_locked_arc_worker<T, R, F>(raw: &<Locked<T> as HasFFI>::FFIType, func: F) -> R
+where
+    Locked<T>: HasArcFFI,
+    F: FnOnce(&mut T) -> R,
+{
+    with_maybe_worker_shared_lock(|lock| {
+        let mut guard = lock.write();
+        func(Locked::<T>::as_arc(&raw).write_with(&mut guard))
+    })
 }
 
 #[no_mangle]
@@ -3034,26 +3077,22 @@ pub extern "C" fn Servo_FontPaletteValuesRule_GetOverrideColors(
 
 #[no_mangle]
 pub extern "C" fn Servo_FontFaceRule_CreateEmpty() -> Strong<RawServoFontFaceRule> {
-    let global_style_data = &*GLOBAL_STYLE_DATA;
     // XXX This is not great. We should split FontFace descriptor data
     // from the rule, so that we don't need to create the rule like this
     // and the descriptor data itself can be hold in UniquePtr from the
     // Gecko side. See bug 1450904.
-    Arc::new(
-        global_style_data
-            .shared_lock
-            .wrap(FontFaceRule::empty(SourceLocation { line: 0, column: 0 })),
-    )
-    .into_strong()
+    with_maybe_worker_shared_lock(|lock| {
+        Arc::new(lock.wrap(FontFaceRule::empty(SourceLocation { line: 0, column: 0 })))
+            .into_strong()
+    })
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn Servo_FontFaceRule_Clone(
     rule: &RawServoFontFaceRule,
 ) -> Strong<RawServoFontFaceRule> {
-    let clone = read_locked_arc(rule, |rule: &FontFaceRule| rule.clone());
-    let global_style_data = &*GLOBAL_STYLE_DATA;
-    Arc::new(global_style_data.shared_lock.wrap(clone)).into_strong()
+    let clone = read_locked_arc_worker(rule, |rule: &FontFaceRule| rule.clone());
+    with_maybe_worker_shared_lock(|lock| Arc::new(lock.wrap(clone)).into_strong())
 }
 
 #[no_mangle]
@@ -3062,7 +3101,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetSourceLocation(
     line: *mut u32,
     column: *mut u32,
 ) {
-    read_locked_arc(rule, |rule: &FontFaceRule| {
+    read_locked_arc_worker(rule, |rule: &FontFaceRule| {
         let location = rule.source_location;
         *line.as_mut().unwrap() = location.line as u32;
         *column.as_mut().unwrap() = location.column as u32;
@@ -3098,7 +3137,7 @@ macro_rules! apply_font_desc_list {
 
 #[no_mangle]
 pub unsafe extern "C" fn Servo_FontFaceRule_Length(rule: &RawServoFontFaceRule) -> u32 {
-    read_locked_arc(rule, |rule: &FontFaceRule| {
+    read_locked_arc_worker(rule, |rule: &FontFaceRule| {
         let mut result = 0;
         macro_rules! count_values {
             (
@@ -3120,7 +3159,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_IndexGetter(
     rule: &RawServoFontFaceRule,
     index: u32,
 ) -> nsCSSFontDesc {
-    read_locked_arc(rule, |rule: &FontFaceRule| {
+    read_locked_arc_worker(rule, |rule: &FontFaceRule| {
         let mut count = 0;
         macro_rules! lookup_index {
             (
@@ -3145,14 +3184,14 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetDeclCssText(
     rule: &RawServoFontFaceRule,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &FontFaceRule| {
+    read_locked_arc_worker(rule, |rule: &FontFaceRule| {
         rule.decl_to_css(result).unwrap();
     })
 }
 
 macro_rules! simple_font_descriptor_getter_impl {
     ($rule:ident, $out:ident, $field:ident, $compute:ident) => {
-        read_locked_arc($rule, |rule: &FontFaceRule| {
+        read_locked_arc_worker($rule, |rule: &FontFaceRule| {
             match rule.$field {
                 None => return false,
                 Some(ref f) => *$out = f.$compute(),
@@ -3244,7 +3283,7 @@ pub extern "C" fn Servo_FontFaceRule_GetSizeAdjust(
 pub unsafe extern "C" fn Servo_FontFaceRule_GetFamilyName(
     rule: &RawServoFontFaceRule,
 ) -> *mut nsAtom {
-    read_locked_arc(rule, |rule: &FontFaceRule| {
+    read_locked_arc_worker(rule, |rule: &FontFaceRule| {
         // TODO(emilio): font-family is a mandatory descriptor, can't we unwrap
         // here, and remove the null-checks in Gecko?
         rule.family
@@ -3259,7 +3298,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetUnicodeRanges(
     out_len: *mut usize,
 ) -> *const UnicodeRange {
     *out_len = 0;
-    read_locked_arc(rule, |rule: &FontFaceRule| {
+    read_locked_arc_worker(rule, |rule: &FontFaceRule| {
         let ranges = match rule.unicode_range {
             Some(ref ranges) => ranges,
             None => return ptr::null(),
@@ -3275,7 +3314,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetSources(
     out: *mut nsTArray<FontFaceSourceListComponent>,
 ) {
     let out = &mut *out;
-    read_locked_arc(rule, |rule: &FontFaceRule| {
+    read_locked_arc_worker(rule, |rule: &FontFaceRule| {
         let sources = match rule.sources {
             Some(ref s) => s,
             None => return,
@@ -3336,7 +3375,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetVariationSettings(
     rule: &RawServoFontFaceRule,
     variations: *mut nsTArray<structs::gfxFontVariation>,
 ) {
-    read_locked_arc(rule, |rule: &FontFaceRule| {
+    read_locked_arc_worker(rule, |rule: &FontFaceRule| {
         let source_variations = match rule.variation_settings {
             Some(ref v) => v,
             None => return,
@@ -3357,7 +3396,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetFeatureSettings(
     rule: &RawServoFontFaceRule,
     features: *mut nsTArray<structs::gfxFontFeature>,
 ) {
-    read_locked_arc(rule, |rule: &FontFaceRule| {
+    read_locked_arc_worker(rule, |rule: &FontFaceRule| {
         let source_features = match rule.feature_settings {
             Some(ref v) => v,
             None => return,
@@ -3379,7 +3418,7 @@ pub extern "C" fn Servo_FontFaceRule_GetDescriptorCssText(
     desc: nsCSSFontDesc,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &FontFaceRule| {
+    read_locked_arc_worker(rule, |rule: &FontFaceRule| {
         let mut writer = CssWriter::new(result);
         macro_rules! to_css_text {
             (
@@ -3428,7 +3467,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_SetDescriptor(
         None,
     );
 
-    write_locked_arc(rule, |rule: &mut FontFaceRule| {
+    write_locked_arc_worker(rule, |rule: &mut FontFaceRule| {
         macro_rules! to_css_text {
             (
                 valid: [$($v_enum_name:ident => $field:ident,)*]
@@ -3465,7 +3504,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_ResetDescriptor(
     rule: &RawServoFontFaceRule,
     desc: nsCSSFontDesc,
 ) {
-    write_locked_arc(rule, |rule: &mut FontFaceRule| {
+    write_locked_arc_worker(rule, |rule: &mut FontFaceRule| {
         macro_rules! reset_desc {
             (
                 valid: [$($v_enum_name:ident => $field:ident,)*]
