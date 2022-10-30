@@ -1656,7 +1656,7 @@
 # JavaScript.
 - name: browser.opaqueResponseBlocking
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # When this pref is enabled, <object> and <embed> elements will create
