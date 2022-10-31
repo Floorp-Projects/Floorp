@@ -17,8 +17,10 @@ async function getua() {
 async function rewriteUserAgentHeader(e) {
   var ua = await getua()
   for (var header of e.requestHeaders) {
+    if (header.name.toLowerCase() === "user-agent") {
       header.value = ua;
     }
+  }
   return {requestHeaders: e.requestHeaders};
 }
 
