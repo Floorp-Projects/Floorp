@@ -44,26 +44,18 @@ from mozfile import which
 import distro
 
 APPLICATION_CHOICE = """
-Note on Artifact Mode:
 
-Artifact builds download prebuilt C++ components rather than building
-them locally. Artifact builds are faster!
-
-Artifact builds are recommended for people working on Firefox or
-Firefox for Android frontends, or the GeckoView Java API. They are unsuitable
-for those working on C++ code. For more information see:
-https://firefox-source-docs.mozilla.org/contributing/build/artifact_builds.html.
-
-Please choose the version of Firefox you want to build (see note above):
+Please choose the version of Floorp you want to build (see note above):
 %s
 Your choice: """
 
 APPLICATIONS = OrderedDict(
     [
-        ("Floorp for Desktop", "browser"),
+        ("Flootrp for Desktop", "browser"),
+        ("Floorp for Desktop Artifact Mode", "browser_artifact_mode"),
+        ("GeckoView/Floorp Android", "mobile_android"),
     ]
 )
-
 FINISHED = """
 Your system should be ready to build %s!
 """
