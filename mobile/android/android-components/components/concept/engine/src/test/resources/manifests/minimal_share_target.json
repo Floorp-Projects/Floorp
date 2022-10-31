@@ -1,0 +1,13 @@
+{
+  "name": "Minimal",
+  "start_url": "/",
+  "share_target": {
+    "action": "/share-target",
+    "params": {
+      "files": {
+        "name": "file",
+        "accept": "image/*"
+      }
+    }
+  }
+}

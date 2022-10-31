@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">Be užraitų</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">Šriftas be užraitų</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">Su užraitas</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">Šriftas su užraitais</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">Šrifto dydžio mažinimas</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">Šrifto dydžio didinimas</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">Tamsus</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">Tamsi spalvų aibė</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">Sepija</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">Sepijos spalvų aibė</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">Šviesus</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Šviesi spalvų aibė</string>
+</resources>

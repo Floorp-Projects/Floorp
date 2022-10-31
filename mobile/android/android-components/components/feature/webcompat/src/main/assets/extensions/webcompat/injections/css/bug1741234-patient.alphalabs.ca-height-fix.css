@@ -1,0 +1,9 @@
+/**
+ * patient.alphalabs.ca - "Continue" button is overlapped by displaced page footer
+ * Bug #1741234 - https://bugzilla.mozilla.org/show_bug.cgi?id=1741234
+ * WebCompat issue #93156 - https://webcompat.com/issues/93156
+ */
+
+body {
+  height: 100%;
+}

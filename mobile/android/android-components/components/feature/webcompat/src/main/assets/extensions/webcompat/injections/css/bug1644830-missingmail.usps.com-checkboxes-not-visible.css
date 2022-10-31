@@ -1,0 +1,13 @@
+/**
+ * missingmail.usps.com - Unable to mark the check-boxes from "Disclaimer and
+ * Terms and Conditions" section
+ * Bug #1644830 - https://bugzilla.mozilla.org/show_bug.cgi?id=1644830
+ * WebCompat issue #53950 - https://webcompat.com/issues/53950
+ *
+ * missingmail.usps.com runs into a case of bug 997189, where an absolutely
+ * positioned inline-block element with floating siblings is shifter to the
+ * right, and thus invisible.
+ */
+.mrc-custom-checkbox-container input {
+  margin-left: -3rem;
+}

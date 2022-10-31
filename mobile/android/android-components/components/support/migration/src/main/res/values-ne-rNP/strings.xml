@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of the notification shown while we upgrade Fennec to Fenix. -->
+    <string name="mozac_support_migration_ongoing_notification_title">अद्यावधिक  हुँदै छ </string>
+    <!-- Text of the notification shown while we upgrade Fennec to Fenix. -->
+    <string name="mozac_support_migration_ongoing_notification_text">Firefox एक क्षणमा तयार हुनेछ…</string>
+    <!-- Title of the notification shown the upgrade from Fennec to Fenix is complete. -->
+    <string name="mozac_support_migration_complete_notification_title">अद्यावधिक सफल भयो</string>
+    <!-- Text of the notification shown the upgrade from Fennec to Fenix is complete. -->
+    <string name="mozac_support_migration_complete_notification_text">Firefox अद्यावधिक भयो र अझै धेरै सुधारियो!</string>
+</resources>

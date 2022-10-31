@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
+    <string name="mozac_browser_toolbar_menu_button">مینیو</string>
+    <string name="mozac_clear_button_description">صاف کریں</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">سراغ کاری تحفظ چالو ہے</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, and trackers have been blocked or detected.-->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">سراغ کاری تحفظ نے سُراغ رساں کو مسدود کردیا ہے</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">سراغ کاری تحفظ اس سائٹ کے لیئے بند ہے</string>
+    <!-- Content description: For the site security information icon (the site security icon).-->
+    <string name="mozac_browser_toolbar_content_description_site_info">سائٹ کی معلومات</string>
+    <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
+    <string name="mozac_browser_toolbar_progress_loading">لوڈ کر رہا ہے</string>
+    <!-- Content description: For the autoplay toolbar icon, it is set when the auto play permission is blocking content playing.-->
+    <string name="mozac_browser_toolbar_content_description_autoplay_blocked">کچھ مشمولات کو آٹو پلے سیٹنگ سے مسدود کردیا گیا ہے</string>
+</resources>

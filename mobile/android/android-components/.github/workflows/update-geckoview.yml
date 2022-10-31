@@ -1,0 +1,48 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+#
+# This workflow periodically calls the relbot action to update GeckoView
+# Beta.
+#
+# The relbot action will look at Maven and compare the latest GV Beta
+# release available to what is currently configured in GeckoView.kt on
+# a hard coded A-C release branch. If the branch is outdated then
+# a new PR will be created to update the GV version and increment the
+# A-C version.
+#
+# When the PR lands, the create-release workflow triggers, which will
+# tag a release, which ultimately results in a full A-C build and push
+# to Maven.
+#
+
+name: "Update GeckoView"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on: workflow_dispatch
+
+jobs:
+  main:
+    name: "Update GeckoView"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: "Update GV (On Main)"
+        uses: mozilla-mobile/relbot@1.0.0
+        if: github.repository == 'mozilla-mobile/android-components'
+        with:
+          project: android-components
+          command: update-main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Update GV (On Releases)"
+        uses: mozilla-mobile/relbot@1.0.0
+        if: github.repository == 'mozilla-mobile/android-components'
+        with:
+          project: android-components
+          command: update-releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

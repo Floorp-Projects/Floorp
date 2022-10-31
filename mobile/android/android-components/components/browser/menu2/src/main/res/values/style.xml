@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+
+    <style name="Mozac.Browser.Menu2" parent="">
+        <item name="cardBackgroundColor">@color/mozac_browser_menu2_background</item>
+    </style>
+
+    <!-- Item Divider -->
+    <style name="Mozac.Browser.Menu2.Candidate.Divider" parent="">
+        <item name="android:background">?android:attr/listDivider</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu2.Candidate.Divider.Horizontal">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/mozac_browser_menu2_candidate_divider_height</item>
+    </style>
+    <!-- Item Divider -->
+
+    <style name="Mozac.Browser.Menu2.Candidate.Container" parent="">
+        <item name="android:layout_height">@dimen/mozac_browser_menu2_candidate_container_layout_height</item>
+        <item name="android:paddingStart">@dimen/mozac_browser_menu2_candidate_container_padding_start</item>
+        <item name="android:paddingEnd">@dimen/mozac_browser_menu2_candidate_container_padding_end</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu2.Candidate.Text" parent="@android:style/TextAppearance.Material.Menu">
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:textSize">@dimen/mozac_browser_menu2_candidate_text_size</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:lines">1</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+    </style>
+
+    <!-- BrowserMenuImageText -->
+    <style name="Mozac.Browser.Menu2.Icon" parent="">
+        <item name="android:layout_width">@dimen/mozac_browser_menu2_icon_width</item>
+        <item name="android:layout_height">@dimen/mozac_browser_menu2_icon_height</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu2.Icon.Text" parent="Mozac.Browser.Menu2.Icon">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:textSize">@dimen/mozac_browser_menu2_icon_text_size</item>
+        <item name="android:lines">1</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu2.Candidate.Label" parent="Mozac.Browser.Menu2.Candidate.Text">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+    <!-- BrowserMenuImageText -->
+
+    <!-- Animation -->
+    <style name="Mozac.Browser.Menu2.Animation.OverflowMenuLeftTop" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_left_top</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu2.Animation.OverflowMenuRightTop" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_right_top</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu2.Animation.OverflowMenuLeftBottom" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_left_bottom</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu2.Animation.OverflowMenuRightBottom" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_right_bottom</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu2.Animation.OverflowMenuLeft" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_left</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu2.Animation.OverflowMenuRight" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_right</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
+    <!-- Animation -->
+</resources>

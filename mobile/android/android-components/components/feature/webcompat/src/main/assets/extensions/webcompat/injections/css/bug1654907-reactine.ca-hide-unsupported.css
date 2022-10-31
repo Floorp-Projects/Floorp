@@ -1,0 +1,12 @@
+/**
+ * reactine.ca - Unsupported browser message
+ * Bug #1654907 - https://bugzilla.mozilla.org/show_bug.cgi?id=1654907
+ * WebCompat issue #55481 - https://webcompat.com/issues/55481
+ *
+ * reactine.ca is showing "Sorry this browser is not supported."
+ * message if Firefox for Android based on UA detection. Site seems
+ * to be working fine, so this intervention is to hide this message
+ */
+#browser-alert {
+  display: none !important;
+}

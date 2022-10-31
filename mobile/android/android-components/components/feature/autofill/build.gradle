@@ -1,0 +1,58 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+
+android {
+    compileSdkVersion config.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        targetSdkVersion config.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation project(':concept-fetch')
+    implementation project(':concept-storage')
+    implementation project(':lib-publicsuffixlist')
+    implementation project(':service-digitalassetlinks')
+    implementation project(':support-base')
+    implementation project(':support-ktx')
+    implementation project(":support-utils")
+
+    implementation Dependencies.androidx_annotation
+    implementation Dependencies.androidx_autofill
+    implementation Dependencies.androidx_biometric
+    implementation Dependencies.androidx_fragment
+    implementation Dependencies.androidx_lifecycle_runtime
+    implementation Dependencies.androidx_recyclerview
+    implementation Dependencies.androidx_core_ktx
+    implementation Dependencies.androidx_preferences
+
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
+
+    testImplementation project(':support-test')
+    testImplementation project(':lib-fetch-okhttp')
+
+    testImplementation Dependencies.androidx_test_core
+    testImplementation Dependencies.androidx_test_junit
+    testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_coroutines
+    testImplementation Dependencies.testing_mockwebserver
+}
+
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

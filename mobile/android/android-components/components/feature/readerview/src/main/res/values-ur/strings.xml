@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">سینس سیرف</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">سانس سیرف فونٹ</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">سیرف</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">سیرف فونٹ</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">فونٹ سائز کم کریں</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">فونٹ سائز اضافہ کریں</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">گہرا</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">گہرے رنگ کی اسکیم</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">سیپیا</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">سیپیا رنگ سکیم</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">ہلکا</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">ہلکے رنگ کی اسکیم</string>
+</resources>

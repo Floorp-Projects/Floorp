@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">Sans serif</string>
+
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">Lechrâ Sans Serif</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">Serif</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">Lechrâ Serif</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">Nāgi\'iaj lij lêchra</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">Nāgi\'iaj yāchìj lêchra</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">Gā rūmin\' man</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">Nej dūguì\' kolô rūmin\'in</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">Rūguì\'i</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">Nej dūguì\' kolô rūguì\'i</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">Sa yigìïn</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Nej dūguì\' kolô yigìïn</string>
+</resources>

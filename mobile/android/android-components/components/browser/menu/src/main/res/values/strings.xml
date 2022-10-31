@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
+    <string name="mozac_browser_menu_button">Menu</string>
+    <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
+    <string name="mozac_browser_menu_highlighted">Highlighted</string>
+    <!-- Label for add-ons submenu section -->
+    <string name="mozac_browser_menu_addons">Add-ons</string>
+    <!-- Label for add-ons sub menu item for add-ons manager -->
+    <string name="mozac_browser_menu_addons_manager">Add-ons Manager</string>
+</resources>

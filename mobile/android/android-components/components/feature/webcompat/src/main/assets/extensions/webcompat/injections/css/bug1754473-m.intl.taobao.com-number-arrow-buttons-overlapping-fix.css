@@ -1,0 +1,9 @@
+/**
+ * m.intl.taobao.com - The quantity value on the shopping cart is hardly
+ * visible due to https://bugzilla.mozilla.org/show_bug.cgi?id=966844,
+ * but a CSS change can fix it in the meantime.
+ * Bug #1754473 - https://bugzilla.mozilla.org/show_bug.cgi?id=1754473
+ */
+.o-t-item .item-info .edit-quantity .btn-input input[type="number"] {
+  appearance: textfield;
+}

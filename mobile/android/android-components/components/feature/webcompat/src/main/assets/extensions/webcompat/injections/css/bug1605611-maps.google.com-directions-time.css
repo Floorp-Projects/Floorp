@@ -1,0 +1,22 @@
+/**
+ * Bug 1605611 - Cannot change Departure/arrival dates in Google Maps on Android
+ *
+ * Google Maps calls .click() on a datetime-local input element, with the intent
+ * to show the native date picker. But the native date picker does not appear,
+ * because that only happens when a user initiated the click.
+ * To fix the problem of the date picker not appearing in Google Maps, alter the
+ * styles of the datetime-local input element, to be rendered on top of the
+ * usual UI (i.e. the icon and date/time text). This allows the user to summon
+ * the native date picker when they tap on the relevant UI in Google Maps.
+ */
+
+.ml-edit-mode-grey-icon > input {
+  z-index: 1; /* overrides -5000, to show on top of the icon AND the rendered date */
+  opacity: 0; /* let the input element be fully transparent */
+  width: 100vw; /* render over the rendered date from Maps' dialog */
+  /* position this (absolute) element to fully cover the parent container */
+  left: 0;
+  bottom: 0;
+  top: 0;
+  height: 100%;
+}

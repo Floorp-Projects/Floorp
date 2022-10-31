@@ -1,0 +1,114 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+def generatedSrcDir = new File(buildDir, "generated/components/src/main/java")
+
+// This gitHash functionality is duplicated in publish.gradle.
+def getGitHash = { ->
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'rev-parse', '--short', 'HEAD'
+        standardOutput = stdout
+    }
+    return stdout.toString().trim()
+}
+
+android {
+    compileSdkVersion config.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        targetSdkVersion config.targetSdkVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        def appServicesVersion = Versions.mozilla_appservices
+        if (gradle.hasProperty("localProperties.branchBuild.application-services.version")) {
+            appServicesVersion = gradle["localProperties.branchBuild.application-services.version"]
+        }
+
+        buildConfigField("String", "LIBRARY_VERSION", "\"" + config.componentsVersion + "\"")
+        buildConfigField("String", "APPLICATION_SERVICES_VERSION", "\"" + appServicesVersion + "\"")
+        buildConfigField("String", "GLEAN_SDK_VERSION", "\"" + Versions.mozilla_glean + "\"")
+        buildConfigField("String", "GIT_HASH", "\"dev build\"")
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            buildConfigField("String", "GIT_HASH", "\"" + getGitHash() + "\"")
+        }
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDirs += generatedSrcDir
+            }
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
+    implementation Dependencies.androidx_lifecycle_viewmodel
+
+    api project(":concept-base")
+    // We expose the app-compat as API so that consumers get access to the Lifecycle classes automatically
+    api Dependencies.androidx_appcompat
+
+    testImplementation project(':support-test')
+
+    testImplementation Dependencies.testing_coroutines
+    testImplementation Dependencies.androidx_test_core
+    testImplementation Dependencies.androidx_test_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
+}
+
+
+preBuild.finalizedBy("generateComponentEnum")
+
+
+/**
+ * Generates a "Components" enum listing all published components.
+ */
+tasks.register("generateComponentEnum") {
+    doLast {
+        generatedSrcDir.mkdirs()
+
+        def file = new File(generatedSrcDir, "Component.kt")
+        file.delete()
+        file.createNewFile()
+
+        file << "package mozilla.components.support.base" << "\n"
+        file << "\n"
+        file << "// Automatically generated file. DO NOT MODIFY" << "\n"
+        file << "\n"
+        file << "enum class Component {" << "\n"
+
+        file << buildConfig.projects.findAll { project ->
+            project.value.publish
+        }.collect { project ->
+            "    " + project.key.replace("-", "_").toUpperCase(Locale.US)
+        }.join(", \n")
+
+        file << "\n"
+        file << "}\n"
+        file << "\n"
+    }
+}
+
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

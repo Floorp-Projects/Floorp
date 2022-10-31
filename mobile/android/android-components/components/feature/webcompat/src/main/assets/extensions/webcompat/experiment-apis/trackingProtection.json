@@ -1,0 +1,102 @@
+[
+  {
+    "namespace": "trackingProtection",
+    "description": "experimental API allow requests through ETP",
+    "functions": [
+      {
+        "name": "isDFPIActive",
+        "type": "function",
+        "description": "Returns whether dFPI is active for private/non-private browsing tabs",
+        "parameters": [
+          {
+            "type": "boolean",
+            "name": "isPrivate"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "shim",
+        "type": "function",
+        "description": "Set specified URL patterns as intended to be shimmed",
+        "parameters": [
+          {
+            "name": "allowlistId",
+            "description": "Identfier for the allow-list, so it may be added-to or revoked",
+            "type": "string"
+          },
+          {
+            "name": "patterns",
+            "description": "Array of match patterns",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "notHosts",
+            "description": "Hosts on which to not shim these patterns",
+            "type": "array",
+            "optional": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      {
+        "name": "allow",
+        "type": "function",
+        "description": "Set specified URL patterns as intended to be allowed through the content blocker for the specified top hosts",
+        "parameters": [
+          {
+            "name": "allowlistId",
+            "description": "Identfier for the allow-list, so it may be added-to or revoked",
+            "type": "string"
+          },
+          {
+            "name": "patterns",
+            "description": "Array of match patterns",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hosts",
+            "description": "Hosts to allow the patterns on",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "revoke",
+        "type": "function",
+        "description": "Revokes the given allow-list entirely (both shims and allows)",
+        "parameters": [
+          {
+            "name": "allowListId",
+            "type": "string"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "wasRequestUnblocked",
+        "type": "function",
+        "description": "Whether the given requestId was unblocked by any allowList",
+        "parameters": [
+          {
+            "name": "requestId",
+            "type": "string"
+          }
+        ],
+        "async": true
+      }
+    ]
+  }
+]

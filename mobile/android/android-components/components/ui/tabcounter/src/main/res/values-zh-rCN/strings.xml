@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="mozac_tab_counter_open_tab_tray_single">打开了 1 个标签页，点击即可切换。</string>
+    <!-- Message announced to the user when tab tray is selected with multiple tabs -->
+    <string name="mozac_tab_counter_open_tab_tray_plural">打开了 %1$s 个标签页，点击即可切换。</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="mozac_browser_menu_new_tab">新建标签页</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="mozac_browser_menu_new_private_tab">新建隐私标签页</string>
+    <!-- Browser menu button to close tab. Closes the current session when pressed. -->
+    <string name="mozac_close_tab">关闭标签页</string>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">克隆标签页</string>
+    <!-- Content description of the tab counter toolbar button -->
+    <string name="mozac_tab_counter_content_description">标签页计数器工具栏按钮。</string>
+</resources>

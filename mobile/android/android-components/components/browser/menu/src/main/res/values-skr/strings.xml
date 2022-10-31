@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
+    <string name="mozac_browser_menu_button">مینیو</string>
+    <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
+    <string name="mozac_browser_menu_highlighted">نمایاں کیتا ڳیا</string>
+    <!-- Label for add-ons submenu section -->
+    <string name="mozac_browser_menu_addons">ایڈ ــ آن</string>
+    <!-- Label for add-ons sub menu item for add-ons manager -->
+    <string name="mozac_browser_menu_addons_manager">ایڈ ــ آن منیجر</string>
+</resources>

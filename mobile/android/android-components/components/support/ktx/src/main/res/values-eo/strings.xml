@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text displayed when choosing which app to call with after selecting a phone number-->
+    <string name="mozac_support_ktx_menu_call_with">Voki per…</string>
+    <!-- Text displayed when choosing which app to email with after selecting an email address-->
+    <string name="mozac_support_ktx_menu_email_with">Sendi retpoŝton per…</string>
+    <string name="mozac_support_ktx_menu_share_with">Dividi kun…</string>
+    <string name="mozac_support_ktx_share_dialog_title">Dividi per</string>
+</resources>

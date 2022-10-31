@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Δοκιμή ξανά</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Αδυναμία ολοκλήρωσης αιτήματος</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Αυτή τη στιγμή, δεν διατίθενται επιπρόσθετες πληροφορίες σχετικά με αυτό το πρόβλημα ή σφάλμα.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Αποτυχία ασφαλούς σύνδεσης</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Η σελίδα που προσπαθείτε να προβάλετε δεν μπορεί να εμφανιστεί, επειδή δεν ήταν δυνατή η επαλήθευση της αυθεντικότητας των ληφθέντων δεδομένων.</li>
+        <li>Παρακαλούμε επικοινωνήστε με τους ιδιοκτήτες της ιστοσελίδας για να τους ενημερώσετε για αυτό το πρόβλημα.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Αποτυχία ασφαλούς σύνδεσης</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Ενδέχεται να υπάρχει πρόβλημα με τη διαμόρφωση του διακομιστή, ή κάποιος προσπαθεί να μιμηθεί το διακομιστή.</li>
+        <li>Αν έχετε συνδεθεί με επιτυχία σε αυτό το διακομιστή στο παρελθόν, το σφάλμα ίσως είναι προσωρινό και μπορείτε να δοκιμάσετε ξανά αργότερα.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Σύνθετα…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Κάποιος ίσως προσπαθεί να μιμηθεί την ιστοσελίδα και δεν πρέπει να συνεχίσετε.</label>
+        <br><br>
+        <label>Οι ιστοσελίδες αποδεικνύουν την ταυτότητά τους με τα πιστοποιητικά. Το %1$s δεν εμπιστεύεται το <b>%2$s</b>, επειδή ο εκδότης του πιστοποιητικού του είναι άγνωστος, το πιστοποιητικό είναι αυτοϋπογεγραμμένο, ή ο διακομιστής δεν στέλνει τα σωστά ενδιάμεσα πιστοποιητικά.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Επιστροφή (Προτείνεται)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Αποδοχή κινδύνου και συνέχεια</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Αυτός ο ιστότοπος απαιτεί ασφαλή σύνδεση.</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Δεν είναι δυνατή η εμφάνιση της σελίδας που προσπαθείτε να προβάλετε, επειδή αυτός ο ιστότοπος απαιτεί ασφαλή σύνδεση.</li>
+         <li>Το ζήτημα οφείλεται κατά πάσα πιθανότητα στον ιστότοπο και δεν μπορείτε να κάνετε τίποτα για να το επιλύσετε.</li>
+         <li>Μπορείτε να ειδοποιήστε τον διαχειριστή του ιστοτόπου σχετικά με το πρόβλημα.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Σύνθετα…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> Το <b>%1$s</b> διαθέτει μια πολιτική ασφαλείας, η οποία ονομάζεται «HTTP Strict Transport Security» (HSTS), που σημαίνει ότι το <b>%2$s</b> μπορεί να συνδεθεί μόνο με ασφάλεια σε αυτό. Δεν μπορείτε να προσθέσετε εξαίρεση για να επισκεφθείτε τον ιστότοπο αυτό.
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> Το <b>%1$s</b> διαθέτει μια πολιτική ασφαλείας, η οποία ονομάζεται «HTTP Strict Transport Security (HSTS)», που σημαίνει ότι το <b>%2$s</b> μπορεί να συνδεθεί μόνο με ασφάλεια σε αυτό. Δεν μπορείτε να προσθέσετε εξαίρεση για να επισκεφθείτε τον ιστότοπο αυτό. </label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Επιστροφή</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Η σύνδεση διακόπηκε</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Το πρόγραμμα περιήγησης συνδέθηκε με επιτυχία, αλλά η σύνδεση διακόπηκε κατά τη μεταφορά πληροφοριών. Παρακαλούμε προσπαθήστε ξανά.</p>
+      <ul>
+        <li>Η σελίδα μπορεί να είναι προσωρινά μη διαθέσιμη ή πολύ απασχολημένη. Δοκιμάστε ξανά σε λίγα λεπτά.</li>
+        <li>Aν δεν μπορείτε να φορτώσετε καμία σελίδα, ελέγξτε τα δεδομένα ή τη σύνδεση Wi-Fi της συσκευής σας.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Το χρονικό όριο της σύνδεσης έληξε</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>Η ζητούμενη ιστοσελίδα δεν αποκρίθηκε στο αίτημα σύνδεσης και το πρόγραμμα περιήγησης σταμάτησε να περιμένει απάντηση.</p>
+      <ul>
+        <li>Μήπως ο διακομιστής αντιμετωπίζει υψηλή ζήτηση ή προσωρινή διακοπή λειτουργίας; Δοκιμάστε ξανά αργότερα.</li>
+        <li>Δεν μπορείτε να περιηγηθείτε σε άλλες ιστοσελίδες; Ελέγξτε 
+ τη σύνδεση δικτύου της συσκευής σας.</li>
+        <li>Προστατεύεται η συσκευή ή το δίκτυό σας από τείχος προστασίας ή διακομιστή μεσολάβησης; Οι εσφαλμένες ρυθμίσεις μπορούν να επηρεάσουν την περιήγηση.</li>
+        <li>Έχετε ακόμη πρόβλημα; Συμβουλευτείτε το διαχειριστή δικτύου ή τον πάροχό σας για βοήθεια.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Αδυναμία σύνδεσης</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Η σελίδα ενδέχεται να είναι προσωρινά μη διαθέσιμη ή πολύ απασχολημένη. Δοκιμάστε ξανά σε λίγο.</li>
+        <li>Αν δεν μπορείτε να φορτώσετε καμία σελίδα, ελέγξτε τη σύνδεση δεδομένων ή Wi-Fi σας.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Απρόσμενη απάντηση από το διακομιστή</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Ο ιστότοπος απάντησε με απρόσμενο τρόπο στο αίτημα δικτύου και το πρόγραμμα περιήγησης δεν μπορεί να συνεχίσει.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Η σελίδα δεν ανακατευθύνει σωστά</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>Το πρόγραμμα περιήγησης έχει σταματήσει την προσπάθεια ανάκτησης του ζητούμενου στοιχείου. Η ιστοσελίδα ανακατευθύνει το αίτημα με τρόπο που δεν θα ολοκληρωθεί.</p>
+      <ul>
+        <li>Έχετε απενεργοποιήσει ή αποκλείσει τα cookies που απαιτούνται από την ιστοσελίδα;</li>
+        <li>Αν η αποδοχή των cookies δεν επιλύει το πρόβλημα, μάλλον οφείλεται σε ζήτημα ρύθμισης του διακομιστή και όχι στη συσκευή σας.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Λειτουργία εκτός σύνδεσης</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Το πρόγραμμα περιήγησης είναι σε λειτουργεία εκτός σύνδεσης και δεν μπορεί να συνδεθεί στο ζητούμενο στοιχείο.</p>
+      <ul>
+        <li>Είναι συνδεδεμένη η συσκευή σε ενεργό δίκτυο;</li>
+        <li>Πατήστε “Δοκιμή ξανά” για σύνδεση στο διαδίκτυο και ανανέωση της σελίδας.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Περιορισμός θύρας για λόγους ασφαλείας</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>Η ζητούμενη διεύθυνση καθόρισε θύρα (π.χ., <q>mozilla.org:80</q> για τη θύρα 80 στο mozilla.org) που <em>δεν</em> χρησιμοποιείται συνήθως για περιήγηση στο διαδίκτυο. Το πρόγραμμα περιήγησης ακύρωσε το αίτημα για να σας προστατεύσει.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Έγινε επαναφορά της σύνδεσης</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Ο σύνδεσμος δικτύου διακόπηκε κατά τη διαδικασία σύνδεσης. Παρακαλούμε δοκιμάστε ξανά.</p>
+      <ul>
+        <li>Η ιστοσελίδα ίσως είναι προσωρινά μη διαθέσιμη ή πολύ απασχολημένη. Δοκιμάστε ξανά σε λίγο.</li>
+        <li>Αν δεν μπορείτε να φορτώσετε καμία σελίδα, ελέγξτε τη σύνδεση δεδομένων ή Wi-Fi της συσκευής σας.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Μη ασφαλής τύπος αρχείου</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>Παρακαλώ επικοινωνήστε με τους ιδιοκτήτες του ιστοτόπου για να τους ενημερώσετε σχετικά με αυτό το πρόβλημα.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Σφάλμα κατεστραμμένου περιεχομένου</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Η σελίδα που προσπαθείτε να δείτε δεν μπορείτε να εμφανιστεί λόγω σφάλματος κατά τη μεταγωγή δεδομένων.</p>
+      <ul>
+        <li>Παρακαλούμε ενημερώστε τους ιδιοκτήτες της ιστοσελίδας για αυτό το πρόβλημα.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Το περιεχόμενο καταστράφηκε</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Η σελίδα που προσπαθείτε να δείτε δεν μπορείτε να εμφανιστεί λόγω σφάλματος κατά τη μεταγωγή δεδομένων.</p>
+      <ul>
+        <li>Παρακαλούμε ενημερώστε τους ιδιοκτήτες της ιστοσελίδας για αυτό το πρόβλημα.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Σφάλμα κωδικοποίησης περιεχομένου</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Η σελίδα που προσπαθείτε να δείτε δεν μπορεί να εμφανιστεί επειδή δεν χρησιμοποιεί έγκυρη ή υποστηριζόμενη μορφή συμπίεσης.</p>
+      <ul>
+        <li>Παρακαλώ επικοινωνήστε με τους ιδιοκτήτες του ιστοτόπου για να τους ενημερώσετε σχετικά με αυτό το πρόβλημα.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Η διεύθυνση δεν βρέθηκε</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Το πρόγραμμα περιήγησης δεν βρήκε τον κεντρικό διακομιστή για την παρεχόμενη διεύθυνση.</p>
+      <ul>
+        <li>Ελέγξτε τη διεύθυνση για τυχόν λάθη, όπως
+          <strong>ww</strong>.example.com αντί για
+          <strong>www</strong>.example.com.</li>
+        <li>Αν δεν μπορείτε να φορτώσετε καμία σελίδα, ελέγξτε τα δεδομένα ή τη σύνδεση Wi-Fi της συσκευής σας.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Δεν υπάρχει σύνδεση στο διαδίκτυο</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Ελέγξτε τη σύνδεση δικτύου σας ή δοκιμάστε να φορτώσετε εκ νέου τη σελίδα σε λίγα λεπτά.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Ανανέωση</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Μη έγκυρη διεύθυνση</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Η διεύθυνση δεν είναι σε αναγνωρισμένη μορφή. Παρακαλούμε ελέγξτε τη γραμμή διευθύνσεων για λάθη και δοκιμάστε ξανά.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Η διεύθυνση δεν είναι έγκυρη</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Οι διευθύνσεις ιστού γράφονται συνήθως ως εξής: <strong>http://www.example.com/</strong></li>
+        <li>Βεβαιωθείτε ότι χρησιμοποιείτε τις σωστές καθέτους (δηλ. <strong>/</strong>).</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Άγνωστο πρωτόκολλο</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Η διεύθυνση καθορίζει ένα πρωτόκολλο (π.χ. «wxyz://») που δεν αναγνωρίζει το πρόγραμμα περιήγησης, επομένως δεν είναι δυνατή η σωστή σύνδεση στον ιστότοπο.</p>
+      <ul>
+        <li>Προσπαθείτε να προσπελάσετε πολυμέσα ή άλλες υπηρεσίες χωρίς κείμενο; Ελέγξτε τον ιστότοπο για επιπλέον απαιτήσεις.</li>
+        <li>Ορισμένα πρωτόκολλα ενδέχεται να απαιτούν λογισμικό ή αρθρώματα τρίτων πριν μπορέσουν να αναγνωριστούν από το πρόγραμμα περιήγησης.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Το αρχείο δεν βρέθηκε</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Μήπως το στοιχείο έχει μετονομαστεί, αφαιρεθεί, ή μετακινηθεί;</li>
+        <li>Υπάρχουν σφάλματα ορθογραφίας, κεφαλαίων, ή άλλα τυπογραφικά λάθη στη διεύθυνση;</li>
+        <li>Έχετε επαρκή δικαιώματα για πρόσβαση στο ζητούμενο στοιχείο;</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Άρνηση πρόσβασης στο αρχείο</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Ίσως έχει αφαιρεθεί, μετακινηθεί ή τα δικαιώματα αρχείου εμποδίζουν την πρόσβαση.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Άρνηση σύνδεσης διαμεσολαβητή</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Το πρόγραμμα περιήγησης έχει ρυθμιστεί ώστε να χρησιμοποιεί διακομιστή μεσολάβησης, αλλά ο διακομιστής μεσολάβησης αρνήθηκε τη σύνδεση.</p>
+      <ul>
+        <li>Έχει ρυθμιστεί σωστά ο διακομιστής μεσολάβησης; Ελέγξτε τις ρυθμίσεις και δοκιμάστε ξανά.</li>
+        <li>Επιτρέπει ο διακομιστής μεσολάβησης συνδέσεις από αυτό το δίκτυο;</li>
+        <li>Έχετε ακόμα πρόβλημα; Συμβουλευτείτε το διαχειριστή δικτύου ή τον πάροχό σας για βοήθεια.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Δεν βρέθηκε διακομιστής μεσολάβησης</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>Το πρόγραμμα περιήγησης έχει ρυθμιστεί ώστε να χρησιμοποιεί διακομιστή μεσολάβησης, αλλά δεν βρέθηκε διακομιστής μεσολάβησης.</p>
+      <ul>
+        <li>Έχει ρυθμιστεί σωστά ο διακομιστής μεσολάβησης; Ελέγξτε τις ρυθμίσεις και δοκιμάστε ξανά.</li>
+        <li>Είναι συνδεδεμένη η συσκευή σε ενεργό δίκτυο;</li>
+        <li>Έχετε ακόμη πρόβλημα; Συμβουλευτείτε το διαχειριστή δικτύου σας ή τον πάροχό σας για βοήθεια.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Ζήτημα κακόβουλου ιστοτόπου</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Ο ιστότοπος στο %1$s έχει αναφερθεί ως ιστότοπος επιθέσεων και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Ζήτημα ανεπιθύμητου ιστοτόπου</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Ο ιστότοπος στο %1$s έχει αναφερθεί για διανομή ανεπιθύμητου λογισμικού και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Ζήτημα επιβλαβούς ιστοτόπου</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Ο ιστότοπος στο %1$s έχει αναφερθεί ως δυνητικά επιβλαβής και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Ζήτημα παραπλανητικού ιστοτόπου</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Η ιστοσελίδα στο %1$s έχει αναφερθεί ως παραπλανητικός ιστότοπος και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>
+    ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Δεν διατίθεται ασφαλής ιστότοπος</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Έχετε ενεργοποιήσει τη λειτουργία «Μόνο HTTPS» για ενισχυμένη ασφάλεια, αλλά δεν διατίθεται ασφαλής έκδοση HTTPS του <em>%1$s</em>.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Συνέχεια σε ιστότοπο HTTP</string>
+</resources>

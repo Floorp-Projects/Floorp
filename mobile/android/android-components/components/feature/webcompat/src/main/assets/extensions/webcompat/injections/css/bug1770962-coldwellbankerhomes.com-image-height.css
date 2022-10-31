@@ -1,0 +1,14 @@
+/**
+ * coldwellbankerhomes.com - Property images are displayed squeezed
+ * Bug #1770962 - https://bugzilla.mozilla.org/show_bug.cgi?id=1770962
+ * WebCompat issue #102872 - https://webcompat.com/issues/102872
+ */
+
+.property-snapshot-psr-panel
+  .prop-pix
+  .photo-carousel.owl
+  .owl-stage-outer
+  .owl-item
+  img {
+  height: -moz-available;
+}

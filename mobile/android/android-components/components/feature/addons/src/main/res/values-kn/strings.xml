@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">ಖಾಸಗಿತನದ ಸಿದ್ದತೆಗಳನ್ನು ಓದಿ ಮತ್ತು ಬದಲಿಸಿ</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">ಎಲ್ಲಾ ಜಾಲತಾಣಗಳ ನಿಮ್ಮ ದತ್ತಾಂಶವನ್ನು ಪಡೆಯಿರಿ</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">ವೀಕ್ಷಕದ ಹಾಳೆಗಳನ್ನು ಪ್ರವೇಶಿಸಿ</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">ಬಳಸುವವರ ಕಡೆ ದತ್ತಾಂಶವನ್ನು ಅಪರಿಮಿತ ಪ್ರಮಾಣದಲ್ಲಿ ಸಂಗ್ರಹಿಸಿ</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">ಸಂಚಾರಿಸುವ ಸಮಯದಲ್ಲಿ ವೀಕ್ಷಕ ಚಟುವಟಿಕೆಯನ್ನು ಪ್ರವೇಶಿಸಿ</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">ಬುಕ್‍ಮಾರ್ಕ್‌ಗಳನ್ನು ಓದಿ ಮತ್ತು ಬದಲಿಸಿ</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">ವೀಕ್ಷಕ ಸಿದ್ದತೆಗಳನ್ನು ಓದಿ ಮತ್ತು ಬದಲಿಸಿ</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">ಇತ್ತೀಚಿನ ವೀಕ್ಷಕ ಇತಿಹಾಸ, ಕುಕ್ಕಿಗಳು ಮತ್ತು ಸಂಭಂದಿತ ದತ್ತಾಂಶವನ್ನು ಅಳಿಸಿರಿ</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">ಕ್ಲಿಪ್‍ಬೋರ್ಡ್‌ನಿಂದ ದತ್ತಾಂಶವನ್ನು ಪಡೆ</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">ಕ್ಲಿಪ್‍ಬೋರ್ಡ್‌ನಿಂದ ದತ್ತಾಂಶವನ್ನು ಹಾಕು</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">ಕಡತಗಳನ್ನು ಡೌನ್ಲೋಡ್ ಮಾಡಿ ಮತ್ತು ವೀಕ್ಷಕದ ಡೌನ್ಲೋಡ್ ಇತಿಹಾಸವನ್ನು ಓದಿ ಮತ್ತು ಮಾರ್ಪಡಿಸಿ</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">ನಿಮ್ಮ ಸಾಧನಕ್ಕೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಫೈಲ್‌ಗಳನ್ನು ತೆರೆಯಿರಿ</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">ತೆರೆದ ಎಲ್ಲಾ ಹಾಳೆಗಳಲ್ಲಿನ ಪಠ್ಯವನ್ನು ಓದು</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">ನಿಮ್ಮ ಸ್ಥಳವನ್ನು ನಿಲುಕಿಸಿಕೊಳ್ಳಿ</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">ವೀಕ್ಷಣೆಯ ಇತಿಹಾಸವನ್ನು ಅಳಿಸಿ</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">ವಿಸ್ತರಣೆಯ ಬಳಕೆಯನ್ನು ಮೇಲ್ವಿಚಾರಣೆ ಮಾಡಿ ಮತ್ತು ಥೀಮ್‌ಗಳನ್ನು ನಿರ್ವಹಿಸಿ</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">ಇದನ್ನು ಹೊರತುಪಡಿಸಿ ಇತರೆ ತಂತ್ರಾಂಶಗಳೊಂದಿಗೆ ಸಂದೇಶಗಳನ್ನು ವಿನಿಮಯ ಮಾಡಿ</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">ನಿಮಗೆ ಅಧಿಸೂಚನೆಗಳನ್ನು ತೋರಿಸಿ</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">ಕ್ರಿಪ್ಟೋಗ್ರಾಫಿಕ್ ದೃಢೀಕರಣ ಸೇವೆಗಳನ್ನು ಒದಗಿಸಿ</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">ವೀಕ್ಷಕ ಪ್ರಾಕ್ಸಿ ಸಿದ್ದತೆಗಳನ್ನು ನಿಯಂತ್ರಿಸಿ</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">ಇತ್ತೀಚೆಗೆ ಮುಚ್ಚಲಾದ ಟ್ಯಾಬ್‌ಗಳು</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">ಬ್ರೌಸರ್ ಟ್ಯಾಬ್‌ಗಳನ್ನು ಮರೆಮಾಡಿ ಮತ್ತು ತೋರಿಸಿ</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">ವೀಕ್ಷಣೆಯ ಇತಿಹಾಸವನ್ನು ಅಳಿಸಿ</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">ತೆರೆದ ಹಾಳೆಗಳಲ್ಲಿ ನಿಮ್ಮ ದತ್ತಾಂಶಕ್ಕಾಗಿ ಪ್ರವೇಶಾವಕಾಶ ನೀಡಲು ಡೆವಲಪರ್ ಪರಿಕರಗಳನ್ನು ವಿಸ್ತರಿಸಿ</string>
+    <!-- The version on of add-on. -->
+    <string name="mozac_feature_addons_version">ಆವೃತ್ತಿ</string>
+    <!-- The authors of an add-on. -->
+    <string name="mozac_feature_addons_authors">ಲೇಖಕರು</string>
+    <!-- The last date that the add-on was updated. -->
+    <string name="mozac_feature_addons_last_updated">ಕೊನೆಯ ಬಾರಿಗೆ ಅಪ್‌ಡೇಟ್ ಮಾಡಿದ್ದು</string>
+    <!-- The developer website (Homepage) of the add-on. -->
+    <string name="mozac_feature_addons_home_page">ನೆಲೆಪುಟ</string>
+    <!-- A link where users can find more information about add-ons permissions. -->
+    <string name="mozac_feature_addons_learn_more">ಅನುಮತಿಗಳ ಬಗ್ಗೆ ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ</string>
+    <!-- The rating of the add-on. -->
+    <string name="mozac_feature_addons_rating">ಜನಪ್ರಿಯತೆಯ ಅಂದಾಜು</string>
+    <!-- The settings of the add-on. -->
+    <string name="mozac_feature_addons_settings">ಸಿದ್ಧತೆಗಳು</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_settings_on">ಆನ್</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_settings_off">ಆಫ್</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">ಖಾಸಗಿ ಬ್ರೌಸಿಂಗ್‌ನಲ್ಲಿ ಅನುಮತಿಸಿ</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">ಖಾಸಗಿ ಬ್ರೌಸಿಂಗ್‌ನಲ್ಲಿ ರನ್ ಮಾಡಿ</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">ಸಕ್ರಿಯಗೊಳಿಸು</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">ಅಶಕ್ತಗೊಂಡ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">ಅನುಸ್ಥಾಪಿತಗೊಂಡಿದೆ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
+    <string name="mozac_feature_addons_recommended_section">ಇದನ್ನು ಸಲಹೆ ಮಾಡಲಾಗುತ್ತದೆ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">ಇನ್ನೂ ಬೆಂಬಲಿವಿಲ್ಲ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
+    <string name="mozac_feature_addons_unavailable_section">ಇನ್ನು ಲಭ್ಯವಿಲ್ಲ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">ಅಶಕ್ತಗೊಂಡ</string>
+    <!-- Displays a page with all the details of an add-on. -->
+    <string name="mozac_feature_addons_details">ವಿವರಗಳು</string>
+    <!-- Displays a page with all the permissions of an add-on. -->
+    <string name="mozac_feature_addons_permissions">ಅನುಮತಿಗಳು</string>
+    <!-- This is button that remove (uninstall an add-on). -->
+    <string name="mozac_feature_addons_remove">ತೆಗೆದು ಹಾಕು</string>
+    <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">%1$s ಅನ್ನು ಸೇರಿಸು‍?‍</string>
+    <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">ಇದನ್ನು ಮಾಡುವುದಕ್ಕೆ ನಿಮ್ಮ ಅನುಮತಿಯನ್ನು ಕೋರುತ್ತದೆ:</string>
+    <!-- This is a button to add (install) an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">ಸೇರಿಸು</string>
+    <!-- This is a button to cancel the add-on installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">ರದ್ದು ಮಾಡು</string>
+    <!-- Accessibility content description to install add-on button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">ಆಡ್-ಆನ್ ಅನ್ನು ಅನುಸ್ಥಾಪಿಸು</string>
+    <!-- This is the label of a button to cancel an ongoing add-on installation. -->
+    <string name="mozac_feature_addons_install_addon_dialog_cancel">ರದ್ದು ಮಾಡು</string>
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
+    <string name="mozac_feature_addons_user_rating_count">ಬಳಕೆದಾರರು: %1$s</string>
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">ಆಡ್-ಆನ್‌ಗಳು</string>
+    <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
+    <string name="mozac_feature_addons_updater_notification_allow_button">ಅನುಮತಿಸು</string>
+    <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
+    <string name="mozac_feature_addons_updater_notification_deny_button">ನಿರಾಕರಿಸು</string>
+    <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
+    <string name="mozac_feature_addons_updater_notification_title">%1$s ಹೊಸ ನವೀಕರಣವನ್ನು ಹೊಂದಿದೆ</string>
+    <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
+    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d ಹೊಸ ಅನುಮತಿಗಳ ಅಗತ್ಯವಿದೆ</string>
+    <!-- The content of the notification displayed when an add-on needs a new permission-->
+    <string name="mozac_feature_addons_updater_notification_content_singular">ಹೊಸ ಅನುಮತಿ ಅಗತ್ಯವಿದೆ</string>
+    <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_updater_notification_channel">ಆಡ್-ಆನ್ ನವೀಕರಣಗಳು</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">ಬೆಂಬಲಿತ ಆಡ್-ಆನ್ ಗಳನ್ನು ಪರೀಷ್ಕಿರಿಸು</string>
+    <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title">ಹೊಸ ಆಡ್-ಆನ್‌ ಲಭ್ಯವಿದೆ</string>
+    <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural">ಹೊಸ ಆಡ್-ಆನ್‌ಗಳು ಲಭ್ಯವಿದೆ</string>
+    <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_one">%1$s ಅನ್ನು %2$sಗೆ ಸೇರಿಸಿ</string>
+    <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s ಮತ್ತು %2$s ಅನ್ನು %3$s ಗೆ ಸೇರಿಸಿ</string>
+    <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">ಅವುಗಳನ್ನು %1$sಗೆ ಸೇರಿಸಿ</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption">ಫೈರ್‌ಫಾಕ್ಸ್ ಆಡ್-ಆನ್ ತಂತ್ರಜ್ಞಾನವು ಆಧುನೀಕರಣಗೊಳ್ಳುತ್ತಿದೆ. ಈ ಆಡ್-ಆನ್‌ಗಳು ಫೈರ್‌ಫಾಕ್ಸ್ 75 ಮತ್ತು ಅದಕ್ಕಿಂತ ಹೆಚ್ಚಿನದಕ್ಕೆ ಹೊಂದಿಕೆಯಾಗದ ಚೌಕಟ್ಟುಗಳನ್ನು ಬಳಸುತ್ತವೆ.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">ಶಿಫಾರಸು ಮಾಡಲಾದ ವಿಸ್ತರಣೆಗಳ ಆರಂಭಿಕ ಆಯ್ಕೆಗಾಗಿ ನಾವು ಪ್ರಸ್ತುತ ಬೆಂಬಲವನ್ನು ನಿರ್ಮಿಸುತ್ತಿದ್ದೇವೆ.</string>
+    <!-- This is the caption for the add-on installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">ಆಡ್-ಆನ್ ಅನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ ಮತ್ತು ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ…</string>
+    <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
+    <string name="mozac_feature_addons_failed_to_query_add_ons">ಆಡ್-ಆನ್‌ಗಳನ್ನು ಹುಡುಕಲುಲು ವಿಫಲವಾಗಿದೆ!</string>
+    <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_installed">%1$s ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸ್ಥಾಪಿಸಲಾಗಿದೆ</string>
+    <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_install">%1$s ಅನ್ನು ಸ್ಥಾಪಿಸಲು ವಿಫಲವಾಗಿದೆ</string>
+    <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_enabled">%1$s ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ</string>
+    <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_enable">%1$s ಅನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಲು ವಿಫಲವಾಗಿದೆ</string>
+    <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_disabled">%1$s ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ</string>
+    <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_disable">%1$s ಅನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲು ವಿಫಲವಾಗಿದೆ</string>
+    <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_uninstalled">%1$s ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸ್ಥಾಪಿಸಲಾಗಿದೆ</string>
+    <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_uninstall">%1$s ಅನ್ನು ಸ್ಥಾಪಿಸಲು ವಿಫಲವಾಗಿದೆ</string>
+    <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ತೆಗೆದುಹಾಕಲಾಗಿದೆ</string>
+    <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s ತೆಗೆದುಹಾಕಲು ವಿಫಲವಾಗಿದೆ</string>
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">ಈ ಆಡ್-ಆನ್ ಅನ್ನು ಹಿಂದಿನ %1$s ಆವೃತ್ತಿಯಿಂದ ಸ್ಥಳಾಂತರಿಸಲಾಗಿದೆ</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">1 ಆಡ್-ಆನ್</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s ಆಡ್-ಆನ್‌ಗಳು</string>
+    <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
+    <string name="mozac_feature_addons_unsupported_learn_more">ಇನ್ನಷ್ಟು ಅರಿತುಕೊಳ್ಳಿ</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->
+    <string name="mozac_feature_addons_updater_status_successfully_updated">ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has no updates available. -->
+    <string name="mozac_feature_addons_updater_status_no_update_available">ಯಾವುದೇ ಅಪ್‌ಡೇಟುಗಳು ಇಲ್ಲ</string>
+    <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
+    <string name="mozac_feature_addons_updater_status_error">ದೋಷ</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">ನವೀಕರಣ ಮಾಹಿತಿ</string>
+    <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
+    <string name="mozac_feature_addons_updater_dialog_last_attempt">ಕೊನೆಯ ಪ್ರಯತ್ನ:</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
+    <string name="mozac_feature_addons_updater_dialog_status">ಸ್ಥಿತಿ:</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_title">%1$s ಅನ್ನು %2$s ಗೆ ಸೇರಿಸಲಾಗಿದೆ</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_installed_dialog_description">ಅದನ್ನು ಮೆನುವಿನಲ್ಲಿ ತೆರೆಯಿರಿ</string>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button">ಸರಿ, ಗೊತ್ತಾಯಿತು</string>
+</resources>

@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Proovi uuesti</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Päringut pole võimalik lõpetada</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Selle probleemi kohta pole lisainformatsiooni.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Turvalise ühenduse viga</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Soovitud veebilehte pole võimalik näidata, kuna saadud andmete autentsust polnud võimalik kontrollida.</li>
+        <li>Palun võta veebilehe omanikuga ühendust ja teavita teda probleemist.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Turvalise ühenduse viga</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Tegemist võib olla serveri seadistuste probleemiga või siis üritab keegi antud
+serverina välja paista.</li>
+        <li>Kui sa oled varem selle serveriga edukalt ühendunud, siis võib olla tegemist ajutise veaga
+ja sa võid hiljem uuesti proovida.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Edasijõudnuile…</string>
+
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Keegi võib üritada selle saidina välja paista ja sa ei peaks jätkama.</label>
+        <br><br>
+        <label>Saidid tõestavad oma identiteeti sertide abil. %1$s ei usalda saiti <b>%2$s</b>, kuna selle serdi väljaandja on tundmatu, sert on allkirjastatud selle omaniku poolt või server ei edasta korrektseid vaheserte.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Mine tagasi (soovitatav)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Nõustu riskiga ja jätka</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">See sait nõuab turvalist ühendust.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Lehte, mida soovid vaadata, pole võimalik kuvada, sest see sait nõuab turvalist ühendust.</li>
+         <li>Probleem on suure tõenäosusega saidi poolel ja sa ei saa selle lahendamiseks midagi teha.</li>
+         <li>Sa võid sellest probleemist teavitada saidi administraatorit.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Edasijõudnuile…</string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[
+        <label>Sait <b>%1$s</b> kasutab HTTP Strict Transport Security (HSTS) turvaprotokolli, mis tähendab, et <b>%2$s</b> saab sellega ühenduda ainult turvaliselt. Selle saidi külastamiseks pole võimalik erandit lisada.
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Mine tagasi</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Ühendus katkes</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Veebilehitsejal õnnestus edukalt ühenduda, kuid ühendust segati keset andmete edastamist. Palun proovi uuesti.</p>
+      <ul>
+        <li>Veebileht võib olla ajutiselt kättesaamatu või liialt hõivatud. Proovi mõne aja pärast uuesti.</li>
+        <li>Kui sa ei saa avada ühtegi lehte, siis kontrolli oma seadme andmeside või Wi-Fi ühendust.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Ühendus aegus</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Soovitud leht ei vastanud ühendusele ja veebilehitseja lõpetas vastuse ootamise.</p>
+      <ul>
+        <li>Kas serveril võib olla probleeme suure koormusega või on tegu ajutise veaga? Proovi hiljem uuesti.</li>
+        <li>Kas ka teiste lehtede vaatamine ei õnnestu? Kontrolli seadme võrguühendust.</li>
+        <li>Kas sinu seade või võrk on kaitstud tulemüüriga? Vigased tulemüüri sätted võivad segada veebilehitsemist.</li>
+        <li>Endiselt probleemid? Konsulteeri oma võrguadministraatori või interneti teenusepakkujaga.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Viga ühendumisel</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>Veebileht võib olla ajutiselt kättesaamatu või liialt hõivatud. Proovi mõne hetke pärast uuesti.</li>
+        <li>Kui sa ei saa avada ühtegi lehte, siis kontrolli oma seadme andmeside või Wi-Fi ühendust.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Ootamatu vastus serverilt</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Veebisait andis päringule ootamatu vastuse ja veebilehitsejal pole võimalik jätkata.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Veebileht pole korralikult ümber suunatud</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Veebilehitseja lõpetas katsed objekti laadida. Veebileht suunab päringu edasi viisil, kuidas see kunagi ei õnnestu.</p>
+      <ul>
+        <li>Kas oled keelanud või blokkinud selle saidi küpsised?</li>
+        <li>Kui küpsiste lubamine ei lahenda antud probleemi, siis on tõenäoliselt tegemist probleemiga serveris, mitte sinu seadmes.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Võrguta režiim</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Brauser on võrguta režiimis ega saa soovitud aadressiga ühenduda.</p>
+      <ul>
+        <li>Kas seade on ühendatud töötavasse võrku?</li>
+        <li>Vajuta “Proovi uuesti”, et lülituda võrgurežiimi ning laadida leht uuesti.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Port on turvakaalutlustel keelatud</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Soovitud aadress määratleb pordi (nt <q>mozilla.org:80</q> ehk pordi 80 aadressil mozilla.org), mida muidu kasutatakse <em>muul</em> otstarbel kui veebilehitsemine. Veebilehitseja katkestas päringu sinu turvalisuse ja julgeoleku huvides.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Ühendus katkestati</string>
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Ühenduse loomisel segati võrguliiklust. Palun proovi uuesti.</p>
+      <ul>
+        <li>Veebileht võib olla ajutiselt kättesaamatu või liialt hõivatud. Proovi mõne aja pärast uuesti.</li>
+        <li>Kui sa ei saa avada ühtegi lehte, siis kontrolli oma seadme andmeside või Wi-Fi ühendust.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Ohtlik faili tüüp</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Palun võta ühendust saidi omanikuga, et informeerida teda antud probleemist.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Vigane sisu</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Andmete edastamisel esinenud vea tõttu pole soovitud lehte võimalik kuvada.</p>
+      <ul>
+        <li>Palun võta ühendust saidi omanikega, et teavitada neid sellest probleemist.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Sisu kuvamisel esines viga</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Andmete edastamisel esinenud vea tõttu pole soovitud lehte võimalik kuvada.</p>
+      <ul>
+        <li>Palun võta ühendust saidi omanikega, et teavitada neid sellest probleemist.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Sisu kodeeringu viga</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Lehte, mida soovid vaadata, pole võimalik kuvada, kuna see kasutab vigast või mittetoetatud pakkimise vormingut.</p>
+      <ul>
+        <li>Palun võta ühendust veebilehe omanikuga, et informeerida teda antud probleemist.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Aadressi ei leitud</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Veebilehitseja ei leidnud sellele aadressile vastavat serverit.</p>
+      <ul>
+        <li>Kontrolli, kas aadressis pole sisestusvigu, näiteks
+          <strong>ww</strong>.example.com
+          <strong>www</strong>.example.com.</li> asemel)
+        <li>Kui sa ei saa avada ühtegi lehte, siis kontrolli oma seadme andmeside või Wi-Fi ühendust.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Puudub internetiühendus</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Kontrolli oma internetiühendust või proovi lehte mõne aja pärast uuesti laadida.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Laadi uuesti</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Vigane aadress</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Sisestatud aadress ei ole tunnustatud formaadis. Palun kontrolli aadressi korrektsust ja proovi uuesti.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Aadress pole korrektne</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Veebiaadressid on tavaliselt kirjutatud kujul <strong>http://www.example.com/</strong></li>
+        <li>Kontrolli üle, et kasutad ikka õigetpidi kaldkriipse (näiteks <strong>/</strong>).</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Tundmatu protokoll</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Soovitud aadress määratleb protokolli (nt <q>wxyz://</q>), mida veebilehitseja ei tunne, seega pole veebilehitsejal võimalik korralikult selle saidiga ühenduda.</p>
+      <ul>
+        <li>Kas üritad avada multimeedia- või muud teenust, mis pole teksti kujul? Kontrolli veebilehe lisanõudeid.</li>
+        <li>Mõned protokollid võivad nõuda kolmanda osapoole tarkvara või pluginaid, enne kui veebilehitseja suudab nad tuvastada.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Faili ei leitud</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Kas soovitud objekt võib olla ümber nimetatud, kustutatud või mujale paigutatud?</li>
+        <li>Kas aadressis võib olla sisestusviga või probleeme suurtähtedega?</li>
+        <li>Kas sul on objektile ligipääsemiseks piisavalt õigusi?</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Ligipääs failile keelati</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Fail võib olla kustutatud, mujale liigutatud või on sellele seatud ligipääsu piiravad õigused.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Puhverserver keeldus ühendusest</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Brauser on häälestatud kasutama puhverserverit, aga puhverserver keeldub ühendusest.</p>
+      <ul>
+        <li>Kas brauseri puhverserveri sätted on korrektsed? Kontrolli sätteid ja proovi uuesti.</li>
+        <li>Kas puhverserver lubab ühendusi sellest võrgust?</li>
+        <li>Endiselt probleemid? Konsulteeri oma võrguadministraatori või interneti teenusepakkujaga.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Puhverserverit ei leitud</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Brauser on häälestatud kasutama puhverserverit, aga puhverserverit ei leitud.</p>
+      <ul>
+        <li>Kas brauseri puhverserveri sätted on korrektsed? Kontrolli sätteid ja proovi uuesti.</li>
+        <li>Kas seade on ühendatud töötavasse võrku?</li>
+        <li>Endiselt probleemid? Konsulteeri oma võrguadministraatori või interneti teenusepakkujaga.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Pahavara saidi probleem</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Aadressil %1$s asuv veebileht on teadete kohaselt ründav leht ja see blokiti vastavalt sinu turvasätetele.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Soovimatu saidi probleem</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Aadressil %1$s asuv veebileht levitab teadete kohaselt soovimatut tarkvara ja see blokiti vastavalt sinu turvasätetele.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Kahjuliku saidi probleem</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Aadressil %1$s asuv veebileht on teadete kohaselt potentsiaalselt kahjulik ja see blokiti vastavalt sinu turvasätetele.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Veebivõltsingu probleem</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Aadressil %1$s asuv veebileht on teadete kohaselt veebivõltsingut sisaldav leht ja see blokiti vastavalt sinu turvasätetele.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Turvaline sait pole saadaval</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Oled turvalisuse suurendamiseks lubanud ainult HTTPS-režiimi ja saidil <em>%1$s</em> puudub HTTPSi tugi.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Mine HTTP saidile</string>
+</resources>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <string name="app_name">Firefox Sync Demo</string>
+    <string name="sign_in">FxA sign in</string>
+    <string name="signed_in_waiting_for_profile">Signed in (type=%1$s); waiting for profile</string>
+    <string name="signed_in_with_profile">Authenticated (type=%1$s) as %2$s</string>
+    <string name="account_error">FxA error: %1$s</string>
+    <string name="sync_idle">Sync is idle</string>
+    <string name="syncing">Syncing&#8230;</string>
+    <string name="sync_error">Sync error: %1$s</string>
+    <plurals name="visited_url_count">
+        <item quantity="zero">There are no visited URLs</item>
+        <item quantity="one">There is %d visited URL</item>
+        <item quantity="other">There are %d visited URLs</item>
+    </plurals>
+    <string name="no_bookmarks_root">No Bookmarks Root node</string>
+    <string name="log_out">FxA Log Out</string>
+    <string name="logged_out">Logged out!</string>
+    <string name="need_reauth">Need to re-authenticate</string>
+    <string name="sync">Sync</string>
+    <string name="refresh_device">Refresh device</string>
+    <string name="send_tab">Send tab</string>
+    <string name="current_device">Current device</string>
+    <string name="current_device_unknown">Unknown</string>
+    <string name="full_device_details">
+        ID: %1$s\n
+        Name: %2$s\n
+        Type: %3$s\n
+        Subscription expired: %4$b\n
+        Subscription: %5$s\n
+        Capabilities: %6$s\n
+        Last access: %7$d
+    </string>
+    <string name="latest_tabs">Latest tabs</string>
+    <string name="devices">Devices</string>
+</resources>

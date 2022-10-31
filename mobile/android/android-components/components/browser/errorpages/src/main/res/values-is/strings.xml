@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Reyndu aftur</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Get ekki klárað beiðni</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Viðbótarupplýsingar um þetta vandamál eru ekki til staðar.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Ekki tókst að koma á öruggri tengingu</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Ekki er hægt að sýna síðuna vegna þess að ekki var hægt að auðkenna gögnin.</li>
+        <li>Hafið samband við vefstjóra vefsvæðisins til að láta hann vita af þessu vandamáli.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Ekki tókst að koma á öruggri tengingu</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Það gæti verið vandamál með uppsetningu netþjónsins eða það gæti einhver verið að reyna að þykjast vera þessi netþjónn.</li>
+        <li>Ef þú hefur náð að tengjast þessum netþjón áður þá gæti villan verið tímabundin og þú gætir reynt aftur síðar.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Frekari stillingar…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Einhver gæti verið að reyna að þykjast vera þetta vefsvæði og þú ættir ekki að halda áfram.</label>
+        <br><br>
+        <label>Vefsvæði sanna auðkenni sitt með skírteini.  %1$s treysti ekki <b>%2$s</b> vegna þess að útgefandi skírteinisins er óþekktur, skírteinið er gefið út af sjálfu sér eða þjóninn er ekki að senda rétt milli skírteini.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Til baka (mælt með)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Samþykkja áhættuna og halda áfram</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Þetta vefsvæði krefst öruggrar tengingar.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Síðan sem þú ert að reyna að skoða er ekki hægt að sýna vegna þess að þetta vefsvæði krefst öruggrar tengingar.</li>
+         <li>Vandamálið tengist líklegast vefsvæðinu sjálfu og það er ekkert sem þú getur gert til að leysa það.</li>
+         <li>Þú getur látið stjórnanda vefsvæðisins vita um vandamálið.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Ítarlegt…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+         · <label> <b>%1$s</b> er með öryggisstefnu sem kallast HTTP Strict Transport Security (HSTS), sem þýðir að <b>%2$s</b> getur aðeins tengst því á öruggan hátt. Þú getur ekki bætt við undantekningu til að heimsækja þetta vefsvæði.]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+         · <label> <b>%1$s</b> er með öryggisstefnu sem kallast HTTP Strict Transport Security (HSTS), sem þýðir að <b>%2$s</b> getur aðeins tengst því á öruggan hátt. Þú getur ekki bætt við undantekningu til að heimsækja þetta vefsvæði.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Fara til baka</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Tenging slitnaði</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Vafrinn náði að tengjast en tengingin rofnaði vði flutning upplýsinga. Endilega reyndu aftur.</p>
+      <ul>
+        <li>Vefsvæðið gæti verið ótiltækt tímabundið eða of undir of miklu álagi. Reyndu aftur eftir smá tíma.</li>
+        <li>Athugaðu gagnatengingu tækisins eða þráðulausu tenginguna ef þú getur ekki hlaðið síður.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Tengingin svaraði ekki tímanlega</string>
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>Umbeðið vefsvæði svaraði ekki tengingu og vafrinn hætti að bíða eftir svari.</p>
+      <ul>
+        <li>Gæti verið að svæðið sé undir of miklu álagi eða sé niðri tímabundið?  Reyndu aftur seinna.</li>
+        <li>Getur þú ekki náð sambandi við önnur vefsvæði? Athugaðu nettenginu tækisins.</li>
+        <li>Er tækið þitt varið af eldvegg eða milliþjóni? Rangar stilingar gætu haft áhrif á vafra.</li>
+        <li>Er vandamálið enn til staðar? Hafðu samband við kerfistjóra eða netaðila eftir aðstoð.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Get ekki tengst</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Svæðið gæti verið ótiltækt tímabundið eða of upptekið til að svara. Reyndu aftur eftir smá tíma.</li>
+        <li>Skoðaðu gagnatenginguna eða þráðlausutenginguna á tækinu þínu ef þú nærð ekki að hlaða inn neinum síðum.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Rangt svar frá netþjóni</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Vefsvæðið svaraði netbeiðni á óvæntan hátt þannig að vafrinn getur ekki haldið áfram.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Síðan er ekki að endurbeina rétt</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>Vafrinn hefur hætt að reyna að ná í umbeðinn hlut. Vefsvæðið er að endursenda beiðnina á þann hátt að því mun aldrei ljúka.</p>
+      <ul>
+        <li>Hefurðu lokað á eða gert smákökur óvirkar frá þessu vefsvæð?</li>
+        <li>Ef þú velur að taka á móti smákökum frá þessu vefsvæði og það lagar ekki vandamálið, er netþjónninn sjálfur líklega rangt stilltur en ekki tölvan þín.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Ónettengdur hamur</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Vafrinn er að vinna án nettengingar og getur ekki tengst við umbeðna síðu.</p>
+      <ul>
+        <li>Er tölvan tengd við virkt net?</li>
+        <li>Smelltu á  “Reyna aftur” til að tengjast netingu og endurnýja síðuna.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Vegna öryggis er aðgangur að þessari gátt ekki leyfður</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>Umbeðið veffang bað um ákveðna gátt (t.d. <q>mozilla.org:80</q> fyrir gátt 80 á mozilla.org) sem venjulega er notað fyrir eitthvað <em>annað</em> en að vafra. Vafrinn hefur lokað á beiðnina þér til verndar.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Tenging slitnaði</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Vafrinn náði að tengjast en tengingin rofnaði við flutning upplýsinga. Endilega reyndu aftur.</p>
+      <ul>
+        <li>Vefsvæðið gæti verið ótiltækt tímabundið eða of undir of miklu álagi. Reyndu aftur eftir smá tíma.</li>
+        <li>Athugaðu gagnatengingu tækisins eða þráðulausu tenginguna ef þú getur ekki hlaðið neinar síður.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Óörugg skráartegund</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>Hafðu samband við vefstjóra vefsvæðisins og láttu hann vita af þessu vandamáli.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Villa vegna skemmdra gagna</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Ekki er hægt að sýna síðuna vegna villu í gagnasendingu.</p>
+      <ul>
+        <li>Hafðu samband við vefsíðueiganda til að láta hann vita af vandamálinu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Innihald olli hruni</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Ekki er hægt að sýna síðuna vegna villu í gagnasendingu.</p>
+      <ul>
+        <li>Hafðu samband við vefsíðueiganda til að láta hann vita af vandamálinu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Kóðunarvilla</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Ekki er hægt að sýna síðuna því hún notar ógilda eða óstudda þjöppun.</p>
+      <ul>
+        <li>Hafðu samband við vefstjóra vefsvæðisins og láttu hann vita af þessu vandamáli.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Veffang fannst ekki</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Vafrinn gat ekki fundið hýsingarþjóninn fyrir þetta vistfang.</p>
+      <ul>
+        <li>Athugaðu hvort það séu villu í vistfanginu, eins og t.d.
+          <strong>ww</strong>.example.com í staðinn fyrir
+          <strong>www</strong>.example.com.</li>
+        <li>Ef þú getur ekki hlaðið neinum vefsvæðum, athugaðu þá gagnatenginu eða þráðulausu tenginu tækis þíns.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Engin internet tenging</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Athugaðu nettenginguna þína eða reyndu að endurglæða síðuna eftir nokkrar mínútur.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Endurglæða</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Veffang ekki gilt</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Innslegið veffang er ekki á viðurkenndu sniði. Skoðaðu veffangið í stikunni og reyndu aftur.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Veffang ekki gilt</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Vistföng eru vanalega rituð á þennan hátt <strong>http://www.example.com/</strong></li>
+        <li>Gangtu úr skugga um að þú sért að nota rétt skástrik (s.s. <strong>/</strong>).</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Óþekkt samskiptaregla</string>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Umbeðið vistfang (t.d., <q>wxyz://</q>) skilgreinir samskiptareglu sem vafrinn kannast ekki við, þannig að vafrinn getur ekki tengst við vefsvæðið.</p>
+      <ul>
+        <li>Ertu að reyna að tengjast myndefni eða annarskonar gagnaþjónustum? Athugaðu á vefsvæðinu hvort þú þurfir fleiri hluti.</li>
+        <li>Sumar samskiptareglur þarfnast forrita eða viðbóta frá þriðja aðila áður en vafrinn getur þekkt þær.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Skrá fannst ekki</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Gæti verið að hluturinn hafi verið endurnefndur, fjarlægður eða færður til?</li>
+        <li>Er stafsetningarvilla, hástafaritun, eða annarskonar stafsetningarvilla í vistfanginu?</li>
+        <li>Hefur þú nægar aðgangsheimildir?</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Aðgangur að skránni ekki leyfður</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Vera má að skráin hafi verið fjarlægð, færð til eða réttindarleyfi komi í veg fyrir aðgengi.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Milliþjónn neitar tengingum</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Vafrinn er stilltur til að nota milliþjóna, en milliþjónninn hafnaði tengingu.</p>
+      <ul>
+        <li>Eru vafra stillingar milliþjónsins réttar? Athugaðu stillingarnar og reyndu aftur.</li>
+        <li>Leyfir milliþjónn tengingar frá þínu neti?</li>
+        <li>Hafðu samband við kerfisstjóra eða netaðila ef vandamálin eru enn til staðar.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Fann ekki milliþjón</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>Vafrinn er stilltur til að nota milliþjóna, en milliþjónn fannst ekki.</p>
+      <ul>
+        <li>Eru vafra stillingar milliþjóns rétt stilltar? Athugaðu stillingarnar og reyndu aftur.</li>
+        <li>Er tækið tengt virku neti?</li>
+        <li>Hafðu samband við kerfisstjóra eða netaðila ef vandamálin eru enn til staðar.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Vandamál með spilliforrit</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Vefsvæðið %1$s hefur verið tilkynnt sem árásarsvæði og aðgangur hefur verið hindraður vegna öryggisstillinga.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Vandamál með óæskilegt vefsvæði</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Tilkynnt hefur verið að vefsvæðið %1$s sé að deila óæskilegum hugbúnaði og hefur aðgangur að því verið lokaður vegna öryggisstillinga.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Villa vegna skaðlegs vefsvæðis</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Tilkynnt hefur verið að vefsvæðið %1$s sé að deila óæskilegum hugbúnaði og hefur aðgangur að því verið lokaður vegna öryggisstillinga..</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Villa vegna svindlsvæðis</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Vefsvæðið %1$s hefur verið tilkynnt sem svindlsvæði og aðgangur hefur verið hindraður vegna öryggisstillinga.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Öruggt vefsvæði ekki tiltækt</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Þú hefur virkjað Einungis-HTTPS-ham til að auka öryggi en HTTPS-útgáfa af <em>%1$s</em> er ekki tiltæk.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Halda áfram á HTTP-vefsvæði</string>
+</resources>

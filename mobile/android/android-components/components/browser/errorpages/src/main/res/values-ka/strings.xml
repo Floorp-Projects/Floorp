@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">ხელახლა ცდა</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">მოთხოვნის შესრულება ვერ მოხერხდა</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>დამატებითი მონაცემები, ამ ხარვეზის ან შეცდომის შესახებ ამჟამად მიუწვდომელია.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">უსაფრთხო დაკავშირება ვერ მოხერხდა</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>თქვენ მიერ მოთხოვნილი გვერდის ნახვა შეუძლებელია, ვინაიდან მიღებული მონაცემების ნამდვილობა ვერ დასტურდება.</li>
+        <li>გთხოვთ, დაუკავშირდეთ ვებსაიტის მფლობელებს და შეატყობინოთ ეს პრობლემა.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">უსაფრთხო დაკავშირება ვერ მოხერხდა</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>ეს შესაძლოა, საიტის გაუმართაობის ბრალი იყოს, ან
+ვინმე მის შეცვლას ცდილობდეს.</li>
+        <li>თუ ამ საიტს მანამდე წარმატებით უკავშირდებოდით, ხარვეზი შესაძლოა
+დროებითი იყოს და მოგვიანებით შეგიძლიათ კვლავ სცადოთ.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">დამატებით…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>ვიღაც შესაძლოა ამ საიტის სხვა საიტად გასაღებას ცდილობდეს და სჯობს აღარ განაგრძოთ.</label>
+        <br><br>
+        <label>ვებსაიტები საკუთარ ნამდვილობას სერტიფიკატებით ადასტურებს. %1$s არ ენდობა <b>%2$s</b>-ს, რადგან მისი უსაფრთხოების სერტიფიკატის გამომშვები უცნობია, შეიძლება თავადვე აქვთ ხელმოწერილი ან სერვერი სწორად არ აგზავნის შუალედურ სერტიფიკატებს.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">უკან დაბრუნება (სასურველია)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">საფრთხის გაცნობიერება და გაგრძელება</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">ვებსაიტი ითხოვს დაცულ კავშირს.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>გვერდი, რომლის ნახვაც გსურთ, ვერ გამოჩნდება, ვინაიდან საჭიროებს დაცულ კავშირს.</li>
+         <li>ეს ხარვეზი უმეტესად დაკავშირებულია თავად ვებსაიტთან და თქვენ ვერ მოახერხებთ მის გამოსწორებას.</li>
+         <li>მხოლოდ შგიძლიათ აცნობოთ საიტის მფლობელებს ამ ხარვეზის შესახებ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">დამატებით…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> იყენებს უსაფრთხოების დებულებას სახელწოდებით HTTP Strict Transport Security (HSTS), ეს კი ნიშნავს, რომ <b>%2$s</b> მას მხოლოდ უსაფრთხო შეერთებით შეიძლება დაუკავშირდეს. გამონაკლისს ვერ დაამატებთ ამ საიტისთვის.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> იყენებს უსაფრთხოების დებულებას სახელწოდებით HTTP Strict Transport Security (HSTS), ეს კი ნიშნავს, რომ <b>%2$s</b> მას მხოლოდ უსაფრთხო შეერთებით შეიძლება დაუკავშირდეს. გამონაკლისს ვერ დაამატებთ ამ საიტისთვის. </label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">უკან დაბრუნება</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">კავშირი გაწყდა</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>დაკავშირება წარმატებული იყო, მაგრამ მოულოდნელად გაწყდა მონაცემთა გადმოტანისას. გთხოვთ, კვლავ სცადოთ.</p>
+<ul>
+        <li>საიტი დროებით მიუწვდომელი ან გადატვირთულია. სცადეთ ხელახლა, ცოტა ხანში.</li>
+        <li>თუ სხვა გვერდების გახსნასაც ვერ ახერხებთ, შეამოწმეთ მოწყობილობის ფიჭური ან WiFi-კავშირი.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">კავშირის დრო ამოიწურა</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>საიტი კავშირის მოთხოვნას არ პასუხობს და ბრაუზერმა შეწყვიტა პასუხის ლოდინი.</p>
+      <ul>
+        <li>შესაძლოა სერვერი გადატვირთული ან დროებით გათიშული იყოს?  სცადეთ მოგვიანებით.</li>
+        <li>ვერც სხვა საიტებს ხსნით? შეამოწმეთ მოწყობილობის ქსელთან კავშირი.</li>
+        <li>თქვენი მოწყობილობა ან ქსელი ფარით ან პროქსითაა დაცული? გაუმართავი პარამეტრები შესაძლოა აფერხებდეს ინტერნეტკავშირს.</li>
+        <li>კვლავ ხარვეზებია? მაშინ, დახმარებისთვის მიმართეთ თქვენი ქსელის მმართველს ან ინტერნეტმომსახურების მომწოდებელს.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">დაკავშირება ვერ ხერხდება</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>საიტი დროებით მიუწვდომელი ან გადატვირთულია. სცადეთ ხელახლა, ცოტა ხანში.</li>
+        <li>თუ სხვა გვერდების გახსნასაც ვერ ახერხებთ, შეამოწმეთ მოწყობილობის ფიჭური ან WiFi-კავშირი.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">გაუთვალისწინებელი პასუხი სერვერიდან</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>საიტის პასუხი მოთხოვნაზე გაურკვეველი სახისაა და ბრაუზერი ვერ ახერხებს მის დამუშავებას.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">ეს გვერდი არამართებულად გადამისამართდა</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>ბრაუზერმა შეწყვიტა მოთხოვნილი გვერდის ჩატვირთვის მცდელობა. საიტის გადამისამართება მოთხოვნის დასრულების შესაძლებლობას გამორიცხავს.</p>
+      <ul>
+        <li>ამორთული ან შეზღუდული ხომ არ გაქვთ ფუნთუშები ამ საიტიდან?</li>
+        <li>თუ საიტის ფუნთუშების დაშვებამაც არ გამოასწორა, მაშინ ხარვეზი საიტის გაუმართაობას უკავშირდება და არა თქვენს მოწყობილობას.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">კავშირგარეშე რეჟიმი</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>ბრაუზერი მუშაობს კავშირგარეშედ და მოთხოვნილ მისამართს ვერ დაუკავშირდება.</p>
+      <ul>
+        <li>ჩართულია მოწყობილობა მოქმედ ქსელში?</li>
+        <li>გამოიყენეთ „სცადეთ ხელახლა“ ღილაკი კავშირზე დასაბრუნებლად და გვერდის ხელახლა ჩასატვირთად.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">პორტი შეზღუდულია უსაფრთხოების მიზნით</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>მოთხოვნილ მისამართში მითითებულია პორტი (მაგ., <q>mozilla.org:80</q> ანუ პორტი 80 mozilla.org საიტზე) რომელიც, ჩვეულებრივ <em>სხვა მიზნით</em> გამოიყენება ხოლმე და არა ვებგვერდების მოსანახულებლად. თქვენი უსაფრთხოებისთვის, ბრაუზერმა ეს მოთხოვნა გააუქმა.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">კავშირი განულდა</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>ქსელური ბმა გაწყდა კავშირის შეთანხმებისას. გთხოვთ კვლავ სცადოთ.</p>
+      <ul>
+        <li>საიტი დროებით მიუწვდომელი ან გადატვირთულია. სცადეთ ხელახლა, ცოტა ხანში.</li>
+        <li>თუ სხვა გვერდების გახსნასაც ვერ ახერხებთ, შეამოწმეთ მოწყობილობის ფიჭური ან WiFi-კავშირი.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">სახიფათო სახის ფაილი</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>გთხოვთ, დაუკავშირდეთ საიტის მფლობელებს და აცნობოთ ამ ხარვეზის შესახებ.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">დაზიანებული შიგთავსის შეცდომა</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>გვერდის ჩვენება, რომლის ნახვასაც ცდილობთ, ვერ ხერხდება მონაცემთა გადაცემისას აღმოჩენილი შეცდომის გამო</p>
+      <ul>
+        <li>გთხოვთ, დაუკავშირდეთ საიტის მფლობელებს და აცნობოთ ამ ხარვეზის შესახებ.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">შიგთავსი დაზიანდა</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>გვერდის ჩვენება, რომლის ნახვასაც ცდილობთ, ვერ ხერხდება მონაცემთა გადაცემისას აღმოჩენილი შეცდომის გამო</p>
+      <ul>
+        <li>გთხოვთ, დაუკავშირდეთ საიტის მფლობელებს და აცნობოთ ამ ხარვეზის შესახებ.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">შიგთავსის დაშიფვრის შეცდომა</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>გვერდის ჩვენება, რომლის ნახვაც გსურთ, შეუძლებელია, რადგან იყენებს შეკუმშვის გაუგებარ ან არამართებულ საშუალებას.</p>
+      <ul>
+        <li>გთხოვთ, დაუკავშირდეთ ვებსაიტის მფლობელებს და აცნობოთ ამ ხარვეზის შესახებ.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">მისამართი ვერ მოიძებნა</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>მითითებულ მისამართზე, ბრაუზერმა სერვერი ვერ მოიძია.</p>
+      <ul>
+        <li>შეცდომა ხომ არ დაუშვით, აკრეფისას, მაგ.
+          <strong>ww</strong>.example.com კი არა, უნდა იყოს
+          <strong>www</strong>.example.com.</li>
+        <li>თუ სხვა გვერდების გახსნასაც ვერ ახერხებთ, შეამოწმეთ მოწყობილობის ფიჭური ან WiFi-კავშირი.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">ინტერნეტთან კავშირი არაა</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">შეამოწმეთ ქსელთან თქვენი კავშირი ან სცადეთ გვერდის ხელახლა გახსნა რამდენიმე წუთში.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">ხელახლა გახსნა</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">არამართებული მისამართი</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>მითითებული მისამართი უცნობი სახისაა. გთხოვთ, გადაამოწმოთ აკრეფის შეცდომები და სცადოთ ხელახლა.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">მისამართი უმართებულოა</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>ვებ მისამართი ჩვეულებრივ ამგვარად მიეთითება <strong>http://www.example.com/</strong></li>
+        <li>გადაამოწმეთ, რომ წინ გადახრილ ხაზს იყენებთ (მაგ. <strong>/</strong>).</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">უცნობი ოქმი</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>მისამართში გამოყენებული ოქმი (მაგ., <q>wxyz://</q>) ბრაუზერმა ვერ ამოიცნო და შესაბამისად, საიტს მართებულად ვერ დაუკავშირდა.</p>
+      <ul>
+        <li>მულტიმედიურ, ან სხვა არატექსტური შიგთავსის მქონე საიტთან დაკავშირებას ცდილობთ? გადაამოწმეთ საიტის დამატებითი მოთხოვნები.</li>
+        <li>ზოგი ოქმი, ბრაუზერთან სამუშაოდ, შეიძლება სხვა პროგრამას, ან მოდულებს საჭიროებდეს.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">ფაილი ვერ მოიძებნა</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>იქნებ გადარქმეული, წაშლილი ან გადაადგილებულია?</li>
+        <li>ხომ არაა მართლწერის შეცდომა, მთავრული ან სხვა სახის მცდარბეჭდილი მისამართში?</li>
+        <li>გაქვთ შესაბამისი ნებართვა მოთხოვნილ ფაილთან წვდომისთვის?</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">ფაილთან წვდომა უარყოფილია</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>შესაძლოა წაშლილია, გადატანილია ან ფაილთან წვდომის უფლებები შეზღუდულია.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">პროქსი-სერვერმა კავშირი უარყო</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>ბრაუზერი გამართულია პროქსი-სერვერის გამოსაყენებლად, მაგრამ პროქსი-სერვერმა კავშირი უარყო.</p>
+      <ul>
+        <li>ბრაუზერის პროქსი, სწორადაა გამართული? შეამოწმეთ პარამეტრები და სცადეთ ხელახლა.</li>
+        <li>იძლევა პროქსი-სერვერი ამ ქსელიდან დაკავშირების უფლებას?</li>
+        <li>კვლავ ხარვეზებია? მაშინ, დახმარებისთვის მიმართეთ თქვენი ქსელის მმართველს ან ინტერნეტმომსახურების მომწოდებელს.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">პროქსი-სერვერი ვერ მოიძებნა</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>ბრაუზერი გამართულია პროქსი-სერვერის გამოსაყენებლად, მაგრამ პროქსი-სერვერი ვერ მოიძებნა.</p>
+      <ul>
+        <li>ბრაუზერის პროქსი სწორადაა გამართული? შეამოწმეთ პარამეტრები და სცადეთ ხელახლა.</li>
+        <li>მოწყობილობა მოქმედ ქსელთანაა მიერთებული?</li>
+        <li>კვლავ ხარვეზებია? მაშინ, დახმარებისთვის მიმართეთ თქვენი ქსელის მმართველს ან ინტერნეტმომსახურების მომწოდებელს.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">მავნე საიტი</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>ვებგვერდი %1$s მიჩნეულია მოიერიშე საიტად და შეზღუდულია უსაფრთხოების მიზნით.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">არასასურველი საიტი</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>ვებგვერდი %1$s შემჩნეულია არასასურველი პროგრამების შემოთავაზებაში და შეზღუდულია უსაფრთხოების მიზნით</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">სახიფათო საიტი</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>ვებგვერდი %1$s მიჩნეულია მავნე საიტად და შეზღუდულია უსაფრთხოების მიზნით.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">თაღლითური საიტი</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>ვებგვერდი %1$s მიჩნეულია თაღლითურ საიტად და შეზღუდულია უსაფრთხოების მიზნით.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">უსაფრთხო საიტი მიუწვდომელია</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[თქვენ ჩართული გაქვთ მხოლოდ-HTTPS-რეჟიმი მაღალი უსაფრთხოებისთვის, მაგრამ <em>%1$s</em> არაა წარმოდგენილი დაცული HTTPS-ვერსიით.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">გადასვლა HTTP-საიტზე</string>
+</resources>

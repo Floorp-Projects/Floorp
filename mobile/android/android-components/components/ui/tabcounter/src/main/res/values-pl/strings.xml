@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="mozac_tab_counter_open_tab_tray_single">Otwarte karty: 1. Stuknij, aby przełączyć karty.</string>
+    <!-- Message announced to the user when tab tray is selected with multiple tabs -->
+    <string name="mozac_tab_counter_open_tab_tray_plural">Otwarte karty: %1$s. Stuknij, aby przełączyć karty.</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="mozac_browser_menu_new_tab">Nowa karta</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="mozac_browser_menu_new_private_tab">Nowa karta prywatna</string>
+    <!-- Browser menu button to close tab. Closes the current session when pressed. -->
+    <string name="mozac_close_tab">Zamknij kartę</string>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">Duplikuj kartę</string>
+    <!-- Content description of the tab counter toolbar button -->
+    <string name="mozac_tab_counter_content_description">Przycisk paska narzędzi z liczbą kart.</string>
+</resources>

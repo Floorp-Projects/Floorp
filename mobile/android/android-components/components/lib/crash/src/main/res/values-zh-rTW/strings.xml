@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_dialog_title">很抱歉，%1$s 遇到問題，發生錯誤。</string>
+
+    <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_crash_dialog_checkbox">傳送錯誤報告給 %1$s</string>
+
+    <!-- Label of the button closing the crash reporter dialog. -->
+    <string name="mozac_lib_crash_dialog_button_close">關閉</string>
+
+    <!-- Label of the button closing the crash reporter dialog and restarting the app. -->
+    <string name="mozac_lib_crash_dialog_button_restart">重新啟動 %1$s</string>
+
+    <!-- Name of the "notification channel" used for displaying a notification when the app crashed and we can't show a prompt. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_lib_crash_channel">程式錯誤</string>
+
+    <!-- Title of the crash reporter notification for background process crashes. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_background_process_notification_title">很抱歉，%1$s 發生問題。</string>
+
+    <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
+    <string name="mozac_lib_crash_notification_action_report">回報</string>
+
+    <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_send_crash_report_in_progress">正在傳送錯誤報告給 %1$s</string>
+
+    <!-- Label of notification showing that the crash handling service is gathering the crash data. -->
+    <string name="mozac_lib_gathering_crash_data_in_progress">收集錯誤資料</string>
+
+    <!-- Label of notification showing that the telemetry service is gathering the crash data. -->
+    <string name="mozac_lib_gathering_crash_telemetry_in_progress">正在取得發生錯誤的 telemetry 資料</string>
+
+    <!-- Title of the activity that shows the list of past crashes (similar to about:crashes)-->
+    <string name="mozac_lib_crash_activity_title">錯誤資訊報表</string>
+
+    <!-- Text shown instead of crash list if no crashes have been submitted yet -->
+    <string name="mozac_lib_crash_no_crashes">未送出任何錯誤資訊報表。</string>
+
+    <!-- Text link that will show an app chooser to share a crash report with a third-party app (e.g. gmail) -->
+    <string name="mozac_lib_crash_share">分享</string>
+</resources>

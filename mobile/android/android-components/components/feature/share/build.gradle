@@ -1,0 +1,74 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion config.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        targetSdkVersion config.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        kapt {
+            arguments {
+                arg("room.schemaLocation", "$projectDir/schemas".toString())
+            }
+        }
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += ["room.incremental": "true"]
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    packagingOptions {
+        exclude 'META-INF/proguard/androidx-annotations.pro'
+    }
+
+    sourceSets {
+        androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
+    }
+}
+
+dependencies {
+    implementation project(':support-ktx')
+    implementation project(':support-base')
+
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
+
+    implementation Dependencies.androidx_lifecycle_runtime
+    implementation Dependencies.androidx_room_runtime
+    kapt Dependencies.androidx_room_compiler
+
+    testImplementation project(':support-test')
+
+    testImplementation Dependencies.androidx_test_core
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_coroutines
+
+    androidTestImplementation project(':support-android-test')
+
+    androidTestImplementation Dependencies.androidx_room_testing
+    androidTestImplementation Dependencies.androidx_test_core
+    androidTestImplementation Dependencies.androidx_test_runner
+    androidTestImplementation Dependencies.androidx_test_rules
+}
+
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

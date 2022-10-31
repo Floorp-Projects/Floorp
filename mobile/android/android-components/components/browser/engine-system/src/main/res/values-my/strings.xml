@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for the title of an alert dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_alert_title">%1$s ရှိစာမျက်နှာက -</string>
+    <!-- Text for the message of an auth dialog displayed by a web page.
+    %1$s will be replaced by the realm, %2$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_message">%2$s သည်သင်၏သုံးစွဲသူအမည်နှင့်စကားဝှက်ကိုတောင်းနေသည်။ ဆိုဒ်တွင်“%1$s” ဆိုထားသည်။</string>
+    <!-- Text for the message of an auth dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_no_realm_message">%1$s သည်သင်၏သုံးစွဲသူအမည်နှင့်စကားဝှက်ကိုတောင်းနေသည်။</string>
+</resources>

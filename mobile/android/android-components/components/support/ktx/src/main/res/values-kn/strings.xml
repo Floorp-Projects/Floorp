@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text displayed when choosing which app to call with after selecting a phone number-->
+    <string name="mozac_support_ktx_menu_call_with">ಇದರೊಂದಿಗೆ ಕರೆ ಮಾಡಿ…</string>
+    <!-- Text displayed when choosing which app to email with after selecting an email address-->
+    <string name="mozac_support_ktx_menu_email_with">ಇದರೊಂದಿಗೆ ಇಮೇಲ್ ಮಾಡಿ…</string>
+    <string name="mozac_support_ktx_menu_share_with">ಜೊತೆ ಹಂಚಿಕೊ…</string>
+    <string name="mozac_support_ktx_share_dialog_title">ಇವುಗಳ ಮೂಲಕ ಹಂಚು</string>
+</resources>

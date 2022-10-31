@@ -1,0 +1,72 @@
+[
+  {
+    "namespace": "aboutConfigPrefs",
+    "description": "experimental API extension to allow access to about:config preferences",
+    "events": [
+      {
+        "name": "onPrefChange",
+        "type": "function",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference which changed"
+          }
+        ],
+        "extraParameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference to monitor"
+          }
+        ]
+      }
+    ],
+    "functions": [
+      {
+        "name": "getBranch",
+        "type": "function",
+        "description": "Get all child prefs for a branch",
+        "parameters": [
+          {
+            "name": "branchName",
+            "type": "string",
+            "description": "The branch name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getPref",
+        "type": "function",
+        "description": "Get a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "setPref",
+        "type": "function",
+        "description": "Set a preference's value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          },
+          {
+            "name": "value",
+            "type": "boolean",
+            "description": "The new value"
+          }
+        ],
+        "async": true
+      }
+    ]
+  }
+]

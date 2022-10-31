@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">යළි උත්සාහය</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">ඉල්ලීම නිම කළ නොහැකිය</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+  <p>මෙම ගැටළුව හෝ දෝෂය පිළිබඳව අතිරේක තොරතුරු දැනට නැත.</p>
+]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">ආරක්‍ෂිත සම්බන්ධතාවය බිඳ වැටුණි</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+<ul>
+  <li>ලැබුණු දත්තවල සත්‍යතාව තහවුරු කිරීමට නොහැකි නිසා ඔබ දැකීමට උත්සාහ කරන පිටුව පෙන්වීමට නොහැකිය.</li>
+  <li>මෙම ගැටළුව පිළිබඳව අඩවියේ හිමිකරුවන්ට දන්වන්න.</li>
+</ul>
+]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">ආරක්‍ෂිත සම්බන්ධතාවය බිඳ වැටුණි</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+  <ul>
+  <li>මෙය සේවාදායකයේ වින්‍යාසයෙහි ගැටළුවක් විය හැකිය, හෝ යමෙක් සේවාදායකය ලෙස වංචනිකව පෙනී සිටීමට තැත් කරනවා විය හැකිය.</li>
+  <li>ඔබ පෙර දී මෙම සේවාදායකයට සාර්ථකව සම්බන්ධ වී ඇත්නම්, මෙය තාවකාලික දෝෂයක් විය හැකිය, පසුව උත්සාහ කරන්න.</li>
+  </ul>
+  ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">වැඩිදුර…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+  <label>යමෙක් වංචනිකව මෙම අඩවිය හසුරුවීමට තැත් කරන හෙයින් ඔබ තවදුරටත් ඉදිරියට නොයා යුතුය.</label>
+  <br><br>
+  <label>සහතික හරහා අඩවි ඔවුන්ගේ අනන්‍යතාවය ඔප්පු කරයි. <b>%2$s</b> හි සහතිකයේ නිකුත්කරු නොදන්නා නිසා %1$s එය විශ්වාස නොකරයි, සහතිකය ස්වයං-අත්සන් කර හෝ සේවාදායකය නිවැරදි අතරමැදි සහතිකය එවන්නේ නැත.</label>
+  ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">ආපසු යන්න (නිර්දේශිතයි)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">අවදානම පිළිගෙන ඉදිරියට</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">අඩවියට ආරක්‍ෂිත සම්බන්ධතාවයක් අවශ්‍යයි.</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+  <ul>
+  <li>ඔබ දැකීමට උත්සාහ කරන අඩවියට ආරක්‍ෂිත සම්බන්ධතාවයක් අවශ්‍ය නිසා පෙන්වීමට නොහැකිය.</li>
+  <li>බොහෝ විට අඩවියෙහි ගැටළුවක් නිසා, එය විසඳීමට ඔබට කළ හැකි කිසිවක් නැත.</li>
+  <li>මෙම ගැටළුව පිළිබඳව අඩවියේ පරිපාලක වෙත දැනුම් දීමට හැකිය.</li>
+  </ul>
+  ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">වැඩිදුර…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+  <label> <b>%1$s</b> හි HTTP දැඩි පරිවහන ආරක්‍ෂාව (HSTS) නම් ආරක්‍ෂණ ප්‍රතිපත්තියක් ඇත, එනම් <b>%2$s</b> මගින් එයට සම්බන්ධ වීමට හැකි වන්නේ ආරක්‍ෂිතව පමණි. ඔබට මෙම අඩවියට ගොඩවැදීමට හැරදැමීමක් එක් කිරීමට නොහැකිය.
+  ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+  <label> <b>%1$s</b> හි HTTP දැඩි පරිවහන ආරක්‍ෂාව (HSTS) නම් ආරක්‍ෂණ ප්‍රතිපත්තියක් ඇත, එනම් <b>%2$s</b> මගින් එයට සම්බන්ධ වීමට හැකි වන්නේ ආරක්‍ෂිතව පමණි. ඔබට මෙම අඩවියට ගොඩවැදීමට හැරදැමීමක් එක් කිරීමට නොහැකිය. </label>
+  ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">ආපසු යන්න</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">සම්බන්ධතාවයට බාධා විය</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+  <p>අතිරික්සුව සාර්ථකව සම්බන්ධ විය, නමුත් තොරතුරු මාරු කිරීමේ දී සම්බන්ධතාවයට බාධා විය. නැවත උත්සාහ කරන්න.</p>
+  <ul>
+  <li>අඩවිය තාවකාලිකව නොතිබේ හෝ ඉතා කාර්ය බහුලයි. මොහොතකින් නැවත බලන්න.</li>
+  <li>කිසිදු පිටුවක් පූරණය නොවේ නම්, ඔබගේ උපාංගයේ දත්ත හෝ වයි-ෆයි සම්බන්ධතාවය පරීක්‍ෂා කරන්න.</li>
+  </ul>
+  ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">සම්බන්ධතාවය ඉකුත් වී ඇත</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+  <p>ඉල්ලන ලද අඩවිය සම්බන්ධතා ඉල්ලීමකට ප්‍රතිචාර නොදැක්වූ අතර අතිරික්සුව පිළිතුරක් අපේක්‍ෂාවෙන් සිටීම නතර කර ඇත.</p>
+  <ul>
+  <li>සේවාදායකය වෙත ඉහළ ඉල්ලුමක් හෝ තාවකාලික ඇණහිටීමක් විය හැකිද? පසුව උත්සාහ කරන්න.</li>
+  <li>ඔබට වෙනත් අඩවි පිරික්සීමට නොහැකිද? පරිගණකයේ ජාල සම්බන්ධතාව පරීක්‍ෂා කරන්න.</li>
+  <li>ඔබගේ පරිගණකය හෝ ජාලය ගිනි පවුරකින් හෝ ප්‍රතියුක්තයකින් ආරක්‍ෂා කර තිබේද? වැරදි සැකසුම් නිසා මෙවැනි දෑ සිදු වීමට හැකිය.</li>
+  <li>තවමත් ගැටළු තිබේද? සහාය සඳහා ඔබගේ ජාලයේ පරිපාලක හෝ අන්තර්ජාල සැපයුම්කරු අමතන්න.</li>
+  </ul>
+  ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">සම්බන්ධ වීමට නොහැකිය</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+   <ul>
+    <li>අඩවිය තාවකාලිකව නොතිබේ හෝ කාර්ය බහුලයි. මොහොතකින් උත්සහා කරන්න.</li>
+    <li>කිසිදු පිටුවක් පූරණය නොවේ නම්, උපාංගයේ දත්ත හෝ වයි-ෆයි සම්බන්ධතාවය පරීක්‍ෂා කරන්න.</li>
+    </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">සේවාදායකයෙන් අනපේක්‍ෂිත ප්‍රතිචාරයකි</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+  <p>ජාල ඉල්ලීමට අනපේක්‍ෂිත අයුරින් අඩවිය ප්‍රතිචාර දැක්වූ අතර අතිරික්සුවට ඉදිරියට යාමට නොහැකිය.</p>
+  ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">පිටුව නිසි අයුරින් හරවා යවන්නේ නැත</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+  <p>අතිරික්සුව ඉල්ලා සිටි අථකය ලබා ගැනීමට උත්සාහ කිරීම නවතා ඇත. අඩවිය ඉල්ලීම කිසිම විටෙක නිම නොවන අයුරින් යළි හරවා යවයි.</p>
+  <ul>
+  <li>මෙම අඩවියට අවශ්‍ය දත්තකඩ අබල හෝ අවහිර කර තිබේ ද?</li>
+  <li>අඩවියෙහි දත්තකඩ පිළිගැනීමෙන් ගැටළුව නොවිසඳෙයි නම්, එය ඔබගේ උපාංගයේ නොව සේවාදායකයේ වින්‍යාසයෙහි ගැටළුවක් විය හැකිය.</li>
+  </ul>
+  ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">මාර්ගඅපගත ප්‍රකාරය</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+  <p>අතිරික්සුව එහි මාර්ගඅපගත ප්‍රකාරයෙන් ක්‍රියාත්මක වන නිසා ඉල්ලූ අථකයට සම්බන්ධ වීමට නොහැකිය.</p>
+  <ul>
+  <li>උපාංගය සක්‍රිය ජාලයකට සම්බන්ධිත ද?</li>
+  <li>මාර්ගගත ප්‍රකාරයට මාරු වීමට සහ පිටුව නැවත පූරණයට “යළි උත්සාහ කරන්න” ඔබන්න.</li>
+  </ul>
+  ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">ආරක්‍ෂණ හේතුන් මත තොට සීමා කර ඇත.</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+  <p>ඉල්ලන ලද ලිපිනය වියමන පිරික්සීමට සාමාන්‍යයෙන් <em>භාවිතා නොකරන</em> තොටක් (උදා. mozilla.org හි තොට 80 සඳහා <q>mozilla.org:80</q>) භාවිතා කරයි. ඔබගේ රැකවරණය හා ආරක්‍ෂාව සඳහා අතිරික්සුව එම ඉල්ලීම අවලංගු කරන ලදි.</p>
+  ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">සම්බන්ධතාවය යළි සැකසිණි</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+  <p>සම්බන්ධතාවයක් කතිකා වන අතරතුර ජාල සබැඳියට බාධා විය. යළි උත්සාහ කරන්න.</p>
+  <ul>
+  <li>අඩවිය තාවකාලිකව නොතිබේ හෝ ඉතා කාර්ය බහුලයි. මොහොතකින් නැවත බලන්න.</li>
+  <li>කිසිදු පිටුවක් පූරණය නොවේ නම්, ඔබගේ උපාංගයේ දත්ත හෝ වයි-ෆයි සම්බන්ධතාවය පරීක්‍ෂා කරන්න.</li>
+  </ul>
+  ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">අනාරක්‍ෂිත ගොනු වර්ගයකි</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+<ul>
+  <li>කරුණාකර මෙම ගැටළුව පිළිබඳව අඩවියේ හිමිකරුවන්ට දන්වන්න.</li>
+</ul>
+]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">හානි වූ අන්තර්ගත දෝෂයකි</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+  <p>දත්ත සම්ප්‍රේෂණ දෝෂයක් අනාවරණය වූ නිසා ඔබ දැකීමට උත්සාහ කරන පිටුව පෙන්වීමට නොහැකිය.</p>
+  <ul>
+  <li>මෙම ගැටළුව පිළිබඳව අඩවියේ හිමිකරුවන්ට දන්වන්න.</li>
+  </ul>
+  ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">අන්තර්ගතය බිඳ වැටුණි</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+  <p>දත්ත සම්ප්‍රේෂණ දෝෂයක් අනාවරණය වූ නිසා ඔබ දැකීමට උත්සාහ කරන පිටුව පෙන්වීමට නොහැකිය.</p>
+  <ul>
+  <li>මෙම ගැටළුව පිළිබඳව අඩවියේ හිමිකරුවන්ට දන්වන්න.</li>
+  </ul>
+  ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">අන්තර්ගත ආකේතන දෝෂයකි</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+  <p>ඔබ දැකීමට උත්සාහ කරන පිටුව වලංගු නොවන හෝ සහාය නොදක්වන හැකිළුම් අන්දමක් භාවිතා කරන නිසා පෙන්වීමට නොහැකිය.</p>
+  <ul>
+  <li>මෙම ගැටළුව පිළිබඳව අඩවියේ හිමිකරුවන්ට දන්වන්න.</li></ul>
+  ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">ලිපිනය හමු නොවුණි</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+  <p>අතිරික්සුවට ලබා දුන් ලිපිනයෙහි සත්කාරක සේවාදායකය සොයා ගැනීමට නොහැකිය.</p>
+  <ul>
+  <li>මෙවැනි ලිවීමේ දෝෂ තිබේදැයි බලන්න
+  <strong>www</strong>.example.com වෙනුවට
+  <strong>ww</strong>.example.com.</li>
+  <li>කිසිදු පිටුවක් පූරණය නොවේ නම්, ඔබගේ උපාංගයේ දත්ත හෝ වයි-ෆයි සම්බන්ධතාවය පරීක්‍ෂා කරන්න.</li>
+  </ul>
+  ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">අන්තර්ජාල සම්බන්ධතාවයක් නැත</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">ඔබගේ ජාලයේ සම්බන්ධතාවය පරීක්‍ෂා කරන්න හෝ මොහොතකින් පිටුව යළි පූරණය කර බලන්න.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">යළි පූරණය</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">සාවද්‍ය ලිපියකි</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+  <p>ලබා දුන් ලිපිනය පිළිගත් ආකෘතියක නැත. වැරදි සඳහා ස්ථාන තීරුව පරීක්‍ෂා කර නැවත උත්සාහ කරන්න.</p>
+  ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ලිපිනය වලංගු නොවේ</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+  <ul>
+  <li>ලිපින සාමාන්‍යයෙන් ලියන්නේ <strong>http://www.example.com/</strong> ලෙසය</li>
+  <li>ඔබ ඉදිරි ඇල ඉරි භාවිතා කරන බවට වග බලා ගන්න (එනම් <strong>/</strong>).</li>
+  </ul>
+  ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">නොදන්නා කෙටුම්පතකි</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+  <p>අතිරික්සුව හඳුනා නොගන්නා කෙටුම්පතක් ලිපිනයෙන් නිරූපනය කෙරේ (උදා: <q>wxyz://</q>), එබැවින් අඩවියට නිසි ලෙස සම්බන්ධ වීමට නොහැකිය.</p>
+  <ul>
+  <li>ඔබ බහුමාධ්‍ය හෝ වෙනත් අකුරු නොවන සේවා වෙත ප්‍රවේශ වීමට උත්සාහ කරනවාද? අමතර අවශ්‍යතා සඳහා අඩවිය පරීක්‍ෂා කරන්න.</li>
+  <li>සමහර කෙටුම්පත් සඳහා ඒවා අතිරික්සුවකින් හඳුනා ගැනීමට තෙවන පාර්ශ්ව මෘදුකාංග හෝ පේනු අවශ්‍ය විය හැකිය.</li>
+  </ul>
+  ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">ගොනුව හමු නොවුණි</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+  <ul>
+  <li>අථකය යළි නම් කර, ඉවත් කර, හෝ අන් තැනකට ගෙන ගොස් ද?</li>
+  <li>ලිපිනයෙහි අකුරු වින්‍යාසය, හැඩයේ හෝ වෙනත් මුද්‍රණ දෝෂයක් තිබේද?</li>
+  <li>ඔබ ඉල්ලන ලද අථකයට ප්‍රමාණවත් ප්‍රවේශ වීමේ අවසර තිබේද?</li>
+  </ul>
+  ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">ගොනුවට ප්‍රවේශය ප්‍රතික්‍ෂේප විය</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+  <ul>
+  <li>එය ඉවත් කර, ගෙන ගොස්, හෝ ගොනුවට ප්‍රවේශ වීමේ අවසර නැත.</li>
+  </ul>
+  ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">ප්‍රතියුක්ත සේවාදායකය සබැඳුම ප්‍රතික්‍ෂේප කෙරිණි</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+  <p>ප්‍රතියුක්ත සේවාදායකයක් භාවිතයට අතිරික්සුව වින්‍යාසගත කර ඇත, නමුත් ප්‍රතියුක්තය සම්බන්ධතාවයක් ප්‍රතික්‍ෂේප කෙරිණි.</p><ul>
+  <li>අතිරික්සුවෙහි ප්‍රතියුක්ත වින්‍යාසය නිවැරදි ද? සැකසුම් පරීක්‍ෂා කර යළි උත්සාහ කරන්න.</li>
+  <li>ප්‍රතියුක්ත සේවාව මෙම ජාලයෙහි සම්බන්ධතා සඳහා ඉඩ දෙන්නේද?</li>
+  <li>තවමත් ගැටළු තිබේද? සහාය සඳහා ඔබගේ ජාලයේ පරිපාලක හෝ අන්තර්ජාල සැපයුම්කරු අමතන්න.</li>
+  </ul>
+  ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">ප්‍රතියුක්ත සේවාදායකය හමු නොවුණි</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+  <p>ප්‍රතියුක්ත සේවාදායකයක් භාවිතයට අතිරික්සුව වින්‍යාසගත කර ඇත, නමුත් ප්‍රතියුක්තය හමු නොවිණි.</p><ul>
+  <li>අතිරික්සුවෙහි ප්‍රතියුක්ත වින්‍යාසය නිවැරදි ද? සැකසුම් පරීක්‍ෂා කර යළි උත්සාහ කරන්න.</li>
+  <li>උපාංගය සක්‍රිය සම්බන්ධතාවයක් වෙත සම්බන්ධිත ද?</li>
+  <li>තවමත් ගැටළු තිබේද? සහාය සඳහා ඔබගේ ජාලයේ පරිපාලක හෝ අන්තර්ජාල සැපයුම්කරු අමතන්න.</li>
+  </ul>
+  ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">අනිෂ්ට අඩවියක ගැටළුවකි</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+  <p>ප්‍රහාරක අඩවියක් ලෙස %1$s වාර්තා කර ඇත. ඔබගේ ආරක්‍ෂණ අභිප්‍රේත මත පදනම්ව අවහිර කර ඇත.</p>
+  ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">අනවශ්‍ය අඩවියක ගැටළුවකි</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+  <p>අනවශ්‍ය මෘදුකාංග අඩවියක් ලෙස %1$s වාර්තා කර ඇත. ඔබගේ ආරක්‍ෂණ අභිප්‍රේත මත පදනම්ව අවහිර කර ඇත.</p>
+  
+  ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">හානිකර අඩවියක ගැටළුවකි</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+  <p>%1$s අඩවිය හානිකර යැයි වාර්තා කර ඇත. ඔබගේ ආරක්‍ෂණ අභිප්‍රේත මත පදනම්ව අවහිර කර ඇත.</p>
+  ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">කූට අඩවියක ගැටළුවකි</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+  <p>කූට පිටුවක් ලෙස %1$s වාර්තා කර ඇත. ඔබගේ ආරක්‍ෂණ අභිප්‍රේත මත පදනම්ව අවහිර කර ඇත.</p>
+  ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">ආරක්‍ෂිත අඩවිය නැත</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[ඉහළ ආරක්‍ෂාවක් සඳහා ඔබ HTTPS-පමණි ප්‍රකාරය සබල කර තිබෙන අතර, <em>%1$s</em> හි HTTPS අනුවාදයක් නැත.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">HTTP අඩවියට යන්න</string>
+</resources>

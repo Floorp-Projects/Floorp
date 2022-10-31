@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of a dialog for a notification permission request. -->
+    <string name="mozac_feature_sitepermissions_notification_title">ಅಧಿಸೂಚನೆಗಳನ್ನು ಕಳುಹಿಸಲು %1$s ಅನ್ನು ಅನುಮತಿಸುವುದೇ?</string>
+    <!-- Title of a dialog for a camera permission request. -->
+    <string name="mozac_feature_sitepermissions_camera_title">ನಿಮ್ಮ ಕ್ಯಾಮೆರಾ ಬಳಸಲು %1$s ಅನ್ನು ಅನುಮತಿಸುವುದೇ?</string>
+    <!-- Title of a dialog for a microphone permission request. -->
+    <string name="mozac_feature_sitepermissions_microfone_title">ನಿಮ್ಮ ಮೈಕ್ರೊಫೋನ್ ಬಳಸಲು %1$s ಅನ್ನು ಅನುಮತಿಸುವುದೇ?</string>
+    <!-- Title of a dialog for a location permission request. -->
+    <string name="mozac_feature_sitepermissions_location_title">ನಿಮ್ಮ ಸ್ಥಳವನ್ನು ಬಳಸಲು %1$s ಅನ್ನು ಅನುಮತಿಸುವುದೇ?</string>
+    <!-- Title of a dialog for a camera and microphone permission request. -->
+    <string name="mozac_feature_sitepermissions_camera_and_microphone">ನಿಮ್ಮ ಕ್ಯಾಮೆರಾ ಮತ್ತು ಮೈಕ್ರೊಫೋನ್ ಬಳಸಲು %1$s ಅನ್ನು ಅನುಮತಿಸುವುದೇ?</string>
+    <!-- Option in a dialog for requesting a microphone permission, this option will give access to
+         the first microphone-->
+    <string name="mozac_feature_sitepermissions_option_microphone_one">ಮೈಕ್ರೊಫೋನ್ 1</string>
+    <!-- Option in a dialog for requesting a camera permission, this option will give access to
+         back facing camera-->
+    <string name="mozac_feature_sitepermissions_back_facing_camera2">ಹಿಂಭಾಗದ ಕ್ಯಾಮೆರಾ</string>
+    <!-- Option in a dialog for requesting a camera permission, this option will give access to
+     front facing camera-->
+    <string name="mozac_feature_sitepermissions_selfie_camera2">ಮುಮ್ಮುಖ ಕ್ಯಾಮೆರ</string>
+    <!-- Text for a positive button in a permission request dialog, this button will give
+        access to this permission-->
+    <string name="mozac_feature_sitepermissions_allow">ಅನುಮತಿಸು</string>
+    <!-- Text for a negative button in a permission request dialog, this button will do not give
+    access to this permission-->
+    <string name="mozac_feature_sitepermissions_not_allow">ಅನುಮತಿಸ ಬೇಡ‍</string>
+    <!-- Text for a checkbox in a permission request dialog, this will allow to not show again the prompt-->
+    <string name="mozac_feature_sitepermissions_do_not_ask_again_on_this_site2">ಈ ಸೈಟ್‌ನ ನಿರ್ಧಾರವನ್ನು ನೆನಪಿಡಿ</string>
+    <!-- Text for a positive button in a permission request dialog. This will always allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
+    <string name="mozac_feature_sitepermissions_always_allow">ಯಾವಾಗಲೂ</string>
+    <!-- Text for a negative button in a permission request dialog. This will never allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
+    <string name="mozac_feature_sitepermissions_never_allow">ಎಂದಿಗೂ ಬೇಡ</string>
+</resources>

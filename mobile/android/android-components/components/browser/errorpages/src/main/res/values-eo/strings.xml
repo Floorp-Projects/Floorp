@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Klopodi denove</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Ne eblas kompletigi la peton</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Ne disponelbas pli da informo pri tiu ĉi problemo aŭ eraro.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Malsukcesa sekura konekto</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+  <li>La paĝo, kiun vi klopodas vidi, ne povas esti montrita ĉar ne eblis kontroli la aŭtentikecon de la ricevitaj datumoj.</li>
+  <li>Bonvolu kontakti la posedantojn de la retejo por raporti al ili tiun ĉi problemon.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Malsukcesa sekura konekto</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul> 
+<li>Tio povus esti problemo en la agordo de la servilo, aŭ iu kiu klopodas preni la identecon de la servilo.</li> 
+<li>Se vi iam jam sukcese konektiĝis al tiu ĉi servilo, 
+la eraro povas esti tempa kaj vi povos klopodi denove poste.</li> 
+</ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Spertula…</string>
+
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Iu eble klopodas ŝajnigi la retejon, vi ne devus daŭrigi.</label>
+        <br><br>
+        <label>Retejoj pruvas sian identecon per atestiloj. %1$s ne fidas <b>%2$s</b> ĉar la eldoninto de la atestilo ne estas konata, la atestilo estas memsubskribita aŭ la servilo ne sendas la ĝustajn interajn atestilojn.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Reen (rekomendita)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Akcepti la riskon kaj daŭrigi</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Tiu ĉi retejo postulas sekuran konekton.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>La paĝo, kiun vi volas vidi, ne povas esti montrita ĉar la retejo postulas sekuran konekton.</li>
+         <li>La problemo plej verŝajne okazas en la retejo, kaj vi nenion povas fari por solvi ĝin.</li>
+         <li>Vi povas tamen sciigi la administranton de la retejo pri la problemo.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Spertula…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> havas sekurecan politikon, kiun oni nomas HTTP Strict Transport Security (HSTS), kiu signifas ke <b>%2$s</b> nur povas konektiĝi per sekura konekto. Vi ne povas aldoni escepton por viziti la retejon.
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> havas sekurecan politikon, kiun oni nomas HTTP Strict Transport Security (HSTS), kiu signifas ke <b>%2$s</b> nur povas konektiĝi per sekura konekto. Vi ne povas aldoni escepton por viziti la retejon.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Iri reen</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">La konekto estis interrompita</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>La retumilo sukcese konektiĝis, sed la konekto estis interrompita dum transmeto de informoj. Bonvolu provi denove.</p>
+      <ul>
+        <li>Tiu ĉi retejo povus esti provizore ne atingebla aŭ tro okupata.  Klopodu denove post kelkaj momentoj.</li>
+        <li>Se vi ne kapablas ŝargi iun ajn paĝon, kontrolu la aparatan datuman aŭ sendratan (Wi-Fi) konekton.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Limtempo por konekto atingita</string>
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>La petita retejo ne respondis la konektan peton kaj la retumilo ĉesis atendi respondon.</p>
+      <ul>
+        <li>Ĉu eble eble la servilo estas tro okupata aŭ provizore malaktiva? Reprovu poste.</li>
+        <li>Ĉu ankaŭ aliajn retejojn vi ne povas viziti? Kontrolu la aparatan retaliron.</li>
+        <li>Ĉu via komputilo aŭ reto estas protektataj de retbarilo aŭ retperanto? Malĝustaj agordoj povas malhelpi retumon.</li>
+        <li>Ĉu ankoraŭ estas problemoj? Petu helpon al via reta administranto aŭ retprovizanto.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Ne eblas konektiĝi</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>La retejo povus esti nuntempe ne alirebla aŭ tro okupata. Bonvolu reprovi post iom da tempo.</li>
+        <li>Se vi ne povas viziti iun ajn paĝon, kontrolu la datuman aŭ sendratan (Wi-Fi) konekton de via poŝaparato.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Neatendita respondo el servilo</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>La retejo respondis la retpeton en maniero neatendita kaj la retumilo ne povas daŭrigi.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">La paĝo ne redirektiĝas bone</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>La retumilo finis la klopodon akiri la petitan elementon. La retejo redirektas la peton tiamaniere ke ĝi neniam estos finita.</p>
+      <ul>
+        <li>Ĉu vi malpermesis aŭ blokis kuketojn kiuj estas postulataj de tiu ĉi retejo?</li>
+        <li>Se la akcepto de kuketoj el tiu ĉi retejo ne solvas la problemon, tre verŝajne temas pri malĝusta agordo en la servilo kaj ne en via aparato.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Malkonektita reĝimo</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>La retumilo funkcias nun en malkonektita reĝimo kaj ne povas konektiĝi al la petita elemento.</p>
+      <ul>
+        <li>Ĉu la aparato estas konektita al aktiva reto?</li>
+        <li>Bonvolu premi “Klopodi denove” por iri al konektita reĝimo kaj reŝargi la paĝon.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Aliro al pordo limigita pro sekurecaj kialoj</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>La petita retadreso enhavas pordon (e.g. <q>mozilla.org:80</q> por pordo 80 en mozilla.org) kiu normale ne estas uzata por retumado sed por <em>aliaj</em> celoj. La retlegilo, celante vian sekurecon kaj protekton, nuligis vian peton.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">La konekto esti rekomencita</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>La retaliro estis interrompita dum la konekto. Bonvolu klopodi denove.</p>
+      <ul>
+        <li>La retejo povus esti provizore ne disponebla aŭ tro okupata. Klopodu denove post kelkaj momentoj.</li>
+        <li>Se vi ne kapablas ŝargi iun ajn paĝon, kontrolu la aparatan datuman aŭ sendratan (Wi-Fi) konekton.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Nesekura tipo de dosiero</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Bonvolu kontakti la retejajn posedantojn por raporti al ili tiun ĉi problemon.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Eraro pro difektita enhavo</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>La paĝo, kiun vi klopodas vidi, ne povas esti montrita ĉar okazis eraro dum la transmeto de datumoj.</p><ul><li>Bonvolu kontakti la posedantojn de la retejo por raporti al ili tiun ĉi problemon.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">La enhavo paneis</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>La paĝo, kiun vi klopodas vidi, ne povas esti montrita ĉar okazis eraro dum la transmeto de datumoj.</p><ul><li>Bonvolu kontakti la posedantojn de la retejo por raporti al ili tiun ĉi problemon.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Eraro de enkodigo de enhavo</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>La paĝo, kiun vi klopodas vidi, ne povas esti montrita ĉar ĝi uzas nevalidan aŭ nesubtenatan kompaktigon.</p>
+      <ul>
+<li>Bonvolu kontakti la posedantojn de la retejo por raporti al ili tiun ĉi problemon.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Adreso ne trovita</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>La retumilo ne povis trovi la servilon asociata al la adreso indikita.</p>
+      <ul>
+        <li>Kontrolu la adreson por vidi ĉu estas tajperaro, ekzemple
+          <strong>ww</strong>.example.com anstataŭ
+          <strong>www</strong>.example.com.</li>
+        <li>Se vi ne kapablas ŝargi iun ajn paĝon, kontrolu la aparatan datuman aŭ sendratan (Wi-Fi) konekton.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Sen retaliro</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Kontrolu vian retaliron kaj klopodu reŝargi la paĝon post kelkaj momentoj.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Reŝargi</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Nevalida adreso</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>La provizita adreso havas formaton nerekoneblan. Bonvolu kontroli ĉu en la adresa strio io estas mistajpita kaj klopodu denove.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">La adreso ne estas valida</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+  <li>Retadresoj estas kutime ĉi tiel skribitaj <strong>http://www.example.com/</strong></li>
+  <li>Estu certa uzi la ĝustajn oblikvajn strekojn (i.e. <strong>/</strong>).</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Nekonata protokolo</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>La adreso specifas protokolon (ekzemple <q>wxyz://</q>) ne rekonata de la retumilo, kiu ne povas do taŭge konektiĝi al la retejo.</p>
+      <ul>
+        <li>Ĉu vi klopodas aliri aŭdvidaĵon aŭ alian servon ne tekstan?  Kontrolu la retejon por scii ĉu estas apartaj postuloj.</li>
+        <li>Kelkaj protokoloj povas postuli apartajn programojn aŭ kromprogramojn antaŭ ol la retumilo povos rekoni ilin.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Dosiero ne trovita</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Ĉu eble la elemento estis renomita, forigita aŭ translokita?</li>
+        <li>Ĉu estas literuma, majuskliga aŭ alia tajperaro en la adreso?</li>
+        <li>Ĉu vi havas sufiĉajn rajtojn aliri la petitan elementon?</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Rifuzita aliro al dosiero</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+  <li>Eble ĝi estis forigita, aŭ movita, aŭ la permesoj dosieraj evitas aliron al ĝi.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Rifuzita konekto al retperanto</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>La retumilaj agordoj indikas uzon de retperanto, sed la retperanto rifuzis la konekton.</p>
+      <ul>
+        <li>Ĉu la retumilaj agordoj pri retperanto estas ĝustaj?  Kontrolu la agordojn kaj klopodu denove.</li>
+        <li>Ĉu la retperanta servo akceptas konektojn el tiu ĉi retejo?</li>
+        <li>Ĉu ankoraŭ estas problemoj? Kontaktu vian retan administraton aŭ retprovizanton por ricevi helpon.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Retperanto ne trovita</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>La retumilaj agordoj indikas uzon de retperanto, sed la retperanto ne estis trovita.</p>
+      <ul>
+        <li>Ĉu la retumilaj agordoj pri retperanto estas ĝustaj? Kontrolu la agordojn kaj klopodu denove.</li>
+        <li>Ĉu la aparato estas konektita al aktiva reto?</li>
+        <li>Ĉu ankoraŭ estas problemoj? Kontaktu vian retan administraton aŭ retprovizanton por ricevi helpon.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problemo kun retejo kiu enhavas malicajn programojn</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>La retejo ĉe %1$s estis denuncita kiel ataka retejo, kaj ĝi estis blokita surbaze de viaj sekurecaj preferoj.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problemo kun programtruda retejo</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>La retejo ĉe %1$s estis denuncita kiel programtruda, kaj ĝi estis blokita surbaze de viaj sekurecaj preferoj.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problemo kun danĝera retejo</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>La retejo ĉe %1$s estis denuncita kiel eble danĝera retejo, kaj ĝi estis blokita surbaze de viaj sekurecaj preferoj.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problemo kun trompa retejo</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Tiu ĉi paĝo ĉe %1$s estis denuncita kiel trompa retejo, kaj ĝi estis blokita surbaze de viaj sekurecaj preferoj.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Sekura retejo ne disponebla</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Vi ŝaltis la HTTPS-nuran reĝimon por plibonigita sekureco, kaj versio HTTPS de <em>%1$s</em> ne estas disponebla.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Daŭrigi al retejo HTTP</string>
+</resources>

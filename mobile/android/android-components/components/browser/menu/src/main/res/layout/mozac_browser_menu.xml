@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Mozac.Browser.Menu"
+    android:id="@+id/mozac_browser_menu_menuView"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="@dimen/mozac_browser_menu_corner_radius"
+    app:cardElevation="@dimen/mozac_browser_menu_elevation"
+    app:cardUseCompatPadding="true">
+
+    <mozilla.components.browser.menu.view.DynamicWidthRecyclerView
+        android:id="@+id/mozac_browser_menu_recyclerView"
+        android:paddingTop="@dimen/mozac_browser_menu_padding_vertical"
+        android:paddingBottom="@dimen/mozac_browser_menu_padding_vertical"
+        android:overScrollMode="never"
+        android:layout_width="@dimen/mozac_browser_menu_width"
+        android:layout_height="wrap_content"
+        tools:listitem="@layout/mozac_browser_menu_item_simple" />
+
+</androidx.cardview.widget.CardView>

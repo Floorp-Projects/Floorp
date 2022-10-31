@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for the title of an alert dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_alert_title">Η σελίδα στο %1$s δηλώνει:</string>
+    <!-- Text for the message of an auth dialog displayed by a web page.
+    %1$s will be replaced by the hostname or a description of the protected area/site, %2$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_message">Το %2$s ζητά όνομα χρήστη και κωδικό πρόσβασής. Ο ιστότοπος δηλώνει: «%1$s»</string>
+    <!-- Text for the message of an auth dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_no_realm_message">Το %1$s ζητά το όνομα χρήστη και τον κωδικό πρόσβασής σας.</string>
+</resources>

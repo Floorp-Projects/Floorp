@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="mozac_support_base_permissions_needed_negative_button">Înlătură</string>
+</resources>

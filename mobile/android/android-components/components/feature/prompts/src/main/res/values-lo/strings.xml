@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- Text for confirmation for a positive action in dialog  -->
+    <string name="mozac_feature_prompts_ok">ຕົກ​ລົງ</string>
+    <!-- Text for confirmation for a negative action in dialog.  -->
+    <string name="mozac_feature_prompts_cancel">ຍົກເລີກ</string>
+    <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
+    <string name="mozac_feature_prompts_no_more_dialogs">ປ້ອງກັນຫນ້ານີ້ບໍ່ໃຫ້ສະແດງໄດອະລັອກເພີ່ມອີກ</string>
+    <!-- Text for a positive button, when an user selects a date in date/time picker. -->
+    <string name="mozac_feature_prompts_set_date">ຕັ້ງຄ່າ</string>
+    <!-- Text for a button that clears the selected input in the date/time picker. -->
+    <string name="mozac_feature_prompts_clear">ລົບລ້າງ</string>
+    <!-- Text for the title of an authentication dialog. -->
+    <string name="mozac_feature_prompt_sign_in">ເຂົ້າສູ່ລະບົບ</string>
+    <!-- Text for username field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_username_hint">ຊື່ຜູ້ໃຊ້</string>
+    <!-- Text for password field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_password_hint">ລະຫັດຜ່ານ</string>
+    <!-- Negative confirmation that we should not save the new or updated login -->
+    <string name="mozac_feature_prompt_dont_save">ບໍ່ບັນທຶກ</string>
+    <!-- Negative confirmation that we should never save a login for this site -->
+    <string name="mozac_feature_prompt_never_save">ບໍ່ຕ້ອງບັນທຶກ</string>
+    <!-- Negative confirmation that we should not save a credit card for this site -->
+    <string name="mozac_feature_prompt_not_now">ບໍ່​ແມ່ນ​ຕອນ​ນີ້</string>
+    <!-- Positive confirmation that we should save the new or updated login -->
+    <string name="mozac_feature_prompt_save_confirmation">ບັນທຶກ</string>
+    <!-- Negative confirmation that we should not save the updated login -->
+    <string name="mozac_feature_prompt_dont_update">ບໍ່ຕ້ອງອັບເດດ</string>
+    <!-- Positive confirmation that we should save the updated login -->
+    <string name="mozac_feature_prompt_update_confirmation">ອັບເດດ</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_empty_password">ປ່ອງປ້ອນລະຫັດຜ່ານຈະຕ້ອງບໍ່ຫວ່າງເປົ່າ</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause">ບໍ່ສາມາດບັກທຶກການເຂົ້າສູ່ລະບົບໄດ້</string>
+    <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
+    <string name="mozac_feature_prompt_login_save_headline">ບັນທຶກການເຂົ້າສູ່ລະບົບນີ້ໄວ້ບໍ?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_update_headline">ອັບເດດການເຂົ້າສູ່ລະບົບນີ້ບໍ?</string>
+    <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_add_username_headline">ເພີ່ມຊື່ຜູ້ໃຊ້ເພື່ອບັນທຶກລະຫັດຜ່ານໄວ້ບໍ?</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">ປ້າຍກຳກັບສຳລັບການປ້ອນຂໍ້ມູນໃສ່ໃນຊ່ອງຂໍ້ຄວາມ</string>
+    <!-- Title of a color picker dialog, this text is shown above a color picker. -->
+    <string name="mozac_feature_prompts_choose_a_color">ເລືອກສີ</string>
+    <!-- Text of a confirm button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_allow">ອະນຸຍາດ</string>
+    <!-- Text of a negative button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_deny">ປະຕິເສດ</string>
+    <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_title">ທ່ານແນ່ໃຈແລ້ວບໍ່?</string>
+    <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_body">ທ່ານຕ້ອງການອອກຈາກເວັບໄຊທນີ້ບໍ? ຂໍ້ມູນທີ່ທ່ານໄດ້ປ້ອນໃສ່ອາດຈະບໍ່ໄດ້ຮັບການບັນທຶກ</string>
+    <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
+    <string name="mozac_feature_prompts_before_unload_stay">ຢູ່</string>
+    <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
+    <string name="mozac_feature_prompts_before_unload_leave">ອອກ</string>
+    <!-- Title of the month chooser dialog. -->
+    <string name="mozac_feature_prompts_set_month">ເລືອກເດືອນ</string>
+    <!-- January (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jan">ມັງກອນ</string>
+    <!-- February month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_feb">​ກຸມພາ</string>
+    <!-- March month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_mar">​ມີນາ</string>
+    <!-- April month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_apr">​ເມສາ</string>
+    <!-- May month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_may">ພຶດສະພາ</string>
+    <!-- June month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jun">​ມິຖຸນາ</string>
+    <!-- July month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jul">ກໍລະ​ກົດ</string>
+    <!-- August month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_aug">ສິງຫາ</string>
+    <!-- September month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_sep">ກັນຍາ</string>
+    <!-- October month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_oct">ຕຸລາ</string>
+    <!-- November month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_nov">ພະຈິກ</string>
+    <!-- December month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_dec">ທັນວາ</string>
+    <!-- Title of the time picker dialog. -->
+    <string name="mozac_feature_prompts_set_time">ກໍານົດເວລາ</string>
+    <!-- Option in expanded select login prompt that links to login settings -->
+    <string name="mozac_feature_prompts_manage_logins">ຈັດການການເຂົ້າສູ່ລະບົບ</string>
+
+    <!-- Content description for expanding the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description">ຂະຫຍາຍການເຂົ້າສູ່ລະບົບທີ່ແນະນຳ</string>
+    <!-- Content description for collapsing the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description">ຍຸບການເຂົ້າສູ່ລະບົບທີ່ແນະນຳ</string>
+
+    <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
+    <string name="mozac_feature_prompts_saved_logins">ການລັອກອິນທີ່ໄດ້ຮັບການແນະນຳ</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">ສົ່ງຂໍ້ມູນຄືນສູ່ເວັບໄຊທນີ້ອີກບໍ?</string>
+    <string name="mozac_feature_prompt_repost_message">ການລີເຟສຫນ້ານີ້ອາດຈະເຮັດໃຫ້ການກະທຳກ່ອນຫນ້ານີ້ຊໍ້າກັນເຊັ່ນວ່າ: ການສົ່ງລາຍການຈ່າຍເງິນ ຫລື ການໂພສຄອມເມັ້ນ 2 ຄັ້ງ.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">ສົ່ງຂໍ້ມູນຄືນໃຫມ່</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">ຍົກເລີກ</string>
+
+    <!-- Credit Card Autofill -->
+    <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
+    <string name="mozac_feature_prompts_select_credit_card">ເລືອກບັດເຄດິດ</string>
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">ຂະຫຍາຍການແນະນຳຂອງບັດເຄດິດ</string>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">ຍຸບການແນະນຳຂອງບັດເຄດິດ</string>
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
+    <string name="mozac_feature_prompts_manage_credit_cards">ຈັດການບັດເຄດິດ</string>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">ຕ້ອງການບັນທຶກບັດນີ້ຢ່າງປອດໄພຫລືບໍ?</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">ຕ້ອງການອັບເດດວັນໝົດອາຍຸຂອງບັດບໍ?</string>
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">ໝາຍເລກບັດຈະຖືກເຂົ້າລະຫັດ. ລະຫັດຄວາມປອດໄພຈະບໍ່ຖືກບັນທຶກໄວ້.</string>
+
+    <!-- Address Autofill -->
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string moz:removedIn="104" name="mozac_feature_prompts_select_address" tools:ignore="UnusedResources">ເລືອກທີ່ຢູ່</string>
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string name="mozac_feature_prompts_select_address_2">ເລືອກທີ່ຢູ່</string>
+    <!-- Content description for expanding the select addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description">ຂະຫຍາຍທີ່ຢູ່ທີ່ແນະນຳ</string>
+    <!-- Content description for collapsing the select address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description">ຫຍໍ້ທີ່ຢູ່ທີ່ແນະນຳ</string>
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">ຈັດການທີ່ຢູ່</string>
+</resources>

@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">Huā sa \'iaj chì\' guendâ gāyi\'ìj</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">A\'ngô ñû</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">Nanikàj rukù</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Na\'ue gārayinaj sa achín nì\'iát</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Nitāj ni\'īn nùhuin saj gire\' ma.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Gire\' koneksiûn dugumî sò\'</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>\'Ngō paginâ ni\'iājt nan nī na\'ue nāyi\'nïn dadin\' na\'ue nāni\'in sà\' aga\' nan nej datô nahuin ra\'ât.</li>
+        <li>Gi\'iaj \'ngō sunnūj nī nanà\'uì\'t ahuin si si\'iaj huin sitiô nan nī gatāj nan\'ānj si gunînt nùhuin saj \'ia dànanj.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Gire\' koneksiûn dugumî sò\'</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Nagi\'iaj chìj sa ruhuât nādūnāt riña servidor, asi huā \'ngō sa ânej ruhuâ natū riña sa huin ruhuât na\'nïnt.</li>
+        <li>Sisī ngà\' gatûj ñùt riña servidor nan nī nitāj nùj gi\'iaj chìj nī ga\'ue sisī man si giyichin\' akuanj, yakāj da\'nga\' gātūt nanâ doj a.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Sa tàj ñā doj…</string>
+
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Huā sa huin ruhuâ dīga\'ñūn\'unj sò\' sisī huê sitiô nan huin nī da\'uît nānikàj rūkût.</label>
+        <br><br>
+        <label>Ngà sertifikâdo nadigân nej sitio web man\'an nej man. %1$snu yumân ruhuâ aga\' nan ni\'in <b>%2$s</b>dadin\' na\'ue nani\'in ahuin si giri si sērtifikadoj, huā a\'nan\' sertifikado asi nu ga\'nïnj hue\'ê servidor sertifikâdo.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Nānikàj ne\' rūkùu (sa sà\'a huin)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Gārāyino\' si ahī hua man nī gun\'  ne\' ñāan</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Giyichin\' ngè kōneksiûn</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Nayi\'nïnj hue\'ê riña sā nana\'uî\'t, sanī gire\' ngè koneksiûn ngà hìaj nayî\'nïn. Gī\'iaj \'ngō sunūnj un, ginù huin ñû.</p>
+      <ul>
+        <li>Ga\'ue sisī ûta hua chrūj riña sitio asi nitāj si \'iaj sun man akuan\' nïn. Ginù huin ñû yichrá \'ngō nâ nùkuaj.</li>
+        <li>Sisī na\'ue nāyi\'nïn riña à\'ngō pâjina, ni’iāj sisī huā hue\'ê internet riña si āgâ\'t.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Ganahuij diû ana\'uìjt</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Nu ga\'ue nāyi\'nïn riña sitiô gachrûnt yi\'ì dan ga\'nïn\' ruhuâ riña sā nana\'uî\'t.</p>
+      <ul>
+        <li>Ûta hua chruj riña servidor asi gire\' internet aj. Ginù huin nanâ doj.</li>
+        <li>Na\'ue gātūt riña a\'ngô nej sitio a\'. Gīni\'iaj si huā internet riña si āgâ\' ra.</li>
+        <li>Dugumîn \'ngō frirewall asi \'ngō proxy si āgâ\' raj. Ni\'iāj si huā konfiguradô hue\'ej dadin\' gā\'ue sisī huej \'iaj.</li>
+        <li>Huā nïn\' \'iaj chìj da\' gātū raj. Gā\'mīn ngà duguî\' dû\'uèj internet riñat da\' rugûñu\'ūnj si sò\'.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Na\'ue gātu riña internet</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>Ga\'ue si huā chruj riña sitiô nana si huā rán akuan\' riñanj. Ginùn huin ñû nanâ doj.</li>
+        <li>Sisī huê dan \'iaj daran\' chre nej pâjina, ni\'iāj sisī \'iaj sun hue\'ê si āgâ\'t li asi huā internet riñanj.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Sê \'ngō nuguan\' hue\'ê narikî servidor</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Nu nahuin rā\'a hue\'ê sitio sa gachín nì\'iát guendâ gātūt riña internet nī sī ga\'ue gān\'ānjt ne\' ñāan ngà sa nānâ\'uì\'t.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Nitāj si \'iaj redireksionando hue\'ê pajinâ nan</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Ganikïn\' sa riñā nana\'uî\'t dadin\' huin ruhuaj nāhuin ra\'a nuguan\' gachrûnt. Nitāj āmān nāyī\'nïn riña sitiô nan si gūrūhuaj.</p>
+      <ul>
+        <li>Huā rán riña nej kokî arâj sun sitiô nan \'iá raj.</li>
+        <li>Sisī ngà gâ\'nïnjt \'iaj sun nej kôki nī huā nï\' na\'ue gi\'iaj sunj, si gūrūhuaj nī servidor hua a\'nan\' nī sê si āgâ\'t \'iaj.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Sī gida\'aj internet</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Nitāj si anûn sa nāhuin rā\'a internet riña si āgâ\'t yi\'ì dan na\'ue nāyi\'nïn riña sa nana\'uî\'t.</p>
+      <ul>
+        <li>\'Iaj sun hue\'ê internet riña si āgâ\' raj.</li>
+        <li>Gūru\'man ra\'a “Ginùn huin ñû” da\' nānùn internet nī nāyi\'nïn si pajinât.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Nitāj si hūaj gātūt dadin\' huā āhī man</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Dīreksiûn gachrûnt nī nīka \'ngō puerto (dàj rû\' <q>mozilla.org:80</q> guendâ puerto 80 nīkāj mozilla.org) sê guendâ gāchē nun\' riña internet huin man dadin\' <em>nīnïn</em> hua si sunj. Duyichin\' sa riñā nana\'uî\'t \'ngō sa gachín nì\'iát da\' dūgumîn man sò\' ngà gāchē nunt.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Nayi\'ì nākà ñû conexión</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Hīaj nûn huin gā kōneksiûn sanī giyichin\' ngè si enlace red. Gī\'iaj \'ngō sunūnj un, ginù huin ñû.</p>
+      <ul>
+        <li>Ga\'ue sisī ûta hua chrūj riña sitio asi nitāj si \'iaj sun man akuan\' nïn. Ginù huin ñû yichrá \'ngō nâ nùkuaj.</li>
+        <li>Sisī na\'ue nāyi\'nïn riña à\'ngō pâjina, ni’iāj sisī huā hue\'ê internet riña si āgâ\'t li.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">\'Ngō archivo huā āhīi huin</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Gī\'iaj \'ngō sunnūj nī, nānà\'uì\' ahuin si sī\'iaj huin sitiô nan nī gāchìnj na\'ānjt nù huin saj gire\'ej.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Gire\'ej dadin\' sa nūn riñanj hua a\'nan\'</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>\'Ngō paginâ ruhuât ni\'iājt nan nī na\'ue nāyi\'nïn dadin\' na\'ue gāchīn sà\' nej dâto.</p>
+      <ul>
+        <li>Gi\'iaj \'ngō sunnūj nī nanà\'uì\'t ahuin si si\'iaj huin sitiô nan nī gatāj nan\'ānjt gūnïn si sa huā nan.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Ganarán riña kōntenîdo</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>\'Ngō paginâ ruhuât ni\'iājt nan nī na\'ue nāyi\'nïn dadin\' na\'ue gāchīn sà\' nej dâto.</p>
+      <ul>
+        <li>Gi\'iaj \'ngō sunnūj nī nanà\'uì\'t ahuin si si\'iaj huin sitiô nan nī gatāj nan\'ānjt gūnïn si sa huā nan.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Gire\' si kodigô kōntenîdo</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>\'Ngō paginâ ruhuât ni\'iājt nan nī na\'ue nāyi\'nïn dadin\' nitāj si huā hue\'ê \'ngō kōmpresiûn nīka.</p>
+      <ul>
+        <li>Gi\'iaj \'ngō sunnūj nī nanà\'uì\'t ahuin si si\'iaj huin sitiô nan nī gatāj nan\'ānjt gūnïn si sa huā nan.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Nu nārì\'ìj dīreksiûn</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Nu ga\'ue narì\' riña sā nana\'uî\'t \'ngō servidor guendâ direksiûn gachrûnt.</p>
+      <ul>
+        <li>Gīni\'iāj si nu gāchrūn hue\'êt, dàj rû\':
+          <strong>ww</strong>.example.com luguâ gāchrūnt
+          <strong>www</strong>.example.com.</li>
+        <li>Sisī na\'ue nāyi\'nïn riña gà\' si \'ngō pâjina, ni\'iāj si huā internet riña si āgà\'t li.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Nitāj internet hua</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Nātsij ni\'iājt sisī huā internet asi ginù huin ñû nā\'nïnt riña nanâ doj sínj.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Nā\'nïn ñû</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Nitāj si huā hue\'ê direksiûn gachrûnt</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Nu nārì\'t dà gāchrūnt direksiûn. Ni\'iāj dānè gachrûn a\'nâ\'t nī nāchrūn hue\'ê man.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Nitāj si huā hue\'ê direksiûn gachrûnt</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Huā da\'āj nī achrûn\' \'ngō dīreksiûn dànanj <strong>http://www.example.com/</strong></li>
+        <li>Ni\'iāj hue\'ê sisī arâj sunt huìj chrun li nīkïn\' nītïn dan ân (dàj rû\' <strong>/</strong>).</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Sê dànanj gāchrūn\'</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Dàj gāchrūn\' \'ngō dīreksiûn (dàj rû\', <q>wxyz://</q>) da\' nāni\'in riña sā nana\'uî\'t, si nitāj nī si na\'nïn riña sitiô ruhuât gātūt.</p>
+      <ul>
+        <li>Sī gātūt riña \'ngō hiūj sê sa achrû\' huin anj. Gīni\'iāj nùj huin doj sa achín sitiô dan ân.</li>
+        <li>Huā da\'āj nej man nī ni\'ña \'ngō software asi plūyîn da\' ga\'ue nāni\'in sa riñā nana\'uî\'t man.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Nu nārì\'ij archîbo</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Nadunâ si yūgui man, nare\' man asi nadunâ man riña hūa aj.</li>
+        <li>Nu gāchrūn hue\'êt, asi garâj sunt mayûskula asi a\'ngô sa huā a\'nan\' gachrûnt riña dīreksiûn anj.</li>
+        <li>Giri\' nì\'iát da\' gātūt hiūj nan bè\'ej.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Nu ga\'ue gā\'nïn gātūt riña archîbo</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Ga\'ue si nare\'ej asi ganatu a\'ngô hiūj u, asi nu gīrì\' nì\'iát riña archîbo da\' gātūt riñaj.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Nu gā\'nïn servidor proxy gātūt</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Huā nî\'nïn riña sā nana\'uî\'t dan da\' gārāsunj \'ngō servidor proxy, sanī proxy nu gā\'nïn gātūt.</p>
+      <ul>
+        <li>Huā hue\'ê proxy riña sa riñā nana\'uî\'t bè\'ej. Nātsij ni\'iājt nī ginù huin ñû gātūt.</li>
+        <li>Ga\'ue gātūt hiūj nan tāj proxy bè\'ej.</li>
+        <li>Huā nï\' iaj chij aj. Gīni\'iāj gā\'mīnt ngà duguî\' dû\'uèj internet asi sû\' nīkāj ñu\'ūnj man da\' rūgûñu\'ūnj si sò\'.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Nu nārì\'ij servidor proxy</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Huā nî\'nïn riña sā nana\'uî\'t dan da\' gārāsunj \'ngō servidor proxy, sanī nu nārì\'ij proxy.</p>
+      <ul>
+        <li>Huā hue\'ê proxy riña sa riñā nana\'uî\'t bè\'ej. Nātsij ni\'iājt nī ginù huin ñû gātūt.</li>
+        <li>Huā kōnektadô si āgâ\'t riña \'ngō red \'iaj sun anj.</li>
+        <li>Huā nï\' iaj chij aj. Gīni\'iāj gā\'mīnt ngà duguî\' dû\'uèj internet asi sû\' nīkāj ñu\'ūnj man da\' rūgûñu\'ūnj si sò\'.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Sa huā a\'nan\' riña sitiô yī\'ì nan</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Sitiô %1$s nī \'ngō sitiô yī\'ìi huin man yī\'ì dan narán aga\' nan riñaj dadin\' daj gà\' gatāj na\'ānjt gūnï.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Sa huā a\'nan\' riña sitiô nāsinùnj nan</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Sitiô %1$s nī \'ngō sitiô duguane\' software āhīi huin man yī\'ì dan narán aga\' nan riñaj dadin\' daj gà\' gatāj na\'ānjt gūnï.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Sa huā a\'nan\' riña sitiô yī\'ìi</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Sitiô %1$s nī \'ngō sitiô yī\'ì hīa nïn\'in huin man yī\'ì dan narán aga\' nan riñaj dadin\' daj gà\' gatāj na\'ānjt gūnï.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Sa huā a\'nan\' riña sitiô diga\'ñu\'ūnj un</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Pajinâ %1$s nī \'ngō pajinâ diga\'ñu\'ūnj un huin man yī\'ì dan narán aga\' nan riñaj dadin\' daj gà\' gatāj na\'ānjt gūnï.</p>]]></string>
+</resources>

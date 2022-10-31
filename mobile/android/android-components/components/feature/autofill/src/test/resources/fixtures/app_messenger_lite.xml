@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<FrameLayout>
+    <LinearLayout idEntry="action_bar_root" idPackage="com.facebook.mlite" idType="id">
+        <View idEntry="action_mode_bar_stub" idPackage="com.facebook.mlite" idType="id"/>
+        <ScrollView idEntry="content_view" idPackage="com.facebook.mlite" idType="id">
+            <LinearLayout idEntry="root_view" idPackage="com.facebook.mlite" idType="id">
+                <LinearLayout idEntry="sso_confirmation_form" idPackage="com.facebook.mlite" idType="id"/>
+                <LinearLayout idEntry="username_password_form" idPackage="com.facebook.mlite" idType="id">
+                    <TextView idEntry="login_message" idPackage="com.facebook.mlite" idType="id"/>
+                    <LinearLayout idEntry="login_username_text" idPackage="com.facebook.mlite" idType="id">
+                        <EditText inputType="1" autofillId="autofillId-username"/>
+                    </LinearLayout>
+                    <LinearLayout idEntry="login_password_edit_text" idPackage="com.facebook.mlite" idType="id">
+                        <EditText inputType="81"/>
+                    </LinearLayout>
+                    <TextView idEntry="login_login_button" idPackage="com.facebook.mlite" idType="id"/>
+                    <TextView idEntry="create_account_button" idPackage="com.facebook.mlite" idType="id"/>
+                    <TextView idEntry="bottom_create_account_message" idPackage="com.facebook.mlite" idType="id"/>
+                    <TextView idEntry="login_forgot_password_button" idPackage="com.facebook.mlite" idType="id"/>
+                </LinearLayout>
+                <LinearLayout idEntry="login_approval_form" idPackage="com.facebook.mlite" idType="id"/>
+                <FrameLayout idEntry="progress_screen" idPackage="com.facebook.mlite" idType="id"/>
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+</FrameLayout>

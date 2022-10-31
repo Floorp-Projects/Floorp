@@ -1,0 +1,45 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file defines the metrics that are recorded by glean telemetry. They are
+# automatically converted to Kotlin code at build time using the `glean_parser`
+# PyPI package.
+---
+
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+
+crash_metrics:
+  crash_count:
+    type: labeled_counter
+    description: >
+      Counts the number of crashes that occur in the application.
+      This measures only the counts of each crash in association
+      with the labeled type of the crash.
+      The labels correspond to the types of crashes handled by lib-crash.
+
+      Deprecated: `native_code_crash`, `fatal_native_code_crash` and
+      `nonfatal_native_code_crash` replaced by `main_proc_native_code_crash`,
+      `fg_proc_native_code_crash` and `bg_proc_native_code_crash`.
+    labels:
+      - uncaught_exception
+      - caught_exception
+      - main_proc_native_code_crash
+      - fg_proc_native_code_crash
+      - bg_proc_native_code_crash
+      - fatal_native_code_crash
+      - nonfatal_native_code_crash
+    bugs:
+      - https://bugzilla.mozilla.org/1553935
+      - https://github.com/mozilla-mobile/android-components/issues/5175
+      - https://github.com/mozilla-mobile/android-components/issues/11876
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1553935#c3
+      - https://github.com/mozilla-mobile/android-components/pull/5700#pullrequestreview-347721248
+      - https://github.com/mozilla-mobile/android-components/pull/11908#issuecomment-1075243414
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-components-team@mozilla.com
+      - jnicol@mozilla.com
+    expires: never

@@ -1,0 +1,27 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file defines the built-in pings that are recorded by glean telemetry.
+# They are # automatically converted to Kotlin code at build time
+# using the `glean_parser` PyPI package.
+---
+
+$schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
+
+sample_metrics:
+  test:
+    type: counter
+    description: >
+      A simple counter defined in a third-party library
+    # To see the result immediately when pressing the "send ping" button in the
+    # interface, uncomment the following:
+    # send_in_pings:
+    #   - baseline
+    bugs:
+      - https://bugzilla.mozilla.org/123456789
+    data_reviews:
+      - N/A
+    notification_emails:
+      - CHANGE-ME@example.com
+    expires: 2100-01-01

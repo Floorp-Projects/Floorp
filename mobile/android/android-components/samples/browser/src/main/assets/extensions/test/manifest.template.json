@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "applications": {
+    "gecko": {
+      "id": "testext@mozac.org"
+    }
+  },
+  "name": "Mozilla Android Components - Test extension",
+  "description": "This extension is used for testing web extension functionality in Android Components",
+  "version": "${version}",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_title": "Test",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "tabs"
+  ]
+}

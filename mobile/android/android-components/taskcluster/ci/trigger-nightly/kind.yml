@@ -1,0 +1,47 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - ac_taskgraph.transforms.trigger_nightly:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+task-defaults:
+    run-on-tasks-for: [github-push]
+    run-on-git-branches: ['^main$']
+    treeherder:
+        kind: other
+        platform: release/opt
+        tier: 2
+        symbol: trigger-nightly
+    worker-type: b-android
+    worker:
+        docker-image: {in-tree: base}
+        max-run-time: 600
+        taskcluster-proxy: true
+    run:
+        using: run-task
+
+tasks:
+    cron:
+        description: 'Schedule nightly graph on major geckoview version bumps'
+        run:
+            command: 'curl --fail --verbose -X POST -d "{}" -H "Content-Type: application/json" ${TASKCLUSTER_PROXY_URL}/api/hooks/v1/hooks/project-releng/cron-task-${HOOK_PROJECT}%2fnightly/trigger'
+        when:
+            files-changed:
+                - 'buildSrc/src/main/java/Gecko.kt'
+        scopes:
+            by-level:
+                '3':
+                    - 'hooks:trigger-hook:project-releng/cron-task-mozilla-mobile-android-components/nightly'
+                default:
+                    - 'hooks:trigger-hook:project-releng/cron-task-mozilla-releng-staging-android-components/nightly'
+        worker:
+            env:
+                HOOK_PROJECT:
+                    by-level:
+                        '3': 'mozilla-mobile-android-components'
+                        default: 'mozilla-releng-staging-android-components'

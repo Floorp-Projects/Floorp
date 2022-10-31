@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Usba</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Dili makumpleto ang Request</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+ · <p>Wala pa\'y dugang detalye para ani nga problema o error.</p>
+ · ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Secure Connection Pakyas</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+ · <ul>
+ · <li>Ang page nga imong buot lantawon dili mapakita kay ang authenticity sa nadawat nga data dili ma-verify.</li>
+ · <li>Palihug pahibal-a ang tag-iya sa website mahitungod ani nga problema.</li>
+ · </ul>
+ · ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Secure Connection Pakyas</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+ · <ul>
+ · <li>Basin problema ni sa server configuration, o basin naa\'y gusto mo-impersonate ani nga server.</li>
+ · <li>Kung naka-konek ka ani nga server sa niagi, basin temporary ra ni nga error, sulayi lang ug balik unya.</li>
+ · </ul>
+ · ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Advanced…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+ · <label>Basin naay ga-impersonate sa site ug dili ka dapat mopadayon.</label>
+ · <br><br>
+ · <label>Ang mga website nagapaila-ila pinaagi sa mga certificate. Ang %1$s wala\'y salig sa <b>%2$s</b> kay dili ilado ang iyang certificate issuer, ang certificate kay self-signed, o ang server kay wala nagtubag sa insakto nga mga intermediate certificate.</label>
+ · ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Balik (Rekomendado)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Dawata ang Risgo ug Padayon</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Ang koneksyon naputol</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+ · <p>Nakakonek ang browser, pero naputol ang koneksyon kamulong balhin sa impormasyon. Palihog sulayi usab.</p>
+ · <ul>
+ · <li>Basin ang site dili available kadyot o busy lang. Sulay balik karon taudtaod.</li>
+ · <li>Kung wala pa gihapon mogawas nga page, tan-awa imong device data o Wi-Fi connection.</li>
+ · </ul>
+ · ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Ang koneksyon ni-time out.</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+ · <p>Ang gi-request nga site wala nitubag sa request ug niundang na ang browser ug paghulat sa tubag.</p>
+ · <ul>
+ · <li>Basin nakasinati ang server ug taas nga demand o kasamtangang pagkapalong? Sulayi balik unya.</li>
+ · <li>DIli ba ka maka-browse ug uban site? Tan-awa ang device network connection.</li>
+ · <li>Aduna ba\'y firewall o proxy ang imong device o network? Ang sayop nga setting makaputol sa Web browsing.</li>
+ · <li>Problema pa gihapon? Tawagi imong network administrator o Internet provider para sa dugang tabang.</li>
+ · </ul>
+ · ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Dili ka-konek</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+ · <ul>
+ · <li>Ang site dili ma-open o busy kaayo. Sulayi balik taudtaod.</li>
+ · <li>Kung wala pa gihapon mogawas nga page, tan-awa imong device data o koneksyon sa Wi-Fi.</li>
+ · </ul>
+ · ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Wala damha nga tubag sa server</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+ · <p>Ang site nitubag sa network request sa wala damha nga pamaagi ug ang browser dili na makapadayon.</p>
+ · ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Ang page dili ka-redirect ug tarong</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+ · <p>Ni-undang ang browser ug kuha sa mga gi-request nga mga item. Ang site ga-redirect sa pamaagi nga dili makumpleto.</p>
+ · <ul>
+ · <li>Imo ba gi-hunongan o gi-block ang mga cookie nga kinahanglan ani nga site?</li>
+ · <li>Kung ang pagdawat sa mga cookie sa site wala makasulbad sa problema, basin problema kini sa server configuration ug dili sa imong device.</li>
+ · </ul>
+ · ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Offline Mode</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+ · <p>Ang browser naka-offline mode karon ug dili makakuha sa gipangayo nga item.</p>
+ · <ul>
+ · <li>Ang device konektado ba sa active nga network?</li>
+ · <li>Pinduta ang “Sulayi Balik” para maka-online mode ug ablihi balik ang page.</li>
+ · </ul>
+ · ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Port gidid-an tungod sa seguridad</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+ · <p>Ang girequest nga address duna\'y port (e.g., <q>mozilla.org:80</q> para port 80 sa mozilla.org) gigamit para lang sa <em>ubang tuyo</em> dili Web browsing. Gi-undang sa browser ang request alang sa imong proteksyon ug seguridad.</p>
+ · ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Na-reset ang koneksyon</string>
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+ · <p>Naputol ang network link samtang gasulay ug konek. Palihog sulay balik.</p>
+ · <ul>
+ · <li>Ang site dili ma-open o busy kaayo. Sulayi balik taudtaod.</li>
+ · <li>Kung wala pa gihapon mogawas nga page, tan-awa imong device data o koneksyon sa Wi-Fi.</li>
+ · </ul>
+ · ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Delikado nga File Type</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+ · <ul>
+ · <li>Palihog ug kontak sa mga tag-iya sa website aron ipahibalo ang problema.</li>
+ · </ul>
+ · ]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Guba nga Content Error</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+ · <p>Ang page nga gisulayan ug pakita dili makita tungod kay naa\'y error nga nabantayan kamulong transmission.</p>
+ · <ul>
+ · <li>Palihog ug kontak sa mga tag-iya sa website aron ipahibalo ang problema.</li>
+ · </ul>
+ · ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Daot nga Content</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+ · <p>Ang page nga gisulayan ug pakita dili makita tungod kay naa\'y error nga nabantayan kamulong transmission.</p>
+ · <ul>
+ · <li>Palihog ug kontak sa mga tag-iya sa website aron ipahibalo ang problema.</li>
+ · </ul>
+ · ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Content Encoding Error</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+ · <p>Ang page nga gisulayan ug pakita dili makita tungod kay gagamit kini ug sayop nga porma sa compression.</p>
+ · <ul>
+ · <li>Palihog ug kontak sa mga tag-iya sa website aron ipahibalo ang problema.</li>
+ · </ul>
+ · ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Wala\'y Address</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+ · <p>Dili makita sa browser ang host server sa gihatag nga address.</p>
+ · <ul>
+ · <li>Susiha ang address kung naa\'y sayup sa pag-type sama sa
+ · <strong>ww</strong>.example.com imbis
+ · <strong>www</strong>.example.com.</li>
+ · <li>Kung wala pa gihapon mogawas nga page, tan-awa imong device data o koneksyon sa Wi-Fi.</li>
+ · </ul>
+ · ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Wala\'y koneksyon sa internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Tan-awa imong koneksyon sa network o sulayi ug reload ang page taudtaod.</string>
+
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Reload</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Sayop ang Address</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+ · <p>Ang gihatag nga address sayop ang format. Palihog ug tan-aw sa location bar kung naa\'y sayop ug sulay balik.</p>
+ · ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Sayop ang address</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+ · <ul>
+ · <li>Ang kasagaran sa mga Web address gisulat sama sa <strong>http://www.example.com/</strong></li>
+ · <li>Siguruha nga nigamit ka ug mga forward slash (i.e. <strong>/</strong>).</li>
+ · </ul>
+ · ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Di inila nga Protocol</string>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Ang address nagbungat ug protocol (eg <q>wxyz://</q>) nga wa ilha sa browser, mao nga ang browser dili maka-konek ug tarong sa site.</p>
+      <ul>
+        <li>Nagsulay ba ka ug access ug multimedia o laing non-text nga mga service? i-Check ang site alang sa dugang requirement.</li>
+        <li>Ubang mga protocol nag-require ug third-party software o mga plugin aron makaila ang browser kanila.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Wala Makita ang File</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Basin ang item kay na-rename, na-remove, o nabalhin?</li>
+        <li>Naa ba\'y spelling, capitalization, o ubang sayop sa pag-sulat sa address?</li>
+        <li>Naa ba ka\'y igo nga access permission sa gi-request nga item?</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Access sa File gi-deny</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+
+      <ul>
+        <li>Basin kini na-remove, nabalhin, o ang mga file permission nagpugong sa access.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Ang Proxy Server Balibad sa Koneksyon</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Ang browser na-configure nga mogamit ug proxy server, pero ang proxy gabalibad ug koneksyon.</p>
+      <ul>
+        <li>Sakto ba ang proxy configuration sa browser? Susiha ang mga setting ug sulay balik.</li>
+        <li>Ang proxy service gadawat ba ug koneksyon gikan ani nga network?</li>
+        <li>Aduna pa\'y problema? Konsulta sa inyong network administrator o internet service provider ug tabang.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proxy Server Wa Makita</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>Ang browser na-configure nga mogamit ug proxy server, pero ang proxy dili makita.</p>
+      <ul>
+        <li>Sakto ba ang proxy configuration sa browser? Susiha ang mga setting ug sulay balik.</li>
+        <li>Ang proxy service gadawat ba ug koneksyon gikan ani nga network?</li>
+        <li>Aduna pa\'y problema? Konsulta sa inyong network administrator o internet service provider ug tabang.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Malware site issue</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Ang site sa %1$s nareport nga usa ka-attack site busa na-block base sa imong mga security preference.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Inayran nga site issue</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Ang site sa %1$s nareport nga nagsilbi ug kadudahang software busa kini na-block base sa imong mga security preference.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Daotan nga site issue</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Ang site sa %1$s nareport nga gidudahang makadaot nga site busa na-block kini base sa imong mga security preference.</p>
+]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Makailad nga site issue</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Kini nga webpage sa %1$s nareport nga mailarong site busa kini nablock base sa imong mga security preference.</p>
+    ]]></string>
+</resources>

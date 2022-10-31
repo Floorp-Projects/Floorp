@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/mozac_browser_toolbar_container"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:mozac="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:layout_height="56dp">
+
+    <ImageView
+        android:id="@+id/mozac_browser_toolbar_background"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:importantForAccessibility="no"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/mozac_browser_toolbar_edit_icon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:scaleType="center"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="@id/mozac_browser_toolbar_background"
+        app:srcCompat="@drawable/mozac_ic_search"
+        android:visibility="gone"
+        tools:ignore="ContentDescription"
+        android:layout_marginTop="8dp" />
+
+    <mozilla.components.browser.toolbar.internal.ActionContainer
+        android:id="@+id/mozac_browser_toolbar_edit_actions_start"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/mozac_browser_toolbar_edit_icon"
+        mozac:actionContainerItemSize="56dp"
+        tools:layout_width="56dp" />
+
+    <mozilla.components.ui.autocomplete.InlineAutocompleteEditText
+        android:id="@+id/mozac_browser_toolbar_edit_url_view"
+        android:layout_width="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_height="40dp"
+        android:width="100dp"
+        android:height="100dp"
+        android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
+        android:inputType="textUri|text"
+        android:lines="1"
+        android:gravity="center_vertical"
+        android:background="#00000000"
+        android:textSize="15sp"
+        app:layout_goneMarginStart="8dp"
+        app:layout_constraintStart_toEndOf="@id/mozac_browser_toolbar_edit_actions_start"
+        app:layout_constraintEnd_toStartOf="@id/mozac_browser_toolbar_edit_actions_end"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <mozilla.components.browser.toolbar.internal.ActionContainer
+        android:id="@+id/mozac_browser_toolbar_edit_actions_end"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/mozac_browser_toolbar_clear_view"
+        mozac:actionContainerItemSize="40dp"
+        tools:layout_width="48dp" />
+
+    <ImageView
+        android:id="@+id/mozac_browser_toolbar_clear_view"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:width="100dp"
+        android:height="100dp"
+        android:contentDescription="@string/mozac_clear_button_description"
+        android:scaleType="center"
+        app:srcCompat="@drawable/mozac_ic_clear"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/mozac_browser_toolbar_background"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

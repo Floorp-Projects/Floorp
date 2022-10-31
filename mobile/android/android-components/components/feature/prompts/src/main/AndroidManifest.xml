@@ -1,0 +1,17 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="mozilla.components.feature.prompts">
+    <application>
+        <provider
+            android:name="mozilla.components.feature.prompts.provider.FileProvider"
+            android:authorities="${applicationId}.feature.prompts.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/feature_prompts_file_paths" />
+        </provider>
+    </application>
+</manifest>

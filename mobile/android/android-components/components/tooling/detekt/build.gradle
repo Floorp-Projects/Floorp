@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'java-library'
+apply plugin: 'kotlin'
+
+targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_1_8
+
+dependencies {
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.tools_detekt_api
+
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.tools_detekt_api
+    testImplementation Dependencies.tools_detekt_test
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    // Gradle keeps warning about different Kotlin versions being on the classpath. I am unsure
+    // how to resolve that and if it is even resolvable in this cross-library setup. Anyhow,
+    // since it is only a warning I am going to suppress them for this project specifically.
+    kotlinOptions.allWarningsAsErrors = false
+}
+
+tasks.register("lintRelease") {
+    doLast {
+        // Do nothing. We execute the same set of tasks for all our modules in parallel on taskcluster.
+        // This project doesn't have a lint task.
+    }
+}
+
+tasks.register("assembleAndroidTest") {
+    doLast {
+        // Do nothing. Like the `lint` task above this is just a dummy task so that this module
+        // behaves like our others and we do not need to special case it in automation.
+    }
+}

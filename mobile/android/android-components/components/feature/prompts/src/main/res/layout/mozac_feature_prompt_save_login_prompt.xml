@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/feature_prompt_login_fragment"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:windowBackground"
+    android:paddingStart="16dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="16dp"
+    tools:ignore="Overdraw">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/host_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/mozac_ic_globe"
+        android:importantForAccessibility="no" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/host_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:gravity="center_vertical"
+        android:textColor="?android:textColorPrimary"
+        android:textSize="16sp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        app:layout_constraintStart_toEndOf="@+id/host_icon"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="host.com" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/save_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:drawablePadding="16dp"
+        android:gravity="center_vertical"
+        android:textColor="?android:textColorPrimary"
+        android:textSize="16sp"
+        app:drawableStartCompat="@drawable/mozac_ic_login"
+        app:drawableTint="?android:textColorPrimary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/host_name"
+        app:layout_goneMarginTop="8dp"
+        tools:text="@string/mozac_feature_prompt_login_save_headline" />
+
+    <mozilla.components.feature.prompts.widget.LoginPanelTextInputLayout
+        android:id="@+id/userNameLayout"
+        style="@style/MozTextInputLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/save_message">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/username_field"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/mozac_feature_prompt_username_hint"
+            android:imeOptions="actionDone"
+            android:singleLine="true"
+            android:textColor="?android:textColorPrimary"
+            android:textSize="16sp" />
+    </mozilla.components.feature.prompts.widget.LoginPanelTextInputLayout>
+
+    <mozilla.components.feature.prompts.widget.LoginPanelTextInputLayout
+        android:id="@+id/password_text_input_layout"
+        style="@style/MozTextInputLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="12dp"
+        app:errorEnabled="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/userNameLayout"
+        app:passwordToggleDrawable="@drawable/mozac_ic_password_reveal_two_state"
+        app:passwordToggleEnabled="true"
+        app:passwordToggleTint="?android:textColorPrimary">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/password_field"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/mozac_feature_prompt_password_hint"
+            android:imeOptions="actionDone"
+            android:inputType="textPassword"
+            android:singleLine="true"
+            android:textColor="?android:textColorPrimary"
+            android:textSize="16sp" />
+
+    </mozilla.components.feature.prompts.widget.LoginPanelTextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/save_cancel"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="12dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:letterSpacing="0"
+        android:text="@string/mozac_feature_prompt_never_save"
+        android:textAllCaps="false"
+        android:textColor="@color/button_state_list"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/save_confirm"
+        app:layout_constraintTop_toBottomOf="@+id/password_text_input_layout"
+        app:rippleColor="?android:textColorSecondary" />
+
+    <Button
+        android:id="@+id/save_confirm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="16dp"
+        android:text="@string/mozac_feature_prompt_save_confirmation"
+        android:textAllCaps="false"
+        android:textColor="?android:windowBackground"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:backgroundTint="@color/button_state_list"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/password_text_input_layout"
+        app:rippleColor="?android:textColorSecondary" />
+</androidx.constraintlayout.widget.ConstraintLayout>

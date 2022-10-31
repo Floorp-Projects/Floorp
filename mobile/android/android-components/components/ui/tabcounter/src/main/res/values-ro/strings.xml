@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="mozac_browser_menu_new_private_tab">Filă privată nouă</string>
+    <!-- Browser menu button to close tab. Closes the current session when pressed. -->
+    <string name="mozac_close_tab">Închide fila</string>
+    </resources>

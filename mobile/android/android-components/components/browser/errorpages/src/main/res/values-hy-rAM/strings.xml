@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Կրկին փորձել</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Անհնար է հարցումն ավարտել</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Այս խնդրի կամ սխալի մասին հավելյալ տեղեկություններ այժմ անմատչելի է:</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Անվտանգ կապակցումը ձախողվեց</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Այն էջը, որը փորձում եք դիտել, կարող է չերևալ, որովհետև ստացված տվյալների իսկությունը  չի կարող ստուգվել:</li>
+        <li>Խնդրում ենք կապնվել կայքի սեփականատերերի հետ՝  նրանց տեղյակ պահելու այս խնդրի մասին:</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Անվտանգ կապակցումը ձախողվեց</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Այս խնդիրը կարող է կապված լինել սպասարկիչի կարգավորման հետ կամ, հնարավոր է, որ որևէ մեկը փորձում է որպես սպասարկիչ հանդես գալ:</li>
+        <li>Եթե դուք այս սպասարկիչին նախկինում հաջողությամբ եք կապակցվել, ապա սխալը կարող է ժամանակավոր բնույթ կրել և կարող եք կրկին փորձել ավելի ուշ:</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Ընդլայնված…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Ինչ-որ մեկը կարող է փորձել գաղտնալսել կայքը, և դուք չպետք է շարունակեք: </label>
+        <br> <br>
+        <label> Կայքերը ապացուցում են իրենց ինքնությունը հավաստագրերի միջոցով: %1$sը չի վստահում <b>%2$s</b>-ին, քանի որ դրա վկայագրի թողարկողը անհայտ է, վկայագիրը ինքնագիր է ստորագրված, կամ սպասարկիչը չի ուղարկում ճիշտ միջանկյալ վկայականներ:</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Վերադառնալ (առաջարկվում է)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Ընդունել վտանգը և շարունակել</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Այս կայքը պահանջում է անվտանգ կապ:</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Էջը, որ փորձում եք դիտել, հնարավոր չէ ցուցադրե, քանի որ կայքը պահանջում է անվտանգ կապակցում:</li>
+         <li>Ամենայն հավանականությամբ՝ խնդիրը կայքի հետ է և դուք ոչինչ չեք կարող անել այն ուղղելու համար:</li>
+         <li>Խնդրի մասին կարող եք ծանուցել կայքի վարիչին:</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Լրացուցիչ…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b>-ը ունի անվտանգության քաղաքականություն, որը կոչվում է HTTP Strict Transport Security (HSTS): Այն նշանակում է, որ <b>%2$s</b>-ը կարող է միայն անվտանգ կապակցում անել: Տվյալ կայքը այցելելու համար դուք չեք կարող բացառություն սահմանել:]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b>-ը ունի անվտանգության քաղաքականություն, որը կոչվում է HTTP Strict Transport Security (HSTS), ինչը նշանակում է, որ <b>%2$s</b>-ը կարող է դրան միմիայն անվտանգ կապակցվել: Դուք չեք կարող բացառություն ավելացնել տվյալ էջն այցելելու համար: </label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Հետ գնալ</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Կապը խզվեց</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p> Զննարկիչը հաջողությամբ կապակցվեց, բայց տեղեկատվությունը փոխանցելիս կապն ընդհատվեց: Խնդրում ենք կրկին փորձել: </p>
+      <ul>
+        <li> Կայքը կարող է ժամանակավորապես անհասանելի կամ շատ զբաղված լինել: Կրկին փորձեք մի քանի րոպեից: </li>
+        <li> Եթե չեք կարողանում բեռնել որևէ էջ, ստուգեք ձեր սարքի տվյալները կամ Wi-Fi կապը: </li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Կապի հաստատման ժամանակը սպառվեց</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Հարցվող կայքը չպատասխանեց կապի հարցմանը և ծրագիրը դադարեցրեց պատասխան սպասելուն</p>
+      <ul>
+        <li>Հնարավո՞ր է կայքը խիստ ծանրաբեռնված է կամ ժամանակավորապես չի գործում: Փորձեք քիչ ուշ:</li>
+        <li>Այլ կայքեր ևս չի՞ լինում բացել: Ստուգեք ցանցային կապակցումը:</li>
+        <li>Արդյոք ձեր համակարգիչը կամ ցանցը պաշտպանվա՞ծ են Firewall­-ով կամ պրոքսիով: Դրա սխալ կազմաձևումը կարող է խանգարել վեբի զննմանը:</li>
+        <li>Եթե դեռ դժվարություններ ունեք, ապա օգնության համար դիմեք ցանցային վարիչին կամ համացանցի սպասարկողին:</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Հնարավոր չէ կապակցվել</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>Կայքը ժամանակավոր անհասանելի կամ զբաղված է: Փորձեք մի փոքր ավելի ուշ:</li>
+        <li>Եթե չկարողանաք բեռնել որևէ էջ՝ ստուգեք ձեր սարքի տվյալները կամ Wi-Fi կապակցումը:</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Անսպասելի պատասխան սպասարկիչից</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Կայքը ցանցային հարցմանը պատասխանեց անսպասելի ձևով, ուստի դիտարկիչը չի կարող շարունակել:</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Էջը ճիշտ չէ վերահասցեավորվել</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Դիտարկիչը դադարեցրեց պահանջվող միույթը ստանալու փորձը: Կայքն այնպես է  վերահասցեավորում հարցումը, որ այն երբեք չի ավարտվի:</p>
+      <ul>
+        <li>Արդյո՞ք այս հանգույցի կողմից պահանջվող cookie-ները արգելափակել եք</li>
+        <li>Եթե կայքի cookie-ները ընդունելը խնդիրը չլուծի, ապա ուրեմն, ամենայն հավանականությամբ, դա սպասարկչի կազմաձևման խնդիր է և ոչ թե Ձեր սարքի:</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Անցանց կերպ</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Դիտարկիչը աշխատում է անցանց կերպում և չի կարող կապակցվել հարցվող միույթին:</p>
+      <ul>
+        <li>Համակարգիչը կապակցվա՞ծ է ակտիվ ցանցի:</li>
+        <li>Սեղմեք “Կրկին փորձել”՝ առցանց անցնելու և էջը կրկին բեռնելու համար:</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Պորտը սահմանափակված է անվտանգության նկատառումներից ելնելով</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Հարցվող հասցեն հատկորոշել է պորտ (օրինակ՝ <q>mozilla.org:80</q>՝ 80 պորտի համար mozilla.org-ում), որը սովորաբար օգտագործվում է <em>այլ</em> նպատակների համար և ոչ վեբի դիտարկման: Ձեր անվտանգության և պաշտպանության նկատառումներով դիտարկիչը չեղարկել է հարցումը:</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Կապը վերակայվեց</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Դիտարկիչի հղումը ընդհատվել է կապակցման ընթացքում: Կրկին փորձեք:</p>
+      <ul>
+        <li>Հնարավոր է՝ կայքը ժամանակավորապես անմատչելի կամ զբաղված է: Փոքր ինչ հետո կրկին փորձեք:</li>
+        <li>Եթե հնարավոր չէ բեռնել որևէ էջ, ապա ստուգեք ձեր սարքի տվյալները կամ Wi-Fi կապակցումը:</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Ոչ անվտանգ ֆայլի տեսակ</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Խնդրեմ կապնվեք այս կայքի սեփականատերերի հետ՝ այս խնդրի մասին տեղյակ պահելու համար:</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Բովանդակությունը վնասված է</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Տվյալ էջը չի կարող ցուցադրվել, քանի որ տեղի է ունեցնել տվյալների փոխանցման սխալ։</p>
+      <ul>
+        <li>Կապնվեք կայքի սեփականատերերի հետ՝ խնդրի մասին հաղորդելու համար։</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Բովանդակությունը խափանվեց</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Ընթացիկ էջը չի կարող ցուցադրվել, քանի որ տեղի է ունեցնել փոխանցման սխալ։</p>
+      <ul>
+        <li>Կապնվեք վեբ կայքի հեղինակների հետ՝ նրանց այս մասին հաղորդելու համար։</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Բովանդակության գաղտնագրման սխալ</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Էջը, որը դուք փորձում էք դիտել, չի կարող ցուցադրվել, քանի որ այն օգտագործում է սխալ կամ չսպասարկվող խտացման ձև:</p>
+      <ul>
+        <li>Կապնվեք կայքի սեփականատերերի հետ և տեղյակ պահեք նրանց խնդրի մասին:</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Հասցեն չի գտնվել</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p> Դիտարկիչը չկարողացավ գտնել տրամադրված հասցեի հոսթի սպասարկիչը:</p>
+      <ul>
+        <li> Ստուգեք հասցեն՝ մուտքագրելու սխալների համար, ինչպիսիք են
+          <strong> ww </strong>.example.com
+          <strong> www </strong>.example.com-ի փոխարեն</li>
+        <li>Եթե որևէ էջ չի բեռնվում, ապա ստուգեք ձեր սարքի տվյալները կամ Wi-Fi կապակցումը:</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Չկա կապակցում համացանցին</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Ստուգեք ձեր ցանցային կապակցումը կամ փորձեք կրկին բեռնել էջը մի քանի վայրկյանից:</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Կրկին բեռնել</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Անվավեր Հասցե</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Ներկայացված հասցեն ճանաչված ձևաչափով չէ: Խնդրում ենք ստուգել տեղադրության գոտին՝ արդյոք սխալ կա, և կրկին փորձել:</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Հասցեն վավեր չէ</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Վեբ հասցեները սովորաբար գրվում են հետևյալ կերպ` <strong>http://www.example.com/</strong></li>
+         <li>Համոզվեք, որ օգտագործում եք հակադարձ սլեշներ (այսինքն` <strong>/</strong>):</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Անհայտ աշխատակարգ</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Հասցեն հատկորոշում է հաղորդակարգ (օրինակ՝ <q>wxyz://</q>), որը դիտարկիչը չի կարողանում ճանաչել, այդ իսկ պատճառով դիտարկիչը ի վիճակի չէ պատշաճ կապակցվել կայքի հետ:</p>
+      <ul>
+        <li>Փորձո՞ւմ եք մուլտիմեդիա կամ այլ ոչ տեքստային ծառայություններ մատչել: Ստուգե՛ք կայքի հավելյալ պահանջները:</li>
+        <li>Որոշ հաղորդակարգեր պահանջում են երրորդ կողմից տրամադրված ծրագրաշար կամ օժանդակ ծրագրեր, որպեսզի դիտարկիչը կարողանա դրանք ճանաչել:</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Ֆայլը չի գտնվել</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Կարո՞ղ է նշված միույթը վերանվանվել կամ տեղափոխվել է կամ վերատեղաբաշխվել է:</li>
+        <li>Արդյո՞ք ուղղագրական, մեծատառ/փոքրատառ կամ այլ տպելասխալ չկա հասցեում:</li>
+        <li>Արդյո՞ք մատչելու բավարար թույլտվություն ունեք հարցվող միությի նկատմամբ:</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Մատչումը ֆայլին մերժված է</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Հնարավոր է՝ այն հեռացվել է, տեղափոխվել կամ ֆայլի թույլտվությունները կանխել են մատչումը:</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Միջանկյալ սպասարկիչը մերժեց կապը</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Դիտարկիչը կազմաձևված է օգտագործելու վստահված պրոքսի սպասարկիչ, բայց պրոքսին մերժել է կապակցումը:</p>
+      <ul>
+        <li>Դիտարկիչի պրոքսի կազմաձևումը ճի՞շտ է: Ստուգեք կարգավորումները և կրկին փորձեք:</li>
+        <li>Արդյո՞ք պրոքսի ծառայությունը թույլ է տալիս կապակցումներ այս ցանցից:</li>
+        <li> Դեռ խնդիրներ ունե՞ք: Օգնության համար խորհրդակցեք ձեր ցանցի վարիչի կամ ինտերնետի մատակարարի հետ: </li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Պրոքսի սպասարկիչը չի գտնվել</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Դիտարկիչը կազմաձևված է օգտագործելու վստահված պրոքսի սպասարկիչ, բայց պրոքսին մերժել է կապակցումը:</p>
+      <ul>
+        <li>Դիտարկիչի պրոքսի կազմաձևումը ճի՞շտ է: Ստուգեք կարգավորումները և կրկին փորձեք:</li>
+        <li>Սարքը կապակցված է ակտիվ ցանցի:</li>
+        <li> Դեռ խնդիրներ ունե՞ք: Օգնության համար խորհրդակցեք ձեր ցանցի վարիչի կամ ինտերնետի մատակարարի հետ: </li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Չարամիտ կայքի թողարկում</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>%1$s կայքը հաղորդվել է որպես հարձակվող կայք և արգելափակված է ըստ ձեր անվտանգության նախապատվությունների:</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Կայքի անցանկալի խնդիր</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>%1$s կայքը հաղորդվել է որպես անցանկալի ծրագրաշար սպասարկող և արգելափակված է ըստ ձեր անվտանգության նախապատվությունների:</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Վնասակար կայքի խնդիր</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>%1$s կայքը հաղորդվել է որպես հավանական վնասակար կայք և արգելափակված է ըստ ձեր անվտանգության նախապատվությունների:</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Խաբուսիկ կայքի խնդիր</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p> %1$s վեբ էջը հաղորդվել է որպես խաբուսիկ կայք և արգելափակված է ըստ ձեր անվտանգության նախապատվությունների:</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Անվտանգ կայքը հասանելի չէ</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Դուք ակտիվացրել եք միայն HTTPS ռեժիմը ուժեղացված անվտանգության համար, և <em>%1$s</em>-ի HTTPS տարբերակը հասանելի չէ:]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Շարունակել HTTP կայքում</string>
+</resources>

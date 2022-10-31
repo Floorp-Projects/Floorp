@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">أعِد المحاولة</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">تعذّر إكمال الطلب</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>لا يوجد حاليا المزيد من المعلومات حول هذه المشكلة أو الخطأ.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">فشل الاتصال الآمن</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul> <li>لا يمكن عرض الصفحة التي تحاول زيارتها لعدم إمكانية الاستيثاق من البيانات المستقبلة.</li> <li>من فضلك اتصل بمالكي الموقع لإعلامهم بهذه المشكلة.</li> </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">فشل الاتصال الآمن</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul> <li>قد يكون هذا بسبب مشكلة في إعدادات الخادوم، أو أنّ أحدًا يحاول انتحال هوية الخادوم</li> <li>إن كنت قد اتصلتَ بهذا الموقع بنجاح في الماضي، قد يكون هذا الخطأ مؤقتًا، لذا أعِد المحاولة في وقت لاحق.</li> </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">متقدم…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>هناك احتمال بمحاولة أحد الأشخاص انتحال هوية هذا الموقع، وبذلك عليك عدم المواصلة.</label>
+<br><br>
+<label>تثبت المواقع على الوِب هويّتها باستعمال الشهادات. لا يثق %1$s بالموقع <b>%2$s</b> لأن مُصدر شهادته غير معلوم، أو أن الشهادة موقعة ذاتيا، أو أن الخادوم لم يرسل الشهادات الوسيطة كما ينبغي.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">عُد للخلف (يُنصح به)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">أقبلُ المخاطرة فتابِع</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">قُوطِع الاتصال</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>اتصل المتصفح بنجاح، لكن قطع الاتصال أثناء نقل البيانات.  من فضلك أعد المحاولة.</p>
+<ul>
+<li>قد يكون الموقع متوقفًا مؤقتًا أو مشغولا جدًا. حاول ثانية بعد عدّة دقائق.</li>
+<li>إن لم تكن تستطيع تحميل أي صفحة، تحقق من اتصال المحمول بشبكة البيانات أو الشبكة اللاسلكية.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">انتهت مهلة الاتصال</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>لم يستجب الموقع المطلوب لطلب الاتصال، وتوقف المتصفح عن انتظار رده.</p>
+<ul>
+<li>ربما يواجه الخادوم طلبا متزايدا أو يعاني من انقطاع مؤقت؟  أعد المحاولة فيما بعد.</li>
+<li>ألا تستطيع تصفح المواقع الأخرى؟ راجع اتصال الجهاز بالشبكة.</li>
+<li>جهازك أو شبكتك محمية بجدار ناري أو وسيط؟  الإعدادات الخطأ قد تتعارض مع تصفح الوِب.</li>
+<li>أمازلت تواجه مشاكل؟ راجع مدير الشبكة أو مزود الخدمة للمساعدة</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">تعذّر الاتصال</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+<li>قد يكون الموقع غير متاح مؤقتًا أو مشغولًا جدًا. حاول مجددًا بعد قليل.</li>
+<li>إن لم تكن تستطيع تحميل أي صفحة، تحقق من اتصال المحمول بشبكة البيانات أو الشبكة اللاسلكية.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">استجابة غير متوقعة من الخادوم</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>استجاب الموقع لطلب الشبكة بطريقة غير متوقعة ولا يستطيع المتصفح المواصلة.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">لا تعيد الصفحة التوجيه بشكل سليم</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>توقف المتصفح عن محاولة جلب العنصر المطلوب. يعيد الموقع توجيه الطلب بصورة لن تتم أبدا.</p><ul><li>هل عطّلت أو حجبتَ الكعكات من هذا الموقع؟</li><li>إذا كان قبول كعكات هذا الموقع لا يحل مشكلتك، فهذه على الأرجح مشكلة في إعدادات الخادوم وليس حاسوبك.</li></ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">وضع بدون اتصال</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>المتصفح يعمل في وضع اللا اتصال ولا يستطيع تحميل العنصر المطلوب.</p>
+      <ul>
+        <li>هل الجهاز متّصل بشبكة نشِطة؟</li>
+        <li>انقر ”حاول مجددًا“ للتبديل إلى وضع الاتصال وإعادة تحميل الصفحة.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">المنفذ ممنوع لأسباب الأمان</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>حدَّد العنوان المطلوب منفذا (مثال <q>mozilla.org:80</q> من أجل المنفذ 80 على mozilla.org) يُستخدم عادة لأسباب <em>غير</em> تصفّح الوِب. ألغى المتصفّح الطّلب لحمايتك وأمنك.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">صُفِّر الاتصال</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>قُوطع الاتصال الشبكي أثناء التفاوض على الاتصال. من فضلك أعد المحاولة.</p>
+<ul>
+<li>قد يكون الموقع متوقفًا مؤقتًا أو مشغولا جدًا. حاول ثانية بعد عدّة دقائق.</li>
+<li>إذا كنت غير قادر على تحميل أي صفحة، افحص اتصال الحاسوب بالشبكة.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">نوع ملف غير آمن</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>من فضلك اتصل بمالكي الموقع لإعلامهم بهذه المشكلة.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">خطأ محتوى فاسد</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>تعذر عرض الصفحة التي تريد مشاهدتها بسبب خطأ أثناء نقل البيانات.</p><ul><li>الرجاء التواصل مع مالك الموقع لإبلاغه بهذه المشكلة.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">انهار المحتوى</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>تعذر عرض الصفحة التي تريد مشاهدتها بسبب خطأ أثناء نقل البيانات.</p><ul><li>الرجاء التواصل مع مالك الموقع لإبلاغه بهذه المشكلة.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">خطأ في ترميز المحتوى</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>الصفحة التي تحاول فتحها لا يمكن عرضها لأنها تستخدم صيغة ضغط غير سليمة أو غير مدعومة.</p><ul><li>الرجاء الاتصال أصحاب الموقع لإخبارهم بهذه المشكلة. </li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">العنوان غير موجود</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>لم يجد المتصفح الخادوم المستضيف للعنوان المعطى.</p>
+<ul>
+<li>هل قمت بخطأ في كتابة النطاق؟ (مثل <q><strong>ww</strong>.example.org</q> بدلا من <q><strong>www</strong>.example.org</q>)</li>
+<li>أمتأكد من وجود عنوان النطاق هذا؟  ربما قد يكون انتهى تسجيله.</li>
+<li>إن لم تكن تستطيع تحميل أي صفحة، تحقق من اتصال المحمول بشبكة البيانات أو الشبكة اللاسلكية.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">لا يوجد اتصال بالإنترنت</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">افحص اتصال الشبكة أو جرّب إعادة تحميل الصفحة بعد قليل.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">أعِد التحميل</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">عنوان غير صحيح</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>تنسيق العنوان المُعطى غير معروف. من فضلك راجع شريط العنوان بحثا عن أخطاء ثم أعد المحاولة.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">العنوان غير صالح</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+  <li>تُكتب عناوين الوِب عادة على الشكل الآتي <strong>‪http://www.example.com/‬</strong>‏</li>
+  <li>تأكد أنك تستخدم الشرطة المائلة إلى اليمين (أي <strong>/</strong>).</li> 
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">بروتوكول مجهول</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>يحدد العنوان بروتوكولا (مثلا: <q>wxyz://</q>) لا يتعرفه المتصفح، لذا لا يستطيع المتصفح الاتصال بالموقع بشكل سليم.</p><ul><li>هل تحاول الوصول لمحتوى متعدد الوسائط أو خدمة غير نصية؟ راجع الموقع لمتطلبات إضافية.</li><li>قد تحتاج بعض البروتوكولات لبرامج إضافية أو ملحقات ليستطيع المتصفح التعرف عليها.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">الملف غير موجود</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul><li>ربما حُذف العنصر أو تغيّر اسمه أو مكانه؟</li><li>هل هناك خطأ إملائي أو مطبعي في العنوان؟</li><li>هل لديك صلاحيات كافية للنفاذ إلى العنصر المطلوب؟</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">مُنِع الوصول للملف</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul> <li>قد يكون حُذف أو نُقل أو أن صلاحيّات الملف تمنع الوصول إليه.</li> </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">رفض الخادوم الوسيط الاتصال</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>ضُبط المتصفّح ليستخدم خادوما وسيطا، لكن الوسيط رفض الاتصال.</p><ul><li>هل إعدادات الوسيط سليمة؟ تأكد من الإعدادات وأعد المحاولة.</li><li>هل يسمح الخادوم الوسيط بالاتصالات من هذه الشبكة؟</li><li>أما زلت تواجه المشاكل؟ راجع مدير الشبكة أو مزود الخدمة للمساعدة.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">لم يُعثر على خادوم وسيط</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>ضُبط المتصفّح ليستخدم خادوما وسيطا، لكن لم يوجد الوسيط.</p><ul><li>هل إعدادات الوسيط سليمة؟ تأكد من الإعدادات وأعد المحاولة.</li><li>هل الجهاز متصل بشبكة نشطة؟</li><li>أما زلت تواجه المشاكل؟ راجع مدير الشبكة أو مزود الخدمة للمساعدة.</li></ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">مشكلة موقع يحتوي برمجيات خبيثة</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>أُبلِغ عن أن الموقع %1$s موقع هجمات و حُجب بناء على تفضيلات الأمن.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">مشكلة موقع غير مرغوب فيه</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>أُبلِغ عن أن الموقع %1$s يقدم برمجيات غير مرغوب فيها و حُجب بناء على تفضيلات الأمن.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">مشكلة موقع ضار</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>أُبلِغ عن أن الموقع %1$s موقع خطر محتمل و حُجِبَ بناء على تفضيلات الأمن.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">مشكلة موقع مخادع</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>أُبلِغ عن أن الموقع %1$s موقع مخادع و حُجِبَ بناء على تفضيلات الأمن.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">خاصية الموقع الآمن غير متاحة</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[فعّلت وضع ”HTTPS فقط“ لتحصل على أفضل مستوى من الحماية، ولكن لا توجد نسخة HTTPS من الموقع <em>%1$s</em>.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">واصِل نحو نسخة HTTP</string>
+</resources>

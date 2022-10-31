@@ -1,0 +1,10 @@
+/**
+ * www.zdnet.com - "ZDNET Recommends" section is cropped
+ * Bug #1789164 - https://bugzilla.mozilla.org/show_bug.cgi?id=1789164
+ * WebCompat issue #109342 - https://webcompat.com/issues/109342
+ */
+
+.c-featureThreeItems {
+  margin-left: -1rem;
+  width: 100vw;
+}

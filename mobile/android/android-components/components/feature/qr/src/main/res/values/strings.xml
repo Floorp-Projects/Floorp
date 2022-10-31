@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+
+    <!-- Content description (not visible, for screen readers etc.): Description of an image view. -->
+    <string name="mozac_feature_qr_scanner">QR scanner</string>
+
+    <!-- Text shown if no camera is available on the device and the QR scanner cannot be displayed. -->
+    <string name="mozac_feature_qr_scanner_no_camera">No camera available on device</string>
+
+</resources>

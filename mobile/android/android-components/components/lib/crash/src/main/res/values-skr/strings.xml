@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_dialog_title">افسوس۔ %1$s وچ کوئی مسئلہ ہے تے تباہ تھی ڳئے۔</string>
+
+    <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_crash_dialog_checkbox">%1$s کوں کریش رپوٹ بھیڄو</string>
+
+    <!-- Label of the button closing the crash reporter dialog. -->
+    <string name="mozac_lib_crash_dialog_button_close">بند کرو</string>
+
+    <!-- Label of the button closing the crash reporter dialog and restarting the app. -->
+    <string name="mozac_lib_crash_dialog_button_restart">%1$s ولدا شروع کرو</string>
+
+    <!-- Name of the "notification channel" used for displaying a notification when the app crashed and we can't show a prompt. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_lib_crash_channel">کریش</string>
+
+    <!-- Title of the crash reporter notification for background process crashes. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_background_process_notification_title">افسوس۔ %1$s وچ ہک مسئلہ تھی ڳیا ہے۔</string>
+
+    <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
+    <string name="mozac_lib_crash_notification_action_report">رپورٹ کرو</string>
+
+    <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_send_crash_report_in_progress">%1$s کوں کریش رپوٹ بھیڄیندا پئے</string>
+
+    <!-- Label of notification showing that the crash handling service is gathering the crash data. -->
+    <string name="mozac_lib_gathering_crash_data_in_progress">کریش ڈیٹا کٹھا کریندا پئے</string>
+
+    <!-- Label of notification showing that the telemetry service is gathering the crash data. -->
+    <string name="mozac_lib_gathering_crash_telemetry_in_progress">کریش ٹیلی میٹری ڈیٹا کٹھا کرݨ</string>
+
+    <!-- Title of the activity that shows the list of past crashes (similar to about:crashes)-->
+    <string name="mozac_lib_crash_activity_title">کریش رپورٹاں</string>
+
+    <!-- Text shown instead of crash list if no crashes have been submitted yet -->
+    <string name="mozac_lib_crash_no_crashes">کوئی کریش رپوٹاں جمع کائنی کرائیاں۔</string>
+
+    <!-- Text link that will show an app chooser to share a crash report with a third-party app (e.g. gmail) -->
+    <string name="mozac_lib_crash_share">شیئر</string>
+</resources>

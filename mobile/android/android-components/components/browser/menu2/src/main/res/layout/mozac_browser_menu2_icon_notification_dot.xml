@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.appcompat.widget.AppCompatImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/notification_dot"
+    android:layout_gravity="top|end"
+    android:contentDescription="@string/mozac_browser_menu2_highlighted"
+    android:layout_width="@dimen/mozac_browser_menu2_icon_notification_dot_size"
+    android:layout_height="@dimen/mozac_browser_menu2_icon_notification_dot_size"
+    android:translationX="@dimen/mozac_browser_menu2_icon_notification_dot_translate_x"
+    android:translationY="@dimen/mozac_browser_menu2_icon_notification_dot_translate_y"
+    android:background="@android:color/transparent"
+    app:srcCompat="@drawable/mozac_browser_menu2_notification_icon"  />

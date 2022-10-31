@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <!-- inherit from the AppCompat theme -->
+    <style name="CrashDialogTheme" parent="Theme.Mozac.CrashReporter">
+
+        <!-- your app branding color for the app bar -->
+        <item name="colorPrimary">#8BC34A</item>
+
+        <!-- darker variant for the status bar and contextual app bars -->
+        <item name="colorPrimaryDark">#689F38</item>
+
+        <!-- theme UI controls like checkboxes and text fields -->
+        <item name="colorAccent">#E040FB</item>
+
+    </style>
+</resources>

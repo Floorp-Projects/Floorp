@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">తిరిగి ప్రయత్నించు</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">అభ్యర్థనను పూర్తి చేయలేము</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>ఈ సమస్యకు లేదా దోషానికి సంబంధించిన అదనపు సమాచారం ప్రస్తుతం అందుబాటులో లేదు</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">సురక్షిత అనుసంధానం విఫలమైంది</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>మీరు చూడటానికి ప్రయత్నిస్తున్న పేజీని చూపించలేము ఎందుకంటే అందుకున్న డేటా ప్రామాణికతను తనిఖీ చేయలేకపోయాం.</li>
+        <li>దయచేసి ఈ వెబ్‌సైట్ యజమానులను సంప్రదించి వారికి ఈ సమస్య గురించి తెలియజేయండి.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">సురక్షిత అనుసంధానం విఫలమైంది</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>ఇది స్వరరు స్వరూపణంలో సమస్య కావచ్చు, లేదా ఎవరో సర్వరును అనుకరించడానికి ప్రయత్నిస్తూండవచ్చు.</li>
+        <li>మీరు ఇంతకుముందు ఈ సర్వరుకి విజయవంతంగా అనుసంధానమైతే, ఈ తప్పిదం తాత్కాలికం కావచ్చు, మీరు కాసేపు ఆగి మళ్ళీ ప్రయత్నించవచ్చు.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">ఉన్నతం…</string>
+
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>ఎవరో ఈ సైటును అనుకరించడానికి ప్రయత్నిస్తూండవచ్చు, మీరు ముందుకెళ్ళకూడదు.</label>
+        <br><br>
+        <label>వెబ్‌సైట్లు తమ గుర్తింపును ధృవపత్రాల ద్వారా నిరూపిస్తాయి. <b>%2$s</b>ను %1$s నమ్మడంలేదు, ఎందుకంటే వారి ధృవపత్రాన్ని జారీ చేసినది గుర్తుతెలియనివారు, ఆ ధృవవత్రం స్వయం-జారీ చేయబడింది, లేదా సర్వరు సరైన మధ్యవర్తి ధృవపత్రాలను పంపించడం లేదు.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">వెనక్కి వెళ్ళండి (సిఫారసు చేయబడింది)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">నష్టభయాన్ని అంగీకరించి ముందుకు కొనసాగండి</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">ఈ వెబ్‌సైటుకి సురక్షిత అనుసంధానం కావాలి.</string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">ఉన్నతం…</string>
+
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">వెనుకకు వెళ్ళు</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">అనుసంధానానికి అంతరాయం కలిగింది</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>విహారిణి విజయవంతంగా అనుసంధానమయ్యింది, కానీ సమాచారం బదిలీ అవుతున్నప్పుడు అనుసంధానానికి అంతరాయం కలిగింది. దయచేసి మళ్ళీ ప్రయత్నించండి.</p>
+      <ul>
+        <li>సైటు తాత్కాలికంగా అందుబాటులో లేకపోవచ్చు లేదా చాలా ఒత్తిడిలో ఉండొచ్చు. కొంతసేపు ఆగి మళ్ళీ ప్రయత్నించండి.</li>
+        <li>మీకు వేరే పేజీలు కూడా తెరుచుకోకపోతూంటే, మీ పరికరంలో డేటా లేక వై-ఫై అనుసంధానాన్ని సరిచూసుకోండి.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">అనుసంధానానికి కాలం చెల్లిపోయింది</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>మీరు అడిగిన సైటు అనుసంధాన అభ్యర్థనకు స్పందించలేదు, విహారిణి ఇక స్పందన కోసం చూడటం ఆపివేసింది.</p>
+      <ul>
+        <li>సర్వరు అధిక ఒత్తిడిలో ఉందేమో లేక తాత్కాలికంగా పనిచేయడం లేదేమో? కాసేపటి తర్వాత మళ్ళీ పయత్నించండి.</li>
+        <li>మీకు వేరే సైట్లు కూడా తెరుచుకోవడం లేదా? మీ పరికరపు అనుసంధానాన్ని సరిచూసుకోండి.</li>
+        <li>మీ పరికరం ఫైర్‌వాల్ లేదా ప్రాక్సీ ద్వారా సంరక్షితమై ఉందా? తప్పుడు అమరికలు మీ జాల విహరణకు అడ్డుపడుతూండవచ్చు.</li>
+        <li>ఇంకా సమస్య ఉందా? సహాయం కొరకు మీ నెట్‌వర్క్ నిర్వాహకులను గానీ లేక అంతర్జాల సేవాదారుని గానీ సంప్రదించండి.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">అనుసంధానం సాధ్యం కావడంలేదు</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>సైటు తాత్కాలికంగా అందుబాటులో లేదు లేక చాలా ఒత్తిలో ఉండవచ్చు. దయచేసి కాపేపు ఆగి మళ్ళీ ప్రయత్నించండి.</li>
+        <li>మీకు మరే ఇతర పేజీలు తెరుచుకోకపోతూంటే, మీ పరికరపు డేటా లేక వై-ఫై అనుసంధానాన్ని సరిచూసుకోండి.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">సర్వరు నుండి అనుకోని స్పందన</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>నెట్‌వర్క్ అభ్యర్థనకు సైటు అనుకోని విధంగా స్పందించింది, కనుక విహారిణి ముందుకు వెళ్ళలేదు.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">పేజీ సరిగా దారిమళ్ళించడం లేదు</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>అడిగిన అంశం తేవడాన్ని విహారిణి ఆపివేసింది. అభ్యర్థనను ఎప్పటికీ పూర్తికాని విధంగా ఈ సైటు దారిమళ్ళిస్తోంది.</p>
+      <ul>
+        <li>ఈ సైటుకు కావలసిన కుకీలను మీరు అచేతనించడం లేక నిరోధించడం గానీ చేసారా?</li>
+        <li>ఈ సైటు కుకీలను అనుమతించడం సమస్యను పరిష్కరించకపోతే, అది బహుశా సర్వరు స్వరూపణంలో సమస్య కావచ్చు, మీ పరికరంలో కాకపోవచ్చు.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">ఆఫ్‌లైన్ రీతి</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>విహారిణి ఆఫ్‌లైన్ రీతితో పనిచేస్తుంది, అడిగిన అంశానికి అనుసంధానం కాలేకున్నది.</p>
+      <ul>
+        <li>ఈ పరికరం క్రియాశీల నెట్‌వర్కుకి అనుసంధానమై ఉందా?</li>
+        <li>ఆన్‌లైన్ రీతికి మారి పేజీని మళ్ళీ లోడుచేయడానికి “మళ్ళీ ప్రయత్నించు” నొక్కండి.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">భద్రతా కారణాల దృష్ట్యా పోర్టు నియంత్రించబడింది</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>అడిగిన చిరునామా సామాన్యంగా జాల విహారణ కోసం కాకుండా <em>ఇతర</em> ఉద్దేశాల కోసం వాడే ఒక పోర్టును పేర్కొన్నది (ఉదా॥ mozilla.orgలో పోర్టు 80 కొరకు<q>mozilla.org:80</q>). మీ సంరక్షణ, భద్రతలకై విహారిణి ఈ అభ్యర్థనను రద్దుచేసింది.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">అనుసంధానానికి అంతరాయం కలిగింది</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>అనుసంధానానికి ప్రయత్నిస్తూన్నప్పుడు నెట్‌వర్క్ లంకెకు అంతరాయం కలిగింది. దయచేసి మళ్ళీ ప్రయత్నించండి.</p>
+      <ul>
+        <li>ఆ సైటు తాత్కాలికంగా అందుబాటులో లేకపోవచ్చు లేక చాలా ఒత్తిడిలో ఉండివుండొచ్చు. కాసేపు ఆగి మళ్ళీ ప్రయత్నించండి.</li>
+        <li>మీకు మరే ఇతర పేజీలు కూడా తెరుచుకోకపోతూంటే, మీ పరికరపు డేటా లేక వై-ఫై అనుసంధానాన్ని సరిచూసుకోండి.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">సురక్షితం కాని ఫైలు రకం</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>దయచేసి వెబ్‌సైటు యజమానులను సంప్రదించి వారిగి ఈ సమస్యను తెలియజేయండి.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">పాడయిన విషయపు తప్పిదం</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>మీరు చూడడానికి ప్రయత్నిస్తున్న పేజీని చూపించలేము ఎందుకంటే డేటా బదలాయింపులో తప్పిదం కనుగొనబడింది.</p>
+      <ul>
+        <li>దయచేసి వెబ్‌సైటు యజమానులను సంప్రదించి వారికి ఈ సమస్య గురించి తెలియజేయండి.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">విషయం దెబ్బ తిన్నది</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>మీరు చూడడానికి ప్రయత్నిస్తున్న పేజీని చూపించలేము ఎందుకంటే డేటా బదలాయింపులో తప్పిదం కనుగొనబడింది.</p>
+      <ul>
+        <li>దయచేసి వెబ్‌సైటు యజమానులను సంప్రదించి వారికి ఈ సమస్య గురించి తెలియజేయండి.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">విషయపు ఎన్‌కోడింగ్ తప్పిదం</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>మీరు చూడడానికి ప్రయత్నిస్తున్న పేజీని చూపించలేము ఎందుకంటే అది చెల్లని లేక తోడ్పాటు లేని కంప్రెషన్ పద్ధతిని ఉపయోగిస్తోంది.</p>
+      <ul>
+        <li>దయచేసి వెబ్‌సైటు యజమానులను సంప్రదించి వారికి ఈ సమస్య గురించి తెలియజేయండి.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">చిరునామా కనపడలేదు</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>ఇచ్చిన చిరునామా కొరకు హోస్టు సర్వరును విహారిణి కనుగొనలేకపోయింది.</p>
+      <ul>
+        <li>చిరునామాలో
+          <strong>www</strong>.example.com బదులుగా
+          <strong>ww</strong>.example.com అని టైపు చేసారేమో
+          సరిచూసుకోండి.</li>
+        <li>మీరు మరే ఇతర పేజీలను తెరవలేకపోతూంటే, మీ పరికరపు డేటా లేక వై-ఫై అనుసంధానాన్ని సరిచూసుకోండి.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">అంతర్జాల అనుసంధానం లేదు</string>
+
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">మీ నెట్‌వర్క్ అనుసంధానాన్ని సరిచూసుకోండి లేక కొన్ని క్షణాల తర్వాత ఈ పేజీని మళ్ళీ తెరవండి.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">మళ్ళీ లోడుచేయి</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">చెల్లని చిరునామా</string>
+
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>ఇచ్చిన చిరునామా గుర్తించగలిగే ఆకృతిలో లేదు. దయచేసి చిరునామా పట్టీలో తప్పులను సరిచేసి అప్పుడు ప్రయత్నించండి.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ఈ చిరునామా చెల్లదు</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>జాల చిరునామాలను మాములుగా ఇలా వ్రాస్తారు <strong>http://www.example.com/</strong></li>
+        <li>మీరు ఫార్వార్డు స్లాషులనే (అంటే <strong>/</strong>) వాడేలా చూసుకోండి.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">తెలియని ప్రొటోకాల్</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>ఆ చిరునామా విహారిణి గుర్తించలేని ప్రొటోకాలును పేర్కొంది (ఉదా॥ <q>wxyz://</q>), కాబట్టి విహారిణి ఆ సైటుకి సరిగా అనుసంధానం కాజాలదు.</p>
+      <ul>
+        <li>మీరు మల్టీమీడియా లేదా పాఠ్యేతర సేవలను పొందడానికి ప్రయత్నిస్తున్నారా? అదనపు ఆవశ్యకాల కోసం సైటులో చూడండి.</li>
+        <li>కొన్ని ప్రొటోకాల్లను ముడో-పక్ష సాఫ్ట్‌వేరు లేక ప్లగిన్లు కావలసిరావచ్చు, ఆ తర్వాత వాటిని విహారిణి గుర్తించగలదు.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">ఫైలు కనబడలేదు</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>పేరుమార్చబడి ఉండొచ్చు, తొలగింబడి ఉండొచ్చు, లేదా వేరే చోటికి తరలించబడి ఉండచ్చేమో?</li>
+        <li>చిరునామాలో స్పెల్లింగు, క్యాపిటలైజేషన్ లేదా ఇతర పాఠ్య సంబంధిత పొరపాట్లు ఏమైనా ఉన్నాయా?</li>
+        <li>అభ్యర్థించిన అంశాన్ని చూడడానికి మీకు తగిన అనుమతులు ఉన్నాయా?</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">ఫైలుకి ప్రాప్యత నిరాకరించబడింది</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>ఇది తీసివేయబడి ఉండచ్చు, తరలించవేయబడి ఉండచ్చు, లేదా ఫైలు అనుమతులు దాన్ని చూడడాన్ని నిరోధిస్తూండవచ్చు.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">ప్రాక్రీ సర్వరు అనుసంధానాన్ని తిరస్కరించింది</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>ఈ విహారిణి ప్రాక్సీ సర్వరును వాడేలా స్వరూపించబడింది, కానీ ప్రాక్సీ అనుసంధానాన్ని నిరాకరించింది.</p>
+      <ul>
+        <li>విహారిణి ప్రాక్సీ స్వరూపణం సరియేనా? అమరికలను సరిచూసి అప్పుడు ప్రయత్నించండి.</li>
+        <li>ప్రాక్సీ సర్వరు ఈ నెట్‌వర్కు నుండి అనుసంధానాలను అనుమతిస్తుందా?</li>
+        <li>ఇంకా సమస్య ఉందా? సహాయం కొరకు మీ నెట్‌వర్క్ నిర్వాహకులను గానీ లేదా అంతర్జాల సేవాదారుని గానీ సంప్రదించండి.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">ప్రాక్సీ సర్వరు కనబడలేదు</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>ఈ విహారిణి ప్రాక్సీ సర్వరును వాడేలా స్వరూపించబడింది, కానీ ప్రాక్సీ కనబడటం లేదు.</p>
+      <ul>
+        <li>విహారిణి ప్రాక్సీ స్వరూపణం సరియేనా? అమరికలను సరిచూసి అప్పుడు ప్రయత్నించండి.</li>
+        <li>ఈ పరికరం క్రియాశీలమైన నెట్‌వర్కుకు అనుసంధానమై ఉందా?</li>
+        <li>ఇంకా సమస్య ఉందా? సహాయం కొరకు మీ నెట్‌వర్క్ నిర్వాహకులను గానీ లేదా అంతర్జాల సేవాదారుని గానీ సంప్రదించండి.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">మాల్‌వేర్ సైటు సమస్య</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>%1$s వద్దగల సైటు దాడిచేసే సైటుగా నివేదించబడింది, మీ భద్రత అభిరుచుల మేరకు ఆ సైటు నిరోధించబడింది.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">అవాంఛిత సైటు సమస్య</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>%1$s వద్దగల సైటు అవాంఛిత సాఫ్ట్‌వేరును అందించేదిగా నివేదించబడింది. మీ భద్రత అభిరుచుల మేరకు ఈ సైటు నిరోధించబడింది.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">హానికరమైన సైటు సమస్య</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>%1$s వద్దగల సైటు హానికరంకాగల సైటుగా నివేదించబడింది, మీ భద్రత అభిరుచుల మేరకు ఆ సైటు నిరోధించబడింది.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">మోసపూరితమైన సైటు సమస్య</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>%1$s వద్ద గల వెబ్ పేజీ మోసపూరితమైన సైటుగా నివేదించబడి ఉంది, మీ భద్రతా అభిరుచుల మేరకు ఆ సైటు నిరోధించబడింది.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">సురక్షితమైన సైటు అందుబాటులో లేదు</string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">HTTP సైటుకి కొనసాగు</string>
+</resources>

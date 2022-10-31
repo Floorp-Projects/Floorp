@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">Без засечак</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">Шрыфт без засечак</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">З засечкамі</string>
+
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">Шрыфт з засечкамі</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">Паменшыць памер шрыфту</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">Павялічыць памер шрыфту</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark"></string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">Цёмная каляровая тэма</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">Сэпія</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">Каляровая тэма сепія</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">Светлая</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Светлая каляровая тэма</string>
+</resources>

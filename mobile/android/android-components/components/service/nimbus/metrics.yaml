@@ -1,0 +1,105 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file defines the metrics that are recorded by glean telemetry. They are
+# automatically converted to Kotlin code at build time using the `glean_parser`
+# PyPI package.
+---
+
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+
+nimbus_events:
+  enrollment:
+    type: event
+    description: >
+      Recorded when a user has met the conditions and is first bucketed into an
+      experiment (i.e. targeting matched and they were randomized into a bucket
+      and branch of the experiment). Expected a maximum of once per experiment
+      per user.
+    extra_keys:
+      experiment:
+        description: The slug/unique identifier of the experiment
+      branch:
+        description: The branch slug/identifier that was randomly chosen
+      enrollment_id:
+        description: A unique identifier generated at enrollment time
+    bugs:
+      - https://jira.mozilla.com/browse/SDK-61
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/9168#issuecomment-743461975
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - tlong@mozilla.com
+      - telemetry-team@mozilla.com
+    expires: never
+  unenrollment:
+    type: event
+    description: >
+      Recorded when either telemetry is disabled, or the experiment has run
+      for its designed duration (i.e. it is no longer present in the Nimbus
+      Remote Settings collection)
+    extra_keys:
+      experiment:
+        description: The slug/unique identifier of the experiment
+      branch:
+        description: The branch slug/identifier that was randomly chosen
+      enrollment_id:
+        description: A unique identifier generated at enrollment time
+    bugs:
+      - https://jira.mozilla.com/browse/SDK-126
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/9168#issuecomment-743461975
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - tlong@mozilla.com
+      - telemetry-team@mozilla.com
+    expires: never
+  disqualification:
+    type: event
+    description: >
+      Recorded when a user becomes ineligible to continue receiving the
+      treatment for an enrolled experiment, for reasons such as the user
+      opting out of the experiment or no longer matching targeting for the
+      experiment.
+    extra_keys:
+      experiment:
+        description: The slug/unique identifier of the experiment
+      branch:
+        description: The branch slug/identifier that was randomly chosen
+      enrollment_id:
+        description: A unique identifier generated at enrollment time
+    bugs:
+      - https://jira.mozilla.com/browse/SDK-126
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/9168#issuecomment-743461975
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - tlong@mozilla.com
+      - telemetry-team@mozilla.com
+    expires: never
+  exposure:
+    type: event
+    description: >
+      Recorded when a user actually observes an experimental treatment, or
+      would have observed an experimental treatment if they had been in a
+      branch that would have shown one.
+    extra_keys:
+      experiment:
+        description: The slug/unique identifier of the experiment
+      branch:
+        description: The branch slug/identifier that was randomly chosen
+      enrollment_id:
+        description: A unique identifier generated at enrollment time
+    bugs:
+      - https://jira.mozilla.com/browse/SDK-65
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/9168#issuecomment-743461975
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - tlong@mozilla.com, telemetry-team@mozilla.com
+    expires: never

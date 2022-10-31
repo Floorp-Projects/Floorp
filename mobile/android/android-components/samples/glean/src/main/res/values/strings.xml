@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <string name="app_name">Glean - Metrics Demo</string>
+    <string name="generate_data">Record Text</string>
+    <string name="string_list_input_hint">Enter some text here</string>
+    <string name="counter_metric_info">
+        Every time you click on the button above, the text is added to the test_string_list metric
+        and a counter metric type called testCounter is incremented. Both of these will be included
+        when the ping is sent. The counter and the string list are utilizing the `user` lifetime
+        and should persist from launch to launch of the app.\n\nAn event metric is also being used
+        to attach a dictionary of values to the extras of the event ping. See MainActivity for
+        where all of this is happening.
+    </string>
+    <string name="experiment_not_active">Experiment not active</string>
+    <string name="experiment_active_branch">Experiment active, branch: %1$s</string>
+    <string name="check_experiments">Check experiments</string>
+    <string name="check_experiments_btn_description">The CHECK EXPERIMENTS button checks the experiments status of the test-colorexperiment and sets the color accordingly.</string>
+</resources>

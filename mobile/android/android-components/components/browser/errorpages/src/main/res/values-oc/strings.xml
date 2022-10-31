@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Tornar ensajar</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Impossible de completar la requèsta</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>I a pas cap d‘informacion disponibla actualament tocant aqueste problèma o error.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Fracàs de la connexion securizada</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>La pagina qu’ensajatz de consultar pòt pas èsser afichada perque l’autenticitat de las donadas recebudas pòt pas èsser verificada.</li>
+        <li>Contactatz los proprietaris del sit Web per los n’assabentar.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">La connexion segura a pas capitat</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+      <li>Aquò pòt èsser degut a un problèma de configuracion del servidor o a una persona qu’ensaja d’usurpar l’identitat del servidor.</li>
+        <li>Se ja sètz connectat(ada) amb succès a aqueste servidor, benlèu l’error es temporària e podètz ensajar tornamai pus tard.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avançat…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Qualqu’un poiriá usurpar l’identitat del site, deuriatz pas contunhar.</label>
+        <br><br>
+        <label>Los sites web pròvan lor identitat via de certificats. %1$s se fisa pas de <b>%2$s</b> perque lo seu emissor de certificats es desconegut, lo certificat es auto-signat, o lo servidor envia pas los certificats intermediari corrèctes.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Tornar (recomandat)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Acceptar lo risc e contunhar</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Aqueste site web requerís una connexion segura.</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>La pagina qu’ensajatz de visualizar se pòt pas afichar perque aqueste site requerís una connexion segura.</li>
+         <li>Lo problèma ven probablament del site web e i a pas res que poscatz far per lo resòlver;</li>
+         <li>Podètz senhalar lo problèma als administrators del site web.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Avançat…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+<label> <b>%1$s</b> a una estrategia de seguretat HTTP Strict Transport Security (HSTS), valent a dire que <b>%2$s</b> pòt sonque s’i connectar amb una connexion securizada. Podètz pas apondre d’excepcion per consultar aqueste site.
+]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+<label> <b>%1$s</b> a una estrategia de seguretat HTTP Strict Transport Security (HSTS), valent a dire que <b>%2$s</b> pòt sonque s’i connectar amb una connexion securizada. Podètz pas apondre d’excepcion per consultar aqueste site. </label>
+]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Tornar</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">La connexion es estada interrompuda</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Lo navegador s’es corrèctament connectat, mas la connexion es estada interrompuda pendent lo transferiment d’informacions. Tornatz ensajar.</p>
+      <ul>
+        <li>Lo site es benlèu pas accessible o subrecargat. Tornatz ensajar dins un momenton</li>
+        <li>Se capitatz pas de navegar sus cap de site, verificatz la connexion de donadas del periferic o la connexion Wi-Fi</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Relambi d’espèra passat</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Lo navegador a esperat tròp longtemps al moment de la connexion al site e a arrestat d’esperar una responsa.</p>
+      <ul>
+        <li>Benlèu que lo servidor es en suscarga o es temporàriament en pana ? Ensajatz mai tard.</li>
+        <li>D’autres sites son tanben inaccessibles ? Verificatz la connexion a la ret de vòstre periferic.</li>
+        <li>Vòstre periferic o vòstra ret es protegida per un parafuòc o un proxy ? De paramètres incorrèctes pòdon interferir amb la navegacion sus lo Web.</li>
+        <li>Avètz totjorn de problèmas ? Consultatz l’administrator de la ret o vòstre provesidor d’accès a Internet per obténer d’ajuda.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Connexion impossibla</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>Aqueste site pòt èsser indisponible pel moment o subrecargat. Tornatz ensajar dins una estona.</li>
+        <li>S’es impossible de telecargar quitament una pagina, verificatz las donadas de connexion o Wifi de vòstre periferic mobil</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Responsa inesperada del servidor</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Lo site a respondut a la requèsta de la ret d’una faiçon inesperada e lo navegador pòt pas contunhar.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Redireccion de pagina incorrècta</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Lo navegador a quitat d’esperar una responsa del site. Lo site crèa una redireccion d’un biais que fa qu’acabarà pas jamai.</p>
+      <ul>
+        <li>Avètz desactivat o blocat los cookies necessaris per aqueste site ?</li>
+        <li>Se lo problèma es pas resolgut en acceptant los cookies d’aqueste site, s’agís probablament d’un problèma de configuracion del servidor e non pas de vòstre ordenador.</li></ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Mòde fòra connexion</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Lo navegador es en mòde fòra connexion e se pòt pas connectar a l’element indicat.</p>
+      <ul>
+        <li>L’ordenador es connectat a la ret ?</li>
+        <li>Clicatz sul boton « Ensajar tornarmai » per tornar en mòde connectat e recargar la pagina.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Pòrt restrench per de rasons de seguretat.</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>L’adreça demandada indica un pòrt (per ex.<q>mozilla.org:80</q> pel pòrt 80 sus mozilla.org) qu’es normalament utilizat per d’<em>autres</em> usatges que la navegacion sul Web. Lo navegador a anullat la requèsta per vòstra proteccion e vòstra seguretat.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">La connexion es estada reïnicializada</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Lo ligam ret es estat copat pendent la negociacion d’una connexion. Tornatz ensajar.</p>
+      <ul>
+        <li>Lo site es benlèu pas accessible o subrecargat. Tornatz ensajar dins un momenton</li>
+        <li>Se capitatz pas de navegar sus cap de site, verificatz la connexion de donadas del periferic o la connexion Wi-Fi</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Tipe de fichièr pas segur</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Contactatz lo webmèstre del site per l’assabentar d’aqueste problèma.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Error deguda a un contengut corromput</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>La pagina qu’ensajatz de veire pòt pas èsser afichada perque una error dins la transmission de donadas es estada detectada.</p>
+      <ul>
+        <li>Contactatz los proprietaris del site Web per los assabentar d’aqueste problèma.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Lo contengut a plantat</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>La pagina qu’ensajatz de veire pòt pas èsser afichada perque una error dins la transmission de donadas es estada detectada.</p>
+      <ul>
+        <li>Contactatz los proprietaris del site Web per los assabentar d’aqueste problèma.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Error d’encodatge de contengut</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>La pagina qu’ensajatz de veire pòt pas èsser afichada perque utiliza un tipe de compression invalid o pas pres en carga.</p>
+      <ul>
+        <li>Contactatz lo webmèstre del site Web per l’assabentar d’aqueste problèma.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Pagina pas trobada</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Lo navegador a pas pogut trobar lo servidor òste per l’adreça fornida.</p>
+      <ul>
+        <li>Verificatz l’adreça se per cas i a una deca coma
+          <strong>ww</strong>.exemple.com allòc de
+          <strong>www</strong>.exemple.com.</li>
+        <li>Se podètz pas cargar cap de pagina, verificatz la connexion de donada del periferic o Wi-Fi.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Cap de connexion Internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Verificatz vòstra connexion ret o ensajatz de recargar la pagina d’aquí un moment.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Tornar cargar</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Adreça invalida</string>
+
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>L’adreça fornida es pas dins un format reconegut. Mercés de verificar qu’i aja pas cap d’error a la barra d’adreça e tornatz ensajar.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">L’adreça es pas valida</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Las adreças web normalament son aital <strong>http://www.exemple.com/</strong></li>
+  <li>Asseguratz-vos qu’utilizetz las barras inclinadas(<strong>/</strong>).</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Protocòl desconegut</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>L’adreça indica un protocòl (per ex. <q>wxyz://</q>) desconegut del navegador que doncas se pòt pas connectar corrèctament al site.</p>
+      <ul>
+        <li>Ensajatz d’accedir a de contengut multimèdia o d’autres servicis que son pas de tèxte ? Verificatz los prerequesits logicials del site.</li>
+        <li>D’unes protocòls pòdon necessitar un logiciel tèrç o de plugins per que lo navegador los pòsca reconéisser.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Fichièr introbable</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+  <li>Lo fichièr es benlèu estat renomenat, suprimit o desplaçat ?</li>
+  <li>I a una deca de majuscula, d’accent o una autra error ?</li>
+  <li>Avètz las permissions d’accès que cal per aqueste fichièr ?</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">L’accès al fichièr es estat refusat</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+  <li>Benlèu es estat suprimit, bolegat o las permissions del fichièr n’empacharián l’accès.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Lo servidor mandatari a refusat la connexion</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Lo navegador es configurat per utilizar un servidor mandatari mas lo proxy a refusat la connexion.</p>
+      <ul>
+        <li>La configuracion proxy del navegador es corrècta ? Verificatz los paramètres e tornatz ensajar.</li>
+        <li>Lo servici proxy autoriza las connexions a partir d’aquesta ret ?</li>
+        <li>Avètz encara de problèmas ? Consultatz vòstre administrator de ret o vòstre provesidor d’accès a Internet per obténer d’ajuda.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Impossible de trobar lo servidor mandatari</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Lo navegador es configurat per utilizar un servidor mandatari mas lo proxy es introbable.</p>
+      <ul>
+        <li>La configuracion proxy del navegador es corrècta ? Verificatz los paramètres e tornatz ensajar.</li>
+        <li>Lo servici proxy autoriza las connexions a partir d’aquesta ret ?</li>
+        <li>Avètz encara de problèmas ? Consultatz vòstre administrator de ret o vòstre provesidor d’accès a Internet per obténer d’ajuda.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problèma de logicial malvolent</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Lo site a l’adreça %1$s es estat senhalat coma comportant de logicials indesirables e es estat blocat segon vòstras preferéncias de seguretat.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problèma de site indesirable</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Lo site a l’adreça %1$s es estat senhalat coma comportant de logicials indesirables e es estat blocat segon vòstras preferéncias de seguretat.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problèma de site perilhós</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Lo site a %1$s es estat senhalat coma un site possiblament malfasent e es estat blocat segon vòstras preferéncias de seguretat.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problèma de site enganaire</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Lo site a l’adreça %1$s es estat senhalat coma un site enganaire e es estat blocat segon vòstras preferéncias de seguretat.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Site securizat non disponible</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Avètz activat lo mòde HTTPS solament e cap de version HTTPS de <em>%1$s</em> es pas disponibla.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Contunhar cap al site HTTP</string>
+</resources>

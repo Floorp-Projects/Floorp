@@ -1,0 +1,28 @@
+{
+  "manifest_version": 2,
+  "applications": {
+    "gecko": {
+      "id": "readerview@mozac.org"
+    }
+  },
+  "name": "Mozilla Android Components - ReaderView",
+  "version": "${version}",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["readability/readability-readerable-0.4.2.js", "readerview-content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "scripts": ["readerview-background.js"]
+  },
+  "permissions": [
+    "mozillaAddons",
+    "geckoViewAddons",
+    "nativeMessaging",
+    "nativeMessagingFromContent",
+    "tabs",
+    "<all_urls>"
+  ]
+}

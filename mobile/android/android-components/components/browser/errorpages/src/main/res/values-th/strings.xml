@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">ลองอีกครั้ง</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">ไม่สามารถทำคำขอให้เสร็จสมบูรณ์</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>ไม่มีข้อมูลเพิ่มเติมเกี่ยวกับปัญหาหรือข้อผิดพลาดนี้ในปัจจุบัน</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">การเชื่อมต่อปลอดภัยล้มเหลว</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>หน้าที่คุณกำลังพยายามจะดูไม่สามารถแสดงได้เนื่องจากไม่สามารถยืนยันความถูกต้องของข้อมูลที่ได้รับ</li>
+        <li>โปรดติดต่อเจ้าของเว็บไซต์เพื่อแจ้งพวกเขาให้ทราบถึงปัญหานี้</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">การเชื่อมต่อปลอดภัยล้มเหลว</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>สิ่งนี้อาจเป็นปัญหาจากการกำหนดค่าของเซิร์ฟเวอร์ หรืออาจมีใครบางคนกำลังพยายามปลอมแปลงเซิร์ฟเวอร์</li>
+        <li>หากคุณเคยเชื่อมต่อกับเซิร์ฟเวอร์นี้สำเร็จในอดีต ข้อผิดพลาดอาจเกิดขึ้นเพียงชั่วคราว และคุณสามารถลองอีกครั้งในภายหลัง</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">ขั้นสูง…</string>
+
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>อาจมีใครบางคนกำลังพยายามเลียนแบบไซต์และคุณไม่ควรดำเนินการต่อ</label>
+        <br><br>
+        <label>เว็บไซต์พิสูจน์ข้อมูลประจำตัวของตัวเองผ่านใบรับรอง %1$s ไม่เชื่อถือ <b>%2$s</b> เนื่องจากไม่ทราบผู้ออกใบรับรอง, ใบรับรองถูกลงชื่อด้วยตนเอง, หรือเซิร์ฟเวอร์ไม่ส่งใบรับรองระดับกลางที่ถูกต้อง</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">ย้อนกลับ (แนะนำ)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">ยอมรับความเสี่ยงและดำเนินการต่อ</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">เว็บไซต์นี้ต้องการการเชื่อมต่อที่ปลอดภัย</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>ไม่สามารถแสดงหน้าที่คุณต้องการเข้าชมได้ เนื่องจากเว็บไซต์นี้บังคับใช้การเชื่อมต่อที่ปลอดภัย</li>
+         <li>โดยส่วนใหญ่แล้ว ปัญหานี้จะเกิดขึ้นที่ฝั่งเว็บไซต์ และคุณไม่สามารถแก้ปัญหาที่ฝั่งของคุณได้</li>
+         <li>คุณสามารถแจ้งผู้ดูแลเว็บไซต์ให้ทราบถึงปัญหานี้</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">ขั้นสูง…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> มีนโยบายการรักษาความปลอดภัยที่เรียกว่า HTTP Strict Transport Security (HSTS) ซึ่งหมายความว่า <b>%2$s</b> สามารถทำการเชื่อมต่อได้อย่างปลอดภัยเท่านั้น คุณไม่สามารถเพิ่มข้อยกเว้นเพื่อเยี่ยมชมไซต์นี้ได้
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> มีนโยบายการรักษาความปลอดภัยที่เรียกว่า HTTP Strict Transport Security (HSTS) ซึ่งหมายความว่า <b>%2$s</b> สามารถทำการเชื่อมต่อได้อย่างปลอดภัยเท่านั้น คุณไม่สามารถเพิ่มข้อยกเว้นเพื่อเยี่ยมชมไซต์นี้ได้ </label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">ย้อนกลับ</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">การเชื่อมต่อถูกขัดจังหวะ</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>เบราว์เซอร์ทำการเชื่อมต่อสำเร็จแล้ว แต่การเชื่อมต่อถูกขัดจังหวะขณะถ่ายโอนข้อมูล โปรดลองอีกครั้ง</p>
+      <ul>
+        <li>ไซต์อาจไม่พร้อมใช้งานชั่วคราวหรือยุ่งเกินไป ลองอีกครั้งในอีกสักครู่</li>
+        <li>หากคุณไม่สามารถโหลดหน้าใด ๆ ได้ ให้ตรวจสอบข้อมูลของอุปกรณ์ของคุณหรือการเชื่อมต่อ Wi-Fi</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">การเชื่อมต่อหมดเวลา</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>ไซต์ที่ร้องขอไม่ตอบสนองต่อคำร้องขอการเชื่อมต่อและเบราว์เซอร์ได้หยุดการรอสำหรับการตอบกลับ</p>
+      <ul>
+        <li>เซิร์ฟเวอร์อาจประสบกับความต้องการที่สูงหรือดับไปชั่วคราว? ลองอีกครั้งในภายหลัง</li>
+        <li>คุณไม่สามารถเรียกดูไซต์อื่น ๆ ได้? ตรวจสอบการเชื่อมต่อเครือข่ายของคอมพิวเตอร์</li>
+        <li>คอมพิวเตอร์หรือเครือข่ายของคุณถูกปกป้องด้วยไฟร์วอลล์หรือพร็อกซี? การตั้งค่าที่ไม่ถูกต้องสามารถรบกวนการท่องเว็บได้</li>
+        <li>ยังคงมีปัญหา? ติดต่อผู้ดูแลเครือข่ายหรือผู้ให้บริการอินเทอร์เน็ตของคุณเพื่อขอรับความช่วยเหลือ</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">ไม่สามารถเชื่อมต่อ</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>ไซต์อาจไม่พร้อมใช้งานชั่วคราวหรือกำลังทำงานหนักเกินไป ลองอีกครั้งในอีกสักครู่</li>
+        <li>หากคุณไม่สามารถโหลดหน้าใด ๆ ได้ ตรวจสอบการเชื่อมต่อข้อมูลหรือ Wi-Fi ของอุปกรณ์ของคุณ</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">การตอบสนองที่ไม่คาดคิดจากเซิร์ฟเวอร์</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>ไซต์ตอบสนองต่อคำร้องขอเครือข่ายด้วยวิธีที่ไม่คาดคิดและเบราว์เซอร์ไม่สามารถดำเนินการต่อได้</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">หน้าไม่ได้เปลี่ยนเส้นทางอย่างถูกต้อง</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>เบราว์เซอร์ได้หยุดความพยายามในการเรียกรายการที่ร้องขอ ไซต์กำลังเปลี่ยนเส้นทางคำร้องขอในทางที่ไม่มีวันเสร็จสมบูรณ์</p>
+      <ul>
+        <li>คุณได้ปิดใช้งานหรือปิดกั้นคุกกี้ที่ต้องการโดยไซต์นี้หรือไม่?</li>
+        <li>หากการยอมรับคุกกี้ของไซต์ไม่แก้ปัญหา มันอาจเป็นปัญหาจากการกำหนดค่าเซิร์ฟเวอร์ ไม่ใช่คอมพิวเตอร์ของคุณ</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">โหมดออฟไลน์</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>เบราว์เซอร์กำลังทำงานในโหมดออฟไลน์และไม่สามารถเชื่อมต่อไปยังรายการที่ร้องขอ</p>
+      <ul>
+        <li>คอมพิวเตอร์เชื่อมต่อกับเครือข่ายที่ใช้งานได้หรือไม่?</li>
+        <li>กด “ลองอีกครั้ง” เพื่อสลับไปยังโหมดออนไลน์และโหลดหน้าใหม่</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">พอร์ตถูกจำกัดด้วยเหตุผลด้านความปลอดภัย</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>ที่อยู่ที่ร้องขอระบุพอร์ต (เช่น <q>mozilla.org:80</q> สำหรับพอร์ต 80 บน mozilla.org) ซึ่งโดยปกติจะใช้เพื่อวัตถุประสงค์ <em>อื่น</em> ที่ไม่ใช่การเรียกดูเว็บ เบราว์เซอร์ได้ยกเลิกคำร้องขอดังกล่าวเพื่อปกป้องคุณและเพื่อความปลอดภัย</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">การเชื่อมต่อถูกตัด</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>การเชื่อมโยงเครือข่ายถูกขัดจังหวะขณะแลกเปลี่ยนข้อมูลการเชื่อมต่อ โปรดลองอีกครั้ง</p>
+      <ul>
+        <li>ไซต์อาจไม่พร้อมใช้งานชั่วคราวหรือยุ่งเกินไป ลองอีกครั้งในอีกสักครู่</li>
+        <li>หากคุณไม่สามารถโหลดหน้าใด ๆ ได้ ให้ตรวจสอบข้อมูลของอุปกรณ์ของคุณหรือการเชื่อมต่อ Wi-Fi</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">ชนิดไฟล์ที่ไม่ปลอดภัย</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>โปรดติดต่อเจ้าของเว็บไซต์เพื่อแจ้งพวกเขาให้ทราบถึงปัญหานี้</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">ข้อผิดพลาดเนื้อหาเสียหาย</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>ไม่สามารถแสดงหน้าที่คุณกำลังพยายามจะดูเนื่องจากตรวจพบข้อผิดพลาดในการส่งผ่านข้อมูล</p>
+      <ul>
+        <li>โปรดติดต่อเจ้าของเว็บไซต์เพื่อแจ้งพวกเขาให้ทราบถึงปัญหานี้</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">เนื้อหาขัดข้อง</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>ไม่สามารถแสดงหน้าที่คุณกำลังพยายามจะดูเนื่องจากตรวจพบข้อผิดพลาดในการส่งผ่านข้อมูล</p>
+      <ul>
+        <li>โปรดติดต่อเจ้าของเว็บไซต์เพื่อแจ้งพวกเขาให้ทราบถึงปัญหานี้</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">ข้อผิดพลาดการเข้ารหัสเนื้อหา</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>ไม่สามารถแสดงหน้าที่คุณกำลังพยายามจะดูเนื่องจากหน้าใช้รูปแบบการบีบอัดที่ไม่ถูกต้องหรือไม่รองรับ</p>
+      <ul>
+        <li>โปรดติดต่อเจ้าของเว็บไซต์เพื่อแจ้งพวกเขาให้ทราบถึงปัญหานี้</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">ไม่พบที่อยู่</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>เบราว์เซอร์ไม่พบเซิร์ฟเวอร์โฮสต์สำหรับที่อยู่ที่ระบุ</p>
+      <ul>
+        <li>ตรวจสอบข้อผิดพลาดในการพิมพ์ที่อยู่ เช่น
+          <strong>ww</strong>.example.com แทนที่จะเป็น
+          <strong>www</strong>.example.com</li>
+        <li>หากคุณไม่สามารถโหลดหน้าใด ๆ ได้ ให้ตรวจสอบข้อมูลของอุปกรณ์หรือการเชื่อมต่อ Wi-Fi ของคุณ</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">ไม่มีการเชื่อมต่ออินเทอร์เน็ต</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">ตรวจสอบการเชื่อมต่อเครือข่ายของคุณหรือลองโหลดหน้านี้อีกครั้งในอีกสักครู่</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">เรียกใหม่</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">ที่อยู่ไม่ถูกต้อง</string>
+
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>ที่อยู่ที่ให้มาไม่อยู่ในรูปแบบที่รู้จัก โปรดตรวจสอบที่อยู่ในแถบที่ตั้งเพื่อหาข้อผิดพลาดและลองใหม่อีกครั้ง</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ที่อยู่ไม่ถูกต้อง</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>ที่อยู่เว็บมักจะเขียนเป็น <strong>http://www.example.com/</strong></li>
+        <li>ตรวจสอบให้แน่ใจว่าคุณใช้เครื่องหมายทับไปข้างหน้า (กล่าวคือ <strong>/</strong>)</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">โปรโตคอลที่ไม่รู้จัก</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>ที่อยู่ระบุโปรโตคอล (เช่น <q>wxyz://</q>) ที่เบราว์เซอร์ไม่รู้จัก เบราว์เซอร์จึงไม่สามารถเชื่อมต่อไปยังไซต์ได้อย่างเหมาะสม</p>
+      <ul>
+        <li>คุณกำลังพยายามเข้าถึงมัลติมีเดียหรือบริการอื่น ๆ ที่ไม่ใช่ตัวอักษร? ตรวจสอบไซต์สำหรับข้อกำหนดพิเศษ</li>
+        <li>บางโปรโตคอลอาจต้องการซอฟต์แวร์หรือปลั๊กอินจากบุคคลที่สามก่อนที่เบราว์เซอร์จะสามารถรู้จัก</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">ไม่พบไฟล์</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>รายการดังกล่าวอาจถูกเปลี่ยนชื่อ เอาออก หรือย้ายตำแหน่งที่ตั้งแล้วหรือไม่?</li>
+        <li>ที่อยู่สะกดผิด พิมพ์ตัวพิมพ์ใหญ่-เล็กไม่ตรง หรือตกหล่นหรือไม่?</li>
+        <li>คุณมีสิทธิอนุญาตการเข้าถึงรายการที่ร้องขอเพียงพอหรือไม่?</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">การเข้าถึงไฟล์ถูกปฏิเสธ</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>ไฟล์อาจถูกเอาออก ย้าย หรือสิทธิอนุญาตของไฟล์อาจป้องกันการเข้าถึง</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">เซิร์ฟเวอร์พร็อกซีปฏิเสธการเชื่อมต่อ</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>เบราว์เซอร์ถูกกำหนดค่าให้ใช้เซิร์ฟเวอร์พร็อกซี</p>
+      <ul>
+        <li>การกำหนดค่าพร็อกซีของเบราว์เซอร์ถูกต้องหรือไม่? ตรวจสอบการตั้งค่าและลองอีกครั้ง</li>
+        <li>บริการพร็อกซีอนุญาตการเชื่อมต่อจากเครือข่ายนี้หรือไม่?</li>
+        <li>ยังคงมีปัญหา? ติดต่อผู้ดูแลเครือข่ายหรือผู้ให้บริการอินเทอร์เน็ตของคุณเพื่อขอรับความช่วยเหลือ</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">ไม่พบเซิร์ฟเวอร์พร็อกซี</string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>เบราว์เซอร์ถูกกำหนดค่าให้ใช้เซิร์ฟเวอร์พร็อกซี แต่พร็อกซีไม่สามารถหาพบ</p>
+      <ul>
+        <li>การกำหนดค่าพร็อกซีของเบราว์เซอร์ถูกต้องหรือไม่? ตรวจสอบการตั้งค่าและลองอีกครั้ง</li>
+        <li>คอมพิวเตอร์เชื่อมต่อกับเครือข่ายที่ใช้งานได้หรือไม่?</li>
+        <li>ยังคงมีปัญหา? ติดต่อผู้ดูแลเครือข่ายหรือผู้ให้บริการอินเทอร์เน็ตของคุณเพื่อขอรับความช่วยเหลือ</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">ปัญหาไซต์มัลแวร์</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>ไซต์ที่ %1$s ถูกรายงานว่าเป็นไซต์รุกรานและถูกปิดกั้นตามค่ากำหนดความปลอดภัยของคุณ</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">ปัญหาไซต์ที่ไม่พึงประสงค์</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>ไซต์ที่ %1$s ถูกรายงานว่าแจกจ่ายซอฟต์แวร์ไม่พึงประสงค์และถูกปิดกั้นตามค่ากำหนดความปลอดภัยของคุณ</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">ปัญหาไซต์ที่เป็นอันตราย</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>ไซต์ที่ %1$s ถูกรายงานว่าเป็นไซต์ที่อาจเป็นอันตรายและถูกปิดกั้นตามค่ากำหนดความปลอดภัยของคุณ</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">ปัญหาไซต์หลอกลวง</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>หน้าเว็บนี้ที่ %1$s ถูกรายงานว่าเป็นไซต์หลอกลวงและถูกปิดกั้นตามค่ากำหนดความปลอดภัยของคุณ</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">ไซต์ที่ปลอดภัยไม่พร้อมใช้งาน</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[คุณได้เปิดใช้งานโหมด HTTPS-Only สำหรับความปลอดภัยที่มากขึ้น และรุ่น HTTPS ของ <em>%1$s</em> ไม่พร้อมใช้งาน]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">ดำเนินการต่อไปยังไซต์ HTTP</string>
+</resources>

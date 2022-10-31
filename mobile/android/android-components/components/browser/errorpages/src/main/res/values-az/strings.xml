@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">Səhifə yüklənmə xətası</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Təkrar Yoxla</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">Geri Get</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">İstək yerinə yetirilə bilmir</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Bu xəta və problem haqqında ətraflı məlumat mövcud deyil</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Təhlükəsiz bağlantı qurula bilmədi</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Görmək istədiyiniz səhifə alınan məlumatlar təsdiqlənə bilmədi deyə göstərilə bilmir.</li>
+        <li>Lütfən sayt sahibləri ilə əlaqə saxlayın və bu problemdən xəbərdar edin.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Təhlükəsiz bağlantı qurula bilmədi</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Bu, serverin tənzimləməsi ilə bağlı bir problemdən ya da başqa birinin sizi səhv serverə yönləndirməsindən qaynaqlana bilər.</li>
+        <li>Əvvəllər bu serverə uğurla bağlana bilirdinizsə problem müvəqqəti ola bilər və daha sonra təkrar yoxlaya bilərsiniz.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Təkmilləşmiş…</string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Geri get (Məsləhətlidir)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Riski qəbul et və davam et</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Bağlantı kəsildi</string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Şəbəkə gözləmə müddəti bitdi</string>
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Açmaq istədiyiniz sayt cavab vermədiyi üçün gözləmə ləğv edildi.</p>
+      <ul>
+        <li>Server çox yüklənib və ya müvəqqəti olaraq bir problemlə qarşılaşmış ola bilər. Daha sonra təkrar yoxlayın.</li>
+        <li>Digər səhifələrdə açılmaya bilər. Əgər elədirsə bağlantınızı yoxlayın.</li>
+        <li>Cihazınız ya da şəbəkəniz təhlükəsizlik divarı ilə qorunmuş ola bilər. Düzgün nizamlanmamış seçimlər internətə qoşulmağınıza problem yarada bilər.</li>
+        <li>Bütün yolları yoxlamağınıza baxmayaraq hələ də qoşula bilmirsinizsə, internet provayderinizlə və ya bağlantı idarəçinizlə əlaqə saxlayın.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Əlaqə cəhdi uğursuz oldu</string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Serverdən gözlənilməz cavab</string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Səhifə düzgün yönləndirilmir</string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Oflayn rejim</string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Təhlükəsizlik səbəblərindən port məhdudlaşdırılıb</string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Əlaqə sıfırlandı</string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Etibarsız fayl növü</string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Zədəli məzmun xətası</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Məzmun çökdü</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Məzmun kodlama səhvi</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Ünvan tapılmadı</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">İnternet bağlantısı yoxdur</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Şəbəkə əlaqənizi yoxlayın və ya səhifəni az sonra təkrar yeniləməyi yoxlayın.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Yenilə</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Xətalı ünvan</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Daxil etdiyiniz ünvan bilinən formata uyğun deyil. Lütfən ünvan sətrinə baxıb mümkün səhvləri düzəltdikdən sonra yenidən yoxlayın.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Ünvan səhvdir</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Naməlum protokol</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Fayl tapılmadı</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Faylın işlədilməsinə icazə verilmədi</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Proxy server bağlantını rədd etdi</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proxy server tapılmadı</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Ziyanverici sayt problemi</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">İstənməyən sayt problemi</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Zərərli sayt problemi</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Aldadıcı sayt problemi</string>
+    </resources>

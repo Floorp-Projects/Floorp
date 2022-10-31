@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/mozac_browser_menu_item_toolbar_height"
+    android:id="@+id/container"
+    style="@style/Mozac.Browser.Menu.Item.Container"
+    android:gravity="center_vertical">
+
+    <ImageView
+        android:id="@+id/action_image"
+        android:layout_width="@dimen/mozac_browser_menu_item_web_extension_icon_width"
+        android:layout_height="@dimen/mozac_browser_menu_item_web_extension_icon_height"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        app:srcCompat="@drawable/mozac_browser_menu_notification_icon"/>
+
+    <TextView
+        android:id="@+id/action_label"
+        style="@style/Mozac.Browser.Menu.Item.Text"
+        android:background="@android:color/transparent"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/mozac_browser_menu_item_container_layout_height"
+        android:gravity="center_vertical"
+        android:textAlignment="viewStart"
+        android:paddingEnd="16dp"
+        android:paddingStart="16dp"
+        android:clickable="false"
+        tools:ignore="RtlCompat"
+        tools:text="uBlock Origin" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_weight="1" />
+
+    <TextView
+        android:id="@+id/badge_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="22dp"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:textColor="@color/photonWhite"
+        android:background="@drawable/rounded_corner"
+        android:visibility="invisible"
+        android:padding="3dp"
+        android:textSize="12sp"
+        tools:text="18" />
+</LinearLayout>

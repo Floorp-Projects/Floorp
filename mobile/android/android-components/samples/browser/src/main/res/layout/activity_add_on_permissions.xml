@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:context=".addons.PermissionsDetailsActivity">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/add_ons_permissions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/learn_more_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/add_ons_permissions"
+        android:background="?attr/selectableItemBackground"
+        android:padding="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:text="@string/mozac_feature_addons_learn_more"
+        android:textColor="@android:color/black"
+        app:drawableEndCompat="@drawable/mozac_ic_link"
+        app:drawableTint="@android:color/black" />
+
+</RelativeLayout>

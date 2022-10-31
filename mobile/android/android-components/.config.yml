@@ -1,0 +1,7 @@
+# Maven group ID used for all components
+componentsGroupId: "org.mozilla.components"
+
+# Synchronized build configuration for all modules
+compileSdkVersion: 32
+minSdkVersion: 21
+targetSdkVersion: 32

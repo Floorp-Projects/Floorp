@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of the notification shown while we upgrade Fennec to Fenix. -->
+    <string name="mozac_support_migration_ongoing_notification_title">အဆင့်မြင့်ခြင်း လုပ်ဆောင်နေသည်</string>
+    <!-- Text of the notification shown while we upgrade Fennec to Fenix. -->
+    <string name="mozac_support_migration_ongoing_notification_text">Firefox သည် မကြာမီ အဆင်သင့် ဖြစ်တော့မည်…</string>
+    <!-- Title of the notification shown the upgrade from Fennec to Fenix is complete. -->
+    <string name="mozac_support_migration_complete_notification_title">အဆင့်မြင့်ခြင်း ပြီးမြောက်ပါပြီ</string>
+    <!-- Text of the notification shown the upgrade from Fennec to Fenix is complete. -->
+    <string name="mozac_support_migration_complete_notification_text">Firefox သည် ပိုမိုကောင်မွန် စေရန် အဆင့်မြင့်တင်ခဲ့သည်!</string>
+</resources>

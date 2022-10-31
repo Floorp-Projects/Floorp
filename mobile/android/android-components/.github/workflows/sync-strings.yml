@@ -1,0 +1,45 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+name: "Sync Strings"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  main:
+    name: "Sync Strings"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: "Discover A-C Version"
+        id: ac-version-for-fenix-beta
+        uses: mozilla-mobile/ac-version-for-fenix-beta@1.2.0
+      - name: "Checkout Main Branch"
+        uses: actions/checkout@v2
+        with:
+          path: main
+          ref: main
+      - name: "Checkout Work Branch"
+        uses: actions/checkout@v2
+        with:
+          path: work
+          ref: "releases/${{ steps.ac-version-for-fenix-beta.outputs.major-ac-version }}.0"
+      - name: "Sync Strings"
+        uses: mozilla-mobile/sync-strings-action@1.0.0
+        with:
+          src: main
+          dst: work
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: work
+          branch: automation/sync-strings-${{ steps.ac-version-for-fenix-beta.outputs.major-ac-version }}
+          title: "Uplift Strings from main to releases/${{steps.ac-version-for-fenix-beta.outputs.major-ac-version}}.0"
+          body: "This (automated) PR sync strings from `main` to `releases/${{steps.ac-version-for-fenix-beta.outputs.major-ac-version}}.0`"

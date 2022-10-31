@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The tile for the list of external apps to open the link in -->
+    <string name="mozac_feature_applinks_open_in">ಇದರಲ್ಲಿ ತೆರೆ…</string>
+    <!-- The description to warn users that their private browsing session changes  -->
+    <string name="mozac_feature_applinks_confirm_dialog_title">ಅಪ್ಲಿಕೇಶನ್‌ನಲ್ಲಿ ತೆರೆಯುವುದೇ? ನಿಮ್ಮ ಚಟುವಟಿಕೆ ಇನ್ನು ಮುಂದೆ ಖಾಸಗಿಯಾಗಿರಬಾರದು.</string>
+    <!-- Opens the selected time -->
+    <string name="mozac_feature_applinks_confirm_dialog_confirm">ತೆರೆ</string>
+    <!-- Cancels the prompt -->
+    <string name="mozac_feature_applinks_confirm_dialog_deny">ರದ್ದು ಮಾಡು</string>
+</resources>

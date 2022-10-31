@@ -1,0 +1,60 @@
+{
+  "data": [{
+    "slug": "test-color",
+    "endDate": null,
+    "branches": [
+      {
+        "slug": "control",
+        "ratio": 1,
+        "feature": {
+          "featureId": "sample-experiment-feature",
+          "enabled": true,
+          "value": null
+        }
+      },
+      {
+        "slug": "red",
+        "ratio": 1,
+        "feature": {
+          "featureId": "sample-experiment-feature",
+          "enabled": true,
+          "value": null
+        }
+      },
+      {
+        "slug": "blue",
+        "ratio": 1,
+        "feature": {
+          "featureId": "sample-experiment-feature",
+          "enabled": true,
+          "value": null
+        }
+      }
+    ],
+    "featureIds": [
+      "sample-experiment-feature"
+    ],
+    "probeSets": [],
+    "startDate": null,
+    "targeting": "true",
+    "appName": "samples-glean",
+    "appId": "org.mozilla.samples.glean.debug",
+    "channel": "samples",
+    "bucketConfig": {
+      "count": 10000,
+      "start": 0,
+      "total": 10000,
+      "namespace": "test-color-1",
+      "randomizationUnit": "nimbus_id"
+    },
+    "schemaVersion": "1.1.0",
+    "userFacingName": "Button color sample experiment",
+    "referenceBranch": "control",
+    "proposedDuration": null,
+    "isEnrollmentPaused": false,
+    "proposedEnrollment": 7,
+    "userFacingDescription": "A sample experiment to determine the color of a button",
+    "id": "test-color",
+    "last_modified": 1607613885917
+  }]
+}

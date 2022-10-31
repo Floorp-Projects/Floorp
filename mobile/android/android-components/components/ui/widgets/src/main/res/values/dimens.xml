@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <dimen name="mozac_widget_favicon_size">40dp</dimen>
+    <dimen name="mozac_widget_favicon_padding">8dp</dimen>
+
+    <dimen name="mozac_widget_site_item_height">56dp</dimen>
+    <dimen name="mozac_widget_site_item_label_text_size">16sp</dimen>
+    <dimen name="mozac_widget_site_item_caption_text_size">12sp</dimen>
+    <dimen name="mozac_widget_site_item_secondary_button_size">32dp</dimen>
+    <dimen name="mozac_widget_site_item_secondary_button_padding">4dp</dimen>
+</resources>

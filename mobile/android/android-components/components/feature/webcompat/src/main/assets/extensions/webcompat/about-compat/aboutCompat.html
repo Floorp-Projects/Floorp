@@ -1,0 +1,44 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <base/>
+
+  <!-- If you change this script tag you must update the hash in the extension's
+         `content_security_policy` 'sha256-MmZkN2QaIHhfRWPZ8TVRjijTn5Ci1iEabtTEWrt9CCo=' -->
+  <script>/* globals browser */ document.head.firstElementChild.href = browser.runtime.getURL("");</script>
+
+  <meta charset="utf-8" />
+  <meta name="color-scheme" content="light dark">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="about-compat/aboutCompat.css" />
+  <link rel="stylesheet" media="screen and (pointer:fine), projection" type="text/css"
+          href="chrome://global/skin/in-content/common.css"/>
+  <link rel="localization" href="toolkit/about/aboutCompat.ftl"/>
+  <title data-l10n-id="text-title"></title>
+  <script src="about-compat/aboutCompat.js"></script>
+  </head>
+<body>
+  <h2 class="tab active" data-l10n-id="label-overrides"></h2>
+  <table id="overrides">
+    <col/>
+    <col/>
+    <col/>
+  </table>
+  <h2 class="tab" data-l10n-id="label-interventions"></h2>
+  <table id="interventions">
+    <col/>
+    <col/>
+    <col/>
+  </table>
+  <h2 class="tab" data-l10n-id="label-smartblock"></h2>
+  <table id="smartblock" class="shims">
+    <col/>
+    <col/>
+    <col/>
+  </table>
+</body>
+</html>

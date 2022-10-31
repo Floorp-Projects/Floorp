@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Încearcă din nou</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Cererea nu poate fi finalizată</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Nu sunt disponibile momentan informații suplimentare despre această problemă sau eroare.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Conexiunea securizată a eșuat</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Pagina pe care încerci să o vizualizezi nu poate fi afișată, deoarece autenticitatea datelor primite nu a putut fi verificată.</li>
+        <li>Te rugăm să contactezi proprietarii site-ului web pentru a-i informa despre această problemă.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Conexiunea securizată a eșuat</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+<li>Ar putea fi din cauza unei probleme în configurația serverului sau ar putea să fie cineva care încearcă să uzurpe identitatea serverului.</li>
+<li>Dacă te-ai conectat cu succes în trecut la acest server, eroarea poate fi temporară și poți încerca din nou mai târziu.</li>
+</ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avansat…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Cineva ar putea încerca să uzurpe site-ul și ar fi bine să nu mergi mai departe.</label>
+        <br><br>
+        <label>Site-urile web își dovedesc identitatea prin certificate. %1$s nu are încredere în <b>%2$s</b> deoarece emitentul certificatului este necunoscut, certificatul este autosemnat sau serverul nu trimite certificatele intermediare corecte.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Înapoi (recomandat)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Acceptă riscul și continuă</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Conexiunea a fost întreruptă</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Browserul s-a conectat cu succes, dar conexiunea a fost întreruptă în timpul transferului de informații. Încearcă din nou.</p>
+      <ul>
+        <li>Site-ul ar putea fi temporar indisponibil sau prea ocupat. Încearcă din nou în câteva momente.</li>
+        <li>Dacă nu poți încărca nicio pagină, verifică datele dispozitivului tău sau conexiunea Wi-Fi.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Conexiunea a expirat</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p> Site-ul solicitat nu a răspuns la o solicitare de conectare și browserul a încetat să aștepte un răspuns. </p>
+      <ul>
+        <li> S-ar putea ca serverul să aibă o cerere ridicată sau o întrerupere temporară? Încearcă din nou mai târziu. </li>
+        <li> Nu poți naviga pe alte site-uri? Verifică-ți conexiunea la rețea. </li>
+        <li> Dispozitivul tău sau rețeaua ta este protejat(ă) de un firewall sau proxy? Setările incorecte pot interfera cu navigarea pe Web. </li>
+        <li> Mai ai probleme? Consultă administratorul de rețea sau furnizorul de internet pentru asistență. </li>
+       </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Conectare eșuată</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>Site-ul ar putea fi temporar indisponibil sau prea ocupat. Încearcă din nou în câteva momente.</li>
+        <li>Dacă nu poți încărca nicio pagină, verifică datele dispozitivului sau conexiunea Wi-Fi.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Răspuns neașteptat de la server</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Site-ul a răspuns într-un mod neașteptat solicitării rețelei și browserul nu poate continua.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Pagina nu se redirecționează corect</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Browserul a încetat să încerce să recupereze articolul solicitat. Site-ul redirecționează solicitarea într-un mod în care nu va fi niciodată finalizat. </p>
+      <ul>
+        <li>Ai dezactivat sau ai blocat cookie-urile solicitate de acest site?</li>
+        <li>Dacă acceptarea cookie-urilor site-ului nu rezolvă problema, este probabil o problemă de configurare a serverului și nu pe calculatorul tău.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Mod offline</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Browserul este în modul offline și nu se poate conecta la articolul solicitat.</p>
+      <ul>
+        <li>Dispozitivul este conectat la o rețea activă?</li>
+        <li>Apasă „Încearcă din nou” pentru trecerea pe modul online și reîncărcarea paginii.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Port restricționat din motive de securitate</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Adresa solicitată a specificat un port (de ex. <q>mozilla.org:80</q> pentru portul 80 oe mozilla.org) folosit în mod normal în <em>alte</em> decât navigarea Web. Browserul a anulat cererea de protecție și securitate.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Conexiunea a fost resetată</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Legătura la rețea a fost întreruptă în timpul negocierii unei conexiuni. Încearcă din nou.</p>
+      <ul>
+        <li>S-ar putea ca site-ul să fie temporar indisponibil sau prea ocupat. Încearcă din nou în câteva momente.</li>
+        <li>Dacă nu poți încărca nicio pagină, verifică datele dispozitivului sau conexiunea Wi-Fi.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Tip de fișier nesigur</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Te rugăm să contactezi proprietarii site-ului web ca să-i informezi despre această problemă.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Eroare de conținut corupt</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Pagina pe care încerci să o vizualizezi nu poate fi afișată deoarece s-a depistat o eroare în transmisia de date.</p>
+      <ul>
+        <li>Te rugăm să contactezi proprietarii site-ului să-i informezi despre problemă.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Conținut blocat</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Pagina pe care încerci să o vizualizezi nu poate fi afișată deoarece s-a depistat o eroare în transmisia de date.</p>
+      <ul>
+        <li>Te rugăm să contactezi proprietarii site-ului să-i informezi despre problemă.</li>
+      </ul>
+]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Eroare de codificare a conținutului</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Pagina pe care încerci să o vezi nu poate fi afișată pentru că folosește o formă de compresie nevalidă sau nesuportată.</p>
+      <ul>
+        <li>Te rugăm să contactezi proprietarii site-ului web pentru a-i informa despre această problemă.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Nu s-a găsit adresa</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Browserul nu a găsit serverul-gazdă pentru adresa furnizată.</p>
+      <ul>
+        <li>Verifică adresa pentru erori de tastare precum
+          <strong>ww</strong>.exemplu.com în loc de
+          <strong>www</strong>.exemplu.com.</li>
+        <li>Dacă nu poți încărca nicio pagină, verifică datele dispozitivului sau conexiunea Wi-Fi.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Lipsă conexiune la internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Verifică-ți conexiunea la rețea sau încearcă să reîncarci pagina în câteva momente.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Reîncarcă</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Adresă nevalidă</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Adresa furnizată nu este într-un format recunoscut. Verifică să nu fie greșeli în bara de adrese și încearcă din nou</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Adresa nu este validă</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Adresele web sunt scrise în mod normal așa: <strong>http://www.example.com/</strong></li>
+        <li>Asigură-te că folosești bare înclinate la dreapta (adică <strong>/</strong>).</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Protocol necunoscut</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Adresa specifică un protocol (de ex. <q>wxyz://</q>) pe care browserul nu îl recunoaște și, prin urmare, nu se poate conecta corect la site.</p>
+      <ul>
+        <li>Încerci să accesezi conținut multimedia sau alte servicii non-text? Verifică site-ul pentru cerințe suplimentare.</li>
+        <li>Este posibil ca unele protocoale să necesite softuri de la terți sau pluginuri înainte ca browserul să le poată recunoaște.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Fișierul nu a fost găsit</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Se poate ca articolul să fi fost redenumit, șters sau mutat?</li>
+        <li>Este vreo eroare de ortografie, majuscule/minuscule sau altă eroare tipografică în adresă?</li>
+        <li>Ai suficiente drepturi de acces la articolul solicitat?</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Accesul la fișier a fost refuzat</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Este posibil să fi fost șters, mutat sau poate că permisiunile fișierului împiedică accesul.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Serverul proxy a refuzat conexiunea</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Browserul este configurat să folosească un server proxy, însă proxy-ul a refuzat o conexiune.</p>
+      <ul>
+        <li>Este configurația proxy corectă în browser? Verifică setările și încearcă din nou.</li>
+        <li>Serviciul proxy permite conexiuni din această rețea?</li>
+        <li>Problemele persistă? Contactează administratorul de rețea sau furnizorul de servicii de Internet pentru asistență.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Serverul proxy nu a fost găsit</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Browserul este configurat să folosească un server proxy, însă proxy-ul nu a putut fi găsit.</p>
+      <ul>
+        <li>Este configurația proxy corectă în browser? Verifică setările și încearcă din nou.</li>
+        <li>Dispozitivul este conectat la o rețea activă?</li>
+        <li>Problemele persistă? Contactează administratorul de rețea sau furnizorul de servicii de Internet pentru asistență.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problemă de soft rău intenționat pe acest site</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Site-ul de la %1$s a fost raportat ca sursă de atacuri și a fost blocat în baza preferințelor tale de securitate.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problemă de site nedorit</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Site-ul de la%1$s a fost raportat ca purtător de softuri nedorite și a fost blocat pe baza preferințelor tale de securitate.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problemă de site dăunător</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Site-ul de la %1$s a fost raportat ca site potențial dăunător și a fost blocat pe baza preferințelor tale de securitate.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problemă de site înșelător</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Această pagină web de la %1$s a fost raportată ca site înșelător și a fost blocată pe baza preferințelor tale de securitate.</p>]]></string>
+
+    </resources>

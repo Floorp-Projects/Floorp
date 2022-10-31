@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Fuɗɗito</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Horiima Timminde Ɗaɓɓitannde</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Humpito ɓeydorɗo baɗte ɗee caɗeele walla ndee juumre heɓotaako oo sahaa.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Ceŋagol Kisnangol Woorii</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+         <li>Hello ngo etoto-ɗaa naatnde ngoo waawaa hollireede sabu goongɗingol keɓe keɓaaɗe ɗee waawaa ƴeewteede.</li>
+         <li>Tiiɗno jokkondir e jeyɓe lowre geese ndee ngam humpitde-ɓe caɗeele ɗee.</li> 
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Ceŋagol Kisnangol Woorii</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Ɗum ena waawi ummaade e teeltol sarworde ndee, walla ena waawi wonde won etotooɗo ñemmbitaade sarworde ndee.</li>
+        <li>So tawii a meeɗii seŋaade e ndee sarworde e ko ɓenni, maa taw juumre ndee juutataa, ngati aɗa waawi etaade so ɓooyii.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Ceeɓtore…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Neɗɗo ina waawi wonde e etaade wujjude hefinirde lowre ndee etee a fotaani jokkude.</label>
+        <br><br>
+        <label>Lowe geese ndallinirta keɓtinirɗe mum en ko e seedanteeji. %1$shoolaaki <b>%2$s</b> sabu dokkoowo-mo seedamfaagu nguu anndaaka, seedamfaagu nguu ko siifngu hoore mum, walla sarworde ndee neldaani seedanteeji hakkundeeji moƴƴi.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Rutto (Ena wasiyaa)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Jaɓ tanaa oo njokkaa</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Ceŋagol ngol taƴii</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Wanngorde ndee seŋii haa moƴƴi, kono ceŋogol ngol taƴii saanga baylugol humpito. Tiiɗno, eto goɗngol.</p>
+      <ul>
+        <li>Lowre ndee ina waasde heɓaade e mudda walla ko nde haljunde no feewi. Eto kadi ɗo e yeeso seeɗa.</li>
+        <li>O a horiima loowde hay hello wooto, ƴeewto keɓe kaɓirgal maa walla ceŋogol WI-FI.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Ceŋagol ngol honaama waktu</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Lowre ɗaɓɓitaande ndee jaabaaki ɗaɓɓitaande ceŋol etee wanngorde ndee dartiima fadde jaabtol.</p>
+      <ul>
+        <li>Mbar sarworde ndee wonaa heewraande walla ena taƴi oo sahaa?  Fuɗɗito so ɓooyii.</li>
+        <li>A horiima naatde e lowe goɗɗe? Ƴeewto ceŋol laylaytol masiŋel ngel. </li>
+        <li>Mbar ordinateer maa suuraaki caggal ɓalal-jaynge walla proxy?  Teelɗe ɗe peewaani ena mbaawi haɗde peeragol e geese.</li>
+        <li>Haa jonni ena waɗi caɗeele? Jokkondir e jiiloowo laylaytol maa walla jeeyoowo ceŋol maa ngam ɗaɓɓude ballal.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Horiima seŋaade</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>dee lowre heɓotaako oo sahaa walla ena halji. Eto naatde e mayre ɗoo e yeeso seeɗa.</li>
+        <li>So a horiima loowde kelle fof, ƴeewto keɓe kaɓirgol maa walla seŋorde maa Wi-Fi.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Jaabawol sarworde ngol tijjaaka</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Lowre ndee jaabtiima ɗaɓɓitaande laylaytol ndol e mabydi kaawniindi etee wanngorde ndee waawaa jokkude.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Ngoo hello wonaani e yiiltude no feewiri</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Wanngorde ndee dartinii aaftaade temre ɗaɓɓitaande ndee. Lowre ndee ɓenninii ɗaɓɓitaande ndee e mbaydi ndi jogoraani timmude.</p>
+      <ul>
+        <li>Mbar a daaƴaani walla pali-ɗaa kukiije cokalaaɗe e ndee lowre?</li>
+        <li>So jaɓde kukiije lowre ndee ñawndaani caɗeele ɗee, Ena wona tawwa ko teeltol sarworde ndee kono wonaa kaɓirgal maa.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Mbaydi Ceŋtol</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Wanngorde ndee woni ko e mbayka ceŋtol etee waawaa seŋaade e temre ɗaɓɓitaande ndee.</p>
+      <ul>
+        <li>Mbar kaɓirgal maa ena seŋii e laylaytol caasngol?</li>
+        <li>Ñoƴƴu “eto kadi” ngam artirde a mbayka ceŋol, kesɗitinaa hello ngoo.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Ceŋagol ngol fuɗɗitaama</string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Ndee Fiilde Hoolnaaki</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Tiiɗno jokkondir e jeyɓe lowre ndee ngam humpitde-ɓe ɗee caɗeele.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Juumre loowdi pirndi</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Hello ngo etot-ɗaa naatnde ngoo waawaa hollireede sabu juumre waɗii e baanjitagol keɓe ɗee.</p>
+      <ul>
+        <li>Tiiɗno jokkondir e jeyɓe lowre geese ndee ngam humpitde-ɓe caɗeele ɗee.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Loowdi ndii hookii</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Hello ngo etot-ɗaa naatnde ngoo waawaa hollireede sabu juumre waɗii e baanjitagol keɓe ɗee.</p>
+      <ul>
+        <li>Tiiɗno jokkondir e jeyɓe lowre geese ndee ngam humpitde-ɓe caɗeele ɗee.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Ñiiɓirde Yiytaaka</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Alaa ceŋol enternet</string>
+
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Yeewto ceŋogol  laylaytol maa walla eto loowtugol hello ngoo ko ɓooyaani.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Loowtu</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Ñiiɓirde Moƴƴaani</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Ñiiɓirde hokkaande ndee wonaani e mbaydi keftinaandi. Tiiɗno ƴeewto palal ñiiɓiɗe ndee ngam pergitte, puɗɗito-ɗaa.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Ñiiɓirde ndee moƴƴaani</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul> <li>Ñiiɓirɗe geese keewi winndireede ko <strong>http://www.yeru.com/</strong></li> <li>Ƴeewto no feewi so a huutoriima laase yeeso (k.n. <strong>/</strong>).</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Fiilde Yiytaaka</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Ballagol fiilde salaama</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Maa taw ko nde momtaande, dirtinaande, walla jamire fiilde ena kala ballagol.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Sawrorde Proxy Saliima Ceŋagol</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Sarworde Proxy Yiytaaka</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Ndee lowre to %1$s jaŋtaama wonde ko lowre njangu etee ko ko daaƴaa e cuɓoraaɗe kisal maa.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Caɗe lowre ɗe njiɗaaka</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Ndee lowre to %1$s jaŋtaama wonde sarwat topirɗe gañaaɗe etee koko daaƴaa e cuɓoraaɗe kisal maa.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Caɗe lowre bonnde</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Ndee lowre to %1$s jaŋtaama wonde ko lowre waawnde bonnude etee koko daaƴaa e cuɓoraaɗe kisal maa.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Caɗe lowre fuuntoore</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Ndee lowre to %1$s jaŋtaama wonde ko lowre fuuntoore etee koko daaƴaa e cuɓoraaɗe kisal maa.</p>]]></string>
+
+    </resources>

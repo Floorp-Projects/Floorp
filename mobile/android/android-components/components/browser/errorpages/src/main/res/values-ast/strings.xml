@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Retentar</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Nun se pue completar la solicitú</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>La información adicional tocante a esti problema o error nun ta disponible anguaño.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">La conexón segura falló</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Nun se pue amosar la páxina que tentes de ver porque nun se pudo verificar l\'autenticidá de los datos recibíos.</li>
+        <li>Ponte en contautu colos propietarios del sitiu web pa informalos d\'esti problema.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">La conexón segura falló</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Esto podría ser un problema cola configuración del sirvidor o que daquién tea tentando de suplantalu.</li>
+        <li>Si nel pasáu te conectesti correutamente al sirvidor, l\'error quiciabes seya temporal polo qu\'anueva la páxina dempués.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Opciones avanzaes…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Daquién podría tar tentando de suplantar el sitiu y nun deberíes siguir.</label>
+        <br><br>
+        <label>Los sitios web demuestren la so identidá per certificaos. %1$s nun s\'enfota en <b>%2$s</b> porque\'l so emisor de certificaos ye desconocíu, el certificáu ta autorobláu o\'l sirvidor nun ta unviando los certificaos intermedios correutos.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Dir p\'atrás (aconséyase)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Aceutar el riesgu y siguir</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Esti sitiu web rique una conexón segura.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Nun se pue amosar la páxina que tentes de ver porque esti sitiu web rique una conexón segura.</li>
+         <li>Ye mui probable que\'l problema seya del sitiu web y nun puedas facer nada pa igualu.</li>
+         <li>Pues avisar a l\'alministración del sitiu web pa informar del problema.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Opciones avanzaes…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> tien una política de seguranza llamada HSTS (HTTP Strict Transport Security), lo que significa que <b>%2$s</b> namás se pue conectar con seguranza al sitiu. Nun pues amestar nenguna esceición pa visitar esti sitiu.
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> tien una política de seguranza llamada HSTS (HTTP Strict Transport Security), lo que significa que <b>%2$s</b> namás se pue conectar con seguranza al sitiu. Nun pues amestar nenguna esceición pa visitar esti sitiu. </label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Dir p\'atrás</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Torgóse la conexón</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>El restolador conectóse correutamente mas la conexón torgóse mentanto se tresfería información. Volvi tentalo.</p>
+      <ul>
+        <li>Seique\'l sitiu ta temporalmente non disponible o perocupáu. Volvi probar nun momentu.</li>
+        <li>Si nun yes a cargar nenguna páxina, comprueba la conexón Wi-Fi o móvil del preséu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Escosó\'l tiempu d\'espera de la conexón</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>El sitiu solicitáu nun respondió a una solicitú de conexón y el restolador dexó d\'esperar una rempuesta.</p>
+      <ul>
+        <li>¿Pue ser que\'l sirvidor tea sufriendo una demanda alta o una cayida temporal? Volvi tentalo dempués.</li>
+        <li>¿Nun yes a restolar per otros sitios? Comprueba la conexón del preséu a la rede.</li>
+        <li>¿El preséu ta protexíu por un tornafuéu o proxy? Unos axustes incorreutos puen afeutar al restolar de la web.</li>
+        <li>¿Sigues teniendo problemes? Consulta al to alministrador de redes o fornidor d\'internet pa más asistencia.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Nun ye posible conectase</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>Seique\'l sitiu tea temporalmente non disponible o perocupáu. Volvi tentalo nun momentu.</li>
+        <li>Si nun yes a cargar nenguna páxina, comprueba la conexón Wi-Fi o móvil del preséu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Rempuesta inesperada del sirvidor</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>El sitiu respondió d\'una forma inesperada a la solicitú de rede y el restolador nun pue siguir.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">La páxina nun ta redirixendo afayadizamente</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>El restolador dexó de tentar de recuperar l\'elementu solicitáu. El sitiu ta redirixendo la solicitú d\'una forma qu\'enxamás nun va completase.</p>
+      <ul>
+        <li>¿Desactivesti o bloquiesti les cookies riquíes por esti sitiu?</li>
+        <li>Si l\'aceutación de les cookies del sitiu nun resuelve\'l problema, ye probable que seya un problema de la configuración del sirvidor y non del preséu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Mou ensin conexón</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>El restolador ta trabayando nel mou ensin conexón y nun pue conectase al elementu solicitáu.</p>
+      <ul>
+        <li>¿El preséu ta conectáu a una rede activa?</li>
+        <li>Primi «Retentar» pa cambiar pal mou conexón y volver cargar la páxina.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Torgóse un puertu por seguranza</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>La direición solicitada especificaba un puertu (por exemplu, <q>softastur.org:80</q> pal puertu 80 en softastur.org) que davezu tien otru propósitu <em>distintu</em> al de restolar la web. El restolador encaboxó la solicitú pa la to proteición y seguranza.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Reanicióse la conexón</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Torgóse l\'enllaz a la rede mentanto se negociaba una conexón. Volvi probar.</p>
+      <ul>
+        <li>Seique\'l sitiu tea temporalmente non disponible o perocupáu. Volvi tentalo nun momentu.</li>
+        <li>Si nun yes a cargar nenguna páxina, comprueba la conexón Wi-Fi o móvil del preséu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">El tipu de ficheru ye inseguru</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Ponte en contautu colos propietarios del sitiu web pa informalos d\'esti problema.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Error de conteníu toyíu</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Nun se pue amosar la páxina que tentes de ver porque se detectó un error na tresmisión de los datos.</p>
+      <ul>
+        <li>Ponte en contautu colos propietarios del sitiu web pa informalos d\'esti problema.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Cascó\'l conteníu</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Nun se pue amosar la páxina que tentes de ver porque se detectó un error na tresmisión de los datos.</p>
+      <ul>
+        <li>Ponte en contautu colos propietarios del sitiu web pa informalos d\'esti problema.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Error de la codificación del conteníu</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Nun se pue amosar la páxina que tentes de ver porque usa un tipu de compresión que nun ye válidu o compatible.</p>
+      <ul>
+        <li>Ponte en contautu colos propietarios del sitiu web pa informalos d\'esti problema.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Nun s\'atopó la direición</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>El restolador nun pudo atopar l\'agospiador de la direición apurrida.</p>
+      <ul>
+        <li>Comprueba que nun s\'introduxeren fallos al teclexar la direición:
+          <strong>ww</strong>.softastur.org en cuentes de
+          <strong>www</strong>.softastur.org.</li>
+        <li>Si nun yes a cargar nenguna páxina, comprueba la conexón Wi-Fi o móvil del preséu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Nun hai conexón a internet</string>
+
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Comprueba la conexón a la rede o tenta de recargar la páxina nun momentu.</string>
+
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Recargar</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">La direición nun ye válida</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>La direición apurrida nun ta nun formatu reconocíu. Comprueba si hai fallos na barra de direiciones y volvi a tentalo.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">La direición nun ye válida</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Les direiciones web suelen escribise asina <strong>https://www.softastur.org/</strong></li>
+        <li>Asegúrate de que tas usando barres inclinaes a la derecha (ye dicir, <strong>/</strong>).</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Desconozse\'l protocolu</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>La direición especifica un protocolu (por exemplu, <q>wxyz://</q>) que\'l restolador nun reconoz, polo que nun se pue conectar afayadizamente al sitiu.</p>
+      <ul>
+        <li>¿Tas tentando d\'acceder a servicios multimedia o que nun son de testu? Comprueba\'l sitiu pa ver más requirimientos.</li>
+        <li>Dalgunos protocolos riquen software o plugins de terceros pa que\'l restolador pueda reconocelos.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Nun s\'atopó\'l ficheru</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>¿Pue ser que l\'elementu se renomare, quitare o moviere?</li>
+        <li>¿La direición tien dalguna falta u otru error tipográficu?</li>
+        <li>¿Tienes abondos permisos p\'acceder al elementu solicitáu?</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Negóse l\'accesu al ficheru</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Seique se desaniciare, moviere o los permisos del ficheru eviten l\'accesu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">El sirvidor del proxy refugó la conexón</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>El restolador ta configuráu pa usar un sirvidor proxy mas esti últimu refugó la conexón.</p>
+      <ul>
+        <li>¿La configuración del proxy del restolador ye correuta? Comprueba los axustes y volvi tentalo.</li>
+        <li>¿El serviciu del proxy permite les conexones dende esta rede?</li>
+        <li>¿Sigues teniendo problemes? Consulta al to alministrador de redes o fornidor d\'internet pa más asistencia.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Nun s\'atopó\'l sirvidor del proxy</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>El restolador ta configuráu pa usar un sirvidor proxy mas nun se pudo atopar.</p>
+      <ul>
+        <li>¿La configuración del proxy del restolador ye correuta? Comprueba los axustes y volvi tentalo.</li>
+        <li>¿El preséu ta conectáu a una rede activa?</li>
+        <li>¿Sigues teniendo problemes? Consulta al to alministrador de redes o fornidor d\'internet pa más asistencia.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problema de sitiu con malware</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Informóse que %1$s ye un sitiu atacador y bloquióse según les tos preferencies de seguranza.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problema de sitiu indeseable</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Informóse que\'l sitiu de %1$s ta sirviendo software indeseable y bloquióse según les tos preferencies de seguranza.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problema de sitiu peligrosu</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Informóse que\'l sitiu de %1$s ye potencialmente peligrosu y bloquióse según les tos preferencies de seguranza.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problema de sitiu engañosu</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Informóse de que la páxina web de %1$s ye engañosa y bloquióse según les tos preferencies de seguranza.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">El sitiu seguru nun ta disponible</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Activesti\'l mou de namás HTTPS p\'ameyorar la seguranza, y la versión HTTPS de <em>%1$s</em> nun ta disponible.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Siguir col sitiu HTTP</string>
+</resources>

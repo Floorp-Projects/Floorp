@@ -1,0 +1,41 @@
+---
+layout: post
+title:  "🎉 Release: Android Components 0.16"
+date:   2018-07-26 18:00:00 +0200
+categories: releases
+author: sebastian
+---
+
+# 0.16.1 (2018-07-26)
+
+* Compiled against:
+  * Android support libraries 27.1.1
+  * Kotlin Standard library 1.2.51
+  * Kotlin coroutines 0.23.4
+  * GeckoView
+    * Nightly: 63.0.20180724100046 (2018.07.24, 1e5fa52a612e8985e12212d1950a732954e00e45)
+    * Beta: 62.0b9 (d7ab2f3df0840cdb8557659afd46f61afa310379)
+    * Release: 61.0 (785d242a5b01d5f1094882aa2144d8e5e2791e06)
+
+* **service-telemetry**: Allow up to 200 extras in event pings.
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.16...v0.16.1), [Milestone](https://github.com/mozilla-mobile/android-components/milestone/17?closed=1)
+
+# 0.16 (2018-07-25)
+
+* Compiled against:
+  * Android support libraries 27.1.1
+  * Kotlin Standard library 1.2.51
+  * Kotlin coroutines 0.23.4
+  * GeckoView
+    * Nightly: 63.0.20180724100046 (2018.07.24, 1e5fa52a612e8985e12212d1950a732954e00e45)
+    * Beta: 62.0b9 (d7ab2f3df0840cdb8557659afd46f61afa310379)
+    * Release: 61.0 (785d242a5b01d5f1094882aa2144d8e5e2791e06)
+
+* **service-fretboard**: Experiments can now be filtered by release channel. Added helper method to get list of active experiments.
+* **service-telemetry**: Added option to report active experiments in the core ping.
+* **service-firefox-accounts**, **sample-firefox-accounts**: libjnidispatch.so is no longer in the tree but automatically fetched from tagged GitHub releases at build-time. Upgraded to fxa-rust-client library 0.2.1. Renmaed armeabi directory to armeabi-v7a.
+* **browser-session**, **concept-engine**: Exposed website title and tracking protection in session and made observable.
+* **browser-toolbar**: Fixed bug that prevented the toolbar from being displayed at the bottom of the screen. Fixed animation problem when multiple buttons animated at the same time.
+* Various bugfixes and refactorings (see commits below for details)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.15...v0.16), [Milestone](https://github.com/mozilla-mobile/android-components/milestone/14?closed=1)

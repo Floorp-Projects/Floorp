@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="@dimen/mozac_widget_site_item_height"
+    android:background="?android:attr/selectableItemBackground">
+
+    <FrameLayout
+        android:id="@+id/favicon_wrapper"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/label">
+        <ImageView
+            android:id="@+id/favicon"
+            style="@style/Mozac.Widgets.Favicon"
+            android:importantForAccessibility="no"
+            tools:src="@android:drawable/ic_secure" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/label"
+        style="@style/Mozac.Widgets.SiteItem.Label"
+        android:layout_width="0dp"
+        tools:textColor="#20123A"
+        tools:text="Example site"
+        app:layout_goneMarginEnd="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/caption"
+        app:layout_constraintStart_toEndOf="@id/favicon_wrapper"
+        app:layout_constraintEnd_toStartOf="@id/secondary_button"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <TextView
+        android:id="@+id/caption"
+        style="@style/Mozac.Widgets.SiteItem.Caption"
+        android:layout_width="0dp"
+        android:layout_marginTop="2dp"
+        tools:text="https://example.com/"
+        tools:textColor="@color/photonLightGrey90"
+        app:layout_constraintEnd_toEndOf="@id/label"
+        app:layout_constraintStart_toStartOf="@id/label"
+        app:layout_constraintTop_toBottomOf="@id/label"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <ImageButton
+        android:id="@+id/secondary_button"
+        android:layout_width="@dimen/mozac_widget_site_item_secondary_button_size"
+        android:layout_height="@dimen/mozac_widget_site_item_secondary_button_size"
+        android:padding="@dimen/mozac_widget_site_item_secondary_button_padding"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:visibility="gone"
+        tools:visibility="visible"
+        tools:src="@drawable/mozac_ic_menu"
+        tools:ignore="ContentDescription"
+        tools:tint="#20123A"
+        app:tint="?attr/mozac_primary_text_color"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/label"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</merge>

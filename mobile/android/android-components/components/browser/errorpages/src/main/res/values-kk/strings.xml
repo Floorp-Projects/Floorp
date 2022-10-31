@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Қайталап көру</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Сұранымды аяқтау мүмкін емес</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Бұл қате жөнінде қосымша ақпарат қазір қолжетерсіз.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Қорғалған байланысты орнату сәтсіз аяқталды</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Сіз сұраған парақ көрсетілмейді, өйткені алынған мәліметтер шынайылығын тексеру мүмкін емес.</li>
+        <li>Сайт иесіне осы мәселе жөнінде хабарлаңыз.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Қорғалған байланысты орнату сәтсіз аяқталды</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Бұл сервердің қатесі болуы мүмкін, немесе біреу сізге керек серверді басқасымен ауыстырғысы келеді.</li>
+        <li>Осыған дейін осы серверге сәтті қосылған болсаңыз, осы қате уақытша болуы мүмкін. Біраздан кейін қайталап көріңіз.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Кеңейтілген…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Біреу бұл сайтты еліктеу талабын жасап жатқаны мүмкін, сондықтан жалғастырмауыңыз керек.</label>
+        <br><br>
+        <label>Веб-сайттар өз шынайылығын сертификаттар арқылы көрсетеді. %1$s қолданбасы <b>%2$s</b> адресіне сенбейді, өйткені сертификат шығарушысы белгісіз, сертификат қолтаңбасы өздігінен қойылған, немесе сервер аралық сертификаттарды жібермеген.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Артқа оралу (ұсынылады)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Тәуекелді қабылдап, жалғастыру</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Бұл веб-сайт қауіпсіз байланысты талап етеді.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Сіз көргіңіз келетін бетті көрсету мүмкін емес, себебі бұл веб-сайт қауіпсіз байланысты талап етеді.</li>
+         <li>Мәселе веб-сайтта болуы мүмкін және оны шешу үшін ештеңе істей алмайсыз.</li>
+         <li>Веб-сайттың әкімшісіне мәселе туралы хабарлауға болады.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Қосымша…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> сайтының HTTP Strict Transport Security (HSTS) деп аталатын қауіпсіздік саясаты бар, бұл дегеніміз, <b>%2$s</b> оған тек қауіпсіз түрде байланыса алады. Бұл веб-сайт үшін ережеден тыс жағдайды қоса алмайсыз.
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> сайтының HTTP Strict Transport Security (HSTS) деп аталатын қауіпсіздік саясаты бар, бұл дегеніміз, <b>%2$s</b> оған тек қауіпсіз түрде байланыса алады. Бұл веб-сайт үшін ережеден тыс жағдайды қоса алмайсыз.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Артқа</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Байланыс үзілген</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Браузер сәтті байланысқан, бірақ, байланыс ақпаратты тасымалдау кезінде үзілген. Қайталап көріңіз.</p>
+      <ul>
+        <li>Сайт уақытша қолжетімсіз немесе сұранымдарға толы шығар. Біраздан кейін қайталап көріңіз.</li>
+        <li>Егер бірде-бір парақ жүктелмесе, құрылғының деректер немесе Wi-Fi байланысын тексеріңіз.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Байланысты күту уақыты аяқталды</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Көрсетілген сайтпен байланыс орнату сұранымына жауап бермеді және браузердің күту уақыты бітті.</p>
+      <ul>
+        <li>Сайт сервері тым жүктелген немесе уақытша жұмыстан тыс болуы мүмкін бе? Біраз уақыт күтіп, қайталап көріңіз.</li>
+        <li>Егер сіз басқа да сайттарды аша алмасаңыз, компьютеріңіздің желімен байланысын тексеріңіз.</li>
+        <li>Егер құрылғыңыз желіаралық экран немесе прокси-сервермен қорғалса, олардың баптауларын тексеріңіз.</li>
+        <li>Егер басқа да мәселелер пайда болса, жүйелік администраторыңызға не Интернет-провайдеріңізге хабарласыңыз.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Байланысты орнату мүмкін емес</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>Сайт уақытша қолжетімсіз, немесе сұранымдарға толы шығар. Кейінірек қайталап көріңіз.</li>
+        <li>Бірде-бір сайт ашылмаса, мобильді құрылғыңыздың деректер не Wi-Fi байланысын тексеріңіз.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Сервердің жауабы күтпеген түрде</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Сайт сұранымға күтпеген түрде жауап берді, браузер өз жұмысын жалғастыра алмайды.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Парақтағы қайта бағдарлау дұрыс емес</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Браузер парақтың жүктелуін тоқтатты, өйткені сайт сұранымды ешқашан аяқталмайтындықтай бағдарлайтыны анықталды.</p>
+      <ul>
+        <li>Бұл сайт сұраған cookies өшірген немесе бұғаттаған жоқсыз ба?</li>
+        <li>Егер сайттан cookies қабылдау мүмкіндігін қосу арқылы мәселе шешілмесе, онда бұл қате серверден кеткен шығар.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Дербес жұмыс режимі</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Браузер қазір дербес жұмыс істеу режимінде, сол үшін сұранған нәрсеге байланыс орната алмайды.</p>
+      <ul>
+        <li>Бұл құрылғы белсенді желіге қосулы тұр ма?</li>
+        <li>Онлайн режиміне ауысып, парақты жаңарту үшін, "Қайталап көру" басыңыз.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Порт қауіпсіздік мақсатында шектелген</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Сұранған байланыс үшін көрсетілген порт  (мысалы: <q>mozilla.org:80</q> бұл mozilla.org сайтындағы 80 порт) әдетте веб-сайттармен байланысу үшін <em>қолданылмайды</em>. Қауіпсіздік мақсатында браузер бұл байланысты үзді.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Байланыс үзілген</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Байланысты орнату кезінде желілік байланыс үзілді. Қайталап көріңіз.</p>
+      <ul>
+        <li>Сайт уақытша қолжетімсіз немесе сұранымдарға толы шығар. Біраздан кейін қайталап көріңіз.</li>
+        <li>Егер бірде-бір парақ жүктелмесе, құрылғының деректер немесе Wi-Fi байланысын тексеріңіз.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Қауіпсіз емес файл түрі</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Веб сайт иелеріне осы мәселе жөнінде хабарлаңыз.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Зақымдалған құрама қатесі</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Сіз қараймын деген парақ көрсетілмейді, өйткені мәліметтер тасымалданған кезде қате анықталды.</p>
+      <ul>
+        <li>Веб сайт иелеріне осы мәселе жөнінде хабарлаңыз.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Құрамасы бұзылды</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Сіз қараймын деген парақ көрсетілмейді, өйткені мәліметтер тасымалданған кезде қате анықталды.</p>
+      <ul>
+        <li>Веб сайт иелеріне осы мәселе жөнінде хабарлаңыз.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Құраманы декодтау кезінде қате кетті</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Сіз сұраған бет көрсетілмейді, өйткені оның сығуы қате немесе браузер оны қолдамайды.</p>
+      <ul>
+        <li>Веб-сайттың иесімен осы мәселе жайында хабарласыңыз.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Адрес табылмады</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Браузер көрсетілген адрес үшін хост атын таба алмады.</p>
+      <ul>
+        <li>Адресті теру қателеріне тексеріңіз, мысалы
+          <strong>www</strong>.example.com орнына
+          <strong>ww</strong>.example.com.</li>
+        <li>Бірде-бір парақ жүктелмесе, құрылғының деректер немесе Wi-Fi байланысын тексеріңіз.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Интернетпен байланыс жоқ</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Желілік байланысты тексеріңіз немесе біраздан кейін бетті қайта жүктеп көріңіз.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Қайта жүктеу</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Адрес пішімі қате</string>
+
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Енгізілген адрестің пішімі қате. Оның енгізілуін тексеріп, қайта көріңіз.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Адрес пішімі қате</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Веб адрестері әдетте келесідей жазылады - <strong>http://www.example.com/</strong></li>
+        <li>Қалыпты слэштер қолданатыңызға көз жеткізіңіз (мыс. <strong>/</strong>).</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Белгісіз хаттама</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Көрсетілген адрес браузерге белгсіз хаттамадан (<q>wxyz://</q> сияқты) басталады, сондықтан браузер сайтпен байланыс орната алмайды.</p>
+      <ul>
+        <li>Егер сіз мультимедиа немесе басқа да мәтіндік емес сервистері бар сайтпен байланыс орнатсаңыз, сайттың бағдарламалық қамтамаға қойылатын талаптарын тексеріңіз.</li>
+        <li>Браузер кейбір хаттамаларды қолдана алу үшін сыртқы бағдарламалық қамтаманы немесе плагиндерді орнату керек.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Файл табылмады</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Ол нәрсенің аты ауысқан, ол өшірілген не орны ауысқан болуы мүмкін бе?</li>
+        <li>Адрес ішінде айтылу не жазылу қателері не басқа қателер жоқ па?</li>
+        <li>Сұранған нәрсеге сізде керек рұқсаттар бар ма?</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Файлға қатынау құқығы жоқ</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Ол өшірілген, жылжытылған немесе файл рұқсаттары қатынауға жол бермеуі мүмкін.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Прокси-сервер сұранымды үзген</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Браузер прокси-сервер қолдануға бапталған, бірақ прокси-сервер байланыс орнатуға рұқсат бермейді.</p>
+      <ul>
+        <li>Браузердегі прокси-сервер баптаулары дұрыс па? Оларды тексеріп, қайталап көріңіз.</li>
+        <li>Прокси-сервер осы желіден байланыс орнатуға рұқсат бере ме?</li>
+        <li>Әлі де мәселелер бар ма? Жүйелік администраторыңызбен, не Интернет-провайдеріңізбен хабарласыңыз.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Прокси-сервер табылмады</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Браузер прокси-серверді қолдануға бапталған, бірақ прокси-серверді табу мүмкін емес.</p>
+      <ul>
+        <li>Браузердің прокси-сервер баптаулары дұрыс па? Оларды тексеріп, қайталап көріңіз.</li>
+        <li>Құрылғы белсенді желіге байланысып тұр ма?</li>
+        <li>Әлі де мәселелер бар ма? Жүйелік администраторыңызбен, не Интернет-провайдеріңізбен хабарласыңыз.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Зиянкес бағдарлама сайты</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>%1$s сайты пайдаланушыларға шабуыл жасау үшін қолданылытыны туралы ақпарат бар, сондықтан қауіпсіздік баптауларыңызға сәйкес ол бұғатталды.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Зиянкес бағдарлама сайты</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>%1$s сайты ұнамсыз бағдарламалық қамтаманы тарататыны туралы ақпарат бар, сондықтан қауіпсіздік баптауларыңызға сәйкес ол бұғатталды.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Зиянкес сайт мәселесі</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>%1$s сайты зиянкес болу мүмкіншілігі туралы ақпарат бар, сондықтан қауіпсіздік баптауларыңызға сәйкес ол бұғатталды..</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Жалған сайт мәселесі</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>%1$s сайты жалған сайт екені туралы ақпарат бар, сондықтан қауіпсіздік баптауларыңызға сәйкес ол бұғатталды.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Қауіпсіз сайт қолжетімді емес</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Сіз жақсартылған қауіпсіздік үшін тек-HTTPS режимін іске қосқансыз, бірақ, <em>%1$s</em> адресінің HTTPS нұсқасы қолжетімсіз.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">HTTP сайтына өту</string>
+</resources>

@@ -1,0 +1,57 @@
+[
+  {
+    "namespace": "browserInfo",
+    "description": "experimental API extensions to get browser info not exposed via web APIs",
+    "functions": [
+      {
+        "name": "getAppVersion",
+        "type": "function",
+        "description": "Gets the app version",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "getBlockList",
+        "type": "function",
+        "description": "Gets the current blocklist",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "getBuildID",
+        "type": "function",
+        "description": "Gets the build ID",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "getGraphicsPrefs",
+        "type": "function",
+        "description": "Gets interesting about:config prefs for graphics",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "getPlatform",
+        "type": "function",
+        "description": "Gets the platform",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "getUpdateChannel",
+        "type": "function",
+        "description": "Gets the update channel",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "hasTouchScreen",
+        "type": "function",
+        "description": "Gets whether a touchscreen is present",
+        "parameters": [],
+        "async": true
+      }
+    ]
+  }
+]

@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">ລອງ​ອີກ​ຄັ້ງ</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">ບໍ່ສາມາດຕອບສະຫນອງຕາມຄຳຮ້ອງຂໍໄດ້</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>ຂໍ້ມູນເພີ່ມເຕີ່ມກ່ຽວກັບບັນຫານີ້ແມ່ນຫຍັງບໍ່ທັນມີເທື່ອໃນຕອນນີ້.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">ການເຊື່ອມຕໍ່ທີປອດໄພຫລົ້ມເຫລວ</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>ບໍ່ສາມາດສະແດງໜ້າທີ່ທ່ານກຳລັງພະຍາຍາມເຂົ້າໄປເບິ່ງໃຫ້ເຫັນໄດ້ເພາະວ່າຄວາມຖືກຕ້ອງຂອງຂໍ້ມູນທີ່ໄດ້ຮັບບໍ່ສາມາດຢັ້ງຢືນໄດ້.</li>
+        <li>ກະລຸນາຕິດຕໍ່ຫາເຈົ້າຂອງເວັບໄຊທເພື່ອແຈ້ງໃຫ້ພວກເຂົາຮູ້ກ່ຽວກັບບັນຫານີ້.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">ການເຊື່ອມຕໍ່ທີປອດໄພຫລົ້ມເຫລວ</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>ປັນຫານີ້ອາດຈະເກີດມາຈາກການຕັ້ງຄ່າຂອງເຊີບເວີ ຫລື ອາດຈະມີຄົນພະຍາຍາມປອມແປງເຊີບເວີ. </li>
+        <li>ຖ້າທ່ານຫາກເຄີຍເຊື່ອມຕໍ່ກັບເຊີບເວີນີ້ໄດ້ມາກ່ອນ, ຂໍ້ຜິດພາດນີ້ອາດຈະເກີດຂື້ນຊົ່ວຄາວ  ແລະ ທ່ານສາມາດລອງໃໝ່ອີກຄັ້ງໃນພາຍຫຼັງ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">ຂັ້ນສູງ…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>ມີບາງຄົນອາດຈະກຳລັງປອມແປງເວັບໄຊທ ແລະ ທ່ານບໍ່ຄວນຈະເຂົ້າໄປ.</label>
+        <br><br>
+        <label>ເວັບໄຊທຈະຢັ້ງຢືນຕົວຕົນຜ່ານທາງໃບຮັບຮອງ. %1$s ບໍ່ຫນ້າເຊື່ອຖື <b>%2$s</b> ເພາະວ່າຜູ້ອອກໃບຮັບຮອງຂອງພວກເຂົາແມ່ນບໍເປັນທີ່ຮູ້ຈັກ, ໃບຮັບຮອງແມ່ນສ້າງຂື້ນມາເອງ ຫລື ເຊີເວີບໍ່ໄດ້ສົ່ງໃບຮັບຮອງທີ່ຖືກຕ້ອງມາໃຫ້.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">ກັບຄືນ (ແນະນຳ)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">ຍອມຮັບຄວາມສ່ຽງ ແລະ ດຳເນີນການຕໍ່</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">ເວັບໄຊທນີ້ຕ້ອງການການເຊື່ອມຕໍ່ທີ່ປອດໄພ.</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>ໜ້າ​ທີ່​ເຈົ້າ​ພະ​ຍາ​ຍາມ​ເບິ່ງ​ບໍ່​ສາ​ມາດ​ສະ​ແດງ​ໄດ້​ເນື່ອງ​ຈາກ​ວ່າ​ເວັບ​ໄຊ​ທ​໌​ນີ້​ຕ້ອງ​ການ​ການ​ເຊື່ອມ​ຕໍ່​ທີ່​ປອດ​ໄພ.</li>
+         <li>ບັນຫາແມ່ນເປັນໄປໄດ້ຫຼາຍທີ່ສຸດກັບເວັບໄຊທ໌, ແລະບໍ່ມີຫຍັງທີ່ເຈົ້າສາມາດແກ້ໄຂມັນໄດ້.</li>
+         <li>ທ່ານ​ສາ​ມາດ​ແຈ້ງ​ໃຫ້​ຜູ້​ຄວບ​ຄຸມ​ຂອງ​ເວັບ​ໄຊ​ທ​໌​ກ່ຽວ​ກັບ​ບັນ​ຫາ​ໄດ້.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">ຂັ້ນສູງ…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> ມີນະໂຍບາຍຄວາມປອດໄພທີ່ເອີ້ນວ່າ HTTP Strict Transport Security (HSTS), ຊຶ່ງຫມາຍຄວາມວ່າ <b>%2$s</b> ສາມາດເຊື່ອມຕໍ່ກັບມັນໄດ້ຢ່າງປອດໄພເທົ່ານັ້ນ. ທ່ານບໍ່ສາມາດເພີ່ມຂໍ້ຍົກເວັ້ນເພື່ອເຂົ້າເບິ່ງເວັບໄຊນີ້ໄດ້.
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> ມີນະໂຍບາຍຄວາມປອດໄພທີ່ເອີ້ນວ່າ HTTP Strict Transport Security (HSTS), ຊຶ່ງຫມາຍຄວາມວ່າ <b>%2$s</b> ສາມາດເຊື່ອມຕໍ່ກັບມັນໄດ້ຢ່າງປອດໄພເທົ່ານັ້ນ. ທ່ານບໍ່ສາມາດເພີ່ມຂໍ້ຍົກເວັ້ນເພື່ອເຂົ້າເບິ່ງເວັບໄຊນີ້ໄດ້.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">ກັບຄືນ</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">ການເຊື່ອມຕໍ່ຖືກລົບກວນ</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>ບຣາວເຊີໄດ້ສຳເລັດການເຊື່ອຕໍ່ແລ້ວ, ແຕ່ວ່າການເຊື່ອມຕໍ່ໄດ້ຖືກຕັດລະຫວ່າງການສົ່ງຂໍ້ມູນ. ກະລຸນາລອງຫໃ່ອີກຄັ້ງຫນຶ່ງ.</p>
+      <ul>
+        <li>ເວັບໄຊທອາດຈະໃຊ້ງານບໍ່ໄດ້ຊົ່ວຄາວ ຫລື ອາດຈະມີຄົນເຂົ້າຫລາຍເກີນໄປ. ລອງໃຫມ່ອີກຄັ້ງໃນອີກສອງສາມນາທີຂ້າງຫນ້າ.</li>
+        <li>ຖ້າຫາກວ່າທ່ານບໍ່ສາມາດໂຫລດຫນ້າເວັບໃດໆໄດ້ເລີຍໃຫ້ທ່ານກວດປະລິມານການນຳໃຊ້ຂໍ້ມູນ ຫລື ການເຊື່ອມຕໍ່ກັບ Wi-Fi ໃນອຸປະກອນຂອງທ່ານຄືນໃຫມ່.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">ການເຊື່ອມຕໍ່ໄດ້ຫມົດເວລາແລ້ວ</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>ເວັບໄຊທທີ່ທ່ານຮ້ອງຂໍບໍ່ສາມາດດຳເນີນການໄດ້ ແລະ ບຣາວເຊີໄດ້ຍຸດການລໍຖ້າຄຳຮ້ອງຂໍດັ່ງກ່າວແລ້ວ.</p>
+      <ul>
+        <li>ອາດຈະເປັນນຳເຊີເວີອາດປະສົບກັບບັນຫາທີ່ມີຜູ້ເຂົ້ານຳໃຊ້ສຸງ ຫລື ໄຟຟ້າດັບຊົ່ວຄາວ. ໃຫ້ລອງເຂົ້າໃຫມ່ອີກຄັ້ງໃນພາຍຫລັງ.</li>
+        <li>ທ່ານສາມາດເຂົ້າເວັບໄຊທອື່ນໄດ້ບໍ່? ໃຫ້ກວດເບິງການເຊື່ອມຕໍ່ເນັດເວີກຂອງຄອມພິວເຕີຄືນ.</li>
+        <li>ເນັດເວີກຂອງທ່ານມີໄຟວໍ ຫລື ພັອກຊີຄັ້ນໄວ້ບໍ່? ການຕັ້ງຄ່າທີ່ຜິດພາດອາດຈະເຮັດໃຫ້ລົບກວນການເຂົ້າເວັບໄດ້.</li>
+        <li>ຫຍັງຄົງມີບັນຫາຢູ່ບໍ່? ໃຫ້ປຶກສາກັບຜູ້ຄຸ້ມຄອງລະບົບເນັດເວີກຂອງທ່ານ ຫລື ຜູ້ໃຫ້ບໍລິການອິນເຕີເນັດສຳລັບການຊ່ວຍເຫລືອ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">ບໍ່​ສາ​ມາດ​ທີ່​ຈະ​ເຊື່ອມ​ຕໍ່</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>ເວັບໄຊທອາດຈະໃຊ້ງານບໍ່ໄດ້ຊົ່ວຄາວ ຫລື ອາດຈະມີຄົນເຂົ້າຫລາຍເກີນໄປ. ລອງໃຫມ່ອີກຄັ້ງໃນອີກສອງສາມນາທີຂ້າງຫນ້າ.</li>
+        <li>ຖ້າຫາກວ່າທ່ານບໍ່ສາມາດໂຫລດຫນ້າເວັບໃດໆໄດ້ເລີຍໃຫ້ທ່ານກວດປະລິມານການນຳໃຊ້ຂໍ້ມູນ ຫລື ການເຊື່ອມຕໍ່ກັບ Wi-Fi ໃນອຸປະກອນຂອງທ່ານຄືນໃຫມ່.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">ການຕອບສະຫນອງທີ່ບໍ່ຄາດຄິດຈາກເຊີເວີ</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>ເວັບໄຊທຕອບສະຫນອງຕໍຄຳຮ້ອງຂໍຂອງເນັດເວີກດ້ວຍວິທີທີ່ບໍຖືກຕ້ອງ ແລະ ບຣາວເຊີບໍ່ສາມາດເຂົ້າໄປຕໍໄດ້.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">ຫນ້າເວັບນີ້ມີການປ່ຽນເສັ້ນທາງທີ່ບໍ່ຖືກຕ້ອງ</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>ບຣາວເຊີໄດ້ຢຸດພະຍາຍາມໃນການຮ້ອງຂໍລາຍການ. ເວັບໄຊທໄດ້ປ່ຽນເສັ້ນທາງຄຳຮ້ອງຂໍໄປໃນທາງທີ່ບໍມີການສີ້ນສຸດ. </p>
+     <ul>
+        <li>ທ່ານໄດ້ປິດ ຫລື ບັອກຄຸກກີ້ທີ່ຕ້ອງການໂດຍເວັບໄຊທນີ້ບໍ?</li>
+        <li>ຖ້າວ່າການຍອມຮັບຄຸກກີ້ຂອງເວັບໄຊທບໍ່ໄດ້ແກ້ໄຂບັນຫາ ມັນອາດຈະເປັນນຳບັນຫາໃນການຕັ້ງຄ່າເຊີເວີ ແລະ ບໍ່ໄດ້ເປັນນຳຄອມພິວເຕີຂອງທ່ານ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">ໂໝດອັອບໄລ</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>ບຣາວເຊີກຳລັງເຮັດວຽກໃນໂຫມດອັອບລາຍ ແລະ ບໍ່ສາມາດເຊື່ອມຕໍ່ໄປຫາລາຍການທີ່ຮ້ອງຂໍໄດ້.</p>
+      <ul>
+        <li>ຄອມພິວເຕີໄດ້ເຊື່ອມຕໍ່ກັບເນັດເວີກຢູ່ບໍ?</li>
+        <li>ກົດ “ລອງໃຫມ່ອີກຄັ້ງ” ເພື່ອປ່ຽນໄປໂຫມດອອນລາຍ ແລະ ໂຫລດຫນ້າໃຫມ່ອີກຄັ້ງ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">ພອດຖືກຈຳກັດດ້ວຍເຫດຜົນດ້ານຄວາມປອດໄພ</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>ທີ່ຢູ່ນີ້ຮ້ອງຂໍພອດທີ່ລະບຸຊັດເຈນ (ເຊັ່ນ: <q>mozilla.org:80</q> ສຳລັບພອດ 80 ໃນ mozilla.org) ປົກກະຕິແລ້ວໃຊ້ສຳລັບ <em>ອື່ນໆ</em> ຫຼາຍກ່ອນການທ່ອງເວັບ. ບຣາວເຊີໄດ້ຍົກເລີກຄຳຮ້ອງຂໍດັ່ງກ່າວເພື່ອປົກປ້ອງທ່ານ ແລະ ຄວາມປອດໄພ.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">ການເຊື່ອມຕໍ່ຖືກຕັດ</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>ເນັດເວີກລີ້ງໄດ້ຮັບການຂັດຈັງຫວະໃນຂະນະທີ່ແລກປ່ຽນຂໍ້ມູນການເຊື່ອມຕໍ. ກະລຸນາລອງໃຫມ່ອີກຄັ້ງ.</p>
+      <ul>
+        <li>ເວັບໄຊທອາດຈະບໍ່ສາມາດໃຊ້ງານໄດ້ຊົ່ວຄາວ ຫລື ເຂົ້າບໍ່ໄດ້. ໃຫ້ລອງເຂົ້າໃຫມ່ໃນອີກ 2-3 ນາທີ.</li>
+        <li>ຖ້າຫາກວ່າທ່ານຍັງບໍສາມາດໂຫລດຫນ້າເວັບໄດ້ ໃຫ້ລອງກວດເບິງອິນເຕີເນັດ ຫລື ການເຊື່ອມຕໍ  Wi-Fi ໃນອຸປະກອນຂອງທ່ານ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">ປະເພດເອກະສານທີ່ບໍ່ປອດໄພ</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>ກະລູນາຕິດຕໍ່ຫາເຈົ້າຂອງເວັບໄຊທເພື່ອແຈ້ງບັນຫານີ້ໃຫ້ພວກເຂົາຮູ້.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">ຂໍ້ຜິດພາດເນື້ອຫາທີ່ເສີຍຫາຍ</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>ຫນ້າເວັບທີ່ທ່ານກຳລັງເຂົ້າໄປເບິງບໍ່ສາມາດສະແດງໄດ້ເພາະວ່າມັນເກີດມີຂໍ້ຜິດພາດໃນການສົ່ງຂໍ້ມູນ.</p>
+      <ul>
+        <li>ກະລຸນາແຈ້ງບັນຫານີ້ໃຫ້ເຈົ້າຂອງເວັບໄຊທຮູ້.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">ເນື້ອຫາຂັດຂ້ອງ</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>ບໍ່ສາມາດສະແດງຫນ້າເວັບທີ່ທ່ານກຳລັງພະຍາຍາມເຂົ້າໄປເບິງໄດ້ເນື່ອງຈາກກວດພົບຂໍ້ຜິດພາດໃນການສົ່ງຂໍ້ມູນ.</p>
+      <ul>
+        <li>ກະລຸນາຕິດຕໍ່ຫາເຈົ້າຂອງເວັບໄຊທເພື່ອແຈ້ງບັນຫານີ້.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">ຂໍ້ຜິດພາດການເຂົ້າລະຫັດເນື້ອຫາ</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>ຫນ້າເວັບທີ່ທ່ານກຳລັງເຂົ້າໄປເບິງບໍ່ສາມາດສະແດງໄດ້ເພາະວ່າມັນໃຊ້ຮູບແບບການບີບອັດຂໍ້ມູນທີ່ບໍ່ຖືກຕ້ອງ ຫລື ບໍ່ໄດ້ຮັບການຊັບພອດ.</p>
+      <ul>
+        <li>ກະລຸນາແຈ້ງບັນຫານີ້ໃຫ້ເຈົ້າຂອງເວັບໄຊທຮູ້.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">ບໍ່ພົບທີ່ຢູ່</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>ບຣາວເຊີອາດຈະບໍ່ສາມາດຊອກຫາທີ່ຢູ່ຂອງໂຮສທີ່ລະບຸມາ.</p>
+      <ul>
+        <li>ກວດຄືນເບິງວ່າຂຽນຊື່ທີ່ຢູ່ຖືກຕ້ອງແລ້ວບໍເຊັ່ນວ່າ: 
+          <strong>ww</strong>.example.com ແທນທີ່ຈະເປັນ 
+          <strong>www</strong>.example.com.</li>
+        <li>ຖ້າຫາກວ່າທ່ານຍັງບໍສາມາດໂຫລດຫນ້າເວັບໄດ້ ໃຫ້ລອງກວດເບິງອິນເຕີເນັດ ຫລື ການເຊື່ອມຕໍ  Wi-Fi ໃນອຸປະກອນຂອງທ່ານ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">ບໍ່ມີການເຊື່ອມຕໍ່ກັບອິນເຕີເນັດ</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">ກວດເບິງເນັດເວີກຂອງທ່ານຄືນ ຫລື ລອງໂຫລດຫນ້າເວັບຄືນໃຫມ່ໃນອີກ 2-3 ນາທີ.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">ໂຫລດຄືນໃຫມ່</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">ທີ່ຢູ່ບໍ່ຖືກຕ້ອງ</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>ຮູບແບບຂອງທີ່ຢູ່ທີໃຫ້ມາແມ່ນບໍ່ຖືກຕ້ອງ. ກະລຸນາກວດເບິງທີ່ຢູ່ໃນແຖບທີ່ຕັ້ງເພື່ອຊອກຫາຂໍ້ຜິດພາດ ແລະ ລອງໃຫມ່ອີກຄັ້ງ.</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ທີ່ຢູ່ບໍ່ຖືກຕ້ອງ</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>ທີ່ຢູ່ຂອງເວັບມັກຈະຂຽນເປັນ <strong>http://www.example.com/</strong></li>
+        <li>ກວດເບິງໃຫ້ຫມັ້ນໃຈວ່າທ່ານໄດ້ໃຊ້ເຄືອງຫມາຍສະແລັດຖືກຕ້ອງແລ້ວ ( <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">ໂປຼໂຕຄໍທີ່ບໍ່ຮູ້ຈັກ</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>ທີ່ຢູ່ລະບຸໂປຣໂຕຄໍ (ເຊັ່ນ: <q>wxyz://</q>) ບຣາວເຊີບໍ່ຮັບຮູ້, ສະນັ້ນ ບຣາວເຊີບໍ່ສາມາດເຊື່ອມຕໍ່ກັບເວັບໄຊທ໌ໄດ້ຢ່າງຖືກຕ້ອງ.</p>
+      <ul>
+        <li>ທ່ານກຳລັງພະຍາຍາມເຂົ້າເຖິງມັນຕິມີເດຍ ຫຼືບໍລິການອື່ນໆທີ່ບໍ່ແມ່ນຂໍ້ຄວາມບໍ? ກວດເບິ່ງເວັບໄຊສຳລັບຄວາມຕ້ອງການເພີ່ມເຕີມ.</li>
+        <li>ບາງໂປຣໂຕຄໍອາດຈະຕ້ອງການຊອບແວພາກສ່ວນທີສາມ ຫຼື plugins ກ່ອນທີ່ຕົວທ່ອງເວັບສາມາດຮັບຮູ້ພວກມັນໄດ້.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">ບໍ່ພົບໄຟລ໌ນີ້</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>ລາຍການດັ່ງກ່າວຖືກປ່ຽນຊື່, ລຶບອອກ ຫຼື ຍ້າຍອອກບໍ?</li>
+        <li>ມີການສະກົດຄໍາ, ຕົວພິມໃຫຍ່, ຫຼືການພິມຜິດອື່ນໆຢູ່ໃນນີ້ບໍ?</li>
+        <li>ສິດອະນຸຍາດຂອງທ່ານພຽງພໍກັບລາຍການທີ່ຮ້ອງຂໍບໍ?</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">ການເຂົ້າເຖິງໄຟລ໌ຂໍ້ມູນໄດ້ຖືກປະຕິເສດ</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul> <li>ມັນອາດຈະຖືກລຶບອອກໄປແລ້ວ, ຍ້າຍໄປໄວ້ຢູ່ບ່ອນອື່ນແລ້ວ ຫລື ທ່ານອາດບໍ່ມີສິດເຂົ້າເຖິງຟາຍຂໍ້ມູນນີ້.</li> </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">ພັອກຊີເຊີເວີໄດ້ປະຕິເສດການເຊື່ອມຕໍ່</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>ຕົວ​ທ່ອງ​ເວັບ​ໄດ້​ຖືກ​ຕັ້ງ​ຄ່າ​ໃຫ້​ໃຊ້​ເຊີບ​ເວີ​ພຣັອກຊີ, ແຕ່​ພຣັອກຊີ​ໄດ້​ປະ​ຕິ​ເສດ​ການ​ເຊື່ອມ​ຕໍ່.</p>
+      <ul>
+        <li>ການກຳນົດຄ່າພຣັອກຊີຂອງບຣາວເຊີຖືກຕ້ອງບໍ? ກວດເບິ່ງການຕັ້ງຄ່າແລ້ວລອງໃໝ່ອີກຄັ້ງ.</li>
+        <li>ບໍລິການພຣັອກຊີອະນຸຍາດການເຊື່ອມຕໍ່ຈາກເຄືອຂ່າຍນີ້ບໍ?</li>
+        <li>ຍັງມີບັນຫາຢູ່ບໍ? ປຶກສາຜູ້ເບິ່ງແຍງລະບົບເຄືອຂ່າຍ ຫຼືຜູ້ໃຫ້ບໍລິການອິນເຕີເນັດຂອງທ່ານເພື່ອຂໍຄວາມຊ່ວຍເຫຼືອ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">ບໍ່ພົບພລັອກຊີເຊີເວີ</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>ຕົວ​ທ່ອງ​ເວັບ​ໄດ້​ຖືກ​ຕັ້ງ​ຄ່າ​ໃຫ້​ໃຊ້​ເຊີບ​ເວີ​ພຣັອກ​ຊີ, ແຕ່​ບໍ່​ສາ​ມາດ​ຊອກ​ຫາ​ຕົວ​ແທນ​ໄດ້.</p>
+      <ul>
+        <li>ການກຳນົດຄ່າພຣັອກຊີຂອງບຣາວເຊີຖືກຕ້ອງບໍ? ກວດເບິ່ງການຕັ້ງຄ່າແລ້ວລອງໃໝ່ອີກຄັ້ງ.</li>
+        <li>ອຸປະກອນເຊື່ອມຕໍ່ກັບເຄືອຂ່າຍທີ່ໃຊ້ຢູ່ບໍ?</li>
+        <li>ຍັງມີບັນຫາຢູ່ບໍ? ປຶກສາຜູ້ເບິ່ງແຍງລະບົບເຄືອຂ່າຍ ຫຼືຜູ້ໃຫ້ບໍລິການອິນເຕີເນັດຂອງທ່ານເພື່ອຂໍຄວາມຊ່ວຍເຫຼືອ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">ປັນຫາເວັບໄຊທ Malware</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>ເວັບໄຊທທີ່ %1$s ໄດ້ຖືກລາຍງານວ່າເປັນເວັບອັນຕະລາຍ ແລະ ໄດ້ຖືກບັອກໂດຍອີງຈາກການຕັ້ງຄ່າຄວາມປອດໄພຂອງທ່ານ.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">ບັນຫາໃນເວັບໄຊທທີ່ບໍ່ເພິງປະສົງ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>ເວັບໄຊທທີ່ %1$s ໄດ້ຖືກລາຍງານວ່າເປັນເວັບທີ່ໃຫ້ບໍລິການຊັອບແວທີ່ອັນຕະລາຍ ແລະ ໄດ້ຖືກບັອກໂດຍອີງຈາກການຕັ້ງຄ່າຄວາມປອດໄພຂອງທ່ານ.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">ເວບໄຊທທີ່ເປັນອັນຕະລາຍ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>ເວັບໄຊທທີ່ %1$s ໄດ້ຖືກລາຍງານວ່າເປັນເວັບທີ່ອາດຈະເປັນອັນຕະລາຍ ແລະ ໄດ້ຖືກບັອກໂດຍອີງຈາກການຕັ້ງຄ່າຄວາມປອດໄພຂອງທ່ານ.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">ບັນຫາເວັບໄຊທປອມແປງ</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>ຫນ້າເວັບນີ້ທີ່ %1$s ໄດ້ຖືກລາຍງານວ່າເປັນເວັບປອມແປງ ແລະ ໄດ້ຖືກບັອກໂດຍອີງຈາກການຕັ້ງຄ່າຄວາມປອດໄພຂອງທ່ານ.</p>
+    ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">ເວັບໄຊທທີ່ປອດໄພຍັງບໍ່ພ້ອມໃຫ້ໃຊ້ງານ</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[ທ່ານ​ໄດ້​ເປີດ​ໃຊ້​ງານໂຫມດ HTTPS-Only ເພື່ອ​ຄວາມ​ປອດ​ໄພ​ທີ່​ຫຼາຍຂື້ນ ແລະ HTTPS ເວີ​ຊັນ <em>%1$s</em> ຍັງບໍພ້ອມໃຫ້ໃຊ້ງານ.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">ສືບຕໍ່ໄປຫາເວັບໄຊທທີ່ນຳໃຊ້ HTTP</string>
+</resources>

@@ -1,0 +1,188 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@media (any-pointer: fine) {
+  :root {
+    font-family: sans-serif;
+    margin: 40px auto;
+    min-width: 30em;
+    max-width: 60em;
+  }
+
+  table {
+    width: 100%;
+    padding-bottom: 2em;
+    border-spacing: 0;
+  }
+
+  td {
+    border-bottom: 1px solid var(--in-content-border-color);
+  }
+
+  td:last-child > button {
+    float: inline-end;
+  }
+}
+
+/* Mobile UI where common.css is not loaded */
+
+@media (any-pointer: coarse), (any-pointer: none) {
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  :root {
+    --background-color: #fff;
+    --text-color: #0c0c0d;
+    --border-color: #e1e1e2;
+    --button-background-color: #f5f5f5;
+    --selected-tab-text-color: #0061e0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background-color: #292833;
+      --text-color: #f9f9fa;
+      --border-color: rgba(255, 255, 255, 0.15);
+      --button-background-color: rgba(0, 0, 0, 0.15);
+      --selected-tab-text-color: #00ddff;
+    }
+  }
+
+  body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font: message-box;
+    font-size: 14px;
+    -moz-text-size-adjust: none;
+    display: grid;
+    grid-template-areas: "a b c" "d d d";
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: fit-content(100%) 1fr;
+  }
+
+  .tab[data-l10n-id="label-overrides"] {
+    grid-area: a;
+  }
+
+  .tab[data-l10n-id="label-interventions"] {
+    grid-area: b;
+  }
+
+  .tab[data-l10n-id="label-smartblock"] {
+    grid-area: c;
+  }
+
+  table {
+    grid-area: d;
+  }
+
+  table,
+  tr,
+  p {
+    display: block;
+  }
+
+  table {
+    border-top: 2px solid var(--border-color);
+    margin-top: -2px;
+    width: 100%;
+    z-index: 1;
+    display: none;
+  }
+
+  tr {
+    border-bottom: 1px solid var(--border-color);
+    padding: 0;
+  }
+
+  a {
+    color: inherit;
+    font-size: 94%;
+  }
+
+  .tab {
+    cursor: pointer;
+    z-index: 2;
+    display: inline-block;
+    text-align: left;
+    font-weight: bold;
+    border-block: 2px solid transparent;
+    font-size: 1em;
+    font-weight: bold;
+    padding: 1em;
+  }
+
+  .tab.active {
+    color: var(--selected-tab-text-color);
+    border-bottom-color: currentColor;
+    margin-bottom: 0;
+    padding-bottom: calc(1em + 2px);
+  }
+
+  .tab.active + table {
+    display: block;
+  }
+
+  td {
+    grid-area: b;
+    padding-left: 1em;
+  }
+
+  td:first-child {
+    grid-area: a;
+    padding-top: 1em;
+  }
+
+  td:last-child {
+    grid-area: c;
+    padding-bottom: 1em;
+  }
+
+  tr {
+    display: grid;
+    grid-template-areas: "a c" "b c";
+    grid-template-columns: 1fr 6.5em;
+  }
+
+  td[colspan="4"] {
+    padding: 1em;
+    font-style: italic;
+    text-align: center;
+  }
+
+  td:not([colspan]):nth-child(1) {
+    font-weight: bold;
+    padding-bottom: 0.25em;
+  }
+
+  td:nth-child(2) {
+    padding-bottom: 1em;
+  }
+
+  td:nth-child(3) {
+    display: flex;
+    padding: 0;
+  }
+
+  button {
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    background: var(--button-background-color);
+    color: inherit;
+    inset-inline-end: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-inline-start: 1px solid var(--border-color);
+    font-weight: 600;
+    appearance: none;
+  }
+
+  button::-moz-focus-inner {
+    border: 0;
+  }
+}

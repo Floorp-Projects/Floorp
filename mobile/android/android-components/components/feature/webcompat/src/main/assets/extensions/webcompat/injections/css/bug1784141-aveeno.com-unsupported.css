@@ -1,0 +1,9 @@
+/**
+ * aveeno.com - Unsupported message is displayed
+ * Bug #1784141 - https://bugzilla.mozilla.org/show_bug.cgi?id=1784141
+ * WebCompat issue #103557 - https://webcompat.com/issues/103557
+ */
+
+#browser-alert {
+  display: none !important;
+}

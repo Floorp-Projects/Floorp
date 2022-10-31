@@ -1,0 +1,85 @@
+---
+layout: post
+title:  "🎉 Release: Android Components 0.21"
+date:   2018-08-31 14:40:00 +0200
+categories: releases
+author: sebastian
+---
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.20...v0.21),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/21?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.21/index)
+
+* Compiled against:
+  * Android support libraries 27.1.1
+  * Kotlin Standard library **1.2.61** 🔺
+  * Kotlin coroutines 0.23.4
+  * GeckoView
+    * Nightly: **63.0.20180830111743** 🔺
+    * Beta: **62.0b21** (7ce198bb7ce027d450af3f69a609896671adfab8) 🔺
+    * Release: 61.0 (785d242a5b01d5f1094882aa2144d8e5e2791e06)
+
+* **concept-engine**, **engine-system**, **engine-gecko**: Added API to set default session configuration e.g. to enable tracking protection for all sessions by default.
+    ```Kotlin
+    // DefaultSettings can be set on GeckoEngine and SystemEngine.
+    GeckoEngine(runtime, DefaultSettings(
+        trackingProtectionPolicy = TrackingProtectionPolicy.all(),
+        javascriptEnabled = false))
+    ```
+* **concept-engine**, **engine-system**, **engine-gecko-beta/nightly**:
+  * Added support for intercepting request and injecting custom content. This can be used for internal pages (e.g. *focus:about*, *firefox:home*) and error pages.
+    ```Kotlin
+    // GeckoEngine (beta/nightly) and SystemEngine support request interceptors.
+    GeckoEngine(runtime, DefaultSettings(
+        requestInterceptor = object : RequestInterceptor {
+            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+                return when (uri) {
+                    "sample:about" -> RequestInterceptor.InterceptionResponse("<h1>I am the sample browser</h1>")
+                    else -> null
+               }
+           }
+       }
+    )
+    ```
+  * Added APIs to support "find in page".
+    ```Kotlin
+        // Finds and highlights all occurrences of "hello"
+        engineSession.findAll("hello")
+
+        // Finds and highlights the next or previous match
+        engineSession.findNext(forward = true)
+
+        // Clears the highlighted results
+        engineSession.clearFindMatches()
+
+        // The current state of "Find in page" can be observed on a Session object:
+        session.register(object : Session.Observer {
+            fun onFindResult(session: Session, result: FindResult) {
+                // ...
+            }
+        })
+    ```
+* **browser-engine-gecko-nightly**: Added option to enable/disable desktop mode ("Request desktop site").
+    ```Kotlin
+        engineSession.setDesktopMode(true, reload = true)
+    ```
+* **browser-engine-gecko(-nightly/beta)**: Added API for observing long presses on web content (links, audio, videos, images, phone numbers, geo locations, email addresses).
+    ```Kotlin
+        session.register(object : Session.Observer {
+            fun onLongPress(session: Session, hitResult: HitResult): Boolean {
+                // HitResult is a sealed class representing the different types of content that can be long pressed.
+                // ...
+
+                // Returning true will "consume" the event. If no observer consumes the event then it will be
+                // set on the Session object to be consumed at a later time.
+                return true
+            }
+        })
+    ```
+* **lib-dataprotect**: New component to protect local user data using the [Android keystore system](https://developer.android.com/training/articles/keystore). This component doesn't contain any code in this release. In the next sprints the Lockbox team will move code from the [prototype implementation](https://github.com/linuxwolf/android-dataprotect) to the component.
+* **support-testing**: New helper test function to assert that a code block throws an exception:
+    ```Kotlin
+    expectException(IllegalStateException::class) {
+        // Do something that should throw IllegalStateException..
+    }
+    ```

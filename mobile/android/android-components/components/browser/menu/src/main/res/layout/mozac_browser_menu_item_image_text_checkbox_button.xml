@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Mozac.Browser.Menu.Item.Container"
+    android:layout_width="match_parent"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    tools:ignore="UseCompoundDrawables">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/image"
+        style="@style/Mozac.Browser.Menu.Item.ImageText.Icon"
+        android:background="@android:color/transparent"
+        android:importantForAccessibility="no"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@android:drawable/screen_background_dark" />
+
+    <TextView
+        android:id="@+id/text"
+        style="@style/Mozac.Browser.Menu.Item.ImageText.Label"
+        android:background="@android:color/transparent"
+        android:gravity="center_vertical"
+        android:importantForAccessibility="no"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/image"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Item" />
+
+    <View
+        android:id="@+id/accessibilityRegion"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:importantForAccessibility="yes"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatCheckBox
+        android:id="@+id/checkbox"
+        style="@style/Mozac.Browser.Menu.Item.Text"
+        android:layout_width="wrap_content"
+        android:layout_height="24dp"
+        android:button="@null"
+        android:drawablePadding="7dp"
+        android:textAlignment="viewEnd"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:drawableStartCompat="@android:drawable/star_big_off"
+        tools:text="Add"
+        tools:textOff="Edit"
+        tools:textOn="Add" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+

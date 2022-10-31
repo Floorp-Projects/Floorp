@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width; user-scalable=false;" />
+        <meta http-equiv="Content-Security-Policy" content="default-src resource:; object-src 'none'" />
+        <link rel="stylesheet" type="text/css" href="error_style.css">
+    </head>
+
+    <body id="errorPage" dir="auto">
+        <!-- PAGE CONTAINER (for styling purposes only) -->
+        <div id="errorPageContainer">
+
+            <!-- Error Image -->
+            <iframe id="errorImage" src="" frameborder="0"></iframe>
+
+            <!-- Error Title -->
+            <div id="errorTitle">
+                <h1 id="errorTitleText"></h1>
+            </div>
+
+            <!-- LONG CONTENT (the section most likely to require scrolling) -->
+            <div id="errorLongContent">
+                <div id="errorShortDesc"></div>
+            </div>
+
+            <!-- Retry Button -->
+            <button id="errorTryAgain"></button>
+ 
+            <!-- Advanced Button -->
+            <button id="advancedButton" class="buttonSecondary"></button>
+
+            <!-- "Continue to HTTP site" Button (For HTTPS-Only error page only) -->
+            <button id="continueHttp" class="buttonSecondary"></button>
+
+            <div id="advancedPanelContainer">
+                <div id="badCertAdvancedPanel" class="advanced-panel">
+                    <p id="badCertTechnicalInfo"></p>
+                    <div id="advancedPanelBackButtonContainer" class="advancedPanelButtonContainer">
+                        <button id="advancedPanelBackButton"></button>
+                    </div>
+                    <div id="advancedPanelAcceptButtonContainer" class="advancedPanelButtonContainer">
+                        <button id="advancedPanelAcceptButton" class="buttonSecondary"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </body>
+
+    <!-- Each consumer that uses a unique HTML error page must implement a parsing script-->
+    <script src="./errorPageScripts.js"></script>
+</html>

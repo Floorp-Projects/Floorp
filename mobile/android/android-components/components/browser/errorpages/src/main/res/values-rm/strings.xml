@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Empruvar anc ina giada</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Impussibel d\'exequir la dumonda</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[      <p>Ulteriuras infurmaziuns davart quest problem u questa errur n\'èn per il mument betg disponiblas.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">La connexiun segira n\'è betg reussida</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>La pagina dumandada na po betg vegnir mussada, perquai ch\'i na va betg da verifitgar l\'autenticitad da las datas.</li>
+        <li>Contactescha per plaschair ils administraturs da la website per als infurmar davart quest problem.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">La connexiun segirada n\'è betg reussida</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+  <li>Quai pudess esser in problem cun la configuraziun dal server u ch\'insatgi vul sa dar per quest server.</li>
+  <li>Sche ti has connectà cun success cun quest server en il passà, sa tracti eventualmain mo d\'ina errur temporara e ti pos empruvar pli tard anc ina giada.</li>
+</ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avanzà…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Eventualmain emprova in\'autra website da sa dar per la website giavischada. I vegn recumandà da betg cuntinuar.</label>
+        <br><br>
+        <label>Websites cumprovan lur identitad cun certificats. %1$s na sa fida betg da <b>%2$s</b> perquai che l\'emettur dal certificat n\'è betg enconuschent, perquai ch\'il certificat è auto-signà u perquai ch\'il server na trametta betg ils certificats intermediars corrects.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Turnar (recumandà)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Acceptar la ristga e cuntinuar</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Questa website pretenda ina connexiun segirada.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>La pagina che ti emprovas da visitar na po betg vegnir mussada perquai che questa website pretenda ina connexiun segirada.</li>
+         <li>I sa tracta probablamain dad in problem da la website e ti na pos far nagut per al schliar.</li>
+         <li>Ti pos dentant infurmar l\'administratur da la website davart il problem.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Avanzà…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> ha ina directiva da segirezza che sa numna HTTP Strict Transport Security (HSTS). Quai munta che <b>%2$s</b> po mo connectar a moda segirada. I n\'è betg pussaivel dad agiuntar ina excepziun per visitar questa website.
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> ha ina directiva da segirezza che sa numna HTTP Strict Transport Security (HSTS). Quai munta che <b>%2$s</b> po mo connectar a moda segirada cun la website. I n\'è betg pussaivel dad agiuntar ina excepziun per visitar questa website. </label>
+]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Turnar</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">La connexiun è interrutta</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Il navigatur ha pudì stabilir ina connexiun, ma ella è interrutta durant la transmissiun da datas. Emprova per plaschair anc ina giada.</p>
+      <ul>
+        <li>Eventualmain n\'è la website temporarmain betg cuntanschibla u ch\'ella è surchargiada. Emprova pli tard anc ina giada.</li>
+        <li>Sche ti na pos era betg chargiar autras paginas, controllescha per plaschair la connexiun da datas u da WLAN da tes apparat.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Surpassà il temp per la connexiun</string>
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>La website dumandada n\'ha betg respundì ad ina emprova da connectar ed il navigatur ha chalà da spetgar ina resposta.</p>
+      <ul>
+        <li>Eventualmain è il server surchargià u temporarmain ord funcziun? Emprova pli tard anc ina giada.</li>
+        <li>Na pos ti era betg chargiar autras websites? Controllescha la configuraziun da la connexiun cun la rait da tes computer.</li>
+        <li>Èn tia rait u tes computer protegids dad ina firewall u dad in proxy? Parameters incorrects pon disturbar la navigaziun en il web.</li>
+        <li>Na funcziuneschi anc adina betg? Contactescha l\'administratur da la rait u il provider e dumonda agid.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Connexiun betg reussida</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+  <li>Eventualmain n\'è la website temporarmain betg cuntanschibla u ch\'ella è surchargiada. Emprova pli tard anc ina giada.</li>
+  <li>Sche ti na pos era betg chargiar autras paginas, controllescha la connexiun da datas u da WLAN da tes apparat.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Resposta nunspetgada dal server</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>La website dumandada ha respundì a moda nunspetgada. Perquai na po la connexiun betg vegnir mantegnida.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">La pagina na renviescha betg a moda correcta</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Il navigatur ha chalà dad empruvar da retschaiver l\'element dumandà. La website dumandada sviescha la dumonda uschia ch\'ella na po mai vegnir terminada.</p>
+      <ul>
+        <li>Has ti bloccà u deactivà cookies indispensabels per questa website?</li>
+        <li>Per cas ch\'i na gida betg d\'acceptar ils cookies da la website, sa tracti probablamain dad in problem cun la configuraziun dal server e betg dad in problem da tes apparat.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Modus offline</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Il navigatur è en il modus offline e na po perquai betg connectar cun l\'element dumandà.</p>
+      <ul>
+        <li>È l\'apparat collià cun ina rait activa?</li>
+        <li>Clicca sin «Empruvar anc ina giada» per midar en il modus online e rechargiar la pagina.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Il port è bloccà per motivs da segirezza</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>L\'adressa dumandada ha inditgà in port (per exempel <q>mozilla.org:80</q> per il port 80 sin mozilla.org) che na vegn <em>normalmain betg</em> utilisà per navigar en il web. Il navigatur ha annullà la dumonda per ta proteger.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">La connexiun è interrutta</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>La connexiun a la rait è vegnida interrutta durant stabilir ina connexiun. Emprova p.pl. anc ina giada.</p>
+      <ul>
+        <li>Eventualmain n\'è la website temporarmain betg cuntanschibla u ch\'ella è surchargiada. Emprova pli tard anc ina giada.</li>
+        <li>Sche ti na pos era betg chargiar autras paginas, controllescha per plaschair la connexiun da datas u da WLAN da tes apparat.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Tip da datoteca malsegir</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Contactescha per plaschair ils possessurs da la website per als infurmar davart quest problem.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Errur: Cuntegn donnegià</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Impussibel da visualisar la pagina che ti vuls chargiar perquai ch\'ina errur è capitada en la transmissiun da datas.</p>
+      <ul>
+        <li>Contactescha per plaschair ils possessurs da la website per als infurmar davart quest problem.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Il cuntegn è collabà</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Impussibel da visualisar la pagina che ti vuls chargiar perquai ch\'ina errur è capitada en la transmissiun da datas.</p>
+      <ul>
+        <li>Contactescha per plaschair ils possessurs da la website per als infurmar davart quest problem.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Cuntegns cun codaziun nunvalida</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Impussibel da visualisar la pagina che ti vuls chargiar perquai ch\'ella utilisescha ina furma da cumpressiun nunvalida u betg cumpatibla.</p>
+      <ul>
+        <li>Contactescha per plaschair ils possessurs da la website per als infurmar davart quest problem.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Impussibel da chattar l\'adressa</string>
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Impussibel da chattar il server da host da l\'adressa dumandada.</p>
+      <ul>
+        <li>Controllescha sche l\'adressa cuntegna sbagls da scriver sco
+          <strong>ww</strong>.example.com empè da
+          <strong>www</strong>.example.com</li>
+        <li>Sch\'i na va era betg da chargiar autras paginas, controllescha per plaschair la connexiun da datas u da WLAN da tes apparat.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Nagina connexiun cun l\'internet</string>
+
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Controllescha tia connexiun cun la  rait u emprova da chargiar danovamain la pagina en in mument.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Rechargiar</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Adressa nunvalida</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>L\'adressa inditgada ha in format nunenconuschent. Controllescha per plaschair sche l\'adressa cuntegna sbagls ed emprova anc ina giada.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">L\'adressa è nunvalida</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+   <li>Adressas d\'internet vegnan normalmain scrittas uschia:
+     <strong>http://www.example.com/</strong></li>
+   <li>Controllescha che ti has utilisà stritgs diagonals che mussan enavant (q.v.d.
+     <strong>/</strong>).</li>
+ </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Protocol nunenconuschent</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>L\'adressa inditgescha in protocol (per exempel <q>wxyz://</q>) ch\'il navigatur n\'enconuscha betg. Perquai na po il navigatur betg connectar correctamain cun la website.</p>
+      <ul>
+        <li>Emprovas ti dad acceder a multimedia u auters servetschs betg textuals? Controllescha sche la website pretenda premissas spezialas.</li>
+        <li>Tscherts protocols dovran software da terzs u plug-ins per ch\'il navigatur als reconuschia.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Betg chattà la datoteca</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Forsa è l\'element vegnì renumnà, stizzà u spustà? </li>
+        <li>Cuntegna l\'adressa in sbagl ortografic, in sbagl da scripziun grond e pitschen u in auter sbagl da scriver? </li>
+        <li>Has ti ils dretgs d\'access necessaris per chargiar l\'element dumandà?</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Refusà l\'access a la datoteca</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+  <li>Forsa è ella stizzada, spustada u che ti n\'es betg autorisà per l\'access.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Il proxy server ha refusà la connexiun</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Il navigatur è configurà per l\'utilisaziun dad in proxy server, ma il proxy ha refusà ina connexiun.</p>
+      <ul>
+        <li>È la configuraziun dal proxy correcta? Controllescha ils parameters ed emprova anc ina giada.</li>
+        <li>Permetta il servetsch da proxy connexiuns or da questa rait?</li>
+        <li>Na funcziuneschi anc adina betg? Contactescha l\'administratur da la rait u il provider e dumonda agid.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Impussibel da chattar il proxy server</string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Il navigatur è configurà per l\'utilisaziun dad in proxy server, ma i n\'è betg reussì da chattar il proxy.</p>
+      <ul>
+        <li>È la configuraziun dal proxy correcta? Controllescha ils parameters ed emprova anc ina giada.</li>
+        <li>È l\'apparat connectà ad ina rait activa?</li>
+        <li>Na funcziuneschi anc adina betg? Contactescha l\'administratur da la rait u il provider e dumonda agid.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problem cun ina pagina da malware</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>La pagina %1$s è vegnida annunziada sco pagina che attatga. Ella vegn bloccada sin fundament da tias preferenzas da segirezza.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problem cun ina pagina nungiavischada</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>La pagina %1$s è annunziada sco pagina che distribuescha software nungiavischada. Ella vegn bloccada sin fundament da tias preferenzas da segirezza.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problem cun ina pagina privlusa</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>La pagina %1$s è vegnida annunziada sco pagina potenzialmain privlusa. Ella vegn bloccada sin fundament da tias preferenzas da segirezza.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problem cun ina pagina che engiona</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>La pagina %1$s è annunziada sco pagina che engiona. Ella vegn bloccada sin fundament da tias preferenzas da segirezza.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Website segirada betg disponibla</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Ti has activà il modus «mo HTTPS» per augmentar la segirezza ed ina versiun HTTPS da <em>%1$s</em> na stat betg a disposiziun.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Cuntinuar cun la website HTTP</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for the title of an alert dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_alert_title">Mae tudalen yn %1$s yn dweud:</string>
+    <!-- Text for the message of an auth dialog displayed by a web page.
+    %1$s will be replaced by the realm, %2$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_message">Mae %2$s yn gofyn am enw defnyddiwr a chyfrinair. Mae’r wefan yn dweud: “%1$s”</string>
+    <!-- Text for the message of an auth dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_no_realm_message">Mae %1$s yn gofyn am eich enw defnyddiwr a chyfrinair.</string>
+</resources>

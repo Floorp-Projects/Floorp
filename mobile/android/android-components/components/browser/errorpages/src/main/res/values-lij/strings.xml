@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Preuva torna</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">No riescio a finî a domanda</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>No gh\'é son atre informaçioin in sciô problema.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Conescion segua no riescia</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>A pagina che ti veu vedde a no peu ese mostrâ perché no l\'é poscibile verificâ l’aotenticitæ di dæti riçevui.</li>
+        <li>Ciamma o responsabile do scito web pe informalo do problema.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Conescion segua no riescia</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Sto chi o peu ese un problema co-e inpostaçion do server ò peu ascì ese quarchedun che o preuva a fâ finta de ese o server.</li>
+        <li>Se ti ê conesso sensa problemi a sto server into passou, aloa l\'erô o peu esê tenporaneo e ti peu provâ torna dòppo.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avansæ…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Porieva ese che quardun o preuva a fâ finta d\'ese o scito e sarieiva megio se no ti væ avanti.</label>
+        <br><br>
+        <label>I sciti web garantiscian a pròpia identitæ con di certificati. %1$s o no considera o scito <b>%2$s</b> fidou perché l\’autoritæ ch\'a l\'à emisso o certificato a l\'é sconosciua, o certificato o l\'é firmato pe conto seu opûre o server o no à mandou i certificati intermedi che servan.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Vanni inderê (Racomandou)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Acetta o reizego e vanni</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">A conescion a l\'é stæta scancelâ</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>O navegatô o s\'é conesso ben, ma a conescion a l\'é è stæta interotta into trasferimento de informaçioin. Preuva torna. </p>
+	<ul>
+		<li> O scito o porieiva ese tenporaneamente no disponibile ò tròppo indafarou. Preuva torna tra quarche momento. </li>
+		<li> Se no ti riesci a caregâ nisciunn-a pagina, contròlla i dæti do dispoxitivo ò a conescion Wi-Fi.</li>
+	</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">A conescion a gh\'à misso tròppo tenpo</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>O scito che t\'æ domandou o no risponde e o navegatô o no l\'aspetâ ciù a risposta.</p>
+      <ul>
+        <li>Fòscia o server o gh\'à \'n\'erta domanda ò \'n problema tenporaneo? Preuva torna dòppo.</li>
+        <li>No ti riesci a navegâ inti atri sciti? Contròlla a conescion.</li>
+        <li>O teu computer ò a teu conescion en protezui da \'n firewall ò proxy? Se e teu inpostaçioin son sbaliæ peuan interferî co-a navegaçion.</li>
+        <li>i gh\'æ torna di problemi? Ciamma o teu aministratô da ræ ò fornitô de serviççi internet pe ascistensa.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">No riescio a conetime</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>O scito o porieiva ese tenporaneamente inacesibile ò tròppo traficou. Preuva torna tra quarche momento.</li>
+        <li>Se no ti riesci a caregâ nisciunn-a pagina, preuva a controlâ a conescion do teu computer.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Risposta sbaliâ da-o server</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>O scito risponde in \'n mòddo ch\'o no capiscio e-o navegatô o no peu continoâ.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">A pagina no redireçionn-a ben</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>O navegatô o no preuvâ ciù a riçeive l\'ògetto domandou. O scito redireçionn-a sensa fin.</p>
+      <ul>
+        <li>T\'æ dizabilitou ò blocou i cookie domandæ da sto scito?</li>
+        <li>Se ti acetti i cookie do scito e no ti rizòlvi o problema, aloa porieivan ese e inpostaçioin do server che no van ben e no quelle do teu dispoxitivo.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Feua linia</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>O navegatô o l\'é into mòddo feua linia e o no peu colegase a l\'ògetto çernuo.</p>
+      <ul>
+        <li>O dispoxitivo o l\'é conesso a \'na ræ ativa?</li>
+        <li>Sciacca “Preuva torna” pe pasâ a-o mòddo in linia e caregâ torna a pagina.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Acesso a-a pòrta dizabilitou pe raxoin de seguessa</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>A pòrta domandâ (ez. <q>mozilla.org:80</q> pa-a pòrta 80 in sciô mozilla.org) l\'é uzâ pe <em>atri</em> fin che no seggian a navegaçion. O navegatô l\'à scancelou a domanda pe a teu proteçion e seguessa.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Conescion scancelâ</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>O navegatô o s\'é conesso ben, ma a conescion a l\'é è stæta interotta into trasferimento de informaçioin. Preuva torna. </p>
+	<ul>
+		<li> O scito o porieiva ese tenporaneamente no disponibile ò tròppo indafarou. Preuva torna tra quarche momento. </li>
+		<li> Se no ti riesci a caregâ nisciunn-a pagina, contròlla i dæti do dispoxitivo ò a conescion Wi-Fi.</li>
+	</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Tipo de file no seguo</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Pe piaxei, contatta i padroin do scito pe faghe savei de questo problema.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Erô contegnuo andæto a mâ</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>A pagina che ti veu vedde a no peu ese mostrâ perché gh\'é \'n erô inta trasmiscion di dæti.</p>
+      <ul>
+        <li>Pe piaxei, ciamma o responsabile do scito pe informalo do problema.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Contegnuo ciantou</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>A pagina che ti veu vedde a no peu ese mostrâ perché gh\'é \'n erô inta trasmiscion di dæti.</p>
+      <ul>
+        <li>Pe piaxei, ciamma o responsabile do scito pe informalo do problema.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Erô còdifica do contegnuo</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>A pagina che t\'eu vedde a no se peu mostrâ perché a gh\'à \'na comprescion ch\'a no l\'é soportâ.</p>
+      <ul>
+        <li>Pe piaxei, contatta i padroin do scito pe faghe savei de questo problema.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Indirisso no trovou</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>O navegatô o no riesce a trovâ o server host pe l\'indirisso fornio.</p>
+      <ul>
+        <li>Contròlla che no ghe segge di eroî comme:
+          <strong>ww</strong>.ezenpio.com in cangio de
+          <strong>www</strong>.ezenpio.com.</li>
+        <li>Se ti no riesci a caregâ nisciunn-a pagina, contròla a conescion dæti o Wi-Fi do teu dispoxitivo.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Niscinn-a conescion Internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">ontròlla a tue conescion ò preuva a caregâ a pagina fra quarche momento.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Recarega</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Indirisso no valido</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>L\'indirisso che ti me dæto o no va ben. Pe piaxei contròlla che no ghe segge di eroî inta bara di indirissi e preuva torna.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">L\'indirisso o no l\'é valido</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Generalmente i indirissi web en scriti coscì <strong>http://www.ezenpio.com/</strong></li>
+        <li>Amia ben se tu deuvi e bare giuste (prezenpio <strong>/</strong>).</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Protocòllo sconosciuo</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>L\’indirisso o domanda \'n protocòllo (prez. <q>wxyz://</q>) ch\'o navegatô o no conosce, quindi o no peu colegase a-o scito.</p>
+      <ul>
+        <li>Ti ê derê a acede a serviççi moltimediali ò no de testo? Verificâ in sciô scito i requixiti necesai</li>
+        <li>Quarche protocòllo o domanda software esterni ò plugin pe poei ese riconosciui da o navegatô.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">File no trovou</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Peu miga ese che l\'ògetto o segge stæto rinominou, scancelou ò mesciou?</li>
+        <li>Gh\'é quarche erô de òrtografia inte l\'indirisso?</li>
+        <li>Ti ghe l\'æ abasta permissi pe acede a l\'ògetto?</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Acesso a-o file negou</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+  <li>O peu ese stæto scancelou,mesciou, ò i permissi de acesso a-i file peuan proibine l\'acesso.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Conescion refuâ do-u server proxy</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>O navegatô o l\'é inpostou pe uzâ un server proxy ma o proxy o refua e conescioin.</p>
+      <ul>
+        <li>E inpostaçioin proxy do navegatô en giuste? Contròlla e preuva torna.</li>
+        <li>O proxy permette e conescioin da sta ræ?</li>
+        <li>Ti gh\'æ torna di problemi? Ciamma o teu aministratô da ræ ò fornitô de serviççi internet pe ascistensa.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">No treuvo o proxy</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>O navegatô o l\'é inpostou pe uzâ un server proxy ma o proxy o refua e conescioin.</p>
+      <ul>
+        <li>E inpostaçioin proxy do navegatô en giuste? Contròlla e preuva torna.</li>
+        <li>Ti ê conesso a \'na ræ ativa?</li>
+        <li>Ti gh\'æ torna di problemi? Ciamma o teu aministratô da ræ ò fornitô de serviççi internet pe ascistensa.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problema de scito con malware</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>O scito %1$s o l\'é stæto segnalou comme un scito de atacco e o l\'é stæto blocou da-e teu preferense de seguessa.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problema de scito no no deziderou</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>O scito web %1$s o l\'é segnalou comme \'n scito con do software indeziderou e o l\'é blocou da-e inpostaçioin de seguessa.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Scito pericolozo</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>O scito %1$s o l\'é stæto segnalou comme un scito potensialmente pericolozo e o l\'é stæto blocou da-e teu preferense de seguessa.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Scito inganevole</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>A pagina %1$s a l\'é segnalâ comme \'n scito inganevole a l\'é stæta blocâ da-e teu preferense de seguessa.</p>]]></string>
+
+    </resources>

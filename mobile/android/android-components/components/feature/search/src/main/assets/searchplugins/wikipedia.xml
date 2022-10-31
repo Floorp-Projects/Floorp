@@ -1,0 +1,18 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Wikipedia</ShortName>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="32" height="32">data:image/png;base64,AAABAAIAICAQAAEABADuAQAAJgAAABAQEAABAAQAYAEAABQCAACJUE5HDQoaCgAAAA1JSERSAAAAIAAAACAIBgAAAHN6evQAAAG1SURBVFiF7ZfNccQgDIVJJi2oBlXgGqjBBdADJdACTbgS36mBJqQcMnLEj9jsXpzD7gwnGenj8SR7P5iZ3Y2/zzuLvwH+BcDXzR68X4HbARwR8bZt7Jwb1r7vTERMRIyITQwAOOfMRMQpJQaAJi6xnPOwV+d2UqDW2iSptV7FZYUQrvh5nk2slMLOOUZELqUMe/d9vwrr3E4/lFK6ChzHMSSptV7xEEITO47D3CcAADAczPUFRIVt26aJYoxTlRCRvffTPQKeUhpiblXAUkEgY4zN6ftr0Tlnp58CaJmtE/UqIGJj2H4BwHBlJoA2jHNuaiitgjw7e06rY8WnAOLovhUtFazTEf20uKWkCUBE7L1ftuSqI2Sd57nsjCWASKfNNrtbGUrW3LC66SGAyGcV0ICzFhOFZCK+BKCL9AUQkUMIlwkBoInLeF7lfwjQyzxztjashgSA6eB5GiDnPLxg5PS9YQVSAGe+eBpA9zwiTvu6vyrv/bI1nwIganvemg39K90aPC8B6J63kmsVVoPnJQCi32+B1cyXD4/V4HkZoNbKMcalsUopf3K+Xh/vv2ZvgLsBvgEmf6Ud8idB7wAAAABJRU5ErkJggolQTkcNChoKAAAADUlIRFIAAAAQAAAAEAgGAAAAH/P/YQAAASdJREFUOI3FkzGKwzAQRX9M7iDnBGqDywhBSCeUi/gQKdL4BiGtK5Fe1zDug3vjMieYv5WEtWG3ycIKBvQ16I/mDdqQJD5Y1SeX/8Rg+2EHqMZxhLUWVVXhfr8DALz3WS/LAmstrLVYlgWPxwO73Q7ee0zTBIgI53kmAMYYmbTWmrfbjSJC5xzneaaIUERojMl7pI1zrkiEEKiUYoyRXdcV58m4MBiGgQA4DENOaq2ptc46FVrrPIWmaeCcw+VyyYBOpxNer1fW4zhiv9+XFNduMUYC4PP5zNWUUgwhUETYtm3BQkS4XZt576G1Rt/3OBwOOJ/PsNbier3ieDwCAOq6/vkFCRKA3GuakDGm4PMGcR1KqYJ027Zv8H41SAzW8b33FJt//41fMtqn5156WuIAAAAASUVORK5CYII=</Image>
+<Url type="application/x-suggestions+json" method="GET" template="https://en.wikipedia.org/w/api.php">
+  <Param name="action" value="opensearch"/>
+  <Param name="search" value="{searchTerms}"/>
+</Url>
+<Url type="text/html" method="GET" template="https://en.wikipedia.org/wiki/Special:Search">
+  <Param name="search" value="{searchTerms}"/>
+  <Param name="sourceid" value="Mozilla-search"/>
+</Url>
+<SearchForm>https://en.wikipedia.org/wiki/Special:Search</SearchForm>
+</SearchPlugin>

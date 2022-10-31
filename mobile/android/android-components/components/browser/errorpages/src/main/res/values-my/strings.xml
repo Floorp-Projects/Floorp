@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">စာမျက်နှာဖွင့်လှစ်မှု အမှား</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">ထပ်ကြိုးစားပါ</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">နောက်သို့ သွားရန်</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">တောင်းဆိုချက်ကို ပြီးဆုံးသည်အထိ မဆောင်ရွက်နိုင်ပါ</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p> ဒီပြဿနာအတွက်နောက်ထပ်အချက်အလက်များကို လက်ရှိမရရှိနိုင်သေးပါ။</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">လုံခြုံသော ချိတ်ဆက်မှု မအောင်မြင်ခဲ့ပါ</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>သင်ကြည့်ရန်ကြိုးစားနေသော စာမျက်နှာကို မဖော်ပြနိုင်ပါ။ အဘယ့်ကြောင့်ဆိုသော် လက်ခံရရှိထားသော အချက်အလက်၏ ထောက်ခံချက်ကို အတည်မပြုနိုင်သောကြောင့် ဖြစ်သည်။</li>
+        <li>ဒီပြဿနာကို အသိပေးရန် ကျေးဇူးပြု၍ ဝဘ်ဆိုဒ်ပိုင်ရှင်ထံသို့ ဆက်သွယ်ပါ။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">လုံခြုံသော ချိတ်ဆက်မှု မအောင်မြင်ခဲ့ပါ</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>ယခုပြဿနာသည် ဆာဗာ၏ အပြင်အဆင်ကြောင့်ဖြစ်နိုင်သည် သို့မဟုတ် တစ်ယောက်ယောက်က ဆာဗာကဲ့သို့ အယောင်ဆောင်နေခြင်းကြောင့် ဖြစ်နေနိုင်သည်။</li>
+        <li>သင်သည် ယခုဆာဗာကို အရင်က ချိတ်ဆက်ဖူးပါက ယခုပြဿနာသည် ယာယီဖြစ်နိုင်သည်၊ ထို့ပြင် နောက်မှ ပြန်ဖွင့်ကြည့်နိုင်သည်။</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">အဆင့်မြင့်…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>တစ်စုံတစ်ယောက်သည် ဝဘ်ဆိုက်ကဲ့သို့ အယောင်ဆောင်နေခြင်း ဖြစ်နေနိုင်ပြီး သင် ရှေ့ဆက်မလုပ်ဆောင်သင့်ပါ။</label>
+        <br><br>
+        <label>ဝဘ်ဆိုက်များသည် သူတို့၏အထောက်အထားကို လက်မှတ်ဖြင့် သက်သေပြသည်။ %1$s သည် <b>%2$s</b> ကို မယုံကြည်ပါ၊ အဘယ့်ကြောင့်ဆိုသော် ၄င်း၏ လက်မှတ်ထုတ်ပေးသူကို မသိရသောကြောင့်၊ ကိုယ်တိုင်လုပ်လက်မှတ် ဖြစ်သောကြောင့်၊ သို့မဟုတ် ဆာဗာက မှန်ကန်သော ပေါင်းကူးလက်မှတ်များ မပို့ပေးသောကြောင့် ဖြစ်သည်။</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">ပြန်သွားပါ (အကြံပြုချက်အရ)</string>
+
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">အန္တရာယ်ကိုလက်ခံပြီးဆက်လုပ်ပါ</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">ချိတ်ဆက်မှု ပြတ်တောက်သွားခဲ့သည်</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>ဘရောင်ဇာသည် အောင်မြင်စွာ ချိတ်ဆက်နိုင်ခဲ့သော်လည်း အချက်အလက်လွှဲပြောင်းနေစဉ် ချိတ်ဆက်မှု ပြတ်တောက်ခဲ့သည်။ ကျေးဇူးပြု၍ ထပ်မံ ဆောင်ရွက်ကြည့်ပါ။</p>
+      <ul>
+        <li>ဝဘ်ဆိုက်ကို ယာယီ ကြည့်ရှု၍ မရနိုင်ပါ သို့မဟုတ် ၄င်းသည် အလုပ်များနေသောကြောင့် ဖြစ်နိုင်သည်။ ခဏကြာလျှင် ထပ်ကြိုးစားကြည့်ပါ။</li>
+        <li>သင်သည် မည်သည့်ဝဘ်ဆိုက်မျှ မကြည့်ရှုနိုင်ပါက သင်၏ ကိရိယာ၏ ဒေတာ သို့မဟုတ် ဝိုင်ဖိုင်ချိတ်ဆက်မှုကို စစ်ဆေးပါ။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">ချိတ်ဆက်မှုသည် သတ်မှတ်ချိန် ကျော်လွန်ခဲ့သည်</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>ချိတ်ဆက်မှုတောင်းဆိုချက်ကို ဝဘ်ဆိုက်က မတုံ့ပြန်နိုင်ပါ၊ ပြီးနောက် ဘရောင်ဇာသည် တုံ့ပြန်မှုစောင့်ဆိုင်းနေခြင်းမှ ရပ်ဆိုင်းသွားသည်။</p>
+      <ul>
+        <li>ဆာဗာသည် ဝန်မနိုင်သောပြဿနာ ကြုံတွေ့နေခြင်း သို့မဟုတ် ယာယီပြတ်တောက်မှု ဖြစ်နိုင်ပါသလား။ နောက်မှ ပြန်ကြိုးစားကြည့်ပါ။</li>
+        <li>အခြားဝဘ်ဆိုက်များကို ကြည့်ရှု၍ မရနိုင် ဖြစ်နေပါသလား။ ကိရိယာ၏ ကွန်ယက်ချိတ်ဆက်မှုကို စစ်ဆေးပါ။</li>
+        <li>သင်၏ ကိရိယာ သို့မဟုတ် ကွန်ယက်ကို မီးနံရံ သို့မဟုတ် ကြားခံဆာဗာက ကာကွယ်ထားပါသလား။ အပြင်အဆင်အမှားများသည်လည်း ဝဘ်ကြည့်ရှုခြင်းကို နှောက်ယှက်နိုင်သည်။</li>
+        <li>ပြဿနာရှိနေဆဲ ဖြစ်နေပါသလား။ သင်၏ ကွန်ယက်ထိန်းချုပ်သူ သို့မဟုတ် အင်တာနက်ဝန်ဆောင်မှုပေးသူကို အကူအညီတောင်းပါ။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">မချိတ်ဆက်နိုင်ပါ</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>ယခုဝဘ်ဆိုက်ကို ယာယီ အသုံးမပြုနိုင်ပါ သို့မဟုတ် အသုံးပြုသူ များနေသောကြောင့် ဖြစ်နိုင်သည်။ ခဏကြာလျှင် ပြန်ကြိုးစားပါ။</li>
+        <li>အကယ်၍ သင်သည် မည်သည့်ဝဘ်ဆိုက်မျှ မဖွင့်နိုင်ပါက သင့်မိုဘိုင်းကိရိယာ၏ ဒေတာ သို့မဟုတ် ဝိုင်ဖိုင် ချိတ်ဆက်မှုကို စစ်ဆေးပါ။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">ဆာဗာမှမမျှော်လင့်သောတုံ့ပြန်မှု</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>ဝဘ်ဆိုက်သည် ကွန်ယက်တောင်းဆိုမှုကို မမျှော်မှန်းထားသောနည်းလမ်းဖြင့် တုန့်ပြန်ခဲ့ပြီး ဘရောင်ဇာသည် ဆက်လက်မဆောင်ရွက်နိုင်ပါ။</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">ယခုစာမျက်နှာသည် ကောင်းမွန်စွာ လမ်းညွှန်မပေးနိုင်ပါ</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>ဘရောင်ဇာသည် တောင်းဆိုထားသည့်အရာကို ရယူရန် ကြိုးစားနေစဉ် ရပ်ဆိုင်းသွားသည်။ ဝဘ်ဆိုက်သည် တောင်းဆိုချက်ကို ပြီးစီးအောင် ဆောင်ရွက်နိုင်မည်မဟုတ်သောပုံစံဖြင့် ပြန်ညွှန်းနေသည်။</p>
+      <ul>
+        <li>ယခုဝဘ်ဆိုက်က လိုအပ်သောကွတ်ကီးများကို ပိတ် သို့မဟုတ် တားဆီးထားပါသလား။</li>
+        <li>ဝဘ်ဆိုက်၏ ကွတ်ကီးကို လက်ခံထားသော်လည်း ပြဿနာ မပြေလည်သေးပါက ၄င်းသည် ဆာဗာ၏ အပြင်အဆင်အမှား ဖြစ်နိုင်သည်၊ သင်၏ ကိရိယာကြောင့် မဟုတ်လောက်ပါ။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">အော့ဖ်လိုင်း mode</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>ဘရောင်ဇာသည် ကွန်ယက်မဲ့သုံးပုံစံတွင် ဖြစ်နေပြီး တောင်းဆိုထားသည့်အရာကို မချိက်ဆက်နိုင်ပါ။</p>
+      <ul>
+        <li>ယခုကိရိယာသည် ကွန်ယက်ကို ချိက်ဆက်ထားပါသလား။</li>
+        <li>ကွန်ယက်သုံးပုံစံကို ပြောင်းရန် “ထပ်မံကြိုးစားကြည့်ပါ” ကို နှိပ်ပြီး စာမျက်နှာကို ပြန်ခေါ်ပါ။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">လုံခြုံရေး ကိစ္စများကြောင့်တားမြစ်ထားတဲ့ Port</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>တောင်းဆိုထားသော လိပ်စာသည် ပုံမှန်အားဖြင့် ဝက်ဆိုက်ကြည့်ရှုရန် မဟုတ်သည့် အပေါက် ( ဥပမာ <q>mozilla.org:80</q> တွင် 80 သည် အပေါက်နံပတ်ဖြစ်သည်) တစ်ခုအား ညွှန်ထားသည် ။ သင့်အား ကာကွယ်ရန် ဘ‌ယောက်ဆာမှ တောင်းဆိုမှုအား မလုပ်တော့ပါ ။</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">ဆက်သွယ်မှုကို ပြန်လည်သတ်မှတ်သည်</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>စတင်ခေါ်ဆိုနေစဥ် နက်ဝက် ချိတ်ဆက်မှု ပြတ်တောက်သွားသည်။ ကျေးဇူးပြုပြီး ထပ်ကြိုးစားပါ။</p>
+      <ul>
+        <li>ဝက်ဆိုက် အလုပ်အရမ်းများနေတာလည်း ဖြစ်နိုင်သည် ။ တစ်ခဏနေ မှ ထပ်ကြိုးစားသင့်သည်။ </li>
+        <li>သင် အခြား ဝက်စာမျက်နှာများပါဖွင့် မရပါက သင့် စက်၏ အချက်အလက် ချိတ်ဆက်မှု သို့ ဝိုင်ဖိုင် အား စစ်ပါ</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">မလုံခြုံသောဖိုင်အမျိုးအစား</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li> ကျေးဇူးပြု၍ ယခုပြဿနာကို အသိပေးရန် ဝဘ်ဆိုက်ပိုင်ရှင်ကို ဆက်သွယ်ပါ။ </li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">အကြောင်းအရာ မစုံလင်သော အမှား</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>သင် တောင်းဆိုထားသော စာမျက်နှာအား ရယူရာတွင် အခက်အခဲတခု ဖြစ်ပွား နေသဖြင့် ဖွင့်ပြမပေးနိုင်ပါ </p>
+      <ul>
+        <li>ကျေးဇူးပြုပြီး ဝက်ဆိုက် ပိုင်ရှင်အား ယခု ပြသာနာနှင့်ပတ်သတ်ပြီး ဆက်သွယ် အကြောင်းကြားပေးပါ။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">အကြောင်းအရာပျက်နေတယ်</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>သင်တောင်းဆိုထားသောစာမျက်နှာအား ရယူရာတွင်အခက်အခဲဖြစ်နေသဖြင့် ဖွင့်ပြမပေးနိုင်ပါ။</p>
+      <ul>
+        <li>ကျေးဇူးပြုပြီး ဝက်ဆိုက် ပိုင်ရှင်အား ယခု ပြသာနာနှင့်ပတ်သတ်ပြီး အကြောင်းကြားပေးပါ။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">အကြောင်းအရာ အန်ကုဒ်ဒင်း အမှား</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>သင်တောင်းဆိုထားသောစာမျက်နှာအား ရယူရာတွင်အခက်အခဲဖြစ်နေသဖြင့် ဖွင့်ပြမပေးနိုင်ပါ။</p>
+      <ul>
+        <li>ကျေးဇူးပြုပြီး ဝက်ဆိုက် ပိုင်ရှင်အား ယခု ပြသာနာနှင့်ပတ်သတ်ပြီး အကြောင်းကြားပေးပါ။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">လိပ်စာမတွေ့ပါ</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>ဘရောက်ဇာသည်ပေးထားသောလိပ်စာအတွက် host server ကိုရှာမရပါ။ </p>
+      <ul>
+        <li>ဥပမာ လိပ်စာအတွက်စာရိုက်အမှားများကိုစစ်ဆေးပါ။
+          <strong>ww</strong>.example.com instead of
+          <strong>www</strong>.example.com.</li>
+        <li>စာမျက်နှာတစ်ခုမျှဖွင့်မရပါက ဝိုင်ဖိုင်ချိတ်ဆက်မှုကိုစစ်ပါ။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">အင်တာနက်ချိတ်ဆက်မှု မရှိပါ</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">သင်၏ကွန်ယက်ချိတ်ဆက်မှုကိုစစ်ဆေးပါ (သို့) အချိန်တိုအတွင်းစာမျက်နှာကိုပြန်ဖွင့်ရန်ကြိုးစားပါ။</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">ပြန်တင်ပါ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">မမှန်ကန်သောလိပ်စာ</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>ပေးထားသောလိပ်စာသည် သတ်မှတ်ထားသော ပုံစံမျိုးဖြင့်မဟုတ်ပါ။ ကျေးဇူးပြုပြီး ရှာဖွေရေးဘားကို စစ်ဆေးပြီး ထပ်မံ ဆောင်ရွက်ကြည့်ပါ။</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">လိပ်စာမမှန်ကန်ပါ</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>ဝဘ်လိပ်စာများကိုအများအားဖြင့်အောက်ပါအတိုင်းရေးကြသည်။<strong>http://www.example.com/</strong></li>
+        <li>မျဉ်းစောင်းလေးပါသည်ကိုဂရုပြုပါ။ (နမူနာ<strong>/</strong>)</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">မသိသောပရိုတိုကော</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>လိပ်စာက protocol ကိုသတ်မှတ်သည် (ဥပမာ -<q>wxyz://</q>) ဘရောက်ဇာမှ မသိသော‌ကြောင့် ဘရောက်ဇာမှ ဤဆိုက်ကိုမချိတ်ဆက်နိုင်ပါ။</p>
+      <ul>
+        <li>သင် multimedia သို့မဟုတ်အခြားစာမဟုတ်သောဝန်ဆောင်မှုများကိုရယူရန်ကြိုးစားနေပါသလား။ အပိုလိုအပ်ချက်များအတွက် site ကိုစစ်ဆေးပါ။ </li>
+        <li>browser သည်၎င်းတို့ကိုအသိမပြုမီ အချို့သော protocol များသည် third-party software သို့မဟုတ် plugins လိုအပ်လိမ့်မည်။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">ဖိုင်ရှာမတွေ့ပါ</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>ယခုအရာသည် အမည်ပြောင်း၊ ဖျက်၊ နေရာရွှေ့ခံထားရခြင်း ဖြစ်နိုင်ပါသလား။</li>
+        <li>လိပ်စာရေးရာတွင် သတ်ပုံ၊ စာလုံးအကြီးအသေး၊ စာလုံးပေါင်းမှားနေခြင်း ရှိနေပါသလား။</li>
+        <li>တောင်းဆိုထားသော အရာအတွက် သင့်တွင် လုံလောက်သော ခွင့်ပြုချက် ရှိပါသလား။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">ဖိုင်အသုံးပြုခြင်းကို တားမြစ်ထားသည်</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>၄င်းကို ဖျက်ထား၊ ရွှေ့ထား သို့မဟုတ် ဖိုင်အသုံးပြုခွင့်က တားဆီးနေခြင်း ဖြစ်နိုင်သည်။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">ကြားခံဆာဗာသည် ချိတ်ဆက်မှုကို ငြင်းဆန်ထားသည်</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>ကြားခံဆာဗာသုံးရန် ဘရောင်ဇာကို ပြင်ဆင်ထားသော်လည်း ကြားခံဆာဗာက ချိတ်ဆက်မှုကို ငြင်းဆိုနေသည်။</p>
+      <ul>
+        <li>ဘရောင်ဇာ၏ ကြားခံဆာဗာအပြင်အဆင် မှားနေသလား။ အပြင်အဆင်ကို စစ်ဆေးပြီး နောက်တစ်ကြိမ်ထပ်ကြိုးစားကြည့်ပါ။</li>
+        <li>ကြားခံဆာဗာဝန်ဆောင်မှုသည် ယခုကွန်ယက်မှ ချိိတ်ဆက်မှုများကို ခွင့်ပြုနေပါသလား။</li>
+        <li>ပြဿနာရှိနေဆဲ ဖြစ်နေပါသလား။ သင်၏ ကွန်ယက်ထိန်းချုပ်သူ သို့မဟုတ် အင်တာနက်ဝန်ဆောင်မှုပေးသူကို အကူအညီတောင်းပါ။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">ကြားခံဆာဗာကို မတွေ့ရပါ</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>ဤဘရောင်ဇာသည် ပရောက်ဆီသုံးရန်ပြုပြင်ထားသော်လည်း ပရောက်ဆီကို ရှာမတွေ့ပါ။</p>
+      <ul>
+        <li>ပရောက်ဆီ၏ အပြင်အဆင်တွေမှန်ပါသလား။ အပြင်အဆင်များကိုစစ်ဆေးပြီးထပ်မံဆောင်ရွက်ကြည့်ပါ။</li>
+        <li>ကိရိယာသည် ကွန်ယက်သို့ ချိတ်ဆက်ထားပါသလား</li>
+        <li>ပြဿနာရှိနေဆဲ ဖြစ်နေပါသလား။ သင်၏ ကွန်ယက်ထိန်းချုပ်သူ သို့မဟုတ် အင်တာနက်ဝန်ဆောင်မှုပေးသူကို အကူအညီတောင်းပါ။</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Malware site ပြဿနာ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>%1$s တွင် ရှိသော ယခုဝဘ်ဆိုက်သည် တိုက်ခိုက်နိုင်ဖွယ်ရှိသောစာမျက်နှာဟု သတင်းပေးခြင်းခံရပြီး သင်၏လုံခြုံရေးအပြင်အဆင်များအရ ပိတ်ပင်ထားသည်။</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">မလိုလားအပ်သောဆိုက်ပြဿနာ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>%1$s ရှိ ဆိုက်သည် မလိုအပ်သည့် ဆော့ဖ်ဝဲများ ဖြန့်သည်ဟု တိုင်ကြားခံထားရသည်။ ထို့ကြောင့် သင့် လုံခြုံရေးအပြင်အဆင်များအရ ထိုဆိုက်ကို ပိတ်ပင်တားဆီးထားသည်။</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">အန္တရာယ်ရှိသော site ပြဿနာ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>%1$s ရှိ ဝဘ်ဆိုက်သည် အန္တရာယ်ရှိနိုင်သော ဝဘ်ဆိုက်ဖြစ်ကြောင်း သတင်းရထားပြီး လုံခြုံရေးအစီအမံများအရ ၎င်းကို ပိတ်ပင်ထားသည်။</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">လှည့်စားသော site ကိုပြဿနာ</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>%1$s တွင် ရှိသော ယခုဝဘ်ဆိုက်သည် တိုက်ခိုက်နိုင်ဖွယ်ရှိသောစာမျက်နှာဟု သတင်းပေးခြင်းခံရပြီး သင်၏လုံခြုံရေးအပြင်အဆင်များအရ ပိတ်ပင်ထားသည်။</p>]]></string>
+</resources>

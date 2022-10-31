@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">ولدا کوشش کرو</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">ارداس پوری کائنی کر سڳدا</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>ایں مسئلے بارے وادھوں معلومات فی الحال دستیاب کائنی۔</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">قابل بھروسہ کنکشن ناکام تھی ڳیا</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>جہڑا ورقہ ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیونجو موصول ڈیٹا  دی اصلیت دی تصدیق کائنی تھی سڳی۔</li> 
+        <li>ویب سائٹ دے مالک کوں ایں مسئلے دا ݙسݨ کیتے  انہاں  نال رابطہ کرو۔</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">قابل بھروسہ کنکشن ناکام تھی ڳیا</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>ایہ سرور کانفیگریشن دا کوئی مسئلہ تھی سڳدا ہے یا تھی  سڳدے جو کوئی سرور کوں نقلی بݨاوݨ دی کوشش کریندا پیا ہے۔</li>
+        <li>جے تساں ماضی وچ ایں  سرور نال  جڑے  ہو تاں تھی سڳدا ہے جو خرابی  کجھ وقت کیتے ہووے  تے تساں کجھ دیر بعد وت کوشش کر سڳدے ہو۔</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">ودھایا۔۔۔</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>تھی  سڳدا ہے جو کوئی سائٹ دی نقل بݨیندا پیا ہے تے تساں جاری نہ رکھو۔</label>
+        <br><br>
+        <label>ویب سائٹساں سرٹیفکیٹ دے ذریعہ آپݨی سُن٘ڄاݨ ثابت کریندیاں ہن۔ %1$s، ایں <b>%2$s</b> تے  بھروسہ کائنی کریندا کیوں جو سرٹیفکیٹ جاری کرݨ آلا نامعلوم ہے، سرٹیفکیٹ تے  خود آپ دستخط کیتے ہوئے ہن یا سرور صحیح درمیانی سرٹیفیکیٹ کائنی پٹھیندا پیا۔</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">واپس ون٘ڄو(سفارش کیتی ویندی ہے)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">خطرے کوں قبول کرو تے جاری رکھو</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">ایں ویب سائٹ کوں محفوظ کنکشن دی لوڑ ہے۔</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>جہڑا ورقہ تساں ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیوں جو ایں ویب سائٹ کوں محفوظ کنکشن دی لوڑ ہے۔</li>
+         <li>ایہ مسئلہ  غالباً ویب سائٹ وی وجہ نال ہے۔ ایندے حل کیتے تہاݙے کول کجھ کائنی۔</li>
+         <li>تساں ایں مسئلے بارے ویب سائٹ ایڈمن کوں ݙسا سڳدے ہو۔</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">ودھایا۔۔۔</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> دی ہک حفاظتی پالیسی ہے جیکوں ایچ ٹی ٹی پی سخت ٹرانسپورٹ حفاظت(HSTS) آہدے ہن، جیندے مطلب ایہ ہے جو  <b>%2$s</b> صرف ایندے نال حفاظت نال کنکٹ کر سڳدے۔ تساں ایں سائٹ تے ون٘ڄݨ کیتے کوئی استثناء شامل نہوے کر سڳدے۔
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> دی ہک حفاظتی پالیسی ہے جیکوں ایچ ٹی ٹی پی سخت ٹرانسپورٹ حفاظت(HSTS) آہدے ہن، جیندے مطلب ایہ ہے جو  <b>%2$s</b> صرف ایندے نال حفاظت نال کنکٹ کر سڳدے۔ تساں ایں سائٹ تے ون٘ڄݨ کیتے کوئی استثناء شامل نہوے کر سڳدے۔</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">واپس ون٘ڄو</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">کنکشن خراب  تھی ڳیا ہائی۔</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+<p>براؤزر کامیابی نال کنکٹ تھی ڳیا  ہے، پر معلومات دی منتقلی دے دوران کنکشن وچ رکاوٹ پیدا تھئی۔ براہ کرم، ولدا کوشش کرو۔</p>
+      <ul>
+        <li>سائٹ عارضی طور پر غیر دستیاب یا کافی مصروف تھی سڳدی ہے۔ کجھ دیر بعد وت کوشش کرو۔</li>
+        <li>جے تساں کوئی وی ورقہ لوڈ نہوے کر سڳدے پئے ، تاں آپݨاں ڈیوائس ڈیٹا یا وائی-فائی کنیکشن دی پڑتال کرو۔ </li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">کنکشن ٹائم آوٹ تھی ڳیا ہے</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>ارداس کیتی ڳئی سائٹ نے کنکشن دی ارداس دا جواب کائنی ݙتا تے براؤزر  نے جواب دی تانگھ کرݨ بند کر ݙتی ہے۔</p>
+      <ul>
+        <li>تھی سڳدے جو سرور زیادہ مانگ یا  عارضی وقفے دا سامھݨا کریندا پیا ہووے؟ ولدا بعد وچ کوشش کرو۔</li>
+        <li> پھلا تساں ݙوجھی سائٹ تے وی براؤز نہوے کر سڳدے پئے؟ ڈیوائس دے نیٹ ورک کنکشن دی جانچ کرو۔</li>
+        <li>بھلا تہاݙی ڈیوائس  یا نیٹ ورک کہیں فائروال یا پراکسی دے ذریعے محفوظ ہے؟غلط ترتیباں ویب براؤز کرݨ وچ مداخلت کر سڳدی ہے۔</li>
+        <li>ہݨ وی مسئلہ درپیش ہے؟ مدد کیتے آپݨے نیٹ ورک کے نگران یا انٹرنیٹ مہیا کار نال رابطہ کرو۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">جڑݨ وچ ناکام ریہا</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>سائٹ عارضی طور تے غیر دستیاب یا کافی مصروف تھی سڳدی ہے۔ کجھ دیر بعد ولدا کوشش کرو۔</li>
+        <li>جے تساں کوئی وی ورقہ لوڈ نہوے کر سڳدے پئے، تاں آپݨی ڈیوائس دا ڈیٹا یا وائی-فائی کنکشن دی جانچ کرو۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">سرور ولوں غیر متوقع  جواب</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>سائٹ نے نیٹ ورک ارداس دا غیر متوقع طریقے نال جواب ݙتا تے براؤزر جاری کائنی رہ سڳدا۔</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">ورقہ ٹھیک طرح ری ڈائریکٹ کائنی تھیندا پیا</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>براؤزر  نے ارداس کیتے ڳئے آئٹم کوں  واگزار کرواوݨ دی کوشش روک ݙتی ہے۔ سائٹ ایں ارداس کوں ایں طرحاں ٻئے پاسے  بھیڄیندا پیا ہے جہڑی کݙاہیں وی مکمل کائناں تھیسی۔</p>
+      <ul>
+        <li>بھلا تساں سائٹ کیتے ضروری کوکیاں کوں معذور یا بلاک کر ݙتے؟</li>
+        <li>اگر سائٹ دیاں کوکیاں کوں قبول کرݨ  نال وی مسئلہ ٹھیک نئیں تھیندا، تاں ممکن ہے جو ایہ سرور کنفگریشن دا کوئی مسئلہ ہووے نا کہ تہاݙی ڈیوائس دا۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">آف لائن موڈ</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>براؤزر آپݨے آف لائن موڈ وچ کم کریندا پئے تے ارداس تھئے آئٹم چیز نال کائنی جڑ سڳدا۔
+</p>
+      <ul>
+        <li>بھلا ڈیوائس فعال نیٹ ورک نال کنکٹ تھیا ہویا ہے؟</li>
+        <li>آن لائن موڈ وچ گھن آوݨ کیتے “ولدا کوشش کرو” دباؤ  تے ورقے کوں ولدا لوڈ کرو۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">حفاظتی وجوہات کیتے پورٹ محدود کر ݙتا ڳیا ہے</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>ارداس کیتا پتہ ہک خاص پورٹ (مثلاً، mozilla.org تے پورٹ 80 کیتے <q>mozilla.org:80</q>)  
+ کوں مخصوص کریندا ہے جہڑا عام طور تے ویب براؤز کرݨ دے علاوہ <em>کجھ ٻئے</em> مقاصد کیتے ورتیندے۔ تہاݙی حفاظت تے سلامتی کیتے براؤزر  نے ارداس کوں منسوخ کر  ݙتا ہے۔</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">کنکشن ریسٹ تھی ڳیا</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+<p>کنکشن قائم کرݨ دے دوران نیٹ ورک لنک وچ رکاوٹ پیدا تھئی۔ براہ کرم، ولدا کوشش کرو۔</p>
+      <ul>
+        <li>سائٹ عارضی طور پر غیر دستیاب یا کافی مصروف تھی سڳدی ہے۔ کجھ دیر بعد وت کوشش کرو۔</li>
+        <li>جے تساں کوئی وی ورقہ لوڈ نہوے کر سڳدے پئے ، تاں آپݨاں ڈیوائس ڈیٹا یا وائی-فائی کنیکشن دی پڑتال کرو۔ </li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">غیر محفوظ فائل قسم</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>ویب سائٹ دے مالکاں  کوں ایہ مسلے ݙسݨ کیتے  رابطہ کرو۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">خراب مواد نقص</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+       <p>جہڑا ورقہ ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیونجو  ڈیٹا ترسیل وچ ہک خرابی دا سراغ لڳے۔</p> 
+      <ul>
+        <li>ویب سائٹ دے مالک کوں ایں مسئلے دا ݙسݨ کیتے  انہاں  نال رابطہ کرو۔</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">مواد تباہ تھی ڳیا</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+       <p>جہڑا ورقہ ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیونجو  ڈیٹا ترسیل وچ ہک خرابی دا سراغ لڳے۔</p> 
+      <ul>
+        <li>ویب سائٹ دے مالک کوں ایں مسئلے دا ݙسݨ کیتے  انہاں  نال رابطہ کرو۔</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">مواد اینکوڈ کرݨ وچ خرابی</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+        <p>جہڑا ورقہ ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیونجو  ایہ ہک غلط یا بغیر سہارا تھئی کمپریشن ورتیندے۔</p> 
+      <ul>
+        <li>ویب سائٹ دے مالک کوں ایں مسئلے دا ݙسݨ کیتے  انہاں  نال رابطہ کرو۔</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">پتہ کائنی لبھا</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>ݙتے ہوئے پتے کیتے براؤزر ہوسٹ سرور کائنی لبھ سڳا۔</p>
+      <ul>
+        <li>پتے وچ ایں طرحاں دیاں ٹائپنگ غلطیاں دی پڑتال کرو 
+          <strong>ww</strong>.example.com پر لکھݨا ہائی
+          <strong>www</strong>.example.com.</li>
+        <li>جے تساں کہیں وی ورقے کوں لوڈ نہوے کر سڳدے تاں ڈیوائس ڈیٹا یا وائی فائی کنکشن دی پڑتال کرو</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">کوئی انٹرنیٹ کنکشن کائنی</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">اپݨے نیٹ ورک کنکشن دی پڑتال کرو یا کجھ لمحے بعد ولدا کوشش کرو۔</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">ولدا لوڈ کرو</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">غلط پتہ</string>
+
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>مہیا کیتا ڳیا پتہ سُن٘ڄاپُو فارمیٹ وچ کائنی۔ سوہݨا، غلطیاں کیتے لوکیشن پٹی دی پڑتال کرو تے ولدا کوشش کرو۔</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">پتہ ٹھیک کائنی</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>ویب پتے عمومی طور تے این٘ویں <strong>http://www.example.com/</strong> لکھے ویندے ہن </li>
+        <li>یقینی بݨاؤ جو تساں فارورڈ سلیشیز (جین٘ویں <strong>/</strong>) ورتندے پئے ہو۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">نامعلوم پروٹوکول</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>پتے وچ پروٹوکول (مثال دے طور تے <q>wxyz://</q>) جیکوں براؤز کائنی سُن٘ڄݨیندا، تہوں تاں براؤزر سائٹ کوں ٹھیک طرحاں کنکٹ کائنی کر سڳدا۔</p>
+      <ul>
+        <li>بھلا تساں  ملٹی میڈیا تے ٻیاں غیرعبارت خدمتاں تے رسائی دی کوشش کریندے پئے ہو؟  ٻیاں ضروریات کیتے سائٹ دی پڑتال کرو۔</li>
+        <li>براؤزر دے سُن٘ڄاݨݨ کنوں پہلے کجھ پروٹوکولاں کوں تریجھی پارٹی سافٹ ویئر یا پلگ اناں دی لوڑ ہوندی ہے۔</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">فائل کائنی لبھی</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>بھلا آئٹم دا ناں وٹایا ون٘ڄ سڳدا ہائی، ہٹا ون٘ڄ سڳدا ہائی، یا ٻئی جاء تے منتقل کیتا ون٘ڄ سڳدا ہائی؟</li>
+        <li>بھلا پتے وچ ہجیاں، وݙے حروف یا ٹائپ دی کوئی ٻئی غلطی ہے؟</li>
+        <li>بھلا تہاݙے کول مطلوبہ آئٹم تائیں رسائی دی کافی اجازت ہے؟</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">فائل تائیں رسائی مسترد کر ݙتی ڳئی ہائی</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>ایہ ہٹا یا ٹور ݙتا ڳیا ہوسی یا فائل اجازتاں رسائی کائناں تھیوݨ ݙیندیاں پیاں ہوسن</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">پراکسی سرور کنکشن دا انکار کر ݙتے</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>براؤزر پراکسی سرر ورتݨ کیتے کنفیگر تھیا ہویا ہے، پر پراکسی نے کنکشن دا انکار کر ݙتے۔</p>
+      <ul>
+        <li>بھلا براؤزر دی پراکسی کنفیگریشن ٹھیک ہے؟ ترتیباں دی پڑتال کرو تے ولدا کوشش کرو۔</li>
+        <li>بھلا پراکسی سروس ایں نیٹ ورک کنوں اجازت ݙیندی ہے؟</li>
+        <li>اڄݨ وی مشکل وچ ہو؟ مدد کیتے نیٹ ورک ایڈمن یا انٹرنیٹ فراہم کرݨ آلے نال مشورہ کرو۔</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">پراکسی سرور کائنی لبھا</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>براؤزر پراکسی سرر ورتݨ کیتے کنفیگر تھیا ہویا ہے، پر پراکسی کائنی لبھ سڳی۔</p>
+      <ul>
+        <li>بھلا براؤزر دی پراکسی کنفیگریشن ٹھیک ہے؟ ترتیباں دی پڑتال کرو تے ولدا کوشش کرو۔</li>
+        <li>بھلا ڈیوائس فعال نیٹ ورک نال کنکٹ تھئی ہوئی ہے؟</li>
+        <li>اڄݨ وی مشکل وچ ہو؟ مدد کیتے نیٹ ورک ایڈمن یا انٹرنیٹ فراہم کرݨ آلے نال مشورہ کرو۔</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">مالویئر سائٹ مسئلہ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>%1$s تے  موجود سائٹ کوں حملہ سائٹ دے طور تے رپورٹ کیتا ڳئے تے تہاݙی سیکیورٹی ترجیحات دی بݨیاد تے بلاک کر ݙتا ڳئے۔</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">ناپسندیدہ سائٹ مسئلہ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>%1$s تے  موجود سائٹ کوں ناپسندیدہ سافٹ ویئر خدمت دے طور تے رپورٹ کیتا ڳئے تے تہاݙی سیکیورٹی ترجیحات دی بݨیاد تے بلاک کر ݙتا ڳئے۔</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">نقصان دہ سائٹ مسئلہ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>%1$s تے  موجود سائٹ کوں ممکنہ نقصان دہ  سائٹ دے طور تے رپورٹ کیتا ڳئے تے تہاݙی سیکیورٹی ترجیحات دی بݨیاد تے بلاک کر ݙتا ڳئے۔</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">فریبی سائٹ مسئلہ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>%1$s تے  موجود ویب ورقے کوں فریبی سائٹ دے طور تے رپورٹ کیتا ڳئے تے تہاݙی سیکیورٹی ترجیحات دی بݨیاد تے بلاک کر ݙتا ڳئے۔</p>
+    ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">محفوظ سائٹ دستیاب کائنی</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[وادھوں حفاظت کیتے اساں ایچ ٹی ٹی پی ایس ــ صرف موڈ فعال کر ݙتے، تے <em>%1$s</em> دا ایچ ٹی ٹی پی ایس ورشن دستیاب کائنی۔]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">ایچ ٹی ٹی پی سائٹ تے جاری رکھو</string>
+</resources>

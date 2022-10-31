@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "applications": {
+    "gecko": {
+      "id": "icons@mozac.org"
+    }
+  },
+  "name": "Mozilla Android Components - Browser Icons",
+  "version": "${version}",
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["icons.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "permissions": [
+    "geckoViewAddons",
+    "nativeMessaging",
+    "nativeMessagingFromContent"
+  ]
+}

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nimbus_default_endpoint" translatable="false">https://settings.stage.mozaws.net</string>
+</resources>

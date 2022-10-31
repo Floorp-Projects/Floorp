@@ -1,0 +1,9 @@
+/**
+ * rainews.it - Image slideshow is not shown
+ * Bug #1774490 - https://bugzilla.mozilla.org/show_bug.cgi?id=1774490
+ * WebCompat issue #105402 - https://webcompat.com/issues/105402
+ */
+
+.photogallery-swiper .swiper-slide {
+  height: auto;
+}

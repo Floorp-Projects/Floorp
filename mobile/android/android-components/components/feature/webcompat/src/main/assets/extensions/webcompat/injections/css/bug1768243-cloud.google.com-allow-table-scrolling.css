@@ -1,0 +1,9 @@
+/**
+ * cloud.google.com - The table doesn't allow horizontal scrolling
+ * Bug #1768243 - https://bugzilla.mozilla.org/show_bug.cgi?id=1768243
+ * WebCompat issue #103328 - https://webcompat.com/issues/103328
+ */
+
+.cloud-collapse__panel .cws-grid__col--span-12 {
+  min-width: 0;
+}

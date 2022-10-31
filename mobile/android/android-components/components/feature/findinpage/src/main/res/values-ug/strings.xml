@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Watermark/Hint for the find in page input field. -->
+    <string name="mozac_feature_findindpage_input">بەت ئىچىدىن ئىزدەش</string>
+
+    </resources>

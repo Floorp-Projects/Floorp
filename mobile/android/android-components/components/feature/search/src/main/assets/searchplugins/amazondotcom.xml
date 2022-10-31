@@ -1,0 +1,17 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Amazon.com</ShortName>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="32" height="32">data:image/png;base64,AAABAAIAEBAAAAEACACtAQAAJgAAACAgAAABACAArAMAANMBAACJUE5HDQoaCgAAAA1JSERSAAAAEAAAABAIBgAAAB/z/2EAAAF0SURBVDiNpVM9S8NQFD2RvC6KCE6V5gdUHBonF6eQrQ4q6dbVjkKH/gN3oVmLk8VFK7gKuiklU6lguliHpliXhrRLKxyH1NB8aEUP3OHdd+9559z3niQLgelkQvwBIpWSJJKx5k6ng1qthpduFwCwl8+jWCwmszACy7IoCxGLSqUSLSVJxgiOSiXKQlDTddq2HawzipJIELPQ7/fhOA5c14XneTiv19FoNAAA08lksQXbtplT1UQbv7JgFAqUhWBOVek4Dqum+SPBUlTRl1zDMJBOp9FqtYK90Wi02MK8fE3XQxaqpvmNhXEvSFiWxYyiBJOvmiaNQoGartPzPLJzRjbLfgQEN1ly+JzoMYS7fb/x6ZS8wBxB79ZPNMshNTGMe2T3yj/scp3k/Dt4bQCPB/5g1nYB5TA8rLd7YHAN7FwBYhUYtoHNY4Qf0rsFtE/8wiiWs8B2FdjQgI/ZbcgrSPxMcG1g8ABM3ZmiLb8xAdJ/v/Mnx1XnNJorMikAAAAASUVORK5CYIKJUE5HDQoaCgAAAA1JSERSAAAAIAAAACAIBgAAAHN6evQAAANzSURBVFiFtZdPaBRXHMc/r+4GlGAbylYWXZFQaCOt7CSK/+hJt/XSogUDvfTQ0OzBg2hgblEQFA9iLeauBDyYUB3x0kv6J0pr4gZLum0yFIpt3V3cUJoymxwS4edhMnEn+3bmJSFfGNj3m9+832d+7/d7bxaWJCKbRaRPRP6QjdPkUozN1EtE2jc4sA6kHUAt0UwCb2OoWq2G67rLY6UU6XSadDptOgXAr8B+ROScKbbjOHI0l5NEMqm9juZy4jjOajLRhxik3vO8yMArL9u2TQEKmHid7O4OBdiUSMRCGGZiPhbAcRxtgKxlycnu7qaZOZLLmQBILMCXvb2xKbZtWwthotfiSlUp1WDr7+8PjXt6elZT/eH5RUTinOrbTilFZ2dng0+ypaXBtriwEAuQMKFsbW2lq6treVypVCiXy/z86BEAo6OjAIiINmPrBgiC3rh5k+HhYYrFotZntcEBjNrQcRzZkckY7wOrKcLYGpiYmODAwYPae2fPnCGzcye7Ozr46NixhvsmNRCbgaxlabfcUqkU8ltrBiIBXNfVTlwoFEJ+5XJ5Y/aBqakprb2+I6L8KpVK7ApEAvzz7JnWXqvVQuPbQ0Nav/Hx8ViAyCUYGRnRHj71W/Hg4GDTAyprWeJ5XuQSRAI0W9tgcpPWvD4wsHYAkcajOApopW1HJiOu664PoNnHSH3KbdsWz/NCp2LWsmKDGwEEENcHBpZBNiUSkrUs6c3nG1ry4qVL0pvPh9d+riRSfSxSHRdZDNdEeCf8/WvYkoFdn8ZXr4nmyzB2CqoOBFH2XIPdp5t0wey0yDdvinx33CderxY9f565kv/7fofIb9dCLuF94PV34JOnsPAvjOyD70/A0zvwItz3xqqOQfEi3N8OcyWoTUHqUMhFfxi9qMGT8/Dn1Vepy3wBbXsgdRja3oVEa+Mz/03DbBGqD+D5Pf9FFHDgDiS3QvECfPhj/VP/KxGZBN7XvsFMAcY+98mDo34lrqqzrfwc2HYcrMt+ZmceQ8tW//crPVQi0gdc0QIE+usuTH8Fsw/8YEFQHZQC2s/Crs8gtTdyWiAf/DX7CcjGeTNfhpkxmPsbnv+wFFBBss1fnjfeg7f2Ny6PXg+VUh/4LyCSEpF76y97Y90SkVSQsGWJyAngY2Avzepi7foFeAIMKaW+DYwvASfwPtL4PwlOAAAAAElFTkSuQmCC</Image>
+<Url type="application/x-suggestions+json" method="GET" template="https://completion.amazon.com/search/complete?q={searchTerms}&amp;search-alias=aps&amp;mkt=1"/>
+<Url type="text/html" method="GET" template="https://www.amazon.com/exec/obidos/external-search/" resultdomain="amazon.com">
+  <Param name="field-keywords" value="{searchTerms}"/>
+  <Param name="mode" value="blended"/>
+  <Param name="tag" value="moz-us-mbl-20"/>
+  <Param name="sourceid" value="Mozilla-search"/>
+</Url>
+<SearchForm>https://www.amazon.com/</SearchForm>
+</SearchPlugin>

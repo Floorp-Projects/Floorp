@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Ripruvà</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Ùn si pò compie a richiesta</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Nisuna infurmazione ùn hè dispunibule à st’ora apprupositu di stu penseru o di stu sbagliu.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Fiascu di a cunnessione assicurizata</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>A pagina chì vò circate à fighjà ùn pò micca esse affissata, perchè a sputichezza di i dati ricevuti ùn pò micca esse verificata.</li>
+        <li>Ci vuleria à cuntattà i prupietarii di u situ web per infurmalli di stu penseru.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Fiascu di a cunnessione assicurizata</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Stu penseru pò vene di a cunfigurazione di u servitore, osinnò ghjè qualchissia forse chì prova d’impatrunissi di u servitore.</li>
+        <li>S’è vo avete dighjà riesciutu à cunnettevi à stu servitore, u sbagliu pò esse timpurariu, è pudete pruvà torna da quì à pocu.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Espertu…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Qualchissia puderia pruvà d’impatrunissi di u situ web è seria più sicuru d’ùn micca cuntinuà.</label>
+        <br><br>
+        <label>I siti web stabiliscenu a so identità via certificati. %1$s ùn hà fidanza in <b>%2$s</b> perchè l’emettore di u so certificatu hè scunnisciutu, u certificatu hè firmatu daperellu, o ancu u servitore ùn manda micca certificati intermediarii curretti.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Ritornu (ricumandatu)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Accettà u risicu è cuntinuà</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Stu situ web richiede una cunnessione sicura.</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>A pagina chì vò circate à fighjà ùn pò micca esse affissata perchè u situ web richiede una cunnessione sicura.</li>
+         <li>Sicuramente, stu prublema hè cagiunatu da u situ web, è ùn pudete fà nunda per què.</li>
+         <li>Ma pudete cuntattà l’amministratore di stu situ web per infurmallu di stu prublema.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Espertu…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> impiega una strategia di sicurità chjamata HTTP Strict Transport Security (HSTS), vole si dì chì <b>%2$s</b> pò solu ci cunnettesi di manera assicurizata. Ùn pudete micca aghjunghje un’eccezzione per visità stu situ.
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> impiega una strategia di sicurità chjamata HTTP Strict Transport Security (HSTS), vole si dì chì <b>%2$s</b> pò solu ci cunnettesi di manera assicurizata. Ùn pudete micca aghjunghje un’eccezzione per visità stu situ. </label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Ritornu</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">A cunnessione hè stata interrotta</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>U navigatore s’hè cunnessu bè, ma a cunnessione hè stata interrotta durante u trasferimentu d’infurmazioni. Ci vole à pruvà torna.</p>
+      <ul>
+        <li>Forse u site hè timpurariamente indispunibule o sopraccarcu. Pruvate torna da quì à pocu.</li>
+        <li>S’ella ùn hè mancu pussibule di navigà nant’à un situ, verificate a cunnessione di dati o Wi-Fi di u vostru apparechju.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">U cumportu d’attesa hè statu ecciditu</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>U navigatore hà troppu aspettatu durante a cunnessione à u situ è hà fermatu d’aspettà una risposta.</p>
+      <ul>
+        <li>Forse u servitore tratta dumande numerose o hè timpurariamente in panna ? Pruvate torna da quì à pocu.</li>
+        <li>Ùn pudete micca navigà nant’à d’altri siti ? Verificate a cunnessione à a reta di u vostru apparechju.</li>
+        <li>U vostru apparechju o a vostra reta hè prutettu da un parafocu o un proxy ? Gattivi parametri ponu interferisce cù a navigazione nant’à u web.</li>
+        <li>Avete sempre penseri ? Cuntattate u vostru amministratore di a reta o u vostru furnidore d’accessu à internet per ottene un aiutu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Impussibule di cunnettesi</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Forse u site hè timpurariamente indispunibule o sopraccarcu. Pruvate torna da quì à pocu.</li>
+        <li>S’ella ùn hè mancu pussibule di navigà nant’à un situ, verificate a cunnessione di dati o Wi-Fi di u vostru apparechju.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Risposta inespettata da u servitore</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>U situ hà rispostu à a dumanda di a reta da una manera inaspettata è u navigatore ùn pò micca cuntinuà.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">A pagina ùn hè micca ridirettata currettamente</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>U navigatore hà piantatu d’aspettà una risposta da u situ. U situ hà creatu una ridirezzione d’una manera ch’ella ùn puderà mai riesce.</p>
+      <ul>
+        <li>Avete disattivatu o bluccatu i canistrelli richiesti da stu situ ?</li>
+        <li>S’è u penseru ùn hè currettu cù l’accunsentu di i canistrelli, forse ci serà una cunfigurazione gattiva di u servitore è micca di u vostru apparechju.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Modu fora di cunnessione</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>U navigatore funziuneghja in u modu fora di cunnessione è ùn si pò cunnette à l’indirizzu indicatu.</p>
+      <ul>
+        <li>L’apparechju hè cunnessu à a reta ?</li>
+        <li>Sciglite « Pruvà torna » per cambià ver di u modu in linea è ricaricà a pagina.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Portu ristrintu per raghjone di sicurità</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>L’indirizzu richiesta indicheghja un portu (i.e. : <q>mozilla.org:80</q> per u portu 80 nant’à mozilla.org) chì hè di solitu impiegatu per d’<em>altri</em> scopi chè a navigazione nant’à u Web. U navigatore hà abbandunatu a richiesta per a vostra prutezzione è a vostra sicurità.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">A cunnessione hè stata rilanciata</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>U liame cù a reta hè statu interrottu durante a neguziazione di a cunnessione. Ci vole à pruvà torna.</p>
+      <ul>
+        <li>Forse u site hè timpurariamente indispunibule o sopraccarcu. Pruvate torna da quì à pocu.</li>
+        <li>S’ella ùn hè mancu pussibule di navigà nant’à un situ, verificate a cunnessione di dati o Wi-Fi di u vostru apparechju.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Tipu di schedariu micca sicuru</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>Ci vole à cuntattà i prupietarii di u situ web per infurmalli di stu penseru.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Sbagliu di cuntenutu alteratu</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>A pagina chì vò circate à fighjà ùn pò micca esse affissata, perchè un sbagliu in a trasmissione di dati hè statu scupertu.</p>
+      <ul>
+        <li>Ci vole à cuntattà i prupietarii di u situ web per infurmalli di stu penseru.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">U cuntenutu s’hè lampatu</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>A pagina chì vò circate à fighjà ùn pò micca esse affissata, perchè un sbagliu in a trasmissione di dati hè statu scupertu.</p>
+      <ul>
+        <li>Ci vole à cuntattà i prupietarii di u situ web per infurmalli di stu penseru.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Sbagliu di cudificazione di cuntenutu</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>A pagina chì vò circate à fighjà ùn pò micca esse affissata, perchè ella impiega una forma di cumpressione scunnisciuta o micca accettata.</p>
+      <ul>
+        <li>Ci vole à cuntattà i prupietarii di u situ web per infurmalli di stu penseru.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">L’indirizzu ùn esiste micca</string>
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>U navigatore ùn pò micca truvà u servitore ospite per l’indirizzu indicatu.</p>
+      <ul>
+        <li>Verificate a sintassa di l’indirizzu per circà i sbaglii cum’è
+          <strong>ww</strong>.esempiu.com invece di
+          <strong>www</strong>.esempiu.com.</li>
+        <li>S’ella ùn hè mancu pussibule di navigà nant’à un situ, verificate a cunnessione di dati o Wi-Fi di u vostru apparechju.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Alcuna cunnessione internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Verificate a vostra cunnessione internet o pruvate di ricaricà a pagina da quì à pocu.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Attualizà</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Indirizzu inaccettevule</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>L’indirizzu pruvistu ùn hè micca in un furmatu ricunnisciutu. Ci vole à verificà ch’ellu ùn ci hè micca sbagliu in a barra d’indirizzu è pruvà torna.</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">L’indirizzu ùn hè accettevule</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>A sintassa di l’indirizzi hè di solitu <strong>http://www.esempiu.com/</strong></li>
+        <li>Assicuratevi d’impiegà barre sbieche (i.e. <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Protocollu scunnisciutu</string>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>L’indirizzu indicheghja un protocollu (i.e. : <q>wxyz://</q>) scunnisciutu da u navigatore chì ùn riesce micca à cunnettesi currettamente à u situ.</p>
+      <ul>
+        <li>>Pruvate d’accede à cuntenutu multimedia o à d’altri servizii non-testu ? Verificate nant’à u situ i prugrammi chì sò richiesti.</li>
+        <li>Certi protocolli ponu richiede un terzu prugramma o moduli d’estensione per chì u navigatore possi ricunnoscelli.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">U schedariu ùn esiste micca</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Forse l’elementu hè statu rinuminatu, cacciatu o dispiazzatu ?</li>
+        <li>Ci hè un sbagliu d’ortugrafia, di maiuscula o un altru sbagliu di tipografia ?</li>
+        <li>Avete abbastanza permessi d’accessu per st’elementu ?</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">L’accessu à u schedariu hè statu ricusatu</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Forse u schedariu hè statu cacciatu, dispiazzatu, o i so permessi ùn permettenu d’accedeci.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">A cunnessione hè stata ricusata da u servitore proxy</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>U navigatore hè cunfiguratu per impiegà un servitore proxy, ma quessu hà ricusatu a cunnessione.</p>
+      <ul>
+        <li>Hè curretta a cunfigurazione proxy di u navigatore ? Verificate e preferenze è pruvate torna.</li>
+        <li>U serviziu proxy permette e cunnessioni da sta reta ?</li>
+        <li>Avete sempre penseru ? Cuntattate u vostru amministratore di a reta o u vostru furnidore d’accessu à internet per ottene un aiutu.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">U servitore proxy ùn si trova micca</string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>U navigatore hè cunfiguratu per impiegà un servitore proxy, ma quessu ùn si trova micca.</p>
+      <ul>
+        <li>Hè curretta a cunfigurazione proxy di u navigatore ? Verificate e preferenze è pruvate torna.</li>
+        <li>Hè cunnessu à una reta attiva, l’apparechju ?</li>
+        <li>Avete sempre penseru ? Cuntattate u vostru amministratore di a reta o u vostru furnidore d’accessu à internet per ottene un aiutu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Prublema di prugramma animosu</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>U situ web à l’indirizzu %1$s hè statu signalatu cum’è una surghjente d’affronti è hè statu bluccatu secondu à e vostre preferenze di sicurità.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Prublema di situ indesiderevule</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>U situ web à l’indirizzu %1$s hè statu signalatu cum’è cuntenendu prugrammi indesiderevule è hè statu bluccatu secondu à e vostre preferenze di sicurità.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Prublema di situ periculosu</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>U situ web à l’indirizzu %1$s hè statu signalatu cum’è putenzialmente periculosu è hè statu bluccatu secondu à e vostre preferenze di sicurità.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Prublema di situ ingannatore</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>U situ web à l’indirizzu %1$s hè statu signalatu cum’è essendu ingannatore è hè statu bluccatu secondu à e vostre preferenze di sicurità.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">U situ sicurizatu ùn hè micca dispunibule</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Avete attivatu u modu « HTTPS solu » per una sicurità rinfurzata, ma ùn ci hè alcuna versione HTTPS di <em>%1$s</em>.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Cuntinuà nant’à u situ HTTP</string>
+</resources>

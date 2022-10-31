@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Hyšći raz wopytaś</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Napšašowanje njedajo se dokóńcyś</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Pśidatne informacije wó toś tom problemje abo zmólce njestoje tuchylu k dispoziciji.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Zwisk njejo se raźił</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Bok, kótaryž cośo se woglědaś, njedajo se pokazaś, dokulaž awtentiskosć dostanych datow njedajo se pśeglědaś.</li>
+        <li>Pšosym stajśo se z wobsejźarjami websedła do zwiska, aby jich wó toś tym problemje informěrował.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Zwisk njejo se raźił</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>To by mógło problem z konfiguraciju serwera byś, abo by mógło byś, až něchten wopytujo serwer imitěrowaś.</li>
+        <li>Jolic sćo ze serwerom w zachadnosći wuspěšnje zwězany był, by mógła zmólka snaź nachylna byś a móžośo pózdźej hyšći raz wopytaś.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Rozšyrjone…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Něchten mógał wopytaś, sedło za swójo wudaś, togodla njeměł wy z tym pókšacowaś.</label>
+        <br><br>
+        <label>Websedła swóju identitu pśez certifikaty dopokazuju. %1$s <b>%2$s</b> njedowěri, dokulaž jogo certifikatowy wudawaŕ jo njeznaty, certifkat jo sebjesigněrowany abo serwer korektne mjazycertifikaty njesćelo.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Slědk (dopórucony)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Riziko akceptěrowaś a pókšacowaś</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Toś to websedło se wěsty zwisk pomina.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Bok, kótaryž se cośo woglědaś, njedajo se pokazaś, dokulaž toś to websedło se wěsty zwisk pomina.</li>
+         <li>Problem se nejskerjej pśez websedło zawinujo a togodla njedajo nic, což móžośo cyniś, aby jen rozwězał.</li>
+         <li>Móžośo administratoroju websedła problem k wěsći daś.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Rozšyrjony…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> ma wěstotne pšawidło z mjenim HTTP Strict Transport Security (HSTS), kótarež wóznamjenijo, až <b>%2$s</b> móžo se jano wěsće zwězaś. Njamóžśo wuwześe pśidaś, aby se k toś tomu sedłoju woglědał.
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> ma wěstotne pšawidło z mjenim HTTP Strict Transport Security (HSTS), kótarež wóznamjenijo, až <b>%2$s</b> móžo se jano wěsće zwězaś. Njamóžśo wuwześe pśidaś, aby se k toś tomu sedłoju woglědał. </label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Slědk</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Zwisk jo se pśetergnuł</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Wobglědowak jo se wuspěšnje zwězał, ale zwisk jo se pśetergnuł, mjaztym až su se informacije pśenosowali. Pšosym wopytajśo hyšći raz.</p>
+      <ul>
+        <li>Sedło njejo snaź nachylu k dispoziji abo jo pśeśěžone. Wopytajśo za někotare wokognuśa hyšći raz.</li>
+        <li>Jolic njamóžośo boki zacytaś, pśeglědajśo daty swójogo rěda abo WLAN-zwisk.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Zwisk jo cas pśekšocył</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Pominane sedło njejo na zwiskowe napšašowanje wótegroniło a wobglědowak jo pśestał na wótegrono cakaś.</p>
+      <ul>
+        <li>Móžo byś, až serwer jo pśeśěžony abo ma nachylne mólenje? Wopytajśo pózdźej hyšći raz.</li>
+        <li>Njamóžośo druge sedła pśeglědowaś? Pśespytajśo seśowy zwisk rěda.</li>
+        <li>Šćita se waš rěd abo waša seś z wognjoweju murju abo proksy? Njekorektne nastajenja mógu webowemu pśeglědowanjeju zajźowaś.</li>
+        <li>Maśo hyšći śěže? Konsultěrujśo swójogo seśowego administratora abo internetnego póbitowarja za pódpěru.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Zwisk njejo móžny</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Sedło njestoj snaź nachylu k dispoziciji abo jo pśeśěžone. Wopytajśo za mało wokognuśow hyšći raz.</li>
+        <li>Jolic njamóžośo boki zacytaś, pśeglědajśo datowy abo WLAN-zwisk swójogo rěda.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Njewótčakane wótegrono ze serwera</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Sedło jo na napšašowanje seśi na njewócakowany nałog wótegroniło a wobglědowak njamóžo pókšacowaś.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Bok pšawje njepósrědnja</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Wobglědowak jo pśestał, pominany objekt wótwołowaś. Sedło pósrědnja napšašowanje na nałog, kótaryž se njekóńcy.</p>
+      <ul>
+        <li>Sćo cookieje znjemóžnił abo zablokěrował, kótarež su trěbne za tós to sedło?</li>
+        <li>Jolic akceptěrowanje sedłowych cookiejow njerozwězujo ten problem, jo to nejskerjej problem serwereje konfiguracije a nic wašogo rěda.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Offline-modus</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Wobglědowak źěła offline a njamóžo z pominanym objektom zwězaś.</p>
+      <ul>
+        <li>Jo rěd z aktiwneju seśu zwězany?</li>
+        <li>Klikniśo na „Hyšći raz“, aby do online-modusa pśejšeł a bok znowego zacytał.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Port z pśicynow wěstoty wobgranicowany</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>Pominana adresa jo port pódała (na pś. <q>mozilla.org:80</q> za port 80 na mozilla.org), kótaryž wužywa se normalnje za <em>druge</em> zaměry nježli webpśeglědowanje. Wobglědowak jo napšašowanje za waš šćit a wěstotu pśetergnuł.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Zwisk jo se slědk stajił</string>
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Syśowy zwisk jo se pśetergnuł, mjaztym až sćo wopytał, zwisk nawězaś. Pšosym wopytajśo hyšći raz.</p>
+      <ul>
+        <li>Sedło njejo snaź nachylu k dispoziji abo jo pśeśěžone. Wopytajśo za někotare wokognuśa hyšći raz.</li>
+        <li>Jolic njamóžośo boki zacytaś, pśeglědajśo daty swójogo rěda abo WLAN-zwisk.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Njewěsty datajowy typ</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>Pšosym stejśo se z wobsejźarjami websedła do zwiska, aby je wó toś tom problemje informěrował.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Zmólka - wobškóźone wopśimjeśe</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Bok, kótaryž cośo se woglědaś, njedajo se pokazaś, dokulaž jo se zmólka pśi pśenosowanju datow namakała.</p>
+      <ul>
+        <li>Pšosym stajśo se z wobsejźarjami websedła do zwiska, aby je wó toś tom problemje informěrował.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Wopśimjeśe jo se wowaliło</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Bok, kótaryž cośo se woglědaś, njedajo se pokazaś, dokulaž jo se zmólka pśi pśenosowanju datow namakała.</p>
+      <ul>
+        <li>Pšosym stajśo se z wobsejźarjami websedła do zwiska, aby je wó toś tom problemje informěrował.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Zmólka pśi koděrowanju wopśimjeśa</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Bok, kótaryž cośo se woglědaś, njedajo se pokazaś, dokulaž wužywa njepłaśiwu abo njepódpěranu formu kompresije.</p>
+      <ul>
+        <li>Pšosym stajśo se z wobsejźarjami websedła do zwiska, aby je wó toś tom problemje informěrował.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Adresa njejo se namakała</string>
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Wobglědowak njejo mógał hostowy serwer za pódanu adresu namakaś.</p>
+      <ul>
+        <li>Pśeglědajśo adresu za pisańskimi zmólkami ako
+          <strong>ww</strong>.example.com město
+          <strong>www</strong>.example.com.</li>
+        <li>Jolic njamóžośo boki zacytaś, pśeglědajśo daty swójogo rěda abo WLAN-zwisk.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Žeden internetny zwisk</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Pśeglědajśo swój seśowy zwisk abo zacytajśo bok za mało wokognuśow znowego.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Znowego zacytaś</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Njepłaśiwa adresa</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Pódana adresa njejo w pśipóznatem formaśe. Pšosym pśeglědajśo adresowe pólo za zmólkami a wopytajśo hyšći raz.</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Adresa njejo płaśiwa</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Webadrese se zwětšego ako <strong>http://www.example.com/</strong> pišu.</li>
+        <li>Zawěsććo, až wužywaśo doprědka schylone nakósne smužki (t. gr. <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Njeznaty protokol</string>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Adresa pódawa protokol (na pś. <q>wxyz://</q>), kótaryž wobglědowak njepśipóznawa, tak až wobglědowak njamóžo pšawje ze sedłom zwězaś.</p>
+      <ul>
+        <li>Wopytujośo na multimedia abo druge njetekstowe słužby pśistup maś? Pśespytajśo sedło za wósebnymi pótrěbnosćami.</li>
+        <li>Někotare protokole trjebaju programy tśeśich abo tykace, nježli až wobglědowak móžo je pśipóznaś.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Dataja njejo se namakała</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Jo móžno, až objekt jo se pśemjenił, wótpórał abo pśesunuł?</li>
+        <li>Jo zmólka pšawopisa, wjelikopisanja, abo hynakša typografiska zmólka w adresy?</li>
+        <li>Maśo dosěgajuce pśistupne pšawa za pominany objekt?</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Pśistup na dataju jo se wótpokazał</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Snaź jo se wótpórała, pśesunuła, abo datajowe pšawa zajźuju pśistupoju.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Proksyjowy serwer jo zwisk wótpokazał</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Wobglědowak jo konfigurěrowany, aby serwer proksy wužywał, ale proksy jo zwisk wótpokazał.</p>
+      <ul>
+        <li>Jo konfiguracija proksy wobglědowaka korektna? Pśeglědajśo nastajenja a wopytajśo hyšći raz.</li>
+        <li>Dowólujo proksyjowa słužba zwiski z toś teje seśi?</li>
+        <li>Maśo hyšći śěže? Konsultěrujśo swójogo seśowego administratora abo internetnego póbitowarja za pódpěru.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proksyjowy serwer njenamakany</string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Wobglědowak jo se konfigurěrował, aby se wužywa proksyjowy serwer, ale proksy njedajo se namakaś.</p>
+      <ul>
+        <li>Jo konfiguracija proksyja wobglědowaka korektna? Pśeglědajśo nastajenja a wopytajśo hyšći raz.</li>
+        <li>Jo rěd z aktiwneju seśu zwězany?</li>
+        <li>Maśo hyšći śěže? Stajśo ze swójim seśowym administratorom abo internetny póbitowarjom za pódpěru do zwiska.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problem ze sedłom ze škódneju softwaru</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Sedło na %1$s jo se ako napadujuce sedło k wěsći dało a jo se na zakłaźe wašych wěstotnych nastajenjow zablokěrowało.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problem z njewitanym sedłom</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Sedło na %1$s jo se ako sedło k wěsći dało, kótarež póbitujo njewitanu softwaru a jo se na zakłaźe wašych wěstotnych nastajenjow zablokěrowało.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problem z wobgrozujucym sedłom</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Sedło na %1$s jo se ako potencielnje wobgrozujuce sedło k wěsći dało a jo se na zakłaźe wašych wěstotnych nastajenjow zablokěrowało.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problem z wobšudnym sedłom</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Toś ten bok na %1$s jo se ako wobšudne sedło k wěsći dało a jo se na zakłaźe wašych wěstotnych nastajenjow zablokěrowało.</p>
+    ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Wěste sedło njejo k dispoziciji</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Sćo zmóžnił modus Jano-HTTPS za pólěpšonu wěstotu a HTTPS-wersija <em>%1$s</em> njejo k dispoziciji.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Dalej k HTTP-sedłoju</string>
+</resources>

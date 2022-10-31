@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Titojtob\'ëx chik</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Man xtikïr ta xutz\'aqatisaj ri k\'utunïk</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Majun na\'oj k\'o chi rij re k\'ayewal o sachoj re\'.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Xq\'ate\' ri Ütz Okem</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Man tikirel ta nik\'ut pe ri ruxaq natojtob\'ej najäq ruma man tikirel ta nijikib\'äx nitz\'et chi e qitzij ri taq tzij.</li>
+        <li>Tab\'ana\' utzil, taya\' rutzijol chi rij re k\'ayewal re\' chi ke ri rajaw ruxaq k\'amaya\'l.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Xqate\' ri Ütz Okem</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Rik\'in jub\'a\' jun ruk\'ayewal ri runuk\'ulem ruk\'u\'x samaj, o chuqa\' k\'o ri nik\'exo ri ruk\'u\'x samaj.</li>
+        <li>We at jikïl chi atokinäq chik ütz pa re ruk\'u\'x samaj re\', ri sachoj xa xe jun ti mej ruma ri\' tikirel natojtob\'ej chik pa jun ch\'utiramaj.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Taq Q\'axinäq…</string>
+
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Rik\'in jub\'a\' k\'o noxk\'ob\'en ri ruxaq ruma ri\' man ta chik nasamajij qa.</label>
+        <br><br>
+        <label>Ri ajk\'amaya\'l ruxaq nikik\'üt ri kib\'anikil rik\'in iqitzijob\'al. %1$s man rukuqub\'an ta ruk\'u\'x pa <b>%2$s</b> ruma man etaman ta ruwäch ri xya\'o ri iqitzijob\'al, ri iqitzijob\'al ruyon juch\'un o ri ruk\'u\'x samaj man yerutäq ta ri nik\'aj ütz taq iqitizjob\'al.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Titzolïx (Chilab\'en)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Tak\'ulu\' ri K\'ayewal chuqa\' Tinsamajij el</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Xq\'at ri okem</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Ütz xok ri okik\'amaya\'l, xa xe chi xnaq ri okem toq niq\'axäx ri etamab\'äl. Tatojtob\'ej chik.</p>
+	<ul>
+		<li>Rik\'in jub\'a\' man wachel ta ri ruxaq wakami o yalan rusamaj. Tatojb\'ej pa jun chik ti ramaj.</li>
+		<li>We majun ruxaq nisamäj, tanik\'oj ri Wi-Fi Okem o taq rutzij ri awokisab\'al oyonib\'äl.</li>
+	</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Xxik\'o ruq\'ijul ri okem</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Ri ruxaq k’amaya’l xk’utüx, man xunimaj ta tzij richin nok chuqa’ ri okik’amaya’l xtane’ chi royob’exik jun tzolin tzij.</p>
+      <ul>
+        <li>¿La nik’ulwachitäj chi e k’ïy yekanon richin o xqupïx jun ch’utiramaj ri ruk’u’x samaj?  Tatojtob’ej chik pa jun ch’utiramaj.</li>
+        <li>¿La man nitikïr ta nok pa juley chik ruxaq k’amaya’l? Tanik’oj ri rokem pa k’amab’ey awokisab’al.</li>
+        <li>¿La nichajïx ri awokisab’al rik’in jun proxi o jun firewall?  Jun itzel runuk’ulem nitikïr nuq’ät ri okem pa k’amaya’l.</li>
+        <li>¿La k’a k’o na ak’ayewal? Tak’ulb’ej ri runuk’unel ak’amab’ey o ri ya’öl ak’amaya’l richin yato’ chi rusamajixik.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Man nitikïr ta nok</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>Ri ruxaq k\'amaya\'l rik\'in jub\'a\' man okel ta wakami o yalan tajin nokisäx. Tatojtob\'ej chik pa jun ti mej</li>
+        <li>We man yatikïr ta nasamajij jujun taq ruxaq k\'amaya\'l, tanik\'oj ri rutzij oyonib\'äl okisaxel o ri Wi-Fi awokem.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Man oyob\'en ta re rutzijol nuya\' pe ri ruk\'u\'x samaj</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Ri okik\'amaya\'l man nitikïr ta chik nusamajib\'ej ri tzolin rutzij ruxaq k\'amaya\'l.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Man ütz ta niq\'axan ri ruxaq k\'amaya\'l</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Ri okik\'amaya\'l xtane\' nutojtob\'ej nuköl ri ch\'akulal xk\'utüx. Ri ruxaq k\'amaya\'l nuq\'axan chik ri taqowuj, rik\'in jun rub\'eyal ri man xtik\'is ta rutz\'aqatisaxik.</p>
+      <ul>
+        <li>¿La e chupül o eq\'aton ri taq kaxlanwey yek\'atzin chi re re ruxaq k\'amaya\'l re\'?</li>
+        <li>Man nusöl ta ri k\'ayewal we ye\'awajo\' ri taq kaxlanwey, rik\'in jub\'a\' jun k\'ayewal richin runuk\'ulem ri ruk\'u\'x samaj, man k\'a ruk\'ayewal ta ri awokisab\'al.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Pa Rub\'eyal Majun Okem</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Ri okik\'amaya\'l nisamäj pa rub\'eyal majun okem pa k\'amaya\'l, ruma ri\' toq man tikirel ta nok pa ri ch\'akulal nik\'utüx chi re.</p>
+      <ul>
+        <li>¿La okinäq ri okisab\'äl pa jun tzijïl k\'amab\'ey?</li>
+        <li>Tapitz\'a\' “Titojtob\'ëx chik” richin tiq\'ax pa rub\'eyal okem pa k\'amaya\'l chuqa\' tisamajib\'ëx chik ri ruxaq k\amaya\'l.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Q\'aton ri b\'ey ruma ri nichajïx</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Ri ochochib\'äl nik\'utüx xuya\' retal jun b\'ey (achi\'el <q>mozilla.org:80</q> richin ri b\'ey 80 richin mozilla.org) okisan kichin <em>jalajöj</em> okem pa k\'amaya\'l. Ri okik\'amaya\'l xuq\'ät ri taqowuj ruma ri ato\'ik chuqa\' achajixïk.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Xtikirisäx chik ri okem</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Xnaq ri ruk\'amab\'ey ximonel toq nitzijöx jun okem . Tatojtob\'ej chik.</p>
+	<ul>
+		<li>Rik\'in jub\'a\' man wachel ta ri ruxaq wakami o yalan rusamaj. Tatojb\'ej pa jun chik ti ramaj.</li>
+		<li>We majun ruxaq nisamäj, tanik\'oj ri Wi-Fi Okem o taq rutzij ri awokisab\'al oyonib\'äl.</li>
+	</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Itzel Ruwäch Chi Yakb\'äl</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+         <li>Tab\'ana\' utzil, taya\' rutzijol chi rij re k\'ayewal re\' chi ke ri rajaw ruxaq k\'amaya\'l.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Rusachoj Itzelan Rupam</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Ri ruxaq wuj natojtob\'ej natz\'ët man tikirel ta nik\'ut pe ruma xilitäj jun sachoj toq yeq\'alajisäx pe ri taq tzij.</p>
+      <ul>
+        <li>Tab\'ana\' utzil, taya\' rutzijol chi rij re k\'ayewal re\' chi ke ri rajaw ruxaq k\'amaya\'l.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Q\'aton rupam</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Ri ruxaq wuj natojtob\'ej natz\'ët man tikirel ta nik\'ut pe ruma xilitäj jun sachoj toq yeq\'alajisäx pe ri taq tzij.</p>
+      <ul>
+        <li>Tab\'ana\' utzil, taya\' rutzijol chi rij re k\'ayewal re\' chi ke ri rajaw ruxaq k\'amaya\'l.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Rusachoj Rucholajil Rupam</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Ri ruxaq nawajo\' natzu\', man tikirel ta nik\'ut pe, ruma nrokisaj jun ruwäch chi jitz\'oj, ri man ütz ta chuqa\' man nik\'ul ta.</p>
+      <ul>
+        <li>Tab\'ana\' utzil, taya\' rutzijol chi rij re k\'ayewal re\' chi ke ri rajaw ruxaq k\'amaya\'l.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Man Xilitäj Ta Ri Ochochib\'äl</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Man xril ta ri ruk\'u\'x samaj ochochib\'äl ri okik\'amaya\'l.</p>
+      <ul>
+        <li>Tanik\'oj chi majun sachoj ruk\'wan ri ochochib\'äl achi\'el
+          <strong>ww</strong>.example.com pa ruk\'exel ri
+          <strong>www</strong>.example.com.</li>
+        <li>We man yatikïr ta nasamajib\'ej jun ruxaq, tanik\'oj ri Wi-Fi awokem o rutzij awokisab\'al.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Majun Okem pa K\'amaya\'l</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Tanik\'oj ri awokem pa k\'amab\'ey o tatojtob\'ej nasamajij chik ri ruxaq pa jun ti mej.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Tisamajïx chik</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Man Okel Ta Ri Ochochib\'äl</string>
+
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Man etaman ta ruwäch ri rub\'anikil ri ochochib\'äl xtz\'ib\'äx. Ke\'anik\'oj ri taq sachoj pa ri kikajtz\'ik ochochib\'äl, k\'a ri\' tatojtob\'ej chik.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Man nuxïm ta ri\' ri ochochib\'äl</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+  <li>Rochochib\'al Ajk\'amaya\'l achi\'el jantape\' nitz\'ib\'äx achi\'el <strong>http://www.example.com/</strong></li>
+        <li>Tajikib\'a\' chi ye\'awokisaj ri q\'eq\'el taq juch\' (achi\'el <strong>/</strong>).</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Man Etaman Ta Ruwäch Ri Rub\'eyal Samaj</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Ri ochochib\'äl nuya\' retal jun rub\'eyal samaj (achi\'el <q>wxyz://</q>) man netamäx ta ruwäch ruma ri okik\'amaya\'l, ruma ri man nitikïr ta nok pa rub\'eyal pa ri ruxaq k\'amaya\'l.</p>
+      <ul>
+        <li>¿La natojtob\'ej yatok chupam jun k\'ïy k\'oxom o jun chik chi samajib\'äl? Tanik\'oj we k\'o chi k\'o taq rutz\'aqat rajowaxik k\'o chi k\'o chupam.</li>
+        <li>Jujun taq rub\'eyal samaj rik\'in jub\'a\' yekajo\' taq kema\' o taq tz\'aqat kichin aj rox winaqi\' richin ütz yesamäj.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Man Xilitäj Ta ri Yakb\'äl</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>¿Rik\'in jub\'a\' chi nisik\'ïx chik, xyujtäj o xk\'ex rub\'ey ri ch\'akulal?</li>
+        <li>¿La k\'o jun sachoj pa ruwi\' rutz\'ib\'axik, nimatz\'ib\' o jun chik chi sachoj toq xtz\'ib\'äx ri ochochib\'äl?</li>
+        <li>¿La kiya\'on aq\'ij richin yatok chupam ri ch\'akulal xk\'utüx?</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Xq\'at rutz\'etik ri yakb\'äl</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Rik\'in jub\'a\' xyuj el, xsilöx el o ri niya\'on q\'ij chi ke ri yakb\'äl niq\'ato rutz\'etik.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Xxutüx ri okem pa k\'amaya\'l ruma ri ruproxi ruk\'u\'x samaj</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Nuk\'un ri okik\'amaya\'l richin nrokisaj jun proxi ruk\'u\'x samaj, xa xe chi xtzolïx pe ri okem.</p>
+      <ul>
+        <li>¿La ütz ri runuk\'ulem ruproxi okik\'amaya\'l? Tanik\'oj ri runuk\'ulem chuqa\' tatojtob\'ej chik.</li>
+        <li>¿Nuya\' q\'ij ri proxi ruk\'u\'x samaj taq okem pa re k\'amab\'ey re\'?</li>
+        <li>¿La k\'a k\'o taq k\'ayewal? Tak\'ulub\'ej ri runuk\'samajel k\'amab\'ey o ya\'öl k\'amaya\'l richin ato\'ik pa ruwi\' rusamajixik.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Man Xilitäj Ta Ri Proxi Ruk\'u\'x Samaj</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Nuk\'un ri okik\'amaya\'l richin nrokisaj jun proxi ruk\'u\'x samaj, xa xe chi man xilitäj ta ri proxi ruk\'u\'x samaj.</p>
+      <ul>
+        <li>¿La ütz ri runuk\'ulem ruproxi okik\'amaya\'l? Tanik\'oj ri runuk\'ulem chuqa\' tatojtob\'ej chik.</li>
+        <li>¿La tzijïl ri okisab\'äl pa jun tzijïl k\'amab\'ey?</li>
+        <li>¿La k\'a k\'o taq k\'ayewal? Tak\'ulub\'ej ri runuk\'samajel k\'amab\'ey o ya\'öl k\'amaya\'l richin ato\'ik pa ruwi\' rusamajixik.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Ruk\'ayewal ruxaq rik\'in Malware</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Re ruxaq k\'amaya\'l pa %1$s xya\' rutzijol chi niqeleb\'en, ruma ri\' toq xq\'at ruma ach\'ojin achajinik.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Man oyob\'en ta reruk\'ayewal ruxaq re\'</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Re ruxaq k\'amaya\'l re\' %1$s xya\' rutzijol chi nik\'atzin chi ke ri itzel taq kema\', ruma ri\' xq\'eleb\'ëx richin ri rajowaxik chajinïk.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Ruk\'ayewal tz\'ilanel ruxaq</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Re ruxaq k\'amaya\'l pa %1$s xya\' rutzijol chi niqeleb\'en, ruma ri\' toq xq\'at ruma ach\'ojin achajinik.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Ruk\'ayewal q\'olonel ruxaq</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Re ruxaq k\'amaya\'l pa %1$s xya\' rutzijol chi niq\'eleb\'en, ruma ri\' toq xq\'at ruma ach\'ojin chajinïk.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Majun jikïl ruxaq</string>
+    </resources>

@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Riprovoni</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Kërkesa Nuk Plotësohet Dot</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Hëpërhë nuk ka të dhëna shtesë gati rreth këtij problemi apo gabimi.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Dështoi Lidhja e Sigurt</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[      <ul>
+        <li>Faqja që po provoni të shihni s’shfaqet dot, ngaqë mirëfilltësia e të dhënave të marra s’u vërtetua dot.</li>
+        <li>Ju lutemi, lidhuni me të zotët e sajtit për t’u bërë të ditur këtë problem.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Dështoi Lidhja e Sigurt</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[      <ul>
+        <li>Mund të jetë problem i formësimit të shërbyesit, ose mundet që dikush të jetë duke imituar shërbyesin.</li>
+        <li>Nëse në të kaluarën jeni lidhur me sukses te ky shërbyes, gabimi mund të jetë i përkohshëm, dhe mund të riprovonit më vonë.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Të mëtejshme…</string>
+
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[        <label>Dikush mund të jetë duke provuar të imitojë sajtin dhe s’duhet të vazhdoni.</label>
+        <br><br>
+        <label>Sajtet dëshmojnë identitetin e tyre përmes dëshmish. %1$s nuk i zë besë <b>%2$s</b>, ngaqë lëshuesi i dëshmisë së tij është i panjohur, dëshmia është e vetënënshkruar, ose shërbyesi s’po dërgon dëshmi të ndërmjetme të sakta.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Kthehuni Mbrapsht (E këshilluar)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Pranoni Rrezikun dhe Vazhdoni</string>
+
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Kthehu Mbrapsht</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Lidhja u ndërpre</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[      <p>Shfletuesi u lidh me sukses, por lidhja u ndërpre teksa shpërnguleshin të dhëna. Ju lutemi, riprovoni.</p>
+      <ul>
+        <li>Sajti mund të jetë përkohësisht jashtë funksionimi ose shumë i zënë. Riprovoni pas pak çastesh.</li>
+        <li>Nëse s’jeni në gjendje të ngarkoni çfarëdo faqe, kontrolloni lidhjen me rrjetin celular ose Wi-Fi të pajisjes tuaj.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Lidhjes i mbaroi koha</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Sajti i kërkuar s’iu përgjigj kërkesës për lidhje dhe shfletuesi reshti së prituri për përgjigje.</p>
+      <ul>
+        <li>Mundet që shërbyesi është duke u përballur me kërkesë të madhe ose mundet të jetë përkohësisht jashtë loje? Riprovoni më vonë.</li>
+        <li>S’jeni në gjendje të shfletoni sajte të tjerë? Kontrolloni lidhjen në rrjet të pajisjes.</li>
+        <li>A është pajisja ose rrjeti juaj i mbrojtur me një <em>firewall</em> apo ndërmjetës? Rregullime të pasakta mund të prekin shfletimin në Web.</li>
+        <li>Keni ende vështirësi? Për ndihmë, lidhuni me administruesin e rrjetit tuaj ose me furnizuesin e Internetit.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">S’arrin të lidhet</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[      <ul>
+        <li>Sajti mund të jetë përkohësisht jashtë funksionimit ose shumë i zënë. Riprovoni pas pak çastesh.</li>
+        <li>Nëse s’jeni në gjendje të ngarkoni çfarëdo faqe, kontrolloni lidhjen me rrjetin celular ose Wi-Fi të pajisjes tuaj.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Përgjigje e papritur prej shërbyesit</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[      <p>Sajti iu përgjigj kërkesës së rrjetit në një mënyrë të papritur dhe shfletuesi s’vazhdon dot.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Faqja s’është ridrejtuar si duhet</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Shfletuesi ka reshtur së provuari të marrë objektin e kërkuar. Sajti po e ridrejton kërkesën në një mënyrë që s’do të plotësohet kurrë.</p>
+      <ul>
+        <li>I keni çaktivizuar apo bllokuar cookie-t e nevojshme për këtë sajt?</li>
+        <li>Nëse pranimi i cookie-ve s’e zgjidh problemin, ka të ngjarë të jetë çështje formësimi shërbyesi dhe jo e pajisjes tuaj.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Mënyrë Jo Në Linjë</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Shfletuesi po punon nën mënyrën jashtë linje dhe s’lidhet dot te objekti i kërkuar.</p>
+      <ul>
+        <li>A është pajisja e lidhur te një rrjet aktiv?</li>
+        <li>Shtypni “Riprovoni” që të kalohet nën mënyrën në linjë dhe të ringarkohet faqja.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Portë e kufizuar për arsye sigurie</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[      <p>Adresa e kërkuar donte një portë (p.sh., <q>mozilla.org:80</q> për portën 80 te mozilla.org) normalisht e përdorur për qëllime <em>të tjera</em> dhe jo për shfletim Web. Shfletuesi e anuloi kërkesën me qëllim mbrojtjen dhe sigurinë tuaj.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Lidhja u rivendos</string>
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Ndërlidhja me rrjetin u ndërpre teksa negociohej një lidhje. Ju lutemi, riprovoni.</p>
+      <ul>
+        <li>Sajti mund të jetë përkohësisht jashtë funksionimi ose shumë i zënë. Riprovoni pas pak çastesh.</li>
+        <li>Nëse s’jeni në gjendje të ngarkoni çfarëdo faqe, kontrolloni lidhjen me rrjetin celular ose Wi-Fi të pajisjes tuaj.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Lloj Jo i Parrezik Kartelash</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>Ju lutemi, lidhuni me të zotët e sajtit për t’u bërë të ditur këtë problem.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Gabim nga Lëndë e Dëmtuar</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[      <p>Faqja që po rrekeni të shihni, s’mund të shfaqet, ngaqë u pikas një gabim në transmetimin e të dhënave.</p>
+      <ul>
+        <li>Ju lutemi, lidhuni me të zotët e sajtit që t’u njoftoni këtë problem.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Vithisje lënde</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[      <p>Faqja që po rrekeni të shihni, s’mund të shfaqet, ngaqë u pikas një gabim në transmetimin e të dhënave.</p>
+      <ul>
+        <li>Ju lutemi, lidhuni me të zotët e sajtit që t’u njoftoni këtë problem.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Gabim Kodimi Lënde</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[      <p>Faqja që po rrekeni të shihni s’shfaqet dot, sepse përdor një formë ngjeshjeje të mangët ose të pambuluar.</p>
+      <ul>
+        <li>Ju lutemi, lidhuni me të zotët e sajtit për t’u njoftuar këtë problem.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">S’u Gjet Adresë</string>
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Shfletuesi s’gjeti dot shërbyesin strehë për adresën e dhënë.</p>
+      <ul>
+        <li>Kontrolloni adresën për gabime shkrimi, bie fjala,
+          <strong>ww</strong>.example.com në vend të 
+          <strong>www</strong>.example.com.</li>
+        <li>Nëse s’jeni në gjendje të ngarkoni çfarëdo faqe, kontrolloni lidhjen e pajisjes tuaj me rrjetin celular ose atë Wi-Fi.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Pa lidhje internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Kontrolloni lidhjen tuaj në rrjet ose provoni të ringarkoni faqen pas pak çastesh.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Ringarkoje</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Adresë e Pavlefshme</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Adresa e dhënë nuk është sipas ndonjë formati të pranuar. Ju lutemi, kontrolloni për gabime te shtylla e vendeve dhe riprovoni.</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Adresa s’është e vlefshme</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Adresat Web zakonisht shkruhen si <strong>http://www.example.com/</strong></li>
+        <li>Sigurohuni se po përdorni pjerrake djathtas (d.m.th., <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Protokoll i Panjohur</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Adresa tregon një protokoll (p.sh., <q>wxyz://</q>) të cilin shfletuesi s’e njeh, kështu që s’mund të lidhet si duhet me këtë sajt.</p>
+      <ul>
+        <li>Mos po përpiqeni të hapni shërbime multimedia apo shërbim tjetër jo tekst? Shihni te sajti për domosdoshmëri ekstra.</li>
+        <li>Disa protokolle mund të lypin software ose shtojca prej palësh të treta, përpara se shfletuesi të mund t’i njohë.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">S’u Gjet Kartelë</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Mundet që objekti të jetë riemërtuar, hequr ose shpërngulur gjetkë?</li>
+        <li>A ka ndonjë gabim shkrimi apo gabim tjetër tipografik te adresa?</li>
+        <li>A keni leje të mjafta hyrjeje për te objekti i kërkuar?</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Hyrja te kartela u mohua</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Mund të jetë hequr, lëvizur, ose hyrjen e pengojnë lejet mbi kartelën.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Shërbyesi Ndërmjetës Hodhi Poshtë Kërkesën për Lidhje</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Shfletuesi është formësuar të përdorë shërbyes ndërmjetës, por ndërmjetësi s’pranoi lidhje.</p>
+      <ul>
+        <li>Është i saktë formësimi i shfletuesit për ndërmjetësin? Kontrolloni rregullimet dhe riprovoni.</li>
+        <li>A lejon shërbimi ndërmjetës lidhje prej këtij rrjeti?</li>
+        <li>Keni ende vështirësi? Për ndihmë, lidhuni me administruesin e rrjetit tuaj ose me furnizuesin e Internetit.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">S’u Gjet Shërbyes Ndërmjetës</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Shfletuesi është formësuar të përdorë një shërbyes ndërmjetës, por ndërmjetësi s’u gjet dot.</p>
+      <ul>
+        <li>Është i saktë formësimi i shfletuesit për ndërmjetësin? Kontrolloni rregullimet dhe riprovoni.</li>
+        <li>A është e lidhur pajisja te një rrjet aktiv?</li>
+        <li>Keni ende vështirësi? Për ndihmë, lidhuni me administruesin e rrjetit tuaj ose me furnizuesin e Internetit.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problem sajti malware-i</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Sajti te %1$s është raportuar si sajt sulmesh dhe është bllokuar bazuar në parapëlqimet tuaja për sigurinë.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problem sajti të padëshiruar</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Sajti te %1$s është raportuar se shërben software të padëshiruar dhe është bllokuar bazuar në parapëlqimet tuaja për sigurinë.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problem sajti të dëmshëm</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Sajti te %1$s është raportuar si sajt potencialisht i dëmshëm dhe është bllokuar bazuar në parapëlqimet tuaja për sigurinë.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problem sajti të rremë</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Kjo faqe web te %1$s është raportuar si sajt i rremë dhe është bllokuar bazuar në parapëlqimet tuaja për sigurinë.</p>
+    ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">S’ka Sajt të Sigurt</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Keni aktivizuar Mënyrën Vetëm-HTTPS, për siguri të thelluar dhe s’ka version HTTPS për <em>%1$s</em>.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Vazhdo te Sajti HTTP</string>
+</resources>

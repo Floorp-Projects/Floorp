@@ -1,0 +1,171 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion config.compileSdkVersion
+
+    defaultConfig {
+        applicationId "org.mozilla.samples.browser"
+        minSdkVersion config.minSdkVersion
+        targetSdkVersion config.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArgument "clearPackageData", "true"
+        testInstrumentationRunnerArgument "listener", "leakcanary.FailTestOnLeakRunListener"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    flavorDimensions "engine"
+
+    productFlavors {
+        gecko {
+            dimension "engine"
+        }
+
+        // WebView
+        system {
+            dimension "engine"
+        }
+    }
+
+    variantFilter { variant ->
+        if (variant.buildType.name == "release") {
+            // This is a sample app that we are not releasing. Save some time and do not build
+            // release versions.
+            setIgnore(true)
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = Versions.compose_compiler
+    }
+}
+
+tasks.register("updateBorderifyExtensionVersion", Copy) { task ->
+    updateExtensionVersion(task, 'src/main/assets/extensions/borderify')
+}
+
+tasks.register("updateTestExtensionVersion", Copy) { task ->
+    updateExtensionVersion(task, 'src/main/assets/extensions/test')
+}
+
+dependencies {
+    implementation project(':concept-awesomebar')
+    implementation project(':concept-fetch')
+    implementation project(':concept-engine')
+    implementation project(':concept-tabstray')
+    implementation project(':concept-toolbar')
+    implementation project(':concept-storage')
+    implementation project(':concept-base')
+
+    implementation project(':compose-awesomebar')
+
+    implementation project(':browser-engine-system')
+    implementation project(':browser-domains')
+    implementation project(':browser-icons')
+    implementation project(':browser-session-storage')
+    implementation project(':browser-state')
+    implementation project(':browser-tabstray')
+    implementation project(':browser-thumbnails')
+    implementation project(':browser-toolbar')
+    implementation project(':browser-menu')
+    implementation project(':browser-storage-sync')
+
+    implementation project(':lib-fetch-httpurlconnection')
+    implementation project(":lib-crash")
+    implementation project(':lib-dataprotect')
+    implementation project(":lib-publicsuffixlist")
+
+    implementation project(':feature-awesomebar')
+    implementation project(":feature-autofill")
+    implementation project(':feature-app-links')
+    implementation project(':feature-contextmenu')
+    implementation project(':feature-customtabs')
+    implementation project(':feature-downloads')
+    implementation project(':feature-intent')
+    implementation project(':feature-media')
+    implementation project(':feature-readerview')
+    implementation project(':feature-search')
+    implementation project(':feature-session')
+    implementation project(':feature-toolbar')
+    implementation project(':feature-tabs')
+    implementation project(':feature-prompts')
+    implementation project(':feature-privatemode')
+    implementation project(':feature-pwa')
+    implementation project(':feature-findinpage')
+    implementation project(':feature-sitepermissions')
+    implementation project(':feature-webcompat')
+    implementation project(':feature-webcompat-reporter')
+    implementation project(':feature-webnotifications')
+    implementation project(':feature-addons')
+
+    implementation project(':ui-autocomplete')
+    implementation project(':ui-tabcounter')
+
+    // Add a dependency on service-glean to simplify the testing workflow
+    // for engineers that want to test Gecko metrics exfiltrated via the Glean
+    // SDK. See bug 1592935 for more context.
+    implementation project(':service-glean')
+    implementation project(':service-location')
+    implementation project(':service-digitalassetlinks')
+    implementation project(':service-sync-logins')
+
+    implementation project(':support-base')
+    implementation project(':support-utils')
+    implementation project(':support-ktx')
+    implementation project(':support-webextensions')
+    implementation project(':support-rustlog')
+
+    geckoImplementation project(':browser-engine-gecko')
+
+    implementation Dependencies.google_material
+
+    implementation Dependencies.kotlin_stdlib
+
+    implementation Dependencies.androidx_appcompat
+    implementation Dependencies.androidx_compose_ui_tooling
+    implementation Dependencies.androidx_compose_foundation
+    implementation Dependencies.androidx_compose_material
+    implementation Dependencies.androidx_core_ktx
+    implementation Dependencies.androidx_constraintlayout
+    implementation Dependencies.androidx_swiperefreshlayout
+    implementation Dependencies.androidx_localbroadcastmanager
+
+    debugImplementation Dependencies.leakcanary
+
+    testImplementation Dependencies.androidx_test_core
+    testImplementation Dependencies.androidx_test_junit
+    testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.testing_coroutines
+
+    androidTestImplementation project(':support-android-test')
+    androidTestImplementation Dependencies.androidx_test_core
+    androidTestImplementation Dependencies.androidx_test_runner
+    androidTestImplementation Dependencies.androidx_test_rules
+    androidTestImplementation Dependencies.androidx_test_junit
+    androidTestImplementation Dependencies.androidx_test_uiautomator
+    androidTestImplementation Dependencies.androidx_espresso_core
+    androidTestImplementation Dependencies.testing_leakcanary
+    androidTestImplementation Dependencies.testing_mockwebserver
+}
+
+preBuild.dependsOn updateBorderifyExtensionVersion
+preBuild.dependsOn updateTestExtensionVersion

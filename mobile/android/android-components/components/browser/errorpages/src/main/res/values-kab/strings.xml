@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Ɛreḍ tikkelt-nniḍen</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Tuttra ur tezmir ad temmed</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Ulac talɣut-nniḍen ɣef wugur-a neɣ tuccḍa-a ulac-itt akka tura.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Tuqqna taɣelsant ur teddi ara</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Asebter-agi i tebɣiḍ ad twaliḍ ur yizmir ara ad d-yettwasken, acku ur nemzir ara ad nessenqed tilawt n yisefka d-ittwaremsen</li>
+        <li>Ma ulac aɣilif nermes imawlan n usmel web ɣef wugur-agi.</li>
+</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Tuqqna taɣelsant ur teddi ara</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Ayagi yezmer ad yili d ugur n twila n uqeddac neɣ d albaɛḍ i yeɛarḍen ad yakwer tamagit n uqeddac-agi.</li>
+        <li>Ma yella teqqneḍ yakan ɣer uqeddac-agi, tuccḍa tezmer ahat ad tili d taskudant, u tzemreḍ ad tɛerḍeḍ i tikelt nniḍen ticki.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Talqayt…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Illa ahat amdan i yebɣan ad yakker tamagit n usmel, ur ilaq ara ad tkemleḍ.</label>
+<br><br>
+<label>Ismal ttaken-d ttbut ɣef tmagit-nsen s lmendad n tisirag. %1$s ur yumin ara <b>%2$s</b> acku tasiragt d tarussint, tasiragt tesêa azmul-is, neɣ aqeddac ur d-yuzin ara tisragt timeɣta.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Uɣal ɣer deffir (Yelha)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Qbel ugur u kemmel</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Asmel-a web yesra tuqqna taɣelsant.</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Asebter i tettaɛraḍeḍ ad t-twaliḍ ur yezmir ara ad d-yettwaskan acku asmel-a yesra tuqqna taɣelsant.</li>
+         <li>Ugur ad yili akked usmel-a web, ur yelli wayen ara t-tgeḍ i wakken ad yefru.</li>
+         <li>You can notify the website’s administrator about the problem.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Talqayt…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> ɣur-s tasertit n tɣellist HTTP Strict Transport Security (HSTS), ay-agi yemmal-d d akken <b>%2$s</b> izmer kan ad iqqen ɣur-s s tɣellist. Ur tezmireḍ ara ad ternuḍ tasureft akken ad twaliḍ asmel-agi.
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> ɣur-s tasertit n tɣellist HTTP Strict Transport Security (HSTS), ay-agi yemmal-d d akken <b>%2$s</b> izmer kan ad iqqen ɣur-s s tɣellist. Ur tezmireḍ ara ad ternuḍ tasureft akken ad twaliḍ asmel-agi.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Uɣal ɣer deffir</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Tuqqna teḥbes</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Iminig yeqqen akken iwata, maca tuqqna teḥbes deg usiweḍ n telɣut.Ma ulac aɣilif ɛreḍ tikkelt-nniḍen.</p>
+      <ul>
+        <li>Asmel yezmer yeḥbes kra n wakud neɣ ahat iɛebba taɛekkemt. Ɛreḍ tikkelt-nniden ticki.</li>
+        <li> Ma yella ur tezmireḍ ara ad tinigeḍ deg yismal meṛṛa, sefqed tuqqna-ik n yisefka neɣ Wi-Fi n yibenk-ik.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Tanzagt n uraǧu tezri</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>Asmel i tessutreḍ ur d-yerri ara tiririt i usuter n tuqqna, ihi iminig iseḥbes araǧu n tririt.</p>
+      <ul>
+        <li>Ahat aqeddac iɛebba ayen ur yezmir neɣ yeḥbes kra n wakud?Ɛreḍ tikkelt-nniḍen ticki.</li>
+        <li>Ur tezmireḍ ara ad tinigeḍ deg yismal-nniḍen? Sefqed tuqqna n uẓeṭṭa n uselkim-ik.</li>
+        <li>Aselkim-ik yettummesten s uɣrab n tmes neɣ apṛuksi? Yir iɣewwaṛen zemren ad sḥebsen tunigin deg  web.</li>
+        <li>Mazal uguren? Suter anedbal-ik n uẓeṭṭa neɣ asaǧǧaw-ik nternet ɣef wugar n tallelt.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Igguma ad iqqen</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>Ahat asmel ulac-it akka tura neγ iɛebba kra. Ɛreḍ tikkelt-nniḍen ticki.</li>
+        <li>Ma yella ur tezmireḍ ara ad tinigeḍ ɣer usmel, senqed tuqqna-ik n yisefka neɣ Wi-Fi n yibenk-ik.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Aqeddac yerra-d yir tiririt ur nettwaṛǧu ara</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Asmel yerra-d i tririt n uẓeṭṭa s tarrayt n nettwarǧi ara, ihi iminig ur yezmir ara ad ikemmel.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Asebter ur yettuwelleh ara akken iwata</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>Iminig-ik yeḥbes araǧu n tririt n usmel. Asmel iwehha tuttra s tarrayt ara tt-yeǧǧen ur tettaweḍ ara.</p>
+      <ul>
+        <li>Ahat tsenseḍ neɣ tesweḥleḍ inagan n tuqqna i ilaqen deg usmel-agi?</li>
+        <li> Ma yella ugur ur yefri ara ticki tremdeḍ inagan n tuqqna, ahat ugur ad yili deg twila n uqeddac mačči deg uselkim-ik.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Askar war tuqqna</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Iminig iteddu deg uskar war tuqqna ihi ur yezmir ara ad yeqqen ɣer tansa i d-yettwammlen.</p>
+      <ul>
+        <li>Aselkim-ik iqqen ɣer uẓeṭṭa urmid?</li>
+        <li>Sit ɣef "Ɛreḍ tikkelt-nniḍen" akken ad tuɣaleḍ ɣer uskar usrid sakin sali-d asebter-inek tikkelt-nniḍen.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Tabburt tezzem ɣef sebba n tɣellist</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>Tansa d-ittusutren temmal-d tabburt (amedya, <q> mozilla.org:80</q> i tebburt 80 ɣef mozilla.org) i yettuseqdacen deg<em>umnaḍ</em>-nniḍen war tunigin deg web. Iminig isefsex tuttra n ummesten-ik d tɣellist-ik.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Tuqqna tettuwennez</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Asiweḍ  n telɣut ɣer uẓeṭṭa yeḥbes deg uɛraḍ n tuqqna. Ma ulac aɣilif ɛreḍ tikkelt-nniḍen.</p>
+      <ul>
+        <li>Asmel yezmer yeḥbes kra n wakud neɣ ahat iɛebba taɛekkemt. Ɛreḍ tikkelt-nniden ticki.</li>
+        <li> Ma yella ur tezmireḍ ara ad tinigeḍ deg yismal meṛṛa, sefqed tuqqna-ik n yisefka neɣ Wi-Fi n yibenk-ik.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Tawsit n ufaylu mačči d taɣelsant</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>Ma ulac aɣilif, nermes imawlan n usmel web ɣef wugur-agi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Tuccḍa d yekkan seg ugbur yerẓen</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Asebter-agi i tebɣiḍ ad twaliḍ ur yizmir ara ad ittwasken, acku tella tuccḍa di tuzzna n isefka.</p>
+      <ul>
+        <li>Ma ulac aɣilif nermes imawlan n usmel web ɣef ugur-agi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Yeɣli ugbur</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Asebter-agi i tebɣiḍ ad twaliḍ ur yizmir ara ad ittwasken, acku tella tuccḍa di tuzzna n isefka.</p>
+      <ul>
+        <li>Ma ulac aɣilif nermes imawlan n usmel web ɣef ugur-agi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Tuccḍa n usettengel n ugbur</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Asebter-agi i tebɣiḍ ad twaliḍ ur yizmir ara ad ittwasken, acku iseqdac tawsit usekkussem tarameɣtut neɣ ur yettusefraken ara.</p>
+      <ul>
+        <li>Ma ulac aɣilif nermes imawlan n usmel web ɣef ugur-agi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Ulac tansa</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Iminig ur izmir ara ad d-yaf aqeddac asenneftaɣ i tansa i d-ttunefken.</p>
+      <ul>
+        <li>Senqed tansa ɣef tuccḍiwin n tira am
+          <strong>ww</strong>.amedya.com deg umḍiq n
+          <strong>www</strong>.amedya.com.</li>
+        <li>Ma tzemreḍ ad tessaliḍ yal asebter, wali isefka n yibenk-ik neɣ tuqqna Wi-Fi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Ulac tuqqna Internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Senqed tuqqna n uẓeṭṭa-ik neɣ ɛreḍ asali n usebter deg kra n wakud.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Smiren</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Tansa tarameɣtut</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Tansa i d-tmuddeḍ ur tella ara deg umasal ittwassnen. Ma ulac aɣilif senqed afeggag n tansa akken ad tesseɣtiḍ tuccḍiwin sakin ɛreḍ tikkelt-nniḍen.</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Tansa-yagi d tarameɣtut</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Tansiwin web ttwarunt am <strong>http://www.example.com/</strong></li>
+        <li>Wali ma yella tseqdaceḍ amgal islacen (i.e. <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Aneggaf arussin</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Tansa temmaled aneggaf (amedya <q>wxyz://</q>) arussin n iminig, ihi iminig ur yezmir ara ad iqqen ɣer usmel.</p>
+      <ul>
+        <li>Tettaɛraḍeḍ ad tkecmeḍ ɣer tanfiwin n wallalen n teywalt neɣ araḍris? Senqed asmel ma yesra ayen nniḍen.</li>
+        <li>Kra n ineggafen sran aseɣẓan neɣ azegrir wis kraḍ send ad ten-yissin iminig.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Ulac afaylu</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Ahat afaylu ittusnifel, ittwakkes  neɣ ittusenkez?</li>
+        <li>Llant tuccḍiwin n teɣdira, isekkilen imeqqṛanen, neɣ tuccḍiwin nniḍen?</li>
+        <li>Ɣur-k tasiregt ara iqadden ɣef ufaylu agi?</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Anekcum ɣer ufaylu yegdel</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Ahat yettwakkes, yettusenkez, neɣ tisirag uggint anekcum.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Tuqqna yugi-tt uqeddac apṛuksi</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Iminig-inek ittuswel akken ad iseqdec aqeddac apṛuksi, acu kan apṛuksi yuggi tuqqna.</p>
+      <ul>
+        <li>Tawila n uminig inek d tameɣtut? Senqed iɣewwaṛen u ɛreḍ tikelt nniḍen.</li>
+        <li>Aseɣẓan agrawan isirig tuqqniwin seg uẓeṭṭa-yagi?</li>
+        <li>Zgan ɣur-k wuguren? Nermes anedbal-ik n unagraw neɣ aseǧǧaw-ik n Internet i tallalt.</li>
+      </ul>
+]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Ulac aqeddac apṛuksi</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>Iminig-inek ittuswel akken ad iseqdec aqeddac apṛuksi, acukan apṛksi ulac-it.</p>
+      <ul>
+        <li>Tawila n uminig-inek d tameɣtut? Senqed iɣewwaṛen sakin ɛreḍ tikkelt-nniḍen.</li>
+        <li>Aselkim-inek iqqen ɣer uẓeṭṭa urmid?</li>
+        <li>Zgan ɣur-k wuguren? Nermes anedbal-ik n unagraw neɣ aseǧǧaw-ik n Internet i tallelt.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Ugur n yir asmel</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      
+<p>Asmel web illan deg tansa %1$s ittwammel d akken d asmel n uẓḍam. Ihi ittusewḥel akken llan ismenyifen-inek n tɣellist.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Ugur n usmel ur nerǧi ara</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Asmel web illan deg tansa %1$s ittwammel d akken d asmel n uẓḍam. Ihi ittusewḥel akken llan ismenyifen-ik n tɣellist.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Ugur n usmel aqesḥan</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Asmel web %1$s ittwammel d akken d asmel diri-t i teγlist. Ihi ittusewḥel akken llan ismenyifen-ik n tɣellist.</p>
+]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Ugur n usmel n ukellex</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Asmel web illan deg tansa %1$s ittwammel d akken d asmel n ukellex. Ihi ittusewḥel akken llan ismenyifen-inek n tɣellist.</p>
+    ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Ulac taɣellist n usmel</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Tremdeḍ askar HTTPS-Only  i tɣellist ifazen, yerna ulac lqem n HTTPS n <em>%1$s</em>.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Kemmel ɣer usmel HTTP</string>
+</resources>

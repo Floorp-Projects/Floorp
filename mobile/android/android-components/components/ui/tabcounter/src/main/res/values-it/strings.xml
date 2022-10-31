@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="mozac_tab_counter_open_tab_tray_single">Aperta 1 scheda. Tocca per cambiare scheda.</string>
+    <!-- Message announced to the user when tab tray is selected with multiple tabs -->
+    <string name="mozac_tab_counter_open_tab_tray_plural">Aperte %1$s schede. Tocca per cambiare scheda.</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="mozac_browser_menu_new_tab">Nuova scheda</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="mozac_browser_menu_new_private_tab">Nuova scheda anonima</string>
+    <!-- Browser menu button to close tab. Closes the current session when pressed. -->
+    <string name="mozac_close_tab">Chiudi scheda</string>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">Duplica scheda</string>
+    <!-- Content description of the tab counter toolbar button -->
+    <string name="mozac_tab_counter_content_description">Il pulsante nella barra degli strumenti con il numero di schede</string>
+</resources>

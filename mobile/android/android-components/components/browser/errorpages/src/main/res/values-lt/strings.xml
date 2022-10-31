@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Bandyti dar kartą</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Nepavyko atlikti užklausos</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Šiuo metu apie šią problemą ar klaidą daugiau informacijos nėra.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Saugaus ryšio užmegzti nepavyko</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Svetainė, kurią bandote atverti, negali būti įkelta, nes nepavyko patikrinti gaunamų duomenų autentiškumo.</li>
+        <li>Prašome informuoti svetainės kūrėjus apie šią problemą.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Saugaus ryšio užmegzti nepavyko</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Tai gali būti serverio konfigūracijos problema, arba kažkieno bandymas apsimesti serveriu.</li>
+        <li>Jei anksčiau esate sėkmingai prisijungę prie šio serverio, ši klaida gali būti laikina, tad pabandykite vėliau.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Papildomai…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Kažkas gali bandyti apsimesti svetaine, tad patartume jos neatverti.</label>
+        <br><br>
+        <label>Svetainės patvirtina savo tapatumą pateikdamos liudijimus. „%1$s“ nepasitikti <b>%2$s</b>, nes liudijimą išdavusi įstaiga nėra žinoma, liudijimas yra pasirašytas pačių svetainės kūrėjų, arba serveris neperduoda teisingų tarpinių liudijimų.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Grįžti (rekomenduojama)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Priimti riziką ir tęsti</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Ryšys buvo nutrauktas</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Naršyklė sėkmingai užmezgė ryšį, tačiau prisijungimas buvo nutrauktas perduodant duomenis. Bandykite dar kartą.</p>
+      <ul>
+        <li>Svetainė gali būti laikinai nepasiekiama arba turi daug lankytojų. Pabandykite dar kartą šiek tiek vėliau.</li>
+        <li>Jeigu negalite įkelti jokio tinklalapio, patikrinkite savo įrenginio mobilųjį arba belaidį ryšį.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Ryšiui skirtas laikas baigėsi</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Svetainė neatsakė į bandymą užmegzti ryšį, o naršyklės laukimo limitas  baigėsi.</p>
+      <ul>
+        <li>Svetainė gali turėti didelį lankytojų srautą, arba laikinų nesklandumų. Prašome bandyti vėliau.</li>
+        <li>Jei nepavyksta įkelti ir kitų tinklalapių, patikrinkite įrenginio ryšį su tinklu.</li>
+        <li>Jei jūsų įrenginys ar tinklas yra apsaugotas užkarda, arba jungiamasi per įgaliotąjį serverį, tai įsitikinkite, kad parinktos tinkamos nuostatos.</li>
+        <li>Jei nesklandumo pašalinti nepavyksta, kreipkitės į tinklo administratorių ar interneto paslaugų teikėją.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Nepavyko užmegzti ryšio</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>Svetainė gali būti laikinai nepasiekiama. Pabandykite šiek tiek vėliau.</li>
+        <li>Jeigu nepavyksta įkelti jokio tinklalapio, patikrinkite savo įrenginio duomenų arba belaidį ryšį.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Netikėtas serverio atsakas</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Svetainė netikėtu būdu atsakė į tinklo užklausą, tad naršyklė negali tęsti darbo.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Netinkamas tinklalapio peradresavimas</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Naršyklė nutraukė ryšį, kadangi svetainė cikliškai peradresuoja užklausas sau pačiai.</p>
+      <ul>
+        <li>Ši klaida galėjo įvykti dėl to, kad naršyklė nepriima svetainės slapukų.</li>
+        <li>Jei leidus priimti svetainės slapukus nesklandumas išlieka, tai jo priežastis gali būti ne jūsų kompiuteryje, o serverio sąrankoje.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Dirbama neprisijungus prie tinklo</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Naršyklė yra atjungta nuo tinklo ir negali užmegzti ryšio su užklaustu objektu.</p>
+      <ul>
+        <li>Ar jūsų įrenginys prijungtas prie veikiančio tinklo?</li>
+        <li>Spustelėkite „Bandyti dar kartą“, kad būtų prisijungta prie tinklo ir pabandyta įkelti tinklalapį iš naujo.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Saugumo tikslais apribota prieiga prie šio prievado</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Adreso, prie kurio bandoma prisijungti, nurodytas numeris prievado (pvz., <q>mozilla.org:80</q> – mozilla.org su prievadu 80), paprastai naudojamo ne naršymui saityne, o <em>kitiems</em> tikslams. Kad užtikrintų jūsų saugumą, naršyklė atmetė šią užklausą.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Ryšys nutrūko</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Prisijungimas buvo nutrauktas bandant užmegzti ryšį. Bandykite dar kartą.</p>
+      <ul>
+        <li>Svetainė gali būti laikinai nepasiekiama, arba turi daug lankytojų. Pabandykite dar kartą šiek tiek vėliau.</li>
+        <li>Jeigu negalite įkelti jokio tinklalapio, patikrinkite savo įrenginio mobilųjį arba belaidį ryšį.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Nesaugus failo tipas</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Praneškite apie šią problemą svetainės prižiūrėtojams.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Klaida: duomenys pažeisti</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Tinklalapio, kurį bandote atverti, parodyti negalima, nes perduodant duomenis įvyko klaida.</p>
+      <ul>
+        <li>Praneškite apie šią problemą svetainės prižiūrėtojams.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Turinio problema</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Tinklalapio, kurį bandote atverti, parodyti negalima, nes perduodant duomenis įvyko klaida,</p>
+      <ul>
+        <li>Praneškite apie šią problemą svetainės prižiūrėtojams.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Kodavimo klaida</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Tinklalapis, kurį bandote atverti, negali būti parodytas, nes naudoja nežinomą arba nepalaikomą suspaudimo būdą.</p>
+      <ul>
+        <li>Praneškite apie šią problemą svetainės prižiūrėtojams.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Nerastas serveris</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Naršyklei nepavyko rasti serverio nurodytu adresu.</p>
+      <ul>
+        <li>Patikrinkite, ar rinkdami adresą nepadarėte klaidų, pavyzdžiui,
+          <strong>ww</strong>.example.com vietoje
+          <strong>www</strong>.example.com.</li>
+        <li>Jei nepavyksta įkelti ir kitų tinklalapių, patikrinkite savo įrenginio duomenų ar belaidį ryšį.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Nėra ryšio su internetu</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Patikrinkite savo tinklo ryšį, arba pabandykite įkelti tinklalapį iš naujo.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Įkelti iš naujo</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Neteisingas adresas</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Neteisingas adreso formatas. Patikrinkite adresą adreso lauke ir bandykite dar kartą.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Neteisingas adresas</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Svetainių adresai dažniausiai rašomi taip: <strong>http://www.example.com/</strong></li>
+        <li>Įsitikinkite, kad naudojate pasviruosius brūkšnius (į priekį): <strong>/</strong>.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Nežinomas protokolas</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Adrese nurodytas protokolas (pvz., <q>wxyz://</q>) naršyklei nežinomas, todėl svetainės įkėlimas nutrauktas.</p>
+      <ul>
+        <li>Jei bandote prisijungti prie įvairialypės terpės išteklių, patikrinkite, ar nėra tam specialių reikalavimų.</li>
+        <li>Kai kurių protokolų atvėrimui gali būti reikalinga papildoma programinė įranga arba naršyklės papildiniai.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Nerastas failas</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Patikrinkite, ar failas nebuvo pervadintas, perkeltas, ar pašalintas.</li>
+        <li>Patikrinkite, ar failo pavadinime nėra rinkimo klaidų, pvz., didžiosios raidės pakeistos mažosiomis.</li>
+        <li>Patikrinkite, ar turite leidimą šį failą atverti.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Priėjimas prie failo uždraustas</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Jis galėjo būti pašalintas, perkeltas, arba priėjimą riboja failo leidimai.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Įgaliotasis serveris atmetė ryšį</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Naršyklės nuostatose nurodytas įgaliotasis serveris, bet jis atmetė ryšį.</p>
+      <ul>
+        <li>Patikrinkite įgaliotojo serverio nuostatas ir bandykite vėl.</li>
+        <li>Įsitikinkite, ar įgaliotasis serveris leidžia prisijungimus iš jūsų tinklo.</li>
+        <li>Jei nesklandumo pašalinti nepavyksta, kreipkitės į tinklo prižiūrėtoją ar interneto paslaugų teikėją.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Nerastas įgaliotasis serveris</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Naršyklės nuostatose nurodytas įgaliotasis serveris, tačiau jo nepavyko rasti.</p>
+      <ul>
+        <li>Patikrinkite įgaliotojo serverio nuostatas ir bandykite vėl.</li>
+        <li>Įsitikinkite, ar įrenginys yra prijungtas prie veikiančio tinklo.</li>
+        <li>Jei nesklandumo pašalinti nepavyksta, kreipkitės į tinklo prižiūrėtoją ar interneto paslaugų teikėją.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problema dėl kenkėjiškos svetainės</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Yra pranešta, jog svetainė adresu %1$s yra kenkėjiška, tad ji užblokuota remiantis jūsų saugumo nuostatomis.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problema dėl nepageidaujamos svetainės</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Yra pranešta, jog svetainė adresu %1$s yra kenkėjiška, tad ji užblokuota remiantis jūsų saugumo nuostatomis.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problema dėl žalingos svetainės</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Yra pranešta, jog svetainė adresu %1$s yra kenkėjiška, tad ji užblokuota remiantis jūsų saugumo nuostatomis.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problema dėl apgaulingos svetainės</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Yra pranešta, jog svetainė adresu %1$s yra apgaulinga, tad ji užblokuota remiantis jūsų saugumo nuostatomis.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Saugi svetainė nepasiekiama</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Įjungėte tik HTTPS veikseną išplėstam saugumui, o <em>%1$s</em> HTTPS versija nėra pasiekiama.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Eiti į HTTP svetainę</string>
+</resources>

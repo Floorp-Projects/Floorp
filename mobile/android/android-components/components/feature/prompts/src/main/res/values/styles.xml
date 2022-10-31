@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <style name="MozTextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/mozacBoxStrokeColor</item>
+        <item name="boxStrokeWidth">2dp</item>
+        <item name="android:theme">@style/MozacPromptLoginTextInputLayoutCursorAppearance</item>
+    </style>
+    <style name="MozDialogStyle" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+    <style name="MozacPromptLoginTextInputLayoutCursorAppearance" parent="ThemeOverlay.MaterialComponents.TextInputEditText.OutlinedBox">
+        <item name="colorControlActivated">?mozacPromptLoginEditTextCursorColor</item>
+    </style>
+</resources>

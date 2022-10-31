@@ -1,0 +1,445 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+import org.gradle.internal.logging.text.StyledTextOutput.Style
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+import static org.gradle.api.tasks.testing.TestResult.ResultType
+
+buildscript {
+    repositories {
+        if (project.hasProperty("googleRepo")) {
+            maven {
+                name "Google"
+                url project.property("googleRepo")
+                allowInsecureProtocol true // Local Nexus in CI uses HTTP
+            }
+        } else {
+            google()
+        }
+
+        if (project.hasProperty("centralRepo")) {
+            maven {
+                name "MavenCentral"
+                url project.property("centralRepo")
+                allowInsecureProtocol true // Local Nexus in CI uses HTTP
+            }
+        } else {
+            mavenCentral()
+        }
+    }
+
+    dependencies {
+        classpath Dependencies.tools_androidgradle
+        classpath Dependencies.tools_kotlingradle
+    }
+}
+
+plugins {
+    id("io.gitlab.arturbosch.detekt").version("1.19.0")  // Check version number in `Versions.detekt` (Dependencies.kt)
+}
+
+allprojects {
+    repositories {
+        if (project.hasProperty("googleRepo")) {
+            maven {
+                name "Google"
+                url project.property("googleRepo")
+                allowInsecureProtocol true // Local Nexus in CI uses HTTP
+            }
+        } else {
+            google()
+        }
+
+        if (project.hasProperty("centralRepo")) {
+            maven {
+                name "MavenCentral"
+                url project.property("centralRepo")
+                allowInsecureProtocol true // Local Nexus in CI uses HTTP
+            }
+        } else {
+            mavenCentral()
+        }
+
+        maven {
+            name "Mozilla"
+            url "https://maven.mozilla.org/maven2"
+        }
+    }
+}
+
+subprojects {
+    apply plugin: 'jacoco'
+
+    // Enable Kotlin warnings as errors for all modules
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+        kotlinOptions.allWarningsAsErrors = true
+    }
+
+    project.configurations.all {
+        // Dependencies can't depend on a different major version of Glean than A-C itself.
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.mozilla.telemetry'
+                    && details.requested.name.contains('glean') ) {
+                def requested = details.requested.version.tokenize(".")
+                def defined = Versions.mozilla_glean.tokenize(".")
+                // Check the major version
+                if (requested[0] != defined[0]) {
+                    throw new AssertionError("Cannot resolve to a single Glean version. Requested: ${details.requested.version}, A-C uses: ${Versions.mozilla_glean}")
+                } else {
+                    // Enforce that all (transitive) dependencies are using the defined Glean version
+                    details.useVersion Versions.mozilla_glean
+                }
+            }
+        }
+
+        // Enforce that all (transitive) dependencies are using the same support library version as we do.
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'com.android.support'
+                    && !details.requested.name.contains('multidex') ) {
+                details.useVersion Versions.support_libraries
+            }
+        }
+
+        resolutionStrategy.capabilitiesResolution.withCapability("org.mozilla.telemetry:glean-native") {
+            def toBeSelected = candidates.find { it.id instanceof ModuleComponentIdentifier && it.id.module.contains('geckoview') }
+            if (toBeSelected != null) {
+                select(toBeSelected)
+            }
+            because 'use GeckoView Glean instead of standalone Glean'
+        }
+    }
+
+
+    // Allow local appservices substitution in each subproject.
+    def appServicesSrcDir = null
+    if (gradle.hasProperty('localProperties.autoPublish.application-services.dir')) {
+        appServicesSrcDir = gradle.getProperty('localProperties.autoPublish.application-services.dir')
+    } else if (gradle.hasProperty('localProperties.branchBuild.application-services.dir')) {
+        appServicesSrcDir = gradle.getProperty('localProperties.branchBuild.application-services.dir')
+    }
+    if (appServicesSrcDir) {
+        if (appServicesSrcDir.startsWith("/")) {
+            apply from: "${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
+        } else {
+            apply from: "${rootProject.projectDir}/${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
+        }
+    }
+
+    // Allow local Glean substitution in each subproject.
+    if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
+        ext.gleanSrcDir = gradle."localProperties.autoPublish.glean.dir"
+        apply from: "${rootProject.projectDir}/${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
+    }
+
+    if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcdir')) {
+        if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopobjdir')) {
+            ext.topobjdir = gradle."localProperties.dependencySubstitutions.geckoviewTopobjdir"
+        }
+        ext.topsrcdir = gradle."localProperties.dependencySubstitutions.geckoviewTopsrcdir"
+        apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
+    }
+
+    // Define a reusable task for updating the version in manifest.json for modules that package
+    // a web extension. We automate this to make sure we never forget to update the version, either
+    // in local development or for releases. In both cases, we want to make sure the latest version
+    // of all extensions (including their latest changes) are installed on first start-up.
+    ext.updateExtensionVersion = { task, extDir ->
+        configure(task) {
+            from extDir
+            include 'manifest.template.json'
+            rename { 'manifest.json' }
+            into extDir
+
+            def values = ['version': rootProject.ext.config.componentsVersion + "." + new Date().format('MMddHHmmss')]
+            inputs.properties(values)
+            expand(values)
+        }
+    }
+
+    afterEvaluate {
+        if (it.hasProperty('android')) {
+            jacoco {
+                toolVersion = "0.8.8"
+            }
+
+            // Format test output
+            tasks.matching {it instanceof Test}.configureEach() {
+                systemProperty "robolectric.logging", "stdout"
+                systemProperty "logging.test-mode", "true"
+                systemProperty "javax.net.ssl.trustStoreType", "JKS"
+
+                testLogging.events = []
+
+                def out = services.get(StyledTextOutputFactory).create("an-ouput")
+
+                beforeSuite { descriptor ->
+                    if (descriptor.getClassName() != null) {
+                        out.style(Style.Header).println("\nSUITE: " + descriptor.getClassName())
+                    }
+                }
+
+                beforeTest { descriptor ->
+                    out.style(Style.Description).println("  TEST: " + descriptor.getName())
+                }
+
+                onOutput { descriptor, event ->
+                    logger.lifecycle("    " + event.message.trim())
+                }
+
+                afterTest { descriptor, result ->
+                    switch (result.getResultType()) {
+                        case ResultType.SUCCESS:
+                            out.style(Style.Success).println("  SUCCESS")
+                            break
+
+                        case ResultType.FAILURE:
+                            out.style(Style.Failure).println("  FAILURE")
+                            logger.lifecycle("", result.getException())
+                            break
+
+                        case ResultType.SKIPPED:
+                            out.style(Style.Info).println("  SKIPPED")
+                            break
+                    }
+                    logger.lifecycle("")
+                }
+            }
+
+            dependencies {
+                lintChecks project(':tooling-lint')
+            }
+
+            android {
+                testOptions {
+                    unitTests {
+                        includeAndroidResources = true
+                    }
+                }
+
+                lintOptions {
+                    warningsAsErrors true
+                    abortOnError (project.name != "support-test")
+
+                            // With our L10N process its totally possible to have missing or (temporarily) extra translations.
+                    disable 'MissingTranslation',
+                            'ExtraTranslation',
+                            // We do not want to enforce this as a generic rule for all languages (see #6117, #6056, #6118)
+                            'TypographyEllipsis',
+                            // https://github.com/mozilla-mobile/android-components/issues/10641
+                            'UnspecifiedImmutableFlag',
+                            // https://github.com/mozilla-mobile/android-components/issues/10643
+                            'UnusedResources',
+                            // "We do not impose rules on locales"
+                            // https://github.com/mozilla-mobile/android-components/pull/11069
+                            'TypographyDashes'
+                }
+
+                packagingOptions {
+                    exclude 'META-INF/atomicfu.kotlin_module'
+                    exclude 'META-INF/AL2.0'
+                    exclude 'META-INF/LGPL2.1'
+
+                    // Required dependencies using byte-buddy; remove after this is
+                    // fixed by: https://issuetracker.google.com/issues/170131605
+                    exclude "META-INF/licenses/ASM"
+                    pickFirst "win32-x86-64/attach_hotspot_windows.dll"
+                    pickFirst "win32-x86/attach_hotspot_windows.dll"
+                }
+
+                aaptOptions {
+                    ignoreAssetsPattern "manifest.template.json"
+                }
+
+                compileOptions {
+                    sourceCompatibility 1.8
+                    targetCompatibility 1.8
+                }
+
+                tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+                    kotlinOptions {
+                        jvmTarget = "1.8"
+                        freeCompilerArgs += [
+                            "-opt-in=kotlin.RequiresOptIn"
+                        ]
+                    }
+                }
+            }
+
+            configurations {
+                // There's an interaction between Gradle's resolution of dependencies with different types
+                // (@jar, @aar) for `implementation` and `testImplementation` and with Android Studio's built-in
+                // JUnit test runner.  The runtime classpath in the built-in JUnit test runner gets the
+                // dependency from the `implementation`, which is type @aar, and therefore the JNA dependency
+                // doesn't provide the JNI dispatch libraries in the correct Java resource directories.  I think
+                // what's happening is that @aar type in `implementation` resolves to the @jar type in
+                // `testImplementation`, and that it wins the dependency resolution battle.
+                //
+                // A workaround is to add a new configuration which depends on the @jar type and to reference
+                // the underlying JAR file directly in `testImplementation`.  This JAR file doesn't resolve to
+                // the @aar type in `implementation`.  This works when invoked via `gradle`, but also sets the
+                // correct runtime classpath when invoked with Android Studio's built-in JUnit test runner.
+                // Success!
+                jnaForTest
+            }
+
+            dependencies {
+                jnaForTest Dependencies.thirdparty_jna
+                testImplementation files(configurations.jnaForTest.copyRecursive().files)
+            }
+
+            if (project.hasProperty("coverage") && project.name != "support-test") {
+                android.buildTypes.all { buildType ->
+                    tasks.withType(Test).configureEach() {
+                        jacoco {
+                            includeNoLocationClasses = true
+                            excludes = ['jdk.internal.*']
+                        }
+
+                        finalizedBy { "jacoco${buildType.name.capitalize()}TestReport" }
+                    }
+
+                    tasks.register("jacoco${buildType.name.capitalize()}TestReport", JacocoReport) {
+                        reports {
+                            xml.enabled = true
+                            html.enabled = true
+                        }
+
+                        def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
+                                          '**/*Test*.*', 'android/**/*.*', '**/*$[0-9].*']
+                        def kotlinDebugTree = fileTree(dir: "$project.buildDir/tmp/kotlin-classes/${buildType.name}", excludes: fileFilter)
+                        def javaDebugTree = fileTree(dir: "$project.buildDir/intermediates/classes/${buildType.name}", excludes: fileFilter)
+                        def mainSrc = "$project.projectDir/src/main/java"
+
+                        sourceDirectories.setFrom(files([mainSrc]))
+                        classDirectories.setFrom(files([kotlinDebugTree, javaDebugTree]))
+                        getExecutionData().setFrom(fileTree(project.buildDir).include([
+                                "jacoco/test${buildType.name.capitalize()}UnitTest.exec"
+                        ]))
+                    }
+                }
+
+                android {
+                    buildTypes {
+                        debug {
+                            testCoverageEnabled true
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
+
+detekt {
+    input = files("$projectDir/components", "$projectDir/buildSrc", "$projectDir/samples")
+    config = files("$projectDir/config/detekt.yml")
+    baseline = file("$projectDir/config/detekt-baseline.xml")
+
+    failFast = false
+
+    reports {
+        html {
+            enabled = true
+            destination = file("$projectDir/build/reports/detekt.html")
+        }
+        xml {
+            enabled = false
+        }
+        txt {
+            enabled = false
+        }
+    }
+}
+
+tasks.withType(io.gitlab.arturbosch.detekt.Detekt).configureEach() {
+    // Custom detekt rules should be build before
+    // See https://arturbosch.github.io/detekt/extensions.html#pitfalls
+    dependsOn(":tooling-detekt:assemble")
+
+    autoCorrect = true
+
+    exclude "**/build.gradle.kts"
+    exclude "**/src/androidTest/**"
+    exclude "**/src/iosTest/**"
+    exclude "**/src/test/**"
+    exclude "**/test/src/**"
+    exclude "**/build/**"
+    exclude "**/resources/**"
+    exclude "**/tmp/**"
+    exclude "**/tooling/fetch/tests/**"
+    exclude "**/tooling/fetch-tests/**"
+}
+
+// Apply same path exclusions as for the main task
+tasks.withType(io.gitlab.arturbosch.detekt.DetektCreateBaselineTask).configureEach() {
+    exclude "**/src/androidTest/**"
+    exclude "**/src/test/**"
+    exclude "**/test/src/**"
+    exclude "**/build/**"
+    exclude "**/resources/**"
+    exclude "**/tmp/**"
+    exclude "**/tooling/fetch/tests/**"
+    exclude "**/tooling/fetch-tests/**"
+}
+
+configurations {
+    ktlint
+}
+
+dependencies {
+    ktlint("com.pinterest:ktlint:0.47.0") {
+        attributes {
+            attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
+        }
+    }
+    detektPlugins project(":tooling-detekt")
+}
+
+tasks.register("ktlint", JavaExec) {
+    group = "verification"
+    description = "Check Kotlin code style."
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "components/**/*.kt" , "samples/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt", "--baseline=ktlint-baseline.xml"
+}
+
+apply plugin: GitHubPlugin
+
+tasks.register("ktlintFormat", JavaExec) {
+    group = "formatting"
+    description = "Fix Kotlin code style deviations."
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "-F", "components/**/*.kt" , "samples/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt", "--baseline=ktlint-baseline.xml"
+}
+
+tasks.register("listRepositories") {
+    doLast {
+        println "Repositories:"
+        project.repositories.each { println "Name: " + it.name + "; url: " + it.url }
+   }
+}
+
+tasks.register("githubBuildDetails", GithubDetailsTask) {
+    text = """### Test result files
+
+- [Test Coverage]({reportsUrl}/jacoco/jacocoReleaseTestReport/html/index.html)
+- [Unit Tests]({reportsUrl}/tests/testReleaseUnitTest/index.html)
+- [Android Lint]({reportsUrl}/lint-results-release.html)"""
+}
+
+tasks.register("githubLintDetektDetails", GithubDetailsTask) {
+    text = """### Test result files
+
+- [Detekt Results]({reportsUrl}/detekt.html)"""
+}
+
+tasks.register("testToolsDir", Exec) {
+    group = "verification"
+    description = "Run tests in the tools/ directory."
+    workingDir = "tools"
+    commandLine = ["python3", "test_list_compatible_dependency_versions.py"]
+}

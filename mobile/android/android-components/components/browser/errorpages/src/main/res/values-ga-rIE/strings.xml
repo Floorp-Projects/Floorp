@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">Fadhb i rith lódáil an leathanaigh</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Bain Triail Eile As</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">Ar Ais</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Ní féidir an t-iarratas a chríochnú</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Níl eolas breise faoin bhfadhb nó faoin earráid seo ar fáil faoi láthair.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Níorbh Fhéidir Ceangal Slán a Bhunú</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Ní féidir an leathanach atá tú ag iarraidh amharc air a thaispeáint toisc nach féidir fírinne na sonraí a fuarthas a fhíordheimhniú.</li>
+        <li>Téigh i dteagmháil le húinéirí an tsuímh Ghréasáin leis an fhadhb seo a chur in iúl dóibh.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Níorbh Fhéidir Ceangal Slán a Bhunú</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>B\'fhéidir gur fadhb i gcumraíocht an fhreastalaí atá ann, nó b\'fhéidir go bhfuil duine éigin ag déanamh aithrise ar an bhfreastalaí.</li>
+        <li>Má éiríonn leat ceangal leis an bhfreastalaí seo de ghnáth, b\'fhéidir gur fadhb shealadach í agus gur féidir leat iarracht a dhéanamh níos déanaí.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Ardroghanna…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Seans go bhfuil duine éigin ag dul i mbréagriocht ar an suíomh, agus níor chóir duit leanúint ar aghaidh.</label>
+        <br><br>
+        <label>Úsáideann suímh Ghréasáin teastais mar chruthúnas aitheantais. Níl muinín ag %1$s as <b>%2$s</b> toisc nach bhfuil eisitheoir an teastais aitheanta, go bhfuil an teastas féinsínithe, nó nach bhfuil an freastalaí ag soláthar na teastais idirmheánacha chearta.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Amach As Seo (Molta)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Tuigim an Baol. Ar Aghaidh Linn!</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Idirbhriseadh an ceangal</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>D\'éirigh leis an mbrabhsálaí ceangal a bhunú, ach briseadh isteach air agus na sonraí á n-aistriú. Bain triail eile as.</p>
+      <ul>
+        <li>Seans go bhfuil fadhb shealadach leis an suíomh, go bhfuil sé róghnóthach faoi láthair. Bain triail eile as i gceann nóiméid.</li>
+        <li>Mura bhfuil tú in ann aon leathanach a lódáil, déan seiceáil ar do cheangal sonraí nó Wi-Fi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Ceangal imithe thar am</string>
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>Níor fhreagair an suíomh iarrtha iarratas ceangail agus tá an brabhsálaí éirithe as bheith ag fanacht ar fhreagra.</p>
+      <ul>
+        <li>An féidir go bhfuil éileamh mór nó fadhb shealadach ar an bhfreastalaí? Triail arís é níos déanaí.</li>
+        <li>Mura bhfuil tú in ann suímh eile a bhrabhsáil, déan seiceáil ar cheangal líonra do ríomhaire.</li>
+        <li>An bhfuil do ríomhaire nó do líonra á chosaint ag seachfhreastalaí nó balla dóiteáin? D\'fhéadfadh socruithe mícheart cur isteach ar bhrabhsáil.</li>
+        <li>An bhfuil fadhbanna agat fós? Téigh i dteagmháil le do riarthóir líonra nó le do sholáthraí Idirlín le haghaidh cabhrach.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Ní féidir ceangal a bhunú</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>D\'fhéadfadh nach bhfuil fáil ar an suíomh nó go bhfuil sé róghnóthach faoi láthair. Bain triail eile as ar ball beag.</li>
+        <li>Mura bhfuil tú in ann leathanach ar bith a lódáil, cinntigh ceangal sonraí nó Wi-Fi do ghléis.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Freagra gan súil leis ón bhfreastalaí</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Ní rabhthas ag súil leis an bhfreagra ar an iarratas líonra a bhfuarthas ón suíomh agus ní féidir leis an mbrabhsálaí leanúint.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Níl an leathanach ag atreorú i gceart</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>Tá an brabhsálaí éirithe as bheith ag iarraidh an mhír iarrtha a fháil. Tá an suíomh ag atreorú an iarratais i slí nach gcríochnóidh choíche.</p>
+      <ul>
+        <li>An bhfuil fianáin atá riachtanach don suíomh seo díchumasaithe nó coiscthe agat?</li>
+        <li>Mura bhfuil an fhadhb réitithe tar éis duit glacadh le fianáin an tsuímh, gach seans nach le do ríomhaire a bhaineann an cheist ach le cumraíocht an fhreastalaí.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Mód As Líne</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Tá an brabhsálaí sa mhód as líne agus ní féidir leis ceangal leis an mhír iarrtha.</p>
+      <ul>
+        <li>An bhfuil an ríomhaire ceangailte le líonra beo?</li>
+        <li>Brúigh “Bain Triail Eile As” chun dul ar líne agus an leathanach a lódáil arís.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Tá an port srianta de bharr cúrsaí slándála</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>Shonraigh an seoladh iarrtha port (m.sh. <q>mozilla.org:80</q> le haghaidh poirt 80 ar mozilla.org) a úsáidtear de ghnáth le haghaidh cúiseanna <em>seachas</em> brabhsáil. Chealaigh an brabhsálaí d\'iarratas ar mhaithe le do shlándáil.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Athshocraíodh an ceangal</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Briseadh an nasc líonra agus ceangal á bhunú. Bain triail eile as.</p>
+      <ul>
+        <li>Seans go bhfuil fadhb shealadach leis an suíomh, nó go bhfuil sé róghnóthach faoi láthair. Bain triail eile as i gceann nóiméid.</li>
+        <li>Mura bhfuil tú in ann aon leathanach a lódáil, déan seiceáil ar do cheangal sonraí nó Wi-Fi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Cineál Comhaid Baolach</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>Téigh i dteagmháil le húinéirí an tsuímh ghréasáin leis an bhfadhb a chur in iúl dóibh.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Earráid: Ábhar Truaillithe</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>An leathanach atá tú ag iarraidh a amharc, ní féidir é a thaispeáint toisc gur tharla earráid agus na sonraí á seoladh.</p>
+      <ul>
+        <li>Téigh i dteagmháil le húinéir an tsuímh agus inis dóibh faoin fhadhb seo.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Ábhar tuairteála</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>An leathanach atá tú ag iarraidh a amharc, ní féidir é a thaispeáint toisc gur tharla earráid agus na sonraí á seoladh.</p>
+      <ul>
+        <li>Téigh i dteagmháil le húinéir an tsuímh agus inis dóibh faoin fhadhb seo.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Earráid: Ionchódú Ábhair</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>An leathanach atá tú ag iarraidh a amharc, ní féidir é a thaispeáint, agus comhbhrú ann nach bhfuil bailí nó nach bhfuil tacaíocht leis.</p>
+      <ul>
+        <li>Téigh i dteagmháil le húinéirí an tsuímh leis an bhfadhb a chur in iúl dóibh.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Seoladh Gan Aimsiú</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Níorbh fhéidir leis an mbrabhsálaí óstach don seoladh iarrtha a aimsiú.</p>
+      <ul>
+        <li>Deimhnigh nach bhfuil botún clóscríofa sa seoladh, ar nós 
+          <strong>ww</strong>.example.com in áit
+          <strong>www</strong>.example.com.</li>
+        <li>Mura bhfuil tú in ann aon leathanach a lódáil, déan seiceáil ar do cheangal sonraí nó Wi-Fi.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Gan ceangal Idirlín</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Déan seiceáil ar do cheangal líonra, nó bain triail as an leathanach a athlódáil i gceann nóiméid.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Athlódáil</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Seoladh Neamhbhailí</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Ní aithnítear formáid an tseolta sonraithe. Féach an bhfuil botúin i mbarra na suíomhanna agus bain triail eile as.</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Níl an seoladh bailí</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>De ghnáth scríobhtar seoltaí Gréasáin mar seo <strong>http://www.example.com/</strong></li>
+        <li>Bí cinnte gur tulslaiseanna atá agat (.i. <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Prótacal Anaithnid</string>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Sonraíonn an seoladh prótacal (m.sh. <q>wxyz://</q>) nach n-aithníonn an brabhsálaí agus ní féidir leis an mbrabhsálaí ceangal leis an suíomh i gceart dá bharr.</p>
+      <ul>
+        <li>An bhfuil tú ag iarraidh seirbhísí ilmheáin, nó seirbhísí eile nach téacs iad, a rochtain? Féach an bhfuil riachtanais bhreise ag an suíomh.</li>
+        <li>D\'fhéadfadh bogearraí nó forlíontáin ó sholáthraithe eile bheith ag teastáil ó phrótacail áirithe sula mbeidh an brabhsálaí in ann iad a aithint.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Comhad Gan Aimsiú</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>An féidir go bhfuil an mhír athainmnithe, bainte, nó bogtha?</li>
+        <li>An bhfuil botún litrithe, nó ceannlitir mhícheart, nó botún eile den sórt sin, sa seoladh?</li>
+        <li>An bhfuil na ceadanna rochtana cuí agat don mhír iarrtha?</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Diúltaíodh rochtain ar an gcomhad</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Seans nach bhfuil an comhad ann a thuilleadh, nó b\'fhéidir nach bhfuil cead agat é a rochtain.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Dhiúltaigh an Seachfhreastalaí leis an gCeangal</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Tá an brabhsálaí cumraithe le seachfhreastalaí a úsáid, ach dhiúltaigh an seachfhreastalaí le ceangal.</p>
+      <ul>
+        <li>An bhfuil cumraíocht seachfhreastalaí cheart ar an mbrabhsálaí? Déan seiceáil ar na socruithe agus triail arís é.</li>
+        <li>An dtugann an tseirbhís seachfhreastalaí cead do cheangail ón líonra seo?</li>
+        <li>An bhfuil fadhbanna agat fós? Téigh i dteagmháil le do riarthóir líonra nó le do sholáthraí Idirlín le haghaidh cabhrach.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Seachfhreastalaí Gan Aimsiú</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>Tá an brabhsálaí socruithe chun seachfhreastalaí a úsáid, ach níorbh fhéidir an seachfhreastalaí a aimsiú.</p>
+      <ul>
+        <li>An bhfuil cumraíocht an tseachfhreastalaí ceart? Déan seiceáil ar na socruithe agus triail arís é.</li>
+        <li>An bhfuil an ríomhaire ceangailte le líonra beo?</li>
+        <li>An bhfuil fadhbanna agat fós? Téigh i dteagmháil le do riarthóir líonra nó le do sholáthraí Idirlín le haghaidh cabhrach.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Suíomh le bogearraí mailíseacha</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Tuairiscíodh gur suíomh ionsaithe é an suíomh %1$s agus tá cosc curtha air de bharr do roghanna slándála.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Suíomh ar a bhfuil bogearraí gan iarraidh</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Tuairiscíodh go bhfuil bogearraí gan iarraidh ar an suíomh %1$s agus tá cosc curtha air de bharr do roghanna slándála.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Suíomh díobhálach</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Tuairiscíodh gur suíomh díobhálach é an suíomh %1$s agus tá cosc curtha air de bharr do roghanna slándála.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Suíomh cealgach</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Tuairiscíodh gur suíomh cealgach é an suíomh %1$s agus cuireadh cosc air de bharr do roghanna slándála.</p>
+    ]]></string>
+</resources>
