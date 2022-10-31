@@ -866,38 +866,13 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
     let A = IsConstructor(C) ? constructContentFunction(C, C) : [];
 
     // Step 3.g. Let iteratorRecord be undefined.
-    let iteratorRecord = undefined;
 
     // Step 3.h. If usingAsyncIterator is not undefined, then
     if (usingAsyncIterator !== undefined) {
       //     Step 3.h.i. Set iteratorRecord to ? GetIterator(asyncItems, async, usingAsyncIterator).
-      let iterator = callContentFunction(usingAsyncIterator, asyncItems);
-
-      if (!IsObject(iterator)) {
-        ThrowTypeError(JSMSG_GET_ASYNC_ITER_RETURNED_PRIMITIVE);
-      }
-
-      iteratorRecord = { iterator, nextMethod: iterator.next };
     } else if (usingSyncIterator !== undefined) {
       // Step 3.i. Else if usingSyncIterator is not undefined, then
       //     Step 3.i.i. Set iteratorRecord to ? CreateAsyncFromSyncIterator(GetIterator(asyncItems, sync, usingSyncIterator)).
-      let iterator = callContentFunction(usingSyncIterator, asyncItems);
-
-      if (!IsObject(iterator)) {
-        ThrowTypeError(JSMSG_GET_ITER_RETURNED_PRIMITIVE);
-      }
-
-      // SpiderMonkey's CreateAsyncFromSyncIterator doesn't return an iterator record
-      // with named slots; so we need to create our own iterator record.
-      let asyncFromSyncIteratorObject = CreateAsyncFromSyncIterator(
-        iterator,
-        iterator.next
-      );
-
-      iteratorRecord = {
-        iterator: asyncFromSyncIteratorObject,
-        nextMethod: asyncFromSyncIteratorObject.next,
-      };
     } else {
       // Step 3.j. If iteratorRecord is not undefined, then ...
       // Step 3.k. Else, (Reordered)
@@ -951,91 +926,62 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
       return A;
     }
 
+    // Note: The published spec as of f6acfc4f0277e625f13fd22068138aec61a12df3
+    //       is incorrect. See https://github.com/tc39/proposal-array-from-async/issues/33
+    //       Here we use the implementation provided by @bakkot in that bug
+    //       in lieu for now; This allows to use a for-await loop below.
+
     // Step 3.j.i. Let k be 0.
     let k = 0;
 
-    // We wrap the below steps in a try {} finally {} block to allow us to implement
-    // the required semantics for IfAbruptCloseAsyncIterator;
-    let mustClose = false;
-    try {
-      // Step 3.j.ii. Repeat,
-      do {
-        // Following in the steps of Array.from, we don't actually implement 3.j.ii.1.
-        // The comment in Array.from also applies here; we should only encounter this
-        // after a huge loop around a proxy
-        //  Step 3.j.ii.1. If k ≥ 2**53 - 1, then
-        //      Step 3.j.ii.1.a. Let error be ThrowCompletion(a newly created TypeError object).
-        //      Step 3.j.ii.1.b. Return ? AsyncIteratorClose(iteratorRecord, error).
-        //  Step 3.j.ii.2. Let Pk be ! ToString(𝔽(k)).
+    // Step 3.j.ii. Repeat,
+    for await (let nextValue of allowContentIterWith(
+      asyncItems,
+      usingAsyncIterator,
+      usingSyncIterator
+    )) {
+      // Following in the steps of Array.from, we don't actually implement 3.j.ii.1.
+      // The comment in Array.from also applies here; we should only encounter this
+      // after a huge loop around a proxy
+      // Step 3.j.ii.1. If k ≥ 2**53 - 1, then
+      //     Step 3.j.ii.1.a. Let error be ThrowCompletion(a newly created TypeError object).
+      //     Step 3.j.ii.1.b. Return ? AsyncIteratorClose(iteratorRecord, error).
+      // Step 3.j.ii.2. Let Pk be ! ToString(𝔽(k)).
 
-        // Note: The published spec as of f6acfc4f0277e625f13fd22068138aec61a12df3
-        //       is incorrect. See https://github.com/tc39/proposal-array-from-async/issues/33
-        //       Here we use the implementation provided by @bakkot in that bug
-        //       in lieu for now;
-        // 1. Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
-        let nextResult = callContentFunction(
-          iteratorRecord.nextMethod,
-          iteratorRecord.iterator
-        );
+      // Step 3.j.ii.3. Let next be ? Await(IteratorStep(iteratorRecord)).
 
-        // 1. Set nextResult to ? Await(nextResult).
-        nextResult = await nextResult;
+      // Step 3.j.ii.5. Let nextValue be ? IteratorValue(next). (Implicit through the for-await loop).
 
-        // 1. If nextResult is not an Object, throw a TypeError exception.
-        if (!IsObject(nextResult)) {
-          ThrowTypeError(JSMSG_OBJECT_REQUIRED, nextResult);
-        }
+      // Step 3.j.ii.7. Else, let mappedValue be nextValue. (Reordered)
+      let mappedValue = nextValue;
 
-        // 1. Let done be ? IteratorComplete(nextResult).
-        let done = nextResult.done;
+      // Step 3.j.ii.6. If mapping is true, then
+      if (mapping) {
+        // Step 3.j.ii.6.a. Let mappedValue be Call(mapfn, thisArg, « nextValue, 𝔽(k) »).
+        // Step 3.j.ii.6.b. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
+        //   Abrupt completion will be handled by the for-await loop.
+        mappedValue = callContentFunction(mapfn, thisArg, nextValue, k);
 
-        // 1. if done is true.
-        if (done) {
-          // Step 3.j.ii.4.a. Perform ? Set(A, "length", 𝔽(k), true).
-          A.length = k;
-
-          // Step 3.j.ii.4.b. Return Completion Record { [[Type]]: return, [[Value]]: A, [[Target]]: empty }.
-          return A;
-        }
-
-        // Step 3.j.ii.5. Let nextValue be ? IteratorValue(next).
-        let nextValue = nextResult.value;
-
-        // Step 3.j.ii.7. Else, let mappedValue be nextValue. (reordered)
-        let mappedValue = nextValue;
-
-        // Start handling the IfAbruptCloseAsyncIterator checks in the finally block
-        // here.
-        mustClose = true;
-
-        // Step 3.j.ii.6. If mapping is true, then
-        if (mapping) {
-          // Step 3.j.ii.6.a. Let mappedValue be Call(mapfn, thisArg, « nextValue, 𝔽(k) »).
-          mappedValue = callContentFunction(mapfn, thisArg, nextValue, k);
-
-          // Step 3.j.ii.6.b. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
-          //   Abrupt completion will be handled by the finally block this code
-          //   is wrapped in, along with the mustClose state variable.
-          // Step 3.j.ii.6.c. Set mappedValue to Await(mappedValue).
-          mappedValue = await mappedValue;
-          // Step 3.j.ii.6.d. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
-        }
-
-        // Step 3.j.ii.8. Let defineStatus be CreateDataPropertyOrThrow(A, Pk, mappedValue).
-        // Step 3.j.ii.9. If defineStatus is an abrupt completion, return ? AsyncIteratorClose(iteratorRecord, defineStatus).
-        DefineDataProperty(A, k, mappedValue);
-
-        // No more IfAbruptCloseAsyncIterator, so mustClose becomes false here.
-        mustClose = false;
-
-        // Step 3.j.ii.10. Set k to k + 1.
-        k = k + 1;
-      } while (true);
-    } finally {
-      if (mustClose) {
-        AsyncIteratorClose(iteratorRecord);
+        // Step 3.j.ii.6.c. Set mappedValue to Await(mappedValue).
+        // Step 3.j.ii.6.d. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
+        mappedValue = await mappedValue;
       }
+
+      // Step 3.j.ii.8. Let defineStatus be CreateDataPropertyOrThrow(A, Pk, mappedValue).
+      // Step 3.j.ii.9. If defineStatus is an abrupt completion, return ? AsyncIteratorClose(iteratorRecord, defineStatus).
+      DefineDataProperty(A, k, mappedValue);
+
+      // Step 3.j.ii.10. Set k to k + 1.
+      k = k + 1;
     }
+
+    // Step 3.j.ii.4. If next is false, then (Reordered)
+
+    // Step 3.j.ii.4.a. Perform ? Set(A, "length", 𝔽(k), true).
+    A.length = k;
+
+    // Step 3.j.ii.4.b. Return Completion Record { [[Type]]: return, [[Value]]: A, [[Target]]: empty }.
+    return A;
   };
 
   // Step 4. Perform AsyncFunctionStart(promiseCapability, fromAsyncClosure).
