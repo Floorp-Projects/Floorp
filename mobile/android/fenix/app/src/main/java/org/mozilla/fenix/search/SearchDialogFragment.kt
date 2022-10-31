@@ -730,9 +730,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 ) {
                     interactor.onMenuItemTapped(SearchSelectorMenu.Item.SearchEngine(it))
                 }
-            } + searchSelectorMenu.menuItems()
+            }
 
-        searchSelectorMenu.menuController.submitList(searchEngineList)
+        searchSelectorMenu.menuController.submitList(searchSelectorMenu.menuItems(searchEngineList))
         toolbarView.view.invalidateActions()
     }
 

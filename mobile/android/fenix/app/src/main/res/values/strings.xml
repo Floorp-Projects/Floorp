@@ -239,6 +239,8 @@
     <string name="search_engine_suggestions_description">Search directly from the address bar</string>
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Search settings</string>
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item">This time search:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
