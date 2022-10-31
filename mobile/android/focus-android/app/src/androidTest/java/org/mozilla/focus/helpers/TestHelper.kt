@@ -24,7 +24,9 @@ import android.provider.MediaStore
 import android.provider.MediaStore.setIncludePending
 import android.util.Log
 import android.view.KeyEvent
+import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.CustomTabsIntent.SHARE_STATE_ON
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -271,7 +273,6 @@ object TestHelper {
         mDevice.pressHome()
     }
 
-    @Suppress("Deprecation")
     fun createCustomTabIntent(
         pageUrl: String,
         customMenuItemLabel: String = "",
@@ -281,11 +282,15 @@ object TestHelper {
             .targetContext
             .applicationContext
         val pendingIntent = PendingIntent.getActivity(appContext, 0, Intent(), IntentUtils.defaultIntentPendingFlags)
+
+        val customTabColorSchemeBuilder = CustomTabColorSchemeParams.Builder()
+        customTabColorSchemeBuilder.setToolbarColor(Color.MAGENTA)
+
         val customTabsIntent = CustomTabsIntent.Builder()
             .addMenuItem(customMenuItemLabel, pendingIntent)
-            .addDefaultShareMenuItem()
+            .setShareState(SHARE_STATE_ON)
             .setActionButton(createTestBitmap(), customActionButtonDescription, pendingIntent, true)
-            .setToolbarColor(Color.MAGENTA)
+            .setDefaultColorSchemeParams(customTabColorSchemeBuilder.build())
             .build()
         customTabsIntent.intent.data = Uri.parse(pageUrl)
         customTabsIntent.intent.component = ComponentName(appContext, IntentReceiverActivity::class.java)
