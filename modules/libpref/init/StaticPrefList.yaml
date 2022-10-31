@@ -7291,12 +7291,6 @@
     mirror: always
 #endif  // NIGHTLY_BUILD
 
-# Experimental support for class static blocks in JavaScript.
--   name: javascript.options.experimental.class_static_blocks
-    type: bool
-    value: true
-    mirror: always
-
 #ifdef NIGHTLY_BUILD
   # Experimental support for Import Assertions in JavaScript.
 -   name: javascript.options.experimental.import_assertions
