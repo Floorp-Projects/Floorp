@@ -120,6 +120,9 @@ floorp-legacy =
 
 floorp-fluentUI =
  .label = fluentUI
+ 
+floorp-fluerialUI =
+ .label = Floorp Fluerial UI
 
 floorp-gnomeUI =
  .label = Gnome Theme
@@ -407,6 +410,9 @@ sidebar-preferences-button =
 
 sidebar-keepWidth-button =
   .tooltiptext = Keep This Panel Width
+
+sidebar2-keep-width-for-global =
+  .label = Set the Current Panel Size to All Webpanels that Do not have a Unique size
 
 #################################################################### menu panel ############################################################
 

@@ -19,10 +19,6 @@
   #category-lepton > .category-icon {
    list-style-image: url("chrome://mozapps/skin/extensions/category-themes.svg")
   }
-
-  .dialogBox {
-    --in-content-page-background: #333333 !important;
-  }
   
   #browserContainersExtensionContent{
     display: none !important;
@@ -342,6 +338,10 @@
       .content-blocking-category.expanded:not(.selected) .content-blocking-warning {
         background-color: #333 !important;
       }
+       
+       .dialogBox {
+         --in-content-page-background: #333333 !important;
+  　   }
     }
   
     /* Cards For Certain Sections */

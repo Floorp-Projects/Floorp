@@ -4,17 +4,18 @@
 /* Control Bar Size */
 @supports -moz-bool-pref("userContent.player.size") {
   #controlsContainer {
-    --button-size: 32px !important;
-    /* Original: 30px */
     --controlBar-height: 40px;
     /* Original: 40px, Replace to this value */
   }
-
   #controlsContainer .touch {
     --button-size: 48px !important;
     /* Original: 40px */
     --controlBar-height: 52px;
     /* Original: 52px */
+  }
+  #controlsContainer .controlBar {
+    height: var(--controlBar-height) !important;
+    /* Original: 40px */
   }
 
   .videocontrols[inDOMFullscreen] #controlsContainer {
@@ -27,19 +28,12 @@
     --controlBar-height: 64px;
     /* Original: 40px */
   }
-
   .videocontrols[inDOMFullscreen] #controlsContainer .touch {
     --button-size: 72px !important;
     /* Original: 40px */
     --controlBar-height: 64px;
     /* Original: 52px */
   }
-
-  #controlsContainer .controlBar {
-    height: var(--controlBar-height) !important;
-    /* Original: 40px */
-  }
-
   .videocontrols[inDOMFullscreen] #controlsContainer .controlBar {
     padding-bottom: 8px !important;
   }
@@ -58,18 +52,17 @@
     box-shadow: 0 5px 10px -3px var(--box-shadow1), 0 3px 16px 2px var(--box-shadow2), 0 8px 12px 1px var(--box-shadow3);
     /* Or: 0 2px 15px rgba(0,0,0,.1); */
   }
-
-  video {
-    --duration-color: #eee;
-    --media-background: linear-gradient(transparent, rgba(26, 26, 26, 0.85));
-  }
-
   @media (-moz-toolbar-prefers-color-scheme: dark), (prefers-color-scheme: dark) {
     audio {
       --box-shadow1: rgba(249, 249, 250, 0.12);
       --box-shadow2: rgba(91, 91, 102, 0.12);
       --box-shadow3: rgba(82, 82, 94, 0.04);
     }
+  }
+
+  video {
+    --duration-color: #eee;
+    --media-background: linear-gradient(transparent, rgba(26, 26, 26, 0.85));
   }
   @media (prefers-contrast) {
     video {
@@ -79,10 +72,10 @@
       /* Like Original */
     }
   }
+
   #controlsContainer .controlBar {
     background: var(--media-background) !important;
   }
-
   #controlsContainer .duration {
     color: var(--duration-color) !important;
     /* Original: #929292 */
@@ -163,7 +156,6 @@
       padding-inline: var(--controlBar-padding-inline) !important;
       /* Original: 9px */
     }
-
     #controlsContainer .scrubberStack {
       /* Vertical */
       order: var(--scrubberStack-order);
@@ -174,7 +166,6 @@
       width: var(--scrubberStack-twoline-width, var(--scrubberStack-width));
       margin-inline: var(--scrubberStack-margin-inline) !important;
     }
-
     #controlsContainer .positionDurationBox {
       flex-grow: var(--positionDurationBox-flex-grow);
       margin-left: var(--positionDurationBox-margin-left);
@@ -194,7 +185,6 @@
   #controlsContainer .fullscreenButton {
     background-image: url("chrome://browser/skin/lepton/enter-fullscreen.svg") !important;
   }
-
   #controlsContainer .fullscreenButton[fullscreened] {
     background-image: url("chrome://browser/skin/lepton/exit-fullscreen.svg") !important;
   }
@@ -211,11 +201,9 @@
     cursor: pointer;
     opacity: 0.65 !important;
   }
-
   #controlsContainer .controlsSpacerStack:hover > .clickToPlay {
     opacity: 0.85 !important;
   }
-
   #controlsContainer .controlsSpacerStack:hover > .clickToPlay:hover {
     opacity: 1 !important;
     fill: #48a0f7 !important;
@@ -230,13 +218,11 @@
       transition: transform 350ms ease;
       opacity: 1 !important;
     }
-
     #controlsContainer .controlBar[hidden] {
       transform: translateY(100%);
       transition: transform 350ms ease-in-out, opacity 1s ease 100ms !important;
       opacity: 0 !important;
     }
-
     #controlsContainer .controlBar[hidden] .progressBar,
     #controlsContainer .controlBar[hidden] .bufferBar {
       display: unset !important;
@@ -286,12 +272,86 @@
       }
     }
   }
+  /** Activity Stream - Menu Icons ********************************************/
+  @supports -moz-bool-pref("userChrome.icon.context_menu") {
+    .context-menu-list .context-menu-item button {
+      padding-inline-start: 0 !important;
+    }
+
+    .context-menu-list .context-menu-item button span {
+      /* Color */
+      -moz-context-properties: fill, fill-opacity !important;
+      fill: currentColor !important;
+      /* Layout */
+      background-size: 16px !important;
+      background-repeat: no-repeat !important;
+      background-image: var(--menuitem-image);
+      padding-inline-start: 24px;
+      /* 16p + (4px *  2) */
+      background-position: var(--uc-menu-background-position, left) 4px center;
+    }
+    .context-menu-list .context-menu-item button span:dir(rtl) {
+      --uc-menu-background-position: right;
+    }
+
+    .context-menu-item span[data-l10n-id="newtab-menu-pin"] {
+      --menuitem-image: url("chrome://browser/skin/lepton/pin-tab.svg");
+    }
+
+    .context-menu-item span[data-l10n-id="newtab-menu-unpin"] {
+      --menuitem-image: url("chrome://browser/skin/lepton/unpin-tab.svg");
+    }
+
+    .context-menu-item span[data-l10n-id="newtab-menu-edit-topsites"] {
+      --menuitem-image: url("chrome://global/skin/icons/edit.svg");
+    }
+
+    .context-menu-item span[data-l10n-id="newtab-menu-bookmark"] {
+      --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+    }
+
+    .context-menu-item span[data-l10n-id="newtab-menu-remove-bookmark"] {
+      --menuitem-image: url("chrome://browser/skin/bookmark-hollow.svg");
+    }
+
+    .context-menu-item span[data-l10n-id="newtab-menu-save-to-pocket"] {
+      --menuitem-image: url("chrome://browser/skin/lepton/pocket-outline.svg");
+    }
+
+    .context-menu-item span[data-l10n-id="newtab-menu-open-file"] {
+      --menuitem-image: url("chrome://browser/skin/lepton/fluid.svg");
+    }
+
+    .context-menu-item span[data-l10n-id="newtab-menu-show-file"] {
+      --menuitem-image: url("chrome://global/skin/icons/folder.svg");
+    }
+    @supports -moz-bool-pref("userChrome.icon.library") {
+      .context-menu-item span[data-l10n-id="newtab-menu-show-file"] {
+        --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+      }
+    }
+
+    .context-menu-item span[data-l10n-id="newtab-menu-open-new-window"] {
+      --menuitem-image: url("chrome://browser/skin/window.svg");
+    }
+
+    .context-menu-item span[data-l10n-id="newtab-menu-open-new-private-window"] {
+      --menuitem-image: url("chrome://browser/skin/privateBrowsing.svg");
+    }
+
+    .context-menu-item span[data-l10n-id="newtab-menu-dismiss"] {
+      --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+    }
+
+    .context-menu-item span[data-l10n-id="newtab-menu-delete-history"] {
+      --menuitem-image: url("chrome://browser/skin/lepton/eraser.svg");
+    }
+  }
   /** Activity Stream - Web Site Icon: full size ******************************/
   @supports -moz-bool-pref("userContent.newTab.full_icon") {
     .top-site-outer .tile {
       overflow: hidden;
     }
-
     .top-site-outer .tile .icon-wrapper {
       width: 100% !important;
       /* Original: 48px */
@@ -313,7 +373,6 @@
       button.close-button {
         transition: background 1.5s var(--animation-easing-function);
       }
-
       .top-site-outer:hover,
       #searchSubmit:hover,
       button.icon:hover,
@@ -346,7 +405,6 @@
       display: flex;
       flex-wrap: wrap;
     }
-
     .body-wrapper.on > .discovery-stream.ds-layout {
       flex-basis: 100%;
     }
@@ -369,7 +427,6 @@
       --newtab-search-dropdown-color: var(--newtab-search-background-color) !important;
       --newtab-element-hover-color: color-mix(in srgb, currentColor 9%, transparent) !important;
     }
-
     @media (-moz-toolbar-prefers-color-scheme: dark), (prefers-color-scheme: dark) {
       #root {
         /* Default Dark Mode */
@@ -377,6 +434,7 @@
         /* Same as dark theme's --panel-background */
       }
     }
+
     .activity-stream[lwt-sidebar]:not([style*="--newtab-background-color: rgba(43, 42, 51, 1);"]) #root {
       /* Light weight theme */
       --newtab-search-background-color: var(--lwt-sidebar-background-color);
@@ -433,18 +491,15 @@
     .contentSearchSuggestionTable .contentSearchSettingsButton:hover {
       color: var(--newtab-text-primary-color) !important;
     }
-
     .contentSearchSuggestionTable .contentSearchSuggestionRow.selected,
     .contentSearchSuggestionTable .contentSearchSettingsButton:hover,
     .contentSearchSuggestionTable .contentSearchOneOffItem.selected {
       background: var(--newtab-element-hover-color) !important;
     }
-
     .contentSearchSuggestionTable .contentSearchSuggestionRow.selected:active,
     .contentSearchSuggestionTable .contentSearchOneOffItem:active {
       background: var(--newtab-element-active-color) !important;
     }
-
     .contentSearchSuggestionTable .contentSearchSuggestionRow.selected .historyIcon {
       fill: var(--newtab-icon-secondary-color) !important;
     }
@@ -560,6 +615,7 @@
 /*= Fully Dark Mode - Dark Mode Colors =======================================*/
 @supports -moz-bool-pref("userContent.page.proton_color") {
   @-moz-document url-prefix("about:"),
+               url-prefix("chrome://browser/content/places/places.xhtml"),
                url-prefix("https://addons.mozilla.org"),
                url-prefix("https://support.mozilla.org"),
                url-prefix("https://accounts.firefox.com"),
@@ -594,7 +650,7 @@
       --in-content-link-color-hover: var(--blue-70);
       --in-content-link-color-active: var(--blue-80);
       --in-content-link-color-visited: var(--blue-60);
-      /* button background states are also used for checkboxes and radiobuttons */
+      /* button background states are also used for checkboxes and radio buttons */
       --in-content-button-text-color: var(--in-content-text-color);
       --in-content-button-text-color-hover: var(--in-content-text-color);
       --in-content-button-background: rgba(207, 207, 216, 0.33);
@@ -770,10 +826,19 @@
     @supports -moz-bool-pref("userContent.page.proton_color.system_accent") {
       :host,
       :root {
-        --in-content-primary-button-text-color: -moz-accent-color-foreground !important;
-        --in-content-primary-button-background: Highlight !important;
-        --in-content-primary-button-background-hover: color-mix(in srgb, black 10%, Highlight) !important;
-        --in-content-primary-button-background-active: color-mix(in srgb, black 20%, Highlight) !important;
+        --in-content-primary-button-text-color: AccentColorText !important;
+        --in-content-primary-button-background: AccentColor !important;
+        --in-content-primary-button-background-hover: color-mix(in srgb, black 10%, AccentColor) !important;
+        --in-content-primary-button-background-active: color-mix(in srgb, black 20%, AccentColor) !important;
+      }
+      @supports -moz-bool-pref("userChrome.compatibility.accent_color") {
+        :host,
+        :root {
+          --in-content-primary-button-text-color: HighlightText !important;
+          --in-content-primary-button-background: Highlight !important;
+          --in-content-primary-button-background-hover: color-mix(in srgb, black 10%, Highlight) !important;
+          --in-content-primary-button-background-active: color-mix(in srgb, black 20%, Highlight) !important;
+        }
       }
     }
   }
@@ -786,13 +851,16 @@
       /* Basic */
       .Page-content,
       .SecondaryHero,
-      body:not(.developer-hub):not(.statistics),
+      body,
       main[aria-label="Content"] {
         color: var(--in-content-page-color) !important;
         background: var(--in-content-page-background) !important;
       }
 
       /* Text */
+      input,
+      textarea,
+      select,
       .AutoSearchInput-query,
       .AutoSearchInput-suggestions-list,
       .Page-content h1,
@@ -801,6 +869,7 @@
       .Home-SubjectShelf-link:link,
       .Home-SubjectShelf-link:visited,
       .DropdownMenuItem-link a,
+      .DropdownMenuItem-link button,
       .Select,
       .Badge,
       .Notice-generic,
@@ -826,6 +895,7 @@
       .SearchResult:hover .SearchResult-link,
       .Home-SubjectShelf-link:is(:active, :focus, :hover),
       .DropdownMenuItem-link a:is(:active, :focus, :hover),
+      .DropdownMenuItem-link button:is(:active, :focus, :hover),
       .AddonMeta .MetadataCard-title a:is(:active, :hover),
       .AddonMeta .MetadataCard-title a.AddonMeta-reviews-content-link:is(:active, :hover),
       .AddonMeta .MetadataCard-content a:is(:active, :hover),
@@ -842,6 +912,7 @@
       .AddonTitle a,
       .TooltipMenu-opener,
       .LanguageTools .Card-contents a,
+      .Button--primary,
       .blog-entry-read-more-link,
       .blogpost-nav-next.blogpost-nav-no-prev:hover p,
       .blogpost-content-wrapper p a,
@@ -883,12 +954,16 @@
       }
 
       /* Background */
-      .Button--action {
+      .Button--action,
+      .DevHub-Navigation ul li.DevHub-Navigation-Register .Button,
+      .DevHub-MyAddons-item-buttons-submit .Button {
         color: var(--in-content-primary-button-text-color) !important;
         background: var(--in-content-primary-button-background) !important;
       }
 
+      select,
       .Select,
+      .Button--primary,
       .Button--neutral,
       .Button--neutral:link,
       .Notice-button,
@@ -896,6 +971,7 @@
         background-color: var(--in-content-button-background) !important;
       }
 
+      .Button--primary:hover,
       .Button--neutral.Button--micro:not(.Button--disabled):hover,
       .Button--neutral:not(.Button--disabled):hover,
       .Notice-button:hover {
@@ -903,7 +979,9 @@
       }
 
       .Button--action.Button--micro:not(.Button--disabled):hover,
-      .Button--action:not(.Button--disabled):hover {
+      .Button--action:not(.Button--disabled):hover,
+      .DevHub-Navigation ul li.DevHub-Navigation-Register .Button:hover,
+      .DevHub-MyAddons-item-buttons-submit .Button:hover {
         background: var(--in-content-primary-button-background-hover) !important;
       }
 
@@ -911,6 +989,8 @@
         background: linear-gradient(rgba(255, 255, 255, 0), var(--in-content-table-background)) !important;
       }
 
+      input,
+      textarea,
       .AutoSearchInput-query,
       .AutoSearchInput-suggestions-list,
       .SecondaryHero-module,
@@ -981,15 +1061,30 @@
         box-shadow: 0 0 2px var(--in-content-border-color) !important;
       }
 
+      input,
+      textarea,
+      select {
+        border-color: var(--in-content-box-border-color) !important;
+      }
+
+      .UserProfileEdit input:disabled,
+      .UserProfileEdit textarea:disabled {
+        background-color: var(--in-content-box-background-odd) !important;
+      }
+
       .AutoSearchInput-query {
         border: 1px solid var(--in-content-table-background) !important;
       }
 
-      .AutoSearchInput-query:is(:hover, :focus) {
+      .AutoSearchInput-query:is(:hover, :focus),
+      .UserProfileEditNotifications .UserProfileEditNotification-input:checked ~ .UserProfileEditNotification-checkbox {
         border-color: var(--in-content-primary-button-background) !important;
       }
 
-      .AutoSearchInput-query:focus {
+      .UserProfileEdit input:focus,
+      .UserProfileEdit textarea:focus,
+      .AutoSearchInput-query:focus,
+      .UserProfileEditNotifications .UserProfileEditNotification-input:focus ~ .UserProfileEditNotification-checkbox {
         box-shadow: inset 0 0 0 1px var(--in-content-primary-button-background),
           0 0 0 1px var(--in-content-primary-button-background), 0 0 0 4px rgba(0, 211, 255, 0.3) !important;
       }
@@ -1012,6 +1107,12 @@
       }
 
       /* /developers/ */
+      .DevHub-Navigation-Logo > .Logo::before {
+        -moz-context-properties: fill !important;
+        fill: var(--in-content-primary-button-background) !important;
+        background-image: url("chrome://browser/skin/lepton/addons-logo.svg") !important;
+      }
+
       .DevHub-Navigation,
       .DevHub-submit-addon,
       .DevHub-get-involved,
@@ -1020,9 +1121,13 @@
         color: var(--in-content-page-color) !important;
       }
 
-      .DevHub-Footer,
-      .DevHub-callout-box {
+      .DevHub-Footer {
         background: var(--in-content-box-background) !important;
+        color: var(--in-content-page-color) !important;
+      }
+
+      .DevHub-callout-box {
+        background: var(--in-content-box-background-odd) !important;
         color: var(--in-content-page-color) !important;
       }
 
@@ -1034,11 +1139,290 @@
         color: var(--in-content-page-color) !important;
       }
 
+      .DevHub-content-copy p,
+      .DevHub-callout-box p {
+        color: var(--in-content-deemphasized-text) !important;
+      }
+
       .DevHub-Banner a,
       .DevHub-Footer a,
       .DevHub-MyAddons-list a,
-      .DevHub-MyAddons-item-buttons-all {
+      .DevHub-MyAddons-item-buttons-all,
+      .DevHub-content-copy a,
+      .DevHub-callout-box a {
         color: var(--in-content-link-color) !important;
+      }
+
+      body:is(.developer-hub, .statistics) {
+        /* Elements */
+        /* .developer-hub */
+        /* Text */
+        /* .developer-hub */
+        /* Background */
+        /* Border */
+        /* Others */
+      }
+      body:is(.developer-hub, .statistics) #main-wrapper,
+      body:is(.developer-hub, .statistics) .menu-nav > ul > li > ul::after,
+      body:is(.developer-hub, .statistics) .menu-nav > ul > li:hover::after,
+      body:is(.developer-hub, .statistics) .menu-nav > ul > li > ul,
+      body:is(.developer-hub, .statistics) .menu-nav > ul > li > ul a,
+      body:is(.developer-hub, .statistics) .menu-nav em,
+      body:is(.developer-hub, .statistics) .primary,
+      body:is(.developer-hub, .statistics) .secondary,
+      body:is(.developer-hub, .statistics) .dashboard .listing .item {
+        background: var(--in-content-page-background) !important;
+        color: var(--in-content-page-color) !important;
+      }
+      body:is(.developer-hub, .statistics) .menu-nav > ul > li > ul a:hover,
+      body:is(.developer-hub, .statistics) .install-note,
+      body:is(.developer-hub, .statistics) .modal,
+      body:is(.developer-hub, .statistics) .popup {
+        background: var(--in-content-box-background-odd) !important;
+      }
+      body:is(.developer-hub, .statistics) .menu-nav > ul > li > ul::after,
+      body:is(.developer-hub, .statistics) .menu-nav > ul > li > ul {
+        box-shadow: 0 0 3px var(--in-content-border-color) !important;
+      }
+      body:is(.developer-hub, .statistics) #footer {
+        background: linear-gradient(
+          to bottom,
+          var(--in-content-page-background) 0,
+          var(--in-content-page-background) 123px,
+          #0c99d5 123px,
+          #0c99d5 200px,
+          var(--in-content-page-background) 200px,
+          rgba(12, 153, 213, 0) 400px
+        ) !important;
+      }
+      body:is(.developer-hub, .statistics) #homepage h2,
+      body:is(.developer-hub, .statistics) header h2,
+      body:is(.developer-hub, .statistics) .primary h2,
+      body:is(.developer-hub, .statistics) h1,
+      body:is(.developer-hub, .statistics) hgroup h2.addon,
+      body:is(.developer-hub, .statistics) hgroup h2.collection,
+      body:is(.developer-hub, .statistics) h3,
+      body:is(.developer-hub, .statistics) .results h4,
+      body:is(.developer-hub, .statistics) .dashboard .listing .item,
+      body:is(.developer-hub, .statistics) .dashboard .listing .item:hover h5,
+      body:is(.developer-hub, .statistics) .secondary .addon-status,
+      body:is(.developer-hub, .statistics) .secondary .addon-status .addon-details li.addon-listed-status,
+      body:is(.developer-hub, .statistics) #refine-results h5,
+      body:is(.developer-hub, .statistics) .island.criteria li,
+      body:is(.developer-hub, .statistics) .two-up div {
+        color: var(--in-content-page-color) !important;
+      }
+      body:is(.developer-hub, .statistics) .item-actions h5,
+      body:is(.developer-hub, .statistics) .item-actions > ul,
+      body:is(.developer-hub, .statistics) .item-actions > ul > li,
+      body:is(.developer-hub, .statistics) .dashboard .listing .item .item-actions a,
+      body:is(.developer-hub, .statistics) .edit-media-details,
+      body:is(.developer-hub, .statistics) .devhub-form table th,
+      body:is(.developer-hub, .statistics) #recent-activity .listing .item .timestamp,
+      body:is(.developer-hub, .statistics) #upload-file .upload-status #uploadstatus,
+      body:is(.developer-hub, .statistics) #addon-validator-suite,
+      body:is(.developer-hub, .statistics) #addon-validator-suite .msg > *,
+      body:is(.developer-hub, .statistics) .island.criteria li a.inactive {
+        color: var(--in-content-deemphasized-text) !important;
+      }
+      body:is(.developer-hub, .statistics) section[role="main"] a,
+      body:is(.developer-hub, .statistics) header a,
+      body:is(.developer-hub, .statistics) .more-info,
+      body:is(.developer-hub, .statistics) .primary a,
+      body:is(.developer-hub, .statistics) .secondary a,
+      body:is(.developer-hub, .statistics) .submission-type-tabs a,
+      body:is(.developer-hub, .statistics) .popup a,
+      body:is(.developer-hub, .statistics) .dashboard .listing .item:hover a,
+      body:is(.developer-hub, .statistics) .dashboard .listing .item:hover .item-actions a,
+      body:is(.developer-hub, .statistics) #upload-status-results.status-pass strong,
+      body:is(.developer-hub, .statistics) #addon-validator-suite a,
+      body:is(.developer-hub, .statistics) #create-addon a,
+      body:is(.developer-hub, .statistics) .html-support {
+        color: var(--in-content-link-color) !important;
+      }
+      body:is(.developer-hub, .statistics) .dashboard .listing .item:hover a {
+        color: var(--in-content-link-color-hover) !important;
+      }
+      body:is(.developer-hub, .statistics) .dashboard .listing .item .item-info .downloads,
+      body:is(.developer-hub, .statistics) .dashboard .listing .item .item-info .price,
+      body:is(.developer-hub, .statistics) .dashboard .listing .item .item-info .users {
+        color: var(--green-60) !important;
+      }
+      body:is(.developer-hub, .statistics) .status-admin-disabled b,
+      body:is(.developer-hub, .statistics) .status-disabled b,
+      body:is(.developer-hub, .statistics) .status-incomplete b,
+      body:is(.developer-hub, .statistics) .status-purgatory b {
+        color: var(--red-60) !important;
+      }
+      body:is(.developer-hub, .statistics) .submission-type-tabs a.active,
+      body:is(.developer-hub, .statistics) .island.criteria li.selected a {
+        color: var(--orange-50) !important;
+      }
+      body:is(.developer-hub, .statistics) .secondary .addon-status,
+      body:is(.developer-hub, .statistics) .devhub-form .item,
+      body:is(.developer-hub, .statistics) #icons_default,
+      body:is(.developer-hub, .statistics) .listing .item,
+      body:is(.developer-hub, .statistics) .object-lead,
+      body:is(.developer-hub, .statistics) #addon-validator-suite .results .tier-results,
+      body:is(.developer-hub, .statistics) #addon-validator-suite .suite,
+      body:is(.developer-hub, .statistics) #addon-validator-suite .suite-container {
+        border-color: var(--in-content-border-color) !important;
+        background: var(--in-content-box-background) !important;
+      }
+      body:is(.developer-hub, .statistics) .highlight,
+      body:is(.developer-hub, .statistics) .listing-footer,
+      body:is(.developer-hub, .statistics) .tab-wrapper .fm-control {
+        color: var(--in-content-page-color) !important;
+        background: var(--in-content-box-info-background) !important;
+      }
+      body:is(.developer-hub, .statistics) .submission-type-tabs a,
+      body:is(.developer-hub, .statistics) #head-chart {
+        background: var(--in-content-page-background) !important;
+      }
+      body:is(.developer-hub, .statistics) #head-chart rect {
+        fill: var(--in-content-page-background) !important;
+      }
+      body:is(.developer-hub, .statistics) #head-chart text {
+        fill: var(--in-content-deemphasized-text) !important;
+      }
+      body:is(.developer-hub, .statistics) #head-chart .highcharts-legend .highcharts-legend-item:hover text {
+        fill: var(--in-content-page-color) !important;
+        paint-order: stroke !important;
+        stroke: var(--in-content-page-color) !important;
+        stroke-width: 0.4px !important;
+        stroke-linecap: butt !important;
+        stroke-linejoin: miter !important;
+      }
+      body:is(.developer-hub, .statistics)
+        #head-chart
+        .highcharts-legend
+        .highcharts-legend-item
+        path[stroke="#CCC"]
+        ~ text {
+        fill: #ccc !important;
+      }
+      body:is(.developer-hub, .statistics) #icons_default li a:hover,
+      body:is(.developer-hub, .statistics) #side-nav .active a,
+      body:is(.developer-hub, .statistics) span.tip,
+      body:is(.developer-hub, .statistics) .addon-submission-process .tip,
+      body:is(.developer-hub, .statistics) .devhub-form .tip,
+      body:is(.developer-hub, .statistics) a.remove,
+      body:is(.developer-hub, .statistics) span.remove,
+      body:is(.developer-hub, .statistics) ul.errorlist li span.tip {
+        background-color: var(--in-content-box-info-background) !important;
+      }
+      body:is(.developer-hub, .statistics) a.remove:hover,
+      body:is(.developer-hub, .statistics) span.tip:hover {
+        background-color: var(--in-content-primary-button-background-hover) !important;
+      }
+      body:is(.developer-hub, .statistics) .submission-type-tabs a,
+      body:is(.developer-hub, .statistics) .devhub-sidebar,
+      body:is(.developer-hub, .statistics) .devhub-sidebar div.item,
+      body:is(.developer-hub, .statistics) .devhub-form .listing-footer {
+        border-color: var(--in-content-border-color) !important;
+      }
+      body:is(.developer-hub, .statistics) #background-wrapper,
+      body:is(.developer-hub, .statistics) #main-wrapper {
+        border-color: var(--in-content-page-background) !important;
+      }
+      body:is(.developer-hub, .statistics) .item-actions a.more-actions:hover:after,
+      body:is(.developer-hub, .statistics) .item-actions button.link.more-actions:hover:after,
+      body:is(.developer-hub, .statistics) #change-locale::after {
+        border-top-color: var(--in-content-link-color) !important;
+      }
+      body:is(.developer-hub, .statistics) install-note::after,
+      body:is(.developer-hub, .statistics) .popup::after {
+        border-bottom-color: var(--in-content-box-background) !important;
+      }
+      body:is(.developer-hub, .statistics) .install-note::before,
+      body:is(.developer-hub, .statistics) .popup::before {
+        border-bottom-color: grey !important;
+      }
+      body:is(.developer-hub, .statistics) #refine-results,
+      body:is(.developer-hub, .statistics) .other-categories,
+      body:is(.developer-hub, .statistics) .versions .primary > .warning {
+        border-color: transparent !important;
+      }
+      body:is(.developer-hub, .statistics) .results {
+        border-color: var(--in-content-box-background-odd) !important;
+        background: transparent !important;
+      }
+      body:is(.developer-hub, .statistics) .results-inner {
+        border-color: var(--in-content-border-color) !important;
+        background: var(--in-content-border-color) !important;
+      }
+      body:is(.developer-hub, .statistics) #promos .view-button a,
+      body:is(.developer-hub, .statistics) #upload-file-finish.button,
+      body:is(.developer-hub, .statistics) #upload-file-widget .button.prominent,
+      body:is(.developer-hub, .statistics) .button,
+      body:is(.developer-hub, .statistics) .cta a.button:link,
+      body:is(.developer-hub, .statistics) .cta a.button:visited,
+      body:is(.developer-hub, .statistics) .linux .button.linux,
+      body:is(.developer-hub, .statistics) .mac .button.mac,
+      body:is(.developer-hub, .statistics) .other .button.bsd,
+      body:is(.developer-hub, .statistics) .other .button.solaris,
+      body:is(.developer-hub, .statistics) .sidebar a.button,
+      body:is(.developer-hub, .statistics) .sidebar button,
+      body:is(.developer-hub, .statistics) .theme .choices button,
+      body:is(.developer-hub, .statistics) .theme-queue a.button,
+      body:is(.developer-hub, .statistics) .theme-queue button,
+      body:is(.developer-hub, .statistics) .windows .button.windows,
+      body:is(.developer-hub, .statistics) a.button:link,
+      body:is(.developer-hub, .statistics) a.button:visited,
+      body:is(.developer-hub, .statistics) a.delete-button.delete-addon,
+      body:is(.developer-hub, .statistics) button,
+      body:is(.developer-hub, .statistics) button.button,
+      body:is(.developer-hub, .statistics) input:not(.upvotes):not(.downvotes)[type="submit"] {
+        color: var(--in-content-primary-button-text-color) !important;
+        background: var(--in-content-primary-button-background) !important;
+      }
+      body:is(.developer-hub, .statistics) #promos .view-button a:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) #upload-file-finish.button:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) #upload-file-widget .button.prominent:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) .button:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) .cta a.button:link:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) .cta a.button:visited:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) .linux .button.linux:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) .mac .button.mac:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) .other .button.bsd:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) .other .button.solaris:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) .sidebar a.button:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) .sidebar button:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) .theme .choices button:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) .theme-queue a.button:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) .theme-queue button:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) .windows .button.windows:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) a.button:link:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) a.button:visited:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) a.delete-button.delete-addon:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) button:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics) button.button:is(.selected, :focus, :hover),
+      body:is(.developer-hub, .statistics)
+        input:not(.upvotes):not(.downvotes)[type="submit"]:is(.selected, :focus, :hover) {
+        background: var(--in-content-primary-button-background-hover) !important;
+      }
+      body:is(.developer-hub, .statistics) .edit_with_prefix span,
+      body:is(.developer-hub, .statistics) .edit_with_suffix span {
+        border-color: var(--in-content-box-border-color) !important;
+        background-color: var(--in-content-box-background-odd) !important;
+        color: var(--in-content-deemphasized-text) !important;
+        padding-block: 3px !important;
+        cursor: not-allowed;
+      }
+      body:is(.developer-hub, .statistics) .devhub-form .item_wrapper input[type="email"] {
+        appearance: none !important;
+        padding: 2px 5px;
+        border: 1px solid;
+      }
+      body:is(.developer-hub, .statistics) #addon-validator-suite .suite-summary {
+        color: var(--in-content-deemphasized-text) !important;
+        background: var(--in-content-button-background) !important;
+        border-top-color: var(--in-content-border-color) !important;
+      }
+      body:is(.developer-hub, .statistics) #addon-validator-suite .context {
+        border-color: var(--in-content-box-border-color) !important;
+        background-color: var(--in-content-button-background) !important;
+        background: var(--in-content-table-background) !important;
       }
     }
     /*= Support.org ============================================================*/
@@ -1630,7 +2014,7 @@
       border-color: transparent !important;
       outline: 2px solid var(--in-content-focus-outline-color) !important;
       outline-offset: -1px !important;
-      /* Prevents antialising around the corners */
+      /* Prevents antialiasing around the corners */
     }
 
     input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):-moz-ui-invalid,
@@ -1638,7 +2022,7 @@
       border-color: transparent !important;
       outline: 2px solid var(--in-content-border-invalid) !important;
       outline-offset: -1px !important;
-      /* Prevents antialising around the corners */
+      /* Prevents antialiasing around the corners */
     }
 
     input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):disabled,
@@ -1676,13 +2060,9 @@
   @supports -moz-bool-pref("userContent.page.field_border") {
     @media (prefers-reduced-motion: no-preference) {
       @-moz-document url-prefix("about:") {
+        html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):not(#newtab-search-text):hover,
+        html|textarea:hover,
         xul|search-textbox:hover {
-          border-color: var(--in-content-focus-outline-color) !important;
-          transition: border-color 0.5s var(--animation-easing-function);
-        }
-      }
-      @-moz-document url-prefix("about:config") {
-        #about-config-search:hover {
           border-color: var(--in-content-focus-outline-color) !important;
           transition: border-color 0.5s var(--animation-easing-function);
         }
@@ -1902,7 +2282,7 @@
         list-style-image: url("chrome://browser/skin/places/tag.svg") !important;
       }
 
-      /* Boomark */
+      /* Bookmark */
       :-moz-any(#placesList, #placeContent) treechildren::-moz-tree-image(query, OrganizerQuery_allbms_____v) {
         list-style-image: url("chrome://browser/skin/bookmark.svg") !important;
       }
@@ -1946,7 +2326,7 @@
         list-style-image: url("chrome://browser/skin/lepton/tag-open.svg") !important;
       }
 
-      /* Boomark */
+      /* Bookmark */
       :-moz-any(#placesList, #placeContent) treechildren::-moz-tree-image(query, open, OrganizerQuery_allbms_____v) {
         list-style-image: url("chrome://browser/skin/bookmark-hollow.svg") !important;
       }
@@ -2016,315 +2396,6 @@
         transform: scaleX(-1) !important;
       }
     }
-    /*= Context Menu ===========================================================*/
-    @supports -moz-bool-pref("userChrome.icon.context_menu") {
-      menupopup menuitem:not([type="checkbox"], [type="radio"]),
-      menupopup menu:not([type="checkbox"], [type="radio"]),
-      #main-menubar > menu {
-        -moz-appearance: none !important;
-        /* Linux: menulist */
-      }
-
-      #placesContext menuitem:not(.menuitem-iconic, .in-menulist, [type="checkbox"], [checked="true"]),
-      #placesContext menu:not(.menu-iconic, .in-menulist, [type="checkbox"], [checked="true"]),
-      menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup) > menuitem,
-      menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu {
-        /* Color */
-        -moz-context-properties: fill, fill-opacity !important;
-        fill: currentColor !important;
-        /* Layout */
-        background-size: 16px !important;
-        background-repeat: no-repeat !important;
-        background-image: var(--menuitem-image);
-      }
-
-      /* For native context menus on macOS */
-      @supports -moz-bool-pref("widget.macos.native-context-menus") {
-        :not(menu, #ContentSelectDropdown)
-          > menupopup
-          > menuitem:not(.menuitem-iconic, [type="checkbox"], [checked="true"], .in-menulist),
-        :not(menu, #ContentSelectDropdown)
-          > menupopup
-          > menu:not(.menu-iconic, [type="checkbox"], [checked="true"], .in-menulist) {
-          list-style-image: var(--menuitem-image) !important;
-        }
-      }
-      /* Padding */
-      :root {
-        --context-menu-background-padding-default: 5px;
-        --context-menu-background-padding: var(--context-menu-background-padding-default);
-      }
-
-      #placesContext menuitem:not(.menuitem-iconic, .in-menulist, [type="checkbox"], [checked="true"]),
-      #placesContext menu:not(.menu-iconic, .in-menulist, [type="checkbox"], [checked="true"]),
-      menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup) > menuitem,
-      menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu {
-        background-position: left var(--context-menu-background-padding) center !important;
-        padding-inline-start: var(--context-menu-background-padding) !important;
-      }
-
-      /* Padding - Windows */
-      @media (-moz-os-version: windows-win7),
-        (-moz-platform: windows-win7),
-        (-moz-os-version: windows-win8),
-        (-moz-platform: windows-win8),
-        (-moz-os-version: windows-win10),
-        (-moz-platform: windows-win10) {
-        /* Checkbox */
-        :root {
-          --context-menu-text-padding: calc(
-            var(--menu-padding) + var(--context-menu-background-padding-default) + 16px
-          );
-        }
-
-        :not(menu, #ContentSelectDropdown, #context-navigation)
-          > menupopup
-          > menuitem[type="checkbox"][checked="false"]
-          > .menu-iconic-left {
-          padding-inline-start: var(--context-menu-text-padding);
-        }
-      }
-      @media (-moz-os-version: windows-win7), (-moz-platform: windows-win7) {
-        :root {
-          --context-menu-background-padding-default: 2px;
-        }
-      }
-      @media (-moz-os-version: windows-win8), (-moz-platform: windows-win8) {
-        :root {
-          --context-menu-background-padding-default: 3px;
-        }
-      }
-      @media (-moz-os-version: windows-win7),
-        (-moz-platform: windows-win7),
-        (-moz-os-version: windows-win8),
-        (-moz-platform: windows-win8) {
-        #placesContext menuitem:not(.menuitem-iconic, .in-menulist, [type="checkbox"], [checked="true"]),
-        #placesContext menu:not(.menu-iconic, .in-menulist, [type="checkbox"], [checked="true"]),
-        menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup) > menuitem,
-        menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu {
-          background-position: left var(--context-menu-background-padding) center !important;
-          padding-inline-start: 0 !important;
-        }
-      }
-      @media (-moz-os-version: windows-win10), (-moz-platform: windows-win10) {
-        :root {
-          --context-menu-background-padding: 1em;
-          --context-menu-text-padding: 24px;
-          /* 16px + 8px */
-          --menu-background-padding-default: calc(
-            var(--context-menu-background-padding) + var(--context-menu-text-padding)
-          );
-        }
-
-        #placesContext menuitem:not(.menuitem-iconic, .in-menulist, [type="checkbox"], [checked="true"]),
-        #placesContext menu:not(.menu-iconic, .in-menulist, [type="checkbox"], [checked="true"]),
-        menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup) > menuitem,
-        menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu {
-          padding-inline-start: var(--menu-background-padding-default) !important;
-          margin-left: 0 !important;
-        }
-      }
-      /* Padding - Linux */
-      @media (-moz-gtk-csd-available) {
-        :root {
-          --context-menu-background-padding-default: 6px;
-        }
-      }
-      /* Padding - Mac */
-      @supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled") {
-        :root {
-          --context-menu-background-padding-default: 10px;
-          --context-menu-mac-padding: 21px;
-        }
-
-        /* context menu width */
-        #placesContext menuitem:not(.menuitem-iconic, .in-menulist, [type="checkbox"], [checked="true"]),
-        #placesContext menu:not(.menu-iconic, .in-menulist, [type="checkbox"], [checked="true"]) {
-          padding-inline-end: var(--context-menu-background-padding) !important;
-        }
-
-        /* text position */
-        #placesContext menuitem:not(.menuitem-iconic, .in-menulist, [type="checkbox"], [checked="true"]) > .menu-text,
-        #placesContext menu:not(.menu-iconic, .in-menulist, [type="checkbox"], [checked="true"]) > .menu-text {
-          padding-inline-start: var(--context-menu-mac-padding) !important;
-        }
-
-        /* Checkbox menuitem, None iconic menu */
-        #placesContext menuitem[type="checkbox"],
-        #placesContext menu:not(.menu-iconic) {
-          padding-inline-start: calc(
-            var(--context-menu-background-padding) + var(--context-menu-mac-padding)
-          ) !important;
-        }
-      }
-      /* Icon lists */
-      /*= placeContext =============================================================*/
-      #placesContext_open {
-        --menuitem-image: url("chrome://browser/skin/lepton/link-square.svg");
-      }
-
-      #placesContext_openBookmarkContainer\:tabs,
-      #placesContext_openBookmarkLinks\:tabs {
-        --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
-      }
-
-      #placesContext_open\:newtab,
-      #placesContext_openContainer\:tabs,
-      #placesContext_openLinks\:tabs {
-        --menuitem-image: url("chrome://browser/skin/new-tab.svg");
-      }
-
-      #placesContext_open\:newwindow {
-        --menuitem-image: url("chrome://browser/skin/window.svg");
-      }
-
-      #placesContext_open\:newprivatewindow {
-        --menuitem-image: url("chrome://browser/skin/privateBrowsing.svg");
-      }
-
-      #placesContext_show_bookmark\:info,
-      #placesContext_show\:info,
-      #placesContext_show_folder\:info {
-        --menuitem-image: url("chrome://global/skin/icons/edit.svg");
-      }
-
-      #placesContext_deleteBookmark,
-      #placesContext_deleteFolder,
-      #placesContext_delete,
-      #placesContext_delete_history {
-        --menuitem-image: url("chrome://global/skin/icons/delete.svg");
-      }
-
-      #placesContext_deleteHost {
-        --menuitem-image: url("chrome://browser/skin/lepton/eye-hide.svg");
-      }
-
-      #placesContext_sortBy\:name {
-        --menuitem-image: url("chrome://browser/skin/lepton/text-sort-ascending.svg");
-      }
-
-      #placesContext_cut {
-        --menuitem-image: url("chrome://browser/skin/edit-cut.svg");
-      }
-
-      #placesContext_copy {
-        --menuitem-image: url("chrome://browser/skin/lepton/edit-copy.svg");
-      }
-
-      #placesContext_paste_group {
-        --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
-      }
-
-      #placesContext_new\:bookmark {
-        --menuitem-image: url("chrome://browser/skin/bookmark.svg");
-      }
-
-      #placesContext_new\:folder {
-        --menuitem-image: url("chrome://global/skin/icons/folder.svg");
-      }
-      @supports -moz-bool-pref("userChrome.icon.library") {
-        #placesContext_new\:folder {
-          --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
-        }
-      }
-
-      #placesContext_new\:separator {
-        --menuitem-image: url("chrome://browser/skin/lepton/vertical-line.svg");
-      }
-
-      #placesContext_paste {
-        --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
-      }
-
-      #placesContext_createBookmark {
-        --menuitem-image: url("chrome://browser/skin/bookmark.svg");
-      }
-
-      #show-other-bookmarks_PersonalToolbar {
-        /* checkbox */
-        /* --menuitem-image: url("chrome://browser/skin/lepton/star-line-horizontal.svg"); */
-      }
-
-      #placesContext_showAllBookmarks {
-        --menuitem-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
-      }
-
-      .openintabs-menuitem {
-        --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
-      }
-
-      /*= organizeButtonPopup ======================================================*/
-      #newbookmark {
-        --menuitem-image: url("chrome://browser/skin/bookmark.svg");
-      }
-
-      #newfolder {
-        --menuitem-image: url("chrome://global/skin/icons/folder.svg");
-      }
-      @supports -moz-bool-pref("userChrome.icon.library") {
-        #newfolder {
-          --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
-        }
-      }
-
-      #newseparator {
-        --menuitem-image: url("chrome://browser/skin/lepton/vertical-line.svg");
-      }
-
-      #orgUndo {
-        --menuitem-image: url("chrome://browser/skin/lepton/undo.svg");
-      }
-
-      #orgCut {
-        --menuitem-image: url("chrome://browser/skin/edit-cut.svg");
-      }
-
-      #orgCopy {
-        --menuitem-image: url("chrome://browser/skin/lepton/edit-copy.svg");
-      }
-
-      #orgPaste {
-        --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
-      }
-
-      #orgDelete {
-        --menuitem-image: url("chrome://global/skin/icons/delete.svg");
-      }
-
-      #orgSelectAll {
-        --menuitem-image: url("chrome://browser/skin/lepton/select-all-on.svg");
-      }
-
-      #orgClose {
-        --menuitem-image: url("chrome://global/skin/icons/close.svg");
-      }
-
-      /*= viewMenuPopup ============================================================*/
-      #viewColumns {
-        --menuitem-image: url("chrome://global/skin/icons/columnpicker.svg");
-      }
-
-      #viewSort {
-        --menuitem-image: url("chrome://browser/skin/lepton/text-sort-ascending.svg");
-      }
-
-      /*= maintenanceButtonPopup ===================================================*/
-      #backupBookmarks {
-        --menuitem-image: url("chrome://devtools/skin/images/datastore.svg");
-      }
-
-      #fileImport {
-        --menuitem-image: url("chrome://browser/skin/save.svg");
-      }
-
-      #fileExport {
-        --menuitem-image: url("chrome://browser/skin/open.svg");
-      }
-
-      #browserImport {
-        --menuitem-image: url("chrome://browser/skin/import.svg");
-      }
-    }
     @media (-moz-gtk-csd-available) {
       /*= Layout Fixes =========================================================*/
       menupopup menu {
@@ -2360,7 +2431,6 @@
           --organizer-toolbar-field-focus-box-shadow: unset;
           --organizer-pane-field-border-color: ThreeDShadow;
         }
-
         @media not all and (prefers-contrast) {
           :root {
             --organizer-color: var(--in-content-page-color);
@@ -2389,7 +2459,6 @@
             --organizer-toolbar-field-focus-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.23);
             --organizer-pane-field-border-color: color-mix(in srgb, currentColor 41%, transparent);
           }
-
           @media (-moz-toolbar-prefers-color-scheme: dark), (prefers-color-scheme: dark) {
             :root {
               --organizer-color: rgb(251, 251, 254);
@@ -2405,6 +2474,7 @@
             }
           }
         }
+
         /*- Toolbar & Menus ------------------------------------------------------*/
         #placesToolbar {
           appearance: none !important;
@@ -2414,22 +2484,18 @@
           padding: 4px !important;
           padding-inline-end: 6px !important;
         }
-
         #placesToolbar > toolbarbutton {
           appearance: none !important;
           padding: 5px !important;
           border-radius: 4px !important;
         }
-
         #placesToolbar > toolbarbutton[disabled] {
           opacity: 0.6 !important;
         }
-
         #placesToolbar > toolbarbutton:not([disabled]):hover {
           background-color: var(--organizer-hover-background) !important;
           color: var(--organizer-hover-color) !important;
         }
-
         #placesToolbar > toolbarbutton:not([disabled]):hover:active {
           background-color: var(--organizer-selected-background) !important;
         }
@@ -2444,7 +2510,6 @@
         #placesMenu {
           margin-inline-start: 6px !important;
         }
-
         #placesMenu > menu {
           appearance: none !important;
           color: var(--organizer-color) !important;
@@ -2453,19 +2518,16 @@
           padding-inline-start: 5px !important;
           margin-inline-end: 2px !important;
         }
-
         #placesMenu > menu[_moz-menuactive="true"],
         #placesMenu > menu:hover {
           background-color: var(--organizer-hover-background) !important;
           color: var(--organizer-hover-color) !important;
         }
-
         #placesMenu > menu:hover:active,
         #placesMenu > menu[open] {
           background-color: var(--organizer-selected-background) !important;
           color: var(--organizer-selected-color) !important;
         }
-
         #placesMenu > menu > .menubar-text {
           margin-block: 0 !important;
           /* override menu.css */
@@ -2556,7 +2618,6 @@
           background-color: var(--organizer-hover-background) !important;
           color: var(--organizer-color) !important;
         }
-
         treecol:not([hideheader="true"], [sortable="false"]):hover:active,
         treecolpicker:hover:active {
           background-color: var(--organizer-selected-background) !important;
@@ -2587,40 +2648,37 @@
         treechildren::-moz-tree-row {
           background-color: transparent !important;
         }
-
         treechildren::-moz-tree-row(hover) {
           background-color: var(--organizer-hover-background) !important;
         }
-
         treechildren::-moz-tree-row(selected) {
           background-color: var(--organizer-selected-background) !important;
           color: var(--organizer-selected-color) !important;
           border: 1px solid transparent !important;
         }
-
         treechildren::-moz-tree-image(hover),
         treechildren::-moz-tree-twisty(hover),
         treechildren::-moz-tree-cell-text(hover) {
           color: var(--organizer-hover-color) !important;
         }
-
         treechildren::-moz-tree-image(selected),
         treechildren::-moz-tree-twisty(selected),
         treechildren::-moz-tree-cell-text(selected) {
           color: var(--organizer-selected-color) !important;
         }
-
         treechildren::-moz-tree-separator {
           height: 1px !important;
           border-color: var(--organizer-separator-color) !important;
         }
-
         treechildren::-moz-tree-separator(hover) {
           border-color: var(--organizer-hover-color) !important;
         }
-
         treechildren::-moz-tree-separator(selected) {
           border-color: var(--organizer-selected-color) !important;
+        }
+        treechildren::-moz-tree-cell-text(primary, dropOn),
+        treechildren::-moz-tree-drop-feedback {
+          background-color: var(--organizer-outline-color) !important;
         }
 
         /*- Info Box -------------------------------------------------------------*/
@@ -2642,36 +2700,34 @@
           border-radius: 4px !important;
           color: var(--organizer-color) !important;
           background-color: var(--organizer-content-background) !important;
-          list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
           -moz-context-properties: fill !important;
           fill: currentColor !important;
         }
-
         #editBookmarkPanelRows .expander-up:hover,
         #editBookmarkPanelRows .expander-down:hover {
           background-color: var(--organizer-hover-background) !important;
           color: var(--organizer-hover-color) !important;
         }
-
         #editBookmarkPanelRows .expander-up:hover:active,
         #editBookmarkPanelRows .expander-down:hover:active {
           background-color: var(--organizer-selected-background) !important;
           color: var(--organizer-selected-color) !important;
         }
-
         #editBookmarkPanelRows .expander-up:focus-visible,
         #editBookmarkPanelRows .expander-down:focus-visible {
           outline: 2px solid var(--organizer-outline-color) !important;
           outline-offset: -1px !important;
         }
+        #editBookmarkPanelRows .expander-up > .button-box,
+        #editBookmarkPanelRows .expander-down > .button-box {
+          padding: 0 !important;
+        }
 
         #editBookmarkPanelRows .expander-up {
           list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
         }
-
-        #editBookmarkPanelRows .expander-up > .button-box,
-        #editBookmarkPanelRows .expander-down > .button-box {
-          padding: 0 !important;
+        #editBookmarkPanelRows .expander-down {
+          list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
         }
 
         #places input {
@@ -2682,12 +2738,10 @@
           min-height: 20px !important;
           padding-inline: 4px !important;
         }
-
         #places input:focus {
           outline: 2px solid var(--organizer-outline-color) !important;
           outline-offset: -1px !important;
         }
-
         #places input:not(:read-write):focus {
           outline: none !important;
         }
@@ -2704,52 +2758,38 @@
           border: 1px solid var(--organizer-border-color) !important;
           border-radius: 4px !important;
         }
-
         #editBMPanel_tagsSelectorRow > richlistbox > richlistitem {
           border: 1px solid transparent !important;
         }
-
         #editBMPanel_tagsSelectorRow > richlistbox > richlistitem:hover {
           background-color: var(--organizer-hover-background) !important;
           color: var(--organizer-hover-color) !important;
         }
-
         #editBMPanel_tagsSelectorRow > richlistbox > richlistitem[selected] {
           background-color: var(--organizer-selected-background) !important;
           color: var(--organizer-selected-color) !important;
         }
 
-        /*- Radio Button ---------------------------------------------------------*/
+        /*- Radio Button -------------------------------------------------------------*/
         menuitem[type="radio"] {
           /* margin-inline-start: 0 !important; */
           appearance: none !important;
         }
-
         menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
           appearance: none !important;
           width: 16px !important;
           height: 16px !important;
-          padding: 0 !important;
           border: 1px solid var(--in-content-box-border-color) !important;
           border-radius: 100% !important;
+          padding: 0 !important;
+          margin-inline: 0 6px !important;
           margin-block: 2px !important;
           /* extend the vertical clicktarget */
-          margin-inline: 0 6px !important;
           background-color: var(--in-content-button-background) !important;
           background-position: center !important;
           flex-shrink: 0 !important;
           /* avoid shrinking inside flex container */
         }
-
-        menuitem[type="radio"]:not([disabled="true"]):hover > .menu-iconic-left > .menu-iconic-icon {
-          background-color: var(--in-content-button-background-hover) !important;
-          color: var(--in-content-button-text-color-hover) !important;
-        }
-
-        menuitem[type="radio"]:not([disabled="true"]):hover:active > .menu-iconic-left > .menu-iconic-icon {
-          background-color: var(--in-content-button-background-active) !important;
-        }
-
         menuitem[type="radio"] > .menu-iconic-left[checked="true"] > .menu-iconic-icon {
           -moz-context-properties: fill !important;
           fill: currentColor !important;
@@ -2760,18 +2800,22 @@
           /* Style the button also when printing with "Print Backgrounds" unchecked */
           color-adjust: exact !important;
         }
-
+        menuitem[type="radio"]:not([disabled="true"]):hover > .menu-iconic-left > .menu-iconic-icon {
+          background-color: var(--in-content-button-background-hover) !important;
+          color: var(--in-content-button-text-color-hover) !important;
+        }
+        menuitem[type="radio"]:not([disabled="true"]):hover:active > .menu-iconic-left > .menu-iconic-icon {
+          background-color: var(--in-content-button-background-active) !important;
+        }
         menuitem[type="radio"]:not([disabled="true"])[checked="true"]:hover > .menu-iconic-left > .menu-iconic-icon {
           background-color: var(--in-content-primary-button-background-hover) !important;
           color: var(--in-content-primary-button-text-color-hover) !important;
         }
-
         menuitem[type="radio"]:not([disabled="true"])[checked="true"]:hover:active
           > .menu-iconic-left
           > .menu-iconic-icon {
           background-color: var(--in-content-primary-button-background-active) !important;
         }
-
         menuitem[type="radio"] > .menu-iconic-text {
           margin-inline: 0 8px !important;
           padding-inline-start: 0 !important;
@@ -2781,131 +2825,612 @@
         menuitem[type="radio"][disabled="true"],
         menuitem[type="checkbox"][disabled="true"] {
           color: inherit !important;
-        }
-
-        menuitem[type="radio"][disabled="true"],
-        menuitem[type="checkbox"][disabled="true"] {
           opacity: 0.5 !important;
         }
 
-        /*- Check Box ------------------------------------------------------------*/
+        /*- Check Box ----------------------------------------------------------------*/
         /* From checkbox.css */
         menuitem[type="checkbox"] {
           appearance: none !important;
           -moz-box-align: center !important;
           margin: 0px 2px !important;
         }
-
-        menuitem[type="checkbox"] > .menu-iconic-left > .menu-iconic-icon {
-          margin-inline-end: 2px !important;
-        }
-
-        menuitem[type="checkbox"] > .menu-iconic-text {
-          margin: 1px 0 !important;
-        }
-
-        menuitem[type="checkbox"][disabled="true"] {
-          opacity: 0.4 !important;
-        }
-
         menuitem[type="checkbox"] > .menu-iconic-left > .menu-iconic-icon {
           appearance: none !important;
-          color: var(--checkbox-border-color, ThreeDDarkShadow) !important;
-          background-color: var(--checkbox-unchecked-bgcolor, Field) !important;
+          width: 16px !important;
+          height: 16px !important;
           border: 1px solid currentColor !important;
           border-radius: 2px !important;
+          color: var(--checkbox-border-color, ThreeDDarkShadow) !important;
+          background-color: var(--checkbox-unchecked-bgcolor, Field) !important;
           margin-inline-end: 6px !important;
+          /* or 2px */
+          margin-block: 2px !important;
+          /* From common.css */
         }
-
-        menuitem[type="checkbox"] > .menu-iconic-left > .menu-iconic-icon {
-          height: 16px !important;
-          width: 16px !important;
-        }
-
-        menuitem[type="checkbox"]:not([disabled="true"]):hover > .menu-iconic-left > .menu-iconic-icon {
-          background-color: var(
-            --checkbox-unchecked-hover-bgcolor,
-            color-mix(in srgb, -moz-accent-color 4%, Field)
-          ) !important;
-        }
-
-        menuitem[type="checkbox"]:not([disabled="true"]):hover:active > .menu-iconic-left > .menu-iconic-icon {
-          background-color: var(
-            --checkbox-unchecked-active-bgcolor,
-            color-mix(in srgb, -moz-accent-color 8%, Field)
-          ) !important;
-        }
-
         menuitem[type="checkbox"] > .menu-iconic-left[checked="true"] > .menu-iconic-icon {
+          -moz-context-properties: fill !important;
+          fill: currentColor !important;
           border-color: var(--checkbox-checked-border-color, transparent) !important;
-          background-color: var(--checkbox-checked-bgcolor, -moz-accent-color) !important;
           background-image: url("chrome://global/skin/icons/check.svg") !important;
           background-position: center !important;
           background-repeat: no-repeat !important;
-          -moz-context-properties: fill !important;
-          fill: currentColor !important;
-          color: var(--checkbox-checked-color, -moz-accent-color-foreground) !important;
           /* Style the button also when printing with "Print Backgrounds" unchecked */
           color-adjust: exact !important;
+          color: var(--checkbox-checked-color, AccentColorText) !important;
+          background-color: var(--checkbox-checked-bgcolor, AccentColor) !important;
         }
-
+        @supports -moz-bool-pref("userChrome.compatibility.accent_color") {
+          menuitem[type="checkbox"] > .menu-iconic-left[checked="true"] > .menu-iconic-icon {
+            color: var(--checkbox-checked-color, -moz-accent-color-foreground) !important;
+            background-color: var(--checkbox-checked-bgcolor, -moz-accent-color) !important;
+          }
+        }
+        menuitem[type="checkbox"]:not([disabled="true"]):hover > .menu-iconic-left > .menu-iconic-icon {
+          background-color: var(
+            --checkbox-unchecked-hover-bgcolor,
+            color-mix(in srgb, AccentColor 4%, Field)
+          ) !important;
+        }
+        @supports -moz-bool-pref("userChrome.compatibility.accent_color") {
+          menuitem[type="checkbox"]:not([disabled="true"]):hover > .menu-iconic-left > .menu-iconic-icon {
+            background-color: var(
+              --checkbox-unchecked-hover-bgcolor,
+              color-mix(in srgb, -moz-accent-color 4%, Field)
+            ) !important;
+          }
+        }
+        menuitem[type="checkbox"]:not([disabled="true"]):hover:active > .menu-iconic-left > .menu-iconic-icon {
+          background-color: var(
+            --checkbox-unchecked-active-bgcolor,
+            color-mix(in srgb, AccentColor 8%, Field)
+          ) !important;
+        }
+        @supports -moz-bool-pref("userChrome.compatibility.accent_color") {
+          menuitem[type="checkbox"]:not([disabled="true"]):hover:active > .menu-iconic-left > .menu-iconic-icon {
+            background-color: var(
+              --checkbox-unchecked-active-bgcolor,
+              color-mix(in srgb, -moz-accent-color 8%, Field)
+            ) !important;
+          }
+        }
         menuitem[type="checkbox"]:not([disabled="true"]):hover > .menu-iconic-left[checked="true"] > .menu-iconic-icon {
           background-color: var(
             --checkbox-checked-hover-bgcolor,
-            color-mix(in srgb, currentColor 12.5%, -moz-accent-color)
+            color-mix(in srgb, currentColor 12.5%, AccentColor)
           ) !important;
         }
-
+        @supports -moz-bool-pref("userChrome.compatibility.accent_color") {
+          menuitem[type="checkbox"]:not([disabled="true"]):hover
+            > .menu-iconic-left[checked="true"]
+            > .menu-iconic-icon {
+            background-color: var(
+              --checkbox-checked-hover-bgcolor,
+              color-mix(in srgb, currentColor 12.5%, -moz-accent-color)
+            ) !important;
+          }
+        }
         menuitem[type="checkbox"]:not([disabled="true"]):hover:active
           > .menu-iconic-left[checked="true"]
           > .menu-iconic-icon {
           background-color: var(
             --checkbox-checked-active-bgcolor,
-            color-mix(in srgb, currentColor 25%, -moz-accent-color)
+            color-mix(in srgb, currentColor 25%, AccentColor)
           ) !important;
         }
-
+        @supports -moz-bool-pref("userChrome.compatibility.accent_color") {
+          menuitem[type="checkbox"]:not([disabled="true"]):hover:active
+            > .menu-iconic-left[checked="true"]
+            > .menu-iconic-icon {
+            background-color: var(
+              --checkbox-checked-active-bgcolor,
+              color-mix(in srgb, currentColor 25%, -moz-accent-color)
+            ) !important;
+          }
+        }
         menuitem[type="checkbox"]:focus > .menu-iconic-left > .menu-iconic-icon {
-          outline: 2px solid var(--focus-outline-color, -moz-accent-color) !important;
+          outline: 2px solid var(--focus-outline-color, AccentColor) !important;
           outline-offset: var(--focus-outline-offset, 2px) !important;
         }
-
+        @supports -moz-bool-pref("userChrome.compatibility.accent_color") {
+          menuitem[type="checkbox"]:focus > .menu-iconic-left > .menu-iconic-icon {
+            outline: 2px solid var(--focus-outline-color, -moz-accent-color) !important;
+          }
+        }
         @media (prefers-contrast) {
           menuitem[type="checkbox"]:not([disabled="true"]) > .menu-iconic-left > .menu-iconic-icon {
             /* color will set the border-color on the check due to how HCM works for in-content pages. */
-            color: var(--checkbox-checked-border-color, color-mix(in srgb, -moz-accent-color 4%, Field)) !important;
+            color: var(--checkbox-checked-border-color, color-mix(in srgb, AccentColor 4%, Field)) !important;
           }
-
+          @supports -moz-bool-pref("userChrome.compatibility.accent_color") {
+            menuitem[type="checkbox"]:not([disabled="true"]) > .menu-iconic-left > .menu-iconic-icon {
+              /* color will set the border-color on the check due to how HCM works for in-content pages. */
+              color: var(--checkbox-checked-border-color, color-mix(in srgb, -moz-accent-color 4%, Field)) !important;
+            }
+          }
           menuitem[type="checkbox"] > .menu-iconic-left[checked="true"] {
             color: var(--checkbox-checked-border-color, currentColor) !important;
-            fill: var(--checkbox-checked-color, -moz-accent-color-foreground) !important;
+            fill: var(--checkbox-checked-color, AccentColorText) !important;
           }
-
+          @supports -moz-bool-pref("userChrome.compatibility.accent_color") {
+            menuitem[type="checkbox"] > .menu-iconic-left[checked="true"] {
+              fill: var(--checkbox-checked-color, -moz-accent-color-foreground) !important;
+            }
+          }
           menuitem[type="checkbox"]:not([disabled="true"]):hover:active
             > .menu-iconic-left[checked="true"]
             > .menu-iconic-icon,
           menuitem[type="checkbox"]:not([disabled="true"]):hover
             > .menu-iconic-left[checked="true"]
             > .menu-iconic-icon {
-            color: var(--checkbox-checked-border-color-hover, -moz-accent-color-foreground) !important;
-            fill: var(--checkbox-checked-border-color-hover, -moz-accent-color-foreground) !important;
+            color: var(--checkbox-checked-border-color-hover, AccentColorText) !important;
+            fill: var(--checkbox-checked-border-color-hover, AccentColorText) !important;
+          }
+          @supports -moz-bool-pref("userChrome.compatibility.accent_color") {
+            menuitem[type="checkbox"]:not([disabled="true"]):hover:active
+              > .menu-iconic-left[checked="true"]
+              > .menu-iconic-icon,
+            menuitem[type="checkbox"]:not([disabled="true"]):hover
+              > .menu-iconic-left[checked="true"]
+              > .menu-iconic-icon {
+              color: var(--checkbox-checked-border-color-hover, -moz-accent-color-foreground) !important;
+              fill: var(--checkbox-checked-border-color-hover, -moz-accent-color-foreground) !important;
+            }
           }
         }
-        /* From common.css */
-        menuitem[type="checkbox"] > .menu-iconic-left > .menu-iconic-icon {
-          margin-block: 2px !important;
+        menuitem[type="checkbox"] > .menu-iconic-text {
+          margin: 1px 0 !important;
+        }
+        menuitem[type="checkbox"][disabled="true"] {
+          opacity: 0.4 !important;
         }
 
-        /*- Menu Separtor --------------------------------------------------------*/
+        /*- Menu Separator -----------------------------------------------------------*/
         menuseparator {
           appearance: none !important;
           min-width: 2px;
           min-height: 0;
           border-top: 1px solid var(--in-content-box-border-color, ThreeDDarkShadow);
           border-bottom: none;
-          margin: var(--panel-separator-margin, 6px);
           padding: 0;
+          margin: var(--panel-separator-margin, 6px);
         }
+      }
+    }
+  }
+}
+/** Monospace *****************************************************************/
+@supports -moz-bool-pref("userContent.page.monospace") {
+  @-moz-document url-prefix("about:"),
+               url-prefix("chrome://browser/content/places/places.xhtml"),
+               regexp("^(((jar:)?file:///)|(chrome://)).*/$")
+  {
+    * {
+      font-family: -moz-fixed;
+    }
+  }
+}
+/** Menu - Icons Layout *******************************************************/
+@supports not -moz-bool-pref("userChrome.icon.disabled") {
+  @supports -moz-bool-pref("userChrome.icon.menu") {
+    @-moz-document url("chrome://browser/content/places/places.xhtml"),
+               url("about:downloads") {
+      menupopup menuitem:not([type="checkbox"][checked="true"], [type="radio"]),
+      menupopup menu:not([type="checkbox"][checked="true"], [type="radio"]) {
+        -moz-appearance: none !important;
+        /* Linux: menulist */
+      }
+
+      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+        menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+        menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+      menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
+        > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+      menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+        /* Color */
+        -moz-context-properties: fill, fill-opacity !important;
+        fill: currentColor !important;
+        /* Layout */
+        background-size: 16px !important;
+        background-repeat: no-repeat !important;
+        background-image: var(--menuitem-image);
+      }
+
+      /* For native context menus */
+      @supports -moz-bool-pref("widget.macos.native-context-menus") or -moz-bool-pref("widget.gtk.native-context-menus") {
+        :not(menu, #ContentSelectDropdown)
+          > menupopup
+          > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        :not(menu, #ContentSelectDropdown) > menupopup > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+          list-style-image: var(--menuitem-image, url("chrome://browser/skin/lepton/blank.svg")) !important;
+        }
+      }
+
+      /* Padding */
+      :root {
+        --uc-menu-background-position: left;
+        --context-menu-background-padding-default: 5px;
+        --context-menu-background-padding: var(--context-menu-background-padding-default);
+      }
+      :root:-moz-locale-dir(rtl) {
+        --uc-menu-background-position: right;
+      }
+
+      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+        menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+      menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+        menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+      menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
+        > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+      menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+        background-position: var(--uc-menu-background-position) var(--context-menu-background-padding) center !important;
+        padding-inline-start: var(--context-menu-background-padding) !important;
+      }
+
+      /* Padding - Windows */
+      @media (-moz-os-version: windows-win7), (-moz-platform: windows-win7) {
+        :root {
+          --context-menu-background-padding-default: 2px;
+        }
+      }
+      @media (-moz-os-version: windows-win8), (-moz-platform: windows-win8) {
+        :root {
+          --context-menu-background-padding-default: 3px;
+        }
+      }
+      @media (-moz-os-version: windows-win7),
+        (-moz-platform: windows-win7),
+        (-moz-os-version: windows-win8),
+        (-moz-platform: windows-win8) {
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+        menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
+          > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+          background-position: left var(--context-menu-background-padding) center !important;
+          padding-inline-start: 0 !important;
+        }
+      }
+      @media (-moz-os-version: windows-win10), (-moz-platform: windows-win10) {
+        :root {
+          --context-menu-background-padding: 1em;
+          --context-menu-text-padding: 24px;
+          /* 16px + 8px */
+          --menu-background-padding-default: calc(
+            var(--context-menu-background-padding) + var(--context-menu-text-padding)
+          );
+        }
+
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+        menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
+          > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+          padding-inline-start: var(--menu-background-padding-default) !important;
+          margin-left: 0 !important;
+        }
+      }
+      /* Padding - Linux */
+      @media (-moz-gtk-csd-available) {
+        :root {
+          --context-menu-background-padding-default: 6px;
+        }
+
+        /* Contextmenu Checkbox Unset */
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu) menuitem[type="checkbox"] {
+          margin-inline: 0 !important;
+        }
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menuitem[type="checkbox"]
+          > .menu-iconic-left
+          > .menu-iconic-icon {
+          margin-inline-end: 0 !important;
+        }
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menuitem[type="checkbox"]:not([checked="true"])
+          > .menu-iconic-left
+          > .menu-iconic-icon {
+          border: none !important;
+          background-color: unset !important;
+        }
+      }
+      /* Padding - Mac */
+      @supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled") {
+        :root {
+          --context-menu-background-padding-default: 10px;
+          --context-menu-mac-padding: 21px;
+        }
+
+        /* context menu width */
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+          padding-inline-end: var(--context-menu-background-padding) !important;
+        }
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"])
+          > .menu-text,
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menu:not(.menu-iconic, .in-menulist, [checked="true"])
+          > .menu-text {
+          /* text position */
+          padding-inline-start: var(--context-menu-mac-padding) !important;
+        }
+
+        /* Checkbox menuitem, None iconic menu */
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu) menuitem[checked="true"],
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu) menu:not(.menu-iconic) {
+          padding-inline-start: calc(
+            var(--context-menu-background-padding) + var(--context-menu-mac-padding)
+          ) !important;
+        }
+      }
+      /*= Context Menu ===========================================================*/
+      @supports -moz-bool-pref("userChrome.icon.context_menu") {
+        /* Icon lists */
+        /*= downloadsContextMenu =====================================================*/
+        .downloadPauseMenuItem {
+          --menuitem-image: url("chrome://global/skin/media/pause-fill.svg");
+        }
+
+        .downloadResumeMenuItem {
+          --menuitem-image: url("chrome://global/skin/media/play-fill.svg");
+        }
+
+        .downloadUnblockMenuItem {
+          --menuitem-image: url("chrome://browser/skin/lepton/checkmark-circle.svg");
+        }
+
+        .downloadUseSystemDefaultMenuItem {
+          --menuitem-image: url("chrome://browser/skin/open.svg");
+        }
+
+        .downloadAlwaysUseSystemDefaultMenuItem {
+          /* checkbox */
+          --menuitem-image: url("chrome://browser/skin/lepton/folder-globe.svg");
+        }
+
+        .downloadAlwaysOpenSimilarFilesMenuItem {
+          /* checkbox */
+          --menuitem-image: url("chrome://browser/skin/lepton/fluid.svg");
+        }
+
+        .downloadShowMenuItem {
+          --menuitem-image: url("chrome://global/skin/icons/folder.svg");
+        }
+        @supports -moz-bool-pref("userChrome.icon.library") {
+          .downloadShowMenuItem {
+            --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+          }
+        }
+
+        #downloadsContextMenu > menuitem.downloadOpenReferrerMenuItem,
+        #downloadsContextMenu > menuitem[command="downloadsCmd_openReferrer"] {
+          --menuitem-image: url("chrome://browser/skin/lepton/link-square.svg");
+        }
+        #downloadsContextMenu > menuitem.downloadCopyLocationMenuItem,
+        #downloadsContextMenu > menuitem[command="downloadsCmd_copyLocation"] {
+          --menuitem-image: url("chrome://browser/skin/lepton/link.svg");
+        }
+
+        .downloadDeleteFileMenuItem {
+          --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+        }
+
+        .downloadRemoveFromHistoryMenuItem {
+          --menuitem-image: url("chrome://browser/skin/lepton/eraser.svg");
+        }
+
+        #downloadsContextMenu > menuitem[command="downloadsCmd_clearList"],
+        #downloadsContextMenu > menuitem[command="downloadsCmd_clearDownloads"] {
+          --menuitem-image: url("chrome://browser/skin/lepton/broom.svg");
+        }
+
+        /*= placeContext =============================================================*/
+        #placesContext_open {
+          --menuitem-image: url("chrome://browser/skin/lepton/link-square.svg");
+        }
+
+        #placesContext_openBookmarkContainer\:tabs,
+        #placesContext_openBookmarkLinks\:tabs {
+          --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
+        }
+
+        #placesContext_open\:newtab,
+        #placesContext_openContainer\:tabs,
+        #placesContext_openLinks\:tabs {
+          --menuitem-image: url("chrome://browser/skin/new-tab.svg");
+        }
+
+        #placesContext_open\:newcontainertab {
+          --menuitem-image: url("chrome://browser/skin/lepton/container-openin-16.svg");
+        }
+
+        #placesContext_open\:newwindow {
+          --menuitem-image: url("chrome://browser/skin/window.svg");
+        }
+
+        #placesContext_open\:newprivatewindow {
+          --menuitem-image: url("chrome://browser/skin/privateBrowsing.svg");
+        }
+
+        #placesContext_show_bookmark\:info,
+        #placesContext_show\:info,
+        #placesContext_show_folder\:info {
+          --menuitem-image: url("chrome://global/skin/icons/edit.svg");
+        }
+
+        #placesContext_deleteBookmark,
+        #placesContext_deleteFolder,
+        #placesContext_delete,
+        #placesContext_delete_history {
+          --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+        }
+
+        #placesContext_deleteHost {
+          --menuitem-image: url("chrome://browser/skin/lepton/eye-hide.svg");
+        }
+
+        #placesContext_sortBy\:name {
+          --menuitem-image: url("chrome://browser/skin/lepton/text-sort-ascending.svg");
+        }
+
+        #placesContext_cut {
+          --menuitem-image: url("chrome://browser/skin/edit-cut.svg");
+        }
+
+        #placesContext_copy {
+          --menuitem-image: url("chrome://browser/skin/lepton/edit-copy.svg");
+        }
+
+        #placesContext_paste_group {
+          --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
+        }
+
+        #placesContext_new\:bookmark {
+          --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+        }
+
+        #placesContext_showInFolder,
+        #placesContext_new\:folder {
+          --menuitem-image: url("chrome://global/skin/icons/folder.svg");
+        }
+        @supports -moz-bool-pref("userChrome.icon.library") {
+          #placesContext_showInFolder,
+          #placesContext_new\:folder {
+            --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+          }
+        }
+
+        #placesContext_new\:separator {
+          --menuitem-image: url("chrome://browser/skin/lepton/vertical-line.svg");
+        }
+
+        #placesContext_paste {
+          --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
+        }
+
+        #placesContext_createBookmark {
+          --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+        }
+
+        #show-other-bookmarks_PersonalToolbar {
+          /* checkbox */
+          --menuitem-image: url("chrome://browser/skin/lepton/star-line-horizontal.svg");
+        }
+
+        #placesContext_showAllBookmarks {
+          --menuitem-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
+        }
+
+        .openintabs-menuitem {
+          --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
+        }
+      }
+      @supports -moz-bool-pref("userChrome.icon.global_menu") {
+        /*= organizeButtonPopup ======================================================*/
+        #newbookmark {
+          --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+        }
+
+        #newfolder {
+          --menuitem-image: url("chrome://global/skin/icons/folder.svg");
+        }
+        @supports -moz-bool-pref("userChrome.icon.library") {
+          #newfolder {
+            --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+          }
+        }
+
+        #newseparator {
+          --menuitem-image: url("chrome://browser/skin/lepton/vertical-line.svg");
+        }
+
+        #orgUndo {
+          --menuitem-image: url("chrome://browser/skin/lepton/undo.svg");
+        }
+
+        #orgCut {
+          --menuitem-image: url("chrome://browser/skin/edit-cut.svg");
+        }
+
+        #orgCopy {
+          --menuitem-image: url("chrome://browser/skin/lepton/edit-copy.svg");
+        }
+
+        #orgPaste {
+          --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
+        }
+
+        #orgDelete {
+          --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+        }
+
+        #orgSelectAll {
+          --menuitem-image: url("chrome://browser/skin/lepton/select-all-on.svg");
+        }
+
+        #orgClose {
+          --menuitem-image: url("chrome://global/skin/icons/close.svg");
+        }
+
+        /*= viewMenuPopup ============================================================*/
+        #viewColumns {
+          --menuitem-image: url("chrome://global/skin/icons/columnpicker.svg");
+        }
+
+        #viewSort {
+          --menuitem-image: url("chrome://browser/skin/lepton/text-sort-ascending.svg");
+        }
+
+        /*= maintenanceButtonPopup ===================================================*/
+        #backupBookmarks {
+          --menuitem-image: url("chrome://devtools/skin/images/datastore.svg");
+        }
+
+        #fileImport {
+          --menuitem-image: url("chrome://browser/skin/save.svg");
+        }
+
+        #fileExport {
+          --menuitem-image: url("chrome://browser/skin/open.svg");
+        }
+
+        #browserImport {
+          --menuitem-image: url("chrome://browser/skin/import.svg");
+        }
+      }
+    }
+  }
+}
+/** Download Panel ************************************************************/
+@-moz-document url-prefix("about:downloads") {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports -moz-bool-pref("userChrome.decoration.download_panel") {
+      /* Accent Color for downloaded item */
+      #downloadsListBox .download-state[exists] .downloadDetails {
+        color: var(--button-primary-bgcolor);
+      }
+      #downloadsListBox .download-state[exists] .downloadDetails.downloadDetailsHover {
+        color: var(--button-primary-hover-bgcolor);
+      }
+
+      /* File moved or missing */
+      #downloadsListBox .download-state:not([exists], [state="0"]) .downloadTarget {
+        text-decoration: line-through;
+        text-decoration-color: color-mix(in srgb, currentColor 65%, transparent);
+      }
+      #downloadsListBox .download-state:not([exists], [state="0"]) .downloadTarget:hover {
+        text-decoration: none;
+      }
+      #downloadsListBox .download-state:not([exists], [state="0"]) .downloadTypeIcon {
+        filter: grayscale(100%) !important;
       }
     }
   }

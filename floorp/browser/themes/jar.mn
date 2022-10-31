@@ -416,6 +416,9 @@ browser.jar:
   skin/classic/browser/floorplegacy/menu.svg                   (designs/floorp-legacy/menu.svg)
   skin/classic/browser/floorplegacy/newtab.svg                 (designs/floorp-legacy/newtab.svg)
 
+# Floorp Fluenial 
+  skin/classic/browser/floorplegacy/test_legacy.css           (designs/floorp-legacy/test_legacy.css)
+
 # New tab background images
   skin/classic/browser/newtabbg-0.webp                            　 (newtabbg/newtabbg-0.webp)
   skin/classic/browser/newtabbg-1.webp                             　(newtabbg/newtabbg-1.webp)

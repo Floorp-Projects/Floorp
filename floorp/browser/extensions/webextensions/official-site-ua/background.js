@@ -1,28 +1,23 @@
-"use strict";
-var ua;
-var dispver;
+const targetURL = "<all_urls>";
+const targetUA = "Mozilla/5.0 (Android 12; Mobile; rv:102.0) Gecko/102.0 Firefox/102.0";
 
-async function getua() {
-  var defaultua = navigator.userAgent;
-  var replua = defaultua.substring(defaultua.indexOf('Firefox/'));
-  return browser.BrowserInfo.getDisplayVersion()
-  .then(data => {
-    var dispve = data;
-    dispver = dispve.replace(/ /g, "-");
-    ua = defaultua.replace(replua, "Floorp/"+dispver);
-    console.log(ua);
-    return ua;
-  })
-}
-async function rewriteUserAgentHeader(e) {
-  var ua = await getua()
-  for (var header of e.requestHeaders) {
-      header.value = ua;
+function rewriteUserAgentHeader(e) {
+    if (e.tabId !== -1) {
+        return;
     }
-  return {requestHeaders: e.requestHeaders};
+    if (e.documentUrl === undefined && e.type !== "main_frame") {
+        return;
+    }
+    e.requestHeaders.forEach(function (header) {
+        if (header.name.toLowerCase() === "user-agent") {
+            header.value = targetUA;
+        }
+    });
+    return { requestHeaders: e.requestHeaders };
 }
 
-browser.webRequest.onBeforeSendHeaders.addListener(rewriteUserAgentHeader,
-                                          {urls: ["https://ablaze.one/*","https://floorp.ablaze.one/*", "https://support.ablaze.one/"]},
-                                          ["blocking", "requestHeaders"]);
-                                          
+browser.webRequest.onBeforeSendHeaders.addListener(
+    rewriteUserAgentHeader,
+    { urls: [targetURL] },
+    ["blocking", "requestHeaders"]
+);

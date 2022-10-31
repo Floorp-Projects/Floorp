@@ -428,7 +428,7 @@ if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
                 ) {
                   let color_experiment = color
                   if(!("experiment" in themeData && themeData != null)) themeData.experiment = {"colors":{}}
-                  if(!("colors" in themeData.experiment && themeData.experiment != null)) themeData.experiment.colors = {}
+                  if(!("colors" in themeData.experiment && themeData.experiment != null && themeData.experiment.colors != null)) themeData.experiment.colors = {}
                   if("experimental" in theme && "colors" in theme.experimental){
                     while(color_experiment in themeData.experiment.colors || color_experiment in theme.experimental.colors){
                       color_experiment += "_"
@@ -470,7 +470,7 @@ if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
                 ) {
                   let image_experiment = image
                   if(!("experiment" in themeData && themeData != null)) themeData.experiment = {"images":{}}
-                  if(!("images" in themeData.experiment && themeData.experiment != null)) themeData.experiment.images = {}
+                  if(!("images" in themeData.experiment && themeData.experiment != null && themeData.experiment.images != null)) themeData.experiment.images = {}
                   if("experimental" in theme && "images" in theme.experimental){
                     while(image_experiment in themeData.experiment.images || image_experiment in theme.experimental.images){
                       image_experiment += "_"
@@ -534,7 +534,7 @@ if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
                 ) {
                   let property_experiment = property
                   if(!("experiment" in themeData && themeData != null)) themeData.experiment = {"properties":{}}
-                  if(!("properties" in themeData.experiment && themeData.experiment != null)) themeData.experiment.properties = {}
+                  if(!("properties" in themeData.experiment && themeData.experiment != null && themeData.experiment.properties != null)) themeData.experiment.properties = {}
                   if("experimental" in theme && "properties" in theme.experimental){
                     while(property_experiment in themeData.experiment.properties || property_experiment in theme.experimental.properties){
                       property_experiment += "_"

@@ -9,24 +9,46 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Delete system folders
+    - name: Setup Disk & Swap Space 💿
       run: |
+        echo Before:
+        free -h
+        df -h
+        echo
+        echo
+        sudo swapoff /mnt/swapfile
+        sudo rm /mnt/swapfile
+        sudo fallocate -l 10G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+        sudo apt autoremove -y
+        sudo apt clean
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/local/graalvm
+        sudo rm -rf /usr/local/share/powershell
+        sudo rm -rf /usr/local/share/chromium
+        sudo rm -rf /usr/local/lib/node_modules
         sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo fallocate -l 20G /home/runner/swapfile2
+        sudo chmod 600 /home/runner/swapfile2
+        sudo mkswap /home/runner/swapfile2
+        sudo swapon /home/runner/swapfile2
+        echo
+        echo
+        echo After:
+        free -h
+        df -h
         
-    - name: Prepare cross compiler
+    - name: Prepare cross compiler ⚒
       run: |
         sudo apt -y install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
         rustup target add aarch64-unknown-linux-gnu
 
-
-    - name: Add swap file
-      run: |
-        sudo fallocate -l 15G /swapfile2
-        sudo chmod 600 /swapfile2
-        sudo mkswap /swapfile2
-        sudo swapon /swapfile2
     - name: Create environment
       run: |
         sudo apt install xvfb
@@ -58,18 +80,20 @@ jobs:
         echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
         ./mach configure
 
-    - name: Build
+    - name: Build 🔨
       run: |
+        rm -rf /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/l10n-central/.git
         Xvfb :2 -screen 0 1024x768x24 &
         export DISPLAY=:2
         export WORKDIR=`pwd`
         echo "Current Workdir: $WORKDIR"
         ./mach build
+
+    - name: Package 📦
+      run: |
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
-    - name: Package
-      run: |
         export WORKDIR=`pwd`
         export DISPVER=`cat browser/config/version_display.txt`
         export DEBWORK=$WORKDIR/floorp-$DISPVER
@@ -100,13 +124,13 @@ jobs:
         cd DEBIAN
         chmod +x postinst postrm preinst prerm
         cd ../usr/lib/floorp
-        chmod +x floorp floorp-bin floorp.sh lib*.so pingsender plugin-container updater gmp-clearkey/0.1/libclearkey.so
+        chmod +x floorp floorp-bin floorp.sh lib*.so plugin-container updater gmp-clearkey/0.1/libclearkey.so
         sudo chown -R root:root $DEBWORK
         cd $WORKDIR
         sudo dpkg-deb -b $DEBWORK
         free
         df
-    - name: Compress artifacts
+    - name: Compress artifacts 🤖
       run: |
         export WORKDIR=`pwd`
         export DISPVER=`cat browser/config/version_display.txt`
@@ -115,7 +139,7 @@ jobs:
         sudo chmod +r floorp-$DISPVER.deb
         zip -r dist.zip floorp-$DISPVER.deb
 
-    - name: Publish
+    - name: Publish 🎁
       uses: actions/upload-artifact@v1
       with:
         name: floorp-debian-amd64

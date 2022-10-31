@@ -9,14 +9,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Setup disk
-      run: |
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /usr/local/lib/android
-        sudo rm -rf /opt/ghc
-    
-
-    - name: Setup Swap Space
+    - name: Setup Disk & Swap Space 💿
       run: |
         echo Before:
         free -h
@@ -25,7 +18,23 @@ jobs:
         echo
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
-        sudo fallocate -l 7G /home/runner/swapfile2
+        sudo fallocate -l 10G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+        sudo apt autoremove -y
+        sudo apt clean
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/local/graalvm
+        sudo rm -rf /usr/local/share/powershell
+        sudo rm -rf /usr/local/share/chromium
+        sudo rm -rf /usr/local/lib/node_modules
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo fallocate -l 20G /home/runner/swapfile2
         sudo chmod 600 /home/runner/swapfile2
         sudo mkswap /home/runner/swapfile2
         sudo swapon /home/runner/swapfile2
@@ -35,7 +44,7 @@ jobs:
         free -h
         df -h
 
-    - name: Create environment
+    - name: Create environment 🌲
       run: |
         sudo apt install xvfb
         git clone https://github.com/floorp-projects/l10n-central.git
@@ -61,16 +70,22 @@ jobs:
         echo 'MOZ_DATA_REPORTING=' >> mozconfig
         echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
         ./mach configure
-    - name: Build & Package
+
+    - name: Build 🔨
       run: |        
         Xvfb :2 -screen 0 1024x768x24 &
         export DISPLAY=:2
+        rm -rf /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/l10n-central/.git
         ./mach build
+
+    - name: Package 📦
+      run: | 
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
         zip -r dist.zip obj-x86_64-pc-linux-gnu/dist/*.tar.bz2
-    - name: Publish
+
+    - name: Publish 🎁
       uses: actions/upload-artifact@v1
       with:
         name: floorp-linux-x64
