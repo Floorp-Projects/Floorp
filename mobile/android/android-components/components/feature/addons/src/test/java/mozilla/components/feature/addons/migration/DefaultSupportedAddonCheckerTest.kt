@@ -53,14 +53,12 @@ class DefaultSupportedAddonCheckerTest {
 
         // Initialize WorkManager (early) for instrumentation tests.
         WorkManagerTestInitHelper.initializeTestWorkManager(testContext, configuration)
-        SupportedAddonsWorker.onNotificationClickIntent = Intent()
     }
 
     @Test
     fun `registerForChecks - schedule work for future checks`() = runTestOnMain {
         val frequency = Frequency(1, TimeUnit.DAYS)
-        val intent = Intent()
-        val checker = DefaultSupportedAddonsChecker(context, frequency, intent)
+        val checker = DefaultSupportedAddonsChecker(context, frequency)
 
         val workId = CHECKER_UNIQUE_PERIODIC_WORK_NAME
 
@@ -72,7 +70,6 @@ class DefaultSupportedAddonCheckerTest {
         checker.registerForChecks()
 
         assertExtensionIsRegisteredForChecks()
-        assertEquals(intent, SupportedAddonsWorker.onNotificationClickIntent)
         // Cleaning work manager
         workManger.cancelUniqueWork(workId)
     }
