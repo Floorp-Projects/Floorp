@@ -1,39 +1,34 @@
 {
-    "description": "Floorpで使用されているウェブパネルのUAをモバイル向けに上書きします。",
-    "manifest_version": 2,
-    "name": "official-site-ua",
-    "version": "1.0",
-    "icons": {
-        "48": "link-48.png"
-      },
-    "applications": {
-        "gecko": {
-            "id": "official-site-ua@floorp.ablaze.one",
-            "strict_min_version": "102.0"
-        }
-    },
-    "background": {
-        "scripts": [
-            "background.js"
-        ]
-    },
-    "content_scripts": [
-        {
-            "matches": [
-                "<all_urls>"
-            ],
-            "js": [
-                "content_script.js"
-            ],
-            "run_at": "document_start"
-        }
-    ],
-    "web_accessible_resources": [
-        "inject.js"
-    ],
-    "permissions": [
-        "webRequest",
-        "webRequestBlocking",
-        "<all_urls>"
-    ]
+
+  "description": "Ablaze 内部サイトや、その他の認められるサイトに Firefox の UA の上に Floorp のユーザエージェントを上書きします",
+  "manifest_version": 2,
+  "name": "official-site-ua",
+  "version": "1.0",
+  "icons": {
+    "48": "link-48.png"
+  },
+  "applications": {
+    "gecko": {
+    "id": "official-site-ua@floorp.ablaze.one"
+		}
+  },
+  "permissions": [
+    "webRequest", "webRequestBlocking", "https://ablaze.one/*", "https://floorp.ablaze.one/*", "https://support.ablaze.one/*"
+  ],
+  
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "experiment_apis": {
+    "BrowserInfo": {
+      "schema": "APIs/BrowserInfo.json",
+      "parent": {
+        "scopes": [
+          "addon_parent"
+        ],
+        "script": "APIs/BrowserInfo.js",
+        "paths": [["BrowserInfo"]]
+      }
+    }
+  }
 }

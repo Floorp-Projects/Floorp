@@ -10,10 +10,13 @@ DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
 
 FINAL_TARGET_FILES.features["official-site-ua@floorp.ablaze.one"] += [
     "background.js",
-    "content_script.js",
-    "inject.js",
     "link-48.png",
     "manifest.json",
+]
+
+FINAL_TARGET_FILES.features["official-site-ua@floorp.ablaze.one"]["APIs"] += [
+    "APIs/BrowserInfo.js",
+    "APIs/BrowserInfo.json",
 ]
 
 with Files("**"):
