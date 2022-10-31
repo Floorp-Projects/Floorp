@@ -188,6 +188,8 @@ class SearchRobot {
     }
 
     fun verifySearchSettings() = assertSearchSettings()
+    fun verifySearchEnginePrompt(rule: ComposeTestRule, searchEngineName: String) =
+        assertSearchEnginePrompt(rule, searchEngineName)
     fun verifySearchBarEmpty() = assertSearchBarEmpty()
 
     fun verifyKeyboardVisibility() = assertKeyboardVisibility(isExpectedToBeVisible = true)
@@ -311,6 +313,9 @@ class SearchRobot {
         pasteText.click()
     }
 
+    fun clickSearchEnginePrompt(rule: ComposeTestRule, searchEngineName: String) =
+        rule.onNodeWithText("Search $searchEngineName").performClick()
+
     fun expandSearchSuggestionsList() {
         onView(allOf(withId(R.id.search_wrapper))).perform(
             closeSoftKeyboard(),
@@ -407,6 +412,14 @@ private fun waitForSearchSuggestions(rule: ComposeTestRule, searchSuggestion: St
         rule.onAllNodesWithTag("mozac.awesomebar.suggestion").assertAny(hasText(searchSuggestion) and hasText(searchEngineName))
         mDevice.findObject(UiSelector().textContains(searchSuggestion)).waitForExists(waitingTime)
     }
+
+private fun assertSearchEnginePrompt(rule: ComposeTestRule, searchEngineName: String) {
+    rule.waitForIdle()
+    rule.onNodeWithText("Search $searchEngineName").assertIsDisplayed()
+    rule.onNodeWithText(
+        getStringResource(R.string.search_engine_suggestions_description),
+    ).assertIsDisplayed()
+}
 
 private fun assertSearchView() =
     assertTrue(
