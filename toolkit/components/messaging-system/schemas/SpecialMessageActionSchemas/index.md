@@ -322,3 +322,10 @@ Action for running multiple actions. Actions should be included in an array of a
 * args: `string` A CSS selector for the HTML element to be clicked
 
 Selects an element in the current Window's document and triggers a click action
+
+
+### `OPEN_FIREFOX_VIEW_AND_COLORWAYS_MODAL`
+
+* args: (none)
+
+Action for opening about:firefoxview and the colorways modal
