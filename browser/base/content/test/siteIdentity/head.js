@@ -265,7 +265,7 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
     .getElementById("identity-popup")
     .getAttribute("mixedcontent");
   let bodyAttr = doc
-    .getElementById("identity-popup-securityView-body")
+    .getElementById("identity-popup-securityView-extended-info")
     .getAttribute("mixedcontent");
 
   is(
@@ -309,14 +309,14 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
         .getElementById("identity-popup-securityView")
         .getElementsByClassName("identity-popup-security-connection")[0]
     )
-    .getPropertyValue("background-image");
+    .getPropertyValue("list-style-image");
   let securityContentBG = tabbrowser.ownerGlobal
     .getComputedStyle(
       document
         .getElementById("identity-popup-mainView")
         .getElementsByClassName("identity-popup-security-connection")[0]
     )
-    .getPropertyValue("background-image");
+    .getPropertyValue("list-style-image");
 
   if (stateInsecure) {
     is(

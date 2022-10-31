@@ -61,14 +61,14 @@
 #identity-popup[httpsonlystatus=failed-top] [when-httpsonlystatus~=failed-top],
 #identity-popup[httpsonlystatus=failed-sub] [when-httpsonlystatus~=failed-sub],
 /* Show 'disable MCB' button always when there is mixed active content blocked. */
-#identity-popup-securityView-body[mixedcontent~=active-blocked] > button[when-mixedcontent=active-blocked] {
+#identity-popup-securityView-extended-info[mixedcontent~=active-blocked] > button[when-mixedcontent=active-blocked] {
   display: revert;
 }
 
 /* Hide 'not secure' message in subview when weak cipher or mixed content messages are shown. */
-#identity-popup-securityView-body:is([mixedcontent],[ciphers]) > description[when-connection=not-secure],
+#identity-popup-securityView-extended-info:is([mixedcontent],[ciphers]) > description[when-connection=not-secure],
 /* Hide 'passive-loaded (only)' message when there is mixed passive content loaded and active blocked. */
-#identity-popup-securityView-body[mixedcontent~=passive-loaded][mixedcontent~=active-blocked] > description[when-mixedcontent=passive-loaded] {
+#identity-popup-securityView-extended-info[mixedcontent~=passive-loaded][mixedcontent~=active-blocked] > description[when-mixedcontent=passive-loaded] {
   display: none;
 }
 
@@ -99,51 +99,29 @@
   min-height: 30px;
 }
 
-.identity-popup-security-connection {
-  background-repeat: no-repeat;
-  background-position: 2em 50%;
-  background-size: 16px auto;
-  -moz-context-properties: fill, fill-opacity;
-}
-
-.identity-popup-security-connection:-moz-locale-dir(rtl) {
-  background-position-x: right 2em
-}
-
-.identity-popup-security-connection > description {
-  margin-block: 0;
-}
-
-.identity-popup-security-connection > hbox {
-  margin-inline-start: 16px;
-}
-
 #identity-popup-security-description > description {
   font-weight: 600;
-  margin-bottom: 1em;
-}
-
-#identity-popup-security-httpsonlymode > label {
   margin-top: 0.5em;
 }
-#identity-popup-security-httpsonlymode > div {
-  /* Make the content fit in the panel for locales with longer text */
-  display: flex;
-  margin-inline-start: 0.3em;
-}
-#identity-popup-security-httpsonlymode > label {
-  margin-block: 0.5em 0;
+
+#identity-popup-security-httpsonlymode {
+  margin-top: 1em;
 }
 
 #identity-popup-security-httpsonlymode-menulist {
   text-overflow: ellipsis;
   overflow: hidden;
   width: 11em;
+  margin: 0.5em 0;
 }
+
 #identity-popup-security-httpsonlymode-info {
   font-size: 0.85em;
   color: var(--panel-description-color);
-  margin-bottom: 12px
+}
+
+#identity-popup-security-httpsonlymode-info > description {
+  margin-bottom: 0.5em;
 }
 
 #permission-popup-permissions-content {
@@ -152,7 +130,7 @@
 
 /* CONTENT */
 
-:where(#protections-popup) :is(description, label) {
+:where(#protections-popup, #identity-popup) :is(description, label) {
   margin: 0;
 }
 
@@ -227,141 +205,108 @@
   color: var(--error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
 }
 
+#identity-popup-mainView > .panel-subview-body {
+  padding-bottom: var(--panel-subview-body-padding-block);
+}
+
+#identity-popup-mainView[footerVisible="true"] > .panel-subview-body {
+  padding-bottom: 0;
+}
+
+.identity-popup-section {
+  margin-inline: var(--arrowpanel-menuitem-margin-inline);
+  padding-inline: var(--arrowpanel-menuitem-padding-inline);
+}
+
+.identity-popup-section.indented {
+  /* Align with the text displayed following the lock icon, in the connection status button above.
+     16px is the icon size and 8px is the inline-start padding of the text. */
+  padding-inline: calc(var(--arrowpanel-menuitem-padding-inline) + 16px + 8px);
+}
+
 .identity-popup-security-connection {
-  background-image: url(chrome://global/skin/icons/security-broken.svg);
+  list-style-image: url(chrome://global/skin/icons/security-broken.svg);
+  margin: var(--arrowpanel-menuitem-margin);
+  padding: var(--arrowpanel-menuitem-padding);
+  -moz-context-properties: fill;
+  min-height: 24px;
 }
 
 #identity-popup[connection=chrome] .identity-popup-security-connection {
-  background-image: url(chrome://branding/content/icon48.png);
+  list-style-image: url(chrome://branding/content/icon48.png);
 }
 
 #identity-popup[connection=file] .identity-popup-security-connection {
-  background-image: url(chrome://global/skin/icons/page-portrait.svg);
+  list-style-image: url(chrome://global/skin/icons/page-portrait.svg);
 }
 
 #identity-popup[connection^=secure] .identity-popup-security-connection {
-  background-image: url(chrome://global/skin/icons/security.svg);
+  list-style-image: url(chrome://global/skin/icons/security.svg);
 }
 
 /* Use [isbroken] to make sure we don't show a warning lock on an http page. See Bug 1192162. */
 #identity-popup[ciphers=weak] .identity-popup-security-connection,
 #identity-popup[mixedcontent~=passive-loaded][isbroken] .identity-popup-security-connection {
-  background-image: url(chrome://global/skin/icons/security-warning.svg);
+  list-style-image: url(chrome://global/skin/icons/security-warning.svg);
   -moz-context-properties: fill, fill-opacity;
 }
 
 #identity-popup[connection=secure-cert-user-overridden] .identity-popup-security-connection,
 #identity-popup[connection=cert-error-page] .identity-popup-security-connection {
-  background-image: url(chrome://global/skin/icons/security-warning.svg);
+  list-style-image: url(chrome://global/skin/icons/security-warning.svg);
   fill: unset;
-  -moz-context-properties: fill;
 }
 
 #identity-popup[connection=net-error-page] .identity-popup-security-connection {
-  background-image: url(chrome://global/skin/icons/info.svg);
+  list-style-image: url(chrome://global/skin/icons/info.svg);
   fill: unset;
-  -moz-context-properties: fill;
 }
 
 #identity-popup[mixedcontent~=active-loaded][isbroken] .identity-popup-security-connection {
-  background-image: url(chrome://browser/skin/controlcenter/mcb-disabled.svg);
-  -moz-context-properties: fill;
+  list-style-image: url(chrome://browser/skin/controlcenter/mcb-disabled.svg);
 }
 
 #identity-popup[connection=extension] .identity-popup-security-connection {
-  background-image: url(chrome://mozapps/skin/extensions/extension.svg);
-  -moz-context-properties: fill;
+  list-style-image: url(chrome://mozapps/skin/extensions/extension.svg);
 }
 
-#identity-popup-securityView-body {
-  margin-inline: 10px;
-  padding-inline-end: 1em;
-  padding-top: 4px;
-}
-
-#identity-popup-multiView {
-  height: -moz-fit-content;
-}
-
-.identity-popup-security-connection > hbox > label {
-  margin-inline-start: 8px;
-  margin-block: 0;
-}
-
-#identity-popup-security-button {
-  margin-bottom: 4px;
-  padding-inline: 3px;
-  -moz-box-pack: start;
-}
-
-#identity-popup-security-button[footerHidden=true] {
-  /* Set the footer's bottom margin according to menuitems inline margin
-     to make sure the footer's margin is even from all sides. */
-  margin-bottom: var(--arrowpanel-menuitem-margin-inline);
-}
-
-.identity-popup-security-connection {
-  padding: 2px;
-  background-position-x: 16px;
-}
-
-.identity-popup-security-connection:-moz-locale-dir(rtl) {
-  background-position-x: right 16px;
-}
-
-.identity-popup-security-connection.identity-button {
-  padding: 0;
-  width: 28em;
-  background-position-x: 4px;
-  margin-inline-end: -6px;
-}
-
-.identity-popup-security-connection.identity-button:-moz-locale-dir(rtl) {
-  background-position-x: right 4px;
-}
-
-.identity-popup-connection-secure.security-view,
-.identity-popup-connection-not-secure.security-view {
-  margin-inline-start: 36px;
+.identity-popup-security-connection-icon {
+  width: 16px;
+  height: 16px;
 }
 
 #identity-popup-mainView-panel-header-span {
   margin-top: 4px;
 }
 
-#identity-popup-clear-sitedata-footer {
-  margin-top: 0;
+.identity-popup-connection-secure.security-view,
+.identity-popup-connection-secure.upgraded,
+.identity-popup-connection-not-secure.security-view {
+  padding-inline-start: 8px;
 }
 
-#identity-popup-security-httpsonlymode,
-#identity-popup-security-ev-content-owner,
-.identity-popup-warning-box {
-  padding-inline: 2.4em 3em;
+#identity-popup-securityView-extended-info > button,
+#identity-popup-securityView-extended-info > hbox > .text-link,
+#identity-popup-content-verifier,
+#identity-popup-content-verifier ~ description,
+#identity-popup-content-owner-label {
+  margin-block: 0.5em;
 }
 
-#identity-popup-securityView-body > .identity-popup-warning-box {
-  padding-inline: 0;
+#identity-popup-securityView-extended-info > .identity-popup-warning-box {
   font-weight: 600;
 }
 
-#identity-popup-securityView-body > label:not(.plain),
-#identity-popup-content-verifier ~ description {
-  margin-top: 0.5em;
-}
-
-description#identity-popup-content-owner-label,
-description#identity-popup-content-owner,
-description#identity-popup-content-verifier,
-#identity-popup-securityView-body > button {
-  margin-top: 0.5em;
+#identity-popup-securityView-extended-info > button {
+  margin-inline: 0;
 }
 
 @media (-moz-platform: macos) {
-  #identity-popup-securityView-body > button {
+  #identity-popup-securityView-extended-info > button {
     min-height: 30px;
   }
 
-  #identity-popup-securityView-body > button:focus-visible {
+  #identity-popup-securityView-extended-info > button:focus-visible {
     outline: var(--focus-outline);
   }
 }
