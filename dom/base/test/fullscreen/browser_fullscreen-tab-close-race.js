@@ -6,8 +6,9 @@
 requestLongerTimeout(2);
 
 // Import helpers
+/* import-globals-from fullscreen_helpers.js */
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/dom/html/test/fullscreen_helpers.js",
+  "chrome://mochitests/content/browser/dom/base/test/fullscreen/fullscreen_helpers.js",
   this
 );
 
@@ -35,10 +36,8 @@ async function startTests(setupFun, name) {
           url,
         },
         async function(browser) {
-          let promiseFsState = Promise.all([
-            setupFun(browser),
-            waitForFullscreenState(document, false, true),
-          ]);
+          let promiseFsState = waitForFullscreenExit(document);
+          setupFun(browser);
           // Trigger click event in inner most iframe
           SpecialPowers.spawn(
             browser.browsingContext.children[0].children[0],
@@ -66,55 +65,38 @@ async function startTests(setupFun, name) {
   });
 }
 
-function RemoveElementFromRemoteDocument(aBrowsingContext, aElementId) {
-  return SpecialPowers.spawn(aBrowsingContext, [aElementId], async function(
-    id
-  ) {
-    content.document.addEventListener(
-      "fullscreenchange",
-      function() {
-        content.document.getElementById(id).remove();
-      },
-      { once: true }
-    );
+async function WaitRemoveDocumentAndCloseTab(aBrowser, aBrowsingContext) {
+  await SpecialPowers.spawn(aBrowsingContext, [], async function() {
+    return new Promise(resolve => {
+      content.document.addEventListener(
+        "fullscreenchange",
+        e => {
+          resolve();
+        },
+        { once: true }
+      );
+    });
   });
+
+  // This should exit fullscreen
+  let tab = gBrowser.getTabForBrowser(aBrowser);
+  BrowserTestUtils.removeTab(tab);
 }
 
 startTests(async browser => {
   // toplevel
-  let promise = waitRemoteFullscreenExitEvents([
-    // browsingContext, name
-    [browser.browsingContext, "toplevel"],
-  ]);
-  await RemoveElementFromRemoteDocument(browser.browsingContext, "div");
-  return promise;
-}, "document_mutation_toplevel");
+  WaitRemoveDocumentAndCloseTab(browser, browser.browsingContext);
+}, "tab_close_toplevel");
 
-startTests(async browser => {
+startTests(browser => {
   // middle iframe
-  let promise = waitRemoteFullscreenExitEvents([
-    // browsingContext, name
-    [browser.browsingContext, "toplevel"],
-    [browser.browsingContext.children[0], "middle"],
-  ]);
-  await RemoveElementFromRemoteDocument(
-    browser.browsingContext.children[0],
-    "div"
-  );
-  return promise;
-}, "document_mutation_middle_frame");
+  WaitRemoveDocumentAndCloseTab(browser, browser.browsingContext.children[0]);
+}, "tab_close_middle_frame");
 
 startTests(async browser => {
   // innermost iframe
-  let promise = waitRemoteFullscreenExitEvents([
-    // browsingContext, name
-    [browser.browsingContext, "toplevel"],
-    [browser.browsingContext.children[0], "middle"],
-    [browser.browsingContext.children[0].children[0], "inner"],
-  ]);
-  await RemoveElementFromRemoteDocument(
-    browser.browsingContext.children[0].children[0],
-    "div"
+  WaitRemoveDocumentAndCloseTab(
+    browser,
+    browser.browsingContext.children[0].children[0]
   );
-  return promise;
-}, "document_mutation_inner_frame");
+}, "tab_close_inner_frame");

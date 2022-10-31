@@ -45,9 +45,8 @@ function addFullscreenChangeContinuation(type, callback, inDoc) {
       // the fullscreen element of the outmost document here instead
       // of the current one.
       return topWin.document.fullscreenElement || inNormalMode(topWin);
-    } else {
-      throw "'type' must be either 'enter', or 'exit'.";
     }
+    throw new Error("'type' must be either 'enter', or 'exit'.");
   }
   function invokeCallback(event) {
     // Use async call after a paint to workaround unfinished fullscreen

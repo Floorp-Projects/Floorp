@@ -24,6 +24,7 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 TEST_DIRS += [
+    "fullscreen",
     "gtest",
     "jsmodules",
     "jsmodules/importmaps",
