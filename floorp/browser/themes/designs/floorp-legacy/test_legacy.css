@@ -1263,7 +1263,7 @@ menuitem>.menu-iconic-text {
 /* #region ナビゲーションバー*/
 /* EdgeFr-Fox by bmFtZQ - navbar.css */
 #navigator-toolbox{
-border-bottom: 1.1px solid var(--toolbar-bgcolor) !important; 
+border-bottom: 1.1px solid var(--toolbar-bgcolor); 
 }
 
 
