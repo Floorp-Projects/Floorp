@@ -173,15 +173,15 @@ void js::ReportPotentiallyDetailedMessage(JSContext* cx,
                                           const unsigned detailedError,
                                           const unsigned genericError) {
   Rooted<Value> exception(cx);
-  if (!JS_GetPendingException(cx, &exception)) {
+  if (!cx->getPendingException(&exception)) {
     return;
   }
-  JS_ClearPendingException(cx);
+  cx->clearPendingException();
 
   JS::ErrorReportBuilder jsReport(cx);
   JS::ExceptionStack exnStack(cx, exception, nullptr);
   if (!jsReport.init(cx, exnStack, JS::ErrorReportBuilder::NoSideEffects)) {
-    JS_ClearPendingException(cx);
+    cx->clearPendingException();
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, genericError);
     return;
   }
@@ -303,13 +303,13 @@ static bool PerformShadowRealmEval(JSContext* cx, Handle<JSString*> sourceText,
     // Clone the exception into the current global and re-throw, as the
     // exception has to come from the current global.
     Rooted<Value> exception(cx);
-    if (!JS_GetPendingException(cx, &exception)) {
+    if (!cx->getPendingException(&exception)) {
       return false;
     }
 
     // Clear our exception now that we've got it, so that we don't
     // do the following call with an exception already pending.
-    JS_ClearPendingException(cx);
+    cx->clearPendingException();
 
     Rooted<Value> clonedException(cx);
     if (!JS_StructuredClone(cx, exception, &clonedException, nullptr,
@@ -317,7 +317,7 @@ static bool PerformShadowRealmEval(JSContext* cx, Handle<JSString*> sourceText,
       return false;
     }
 
-    JS_SetPendingException(cx, clonedException);
+    cx->setPendingException(clonedException, ShouldCaptureStack::Always);
     return false;
   }
 
@@ -492,7 +492,7 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
 
   // The handler can only hold onto a single object, so we pack that into a new
   // JS Object, and store there.
-  Rooted<JSObject*> handlerObject(cx, JS_NewPlainObject(cx));
+  Rooted<JSObject*> handlerObject(cx, NewPlainObject(cx));
   if (!handlerObject) {
     return nullptr;
   }
@@ -544,11 +544,12 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
             // Assert: Type(string) is String.
             MOZ_ASSERT(exportNameValue.isString());
 
-            Rooted<JSString*> string(cx, exportNameValue.toString());
-            Rooted<jsid> stringId(cx);
-            if (!JS_StringToId(cx, string, &stringId)) {
+            Rooted<JSAtom*> stringAtom(
+                cx, AtomizeString(cx, exportNameValue.toString()));
+            if (!stringAtom) {
               return false;
             }
+            Rooted<jsid> stringId(cx, AtomToId(stringAtom));
 
             // Step 5. Let hasOwn be ? HasOwnProperty(exports, string).
             bool hasOwn = false;
@@ -565,7 +566,7 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
 
             // Step 7. Let value be ? Get(exports, string).
             Rooted<Value> value(cx);
-            if (!JS_GetPropertyById(cx, exports, stringId, &value)) {
+            if (!GetProperty(cx, exports, exports, stringId, &value)) {
               return false;
             }
 
@@ -599,7 +600,7 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
   // Step 13. Return ! PerformPromiseThen(innerCapability.[[Promise]],
   //           onFulfilled, callerRealm.[[Intrinsics]].[[%ThrowTypeError%]],
   //           promiseCapability).
-  return JS::CallOriginalPromiseThen(cx, promise, onFulfilled, onRejected);
+  return OriginalPromiseThen(cx, promise, onFulfilled, onRejected);
 }
 
 //  ShadowRealm.prototype.importValue ( specifier, exportName )
