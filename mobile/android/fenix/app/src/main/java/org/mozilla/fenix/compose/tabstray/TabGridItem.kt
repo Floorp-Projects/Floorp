@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
-import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +45,7 @@ import androidx.core.text.BidiFormatter
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.HorizontalFadingEdgeBox
 import org.mozilla.fenix.compose.ThumbnailCard
@@ -159,10 +159,7 @@ fun TabGridItem(
                     )
                 }
 
-                Divider(
-                    color = FirefoxTheme.colors.borderPrimary,
-                    thickness = 1.dp,
-                )
+                Divider()
 
                 Thumbnail(
                     tab = tab,
