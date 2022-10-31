@@ -21,7 +21,7 @@ add_task(async function init() {
   UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", false);
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
 
-  MerinoTestUtils.server.start();
+  await MerinoTestUtils.server.start();
 });
 
 // In a single engagement, all requests should use the same session ID and the

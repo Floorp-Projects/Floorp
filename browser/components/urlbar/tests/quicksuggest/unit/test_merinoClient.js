@@ -24,7 +24,7 @@ let gClient;
 
 add_task(async function init() {
   gClient = new MerinoClient();
-  MerinoTestUtils.server.start();
+  await MerinoTestUtils.server.start();
 
   for (let suggestion of MerinoTestUtils.server.response.body.suggestions) {
     EXPECTED_MERINO_SUGGESTIONS.push({
