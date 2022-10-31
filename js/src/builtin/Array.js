@@ -1175,7 +1175,7 @@ function ArrayToLocaleString(locales, options) {
   if (firstElement === undefined || firstElement === null) {
     R = "";
   } else {
-    #if JS_HAS_INTL_API
+#if JS_HAS_INTL_API
     R = ToString(
       callContentFunction(
         firstElement.toLocaleString,
@@ -1184,11 +1184,11 @@ function ArrayToLocaleString(locales, options) {
         options
       )
     );
-    #else
+#else
     R = ToString(
       callContentFunction(firstElement.toLocaleString, firstElement)
     );
-    #endif
+#endif
   }
 
   // Step 3 (reordered).
@@ -1203,7 +1203,7 @@ function ArrayToLocaleString(locales, options) {
     // Steps 9.a, 9.c-e.
     R += separator;
     if (!(nextElement === undefined || nextElement === null)) {
-      #if JS_HAS_INTL_API
+#if JS_HAS_INTL_API
       R += ToString(
         callContentFunction(
           nextElement.toLocaleString,
@@ -1212,11 +1212,11 @@ function ArrayToLocaleString(locales, options) {
           options
         )
       );
-      #else
+#else
       R += ToString(
         callContentFunction(nextElement.toLocaleString, nextElement)
       );
-      #endif
+#endif
     }
   }
 
@@ -1292,7 +1292,7 @@ function IsConcatSpreadable(O) {
   if (!IsObject(O) // eslint-disable-line prettier/prettier
 #ifdef ENABLE_RECORD_TUPLE
     && !IsTuple(O) // eslint-disable-line prettier/prettier
-  #endif
+#endif
   ) {
     return false;
   }
@@ -1305,11 +1305,11 @@ function IsConcatSpreadable(O) {
     return ToBoolean(spreadable);
   }
 
-  #ifdef ENABLE_RECORD_TUPLE
+#ifdef ENABLE_RECORD_TUPLE
   if (IsTuple(O)) {
     return true;
   }
-  #endif
+#endif
 
   // Step 4.
   return IsArray(O);
@@ -1340,10 +1340,10 @@ function ArrayConcat(arg1) {
   while (true) {
     // Steps 5.b-c.
     if (IsConcatSpreadable(E)) {
-      #ifdef ENABLE_RECORD_TUPLE
+#ifdef ENABLE_RECORD_TUPLE
       // FIXME: spec bug - steps below expect that |E| is an object.
       E = ToObject(E);
-      #endif
+#endif
 
       // Step 5.c.ii.
       len = ToLength(E.length);
