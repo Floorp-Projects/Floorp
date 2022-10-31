@@ -9,10 +9,6 @@
 
 const EXPORTED_SYMBOLS = ["NewPasswordModel"];
 
-const { fathom } = ChromeUtils.import(
-  "resource://gre/modules/third_party/fathom/fathom.jsm"
-);
-
 const {
   dom,
   element,
@@ -23,7 +19,9 @@ const {
   type,
   utils: { identity, isVisible, min, setDefault },
   clusters: { euclidean },
-} = fathom;
+} = ChromeUtils.importESModule(
+  "resource://gre/modules/third_party/fathom/fathom.mjs"
+);
 
 /**
  * ----- Start of model -----

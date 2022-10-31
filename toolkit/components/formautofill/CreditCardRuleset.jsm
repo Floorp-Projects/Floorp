@@ -26,10 +26,16 @@ const EXPORTED_SYMBOLS = ["creditCardRulesets"];
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { fathom } = ChromeUtils.import(
-  "resource://gre/modules/third_party/fathom/fathom.jsm"
+const {
+  element: clickedElement,
+  out,
+  rule,
+  ruleset,
+  score,
+  type,
+} = ChromeUtils.importESModule(
+  "resource://gre/modules/third_party/fathom/fathom.mjs"
 );
-const { element: clickedElement, out, rule, ruleset, score, type } = fathom;
 const { CreditCard } = ChromeUtils.importESModule(
   "resource://gre/modules/CreditCard.sys.mjs"
 );
