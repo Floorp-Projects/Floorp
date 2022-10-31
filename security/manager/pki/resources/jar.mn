@@ -5,6 +5,7 @@
 pippki.jar:
 % content pippki %content/pippki/
     content/pippki/certManager.js            (content/certManager.js)
+    content/pippki/certManager.css           (content/certManager.css)
     content/pippki/certManager.xhtml           (content/certManager.xhtml)
     content/pippki/changepassword.js         (content/changepassword.js)
     content/pippki/changepassword.xhtml        (content/changepassword.xhtml)

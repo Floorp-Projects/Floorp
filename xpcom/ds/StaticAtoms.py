@@ -420,7 +420,6 @@ STATIC_ATOMS = [
     Atom("end", "end"),
     Atom("endEvent", "endEvent"),
     Atom("enterkeyhint", "enterkeyhint"),
-    Atom("equalsize", "equalsize"),
     Atom("error", "error"),
     Atom("ethiopic_numeric", "ethiopic-numeric"),
     Atom("even", "even"),

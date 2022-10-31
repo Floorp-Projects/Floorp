@@ -203,13 +203,6 @@ void nsBoxFrame::CacheAttributes() {
   GetInitialVAlignment(mValign);
   GetInitialHAlignment(mHalign);
 
-  bool equalSize = false;
-  GetInitialEqualSize(equalSize);
-  if (equalSize)
-    AddStateBits(NS_STATE_EQUAL_SIZE);
-  else
-    RemoveStateBits(NS_STATE_EQUAL_SIZE);
-
   bool autostretch = !!(mState & NS_STATE_AUTO_STRETCH);
   GetInitialAutoStretch(autostretch);
   if (autostretch)
@@ -339,22 +332,6 @@ void nsBoxFrame::GetInitialDirection(bool& aIsNormal) {
   if (boxInfo->mBoxDirection == StyleBoxDirection::Reverse) {
     aIsNormal = !aIsNormal;  // Invert our direction.
   }
-}
-
-/* Returns true if it was set.
- */
-bool nsBoxFrame::GetInitialEqualSize(bool& aEqualSize) {
-  // see if we are a vertical or horizontal box.
-  if (!GetContent() || !GetContent()->IsElement()) return false;
-
-  if (GetContent()->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                             nsGkAtoms::equalsize,
-                                             nsGkAtoms::always, eCaseMatters)) {
-    aEqualSize = true;
-    return true;
-  }
-
-  return false;
 }
 
 /* Returns true if it was set.
@@ -815,8 +792,7 @@ nsresult nsBoxFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
       aAttribute == nsGkAtoms::minwidth || aAttribute == nsGkAtoms::maxwidth ||
       aAttribute == nsGkAtoms::minheight ||
       aAttribute == nsGkAtoms::maxheight || aAttribute == nsGkAtoms::orient ||
-      aAttribute == nsGkAtoms::pack || aAttribute == nsGkAtoms::dir ||
-      aAttribute == nsGkAtoms::equalsize) {
+      aAttribute == nsGkAtoms::pack || aAttribute == nsGkAtoms::dir) {
     if (aAttribute == nsGkAtoms::align || aAttribute == nsGkAtoms::valign ||
         aAttribute == nsGkAtoms::orient || aAttribute == nsGkAtoms::pack ||
         aAttribute == nsGkAtoms::dir) {
@@ -839,13 +815,6 @@ nsresult nsBoxFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
 
       GetInitialVAlignment(mValign);
       GetInitialHAlignment(mHalign);
-
-      bool equalSize = false;
-      GetInitialEqualSize(equalSize);
-      if (equalSize)
-        AddStateBits(NS_STATE_EQUAL_SIZE);
-      else
-        RemoveStateBits(NS_STATE_EQUAL_SIZE);
 
       bool autostretch = !!(mState & NS_STATE_AUTO_STRETCH);
       GetInitialAutoStretch(autostretch);
