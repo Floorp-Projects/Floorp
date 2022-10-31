@@ -41,10 +41,10 @@ void CanvasRenderThread::Start() {
   nsresult rv = NS_NewNamedThread(
       "CanvasRenderer", getter_AddRefs(thread),
       NS_NewRunnableFunction(
-          "CanvasRender::BackgroundHanSetup",
+          "CanvasRender::BackgroundHangSetup",
           []() {
             sBackgroundHangMonitor = new mozilla::BackgroundHangMonitor(
-                "CanvasRenderer",
+                "CanvasRendererBHM",
                 /* Timeout values are powers-of-two to enable us get better
                    data. 128ms is chosen for transient hangs because 8Hz should
                    be the minimally acceptable goal for Compositor
@@ -73,7 +73,7 @@ void CanvasRenderThread::ShutDown() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sCanvasRenderThread);
 
-  layers::SynchronousTask task("CanvasRenderThread");
+  layers::SynchronousTask task("CanvasRenderThreadShutdown");
   RefPtr<Runnable> runnable =
       WrapRunnable(RefPtr<CanvasRenderThread>(sCanvasRenderThread.get()),
                    &CanvasRenderThread::ShutDownTask, &task);
