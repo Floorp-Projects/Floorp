@@ -591,7 +591,7 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
                 return false;
               },
               promise));
-  if (!onFulfilled) {
+  if (!onRejected) {
     return nullptr;
   }
 
