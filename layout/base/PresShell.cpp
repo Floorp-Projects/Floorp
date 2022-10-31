@@ -193,6 +193,7 @@
 #include "mozilla/layers/APZPublicUtils.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
+#include "mozilla/ScrollTimelineAnimationTracker.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
@@ -4241,6 +4242,14 @@ static inline void AssertFrameTreeIsSane(const PresShell& aPresShell) {
 #endif
 }
 
+static void TriggerPendingScrollTimelineAnimations(Document* aDocument) {
+  auto* tracker = aDocument->GetScrollTimelineAnimationTracker();
+  if (!tracker || !tracker->HasPendingAnimations()) {
+    return;
+  }
+  tracker->TriggerPendingAnimations();
+}
+
 void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   // FIXME(emilio, bug 1530177): Turn into a release assert when bug 1530188 and
   // bug 1530190 are fixed.
@@ -4413,6 +4422,17 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
     }
 
     FlushPendingScrollResnap();
+
+    if (MOZ_LIKELY(!mIsDestroying)) {
+      // Try to trigger pending scroll-linked animations after we flush
+      // style and layout (if any). If we try to trigger them after flushing
+      // style but the frame tree is not ready, we will check them again after
+      // we flush layout because the requirement to trigger scroll-linked
+      // animations is that the associated scroll containers are ready (i.e. the
+      // scroll-timeline is active), and this depends on the readiness of the
+      // scrollable frame and the primary frame of the scroll container.
+      TriggerPendingScrollTimelineAnimations(mDocument);
+    }
 
     if (flushType >= FlushType::Layout) {
       if (!mIsDestroying) {
