@@ -4,7 +4,7 @@
 
 
 #app-picker {
-  width: 320px;
+  min-width: 320px;
 }
 
 #content-description {
