@@ -798,7 +798,7 @@ Relation RemoteAccessibleBase<Derived>::RelationByType(
     return rel;
   }
 
-  for (auto data : kRelationTypeAtoms) {
+  for (const auto& data : kRelationTypeAtoms) {
     if (data.mType != aType ||
         (data.mValidTag && TagName() != data.mValidTag)) {
       continue;
