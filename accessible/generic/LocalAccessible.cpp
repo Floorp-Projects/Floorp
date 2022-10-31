@@ -3429,19 +3429,32 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
 
       if (frame && frame->IsTextFrame()) {
         nsTArray<int32_t> charData;
-        nsIFrame* currTextFrame = frame;
+        nsTextFrame* currTextFrame = do_QueryFrame(frame);
+        bool isFirstContinuation = true;
         while (currTextFrame) {
+          nsRect t = currTextFrame->GetRect();
           nsTArray<nsRect> charBounds;
           currTextFrame->GetCharacterRectsInRange(
-              0, static_cast<nsTextFrame*>(currTextFrame)->GetContentLength(),
+              currTextFrame->GetContentOffset(), currTextFrame->GetContentEnd(),
               charBounds);
           for (const nsRect& rect : charBounds) {
-            charData.AppendElement(rect.x);
-            charData.AppendElement(rect.y);
+            // We expect each char rect to be relative to the text leaf
+            // acc this text lives in. Unfortunately, GetCharacterRectsInRange
+            // returns rects relative to their continuation. Add the
+            // continuation's relative position here to make our final
+            // rect relative to the text leaf acc. We avoid doing any sort of
+            // offsetting for the first continuation because the x, y coords
+            // of the first continuation's rect are the x, y coords of the text
+            // frame, which are not necessarily 0, 0. Chars in the first cont
+            // are also already relative to the text frame, so they don't need
+            // adjustment.
+            charData.AppendElement(rect.x + (isFirstContinuation ? 0 : t.x));
+            charData.AppendElement(rect.y + (isFirstContinuation ? 0 : t.y));
             charData.AppendElement(rect.width);
             charData.AppendElement(rect.height);
           }
           currTextFrame = currTextFrame->GetNextContinuation();
+          isFirstContinuation = false;
         }
 
         if (charData.Length()) {
