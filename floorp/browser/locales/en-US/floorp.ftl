@@ -412,7 +412,7 @@ sidebar-keepWidth-button =
   .tooltiptext = Keep This Panel Width
 
 sidebar2-keep-width-for-global =
-  .label = Set the Current Panel Size to All Webpanels that Do not have a Unique size
+  .label = Set the current panel size to all web panels that don't have a unique size
 
 #################################################################### menu panel ############################################################
 
