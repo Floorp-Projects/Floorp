@@ -37,4 +37,4 @@ version: 60.0.1esr
 required_signoffs: []
 signoff_urls: {}
 phabricator_diff:
-tasks_for: actions
+tasks_for: action

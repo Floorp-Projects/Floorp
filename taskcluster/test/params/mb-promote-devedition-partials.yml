@@ -13231,7 +13231,7 @@ release_type: beta
 required_signoffs: []
 signoff_urls: {}
 target_tasks_method: promote_desktop
-tasks_for: hg-push
+tasks_for: action
 try_mode: null
 try_options: null
 try_task_config: {}

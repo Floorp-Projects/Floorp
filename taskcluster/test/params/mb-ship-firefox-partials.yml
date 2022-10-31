@@ -19474,4 +19474,4 @@ version: 63.0b14
 required_signoffs: []
 signoff_urls: {}
 phabricator_diff:
-tasks_for: actions
+tasks_for: action

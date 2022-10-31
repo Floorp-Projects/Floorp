@@ -39,4 +39,4 @@ release_product: devedition
 required_signoffs: []
 signoff_urls: {}
 phabricator_diff:
-tasks_for: actions
+tasks_for: action
