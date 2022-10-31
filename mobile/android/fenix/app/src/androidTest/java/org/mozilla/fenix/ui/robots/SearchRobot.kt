@@ -323,6 +323,20 @@ class SearchRobot {
         awesomeBar.swipeUp(2)
     }
 
+    fun verifyTranslatedFocusedNavigationToolbar(toolbarHintString: String) =
+        assertTranslatedFocusedNavigationToolbar(toolbarHintString)
+
+    fun verifySearchEngineShortcuts(rule: ComposeTestRule, vararg searchEngines: String) {
+        mDevice.findObject(
+            UiSelector().resourceId("$packageName:id/awesome_bar"),
+        ).swipeUp(1)
+
+        for (searchEngine in searchEngines) {
+            rule.waitForIdle()
+            rule.onNodeWithText(searchEngine).assertIsDisplayed()
+        }
+    }
+
     fun verifyTypedToolbarText(expectedText: String) {
         mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar"))
             .waitForExists(waitingTime)
@@ -549,6 +563,15 @@ private fun assertDefaultSearchEngine(expectedText: String) =
             UiSelector()
                 .resourceId("$packageName:id/mozac_browser_toolbar_edit_icon")
                 .descriptionContains(expectedText),
+        ).waitForExists(waitingTime),
+    )
+
+private fun assertTranslatedFocusedNavigationToolbar(toolbarHintString: String) =
+    assertTrue(
+        mDevice.findObject(
+            UiSelector()
+                .resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view")
+                .textContains(toolbarHintString),
         ).waitForExists(waitingTime),
     )
 
