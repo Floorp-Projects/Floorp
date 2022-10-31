@@ -74,42 +74,70 @@ struct CallbackData {
     open_timestamp: GeckoTimeStamp,
 }
 
+type AddCallback = unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool);
+type RemoveCallback = AddCallback;
+
 impl MidirWrapper {
     fn refresh(
         self: &mut MidirWrapper,
-        add_callback: unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool),
-        remove_callback: unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool),
+        add_callback: AddCallback,
+        remove_callback: Option<RemoveCallback>,
     ) {
         if let Ok(ports) = collect_ports() {
-            let old_ports = &mut self.ports;
-            let mut i = 0;
-            while i < old_ports.len() {
-                if !ports
-                    .iter()
-                    .any(|p| p.name == old_ports[i].name && p.input() == old_ports[i].input())
-                {
-                    let port = old_ports.remove(i);
-                    let id = nsString::from(&port.id);
-                    let name = nsString::from(&port.name);
-                    unsafe { remove_callback(&id, &name, port.input()) };
-                } else {
-                    i += 1;
-                }
+            if let Some(remove_callback) = remove_callback {
+                self.remove_missing_ports(&ports, remove_callback);
             }
 
-            for port in ports {
-                if !self
-                    .ports
-                    .iter()
-                    .any(|p| p.name == port.name && p.input() == port.input())
-                {
-                    let id = nsString::from(&port.id);
-                    let name = nsString::from(&port.name);
-                    unsafe { add_callback(&id, &name, port.input()) };
-                    self.ports.push(port);
-                }
+            self.add_new_ports(ports, add_callback);
+        }
+    }
+
+    fn remove_missing_ports(
+        self: &mut MidirWrapper,
+        ports: &Vec<MidiPortWrapper>,
+        remove_callback: RemoveCallback,
+    ) {
+        let old_ports = &mut self.ports;
+        let mut i = 0;
+        while i < old_ports.len() {
+            if !ports
+                .iter()
+                .any(|p| p.name == old_ports[i].name && p.input() == old_ports[i].input())
+            {
+                let port = old_ports.remove(i);
+                let id = nsString::from(&port.id);
+                let name = nsString::from(&port.name);
+                unsafe { remove_callback(&id, &name, port.input()) };
+            } else {
+                i += 1;
             }
         }
+    }
+
+    fn add_new_ports(
+        self: &mut MidirWrapper,
+        ports: Vec<MidiPortWrapper>,
+        add_callback: AddCallback,
+    ) {
+        for port in ports {
+            if !self.is_port_present(&port) && !Self::is_microsoft_synth_output(&port) {
+                let id = nsString::from(&port.id);
+                let name = nsString::from(&port.name);
+                unsafe { add_callback(&id, &name, port.input()) };
+                self.ports.push(port);
+            }
+        }
+    }
+
+    fn is_port_present(self: &MidirWrapper, port: &MidiPortWrapper) -> bool {
+        self.ports
+            .iter()
+            .any(|p| p.name == port.name && p.input() == port.input())
+    }
+
+    // We explicitly disable Microsoft's soft synthesizer, see bug 1798097
+    fn is_microsoft_synth_output(port: &MidiPortWrapper) -> bool {
+        (port.input() == false) && (port.name == "Microsoft GS Wavetable Synth")
     }
 
     fn open_port(
@@ -230,7 +258,7 @@ fn collect_ports() -> Result<Vec<MidiPortWrapper>, InitError> {
 
 impl MidirWrapper {
     fn new() -> Result<MidirWrapper, InitError> {
-        let ports = collect_ports()?;
+        let ports = Vec::new();
         let connections: Vec<MidiConnectionWrapper> = Vec::new();
         Ok(MidirWrapper { ports, connections })
     }
@@ -245,11 +273,9 @@ impl MidirWrapper {
 /// This function deliberately leaks the wrapper because ownership is
 /// transfered to the C++ code. Use [midir_impl_shutdown()] to free it.
 #[no_mangle]
-pub unsafe extern "C" fn midir_impl_init(
-    callback: unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool),
-) -> *mut MidirWrapper {
-    if let Ok(midir_impl) = MidirWrapper::new() {
-        iterate_ports(&midir_impl.ports, callback);
+pub unsafe extern "C" fn midir_impl_init(callback: AddCallback) -> *mut MidirWrapper {
+    if let Ok(mut midir_impl) = MidirWrapper::new() {
+        midir_impl.refresh(callback, None);
 
         let midir_box = Box::new(midir_impl);
         // Leak the object as it will be owned by the C++ code from now on
@@ -269,10 +295,10 @@ pub unsafe extern "C" fn midir_impl_init(
 #[no_mangle]
 pub unsafe extern "C" fn midir_impl_refresh(
     wrapper: *mut MidirWrapper,
-    add_callback: unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool),
-    remove_callback: unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool),
+    add_callback: AddCallback,
+    remove_callback: RemoveCallback,
 ) {
-    (*wrapper).refresh(add_callback, remove_callback)
+    (*wrapper).refresh(add_callback, Some(remove_callback))
 }
 
 /// Shutdown midir and free the C++ wrapper.
@@ -383,20 +409,5 @@ fn collect_output_ports(output: &MidiOutput, wrappers: &mut Vec<MidiPortWrapper>
             open_count: 0,
         };
         wrappers.push(port);
-    }
-}
-
-unsafe fn iterate_ports(
-    ports: &[MidiPortWrapper],
-    callback: unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool),
-) {
-    for port in ports {
-        let id = nsString::from(&port.id);
-        let name = nsString::from(&port.name);
-        let input = match port.port {
-            MidiPort::Input(_) => true,
-            MidiPort::Output(_) => false,
-        };
-        callback(&id, &name, input);
     }
 }
