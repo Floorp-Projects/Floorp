@@ -22,6 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   UITour: "resource:///modules/UITour.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   Spotlight: "resource://activity-stream/lib/Spotlight.jsm",
+  ColorwayClosetOpener: "resource:///modules/ColorwayClosetOpener.jsm",
 });
 
 const SpecialMessageActions = {
@@ -407,6 +408,12 @@ const SpecialMessageActions = {
           action.data.selector
         );
         clickElement?.click();
+        break;
+      case "OPEN_FIREFOX_VIEW_AND_COLORWAYS_MODAL":
+        window.FirefoxViewHandler.openTab();
+        lazy.ColorwayClosetOpener.openModal({
+          source: "firefoxview",
+        });
         break;
     }
   },

@@ -347,7 +347,7 @@
                   "type": "boolean",
                   "description": "Whether or not to pin private browsing mode"
                 }
-              }, 
+              },
               "additionalProperties": false
             }
           },
@@ -560,6 +560,18 @@
           "required": ["data", "type"],
           "additionalProperties": false,
           "description": "Selects an element in the current Window's document and triggers a click action"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["OPEN_FIREFOX_VIEW_AND_COLORWAYS_MODAL"]
+            }
+          },
+          "required": ["type"],
+          "additionalProperties": false,
+          "description": "Message action that opens about:firefoxview and renders the colorways modal"
         }
       ]
     }
