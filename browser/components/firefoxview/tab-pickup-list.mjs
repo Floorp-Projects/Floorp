@@ -86,6 +86,102 @@ class TabPickupList extends HTMLElement {
         }
       );
     }
+    if (event.type == "keydown") {
+      switch (event.key) {
+        case "ArrowRight": {
+          event.preventDefault();
+          this.moveFocusToSecondElement();
+          break;
+        }
+        case "ArrowLeft": {
+          event.preventDefault();
+          this.moveFocusToFirstElement();
+          break;
+        }
+        case "ArrowDown": {
+          event.preventDefault();
+          this.moveFocusToNextElement();
+          break;
+        }
+        case "ArrowUp": {
+          event.preventDefault();
+          this.moveFocusToPreviousElement();
+          break;
+        }
+        case "Tab": {
+          this.resetFocus(event);
+        }
+      }
+    }
+  }
+
+  /**
+   * Handles removing and setting tabindex on elements
+   * while moving focus to the next element
+   *
+   * @param {HTMLElement} currentElement currently focused element
+   * @param {HTMLElement} nextElement element that should receive focus next
+   * @memberof TabPickupList
+   * @private
+   */
+  #manageTabIndexAndFocus(currentElement, nextElement) {
+    currentElement.setAttribute("tabindex", "-1");
+    nextElement.removeAttribute("tabindex");
+    nextElement.focus();
+  }
+
+  moveFocusToFirstElement() {
+    let selectableElements = Array.from(this.tabsList.querySelectorAll("a"));
+    let firstElement = selectableElements[0];
+    let selectedElement = this.tabsList.querySelector("a:not([tabindex]");
+    this.#manageTabIndexAndFocus(selectedElement, firstElement);
+  }
+
+  moveFocusToSecondElement() {
+    let selectableElements = Array.from(this.tabsList.querySelectorAll("a"));
+    let secondElement = selectableElements[1];
+    if (secondElement) {
+      let selectedElement = this.tabsList.querySelector("a:not([tabindex]");
+      this.#manageTabIndexAndFocus(selectedElement, secondElement);
+    }
+  }
+
+  moveFocusToNextElement() {
+    let selectableElements = Array.from(this.tabsList.querySelectorAll("a"));
+    let selectedElement = this.tabsList.querySelector("a:not([tabindex]");
+    let nextElement =
+      selectableElements.findIndex(elem => elem == selectedElement) + 1;
+    if (nextElement < selectableElements.length) {
+      this.#manageTabIndexAndFocus(
+        selectedElement,
+        selectableElements[nextElement]
+      );
+    }
+  }
+  moveFocusToPreviousElement() {
+    let selectableElements = Array.from(this.tabsList.querySelectorAll("a"));
+    let selectedElement = this.tabsList.querySelector("a:not([tabindex]");
+    let previousElement =
+      selectableElements.findIndex(elem => elem == selectedElement) - 1;
+    if (previousElement >= 0) {
+      this.#manageTabIndexAndFocus(
+        selectedElement,
+        selectableElements[previousElement]
+      );
+    }
+  }
+  resetFocus(e) {
+    let selectableElements = Array.from(this.tabsList.querySelectorAll("a"));
+    let selectedElement = this.tabsList.querySelector("a:not([tabindex]");
+    selectedElement.setAttribute("tabindex", "-1");
+    selectableElements[0].removeAttribute("tabindex");
+    if (e.shiftKey) {
+      e.preventDefault();
+      document
+        .getElementById("tab-pickup-container")
+        .querySelector("summary")
+        .focus();
+    }
   }
 
   cleanup() {
@@ -181,6 +277,10 @@ class TabPickupList extends HTMLElement {
     a.classList.add("synced-tab-a");
     a.href = targetURI;
     a.target = "_blank";
+    if (index != 0) {
+      a.setAttribute("tabindex", "-1");
+    }
+    a.addEventListener("keydown", this);
     document.l10n.setAttributes(a, "firefoxview-tabs-list-tab-button", {
       targetURI,
     });
