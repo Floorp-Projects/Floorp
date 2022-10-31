@@ -530,7 +530,7 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
                 cx, handlerObject, "exportNameString", &exportNameValue));
 
             // Step 1. Assert: exports is a module namespace exotic object.
-            Rooted<Value> exportsValue(cx, args.get(0));
+            Handle<Value> exportsValue = args[0];
             MOZ_ASSERT(exportsValue.isObject() &&
                        exportsValue.toObject().is<ModuleNamespaceObject>());
 
@@ -653,9 +653,8 @@ static bool ShadowRealm_importValue(JSContext* cx, unsigned argc, Value* vp) {
   //                                         callerRealm, evalRealm,
   //                                         evalContext).
 
-  Rooted<JSObject*> res(
-      cx, ShadowRealmImportValue(cx, specifierString, exportName, callerRealm,
-                                 evalRealm));
+  JSObject* res = ShadowRealmImportValue(cx, specifierString, exportName,
+                                         callerRealm, evalRealm);
   if (!res) {
     return false;
   }
