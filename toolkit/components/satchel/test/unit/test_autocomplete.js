@@ -361,3 +361,28 @@ add_test(function test_token_limit_DB() {
     );
   });
 });
+
+add_test(async function can_search_escape_marker() {
+  await promiseUpdate({
+    op: "add",
+    fieldname: "field1",
+    value: "/* Further reading */ test",
+    timesUsed: 1,
+    firstUsed: now,
+    lastUsed: now,
+  });
+
+  fac.autoCompleteSearchAsync(
+    "field1",
+    "/* Further reading */ t",
+    null,
+    null,
+    null,
+    {
+      onSearchCompletion(aResults) {
+        Assert.equal(1, aResults.matchCount);
+        run_next_test();
+      },
+    }
+  );
+});
