@@ -348,7 +348,7 @@ treechildren::-moz-tree-separator(selected) {
   color: var(--organizer-deemphasized-color);
 }
 
-#editBMPanel_tagsSelectorRow > richlistbox {
+#editBMPanel_tagsSelector {
   appearance: none;
   color: var(--organizer-color);
   background-color: var(--organizer-content-background);
@@ -356,16 +356,16 @@ treechildren::-moz-tree-separator(selected) {
   border-radius: 4px;
 }
 
-#editBMPanel_tagsSelectorRow > richlistbox > richlistitem {
+#editBMPanel_tagsSelector > richlistitem {
   border: 1px solid transparent;
 }
 
-#editBMPanel_tagsSelectorRow > richlistbox > richlistitem:hover {
+#editBMPanel_tagsSelector > richlistitem:hover {
   background-color: var(--organizer-hover-background);
   color: var(--organizer-hover-color);
 }
 
-#editBMPanel_tagsSelectorRow > richlistbox > richlistitem[selected] {
+#editBMPanel_tagsSelector > richlistitem[selected] {
   background-color: var(--organizer-selected-background);
   color: var(--organizer-selected-color);
 }
