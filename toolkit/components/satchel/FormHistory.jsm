@@ -1272,7 +1272,7 @@ FormHistory = {
     let boundaryCalc = "";
 
     if (searchString.length >= 1) {
-      params.valuePrefix = searchString + "%";
+      params.valuePrefix = searchString.replaceAll("/", "//") + "%";
     }
 
     if (searchString.length > 1) {
@@ -1286,7 +1286,7 @@ FormHistory = {
       let tokenCalc = [];
       let searchTokenCount = Math.min(searchTokens.length, MAX_SEARCH_TOKENS);
       for (let i = 0; i < searchTokenCount; i++) {
-        let escapedToken = searchTokens[i];
+        let escapedToken = searchTokens[i].replaceAll("/", "//");
         params["tokenBegin" + i] = escapedToken + "%";
         params["tokenBoundary" + i] = "% " + escapedToken + "%";
         params["tokenContains" + i] = "%" + escapedToken + "%";
