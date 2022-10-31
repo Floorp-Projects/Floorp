@@ -41,7 +41,6 @@ class TestTargetTasks(unittest.TestCase):
             parameters={
                 "project": project,
                 "hg_branch": "default",
-                "tasks_for": "hg-push",
             },
         )
 
@@ -55,7 +54,6 @@ class TestTargetTasks(unittest.TestCase):
             parameters={
                 "project": "mozilla-central",
                 "hg_branch": hg_branch,
-                "tasks_for": "hg-push",
             },
         )
 
@@ -156,7 +154,6 @@ class TestTargetTasks(unittest.TestCase):
             "try_mode": None,
             "project": "try",
             "message": "",
-            "tasks_for": "hg-push",
         }
         # only runs the task with run_on_projects: try
         self.assertEqual(method(tg, params, {}), [])
@@ -169,7 +166,6 @@ class TestTargetTasks(unittest.TestCase):
             params = {
                 "try_mode": "try_option_syntax",
                 "message": "try: -p all",
-                "tasks_for": "hg-push",
             }
             self.assertEqual(method(tg, params, {}), ["b"])
 
@@ -180,20 +176,8 @@ class TestTargetTasks(unittest.TestCase):
         params = {
             "try_mode": "try_task_config",
             "try_task_config": {"tasks": ["a"]},
-            "tasks_for": "hg-push",
         }
         self.assertEqual(method(tg, params, {}), ["a"])
-
-    def test_always_target(self):
-        "The target_task_graph includes tasks with 'always_target'"
-        tg = self.make_task_graph()
-        tg.tasks["a"].attributes["always_target"] = True
-        method = target_tasks.get_method("nothing")
-        params = {"tasks_for": "hg-push"}
-        self.assertEqual(method(tg, params, {}), ["a"])
-
-        params = {"tasks_for": "release"}
-        self.assertEqual(method(tg, params, {}), [])
 
 
 # tests for specific filters
