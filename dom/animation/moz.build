@@ -38,7 +38,6 @@ EXPORTS.mozilla += [
     "PendingAnimationTracker.h",
     "PostRestyleMode.h",
     "PseudoElementHashEntry.h",
-    "ScrollTimelineAnimationTracker.h",
     "TimingParams.h",
 ]
 
@@ -59,7 +58,6 @@ UNIFIED_SOURCES += [
     "KeyframeUtils.cpp",
     "PendingAnimationTracker.cpp",
     "ScrollTimeline.cpp",
-    "ScrollTimelineAnimationTracker.cpp",
     "TimingParams.cpp",
 ]
 
