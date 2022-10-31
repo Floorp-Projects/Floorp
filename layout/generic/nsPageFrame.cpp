@@ -604,12 +604,13 @@ nsSize nsPageFrame::ComputePageSize() const {
   }
   if (pageSize.IsOrientation()) {
     // Ensure the correct orientation is applied.
-    if (pageSize.AsOrientation() == StylePageOrientation::Portrait) {
+    if (pageSize.AsOrientation() == StylePageSizeOrientation::Portrait) {
       if (size.width > size.height) {
         std::swap(size.width, size.height);
       }
     } else {
-      MOZ_ASSERT(pageSize.AsOrientation() == StylePageOrientation::Landscape);
+      MOZ_ASSERT(pageSize.AsOrientation() ==
+                 StylePageSizeOrientation::Landscape);
       if (size.width < size.height) {
         std::swap(size.width, size.height);
       }

@@ -1336,15 +1336,15 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
   // FinishPrintPreview, so that the frontend can reflect this.
   // The new document has not yet been reflowed, so we have to query the
   // original document for any CSS page-size.
-  if (const Maybe<StylePageOrientation> maybeOrientation =
+  if (const Maybe<StylePageSizeOrientation> maybeOrientation =
           aPO->mDocument->GetPresShell()
               ->StyleSet()
-              ->GetDefaultPageOrientation()) {
-    if (maybeOrientation.value() == StylePageOrientation::Landscape &&
+              ->GetDefaultPageSizeOrientation()) {
+    if (maybeOrientation.value() == StylePageSizeOrientation::Landscape &&
         pageSize.width < pageSize.height) {
       // Paper is in portrait, CSS page size is landscape.
       std::swap(pageSize.width, pageSize.height);
-    } else if (maybeOrientation.value() == StylePageOrientation::Portrait &&
+    } else if (maybeOrientation.value() == StylePageSizeOrientation::Portrait &&
                pageSize.width > pageSize.height) {
       // Paper is in landscape, CSS page size is portrait.
       std::swap(pageSize.width, pageSize.height);
@@ -1985,9 +1985,10 @@ nsresult nsPrintJob::FinishPrintPreview() {
     // Determine if there is a specified page size, and if we should set the
     // paper orientation to match it.
     const Maybe<bool> maybeLandscape =
-        mPrintObject->mPresShell->StyleSet()->GetDefaultPageOrientation().map(
-            [](StylePageOrientation o) -> bool {
-              return o == StylePageOrientation::Landscape;
+        mPrintObject->mPresShell->StyleSet()
+            ->GetDefaultPageSizeOrientation()
+            .map([](StylePageSizeOrientation o) -> bool {
+              return o == StylePageSizeOrientation::Landscape;
             });
     mPrintPreviewCallback(PrintPreviewResultInfo(
         GetPrintPreviewNumSheets(), GetRawNumPages(), GetIsEmpty(),
