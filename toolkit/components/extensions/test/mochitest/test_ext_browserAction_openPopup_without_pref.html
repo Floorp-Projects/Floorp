@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>action.openPopup Preference Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+let extensionData = {
+  manifest: {
+    applications: {
+      gecko: {
+        id: "open-popup@tests.mozilla.org",
+      }
+    },
+    browser_action: {
+      default_popup: "popup.html",
+    }
+  },
+
+  useAddonManager: "android-only",
+};
+
+add_task(async function test_browserAction_openPopup_without_pref() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["extensions.openPopupWithoutUserGesture.enabled", false],
+    ],
+  });
+
+  let extension = ExtensionTestUtils.loadExtension({
+    ...extensionData,
+
+    background: async function() {
+      await browser.test.assertRejects(
+        browser.browserAction.openPopup(),
+        "openPopup requires a user gesture",
+        "Should throw when preference is unset"
+      );
+
+      browser.test.notifyPass("withoutPref");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("withoutPref");
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>
