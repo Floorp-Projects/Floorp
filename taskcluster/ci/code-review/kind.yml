@@ -16,7 +16,7 @@ jobs:
     issues:
         label: code-review-issues
         description: List all issues found in static analysis and linting tasks
-        worker-type: b-linux
+        worker-type: b-linux-gcp
 
         # Only run by using the code-review target_tasks_method
         run-on-projects: []
