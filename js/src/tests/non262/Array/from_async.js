@@ -133,5 +133,46 @@ assertEq(done, true);
 })();
 
 drainJobQueue();
+
+(async function() {
+  var badSyncIterator = {
+    [Symbol.iterator](){
+      return null;
+    }
+  };
+
+  var badAsyncIterator = {
+    [Symbol.asyncIterator](){
+      return null;
+    }
+  };
+
+  async function errorMessage(fn) {
+    try {
+      await fn();
+    } catch (e) {
+      return e.message;
+    }
+    throw new Error("missing error");
+  }
+
+  // Ensure Array.from and Array.fromAsync use consistent error reporting.
+  var expected = await errorMessage(() => Array.from(badSyncIterator));
+  var actual = await errorMessage(() => Array.fromAsync(badSyncIterator));
+  assertEq(actual, expected);
+
+  // Ensure for-of iteration and Array.fromAsync use consistent error reporting.
+  var expected = await errorMessage(() => { for (var _ of badSyncIterator); });
+  var actual = await errorMessage(() => Array.fromAsync(badSyncIterator));
+  assertEq(actual, expected);
+
+  // Ensure await for-of iteration and Array.fromAsync use consistent error reporting.
+  var expected = await errorMessage(async () => { for await (var _ of badAsyncIterator); });
+  var actual = await errorMessage(() => Array.fromAsync(badAsyncIterator));
+  assertEq(actual, expected);
+})();
+
+drainJobQueue();
+
 if (typeof reportCompare === 'function')
     reportCompare(true, true);

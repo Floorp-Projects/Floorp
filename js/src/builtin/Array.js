@@ -871,17 +871,27 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
     // Step 3.h. If usingAsyncIterator is not undefined, then
     if (usingAsyncIterator !== undefined) {
       //     Step 3.h.i. Set iteratorRecord to ? GetIterator(asyncItems, async, usingAsyncIterator).
-      iteratorRecord = GetIterator(asyncItems, "async", usingAsyncIterator);
+      let iterator = callContentFunction(usingAsyncIterator, asyncItems);
+
+      if (!IsObject(iterator)) {
+        ThrowTypeError(JSMSG_GET_ASYNC_ITER_RETURNED_PRIMITIVE);
+      }
+
+      iteratorRecord = { iterator, nextMethod: iterator.next };
     } else if (usingSyncIterator !== undefined) {
       // Step 3.i. Else if usingSyncIterator is not undefined, then
       //     Step 3.i.i. Set iteratorRecord to ? CreateAsyncFromSyncIterator(GetIterator(asyncItems, sync, usingSyncIterator)).
-      let asyncIterator = GetIterator(asyncItems, "sync", usingSyncIterator);
+      let iterator = callContentFunction(usingSyncIterator, asyncItems);
+
+      if (!IsObject(iterator)) {
+        ThrowTypeError(JSMSG_GET_ITER_RETURNED_PRIMITIVE);
+      }
 
       // SpiderMonkey's CreateAsyncFromSyncIterator doesn't return an iterator record
       // with named slots; so we need to create our own iterator record.
       let asyncFromSyncIteratorObject = CreateAsyncFromSyncIterator(
-        asyncIterator.iterator,
-        asyncIterator.nextMethod
+        iterator,
+        iterator.next
       );
 
       iteratorRecord = {

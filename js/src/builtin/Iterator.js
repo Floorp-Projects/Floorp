@@ -49,61 +49,6 @@ function IteratorClose(iteratorRecord, value) {
  * GetIterator ( obj [ , hint [ , method ] ] )
  * https://tc39.es/ecma262/#sec-getiterator
  *
- */
-function GetIterator(obj, hint = undefined, method = undefined) {
-  // Step 1. If hint is not present, set hint to sync.
-  if (hint === undefined) {
-    hint = "sync";
-  }
-
-  // Step 2. If method is not present, then
-  if (method === undefined) {
-    // Step 2.a. If hint is async, then
-    if (hint === "async") {
-      // Step 2.a.i. Set method to ? GetMethod(obj, @@asyncIterator).
-      method = GetMethod(obj, GetBuiltinSymbol("asyncIterator"));
-      // Step 2.a.ii. If method is undefined, then
-      if (method === undefined) {
-        // Step 2.a.ii.1. Let syncMethod be ? GetMethod(obj, @@iterator).
-        let syncMethod = GetMethod(obj, GetBuiltinSymbol("iterator"));
-        // Step 2.a.ii.2. Let syncIteratorRecord be ? GetIterator(obj, sync, syncMethod).
-        let syncIteratorRecord = GetIterator(obj, "sync", syncMethod);
-        // Step 2.a.ii.3. Return CreateAsyncFromSyncIterator(syncIteratorRecord).
-        // (SpiderMonkey extracts the contents of the iterator record for this call.)
-        return CreateAsyncFromSyncIterator(
-          syncIteratorRecord.iterator,
-          syncIteratorRecord.nextMethod
-        );
-      }
-    } else {
-      // Step 2.b. Otherwise, set method to ? GetMethod(obj, @@iterator).
-      method = GetMethod(obj, GetBuiltinSymbol("iterator"));
-    }
-  }
-
-  // Step 3. Let iterator be ? Call(method, obj).
-  let iterator = callContentFunction(method, obj);
-  // Step 4. If iterator is not an Object, throw a TypeError exception.
-  if (!IsObject(iterator)) {
-    ThrowTypeError(JSMSG_OBJECT_REQUIRED, iterator);
-  }
-
-  // Step 5. Let nextMethod be ? GetV(iterator, "next").
-  let nextMethod = iterator.next;
-
-  // Step 6. Let iteratorRecord be the Iterator Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
-  let iteratorRecord = { iterator, nextMethod, done: false };
-
-  // Step 7. Return iteratorRecord.
-  return iteratorRecord;
-}
-
-/**
- * ES2022 draft rev c5f683e61d5dce703650f1c90d2309c46f8c157a
- *
- * GetIterator ( obj [ , hint [ , method ] ] )
- * https://tc39.es/ecma262/#sec-getiterator
- *
  * Optimized for single argument
  */
 function GetIteratorSync(obj) {
