@@ -6,6 +6,8 @@
 
 #include "builtin/WrappedFunctionObject.h"
 
+#include <string_view>
+
 #include "jsapi.h"
 
 #include "builtin/ShadowRealm.h"
@@ -216,28 +218,19 @@ static bool CopyNameAndLength(JSContext* cx, HandleObject fun,
 
 static JSString* ToStringOp(JSContext* cx, JS::HandleObject obj,
                             bool isToSource) {
-  Rooted<Value> nameVal(cx);
-  if (!GetProperty(cx, obj, obj, cx->names().name, &nameVal)) {
-    return nullptr;
-  }
+  // Return an unnamed native function to match the behavior of bound
+  // functions.
+  //
+  // NOTE: The current value of the "name" property can be any value, it's not
+  // necessarily a string value. It can also be an accessor property which could
+  // lead to executing side-effects, which isn't allowed per the spec, cf.
+  // <https://tc39.es/ecma262/#sec-function.prototype.tostring>. Even if it's a
+  // data property with a string value, we'd still need to validate the string
+  // can be parsed as a |PropertyName| production before using it as part of the
+  // output.
+  constexpr std::string_view nativeCode = "function () {\n    [native code]\n}";
 
-  MOZ_ASSERT(nameVal.isString());
-  Rooted<JSString*> nameStr(cx, nameVal.toString());
-
-  JSStringBuilder out(cx);
-  if (!out.append("function ")) {
-    return nullptr;
-  }
-
-  if (!out.append(nameStr)) {
-    return nullptr;
-  }
-
-  if (!out.append("() {\n    [native code]\n}")) {
-    return nullptr;
-  }
-
-  return out.finishString();
+  return NewStringCopy<CanGC>(cx, nativeCode);
 }
 
 static const JSClassOps classOps = {
