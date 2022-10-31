@@ -10,6 +10,7 @@ DIRS += [
     "treestyletab",
     "undo-closed-tab",
     "official-site-ua",
+    "webpanel-ua",
     "multirow-tabs",
 ]
 

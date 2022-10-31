@@ -1,0 +1,13 @@
+[
+  {
+    "namespace": "BrowserInfo",
+    "description": "display version get",
+    "events": [
+      {
+        "name": "onBeforeRequest_webpanel_requestId",
+        "type": "function",
+        "parameters": []
+      }
+    ]
+  }
+]
