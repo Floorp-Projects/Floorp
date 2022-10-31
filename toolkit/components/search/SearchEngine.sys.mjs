@@ -504,8 +504,21 @@ export class EngineURL {
   }
 
   _getTermsParameterName() {
-    let queryParam = this.params.find(p => p.value == "{" + USER_DEFINED + "}");
-    return queryParam ? queryParam.name : "";
+    let searchTerms = "{" + USER_DEFINED + "}";
+    let paramName = this.params.find(p => p.value == searchTerms)?.name;
+    // Some query params might not be added to this.params
+    // in the engine construction process, so try checking the URL
+    // template for the existence of the query parameter value.
+    if (!paramName) {
+      let urlParms = new URL(this.template).searchParams;
+      for (let [name, value] of urlParms.entries()) {
+        if (value == searchTerms) {
+          paramName = name;
+          break;
+        }
+      }
+    }
+    return paramName ?? "";
   }
 
   _hasRelation(rel) {

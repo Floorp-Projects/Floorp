@@ -34,8 +34,13 @@ add_task(async function test_parseSubmissionURL() {
   let engine3 = Services.search.getEngineByName("bacon_addParam");
   let engine4 = Services.search.getEngineByName("idn_addParam");
 
+  // The following engine provides it's query keyword in
+  // its template in the form of q={searchTerms}
+  let engine5 = await SearchTestUtils.promiseNewSearchEngine(
+    `${gDataUrl}engine2.xml`
+  );
+
   // The following engines cannot identify the search parameter.
-  await SearchTestUtils.promiseNewSearchEngine(`${gDataUrl}engine2.xml`);
   await SearchTestUtils.installSearchExtension({
     name: "bacon",
     keyword: "bacon",
@@ -112,20 +117,32 @@ add_task(async function test_parseSubmissionURL() {
   Assert.ok(url.slice(result.termsOffset).startsWith("foo+bar"));
   Assert.equal(result.termsLength, "foo+bar".length);
 
-  // Parsing of parameters from an engine template URL is not supported.
+  // Parsing of parameters from an engine template URL is not supported
+  // if no matching parameter value template is provided.
   Assert.equal(
     Services.search.parseSubmissionURL("https://www.bacon.moz/search?q=")
       .engine,
     null
   );
-  Assert.equal(
-    Services.search.parseSubmissionURL("https://duckduckgo.com?q=test").engine,
-    null
-  );
-  Assert.equal(
-    Services.search.parseSubmissionURL("https://duckduckgo.com/?q=test").engine,
-    null
-  );
+
+  // Parsing of parameters from an engine template URL is supported
+  // if a matching parameter value template is provided.
+  url = "https://duckduckgo.com/?foo=bar&q=caff%C3%A8";
+  result = Services.search.parseSubmissionURL(url);
+  Assert.equal(result.engine.wrappedJSObject, engine5);
+  Assert.equal(result.terms, "caff\u00E8");
+  Assert.ok(url.slice(result.termsOffset).startsWith("caff%C3%A8"));
+  Assert.equal(result.termsLength, "caff%C3%A8".length);
+
+  // If the search params are in the template, the query parameter
+  // doesn't need to be separated from the host by a slash, only by
+  // by a question mark.
+  url = "https://duckduckgo.com?foo=bar&q=caff%C3%A8";
+  result = Services.search.parseSubmissionURL(url);
+  Assert.equal(result.engine.wrappedJSObject, engine5);
+  Assert.equal(result.terms, "caff\u00E8");
+  Assert.ok(url.slice(result.termsOffset).startsWith("caff%C3%A8"));
+  Assert.equal(result.termsLength, "caff%C3%A8".length);
 
   // HTTP and HTTPS schemes are interchangeable.
   url = "https://www.google.com/search?q=caff%C3%A8";
