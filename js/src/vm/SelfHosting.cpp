@@ -849,13 +849,12 @@ bool js::intrinsic_CreateAsyncFromSyncIterator(JSContext* cx, unsigned argc,
                                                Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
-  MOZ_ASSERT(args.get(0).isObject());
+  MOZ_ASSERT(args[0].isObject());
 
-  RootedObject iter(cx, &args.get(0).toObject());
-  RootedValue nextMethod(cx, args.get(1));
+  RootedObject iter(cx, &args[0].toObject());
+  HandleValue nextMethod = args[1];
 
-  RootedObject syncIter(cx,
-                        js::CreateAsyncFromSyncIterator(cx, iter, nextMethod));
+  JSObject* syncIter = js::CreateAsyncFromSyncIterator(cx, iter, nextMethod);
   if (!syncIter) {
     return false;
   }
