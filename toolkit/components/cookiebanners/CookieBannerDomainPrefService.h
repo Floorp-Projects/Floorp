@@ -12,6 +12,7 @@
 #include "nsTHashMap.h"
 
 #include "nsICookieBannerService.h"
+#include "nsIObserver.h"
 
 namespace mozilla {
 
@@ -19,10 +20,12 @@ namespace mozilla {
 // the content pref to store the per-domain preference for cookie banner
 // handling. To support the synchronous access, the service caches the
 // preferences in the memory.
-class CookieBannerDomainPrefService final : public nsIContentPrefCallback2 {
+class CookieBannerDomainPrefService final : public nsIContentPrefCallback2,
+                                            public nsIObserver {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTPREFCALLBACK2
+  NS_DECL_NSIOBSERVER
 
   static already_AddRefed<CookieBannerDomainPrefService> GetOrCreate();
 
@@ -64,6 +67,8 @@ class CookieBannerDomainPrefService final : public nsIContentPrefCallback2 {
   // A helper function that will wait until the initialization of the content
   // pref completed.
   void EnsureInitCompleted();
+
+  void Shutdown();
 };
 
 }  // namespace mozilla
