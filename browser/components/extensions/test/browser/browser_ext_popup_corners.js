@@ -134,10 +134,14 @@ add_task(async function testPopupBorderRadius() {
       "Should have an overflowing toolbar."
     );
 
-    let chevron = document.getElementById("nav-bar-overflow-button");
-    let shownPanelPromise = promisePanelElementShown(window, overflowPanel);
-    chevron.click();
-    await shownPanelPromise;
+    if (window.gUnifiedExtensions.isEnabled) {
+      await window.gUnifiedExtensions.togglePanel();
+    } else {
+      let chevron = document.getElementById("nav-bar-overflow-button");
+      let shownPanelPromise = promisePanelElementShown(window, overflowPanel);
+      chevron.click();
+      await shownPanelPromise;
+    }
 
     clickBrowserAction(extension);
     let browser = await awaitExtensionPanel(extension);
