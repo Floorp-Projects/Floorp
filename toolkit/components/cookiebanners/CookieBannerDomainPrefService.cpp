@@ -7,11 +7,13 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Services.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPtr.h"
 
 #include "nsIContentPrefService2.h"
 #include "nsICookieBannerService.h"
+#include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsVariant.h"
 
@@ -19,7 +21,8 @@
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS(CookieBannerDomainPrefService, nsIContentPrefCallback2)
+NS_IMPL_ISUPPORTS(CookieBannerDomainPrefService, nsIContentPrefCallback2,
+                  nsIObserver)
 
 LazyLogModule gCookieBannerPerSitePrefLog("CookieBannerDomainPref");
 
@@ -32,7 +35,13 @@ CookieBannerDomainPrefService::GetOrCreate() {
   if (!sCookieBannerDomainPrefService) {
     sCookieBannerDomainPrefService = new CookieBannerDomainPrefService();
 
-    ClearOnShutdown(&sCookieBannerDomainPrefService);
+    RunOnShutdown([] {
+      MOZ_LOG(gCookieBannerPerSitePrefLog, LogLevel::Debug, ("RunOnShutdown."));
+
+      sCookieBannerDomainPrefService->Shutdown();
+
+      sCookieBannerDomainPrefService = nullptr;
+    });
   }
 
   return do_AddRef(sCookieBannerDomainPrefService);
@@ -51,13 +60,43 @@ void CookieBannerDomainPrefService::Init() {
     return;
   }
 
-  mIsInitialized = true;
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+
+  if (!obs) {
+    return;
+  }
+
+  // Register the observer to watch private browsing session ends. We will clean
+  // the private domain prefs when this happens.
+  DebugOnly<nsresult> rv =
+      obs->AddObserver(this, "last-pb-context-exited", false);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Fail to add observer for 'last-pb-context-exited'.");
 
   // Populate the content pref for cookie banner domain preferences.
-  DebugOnly<nsresult> rv = contentPrefService->GetByName(
-      COOKIE_BANNER_CONTENT_PREF_NAME, nullptr, this);
+  rv = contentPrefService->GetByName(COOKIE_BANNER_CONTENT_PREF_NAME, nullptr,
+                                     this);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Fail to get all content prefs during init.");
+
+  mIsInitialized = true;
+}
+
+void CookieBannerDomainPrefService::Shutdown() {
+  // Bail out early if the service never gets initialized.
+  if (!mIsInitialized) {
+    return;
+  }
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+
+  if (!obs) {
+    return;
+  }
+
+  DebugOnly<nsresult> rv = obs->RemoveObserver(this, "last-pb-context-exited");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Fail to remove observer for 'last-pb-context-exited'.");
 }
 
 Maybe<nsICookieBannerService::Modes> CookieBannerDomainPrefService::GetPref(
@@ -215,6 +254,22 @@ CookieBannerDomainPrefService::HandleError(nsresult error) {
             ("Fail to get content pref during initiation."));
     return NS_OK;
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CookieBannerDomainPrefService::Observe(nsISupports* /*aSubject*/,
+                                       const char* aTopic,
+                                       const char16_t* /*aData*/) {
+  if (strcmp(aTopic, "last-pb-context-exited") != 0) {
+    MOZ_ASSERT_UNREACHABLE("unexpected topic");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Clear the private browsing domain prefs if we observe the private browsing
+  // session has ended.
+  mPrefsPrivate.Clear();
 
   return NS_OK;
 }
