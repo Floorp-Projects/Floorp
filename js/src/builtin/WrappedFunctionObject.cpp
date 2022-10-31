@@ -30,6 +30,8 @@ using namespace JS;
 // GetWrappedValue ( callerRealm: a Realm Record, value: unknown )
 bool js::GetWrappedValue(JSContext* cx, Realm* callerRealm, Handle<Value> value,
                          MutableHandle<Value> res) {
+  cx->check(value);
+
   // Step 2. Return value (Reordered)
   if (!value.isObject()) {
     res.set(value);
@@ -275,43 +277,53 @@ const JSClass WrappedFunctionObject::class_ = {
 // object)
 bool js::WrappedFunctionCreate(JSContext* cx, Realm* callerRealm,
                                HandleObject target, MutableHandle<Value> res) {
-  // Ensure that the function object has the correct realm by allocating it
-  // into that realm.
-  Rooted<JSObject*> global(cx, callerRealm->maybeGlobal());
-  MOZ_RELEASE_ASSERT(global,
-                     "global is null; executing in a realm that's being GC'd?");
-  AutoRealm ar(cx, global);
+  cx->check(target);
 
-  MOZ_ASSERT(target);
+  WrappedFunctionObject* wrapped = nullptr;
+  {
+    // Ensure that the function object has the correct realm by allocating it
+    // into that realm.
+    Rooted<JSObject*> global(cx, callerRealm->maybeGlobal());
+    MOZ_RELEASE_ASSERT(
+        global, "global is null; executing in a realm that's being GC'd?");
+    AutoRealm ar(cx, global);
 
-  // Target *could* be a function from another realm
-  Rooted<JSObject*> maybeWrappedTarget(cx, target);
-  if (!cx->compartment()->wrap(cx, &maybeWrappedTarget)) {
-    return false;
+    MOZ_ASSERT(target);
+
+    // Target *could* be a function from another compartment.
+    Rooted<JSObject*> maybeWrappedTarget(cx, target);
+    if (!cx->compartment()->wrap(cx, &maybeWrappedTarget)) {
+      return false;
+    }
+
+    // 1. Let internalSlotsList be the internal slots listed in Table 2, plus
+    // [[Prototype]] and [[Extensible]].
+    // 2. Let wrapped be ! MakeBasicObject(internalSlotsList).
+    // 3. Set wrapped.[[Prototype]] to
+    //    callerRealm.[[Intrinsics]].[[%Function.prototype%]].
+    wrapped = NewBuiltinClassInstance<WrappedFunctionObject>(cx);
+    if (!wrapped) {
+      return false;
+    }
+
+    // 4. Set wrapped.[[Call]] as described in 2.1 (implicit in JSClass call
+    // hook)
+    // 5. Set wrapped.[[WrappedTargetFunction]] to Target.
+    wrapped->setTargetFunction(*maybeWrappedTarget);
+    // 6. Set wrapped.[[Realm]] to callerRealm. (implicitly the realm of
+    //    wrapped, which we assured with the AutoRealm
+
+    MOZ_ASSERT(wrapped->realm() == callerRealm);
   }
 
-  // 1. Let internalSlotsList be the internal slots listed in Table 2, plus
-  // [[Prototype]] and [[Extensible]].
-  // 2. Let wrapped be ! MakeBasicObject(internalSlotsList).
-  // 3. Set wrapped.[[Prototype]] to
-  //    callerRealm.[[Intrinsics]].[[%Function.prototype%]].
-  Rooted<WrappedFunctionObject*> wrapped(
-      cx, NewBuiltinClassInstance<WrappedFunctionObject>(cx));
-  if (!wrapped) {
+  // Wrap |wrapped| to the current compartment.
+  RootedObject obj(cx, wrapped);
+  if (!cx->compartment()->wrap(cx, &obj)) {
     return false;
   }
-
-  // 4. Set wrapped.[[Call]] as described in 2.1 (implicit in JSClass call
-  // hook)
-  // 5. Set wrapped.[[WrappedTargetFunction]] to Target.
-  wrapped->setTargetFunction(*maybeWrappedTarget);
-  // 6. Set wrapped.[[Realm]] to callerRealm. (implicitly the realm of
-  //    wrapped, which we assured with the AutoRealm
-
-  MOZ_ASSERT(wrapped->realm() == callerRealm);
 
   // 7. Let result be CopyNameAndLength(wrapped, Target).
-  if (!CopyNameAndLength(cx, wrapped, maybeWrappedTarget)) {
+  if (!CopyNameAndLength(cx, obj, target)) {
     // 8. If result is an Abrupt Completion, throw a TypeError exception.
     cx->clearPendingException();
 
@@ -321,6 +333,6 @@ bool js::WrappedFunctionCreate(JSContext* cx, Realm* callerRealm,
   }
 
   // 9. Return wrapped.
-  res.set(ObjectValue(*wrapped));
+  res.set(ObjectValue(*obj));
   return true;
 }
