@@ -18,6 +18,7 @@ title: Mozilla Android Components
 description: >- # this means to ignore newlines until "baseurl:"
    A collection of Android libraries to build browsers or browser-like applications.
 # baseurl: "/" # the subpath of your site, e.g. /blog
+source: ./android-components
 url: "https://mozac.org/" # the base hostname & protocol for your site, e.g. http://example.com
 #twitter_username: anti_hype
 #github_username:  mozilla-mobile
