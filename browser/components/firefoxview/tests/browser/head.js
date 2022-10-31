@@ -346,3 +346,30 @@ async function touchLastTabFetch() {
   // wait so all pref observers can complete
   await TestUtils.waitForTick();
 }
+
+/**
+ * Opens and then closes a tab so that Firefox View can have
+ * a tab available in the recently closed list
+ *
+ * @param {string} url
+ * @return {Promise} Promise that is resolved when the session
+ * store has observed that the newly created tab has been closed
+ */
+async function open_then_close(url) {
+  let { updatePromise } = await BrowserTestUtils.withNewTab(
+    url,
+    async browser => {
+      return {
+        updatePromise: BrowserTestUtils.waitForSessionStoreUpdate({
+          linkedBrowser: browser,
+        }),
+      };
+    }
+  );
+  await updatePromise;
+  return TestUtils.topicObserved("sessionstore-closed-objects-changed");
+}
+
+function clearHistory() {
+  Services.obs.notifyObservers(null, "browser:purge-session-history");
+}
