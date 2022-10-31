@@ -65,6 +65,10 @@
         <label> <b>%1$s</b> polîtîkayeke ewlekariyê heye ku navê wê HTTP Strict Transport Security (HSTS) ango Ewlekariya Transporta Guvaştî ye, loma <b>%2$s</b> dikare tenê gava ewle be peywendiyê çêke. Tu nikarî ji bo vekirina vê malperê îstisnayan lê zêde bikî.
     ]]></string>
 
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> rêgezeke ewlekariyê ya bi navê Ewlekariya Jidandî ya Guheztinê ya HTTPê (HSTS) heye û loma <b>%2$s</b> dikare tenê di rewşeke ewle de bi malperê re têkiliyê dayne. Tu nikarî zêdekariyan bidiyê û têkeviyê.</label>
+     ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Vegere</string>
 
@@ -249,11 +253,34 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Rûpel nehate dîtin</string>
 
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Dibe ku pel hatibe guheztin, jêbirin yan jî navê wê hatibe guhertin?</li>
+        <li>Dibe ku navnîşan çewt hatibe nivîsandin?</li>
+        <li>Dibe ku ji bo xwe bigihînî vê hêmanê destûrs te tune be?</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Gihîna li dosyeyê hate redkirin</string>
 
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Dibe ku hatibe jêbirin, ciyê wê hatibe guhertin yan jî ji ber destûrên pelê nikarî xwe bigihîniyê.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Proxy Serverê girêdan red kir</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Gerok ji bo bikaranîna pêşkêşkara proksy hatiye eyarkirin, lê proksyê daxwaza têkiliyê red kir.</p>
+      <ul>
+        <li>DIbe ku eyarên proksyê ne rast hatibin çêkirin? Eyaran kontrol bike û dîsa biceribîne.</li>
+        <li>DIbe ku ev proksy destûrê nade têkiliyên di ser wê torê re?</li>
+        <li>Heke hê jî problem hebin, serî li rêveberiya torê yan jî dabînkera xizmeta înternetê bide.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proxy server nehate dîtin</string>
