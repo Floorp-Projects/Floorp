@@ -444,10 +444,9 @@ static std::pair<Maybe<nscoord>, Maybe<nscoord>> GetCandidateInLastTargets(
         aSnapInfo.mScrollSnapStrictnessY != StyleScrollSnapStrictness::None) {
       if (aLastSnapTargetIds->mIdsOnY.Contains(target.mTargetId)) {
         if (targetIdForFocusedContent == target.mTargetId) {
-          MOZ_ASSERT(!focusedTarget || focusedTarget == &target,
-                     "If the focused target has been found on X axis, the "
-                     "target should "
-                     "be same");
+          NS_ASSERTION(!focusedTarget || focusedTarget == &target,
+                       "If the focused target has been found on X axis, the "
+                       "target should be same");
           // If we've already found the candidate on X axis other than the
           // focused one, but if snapping to the point results this target is
           // scrolled out, we can't use it.
