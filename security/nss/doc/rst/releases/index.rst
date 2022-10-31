@@ -13,8 +13,9 @@ Releases
    nss_3_82.rst
    nss_3_81.rst
    nss_3_80.rst
-   nss_3_79.rst
+   nss_3_79_2.rst
    nss_3_79_1.rst
+   nss_3_79.rst
    nss_3_78_1.rst
    nss_3_78.rst
    nss_3_77.rst
@@ -45,8 +46,8 @@ Releases
    **NSS 3.84** is the latest version of NSS.
    Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_84_release_notes`
 
-   **NSS 3.79.1** is the latest ESR version of NSS.
-   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_79_1_release_notes`
+   **NSS 3.79.2** is the latest ESR version of NSS.
+   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_79_2_release_notes`
 
 
 .. container::
