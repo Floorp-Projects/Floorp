@@ -292,28 +292,25 @@ def clone(options):
     no_interactive = options.no_interactive
     no_system_changes = options.no_system_changes
 
-    hg = which("hg")
-    if not hg:
-        print(
-            "Mercurial is not installed. Mercurial is required to clone "
-            "Firefox%s." % (", even when cloning with Git" if vcs == "git" else "")
-        )
-        try:
-            # We're going to recommend people install the Mercurial package with
-            # pip3. That will work if `pip3` installs binaries to a location
-            # that's in the PATH, but it might not be. To help out, if we CAN
-            # import "mercurial" (in which case it's already been installed),
-            # offer that as a solution.
-            import mercurial  # noqa: F401
-
-            print(
-                "Hint: have you made sure that Mercurial is installed to a "
-                "location in your PATH?"
-            )
-        except ImportError:
-            print("Try installing hg with `pip3 install Mercurial`.")
-        return None
     if vcs == "hg":
+        hg = which("hg")
+        if not hg:
+            print("Mercurial is not installed. Mercurial is required to clone Firefox.")
+            try:
+                # We're going to recommend people install the Mercurial package with
+                # pip3. That will work if `pip3` installs binaries to a location
+                # that's in the PATH, but it might not be. To help out, if we CAN
+                # import "mercurial" (in which case it's already been installed),
+                # offer that as a solution.
+                import mercurial  # noqa: F401
+
+                print(
+                    "Hint: have you made sure that Mercurial is installed to a "
+                    "location in your PATH?"
+                )
+            except ImportError:
+                print("Try installing hg with `pip3 install Mercurial`.")
+            return None
         binary = hg
     else:
         binary = which(vcs)
