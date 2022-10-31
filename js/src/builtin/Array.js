@@ -897,17 +897,17 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
         // https://tc39.es/ecma262/#sec-createasyncfromsynciterator
         done: false,
       };
-    }
+    } else {
+      // Step 3.j. If iteratorRecord is not undefined, then ...
+      // Step 3.k. Else, (Reordered)
 
-    // Step 3.j. If iteratorRecord is not undefined, then ...
-    // Step 3.k. Else, (Reordered)
-    if (iteratorRecord === undefined) {
       // Step 3.k.i. NOTE: asyncItems is neither an AsyncIterable nor an Iterable so assume it is an array-like object.
       // Step 3.k.ii. Let arrayLike be ! ToObject(asyncItems).
       let arrayLike = ToObject(asyncItems);
 
       // Step 3.k.iii. Let len be ? LengthOfArrayLike(arrayLike).
       let len = ToLength(arrayLike.length);
+
       // Step 3.k.iv. If IsConstructor(C) is true, then
       //     Step 3.k.iv.1. Let A be ? Construct(C, « 𝔽(len) »).
       // Step 3.k.v. Else,
@@ -920,8 +920,8 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
 
       // Step 3.k.vi. Let k be 0.
       let k = 0;
-      // Step 3.k.vii. Repeat, while k < len,
 
+      // Step 3.k.vii. Repeat, while k < len,
       while (k < len) {
         // Step 3.k.vii.1. Let Pk be ! ToString(𝔽(k)).
         // Step 3.k.vii.2. Let kValue be ? Get(arrayLike, Pk).
