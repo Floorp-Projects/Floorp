@@ -785,7 +785,7 @@ add_task(async function test_globalRules() {
   );
 });
 
-add_task(async function test_DomainPreference() {
+add_task(async function test_domain_preference() {
   info("Enabling cookie banner service with MODE_REJECT");
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -871,7 +871,7 @@ add_task(async function test_DomainPreference() {
   );
 });
 
-add_task(async function test_DomainPreference_dont_override_disable_pref() {
+add_task(async function test_domain_preference_dont_override_disable_pref() {
   info("Enabling cookie banner service with MODE_REJECT");
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -916,4 +916,55 @@ add_task(async function test_DomainPreference_dont_override_disable_pref() {
     ],
   });
   Services.cookieBanners.removeAllDomainPrefs(false);
+});
+
+/**
+ * Test that domain preference is properly cleared when private browsing session
+ * ends.
+ */
+add_task(async function test_domain_preference_cleared_PBM_ends() {
+  info("Enabling cookie banner service with MODE_REJECT");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
+    ],
+  });
+
+  info("Adding a domain preference for example.com in PBM");
+  let uri = Services.io.newURI("http://example.com");
+
+  info("Open a private browsing window.");
+  let PBMWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+
+  // Set a domain preference for PBM.
+  Services.cookieBanners.setDomainPref(
+    uri,
+    Ci.nsICookieBannerService.MODE_DISABLED,
+    true
+  );
+
+  info("Verifying if the cookie banner domain pref is set for PBM.");
+  is(
+    Services.cookieBanners.getDomainPref(uri, true),
+    Ci.nsICookieBannerService.MODE_DISABLED,
+    "The domain pref is properly set for PBM."
+  );
+
+  info("Trigger an ending of a private browsing window session");
+  let PBMSessionEndsObserved = TestUtils.topicObserved(
+    "last-pb-context-exited"
+  );
+
+  // Close the PBM window and wait until it finishes.
+  await BrowserTestUtils.closeWindow(PBMWin);
+  await PBMSessionEndsObserved;
+
+  info("Verify if the private domain pref is cleared.");
+  is(
+    Services.cookieBanners.getDomainPref(uri, true),
+    Ci.nsICookieBannerService.MODE_UNSET,
+    "The domain pref is properly set for PBM."
+  );
 });
