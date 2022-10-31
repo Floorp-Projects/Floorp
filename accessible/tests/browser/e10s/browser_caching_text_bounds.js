@@ -11,6 +11,10 @@ async function testTextNode(accDoc, browser, id) {
   await testTextRange(accDoc, browser, id, 0, -1);
 }
 
+async function testChar(accDoc, browser, id, idx) {
+  await testTextRange(accDoc, browser, id, idx, idx + 1);
+}
+
 async function testTextRange(accDoc, browser, id, start, end) {
   const r = await invokeContentTask(
     browser,
@@ -85,7 +89,13 @@ async function testTextRange(accDoc, browser, id, start, end) {
   // test against parent-relative coords, because getBoundingClientRect
   // is relative to the document, not the screen. this won't work on nested
   // elements (ie. any hypertext whose parent is not the doc).
-  testTextBounds(hyperTextNode, start, end, r, COORDTYPE_PARENT_RELATIVE);
+  if (end != -1 && end - start == 1) {
+    // If we're only testing a character, use this function because it calls
+    // CharBounds() directly instead of TextBounds().
+    testTextPos(hyperTextNode, start, [r[0], r[1]], COORDTYPE_PARENT_RELATIVE);
+  } else {
+    testTextBounds(hyperTextNode, start, end, r, COORDTYPE_PARENT_RELATIVE);
+  }
 }
 
 /**
@@ -347,6 +357,32 @@ addAccessibleTask(
   async function(browser, docAcc) {
     const input = findAccessibleChildByID(docAcc, "input");
     testTextPos(input, 1, [0, 0], COORDTYPE_SCREEN_RELATIVE);
+  },
+  {
+    chrome: true,
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+  }
+);
+
+/**
+ * Test character bounds after non-br line break.
+ */
+addAccessibleTask(
+  `
+  <style>
+    @font-face {
+      font-family: Ahem;
+      src: url(./fonts/Ahem.ttf);
+    }
+    pre {
+      font: 20px/20px Ahem;
+    }
+  </style>
+  <pre id="t">XX
+XXX</pre>`,
+  async function(browser, docAcc) {
+    await testChar(docAcc, browser, "t", 3);
   },
   {
     chrome: true,
