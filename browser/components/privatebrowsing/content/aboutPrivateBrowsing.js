@@ -240,20 +240,21 @@ async function handlePromoOnPreload(message) {
   }
 }
 
-async function setupMessageConfig() {
-  let config = null;
+async function setupMessageConfig(config = null) {
   let message = null;
 
-  let hideDefault = window.PrivateBrowsingShouldHideDefault();
-  try {
-    let response = await window.ASRouterMessage({
-      type: "PBNEWTAB_MESSAGE_REQUEST",
-      data: { hideDefault: !!hideDefault },
-    });
-    message = response?.message;
-    config = message?.content;
-    config.messageId = message?.id;
-  } catch (e) {}
+  if (!config) {
+    let hideDefault = window.PrivateBrowsingShouldHideDefault();
+    try {
+      let response = await window.ASRouterMessage({
+        type: "PBNEWTAB_MESSAGE_REQUEST",
+        data: { hideDefault: !!hideDefault },
+      });
+      message = response?.message;
+      config = message?.content;
+      config.messageId = message?.id;
+    } catch (e) {}
+  }
 
   await renderInfo(config);
   let hasRendered = await renderPromo(config);
@@ -265,7 +266,20 @@ async function setupMessageConfig() {
   document.documentElement.setAttribute("PrivateBrowsingRenderComplete", true);
 }
 
+let SHOW_DEVTOOLS_MESSAGE = "ShowDevToolsMessage";
+
+function showDevToolsMessage(msg) {
+  msg.data.content.messageId = "DEVTOOLS_MESSAGE";
+  setupMessageConfig(msg?.data?.content);
+  RPMRemoveMessageListener(SHOW_DEVTOOLS_MESSAGE, showDevToolsMessage);
+}
+
 document.addEventListener("DOMContentLoaded", function() {
+  // check the url to see if we're rendering a devtools message
+  if (document.location.toString().includes("debug")) {
+    RPMAddMessageListener(SHOW_DEVTOOLS_MESSAGE, showDevToolsMessage);
+    return;
+  }
   if (!RPMIsWindowPrivate()) {
     document.documentElement.classList.remove("private");
     document.documentElement.classList.add("normal");

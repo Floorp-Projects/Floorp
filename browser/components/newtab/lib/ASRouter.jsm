@@ -32,6 +32,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteImages: "resource://activity-stream/lib/RemoteImages.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
@@ -598,6 +599,7 @@ class _ASRouter {
     this._onExperimentForceEnrolled = this._onExperimentForceEnrolled.bind(
       this
     );
+    this.forcePBWindow = this.forcePBWindow.bind(this);
     Services.telemetry.setEventRecordingEnabled(REACH_EVENT_CATEGORY, true);
   }
 
@@ -1998,6 +2000,35 @@ class _ASRouter {
     if (messages.length) {
       lazy.RemoteImages.prefetchImagesFor(messages);
     }
+  }
+
+  async forcePBWindow(browser, msg) {
+    const privateBrowserOpener = await new Promise((
+      resolveOnContentBrowserCreated // wrap this in a promise to give back the right browser
+    ) =>
+      browser.ownerGlobal.openTrustedLinkIn(
+        "about:privatebrowsing?debug",
+        "window",
+        {
+          private: true,
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(
+            {}
+          ),
+          csp: null,
+          resolveOnContentBrowserCreated,
+          opener: "devtools",
+        }
+      )
+    );
+
+    lazy.setTimeout(() => {
+      // setTimeout is necessary to make sure the private browsing window has a chance to open before the message is sent
+      privateBrowserOpener.browsingContext.currentWindowGlobal
+        .getActor("AboutPrivateBrowsing")
+        .sendAsyncMessage("ShowDevToolsMessage", msg);
+    }, 100);
+
+    return privateBrowserOpener;
   }
 }
 
