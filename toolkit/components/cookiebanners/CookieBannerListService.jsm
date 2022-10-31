@@ -282,7 +282,13 @@ class CookieBannerListService {
       return;
     }
 
-    rule.addClickRule(click.presence, click.hide, click.optOut, click.optIn);
+    rule.addClickRule(
+      click.presence,
+      click.skipPresenceVisibilityCheck,
+      click.hide,
+      click.optOut,
+      click.optIn
+    );
   }
 }
 

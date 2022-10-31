@@ -200,7 +200,13 @@ function insertTestClickRules() {
   ruleA.id = genUUID();
   ruleA.domain = TEST_DOMAIN_A;
 
-  ruleA.addClickRule("div#banner", null, "button#optOut", "button#optIn");
+  ruleA.addClickRule(
+    "div#banner",
+    false,
+    null,
+    "button#optOut",
+    "button#optIn"
+  );
   Services.cookieBanners.insertRule(ruleA);
 
   info("Add opt-in click rule for DOMAIN_B.");
@@ -210,7 +216,7 @@ function insertTestClickRules() {
   ruleB.id = genUUID();
   ruleB.domain = TEST_DOMAIN_B;
 
-  ruleB.addClickRule("div#banner", null, null, "button#optIn");
+  ruleB.addClickRule("div#banner", false, null, null, "button#optIn");
   Services.cookieBanners.insertRule(ruleB);
 
   info("Add global ruleC which targets a non-existing banner (presence).");
@@ -219,7 +225,13 @@ function insertTestClickRules() {
   );
   ruleC.id = genUUID();
   ruleC.domain = "*";
-  ruleC.addClickRule("div#nonExistingBanner", null, null, "button#optIn");
+  ruleC.addClickRule(
+    "div#nonExistingBanner",
+    false,
+    null,
+    null,
+    "button#optIn"
+  );
   Services.cookieBanners.insertRule(ruleC);
 
   info("Add global ruleD which targets a non-existing banner (presence).");
@@ -230,6 +242,7 @@ function insertTestClickRules() {
   ruleD.domain = "*";
   ruleD.addClickRule(
     "div#nonExistingBanner2",
+    false,
     null,
     "button#optOut",
     "button#optIn"

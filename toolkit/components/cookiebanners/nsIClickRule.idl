@@ -16,6 +16,11 @@ interface nsIClickRule : nsISupports {
   [must_use] readonly attribute ACString presence;
 
   /**
+   * Whether to skip checking if the banner is visible before clicking it.
+   */
+  [must_use] readonly attribute boolean skipPresenceVisibilityCheck;
+
+  /**
    * The CSS selector for hiding the presence of the cookie banner. If this is
    * not given, we will use the presence selector to hide the banner.
    *

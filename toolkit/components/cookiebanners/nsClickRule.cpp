@@ -17,6 +17,16 @@ nsClickRule::GetPresence(nsACString& aPresence) {
 }
 
 NS_IMETHODIMP
+nsClickRule::GetSkipPresenceVisibilityCheck(
+    bool* aSkipPresenceVisibilityCheck) {
+  NS_ENSURE_ARG_POINTER(aSkipPresenceVisibilityCheck);
+
+  *aSkipPresenceVisibilityCheck = mSkipPresenceVisibilityCheck;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsClickRule::GetHide(nsACString& aHide) {
   aHide.Assign(mHide);
   return NS_OK;
