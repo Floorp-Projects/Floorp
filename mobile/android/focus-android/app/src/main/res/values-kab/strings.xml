@@ -503,6 +503,30 @@
     <string name="onboarding_first_screen_title">Welcome to %1$s</string>
 
 
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">D arurad. D uslig. Ulac yesruḥuyen ddehn.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Bdu</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s mačči am yiminigen-nniḍen</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Anseffeḍ azray-ik•im mi ara tmedleḍ asnas i wugar n lemqadra n tbaḍnit.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Err %1$s d iminig-ik·im amezwer i ummesten n yifeka-k·m yal tikkelt mi ara teldiḍ aseɣwen.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Sbadu-t d iminig amezwer</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Suref</string>
+
+
     <!-- Onboarding: Description -->
     <string moz:removedIn="106" name="onboarding_description">Tunigin tusligt s uswir meqqren melmi i tebɣiḍ</string>
 
@@ -948,6 +972,10 @@
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Mdel Iccer</string>
 
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon2">Ṭṭfeɣ-ten! Nesseḥbes asmel-a ɣef tɛessast-ik·im. Sit ɣef ẓẓerb-nni yal tikkelt i wakken ad twaliḍ acu i nessewḥel.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Mdel asfaylu udhim</string>
 
@@ -966,4 +994,24 @@
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
-    </resources>
+    <string name="promote_search_widget_dialog_content_description">Mdel</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Nadi awiǧit</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Azray n tunigin yettwasfaḍ! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Ad ak·akem-neǧǧ tunigin tusligt, maca bdu s zzerb deg wussan i d-iteddun s uwiǧit %1$s ɣef ugdil-ik·im agejdan.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Rnu awiǧit ɣer ugdil agejdan</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Yettwarna uwiǧit ɣer ugdil agejdan</string>
+</resources>
