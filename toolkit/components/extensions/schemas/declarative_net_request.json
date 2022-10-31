@@ -67,11 +67,6 @@
           "rulesetId": {
             "type": "string",
             "description": "ID of the Ruleset this rule belongs to."
-          },
-          "extensionId": {
-            "type": "string",
-            "description": "ID of the extension, if this rule belongs to a different extension.",
-            "optional": true
           }
         }
       },
@@ -117,7 +112,7 @@
                 "minItems": 1,
                 "items": {
                   "type": "string",
-                  "format": "canonicalDomain"
+                  "description": "TODO: describe domain format."
                 }
               },
               "excludedInitiatorDomains": {
@@ -126,7 +121,7 @@
                 "description": "The rule will not match network requests originating from the list of 'initiatorDomains'. If the list is empty or omitted, no domains are excluded. This takes precedence over 'initiatorDomains'.",
                 "items": {
                   "type": "string",
-                  "format": "canonicalDomain"
+                  "description": "TODO: describe domain format."
                 }
               },
               "requestDomains": {
@@ -136,7 +131,7 @@
                 "minItems": 1,
                 "items": {
                   "type": "string",
-                  "format": "canonicalDomain"
+                  "description": "TODO: describe domain format."
                 }
               },
               "excludedRequestDomains": {
@@ -145,7 +140,7 @@
                 "description": "The rule will not match network requests when the domains matches one from the list of 'excludedRequestDomains'. If the list is empty or omitted, no domains are excluded. This takes precedence over 'requestDomains'.",
                 "items": {
                   "type": "string",
-                  "format": "canonicalDomain"
+                  "description": "TODO: describe domain format."
                 }
               },
               "resourceTypes": {
@@ -161,6 +156,7 @@
                 "type": "array",
                 "optional": true,
                 "description": "List of resource types which the rule won't match. Cannot be specified if 'resourceTypes' is specified. If neither of them is specified, all resource types except 'main_frame' are matched.",
+                "minItems": 1,
                 "items": {
                   "$ref": "ResourceType"
                 }
@@ -178,6 +174,7 @@
                 "type": "array",
                 "optional": true,
                 "description": "List of request methods which the rule won't match. Cannot be specified if 'requestMethods' is specified. If neither of them is specified, all request methods are matched.",
+                "minItems": 1,
                 "items": {
                   "type": "string"
                 }
@@ -232,7 +229,6 @@
                   },
                   "url": {
                     "type": "string",
-                    "format": "url",
                     "optional": true,
                     "description": "The redirect url. Redirects to JavaScript urls are not allowed."
                   },
@@ -244,52 +240,44 @@
                 }
               },
               "requestHeaders": {
-                "type": "array",
+                "type": "object",
                 "optional": true,
                 "description": "The request headers to modify for the request. Only valid when type is 'modifyHeaders'.",
-                "minItems": 1,
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "header": {
-                      "type": "string",
-                      "description": "The name of the request header to be modified."
-                    },
-                    "operation": {
-                      "type": "string",
-                      "description": "The operation to be performed on a header. The 'append' operation is not supported for request headers.",
-                      "enum": ["set", "remove"]
-                    },
-                    "value": {
-                      "type": "string",
-                      "optional": true,
-                      "description": "The new value for the header. Must be specified for the 'set' operation."
-                    }
+                "properties": {
+                  "header": {
+                    "type": "string",
+                    "description": "The name of the request header to be modified."
+                  },
+                  "operation": {
+                    "type": "string",
+                    "description": "The operation to be performed on a header. The 'append' operation is not supported for request headers.",
+                    "enum": ["set", "remove"]
+                  },
+                  "value": {
+                    "type": "string",
+                    "optional": true,
+                    "description": "The new value for the header. Must be specified for the 'set' operation."
                   }
                 }
               },
               "responseHeaders": {
-                "type": "array",
+                "type": "object",
                 "optional": true,
                 "description": "The response headers to modify for the request. Only valid when type is 'modifyHeaders'.",
-                "minItems": 1,
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "header": {
-                      "type": "string",
-                      "description": "The name of the response header to be modified."
-                    },
-                    "operation": {
-                      "type": "string",
-                      "description": "The operation to be performed on a header.",
-                      "enum": ["append", "set", "remove"]
-                    },
-                    "value": {
-                      "type": "string",
-                      "optional": true,
-                      "description": "The new value for the header. Must be specified for the 'append' and 'set' operations."
-                    }
+                "properties": {
+                  "header": {
+                    "type": "string",
+                    "description": "The name of the response header to be modified."
+                  },
+                  "operation": {
+                    "type": "string",
+                    "description": "The operation to be performed on a header.",
+                    "enum": ["append", "set", "remove"]
+                  },
+                  "value": {
+                    "type": "string",
+                    "optional": true,
+                    "description": "The new value for the header. Must be specified for the 'append' and 'set' operations."
                   }
                 }
               }
@@ -391,18 +379,6 @@
                 "description": "The ID of the tab in which the hypothetical request takes place. Does not need to correspond to a real tab ID. Default is -1, meaning that the request isn't related to a tab.",
                 "optional": true,
                 "default": -1
-              }
-            }
-          },
-          {
-            "name": "options",
-            "type": "object",
-            "optional": true,
-            "properties": {
-              "includeOtherExtensions": {
-                "type": "boolean",
-                "description": "Whether to account for rules from other installed extensions during rule evaluation.",
-                "optional": true
               }
             }
           },
