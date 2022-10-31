@@ -1262,6 +1262,10 @@ menuitem>.menu-iconic-text {
 /* #endregion*/
 /* #region ナビゲーションバー*/
 /* EdgeFr-Fox by bmFtZQ - navbar.css */
+#navigator-toolbox{
+border-bottom: 1.1px solid var(--toolbar-bgcolor); 
+}
+
 
 #nav-bar .toolbarbutton-1>.toolbarbutton-icon {
   width: calc(2 * var(--uc-toolbarbutton-inner-inline-padding) + 16px) !important;
