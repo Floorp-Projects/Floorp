@@ -494,7 +494,10 @@ export class ASRouterAdminInner extends React.PureComponent {
     this.setAttribution = this.setAttribution.bind(this);
     this.onCopyTargetingParams = this.onCopyTargetingParams.bind(this);
     this.onNewTargetingParams = this.onNewTargetingParams.bind(this);
-    this.resetPanel = this.resetPanel.bind(this);
+    this.handleOpenPB = this.handleOpenPB.bind(this);
+    this.selectPBMessage = this.selectPBMessage.bind(this);
+    this.resetPBJSON = this.resetPBJSON.bind(this);
+    this.resetPBMessageState = this.resetPBMessageState.bind(this);
     this.toggleJSON = this.toggleJSON.bind(this);
     this.toggleAllMessages = this.toggleAllMessages.bind(this);
     this.resetGroups = this.resetGroups.bind(this);
@@ -506,6 +509,7 @@ export class ASRouterAdminInner extends React.PureComponent {
       messageGroupsFilter: "all",
       collapsedMessages: [],
       modifiedMessages: [],
+      selectedPBMessage: "",
       evaluationStatus: {},
       stringTargetingParameters: null,
       newStringTargetingParameters: null,
@@ -582,30 +586,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     }));
   }
 
-  resetAllJSON() {
-    let messageCheckboxes = document.querySelectorAll('input[type="checkbox"]');
-
-    for (const checkbox of messageCheckboxes) {
-      let trimmedId = checkbox.id.replace(" checkbox", "");
-
-      let message = this.state.messages.filter(msg => msg.id === trimmedId);
-      let msgId = message[0].id;
-
-      document.getElementById(`${msgId}-textarea`).value = JSON.stringify(
-        message[0],
-        null,
-        2
-      );
-    }
-    this.setState({
-      WNMessages: [],
-    });
-  }
-
-  resetPanel() {
-    this.resetAllJSON();
-  }
-
   handleOverride(id) {
     return () =>
       ASRouterUtils.overrideMessage(id).then(state => {
@@ -614,6 +594,39 @@ export class ASRouterAdminInner extends React.PureComponent {
           message: state.message,
         });
       });
+  }
+
+  resetPBMessageState() {
+    // Iterate over Private Browsing messages and block/unblock each one to clear impressions
+    const PBMessages = this.state.messages.filter(
+      message => message.template === "pb_newtab"
+    ); // messages from state go here
+
+    PBMessages.forEach(message => {
+      if (message?.id) {
+        ASRouterUtils.blockById(message.id);
+        ASRouterUtils.unblockById(message.id);
+      }
+    });
+    // Clear the selected messages & radio buttons
+    document.getElementById("clear radio").checked = true;
+    this.selectPBMessage("clear");
+  }
+
+  resetPBJSON(msg) {
+    // reset the displayed JSON for the given message
+    document.getElementById(`${msg.id}-textarea`).value = JSON.stringify(
+      msg,
+      null,
+      2
+    );
+  }
+
+  handleOpenPB() {
+    ASRouterUtils.sendMessage({
+      type: "FORCE_PRIVATE_BROWSING_WINDOW",
+      data: { message: { content: this.state.selectedPBMessage } },
+    });
   }
 
   expireCache() {
@@ -919,6 +932,27 @@ export class ASRouterAdminInner extends React.PureComponent {
     );
   }
 
+  selectPBMessage(msgId) {
+    if (msgId === "clear") {
+      this.setState({
+        selectedPBMessage: "",
+      });
+    } else {
+      let selected = document.getElementById(`${msgId} radio`);
+      let msg = JSON.parse(document.getElementById(`${msgId}-textarea`).value);
+
+      if (selected.checked) {
+        this.setState({
+          selectedPBMessage: msg?.content,
+        });
+      } else {
+        this.setState({
+          selectedPBMessage: "",
+        });
+      }
+    }
+  }
+
   modifyJson(content) {
     const message = JSON.parse(
       document.getElementById(`${content.id}-textarea`).value
@@ -929,6 +963,75 @@ export class ASRouterAdminInner extends React.PureComponent {
         message: state.message,
       });
     });
+  }
+
+  renderPBMessageItem(msg) {
+    const isBlocked =
+      this.state.messageBlockList.includes(msg.id) ||
+      this.state.messageBlockList.includes(msg.campaign);
+    const impressions = this.state.messageImpressions[msg.id]
+      ? this.state.messageImpressions[msg.id].length
+      : 0;
+
+    const isCollapsed = this.state.collapsedMessages.includes(msg.id);
+
+    let itemClassName = "message-item";
+    if (isBlocked) {
+      itemClassName += " blocked";
+    }
+
+    return (
+      <tr className={itemClassName} key={`${msg.id}-${msg.provider}`}>
+        <td className="message-id">
+          <span>
+            {msg.id} <br />
+            <br />({impressions} impressions)
+          </span>
+        </td>
+        <td>
+          <ToggleMessageJSON
+            msgId={`${msg.id}`}
+            toggleJSON={this.toggleJSON}
+            isCollapsed={isCollapsed}
+          />
+        </td>
+        <td>
+          <input
+            type="radio"
+            id={`${msg.id} radio`}
+            name="PB_message_radio"
+            style={{ marginBottom: 20 }}
+            onClick={() => this.selectPBMessage(msg.id)}
+            disabled={isBlocked}
+          />
+          <button
+            className={`button ${isBlocked ? "" : " primary"}`}
+            onClick={
+              isBlocked ? this.handleUnblock(msg) : this.handleBlock(msg)
+            }
+          >
+            {isBlocked ? "Unblock" : "Block"}
+          </button>
+          <button
+            className="ASRouterButton slim button"
+            onClick={e => this.resetPBJSON(msg)}
+          >
+            Reset JSON
+          </button>
+        </td>
+        <td className={`message-summary`}>
+          <pre className={isCollapsed ? "collapsed" : "expanded"}>
+            <textarea
+              id={`${msg.id}-textarea`}
+              className="wnp-textarea"
+              name={msg.id}
+            >
+              {JSON.stringify(msg, null, 2)}
+            </textarea>
+          </pre>
+        </td>
+      </tr>
+    );
   }
 
   toggleAllMessages(messagesToShow) {
@@ -953,7 +1056,9 @@ export class ASRouterAdminInner extends React.PureComponent {
       this.state.messageFilter === "all"
         ? this.state.messages
         : this.state.messages.filter(
-            message => message.provider === this.state.messageFilter
+            message =>
+              message.provider === this.state.messageFilter &&
+              message.template !== "pb_newtab"
           );
 
     return (
@@ -995,6 +1100,22 @@ export class ASRouterAdminInner extends React.PureComponent {
     return (
       <table>
         <tbody>{messagesToShow.map(msg => this.renderMessageItem(msg))}</tbody>
+      </table>
+    );
+  }
+
+  renderPBMessages() {
+    if (!this.state.messages) {
+      return null;
+    }
+    const messagesToShow = this.state.messages.filter(
+      message => message.template === "pb_newtab"
+    );
+    return (
+      <table>
+        <tbody>
+          {messagesToShow.map(msg => this.renderPBMessageItem(msg))}
+        </tbody>
       </table>
     );
   }
@@ -1523,9 +1644,78 @@ export class ASRouterAdminInner extends React.PureComponent {
     return <p>No errors</p>;
   }
 
+  renderPBTab() {
+    if (!this.state.messages) {
+      return null;
+    }
+    let messagesToShow = this.state.messages.filter(
+      message => message.template === "pb_newtab"
+    );
+
+    return (
+      <div>
+        <p className="helpLink">
+          <span className="icon icon-small-spacer icon-info" />{" "}
+          <span>
+            To view an available message, select its radio button and click
+            "Open a Private Browsing Window".
+            <br />
+            To modify a message, make changes to the JSON first, then select the
+            radio button. (To make new changes, click "Reset Message State",
+            make your changes, and reselect the radio button.)
+            <br />
+            Click "Reset Message State" to clear all message impressions and
+            view messages in a clean state.
+            <br />
+            Note that ContentSearch functions do not work in debug mode.
+          </span>
+        </p>
+        <div>
+          <button
+            className="ASRouterButton primary button"
+            onClick={this.handleOpenPB}
+          >
+            Open a Private Browsing Window
+          </button>
+          <button
+            className="ASRouterButton primary button"
+            style={{ marginInlineStart: 12 }}
+            onClick={this.resetPBMessageState}
+          >
+            Reset Message State
+          </button>
+          <br />
+          <input
+            type="radio"
+            id={`clear radio`}
+            name="PB_message_radio"
+            value="clearPBMessage"
+            style={{ display: "none" }}
+          />
+          <h2>Messages</h2>
+          <button
+            className="ASRouterButton slim button"
+            // eslint-disable-next-line react/jsx-no-bind
+            onClick={e => this.toggleAllMessages(messagesToShow)}
+          >
+            Collapse/Expand All
+          </button>
+          {this.renderPBMessages()}
+        </div>
+      </div>
+    );
+  }
+
   getSection() {
     const [section] = this.props.location.routes;
     switch (section) {
+      case "private":
+        return (
+          <React.Fragment>
+            <h2>Private Browsing Messages</h2>
+            {this.renderPBTab()}
+          </React.Fragment>
+        );
       case "targeting":
         return (
           <React.Fragment>
@@ -1636,6 +1826,9 @@ export class ASRouterAdminInner extends React.PureComponent {
           <ul>
             <li>
               <a href="#devtools">General</a>
+            </li>
+            <li>
+              <a href="#devtools-private">Private Browsing</a>
             </li>
             <li>
               <a href="#devtools-targeting">Targeting</a>

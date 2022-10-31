@@ -147,6 +147,9 @@ class ASRouterParentProcessMessageHandler {
       case msg.FORCE_ATTRIBUTION: {
         return this._router.forceAttribution(data);
       }
+      case msg.FORCE_PRIVATE_BROWSING_WINDOW: {
+        return this._router.forcePBWindow(browser, data.message);
+      }
       case msg.FORCE_WHATSNEW_PANEL: {
         return this._router.forceWNPanel(browser);
       }

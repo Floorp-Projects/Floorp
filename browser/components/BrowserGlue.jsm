@@ -319,7 +319,7 @@ let JSWINDOWACTORS = {
       },
     },
 
-    matches: ["about:privatebrowsing"],
+    matches: ["about:privatebrowsing*"],
   },
 
   AboutProtections: {
@@ -741,7 +741,7 @@ let JSWINDOWACTORS = {
       "about:home*",
       "about:newtab*",
       "about:welcome*",
-      "about:privatebrowsing",
+      "about:privatebrowsing*",
     ],
     remoteTypes: ["privilegedabout"],
   },

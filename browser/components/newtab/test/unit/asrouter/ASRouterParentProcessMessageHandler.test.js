@@ -18,6 +18,7 @@ describe("ASRouterParentProcessMessageHandler", () => {
       "forceAttribution",
       "forceWNPanel",
       "closeWNPanel",
+      "forcePBWindow",
       "resetGroupsState",
     ].forEach(method => sandbox.stub(router, `${method}`).resolves());
     [
@@ -354,6 +355,17 @@ describe("ASRouterParentProcessMessageHandler", () => {
         );
         assert.calledOnce(config.router.closeWNPanel);
         assert.calledWith(config.router.closeWNPanel, { ownerGlobal: {} });
+      });
+    });
+    describe("FORCE_PRIVATE_BROWSING_WINDOW action", () => {
+      it("default calls forcePBWindow", () => {
+        handler.handleMessage(
+          msg.FORCE_PRIVATE_BROWSING_WINDOW,
+          {},
+          { browser: { ownerGlobal: {} } }
+        );
+        assert.calledOnce(config.router.forcePBWindow);
+        assert.calledWith(config.router.forcePBWindow, { ownerGlobal: {} });
       });
     });
     describe("MODIFY_MESSAGE_JSON action", () => {
