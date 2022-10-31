@@ -2,7 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import argparse
 import atexit
+import json
+import logging
 import os
 import re
 import shutil
@@ -10,9 +13,6 @@ import subprocess
 import sys
 import tempfile
 import traceback
-import argparse
-import logging
-import json
 from collections import namedtuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
@@ -47,7 +47,9 @@ def argument(*args, **kwargs):
 
 def format_taskgraph_labels(taskgraph):
     return "\n".join(
-        taskgraph.tasks[index].label for index in taskgraph.graph.visit_postorder()
+        sorted(
+            taskgraph.tasks[index].label for index in taskgraph.graph.visit_postorder()
+        )
     )
 
 
@@ -503,7 +505,7 @@ def show_taskgraph(options):
     metavar="context.tar",
 )
 def build_image(args):
-    from gecko_taskgraph.docker import build_image, build_context
+    from gecko_taskgraph.docker import build_context, build_image
 
     if args["context_only"] is None:
         build_image(args["image_name"], args["tag"], os.environ)
@@ -682,8 +684,8 @@ def action_callback(options):
 @argument("--input", default=None, help="Action input (.yml or .json)")
 @argument("callback", default=None, help="Action callback name (Python function name)")
 def test_action_callback(options):
-    import taskgraph.parameters
     import gecko_taskgraph.actions
+    import taskgraph.parameters
     from taskgraph.config import load_graph_config
     from taskgraph.util import yaml
 
