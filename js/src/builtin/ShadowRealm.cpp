@@ -375,6 +375,14 @@ static bool ShadowRealm_evaluate(JSContext* cx, unsigned argc, Value* vp) {
                                 args.rval());
 }
 
+enum class ImportValueIndices : uint32_t {
+  CalleRealm = 0,
+
+  ExportNameString,
+
+  Length,
+};
+
 // MG:XXX: Cribbed/Overlapping with StartDynamicModuleImport; may need to
 // refactor to share.
 // https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue
@@ -491,27 +499,24 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
   //          [[ExportNameString]] », callerRealm).
 
   // The handler can only hold onto a single object, so we pack that into a new
-  // JS Object, and store there.
-  Rooted<JSObject*> handlerObject(cx, NewPlainObject(cx));
+  // array, and store there.
+  Rooted<ArrayObject*> handlerObject(
+      cx,
+      NewDenseFullyAllocatedArray(cx, uint32_t(ImportValueIndices::Length)));
   if (!handlerObject) {
     return nullptr;
   }
 
-  Rooted<Value> calleeRealmValue(cx, PrivateValue(callerRealm));
-  if (!JS_DefineProperty(cx, handlerObject, "calleeRealm", calleeRealmValue,
-                         JSPROP_READONLY)) {
-    return nullptr;
-  }
+  handlerObject->setDenseInitializedLength(
+      uint32_t(ImportValueIndices::Length));
+  handlerObject->initDenseElement(uint32_t(ImportValueIndices::CalleRealm),
+                                  PrivateValue(callerRealm));
+  handlerObject->initDenseElement(
+      uint32_t(ImportValueIndices::ExportNameString), StringValue(exportName));
 
-  if (!JS_DefineProperty(cx, handlerObject, "exportNameString", exportName,
-                         JSPROP_READONLY)) {
-    return nullptr;
-  }
-
-  Rooted<Value> handlerValue(cx, ObjectValue(*handlerObject));
   Rooted<JSFunction*> onFulfilled(
       cx,
-      NewHandlerWithExtraValue(
+      NewHandlerWithExtra(
           cx,
           [](JSContext* cx, unsigned argc, Value* vp) {
             // This is the export getter function from
@@ -519,15 +524,14 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
             CallArgs args = CallArgsFromVp(argc, vp);
             MOZ_ASSERT(args.length() == 1);
 
-            Rooted<JSObject*> handlerObject(
-                cx, &ExtraValueFromHandler(args).toObject());
+            auto* handlerObject = ExtraFromHandler<ArrayObject>(args);
 
-            Rooted<Value> realmValue(cx);
-            Rooted<Value> exportNameValue(cx);
-            MOZ_ALWAYS_TRUE(
-                JS_GetProperty(cx, handlerObject, "calleeRealm", &realmValue));
-            MOZ_ALWAYS_TRUE(JS_GetProperty(
-                cx, handlerObject, "exportNameString", &exportNameValue));
+            Rooted<Value> realmValue(
+                cx, handlerObject->getDenseElement(
+                        uint32_t(ImportValueIndices::CalleRealm)));
+            Rooted<Value> exportNameValue(
+                cx, handlerObject->getDenseElement(
+                        uint32_t(ImportValueIndices::ExportNameString)));
 
             // Step 1. Assert: exports is a module namespace exotic object.
             Handle<Value> exportsValue = args[0];
@@ -576,7 +580,7 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
             // Step 9. Return ? GetWrappedValue(realm, value).
             return GetWrappedValue(cx, callerRealm, value, args.rval());
           },
-          promise, handlerValue));
+          promise, handlerObject));
   if (!onFulfilled) {
     return nullptr;
   }
