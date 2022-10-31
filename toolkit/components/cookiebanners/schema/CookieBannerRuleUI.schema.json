@@ -2,6 +2,7 @@
   "click": {
     "ui:order": [
       "presence",
+      "skipPresenceVisibilityCheck",
       "hide",
       "optOut",
       "optIn"

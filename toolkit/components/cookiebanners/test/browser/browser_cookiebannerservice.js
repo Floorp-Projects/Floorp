@@ -301,7 +301,13 @@ add_task(async function test_insertAndGetRule() {
   );
 
   info("Adding a click rule to the rule for example.com.");
-  rule.addClickRule("div#presence", "div#hide", "div#optOut", "div#optIn");
+  rule.addClickRule(
+    "div#presence",
+    false,
+    "div#hide",
+    "div#optOut",
+    "div#optIn"
+  );
 
   is(rule.cookiesOptOut.length, 2, "Should have two opt-out cookies.");
   is(rule.cookiesOptIn.length, 1, "Should have one opt-in cookie.");
@@ -338,7 +344,7 @@ add_task(async function test_insertAndGetRule() {
   );
 
   info("Adding a click rule to the rule for example.org.");
-  rule2.addClickRule("div#presence", null, null, "div#optIn");
+  rule2.addClickRule("div#presence", false, null, null, "div#optIn");
 
   is(
     Services.cookieBanners.rules.length,
@@ -670,7 +676,7 @@ add_task(async function test_globalRules() {
     0,
     0
   );
-  rule.addClickRule("#cookieBannerExample", "#btnOptOut", "#btnOptIn");
+  rule.addClickRule("#cookieBannerExample", false, "#btnOptOut", "#btnOptIn");
   Services.cookieBanners.insertRule(rule);
 
   info(
@@ -695,7 +701,12 @@ add_task(async function test_globalRules() {
     0,
     0
   );
-  ruleGlobalA.addClickRule("#globalCookieBanner", "#btnOptOut", "#btnOptIn");
+  ruleGlobalA.addClickRule(
+    "#globalCookieBanner",
+    false,
+    "#btnOptOut",
+    "#btnOptIn"
+  );
   Services.cookieBanners.insertRule(ruleGlobalA);
 
   info("Insert a second global rule");
@@ -704,7 +715,12 @@ add_task(async function test_globalRules() {
   );
   ruleGlobalB.id = genUUID();
   ruleGlobalB.domain = "*";
-  ruleGlobalB.addClickRule("#globalCookieBannerB", "#btnOptOutB", "#btnOptIn");
+  ruleGlobalB.addClickRule(
+    "#globalCookieBannerB",
+    false,
+    "#btnOptOutB",
+    "#btnOptIn"
+  );
   Services.cookieBanners.insertRule(ruleGlobalB);
 
   is(

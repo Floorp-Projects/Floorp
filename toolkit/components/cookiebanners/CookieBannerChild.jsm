@@ -313,7 +313,7 @@ class CookieBannerChild extends JSWindowActorChild {
     let presenceDetector = () => {
       lazy.logConsole.debug("presenceDetector start");
       let matchingRules = this.#clickRules.filter(rule => {
-        let { presence } = rule;
+        let { presence, skipPresenceVisibilityCheck } = rule;
 
         let banner = this.document.querySelector(presence);
         lazy.logConsole.debug("Testing banner el presence", {
@@ -326,6 +326,9 @@ class CookieBannerChild extends JSWindowActorChild {
           return false;
         }
 
+        if (skipPresenceVisibilityCheck) {
+          return true;
+        }
         return this.#isVisible(banner);
       });
 

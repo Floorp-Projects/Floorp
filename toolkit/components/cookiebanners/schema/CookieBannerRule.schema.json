@@ -122,6 +122,11 @@
           "type": "string",
           "description": "Query selector to detect cookie banner element."
         },
+        "skipPresenceVisibilityCheck": {
+          "title": "Skip Presence Visibility Check",
+          "type": "boolean",
+          "description": "Whether to skip checking if the banner is visible before clicking it."
+        },
         "hide": {
           "title": "Hide Selector",
           "type": "string",

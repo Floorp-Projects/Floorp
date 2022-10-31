@@ -29,7 +29,13 @@ add_task(async function test_clicking_global_rules() {
   );
   ruleA.id = genUUID();
   ruleA.domain = "*";
-  ruleA.addClickRule("div#banner", null, "button#optOut", "button#optIn");
+  ruleA.addClickRule(
+    "div#banner",
+    false,
+    null,
+    "button#optOut",
+    "button#optIn"
+  );
   Services.cookieBanners.insertRule(ruleA);
 
   info(
@@ -42,6 +48,7 @@ add_task(async function test_clicking_global_rules() {
   ruleC.domain = "*";
   ruleC.addClickRule(
     "div#banner",
+    false,
     null,
     "button#nonExistingOptOut",
     "button#nonExistingOptIn"
@@ -54,7 +61,13 @@ add_task(async function test_clicking_global_rules() {
   );
   ruleD.id = genUUID();
   ruleD.domain = "*";
-  ruleD.addClickRule("div#nonExistingBanner", null, null, "button#optIn");
+  ruleD.addClickRule(
+    "div#nonExistingBanner",
+    false,
+    null,
+    null,
+    "button#optIn"
+  );
   Services.cookieBanners.insertRule(ruleD);
 
   info("The global rule ruleA should handle both test pages with div#banner.");
@@ -118,7 +131,7 @@ add_task(async function test_clicking_global_rules_precedence() {
   );
   ruleGlobal.id = genUUID();
   ruleGlobal.domain = "*";
-  ruleGlobal.addClickRule("div#banner", null, "button#optOut", null);
+  ruleGlobal.addClickRule("div#banner", false, null, "button#optOut", null);
   Services.cookieBanners.insertRule(ruleGlobal);
 
   info("Add domain specific rule which also targets the existing banner.");
@@ -127,7 +140,7 @@ add_task(async function test_clicking_global_rules_precedence() {
   );
   ruleDomain.id = genUUID();
   ruleDomain.domain = TEST_DOMAIN_A;
-  ruleDomain.addClickRule("div#banner", null, null, "button#optIn");
+  ruleDomain.addClickRule("div#banner", false, null, null, "button#optIn");
   Services.cookieBanners.insertRule(ruleDomain);
 
   info("Test that the domain-specific rule applies, not the global one.");

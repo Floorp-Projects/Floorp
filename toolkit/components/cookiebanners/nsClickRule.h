@@ -14,14 +14,21 @@ class nsClickRule final : public nsIClickRule {
   NS_DECL_ISUPPORTS
   NS_DECL_NSICLICKRULE
 
-  explicit nsClickRule(const nsACString& aPresence, const nsACString& aHide,
-                       const nsACString& aOptOut, const nsACString& aOptIn)
-      : mPresence(aPresence), mHide(aHide), mOptOut(aOptOut), mOptIn(aOptIn) {}
+  explicit nsClickRule(const nsACString& aPresence,
+                       const bool aSkipPresenceVisibilityCheck,
+                       const nsACString& aHide, const nsACString& aOptOut,
+                       const nsACString& aOptIn)
+      : mPresence(aPresence),
+        mSkipPresenceVisibilityCheck(aSkipPresenceVisibilityCheck),
+        mHide(aHide),
+        mOptOut(aOptOut),
+        mOptIn(aOptIn) {}
 
  private:
   ~nsClickRule() = default;
 
   nsCString mPresence;
+  bool mSkipPresenceVisibilityCheck;
   nsCString mHide;
   nsCString mOptOut;
   nsCString mOptIn;

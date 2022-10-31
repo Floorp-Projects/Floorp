@@ -122,6 +122,7 @@ class CookieBannerParent extends JSWindowActorParent {
       return {
         hide: rule.hide ?? rule.presence,
         presence: rule.presence,
+        skipPresenceVisibilityCheck: rule.skipPresenceVisibilityCheck,
         target,
       };
     });

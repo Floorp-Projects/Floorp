@@ -59,12 +59,16 @@ interface nsICookieBannerRule : nsISupports {
     /**
      * Add a click rule to the rule.
      *
-     * aPresence - The CSS selector for detecting the presence of the cookie banner
+     * aPresence - The CSS selector for detecting the presence of the cookie
+     * banner
+     * aSkipPresenceVisibilityCheck - Whether to skip checking if the banner is
+     * visible before clicking it.
      * aHide - The CSS selector for hiding the cookie banner
      * aOptOut - The CSS selector for selecting the opt-out banner button
      * aOptIn - The CSS selector for selecting the opt-in banner button
      */
     void addClickRule(in ACString aPresence,
+                      [optional] in bool aSkipPresenceVisibilityCheck,
                       [optional] in ACString aHide,
                       [optional] in ACString aOptOut,
                       [optional] in ACString aOptIn);
