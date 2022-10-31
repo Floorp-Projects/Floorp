@@ -1000,8 +1000,12 @@ impl<'a> SceneBuilder<'a> {
 
                 if vertical_flip {
                     let content_size = &self.iframe_size.last().unwrap();
+                    let content_height = match rotation {
+                        Rotation::Degree0 | Rotation::Degree180 => content_size.height,
+                        Rotation::Degree90 | Rotation::Degree270 => content_size.width,
+                    };
                     transform = transform
-                        .then_translate(LayoutVector3D::new(0.0, content_size.height, 0.0))
+                        .then_translate(LayoutVector3D::new(0.0, content_height, 0.0))
                         .pre_scale(1.0, -1.0, 1.0);
                 }
 
