@@ -35,7 +35,7 @@ function getSecurityConnectionBG() {
         .getElementById("identity-popup-mainView")
         .getElementsByClassName("identity-popup-security-connection")[0]
     )
-    .getPropertyValue("list-style-image");
+    .getPropertyValue("background-image");
 }
 
 async function getReaderModeURL() {
