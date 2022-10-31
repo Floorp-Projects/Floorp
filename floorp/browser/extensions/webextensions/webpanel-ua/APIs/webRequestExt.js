@@ -6,20 +6,16 @@
 
 /* global ExtensionAPI, ExtensionCommon, Services, XPCOMUtils */
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
-
 const { WebRequest } = ChromeUtils.import(
   "resource://gre/modules/WebRequest.jsm"
 );
 
-this.BrowserInfo = class extends ExtensionAPI {
+this.webRequestExt = class extends ExtensionAPI {
   getAPI(context) {
     const EventManager = ExtensionCommon.EventManager;
 
     return {
-      BrowserInfo: {
+      webRequestExt: {
         onBeforeRequest_webpanel_requestId: new EventManager({
           context,
           register: (fire) => {

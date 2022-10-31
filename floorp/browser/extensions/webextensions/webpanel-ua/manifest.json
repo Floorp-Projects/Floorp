@@ -20,14 +20,14 @@
     "scripts": ["background.js"]
   },
   "experiment_apis": {
-    "BrowserInfo": {
-      "schema": "APIs/BrowserInfo.json",
+    "webRequestExt": {
+      "schema": "APIs/webRequestExt.json",
       "parent": {
         "scopes": [
           "addon_parent"
         ],
-        "script": "APIs/BrowserInfo.js",
-        "paths": [["BrowserInfo"]]
+        "script": "APIs/webRequestExt.js",
+        "paths": [["webRequestExt"]]
       }
     }
   }

@@ -11,8 +11,8 @@ FINAL_TARGET_FILES.features["user-agent@floorp.ablaze.one"] += [
 ]
 
 FINAL_TARGET_FILES.features["user-agent@floorp.ablaze.one"]["APIs"] += [
-    "APIs/BrowserInfo.js",
-    "APIs/BrowserInfo.json",
+    "APIs/webRequestExt.js",
+    "APIs/webRequestExt.json",
 ]
 
 with Files("**"):
