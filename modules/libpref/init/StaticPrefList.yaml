@@ -7313,12 +7313,6 @@
   mirror: always
 #endif
 
-  # Experimental support for Top-level Await in JavaScript.
--   name: javascript.options.experimental.top_level_await
-    type: bool
-    value: true
-    mirror: always
-
 - name: javascript.options.wasm_caching
   type: bool
   value: true
