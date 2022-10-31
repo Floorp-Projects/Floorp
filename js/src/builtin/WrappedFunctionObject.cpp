@@ -272,7 +272,8 @@ const JSClass WrappedFunctionObject::class_ = {
     &classOps,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
-    &objOps};
+    &objOps,
+};
 
 JSObject* GetRealmFunctionPrototype(JSContext* cx, Realm* realm) {
   CHECK_THREAD(cx);

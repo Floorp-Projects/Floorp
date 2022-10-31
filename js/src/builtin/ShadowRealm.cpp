@@ -666,27 +666,36 @@ static bool ShadowRealm_importValue(JSContext* cx, unsigned argc, Value* vp) {
 
 static const JSFunctionSpec shadowrealm_methods[] = {
     JS_FN("evaluate", ShadowRealm_evaluate, 1, 0),
-    JS_FN("importValue", ShadowRealm_importValue, 2, 0), JS_FS_END};
+    JS_FN("importValue", ShadowRealm_importValue, 2, 0),
+    JS_FS_END,
+};
 
 static const JSPropertySpec shadowrealm_properties[] = {
-    JS_STRING_SYM_PS(toStringTag, "ShadowRealm", JSPROP_READONLY), JS_PS_END};
+    JS_STRING_SYM_PS(toStringTag, "ShadowRealm", JSPROP_READONLY),
+    JS_PS_END,
+};
 
 static const ClassSpec ShadowRealmObjectClassSpec = {
     GenericCreateConstructor<ShadowRealmObject::construct, 0,
                              gc::AllocKind::FUNCTION>,
     GenericCreatePrototype<ShadowRealmObject>,
-    nullptr,                // Static methods
-    nullptr,                // Static properties
-    shadowrealm_methods,    // Methods
-    shadowrealm_properties  // Properties
+    nullptr,                 // Static methods
+    nullptr,                 // Static properties
+    shadowrealm_methods,     // Methods
+    shadowrealm_properties,  // Properties
 };
 
 const JSClass ShadowRealmObject::class_ = {
     "ShadowRealm",
     JSCLASS_HAS_CACHED_PROTO(JSProto_ShadowRealm) |
         JSCLASS_HAS_RESERVED_SLOTS(ShadowRealmObject::SlotCount),
-    JS_NULL_CLASS_OPS, &ShadowRealmObjectClassSpec};
+    JS_NULL_CLASS_OPS,
+    &ShadowRealmObjectClassSpec,
+};
 
 const JSClass ShadowRealmObject::protoClass_ = {
-    "ShadowRealm.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_ShadowRealm),
-    JS_NULL_CLASS_OPS, &ShadowRealmObjectClassSpec};
+    "ShadowRealm.prototype",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_ShadowRealm),
+    JS_NULL_CLASS_OPS,
+    &ShadowRealmObjectClassSpec,
+};
