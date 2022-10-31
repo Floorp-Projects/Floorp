@@ -12,7 +12,7 @@
 # what relbot thinks is current, then nothing happens.
 #
 
-name: "Create Release"
+name: "AC - Create Release"
 
 permissions:
   contents: write

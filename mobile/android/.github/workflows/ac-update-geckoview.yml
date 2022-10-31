@@ -17,7 +17,7 @@
 # to Maven.
 #
 
-name: "Update GeckoView"
+name: "AC - Update GeckoView"
 
 permissions:
   contents: write
