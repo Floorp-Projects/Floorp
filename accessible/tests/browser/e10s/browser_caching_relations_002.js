@@ -1,0 +1,83 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+/**
+ * Test MEMBER_OF relation caching on HTML radio buttons
+ */
+addAccessibleTask(
+  `
+  <input type="radio" id="r1">I have no name<br>
+  <input type="radio" id="r2">I also have no name<br>
+  <input type="radio" id="r3" name="n">I have a name<br>
+  <input type="radio" id="r4" name="a">I have a different name<br>
+  <fieldset role="radiogroup">
+    <input type="radio" id="r5" name="n">I have an already used name
+     and am in a different part of the tree
+    <input type="radio" id="r6" name="r">I have a different name but am
+     in the same group
+  </fieldset>`,
+  async function(browser, accDoc) {
+    const r1 = findAccessibleChildByID(accDoc, "r1");
+    const r2 = findAccessibleChildByID(accDoc, "r2");
+    const r3 = findAccessibleChildByID(accDoc, "r3");
+    const r4 = findAccessibleChildByID(accDoc, "r4");
+    const r5 = findAccessibleChildByID(accDoc, "r5");
+    const r6 = findAccessibleChildByID(accDoc, "r6");
+
+    await testCachedRelation(r1, RELATION_MEMBER_OF, null);
+    await testCachedRelation(r2, RELATION_MEMBER_OF, null);
+    await testCachedRelation(r3, RELATION_MEMBER_OF, [r3, r5]);
+    await testCachedRelation(r4, RELATION_MEMBER_OF, r4);
+    await testCachedRelation(r5, RELATION_MEMBER_OF, [r3, r5]);
+    await testCachedRelation(r6, RELATION_MEMBER_OF, r6);
+
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("r5").name = "a";
+    });
+
+    await testCachedRelation(r3, RELATION_MEMBER_OF, r3);
+    await testCachedRelation(r4, RELATION_MEMBER_OF, [r5, r4]);
+    await testCachedRelation(r5, RELATION_MEMBER_OF, [r5, r4]);
+  },
+  { chrome: true, iframe: true, remoteIframe: true }
+);
+
+/*
+ * Test MEMBER_OF relation caching on aria radio buttons
+ */
+addAccessibleTask(
+  `
+  <div role="radio" id="r1">I have no radio group</div><br>
+  <fieldset role="radiogroup" id="fs">
+    <div role="radio" id="r2">hello</div><br>
+    <div role="radio" id="r3">world</div><br>
+  </fieldset>`,
+  async function(browser, accDoc) {
+    const r1 = findAccessibleChildByID(accDoc, "r1");
+    const r2 = findAccessibleChildByID(accDoc, "r2");
+    let r3 = findAccessibleChildByID(accDoc, "r3");
+
+    await testCachedRelation(r1, RELATION_MEMBER_OF, null);
+    await testCachedRelation(r2, RELATION_MEMBER_OF, [r2, r3]);
+    await testCachedRelation(r3, RELATION_MEMBER_OF, [r2, r3]);
+    const r = waitForEvent(EVENT_INNER_REORDER, "fs");
+    await invokeContentTask(browser, [], () => {
+      let innerRadio = content.document.getElementById("r3");
+      content.document.body.appendChild(innerRadio);
+    });
+    await r;
+
+    r3 = findAccessibleChildByID(accDoc, "r3");
+    await testCachedRelation(r1, RELATION_MEMBER_OF, null);
+    await testCachedRelation(r2, RELATION_MEMBER_OF, r2);
+    await testCachedRelation(r3, RELATION_MEMBER_OF, null);
+  },
+  {
+    chrome: true,
+    iframe: true,
+    remoteIframe: true,
+  }
+);
