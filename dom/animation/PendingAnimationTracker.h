@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_PendingAnimationTracker_h
-#define mozilla_dom_PendingAnimationTracker_h
+#ifndef mozilla_PendingAnimationTracker_h
+#define mozilla_PendingAnimationTracker_h
 
 #include "mozilla/dom/Animation.h"
 #include "mozilla/TypedEnumBits.h"
@@ -20,6 +20,10 @@ namespace dom {
 class Document;
 }
 
+/**
+ * Handle the pending animations which use document-timeline or null-timeline
+ * while playing or pausing.
+ */
 class PendingAnimationTracker final {
  public:
   explicit PendingAnimationTracker(dom::Document* aDocument);
@@ -106,4 +110,4 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(PendingAnimationTracker::CheckState)
 
 }  // namespace mozilla
 
-#endif  // mozilla_dom_PendingAnimationTracker_h
+#endif  // mozilla_PendingAnimationTracker_h
