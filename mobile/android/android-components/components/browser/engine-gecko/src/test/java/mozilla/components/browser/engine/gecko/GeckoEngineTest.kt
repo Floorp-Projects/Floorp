@@ -302,8 +302,11 @@ class GeckoEngineTest {
         assertEquals(SafeBrowsingPolicy.PHISHING.id, contentBlockingSettings.safeBrowsingCategories)
 
         assertEquals(defaultSettings.trackingProtectionPolicy, TrackingProtectionPolicy.strict())
-        assertEquals(contentBlockingSettings.cookieBehavior, CookiePolicy.ACCEPT_NON_TRACKERS.id)
-        assertEquals(contentBlockingSettings.cookieBehaviorPrivateMode, CookiePolicy.ACCEPT_NON_TRACKERS.id)
+        assertEquals(contentBlockingSettings.cookieBehavior, CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS.id)
+        assertEquals(
+            contentBlockingSettings.cookieBehaviorPrivateMode,
+            CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS.id,
+        )
 
         assertEquals(contentBlockingSettings.cookieBannerMode, EngineSession.CookieBannerHandlingMode.DISABLED.mode)
         assertEquals(contentBlockingSettings.cookieBannerModePrivateBrowsing, EngineSession.CookieBannerHandlingMode.REJECT_ALL.mode)
@@ -688,8 +691,11 @@ class GeckoEngineTest {
 
         assertEquals(SafeBrowsingPolicy.RECOMMENDED.id, contentBlockingSettings.safeBrowsingCategories)
 
-        assertEquals(CookiePolicy.ACCEPT_NON_TRACKERS.id, contentBlockingSettings.cookieBehavior)
-        assertEquals(CookiePolicy.ACCEPT_NON_TRACKERS.id, contentBlockingSettings.cookieBehaviorPrivateMode)
+        assertEquals(CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS.id, contentBlockingSettings.cookieBehavior)
+        assertEquals(
+            CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS.id,
+            contentBlockingSettings.cookieBehaviorPrivateMode,
+        )
         assertTrue(engine.settings.testingModeEnabled)
         assertEquals("test-ua", engine.settings.userAgentString)
         assertEquals(PreferredColorScheme.Light, engine.settings.preferredColorScheme)

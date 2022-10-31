@@ -721,7 +721,7 @@ class EngineSessionTest {
             TrackingCategory.RECOMMENDED.id,
         )
 
-        assertEquals(recommendedPolicy.cookiePolicy.id, CookiePolicy.ACCEPT_NON_TRACKERS.id)
+        assertEquals(recommendedPolicy.cookiePolicy.id, CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS.id)
         assertEquals(recommendedPolicy.cookiePolicyPrivateMode.id, recommendedPolicy.cookiePolicy.id)
 
         val strictPolicy = TrackingProtectionPolicy.strict()
@@ -731,7 +731,7 @@ class EngineSessionTest {
             TrackingCategory.STRICT.id,
         )
 
-        assertEquals(strictPolicy.cookiePolicy.id, CookiePolicy.ACCEPT_NON_TRACKERS.id)
+        assertEquals(strictPolicy.cookiePolicy.id, CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS.id)
         assertEquals(strictPolicy.cookiePolicyPrivateMode.id, strictPolicy.cookiePolicy.id)
 
         val nonePolicy = TrackingProtectionPolicy.none()

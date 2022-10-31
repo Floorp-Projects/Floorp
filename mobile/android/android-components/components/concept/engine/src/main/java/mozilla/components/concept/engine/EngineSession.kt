@@ -8,7 +8,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import androidx.annotation.CallSuper
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.manifest.WebAppManifest
@@ -299,7 +299,7 @@ abstract class EngineSession(
         val trackingCategories: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
         val useForPrivateSessions: Boolean = true,
         val useForRegularSessions: Boolean = true,
-        val cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS,
+        val cookiePolicy: CookiePolicy = ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
         val cookiePolicyPrivateMode: CookiePolicy = cookiePolicy,
         val strictSocialTrackingProtection: Boolean? = null,
         val cookiePurging: Boolean = false,
@@ -416,24 +416,25 @@ abstract class EngineSession(
 
             /**
              * Strict policy.
-             * Combining the [TrackingCategory.STRICT] plus a cookiePolicy of [ACCEPT_NON_TRACKERS]
+             * Combining the [TrackingCategory.STRICT] plus a cookiePolicy of [ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS].
              * This is the strictest setting and may cause issues on some web sites.
              */
             fun strict() = TrackingProtectionPolicyForSessionTypes(
                 trackingCategory = arrayOf(TrackingCategory.STRICT),
-                cookiePolicy = ACCEPT_NON_TRACKERS,
+                cookiePolicy = ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
                 strictSocialTrackingProtection = true,
                 cookiePurging = true,
             )
 
             /**
              * Recommended policy.
-             * Combining the [TrackingCategory.RECOMMENDED] plus a [CookiePolicy] of [ACCEPT_NON_TRACKERS].
+             * Combining the [TrackingCategory.RECOMMENDED] plus a [CookiePolicy]
+             * of [ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS].
              * This is the recommended setting.
              */
             fun recommended() = TrackingProtectionPolicyForSessionTypes(
                 trackingCategory = arrayOf(TrackingCategory.RECOMMENDED),
-                cookiePolicy = ACCEPT_NON_TRACKERS,
+                cookiePolicy = ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
                 strictSocialTrackingProtection = false,
                 cookiePurging = true,
             )
@@ -454,7 +455,7 @@ abstract class EngineSession(
             @Suppress("LongParameterList")
             fun select(
                 trackingCategories: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
-                cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS,
+                cookiePolicy: CookiePolicy = ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
                 cookiePolicyPrivateMode: CookiePolicy = cookiePolicy,
                 strictSocialTrackingProtection: Boolean? = null,
                 cookiePurging: Boolean = false,
@@ -521,7 +522,7 @@ abstract class EngineSession(
      */
     class TrackingProtectionPolicyForSessionTypes internal constructor(
         trackingCategory: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
-        cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS,
+        cookiePolicy: CookiePolicy = ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
         cookiePolicyPrivateMode: CookiePolicy = cookiePolicy,
         strictSocialTrackingProtection: Boolean? = null,
         cookiePurging: Boolean = false,
