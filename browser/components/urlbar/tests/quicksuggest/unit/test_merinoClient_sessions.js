@@ -16,7 +16,7 @@ let gClient;
 
 add_task(async function init() {
   gClient = new MerinoClient();
-  MerinoTestUtils.server.start();
+  await MerinoTestUtils.server.start();
 });
 
 // In a single session, all requests should use the same session ID and the
