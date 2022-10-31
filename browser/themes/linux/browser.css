@@ -330,7 +330,7 @@ menuitem.bookmark-item {
   }
 
   :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox:-moz-lwtheme,
-  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) ::backdrop {
+  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) dialog::backdrop {
     border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
     border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
   }
