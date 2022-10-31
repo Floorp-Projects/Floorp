@@ -20,7 +20,7 @@ this.webRequestExt = class extends ExtensionAPI {
           context,
           register: (fire) => {
             function listener(e) {
-              if (e.browserElement.id.startsWith("webpanel")) {
+              if (typeof e.browserElement !== "undefined" && e.browserElement.id.startsWith("webpanel")) {
                 return fire.async(e.requestId);
               }
             }
