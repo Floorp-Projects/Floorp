@@ -20,6 +20,24 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
+  "serviceMode",
+  "cookiebanners.service.mode",
+  Ci.nsICookieBannerService.MODE_DISABLED
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "serviceModePBM",
+  "cookiebanners.service.mode.privateBrowsing",
+  Ci.nsICookieBannerService.MODE_DISABLED
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "bannerClickingEnabled",
+  "cookiebanners.bannerClicking.enabled",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
   "observeTimeout",
   "cookiebanners.bannerClicking.timeout",
   3000
@@ -48,6 +66,12 @@ class CookieBannerChild extends JSWindowActorChild {
   #didLoad = false;
 
   handleEvent(event) {
+    if (!this.#isEnabled) {
+      // Automated tests may still expect the test message to be sent.
+      this.#maybeSendTestMessage();
+      return;
+    }
+
     switch (event.type) {
       case "DOMContentLoaded":
         this.#onDOMContentLoaded();
@@ -58,6 +82,18 @@ class CookieBannerChild extends JSWindowActorChild {
       default:
         lazy.logConsole.warn(`Unexpected event ${event.type}.`, event);
     }
+  }
+
+  /**
+   * Whether the feature is enabled based on pref state.
+   * @type {boolean}
+   */
+  get #isEnabled() {
+    return (
+      lazy.bannerClickingEnabled &&
+      (lazy.serviceMode != Ci.nsICookieBannerService.MODE_DISABLED ||
+        lazy.serviceModePBM != Ci.nsICookieBannerService.MODE_DISABLED)
+    );
   }
 
   /**
