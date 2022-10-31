@@ -610,9 +610,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the total cookie protection CRF should be shown.
      */
-    var shouldShowTotalCookieProtectionCFR by booleanPreference(
+    var shouldShowTotalCookieProtectionCFR by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_should_show_total_cookie_protection_popup),
-        default = mr2022Sections[Mr2022Section.TCP_CFR] == true,
+        featureFlag = true,
+        default = { mr2022Sections[Mr2022Section.TCP_CFR] == true },
     )
 
     val blockCookiesSelectionInCustomTrackingProtection by stringPreference(
