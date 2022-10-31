@@ -17,14 +17,14 @@ Before contributing, please review our [Community Participation Guidelines](http
 
 ### Project
 
-* [Hosting Android code in the Android Components repository]({{ site.baseurl }}{% link contribute/hosting_code_in_repository.md %})
+* [Hosting Android code in the Android Components repository]({{ site.baseurl }}/contributing/hosting-android-code-in-repository)
 
 ### Development
 
 * [Design Axioms]({{ site.baseurl }}/contributing/design-axioms)
 * [Architecture and Overview]({{ site.baseurl }}/contributing/architecture)
 * [Code coverage]({{ site.baseurl }}/contributing/code-coverage)
-* [Working on unreleased component code in an app]({{ site.baseurl }}{% link contribute/components_inside_app.md %})
+* [Working on unreleased component code in an app]({{ site.baseurl }}/contributing/testing-components_inside_app)
 
 ### Process
 
