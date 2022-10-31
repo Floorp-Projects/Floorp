@@ -819,7 +819,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
       bool isIteratorMethodOnStack = false);
 
   [[nodiscard]] bool emitAsyncIterator(
-      SelfHostedIter selfHostedIter = SelfHostedIter::Deny);
+      SelfHostedIter selfHostedIter = SelfHostedIter::Deny,
+      bool isIteratorMethodOnStack = false);
 
   // Pops iterator from the top of the stack. Pushes the result of |.next()|
   // onto the stack.
