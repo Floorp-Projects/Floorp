@@ -101,10 +101,13 @@ bool HTMLSummaryElement::IsMainSummary() const {
 }
 
 HTMLDetailsElement* HTMLSummaryElement::GetDetails() const {
-  if (HasBeenInUAWidget()) {
-    return HTMLDetailsElement::FromNodeOrNull(GetContainingShadowHost());
+  if (auto* details = HTMLDetailsElement::FromNodeOrNull(GetParent())) {
+    return details;
   }
-  return HTMLDetailsElement::FromNodeOrNull(GetParent());
+  if (!HasBeenInUAWidget()) {
+    return nullptr;
+  }
+  return HTMLDetailsElement::FromNodeOrNull(GetContainingShadowHost());
 }
 
 JSObject* HTMLSummaryElement::WrapNode(JSContext* aCx,
