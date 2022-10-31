@@ -173,6 +173,8 @@ class RuleValidator {
       // The following conditions have already been validated by the schema:
       // - isUrlFilterCaseSensitive (boolean)
       // - domainType (enum string)
+      // - initiatorDomains & excludedInitiatorDomains & requestDomains &
+      //   excludedRequestDomains (array of string in canonicalDomain format)
       // TODO bug 1745759: urlFilter validation
       // TODO bug 1745760: regexFilter validation
       if (
@@ -417,8 +419,8 @@ class MatchedRule {
 
 class RequestDetails {
   /**
-   * @param {nsIURI} requestURI
-   * @param {nsIURI} [initiatorURI]
+   * @param {nsIURI} requestURI - URL of the requested resource.
+   * @param {nsIURI} [initiatorURI] - URL of triggering principal (non-null).
    * @param {string} type - ResourceType (MozContentPolicyType).
    * @param {string} [method] - HTTP method
    * @param {integer} [tabId]
@@ -429,6 +431,11 @@ class RequestDetails {
     this.type = type;
     this.method = method;
     this.tabId = tabId;
+
+    this.requestDomain = this.#domainFromURI(requestURI);
+    this.initiatorDomain = initiatorURI
+      ? this.#domainFromURI(initiatorURI)
+      : null;
   }
 
   canExtensionModify(extension) {
@@ -437,6 +444,13 @@ class RequestDetails {
       (!this.initiatorURI || policy.canAccessURI(this.initiatorURI)) &&
       policy.canAccessURI(this.requestURI)
     );
+  }
+
+  #domainFromURI(uri) {
+    let hostname = uri.host;
+    // nsIURI omits brackets from IPv6 addresses. But the canonical form of an
+    // IPv6 address is with brackets, so add them.
+    return hostname.includes(":") ? `[${hostname}]` : hostname;
   }
 }
 
@@ -635,9 +649,37 @@ class RequestEvaluator {
     } else if (cond.regexFilter) {
       // TODO bug 1745760: check cond.regexFilter + isUrlFilterCaseSensitive
     }
-    // TODO: requestDomains & excludedRequestDomains
-
-    // TODO: initiatorDomains & excludedInitiatorDomains
+    if (
+      cond.excludedRequestDomains &&
+      this.#matchesDomains(cond.excludedRequestDomains, this.req.requestDomain)
+    ) {
+      return false;
+    }
+    if (
+      cond.requestDomains &&
+      !this.#matchesDomains(cond.requestDomains, this.req.requestDomain)
+    ) {
+      return false;
+    }
+    if (
+      cond.excludedInitiatorDomains &&
+      // Note: unable to only match null principals (bug 1798225).
+      this.req.initiatorDomain &&
+      this.#matchesDomains(
+        cond.excludedInitiatorDomains,
+        this.req.initiatorDomain
+      )
+    ) {
+      return false;
+    }
+    if (
+      cond.initiatorDomains &&
+      // Note: unable to only match null principals (bug 1798225).
+      (!this.req.initiatorDomain ||
+        !this.#matchesDomains(cond.initiatorDomains, this.req.initiatorDomain))
+    ) {
+      return false;
+    }
 
     // TODO bug 1797408: domainType
 
@@ -658,6 +700,26 @@ class RequestEvaluator {
     }
 
     return true;
+  }
+
+  /**
+   * @param {string[]} domains - A list of canonicalized domain patterns.
+   *   Canonical means punycode, no ports, and IPv6 without brackets, and not
+   *   starting with a dot. May end with a dot if it is a FQDN.
+   * @param {string} host - The canonical representation of the host of a URL.
+   * @returns {boolean} Whether the given host is a (sub)domain of any of the
+   *   given domains.
+   **/
+  #matchesDomains(domains, host) {
+    return domains.some(domain => {
+      return (
+        host.endsWith(domain) &&
+        // either host === domain
+        (host.length === domain.length ||
+          // or host = "something." + domain (WITH a domain separator).
+          host.charAt(host.length - domain.length - 1) === ".")
+      );
+    });
   }
 
   /**
