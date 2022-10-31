@@ -4,11 +4,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivacyLevel",
-  "resource://gre/modules/sessionstore/PrivacyLevel.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivacyLevel: "resource://gre/modules/sessionstore/PrivacyLevel.sys.mjs",
+});
 
 /**
  * A module that provides methods to filter various kinds of data collected

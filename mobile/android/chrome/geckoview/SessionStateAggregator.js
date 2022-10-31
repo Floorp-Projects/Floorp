@@ -15,12 +15,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeoutWithTarget: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
 });
 
 const NO_INDEX = Number.MAX_SAFE_INTEGER;

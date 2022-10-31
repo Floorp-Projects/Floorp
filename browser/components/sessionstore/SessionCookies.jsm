@@ -8,11 +8,9 @@ var EXPORTED_SYMBOLS = ["SessionCookies"];
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivacyLevel",
-  "resource://gre/modules/sessionstore/PrivacyLevel.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivacyLevel: "resource://gre/modules/sessionstore/PrivacyLevel.sys.mjs",
+});
 
 const MAX_EXPIRY = Number.MAX_SAFE_INTEGER;
 
