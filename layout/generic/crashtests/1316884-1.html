@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset="UTF-8">
+<script>
+addEventListener("DOMContentLoaded", function(){
+  setTimeout(function(){
+    o_0.appendChild(document.createElement("span"));
+    document.documentElement.removeAttribute("class");
+  }, 0);
+});
+</script>
+<body style="columns: 5; column-fill: auto; height: 100px;">
+<div style="display: grid; grid-auto-rows: 30px; grid-template-rows: 5px min-content 50px;">
+<span style="page-break-inside: avoid; grid-row: 2; height: 60px;">
+<div id=o_0 style="display: grid; grid-gap: 0; grid-template-rows: min-content 50px; grid-auto-rows: 30px;">
+<span style="grid-row: 1/span 4;"></span>
+</div>
+</span>
+</div>
+</body>
+</html>

@@ -536,6 +536,7 @@ load 854263-1.html
 load 862185.html
 load 863935.html
 load 866547-1.html
+load 866767-1.html
 needs-focus pref(accessibility.browsewithcaret,true) load 868906.html
 load 876074-1.html
 load 876155.html
@@ -661,6 +662,7 @@ load 1297427-non-equal-centers.html
 load 1304441.html
 load 1308876-1.html
 load 1316649.html
+load 1316884-1.html
 load 1343552-1.html
 load 1343552-2.html
 load 1346454-1.html
