@@ -29,6 +29,7 @@
 #include "nsThreadUtils.h"  // For nsRunnableMethod and nsRevocableEventPtr
 #include "nsTransitionManager.h"      // For CSSTransition
 #include "PendingAnimationTracker.h"  // For PendingAnimationTracker
+#include "ScrollTimelineAnimationTracker.h"
 
 namespace mozilla::dom {
 
@@ -267,6 +268,9 @@ void Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline) {
   if (!aTimeline) {
     MaybeQueueCancelEvent(activeTime);
   }
+
+  UpdatePendingAnimationTracker(oldTimeline, aTimeline);
+
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
 }
 
@@ -904,18 +908,40 @@ void Animation::TriggerNow() {
   }
 
   // If we don't have an active timeline we can't trigger the animation.
-  // For non monotonically increasing timelines, we call this function in Play()
-  // and Pause() immediately,
-  //
-  // For monotonically increasing timelines, this is a test-only method that we
-  // don't expect to be used in conjunction with animations without an active
-  // timeline so generate a warning if we do find ourselves in that situation.
+  // However, this is a test-only method that we don't expect to be used in
+  // conjunction with animations without an active timeline so generate
+  // a warning if we do find ourselves in that situation.
   if (!mTimeline || mTimeline->GetCurrentTimeAsDuration().IsNull()) {
     NS_WARNING("Failed to trigger an animation with an active timeline");
     return;
   }
 
   FinishPendingAt(mTimeline->GetCurrentTimeAsDuration().Value());
+}
+
+bool Animation::TryTriggerNowForFiniteTimeline() {
+  // Normally we expect the play state to be pending but when an animation
+  // is cancelled and its rendered document can't be reached, we can end up
+  // with the animation still in a pending player tracker even after it is
+  // no longer pending.
+  if (!Pending()) {
+    return true;
+  }
+
+  MOZ_ASSERT(mTimeline && !mTimeline->IsMonotonicallyIncreasing());
+
+  // It's possible that the primary frame or the scrollable frame is not ready
+  // when setting up this animation. So we don't finish pending right now. In
+  // this case, the timeline is inactive so it is still pending. The caller
+  // should handle this case by trying this later once the scrollable frame is
+  // ready.
+  const auto currentTime = mTimeline->GetCurrentTimeAsDuration();
+  if (currentTime.IsNull()) {
+    return false;
+  }
+
+  FinishPendingAt(currentTime.Value());
+  return true;
 }
 
 Nullable<TimeDuration> Animation::GetCurrentOrPendingStartTime() const {
@@ -1442,10 +1468,14 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
   // animations if it applies.
   mSyncWithGeometricAnimations = false;
 
-  // If the animation use finite timeline, e.g. scroll timeline, we don't use
-  // pending animation tracker. Instead, we let it play immediately.
   if (HasFiniteTimeline()) {
-    TriggerNow();
+    // Always schedule a task even if we would like to let this animation
+    // immedidately ready, per spec.
+    // https://drafts.csswg.org/web-animations/#playing-an-animation-section
+    if (Document* doc = GetRenderedDocument()) {
+      doc->GetOrCreateScrollTimelineAnimationTracker()->AddPending(*this);
+    }  // else: we fail to track this animation, so let the scroll frame to
+       // trigger it when ticking.
   } else {
     if (Document* doc = GetRenderedDocument()) {
       PendingAnimationTracker* tracker =
@@ -1504,10 +1534,14 @@ void Animation::Pause(ErrorResult& aRv) {
 
   mPendingState = PendingState::PausePending;
 
-  // If the animation use finite timeline, e.g. scroll timeline, we don't use
-  // pending animation tracker. Instead, we let it pause immediately.
   if (HasFiniteTimeline()) {
-    TriggerNow();
+    // Always schedule a task even if we would like to let this animation
+    // immedidately ready, per spec.
+    // https://drafts.csswg.org/web-animations/#playing-an-animation-section
+    if (Document* doc = GetRenderedDocument()) {
+      doc->GetOrCreateScrollTimelineAnimationTracker()->AddPending(*this);
+    }  // else: we fail to track this animation, so let the scroll frame to
+       // trigger it when ticking.
   } else {
     if (Document* doc = GetRenderedDocument()) {
       PendingAnimationTracker* tracker =
@@ -1804,10 +1838,13 @@ bool Animation::IsPossiblyOrphanedPendingAnimation() const {
   // * We started playing but our timeline became inactive.
   //   In this case the pending animation tracker will drop us from its hashmap
   //   when we have been painted.
-  // * When we started playing we couldn't find a PendingAnimationTracker to
-  //   register with (perhaps the effect had no document) so we simply
-  //   set mPendingState in PlayNoUpdate and relied on this method to catch us
-  //   on the next tick.
+  // * When we started playing we couldn't find a
+  //   PendingAnimationTracker/ScrollTimelineAnimationTracker to register with
+  //   (perhaps the effect had no document) so we may
+  //   1. simply set mPendingState in PlayNoUpdate and relied on this method to
+  //      catch us on the next tick, or
+  //   2. rely on the scroll frame to tick this animation and catch us in this
+  //      method.
 
   // If we're not pending we're ok.
   if (mPendingState == PendingState::NotPending) {
@@ -1860,6 +1897,50 @@ Document* Animation::GetRenderedDocument() const {
 
 Document* Animation::GetTimelineDocument() const {
   return mTimeline ? mTimeline->GetDocument() : nullptr;
+}
+
+void Animation::UpdatePendingAnimationTracker(AnimationTimeline* aOldTimeline,
+                                              AnimationTimeline* aNewTimeline) {
+  // If we are still in pending, we may have to move this animation into the
+  // correct animation tracker.
+  Document* doc = GetRenderedDocument();
+  if (!doc || !Pending()) {
+    return;
+  }
+
+  const bool fromFiniteTimeline =
+      aOldTimeline && !aOldTimeline->IsMonotonicallyIncreasing();
+  const bool toFiniteTimeline =
+      aNewTimeline && !aNewTimeline->IsMonotonicallyIncreasing();
+  if (fromFiniteTimeline == toFiniteTimeline) {
+    return;
+  }
+
+  const bool isPlayPending = mPendingState == PendingState::PlayPending;
+  if (toFiniteTimeline) {
+    // From null/document-timeline to scroll-timeline
+    if (auto* tracker = doc->GetPendingAnimationTracker()) {
+      if (isPlayPending) {
+        tracker->RemovePlayPending(*this);
+      } else {
+        tracker->RemovePausePending(*this);
+      }
+    }
+
+    doc->GetOrCreateScrollTimelineAnimationTracker()->AddPending(*this);
+  } else {
+    // From scroll-timeline to null/document-timeline
+    if (auto* tracker = doc->GetScrollTimelineAnimationTracker()) {
+      tracker->RemovePending(*this);
+    }
+
+    auto* tracker = doc->GetOrCreatePendingAnimationTracker();
+    if (isPlayPending) {
+      tracker->AddPlayPending(*this);
+    } else {
+      tracker->AddPausePending(*this);
+    }
+  }
 }
 
 class AsyncFinishNotification : public MicroTaskRunnable {
