@@ -16,6 +16,12 @@
     <string name="content_description_disable_private_browsing_button">Disable private browsing</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Search or enter address</string>
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">Search history</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">Search bookmarks</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">Search tabs</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
     <string name="application_search_hint">Enter search terms</string>
     <!-- No Open Tabs Message Description -->

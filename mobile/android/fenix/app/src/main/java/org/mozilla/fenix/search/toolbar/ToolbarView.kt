@@ -16,6 +16,7 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.Core
 import org.mozilla.fenix.search.SearchFragmentState
 import org.mozilla.fenix.utils.Settings
 
@@ -147,11 +148,16 @@ class ToolbarView(
 
         val searchEngine = searchState.searchEngineSource.searchEngine
 
-        when (searchEngine?.type) {
+        view.edit.hint = when (searchEngine?.type) {
             SearchEngine.Type.APPLICATION ->
-                view.edit.hint = context.getString(R.string.application_search_hint)
+                when (searchEngine.id) {
+                    Core.HISTORY_SEARCH_ENGINE_ID -> context.getString(R.string.history_search_hint)
+                    Core.BOOKMARKS_SEARCH_ENGINE_ID -> context.getString(R.string.bookmark_search_hint)
+                    Core.TABS_SEARCH_ENGINE_ID -> context.getString(R.string.tab_search_hint)
+                    else -> context.getString(R.string.application_search_hint)
+                }
             else ->
-                view.edit.hint = context.getString(R.string.search_hint)
+                context.getString(R.string.search_hint)
         }
 
         if (!settings.showUnifiedSearchFeature && searchEngine != null) {
