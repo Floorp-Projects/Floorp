@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1666878490459,
+      "derHash": "/9AIXGw1afjUErzY5tG4rPCSmkH0/TWU+MD0ttUlODA=",
+      "subject": "CN=FIRMAPROFESIONAL CA ROOT-A WEB,O=Firmaprofesional SA,C=ES",
+      "subjectDN": "MG4xCzAJBgNVBAYTAkVTMRwwGgYDVQQKDBNGaXJtYXByb2Zlc2lvbmFsIFNBMRgwFgYDVQRhDA9WQVRFUy1BNjI2MzQwNjgxJzAlBgNVBAMMHkZJUk1BUFJPRkVTSU9OQUwgQ0EgUk9PVC1BIFdFQg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "da6afa1e6ed36e40f11db7e5601e29dfd02bb7a345bb1fb6b2997dfa73831f6c",
+        "size": 1910,
+        "filename": "LbKuTQ0IpNx7elyRGza0LjBo0uWGV--mGi8vacVTuFg=.pem",
+        "location": "security-state-staging/intermediates/5160802f-75c0-47eb-af34-5ef35d988822.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "LbKuTQ0IpNx7elyRGza0LjBo0uWGV++mGi8vacVTuFg=",
+      "crlite_enrolled": false,
+      "id": "695f31b6-0c5d-4b65-b4d6-3c1068257111",
+      "last_modified": 1666879023366
+    },
+    {
       "schema": 1666727451807,
       "derHash": "eBbHsFZrRng7HBXYoo2LDSDP6yCz0T95RG4VxKUckd8=",
       "subject": "CN=Certum Extended Validation CA,OU=Certum Certification Authority,O=Unizeto Technologies S.A.,C=PL",
@@ -14599,24 +14617,6 @@
       "last_modified": 1664326625222
     },
     {
-      "schema": 1664326233896,
-      "derHash": "ayMo5//1mLKt+Qt/PqQrRfpgbXjisRe31g6Z6CjPdWU=",
-      "subject": "CN=SecurityMetrics DigiCert EV CA,OU=www.securitymetrics.com,O=SecurityMetrics,C=US",
-      "subjectDN": "MHIxCzAJBgNVBAYTAlVTMRgwFgYDVQQKEw9TZWN1cml0eU1ldHJpY3MxIDAeBgNVBAsTF3d3dy5zZWN1cml0eW1ldHJpY3MuY29tMScwJQYDVQQDEx5TZWN1cml0eU1ldHJpY3MgRGlnaUNlcnQgRVYgQ0E=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "8f2fed33a01ee802659c8cce0dca62c7338adc4912c859ac33291ca9ccb450a0",
-        "size": 2316,
-        "filename": "f8vazxLVGT76Jd96F8flimC6GezMF1z65oKBNglhwWI=.pem",
-        "location": "security-state-staging/intermediates/338ca3d9-aaf8-4f72-84fc-aa3473ff7e0a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "f8vazxLVGT76Jd96F8flimC6GezMF1z65oKBNglhwWI=",
-      "crlite_enrolled": false,
-      "id": "8f3622a7-27bd-4844-a283-703d57161bea",
-      "last_modified": 1664326625206
-    },
-    {
       "schema": 1664326220594,
       "derHash": "ydaRPz/t3v8YTJ7h1+F8WuyQiG7tXMPW6YEFgxyMDgs=",
       "subject": "CN=TERENA SSL CA 3 G3,O=TERENA,L=Amsterdam,ST=Noord-Holland,C=NL",
@@ -14633,24 +14633,6 @@
       "crlite_enrolled": false,
       "id": "6f73b567-3c48-499d-a69e-5da61f1aafb8",
       "last_modified": 1664326625160
-    },
-    {
-      "schema": 1664326222344,
-      "derHash": "8y3q8iznJGYfU9UocxGv8lQes47K9J3Yd7lAI+OhGx8=",
-      "subject": "CN=SecurityMetrics DigiCert CA,OU=www.securitymetrics.com,O=SecurityMetrics,C=US",
-      "subjectDN": "MG8xCzAJBgNVBAYTAlVTMRgwFgYDVQQKEw9TZWN1cml0eU1ldHJpY3MxIDAeBgNVBAsTF3d3dy5zZWN1cml0eW1ldHJpY3MuY29tMSQwIgYDVQQDExtTZWN1cml0eU1ldHJpY3MgRGlnaUNlcnQgQ0E=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d50c056638b09407fa0dee4209af760ade36d666f654cb728d8b942d6ab26464",
-        "size": 2312,
-        "filename": "m-VKH0mPQWihT4uaJ80flL4auSAFAu5yhBL9G2W29xk=.pem",
-        "location": "security-state-staging/intermediates/6b75747f-e456-4dfc-8d25-d833991ae3c1.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "m+VKH0mPQWihT4uaJ80flL4auSAFAu5yhBL9G2W29xk=",
-      "crlite_enrolled": false,
-      "id": "47556c51-b534-409d-9dc1-af68548bdc2d",
-      "last_modified": 1664326625137
     },
     {
       "schema": 1664326217988,
@@ -26785,5 +26767,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1666727875396
+  "timestamp": 1667138223260
 }
