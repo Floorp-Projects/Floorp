@@ -716,3 +716,68 @@ add_task(async function test_alt_click_no_launch() {
     }
   );
 });
+
+/**
+ * Asserts that tabs that have been recently closed can be
+ * restored by clicking on them, using the Enter key,
+ * and using the Space bar.
+ */
+add_task(async function test_restore_recently_closed_tabs() {
+  clearHistory();
+
+  await open_then_close(URLs[0]);
+  await open_then_close(URLs[1]);
+  await open_then_close(URLs[2]);
+
+  await EventUtils.synthesizeMouseAtCenter(
+    gBrowser.ownerDocument.getElementById("firefox-view-button"),
+    { type: "mousedown" },
+    window
+  );
+  // Wait for Firefox View to be loaded before interacting
+  // with the page.
+  await BrowserTestUtils.browserLoaded(
+    window.FirefoxViewHandler.tab.linkedBrowser
+  );
+  let { document } = gBrowser.contentWindow;
+  let tabRestored = BrowserTestUtils.waitForNewTab(gBrowser, URLs[2]);
+  EventUtils.synthesizeMouseAtCenter(
+    document.querySelector(".closed-tab-li"),
+    {},
+    gBrowser.contentWindow
+  );
+
+  await tabRestored;
+  ok(true, "Tab was restored by mouse click");
+
+  await EventUtils.synthesizeMouseAtCenter(
+    gBrowser.ownerDocument.getElementById("firefox-view-button"),
+    { type: "mousedown" },
+    window
+  );
+
+  tabRestored = BrowserTestUtils.waitForNewTab(gBrowser, URLs[1]);
+  document.querySelector(".closed-tab-li").focus();
+  EventUtils.synthesizeKey("KEY_Enter", {}, gBrowser.contentWindow);
+
+  await tabRestored;
+  ok(true, "Tab was restored by using the Enter key");
+
+  await EventUtils.synthesizeMouseAtCenter(
+    gBrowser.ownerDocument.getElementById("firefox-view-button"),
+    { type: "mousedown" },
+    window
+  );
+
+  tabRestored = BrowserTestUtils.waitForNewTab(gBrowser, URLs[0]);
+  document.querySelector(".closed-tab-li").focus();
+  EventUtils.synthesizeKey(" ", {}, gBrowser.contentWindow);
+
+  await tabRestored;
+  ok(true, "Tab was restored by using the Space bar");
+
+  // clean up extra tabs
+  while (gBrowser.tabs.length > 1) {
+    BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
+  }
+});
