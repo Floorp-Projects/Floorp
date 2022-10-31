@@ -847,16 +847,30 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
     }
 
     // Step 3.c. Let usingAsyncIterator be ? GetMethod(asyncItems, @@asyncIterator).
-    let usingAsyncIterator = GetMethod(
-      asyncItems,
-      GetBuiltinSymbol("asyncIterator")
-    );
-    let usingSyncIterator = undefined;
+    let usingAsyncIterator = asyncItems[GetBuiltinSymbol("asyncIterator")];
+    if (usingAsyncIterator === null) {
+      usingAsyncIterator = undefined;
+    }
 
-    // Step 3.d. If usingAsyncIterator is undefined, then
-    if (usingAsyncIterator === undefined) {
+    let usingSyncIterator = undefined;
+    if (usingAsyncIterator !== undefined) {
+      if (!IsCallable(usingAsyncIterator)) {
+        ThrowTypeError(JSMSG_NOT_ITERABLE, ToSource(asyncItems));
+      }
+    } else {
+      // Step 3.d. If usingAsyncIterator is undefined, then
+
       // Step 3.d.i. Let usingSyncIterator be ? GetMethod(asyncItems, @@iterator).
-      usingSyncIterator = GetMethod(asyncItems, GetBuiltinSymbol("iterator"));
+      usingSyncIterator = asyncItems[GetBuiltinSymbol("iterator")];
+      if (usingSyncIterator === null) {
+        usingSyncIterator = undefined;
+      }
+
+      if (usingSyncIterator !== undefined) {
+        if (!IsCallable(usingSyncIterator)) {
+          ThrowTypeError(JSMSG_NOT_ITERABLE, ToSource(asyncItems));
+        }
+      }
     }
 
     // Step 3.e. If IsConstructor(C) is true, then
