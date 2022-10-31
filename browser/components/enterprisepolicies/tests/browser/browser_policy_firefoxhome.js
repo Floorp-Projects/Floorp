@@ -35,6 +35,15 @@ add_task(async function test_firefox_home_without_policy_without_pocket() {
 });
 
 add_task(async function test_firefox_home_with_policy() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.newtabpage.activity-stream.discoverystream.endpointSpocsClear",
+        "",
+      ],
+    ],
+  });
+
   await setupPolicyEngineWithJson({
     policies: {
       FirefoxHome: {
@@ -65,6 +74,7 @@ add_task(async function test_firefox_home_with_policy() {
     is(highlights, null, "Highlights section should not be there.");
   });
   BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_firefoxhome_preferences_set() {

@@ -1582,6 +1582,8 @@ pref("browser.newtabpage.activity-stream.discoverystream.sponsored-collections.e
 // Changes the spoc content.
 pref("browser.newtabpage.activity-stream.discoverystream.spocAdTypes", "");
 pref("browser.newtabpage.activity-stream.discoverystream.spocZoneIds", "");
+pref("browser.newtabpage.activity-stream.discoverystream.spocTopsitesAdTypes", "");
+pref("browser.newtabpage.activity-stream.discoverystream.spocTopsitesZoneIds", "");
 pref("browser.newtabpage.activity-stream.discoverystream.spocSiteId", "");
 
 pref("browser.newtabpage.activity-stream.discoverystream.sendToPocket.enabled", false);
