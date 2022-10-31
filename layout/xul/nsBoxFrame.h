@@ -150,7 +150,6 @@ class nsBoxFrame : public nsContainerFrame {
   nsBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID);
   virtual ~nsBoxFrame();
 
-  virtual bool GetInitialEqualSize(bool& aEqualSize);
   virtual void GetInitialOrientation(bool& aIsHorizontal);
   virtual void GetInitialDirection(bool& aIsNormal);
   virtual bool GetInitialHAlignment(Halignment& aHalign);
