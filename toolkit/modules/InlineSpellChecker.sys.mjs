@@ -228,6 +228,39 @@ InlineSpellChecker.prototype = {
     return sortedList;
   },
 
+  async languageMenuListener(evt) {
+    let curlangs = new Set();
+    if (this.mRemote) {
+      curlangs = new Set(this.mRemote.currentDictionaries);
+    } else if (this.mInlineSpellChecker) {
+      let spellchecker = this.mInlineSpellChecker.spellChecker;
+      try {
+        curlangs = new Set(spellchecker.getCurrentDictionaries());
+      } catch (e) {}
+    }
+
+    let localeCodes = new Set(curlangs);
+    let localeCode = evt.target.dataset.localeCode;
+    if (localeCodes.has(localeCode)) {
+      localeCodes.delete(localeCode);
+    } else {
+      localeCodes.add(localeCode);
+    }
+    let dictionaries = Array.from(localeCodes);
+    await this.selectDictionaries(dictionaries);
+    if (this.mRemote) {
+      // Store the new set in case the menu doesn't close.
+      this.mRemote.currentDictionaries = dictionaries;
+    }
+    // Notify change of dictionary, especially for Thunderbird,
+    // which is otherwise not notified any more.
+    let view = this.mDictionaryMenu.ownerGlobal;
+    let spellcheckChangeEvent = new view.CustomEvent("spellcheck-changed", {
+      detail: { dictionaries },
+    });
+    this.mDictionaryMenu.ownerDocument.dispatchEvent(spellcheckChangeEvent);
+  },
+
   // returns the number of dictionary languages. If insertBefore is NULL, this
   // does an append to the given menu
   addDictionaryListToMenu(menu, insertBefore) {
@@ -238,46 +271,26 @@ InlineSpellChecker.prototype = {
       return 0;
     }
 
-    var list;
-    var curlangs = new Set();
+    let list;
+    let curlangs = new Set();
     if (this.mRemote) {
       list = this.mRemote.dictionaryList;
       curlangs = new Set(this.mRemote.currentDictionaries);
     } else if (this.mInlineSpellChecker) {
-      var spellchecker = this.mInlineSpellChecker.spellChecker;
+      let spellchecker = this.mInlineSpellChecker.spellChecker;
       list = spellchecker.GetDictionaryList();
       try {
         curlangs = new Set(spellchecker.getCurrentDictionaries());
       } catch (e) {}
     }
 
-    var sortedList = this.sortDictionaryList(list);
+    let sortedList = this.sortDictionaryList(list);
+    this.languageMenuListenerBind = this.languageMenuListener.bind(this);
+    menu.addEventListener("command", this.languageMenuListenerBind, true);
 
-    menu.addEventListener(
-      "command",
-      async evt => {
-        let localeCodes = new Set(curlangs);
-        let localeCode = evt.target.dataset.localeCode;
-        if (localeCodes.has(localeCode)) {
-          localeCodes.delete(localeCode);
-        } else {
-          localeCodes.add(localeCode);
-        }
-        let dictionaries = Array.from(localeCodes);
-        await this.selectDictionaries(dictionaries);
-        // Notify change of dictionary, especially for Thunderbird,
-        // which is otherwise not notified any more.
-        var view = menu.ownerGlobal;
-        var spellcheckChangeEvent = new view.CustomEvent("spellcheck-changed", {
-          detail: { dictionaries },
-        });
-        menu.ownerDocument.dispatchEvent(spellcheckChangeEvent);
-      },
-      true
-    );
+    for (let i = 0; i < sortedList.length; i++) {
+      let item = menu.ownerDocument.createXULElement("menuitem");
 
-    for (var i = 0; i < sortedList.length; i++) {
-      var item = menu.ownerDocument.createXULElement("menuitem");
       item.setAttribute(
         "id",
         "spell-check-dictionary-" + sortedList[i].localeCode
@@ -288,6 +301,9 @@ InlineSpellChecker.prototype = {
       item.setAttribute("label", sortedList[i].displayName);
       item.setAttribute("type", "checkbox");
       item.setAttribute("selection-type", "multiple");
+      if (sortedList.length > 1) {
+        item.setAttribute("closemenu", "none");
+      }
       this.mDictionaryItems.push(item);
       item.dataset.localeCode = sortedList[i].localeCode;
       if (curlangs.has(sortedList[i].localeCode)) {
@@ -305,6 +321,11 @@ InlineSpellChecker.prototype = {
   // undoes the work of addDictionaryListToMenu for the menu
   // (call on popup hiding)
   clearDictionaryListFromMenu() {
+    this.mDictionaryMenu?.removeEventListener(
+      "command",
+      this.languageMenuListenerBind,
+      true
+    );
     for (var i = 0; i < this.mDictionaryItems.length; i++) {
       this.mDictionaryMenu.removeChild(this.mDictionaryItems[i]);
     }
@@ -542,6 +563,9 @@ RemoteSpellChecker.prototype = {
 
   get currentDictionaries() {
     return this._spellInfo.currentDictionaries;
+  },
+  set currentDictionaries(dicts) {
+    this._spellInfo.currentDictionaries = dicts;
   },
   get dictionaryList() {
     return this._spellInfo.dictionaryList.slice();
