@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PrivacyFilter"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -18,7 +14,7 @@ ChromeUtils.defineModuleGetter(
  * A module that provides methods to filter various kinds of data collected
  * from a tab by the current privacy level as set by the user.
  */
-var PrivacyFilter = Object.freeze({
+export var PrivacyFilter = Object.freeze({
   /**
    * Filters the given (serialized) session storage |data| according to the
    * current privacy level and returns a new object containing only data that

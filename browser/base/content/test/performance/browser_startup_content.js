@@ -69,10 +69,10 @@ if (!gFissionBrowser) {
 const intermittently_loaded_scripts = {
   modules: new Set([
     "resource://gre/modules/nsAsyncShutdown.jsm",
-    "resource://gre/modules/sessionstore/Utils.jsm",
+    "resource://gre/modules/sessionstore/Utils.sys.mjs",
 
     // Session store.
-    "resource://gre/modules/sessionstore/SessionHistory.jsm",
+    "resource://gre/modules/sessionstore/SessionHistory.sys.mjs",
 
     // Webcompat about:config front-end. This is part of a system add-on which
     // may not load early enough for the test.

@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["Utils"];
-
-var Utils = Object.freeze({
+export var Utils = Object.freeze({
   /**
    * Restores frame tree |data|, starting at the given root |frame|. As the
    * function recurses into descendant frames it will call cb(frame, data) for

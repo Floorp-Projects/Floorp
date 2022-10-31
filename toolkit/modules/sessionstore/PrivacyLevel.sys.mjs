@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PrivacyLevel"];
-
 const PREF = "browser.sessionstore.privacy_level";
 
 // The following constants represent the different possible privacy levels that
@@ -22,7 +18,7 @@ const PRIVACY_FULL = 2;
 /**
  * The external API as exposed by this module.
  */
-var PrivacyLevel = Object.freeze({
+export var PrivacyLevel = Object.freeze({
   /**
    * Returns whether the current privacy level allows saving data for the given
    * |url|.
