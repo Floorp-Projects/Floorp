@@ -1198,6 +1198,7 @@ xul|treecol:not([hideheader="true"]),
 .tree-columnpicker-button {
   appearance: none;
   border: none;
+  border-radius: unset;
   background-color: var(--in-content-button-background);
   color: var(--in-content-button-text-color, inherit);
   padding: 5px 10px;
