@@ -45,6 +45,11 @@ internal object EngineStateReducer {
         is EngineAction.OptimizedLoadUrlTriggeredAction -> {
             state
         }
+        is EngineAction.SaveToPdfExceptionAction -> {
+            throw IllegalStateException(
+                "You need to add a middleware to handle this action in your BrowserStore. ($action)",
+            )
+        }
         is EngineAction.SuspendEngineSessionAction,
         is EngineAction.CreateEngineSessionAction,
         is EngineAction.LoadDataAction,

@@ -416,6 +416,10 @@ class SessionUseCases(
          * loaded, however, this does not guarantee the page contents will be correctly painted
          * into the PDF. Typically, a session is required to have been painted on the screen (by
          * being the selected tab) for a PDF to be generated successfully.
+         *
+         * ⚠️ Make sure to have a middleware that handles the [EngineAction.SaveToPdfExceptionAction]`,
+         * or your application will crash when an error happens when
+         * requesting a page to be saved a PDF.
          */
         operator fun invoke(
             tabId: String? = store.state.selectedTabId,

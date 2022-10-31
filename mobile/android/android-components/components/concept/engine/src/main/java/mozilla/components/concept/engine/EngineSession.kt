@@ -247,6 +247,13 @@ abstract class EngineSession(
          * @param currentIndex Index of the current page in the history list.
          */
         fun onHistoryStateChanged(historyList: List<HistoryItem>, currentIndex: Int) = Unit
+
+        /**
+         * Event to indicate that an issue happened while generating a PDF.
+         *
+         * @param throwable The list of items in the session history.
+         */
+        fun onSaveToPdfError(throwable: Throwable) = Unit
     }
 
     /**

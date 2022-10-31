@@ -13,6 +13,10 @@ permalink: /changelog/
 * **concept-engine**
   * [bug #1798359](https://bugzilla.mozilla.org/show_bug.cgi?id=1798359) Set Total Cookie Protection as the default cookie policy for all Tracking Protection modes. Read more about Total Cookie Protection [here](https://blog.mozilla.org/en/mozilla/firefox-rolls-out-total-cookie-protection-by-default-to-all-users-worldwide/).
 
+* **browser-engine-gecko**
+  * 🆕 A new action `SaveToPdfExceptionAction` was added to the `EngineAction` to allow for notifying consumers on unsuccessful Save to PDF requests. For more references see [bug #1796482](https://bugzilla.mozilla.org/show_bug.cgi?id=1796482).
+  * ⚠️ When using the save to pdf feature, now it's required have a middleware that handles the `SaveToPdfExceptionAction`, or your application will crash when an error happens when requesting a page to be saved as PDF.
+
 * **compose-cfr**
   * 🆕 New composable popup allowing to offer more context about a specific View anchor on the screen. Supports RTL along with many other customizations and anchorings.
 

@@ -262,6 +262,9 @@ class GeckoEngineSession(
             { throwable ->
                 // Log the error. There is nothing we can do otherwise.
                 logger.error("Save to PDF failed.", throwable)
+                notifyObservers {
+                    onSaveToPdfError(throwable)
+                }
                 GeckoResult()
             },
         )

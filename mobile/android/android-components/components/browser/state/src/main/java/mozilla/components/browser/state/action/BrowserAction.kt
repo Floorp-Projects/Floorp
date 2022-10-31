@@ -1017,6 +1017,14 @@ sealed class EngineAction : BrowserAction() {
     ) : EngineAction(), ActionWithTab
 
     /**
+     * Indicates the given [tabId] was unable to generate a requested save to PDF page.
+     */
+    data class SaveToPdfExceptionAction(
+        override val tabId: String,
+        val throwable: Throwable,
+    ) : EngineAction(), ActionWithTab
+
+    /**
      * Clears browsing data for the tab with the given [tabId].
      */
     data class ClearDataAction(
