@@ -525,20 +525,16 @@ function getSessionHistory(browser) {
       );
       return docShell.document.body;
     });
-    /* eslint-disable no-undef */
-    const { SessionHistory } = ChromeUtils.import(
-      "resource://gre/modules/sessionstore/SessionHistory.jsm"
+    const { SessionHistory } = ChromeUtils.importESModule(
+      "resource://gre/modules/sessionstore/SessionHistory.sys.mjs"
     );
     return SessionHistory.collectFromParent(uri, body, history);
-    /* eslint-enable no-undef */
   }
   return ContentTask.spawn(browser, null, function() {
-    /* eslint-disable no-undef */
-    const { SessionHistory } = ChromeUtils.import(
-      "resource://gre/modules/sessionstore/SessionHistory.jsm"
+    const { SessionHistory } = ChromeUtils.importESModule(
+      "resource://gre/modules/sessionstore/SessionHistory.sys.mjs"
     );
     return SessionHistory.collect(docShell);
-    /* eslint-enable no-undef */
   });
 }
 

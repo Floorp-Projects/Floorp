@@ -22,11 +22,11 @@ const { AppConstants } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   RunState: "resource:///modules/sessionstore/RunState.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   SessionFile: "resource:///modules/sessionstore/SessionFile.jsm",

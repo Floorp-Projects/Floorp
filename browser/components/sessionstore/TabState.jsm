@@ -8,11 +8,9 @@ var EXPORTED_SYMBOLS = ["TabState"];
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivacyFilter",
-  "resource://gre/modules/sessionstore/PrivacyFilter.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "TabStateCache",

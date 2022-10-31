@@ -24,11 +24,9 @@ ChromeUtils.defineModuleGetter(
   "ContentRestore",
   "resource:///modules/sessionstore/ContentRestore.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SessionHistory",
-  "resource://gre/modules/sessionstore/SessionHistory.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.sys.mjs",
+});
 
 // This pref controls whether or not we send updates to the parent on a timeout
 // or not, and should only be used for tests or debugging.

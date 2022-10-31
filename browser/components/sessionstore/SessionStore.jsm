@@ -243,12 +243,6 @@ const { GlobalState } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SessionHistory",
-  "resource://gre/modules/sessionstore/SessionHistory.jsm"
-);
-
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   gScreenManager: ["@mozilla.org/gfx/screenmanager;1", "nsIScreenManager"],
 });
@@ -256,7 +250,9 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 ChromeUtils.defineESModuleGetters(lazy, {
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+  PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
@@ -264,7 +260,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
-  PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   RunState: "resource:///modules/sessionstore/RunState.jsm",
   SessionCookies: "resource:///modules/sessionstore/SessionCookies.jsm",
   SessionFile: "resource:///modules/sessionstore/SessionFile.jsm",
