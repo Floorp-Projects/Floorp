@@ -6,7 +6,7 @@
 
 #include "AudioInputSource.h"
 
-#include "AudioThreadRegistry.h"
+#include "CallbackThreadRegistry.h"
 #include "GraphDriver.h"
 
 namespace mozilla {
@@ -154,7 +154,8 @@ long AudioInputSource::DataCallback(const void* aBuffer, long aFrames) {
   if (CheckThreadIdChanged()) {
     mSPSCQueue.ResetProducerThreadId();
     if (!mSandboxed) {
-      CubebUtils::GetAudioThreadRegistry()->Register(mAudioThreadId);
+      CallbackThreadRegistry::Get()->Register(mAudioThreadId,
+                                              "NativeAudioCallback");
     }
   }
 
