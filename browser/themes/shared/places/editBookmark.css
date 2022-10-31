@@ -40,15 +40,6 @@
   }
 }
 
-/* Hide the value column of the tag autocomplete popup
- * leaving only the comment column visible. This is
- * so that only the tag being edited is shown in the
- * popup.
- */
-#editBMPanel_tagsField #treecolAutoCompleteValue {
-  visibility: collapse;
-}
-
 #editBMPanel_tagsSelector > richlistitem > image {
   appearance: auto;
   -moz-default-appearance: checkbox;
