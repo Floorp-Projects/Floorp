@@ -6,8 +6,9 @@
 requestLongerTimeout(2);
 
 // Import helpers
+/* import-globals-from fullscreen_helpers.js */
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/dom/html/test/fullscreen_helpers.js",
+  "chrome://mochitests/content/browser/dom/base/test/fullscreen/fullscreen_helpers.js",
   this
 );
 
@@ -22,6 +23,41 @@ add_setup(async function() {
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"],
     ["full-screen-api.allow-trusted-requests-only", false]
+  );
+});
+
+add_task(async function navigation() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: `data:text/html,
+      <button id="button">Click here</button>
+      <script>
+        let button = document.getElementById("button");
+        button.addEventListener("click", function() {
+          button.requestFullscreen();
+        });
+      </script>`,
+    },
+    async function(browser) {
+      let promiseFsState = waitForFullscreenState(document, true);
+      // Trigger click event
+      BrowserTestUtils.synthesizeMouseAtCenter("#button", {}, browser);
+      await promiseFsState;
+
+      promiseFsState = waitForFullscreenState(document, false);
+      await SpecialPowers.spawn(browser, [], async function() {
+        content.location.href = "about:blank";
+      });
+      await promiseFsState;
+
+      // Ensure the browser exits fullscreen state.
+      ok(!window.fullScreen, "The chrome window should not be in fullscreen");
+      ok(
+        !document.documentElement.hasAttribute("inDOMFullscreen"),
+        "The chrome document should not be in fullscreen"
+      );
+    }
   );
 });
 
@@ -68,49 +104,40 @@ async function startTests(testFun, name) {
   });
 }
 
-function RemoveElementFromRemoteDocument(aBrowsingContext, aElementId) {
-  return SpecialPowers.spawn(aBrowsingContext, [aElementId], async function(
-    id
-  ) {
-    content.document.getElementById(id).remove();
+function NavigateRemoteDocument(aBrowsingContext, aURL) {
+  return SpecialPowers.spawn(aBrowsingContext, [aURL], async function(url) {
+    content.location.href = url;
   });
 }
 
 startTests(async browser => {
-  let promiseRemoteFsState = waitRemoteFullscreenExitEvents([
-    // browsingContext, name
-    [browser.browsingContext, "toplevel"],
-  ]);
   // toplevel
-  await RemoveElementFromRemoteDocument(browser.browsingContext, "div");
-  await promiseRemoteFsState;
-}, "document_mutation_toplevel");
+  await NavigateRemoteDocument(browser.browsingContext, "about:blank");
+}, "navigation_toplevel");
 
 startTests(async browser => {
   let promiseRemoteFsState = waitRemoteFullscreenExitEvents([
     // browsingContext, name
     [browser.browsingContext, "toplevel"],
-    [browser.browsingContext.children[0], "middle"],
   ]);
   // middle iframe
-  await RemoveElementFromRemoteDocument(
+  await NavigateRemoteDocument(
     browser.browsingContext.children[0],
-    "div"
+    "about:blank"
   );
   await promiseRemoteFsState;
-}, "document_mutation_middle_frame");
+}, "navigation_middle_frame");
 
 startTests(async browser => {
   let promiseRemoteFsState = waitRemoteFullscreenExitEvents([
     // browsingContext, name
     [browser.browsingContext, "toplevel"],
     [browser.browsingContext.children[0], "middle"],
-    [browser.browsingContext.children[0].children[0], "inner"],
   ]);
   // innermost iframe
-  await RemoveElementFromRemoteDocument(
+  await NavigateRemoteDocument(
     browser.browsingContext.children[0].children[0],
-    "div"
+    "about:blank"
   );
   await promiseRemoteFsState;
-}, "document_mutation_inner_frame");
+}, "navigation_inner_frame");

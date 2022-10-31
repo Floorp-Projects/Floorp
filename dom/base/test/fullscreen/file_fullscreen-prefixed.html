@@ -72,7 +72,7 @@ class TestCase {
     return new Promise(resolve => {
       let timeout = 0;
       let expectEvent = new Map();
-      for (let [target, type] of this.handlersType) {
+      for (let [target] of this.handlersType) {
         expectEvent.set(target, this.handlersType != NO_EVENT_HANDLER);
       }
       let handleEvent = evt => {
