@@ -33,6 +33,7 @@
 #include "vm/ObjectOperations.h"
 
 #include "builtin/HandlerFunction-inl.h"
+#include "vm/Compartment-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/Realm-inl.h"
 
@@ -148,25 +149,13 @@ bool ShadowRealmObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 // https://tc39.es/proposal-shadowrealm/#sec-validateshadowrealmobject
 // (slightly modified into a cast operator too)
 static ShadowRealmObject* ValidateShadowRealmObject(JSContext* cx,
-                                                    Handle<JSObject*> O) {
+                                                    Handle<Value> value) {
   // Step 1. Perform ? RequireInternalSlot(O, [[ShadowRealm]]).
   // Step 2. Perform ? RequireInternalSlot(O, [[ExecutionContext]]).
-  Rooted<JSObject*> maybeUnwrappedO(cx, O);
-  if (IsCrossCompartmentWrapper(O)) {
-    maybeUnwrappedO = CheckedUnwrapDynamic(O, cx);
-    // Unwrapping failed; security wrapper denied.
-    if (!maybeUnwrappedO) {
-      return nullptr;
-    }
-  }
-
-  if (!maybeUnwrappedO->is<ShadowRealmObject>()) {
+  return UnwrapAndTypeCheckValue<ShadowRealmObject>(cx, value, [cx]() {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_NOT_SHADOW_REALM);
-    return nullptr;
-  }
-
-  return &maybeUnwrappedO->as<ShadowRealmObject>();
+  });
 }
 
 void js::ReportPotentiallyDetailedMessage(JSContext* cx,
@@ -348,11 +337,8 @@ static bool PerformShadowRealmEval(JSContext* cx, Handle<JSString*> sourceText,
 static bool ShadowRealm_evaluate(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  // Step 1. Let O be this value (implicit ToObject)
-  Rooted<JSObject*> obj(cx, ToObject(cx, args.thisv()));
-  if (!obj) {
-    return false;
-  }
+  // Step 1. Let O be this value.
+  HandleValue obj = args.thisv();
 
   // Step 2. Perform ? ValidateShadowRealmObject(O)
   Rooted<ShadowRealmObject*> shadowRealm(cx,
@@ -617,11 +603,8 @@ static JSObject* ShadowRealmImportValue(JSContext* cx,
 static bool ShadowRealm_importValue(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  // Step 1. Let O be this value (implicit ToObject)
-  Rooted<JSObject*> obj(cx, ToObject(cx, args.thisv()));
-  if (!obj) {
-    return false;
-  }
+  // Step 1. Let O be this value.
+  HandleValue obj = args.thisv();
 
   // Step 2. Perform ? ValidateShadowRealmObject(O).
   Rooted<ShadowRealmObject*> shadowRealm(cx,
