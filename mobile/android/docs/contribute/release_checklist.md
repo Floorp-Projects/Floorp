@@ -62,7 +62,7 @@ These are instructions for preparing a release branch for Android Components and
     ```
 
 3. Create a new [Github Milestone](https://github.com/mozilla-mobile/firefox-android/milestones) with the following format `[nightly_version].0.0 <insert an emoji>` (for example, `99.0.0 🛎`). Close the existing milestone and bump all the remaining opened issues to the next milestone or simply remove the tagged milestone depending on what is appropriate.
-4. Create a commit named `Update changelog for [nightly_version].0.0 release` that will update the following in [changelog.md](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/docs/changelog.md):
+4. Create a commit named `Update changelog for [nightly_version].0.0 release` that will update the following in [changelog.md](https://github.com/mozilla-mobile/firefox-android/blob/main/docs/changelog.md):
   - Add a new `[nightly_version].0.0 (In Development)` section for the next Nightly version of AC with the next commit and milestone numbers.
   - Update the `[beta_version].0.0` section, change `blob` in the links to `v[beta_version].0.0` and specifying the correct commit ranges.
 
@@ -103,7 +103,7 @@ See [https://github.com/mozilla-mobile/android-components/pull/12956](https://gi
 
 ## After the release
 
-1. Verify that the links in the [changelog.md](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/docs/changelog.md) and new release are working.
+1. Verify that the links in the [changelog.md](https://github.com/mozilla-mobile/firefox-android/blob/main/docs/changelog.md) and new release are working.
 2. Verify that Fenix is receiving the latest `[nightly_version]` AC version in `main`.
 3. Send release message to the [Matrix channel](https://chat.mozilla.org/#/room/#android-components:mozilla.org):
 ```

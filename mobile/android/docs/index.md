@@ -18,6 +18,6 @@ layout: page
 {% for post in site.posts limit:5 %}
   {% assign post = post  %}
   {% assign content = post.content %}
-  {% include_relative _includes/post_detail.html %}
+  {% include post_detail.html %}
 {% endfor %}
 </div>
