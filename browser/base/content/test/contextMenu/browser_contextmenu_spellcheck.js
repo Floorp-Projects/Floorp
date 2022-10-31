@@ -5,6 +5,8 @@
 
 let contextMenu;
 
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+
 const example_base =
   "http://example.com/browser/browser/base/content/test/contextMenu/";
 const MAIN_URL = example_base + "subtst_contextmenu_input.html";
@@ -240,6 +242,88 @@ add_task(async function test_text_input_spellcheck_deadactor() {
   await test_contextmenu("#input_spellcheck_correct", kCorrectItems, {
     waitForSpellCheck: true,
   });
+});
+
+add_task(async function test_text_input_spellcheck_multilingual() {
+  if (AppConstants.platform == "macosx") {
+    todo(
+      false,
+      "Need macOS support for closemenu attributes in order to " +
+        "stop the spellcheck menu closing, see bug 1796007."
+    );
+    return;
+  }
+  let sandbox = sinon.createSandbox();
+  registerCleanupFunction(() => sandbox.restore());
+
+  // We need to mock InlineSpellCheckerUI.mRemote's properties, but
+  // InlineSpellCheckerUI.mRemote won't exist until we initialize the context
+  // menu, so do that and then manually reinit the spellcheck bits so
+  // we control them:
+  await test_contextmenu("#input_spellcheck_correct", kCorrectItems, {
+    waitForSpellCheck: true,
+    keepMenuOpen: true,
+  });
+  sandbox
+    .stub(InlineSpellCheckerUI.mRemote, "dictionaryList")
+    .get(() => ["en-US", "nl-NL"]);
+  let setterSpy = sandbox.spy();
+  sandbox
+    .stub(InlineSpellCheckerUI.mRemote, "currentDictionaries")
+    .get(() => ["en-US"])
+    .set(setterSpy);
+  // Re-init the spellcheck items:
+  InlineSpellCheckerUI.clearDictionaryListFromMenu();
+  gContextMenu.initSpellingItems();
+
+  let dictionaryMenu = document.getElementById("spell-dictionaries-menu");
+  let menuOpen = BrowserTestUtils.waitForPopupEvent(dictionaryMenu, "shown");
+  dictionaryMenu.parentNode.openMenu(true);
+  await menuOpen;
+  checkMenu(dictionaryMenu, [
+    "spell-check-dictionary-nl-NL",
+    true,
+    "spell-check-dictionary-en-US",
+    true,
+    "---",
+    null,
+    "spell-add-dictionaries",
+    true,
+  ]);
+  is(
+    dictionaryMenu.children.length,
+    4,
+    "Should have 2 dictionaries, a separator and 'add more dictionaries' item in the menu."
+  );
+
+  let dictionaryEventPromise = BrowserTestUtils.waitForEvent(
+    document,
+    "spellcheck-changed"
+  );
+  dictionaryMenu.activateItem(
+    dictionaryMenu.querySelector("[data-locale-code*=nl]")
+  );
+  let event = await dictionaryEventPromise;
+  Assert.deepEqual(
+    event.detail?.dictionaries,
+    ["en-US", "nl-NL"],
+    "Should have sent right dictionaries with event."
+  );
+  ok(setterSpy.called, "Should have set currentDictionaries");
+  Assert.deepEqual(
+    setterSpy.firstCall?.args,
+    [["en-US", "nl-NL"]],
+    "Should have called setter with single argument array of 2 dictionaries."
+  );
+  // Allow for the menu to potentially close:
+  await new Promise(r => Services.tm.dispatchToMainThread(r));
+  // Check it hasn't:
+  is(
+    dictionaryMenu.closest("menupopup").state,
+    "open",
+    "Main menu should still be open."
+  );
+  contextMenu.hidePopup();
 });
 
 add_task(async function test_cleanup() {
