@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>action.openPopup Incognito Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+let extensionData = {
+  manifest: {
+    applications: {
+      gecko: {
+        id: "open-popup@tests.mozilla.org",
+      }
+    },
+    browser_action: {
+      default_popup: "popup.html",
+    },
+    permissions: ["activeTab"]
+  },
+
+  useAddonManager: "android-only",
+};
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["extensions.openPopupWithoutUserGesture.enabled", true],
+    ],
+  });
+});
+
+async function getIncognitoWindow() {
+  // Since events will be limited based on incognito, we need a
+  // spanning extension to get the tab id so we can test access failure.
+
+  let windowWatcher = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["tabs"],
+    },
+    background: function() {
+      browser.windows.create({ incognito: true }).then(({ id: windowId }) => {
+        browser.test.onMessage.addListener(async data => {
+          if (data === "close") {
+            await browser.windows.remove(windowId);
+            browser.test.sendMessage("window-closed");
+          }
+        });
+
+        browser.test.sendMessage("window-id", windowId);
+      });
+    },
+    incognitoOverride: "spanning",
+  });
+
+  await windowWatcher.startup();
+  let windowId = await windowWatcher.awaitMessage("window-id");
+
+  return {
+    windowId,
+    close: async () => {
+      windowWatcher.sendMessage("close");
+      await windowWatcher.awaitMessage("window-closed");
+      await windowWatcher.unload();
+    },
+  };
+}
+
+add_task(async function test_browserAction_openPopup_incognito_window() {
+  if (AppConstants.platform == "android") {
+    // TODO bug 1372178: Cannot open private windows from an extension.
+    todo(false, "Cannot open private windows on Android");
+    return;
+  }
+
+  async function testWithIncognitoOverride(incognitoOverride) {
+    let extension = ExtensionTestUtils.loadExtension({
+      ...extensionData,
+
+      incognitoOverride,
+
+      background: async function() {
+        browser.test.onMessage.addListener(async ({ windowId, incognitoOverride }) => {
+          const openPromise = browser.browserAction.openPopup({ windowId });
+
+          if (incognitoOverride === "not_allowed") {
+            await browser.test.assertRejects(
+              openPromise,
+              /Invalid window ID/,
+              "Should prevent open popup call for incognito window"
+            );
+          } else {
+            try {
+              browser.test.assertEq(await openPromise, undefined, "openPopup resolved");
+            } catch (e) {
+              browser.test.fail(`Unexpected error: ${e}`);
+            }
+          }
+
+          browser.test.sendMessage("incognitoWindow");
+        });
+      },
+    });
+
+    await extension.startup();
+
+    let incognitoWindow = await getIncognitoWindow();
+    await extension.sendMessage({ windowId: incognitoWindow.windowId, incognitoOverride });
+
+    await extension.awaitMessage("incognitoWindow");
+    await extension.unload();
+
+    await incognitoWindow.close();
+  }
+
+  for (const override of ["spanning", "not_allowed"]) {
+    await testWithIncognitoOverride(override);
+  }
+});
+</script>
+
+</body>
+</html>
