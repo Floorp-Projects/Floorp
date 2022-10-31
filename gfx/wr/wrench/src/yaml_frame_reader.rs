@@ -1575,6 +1575,7 @@ impl YamlFrameReader {
                     self.add_stacking_context_from_yaml(dl, wrench, item, IsRoot(false), &mut info)
                 }
                 "reference-frame" => self.handle_reference_frame(dl, wrench, item),
+                "computed-frame" => self.handle_computed_frame(dl, wrench, item),
                 "shadow" => self.handle_push_shadow(dl, item, &mut info),
                 "pop-all-shadows" => self.handle_pop_all_shadows(dl),
                 "backdrop-filter" => self.handle_backdrop_filter(dl, item, &mut info),
@@ -1907,6 +1908,53 @@ impl YamlFrameReader {
     ) {
         let default_bounds = || LayoutRect::from_size(wrench.window_size_f32());
         let real_id = self.push_reference_frame(dl, default_bounds, yaml);
+        self.spatial_id_stack.push(real_id);
+
+        if let Some(yaml_items) = yaml["items"].as_vec() {
+            self.add_display_list_items_from_yaml(dl, wrench, yaml_items);
+        }
+
+        self.spatial_id_stack.pop().unwrap();
+        dl.pop_reference_frame();
+    }
+
+    fn push_computed_frame(
+        &mut self,
+        dl: &mut DisplayListBuilder,
+        default_bounds: impl Fn() -> LayoutRect,
+        yaml: &Yaml,
+    ) -> SpatialId {
+        let bounds = yaml["bounds"].as_rect().unwrap_or_else(default_bounds);
+
+        let scale_from = yaml["scale-from"].as_size();
+        let vertical_flip = yaml["vertical-flip"].as_bool().unwrap_or(false);
+        let rotation = yaml["rotation"].as_rotation().unwrap_or(Rotation::Degree0);
+
+        let reference_frame_id = dl.push_computed_frame(
+            bounds.min,
+            *self.spatial_id_stack.last().unwrap(),
+            scale_from,
+            vertical_flip,
+            rotation,
+            self.next_spatial_key(),
+        );
+
+        let numeric_id = yaml["id"].as_i64();
+        if let Some(numeric_id) = numeric_id {
+            self.add_spatial_id_mapping(numeric_id as u64, reference_frame_id);
+        }
+
+        reference_frame_id
+    }
+
+    fn handle_computed_frame(
+        &mut self,
+        dl: &mut DisplayListBuilder,
+        wrench: &mut Wrench,
+        yaml: &Yaml,
+    ) {
+        let default_bounds = || LayoutRect::from_size(wrench.window_size_f32());
+        let real_id = self.push_computed_frame(dl, default_bounds, yaml);
         self.spatial_id_stack.push(real_id);
 
         if let Some(yaml_items) = yaml["items"].as_vec() {

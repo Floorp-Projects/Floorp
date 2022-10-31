@@ -48,6 +48,7 @@ pub trait YamlHelper {
     fn as_radial_gradient(&self, dl: &mut DisplayListBuilder) -> RadialGradient;
     fn as_conic_gradient(&self, dl: &mut DisplayListBuilder) -> ConicGradient;
     fn as_complex_clip_regions(&self) -> Vec<ComplexClipRegion>;
+    fn as_rotation(&self) -> Option<Rotation>;
 }
 
 fn string_to_color(color: &str) -> Option<ColorF> {
@@ -902,6 +903,20 @@ impl YamlHelper for Yaml {
             _ => {
                 println!("Unable to parse complex clip region {:?}", self);
                 vec![]
+            }
+        }
+    }
+
+    fn as_rotation(&self) -> Option<Rotation> {
+        match *self {
+            Yaml::Integer(0) => Some(Rotation::Degree0),
+            Yaml::Integer(90) => Some(Rotation::Degree90),
+            Yaml::Integer(180) => Some(Rotation::Degree180),
+            Yaml::Integer(270) => Some(Rotation::Degree270),
+            Yaml::BadValue => None,
+            _ => {
+                println!("Unable to parse rotation {:?}", self);
+                None
             }
         }
     }
