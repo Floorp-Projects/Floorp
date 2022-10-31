@@ -277,13 +277,6 @@ const JSClass WrappedFunctionObject::class_ = {
     &objOps,
 };
 
-JSObject* GetRealmFunctionPrototype(JSContext* cx, Realm* realm) {
-  CHECK_THREAD(cx);
-  Rooted<GlobalObject*> global(cx, realm->maybeGlobal());
-  MOZ_RELEASE_ASSERT(global);
-  return GlobalObject::getOrCreateFunctionPrototype(cx, global);
-}
-
 // WrappedFunctionCreate ( callerRealm: a Realm Record, Target: a function
 // object)
 bool js::WrappedFunctionCreate(JSContext* cx, Realm* callerRealm,
@@ -308,13 +301,8 @@ bool js::WrappedFunctionCreate(JSContext* cx, Realm* callerRealm,
   // 2. Let wrapped be ! MakeBasicObject(internalSlotsList).
   // 3. Set wrapped.[[Prototype]] to
   //    callerRealm.[[Intrinsics]].[[%Function.prototype%]].
-  Rooted<JSObject*> functionPrototype(
-      cx, GetRealmFunctionPrototype(cx, callerRealm));
-  MOZ_ASSERT(cx->compartment() == functionPrototype->compartment());
-
   Rooted<WrappedFunctionObject*> wrapped(
-      cx,
-      NewObjectWithGivenProto<WrappedFunctionObject>(cx, functionPrototype));
+      cx, NewBuiltinClassInstance<WrappedFunctionObject>(cx));
   if (!wrapped) {
     return false;
   }
