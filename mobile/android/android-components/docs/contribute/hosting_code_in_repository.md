@@ -4,9 +4,9 @@ title: Hosting Android code in the Android Components repository
 permalink: /contributing/hosting-android-code-in-repository
 ---
 
-When developing a new (Mozilla) Android component - especially one that wraps **Rust** code for multiple platforms - one decision to make is where the Android (Kotlin/Java) code should live. Should it live in a project repository that also contains the Rust code or should it live in the *android-components* repository alongside the other Android code?
+When developing a new (Mozilla) Android component - especially one that wraps **Rust** code for multiple platforms - one decision to make is where the Android (Kotlin/Java) code should live. Should it live in a project repository that also contains the Rust code or should it live in the *firefox-android* repository alongside the other Android code?
 
-This document lists the advantages you get *for free* when hosting your Android code in the *android-components* repository (consuming pre-compiled binaries of your Rust code).
+This document lists the advantages you get *for free* when hosting your Android code in the *firefox-android* repository (consuming pre-compiled binaries of your Rust code).
 
 ## Build
 
@@ -38,7 +38,7 @@ The *Android components* team is planning to release SNAPSHOT builds for every s
 
 #### Consistent versioning and compatibility
 
-All components are released together with a shared version number. This guarantees that all components with the same version number are compatible. With that a consuming app can use the components in the same setup as they were developed and tested in the *android-components* repository.
+All components are released together with a shared version number. This guarantees that all components with the same version number are compatible. With that a consuming app can use the components in the same setup as they were developed and tested in the *firefox-android* repository.
 
 #### Less Fragmentation
 
@@ -59,7 +59,7 @@ Currently we are using:
 * [ktlint](https://github.com/shyiko/ktlint) - *"An anti-bikeshedding Kotlin linter with built-in formatter"*
 * [detekt](https://github.com/arturbosch/detekt) - *"A static code analysis tool for the Kotlin programming language"*
 
-In addition to that the *Android components* team started to write [custom lint rules](https://github.com/mozilla-mobile/android-components/tree/main/components/tooling/lint) that enforce component related rules (e.g. "Use the provided logging class in components instead of android.util.Log").
+In addition to that the *Android components* team started to write [custom lint rules](https://github.com/mozilla-mobile/firefox-android/tree/main/android-components/components/tooling/lint) that enforce component related rules (e.g. "Use the provided logging class in components instead of android.util.Log").
 
 ## Services
 
@@ -100,4 +100,4 @@ You remain the owner of your components code. Each component can have a [CODEOWN
 
 ## Conclusion
 
-The *Android components* team recommends hosting Android component code (Kotlin) in the *android-components* repository for the reasons mentioned above.
+The *Android components* team recommends hosting Android component code (Kotlin) in the *firefox-android* repository for the reasons mentioned above.

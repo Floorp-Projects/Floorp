@@ -95,7 +95,7 @@ This is the fully manual version of the above flow. Generally not recommended fo
 
 #### Setup version number
 
-In the *android-components* repository update the version number [in the configuration](https://github.com/mozilla-mobile/android-components/blob/main/.buildconfig.yml#L1) so that the app will be required to "download" this new version. Try to avoid picking a version number that was or will be officially released. Otherwise you may "pollute" your gradle cache with unofficial releases. To follow [the Maven convention](https://maven.apache.org/guides/getting-started/index.html#What_is_a_SNAPSHOT_version) you may want to use a `-SNAPSHOT` suffix.
+In the *android-components* repository update the version number [in the configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.buildconfig.yml#L1) so that the app will be required to "download" this new version. Try to avoid picking a version number that was or will be officially released. Otherwise you may "pollute" your gradle cache with unofficial releases. To follow [the Maven convention](https://maven.apache.org/guides/getting-started/index.html#What_is_a_SNAPSHOT_version) you may want to use a `-SNAPSHOT` suffix.
 
 #### Publish to local maven repository
 

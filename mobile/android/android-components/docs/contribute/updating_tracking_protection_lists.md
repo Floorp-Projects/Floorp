@@ -53,9 +53,9 @@ commit(shavar-prod-lists) 01dcca911aa7787fd835a1a19cef1012296f4eb7
 
 THE END!
 
-[1]: https://github.com/mozilla-mobile/android-components/blob/main/components/browser/engine-system/src/main/res/raw/domain_blocklist.json
+[1]: https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/components/browser/engine-system/src/main/res/raw/domain_blocklist.json
 [2]: https://github.com/mozilla-services/shavar-prod-lists/blob/master/disconnect-blocklist.json
 [3]: https://github.com/mozilla-services/shavar-prod-lists/blob/master/README.md#disconnect-blocklist.json
-[4]: https://github.com/mozilla-mobile/android-components/blob/main/components/browser/engine-system/src/main/res/raw/domain_safelist.json
+[4]: https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/components/browser/engine-system/src/main/res/raw/domain_safelist.json
 [5]: https://github.com/mozilla-services/shavar-prod-lists/blob/master/disconnect-entitylist.json
 [6]: https://github.com/mozilla-services/shavar-prod-lists/blob/master/README.md#disconnect-entitylistjson
