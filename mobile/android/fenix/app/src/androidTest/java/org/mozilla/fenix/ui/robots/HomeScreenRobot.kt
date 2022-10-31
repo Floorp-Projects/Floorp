@@ -706,9 +706,11 @@ private fun assertStartSyncHeader() {
     onView(allOf(withText(R.string.onboarding_account_sign_in_header)))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
-private fun assertAccountsSignInButton() =
+private fun assertAccountsSignInButton() {
+    scrollToElementByText(getStringResource(R.string.onboarding_firefox_account_sign_in))
     onView(ViewMatchers.withResourceName("fxa_sign_in_button"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
 
 private fun assertChooseThemeHeader() {
     scrollToElementByText("Choose your theme")
