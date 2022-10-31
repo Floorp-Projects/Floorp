@@ -28,7 +28,7 @@
 
 namespace mozilla {
 enum class MediaFeatureChangeReason : uint16_t;
-enum class StylePageOrientation : uint8_t;
+enum class StylePageSizeOrientation : uint8_t;
 enum class StyleRuleChangeKind : uint32_t;
 
 template <typename Integer, typename Number, typename LinearStops>
@@ -250,7 +250,7 @@ class ServoStyleSet {
   // value to page-size, as well as for an explicit size or paper name which
   // is not square.
   // If the value is auto or square, then returns nothing.
-  Maybe<StylePageOrientation> GetDefaultPageOrientation();
+  Maybe<StylePageSizeOrientation> GetDefaultPageSizeOrientation();
 
   void AppendAllNonDocumentAuthorSheets(nsTArray<StyleSheet*>& aArray) const;
 
