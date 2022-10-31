@@ -763,6 +763,28 @@ Relation RemoteAccessibleBase<Derived>::RelationByType(
 
   if (aType == RelationType::MEMBER_OF) {
     Relation rel = Relation();
+    // HTML radio buttons with cached names should be grouped.
+    if (IsHTMLRadioButton()) {
+      auto maybeName =
+          mCachedFields->GetAttribute<nsString>(nsGkAtoms::radioLabel);
+      if (!maybeName) {
+        return rel;
+      }
+
+      RemoteAccessible* ancestor = RemoteParent();
+      while (ancestor && ancestor->Role() != roles::FORM && ancestor != mDoc) {
+        ancestor = ancestor->RemoteParent();
+      }
+      Pivot p = Pivot(ancestor);
+      PivotRadioNameRule rule(*maybeName);
+      Accessible* match = p.Next(ancestor, rule);
+      while (match) {
+        rel.AppendTarget(match->AsRemote());
+        match = p.Next(match, rule);
+      }
+      return rel;
+    }
+
     if (IsARIARole(nsGkAtoms::radio)) {
       // ARIA radio buttons should be grouped by their radio group
       // parent, if one exists.
