@@ -1939,8 +1939,7 @@
   mirror: always
 
 # Enables the cookie banner cookie injector. The cookie banner cookie injector
-# depends on the above `cookiebanners.service.mode` pref: it would be disabled
-# if the servcie mode is disabled.
+# depends on the `cookiebanners.service.mode` pref above.
 - name: cookiebanners.cookieInjector.enabled
   type: bool
   value: true
@@ -1956,11 +1955,10 @@
   mirror: always
 
 # Enables the cookie banner auto clicking. The cookie banner auto clicking
-# depends on the above `cookiebanners.service.mode` pref: it would be disabled
-# if the servcie mode is disabled.
+# depends on the `cookiebanners.service.mode` pref above.
 - name: cookiebanners.bannerClicking.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # The maximum time in ms for detecting banner and button elements for cookie
