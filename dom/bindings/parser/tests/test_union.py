@@ -3,6 +3,8 @@ import itertools
 import string
 
 # We'd like to use itertools.chain but it's 2.6 or higher.
+
+
 def chain(*iterables):
     # chain('ABC', 'DEF') --> A B C D E F
     for it in iterables:

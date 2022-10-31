@@ -286,27 +286,60 @@ class Configuration(DescriptorProvider):
                 curr = self.descriptorsByFile.get(val, [])
                 continue
             elif key == "hasInterfaceObject":
-                getter = lambda x: x.interface.hasInterfaceObject()
+
+                def getter(x):
+                    return x.interface.hasInterfaceObject()
+
             elif key == "hasInterfacePrototypeObject":
-                getter = lambda x: x.interface.hasInterfacePrototypeObject()
+
+                def getter(x):
+                    return x.interface.hasInterfacePrototypeObject()
+
             elif key == "hasInterfaceOrInterfacePrototypeObject":
-                getter = lambda x: x.hasInterfaceOrInterfacePrototypeObject()
+
+                def getter(x):
+                    return x.hasInterfaceOrInterfacePrototypeObject()
+
             elif key == "isCallback":
-                getter = lambda x: x.interface.isCallback()
+
+                def getter(x):
+                    return x.interface.isCallback()
+
             elif key == "isJSImplemented":
-                getter = lambda x: x.interface.isJSImplemented()
+
+                def getter(x):
+                    return x.interface.isJSImplemented()
+
             elif key == "isExposedInAnyWorker":
-                getter = lambda x: x.interface.isExposedInAnyWorker()
+
+                def getter(x):
+                    return x.interface.isExposedInAnyWorker()
+
             elif key == "isExposedInWorkerDebugger":
-                getter = lambda x: x.interface.isExposedInWorkerDebugger()
+
+                def getter(x):
+                    return x.interface.isExposedInWorkerDebugger()
+
             elif key == "isExposedInAnyWorklet":
-                getter = lambda x: x.interface.isExposedInAnyWorklet()
+
+                def getter(x):
+                    return x.interface.isExposedInAnyWorklet()
+
             elif key == "isExposedInWindow":
-                getter = lambda x: x.interface.isExposedInWindow()
+
+                def getter(x):
+                    return x.interface.isExposedInWindow()
+
             elif key == "isExposedInShadowRealms":
-                getter = lambda x: x.interface.isExposedInShadowRealms()
+
+                def getter(x):
+                    return x.interface.isExposedInShadowRealms()
+
             elif key == "isSerializable":
-                getter = lambda x: x.interface.isSerializable()
+
+                def getter(x):
+                    return x.interface.isSerializable()
+
             else:
                 # Have to watch out: just closing over "key" is not enough,
                 # since we're about to mutate its value
