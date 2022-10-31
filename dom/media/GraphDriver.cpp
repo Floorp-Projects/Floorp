@@ -17,7 +17,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "CubebDeviceEnumerator.h"
 #include "MediaTrackGraphImpl.h"
-#include "AudioThreadRegistry.h"
+#include "CallbackThreadRegistry.h"
 #include "Tracing.h"
 
 #ifdef MOZ_WEBRTC
@@ -850,7 +850,8 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
                                        AudioDataValue* aOutputBuffer,
                                        long aFrames) {
   if (!mSandboxed && CheckThreadIdChanged()) {
-    CubebUtils::GetAudioThreadRegistry()->Register(mAudioThreadId);
+    CallbackThreadRegistry::Get()->Register(mAudioThreadId,
+                                            "NativeAudioCallback");
   }
 
   if (mAudioStreamState.compareExchange(AudioStreamState::Pending,
@@ -876,7 +877,7 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     // We're supposed to stop.
     PodZero(aOutputBuffer, aFrames * mOutputChannelCount);
     if (!mSandboxed) {
-      CubebUtils::GetAudioThreadRegistry()->Unregister(mAudioThreadId);
+      CallbackThreadRegistry::Get()->Unregister(mAudioThreadId);
     }
     return aFrames - 1;
   }
@@ -998,7 +999,7 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     // Update the flag before handing over the graph and going to drain.
     mAudioStreamState = AudioStreamState::Stopping;
     if (!mSandboxed) {
-      CubebUtils::GetAudioThreadRegistry()->Unregister(mAudioThreadId);
+      CallbackThreadRegistry::Get()->Unregister(mAudioThreadId);
     }
     return aFrames - 1;
   }
@@ -1015,7 +1016,7 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     nextDriver->SetState(mIterationStart, mIterationEnd, mStateComputedTime);
     nextDriver->Start();
     if (!mSandboxed) {
-      CubebUtils::GetAudioThreadRegistry()->Unregister(mAudioThreadId);
+      CallbackThreadRegistry::Get()->Unregister(mAudioThreadId);
     }
     // Returning less than aFrames starts the draining and eventually stops the
     // audio thread. This function will never get called again.

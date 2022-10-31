@@ -27,7 +27,7 @@
 #endif
 #include "Tracing.h"
 #include "webaudio/blink/DenormalDisabler.h"
-#include "AudioThreadRegistry.h"
+#include "CallbackThreadRegistry.h"
 #include "mozilla/StaticPrefs_media.h"
 
 // Use abort() instead of exception in SoundTouch.
@@ -594,7 +594,8 @@ void AudioStream::UpdatePlaybackRateIfNeeded() {
 
 long AudioStream::DataCallback(void* aBuffer, long aFrames) {
   if (CheckThreadIdChanged() && !mSandboxed) {
-    CubebUtils::GetAudioThreadRegistry()->Register(mAudioThreadId);
+    CallbackThreadRegistry::Get()->Register(mAudioThreadId,
+                                            "NativeAudioCallback");
   }
   WebCore::DenormalDisabler disabler;
   if (!mCallbacksStarted) {
@@ -654,7 +655,7 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
                   aFrames * mOutChannels);
 
   if (!mSandboxed && writer.Available() != 0) {
-    CubebUtils::GetAudioThreadRegistry()->Unregister(mAudioThreadId);
+    CallbackThreadRegistry::Get()->Unregister(mAudioThreadId);
   }
   return aFrames - writer.Available();
 }
