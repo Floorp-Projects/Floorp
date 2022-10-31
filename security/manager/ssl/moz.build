@@ -13,6 +13,7 @@ if (CONFIG["OS_ARCH"] == "WINNT" and CONFIG["CPU_ARCH"] != "aarch64") or CONFIG[
     DIRS += ["osclientcerts"]
 
 DIRS += ["ipcclientcerts"]
+DIRS += ["builtins"]
 
 TEST_DIRS += ["tests"]
 

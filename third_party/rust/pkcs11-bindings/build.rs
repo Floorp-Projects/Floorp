@@ -17,7 +17,7 @@ impl ParseCallbacks for PKCS11TypesParseCallbacks {
     }
 
     fn int_macro(&self, name: &str, _value: i64) -> Option<IntKind> {
-        if name == "CK_TRUE" {
+        if name == "CK_TRUE" || name == "CK_FALSE" {
             Some(IntKind::U8)
         } else {
             Some(IntKind::ULong)
@@ -76,7 +76,10 @@ fn main() {
         .allowlist_type("CK_KEY_TYPE")
         .allowlist_type("CK_C_INITIALIZE_ARGS_PTR")
         .allowlist_var("CK_TRUE")
+        .allowlist_var("CK_FALSE")
+        .allowlist_var("CK_UNAVAILABLE_INFORMATION")
         .allowlist_var("CKA_.*")
+        .allowlist_var("CKC_.*")
         .allowlist_var("CKF_.*")
         .allowlist_var("CKK_.*")
         .allowlist_var("CKM_.*")
