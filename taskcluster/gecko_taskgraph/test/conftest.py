@@ -158,6 +158,7 @@ def maketgg(monkeypatch):
             {
                 "_kinds": kinds,
                 "backstop": False,
+                "enable_always_target": False,
                 "target_tasks_method": "test_method",
                 "test_manifest_loader": "default",
                 "try_mode": None,

@@ -359,7 +359,7 @@ class TaskGraphGenerator:
             if t.attributes["kind"] == "docker-image"
         }
         # include all tasks with `always_target` set
-        if parameters["tasks_for"] == "hg-push":
+        if parameters["enable_always_target"]:
             always_target_tasks = {
                 t.label
                 for t in full_task_graph.tasks.values()
