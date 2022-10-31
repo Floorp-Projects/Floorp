@@ -3070,7 +3070,11 @@ menuitem[id="placesContext_new:separator"] {
     #identity-box[pageproxystate="valid"].extensionPage>.identity-box-button:not(:hover, [open]))::after {
     opacity: 0.375;
   }
-    
+
   :root:not([lwtheme-mozlightdark], [style*="--lwt-accent-color: rgb(28, 27, 34); --lwt-text-color: rgba(251, 251, 254);"]) #TabsToolbar[brighttext] #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected="true"], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
     box-shadow: none !important;
+  }
+
+  #tab-icon-image{
+    opacity: 1 !important;
   }

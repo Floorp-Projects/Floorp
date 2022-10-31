@@ -1189,6 +1189,10 @@ SearchService.prototype = {
       { webExtension: { id: "google@search.mozilla.org" }, orderHint: 100 },
       { webExtension: { id: "frea@search.mozilla.org" }, orderHint: 90 },
       { webExtension: { id: "ddg@search.mozilla.org" }, orderHint: 80 },
+      { webExtension: { id: "startpage@search.mozilla.org" }, orderHint: 70 },
+      { webExtension: { id: "bing@search.mozilla.org" }, orderHint: 60 },
+      { webExtension: { id: "yahoo-jp@search.mozilla.org" }, orderHint: 50 },
+      { webExtension: { id: "wikipedia@search.mozilla.org" }, orderHint: 40 },
     ]
 
     // 参考

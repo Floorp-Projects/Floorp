@@ -281,23 +281,23 @@ lepton-mode =
 autohide-preference = Auto hide elements
 
 floorp-lepton-enable-tab-autohide =
-    .label = Enable Auto hide Tabbar
+    .label = Auto hide tabbar
 floorp-lepton-enable-navbar-autohide =
-    .label = Enable Auto hide navbar
+    .label = Auto hide navbar
 floorp-lepton-enable-sidebar-autohide =
-    .label = Enable Auto hide sidebar
+    .label = Auto hide sidebar
 floorp-lepton-enable-urlbar-autohide =
-    .label = Enable Auto hide urlbar
+    .label = Auto hide URLBar
 floorp-lepton-enable-back-button-autohide =
-    .label = Enable auto hide back button
+    .label = Auto hide back button
 floorp-lepton-enable-forward-button-autohide =
-    .label = Enable Auto hide forward button
+    .label = Auto hide forward button
 floorp-lepton-enable-page-action-button-autohide =
-    .label = Enable Auto hide addressbar addon action button
+    .label = Auto hide action button on addressbar
 floorp-lepton-enable-toolbar-overlap =
     .label = Enable Toolbar overlay
 floorp-lepton-enable-toolbar-overlap-allow-layout-shift-autohide =
-    .label = Enable toolbar auto hide when in ltr content
+    .label = Auto-hide toolbar when displaying "ltr" content
 
 hide-preference = Manage display elements
 
@@ -310,7 +310,7 @@ floorp-lepton-enable-navbar-hide =
 floorp-lepton-enable-sidebar_header-hide =
     .label = Hide Sidebar Header
 floorp-lepton-enable-urlbar_iconbox-hide =
-    .label = Hide urlbar icons
+    .label = Hide URLBar icons
 floorp-lepton-enable-bookmarkbar_icon-hide =
     .label = Hide bookmarks-bar icons
 floorp-lepton-enable-bookmarkbar_label-hide =
@@ -323,7 +323,7 @@ positon-preferences = Position adjustment
 floorp-lepton-enable-centered-tab =
     .label = Centered Tab label
 floorp-lepton-enable-centered-urlbar =
-    .label = Centered urlbar
+    .label = Centered URLBar
 floorp-lepton-enable-centered-bookmarkbar =
     .label = Centered bookmarkbar
 
@@ -334,7 +334,7 @@ floorp-lepton-enable-urlbar-icon-move-to-left =
 floorp-lepton-enable-urlname-go_button_when_typing =
     .label = When typing, reduce the urlbar space and show a Go Button
 floorp-lepton-enable-always-show-page_action =
-    .label = Reduce the urlbar space and always show  addressbar addon action button
+    .label = Reduce the urlbar space and always show the addon action button
 
 tabbar-preferences = Tabbar
 
@@ -410,6 +410,9 @@ sidebar-preferences-button =
 
 sidebar-keepWidth-button =
   .tooltiptext = Keep This Panel Width
+
+sidebar2-keep-width-for-global =
+  .label = Set the Current Panel Size to All Webpanels that Do not have a Unique size
 
 #################################################################### menu panel ############################################################
 

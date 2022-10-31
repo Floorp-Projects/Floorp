@@ -63,7 +63,6 @@ jobs:
         key: ${{ runner.os }}
     - name: Create environment 🌲
       run: |
-
         mkdir -p /home/runner/work/win-cross
         git clone --depth 1 https://github.com/Floorp-Projects/l10n-central.git
         if [ ! -f /home/runner/work/wasi-sysroot-15.0.tar.gz ]; then
@@ -72,21 +71,18 @@ jobs:
                tar xzf /home/runner/work/wasi-sysroot-15.0.tar.gz -C /home/runner/work
             fi
         fi
-
         if [ ! -f /home/runner/work/liblowercase.tar.xz ]; then
             aria2c  -x5 -d /home/runner/work https://firefoxci.taskcluster-artifacts.net/drVtpuFHRiWIOId3mkNy1Q/0/public/build/liblowercase.tar.xz
             if [ ! -d /home/runner/work/win-cross/liblowercase ]; then
                 tar xJf /home/runner/work/liblowercase.tar.xz -C /home/runner/work/win-cross
             fi
         fi
-
         if [ ! -f /home/runner/work/wine.tar.zst ]; then
             aria2c  -x5 -d /home/runner/work https://firefoxci.taskcluster-artifacts.net/CMNlM0vLSlGmZ4gzVFVu1w/0/public/build/wine.tar.zst
             if [ ! -d /home/runner/work/win-cross/wine ]; then
                 zstd -dc /home/runner/work/wine.tar.zst | tar -xf - -C /home/runner/work/win-cross
             fi
         fi
-
         if [ ! -f /home/runner/work/clang.tar.zst ]; then
             aria2c  -x5 -d /home/runner/work https://firefoxci.taskcluster-artifacts.net/Eej8-tTDT0WSwK-h15yyEQ/0/public/build/clang.tar.zst
             if [ ! -d /home/runner/work/win-cross/clang ]; then
@@ -94,7 +90,6 @@ jobs:
                 sed -i '16c #if !__STDC_HOSTED__ && __has_include_next(<stdatomic.h>)' /home/runner/work/win-cross/clang/lib/clang/13.0.1/include/stdatomic.h
             fi
         fi
-
         if [ ! -d "/home/runner/work/win-cross/dia sdk" ]; then
             rm -f vsdownload.py
             aria2c  -x5 -d /home/runner/work https://raw.githubusercontent.com/Ablaze-MIRAI/vsdownload/main/vsdownload.py
@@ -124,7 +119,6 @@ jobs:
         fi
         chmod -R 777 /home/runner/work/win-cross
         sed -i '76c //const uint64_t ROOT_CLIP_CHAIN = ~0;' /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/gfx/webrender_bindings/webrender_ffi.h
-
         tool_msvc_v=$(ls /home/runner/work/win-cross/vc/tools/msvc | grep "14\..*")
         echo ${tool_msvc_v}
         red_msvc_v=$(ls /home/runner/work/win-cross/vc/redist/msvc | grep "14\..*")
@@ -138,7 +132,6 @@ jobs:
         echo 'export WINDOWSSDKDIR="${TOOLS}/kits/10"' >> mozconfig
         echo "EXTRA_PATH=\"\${TOOLS}/clang/bin:\${TOOLS}/vc/tools/msvc/${tool_msvc_v}/bin/hostx64/x64:\"" >> mozconfig
         echo 'X=$(($(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)))' >> mozconfig
-
         echo 'export CC="${TOOLS}/clang/bin/clang-cl"' >> mozconfig
         echo 'export CXX="${TOOLS}/clang/bin/clang-cl"' >> mozconfig
         echo 'export DIA_SDK_PATH="${TOOLS}/dia sdk"' >> mozconfig
@@ -152,7 +145,6 @@ jobs:
         echo "export WIN_UCRT_REDIST_DIR="\${WINDOWSSDKDIR}/redist/${red_kit_v}/ucrt/dlls/x64"" >> mozconfig
         echo 'export WINE="${TOOLS}/wine/bin/wine64"' >> mozconfig
         echo 'export WINEDEBUG=-all' >> mozconfig
-
         echo 'mk_add_options "export LD_PRELOAD=${TOOLS}/liblowercase/liblowercase.so"' >> mozconfig
         echo 'mk_add_options "export LOWERCASE_DIRS=${TOOLS}"' >> mozconfig
         echo 'mk_add_options "export PATH=$EXTRA_PATH$PATH"' >> mozconfig
@@ -191,13 +183,9 @@ jobs:
         echo 'ac_add_options --with-mozilla-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-mozilla-key' >> mozconfig
         echo 'ac_add_options --with-google-safebrowsing-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-safe-browsing-key' >> mozconfig
         echo 'ac_add_options --with-google-location-service-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-location-service-key' >> mozconfig
-
-
         echo 'ac_add_options --target=x86_64-pc-mingw32' >> mozconfig
-
         echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
         echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
-
         ./mach bootstrap
         source $HOME/.cargo/env
         cargo install sccache
