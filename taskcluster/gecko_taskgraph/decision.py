@@ -52,6 +52,7 @@ ARTIFACTS_DIR = "artifacts"
 # See `taskcluster/docs/parameters.rst` for information on parameters.
 PER_PROJECT_PARAMETERS = {
     "try": {
+        "enable_always_target": True,
         "target_tasks_method": "try_tasks",
     },
     "kaios-try": {
@@ -336,6 +337,7 @@ def get_decision_parameters(graph_config, options):
     parameters["filters"] = [
         "target_tasks_method",
     ]
+    parameters["enable_always_target"] = False
     parameters["existing_tasks"] = {}
     parameters["do_not_optimize"] = []
     parameters["build_number"] = 1

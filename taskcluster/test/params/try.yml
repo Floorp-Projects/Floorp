@@ -6,6 +6,7 @@ app_version: 60.0a1
 version: 60.0a1
 next_version: null
 do_not_optimize: []
+enable_always_target: true
 existing_tasks: {}
 filters:
     - target_tasks_method

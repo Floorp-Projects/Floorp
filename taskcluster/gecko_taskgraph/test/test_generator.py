@@ -90,7 +90,7 @@ def test_always_target_tasks(maketgg):
                 },
             ),
         ],
-        "params": {"optimize_target_tasks": False},
+        "params": {"optimize_target_tasks": False, "enable_always_target": True},
     }
     tgg = maketgg(**tgg_args)
     assert sorted(tgg.target_task_set.tasks.keys()) == sorted(
