@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: "Create Release"
-        uses: mozilla-mobile/relbot@2.1.0
+        uses: mozilla-mobile/relbot@2.2.0
         if: github.repository == 'mozilla-mobile/firefox-android'
         with:
           project: android-components
