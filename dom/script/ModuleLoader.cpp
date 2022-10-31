@@ -172,7 +172,7 @@ nsresult ModuleLoader::CompileFetchedModule(
   }
 
   if (!nsJSUtils::IsScriptable(aGlobal)) {
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   RefPtr<JS::Stencil> stencil;

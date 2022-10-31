@@ -546,6 +546,12 @@ nsresult ModuleLoaderBase::OnFetchComplete(ModuleLoadRequest* aRequest,
   if (NS_SUCCEEDED(rv)) {
     rv = CreateModuleScript(aRequest);
 
+    // If a module script was created, it should either have a module record
+    // object or a parse error.
+    if (ModuleScript* ms = aRequest->mModuleScript) {
+      MOZ_DIAGNOSTIC_ASSERT(bool(ms->ModuleRecord()) != ms->HasParseError());
+    }
+
     aRequest->ClearScriptSource();
 
     if (NS_FAILED(rv)) {
@@ -590,7 +596,7 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
       rv = CompileFetchedModule(cx, global, options, aRequest, &module);
     }
 
-    MOZ_ASSERT(NS_SUCCEEDED(rv) == (module != nullptr));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv) == (module != nullptr));
 
     if (module) {
       JS::RootedValue privateValue(cx);
@@ -611,9 +617,9 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
       LOG(("ScriptLoadRequest (%p):   compilation failed (%d)", aRequest,
            unsigned(rv)));
 
-      MOZ_ASSERT(jsapi.HasException());
       JS::Rooted<JS::Value> error(cx);
-      if (!jsapi.StealException(&error)) {
+      if (!jsapi.HasException() || !jsapi.StealException(&error) ||
+          error.isUndefined()) {
         aRequest->mModuleScript = nullptr;
         return NS_ERROR_FAILURE;
       }
