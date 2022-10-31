@@ -31,7 +31,7 @@ add_setup(async function() {
     Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
-  MerinoTestUtils.server.start();
+  await MerinoTestUtils.server.start();
 
   registerCleanupFunction(async () => {
     await Services.search.setDefault(

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<script>
+
+window.addEventListener("load", function() {
+    document.documentElement.style.fontSize = "70%";
+    document.documentElement.setAttribute("transform", "scale(2)");
+    var filt = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+    filt.style.borderWidth = "2rem";
+    document.documentElement.appendChild(filt);
+}, false);
+
+</script>
+</svg>

@@ -6,6 +6,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
 
@@ -299,10 +300,12 @@ class MockMerinoServer {
    * `stop()` yourself because it will automatically be called as a cleanup
    * function. Otherwise you'll need to call `stop()`.
    */
-  start() {
+  async start() {
     if (this.#url) {
       return;
     }
+
+    this.info("MockMerinoServer starting");
 
     this.#httpServer.start(-1);
     this.#url = new URL(this.#baseURL);
@@ -312,6 +315,20 @@ class MockMerinoServer {
     lazy.UrlbarPrefs.set("merino.endpointURL", this.#url.toString());
 
     this.registerCleanupFunction?.(() => this.stop());
+
+    // Wait for the server to actually start serving. In TV tests, where the
+    // server is created over and over again, sometimes it doesn't seem to be
+    // ready after being recreated even after `#httpServer.start()` is called.
+    this.info("MockMerinoServer waiting to start serving...");
+    this.reset();
+    let suggestion;
+    while (!suggestion) {
+      let response = await fetch(this.#url);
+      let body = await response?.json();
+      suggestion = body?.suggestions?.[0];
+    }
+    this.reset();
+    this.info("MockMerinoServer is now serving");
   }
 
   /**
@@ -321,6 +338,10 @@ class MockMerinoServer {
     if (!this.#url) {
       return;
     }
+
+    // `uninit()` may have already been called by this point and removed
+    // `this.info()`, so don't assume it's defined.
+    this.info?.("MockMerinoServer stopping");
 
     // Cancel delayed-response timers and resolve their promises. Otherwise, if
     // a test awaits this method before finishing, it will hang until the timers
@@ -334,6 +355,8 @@ class MockMerinoServer {
     await this.#httpServer.stop();
     this.#url = null;
     lazy.UrlbarPrefs.set("merino.endpointURL", this._originalEndpointURL);
+
+    this.info?.("MockMerinoServer is now stopped");
   }
 
   /**
@@ -481,8 +504,11 @@ class MockMerinoServer {
    *
    * @returns {Promise}
    */
-  async waitForNextRequest() {
-    await new Promise(r => this.#nextRequestResolves.push(r));
+  waitForNextRequest() {
+    if (!this.#nextRequestDeferred) {
+      this.#nextRequestDeferred = lazy.PromiseUtils.defer();
+    }
+    return this.#nextRequestDeferred.promise;
   }
 
   /**
@@ -494,14 +520,21 @@ class MockMerinoServer {
    *   Response.
    */
   async #handleRequest(httpRequest, httpResponse) {
+    this.info(
+      "MockMerinoServer received request with query string: " +
+        JSON.stringify(httpRequest.queryString)
+    );
+    this.info(
+      "MockMerinoServer replying with response: " +
+        JSON.stringify(this.response)
+    );
+
     // Add the request to the list of received requests.
     this.#requests.push(httpRequest);
 
     // Resolve promises waiting on the next request.
-    while (this.#nextRequestResolves.length) {
-      let resolve = this.#nextRequestResolves.shift();
-      resolve();
-    }
+    this.#nextRequestDeferred?.resolve();
+    this.#nextRequestDeferred = null;
 
     // Now set up and finish the response.
     httpResponse.processAsync();
@@ -547,6 +580,6 @@ class MockMerinoServer {
   #baseURL = null;
   #response = null;
   #requests = [];
-  #nextRequestResolves = [];
+  #nextRequestDeferred = null;
   #delayedResponseRecords = new Set();
 }
