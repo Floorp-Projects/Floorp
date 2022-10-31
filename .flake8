@@ -4,7 +4,6 @@ exclude =
     # These paths should be triaged and either fixed or moved to the list below.
     devtools/shared,
     dom/bindings,
-    gfx/tests,
     ipc/ipdl/ipdl,
     layout/base/tests/marionette,
     layout/reftests/border-image,
