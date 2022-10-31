@@ -895,17 +895,8 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
       );
 
       iteratorRecord = {
-        __proto__: null,
-        iterator: UnsafeGetReservedSlot(
-          asyncFromSyncIteratorObject,
-          ASYNC_FROM_SYNC_ITERATOR_OBJECT_ITERATOR_SLOT
-        ),
-        nextMethod: UnsafeGetReservedSlot(
-          asyncFromSyncIteratorObject,
-          ASYNC_FROM_SYNC_ITERATOR_OBJECT_NEXT_METHOD_SLOT
-        ),
-        // https://tc39.es/ecma262/#sec-createasyncfromsynciterator
-        done: false,
+        iterator: asyncFromSyncIteratorObject,
+        nextMethod: asyncFromSyncIteratorObject.next,
       };
     } else {
       // Step 3.j. If iteratorRecord is not undefined, then ...
