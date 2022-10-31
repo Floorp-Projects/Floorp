@@ -866,121 +866,119 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
     let A = IsConstructor(C) ? constructContentFunction(C, C) : [];
 
     // Step 3.g. Let iteratorRecord be undefined.
+    // Step 3.j. If iteratorRecord is not undefined, then ...
+    if (usingAsyncIterator !== undefined || usingSyncIterator !== undefined) {
+      // Note: The published spec as of f6acfc4f0277e625f13fd22068138aec61a12df3
+      //       is incorrect. See https://github.com/tc39/proposal-array-from-async/issues/33
+      //       Here we use the implementation provided by @bakkot in that bug
+      //       in lieu for now; This allows to use a for-await loop below.
 
-    // Step 3.h. If usingAsyncIterator is not undefined, then
-    if (usingAsyncIterator !== undefined) {
+      // Steps 3.h-i are implicit through the for-await loop.
+
+      // Step 3.h. If usingAsyncIterator is not undefined, then
       //     Step 3.h.i. Set iteratorRecord to ? GetIterator(asyncItems, async, usingAsyncIterator).
-    } else if (usingSyncIterator !== undefined) {
       // Step 3.i. Else if usingSyncIterator is not undefined, then
-      //     Step 3.i.i. Set iteratorRecord to ? CreateAsyncFromSyncIterator(GetIterator(asyncItems, sync, usingSyncIterator)).
-    } else {
-      // Step 3.j. If iteratorRecord is not undefined, then ...
-      // Step 3.k. Else, (Reordered)
+      //     Set iteratorRecord to ? CreateAsyncFromSyncIterator(GetIterator(asyncItems, sync, usingSyncIterator)).
 
-      // Step 3.k.i. NOTE: asyncItems is neither an AsyncIterable nor an Iterable so assume it is an array-like object.
-      // Step 3.k.ii. Let arrayLike be ! ToObject(asyncItems).
-      let arrayLike = ToObject(asyncItems);
-
-      // Step 3.k.iii. Let len be ? LengthOfArrayLike(arrayLike).
-      let len = ToLength(arrayLike.length);
-
-      // Step 3.k.iv. If IsConstructor(C) is true, then
-      //     Step 3.k.iv.1. Let A be ? Construct(C, « 𝔽(len) »).
-      // Step 3.k.v. Else,
-      //     Step 3.k.v.1. Let A be ? ArrayCreate(len).
-      // Note: This double construction isn't great, issue is open:
-      // https://github.com/tc39/proposal-array-from-async/issues/35
-      let A = IsConstructor(C)
-        ? constructContentFunction(C, C, len)
-        : std_Array(len);
-
-      // Step 3.k.vi. Let k be 0.
+      // Step 3.j.i. Let k be 0.
       let k = 0;
 
-      // Step 3.k.vii. Repeat, while k < len,
-      while (k < len) {
-        // Step 3.k.vii.1. Let Pk be ! ToString(𝔽(k)).
-        // Step 3.k.vii.2. Let kValue be ? Get(arrayLike, Pk).
-        // Step 3.k.vii.3. Let kValue be ? Await(kValue).
-        let kValue = await arrayLike[k];
+      // Step 3.j.ii. Repeat,
+      for await (let nextValue of allowContentIterWith(
+        asyncItems,
+        usingAsyncIterator,
+        usingSyncIterator
+      )) {
+        // Following in the steps of Array.from, we don't actually implement 3.j.ii.1.
+        // The comment in Array.from also applies here; we should only encounter this
+        // after a huge loop around a proxy
+        // Step 3.j.ii.1. If k ≥ 2**53 - 1, then
+        //     Step 3.j.ii.1.a. Let error be ThrowCompletion(a newly created TypeError object).
+        //     Step 3.j.ii.1.b. Return ? AsyncIteratorClose(iteratorRecord, error).
+        // Step 3.j.ii.2. Let Pk be ! ToString(𝔽(k)).
 
-        // Step 3.k.vii.4. If mapping is true, then
-        //     Step 3.k.vii.4.a. Let mappedValue be ? Call(mapfn, thisArg, « kValue, 𝔽(k) »).
-        //     Step 3.k.vii.4.b. Let mappedValue be ? Await(mappedValue).
-        // Step 3.k.vii.5. Else, let mappedValue be kValue.
-        let mappedValue = mapping
-          ? await callContentFunction(mapfn, thisArg, kValue, k)
-          : kValue;
+        // Step 3.j.ii.3. Let next be ? Await(IteratorStep(iteratorRecord)).
 
-        // Step 3.k.vii.6. Perform ? CreateDataPropertyOrThrow(A, Pk, mappedValue).
+        // Step 3.j.ii.5. Let nextValue be ? IteratorValue(next). (Implicit through the for-await loop).
+
+        // Step 3.j.ii.7. Else, let mappedValue be nextValue. (Reordered)
+        let mappedValue = nextValue;
+
+        // Step 3.j.ii.6. If mapping is true, then
+        if (mapping) {
+          // Step 3.j.ii.6.a. Let mappedValue be Call(mapfn, thisArg, « nextValue, 𝔽(k) »).
+          // Step 3.j.ii.6.b. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
+          //   Abrupt completion will be handled by the for-await loop.
+          mappedValue = callContentFunction(mapfn, thisArg, nextValue, k);
+
+          // Step 3.j.ii.6.c. Set mappedValue to Await(mappedValue).
+          // Step 3.j.ii.6.d. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
+          mappedValue = await mappedValue;
+        }
+
+        // Step 3.j.ii.8. Let defineStatus be CreateDataPropertyOrThrow(A, Pk, mappedValue).
+        // Step 3.j.ii.9. If defineStatus is an abrupt completion, return ? AsyncIteratorClose(iteratorRecord, defineStatus).
         DefineDataProperty(A, k, mappedValue);
 
-        // Step 3.k.vii.7. Set k to k + 1.
+        // Step 3.j.ii.10. Set k to k + 1.
         k = k + 1;
       }
 
-      // Step 3.k.viii. Perform ? Set(A, "length", 𝔽(len), true).
-      A.length = len;
+      // Step 3.j.ii.4. If next is false, then (Reordered)
 
-      // Step 3.k.ix. Return Completion Record { [[Type]]: return, [[Value]]: A, [[Target]]: empty }.
+      // Step 3.j.ii.4.a. Perform ? Set(A, "length", 𝔽(k), true).
+      A.length = k;
+
+      // Step 3.j.ii.4.b. Return Completion Record { [[Type]]: return, [[Value]]: A, [[Target]]: empty }.
       return A;
     }
 
-    // Note: The published spec as of f6acfc4f0277e625f13fd22068138aec61a12df3
-    //       is incorrect. See https://github.com/tc39/proposal-array-from-async/issues/33
-    //       Here we use the implementation provided by @bakkot in that bug
-    //       in lieu for now; This allows to use a for-await loop below.
+    // Step 3.k. Else,
 
-    // Step 3.j.i. Let k be 0.
+    // Step 3.k.i. NOTE: asyncItems is neither an AsyncIterable nor an Iterable so assume it is an array-like object.
+    // Step 3.k.ii. Let arrayLike be ! ToObject(asyncItems).
+    let arrayLike = ToObject(asyncItems);
+
+    // Step 3.k.iii. Let len be ? LengthOfArrayLike(arrayLike).
+    let len = ToLength(arrayLike.length);
+
+    // Step 3.k.iv. If IsConstructor(C) is true, then
+    //     Step 3.k.iv.1. Let A be ? Construct(C, « 𝔽(len) »).
+    // Step 3.k.v. Else,
+    //     Step 3.k.v.1. Let A be ? ArrayCreate(len).
+    // Note: This double construction isn't great, issue is open:
+    // https://github.com/tc39/proposal-array-from-async/issues/35
+    A = IsConstructor(C) ? constructContentFunction(C, C, len) : std_Array(len);
+
+    // Step 3.k.vi. Let k be 0.
     let k = 0;
 
-    // Step 3.j.ii. Repeat,
-    for await (let nextValue of allowContentIterWith(
-      asyncItems,
-      usingAsyncIterator,
-      usingSyncIterator
-    )) {
-      // Following in the steps of Array.from, we don't actually implement 3.j.ii.1.
-      // The comment in Array.from also applies here; we should only encounter this
-      // after a huge loop around a proxy
-      // Step 3.j.ii.1. If k ≥ 2**53 - 1, then
-      //     Step 3.j.ii.1.a. Let error be ThrowCompletion(a newly created TypeError object).
-      //     Step 3.j.ii.1.b. Return ? AsyncIteratorClose(iteratorRecord, error).
-      // Step 3.j.ii.2. Let Pk be ! ToString(𝔽(k)).
+    // Step 3.k.vii. Repeat, while k < len,
+    while (k < len) {
+      // Step 3.k.vii.1. Let Pk be ! ToString(𝔽(k)).
+      // Step 3.k.vii.2. Let kValue be ? Get(arrayLike, Pk).
+      // Step 3.k.vii.3. Let kValue be ? Await(kValue).
+      let kValue = await arrayLike[k];
 
-      // Step 3.j.ii.3. Let next be ? Await(IteratorStep(iteratorRecord)).
+      // Step 3.k.vii.4. If mapping is true, then
+      //     Step 3.k.vii.4.a. Let mappedValue be ? Call(mapfn, thisArg, « kValue, 𝔽(k) »).
+      //     Step 3.k.vii.4.b. Let mappedValue be ? Await(mappedValue).
+      // Step 3.k.vii.5. Else, let mappedValue be kValue.
+      let mappedValue = mapping
+        ? await callContentFunction(mapfn, thisArg, kValue, k)
+        : kValue;
 
-      // Step 3.j.ii.5. Let nextValue be ? IteratorValue(next). (Implicit through the for-await loop).
-
-      // Step 3.j.ii.7. Else, let mappedValue be nextValue. (Reordered)
-      let mappedValue = nextValue;
-
-      // Step 3.j.ii.6. If mapping is true, then
-      if (mapping) {
-        // Step 3.j.ii.6.a. Let mappedValue be Call(mapfn, thisArg, « nextValue, 𝔽(k) »).
-        // Step 3.j.ii.6.b. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
-        //   Abrupt completion will be handled by the for-await loop.
-        mappedValue = callContentFunction(mapfn, thisArg, nextValue, k);
-
-        // Step 3.j.ii.6.c. Set mappedValue to Await(mappedValue).
-        // Step 3.j.ii.6.d. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
-        mappedValue = await mappedValue;
-      }
-
-      // Step 3.j.ii.8. Let defineStatus be CreateDataPropertyOrThrow(A, Pk, mappedValue).
-      // Step 3.j.ii.9. If defineStatus is an abrupt completion, return ? AsyncIteratorClose(iteratorRecord, defineStatus).
+      // Step 3.k.vii.6. Perform ? CreateDataPropertyOrThrow(A, Pk, mappedValue).
       DefineDataProperty(A, k, mappedValue);
 
-      // Step 3.j.ii.10. Set k to k + 1.
+      // Step 3.k.vii.7. Set k to k + 1.
       k = k + 1;
     }
 
-    // Step 3.j.ii.4. If next is false, then (Reordered)
+    // Step 3.k.viii. Perform ? Set(A, "length", 𝔽(len), true).
+    A.length = len;
 
-    // Step 3.j.ii.4.a. Perform ? Set(A, "length", 𝔽(k), true).
-    A.length = k;
-
-    // Step 3.j.ii.4.b. Return Completion Record { [[Type]]: return, [[Value]]: A, [[Target]]: empty }.
+    // Step 3.k.ix. Return Completion Record { [[Type]]: return, [[Value]]: A, [[Target]]: empty }.
     return A;
   };
 
