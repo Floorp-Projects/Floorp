@@ -51,6 +51,7 @@ bool js::GetWrappedValue(JSContext* cx, Realm* callerRealm, Handle<Value> value,
 
 // [[Call]]
 // https://tc39.es/proposal-shadowrealm/#sec-wrapped-function-exotic-objects-call-thisargument-argumentslist
+// https://tc39.es/proposal-shadowrealm/#sec-ordinary-wrapped-function-call
 static bool WrappedFunction_Call(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -59,75 +60,76 @@ static bool WrappedFunction_Call(JSContext* cx, unsigned argc, Value* vp) {
 
   Handle<WrappedFunctionObject*> fun = callee.as<WrappedFunctionObject>();
 
+  // PrepareForWrappedFunctionCall is a no-op in our implementation, because
+  // we've already entered the correct realm.
+  MOZ_ASSERT(cx->realm() == fun->realm());
+
+  // The next steps refer to the OrdinaryWrappedFunctionCall operation.
+
   // 1. Let target be F.[[WrappedTargetFunction]].
   Rooted<JSObject*> target(cx, fun->getTargetFunction());
 
   // 2. Assert: IsCallable(target) is true.
   MOZ_ASSERT(IsCallable(ObjectValue(*target)));
 
-  // 3. Let targetRealm be ? GetFunctionRealm(target).
+  // 3. Let callerRealm be F.[[Realm]].
+  Rooted<Realm*> callerRealm(cx, fun->realm());
+
+  // 4. NOTE: Any exception objects produced after this point are associated
+  //    with callerRealm.
+  //
+  // Implicit in our implementation, because |callerRealm| is already the
+  // current realm.
+
+  // 5. Let targetRealm be ? GetFunctionRealm(target).
   Rooted<Realm*> targetRealm(cx, GetFunctionRealm(cx, target));
   if (!targetRealm) {
     return false;
   }
-  // 4. Let callerRealm be ? GetFunctionRealm(F).
-  Rooted<Realm*> callerRealm(cx, GetFunctionRealm(cx, fun));
-  if (!callerRealm) {
+
+  // 6. Let wrappedArgs be a new empty List.
+  InvokeArgs wrappedArgs(cx);
+  if (!wrappedArgs.init(cx, args.length())) {
     return false;
   }
 
-  // 5. NOTE: Any exception objects produced after this point are associated
-  //    with callerRealm.
+  // 7. For each element arg of argumentsList, do
+  //     a. Let wrappedValue be ? GetWrappedValue(targetRealm, arg).
+  //     b. Append wrappedValue to wrappedArgs.
+  Rooted<Value> element(cx);
+  for (size_t i = 0; i < args.length(); i++) {
+    element = args.get(i);
+    if (!GetWrappedValue(cx, targetRealm, element, &element)) {
+      return false;
+    }
+
+    wrappedArgs[i].set(element);
+  }
+
+  // 8. Let wrappedThisArgument to ? GetWrappedValue(targetRealm,
+  // thisArgument).
+  Rooted<Value> wrappedThisArgument(cx);
+  if (!GetWrappedValue(cx, targetRealm, args.thisv(), &wrappedThisArgument)) {
+    return false;
+  }
+
+  // 9. Let result be the Completion Record of Call(target,
+  //    wrappedThisArgument, wrappedArgs).
+  Rooted<Value> targetValue(cx, ObjectValue(*target));
   Rooted<Value> result(cx);
-  {
-    Rooted<JSObject*> global(cx, callerRealm->maybeGlobal());
-    MOZ_RELEASE_ASSERT(
-        global, "global is null; executing in a realm that's being GC'd?");
-    AutoRealm ar(cx, global);
+  if (!js::Call(cx, targetValue, wrappedThisArgument, wrappedArgs, &result)) {
+    // 11. Else (reordered);
+    //     a. Throw a TypeError exception.
+    ReportPotentiallyDetailedMessage(
+        cx, JSMSG_SHADOW_REALM_WRAPPED_EXECUTION_FAILURE_DETAIL,
+        JSMSG_SHADOW_REALM_WRAPPED_EXECUTION_FAILURE);
+    return false;
+  }
 
-    // 6. Let wrappedArgs be a new empty List.
-    InvokeArgs wrappedArgs(cx);
-    if (!wrappedArgs.init(cx, args.length())) {
-      return false;
-    }
-
-    // 7. For each element arg of argumentsList, do
-    //     a. Let wrappedValue be ? GetWrappedValue(targetRealm, arg).
-    //     b. Append wrappedValue to wrappedArgs.
-    Rooted<Value> element(cx);
-    for (size_t i = 0; i < args.length(); i++) {
-      element = args.get(i);
-      if (!GetWrappedValue(cx, targetRealm, element, &element)) {
-        return false;
-      }
-
-      wrappedArgs[i].set(element);
-    }
-
-    // 8. Let wrappedThisArgument to ? GetWrappedValue(targetRealm,
-    // thisArgument).
-    Rooted<Value> wrappedThisArgument(cx);
-    if (!GetWrappedValue(cx, targetRealm, args.thisv(), &wrappedThisArgument)) {
-      return false;
-    }
-
-    // 9. Let result be the Completion Record of Call(target,
-    //    wrappedThisArgument, wrappedArgs).
-    Rooted<Value> targetValue(cx, ObjectValue(*target));
-    if (!js::Call(cx, targetValue, wrappedThisArgument, wrappedArgs, &result)) {
-      // 11. Else (reordered);
-      //     a. Throw a TypeError exception.
-      ReportPotentiallyDetailedMessage(
-          cx, JSMSG_SHADOW_REALM_WRAPPED_EXECUTION_FAILURE_DETAIL,
-          JSMSG_SHADOW_REALM_WRAPPED_EXECUTION_FAILURE);
-      return false;
-    }
-
-    // 10. If result.[[Type]] is normal or result.[[Type]] is return, then
-    //     a. Return ? GetWrappedValue(callerRealm, result.[[Value]]).
-    if (!GetWrappedValue(cx, callerRealm, result, args.rval())) {
-      return false;
-    }
+  // 10. If result.[[Type]] is normal or result.[[Type]] is return, then
+  //     a. Return ? GetWrappedValue(callerRealm, result.[[Value]]).
+  if (!GetWrappedValue(cx, callerRealm, result, args.rval())) {
+    return false;
   }
 
   return true;
