@@ -575,6 +575,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "builtins-static"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "nom 7.1.1",
+ "pkcs11-bindings",
+ "smallvec",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4094,9 +4104,9 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pkcs11-bindings"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "054f65db435bb7cf99db2f38bbcf568dfa66c342201df54e700c772b178e2f20"
+checksum = "780bf71a814823f87d50b5bfbfd4ba5f2af46819a01f0ac31238f650693eb592"
 dependencies = [
  "bindgen",
 ]
