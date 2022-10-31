@@ -7,6 +7,68 @@
 // occasionally modify their rules (e.g. via the updateSessionRules API).
 const gRuleManagers = [];
 
+/**
+ * Whenever a request occurs, the rules of each RuleManager are matched against
+ * the request to determine the final action to take. The RequestEvaluator class
+ * is responsible for evaluating rules, and its behavior is described below.
+ *
+ * Short version:
+ * Find the highest-priority rule that matches the given request. If the
+ * request is not canceled, all matching allowAllRequests and modifyHeaders
+ * actions are returned.
+ *
+ * Longer version:
+ * Unless stated otherwise, the explanation below describes the behavior within
+ * an extension.
+ * An extension can specify rules, optionally in multiple rulesets. The ability
+ * to have multiple ruleset exists to support bulk updates of rules. Rulesets
+ * are NOT independent - rules from different rulesets can affect each other.
+ *
+ * When multiple rules match, the order between rules are defined as follows:
+ * - Ruleset precedence: session > dynamic > static (order from manifest.json).
+ * - Rules in ruleset precedence: ordered by rule.id, lowest (numeric) ID first.
+ * - Across all rules+rulesets: highest rule.priority (default 1) first,
+ *                              action precedence if rule priority are the same.
+ *
+ * The primary documented way for extensions to describe precedence is by
+ * specifying rule.priority. Between same-priority rules, their precedence is
+ * dependent on the rule action. The ruleset/rule ID precedence is only used to
+ * have a defined ordering if multiple rules have the same priority+action.
+ *
+ * Rule actions have the following order of precedence and meaning:
+ * - "allow" can be used to ignore other same-or-lower-priority rules.
+ * - "allowAllRequests" (for main_frame / sub_frame resourceTypes only) has the
+ *      same effect as allow, but also applies to (future) subresource loads in
+ *      the document (including descendant frames) generated from the request.
+ * - "block" cancels the matched request.
+ * - "upgradeScheme" upgrades the scheme of the request.
+ * - "redirect" redirects the request.
+ * - "modifyHeaders" rewrites request/response headers.
+ *
+ * The matched rules are evaluated in two passes:
+ * 1. findMatchingRules():
+ *    Find the highest-priority rule(s), and choose the action with the highest
+ *    precedence (across all rulesets, any action except modifyHeaders).
+ *    This also accounts for any allowAllRequests from an ancestor frame.
+ *
+ * 2. getMatchingModifyHeadersRules():
+ *    Find matching rules with the "modifyHeaders" action, minus ignored rules.
+ *    Reaching this step implies that the request was not canceled, so either
+ *    the first step did not yield a rule, or the rule action is "allow" or
+ *    "allowAllRequests" (i.e. ignore same-or-lower-priority rules).
+ *
+ * If an extension does not have sufficient permissions for the action, the
+ * resulting action is ignored.
+ *
+ * The above describes the evaluation within one extension. When a sequence of
+ * (multiple) extensions is given, they may return conflicting actions in the
+ * first pass. This is resolved by choosing the action with the following order
+ * of precedence, in RequestEvaluator.evaluateRequest():
+ *  - block
+ *  - redirect / upgradeScheme
+ *  - allow / allowAllRequests
+ **/
+
 // The RuleCondition class represents a rule's "condition" type as described in
 // schemas/declarative_net_request.json. This class exists to allow the JS
 // engine to use one Shape for all Rule instances.
@@ -36,6 +98,48 @@ class Rule {
     this.condition = new RuleCondition(rule.condition);
     this.action = rule.action;
   }
+
+  // The precedence of rules within an extension. This method is frequently
+  // used during the first pass of the RequestEvaluator.
+  actionPrecedence() {
+    switch (this.action.type) {
+      case "allow":
+        return 1; // Highest precedence.
+      case "allowAllRequests":
+        return 2;
+      case "block":
+        return 3;
+      case "upgradeScheme":
+        return 4;
+      case "redirect":
+        return 5;
+      case "modifyHeaders":
+        return 6;
+      default:
+        throw new Error(`Unexpected action type: ${this.action.type}`);
+    }
+  }
+
+  isAllowOrAllowAllRequestsAction() {
+    const type = this.action.type;
+    return type === "allow" || type === "allowAllRequests";
+  }
+}
+
+class Ruleset {
+  /**
+   * @param {string} rulesetId - extension-defined ruleset ID.
+   * @param {integer} rulesetPrecedence
+   * @param {Rule[]} rules - extension-defined rules
+   * @param {RuleManager} ruleManager - owner of this ruleset.
+   */
+  constructor(rulesetId, rulesetPrecedence, rules, ruleManager) {
+    this.id = rulesetId;
+    this.rulesetPrecedence = rulesetPrecedence;
+    this.rules = rules;
+    // For use by MatchedRule.
+    this.ruleManager = ruleManager;
+  }
 }
 
 class RuleValidator {
@@ -50,18 +154,206 @@ class RuleValidator {
     }
   }
 
+  /**
+   * @param {object[]} rules - A list of objects that adhere to the Rule type
+   *    from declarative_net_request.json.
+   */
   addRules(rules) {
     for (const rule of rules) {
       if (this.rulesMap.has(rule.id)) {
         this.#collectInvalidRule(rule, `Duplicate rule ID: ${rule.id}`);
         continue;
       }
-      const newRule = new Rule(rule);
+      // declarative_net_request.json defines basic types, such as the expected
+      // object properties and (primitive) type. Trivial constraints such as
+      // minimum array lengths are also expressed in the schema.
+      // Anything more complex is validated here. In particular, constraints
+      // involving multiple properties (e.g. mutual exclusiveness).
+      //
+      // The following conditions have already been validated by the schema:
+      // - isUrlFilterCaseSensitive (boolean)
+      // - domainType (enum string)
+      // TODO bug 1745759: urlFilter validation
+      // TODO bug 1745760: regexFilter validation
+      if (
+        !this.#checkCondResourceTypes(rule) ||
+        !this.#checkCondRequestMethods(rule) ||
+        !this.#checkCondTabIds(rule) ||
+        !this.#checkAction(rule)
+      ) {
+        continue;
+      }
 
-      // TODO bug 1745758: Need more validation, before rules are evaluated.
+      const newRule = new Rule(rule);
 
       this.rulesMap.set(rule.id, newRule);
     }
+  }
+
+  // Checks: resourceTypes & excludedResourceTypes
+  #checkCondResourceTypes(rule) {
+    const { resourceTypes, excludedResourceTypes } = rule.condition;
+    if (this.#hasOverlap(resourceTypes, excludedResourceTypes)) {
+      this.#collectInvalidRule(
+        rule,
+        "resourceTypes and excludedResourceTypes should not overlap"
+      );
+      return false;
+    }
+    if (rule.action.type === "allowAllRequests") {
+      if (!resourceTypes) {
+        this.#collectInvalidRule(
+          rule,
+          "An allowAllRequests rule must have a non-empty resourceTypes array"
+        );
+        return false;
+      }
+      if (resourceTypes.some(r => r !== "main_frame" && r !== "sub_frame")) {
+        this.#collectInvalidRule(
+          rule,
+          "An allowAllRequests rule may only include main_frame/sub_frame in resourceTypes"
+        );
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Checks: requestMethods & excludedRequestMethods
+  #checkCondRequestMethods(rule) {
+    const { requestMethods, excludedRequestMethods } = rule.condition;
+    if (this.#hasOverlap(requestMethods, excludedRequestMethods)) {
+      this.#collectInvalidRule(
+        rule,
+        "requestMethods and excludedRequestMethods should not overlap"
+      );
+      return false;
+    }
+    const isInvalidRequestMethod = method => method.toLowerCase() !== method;
+    if (
+      requestMethods?.some(isInvalidRequestMethod) ||
+      excludedRequestMethods?.some(isInvalidRequestMethod)
+    ) {
+      this.#collectInvalidRule(rule, "request methods must be in lower case");
+      return false;
+    }
+    return true;
+  }
+
+  // Checks: tabIds & excludedTabIds
+  #checkCondTabIds(rule) {
+    const { tabIds, excludedTabIds } = rule.condition;
+    if (this.#hasOverlap(tabIds, excludedTabIds)) {
+      this.#collectInvalidRule(
+        rule,
+        "tabIds and excludedTabIds should not overlap"
+      );
+      return false;
+    }
+    // TODO bug 1745764 / bug 1745763: after adding support for dynamic/static
+    // rules, validate that we only have a session ruleset here.
+    return true;
+  }
+
+  #checkAction(rule) {
+    switch (rule.action.type) {
+      case "allow":
+      case "allowAllRequests":
+      case "block":
+      case "upgradeScheme":
+        // These actions have no extra properties.
+        break;
+      case "redirect":
+        return this.#checkActionRedirect(rule);
+      case "modifyHeaders":
+        return this.#checkActionModifyHeaders(rule);
+      default:
+        // Other values are not possible because declarative_net_request.json
+        // only accepts the above action types.
+        throw new Error(`Unexpected action type: ${rule.action.type}`);
+    }
+    return true;
+  }
+
+  #checkActionRedirect(rule) {
+    const { extensionPath, url } = rule.action.redirect ?? {};
+    if (!url && extensionPath == null) {
+      this.#collectInvalidRule(
+        rule,
+        "A redirect rule must have a non-empty action.redirect object"
+      );
+      return false;
+    }
+    if (url && extensionPath != null) {
+      this.#collectInvalidRule(
+        rule,
+        "redirect.extensionPath and redirect.url are mutually exclusive"
+      );
+      return false;
+    }
+    if (extensionPath != null && !extensionPath.startsWith("/")) {
+      this.#collectInvalidRule(
+        rule,
+        "redirect.extensionPath should start with a '/'"
+      );
+      return false;
+    }
+    // If specified, the "url" property is described as "format": "url" in the
+    // JSON schema, which ensures that the URL is a canonical form, and that
+    // the extension is allowed to trigger a navigation to the URL.
+    // E.g. javascript: and privileged about:-URLs cannot be navigated to, but
+    // http(s) URLs can (regardless of extension permissions).
+    // data:-URLs are currently blocked due to bug 1622986.
+
+    // TODO bug 1745761: With the redirect action, add schema definitions +
+    // implement rule.action.redirect.transform / regexSubstitution.
+    return true;
+  }
+
+  #checkActionModifyHeaders(rule) {
+    const { requestHeaders, responseHeaders } = rule.action;
+    if (!requestHeaders && !responseHeaders) {
+      this.#collectInvalidRule(
+        rule,
+        "A modifyHeaders rule must have a non-empty requestHeaders or modifyHeaders list"
+      );
+      return false;
+    }
+
+    const isValidModifyHeadersOp = ({ header, operation, value }) => {
+      if (!header) {
+        this.#collectInvalidRule(rule, "header must be non-empty");
+        return false;
+      }
+      if (!value && (operation === "append" || operation === "set")) {
+        this.#collectInvalidRule(
+          rule,
+          "value is required for operations append/set"
+        );
+        return false;
+      }
+      if (value && operation === "remove") {
+        this.#collectInvalidRule(
+          rule,
+          "value must not be provided for operation remove"
+        );
+        return false;
+      }
+      return true;
+    };
+    if (
+      (requestHeaders && !requestHeaders.every(isValidModifyHeadersOp)) ||
+      (responseHeaders && !responseHeaders.every(isValidModifyHeadersOp))
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  // Conditions with a filter and an exclude-filter should reject overlapping
+  // lists, because they can never simultaneously be true.
+  #hasOverlap(arrayA, arrayB) {
+    return arrayA && arrayB && arrayA.some(v => arrayB.includes(v));
   }
 
   #collectInvalidRule(rule, message) {
@@ -77,18 +369,342 @@ class RuleValidator {
   }
 }
 
+/**
+ * Compares two rules to determine the relative order of precedence.
+ * Rules are only comparable if they are from the same extension!
+ *
+ * @param {Rule} ruleA
+ * @param {Rule} ruleB
+ * @param {Ruleset} rulesetA - the ruleset ruleA is part of.
+ * @param {Ruleset} rulesetB - the ruleset ruleB is part of.
+ * @returns {integer}
+ *   0 if equal.
+ *   <0 if ruleA comes before ruleB.
+ *   >0 if ruleA comes after ruleB.
+ */
+function compareRule(ruleA, ruleB, rulesetA, rulesetB) {
+  // Comparators: 0 if equal, >0 if a after b, <0 if a before b.
+  function cmpHighestNumber(a, b) {
+    return a === b ? 0 : b - a;
+  }
+  function cmpLowestNumber(a, b) {
+    return a === b ? 0 : a - b;
+  }
+  return (
+    // All compared operands are non-negative integers.
+    cmpHighestNumber(ruleA.priority, ruleB.priority) ||
+    cmpLowestNumber(ruleA.actionPrecedence(), ruleB.actionPrecedence()) ||
+    // As noted in the big comment at the top of the file, the following two
+    // comparisons only exist in order to have a stable ordering of rules. The
+    // specific comparison is somewhat arbitrary and matches Chrome's behavior.
+    // For context, see https://github.com/w3c/webextensions/issues/280
+    cmpLowestNumber(rulesetA.rulesetPrecedence, rulesetB.rulesetPrecedence) ||
+    cmpLowestNumber(ruleA.id, ruleB.id)
+  );
+}
+
+class MatchedRule {
+  constructor(rule, ruleset) {
+    this.rule = rule;
+    this.ruleset = ruleset;
+  }
+
+  // The RuleManager that generated this MatchedRule.
+  get ruleManager() {
+    return this.ruleset.ruleManager;
+  }
+}
+
+class RequestDetails {
+  /**
+   * @param {nsIURI} requestURI
+   * @param {nsIURI} [initiatorURI]
+   * @param {string} type - ResourceType (MozContentPolicyType).
+   * @param {string} [method] - HTTP method
+   * @param {integer} [tabId]
+   **/
+  constructor({ requestURI, initiatorURI, type, method, tabId }) {
+    this.requestURI = requestURI;
+    this.initiatorURI = initiatorURI;
+    this.type = type;
+    this.method = method;
+    this.tabId = tabId;
+  }
+
+  canExtensionModify(extension) {
+    const policy = extension.policy;
+    return (
+      (!this.initiatorURI || policy.canAccessURI(this.initiatorURI)) &&
+      policy.canAccessURI(this.requestURI)
+    );
+  }
+}
+
+/**
+ * This RequestEvaluator class's logic is documented at the top of this file.
+ */
+class RequestEvaluator {
+  // private constructor, only used by RequestEvaluator.evaluateRequest.
+  constructor(request, ruleManager) {
+    this.req = request;
+    this.ruleManager = ruleManager;
+    this.canModify = request.canExtensionModify(ruleManager.extension);
+
+    // These values are initialized by findMatchingRules():
+    this.matchedRule = null;
+    this.matchedModifyHeadersRules = [];
+    this.findMatchingRules();
+  }
+
+  /**
+   * Finds the matched rules for the given request and extensions,
+   * according to the logic documented at the top of this file.
+   *
+   * @param {RequestDetails} request
+   * @param {RuleManager[]} ruleManagers
+   *    The list of RuleManagers, ordered by importance of its extension.
+   * @returns {MatchedRule[]}
+   */
+  static evaluateRequest(request, ruleManagers) {
+    // Helper to determine precedence of rules from different extensions.
+    function precedence(matchedRule) {
+      switch (matchedRule.rule.action.type) {
+        case "block":
+          return 1;
+        case "redirect":
+        case "upgradeScheme":
+          return 2;
+        case "allow":
+        case "allowAllRequests":
+          return 3;
+        // case "modifyHeaders": not comparable after the first pass.
+        default:
+          throw new Error(`Unexpected action: ${matchedRule.rule.action.type}`);
+      }
+    }
+
+    let requestEvaluators = [];
+    let finalMatch;
+    let finalAllowAllRequestsMatches = [];
+    for (let ruleManager of ruleManagers) {
+      // Evaluate request with findMatchingRules():
+      const requestEvaluator = new RequestEvaluator(request, ruleManager);
+      // RequestEvaluator may be used after the loop when the request is
+      // accepted, to collect modifyHeaders/allow/allowAllRequests actions.
+      requestEvaluators.push(requestEvaluator);
+      let matchedRule = requestEvaluator.matchedRule;
+      if (matchedRule) {
+        if (matchedRule.rule.action.type === "allowAllRequests") {
+          // Even if a different extension wins the final match, an extension
+          // may want to record the "allowAllRequests" action for the future.
+          finalAllowAllRequestsMatches.push(matchedRule);
+        }
+        if (!finalMatch || precedence(matchedRule) < precedence(finalMatch)) {
+          finalMatch = matchedRule;
+          if (finalMatch.rule.action.type === "block") {
+            break;
+          }
+        }
+      }
+    }
+    if (finalMatch && !finalMatch.rule.isAllowOrAllowAllRequestsAction()) {
+      // Found block/redirect/upgradeScheme, request will be replaced.
+      return [finalMatch];
+    }
+    // Request not canceled, collect all modifyHeaders actions:
+    let matchedRules = requestEvaluators
+      .map(re => re.getMatchingModifyHeadersRules())
+      .flat(1);
+
+    // ... and collect the allowAllRequests actions:
+    if (finalAllowAllRequestsMatches.length) {
+      matchedRules = finalAllowAllRequestsMatches.concat(matchedRules);
+    }
+
+    // ... and collect the "allow" action. At this point, finalMatch could also
+    // be a modifyHeaders or allowAllRequests action, but these would already
+    // have been added to the matchedRules result before.
+    if (finalMatch && finalMatch.rule.action.type === "allow") {
+      matchedRules.unshift(finalMatch);
+    }
+    return matchedRules;
+  }
+
+  /**
+   * Finds the matching rules, as documented in the comment before the class.
+   */
+  findMatchingRules() {
+    if (!this.canModify && !this.ruleManager.hasBlockPermission) {
+      // If the extension cannot apply any action, don't bother.
+      return;
+    }
+
+    // TODO bug 1745761: when the channel/originAttributes is chosen, use
+    // ruleManager.extension to exclude private requests if needed.
+
+    this.#collectMatchInRuleset(this.ruleManager.sessionRules);
+    this.#collectMatchInRuleset(this.ruleManager.dynamicRules);
+    for (let ruleset of this.ruleManager.enabledStaticRules) {
+      this.#collectMatchInRuleset(ruleset);
+    }
+
+    if (this.matchedRule && !this.#isRuleActionAllowed(this.matchedRule.rule)) {
+      this.matchedRule = null;
+      // Note: this.matchedModifyHeadersRules is [] because canModify access is
+      // checked before populating the list.
+    }
+  }
+
+  /**
+   * Retrieves the list of matched modifyHeaders rules that should apply.
+   *
+   * @returns {MatchedRule[]}
+   */
+  getMatchingModifyHeadersRules() {
+    // The minimum priority is 1. Defaulting to 0 = include all.
+    let priorityThreshold = 0;
+    if (this.matchedRule?.rule.isAllowOrAllowAllRequestsAction()) {
+      priorityThreshold = this.matchedRule.rule.priority;
+    }
+    // Note: the result cannot be non-empty if this.matchedRule is a non-allow
+    // action, because if that were to be the case, then the request would have
+    // been canceled, and therefore there would not be any header to modify.
+    // Even if another extension were to override the action, it could only be
+    // any other non-allow action, which would still cancel the request.
+    let matchedRules = this.matchedModifyHeadersRules.filter(matchedRule => {
+      return matchedRule.rule.priority > priorityThreshold;
+    });
+    // Sort output for a deterministic order.
+    // NOTE: Sorting rules at registration (in RuleManagers) would avoid the
+    // need to sort here. Since the number of matched modifyHeaders rules are
+    // expected to be small, we don't bother optimizing.
+    matchedRules.sort((a, b) => {
+      return compareRule(a.rule, b.rule, a.ruleset, b.ruleset);
+    });
+    return matchedRules;
+  }
+
+  #collectMatchInRuleset(ruleset) {
+    for (let rule of ruleset.rules) {
+      if (!this.#matchesRuleCondition(rule.condition)) {
+        continue;
+      }
+      if (rule.action.type === "modifyHeaders") {
+        if (this.canModify) {
+          this.matchedModifyHeadersRules.push(new MatchedRule(rule, ruleset));
+        }
+        continue;
+      }
+      if (
+        this.matchedRule &&
+        compareRule(
+          this.matchedRule.rule,
+          rule,
+          this.matchedRule.ruleset,
+          ruleset
+        ) <= 0
+      ) {
+        continue;
+      }
+      this.matchedRule = new MatchedRule(rule, ruleset);
+    }
+  }
+
+  /**
+   * @param {RuleCondition} cond
+   * @returns {boolean} Whether the condition matched.
+   */
+  #matchesRuleCondition(cond) {
+    if (cond.resourceTypes) {
+      if (!cond.resourceTypes.includes(this.req.type)) {
+        return false;
+      }
+    } else if (cond.excludedResourceTypes) {
+      if (cond.excludedResourceTypes.includes(this.req.type)) {
+        return false;
+      }
+    } else if (this.req.type === "main_frame") {
+      // When resourceTypes/excludedResourceTypes are not specified, the
+      // documented behavior is to ignore main_frame requests.
+      return false;
+    }
+
+    // Check this.req.requestURI:
+    if (cond.urlFilter) {
+      // TODO bug 1745759: Check cond.urlFilter + isUrlFilterCaseSensitive
+    } else if (cond.regexFilter) {
+      // TODO bug 1745760: check cond.regexFilter + isUrlFilterCaseSensitive
+    }
+    // TODO: requestDomains & excludedRequestDomains
+
+    // TODO: initiatorDomains & excludedInitiatorDomains
+
+    // TODO bug 1797408: domainType
+
+    if (cond.requestMethods) {
+      if (!cond.requestMethods.includes(this.req.method)) {
+        return false;
+      }
+    } else if (cond.excludedRequestMethods?.includes(this.req.method)) {
+      return false;
+    }
+
+    if (cond.tabIds) {
+      if (!cond.tabIds.includes(this.req.tabId)) {
+        return false;
+      }
+    } else if (cond.excludedTabIds?.includes(this.req.tabId)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * @param {Rule} rule - The final rule from the first pass.
+   * @returns {boolean} Whether the extension is allowed to execute the rule.
+   */
+  #isRuleActionAllowed(rule) {
+    if (this.canModify) {
+      return true;
+    }
+    switch (rule.action.type) {
+      case "allow":
+      case "allowAllRequests":
+      case "block":
+      case "upgradeScheme":
+        return this.ruleManager.hasBlockPermission;
+      case "redirect":
+        return false;
+      // case "modifyHeaders" is never an action for this.matchedRule.
+      default:
+        throw new Error(`Unexpected action type: ${rule.action.type}`);
+    }
+  }
+}
+
 class RuleManager {
   constructor(extension) {
     this.extension = extension;
-    this.sessionRules = [];
+    this.sessionRules = this.makeRuleset("_session", 1);
+    // TODO bug 1745764: support registration of (persistent) dynamic rules.
+    this.dynamicRules = this.makeRuleset("_dynamic", 2);
+    // TODO bug 1745763: support registration of static rules.
+    this.enabledStaticRules = [];
+
+    this.hasBlockPermission = extension.hasPermission("declarativeNetRequest");
+  }
+
+  makeRuleset(rulesetId, rulesetPrecedence, rules = []) {
+    return new Ruleset(rulesetId, rulesetPrecedence, rules, this);
   }
 
   setSessionRules(validatedSessionRules) {
-    this.sessionRules = validatedSessionRules;
+    this.sessionRules.rules = validatedSessionRules;
   }
 
   getSessionRules() {
-    return this.sessionRules;
+    return this.sessionRules.rules;
   }
 }
 
@@ -96,8 +712,12 @@ function getRuleManager(extension, createIfMissing = true) {
   let ruleManager = gRuleManagers.find(rm => rm.extension === extension);
   if (!ruleManager && createIfMissing) {
     ruleManager = new RuleManager(extension);
+    // The most recently installed extension gets priority, i.e. appears at the
+    // start of the gRuleManagers list. It is not yet possible to determine the
+    // installation time of a given Extension, so currently the last to
+    // instantiate a RuleManager claims the highest priority.
     // TODO bug 1786059: order extensions by "installation time".
-    gRuleManagers.push(ruleManager);
+    gRuleManagers.unshift(ruleManager);
   }
   return ruleManager;
 }
@@ -109,8 +729,26 @@ function clearRuleManager(extension) {
   }
 }
 
+/**
+ * Finds all matching rules for a request, optionally restricted to one
+ * extension.
+ *
+ * @param {object|RequestDetails} request
+ * @param {Extension} [extension]
+ * @returns {MatchedRule[]}
+ **/
+function getMatchedRulesForRequest(request, extension) {
+  let requestDetails = new RequestDetails(request);
+  let ruleManagers = gRuleManagers;
+  if (extension) {
+    ruleManagers = ruleManagers.filter(rm => rm.extension === extension);
+  }
+  return RequestEvaluator.evaluateRequest(requestDetails, ruleManagers);
+}
+
 export const ExtensionDNR = {
   RuleValidator,
   getRuleManager,
   clearRuleManager,
+  getMatchedRulesForRequest,
 };
