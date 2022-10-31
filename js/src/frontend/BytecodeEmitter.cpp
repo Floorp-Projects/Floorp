@@ -5226,7 +5226,7 @@ bool BytecodeEmitter::emitAsyncIterator(
     //              [stack] ITER
     return false;
   }
-  if (!emitCheckIsObj(CheckIsObjectKind::GetIterator)) {
+  if (!emitCheckIsObj(CheckIsObjectKind::GetAsyncIterator)) {
     //              [stack] ITER
     return false;
   }
