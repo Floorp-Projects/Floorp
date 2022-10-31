@@ -353,6 +353,7 @@ WebrtcVideoConduit::WebrtcVideoConduit(
       mSendTransport(this),
       mRecvTransport(this),
       mSendStreamConfig(&mSendTransport),
+      mVideoStreamFactory("WebrtcVideoConduit::mVideoStreamFactory"),
       mRecvStreamConfig(&mRecvTransport) {
   mRecvStreamConfig.rtp.rtcp_event_observer = this;
 }
@@ -1249,11 +1250,12 @@ void WebrtcVideoConduit::DetachRenderer() {
 
 rtc::RefCountedObject<mozilla::VideoStreamFactory>*
 WebrtcVideoConduit::CreateVideoStreamFactory() {
-  mVideoStreamFactory = new rtc::RefCountedObject<VideoStreamFactory>(
+  auto videoStreamFactory = mVideoStreamFactory.Lock();
+  *videoStreamFactory = new rtc::RefCountedObject<VideoStreamFactory>(
       *mCurSendCodecConfig, mControl.mCodecMode, mMinBitrate, mStartBitrate,
       mPrefMaxBitrate, mNegotiatedMaxBitrate, mVideoBroadcaster.wants(),
       mLockScaling);
-  return mVideoStreamFactory.get();
+  return videoStreamFactory->get();
 }
 
 void WebrtcVideoConduit::AddOrUpdateSink(
@@ -1325,7 +1327,9 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
     }
 
     // Check if we need to drop this frame to meet a requested FPS
-    if (mVideoStreamFactory->ShouldDropFrame(aFrame.timestamp_us())) {
+    auto videoStreamFactory = mVideoStreamFactory.Lock();
+    auto& videoStreamFactoryRef = videoStreamFactory.ref();
+    if (videoStreamFactoryRef->ShouldDropFrame(aFrame.timestamp_us())) {
       return kMediaConduitNoError;
     }
   }
