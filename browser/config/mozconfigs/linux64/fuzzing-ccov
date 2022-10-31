@@ -15,5 +15,5 @@ ac_add_options --enable-fuzzing
 # well as for libFuzzer targets. See also bug 1649062.
 ac_add_options --disable-crashreporter
 
-# gold is required for libFuzzer to work properly
-ac_add_options --enable-linker=gold
+# gold or lld is required for libFuzzer to work properly
+ac_add_options --enable-linker=lld
