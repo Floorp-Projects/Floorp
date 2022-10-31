@@ -738,9 +738,8 @@
   --hover-outline: dashed 2px blue;
   --freetext-line-height: 1.35;
   --freetext-padding: 2px;
-  --editorInk-editing-cursor: url(images/cursor-editorInk.svg) 0 16;
-  --editorFreeText-editing-cursor: url(images/toolbarButton-editorFreeText.svg)
-    8 16;
+  --editorFreeText-editing-cursor: text;
+  --editorInk-editing-cursor: url(images/cursor-editorInk.svg) 0 16, pointer;
 }
 
 @media (forced-colors: active) {
@@ -772,11 +771,11 @@
 }
 
 .annotationEditorLayer.freeTextEditing {
-  cursor: var(--editorFreeText-editing-cursor), text;
+  cursor: var(--editorFreeText-editing-cursor);
 }
 
 .annotationEditorLayer.inkEditing {
-  cursor: var(--editorInk-editing-cursor), pointer;
+  cursor: var(--editorInk-editing-cursor);
 }
 
 .annotationEditorLayer .selectedEditor {
@@ -1327,6 +1326,7 @@ body {
 .toolbar select,
 .secondaryToolbar input,
 .secondaryToolbar button,
+.secondaryToolbar a,
 .secondaryToolbar select,
 .editorParamsToolbar input,
 .editorParamsToolbar button,
@@ -1926,7 +1926,7 @@ body {
 }
 
 a.secondaryToolbarButton {
-  padding-top: 6px;
+  padding-top: 5px;
   text-decoration: none;
 }
 a.toolbarButton[href="#"],

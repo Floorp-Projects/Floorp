@@ -49,6 +49,9 @@ class SandboxSupportBase {
     if (typeof callbackId !== "number" || typeof nMilliseconds !== "number") {
      return;
     }
+    if (callbackId === 0) {
+     this.win.clearTimeout(this.timeoutIds.get(callbackId));
+    }
     const id = this.win.setTimeout(() => {
      this.timeoutIds.delete(callbackId);
      this.callSandboxFunction("timeoutCb", {
