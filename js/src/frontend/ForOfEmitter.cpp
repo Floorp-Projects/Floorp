@@ -46,15 +46,12 @@ bool ForOfEmitter::emitInitialize(uint32_t forPos,
   tdzCacheForIteratedValue_.reset();
 
   //                [stack] # if isIteratorMethodOnStack
-  //                [stack] ITERABLE ITERFN
-  //                [stack] # if isIteratorMethodOnStack
+  //                [stack] ITERABLE ITERFN SYNC_ITERFN?
+  //                [stack] # else isIteratorMethodOnStack
   //                [stack] ITERABLE
 
   if (iterKind_ == IteratorKind::Async) {
-    // Don't support isIteratorMethodOnStack for async for now.
-    MOZ_ASSERT(!isIteratorMethodOnStack);
-
-    if (!bce_->emitAsyncIterator(selfHostedIter_)) {
+    if (!bce_->emitAsyncIterator(selfHostedIter_, isIteratorMethodOnStack)) {
       //            [stack] NEXT ITER
       return false;
     }

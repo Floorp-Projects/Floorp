@@ -5140,54 +5140,72 @@ bool BytecodeEmitter::emitIterator(
 }
 
 bool BytecodeEmitter::emitAsyncIterator(
-    SelfHostedIter selfHostedIter /* = SelfHostedIter::Deny */) {
+    SelfHostedIter selfHostedIter /* = SelfHostedIter::Deny */,
+    bool isIteratorMethodOnStack /* = false */) {
   MOZ_ASSERT(selfHostedIter == SelfHostedIter::Allow ||
                  emitterMode != BytecodeEmitter::SelfHosting,
              "[Symbol.asyncIterator]() call is prohibited in self-hosted code "
              "because it can run user-modifiable iteration code");
 
-  // Convert iterable to iterator.
-  if (!emit1(JSOp::Dup)) {
-    //              [stack] OBJ OBJ
-    return false;
-  }
-  if (!emit2(JSOp::Symbol, uint8_t(JS::SymbolCode::asyncIterator))) {
-    //              [stack] OBJ OBJ @@ASYNCITERATOR
-    return false;
-  }
-  if (!emitElemOpBase(JSOp::GetElem)) {
-    //              [stack] OBJ ITERFN
-    return false;
+  if (!isIteratorMethodOnStack) {
+    //              [stack] OBJ
+
+    // Convert iterable to iterator.
+    if (!emit1(JSOp::Dup)) {
+      //            [stack] OBJ OBJ
+      return false;
+    }
+    if (!emit2(JSOp::Symbol, uint8_t(JS::SymbolCode::asyncIterator))) {
+      //            [stack] OBJ OBJ @@ASYNCITERATOR
+      return false;
+    }
+    if (!emitElemOpBase(JSOp::GetElem)) {
+      //            [stack] OBJ ASYNC_ITERFN
+      return false;
+    }
+  } else {
+    //              [stack] OBJ ASYNC_ITERFN SYNC_ITERFN
+
+    if (!emitElemOpBase(JSOp::Swap)) {
+      //            [stack] OBJ SYNC_ITERFN ASYNC_ITERFN
+      return false;
+    }
   }
 
   InternalIfEmitter ifAsyncIterIsUndefined(this);
   if (!emit1(JSOp::IsNullOrUndefined)) {
-    //              [stack] OBJ ITERFN NULL-OR-UNDEF
+    //              [stack] OBJ SYNC_ITERFN? ASYNC_ITERFN NULL-OR-UNDEF
     return false;
   }
   if (!ifAsyncIterIsUndefined.emitThenElse()) {
-    //              [stack] OBJ ITERFN
+    //              [stack] OBJ SYNC_ITERFN? ASYNC_ITERFN
     return false;
   }
 
   if (!emit1(JSOp::Pop)) {
-    //              [stack] OBJ
+    //              [stack] OBJ SYNC_ITERFN?
     return false;
   }
-  if (!emit1(JSOp::Dup)) {
-    //              [stack] OBJ OBJ
-    return false;
+
+  if (!isIteratorMethodOnStack) {
+    if (!emit1(JSOp::Dup)) {
+      //            [stack] OBJ OBJ
+      return false;
+    }
+    if (!emit2(JSOp::Symbol, uint8_t(JS::SymbolCode::iterator))) {
+      //            [stack] OBJ OBJ @@ITERATOR
+      return false;
+    }
+    if (!emitElemOpBase(JSOp::GetElem)) {
+      //            [stack] OBJ SYNC_ITERFN
+      return false;
+    }
+  } else {
+    //              [stack] OBJ SYNC_ITERFN
   }
-  if (!emit2(JSOp::Symbol, uint8_t(JS::SymbolCode::iterator))) {
-    //              [stack] OBJ OBJ @@ITERATOR
-    return false;
-  }
-  if (!emitElemOpBase(JSOp::GetElem)) {
-    //              [stack] OBJ ITERFN
-    return false;
-  }
+
   if (!emit1(JSOp::Swap)) {
-    //              [stack] ITERFN OBJ
+    //              [stack] SYNC_ITERFN OBJ
     return false;
   }
   if (!emitCall(getIterCallOp(JSOp::CallIter, selfHostedIter), 0)) {
@@ -5214,12 +5232,23 @@ bool BytecodeEmitter::emitAsyncIterator(
   }
 
   if (!ifAsyncIterIsUndefined.emitElse()) {
-    //              [stack] OBJ ITERFN
+    //              [stack] OBJ SYNC_ITERFN? ASYNC_ITERFN
     return false;
   }
 
+  if (isIteratorMethodOnStack) {
+    if (!emit1(JSOp::Swap)) {
+      //            [stack] OBJ ASYNC_ITERFN SYNC_ITERFN
+      return false;
+    }
+    if (!emit1(JSOp::Pop)) {
+      //            [stack] OBJ ASYNC_ITERFN
+      return false;
+    }
+  }
+
   if (!emit1(JSOp::Swap)) {
-    //              [stack] ITERFN OBJ
+    //              [stack] ASYNC_ITERFN OBJ
     return false;
   }
   if (!emitCall(getIterCallOp(JSOp::CallIter, selfHostedIter), 0)) {
@@ -5474,9 +5503,21 @@ bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
     // `usingIterator` is the value of `items[Symbol.iterator]`, that's already
     // retrieved.
     ListNode* argsList = &forHeadExpr->as<BinaryNode>().right()->as<ListNode>();
+    MOZ_ASSERT_IF(iterKind == IteratorKind::Sync, argsList->count() == 2);
+    MOZ_ASSERT_IF(iterKind == IteratorKind::Async, argsList->count() == 3);
+
     if (!emitTree(argsList->head()->pn_next)) {
       //            [stack] ITERABLE ITERFN
       return false;
+    }
+
+    // Async iterator has two possible iterators: An async iterator and a sync
+    // iterator.
+    if (iterKind == IteratorKind::Async) {
+      if (!emitTree(argsList->head()->pn_next->pn_next)) {
+        //          [stack] ITERABLE ASYNC_ITERFN SYNC_ITERFN
+        return false;
+      }
     }
 
     isIteratorMethodOnStack = true;
@@ -7240,7 +7281,7 @@ bool BytecodeEmitter::emitSelfHostedAllowContentIter(CallNode* callNode) {
 bool BytecodeEmitter::emitSelfHostedAllowContentIterWith(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  MOZ_ASSERT(argsList->count() == 2);
+  MOZ_ASSERT(argsList->count() == 2 || argsList->count() == 3);
 
   // We're just here as a sentinel. Pass the value through directly.
   return emitTree(argsList->head());
