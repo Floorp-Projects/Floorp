@@ -78,12 +78,6 @@ class WebNotificationTest : BaseSessionTest() {
         assertThat("Source should match", notification.source, equalTo(createTestUrl(HELLO_HTML_PATH)))
     }
 
-    @GeckoSessionTestRule.Setting.List(
-        GeckoSessionTestRule.Setting(
-            key = GeckoSessionTestRule.Setting.Key.USE_PRIVATE_MODE,
-            value = "true"
-        )
-    )
     @Test fun onShowNotification() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.webnotifications.vibrate.enabled" to true))
         val notificationResult = GeckoResult<Void>()
@@ -94,7 +88,6 @@ class WebNotificationTest : BaseSessionTest() {
                 @GeckoSessionTestRule.AssertCalled
                 override fun onShowNotification(notification: WebNotification) {
                     assertNotificationData(notification, requireInteraction)
-                    assertThat("privateBrowsing should match", notification.privateBrowsing, equalTo(true))
                     notificationResult.complete(null)
                 }
         })
@@ -159,7 +152,6 @@ class WebNotificationTest : BaseSessionTest() {
 
         val notification = sessionRule.waitForResult(notificationResult)
         assertNotificationData(notification, requireInteraction)
-        assertThat("privateBrowsing should match", notification.privateBrowsing, equalTo(true))
 
         // Test that we can click from a deserialized notification
         val parcel = Parcel.obtain()
@@ -168,61 +160,6 @@ class WebNotificationTest : BaseSessionTest() {
 
         val deserialized = WebNotification.CREATOR.createFromParcel(parcel)
         assertNotificationData(deserialized, requireInteraction)
-        assertThat("privateBrowsing should match", deserialized.privateBrowsing, equalTo(false))
-
-        deserialized!!.click()
-        assertThat("Promise should have been resolved.", promiseResult.value as Double, equalTo(1.0))
-    }
-
-    @GeckoSessionTestRule.Setting.List(
-        GeckoSessionTestRule.Setting(
-            key = GeckoSessionTestRule.Setting.Key.USE_PRIVATE_MODE,
-            value = "true"
-        )
-    )
-    @Test fun clickPrivateNotificationParceled() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webnotifications.vibrate.enabled" to true))
-        val notificationResult = GeckoResult<WebNotification>()
-        val requireInteraction =
-            sessionRule.getPrefs("dom.webnotifications.requireinteraction.enabled")[0] as Boolean
-
-        sessionRule.delegateDuringNextWait(object : WebNotificationDelegate {
-            @GeckoSessionTestRule.AssertCalled
-            override fun onShowNotification(notification: WebNotification) {
-                notificationResult.complete(notification)
-            }
-        })
-
-        val promiseResult = mainSession.evaluatePromiseJS("""
-            new Promise(resolve => {
-                const notification = new Notification('The Title', {
-                   body: 'The Text',
-                   cookie: 'Cookie',
-                   icon: 'icon.png',
-                   tag: 'Tag',
-                   dir: 'ltr',
-                   lang: 'en-US',
-                   requireInteraction: true,
-                   vibrate: [1,2,3,4]
-                });
-                notification.onclick = function() {
-                    resolve(1);
-                }
-            });
-        """.trimIndent())
-
-        val notification = sessionRule.waitForResult(notificationResult)
-        assertNotificationData(notification, requireInteraction)
-        assertThat("privateBrowsing should match", notification.privateBrowsing, equalTo(true))
-
-        // Test that we can click from a deserialized notification
-        val parcel = Parcel.obtain()
-        notification.writeToParcel(parcel, 0)
-        parcel.setDataPosition(0);
-
-        val deserialized = WebNotification.CREATOR.createFromParcel(parcel)
-        assertNotificationData(deserialized, requireInteraction)
-        assertThat("privateBrowsing should match", deserialized.privateBrowsing, equalTo(true))
 
         deserialized!!.click()
         assertThat("Promise should have been resolved.", promiseResult.value as Double, equalTo(1.0))
