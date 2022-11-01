@@ -6,10 +6,15 @@ package org.mozilla.fenix.components
 
 import android.app.Activity
 import androidx.annotation.VisibleForTesting
+import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.withContext
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.GleanMetrics.ReviewPrompt
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Interface that describes the settings needed to track the Review Prompt.
@@ -50,6 +55,11 @@ class ReviewPromptController(
             flow.addOnCompleteListener {
                 if (it.isSuccessful) {
                     manager.launchReviewFlow(activity, it.result)
+                    recordReviewPromptEvent(
+                        it.result.toString(),
+                        reviewSettings.numberOfAppLaunches,
+                        Date(),
+                    )
                 }
             }
         }
@@ -97,4 +107,45 @@ class ReviewPromptController(
         private const val NUMBER_OF_LAUNCHES_REQUIRED = 5
         private const val NUMBER_OF_MONTHS_TO_PASS = 4
     }
+}
+
+/**
+ * Records a [ReviewPrompt] with the required data.
+ *
+ * **Note:** The docs for [ReviewManager.launchReviewFlow] state 'In some circumstances the review
+ * flow will not be shown to the user, e.g. they have already seen it recently, so do not assume that
+ * calling this method will always display the review dialog.'
+ * However, investigation has shown that a [ReviewInfo] instance with the flag:
+ * - 'isNoOp=true' indicates that the prompt has NOT been displayed.
+ * - 'isNoOp=false' indicates that a prompt has been displayed.
+ * [ReviewManager.launchReviewFlow] will modify the ReviewInfo instance which can be used to determine
+ * which of these flags is present.
+ */
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+fun recordReviewPromptEvent(
+    reviewInfoAsString: String,
+    numberOfAppLaunches: Int,
+    now: Date,
+) {
+    val formattedLocalDatetime =
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(now)
+
+    // The internals of ReviewInfo cannot be accessed directly or cast nicely, so lets simply use
+    // the object as a string.
+    // ReviewInfo is susceptible to changes outside of our control hence the catch-all 'else' statement.
+    val promptWasDisplayed = if (reviewInfoAsString.contains("isNoOp=true")) {
+        "false"
+    } else if (reviewInfoAsString.contains("isNoOp=false")) {
+        "true"
+    } else {
+        "error"
+    }
+
+    ReviewPrompt.promptAttempt.record(
+        ReviewPrompt.PromptAttemptExtra(
+            promptWasDisplayed = promptWasDisplayed,
+            localDatetime = formattedLocalDatetime,
+            numberOfAppLaunches = numberOfAppLaunches,
+        ),
+    )
 }

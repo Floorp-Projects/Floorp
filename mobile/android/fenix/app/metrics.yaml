@@ -8456,3 +8456,31 @@ recent_synced_tabs:
     data_sensitivity:
       - interaction
     expires: 114
+review_prompt:
+  prompt_attempt:
+    type: event
+    description: |
+      Data captured for each attempt to display the review prompt.
+    extra_keys:
+      prompt_was_displayed:
+        description: |
+          Whether the prompt was displayed to the user. Value
+          reported will be: 'true', 'false' or 'error'.
+        type: string
+      local_datetime:
+        description: |
+          The local datetime.
+        type: string
+      number_of_app_launches:
+        description: |
+          The total number of times the app has been launched.
+        type: quantity
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/27472
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/27596
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: 121

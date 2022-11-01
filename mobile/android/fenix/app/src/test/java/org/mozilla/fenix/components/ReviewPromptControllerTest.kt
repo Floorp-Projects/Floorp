@@ -8,14 +8,21 @@ import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
 import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Test
+import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
 import org.junit.Before
+import org.junit.Rule
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.ReviewPrompt
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class TestReviewSettings(
     override var numberOfAppLaunches: Int = 0,
@@ -28,6 +35,9 @@ class TestReviewSettings(
 
 @RunWith(FenixRobolectricTestRunner::class)
 class ReviewPromptControllerTest {
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     private lateinit var reviewManager: ReviewManager
 
@@ -208,9 +218,49 @@ class ReviewPromptControllerTest {
         assertFalse(controller.shouldShowPrompt())
     }
 
+    @Test
+    fun reviewPromptWasDisplayed() {
+        testRecordReviewPromptEventRecordsTheExpectedData("isNoOp=false", "true")
+    }
+
+    @Test
+    fun reviewPromptWasNotDisplayed() {
+        testRecordReviewPromptEventRecordsTheExpectedData("isNoOp=true", "false")
+    }
+
+    @Test
+    fun reviewPromptDisplayStateUnknown() {
+        testRecordReviewPromptEventRecordsTheExpectedData(expected = "error")
+    }
+
+    private fun testRecordReviewPromptEventRecordsTheExpectedData(
+        reviewInfoArg: String = "",
+        expected: String,
+    ) {
+        val numberOfAppLaunches = 1
+        val reviewInfoAsString =
+            "ReviewInfo{pendingIntent=PendingIntent{5b613b1: android.os.BinderProxy@46c8096}, $reviewInfoArg}"
+        val datetime = Date(TEST_TIME_NOW)
+        val formattedNowLocalDatetime = SIMPLE_DATE_FORMAT.format(datetime)
+
+        assertNull(ReviewPrompt.promptAttempt.testGetValue())
+        recordReviewPromptEvent(reviewInfoAsString, numberOfAppLaunches, datetime)
+
+        val reviewPromptData = ReviewPrompt.promptAttempt.testGetValue()!!.last().extra!!
+        assertEquals(expected, reviewPromptData["prompt_was_displayed"])
+        assertEquals(numberOfAppLaunches, reviewPromptData["number_of_app_launches"]!!.toInt())
+        assertEquals(formattedNowLocalDatetime, reviewPromptData["local_datetime"])
+    }
+
     companion object {
         private const val TEST_TIME_NOW = 1598416882805L
         private const val MORE_THAN_4_MONTHS_FROM_TEST_TIME_NOW = 1588048882804L
         private const val LESS_THAN_4_MONTHS_FROM_TEST_TIME_NOW = 1595824882905L
+        private val SIMPLE_DATE_FORMAT by lazy {
+            SimpleDateFormat(
+                "yyyy-MM-dd'T'HH:mm:ss",
+                Locale.getDefault(),
+            )
+        }
     }
 }
