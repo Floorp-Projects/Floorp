@@ -2697,6 +2697,7 @@ struct PreRecordedMetaInformation {
 
   int32_t mProcessInfoCpuCount;
   int32_t mProcessInfoCpuCores;
+  nsAutoCString mProcessInfoCpuName;
 };
 
 // This function should be called out of the profiler lock.
@@ -2787,6 +2788,7 @@ static PreRecordedMetaInformation PreRecordMetaInformation() {
   if (NS_SUCCEEDED(CollectProcessInfo(processInfo))) {
     info.mProcessInfoCpuCount = processInfo.cpuCount;
     info.mProcessInfoCpuCores = processInfo.cpuCores;
+    info.mProcessInfoCpuName = processInfo.cpuName;
   }
 
   return info;
@@ -2909,6 +2911,10 @@ static void StreamMetaJSCustomObject(
                            aPreRecordedMetaInformation.mAppInfoSourceURL);
   }
 
+  if (!aPreRecordedMetaInformation.mProcessInfoCpuName.IsEmpty()) {
+    aWriter.StringProperty("CPUName",
+                           aPreRecordedMetaInformation.mProcessInfoCpuName);
+  }
   if (aPreRecordedMetaInformation.mProcessInfoCpuCores > 0) {
     aWriter.IntProperty("physicalCPUs",
                         aPreRecordedMetaInformation.mProcessInfoCpuCores);
