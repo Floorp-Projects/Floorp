@@ -924,7 +924,7 @@ void nsColumnSetFrame::DrainOverflowColumns() {
     if (overflows) {
       nsContainerFrame::ReparentFrameViewList(*overflows, prev, this);
 
-      mFrames.InsertFrames(this, nullptr, *overflows);
+      mFrames.InsertFrames(this, nullptr, std::move(*overflows));
     }
   }
 

@@ -333,7 +333,7 @@ void nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext) {
       // views need to be reparented.
       nsContainerFrame::ReparentFrameViewList(*overflowFrames, prevInFlow,
                                               this);
-      mFrames.InsertFrames(this, nullptr, *overflowFrames);
+      mFrames.InsertFrames(this, nullptr, std::move(*overflowFrames));
     }
   }
 

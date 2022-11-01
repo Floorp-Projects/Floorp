@@ -58,7 +58,7 @@ void SVGContainerFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
 
-  mFrames.InsertFrames(this, aPrevFrame, aFrameList);
+  mFrames.InsertFrames(this, aPrevFrame, std::move(aFrameList));
 }
 
 void SVGContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {

@@ -10166,7 +10166,7 @@ void nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
       // Take textFrame out of the block's frame list and substitute the
       // letter frame(s) instead.
       aBlockFrames.DestroyFrame(textFrame);
-      aBlockFrames.InsertFrames(nullptr, prevFrame, letterFrames);
+      aBlockFrames.InsertFrames(nullptr, prevFrame, std::move(letterFrames));
     } else {
       // Take the old textFrame out of the inline parent's child list
       RemoveFrame(kPrincipalList, textFrame);

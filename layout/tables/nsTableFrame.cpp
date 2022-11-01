@@ -697,7 +697,7 @@ void nsTableFrame::AppendAnonymousColFrames(
   nsFrameList& cols = aColGroupFrame->GetWritableChildList();
   nsIFrame* oldLastCol = cols.LastChild();
   const nsFrameList::Slice& newCols =
-      cols.InsertFrames(nullptr, oldLastCol, newColFrames);
+      cols.InsertFrames(nullptr, oldLastCol, std::move(newColFrames));
   if (aAddToTable) {
     // get the starting col index in the cache
     int32_t startColIndex;
@@ -1998,7 +1998,8 @@ void nsTableFrame::PushChildren(const RowGroupArray& aRowGroups,
     // When pushing and pulling frames we need to check for whether any
     // views need to be reparented.
     ReparentFrameViewList(frames, this, nextInFlow);
-    nextInFlow->mFrames.InsertFrames(nextInFlow, prevSibling, frames);
+    nextInFlow->mFrames.InsertFrames(nextInFlow, prevSibling,
+                                     std::move(frames));
   } else {
     // Add the frames to our overflow list.
     SetOverflowFrames(std::move(frames));
@@ -2282,7 +2283,7 @@ void nsTableFrame::HomogenousInsertFrames(ChildListID aListID,
     NS_ASSERTION(aListID == kColGroupList, "unexpected child list");
     // Insert the column group frames
     const nsFrameList::Slice& newColgroups =
-        mColGroups.InsertFrames(this, aPrevFrame, aFrameList);
+        mColGroups.InsertFrames(this, aPrevFrame, std::move(aFrameList));
     // find the starting col index for the first new col group
     int32_t startColIndex = 0;
     if (aPrevFrame) {
@@ -2300,14 +2301,14 @@ void nsTableFrame::HomogenousInsertFrames(ChildListID aListID,
     DrainSelfOverflowList();  // ensure aPrevFrame is in mFrames
     // Insert the frames in the sibling chain
     const nsFrameList::Slice& newRowGroups =
-        mFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
+        mFrames.InsertFrames(nullptr, aPrevFrame, std::move(aFrameList));
 
     InsertRowGroups(newRowGroups);
   } else {
     NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
     MOZ_ASSERT_UNREACHABLE("How did we even get here?");
     // Just insert the frame and don't worry about reflowing it
-    mFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
+    mFrames.InsertFrames(nullptr, aPrevFrame, std::move(aFrameList));
     return;
   }
 

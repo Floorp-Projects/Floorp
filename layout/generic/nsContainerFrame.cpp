@@ -143,7 +143,7 @@ void nsContainerFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   }
 
   DrainSelfOverflowList();  // ensure aPrevFrame is in mFrames
-  mFrames.InsertFrames(this, aPrevFrame, aFrameList);
+  mFrames.InsertFrames(this, aPrevFrame, std::move(aFrameList));
 
   if (aListID != kNoReflowPrincipalList) {
     PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
@@ -1546,7 +1546,7 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
     for (nsIFrame* f = aFromChild; f; f = f->GetNextSibling()) {
       nsContainerFrame::ReparentFrameView(f, this, nextInFlow);
     }
-    nextInFlow->mFrames.InsertFrames(nextInFlow, nullptr, tail);
+    nextInFlow->mFrames.InsertFrames(nextInFlow, nullptr, std::move(tail));
   } else {
     // Add the frames to our overflow list
     SetOverflowFrames(std::move(tail));
@@ -2115,7 +2115,7 @@ bool nsContainerFrame::MoveInlineOverflowToChildList(nsIFrame* aLineContainer) {
       nsContainerFrame::ReparentFrameViewList(*prevOverflowFrames, prevInFlow,
                                               this);
       // Prepend overflow frames to the list.
-      mFrames.InsertFrames(this, nullptr, *prevOverflowFrames);
+      mFrames.InsertFrames(this, nullptr, std::move(*prevOverflowFrames));
       result = true;
     }
   }

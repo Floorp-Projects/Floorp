@@ -222,7 +222,7 @@ void nsTableColGroupFrame::InsertFrames(
                "Shouldn't be inserting before a spanned colframe");
 
   const nsFrameList::Slice& newFrames =
-      mFrames.InsertFrames(this, aPrevFrame, aFrameList);
+      mFrames.InsertFrames(this, aPrevFrame, std::move(aFrameList));
   nsIFrame* prevFrame = nsTableFrame::GetFrameAtOrBefore(
       this, aPrevFrame, LayoutFrameType::TableCol);
 

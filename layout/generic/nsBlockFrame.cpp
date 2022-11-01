@@ -5265,7 +5265,7 @@ void nsBlockFrame::PushLines(BlockReflowState& aState,
 #endif
       // Push the floats onto the front of the overflow out-of-flows list
       nsAutoOOFFrameList oofs(this);
-      oofs.mList.InsertFrames(nullptr, nullptr, floats);
+      oofs.mList.InsertFrames(nullptr, nullptr, std::move(floats));
     }
 
     // overflow lines can already exist in some cases, in particular,
@@ -5289,7 +5289,8 @@ void nsBlockFrame::PushLines(BlockReflowState& aState,
                      "unexpected line frames");
       }
       nsFrameList pushedFrames = mFrames.TakeFramesAfter(lineBeforeLastFrame);
-      overflowLines->mFrames.InsertFrames(nullptr, nullptr, pushedFrames);
+      overflowLines->mFrames.InsertFrames(nullptr, nullptr,
+                                          std::move(pushedFrames));
 
       overflowLines->mLines.splice(overflowLines->mLines.begin(), mLines,
                                    overBegin, LinesEnd());
@@ -5366,7 +5367,7 @@ bool nsBlockFrame::DrainOverflowLines() {
         }
         if (!ocContinuations.IsEmpty()) {
           if (nsFrameList* eoc = GetExcessOverflowContainers()) {
-            eoc->InsertFrames(nullptr, nullptr, ocContinuations);
+            eoc->InsertFrames(nullptr, nullptr, std::move(ocContinuations));
           } else {
             SetExcessOverflowContainers(std::move(ocContinuations));
           }
@@ -5388,10 +5389,10 @@ bool nsBlockFrame::DrainOverflowLines() {
           }
         }
         ReparentFrames(oofs.mList, prevBlock, this);
-        mFloats.InsertFrames(nullptr, nullptr, oofs.mList);
+        mFloats.InsertFrames(nullptr, nullptr, std::move(oofs.mList));
         if (!pushedFloats.IsEmpty()) {
           nsFrameList* pf = EnsurePushedFloats();
-          pf->InsertFrames(nullptr, nullptr, pushedFloats);
+          pf->InsertFrames(nullptr, nullptr, std::move(pushedFloats));
         }
       }
 
@@ -5404,7 +5405,7 @@ bool nsBlockFrame::DrainOverflowLines() {
       // margins marked dirty also.
 
       // Prepend the overflow frames/lines to our principal list.
-      mFrames.InsertFrames(nullptr, nullptr, overflowLines->mFrames);
+      mFrames.InsertFrames(nullptr, nullptr, std::move(overflowLines->mFrames));
       mLines.splice(mLines.begin(), overflowLines->mLines);
       NS_ASSERTION(overflowLines->mLines.empty(), "splice should empty list");
       delete overflowLines;
@@ -5539,7 +5540,7 @@ void nsBlockFrame::DrainPushedFloats() {
   if (prevBlock) {
     AutoFrameListPtr list(PresContext(), prevBlock->RemovePushedFloats());
     if (list && list->NotEmpty()) {
-      mFloats.InsertFrames(this, nullptr, *list);
+      mFloats.InsertFrames(this, nullptr, std::move(*list));
     }
   }
 }
@@ -5751,7 +5752,7 @@ void nsBlockFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   if (aListID != kPrincipalList) {
     if (kFloatList == aListID) {
       DrainSelfPushedFloats();  // ensure aPrevFrame is in mFloats
-      mFloats.InsertFrames(this, aPrevFrame, aFrameList);
+      mFloats.InsertFrames(this, aPrevFrame, std::move(aFrameList));
       return;
     }
     MOZ_ASSERT(kNoReflowPrincipalList == aListID, "unexpected child list");
@@ -5939,7 +5940,7 @@ void nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling,
     lineList->front()->SetInvalidateTextRuns(true);
   }
   const nsFrameList::Slice& newFrames =
-      frames->InsertFrames(nullptr, aPrevSibling, aFrameList);
+      frames->InsertFrames(nullptr, aPrevSibling, std::move(aFrameList));
 
   // Walk through the new frames being added and update the line data
   // structures to fit.

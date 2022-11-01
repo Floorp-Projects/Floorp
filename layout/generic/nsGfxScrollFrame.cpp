@@ -263,7 +263,7 @@ void nsHTMLScrollFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   NS_ASSERTION(aListID == kPrincipalList, "Only main list supported");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
-  mFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
+  mFrames.InsertFrames(nullptr, aPrevFrame, std::move(aFrameList));
   mHelper.ReloadChildFrames();
 }
 
