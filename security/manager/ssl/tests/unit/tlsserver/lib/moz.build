@@ -9,9 +9,31 @@ UNIFIED_SOURCES += [
     "TLSServer.cpp",
 ]
 
+DEFINES["NSS_USE_STATIC_LIBS"] = True
+
 USE_LIBS += [
+    "certdb",
+    "certhi",
+    "cryptohi",
+    "freebl",
+    "mozpkix",
     "mozpkix-testlib",
+    "nspr",
+    "nss_static",
+    "nssb",
+    "nssdev",
+    "nsspki",
+    "pk11wrap",
+    "smime",
+    "softokn3",
+    "sqlite",
+    "ssl",
 ]
+
+if CONFIG["MOZ_FOLD_LIBS"]:
+    USE_LIBS += ["nssutil"]
+else:
+    USE_LIBS += ["nssutil3"]
 
 Library("tlsserver")
 
