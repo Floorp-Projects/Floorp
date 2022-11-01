@@ -354,12 +354,26 @@ function showSidebarNodes(sidebar_mode) { /* Managers - 0; TST - 1  webpanel - 2
 function UnloadWebpanel() {
   let sidebarsplit2 = document.getElementById("sidebar-splitter2");
 
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 30);
+  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 0);
 
   if (sidebarsplit2.getAttribute("hidden") != "true") {
     changeSidebarVisibility();
   }
   contextWebpanel.remove();
+}
+
+function changeWebpanelUA() {
+  webpanel = clickedWebpanel.replace("select-CustomURL", "webpanel");
+  let pref = `floorp.enable.useragent.override.${webpanel}`
+  let setting = Services.prefs.getBoolPref(pref, false);
+
+  if(setting == false){
+    Services.prefs.setBoolPref(pref, true);
+  } else if (setting == true){
+    Services.prefs.setBoolPref(pref, false);
+  }
+  //reload webpanel
+  sidebarSiteAction(2);
 }
 
  function muteSidebar(){

@@ -363,6 +363,9 @@ sidebar2-mute-and-unmute =
 sidebar2-unload-panel =
   .label = Unload this panel
 
+sidebar2-change-ua-panel =
+  .label = Switch User agent to Mobile/Desktop version at this panel
+
 sidebar-close-button =
   .tooltiptext = Close sidebar
 

@@ -3,6 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+
+// 初回起動時、UA を変更するようにするための処理
+Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 0);
+
 if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
     Services.prefs.addObserver("floorp.browser.sidebar2.mode", function(){
      setSidebarMode();
@@ -33,18 +37,6 @@ const DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT = 19 /* CustomURL modes, that are e
     })    
   }
  }
-/* This code does not work well. Two clicks are required. The cause is unknown.
-
-const target = document.getElementsByClassName("sidepanel-icon");
-for (let i = 0; i < target.length; i++) {
- target[i].addEventListener("click", function() {
-  let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  let selectedNode = document.querySelector(".sidepanel-icon[panel= \"" +  selectedMode + "\"]");
-
-  removeAttributeSelectedNode();
-  selectedNode.setAttribute("checked", "true");
-}, false)}
-*/
 
 //startup functions
 setSidebarIconView();
@@ -52,9 +44,4 @@ setSidebarMode();
 removeAttributeSelectedNode();
 getSelectedNode().setAttribute("checked", "true");
 setAllfavicons();
-
-if(Services.prefs.getBoolPref("floorp.browser.restore.sidebar.panel", false)) {
- setSidebarMode();
-}else{
- changeSidebarVisibility();
-}
+changeSidebarVisibility();

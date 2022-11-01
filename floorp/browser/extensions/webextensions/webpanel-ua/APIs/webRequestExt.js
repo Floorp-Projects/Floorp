@@ -10,6 +10,10 @@ const { WebRequest } = ChromeUtils.import(
   "resource://gre/modules/WebRequest.jsm"
 );
 
+const { Services } = ChromeUtils.import(
+  "resource://gre/modules/Services.jsm"
+);
+
 this.webRequestExt = class extends ExtensionAPI {
   getAPI(context) {
     const EventManager = ExtensionCommon.EventManager;
@@ -20,7 +24,9 @@ this.webRequestExt = class extends ExtensionAPI {
           context,
           register: (fire) => {
             function listener(e) {
-              if (typeof e.browserElement !== "undefined" && e.browserElement.id.startsWith("webpanel")) {
+              let webpanelid = e.browserElement.id;
+              const uaPref = `floorp.enable.useragent.override.${webpanelid}`;
+              if (typeof e.browserElement !== "undefined" && e.browserElement.id.startsWith("webpanel") && Services.prefs.getBoolPref(uaPref, false) === true) {
                 return fire.async(e.requestId);
               }
             }
