@@ -935,13 +935,13 @@ void nsFieldSetFrame::EnsureChildContinuation(nsIFrame* aChild,
     }
     if (aStatus.IsOverflowIncomplete()) {
       if (nsFrameList* eoc = GetExcessOverflowContainers()) {
-        eoc->AppendFrames(nullptr, nifs);
+        eoc->AppendFrames(nullptr, std::move(nifs));
       } else {
         SetExcessOverflowContainers(std::move(nifs));
       }
     } else {
       if (nsFrameList* oc = GetOverflowFrames()) {
-        oc->AppendFrames(nullptr, nifs);
+        oc->AppendFrames(nullptr, std::move(nifs));
       } else {
         SetOverflowFrames(std::move(nifs));
       }

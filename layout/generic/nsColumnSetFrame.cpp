@@ -934,7 +934,7 @@ void nsColumnSetFrame::DrainOverflowColumns() {
   if (overflows) {
     // We're already the parent for these frames, so no need to set
     // their parent again.
-    mFrames.AppendFrames(nullptr, *overflows);
+    mFrames.AppendFrames(nullptr, std::move(*overflows));
   }
 }
 

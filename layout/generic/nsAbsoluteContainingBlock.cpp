@@ -66,7 +66,7 @@ void nsAbsoluteContainingBlock::AppendFrames(nsIFrame* aDelegatingFrame,
 #ifdef DEBUG
   nsIFrame::VerifyDirtyBitSet(aFrameList);
 #endif
-  mAbsoluteFrames.AppendFrames(nullptr, aFrameList);
+  mAbsoluteFrames.AppendFrames(nullptr, std::move(aFrameList));
 
   // no damage to intrinsic widths, since absolutely positioned frames can't
   // change them

@@ -2183,9 +2183,9 @@ void nsTableFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
       return aFrame->StyleDisplay()->mDisplay != display;
     });
     if (display == mozilla::StyleDisplay::TableColumnGroup) {
-      colGroupList.AppendFrames(nullptr, head);
+      colGroupList.AppendFrames(nullptr, std::move(head));
     } else {
-      principalList.AppendFrames(nullptr, head);
+      principalList.AppendFrames(nullptr, std::move(head));
     }
   } while (aFrameList.NotEmpty());
 

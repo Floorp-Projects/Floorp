@@ -133,7 +133,7 @@ void nsTableColGroupFrame::SetInitialChildList(ChildListID aListID,
     return;
   }
 
-  mFrames.AppendFrames(this, aChildList);
+  mFrames.AppendFrames(this, std::move(aChildList));
 }
 
 /* virtual */
@@ -178,7 +178,8 @@ void nsTableColGroupFrame::AppendFrames(ChildListID aListID,
   MOZ_ASSERT(!col || col->GetColType() == eColContent,
              "What's going on with our columns?");
 
-  const nsFrameList::Slice& newFrames = mFrames.AppendFrames(this, aFrameList);
+  const nsFrameList::Slice& newFrames =
+      mFrames.AppendFrames(this, std::move(aFrameList));
   InsertColsReflow(GetStartColumnIndex() + mColCount, newFrames);
 }
 

@@ -112,7 +112,7 @@ void nsTableWrapperFrame::AppendFrames(ChildListID aListID,
   MOZ_ASSERT(kCaptionList == aListID, "unexpected child list");
   MOZ_ASSERT(aFrameList.IsEmpty() || aFrameList.FirstChild()->IsTableCaption(),
              "appending non-caption frame to captionList");
-  mCaptionFrames.AppendFrames(nullptr, aFrameList);
+  mCaptionFrames.AppendFrames(nullptr, std::move(aFrameList));
 
   // Reflow the new caption frame. It's already marked dirty, so
   // just tell the pres shell.
