@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>Coordination of kern and palt features for CJK kerning</title>
+<style>
+.test {
+  font-family: "Yu Gothic UI";
+  font-size: 3em;
+  font-feature-settings: "kern" 1, "palt" 1;  /* should render differently from testcase */
+}
+</style>
+<body>
+<p>Enabling font-kerning:normal should NOT apply 'palt' for the Yu Gothic UI font</p>
+<div class=test>幻塔アートフェスティバル イラストコンテスト　開催</div>
+</body>
+</head>
