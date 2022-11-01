@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/IdlePeriodState.h"
 #include "mozilla/StaticPrefs_idle_period.h"
 #include "mozilla/ipc/IdleSchedulerChild.h"
@@ -108,7 +109,7 @@ TimeStamp IdlePeriodState::GetLocalIdleDeadline(
   // gets exhausted at shutdown time to prevent intermittently leaking
   // some runnables inside that queue and even worse potentially leaving
   // some important cleanup work unfinished.
-  if (gXPCOMThreadsShutDown ||
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads) ||
       nsThreadManager::get().GetCurrentThread()->ShuttingDown()) {
     aShuttingDown = true;
     return TimeStamp::Now();
