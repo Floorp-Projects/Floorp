@@ -2144,7 +2144,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   uint16_t mCurrentDepth;
   bool mQuotesDirty : 1;
   bool mCountersDirty : 1;
-  bool mIsDestroyingFrameTree : 1;
   bool mAlwaysCreateFramesForIgnorableWhitespace : 1;
 
   // The layout state from our history entry (to restore scroll positions and
