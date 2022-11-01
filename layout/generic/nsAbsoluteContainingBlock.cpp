@@ -46,7 +46,7 @@ typedef mozilla::CSSAlignUtils::AlignJustifyFlags AlignJustifyFlags;
 
 void nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame* aDelegatingFrame,
                                                     ChildListID aListID,
-                                                    nsFrameList& aChildList) {
+                                                    nsFrameList&& aChildList) {
   MOZ_ASSERT(mChildListID == aListID, "unexpected child list name");
 #ifdef DEBUG
   nsIFrame::VerifyDirtyBitSet(aChildList);
@@ -59,7 +59,7 @@ void nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame* aDelegatingFrame,
 
 void nsAbsoluteContainingBlock::AppendFrames(nsIFrame* aDelegatingFrame,
                                              ChildListID aListID,
-                                             nsFrameList& aFrameList) {
+                                             nsFrameList&& aFrameList) {
   NS_ASSERTION(mChildListID == aListID, "unexpected child list");
 
   // Append the frames to our list of absolutely positioned frames
@@ -77,7 +77,7 @@ void nsAbsoluteContainingBlock::AppendFrames(nsIFrame* aDelegatingFrame,
 void nsAbsoluteContainingBlock::InsertFrames(nsIFrame* aDelegatingFrame,
                                              ChildListID aListID,
                                              nsIFrame* aPrevFrame,
-                                             nsFrameList& aFrameList) {
+                                             nsFrameList&& aFrameList) {
   NS_ASSERTION(mChildListID == aListID, "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == aDelegatingFrame,
                "inserting after sibling frame with different parent");

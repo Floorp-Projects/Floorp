@@ -56,11 +56,11 @@ class nsAbsoluteContainingBlock {
   }
 
   void SetInitialChildList(nsIFrame* aDelegatingFrame, ChildListID aListID,
-                           nsFrameList& aChildList);
+                           nsFrameList&& aChildList);
   void AppendFrames(nsIFrame* aDelegatingFrame, ChildListID aListID,
-                    nsFrameList& aFrameList);
+                    nsFrameList&& aFrameList);
   void InsertFrames(nsIFrame* aDelegatingFrame, ChildListID aListID,
-                    nsIFrame* aPrevFrame, nsFrameList& aFrameList);
+                    nsIFrame* aPrevFrame, nsFrameList&& aFrameList);
   void RemoveFrame(nsIFrame* aDelegatingFrame, ChildListID aListID,
                    nsIFrame* aOldFrame);
 
