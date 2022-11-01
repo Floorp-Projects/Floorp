@@ -54,7 +54,7 @@ class LoadContextBase : public nsISupports {
  public:
   explicit LoadContextBase(ContextKind kind);
 
-  void SetRequest(JS::loader::ScriptLoadRequest* aRequest);
+  virtual void SetRequest(JS::loader::ScriptLoadRequest* aRequest);
 
   // Used to output a string for the Gecko Profiler.
   virtual void GetProfilerLabel(nsACString& aOutString);

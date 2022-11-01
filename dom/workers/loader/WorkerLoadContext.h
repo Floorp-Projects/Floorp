@@ -80,10 +80,13 @@ class WorkerLoadContext : public JS::loader::LoadContextNoCCBase {
 
   explicit WorkerLoadContext(Kind aKind, const Maybe<ClientInfo>& aClientInfo);
 
+  void SetRequest(JS::loader::ScriptLoadRequest* aRequest) override {
+    LoadContextBase::SetRequest(aRequest);
+    mIsTopLevel = aRequest->IsTopLevel() && (mKind == Kind::MainScript);
+  }
+
   // Used to detect if the `is top-level` bit is set on a given module.
-  bool IsTopLevel() {
-    return mRequest->IsTopLevel() && (mKind == Kind::MainScript);
-  };
+  bool IsTopLevel() { return mIsTopLevel; };
 
   static Kind GetKind(bool isMainScript, bool isDebuggerScript) {
     if (isDebuggerScript) {
@@ -99,6 +102,7 @@ class WorkerLoadContext : public JS::loader::LoadContextNoCCBase {
   Maybe<bool> mMutedErrorFlag;
   nsresult mLoadResult = NS_ERROR_NOT_INITIALIZED;
   bool mLoadingFinished = false;
+  bool mIsTopLevel = true;
   Kind mKind;
   Maybe<ClientInfo> mClientInfo;
 

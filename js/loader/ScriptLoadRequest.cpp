@@ -115,6 +115,12 @@ void ScriptLoadRequest::Cancel() {
   if (HasScriptLoadContext()) {
     GetScriptLoadContext()->MaybeCancelOffThreadScript();
   }
+  if (HasWorkerLoadContext()) {
+    // Steal and let the worker load context go out of scope, we
+    // no longer need it.
+    RefPtr<mozilla::dom::WorkerLoadContext> droppedContext =
+        StealWorkerLoadContext();
+  }
 }
 
 void ScriptLoadRequest::DropBytecodeCacheReferences() {
@@ -124,6 +130,10 @@ void ScriptLoadRequest::DropBytecodeCacheReferences() {
 
 bool ScriptLoadRequest::HasScriptLoadContext() const {
   return HasLoadContext() && mLoadContext->IsWindowContext();
+}
+
+bool ScriptLoadRequest::HasWorkerLoadContext() const {
+  return HasLoadContext() && mLoadContext->IsWorkerContext();
 }
 
 mozilla::dom::ScriptLoadContext* ScriptLoadRequest::GetScriptLoadContext() {
@@ -140,6 +150,17 @@ ScriptLoadRequest::GetComponentLoadContext() {
 mozilla::dom::WorkerLoadContext* ScriptLoadRequest::GetWorkerLoadContext() {
   MOZ_ASSERT(mLoadContext);
   return mLoadContext->AsWorkerContext();
+}
+
+already_AddRefed<mozilla::dom::WorkerLoadContext>
+ScriptLoadRequest::StealWorkerLoadContext() {
+  MOZ_ASSERT(mLoadContext);
+  RefPtr<mozilla::dom::WorkerLoadContext> workerContext =
+      mLoadContext->AsWorkerContext();
+  // Break cycle.
+  mLoadContext->mRequest = nullptr;
+  mLoadContext = nullptr;
+  return workerContext.forget();
 }
 
 ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() {

@@ -305,13 +305,15 @@ class ScriptLoadRequest
   void DropBytecodeCacheReferences();
 
   bool HasLoadContext() const { return mLoadContext; }
-
   bool HasScriptLoadContext() const;
+  bool HasWorkerLoadContext() const;
+
   mozilla::dom::ScriptLoadContext* GetScriptLoadContext();
 
   mozilla::loader::ComponentLoadContext* GetComponentLoadContext();
 
   mozilla::dom::WorkerLoadContext* GetWorkerLoadContext();
+  already_AddRefed<mozilla::dom::WorkerLoadContext> StealWorkerLoadContext();
 
   const ScriptKind mKind;  // Whether this is a classic script or a module
                            // script.

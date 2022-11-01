@@ -40,9 +40,9 @@ NS_IMPL_ISUPPORTS(CacheLoadHandler, nsIStreamLoaderObserver)
 
 NS_IMPL_ISUPPORTS0(CachePromiseHandler)
 
-CachePromiseHandler::CachePromiseHandler(
-    WorkerScriptLoader* aLoader, JS::loader::ScriptLoadRequest* aRequest)
-    : mLoader(aLoader), mLoadContext(aRequest->GetWorkerLoadContext()) {
+CachePromiseHandler::CachePromiseHandler(WorkerScriptLoader* aLoader,
+                                         WorkerLoadContext* aLoadContext)
+    : mLoader(aLoader), mLoadContext(aLoadContext) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mLoader);
 }
@@ -61,7 +61,9 @@ void CachePromiseHandler::ResolvedCallback(JSContext* aCx,
   if (mLoadContext->mCachePromise) {
     mLoadContext->mCacheStatus = WorkerLoadContext::Cached;
     mLoadContext->mCachePromise = nullptr;
-    mLoader->MaybeExecuteFinishedScripts(mLoadContext->mRequest);
+    if (mLoadContext->mRequest) {
+      mLoader->MaybeExecuteFinishedScripts(mLoadContext->mRequest);
+    }
   }
 }
 
@@ -270,7 +272,7 @@ void CacheLoadHandler::Fail(nsresult aRv) {
   }
   mLoadContext->mCachePromise = nullptr;
 
-  if (mLoader->IsCancelled()) {
+  if (mLoader->IsCancelled() || !mLoadContext->mRequest) {
     return;
   }
 
@@ -280,6 +282,7 @@ void CacheLoadHandler::Fail(nsresult aRv) {
 void CacheLoadHandler::Load(Cache* aCache) {
   AssertIsOnMainThread();
   MOZ_ASSERT(aCache);
+  MOZ_ASSERT(mLoadContext->mRequest);
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), mLoadContext->mRequest->mURL,
@@ -324,7 +327,7 @@ void CacheLoadHandler::RejectedCallback(JSContext* aCx,
                                         ErrorResult& aRv) {
   AssertIsOnMainThread();
 
-  if (mLoader->IsCancelled()) {
+  if (mLoader->IsCancelled() || !mLoadContext->mRequest) {
     return;
   }
 
@@ -338,7 +341,7 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
   AssertIsOnMainThread();
   // If we have already called 'Fail', we should not proceed. If we cancelled,
   // we should similarily not proceed.
-  if (mFailed || mLoader->IsCancelled()) {
+  if (mFailed || mLoader->IsCancelled() || !mLoadContext->mRequest) {
     return;
   }
 
@@ -492,7 +495,7 @@ CacheLoadHandler::OnStreamComplete(nsIStreamLoader* aLoader,
 
   MOZ_ASSERT(mPrincipalInfo);
 
-  if (mLoader->IsCancelled()) {
+  if (mLoader->IsCancelled() || !mLoadContext->mRequest) {
     auto cacheCreator = mLoadContext->GetCacheCreator();
     if (cacheCreator) {
       cacheCreator->DeleteCache(mLoader->GetCancelResult());
@@ -515,6 +518,7 @@ nsresult CacheLoadHandler::DataReceivedFromCache(
   AssertIsOnMainThread();
 
   MOZ_ASSERT(mLoadContext->mCacheStatus == WorkerLoadContext::Cached);
+  MOZ_ASSERT(mLoadContext->mRequest);
 
   auto responsePrincipalOrErr = PrincipalInfoToPrincipal(*aPrincipalInfo);
   MOZ_DIAGNOSTIC_ASSERT(responsePrincipalOrErr.isOk());
