@@ -13,8 +13,8 @@ function* testSteps() {
   }
 
   // Test for IDBKeyRange and indexedDB availability in JS modules.
-  const { GlobalObjectsModule } = ChromeUtils.import(
-    "resource://test/GlobalObjectsModule.jsm"
+  const { GlobalObjectsModule } = ChromeUtils.importESModule(
+    "resource://test/GlobalObjectsModule.sys.mjs"
   );
   let test = new GlobalObjectsModule();
   test.ok = ok;

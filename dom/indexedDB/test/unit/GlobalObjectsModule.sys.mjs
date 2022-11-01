@@ -3,9 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var EXPORTED_SYMBOLS = ["GlobalObjectsModule"];
-
-function GlobalObjectsModule() {}
+export function GlobalObjectsModule() {}
 
 GlobalObjectsModule.prototype = {
   runTest() {
