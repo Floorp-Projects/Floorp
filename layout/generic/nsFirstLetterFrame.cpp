@@ -341,7 +341,7 @@ void nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext) {
   AutoFrameListPtr overflowFrames(aPresContext, StealOverflowFrames());
   if (overflowFrames) {
     NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
-    mFrames.AppendFrames(nullptr, *overflowFrames);
+    mFrames.AppendFrames(nullptr, std::move(*overflowFrames));
   }
 
   // Now repair our first frames ComputedStyle (since we only reflow

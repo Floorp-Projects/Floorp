@@ -2544,7 +2544,7 @@ void nsBlockFrame::ReparentFloats(nsIFrame* aFirstFrame,
                  "CollectFloats should've removed that bit");
       ReparentFrame(f, aOldParent, this);
     }
-    mFloats.AppendFrames(nullptr, list);
+    mFloats.AppendFrames(nullptr, std::move(list));
   }
 }
 
@@ -3160,7 +3160,7 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
                    "Incorrect aState.mPrevChild before inserting line at end");
 
       // Shift pulledLine's frames into our mFrames list.
-      mFrames.AppendFrames(nullptr, pulledFrames);
+      mFrames.AppendFrames(nullptr, std::move(pulledFrames));
 
       // Add line to our line list, and set its last child as our new prev-child
       line = mLines.before_insert(LinesEnd(), pulledLine);
@@ -5436,11 +5436,11 @@ bool nsBlockFrame::DrainSelfOverflowList() {
       }
 #endif
       // The overflow floats go after our regular floats.
-      mFloats.AppendFrames(nullptr, oofs.mList);
+      mFloats.AppendFrames(nullptr, std::move(oofs).mList);
     }
   }
   if (!ourOverflowLines->mLines.empty()) {
-    mFrames.AppendFrames(nullptr, ourOverflowLines->mFrames);
+    mFrames.AppendFrames(nullptr, std::move(ourOverflowLines->mFrames));
     mLines.splice(mLines.end(), ourOverflowLines->mLines);
   }
 
@@ -5702,7 +5702,7 @@ void nsBlockFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
   if (aListID != kPrincipalList) {
     if (kFloatList == aListID) {
       DrainSelfPushedFloats();  // ensure the last frame is in mFloats
-      mFloats.AppendFrames(nullptr, aFrameList);
+      mFloats.AppendFrames(nullptr, std::move(aFrameList));
       return;
     }
     MOZ_ASSERT(kNoReflowPrincipalList == aListID, "unexpected child list");

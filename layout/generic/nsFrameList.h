@@ -162,7 +162,7 @@ class nsFrameList {
    * reparents the newly added frames.  Clears out aFrameList and
    * returns a list slice represening the newly-appended frames.
    */
-  Slice AppendFrames(nsContainerFrame* aParent, nsFrameList& aFrameList) {
+  Slice AppendFrames(nsContainerFrame* aParent, nsFrameList&& aFrameList) {
     return InsertFrames(aParent, LastChild(), std::move(aFrameList));
   }
 
@@ -171,8 +171,7 @@ class nsFrameList {
    * reparents the newly added frame.
    */
   void AppendFrame(nsContainerFrame* aParent, nsIFrame* aFrame) {
-    nsFrameList temp(aFrame, aFrame);
-    AppendFrames(aParent, temp);
+    AppendFrames(aParent, nsFrameList(aFrame, aFrame));
   }
 
   /**

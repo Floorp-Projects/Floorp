@@ -122,7 +122,7 @@ void nsContainerFrame::AppendFrames(ChildListID aListID,
   }
 
   DrainSelfOverflowList();  // ensure the last frame is in mFrames
-  mFrames.AppendFrames(this, aFrameList);
+  mFrames.AppendFrames(this, std::move(aFrameList));
 
   if (aListID != kNoReflowPrincipalList) {
     PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
@@ -1935,7 +1935,7 @@ bool nsContainerFrame::MoveOverflowToChildList() {
       // views need to be reparented.
       nsContainerFrame::ReparentFrameViewList(*prevOverflowFrames, prevInFlow,
                                               this);
-      mFrames.AppendFrames(this, *prevOverflowFrames);
+      mFrames.AppendFrames(this, std::move(*prevOverflowFrames));
       result = true;
     }
   }
@@ -2056,7 +2056,7 @@ void nsContainerFrame::MergeSortedFrameLists(nsFrameList& aDest,
   nsIFrame* dest = aDest.FirstChild();
   for (nsIFrame* src = aSrc.FirstChild(); src;) {
     if (!dest) {
-      aDest.AppendFrames(nullptr, aSrc);
+      aDest.AppendFrames(nullptr, std::move(aSrc));
       break;
     }
     nsIContent* srcContent = FrameForDOMPositionComparison(src)->GetContent();
@@ -2127,7 +2127,7 @@ bool nsContainerFrame::MoveInlineOverflowToChildList(nsIFrame* aLineContainer) {
 bool nsContainerFrame::DrainSelfOverflowList() {
   AutoFrameListPtr overflowFrames(PresContext(), StealOverflowFrames());
   if (overflowFrames) {
-    mFrames.AppendFrames(nullptr, *overflowFrames);
+    mFrames.AppendFrames(nullptr, std::move(*overflowFrames));
     return true;
   }
   return false;

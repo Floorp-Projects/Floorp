@@ -401,7 +401,7 @@ bool nsInlineFrame::DrainSelfOverflowListInternal(bool aInFirstLine) {
       nsLayoutUtils::MarkDescendantsDirty(f);
     }
   }
-  mFrames.AppendFrames(nullptr, *overflowFrames);
+  mFrames.AppendFrames(nullptr, std::move(*overflowFrames));
   return true;
 }
 
@@ -1073,7 +1073,7 @@ bool nsFirstLineFrame::DrainSelfOverflowList() {
   if (overflowFrames) {
     bool result = !overflowFrames->IsEmpty();
     const nsFrameList::Slice& newFrames =
-        mFrames.AppendFrames(nullptr, *overflowFrames);
+        mFrames.AppendFrames(nullptr, std::move(*overflowFrames));
     ReparentChildListStyle(PresContext(), newFrames, this);
     return result;
   }

@@ -1473,7 +1473,7 @@ void nsTableRowGroupFrame::AppendFrames(ChildListID aListID,
 
   int32_t rowIndex = GetRowCount();
   // Append the frames to the sibling chain
-  mFrames.AppendFrames(nullptr, aFrameList);
+  mFrames.AppendFrames(nullptr, std::move(aFrameList));
 
   if (rows.Length() > 0) {
     nsTableFrame* tableFrame = GetTableFrame();

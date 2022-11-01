@@ -362,7 +362,7 @@ class nsContainerFrame : public nsSplittableFrame {
   static inline void DefaultChildFrameMerge(nsFrameList& aDest,
                                             nsFrameList& aSrc,
                                             nsContainerFrame* aParent) {
-    aDest.AppendFrames(nullptr, aSrc);
+    aDest.AppendFrames(nullptr, std::move(aSrc));
   }
 
   /**
