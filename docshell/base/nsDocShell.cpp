@@ -11711,8 +11711,13 @@ bool nsDocShell::ShouldAddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel) {
     if (buf.EqualsLiteral("blank")) {
       return false;
     }
-    // We only want to add about:newtab if it's not privileged:
+    // We only want to add about:newtab if it's not privileged, and
+    // if it is not configured to show the blank page.
     if (buf.EqualsLiteral("newtab")) {
+      if (!StaticPrefs::browser_newtabpage_enabled()) {
+        return false;
+      }
+
       NS_ENSURE_TRUE(aChannel, false);
       nsCOMPtr<nsIPrincipal> resultPrincipal;
       rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
