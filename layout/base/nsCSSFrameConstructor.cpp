@@ -1216,7 +1216,7 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
     // absolute containing block
     if (aChildListID == containingBlock->GetAbsoluteListID()) {
       containingBlock->GetAbsoluteContainingBlock()->SetInitialChildList(
-          containingBlock, aChildListID, aFrameList);
+          containingBlock, aChildListID, std::move(aFrameList));
     } else {
       containingBlock->SetInitialChildList(aChildListID, std::move(aFrameList));
     }
@@ -1224,7 +1224,8 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
              aChildListID == nsIFrame::kAbsoluteList) {
     // The order is not important for abs-pos/fixed-pos frame list, just
     // append the frame items to the list directly.
-    mFrameManager->AppendFrames(containingBlock, aChildListID, aFrameList);
+    mFrameManager->AppendFrames(containingBlock, aChildListID,
+                                std::move(aFrameList));
   } else {
     // Note that whether the frame construction context is doing an append or
     // not is not helpful here, since it could be appending to some frame in
@@ -1253,7 +1254,8 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
                           notCommonAncestor ? containingBlock : nullptr) < 0) {
       // no lastChild, or lastChild comes before the new children, so just
       // append
-      mFrameManager->AppendFrames(containingBlock, aChildListID, aFrameList);
+      mFrameManager->AppendFrames(containingBlock, aChildListID,
+                                  std::move(aFrameList));
     } else {
       // Try the other children. First collect them to an array so that a
       // reasonable fast binary search can be used to find the insertion point.
@@ -1299,7 +1301,7 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
         }
       }
       mFrameManager->InsertFrames(containingBlock, aChildListID, insertionPoint,
-                                  aFrameList);
+                                  std::move(aFrameList));
     }
   }
 
@@ -5827,7 +5829,7 @@ void nsCSSFrameConstructor::AppendFramesToParent(
         aFrameList.Split([](nsIFrame* f) { return f->IsBlockOutside(); });
 
     if (!inlineKids.IsEmpty()) {
-      AppendFrames(aParentFrame, kPrincipalList, inlineKids);
+      AppendFrames(aParentFrame, kPrincipalList, std::move(inlineKids));
     }
 
     if (!aFrameList.IsEmpty()) {
@@ -5857,7 +5859,8 @@ void nsCSSFrameConstructor::AppendFramesToParent(
     // ::-moz-column-content's child list.
     nsFrameList initialNonColumnSpanKids =
         aFrameList.Split([](nsIFrame* f) { return f->IsColumnSpan(); });
-    AppendFrames(aParentFrame, kPrincipalList, initialNonColumnSpanKids);
+    AppendFrames(aParentFrame, kPrincipalList,
+                 std::move(initialNonColumnSpanKids));
 
     if (aFrameList.IsEmpty()) {
       // No more kids to process (there weren't any column-span kids).
@@ -5886,7 +5889,8 @@ void nsCSSFrameConstructor::AppendFramesToParent(
   }
 
   // Insert the frames after our aPrevSibling
-  InsertFrames(aParentFrame, kPrincipalList, aPrevSibling, aFrameList);
+  InsertFrames(aParentFrame, kPrincipalList, aPrevSibling,
+               std::move(aFrameList));
 }
 
 // This gets called to see if the frames corresponding to aSibling and aContent
@@ -6766,7 +6770,7 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
     NS_ASSERTION(LayoutFrameType::Table == frameType, "how did that happen?");
     nsContainerFrame* outerTable = parentFrame->GetParent();
     captionList.ApplySetParent(outerTable);
-    AppendFrames(outerTable, nsIFrame::kCaptionList, captionList);
+    AppendFrames(outerTable, nsIFrame::kCaptionList, std::move(captionList));
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
@@ -7253,10 +7257,10 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
 
     captionList.ApplySetParent(outerTable);
     if (captionIsAppend) {
-      AppendFrames(outerTable, nsIFrame::kCaptionList, captionList);
+      AppendFrames(outerTable, nsIFrame::kCaptionList, std::move(captionList));
     } else {
       InsertFrames(outerTable, nsIFrame::kCaptionList, captionPrevSibling,
-                   captionList);
+                   std::move(captionList));
     }
   }
 
@@ -7275,7 +7279,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
                            prevSibling);
     } else {
       InsertFrames(insertion.mParentFrame, kPrincipalList, prevSibling,
-                   frameList);
+                   std::move(frameList));
     }
   }
 
@@ -9862,7 +9866,7 @@ void nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
     aLineFrame->SetInitialChildList(kPrincipalList,
                                     std::move(firstLineChildren));
   } else {
-    AppendFrames(aLineFrame, kPrincipalList, firstLineChildren);
+    AppendFrames(aLineFrame, kPrincipalList, std::move(firstLineChildren));
   }
 }
 
@@ -10346,8 +10350,8 @@ void nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   }
 
   // Insert text frame in its place
-  nsFrameList textList(newTextFrame, newTextFrame);
-  InsertFrames(parentFrame, kPrincipalList, prevSibling, textList);
+  InsertFrames(parentFrame, kPrincipalList, prevSibling,
+               nsFrameList(newTextFrame, newTextFrame));
 
   if (offsetsNeedFixing) {
     prevSibling->RemoveStateBits(TEXT_OFFSETS_NEED_FIXING);
@@ -10396,8 +10400,8 @@ void nsCSSFrameConstructor::RemoveFirstLetterFrames(
       }
 
       // Insert text frame in its place
-      nsFrameList textList(textFrame, textFrame);
-      InsertFrames(aFrame, kPrincipalList, prevSibling, textList);
+      InsertFrames(aFrame, kPrincipalList, prevSibling,
+                   nsFrameList(textFrame, textFrame));
 
       if (offsetsNeedFixing) {
         prevSibling->RemoveStateBits(TEXT_OFFSETS_NEED_FIXING);
