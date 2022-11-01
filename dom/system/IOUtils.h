@@ -212,6 +212,10 @@ class IOUtils final {
       GlobalObject& aGlobal, const Sequence<nsString>& aComponents,
       ErrorResult& aError);
 
+  static already_AddRefed<Promise> GetDirectory(
+      GlobalObject& aGlobal, const Sequence<nsString>& aComponents,
+      ErrorResult& aError);
+
   static void GetProfileBeforeChange(GlobalObject& aGlobal,
                                      JS::MutableHandle<JS::Value>,
                                      ErrorResult& aRv);
