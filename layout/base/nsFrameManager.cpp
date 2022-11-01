@@ -86,7 +86,8 @@ void nsFrameManager::InsertFrames(nsContainerFrame* aParentFrame,
     aParentFrame->GetAbsoluteContainingBlock()->InsertFrames(
         aParentFrame, aListID, aPrevFrame, aFrameList);
   } else {
-    aParentFrame->InsertFrames(aListID, aPrevFrame, nullptr, aFrameList);
+    aParentFrame->InsertFrames(aListID, aPrevFrame, nullptr,
+                               std::move(aFrameList));
   }
 }
 

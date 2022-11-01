@@ -103,9 +103,9 @@ void nsMathMLTokenFrame::AppendFrames(ChildListID aListID,
 
 void nsMathMLTokenFrame::InsertFrames(
     ChildListID aListID, nsIFrame* aPrevFrame,
-    const nsLineList::iterator* aPrevFrameLine, nsFrameList& aChildList) {
+    const nsLineList::iterator* aPrevFrameLine, nsFrameList&& aChildList) {
   nsMathMLContainerFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
-                                       aChildList);
+                                       std::move(aChildList));
   MarkTextFramesAsTokenMathML();
 }
 

@@ -997,7 +997,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   void AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) final;
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
-                    nsFrameList& aFrameList) final;
+                    nsFrameList&& aFrameList) final;
   void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) final;
 
   void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData&) override;
@@ -1454,7 +1454,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
   void AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) final;
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
-                    nsFrameList& aFrameList) final;
+                    nsFrameList&& aFrameList) final;
   void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) final;
 
   void DestroyFrom(nsIFrame* aDestructRoot,

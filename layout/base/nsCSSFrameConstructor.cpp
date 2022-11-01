@@ -9447,12 +9447,10 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
         nsFieldSetFrame* fieldSetFrame = GetFieldSetFrameFor(aParentFrame);
         nsFrameList renderedLegend;
         ConstructFramesFromItem(aState, iter, fieldSetFrame, renderedLegend);
-        MOZ_ASSERT(
-            renderedLegend.FirstChild() &&
-                renderedLegend.FirstChild() == renderedLegend.LastChild(),
-            "a rendered legend should have exactly one frame");
+        MOZ_ASSERT(renderedLegend.OnlyChild(),
+                   "a rendered legend should have exactly one frame");
         fieldSetFrame->InsertFrames(kPrincipalList, nullptr, nullptr,
-                                    renderedLegend);
+                                    std::move(renderedLegend));
         FCItemIterator next = iter;
         next.Next();
         iter.DeleteItemsTo(this, next);
@@ -10178,7 +10176,7 @@ void nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
 
       // Insert in the letter frame(s)
       parentFrame->InsertFrames(kPrincipalList, prevFrame, nullptr,
-                                letterFrames);
+                                std::move(letterFrames));
     }
   }
 }
@@ -10476,7 +10474,8 @@ void nsCSSFrameConstructor::RecoverLetterFrames(nsContainerFrame* aBlockFrame) {
     RemoveFrame(kPrincipalList, textFrame);
 
     // Insert in the letter frame(s)
-    parentFrame->InsertFrames(kPrincipalList, prevFrame, nullptr, letterFrames);
+    parentFrame->InsertFrames(kPrincipalList, prevFrame, nullptr,
+                              std::move(letterFrames));
   }
 }
 

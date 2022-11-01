@@ -385,7 +385,7 @@ void nsHTMLButtonControlFrame::AppendFrames(ChildListID aListID,
 
 void nsHTMLButtonControlFrame::InsertFrames(
     ChildListID aListID, nsIFrame* aPrevFrame,
-    const nsLineList::iterator* aPrevFrameLine, nsFrameList& aFrameList) {
+    const nsLineList::iterator* aPrevFrameLine, nsFrameList&& aFrameList) {
   MOZ_CRASH("unsupported operation");
 }
 

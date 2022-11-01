@@ -85,9 +85,9 @@ class nsBoxFrame : public nsContainerFrame {
   void SetInitialChildList(ChildListID aListID,
                            nsFrameList&& aChildList) override;
   void AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) override;
-  virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
-                            const nsLineList::iterator* aPrevFrameLine,
-                            nsFrameList& aFrameList) override;
+  void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                    const nsLineList::iterator* aPrevFrameLine,
+                    nsFrameList&& aFrameList) override;
   virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 
   virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
