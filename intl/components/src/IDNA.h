@@ -65,6 +65,15 @@ class IDNA final {
       return (mErrorCode & UIDNA_ERROR_PUNYCODE) != 0;
     }
 
+    /* The label was successfully ACE (Punycode) decoded but the resulting
+     * string had severe validation errors. For example,
+     * it might contain characters that are not allowed in ACE labels,
+     * or it might not be normalized.
+     */
+    bool HasInvalidAceLabel() const {
+      return (mErrorCode & UIDNA_ERROR_INVALID_ACE_LABEL) != 0;
+    }
+
     /**
      * Checks if the domain name label has any invalid hyphen characters.
      *

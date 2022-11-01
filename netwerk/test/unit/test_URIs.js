@@ -1036,3 +1036,8 @@ add_task(function test_iconURI_serialization() {
 add_task(function test_jarURI_serialization() {
   check_round_trip_serialization("jar:http://example.com/bar.jar!/");
 });
+
+add_task(async function round_trip_invalid_ace_label() {
+  let uri = Services.io.newURI("http://xn--xn--d--fg4n-5y45d/");
+  Assert.equal(uri.spec, "http://xn--xn--d--fg4n-5y45d/");
+});

@@ -188,8 +188,8 @@ nsresult nsIDNService::IDNA2008StringPrep(const nsAString& input,
   // appears to get an appended U+FFFD REPLACEMENT CHARACTER, which will
   // confuse our subsequent processing, so we drop that.
   // (https://bugzilla.mozilla.org/show_bug.cgi?id=1399540#c9)
-  if (info.HasInvalidPunycode() && !output.IsEmpty() &&
-      output.Last() == 0xfffd) {
+  if ((info.HasInvalidPunycode() || info.HasInvalidAceLabel()) &&
+      !output.IsEmpty() && output.Last() == 0xfffd) {
     output.Truncate(output.Length() - 1);
   }
 
