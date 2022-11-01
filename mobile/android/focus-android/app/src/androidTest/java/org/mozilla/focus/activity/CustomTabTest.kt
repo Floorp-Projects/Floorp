@@ -19,8 +19,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.customTab
-import org.mozilla.focus.activity.robots.homeScreen
-import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.TestAssetHelper.getGenericAsset
@@ -96,20 +94,7 @@ class CustomTabTest {
     @SmokeTest
     @Test
     fun openCustomTabInFocusTest() {
-        val browserPage = getGenericAsset(webServer)
         val customTabPage = getGenericTabAsset(webServer, 1)
-
-        launchActivity<IntentReceiverActivity>()
-        homeScreen {
-            // The new onboarding moved to experiments, remove comment when implemented again in Focus
-            // clickStartBrowsing()
-            closeOnboarding()
-        }
-
-        searchScreen {
-        }.loadPage(browserPage.url) {
-            verifyPageURL(browserPage.url)
-        }
 
         launchActivity<IntentReceiverActivity>(createCustomTabIntent(customTabPage.url))
         customTab {
@@ -118,8 +103,6 @@ class CustomTabTest {
             openCustomTabMenu()
         }.clickOpenInFocusButton {
             verifyPageURL(customTabPage.url)
-            mDevice.pressBack()
-            verifyPageURL(browserPage.url)
         }
     }
 
