@@ -16,6 +16,7 @@ import {
   getGeneratedSource,
   isSourceBlackBoxed,
   canPrettyPrintSource,
+  getPrettyPrintMessage,
 } from "../../selectors";
 
 import { isPretty, getFilename, shouldBlackbox } from "../../utils/source";
@@ -35,6 +36,7 @@ class SourceFooter extends PureComponent {
   static get propTypes() {
     return {
       canPrettyPrint: PropTypes.bool.isRequired,
+      prettyPrintMessage: PropTypes.string.isRequired,
       cx: PropTypes.object.isRequired,
       endPanelCollapsed: PropTypes.bool.isRequired,
       horizontal: PropTypes.bool.isRequired,
@@ -78,6 +80,7 @@ class SourceFooter extends PureComponent {
       cx,
       selectedSource,
       canPrettyPrint,
+      prettyPrintMessage,
       togglePrettyPrint,
       sourceLoaded,
     } = this.props;
@@ -94,23 +97,23 @@ class SourceFooter extends PureComponent {
       );
     }
 
-    if (!canPrettyPrint) {
-      return null;
-    }
-
-    const tooltip = L10N.getStr("sourceTabs.prettyPrint");
-
     const type = "prettyPrint";
     return (
       <button
-        onClick={() => togglePrettyPrint(cx, selectedSource.id)}
+        onClick={() => {
+          if (!canPrettyPrint) {
+            return;
+          }
+          togglePrettyPrint(cx, selectedSource.id);
+        }}
         className={classnames("action", type, {
-          active: sourceLoaded,
+          active: sourceLoaded && canPrettyPrint,
           pretty: isPretty(selectedSource),
         })}
         key={type}
-        title={tooltip}
-        aria-label={tooltip}
+        title={prettyPrintMessage}
+        aria-label={prettyPrintMessage}
+        disabled={!canPrettyPrint}
       >
         <AccessibleImage className={type} />
       </button>
@@ -275,6 +278,7 @@ const mapStateToProps = state => {
     canPrettyPrint: selectedSource
       ? canPrettyPrintSource(state, selectedSource.id)
       : false,
+    prettyPrintMessage: getPrettyPrintMessage(state, selectedSource),
   };
 };
 

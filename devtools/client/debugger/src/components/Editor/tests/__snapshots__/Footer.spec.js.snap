@@ -21,6 +21,16 @@ exports[`SourceFooter Component default case should render 1`] = `
           className="blackBox"
         />
       </button>
+      <button
+        className="action prettyPrint"
+        disabled={true}
+        key="prettyPrint"
+        onClick={[Function]}
+      >
+        <AccessibleImage
+          className="prettyPrint"
+        />
+      </button>
     </div>
   </div>
   <div
@@ -61,6 +71,16 @@ exports[`SourceFooter Component move cursor should render new cursor position 1`
       >
         <AccessibleImage
           className="blackBox"
+        />
+      </button>
+      <button
+        className="action prettyPrint"
+        disabled={true}
+        key="prettyPrint"
+        onClick={[Function]}
+      >
+        <AccessibleImage
+          className="prettyPrint"
         />
       </button>
     </div>

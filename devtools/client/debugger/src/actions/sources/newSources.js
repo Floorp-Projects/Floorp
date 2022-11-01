@@ -101,8 +101,9 @@ function loadSourceMap(cx, sourceActor) {
       console.error(e);
     }
 
-    if (!data) {
-      // If this source doesn't have a sourcemap, enable it for pretty printing
+    if (!data || !data.length) {
+      // If this source doesn't have a sourcemap or there are no original files
+      // existing, enable it for pretty printing
       dispatch({
         type: "CLEAR_SOURCE_ACTOR_MAP_URL",
         cx,
