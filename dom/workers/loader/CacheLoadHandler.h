@@ -105,7 +105,7 @@ class CacheLoadHandler final : public PromiseNativeHandler,
                                  const nsACString& aReferrerPolicyHeaderValue);
   void DataReceived();
 
-  WorkerLoadContext* mLoadContext;
+  RefPtr<WorkerLoadContext> mLoadContext;
   const RefPtr<WorkerScriptLoader> mLoader;
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   const bool mIsWorkerScript;
@@ -198,7 +198,7 @@ class CachePromiseHandler final : public PromiseNativeHandler {
   NS_DECL_ISUPPORTS
 
   CachePromiseHandler(WorkerScriptLoader* aLoader,
-                      JS::loader::ScriptLoadRequest* aRequest);
+                      WorkerLoadContext* aLoadContext);
 
   virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
                                 ErrorResult& aRv) override;
@@ -210,7 +210,7 @@ class CachePromiseHandler final : public PromiseNativeHandler {
   ~CachePromiseHandler() { AssertIsOnMainThread(); }
 
   RefPtr<WorkerScriptLoader> mLoader;
-  WorkerLoadContext* mLoadContext;
+  RefPtr<WorkerLoadContext> mLoadContext;
 };
 
 }  // namespace workerinternals::loader

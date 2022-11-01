@@ -71,7 +71,7 @@ class NetworkLoadHandler final : public nsIStreamLoaderObserver,
   RefPtr<WorkerScriptLoader> mLoader;
   UniquePtr<ScriptDecoder> mDecoder;
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
-  WorkerLoadContext* mLoadContext;
+  RefPtr<WorkerLoadContext> mLoadContext;
 };
 
 }  // namespace mozilla::dom::workerinternals::loader

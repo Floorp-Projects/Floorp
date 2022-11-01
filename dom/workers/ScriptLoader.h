@@ -247,6 +247,7 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
 
   void DispatchMaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
+  bool HasLoadErrors(WorkerLoadContext* aLoadContext);
   bool EvaluateScript(JSContext* aCx, ScriptLoadRequest* aRequest);
 
   nsresult FillCompileOptionsForRequest(
