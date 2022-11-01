@@ -1089,6 +1089,35 @@ already_AddRefed<Promise> IOUtils::GetFile(
 }
 
 /* static */
+already_AddRefed<Promise> IOUtils::GetDirectory(
+    GlobalObject& aGlobal, const Sequence<nsString>& aComponents,
+    ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        ErrorResult joinErr;
+        nsCOMPtr<nsIFile> dir = PathUtils::Join(aComponents, joinErr);
+        if (joinErr.Failed()) {
+          promise->MaybeReject(std::move(joinErr));
+          return;
+        }
+
+        state->mEventQueue
+            ->template Dispatch<Ok>([dir]() {
+              return MakeDirectorySync(dir, /* aCreateAncestors = */ true,
+                                       /* aIgnoreExisting = */ true, 0755);
+            })
+            ->Then(
+                GetCurrentSerialEventTarget(), __func__,
+                [dir, promise = RefPtr(promise)](const Ok&) {
+                  promise->MaybeResolve(dir);
+                },
+                [promise = RefPtr(promise)](const IOError& err) {
+                  RejectJSPromise(promise, err);
+                });
+      });
+}
+
+/* static */
 already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal,
                                                    ErrorResult& aError) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
