@@ -5936,9 +5936,24 @@ bool nsLayoutUtils::GetLastLineBaseline(WritingMode aWM, const nsIFrame* aFrame,
   }
 
   const nsBlockFrame* block = do_QueryFrame(aFrame);
-  if (!block)
-    // No baseline.  (We intentionally don't descend into scroll frames.)
+  if (!block) {
+    if (nsIScrollableFrame* sFrame = do_QueryFrame(aFrame)) {
+      // Use the baseline position only if the last line's baseline is within
+      // the scrolling frame's box in the initial position.
+      const auto* scrolledFrame = sFrame->GetScrolledFrame();
+      if (!GetLastLineBaseline(aWM, scrolledFrame, aResult)) {
+        return false;
+      }
+      // Go from scrolled frame to scrollable frame position.
+      *aResult += aFrame->GetLogicalUsedBorder(aWM).BStart(aWM);
+      const auto maxBaseline = aFrame->GetLogicalSize(aWM).BSize(aWM);
+      // If out of range, let the caller decide on how to syhthesize the
+      // baseline.
+      return *aResult <= maxBaseline && *aResult >= 0;
+    }
+    // No baseline.
     return false;
+  }
 
   for (nsBlockFrame::ConstReverseLineIterator line = block->LinesRBegin(),
                                               line_end = block->LinesREnd();
