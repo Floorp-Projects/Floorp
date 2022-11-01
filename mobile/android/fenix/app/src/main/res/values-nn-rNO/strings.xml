@@ -81,6 +81,13 @@
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Ignorer</string>
 
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Vår kraftigaste personvernfunksjon til no isolerer sporarar på tvers av nettstadar.</string>
+
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Les meir om totalt vern mot infokapslar</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Kameratilgang er nødvendig. Gå til Android-innstillingar, trykk på løyve, og trykk på tillat.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -127,13 +134,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Vis alle nylege faner-knappen</string>
-    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
-        The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Du søkte etter «%1$s»</string>
-
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d nettstadar</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Vis alle synkroniserte faner</string>
@@ -277,10 +277,14 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Den personlege Firefox-startsida di gjer det no lettare å fortsetje der du slutta. Finn dei siste fanene, bokmerka og søkjeresultata.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Møt den personlege heimesida di. Nylege faner, bokmerke og søkjeresultat vert viste her.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Velkomen til eit uavhengig internett</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Byt frå telefonen til datamaskina og tilbake</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Hald fram der du slapp med faner frå andre einingar - no på startsida di.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Kom i gang</string>
 
@@ -288,6 +292,9 @@
     <string name="onboarding_home_sign_in_button">Logg inn</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Hopp over</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Lat att</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -467,12 +474,6 @@
     <string name="wallpaper_download_error_snackbar_action">Prøv igjen</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">Les meir</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Endre bakgrunnsbilde ved å trykkje på Firefox-logoen på startsida</string>
-
-    <!-- This is the accessibility content description for the wallpapers functionality. Users are
-    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox-logo - knapp for å endre bakgrunnsbilde</string>
 
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">Klassisk %s</string>
@@ -658,10 +659,6 @@
     <string name="tab_view_list">Liste</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Rutenett</string>
-    <!-- Option for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Søkjegrupper</string>
-    <!-- Summary text for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Grupper relaterte nettstadar saman</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Lat att faner</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -813,18 +810,6 @@
     <string name="history_older">Eldre</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Ingen historikk her</string>
-
-    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Synkronisert frå andre einingar</string>
-    <!-- The page title for browsing history coming from other devices. -->
-    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Frå andre einingar</string>
-
-    <!-- The synced history sign in dialog message -->
-    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Logg inn for å sjå historikken synkronisert frå dei andre einingane dine.</string>
-    <!-- The synced history sign in dialog button text -->
-    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Logga in</string>
-    <!-- The synced history sign in dialog create a new account link -->
-    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Eller opprett ein Firefox-konto for å starte synkronisering</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1065,10 +1050,10 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Kopier til utklippstavla</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Logg inn for å synkronisere</string>
+    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Logg inn for å synkronisere</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Logg inn på Sync</string>
-    <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Send til alle einingar</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Kople til Sync på nytt</string>
@@ -1920,4 +1905,5 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Gå til innstillingar</string>
     <string name="firefox_suggest_header">Firefox-forslag</string>
-</resources>
+
+    </resources>
