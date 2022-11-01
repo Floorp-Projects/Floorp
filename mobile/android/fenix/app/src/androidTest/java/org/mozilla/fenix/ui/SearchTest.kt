@@ -30,7 +30,6 @@ import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.grantPermission
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.setCustomSearchEngine
-import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 
@@ -113,31 +112,6 @@ class SearchTest {
             clickScanButton()
             grantPermission()
             verifyScannerOpen()
-        }
-    }
-
-    @Test
-    fun shortcutButtonTest() {
-        val searchEngineURL = "bing.com/search?q=mozilla%20firefox"
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openSearchSubMenu {
-            toggleShowSearchShortcuts()
-        }.goBack {
-        }.goBack {
-        }.openSearch {
-            verifySearchBarEmpty()
-            clickSearchEngineButton(activityTestRule, "Bing")
-            typeSearch("mozilla")
-            verifySearchEngineResults(activityTestRule, "mozilla firefox", "Bing")
-            clickSearchEngineResult(activityTestRule, "mozilla firefox")
-        }
-
-        browserScreen {
-            waitForPageToLoad()
-            verifyUrl(searchEngineURL)
         }
     }
 
