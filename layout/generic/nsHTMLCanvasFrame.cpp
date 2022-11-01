@@ -181,10 +181,9 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         // result, a bunch of the calculations normally done as part of that
         // stacking context need to be done manually and pushed over to the
         // parent side, where it will be done when we build the display list for
-        // the iframe. That happens in WebRenderCompositableHolder.
-
-        wr::LayoutRect r = wr::ToLayoutRect(bounds);
-        aBuilder.PushIFrame(r, !BackfaceIsHidden(), data->GetPipelineId().ref(),
+        // the iframe. That happens in WebRenderCompositableHolder.s2);
+        aBuilder.PushIFrame(bounds, !BackfaceIsHidden(),
+                            data->GetPipelineId().ref(),
                             /*ignoreMissingPipelines*/ false);
 
         LayoutDeviceRect scBounds(LayoutDevicePoint(0, 0), bounds.Size());

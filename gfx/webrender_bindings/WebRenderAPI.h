@@ -577,7 +577,7 @@ class DisplayListBuilder final {
       bool aPreferCompositorSurface = false,
       bool aSupportsExternalCompositing = false);
 
-  void PushIFrame(const wr::LayoutRect& aBounds, bool aIsBackfaceVisible,
+  void PushIFrame(const LayoutDeviceRect& aDevPxBounds, bool aIsBackfaceVisible,
                   wr::PipelineId aPipeline, bool aIgnoreMissingPipeline);
 
   // XXX WrBorderSides are passed with Range.
