@@ -20,6 +20,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.Constants.PackageName.ANDROID_SETTINGS
+import org.mozilla.fenix.helpers.Constants.searchEngineCodes
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
@@ -45,6 +46,7 @@ import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 
 class SearchTest {
     lateinit var searchMockServer: MockWebServer
+    lateinit var queryString: String
 
     @get:Rule
     val activityTestRule = AndroidComposeTestRule(
@@ -117,6 +119,8 @@ class SearchTest {
 
     @Test
     fun setDefaultSearchEngineFromShortcutsTest() {
+        queryString = "firefox"
+
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -134,16 +138,18 @@ class SearchTest {
 
         homeScreen {
         }.openSearch {
-        }.submitQuery("firefox") {
+        }.submitQuery(queryString) {
             verifyUrl("duckduckgo.com/?q=firefox")
         }
     }
 
     @Test
     fun clearSearchTest() {
+        queryString = "test"
+
         homeScreen {
         }.openSearch {
-            typeSearch("test")
+            typeSearch(queryString)
             clickClearButton()
             verifySearchBarEmpty()
         }
@@ -153,6 +159,7 @@ class SearchTest {
     @SmokeTest
     @Test
     fun searchGroupShowsInRecentlyVisitedTest() {
+        queryString = "test search"
         val firstPage = getGenericAsset(searchMockServer, 1)
         val secondPage = getGenericAsset(searchMockServer, 2)
         // setting our custom mockWebServer search URL
@@ -168,7 +175,7 @@ class SearchTest {
         // Performs a search and opens 2 dummy search results links to create a search group
         homeScreen {
         }.openSearch {
-        }.submitQuery("test search") {
+        }.submitQuery(queryString) {
             longClickLink("Link 1")
             clickContextOpenLinkInNewTab()
             longClickLink("Link 2")
@@ -180,13 +187,14 @@ class SearchTest {
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
         }.closeAllTabs {
-            verifyRecentlyVisitedSearchGroupDisplayed(true, "test search", 3)
+            verifyRecentlyVisitedSearchGroupDisplayed(true, queryString, 3)
         }
     }
 
     @SmokeTest
     @Test
     fun noSearchGroupFromPrivateBrowsingTest() {
+        queryString = "test search"
         // setting our custom mockWebServer search URL
         val searchString = "http://localhost:${searchMockServer.port}/searchResults.html?search={searchTerms}"
         val customSearchEngine = createSearchEngine(
@@ -199,7 +207,7 @@ class SearchTest {
         // Performs a search and opens 2 dummy search results links to create a search group
         homeScreen {
         }.openSearch {
-        }.submitQuery("test search") {
+        }.submitQuery(queryString) {
             longClickLink("Link 1")
             clickContextOpenLinkInPrivateTab()
             longClickLink("Link 2")
@@ -213,7 +221,7 @@ class SearchTest {
         }.openTabsListThreeDotMenu {
         }.closeAllTabs {
             togglePrivateBrowsingModeOnOff()
-            verifyCurrentSearchGroupIsDisplayed(false, "test search", 3)
+            verifyCurrentSearchGroupIsDisplayed(false, queryString, 3)
         }.openThreeDotMenu {
         }.openHistory {
             verifyHistoryItemExists(false, "3 sites")
@@ -224,6 +232,7 @@ class SearchTest {
     @SmokeTest
     @Test
     fun deleteItemsFromSearchGroupsHistoryTest() {
+        queryString = "test search"
         val firstPage = getGenericAsset(searchMockServer, 1)
         val secondPage = getGenericAsset(searchMockServer, 2)
         // setting our custom mockWebServer search URL
@@ -238,7 +247,7 @@ class SearchTest {
         // Performs a search and opens 2 dummy search results links to create a search group
         homeScreen {
         }.openSearch {
-        }.submitQuery("test search") {
+        }.submitQuery(queryString) {
             longClickLink("Link 1")
             clickContextOpenLinkInNewTab()
             longClickLink("Link 2")
@@ -250,8 +259,8 @@ class SearchTest {
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
         }.closeAllTabs {
-            verifyRecentlyVisitedSearchGroupDisplayed(true, "test search", 3)
-        }.openRecentlyVisitedSearchGroupHistoryList("test search") {
+            verifyRecentlyVisitedSearchGroupDisplayed(true, queryString, 3)
+        }.openRecentlyVisitedSearchGroupHistoryList(queryString) {
             clickDeleteHistoryButton(firstPage.url.toString())
             longTapSelectItem(secondPage.url)
             multipleSelectionToolbar {
@@ -262,7 +271,61 @@ class SearchTest {
         }
         homeScreen {
             // checking that the group is removed when only 1 item is left
-            verifyRecentlyVisitedSearchGroupDisplayed(false, "test search", 1)
+            verifyRecentlyVisitedSearchGroupDisplayed(false, queryString, 1)
+        }
+    }
+
+    // Default search code for Google-US
+    @Test
+    fun defaultSearchCodeGoogleUS() {
+        queryString = "firefox"
+
+        homeScreen {
+        }.openSearch {
+        }.submitQuery(queryString) {
+            verifyUrl(searchEngineCodes["Google"]!!)
+        }
+    }
+
+    // Default search code for Bing-US
+    @Test
+    fun defaultSearchCodeBingUS() {
+        queryString = "firefox"
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            changeDefaultSearchEngine("Bing")
+        }
+
+        exitMenu()
+
+        homeScreen {
+        }.openSearch {
+        }.submitQuery(queryString) {
+            verifyUrl(searchEngineCodes["Bing"]!!)
+        }
+    }
+
+    // Default search code for DuckDuckGo-US
+    @Test
+    fun defaultSearchCodeDuckDuckGoUS() {
+        queryString = "firefox"
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            changeDefaultSearchEngine("DuckDuckGo")
+        }
+
+        exitMenu()
+
+        homeScreen {
+        }.openSearch {
+        }.submitQuery(queryString) {
+            verifyUrl(searchEngineCodes["DuckDuckGo"]!!)
         }
     }
 }
