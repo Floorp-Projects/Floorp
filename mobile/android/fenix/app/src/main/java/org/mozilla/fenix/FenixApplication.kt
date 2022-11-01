@@ -75,6 +75,8 @@ import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.containsQueryParameters
+import org.mozilla.fenix.ext.getCustomGleanServerUrlIfAvailable
+import org.mozilla.fenix.ext.setCustomEndpointIfAvailable
 import org.mozilla.fenix.ext.isCustomEngine
 import org.mozilla.fenix.ext.isKnownSearchDomain
 import org.mozilla.fenix.ext.settings
@@ -154,14 +156,24 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
         logger.debug("Initializing Glean (uploadEnabled=$telemetryEnabled})")
 
+        // for performance reasons, this is only available in Nightly or Debug builds
+        val customEndpoint = if (Config.channel.isNightlyOrDebug) {
+            // for testing, if custom glean server url is set in the secret menu, use it to initialize Glean
+            getCustomGleanServerUrlIfAvailable(this)
+        } else {
+            null
+        }
+
+        val configuration = Configuration(
+            channel = BuildConfig.BUILD_TYPE,
+            httpClient = ConceptFetchHttpUploader(
+                lazy(LazyThreadSafetyMode.NONE) { components.core.client },
+            ),
+        )
+
         Glean.initialize(
             applicationContext = this,
-            configuration = Configuration(
-                channel = BuildConfig.BUILD_TYPE,
-                httpClient = ConceptFetchHttpUploader(
-                    lazy(LazyThreadSafetyMode.NONE) { components.core.client },
-                ),
-            ),
+            configuration = configuration.setCustomEndpointIfAvailable(customEndpoint),
             uploadEnabled = telemetryEnabled,
             buildInfo = GleanBuildInfo.buildInfo,
         )

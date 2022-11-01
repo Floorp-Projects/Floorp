@@ -44,6 +44,8 @@
     <string name="preferences_debug_settings_task_continuity" translatable="false">Enable Task Continuity</string>
     <!-- Label for enabling the Unified Search feature -->
     <string name="preferences_debug_settings_unified_search" translatable="false">Enable Unified Search (requires restart)</string>
+    <!-- Label for custom Glean server URL -->
+    <string name="preferences_debug_settings_custom_glean_server_url" translatable="false">Custom Glean server URL (requires restart)</string>
     <!-- Title of preference for sync debugging (only shown in the when the secret debug menu is enabled) -->
     <string name="preferences_sync_debug">Sync Debug</string>
     <!-- Preference to override the Push server -->
