@@ -20,11 +20,9 @@ import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
-import org.mozilla.fenix.compose.button.Button
 import org.mozilla.fenix.compose.button.TertiaryButton
 import org.mozilla.fenix.home.sessioncontrol.CustomizeHomeIteractor
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.wallpapers.WallpaperState
 
 class CustomizeHomeButtonViewHolder(
@@ -48,7 +46,6 @@ class CustomizeHomeButtonViewHolder(
         val wallpaperState = components.appStore
             .observeAsComposableState { state -> state.wallpaperState }.value ?: WallpaperState.default
         var buttonColor: Color = FirefoxTheme.colors.actionTertiary
-        val textColor: Color = FirefoxTheme.colors.textActionTertiary
 
         wallpaperState.composeRunIfWallpaperCardColorsAreAvailable { cardColorLight, cardColorDark ->
             buttonColor = if (isSystemInDarkTheme()) {
@@ -61,15 +58,9 @@ class CustomizeHomeButtonViewHolder(
         Column {
             Spacer(modifier = Modifier.height(68.dp))
 
-            /**
-             * This button will be stylized as a [TertiaryButton] when no wallpaper is selected.
-             * Otherwise, the background will use [Wallpaper.cardColorLight] or [Wallpaper.cardColorDark].
-             * */
-            Button(
+            TertiaryButton(
                 text = stringResource(R.string.browser_menu_customize_home_1),
-                textColor = textColor,
                 backgroundColor = buttonColor,
-                tint = FirefoxTheme.colors.iconActionTertiary,
                 onClick = interactor::openCustomizeHomePage,
             )
         }
