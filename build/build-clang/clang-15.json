@@ -7,14 +7,13 @@
         "bug47258-extract-symbols-mbcs.patch",
         "fuzzing_ccov_build_clang_12.patch",
         "win64-no-symlink_clang_16.patch",
-        "revert-llvmorg-16-init-8201-ge0fb01e97b6b.patch",
-        "revert-llvmorg-16-init-7694-g19e984ef8f49.patch",
-        "revert-llvmorg-16-init-7598-g54bfd0484615.patch",
         "revert-llvmorg-15-init-13446-g7524fe962e47.patch",
         "revert-llvmorg-14-init-14141-gd6d3000a2f6d.patch",
-        "revert-llvmorg-14-init-11890-gf86deb18cab6_clang_16.patch",
+        "revert-llvmorg-14-init-11890-gf86deb18cab6.patch",
         "win64-ret-null-on-commitment-limit_clang_14.patch",
-        "compiler-rt-rss-limit-heap-profile.patch",
+        "llvmorg-16-init-7778-g232e0a011e8c.patch",
+        "llvmorg-16-init-8264-gc34caa9120a4.patch",
+        "llvmorg-16-init-9438-g8c49b01a1ee0.patch",
         "profdata-compat.patch"
     ]
 }
