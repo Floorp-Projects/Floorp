@@ -192,10 +192,7 @@ class HomeScreenRobot {
     fun verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed: Boolean, searchTerm: String, groupSize: Int) {
         // checks if the search group exists in the Recently visited section
         if (shouldBeDisplayed) {
-            recentlyVisitedList.waitForExists(waitingTime)
             scrollToElementByText("Recently visited")
-            recentlyVisitedList.getChildByText(UiSelector().text(searchTerm), searchTerm, true)
-                .waitForExists(waitingTimeShort)
             assertTrue(
                 mDevice.findObject(UiSelector().text(searchTerm))
                     .getFromParent(UiSelector().text("$groupSize sites"))
@@ -580,7 +577,7 @@ class HomeScreenRobot {
         }
 
         fun openRecentlyVisitedSearchGroupHistoryList(title: String, interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
-            val searchGroup = recentlyVisitedList.getChildByText(UiSelector().text(title), title, true)
+            val searchGroup = mDevice.findObject(UiSelector().text(title))
             searchGroup.waitForExists(waitingTimeShort)
             searchGroup.click()
 

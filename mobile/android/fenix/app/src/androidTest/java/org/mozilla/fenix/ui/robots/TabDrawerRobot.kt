@@ -340,19 +340,19 @@ class TabDrawerRobot {
             return BrowserRobot.Transition()
         }
 
-        fun openTabFromGroup(
-            title: String,
+        // Temporary method to use indexes instead of tab titles, until the compose migration is complete
+        fun openTabWithIndex(
+            tabPosition: Int,
             interact: BrowserRobot.() -> Unit,
         ): BrowserRobot.Transition {
-            val tab = UiScrollable(UiSelector().resourceId("$packageName:id/tab_group_list"))
-                .setAsHorizontalList()
-                .getChildByText(
-                    UiSelector()
-                        .resourceId("$packageName:id/mozac_browser_tabstray_title")
-                        .textContains(title),
-                    title,
-                    true,
-                )
+            val tab = mDevice.findObject(
+                UiSelector()
+                    .className("androidx.compose.ui.platform.ComposeView")
+                    .index(tabPosition),
+            )
+
+            UiScrollable(UiSelector().resourceId("$packageName:id/tray_list_item")).scrollIntoView(tab)
+            tab.waitForExists(waitingTime)
             tab.click()
 
             BrowserRobot().interact()
