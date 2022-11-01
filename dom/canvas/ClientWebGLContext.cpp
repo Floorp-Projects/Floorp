@@ -498,7 +498,7 @@ bool ClientWebGLContext::UpdateWebRenderCanvasData(
     nsDisplayListBuilder* aBuilder, WebRenderCanvasData* aCanvasData) {
   CanvasRenderer* renderer = aCanvasData->GetCanvasRenderer();
 
-  if (!mResetLayer && renderer) {
+  if (!IsContextLost() && !mResetLayer && renderer) {
     return true;
   }
 
