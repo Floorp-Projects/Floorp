@@ -1376,9 +1376,13 @@ bool gfxHarfBuzzShaper::ShapeText(DrawTarget* aDrawTarget,
     } else if (features[i].value) {
       // If kerning was explicitly enabled), we also turn on proportional
       // alternates, as per the OpenType feature registry.
-      if (features.IndexOf(alt, 0, Cmp()) == NoIndex) {
-        features.AppendElement(hb_feature_t{alt, 1, HB_FEATURE_GLOBAL_START,
-                                            HB_FEATURE_GLOBAL_END});
+      // Bug 1798297: for the Yu Gothic UI font, we don't do this, because its
+      // 'palt' feature produces badly-spaced (overcrowded) kana glyphs.
+      if (!entry->FamilyName().EqualsLiteral("Yu Gothic UI")) {
+        if (features.IndexOf(alt, 0, Cmp()) == NoIndex) {
+          features.AppendElement(hb_feature_t{alt, 1, HB_FEATURE_GLOBAL_START,
+                                              HB_FEATURE_GLOBAL_END});
+        }
       }
     }
   }
