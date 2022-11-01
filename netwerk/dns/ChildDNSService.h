@@ -35,6 +35,9 @@ class ChildDNSService final : public DNSServiceBase, public nsPIDNSService {
 
   void NotifyRequestDone(DNSRequestSender* aDnsRequest);
 
+  void SetTRRDomain(const nsACString& aTRRDomain);
+  void GetTRRDomain(nsACString& aTRRDomain);
+
  private:
   virtual ~ChildDNSService() = default;
 
@@ -60,6 +63,8 @@ class ChildDNSService final : public DNSServiceBase, public nsPIDNSService {
       mPendingRequests;
   Mutex mPendingRequestsLock MOZ_UNANNOTATED{"DNSPendingRequestsLock"};
   RefPtr<TRRServiceParent> mTRRServiceParent;
+
+  nsCString mTRRDomain;
 };
 
 }  // namespace net

@@ -206,6 +206,7 @@ LOCAL_INCLUDES += [
     "/layout/base",
     "/media/webrtc",
     "/netwerk/base",
+    "/netwerk/dns",
     "/netwerk/protocol/http",
     "/toolkit/components/printingui/ipc",
     "/toolkit/crashreporter",

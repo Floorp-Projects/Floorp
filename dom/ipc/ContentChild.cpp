@@ -113,6 +113,7 @@
 #include "mozilla/loader/ScriptCacheActors.h"
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/net/CaptivePortalService.h"
+#include "mozilla/net/ChildDNSService.h"
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/DocumentChannelChild.h"
 #include "mozilla/net/HttpChannelChild.h"
@@ -685,7 +686,11 @@ mozilla::ipc::IPCResult ContentChild::RecvSetXPCOMProcessAttributes(
   InitXPCOM(std::move(aXPCOMInit), aInitialData,
             aIsReadyForBackgroundProcessing);
   InitGraphicsDeviceData(aXPCOMInit.contentDeviceData());
-
+  RefPtr<net::ChildDNSService> dnsServiceChild =
+      dont_AddRef(net::ChildDNSService::GetSingleton());
+  if (dnsServiceChild) {
+    dnsServiceChild->SetTRRDomain(aXPCOMInit.trrDomain());
+  }
   return IPC_OK();
 }
 

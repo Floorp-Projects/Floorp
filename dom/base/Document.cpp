@@ -248,6 +248,7 @@
 #include "mozilla/ipc/IdleSchedulerChild.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/net/ChannelEventQueue.h"
+#include "mozilla/net/ChildDNSService.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/net/RequestContextService.h"
@@ -2081,11 +2082,20 @@ void Document::AccumulatePageLoadTelemetry(
     return;
   }
 
-  nsCString http3Key;
-  nsCString http3WithPriorityKey;
+  nsAutoCString dnsKey("Native");
+  nsAutoCString http3Key;
+  nsAutoCString http3WithPriorityKey;
   nsCOMPtr<nsIHttpChannelInternal> httpChannel =
       do_QueryInterface(GetChannel());
   if (httpChannel) {
+    bool resolvedByTRR = false;
+    Unused << httpChannel->GetIsResolvedByTRR(&resolvedByTRR);
+    if (resolvedByTRR) {
+      RefPtr<net::ChildDNSService> dnsServiceChild =
+          net::ChildDNSService::GetSingleton();
+      dnsServiceChild->GetTRRDomain(dnsKey);
+    }
+
     uint32_t major;
     uint32_t minor;
     if (NS_SUCCEEDED(httpChannel->GetResponseVersion(&major, &minor))) {
@@ -2130,6 +2140,10 @@ void Document::AccumulatePageLoadTelemetry(
           Telemetry::H3P_PERF_FIRST_CONTENTFUL_PAINT_MS, http3WithPriorityKey,
           navigationStart, firstContentfulComposite);
     }
+
+    Telemetry::AccumulateTimeDelta(
+        Telemetry::DNS_PERF_FIRST_CONTENTFUL_PAINT_MS, dnsKey, navigationStart,
+        firstContentfulComposite);
 
     Telemetry::AccumulateTimeDelta(
         Telemetry::PERF_FIRST_CONTENTFUL_PAINT_FROM_RESPONSESTART_MS,

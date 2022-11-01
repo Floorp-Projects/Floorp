@@ -10,6 +10,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/net/HttpChannelChild.h"
+#include "mozilla/net/ChildDNSService.h"
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/DataChannelChild.h"
 #ifdef MOZ_WIDGET_GTK
@@ -341,6 +342,15 @@ bool NeckoChild::DeallocPClassifierDummyChannelChild(
     PClassifierDummyChannelChild* aActor) {
   delete static_cast<ClassifierDummyChannelChild*>(aActor);
   return true;
+}
+
+mozilla::ipc::IPCResult NeckoChild::RecvSetTRRDomain(const nsCString& domain) {
+  RefPtr<net::ChildDNSService> dnsServiceChild =
+      dont_AddRef(net::ChildDNSService::GetSingleton());
+  if (dnsServiceChild) {
+    dnsServiceChild->SetTRRDomain(domain);
+  }
+  return IPC_OK();
 }
 
 }  // namespace net

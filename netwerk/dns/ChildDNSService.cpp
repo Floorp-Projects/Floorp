@@ -460,5 +460,13 @@ ChildDNSService::Observe(nsISupports* subject, const char* topic,
   return NS_OK;
 }
 
+void ChildDNSService::SetTRRDomain(const nsACString& aTRRDomain) {
+  mTRRDomain = aTRRDomain;
+}
+
+void ChildDNSService::GetTRRDomain(nsACString& aTRRDomain) {
+  aTRRDomain = mTRRDomain;
+}
+
 }  // namespace net
 }  // namespace mozilla
