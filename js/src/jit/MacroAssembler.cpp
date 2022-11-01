@@ -1905,12 +1905,21 @@ void MacroAssembler::loadMegamorphicCache(Register dest) {
 void MacroAssembler::loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
                                              Register outHash,
                                              Label* cacheMiss) {
-  Label maybeSymbol, fatInline, done;
+  Label isString, fatInline, done;
 
-  ScratchTagScope tag(*this, value);
-  splitTagForTest(value, tag);
-  branchTestString(Assembler::NotEqual, tag, &maybeSymbol);
+  {
+    ScratchTagScope tag(*this, value);
+    splitTagForTest(value, tag);
+    branchTestString(Assembler::Equal, tag, &isString);
 
+    branchTestSymbol(Assembler::NotEqual, tag, cacheMiss);
+
+    unboxSymbol(value, outId);
+    load32(Address(outId, JS::Symbol::offsetOfHash()), outHash);
+    jump(&done);
+  }
+
+  bind(&isString);
   unboxString(value, outId);
   branchTest32(Assembler::Zero, Address(outId, JSString::offsetOfFlags()),
                Imm32(JSString::ATOM_BIT), cacheMiss);
@@ -1924,13 +1933,6 @@ void MacroAssembler::loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
   jump(&done);
   bind(&fatInline);
   load32(Address(outId, FatInlineAtom::offsetOfHash()), outHash);
-  jump(&done);
-
-  bind(&maybeSymbol);
-  branchTestSymbol(Assembler::NotEqual, tag, cacheMiss);
-
-  unboxSymbol(value, outId);
-  load32(Address(outId, JS::Symbol::offsetOfHash()), outHash);
 
   bind(&done);
 }
