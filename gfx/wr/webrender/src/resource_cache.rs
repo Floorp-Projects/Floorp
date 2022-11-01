@@ -33,6 +33,7 @@ use crate::profiler::{self, TransactionProfile, bytes_to_mb};
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraphBuilder};
 use crate::render_task_cache::{RenderTaskCache, RenderTaskCacheKey, RenderTaskParent};
 use crate::render_task_cache::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle};
+use crate::renderer::GpuBufferBuilder;
 use crate::surface::SurfaceBuilder;
 use euclid::point2;
 use smallvec::SmallVec;
@@ -591,6 +592,7 @@ impl ResourceCache {
         &mut self,
         key: RenderTaskCacheKey,
         gpu_cache: &mut GpuCache,
+        gpu_buffer_builder: &mut GpuBufferBuilder,
         rg_builder: &mut RenderTaskGraphBuilder,
         user_data: Option<[f32; 4]>,
         is_opaque: bool,
@@ -599,18 +601,19 @@ impl ResourceCache {
         f: F,
     ) -> RenderTaskId
     where
-        F: FnOnce(&mut RenderTaskGraphBuilder) -> RenderTaskId,
+        F: FnOnce(&mut RenderTaskGraphBuilder, &mut GpuBufferBuilder) -> RenderTaskId,
     {
         self.cached_render_tasks.request_render_task(
             key,
             &mut self.texture_cache,
             gpu_cache,
+            gpu_buffer_builder,
             rg_builder,
             user_data,
             is_opaque,
             parent,
             surface_builder,
-            |render_graph| Ok(f(render_graph))
+            |render_graph, gpu_buffer_builder| Ok(f(render_graph, gpu_buffer_builder))
         ).expect("Failed to request a render task from the resource cache!")
     }
 

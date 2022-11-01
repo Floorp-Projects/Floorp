@@ -26,6 +26,7 @@ use crate::picture::{PicturePrimitive, SliceId, ClusterFlags};
 use crate::picture::{PrimitiveList, PrimitiveCluster, SurfaceIndex, TileCacheInstance, SubpixelMode, Picture3DContext};
 use crate::prim_store::line_dec::MAX_LINE_DECORATION_RESOLUTION;
 use crate::prim_store::*;
+use crate::prim_store::gradient::GradientGpuBlockBuilder;
 use crate::render_backend::DataStores;
 use crate::render_task_graph::RenderTaskId;
 use crate::render_task_cache::RenderTaskCacheKeyKind;
@@ -232,6 +233,7 @@ fn prepare_interned_prim_for_render(
 ) -> PrimitiveCommand {
     let prim_spatial_node_index = cluster.spatial_node_index;
     let device_pixel_scale = frame_state.surfaces[pic_context.surface_index.0].device_pixel_scale;
+    let mut prim_cmd = None;
 
     match &mut prim_instance.kind {
         PrimitiveInstanceKind::LineDecoration { data_handle, ref mut render_task, .. } => {
@@ -297,12 +299,13 @@ fn prepare_interned_prim_for_render(
                         kind: RenderTaskCacheKeyKind::LineDecoration(cache_key.clone()),
                     },
                     frame_state.gpu_cache,
+                    frame_state.frame_gpu_data,
                     frame_state.rg_builder,
                     None,
                     false,
                     RenderTaskParent::Surface(pic_context.surface_index),
                     &mut frame_state.surface_builder,
-                    |rg_builder| {
+                    |rg_builder, _| {
                         rg_builder.add().init(RenderTask::new_dynamic(
                             task_size,
                             RenderTaskKind::new_line_decoration(
@@ -450,12 +453,13 @@ fn prepare_interned_prim_for_render(
                 handles.push(frame_state.resource_cache.request_render_task(
                     cache_key,
                     frame_state.gpu_cache,
+                    frame_state.frame_gpu_data,
                     frame_state.rg_builder,
                     None,
                     false,          // TODO(gw): We don't calculate opacity for borders yet!
                     RenderTaskParent::Surface(pic_context.surface_index),
                     &mut frame_state.surface_builder,
-                    |rg_builder| {
+                    |rg_builder, _| {
                         rg_builder.add().init(RenderTask::new_dynamic(
                             cache_size,
                             RenderTaskKind::new_border_segment(
@@ -636,8 +640,16 @@ fn prepare_interned_prim_for_render(
                 }
             }
 
+            let stops_address = GradientGpuBlockBuilder::build(
+                prim_data.reverse_stops,
+                frame_state.frame_gpu_data,
+                &prim_data.stops,
+            );
+
             // TODO(gw): Consider whether it's worth doing segment building
             //           for gradient primitives.
+
+            prim_cmd = Some(PrimitiveCommand::instance(prim_instance_index, stops_address));
         }
         PrimitiveInstanceKind::CachedLinearGradient { data_handle, ref mut visible_tiles_range, .. } => {
             profile_scope!("CachedLinearGradient");
@@ -811,7 +823,7 @@ fn prepare_interned_prim_for_render(
         }
     }
 
-    PrimitiveCommand::simple(prim_instance_index)
+    prim_cmd.unwrap_or(PrimitiveCommand::simple(prim_instance_index))
 }
 
 
@@ -1147,6 +1159,7 @@ pub fn update_clip_task(
             root_spatial_node_index,
             frame_state.clip_store,
             frame_state.gpu_cache,
+            frame_state.frame_gpu_data,
             frame_state.resource_cache,
             frame_state.rg_builder,
             &mut data_stores.clip,
@@ -1207,6 +1220,7 @@ pub fn update_brush_segment_clip_task(
         root_spatial_node_index,
         frame_state.clip_store,
         frame_state.gpu_cache,
+        frame_state.frame_gpu_data,
         frame_state.resource_cache,
         frame_state.rg_builder,
         clip_data_store,

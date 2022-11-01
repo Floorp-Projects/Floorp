@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef WR_VERTEX_SHADER
-
 uniform HIGHP_SAMPLER_FLOAT sampler2D sGpuBuffer;
 
 ivec2 get_gpu_buffer_uv(HIGHP_FS_ADDRESS int address) {
@@ -23,5 +21,3 @@ vec4[2] fetch_from_gpu_buffer_2(HIGHP_FS_ADDRESS int address) {
         TEXEL_FETCH(sGpuBuffer, uv, 0, ivec2(1, 0))
     );
 }
-
-#endif

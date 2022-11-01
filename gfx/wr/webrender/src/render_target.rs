@@ -637,7 +637,6 @@ impl TextureCacheRenderTarget {
         &mut self,
         task_id: RenderTaskId,
         render_tasks: &RenderTaskGraph,
-        gpu_cache: &mut GpuCache,
     ) {
         profile_scope!("add_task");
         let task_address = task_id.into();
@@ -701,13 +700,13 @@ impl TextureCacheRenderTarget {
                 self.fast_linear_gradients.push(task_info.to_instance(&target_rect));
             }
             RenderTaskKind::LinearGradient(ref task_info) => {
-                self.linear_gradients.push(task_info.to_instance(&target_rect, gpu_cache));
+                self.linear_gradients.push(task_info.to_instance(&target_rect));
             }
             RenderTaskKind::RadialGradient(ref task_info) => {
-                self.radial_gradients.push(task_info.to_instance(&target_rect, gpu_cache));
+                self.radial_gradients.push(task_info.to_instance(&target_rect));
             }
             RenderTaskKind::ConicGradient(ref task_info) => {
-                self.conic_gradients.push(task_info.to_instance(&target_rect, gpu_cache));
+                self.conic_gradients.push(task_info.to_instance(&target_rect));
             }
             RenderTaskKind::Image(..) |
             RenderTaskKind::Cached(..) |

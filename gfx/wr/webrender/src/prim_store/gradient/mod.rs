@@ -4,7 +4,7 @@
 
 use api::{ColorF, ColorU, GradientStop, PremultipliedColorF};
 use api::units::{LayoutRect, LayoutSize, LayoutVector2D};
-use crate::gpu_cache::GpuDataRequest;
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilder};
 use std::hash;
 
 mod linear;
@@ -105,7 +105,7 @@ impl GradientDataEntry {
 }
 
 // TODO(gw): Tidy this up to be a free function / module?
-struct GradientGpuBlockBuilder {}
+pub struct GradientGpuBlockBuilder {}
 
 impl GradientGpuBlockBuilder {
     /// Generate a color ramp filling the indices in [start_idx, end_idx) and interpolating
@@ -165,11 +165,11 @@ impl GradientGpuBlockBuilder {
     }
 
     // Build the gradient data from the supplied stops, reversing them if necessary.
-    fn build(
+    pub fn build(
         reverse_stops: bool,
-        request: &mut GpuDataRequest,
+        gpu_buffer_builder: &mut GpuBufferBuilder,
         src_stops: &[GradientStop],
-    ) {
+    ) -> GpuBufferAddress {
         // Preconditions (should be ensured by DisplayListBuilder):
         // * we have at least two stops
         // * first stop has offset 0.0
@@ -310,10 +310,14 @@ impl GradientGpuBlockBuilder {
             );
         }
 
-        for entry in entries.iter() {
-            request.push(entry.start_color);
-            request.push(entry.end_step);
+        let mut writer = gpu_buffer_builder.write_blocks(2 * entries.len());
+
+        for entry in entries {
+            writer.push_one(entry.start_color);
+            writer.push_one(entry.end_step);
         }
+
+        writer.finish()
     }
 }
 
@@ -375,14 +379,14 @@ fn test_struct_sizes() {
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<LinearGradient>(), 72, "LinearGradient size changed");
-    assert_eq!(mem::size_of::<LinearGradientTemplate>(), 152, "LinearGradientTemplate size changed");
+    assert_eq!(mem::size_of::<LinearGradientTemplate>(), 144, "LinearGradientTemplate size changed");
     assert_eq!(mem::size_of::<LinearGradientKey>(), 88, "LinearGradientKey size changed");
 
     assert_eq!(mem::size_of::<RadialGradient>(), 72, "RadialGradient size changed");
-    assert_eq!(mem::size_of::<RadialGradientTemplate>(), 152, "RadialGradientTemplate size changed");
+    assert_eq!(mem::size_of::<RadialGradientTemplate>(), 144, "RadialGradientTemplate size changed");
     assert_eq!(mem::size_of::<RadialGradientKey>(), 96, "RadialGradientKey size changed");
 
     assert_eq!(mem::size_of::<ConicGradient>(), 72, "ConicGradient size changed");
-    assert_eq!(mem::size_of::<ConicGradientTemplate>(), 152, "ConicGradientTemplate size changed");
+    assert_eq!(mem::size_of::<ConicGradientTemplate>(), 144, "ConicGradientTemplate size changed");
     assert_eq!(mem::size_of::<ConicGradientKey>(), 96, "ConicGradientKey size changed");
 }

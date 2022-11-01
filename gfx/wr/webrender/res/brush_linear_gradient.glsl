@@ -4,7 +4,7 @@
 
 #define VECS_PER_SPECIFIC_BRUSH 2
 
-#include shared,prim_shared,brush,gradient_shared
+#include shared,prim_shared,brush,gpu_buffer,gradient_shared
 
 // Start offset. Packed in to vector to work around bug 1630356.
 flat varying vec2 v_start_offset;
@@ -82,12 +82,12 @@ Fragment brush_fs() {
 
 #ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
-    int address = swgl_validateGradient(sGpuCache, get_gpu_cache_uv(v_gradient_address.x), int(GRADIENT_ENTRIES + 2.0));
+    int address = swgl_validateGradient(sGpuBuffer, get_gpu_buffer_uv(v_gradient_address.x), int(GRADIENT_ENTRIES + 2.0));
     if (address < 0) {
         return;
     }
 
-    swgl_commitLinearGradientRGBA8(sGpuCache, address, GRADIENT_ENTRIES, true, v_gradient_repeat.x != 0.0,
+    swgl_commitLinearGradientRGBA8(sGpuBuffer, address, GRADIENT_ENTRIES, true, v_gradient_repeat.x != 0.0,
                                    v_pos, v_scale_dir, v_start_offset.x);
 }
 #endif

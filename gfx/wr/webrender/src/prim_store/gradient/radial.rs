@@ -13,7 +13,6 @@ use api::{ExtendMode, GradientStop, PremultipliedColorF, ColorU};
 use api::units::*;
 use crate::scene_building::IsVisible;
 use crate::frame_builder::FrameBuildingState;
-use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::prim_store::{BrushSegment, GradientTileRange, InternablePrimitive};
@@ -23,6 +22,7 @@ use crate::prim_store::{NinePatchDescriptor, PointKey, SizeKey, FloatKey};
 use crate::render_task::{RenderTask, RenderTaskKind};
 use crate::render_task_graph::RenderTaskId;
 use crate::render_task_cache::{RenderTaskCacheKeyKind, RenderTaskCacheKey, RenderTaskParent};
+use crate::renderer::GpuBufferAddress;
 use crate::picture::{SurfaceIndex};
 
 use std::{hash, ops::{Deref, DerefMut}};
@@ -102,7 +102,6 @@ pub struct RadialGradientTemplate {
     pub brush_segments: Vec<BrushSegment>,
     pub stops_opacity: PrimitiveOpacity,
     pub stops: Vec<GradientStop>,
-    pub stops_handle: GpuCacheHandle,
     pub src_color: Option<RenderTaskId>,
 }
 
@@ -166,7 +165,6 @@ impl From<RadialGradientKey> for RadialGradientTemplate {
             brush_segments,
             stops_opacity,
             stops,
-            stops_handle: GpuCacheHandle::new(),
             src_color: None,
         }
     }
@@ -204,14 +202,6 @@ impl RadialGradientTemplate {
             }
         }
 
-        if let Some(mut request) = frame_state.gpu_cache.request(&mut self.stops_handle) {
-            GradientGpuBlockBuilder::build(
-                false,
-                &mut request,
-                &self.stops,
-            );
-        }
-
         let task_size = self.task_size;
         let cache_key = RadialGradientCacheKey {
             size: task_size,
@@ -230,12 +220,19 @@ impl RadialGradientTemplate {
                 kind: RenderTaskCacheKeyKind::RadialGradient(cache_key),
             },
             frame_state.gpu_cache,
+            frame_state.frame_gpu_data,
             frame_state.rg_builder,
             None,
             false,
             RenderTaskParent::Surface(parent_surface),
             &mut frame_state.surface_builder,
-            |rg_builder| {
+            |rg_builder, gpu_buffer_builder| {
+                let stops = GradientGpuBlockBuilder::build(
+                    false,
+                    gpu_buffer_builder,
+                    &self.stops,
+                );
+
                 rg_builder.add().init(RenderTask::new_dynamic(
                     task_size,
                     RenderTaskKind::RadialGradient(RadialGradientTask {
@@ -243,7 +240,7 @@ impl RadialGradientTemplate {
                         center: self.center,
                         scale: self.scale,
                         params: self.params.clone(),
-                        stops: self.stops_handle,
+                        stops,
                     }),
                 ))
             }
@@ -316,11 +313,11 @@ pub struct RadialGradientTask {
     pub center: DevicePoint,
     pub scale: DeviceVector2D,
     pub params: RadialGradientParams,
-    pub stops: GpuCacheHandle,
+    pub stops: GpuBufferAddress,
 }
 
 impl RadialGradientTask {
-    pub fn to_instance(&self, target_rect: &DeviceIntRect, gpu_cache: &mut GpuCache) -> RadialGradientInstance {
+    pub fn to_instance(&self, target_rect: &DeviceIntRect) -> RadialGradientInstance {
         RadialGradientInstance {
             task_rect: target_rect.to_f32(),
             center: self.center,
@@ -329,7 +326,7 @@ impl RadialGradientTask {
             end_radius: self.params.end_radius,
             ratio_xy: self.params.ratio_xy,
             extend_mode: self.extend_mode as i32,
-            gradient_stops_address: self.stops.as_int(gpu_cache),
+            gradient_stops_address: self.stops.as_int(),
         }
     }
 }

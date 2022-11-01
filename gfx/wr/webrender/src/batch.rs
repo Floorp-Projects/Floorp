@@ -25,7 +25,7 @@ use crate::render_target::RenderTargetContext;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
 use crate::render_task::{RenderTaskAddress, RenderTaskKind};
 use crate::renderer::{BlendMode, ShaderColorMode};
-use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, GpuBufferBuilder};
+use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, GpuBufferBuilder, GpuBufferAddress};
 use crate::resource_cache::{GlyphFetchResult, ImageProperties, ImageRequest};
 use crate::space::SpaceMapper;
 use crate::surface::SurfaceTileDescriptor;
@@ -786,7 +786,7 @@ impl BatchBuilder {
         bounding_rect: &PictureRect,
         z_id: ZBufferId,
         prim_header_index: PrimitiveHeaderIndex,
-        polygons_address: GpuCacheAddress,
+        polygons_address: i32,
     ) {
         let render_task_address = self.batcher.render_task_address;
 
@@ -834,7 +834,10 @@ impl BatchBuilder {
                 (prim_instance_index, None)
             }
             PrimitiveCommand::Complex { prim_instance_index, gpu_address } => {
-                (prim_instance_index, Some(*gpu_address))
+                (prim_instance_index, Some(gpu_address.as_int()))
+            }
+            PrimitiveCommand::Instance { prim_instance_index, gpu_buffer_address } => {
+                (prim_instance_index, Some(gpu_buffer_address.as_int()))
             }
         };
 
@@ -2514,7 +2517,7 @@ impl BatchBuilder {
                     BlendMode::None
                 };
 
-                let user_data = [prim_data.stops_handle.as_int(gpu_cache), 0, 0, 0];
+                let user_data = [extra_prim_gpu_address.unwrap(), 0, 0, 0];
 
                 if visible_tiles_range.is_empty() {
                     let batch_params = BrushBatchParameters::shared(
@@ -3787,6 +3790,10 @@ pub enum PrimitiveCommand {
         prim_instance_index: PrimitiveInstanceIndex,
         gpu_address: GpuCacheAddress,
     },
+    Instance {
+        prim_instance_index: PrimitiveInstanceIndex,
+        gpu_buffer_address: GpuBufferAddress,
+    },
 }
 
 impl PrimitiveCommand {
@@ -3807,6 +3814,16 @@ impl PrimitiveCommand {
             gpu_address,
         }
     }
+
+    pub fn instance(
+        prim_instance_index: PrimitiveInstanceIndex,
+        gpu_buffer_address: GpuBufferAddress,
+    ) -> Self {
+        PrimitiveCommand::Instance {
+            prim_instance_index,
+            gpu_buffer_address,
+        }
+    }
 }
 
 // A tightly packed command stored in a command buffer
@@ -3822,6 +3839,8 @@ impl Command {
     const CMD_SET_SPATIAL_NODE: u32 = 0x10000000;
     /// Draw a complex (3d-split) primitive, that has multiple GPU cache addresses
     const CMD_DRAW_COMPLEX_PRIM: u32 = 0x20000000;
+    /// Draw a primitive, that has a single GPU buffer addresses
+    const CMD_DRAW_INSTANCE: u32 = 0x40000000;
 
     /// Bitmask for command bits of the command
     const CMD_MASK: u32 = 0xf0000000;
@@ -3841,6 +3860,10 @@ impl Command {
     /// Encode drawing a complex prim
     fn draw_complex_prim(prim_instance_index: PrimitiveInstanceIndex) -> Self {
         Command(Command::CMD_DRAW_COMPLEX_PRIM | prim_instance_index.0)
+    }
+
+    fn draw_instance(prim_instance_index: PrimitiveInstanceIndex) -> Self {
+        Command(Command::CMD_DRAW_INSTANCE | prim_instance_index.0)
     }
 
     /// Encode arbitrary data word
@@ -3925,6 +3948,10 @@ impl CommandBuffer {
                 self.commands.push(Command::draw_complex_prim(prim_instance_index));
                 self.commands.push(Command::data((gpu_address.u as u32) << 16 | gpu_address.v as u32));
             }
+            PrimitiveCommand::Instance { prim_instance_index, gpu_buffer_address } => {
+                self.commands.push(Command::draw_instance(prim_instance_index));
+                self.commands.push(Command::data((gpu_buffer_address.u as u32) << 16 | gpu_buffer_address.v as u32));
+            }
         }
     }
 
@@ -3959,6 +3986,19 @@ impl CommandBuffer {
                     let cmd = PrimitiveCommand::complex(
                         prim_instance_index,
                         gpu_address,
+                    );
+                    f(&cmd, current_spatial_node_index);
+                }
+                Command::CMD_DRAW_INSTANCE => {
+                    let prim_instance_index = PrimitiveInstanceIndex(param);
+                    let data = cmd_iter.next().unwrap();
+                    let gpu_buffer_address = GpuBufferAddress {
+                        u: (data.0 >> 16) as u16,
+                        v: (data.0 & 0xffff) as u16,
+                    };
+                    let cmd = PrimitiveCommand::instance(
+                        prim_instance_index,
+                        gpu_buffer_address,
                     );
                     f(&cmd, current_spatial_node_index);
                 }
