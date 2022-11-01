@@ -30,7 +30,6 @@ import mozilla.components.concept.base.images.ImageLoader
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.support.ktx.kotlin.MAX_URI_LENGTH
 import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -244,7 +243,7 @@ abstract class AbstractBrowserTabViewHolder(
                     val touchStart = touchStartPoint
                     val selected = holder.selectedItems
                     val selectsOnlyThis = (selected.size == 1 && selected.contains(item))
-                    if (FeatureFlags.tabReorderingFeature && selectsOnlyThis && touchStart != null) {
+                    if (selectsOnlyThis && touchStart != null) {
                         // If the parent is null then return early and mark the event as unhandled
                         val parent = itemView.parent as? AbstractBrowserTrayList ?: return@setOnTouchListener false
 

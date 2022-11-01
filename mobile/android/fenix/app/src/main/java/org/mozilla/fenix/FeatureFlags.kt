@@ -67,11 +67,6 @@ object FeatureFlags {
     const val inactiveTabs = true
 
     /**
-     * Allows tabs to be dragged around as long as tab groups are disabled
-     */
-    val tabReorderingFeature = Config.channel.isNightlyOrDebug
-
-    /**
      * Show Pocket recommended stories on home.
      */
     fun isPocketRecommendationsFeatureEnabled(context: Context): Boolean {
