@@ -60,7 +60,7 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
                        mozilla::WidgetGUIEvent* aEvent,
                        nsEventStatus* aEventStatus) final;
 
-  void SetInitialChildList(ChildListID aListID, nsFrameList& aChildList) final;
+  void SetInitialChildList(ChildListID aListID, nsFrameList&& aChildList) final;
 
   nscoord GetPrefISize(gfxContext* aRenderingContext) final;
   nscoord GetMinISize(gfxContext* aRenderingContext) final;

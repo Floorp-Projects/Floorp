@@ -879,8 +879,8 @@ NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtableFrame)
 nsMathMLmtableFrame::~nsMathMLmtableFrame() = default;
 
 void nsMathMLmtableFrame::SetInitialChildList(ChildListID aListID,
-                                              nsFrameList& aChildList) {
-  nsTableFrame::SetInitialChildList(aListID, aChildList);
+                                              nsFrameList&& aChildList) {
+  nsTableFrame::SetInitialChildList(aListID, std::move(aChildList));
   MapAllAttributesIntoCSS(this);
 }
 

@@ -16,8 +16,8 @@ class nsMathMLSelectedFrame : public nsMathMLContainerFrame {
   NS_IMETHOD
   TransmitAutomaticData() override;
 
-  virtual void SetInitialChildList(ChildListID aListID,
-                                   nsFrameList& aChildList) override;
+  void SetInitialChildList(ChildListID aListID,
+                           nsFrameList&& aChildList) override;
 
   virtual nsresult ChildListChanged(int32_t aModType) override;
 

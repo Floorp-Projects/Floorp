@@ -255,7 +255,7 @@ void nsMenuFrame::SetPopupFrame(nsFrameList& aFrameList) {
 }
 
 void nsMenuFrame::SetInitialChildList(ChildListID aListID,
-                                      nsFrameList& aChildList) {
+                                      nsFrameList&& aChildList) {
   if (aListID == kPrincipalList || aListID == kPopupList) {
     NS_ASSERTION(!HasPopup(), "SetInitialChildList called twice?");
 #ifdef DEBUG
@@ -265,7 +265,7 @@ void nsMenuFrame::SetInitialChildList(ChildListID aListID,
 #endif
     SetPopupFrame(aChildList);
   }
-  nsBoxFrame::SetInitialChildList(aListID, aChildList);
+  nsBoxFrame::SetInitialChildList(aListID, std::move(aChildList));
 }
 
 void nsMenuFrame::DestroyFrom(nsIFrame* aDestructRoot,

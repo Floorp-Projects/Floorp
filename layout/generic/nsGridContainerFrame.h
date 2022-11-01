@@ -170,7 +170,7 @@ class nsGridContainerFrame final : public nsContainerFrame,
 
 #ifdef DEBUG
   void SetInitialChildList(ChildListID aListID,
-                           nsFrameList& aChildList) override;
+                           nsFrameList&& aChildList) override;
 #endif
 
   /**

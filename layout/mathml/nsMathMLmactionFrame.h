@@ -30,8 +30,8 @@ class nsMathMLmactionFrame final : public nsMathMLSelectedFrame {
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
                     nsIFrame* aPrevInFlow) override;
 
-  virtual void SetInitialChildList(ChildListID aListID,
-                                   nsFrameList& aChildList) override;
+  void SetInitialChildList(ChildListID aListID,
+                           nsFrameList&& aChildList) override;
 
   virtual nsresult ChildListChanged(int32_t aModType) override;
 

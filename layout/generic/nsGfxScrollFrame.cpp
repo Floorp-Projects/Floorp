@@ -245,8 +245,8 @@ void nsHTMLScrollFrame::DestroyFrom(nsIFrame* aDestructRoot,
 }
 
 void nsHTMLScrollFrame::SetInitialChildList(ChildListID aListID,
-                                            nsFrameList& aChildList) {
-  nsContainerFrame::SetInitialChildList(aListID, aChildList);
+                                            nsFrameList&& aChildList) {
+  nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
   mHelper.ReloadChildFrames();
 }
 
@@ -1857,8 +1857,8 @@ void nsXULScrollFrame::DestroyFrom(nsIFrame* aDestructRoot,
 }
 
 void nsXULScrollFrame::SetInitialChildList(ChildListID aListID,
-                                           nsFrameList& aChildList) {
-  nsBoxFrame::SetInitialChildList(aListID, aChildList);
+                                           nsFrameList&& aChildList) {
+  nsBoxFrame::SetInitialChildList(aListID, std::move(aChildList));
   if (aListID == kPrincipalList) {
     mHelper.ReloadChildFrames();
   }

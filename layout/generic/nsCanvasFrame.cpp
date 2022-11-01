@@ -264,11 +264,11 @@ nsCanvasFrame::SetHasFocus(bool aHasFocus) {
 }
 
 void nsCanvasFrame::SetInitialChildList(ChildListID aListID,
-                                        nsFrameList& aChildList) {
+                                        nsFrameList&& aChildList) {
   NS_ASSERTION(aListID != kPrincipalList || aChildList.IsEmpty() ||
                    aChildList.OnlyChild(),
                "Primary child list can have at most one frame in it");
-  nsContainerFrame::SetInitialChildList(aListID, aChildList);
+  nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
 }
 
 void nsCanvasFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {

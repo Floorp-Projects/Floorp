@@ -118,7 +118,7 @@ nsTableColGroupFrame* nsTableColGroupFrame::GetLastRealColGroup(
 
 // don't set mColCount here, it is done in AddColsToTable
 void nsTableColGroupFrame::SetInitialChildList(ChildListID aListID,
-                                               nsFrameList& aChildList) {
+                                               nsFrameList&& aChildList) {
   MOZ_ASSERT(mFrames.IsEmpty(),
              "unexpected second call to SetInitialChildList");
   MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");

@@ -7480,7 +7480,7 @@ void nsBlockFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 
 void nsBlockFrame::SetInitialChildList(ChildListID aListID,
-                                       nsFrameList& aChildList) {
+                                       nsFrameList&& aChildList) {
   if (kFloatList == aListID) {
     mFloats = std::move(aChildList);
   } else if (kPrincipalList == aListID) {
@@ -7513,7 +7513,7 @@ void nsBlockFrame::SetInitialChildList(ChildListID aListID,
 
     AddFrames(aChildList, nullptr, nullptr);
   } else {
-    nsContainerFrame::SetInitialChildList(aListID, aChildList);
+    nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
   }
 }
 

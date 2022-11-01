@@ -90,7 +90,7 @@ class nsContainerFrame : public nsSplittableFrame {
    * @see     #Init()
    */
   virtual void SetInitialChildList(ChildListID aListID,
-                                   nsFrameList& aChildList);
+                                   nsFrameList&& aChildList);
 
   /**
    * This method is responsible for appending frames to the frame
