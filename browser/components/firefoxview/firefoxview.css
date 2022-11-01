@@ -62,7 +62,7 @@ body {
   --fxview-extra-contrast-border: color-mix(in hsl, currentColor 85%, transparent);
   --in-content-zap-gradient: linear-gradient(var(--fxview-extra-contrast-border), var(--fxview-extra-contrast-border));
   --card-border-zap-gradient: var(--in-content-zap-gradient);
-  --fxview-text-secondary-color: color-mix(in srgb, currentColor 70%, transparent);
+  --fxview-text-secondary-color: color-mix(in srgb, currentColor 80%, transparent);
   --newtab-background-color-secondary: #FFF;
   --colorways-no-collection-notice-bg-color: transparent;
 
@@ -98,7 +98,6 @@ body:not([lwt-newtab]) {
     --fxview-element-background-hover: ButtonText;
     --fxview-element-background-active: ButtonText;
     --fxview-text-color-hover: ButtonFace;
-    --fxview-text-secondary-color: currentColor;
   }
 }
 
