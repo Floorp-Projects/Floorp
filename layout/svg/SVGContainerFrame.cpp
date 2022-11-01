@@ -47,7 +47,7 @@ NS_QUERYFRAME_TAIL_INHERITING(SVGContainerFrame)
 NS_IMPL_FRAMEARENA_HELPERS(SVGContainerFrame)
 
 void SVGContainerFrame::AppendFrames(ChildListID aListID,
-                                     nsFrameList& aFrameList) {
+                                     nsFrameList&& aFrameList) {
   InsertFrames(aListID, mFrames.LastChild(), nullptr, aFrameList);
 }
 

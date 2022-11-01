@@ -1364,7 +1364,7 @@ static void MoveChildrenTo(nsIFrame* aOldParent, nsContainerFrame* aNewParent,
       aNewParent->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     aNewParent->SetInitialChildList(kPrincipalList, std::move(aFrameList));
   } else {
-    aNewParent->AppendFrames(kPrincipalList, aFrameList);
+    aNewParent->AppendFrames(kPrincipalList, std::move(aFrameList));
   }
 }
 
@@ -2534,7 +2534,8 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
   nsIFrame* newFrame = frameList.FirstChild();
   // set the primary frame
   aDocElement->SetPrimaryFrame(contentFrame);
-  mDocElementContainingBlock->AppendFrames(kPrincipalList, frameList);
+  mDocElementContainingBlock->AppendFrames(kPrincipalList,
+                                           std::move(frameList));
 
   MOZ_ASSERT(!state.mHavePendingPopupgroup,
              "Should have proccessed pending popup group by now");
@@ -2776,8 +2777,8 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   if (viewportFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     SetInitialSingleChild(viewportFrame, newFrame);
   } else {
-    nsFrameList newFrameList(newFrame, newFrame);
-    viewportFrame->AppendFrames(kPrincipalList, newFrameList);
+    viewportFrame->AppendFrames(kPrincipalList,
+                                nsFrameList(newFrame, newFrame));
   }
 }
 
@@ -3167,7 +3168,8 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
 
   // We use AppendFrames here because the rendered legend will already
   // be present in the principal child list if it exists.
-  fieldsetFrame->AppendFrames(nsIFrame::kNoReflowPrincipalList, fieldsetKids);
+  fieldsetFrame->AppendFrames(nsIFrame::kNoReflowPrincipalList,
+                              std::move(fieldsetKids));
 
   return fieldsetFrame;
 }
@@ -4242,8 +4244,8 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
 
 void nsCSSFrameConstructor::FinishBuildingScrollFrame(
     nsContainerFrame* aScrollFrame, nsIFrame* aScrolledFrame) {
-  nsFrameList scrolled(aScrolledFrame, aScrolledFrame);
-  aScrollFrame->AppendFrames(kPrincipalList, scrolled);
+  aScrollFrame->AppendFrames(kPrincipalList,
+                             nsFrameList(aScrolledFrame, aScrolledFrame));
 }
 
 /**
@@ -10740,7 +10742,7 @@ void nsCSSFrameConstructor::FinishBuildingColumns(
   // Unset the bit because the last ColumnSet has no column-span siblings.
   prevColumnSet->SetHasColumnSpanSiblings(false);
 
-  aColumnSetWrapper->AppendFrames(kPrincipalList, finalList);
+  aColumnSetWrapper->AppendFrames(kPrincipalList, std::move(finalList));
 }
 
 bool nsCSSFrameConstructor::MayNeedToCreateColumnSpanSiblings(

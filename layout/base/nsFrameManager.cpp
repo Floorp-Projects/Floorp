@@ -66,7 +66,7 @@ void nsFrameManager::AppendFrames(nsContainerFrame* aParentFrame,
     aParentFrame->GetAbsoluteContainingBlock()->AppendFrames(
         aParentFrame, aListID, aFrameList);
   } else {
-    aParentFrame->AppendFrames(aListID, aFrameList);
+    aParentFrame->AppendFrames(aListID, std::move(aFrameList));
   }
 }
 

@@ -156,7 +156,7 @@ void nsTableColGroupFrame::DidSetComputedStyle(
 }
 
 void nsTableColGroupFrame::AppendFrames(ChildListID aListID,
-                                        nsFrameList& aFrameList) {
+                                        nsFrameList&& aFrameList) {
   NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
 
   nsTableColFrame* col = GetFirstColumn();

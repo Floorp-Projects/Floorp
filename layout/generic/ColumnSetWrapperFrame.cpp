@@ -105,13 +105,13 @@ nsresult ColumnSetWrapperFrame::GetFrameName(nsAString& aResult) const {
 // column hierarchy since any change to the column hierarchy in the column
 // sub-tree need to be re-created.
 void ColumnSetWrapperFrame::AppendFrames(ChildListID aListID,
-                                         nsFrameList& aFrameList) {
+                                         nsFrameList&& aFrameList) {
 #ifdef DEBUG
   MOZ_ASSERT(!mFinishedBuildingColumns, "Should only call once!");
   mFinishedBuildingColumns = true;
 #endif
 
-  nsBlockFrame::AppendFrames(aListID, aFrameList);
+  nsBlockFrame::AppendFrames(aListID, std::move(aFrameList));
 
 #ifdef DEBUG
   nsIFrame* firstColumnSet = PrincipalChildList().FirstChild();

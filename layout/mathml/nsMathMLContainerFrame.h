@@ -72,8 +72,7 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
     return nsContainerFrame::IsFrameOfType(aFlags & ~eMathML);
   }
 
-  virtual void AppendFrames(ChildListID aListID,
-                            nsFrameList& aFrameList) override;
+  void AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) override;
 
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                             const nsLineList::iterator* aPrevFrameLine,
@@ -396,11 +395,10 @@ class nsMathMLmathBlockFrame final : public nsBlockFrame {
     }
   }
 
-  virtual void AppendFrames(ChildListID aListID,
-                            nsFrameList& aFrameList) override {
+  void AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) override {
     NS_ASSERTION(aListID == kPrincipalList || aListID == kNoReflowPrincipalList,
                  "unexpected frame list");
-    nsBlockFrame::AppendFrames(aListID, aFrameList);
+    nsBlockFrame::AppendFrames(aListID, std::move(aFrameList));
     if (MOZ_LIKELY(aListID == kPrincipalList))
       nsMathMLContainerFrame::ReLayoutChildren(this);
   }
@@ -463,11 +461,10 @@ class nsMathMLmathInlineFrame final : public nsInlineFrame,
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(this);
   }
 
-  virtual void AppendFrames(ChildListID aListID,
-                            nsFrameList& aFrameList) override {
+  void AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) override {
     NS_ASSERTION(aListID == kPrincipalList || aListID == kNoReflowPrincipalList,
                  "unexpected frame list");
-    nsInlineFrame::AppendFrames(aListID, aFrameList);
+    nsInlineFrame::AppendFrames(aListID, std::move(aFrameList));
     if (MOZ_LIKELY(aListID == kPrincipalList))
       nsMathMLContainerFrame::ReLayoutChildren(this);
   }

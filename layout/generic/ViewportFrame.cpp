@@ -252,10 +252,11 @@ nsDisplayWrapList* ViewportFrame::BuildDisplayListForTopLayer(
 }
 
 #ifdef DEBUG
-void ViewportFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
+void ViewportFrame::AppendFrames(ChildListID aListID,
+                                 nsFrameList&& aFrameList) {
   NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
   NS_ASSERTION(GetChildList(aListID).IsEmpty(), "Shouldn't have any kids!");
-  nsContainerFrame::AppendFrames(aListID, aFrameList);
+  nsContainerFrame::AppendFrames(aListID, std::move(aFrameList));
 }
 
 void ViewportFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,

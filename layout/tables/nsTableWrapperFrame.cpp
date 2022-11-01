@@ -106,7 +106,7 @@ void nsTableWrapperFrame::SetInitialChildList(ChildListID aListID,
 }
 
 void nsTableWrapperFrame::AppendFrames(ChildListID aListID,
-                                       nsFrameList& aFrameList) {
+                                       nsFrameList&& aFrameList) {
   // We only have two child frames: the inner table and a caption frame.
   // The inner frame is provided when we're initialized, and it cannot change
   MOZ_ASSERT(kCaptionList == aListID, "unexpected child list");

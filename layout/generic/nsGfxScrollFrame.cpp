@@ -251,7 +251,7 @@ void nsHTMLScrollFrame::SetInitialChildList(ChildListID aListID,
 }
 
 void nsHTMLScrollFrame::AppendFrames(ChildListID aListID,
-                                     nsFrameList& aFrameList) {
+                                     nsFrameList&& aFrameList) {
   NS_ASSERTION(aListID == kPrincipalList, "Only main list supported");
   mFrames.AppendFrames(nullptr, std::move(aFrameList));
   mHelper.ReloadChildFrames();
@@ -1865,8 +1865,8 @@ void nsXULScrollFrame::SetInitialChildList(ChildListID aListID,
 }
 
 void nsXULScrollFrame::AppendFrames(ChildListID aListID,
-                                    nsFrameList& aFrameList) {
-  nsBoxFrame::AppendFrames(aListID, aFrameList);
+                                    nsFrameList&& aFrameList) {
+  nsBoxFrame::AppendFrames(aListID, std::move(aFrameList));
   mHelper.ReloadChildFrames();
 }
 

@@ -72,8 +72,7 @@ class SVGContainerFrame : public nsContainerFrame {
   }
 
   // nsIFrame:
-  virtual void AppendFrames(ChildListID aListID,
-                            nsFrameList& aFrameList) override;
+  void AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) override;
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                             const nsLineList::iterator* aPrevFrameLine,
                             nsFrameList& aFrameList) override;

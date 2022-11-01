@@ -271,7 +271,8 @@ void nsCanvasFrame::SetInitialChildList(ChildListID aListID,
   nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
 }
 
-void nsCanvasFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
+void nsCanvasFrame::AppendFrames(ChildListID aListID,
+                                 nsFrameList&& aFrameList) {
 #ifdef DEBUG
   MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
   if (!mFrames.IsEmpty()) {
@@ -284,7 +285,7 @@ void nsCanvasFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
   }
   nsIFrame::VerifyDirtyBitSet(aFrameList);
 #endif
-  nsContainerFrame::AppendFrames(aListID, aFrameList);
+  nsContainerFrame::AppendFrames(aListID, std::move(aFrameList));
 }
 
 void nsCanvasFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
@@ -293,7 +294,7 @@ void nsCanvasFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   // Because we only support a single child frame inserting is the same
   // as appending
   MOZ_ASSERT(!aPrevFrame, "unexpected previous sibling frame");
-  AppendFrames(aListID, aFrameList);
+  AppendFrames(aListID, std::move(aFrameList));
 }
 
 #ifdef DEBUG

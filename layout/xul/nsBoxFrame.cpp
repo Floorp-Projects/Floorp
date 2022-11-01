@@ -755,7 +755,7 @@ void nsBoxFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
-void nsBoxFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
+void nsBoxFrame::AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) {
   MOZ_ASSERT(aListID == kPrincipalList, "We don't support out-of-flow kids");
 
   nsBoxLayoutState state(PresContext());

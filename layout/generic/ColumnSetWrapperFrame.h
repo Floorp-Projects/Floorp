@@ -45,7 +45,7 @@ class ColumnSetWrapperFrame final : public nsBlockFrame {
   nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  void AppendFrames(ChildListID aListID, nsFrameList& aFrameList) override;
+  void AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) override;
 
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,

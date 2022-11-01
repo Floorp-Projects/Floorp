@@ -101,7 +101,7 @@ class nsContainerFrame : public nsSplittableFrame {
    * @param   aFrameList list of child frames to append. Each of the frames has
    *            its NS_FRAME_IS_DIRTY bit set.  Must not be empty.
    */
-  virtual void AppendFrames(ChildListID aListID, nsFrameList& aFrameList);
+  virtual void AppendFrames(ChildListID aListID, nsFrameList&& aFrameList);
 
   /**
    * This method is responsible for inserting frames into the frame

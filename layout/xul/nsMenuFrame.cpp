@@ -1022,7 +1022,7 @@ void nsMenuFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   nsBoxFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine, aFrameList);
 }
 
-void nsMenuFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
+void nsMenuFrame::AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) {
   if (!HasPopup() && (aListID == kPrincipalList || aListID == kPopupList)) {
     SetPopupFrame(aFrameList);
     if (HasPopup()) {
@@ -1033,7 +1033,7 @@ void nsMenuFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
 
   if (aFrameList.IsEmpty()) return;
 
-  nsBoxFrame::AppendFrames(aListID, aFrameList);
+  nsBoxFrame::AppendFrames(aListID, std::move(aFrameList));
 }
 
 bool nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize) {

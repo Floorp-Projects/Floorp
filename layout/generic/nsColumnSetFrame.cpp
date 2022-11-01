@@ -1265,7 +1265,7 @@ void nsColumnSetFrame::SetInitialChildList(ChildListID aListID,
 }
 
 void nsColumnSetFrame::AppendFrames(ChildListID aListID,
-                                    nsFrameList& aFrameList) {
+                                    nsFrameList&& aFrameList) {
   MOZ_CRASH("unsupported operation");
 }
 

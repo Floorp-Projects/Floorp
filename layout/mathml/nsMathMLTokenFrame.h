@@ -43,8 +43,7 @@ class nsMathMLTokenFrame : public nsMathMLContainerFrame {
   void SetInitialChildList(ChildListID aListID,
                            nsFrameList&& aChildList) override;
 
-  virtual void AppendFrames(ChildListID aListID,
-                            nsFrameList& aChildList) override;
+  void AppendFrames(ChildListID aListID, nsFrameList&& aChildList) override;
 
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                             const nsLineList::iterator* aPrevFrameLine,
