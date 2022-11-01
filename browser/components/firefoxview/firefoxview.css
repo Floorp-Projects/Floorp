@@ -389,11 +389,11 @@ button.close {
   column-gap: 16px;
   cursor: pointer;
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: auto 1fr;
   grid-template-rows: 1fr auto;
   grid-template-areas:
-      "head head head head head head head twisty"
-      "desc desc desc desc desc desc desc desc";
+      "twisty head"
+      "none desc";
   list-style-type: none;
   padding-inline-start: 8px;
   position: relative;
@@ -420,17 +420,20 @@ button.close {
 
 /* the twisty is just an ornament; the whole summary parent node is clickable */
 .page-section-header > .twisty {
-  background-image: url("chrome://global/skin/icons/arrow-down.svg");
+  background-image: url("chrome://global/skin/icons/arrow-right.svg");
   display: inline-block;
   grid-area: twisty;
   align-self: center;
-  justify-self: end;
+  justify-self: start;
   padding-block: 4px;
   padding-inline: 8px;
   fill: currentColor;
   border-radius: 4px;
   margin-block: 0;
-  margin-inline-end: 4px;
+}
+
+[dir="rtl"] .page-section-header > .twisty {
+  background-image: url("chrome://global/skin/icons/arrow-left.svg");
 }
 
 @media (prefers-contrast) {
@@ -440,7 +443,7 @@ button.close {
 }
 
 details[open] > .page-section-header > .twisty {
-  background-image: url("chrome://global/skin/icons/arrow-up.svg");
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
 }
 
 .page-section-header:hover > .twisty {
