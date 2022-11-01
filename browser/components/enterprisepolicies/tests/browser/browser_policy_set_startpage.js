@@ -51,7 +51,7 @@ add_task(async function homepage_test_startpage_none() {
     },
   });
   await check_homepage({
-    expectedURL: "about:blank",
+    expectedURL: "chrome://browser/content/blanktab.html",
     expectedPageVal: 1,
   });
 });

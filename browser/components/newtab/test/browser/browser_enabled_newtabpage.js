@@ -1,33 +1,33 @@
-function checkSpec(uri, check, message) {
+function getSpec(uri) {
   const { spec } = NetUtil.newChannel({
     loadUsingSystemPrincipal: true,
     uri,
   }).URI;
 
   info(`got ${spec} for ${uri}`);
-  check(spec, "about:blank", message);
+  return spec;
 }
 
 add_task(async function test_newtab_enabled() {
-  checkSpec(
-    "about:newtab",
-    isnot,
+  ok(
+    !getSpec("about:newtab").endsWith("/blanktab.html"),
     "did not get blank for default about:newtab"
   );
-  checkSpec("about:home", isnot, "did not get blank for default about:home");
+  ok(
+    !getSpec("about:home").endsWith("/blanktab.html"),
+    "did not get blank for default about:home"
+  );
 
   await SpecialPowers.pushPrefEnv({
     set: [["browser.newtabpage.enabled", false]],
   });
 
-  const { spec } = NetUtil.newChannel({
-    loadUsingSystemPrincipal: true,
-    uri: "about:newtab",
-  }).URI;
-
   ok(
-    spec.endsWith("/blanktab.html"),
+    getSpec("about:newtab").endsWith("/blanktab.html"),
     "got special blank page when newtab is not enabled"
   );
-  checkSpec("about:home", isnot, "still did not get blank for about:home");
+  ok(
+    !getSpec("about:home").endsWith("/blanktab.html"),
+    "got special blank page for about:home"
+  );
 });
