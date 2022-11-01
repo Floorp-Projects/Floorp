@@ -367,11 +367,8 @@ function changeWebpanelUA() {
   let pref = `floorp.enable.useragent.override.${webpanel}`
   let setting = Services.prefs.getBoolPref(pref, false);
 
-  if(setting == false){
-    Services.prefs.setBoolPref(pref, true);
-  } else if (setting == true){
-    Services.prefs.setBoolPref(pref, false);
-  }
+  Services.prefs.setBoolPref(pref, !setting);
+
   //reload webpanel
   sidebarSiteAction(2);
 }
