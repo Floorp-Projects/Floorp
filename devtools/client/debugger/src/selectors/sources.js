@@ -238,6 +238,37 @@ export function canPrettyPrintSource(state, id) {
   return true;
 }
 
+export function getPrettyPrintMessage(state, source) {
+  if (!source) {
+    return L10N.getStr("sourceTabs.prettyPrint");
+  }
+
+  if (isPretty(source)) {
+    return L10N.getStr("sourceFooter.prettyPrint.isPrettyPrintedMessage");
+  }
+
+  if (source.isOriginal) {
+    return L10N.getStr("sourceFooter.prettyPrint.isOriginalMessage");
+  }
+
+  if (prefs.clientSourceMapsEnabled && isSourceWithMap(state, source.id)) {
+    return L10N.getStr("sourceFooter.prettyPrint.hasSourceMapMessage");
+  }
+
+  const content = getSourceTextContent(state, source.id);
+  const sourceContent = content && isFulfilled(content) ? content.value : null;
+
+  if (!sourceContent) {
+    return L10N.getStr("sourceFooter.prettyPrint.noContentMessage");
+  }
+
+  if (!isJavaScript(source, sourceContent)) {
+    return L10N.getStr("sourceFooter.prettyPrint.isNotJavascriptMessage");
+  }
+
+  return L10N.getStr("sourceTabs.prettyPrint");
+}
+
 // Used by visibleColumnBreakpoints selectors
 export function getBreakpointPositions(state) {
   return state.sources.breakpointPositions;
