@@ -16,6 +16,7 @@
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/MediaSource.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Maybe.h"
@@ -396,13 +397,10 @@ class ReleasingTimerHolder final : public Runnable,
 
     RefPtr<ReleasingTimerHolder> holder = new ReleasingTimerHolder(aURI);
 
+    // BlobURLProtocolHandler::RemoveDataEntry potentially happens late. We are
+    // prepared to RevokeUri synchronously if we run after XPCOMWillShutdown,
+    // but we need at least to be able to dispatch to the main thread here.
     auto raii = MakeScopeExit([holder] { holder->CancelTimerAndRevokeURI(); });
-
-    // ReleasingTimerHolder potentially dispatches after we've
-    // shutdown the main thread, so guard agains that.
-    if (NS_WARN_IF(gXPCOMThreadsShutDown)) {
-      return;
-    }
 
     nsresult rv =
         SchedulerGroup::Dispatch(TaskCategory::Other, holder.forget());
