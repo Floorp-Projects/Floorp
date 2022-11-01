@@ -418,6 +418,18 @@ class ThreadSafeAutoRefCnt {
   NS_DECL_OWNINGTHREAD                                                    \
  public:
 
+#define NS_DECL_ISUPPORTS_ONEVENTTARGET                                   \
+ public:                                                                  \
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override; \
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override;             \
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) override;            \
+  using HasThreadSafeRefCnt = std::false_type;                            \
+                                                                          \
+ protected:                                                               \
+  nsAutoRefCnt mRefCnt;                                                   \
+  NS_DECL_OWNINGEVENTTARGET                                               \
+ public:
+
 #define NS_DECL_THREADSAFE_ISUPPORTS                                      \
  public:                                                                  \
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override; \
