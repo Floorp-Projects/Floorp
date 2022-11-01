@@ -409,7 +409,7 @@ class RepackBase(object):
         # Check whether we've already copied files over for this partner.
         if not platform_dir.exists():
             platform_dir.mkdir(mode=0o755, exist_ok=True, parents=True)
-            for i in ["distribution", "extensions", "searchplugins"]:
+            for i in ["distribution", "extensions"]:
                 full_path = self.full_partner_path / i
                 if full_path.exists():
                     copytree(str(full_path), str(platform_dir / i))
