@@ -1,16 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-"use strict";
+import { OSKeyStore } from "resource://gre/modules/OSKeyStore.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["OSKeyStoreTestUtils"];
-
-const { OSKeyStore } = ChromeUtils.importESModule(
-  "resource://gre/modules/OSKeyStore.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
@@ -23,7 +16,7 @@ const { TestUtils } = ChromeUtils.import(
 // We want to ensure that we catch test failures that would only otherwise show up in official builds
 const isCanaryBuildForOSKeyStore = AppConstants.DEBUG;
 
-var OSKeyStoreTestUtils = {
+export var OSKeyStoreTestUtils = {
   TEST_ONLY_REAUTH: "toolkit.osKeyStore.unofficialBuildOnlyLogin",
 
   setup() {

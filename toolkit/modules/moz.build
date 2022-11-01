@@ -135,11 +135,11 @@ BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
 
 TESTING_JS_MODULES += [
-    "tests/modules/MockDocument.jsm",
-    "tests/modules/OSKeyStoreTestUtils.jsm",
-    "tests/modules/PromiseTestUtils.jsm",
-    "tests/xpcshell/RegionTestUtils.jsm",
-    "tests/xpcshell/TestIntegration.jsm",
+    "tests/modules/MockDocument.sys.mjs",
+    "tests/modules/OSKeyStoreTestUtils.sys.mjs",
+    "tests/modules/PromiseTestUtils.sys.mjs",
+    "tests/xpcshell/RegionTestUtils.sys.mjs",
+    "tests/xpcshell/TestIntegration.sys.mjs",
 ]
 
 SPHINX_TREES["toolkit_modules"] = "docs"

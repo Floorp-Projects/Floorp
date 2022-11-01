@@ -5,11 +5,7 @@
  * Internal module used to test the generation of Integration.sys.mjs getters.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TestIntegration"];
-
-var TestIntegration = {
+export var TestIntegration = {
   value: "value",
 
   get valueFromThis() {
