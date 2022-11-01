@@ -204,7 +204,9 @@ public final class StorageController {
   }
 
   /**
-   * Get all currently stored permissions for a given URI and default (unset) context ID.
+   * Get all currently stored permissions for a given URI and default (unset) context ID, in normal
+   * mode This API will be deprecated in the future
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=1797379
    *
    * @param uri A String representing the URI to get permissions for.
    * @return A {@link GeckoResult} that will complete with a list of all currently stored {@link
@@ -212,7 +214,22 @@ public final class StorageController {
    */
   @AnyThread
   public @NonNull GeckoResult<List<ContentPermission>> getPermissions(final @NonNull String uri) {
-    return getPermissions(uri, null);
+    return getPermissions(uri, null, false);
+  }
+
+  /**
+   * Get all currently stored permissions for a given URI and default (unset) context ID.
+   *
+   * @param uri A String representing the URI to get permissions for.
+   * @param privateMode indicate where the {@link ContentPermission}s should be in private or normal
+   *     mode.
+   * @return A {@link GeckoResult} that will complete with a list of all currently stored {@link
+   *     ContentPermission}s for the URI.
+   */
+  @AnyThread
+  public @NonNull GeckoResult<List<ContentPermission>> getPermissions(
+      final @NonNull String uri, final boolean privateMode) {
+    return getPermissions(uri, null, privateMode);
   }
 
   /**
@@ -220,15 +237,19 @@ public final class StorageController {
    *
    * @param uri A String representing the URI to get permissions for.
    * @param contextId A String specifying the context ID.
+   * @param privateMode indicate where the {@link ContentPermission}s should be in private or normal
+   *     mode
    * @return A {@link GeckoResult} that will complete with a list of all currently stored {@link
    *     ContentPermission}s for the URI.
    */
   @AnyThread
   public @NonNull GeckoResult<List<ContentPermission>> getPermissions(
-      final @NonNull String uri, final @Nullable String contextId) {
+      final @NonNull String uri, final @Nullable String contextId, final boolean privateMode) {
     final GeckoBundle msg = new GeckoBundle(2);
+    final int privateBrowsingId = (privateMode) ? 1 : 0;
     msg.putString("uri", uri);
     msg.putString("contextId", createSafeSessionContextId(contextId));
+    msg.putInt("privateBrowsingId", privateBrowsingId);
     return EventDispatcher.getInstance()
         .queryBundle("GeckoView:GetPermissionsByURI", msg)
         .map(

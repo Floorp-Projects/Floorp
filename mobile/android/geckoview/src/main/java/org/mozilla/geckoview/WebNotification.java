@@ -103,6 +103,9 @@ public class WebNotification implements Parcelable {
    */
   public final boolean silent;
 
+  /** indicates whether the notification came from private browsing mode or not. */
+  public final boolean privateBrowsing;
+
   /**
    * A vibration pattern to run with the display of the notification. A vibration pattern can be an
    * array with as few as one member. The values are times in milliseconds where the even indices
@@ -126,6 +129,7 @@ public class WebNotification implements Parcelable {
       @NonNull final boolean requireInteraction,
       @NonNull final String source,
       final boolean silent,
+      final boolean privateBrowsing,
       @NonNull final int[] vibrate) {
     this.tag = tag;
     this.mCookie = cookie;
@@ -138,6 +142,7 @@ public class WebNotification implements Parcelable {
     this.source = "".equals(source) ? null : source;
     this.silent = silent;
     this.vibrate = vibrate;
+    this.privateBrowsing = privateBrowsing;
   }
 
   /**
@@ -189,6 +194,7 @@ public class WebNotification implements Parcelable {
     dest.writeInt(requireInteraction ? 1 : 0);
     dest.writeString(source);
     dest.writeInt(silent ? 1 : 0);
+    dest.writeInt(privateBrowsing ? 1 : 0);
     dest.writeIntArray(vibrate);
   }
 
@@ -203,6 +209,7 @@ public class WebNotification implements Parcelable {
     requireInteraction = in.readInt() == 1;
     source = in.readString();
     silent = in.readInt() == 1;
+    privateBrowsing = in.readInt() == 1;
     vibrate = in.createIntArray();
   }
 
