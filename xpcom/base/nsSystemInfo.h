@@ -57,6 +57,7 @@ struct ProcessInfo {
   int32_t cpuCount = 0;
   int32_t cpuCores = 0;
   nsCString cpuVendor;
+  nsCString cpuName;
   int32_t cpuFamily = 0;
   int32_t cpuModel = 0;
   int32_t cpuStepping = 0;

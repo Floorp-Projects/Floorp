@@ -125,6 +125,8 @@ Structure:
             count: <number>,  // desktop only, e.g. 8, or null on failure - logical cpus
             cores: <number>, // desktop only, e.g., 4, or null on failure - physical cores
             vendor: <string>, // desktop only, e.g. "GenuineIntel", or null on failure
+            name: <string>, // desktop only, e.g. "Intel(R) Core(TM) i9-8950HK CPU @ 2.90GHz",
+                            // or null on failure
             family: <number>, // desktop only, null on failure
             model: <number, // desktop only, null on failure
             stepping: <number>, // desktop only, null on failure
