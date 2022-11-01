@@ -137,8 +137,8 @@ var gTests = [
       await promiseMessage(permissionError, () => {
         is(
           PopupNotifications.panel.firstElementChild.secondaryButton.label,
-          "Block",
-          "We offer Block option because we are not asking for cam or mic"
+          "Not now",
+          "We offer Not now option because we are asking for screen"
         );
         activateSecondaryAction(kActionDeny);
       });
