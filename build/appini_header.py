@@ -29,9 +29,9 @@ def main(output, file):
         for o in config.options(s)
     )
     appdata["flags"] = " | ".join(sorted(flags)) if flags else "0"
-    appdata["App:profile"] = (
-        '"%s"' % appdata["App:profile"] if "App:profile" in appdata else "NULL"
-    )
+    for key in ("App:vendor", "App:profile"):
+        # Set to NULL when not present or falsy such as an empty string
+        appdata[key] = '"%s"' % appdata[key] if appdata.get(key, None) else "NULL"
     expected = (
         "App:vendor",
         "App:name",
@@ -63,7 +63,7 @@ def main(output, file):
     output.write(
         """#include "mozilla/XREAppData.h"
              static const mozilla::StaticXREAppData sAppData = {
-                 "%(App:vendor)s",
+                 %(App:vendor)s,
                  "%(App:name)s",
                  "%(App:remotingname)s",
                  "%(App:version)s",
