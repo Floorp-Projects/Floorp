@@ -915,14 +915,14 @@ var gIdentityHandler = {
     // "Clear Site Data" button if the site is storing local data, and
     // if the page is not controlled by a WebExtension.
     this._clearSiteDataFooter.hidden = true;
-    let securityButton = document.getElementById(
-      "identity-popup-security-button"
+    let identityPopupPanelView = document.getElementById(
+      "identity-popup-mainView"
     );
-    securityButton.removeAttribute("footerHidden");
+    identityPopupPanelView.removeAttribute("footerVisible");
     if (this._uriHasHost && !this._pageExtensionPolicy) {
       SiteDataManager.hasSiteData(this._uri.asciiHost).then(hasData => {
         this._clearSiteDataFooter.hidden = !hasData;
-        securityButton.setAttribute("footerHidden", !hasData);
+        identityPopupPanelView.setAttribute("footerVisible", hasData);
       });
     }
 
@@ -1047,7 +1047,10 @@ var gIdentityHandler = {
     }
 
     // Update all elements.
-    let elementIDs = ["identity-popup", "identity-popup-securityView-body"];
+    let elementIDs = [
+      "identity-popup",
+      "identity-popup-securityView-extended-info",
+    ];
 
     for (let id of elementIDs) {
       let element = document.getElementById(id);
