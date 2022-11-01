@@ -143,7 +143,7 @@ def fill_template(config, tasks):
                 "tier": 1,
             },
             "run-on-projects": [],
-            "worker-type": "images",
+            "worker-type": "images-gcp",
             "worker": {
                 "implementation": "docker-worker",
                 "os": "linux",
