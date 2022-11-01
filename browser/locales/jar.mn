@@ -15,6 +15,7 @@
   preview/originControls.ftl                       (../components/extensions/originControls.ftl)
   preview/unifiedExtensions.ftl                    (../components/extensions/unifiedExtensions.ftl)
   preview/identityCredentialNotification.ftl       (../components/credentialmanager/identityCredentialNotification.ftl)
+  preview/protectionsPanel.ftl                     (../base/content/protectionsPanel.ftl)
   browser                                          (%browser/**/*.ftl)
 
 @AB_CD@.jar:

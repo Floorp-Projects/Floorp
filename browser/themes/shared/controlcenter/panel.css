@@ -571,6 +571,16 @@
   display: none;
 }
 
+#protections-popup-cookie-banner-section[hasException] .protections-popup-cookie-banner-switch-on-header,
+#protections-popup-cookie-banner-section:not([hasException]) .protections-popup-cookie-banner-switch-off-header {
+  display: none;
+}
+
+#protections-popup-cookie-banner-section[uiDisabled],
+#protections-popup-cookie-banner-section-separator[uiDisabled]{
+  display: none;
+}
+
 #protections-popup-toast-panel-tp-on-desc,
 #protections-popup-toast-panel-tp-off-desc {
   display: none;
@@ -589,13 +599,12 @@
 
 /* This is needed in order to show a correct height if the 'Site not working?'
    link is not displaying. */
-#protections-popup-tp-switch-section[short] > .protections-popup-tp-switch-label-box,
-#protections-popup-tp-switch-section[short] > .protections-popup-tp-switch-box {
+.protections-popup-switch-section[short] > .protections-popup-tp-switch-label-box,
+.protections-popup-switch-section[short] > .protections-popup-tp-switch-box {
   min-height: 30px;
 }
 
-.protections-popup-tp-switch-on-header,
-.protections-popup-tp-switch-off-header {
+.protections-popup-switch-header {
   font-weight: 600;
 }
 
@@ -772,7 +781,7 @@
 }
 
 .protections-popup-section-header,
-#protections-popup-tp-switch-section,
+.protections-popup-switch-section,
 #protections-popup-siteNotWorkingView-header {
   padding: var(--arrowpanel-menuitem-padding);
   margin: var(--arrowpanel-menuitem-margin);
