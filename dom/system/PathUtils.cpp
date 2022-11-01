@@ -182,36 +182,29 @@ void PathUtils::Parent(const GlobalObject&, const nsAString& aPath,
 
 void PathUtils::Join(const GlobalObject&, const Sequence<nsString>& aComponents,
                      nsString& aResult, ErrorResult& aErr) {
-  nsCOMPtr<nsIFile> path = Join(Span(aComponents), aErr);
-  if (aErr.Failed()) {
+  if (aComponents.IsEmpty()) {
     return;
   }
-
-  MOZ_ALWAYS_SUCCEEDS(path->GetPath(aResult));
-}
-
-already_AddRefed<nsIFile> PathUtils::Join(
-    const Span<const nsString>& aComponents, ErrorResult& aErr) {
-  if (aComponents.IsEmpty() || aComponents[0].IsEmpty()) {
+  if (aComponents[0].IsEmpty()) {
     aErr.ThrowNotAllowedError(ERROR_EMPTY_PATH);
-    return nullptr;
+    return;
   }
 
   nsCOMPtr<nsIFile> path = new nsLocalFile();
   if (nsresult rv = InitFileWithPath(path, aComponents[0]); NS_FAILED(rv)) {
     ThrowError(aErr, rv, ERROR_INITIALIZE_PATH);
-    return nullptr;
+    return;
   }
 
   const auto components = Span<const nsString>(aComponents).Subspan(1);
   for (const auto& component : components) {
     if (nsresult rv = path->Append(component); NS_FAILED(rv)) {
       ThrowError(aErr, rv, ERROR_JOIN);
-      return nullptr;
+      return;
     }
   }
 
-  return path.forget();
+  MOZ_ALWAYS_SUCCEEDS(path->GetPath(aResult));
 }
 
 void PathUtils::JoinRelative(const GlobalObject&, const nsAString& aBasePath,
