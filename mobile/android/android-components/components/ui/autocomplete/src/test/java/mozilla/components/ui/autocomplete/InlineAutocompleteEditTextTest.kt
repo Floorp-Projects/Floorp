@@ -352,6 +352,26 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
+    fun `GIVEN the current text contains an autocompletion WHEN a new character does not match the autocompletion THEN remove the autocompletion`() {
+        val et = InlineAutocompleteEditText(testContext, attributes)
+        val ic = et.onCreateInputConnection(mock(EditorInfo::class.java))
+
+        ic?.setComposingText("mo", 1)
+        assertEquals("mo", et.text.toString())
+
+        et.applyAutocompleteResult(AutocompleteResult("mozilla", "source", 1))
+        assertEquals("mozilla", et.text.toString())
+
+        // Simulating the user entering a new character which makes the current autocomplete invalid
+        ic?.setComposingText("mod", 1)
+        assertEquals("mod", et.text.toString())
+
+        // Verify that autocompletion works for the new text
+        et.applyAutocompleteResult(AutocompleteResult("moderator", "source", 1))
+        assertEquals("moderator", et.text.toString())
+    }
+
+    @Test
     fun `GIVEN empty edit field WHEN text 'g' added THEN autocomplete to google`() {
         val et = InlineAutocompleteEditText(testContext, attributes)
         et.setText("")

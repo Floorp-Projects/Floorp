@@ -575,9 +575,24 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
                 return super.deleteSurroundingText(beforeLength, afterLength)
             }
 
+            /**
+             * Optionally remove the current autocompletion depending on the new [text].
+             *
+             * Cases in which the autocompletion will be removed:
+             *  - if the user pressed the backspace to remove the autocompletion or
+             *  - if the user modified their input such that the autocompletion does not apply anymore.
+             *
+             * @return `true` if this method consumed the user input, `false` otherwise.
+             */
             @Suppress("ComplexCondition")
             private fun removeAutocompleteOnComposing(text: CharSequence): Boolean {
                 val editable = getText()
+
+                // Remove the autocomplete text as soon as possible if not applicable anymore.
+                if (!editableText.startsWith(text) && removeAutocomplete(editable)) {
+                    return false // If the user modified their input then allow the new text to be set.
+                }
+
                 val composingStart = BaseInputConnection.getComposingSpanStart(editable)
                 val composingEnd = BaseInputConnection.getComposingSpanEnd(editable)
                 // We only delete the autocomplete text when the user is backspacing,
