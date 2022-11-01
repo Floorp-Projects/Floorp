@@ -4,11 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* global noSuchMethodExistsYo1, noSuchMethodExistsYo2, noSuchMethodExistsYo3 */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TestInterfaceJS"];
-
-function TestInterfaceJS() {}
+export function TestInterfaceJS() {}
 
 TestInterfaceJS.prototype = {
   QueryInterface: ChromeUtils.generateQI([

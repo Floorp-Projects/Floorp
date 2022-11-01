@@ -23,7 +23,7 @@ TEST_WEBIDL_FILES += [
 ]
 
 TESTING_JS_MODULES += [
-    "TestInterfaceJS.jsm",
+    "TestInterfaceJS.sys.mjs",
 ]
 
 PREPROCESSED_TEST_WEBIDL_FILES += [
