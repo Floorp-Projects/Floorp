@@ -190,17 +190,19 @@ nsresult nsHttpConnectionMgr::PostEvent(nsConnEventHandler handler,
                                         int32_t iparam, ARefBase* vparam) {
   Unused << EnsureSocketThreadTarget();
 
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-  nsresult rv;
-  if (!mSocketThreadTarget) {
-    NS_WARNING("cannot post event if not initialized");
-    rv = NS_ERROR_NOT_INITIALIZED;
-  } else {
-    nsCOMPtr<nsIRunnable> event = new ConnEvent(this, handler, iparam, vparam);
-    rv = mSocketThreadTarget->Dispatch(event, NS_DISPATCH_NORMAL);
+  nsCOMPtr<nsIEventTarget> target;
+  {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    target = mSocketThreadTarget;
   }
-  return rv;
+
+  if (!target) {
+    NS_WARNING("cannot post event if not initialized");
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  nsCOMPtr<nsIRunnable> event = new ConnEvent(this, handler, iparam, vparam);
+  return target->Dispatch(event, NS_DISPATCH_NORMAL);
 }
 
 void nsHttpConnectionMgr::PruneDeadConnectionsAfter(uint32_t timeInSeconds) {
@@ -357,14 +359,19 @@ void nsHttpConnectionMgr::UpdateClassOfServiceOnTransaction(
 
   Unused << EnsureSocketThreadTarget();
 
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  nsCOMPtr<nsIEventTarget> target;
+  {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    target = mSocketThreadTarget;
+  }
 
-  if (!mSocketThreadTarget) {
+  if (!target) {
     NS_WARNING("cannot post event if not initialized");
+    return;
   }
 
   RefPtr<nsHttpConnectionMgr> self(this);
-  Unused << mSocketThreadTarget->Dispatch(NS_NewRunnableFunction(
+  Unused << target->Dispatch(NS_NewRunnableFunction(
       "nsHttpConnectionMgr::CallUpdateClassOfServiceOnTransaction",
       [cos{classOfService}, self{std::move(self)}, trans = RefPtr{trans}]() {
         self->OnMsgUpdateClassOfServiceOnTransaction(
@@ -505,16 +512,20 @@ nsresult nsHttpConnectionMgr::ReclaimConnection(HttpConnectionBase* conn) {
 
   Unused << EnsureSocketThreadTarget();
 
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  nsCOMPtr<nsIEventTarget> target;
+  {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    target = mSocketThreadTarget;
+  }
 
-  if (!mSocketThreadTarget) {
+  if (!target) {
     NS_WARNING("cannot post event if not initialized");
     return NS_ERROR_NOT_INITIALIZED;
   }
 
   RefPtr<HttpConnectionBase> connRef(conn);
   RefPtr<nsHttpConnectionMgr> self(this);
-  return mSocketThreadTarget->Dispatch(NS_NewRunnableFunction(
+  return target->Dispatch(NS_NewRunnableFunction(
       "nsHttpConnectionMgr::CallReclaimConnection",
       [conn{std::move(connRef)}, self{std::move(self)}]() {
         self->OnMsgReclaimConnection(conn);
