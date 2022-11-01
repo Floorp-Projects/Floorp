@@ -225,8 +225,7 @@ void WebRenderImageData::CreateAsyncImageWebRenderCommands(
   // context need to be done manually and pushed over to the parent side,
   // where it will be done when we build the display list for the iframe.
   // That happens in AsyncImagePipelineManager.
-  wr::LayoutRect r = wr::ToLayoutRect(aBounds);
-  aBuilder.PushIFrame(r, aIsBackfaceVisible, mPipelineId.ref(),
+  aBuilder.PushIFrame(aBounds, aIsBackfaceVisible, mPipelineId.ref(),
                       /*ignoreMissingPipelines*/ false);
 
   WrBridge()->AddWebRenderParentCommand(OpUpdateAsyncImagePipeline(
@@ -335,8 +334,7 @@ void WebRenderInProcessImageData::CreateWebRenderCommands(
   // context need to be done manually and pushed over to the parent side,
   // where it will be done when we build the display list for the iframe.
   // That happens in AsyncImagePipelineManager.
-  wr::LayoutRect r = wr::ToLayoutRect(aBounds);
-  aBuilder.PushIFrame(r, aIsBackfaceVisible, mPipelineId.ref(),
+  aBuilder.PushIFrame(aBounds, aIsBackfaceVisible, mPipelineId.ref(),
                       /*ignoreMissingPipelines*/ false);
 
   WrBridge()->AddWebRenderParentCommand(OpUpdateAsyncImagePipeline(

@@ -1370,13 +1370,14 @@ void DisplayListBuilder::PushYCbCrInterleavedImage(
       aSupportsExternalCompositing);
 }
 
-void DisplayListBuilder::PushIFrame(const wr::LayoutRect& aBounds,
+void DisplayListBuilder::PushIFrame(const LayoutDeviceRect& aDevPxBounds,
                                     bool aIsBackfaceVisible,
                                     PipelineId aPipeline,
                                     bool aIgnoreMissingPipeline) {
   mRemotePipelineIds.AppendElement(aPipeline);
-  wr_dp_push_iframe(mWrState, aBounds, MergeClipLeaf(aBounds),
-                    aIsBackfaceVisible, &mCurrentSpaceAndClipChain, aPipeline,
+  const auto bounds = wr::ToLayoutRect(aDevPxBounds);
+  wr_dp_push_iframe(mWrState, bounds, MergeClipLeaf(bounds), aIsBackfaceVisible,
+                    &mCurrentSpaceAndClipChain, aPipeline,
                     aIgnoreMissingPipeline);
 }
 
