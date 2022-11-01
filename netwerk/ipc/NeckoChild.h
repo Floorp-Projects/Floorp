@@ -84,6 +84,8 @@ class NeckoChild : public PNeckoChild {
 
   bool DeallocPClassifierDummyChannelChild(
       PClassifierDummyChannelChild* aActor);
+
+  mozilla::ipc::IPCResult RecvSetTRRDomain(const nsCString& domain);
 };
 
 /**

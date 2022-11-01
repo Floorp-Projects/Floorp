@@ -42,6 +42,7 @@ EXPORTS.mozilla.net += [
     "DNSRequestBase.h",
     "DNSRequestChild.h",
     "DNSRequestParent.h",
+    "DNSServiceBase.h",
     "HTTPSSVC.h",
     "IDNBlocklistUtils.h",
     "NativeDNSResolverOverrideChild.h",

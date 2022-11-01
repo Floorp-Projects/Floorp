@@ -23,6 +23,8 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryComms.h"
 #include "mozilla/Tokenizer.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/TRRServiceChild.h"
 // Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
 #include "DNSLogging.h"
@@ -299,6 +301,17 @@ bool TRRService::MaybeSetPrivateURI(const nsACString& aURI) {
     }
 
     mPrivateURI = newURI;
+
+    // Notify the content processes of the new TRR
+    for (auto* cp :
+         dom::ContentParent::AllProcesses(dom::ContentParent::eLive)) {
+      PNeckoParent* neckoParent =
+          SingleManagedOrNull(cp->ManagedPNeckoParent());
+      if (!neckoParent) {
+        continue;
+      }
+      Unused << neckoParent->SendSetTRRDomain(ProviderKey());
+    }
 
     AsyncCreateTRRConnectionInfo(mPrivateURI);
 
