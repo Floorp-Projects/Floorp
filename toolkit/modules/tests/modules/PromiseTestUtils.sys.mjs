@@ -6,13 +6,9 @@
  * will fail tests in this case, unless the test explicitly allows rejections.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PromiseTestUtils"];
-
 const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
-var PromiseTestUtils = {
+export var PromiseTestUtils = {
   /**
    * Array of objects containing the details of the Promise rejections that are
    * currently left uncaught. This includes DOM Promise and Promise.jsm. When
@@ -117,7 +113,7 @@ var PromiseTestUtils = {
     PromiseDebugging.addUncaughtRejectionObserver(observer);
     Promise.reject(this._ensureDOMPromiseRejectionsProcessedReason);
     Services.tm.spinEventLoopUntil(
-      "Test(PromiseTestUtils.jsm:ensureDOMPromiseRejectionsProcessed)",
+      "Test(PromiseTestUtils.sys.mjs:ensureDOMPromiseRejectionsProcessed)",
       () => observed
     );
     PromiseDebugging.removeUncaughtRejectionObserver(observer);

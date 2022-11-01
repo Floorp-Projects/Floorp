@@ -1,8 +1,4 @@
-"use strict";
-
-const EXPORTED_SYMBOLS = ["RegionTestUtils"];
-
-const RegionTestUtils = Object.freeze({
+export const RegionTestUtils = Object.freeze({
   REGION_URL_PREF: "browser.region.network.url",
 
   setNetworkRegion(region) {

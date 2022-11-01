@@ -2,13 +2,9 @@
  * Provides infrastructure for tests that would require mock document.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["MockDocument"];
-
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-const MockDocument = {
+export const MockDocument = {
   /**
    * Create a document for the given URL containing the given HTML with the ownerDocument of all <form>s having a mocked location.
    */

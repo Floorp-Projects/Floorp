@@ -256,7 +256,7 @@ IntegrationPoint.prototype = {
    * specified JSM module. For example:
    *
    *   Integration.test.defineModuleGetter(this, "TestIntegration",
-   *                    "resource://testing-common/TestIntegration.jsm");
+   *                    "resource://testing-common/TestIntegration.sys.mjs");
    *
    * @param targetObject
    *        The object on which the lazy getter will be defined.
