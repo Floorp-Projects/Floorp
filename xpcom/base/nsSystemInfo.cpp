@@ -596,6 +596,7 @@ static const struct PropItems {
 
 nsresult CollectProcessInfo(ProcessInfo& info) {
   nsAutoCString cpuVendor;
+  nsAutoCString cpuName;
   int cpuSpeed = -1;
   int cpuFamily = -1;
   int cpuModel = -1;
@@ -692,6 +693,20 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
       CopyUTF16toUTF8(nsDependentString(cpuVendorStr), cpuVendor);
     }
 
+    // Limit to 64 double byte characters, should be plenty, but create
+    // a buffer one larger as the result may not be null terminated. If
+    // it is more than 64, we will not get the value.
+    // The expected string size is 48 characters or less.
+    wchar_t cpuNameStr[64 + 1];
+    len = sizeof(cpuNameStr) - 2;
+    if (RegQueryValueExW(key, L"ProcessorNameString", 0, &vtype,
+                         reinterpret_cast<LPBYTE>(cpuNameStr),
+                         &len) == ERROR_SUCCESS &&
+        vtype == REG_SZ && len % 2 == 0 && len > 1) {
+      cpuNameStr[len / 2] = 0;  // In case it isn't null terminated
+      CopyUTF16toUTF8(nsDependentString(cpuNameStr), cpuName);
+    }
+
     RegCloseKey(key);
   }
 
@@ -749,6 +764,14 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
     delete[] cpuVendorStr;
   }
 
+  if (!sysctlbyname("machdep.cpu.brand_string", NULL, &len, NULL, 0)) {
+    char* cpuNameStr = new char[len];
+    if (!sysctlbyname("machdep.cpu.brand_string", cpuNameStr, &len, NULL, 0)) {
+      cpuName = cpuNameStr;
+    }
+    delete[] cpuNameStr;
+  }
+
   len = sizeof(sysctlValue32);
   if (!sysctlbyname("machdep.cpu.family", &sysctlValue32, &len, NULL, 0)) {
     cpuFamily = static_cast<int>(sysctlValue32);
@@ -776,6 +799,9 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
 
     // cpuVendor from "vendor_id"
     info.cpuVendor.Assign(keyValuePairs["vendor_id"_ns]);
+
+    // cpuName from "model name"
+    info.cpuName.Assign(keyValuePairs["model name"_ns]);
 
     {
       // cpuFamily from "cpu family"
@@ -873,6 +899,9 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
   }
   if (!cpuVendor.IsEmpty()) {
     info.cpuVendor = cpuVendor;
+  }
+  if (!cpuName.IsEmpty()) {
+    info.cpuName = cpuName;
   }
   if (cpuFamily >= 0) {
     info.cpuFamily = cpuFamily;
@@ -1328,6 +1357,11 @@ JSObject* GetJSObjForProcessInfo(JSContext* aCx, const ProcessInfo& info) {
       JS_NewStringCopyN(aCx, info.cpuVendor.get(), info.cpuVendor.Length());
   JS::Rooted<JS::Value> valVendor(aCx, JS::StringValue(strVendor));
   JS_SetProperty(aCx, jsInfo, "vendor", valVendor);
+
+  JSString* strName =
+      JS_NewStringCopyN(aCx, info.cpuName.get(), info.cpuName.Length());
+  JS::Rooted<JS::Value> valName(aCx, JS::StringValue(strName));
+  JS_SetProperty(aCx, jsInfo, "name", valName);
 
   JS::Rooted<JS::Value> valFamilyInfo(aCx, JS::Int32Value(info.cpuFamily));
   JS_SetProperty(aCx, jsInfo, "family", valFamilyInfo);

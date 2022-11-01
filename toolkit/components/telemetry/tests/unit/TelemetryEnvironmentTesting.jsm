@@ -485,6 +485,7 @@ var TelemetryEnvironmentTesting = {
           "l3cacheKB",
           "speedMHz",
           "vendor",
+          "name",
         ];
 
         for (let f of EXTRA_CPU_FIELDS) {
