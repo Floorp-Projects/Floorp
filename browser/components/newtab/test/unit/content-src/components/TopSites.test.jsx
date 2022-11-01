@@ -716,8 +716,11 @@ describe("<TopSite>", () => {
     it("should dispatch a UserEventAction with the right data for SPOC top site", () => {
       const dispatch = sinon.stub();
       const siteInfo = {
+        id: 1,
         iconType: "custom_screenshot",
         type: "SPOC",
+        pos: 1,
+        label: "test advertiser",
       };
       const wrapper = shallow(
         <TopSite
@@ -729,7 +732,7 @@ describe("<TopSite>", () => {
 
       wrapper.find(TopSiteLink).simulate("click", { preventDefault() {} });
 
-      const [action] = dispatch.firstCall.args;
+      let [action] = dispatch.firstCall.args;
       assert.isUserEventAction(action);
 
       assert.propertyVal(action.data, "event", "CLICK");
@@ -737,6 +740,23 @@ describe("<TopSite>", () => {
       assert.propertyVal(action.data, "action_position", 0);
       assert.propertyVal(action.data.value, "card_type", "spoc");
       assert.propertyVal(action.data.value, "icon_type", "custom_screenshot");
+
+      // Pocket SPOC click event.
+      [action] = dispatch.getCall(2).args;
+      assert.equal(action.type, at.TELEMETRY_IMPRESSION_STATS);
+
+      assert.propertyVal(action.data, "click", 0);
+      assert.propertyVal(action.data, "source", "TOP_SITES");
+
+      // Topsite SPOC click event.
+      [action] = dispatch.getCall(3).args;
+      assert.equal(action.type, at.TOP_SITES_IMPRESSION_STATS);
+
+      assert.propertyVal(action.data, "type", "click");
+      assert.propertyVal(action.data, "tile_id", 1);
+      assert.propertyVal(action.data, "source", "newtab");
+      assert.propertyVal(action.data, "position", 2);
+      assert.propertyVal(action.data, "advertiser", "test advertiser");
     });
     it("should dispatch OPEN_LINK with the right data", () => {
       const dispatch = sinon.stub();

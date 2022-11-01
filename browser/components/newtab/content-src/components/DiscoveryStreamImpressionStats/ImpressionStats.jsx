@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import { TOP_SITES_SOURCE } from "../TopSites/TopSitesConstants";
 import React from "react";
 
 const VISIBLE = "visible";
@@ -62,6 +63,24 @@ export class ImpressionStats extends React.PureComponent {
           data: { flightId: this.props.flightId },
         })
       );
+
+      // Record sponsored topsites impressions if the source is `TOP_SITES_SOURCE`.
+      if (this.props.source === TOP_SITES_SOURCE) {
+        for (const card of cards) {
+          this.props.dispatch(
+            ac.OnlyToMain({
+              type: at.TOP_SITES_IMPRESSION_STATS,
+              data: {
+                type: "impression",
+                tile_id: card.id,
+                source: "newtab",
+                advertiser: card.advertiser,
+                position: card.pos + 1, // positions are 1-based for telemetry
+              },
+            })
+          );
+        }
+      }
     }
 
     if (this._needsImpressionStats(cards)) {
