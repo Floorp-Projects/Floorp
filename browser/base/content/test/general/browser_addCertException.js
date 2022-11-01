@@ -43,14 +43,14 @@ add_task(async function() {
         .getElementById("identity-popup-securityView")
         .getElementsByClassName("identity-popup-security-connection")[0]
     )
-    .getPropertyValue("background-image");
+    .getPropertyValue("list-style-image");
   let securityContentBG = gBrowser.ownerGlobal
     .getComputedStyle(
       document
         .getElementById("identity-popup-mainView")
         .getElementsByClassName("identity-popup-security-connection")[0]
     )
-    .getPropertyValue("background-image");
+    .getPropertyValue("list-style-image");
   is(
     identityIconImage,
     'url("chrome://global/skin/icons/security-warning.svg")',
