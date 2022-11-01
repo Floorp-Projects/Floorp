@@ -75,7 +75,7 @@ void nsContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 
 void nsContainerFrame::SetInitialChildList(ChildListID aListID,
-                                           nsFrameList& aChildList) {
+                                           nsFrameList&& aChildList) {
 #ifdef DEBUG
   nsIFrame::VerifyDirtyBitSet(aChildList);
   for (nsIFrame* f : aChildList) {

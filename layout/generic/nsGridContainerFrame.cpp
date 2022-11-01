@@ -9736,14 +9736,14 @@ void nsGridContainerFrame::StoreUsedTrackSizes(
 
 #ifdef DEBUG
 void nsGridContainerFrame::SetInitialChildList(ChildListID aListID,
-                                               nsFrameList& aChildList) {
+                                               nsFrameList&& aChildList) {
   ChildListIDs supportedLists = {kPrincipalList};
   // We don't handle the kBackdropList frames in any way, but it only contains
   // a placeholder for ::backdrop which is OK to not reflow (for now anyway).
   supportedLists += kBackdropList;
   MOZ_ASSERT(supportedLists.contains(aListID), "unexpected child list");
 
-  return nsContainerFrame::SetInitialChildList(aListID, aChildList);
+  return nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
 }
 
 void nsGridContainerFrame::TrackSize::DumpStateBits(StateBits aState) {

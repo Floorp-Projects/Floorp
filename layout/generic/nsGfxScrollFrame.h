@@ -993,7 +993,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
   void SetInitialChildList(ChildListID aListID,
-                           nsFrameList& aChildList) override;
+                           nsFrameList&& aChildList) override;
   void AppendFrames(ChildListID aListID, nsFrameList& aFrameList) final;
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
@@ -1450,7 +1450,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
 
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
-  void SetInitialChildList(ChildListID aListID, nsFrameList& aChildList) final;
+  void SetInitialChildList(ChildListID aListID, nsFrameList&& aChildList) final;
   void AppendFrames(ChildListID aListID, nsFrameList& aFrameList) final;
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,

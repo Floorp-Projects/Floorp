@@ -42,8 +42,8 @@ nsresult nsMathMLSelectedFrame::ChildListChanged(int32_t aModType) {
 }
 
 void nsMathMLSelectedFrame::SetInitialChildList(ChildListID aListID,
-                                                nsFrameList& aChildList) {
-  nsMathMLContainerFrame::SetInitialChildList(aListID, aChildList);
+                                                nsFrameList&& aChildList) {
+  nsMathMLContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
   // This very first call to GetSelectedFrame() will cause us to be marked as an
   // embellished operator if the selected child is an embellished operator
   GetSelectedFrame();

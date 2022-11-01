@@ -107,7 +107,7 @@ class nsComboboxControlFrame final : public nsBlockFrame,
 #endif
   void DestroyFrom(nsIFrame* aDestructRoot,
                    PostDestroyData& aPostDestroyData) final;
-  void SetInitialChildList(ChildListID aListID, nsFrameList& aChildList) final;
+  void SetInitialChildList(ChildListID aListID, nsFrameList&& aChildList) final;
   const nsFrameList& GetChildList(ChildListID aListID) const final;
   void GetChildLists(nsTArray<ChildList>* aLists) const final;
 

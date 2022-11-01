@@ -1258,10 +1258,10 @@ void nsColumnSetFrame::AppendDirectlyOwnedAnonBoxes(
 
 #ifdef DEBUG
 void nsColumnSetFrame::SetInitialChildList(ChildListID aListID,
-                                           nsFrameList& aChildList) {
+                                           nsFrameList&& aChildList) {
   MOZ_ASSERT(aListID != kPrincipalList || aChildList.OnlyChild(),
              "initial principal child list must have exactly one child");
-  nsContainerFrame::SetInitialChildList(aListID, aChildList);
+  nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
 }
 
 void nsColumnSetFrame::AppendFrames(ChildListID aListID,

@@ -83,7 +83,7 @@ void nsTableWrapperFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
 }
 
 void nsTableWrapperFrame::SetInitialChildList(ChildListID aListID,
-                                              nsFrameList& aChildList) {
+                                              nsFrameList&& aChildList) {
   if (kCaptionList == aListID) {
 #ifdef DEBUG
     nsIFrame::VerifyDirtyBitSet(aChildList);
@@ -101,7 +101,7 @@ void nsTableWrapperFrame::SetInitialChildList(ChildListID aListID,
                     aChildList.FirstChild() == aChildList.LastChild() &&
                     aChildList.FirstChild()->IsTableFrame()),
                "expected a single table frame in principal child list");
-    nsContainerFrame::SetInitialChildList(aListID, aChildList);
+    nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
   }
 }
 

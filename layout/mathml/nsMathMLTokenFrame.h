@@ -40,8 +40,8 @@ class nsMathMLTokenFrame : public nsMathMLContainerFrame {
 
   virtual eMathMLFrameType GetMathMLFrameType() override;
 
-  virtual void SetInitialChildList(ChildListID aListID,
-                                   nsFrameList& aChildList) override;
+  void SetInitialChildList(ChildListID aListID,
+                           nsFrameList&& aChildList) override;
 
   virtual void AppendFrames(ChildListID aListID,
                             nsFrameList& aChildList) override;

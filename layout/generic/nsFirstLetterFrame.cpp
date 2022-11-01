@@ -67,7 +67,7 @@ void nsFirstLetterFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 
 void nsFirstLetterFrame::SetInitialChildList(ChildListID aListID,
-                                             nsFrameList& aChildList) {
+                                             nsFrameList&& aChildList) {
   MOZ_ASSERT(aListID == kPrincipalList,
              "Principal child list is the only "
              "list that nsFirstLetterFrame should set via this function");

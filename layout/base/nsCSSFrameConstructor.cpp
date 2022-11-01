@@ -533,8 +533,7 @@ static bool ParentIsWrapperAnonBox(nsIFrame* aParent) {
 
 inline void SetInitialSingleChild(nsContainerFrame* aParent, nsIFrame* aFrame) {
   MOZ_ASSERT(!aFrame->GetNextSibling(), "Should be using a frame list");
-  nsFrameList temp(aFrame, aFrame);
-  aParent->SetInitialChildList(kPrincipalList, temp);
+  aParent->SetInitialChildList(kPrincipalList, nsFrameList(aFrame, aFrame));
 }
 
 // -----------------------------------------------------------
@@ -1117,8 +1116,8 @@ void nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
 
   nsIFrame* placeholder = nsCSSFrameConstructor::CreatePlaceholderFrameFor(
       mPresShell, aContent, backdropFrame, frame, nullptr, placeholderType);
-  nsFrameList temp(placeholder, placeholder);
-  frame->SetInitialChildList(nsIFrame::kBackdropList, temp);
+  frame->SetInitialChildList(nsIFrame::kBackdropList,
+                             nsFrameList(placeholder, placeholder));
 
   frameList->AppendFrame(nullptr, backdropFrame);
 }
@@ -1219,7 +1218,7 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
       containingBlock->GetAbsoluteContainingBlock()->SetInitialChildList(
           containingBlock, aChildListID, aFrameList);
     } else {
-      containingBlock->SetInitialChildList(aChildListID, aFrameList);
+      containingBlock->SetInitialChildList(aChildListID, std::move(aFrameList));
     }
   } else if (aChildListID == nsIFrame::kFixedList ||
              aChildListID == nsIFrame::kAbsoluteList) {
@@ -1363,7 +1362,7 @@ static void MoveChildrenTo(nsIFrame* aOldParent, nsContainerFrame* aNewParent,
 
   if (aNewParent->PrincipalChildList().IsEmpty() &&
       aNewParent->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
-    aNewParent->SetInitialChildList(kPrincipalList, aFrameList);
+    aNewParent->SetInitialChildList(kPrincipalList, std::move(aFrameList));
   } else {
     aNewParent->AppendFrames(kPrincipalList, aFrameList);
   }
@@ -2038,12 +2037,13 @@ nsIFrame* nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
   PullOutCaptionFrames(childList, captionList);
 
   // Set the inner table frame's initial primary list
-  innerFrame->SetInitialChildList(kPrincipalList, childList);
+  innerFrame->SetInitialChildList(kPrincipalList, std::move(childList));
 
   // Set the table wrapper frame's secondary childlist lists
   if (captionList.NotEmpty()) {
     captionList.ApplySetParent(newFrame);
-    newFrame->SetInitialChildList(nsIFrame::kCaptionList, captionList);
+    newFrame->SetInitialChildList(nsIFrame::kCaptionList,
+                                  std::move(captionList));
   }
 
   return newFrame;
@@ -2110,7 +2110,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableRowOrRowGroup(
                     false);
   }
 
-  newFrame->SetInitialChildList(kPrincipalList, childList);
+  newFrame->SetInitialChildList(kPrincipalList, std::move(childList));
   aFrameList.AppendFrame(nullptr, newFrame);
   return newFrame;
 }
@@ -2210,7 +2210,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
                     childList, !isMathMLContent);
   }
 
-  cellInnerFrame->SetInitialChildList(kPrincipalList, childList);
+  cellInnerFrame->SetInitialChildList(kPrincipalList, std::move(childList));
   SetInitialSingleChild(newFrame, cellInnerFrame);
   aFrameList.AppendFrame(nullptr, newFrame);
   return newFrame;
@@ -2528,7 +2528,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
                     childList, false);
 
     // Set the initial child lists
-    contentFrame->SetInitialChildList(kPrincipalList, childList);
+    contentFrame->SetInitialChildList(kPrincipalList, std::move(childList));
   }
 
   nsIFrame* newFrame = frameList.FirstChild();
@@ -2987,7 +2987,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
                                 /* aParentIsWrapperAnonBox = */ false,
                                 childList);
 
-    comboboxFrame->SetInitialChildList(kPrincipalList, childList);
+    comboboxFrame->SetInitialChildList(kPrincipalList, std::move(childList));
 
     aState.mFrameState = historyState;
     if (aState.mFrameState) {
@@ -3045,7 +3045,7 @@ void nsCSSFrameConstructor::InitializeListboxSelect(
                   childList, false);
 
   // Set the scrolled frame's initial child lists
-  scrolledFrame->SetInitialChildList(kPrincipalList, childList);
+  scrolledFrame->SetInitialChildList(kPrincipalList, std::move(childList));
 }
 
 nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
@@ -3141,13 +3141,14 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
 
   if (!MayNeedToCreateColumnSpanSiblings(contentFrame, childList)) {
     // Set the inner frame's initial child lists.
-    contentFrame->SetInitialChildList(kPrincipalList, childList);
+    contentFrame->SetInitialChildList(kPrincipalList, std::move(childList));
   } else {
     // Extract any initial non-column-span kids, and put them in inner frame's
     // child list.
     nsFrameList initialNonColumnSpanKids =
         childList.Split([](nsIFrame* f) { return f->IsColumnSpan(); });
-    contentFrame->SetInitialChildList(kPrincipalList, initialNonColumnSpanKids);
+    contentFrame->SetInitialChildList(kPrincipalList,
+                                      std::move(initialNonColumnSpanKids));
 
     if (childList.NotEmpty()) {
       nsFrameList columnSpanSiblings = CreateColumnSpanSiblings(
@@ -3234,7 +3235,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructBlockRubyFrame(
   nsFrameList childList;
   ProcessChildren(aState, content, rubyStyle, rubyFrame, true, childList, false,
                   nullptr);
-  rubyFrame->SetInitialChildList(kPrincipalList, childList);
+  rubyFrame->SetInitialChildList(kPrincipalList, std::move(childList));
 
   return newFrame;
 }
@@ -3853,14 +3854,15 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
           !MayNeedToCreateColumnSpanSiblings(newFrameAsContainer, childList)) {
         // Set the frame's initial child list. Note that MathML depends on this
         // being called even if childList is empty!
-        newFrameAsContainer->SetInitialChildList(kPrincipalList, childList);
+        newFrameAsContainer->SetInitialChildList(kPrincipalList,
+                                                 std::move(childList));
       } else {
         // Extract any initial non-column-span kids, and put them in inner
         // frame's child list.
         nsFrameList initialNonColumnSpanKids =
             childList.Split([](nsIFrame* f) { return f->IsColumnSpan(); });
-        newFrameAsContainer->SetInitialChildList(kPrincipalList,
-                                                 initialNonColumnSpanKids);
+        newFrameAsContainer->SetInitialChildList(
+            kPrincipalList, std::move(initialNonColumnSpanKids));
 
         if (childList.NotEmpty()) {
           nsFrameList columnSpanSiblings = CreateColumnSpanSiblings(
@@ -4233,7 +4235,7 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
       styleSet->ResolveInheritingAnonymousBoxStyle(aScrolledPseudo,
                                                    aContentStyle);
 
-  gfxScrollFrame->SetInitialChildList(kPrincipalList, anonymousList);
+  gfxScrollFrame->SetInitialChildList(kPrincipalList, std::move(anonymousList));
 
   return scrolledChildStyle.forget();
 }
@@ -4671,9 +4673,7 @@ void nsCSSFrameConstructor::FlushAccumulatedBlock(
   }
   // abs-pos and floats are disabled in MathML children so we don't have to
   // worry about messing up those.
-  blockFrame->SetInitialChildList(kPrincipalList, aBlockList);
-  NS_ASSERTION(aBlockList.IsEmpty(), "What happened?");
-  aBlockList.Clear();
+  blockFrame->SetInitialChildList(kPrincipalList, std::move(aBlockList));
   aNewList.AppendFrame(nullptr, blockFrame);
 }
 
@@ -4821,7 +4821,7 @@ nsContainerFrame* nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
   }
 
   // Set the inner wrapper frame's initial primary list
-  innerFrame->SetInitialChildList(kPrincipalList, childList);
+  innerFrame->SetInitialChildList(kPrincipalList, std::move(childList));
 
   return newFrame;
 }
@@ -7830,7 +7830,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingOuterTableFrame(
   }
 
   // Set the table wrapper's initial child list
-  newFrame->SetInitialChildList(kPrincipalList, newChildFrames);
+  newFrame->SetInitialChildList(kPrincipalList, std::move(newChildFrames));
 
   return newFrame;
 }
@@ -7880,7 +7880,8 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingTableFrame(
       ProcessChildren(state, headerFooter, rowGroupFrame->Style(),
                       headerFooterFrame, true, childList, false, nullptr);
       NS_ASSERTION(state.mFloatedList.IsEmpty(), "unexpected floated element");
-      headerFooterFrame->SetInitialChildList(kPrincipalList, childList);
+      headerFooterFrame->SetInitialChildList(kPrincipalList,
+                                             std::move(childList));
       headerFooterFrame->SetRepeatable(true);
 
       // Table specific initialization
@@ -7892,7 +7893,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingTableFrame(
   }
 
   // Set the table frame's initial child list
-  newFrame->SetInitialChildList(kPrincipalList, childFrames);
+  newFrame->SetInitialChildList(kPrincipalList, std::move(childFrames));
 
   return newFrame;
 }
@@ -7967,7 +7968,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
       cellFrame = cellFrame->GetNextSibling();
     }
 
-    rowFrame->SetInitialChildList(kPrincipalList, newChildList);
+    rowFrame->SetInitialChildList(kPrincipalList, std::move(newChildList));
     newFrame = rowFrame;
 
   } else if (LayoutFrameType::TableCell == frameType) {
@@ -8119,7 +8120,8 @@ nsresult nsCSSFrameConstructor::ReplicateFixedFrames(
   // broken auto-positioning. Oh, well.
   NS_ASSERTION(!canvasFrame->PrincipalChildList().FirstChild(),
                "leaking frames; doc root continuation must be empty");
-  canvasFrame->SetInitialChildList(kPrincipalList, fixedPlaceholders);
+  canvasFrame->SetInitialChildList(kPrincipalList,
+                                   std::move(fixedPlaceholders));
   return NS_OK;
 }
 
@@ -9857,7 +9859,8 @@ void nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
   ReparentFrames(this, aLineFrame, firstLineChildren, true);
   if (aLineFrame->PrincipalChildList().IsEmpty() &&
       aLineFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
-    aLineFrame->SetInitialChildList(kPrincipalList, firstLineChildren);
+    aLineFrame->SetInitialChildList(kPrincipalList,
+                                    std::move(firstLineChildren));
   } else {
     AppendFrames(aLineFrame, kPrincipalList, firstLineChildren);
   }
@@ -10611,7 +10614,7 @@ void nsCSSFrameConstructor::ConstructBlock(
 
   if (!MayNeedToCreateColumnSpanSiblings(blockFrame, childList)) {
     // No need to create column-span siblings.
-    blockFrame->SetInitialChildList(kPrincipalList, childList);
+    blockFrame->SetInitialChildList(kPrincipalList, std::move(childList));
     return;
   }
 
@@ -10619,7 +10622,8 @@ void nsCSSFrameConstructor::ConstructBlock(
   // child list.
   nsFrameList initialNonColumnSpanKids =
       childList.Split([](nsIFrame* f) { return f->IsColumnSpan(); });
-  blockFrame->SetInitialChildList(kPrincipalList, initialNonColumnSpanKids);
+  blockFrame->SetInitialChildList(kPrincipalList,
+                                  std::move(initialNonColumnSpanKids));
 
   if (childList.IsEmpty()) {
     // No more kids to process (there weren't any column-span kids).
@@ -10797,7 +10801,8 @@ nsFrameList nsCSSFrameConstructor::CreateColumnSpanSiblings(
     nsFrameList columnSpanKids =
         aChildList.Split([](nsIFrame* f) { return !f->IsColumnSpan(); });
     columnSpanKids.ApplySetParent(columnSpanWrapper);
-    columnSpanWrapper->SetInitialChildList(kPrincipalList, columnSpanKids);
+    columnSpanWrapper->SetInitialChildList(kPrincipalList,
+                                           std::move(columnSpanKids));
     if (aPositionedFrame) {
       aState.ReparentAbsoluteItems(columnSpanWrapper);
     }
@@ -10819,7 +10824,7 @@ nsFrameList nsCSSFrameConstructor::CreateColumnSpanSiblings(
 
       nonColumnSpanKids.ApplySetParent(nonColumnSpanWrapper);
       nonColumnSpanWrapper->SetInitialChildList(kPrincipalList,
-                                                nonColumnSpanKids);
+                                                std::move(nonColumnSpanKids));
       if (aPositionedFrame) {
         aState.ReparentAbsoluteItems(nonColumnSpanWrapper);
       }
@@ -11023,7 +11028,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructInline(
     // acquired one when ancestor inline frames and {ib} splits got
     // constructed).  Just put all the kids into the single inline frame and
     // bail.
-    newFrame->SetInitialChildList(kPrincipalList, childList);
+    newFrame->SetInitialChildList(kPrincipalList, std::move(childList));
     aState.AddChild(newFrame, aFrameList, content, aParentFrame);
     return newFrame;
   }
@@ -11033,7 +11038,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructInline(
 
   // Grab the first inline's kids
   nsFrameList firstInlineKids = childList.TakeFramesBefore(firstBlock);
-  newFrame->SetInitialChildList(kPrincipalList, firstInlineKids);
+  newFrame->SetInitialChildList(kPrincipalList, std::move(firstInlineKids));
 
   aFrameList.AppendFrame(nullptr, newFrame);
 

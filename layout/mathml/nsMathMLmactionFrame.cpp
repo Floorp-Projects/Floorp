@@ -164,8 +164,8 @@ nsIFrame* nsMathMLmactionFrame::GetSelectedFrame() {
 }
 
 void nsMathMLmactionFrame::SetInitialChildList(ChildListID aListID,
-                                               nsFrameList& aChildList) {
-  nsMathMLSelectedFrame::SetInitialChildList(aListID, aChildList);
+                                               nsFrameList&& aChildList) {
+  nsMathMLSelectedFrame::SetInitialChildList(aListID, std::move(aChildList));
 
   if (!mSelectedFrame) {
     mActionType = NS_MATHML_ACTION_TYPE_NONE;

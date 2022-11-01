@@ -1044,8 +1044,8 @@ void nsSliderFrame::SetCurrentPositionInternal(nsIContent* aScrollbar,
 }
 
 void nsSliderFrame::SetInitialChildList(ChildListID aListID,
-                                        nsFrameList& aChildList) {
-  nsBoxFrame::SetInitialChildList(aListID, aChildList);
+                                        nsFrameList&& aChildList) {
+  nsBoxFrame::SetInitialChildList(aListID, std::move(aChildList));
   if (aListID == kPrincipalList) {
     AddListener();
   }

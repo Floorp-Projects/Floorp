@@ -385,11 +385,11 @@ class nsMathMLmathBlockFrame final : public nsBlockFrame {
   // beware, mFrames is not set by nsBlockFrame
   // cannot use mFrames{.FirstChild()|.etc} since the block code doesn't set
   // mFrames
-  virtual void SetInitialChildList(ChildListID aListID,
-                                   nsFrameList& aChildList) override {
+  void SetInitialChildList(ChildListID aListID,
+                           nsFrameList&& aChildList) override {
     MOZ_ASSERT(aListID == kPrincipalList || aListID == kBackdropList,
                "unexpected frame list");
-    nsBlockFrame::SetInitialChildList(aListID, aChildList);
+    nsBlockFrame::SetInitialChildList(aListID, std::move(aChildList));
     if (aListID == kPrincipalList) {
       // re-resolve our subtree to set any mathml-expected data
       nsMathMLContainerFrame::RebuildAutomaticDataForChildren(this);
@@ -455,10 +455,10 @@ class nsMathMLmathInlineFrame final : public nsInlineFrame,
   friend nsContainerFrame* NS_NewMathMLmathInlineFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
-  virtual void SetInitialChildList(ChildListID aListID,
-                                   nsFrameList& aChildList) override {
+  void SetInitialChildList(ChildListID aListID,
+                           nsFrameList&& aChildList) override {
     NS_ASSERTION(aListID == kPrincipalList, "unexpected frame list");
-    nsInlineFrame::SetInitialChildList(aListID, aChildList);
+    nsInlineFrame::SetInitialChildList(aListID, std::move(aChildList));
     // re-resolve our subtree to set any mathml-expected data
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(this);
   }

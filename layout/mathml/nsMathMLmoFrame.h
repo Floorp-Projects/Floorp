@@ -39,8 +39,8 @@ class nsMathMLmoFrame final : public nsMathMLTokenFrame {
   NS_IMETHOD
   TransmitAutomaticData() override;
 
-  virtual void SetInitialChildList(ChildListID aListID,
-                                   nsFrameList& aChildList) override;
+  void SetInitialChildList(ChildListID aListID,
+                           nsFrameList&& aChildList) override;
 
   virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,

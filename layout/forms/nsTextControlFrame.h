@@ -138,7 +138,7 @@ class nsTextControlFrame : public nsContainerFrame,
   void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                 uint32_t aFilter) override;
 
-  void SetInitialChildList(ChildListID, nsFrameList&) override;
+  void SetInitialChildList(ChildListID, nsFrameList&&) override;
 
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) override;

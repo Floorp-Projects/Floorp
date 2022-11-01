@@ -336,7 +336,7 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 
 void nsHTMLFramesetFrame::SetInitialChildList(ChildListID aListID,
-                                              nsFrameList& aChildList) {
+                                              nsFrameList&& aChildList) {
   // We do this weirdness where we create our child frames in Init().  On the
   // other hand, we're going to get a SetInitialChildList() with an empty list
   // and null list name after the frame constructor is done creating us.  So
@@ -345,7 +345,7 @@ void nsHTMLFramesetFrame::SetInitialChildList(ChildListID aListID,
     return;
   }
 
-  nsContainerFrame::SetInitialChildList(aListID, aChildList);
+  nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
 }
 
 // XXX should this try to allocate twips based on an even pixel boundary?

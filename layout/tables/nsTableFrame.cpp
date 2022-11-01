@@ -300,9 +300,9 @@ void nsTableFrame::UnregisterPositionedTablePart(nsIFrame* aFrame,
 // XXX this needs to be cleaned up so that the frame constructor breaks out col
 // group frames into a separate child list, bug 343048.
 void nsTableFrame::SetInitialChildList(ChildListID aListID,
-                                       nsFrameList& aChildList) {
+                                       nsFrameList&& aChildList) {
   if (aListID != kPrincipalList) {
-    nsContainerFrame::SetInitialChildList(aListID, aChildList);
+    nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
     return;
   }
 
