@@ -1,11 +1,9 @@
-var EXPORTED_SYMBOLS = ["ForceRefreshParent"];
-
 var maxCacheLoadCount = 3;
 var cachedLoadCount = 0;
 var baseLoadCount = 0;
 var done = false;
 
-class ForceRefreshParent extends JSWindowActorParent {
+export class ForceRefreshParent extends JSWindowActorParent {
   constructor() {
     super();
   }

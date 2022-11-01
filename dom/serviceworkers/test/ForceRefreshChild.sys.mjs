@@ -1,6 +1,4 @@
-var EXPORTED_SYMBOLS = ["ForceRefreshChild"];
-
-class ForceRefreshChild extends JSWindowActorChild {
+export class ForceRefreshChild extends JSWindowActorChild {
   constructor() {
     super();
   }
