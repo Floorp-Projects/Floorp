@@ -23,6 +23,8 @@ class FenixRobolectricTestApplication : FenixApplication() {
 
     override val components = mockk<Components>()
 
+    override fun initializeNimbus() = Unit
+
     override fun initializeGlean() = Unit
 
     override fun setupInAllProcesses() = Unit
