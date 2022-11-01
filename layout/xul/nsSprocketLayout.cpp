@@ -1163,10 +1163,6 @@ nsSize nsSprocketLayout::GetXULPrefSize(nsIFrame* aBox,
   // run through all the children and get their min, max, and preferred sizes
   // return us the size of the box
 
-  nsFrameState frameState = nsFrameState(0);
-  GetFrameState(aBox, frameState);
-  int32_t count = 0;
-
   for (auto iter = IterFor(aBox); iter && !iter->AtEnd(); iter->Next()) {
     nsIFrame* child = iter->get();
     // ignore collapsed children
@@ -1176,7 +1172,6 @@ nsSize nsSprocketLayout::GetXULPrefSize(nsIFrame* aBox,
     nsSize pref = child->GetXULPrefSize(aState);
     AddXULMargin(child, pref);
     AddLargestSize(vpref, pref, isHorizontal);
-    count++;
   }
 
   // now add our border and padding
@@ -1192,8 +1187,6 @@ nsSize nsSprocketLayout::GetXULMinSize(nsIFrame* aBox,
 
   // run through all the children and get their min, max, and preferred sizes
   // return us the size of the box
-
-  int32_t count = 0;
 
   for (auto iter = IterFor(aBox); iter && !iter->AtEnd(); iter->Next()) {
     nsIFrame* child = iter->get();
@@ -1218,7 +1211,6 @@ nsSize nsSprocketLayout::GetXULMinSize(nsIFrame* aBox,
 
     AddXULMargin(child, min);
     AddLargestSize(minSize, min, isHorizontal);
-    count++;
   }
 
   // now add our border and padding
@@ -1236,8 +1228,6 @@ nsSize nsSprocketLayout::GetXULMaxSize(nsIFrame* aBox,
   // run through all the children and get their min, max, and preferred sizes
   // return us the size of the box
 
-  int32_t count = 0;
-
   for (auto iter = IterFor(aBox); iter && !iter->AtEnd(); iter->Next()) {
     nsIFrame* child = iter->get();
 
@@ -1252,8 +1242,6 @@ nsSize nsSprocketLayout::GetXULMaxSize(nsIFrame* aBox,
 
     AddXULMargin(child, max);
     AddSmallestSize(maxSize, max, isHorizontal);
-
-    count++;
   }
 
   // now add our border and padding
