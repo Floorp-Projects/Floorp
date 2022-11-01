@@ -2749,6 +2749,8 @@ pref("browser.pdfjs.feature-tour", "{\"screen\":\"FEATURE_CALLOUT_1\",\"complete
 // StaticPrefList.yaml for a description of the prefs.
 #ifdef NIGHTLY_BUILD
   pref("cookiebanners.service.mode.privateBrowsing", 1);
+  // Enables the cookie banner desktop UI.
+  pref("cookiebanners.ui.desktop.enabled", true);
 #endif
 
 // We only want to enable this pref for Desktop nightlies.
