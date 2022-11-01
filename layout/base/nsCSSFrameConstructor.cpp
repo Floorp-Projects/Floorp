@@ -1451,7 +1451,6 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(Document* aDocument,
       mCurrentDepth(0),
       mQuotesDirty(false),
       mCountersDirty(false),
-      mIsDestroyingFrameTree(false),
       mAlwaysCreateFramesForIgnorableWhitespace(false) {
 #ifdef DEBUG
   static bool gFirstTime = true;
@@ -7776,8 +7775,6 @@ void nsCSSFrameConstructor::WillDestroyFrameTree() {
 #if defined(DEBUG_dbaron_off)
   mContainStyleScopeManager.DumpCounters();
 #endif
-
-  mIsDestroyingFrameTree = true;
 
   // Prevent frame tree destruction from being O(N^2)
   mContainStyleScopeManager.Clear();
