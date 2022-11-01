@@ -271,6 +271,7 @@ export var ChromeMigrationUtils = {
         Edge: ["Microsoft", "Edge"],
         "Edge Beta": ["Microsoft", "Edge Beta"],
         "360 SE": ["360se6"],
+        Opera: ["Opera Software", "Opera Stable"],
       },
       macosx: {
         Brave: ["BraveSoftware", "Brave-Browser"],
@@ -279,6 +280,7 @@ export var ChromeMigrationUtils = {
         Canary: ["Google", "Chrome Canary"],
         Edge: ["Microsoft Edge"],
         "Edge Beta": ["Microsoft Edge Beta"],
+        Opera: ["com.operasoftware.Opera"],
       },
       linux: {
         Brave: ["BraveSoftware", "Brave-Browser"],
@@ -288,6 +290,7 @@ export var ChromeMigrationUtils = {
         Chromium: ["chromium"],
         // Canary is not available on Linux.
         // Edge is not available on Linux.
+        Opera: ["Opera"],
       },
     };
     let subfolders = SUB_DIRECTORIES[AppConstants.platform][chromeProjectName];
@@ -297,8 +300,14 @@ export var ChromeMigrationUtils = {
 
     let rootDir;
     if (AppConstants.platform == "win") {
-      rootDir = chromeProjectName === "360 SE" ? "AppData" : "LocalAppData";
-      subfolders = subfolders.concat(["User Data"]);
+      if (chromeProjectName === "360 SE" || chromeProjectName === "Opera") {
+        rootDir = "AppData";
+      } else {
+        rootDir = "LocalAppData";
+      }
+      if (chromeProjectName != "Opera") {
+        subfolders = subfolders.concat(["User Data"]);
+      }
     } else if (AppConstants.platform == "macosx") {
       rootDir = "ULibDir";
       subfolders = ["Application Support"].concat(subfolders);
