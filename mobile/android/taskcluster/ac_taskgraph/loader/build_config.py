@@ -31,13 +31,13 @@ ALL_COMPONENTS = object()
 def get_components_changed(files_changed):
     """Translate a list of files changed into a list of components. Eg:
         [
-            "components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/GeckoLoginStorageDelegate.kt",
-            "components/service/sync-logins/src/test/java/mozilla/components/service/sync/logins/GeckoLoginStorageDelegateTest.kt",
+            "android-components/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/GeckoLoginStorageDelegate.kt",
+            "android-components/components/service/sync-logins/src/test/java/mozilla/components/service/sync/logins/GeckoLoginStorageDelegateTest.kt",
         ]
         ->
         {service-sync-logins}
     """
-    return {"-".join(f.split("/")[1:3]) for f in files_changed if f.startswith("components")}
+    return {"-".join(f.split("/")[2:4]) for f in files_changed if f.startswith("android-components")}
 
 
 cached_deps = {}
