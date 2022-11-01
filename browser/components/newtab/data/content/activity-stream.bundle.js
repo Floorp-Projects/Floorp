@@ -7042,10 +7042,25 @@ class DSLinkMenu extends (external_React_default()).PureComponent {
   }
 
 }
+;// CONCATENATED MODULE: ./content-src/components/TopSites/TopSitesConstants.js
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+const TOP_SITES_SOURCE = "TOP_SITES";
+const TOP_SITES_CONTEXT_MENU_OPTIONS = ["CheckPinTopSite", "EditTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"];
+const TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS = ["PinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "ShowPrivacyInfo"];
+const TOP_SITES_SPONSORED_POSITION_CONTEXT_MENU_OPTIONS = ["OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "AboutSponsored"]; // the special top site for search shortcut experiment can only have the option to unpin (which removes) the topsite
+
+const TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "BlockUrl"]; // minimum size necessary to show a rich icon instead of a screenshot
+
+const MIN_RICH_FAVICON_SIZE = 96; // minimum size necessary to show any icon
+
+const MIN_SMALL_FAVICON_SIZE = 16;
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamImpressionStats/ImpressionStats.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 const ImpressionStats_VISIBLE = "visible";
@@ -7102,7 +7117,23 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
         data: {
           flightId: this.props.flightId
         }
-      }));
+      })); // Record sponsored topsites impressions if the source is `TOP_SITES_SOURCE`.
+
+      if (this.props.source === TOP_SITES_SOURCE) {
+        for (const card of cards) {
+          this.props.dispatch(actionCreators.OnlyToMain({
+            type: actionTypes.TOP_SITES_IMPRESSION_STATS,
+            data: {
+              type: "impression",
+              tile_id: card.id,
+              source: "newtab",
+              advertiser: card.advertiser,
+              position: card.pos + 1 // positions are 1-based for telemetry
+
+            }
+          }));
+        }
+      }
     }
 
     if (this._needsImpressionStats(cards)) {
@@ -10164,20 +10195,6 @@ class Topics extends (external_React_default()).PureComponent {
   }
 
 }
-;// CONCATENATED MODULE: ./content-src/components/TopSites/TopSitesConstants.js
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-const TOP_SITES_SOURCE = "TOP_SITES";
-const TOP_SITES_CONTEXT_MENU_OPTIONS = ["CheckPinTopSite", "EditTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"];
-const TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS = ["PinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "ShowPrivacyInfo"];
-const TOP_SITES_SPONSORED_POSITION_CONTEXT_MENU_OPTIONS = ["OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "AboutSponsored"]; // the special top site for search shortcut experiment can only have the option to unpin (which removes) the topsite
-
-const TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "BlockUrl"]; // minimum size necessary to show a rich icon instead of a screenshot
-
-const MIN_RICH_FAVICON_SIZE = 96; // minimum size necessary to show any icon
-
-const MIN_SMALL_FAVICON_SIZE = 16;
 ;// CONCATENATED MODULE: ./content-src/components/TopSites/SearchShortcutsForm.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -11905,7 +11922,8 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       rows: [{
         id: link.id,
         pos: link.pos,
-        shim: link.shim && link.shim.impression
+        shim: link.shim && link.shim.impression,
+        advertiser: title.toLocaleLowerCase()
       }],
       dispatch: this.props.dispatch,
       source: TOP_SITES_SOURCE
@@ -12001,6 +12019,7 @@ class TopSite extends (external_React_default()).PureComponent {
       })); // Fire off a spoc specific impression.
 
       if (this.props.link.type === SPOC_TYPE) {
+        // Record a Pocket click.
         this.props.dispatch(actionCreators.ImpressionStats({
           source: TOP_SITES_SOURCE,
           click: 0,
@@ -12009,6 +12028,18 @@ class TopSite extends (external_React_default()).PureComponent {
             pos: this.props.link.pos,
             shim: this.props.link.shim && this.props.link.shim.click
           }]
+        })); // Record a click for sponsored topsites.
+
+        const title = this.props.link.label || this.props.link.hostname;
+        this.props.dispatch(actionCreators.OnlyToMain({
+          type: actionTypes.TOP_SITES_IMPRESSION_STATS,
+          data: {
+            type: "click",
+            position: this.props.link.pos + 1,
+            tile_id: this.props.link.id,
+            advertiser: title.toLocaleLowerCase(),
+            source: NEWTAB_SOURCE
+          }
         }));
       }
 
