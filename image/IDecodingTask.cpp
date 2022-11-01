@@ -6,6 +6,7 @@
 #include "IDecodingTask.h"
 
 #include "nsThreadUtils.h"
+#include "mozilla/AppShutdown.h"
 
 #include "Decoder.h"
 #include "DecodePool.h"
@@ -78,7 +79,8 @@ void IDecodingTask::NotifyProgress(NotNull<RasterImage*> aImage,
   }
 
   // Don't try to dispatch after shutdown, we'll just leak the runnable.
-  if (gXPCOMThreadsShutDown) {
+  if (NS_WARN_IF(
+          AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads))) {
     return;
   }
 
@@ -119,7 +121,8 @@ void IDecodingTask::NotifyDecodeComplete(NotNull<RasterImage*> aImage,
   }
 
   // Don't try to dispatch after shutdown, we'll just leak the runnable.
-  if (gXPCOMThreadsShutDown) {
+  if (NS_WARN_IF(
+          AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads))) {
     return;
   }
 
