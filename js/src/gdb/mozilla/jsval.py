@@ -13,65 +13,8 @@ from mozilla.prettyprinters import pretty_printer
 # Forget any printers from previous loads of this module.
 mozilla.prettyprinters.clear_module_printers(__name__)
 
-# Summary of the JS::Value type:
-#
-# JS::Value is a 64-bit discriminated union, with JSString*, JSObject*, IEEE
-# 64-bit floating-point, and 32-bit integer branches (and a few others).
-# JS::Value is 64 bits long on all architectures.
-#
-# The ECMAScript standard specifies that ECMAScript numbers are IEEE 64-bit
-# floating-point values. A JS::Value can represent any JavaScript number
-# value directly, without referring to additional storage, or represent an
-# object, string, or other ECMAScript value, and remember which type it is.
-# This may seem surprising: how can a 64-bit type hold all the 64-bit IEEE
-# values, and still distinguish them from objects, strings, and so on,
-# which have 64-bit addresses?
-#
-# This is possible for two reasons:
-#
-# - First, ECMAScript implementations aren't required to distinguish all
-#   the values the IEEE 64-bit format can represent. The IEEE format
-#   specifies many bitstrings representing NaN values, while ECMAScript
-#   requires only a single NaN value. This means we can use one IEEE NaN to
-#   represent ECMAScript's NaN, and use all the other IEEE NaNs to
-#   represent the other ECMAScript values.
-#
-#   (IEEE says that any floating-point value whose 11-bit exponent field is
-#   0x7ff (all ones) and whose 52-bit fraction field is non-zero is a NaN.
-#   So as long as we ensure the fraction field is non-zero, and save a NaN
-#   for ECMAScript, we have 2^52 values to play with.)
-#
-# - Second, on the only 64-bit architecture we support, x86_64, only the
-#   lower 48 bits of an address are significant. The upper sixteen bits are
-#   required to be the sign-extension of bit 48. Furthermore, user code
-#   always runs in "positive addresses": those in which bit 48 is zero. So
-#   we only actually need 47 bits to store all possible object or string
-#   addresses, even on 64-bit platforms.
-#
-# With a 52-bit fraction field, and 47 bits needed for the 'payload', we
-# have up to five bits left to store a 'tag' value, to indicate which
-# branch of our discriminated union is live.
-#
-# Thus, we define JS::Value representations in terms of the IEEE 64-bit
-# floating-point format:
-#
-# - Any bitstring that IEEE calls a number or an infinity represents that
-#   ECMAScript number.
-#
-# - Any bitstring that IEEE calls a NaN represents either an ECMAScript NaN
-#   or a non-number ECMAScript value, as determined by a tag field stored
-#   towards the most significant end of the fraction field (exactly where
-#   depends on the address size). If the tag field indicates that this
-#   JS::Value is an object, the fraction field's least significant end
-#   holds the address of a JSObject; if a string, the address of a
-#   JSString; and so on.
-#
-# On x86_64 only the lower 48 bits of an address are significant, and only
-# those values whose top bit is zero are used for user-space addresses. Thus
-# x86_64 addresses are effectively 47 bits long and fit nicely in the available
-# portion of the fraction field.
-#
-# See Value.h for full details.
+# See Value.h [SMDOC] JS::Value Boxing Formats for details on the JS::Value boxing
+# formats handled below.
 
 
 class Box(object):
