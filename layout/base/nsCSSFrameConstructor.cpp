@@ -996,7 +996,7 @@ void nsFrameConstructorState::ReparentAbsoluteItems(
   MOZ_ASSERT(aNewParent->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR),
              "Restrict the usage under column hierarchy.");
 
-  nsFrameList newAbsoluteItems;
+  AbsoluteFrameList newAbsoluteItems(aNewParent);
 
   nsIFrame* current = mAbsoluteList.FirstChild();
   while (current) {
@@ -1020,7 +1020,7 @@ void nsFrameConstructorState::ReparentAbsoluteItems(
     // It doesn't matter whether aNewParent has position style or not. Caller
     // won't call us if we can't have absolute children.
     PushAbsoluteContainingBlock(aNewParent, aNewParent, absoluteSaveState);
-    mAbsoluteList.SetFrames(newAbsoluteItems);
+    mAbsoluteList = std::move(newAbsoluteItems);
   }
 }
 
@@ -1032,7 +1032,7 @@ void nsFrameConstructorState::ReparentFloats(nsContainerFrame* aNewParent) {
       "Why calling this method if aNewParent is not a float containing block?");
 
   // Gather floats that should reparent under aNewParent.
-  nsFrameList floats;
+  AbsoluteFrameList floats(aNewParent);
   nsIFrame* current = mFloatedList.FirstChild();
   while (current) {
     nsIFrame* placeholder = current->GetPlaceholderFrame();
@@ -1049,7 +1049,7 @@ void nsFrameConstructorState::ReparentFloats(nsContainerFrame* aNewParent) {
     // ~nsFrameConstructorSaveState() when destructing floatSaveState.
     nsFrameConstructorSaveState floatSaveState;
     PushFloatContainingBlock(aNewParent, floatSaveState);
-    mFloatedList.SetFrames(floats);
+    mFloatedList = std::move(floats);
   }
 }
 

@@ -308,7 +308,7 @@ void nsInlineFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
         // wait to do this until we actually reflow the frame. If the overflow
         // list contains thousands of frames this is a big performance issue
         // (see bug #5588)
-        mFrames.SetFrames(*prevOverflowFrames);
+        mFrames = std::move(*prevOverflowFrames);
         lazilySetParentPointer = true;
       } else {
         // Insert the new frames at the beginning of the child list

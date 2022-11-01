@@ -115,7 +115,10 @@ class nsFrameList {
   }
   nsFrameList& operator=(nsFrameList&& aOther) {
     if (this != &aOther) {
-      SetFrames(aOther);
+      MOZ_ASSERT(IsEmpty(), "Assigning to a non-empty list will lose frames!");
+      mFirstChild = aOther.FirstChild();
+      mLastChild = aOther.LastChild();
+      aOther.Clear();
     }
     return *this;
   }
@@ -146,14 +149,6 @@ class nsFrameList {
       mozilla::layout::PostFrameDestroyData& aPostDestroyData);
 
   void Clear() { mFirstChild = mLastChild = nullptr; }
-
-  void SetFrames(nsFrameList& aFrameList) {
-    MOZ_ASSERT(!mFirstChild, "Losing frames");
-
-    mFirstChild = aFrameList.FirstChild();
-    mLastChild = aFrameList.LastChild();
-    aFrameList.Clear();
-  }
 
   /**
    * Append aFrameList to this list.  If aParent is not null,

@@ -7482,7 +7482,7 @@ void nsBlockFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 void nsBlockFrame::SetInitialChildList(ChildListID aListID,
                                        nsFrameList& aChildList) {
   if (kFloatList == aListID) {
-    mFloats.SetFrames(aChildList);
+    mFloats = std::move(aChildList);
   } else if (kPrincipalList == aListID) {
 #ifdef DEBUG
     // The only times a block that is an anonymous box is allowed to have a

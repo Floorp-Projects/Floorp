@@ -85,7 +85,7 @@ void nsContainerFrame::SetInitialChildList(ChildListID aListID,
   if (aListID == kPrincipalList) {
     MOZ_ASSERT(mFrames.IsEmpty(),
                "unexpected second call to SetInitialChildList");
-    mFrames.SetFrames(aChildList);
+    mFrames = std::move(aChildList);
   } else if (aListID == kBackdropList) {
     MOZ_ASSERT(StyleDisplay()->mTopLayer != StyleTopLayer::None,
                "Only top layer frames should have backdrop");

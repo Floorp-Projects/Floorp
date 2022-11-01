@@ -54,7 +54,7 @@ void nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame* aDelegatingFrame,
     MOZ_ASSERT(f->GetParent() == aDelegatingFrame, "Unexpected parent");
   }
 #endif
-  mAbsoluteFrames.SetFrames(aChildList);
+  mAbsoluteFrames = std::move(aChildList);
 }
 
 void nsAbsoluteContainingBlock::AppendFrames(nsIFrame* aDelegatingFrame,
