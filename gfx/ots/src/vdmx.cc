@@ -4,18 +4,23 @@
 
 #include "vdmx.h"
 
+#include <set>
+
 // VDMX - Vertical Device Metrics
 // http://www.microsoft.com/typography/otspec/vdmx.htm
 
 namespace ots {
 
+#define TABLE_NAME "VDMX"
+
 bool OpenTypeVDMX::Parse(const uint8_t *data, size_t length) {
   Buffer table(data, length);
+  ots::Font* font = this->GetFont();
 
   if (!table.ReadU16(&this->version) ||
       !table.ReadU16(&this->num_recs) ||
       !table.ReadU16(&this->num_ratios)) {
-    return Error("Failed to read table header");
+    return Drop("Failed to read table header");
   }
 
   if (this->version > 1) {
@@ -30,7 +35,7 @@ bool OpenTypeVDMX::Parse(const uint8_t *data, size_t length) {
         !table.ReadU8(&rec.x_ratio) ||
         !table.ReadU8(&rec.y_start_ratio) ||
         !table.ReadU8(&rec.y_end_ratio)) {
-      return Error("Failed to read RatioRange record %d", i);
+      return Drop("Failed to read RatioRange record %d", i);
     }
 
     if (rec.charset > 1) {
@@ -56,17 +61,28 @@ bool OpenTypeVDMX::Parse(const uint8_t *data, size_t length) {
 
   this->offsets.reserve(this->num_ratios);
   const size_t current_offset = table.offset();
+  std::set<uint16_t> unique_offsets;
   // current_offset is less than (2 bytes * 3) + (4 bytes * USHRT_MAX) = 256k.
   for (unsigned i = 0; i < this->num_ratios; ++i) {
     uint16_t offset;
     if (!table.ReadU16(&offset)) {
-      return Error("Failed to read ratio offset %d", i);
+      return Drop("Failed to read ratio offset %d", i);
     }
     if (current_offset + offset >= length) {  // thus doesn't overflow.
-      return Error("Bad ratio offset %d for ration %d", offset, i);
+      return Drop("Bad ratio offset %d for ration %d", offset, i);
     }
 
     this->offsets.push_back(offset);
+    unique_offsets.insert(offset);
+  }
+
+  // Check that num_recs is sufficient to provide as many VDMXGroup records
+  // as there are unique offsets; if not, update it (we'll return an error
+  // below if they're not actually present).
+  if (unique_offsets.size() > this->num_recs) {
+    OTS_WARNING("increasing num_recs (%u is too small for %u unique offsets)",
+                this->num_recs, unique_offsets.size());
+    this->num_recs = unique_offsets.size();
   }
 
   this->groups.reserve(this->num_recs);
@@ -75,7 +91,7 @@ bool OpenTypeVDMX::Parse(const uint8_t *data, size_t length) {
     if (!table.ReadU16(&group.recs) ||
         !table.ReadU8(&group.startsz) ||
         !table.ReadU8(&group.endsz)) {
-      return Error("Failed to read record header %d", i);
+      return Drop("Failed to read record header %d", i);
     }
     group.entries.reserve(group.recs);
     for (unsigned j = 0; j < group.recs; ++j) {
@@ -83,7 +99,7 @@ bool OpenTypeVDMX::Parse(const uint8_t *data, size_t length) {
       if (!table.ReadU16(&vt.y_pel_height) ||
           !table.ReadS16(&vt.y_max) ||
           !table.ReadS16(&vt.y_min)) {
-        return Error("Failed to read reacord %d group %d", i, j);
+        return Drop("Failed to read record %d group %d", i, j);
       }
       if (vt.y_max < vt.y_min) {
         return Drop("bad y min/max");
@@ -151,5 +167,7 @@ bool OpenTypeVDMX::Serialize(OTSStream *out) {
 
   return true;
 }
+
+#undef TABLE_NAME
 
 }  // namespace ots
