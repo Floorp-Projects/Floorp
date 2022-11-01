@@ -64,9 +64,9 @@ TEST_HARNESS_FILES.xpcshell.dom.quota.test.xpcshell.common += [
 ]
 
 TESTING_JS_MODULES.dom.quota.test.modules += [
-    "modules/system/ModuleLoader.jsm",
-    "modules/system/StorageUtils.jsm",
-    "modules/system/WorkerDriver.jsm",
+    "modules/system/ModuleLoader.sys.mjs",
+    "modules/system/StorageUtils.sys.mjs",
+    "modules/system/WorkerDriver.sys.mjs",
 ]
 
 TESTING_JS_MODULES.dom.quota.test.modules.worker += [
