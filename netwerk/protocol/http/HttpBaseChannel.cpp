@@ -3060,8 +3060,9 @@ OpaqueResponseAllowed HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
   auto extContentPolicyType = mLoadInfo->GetExternalContentPolicyType();
   if (extContentPolicyType == ExtContentPolicy::TYPE_OBJECT ||
       extContentPolicyType == ExtContentPolicy::TYPE_OBJECT_SUBREQUEST ||
-      extContentPolicyType == ExtContentPolicy::TYPE_WEBSOCKET) {
-    LOGORB("Allowed: object or websocket request");
+      extContentPolicyType == ExtContentPolicy::TYPE_WEBSOCKET ||
+      extContentPolicyType == ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD) {
+    LOGORB("Allowed: object || websocket request || save as download");
     return OpaqueResponseAllowed::Yes;
   }
 
