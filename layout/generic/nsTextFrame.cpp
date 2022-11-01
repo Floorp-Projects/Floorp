@@ -9325,9 +9325,9 @@ void nsTextFrame::SetLength(int32_t aLength, nsLineLayout* aLineLayout,
           PresShell()->FrameConstructor()->CreateContinuingFrame(this,
                                                                  GetParent());
       nsTextFrame* next = static_cast<nsTextFrame*>(newFrame);
-      nsFrameList temp(next, next);
       GetParent()->InsertFrames(kNoReflowPrincipalList, this,
-                                aLineLayout->GetLine(), temp);
+                                aLineLayout->GetLine(),
+                                nsFrameList(next, next));
       f = next;
     }
 

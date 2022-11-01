@@ -57,12 +57,13 @@ void nsPopupSetFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
 
 void nsPopupSetFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                                    const nsLineList::iterator* aPrevFrameLine,
-                                   nsFrameList& aFrameList) {
+                                   nsFrameList&& aFrameList) {
   if (aListID == kPopupList) {
     AddPopupFrameList(aFrameList);
     return;
   }
-  nsBoxFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine, aFrameList);
+  nsBoxFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
+                           std::move(aFrameList));
 }
 
 void nsPopupSetFrame::SetInitialChildList(ChildListID aListID,

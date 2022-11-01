@@ -314,8 +314,8 @@ void nsFirstLetterFrame::CreateContinuationForFloatingParent(
   // kNoReflowPrincipalList because this is just like creating a continuation
   // except we have to insert it in a different place and we don't want a
   // reflow command to try to be issued.
-  nsFrameList temp(continuation, continuation);
-  parent->InsertFrames(kNoReflowPrincipalList, placeholderFrame, nullptr, temp);
+  parent->InsertFrames(kNoReflowPrincipalList, placeholderFrame, nullptr,
+                       nsFrameList(continuation, continuation));
 
   *aContinuation = continuation;
 }

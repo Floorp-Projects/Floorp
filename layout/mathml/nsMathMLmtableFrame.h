@@ -80,10 +80,11 @@ class nsMathMLmtableFrame final : public nsTableFrame {
     RestyleTable();
   }
 
-  virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
-                            const nsLineList::iterator* aPrevFrameLine,
-                            nsFrameList& aFrameList) override {
-    nsTableFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine, aFrameList);
+  void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                    const nsLineList::iterator* aPrevFrameLine,
+                    nsFrameList&& aFrameList) override {
+    nsTableFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
+                               std::move(aFrameList));
     RestyleTable();
   }
 
@@ -175,11 +176,11 @@ class nsMathMLmtrFrame final : public nsTableRowFrame {
     RestyleTable();
   }
 
-  virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
-                            const nsLineList::iterator* aPrevFrameLine,
-                            nsFrameList& aFrameList) override {
+  void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                    const nsLineList::iterator* aPrevFrameLine,
+                    nsFrameList&& aFrameList) override {
     nsTableRowFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
-                                  aFrameList);
+                                  std::move(aFrameList));
     RestyleTable();
   }
 

@@ -74,9 +74,9 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
 
   void AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) override;
 
-  virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
-                            const nsLineList::iterator* aPrevFrameLine,
-                            nsFrameList& aFrameList) override;
+  void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                    const nsLineList::iterator* aPrevFrameLine,
+                    nsFrameList&& aFrameList) override;
 
   virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 
@@ -403,12 +403,13 @@ class nsMathMLmathBlockFrame final : public nsBlockFrame {
       nsMathMLContainerFrame::ReLayoutChildren(this);
   }
 
-  virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
-                            const nsLineList::iterator* aPrevFrameLine,
-                            nsFrameList& aFrameList) override {
+  void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                    const nsLineList::iterator* aPrevFrameLine,
+                    nsFrameList&& aFrameList) override {
     NS_ASSERTION(aListID == kPrincipalList || aListID == kNoReflowPrincipalList,
                  "unexpected frame list");
-    nsBlockFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine, aFrameList);
+    nsBlockFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
+                               std::move(aFrameList));
     if (MOZ_LIKELY(aListID == kPrincipalList))
       nsMathMLContainerFrame::ReLayoutChildren(this);
   }
@@ -469,13 +470,13 @@ class nsMathMLmathInlineFrame final : public nsInlineFrame,
       nsMathMLContainerFrame::ReLayoutChildren(this);
   }
 
-  virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
-                            const nsLineList::iterator* aPrevFrameLine,
-                            nsFrameList& aFrameList) override {
+  void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                    const nsLineList::iterator* aPrevFrameLine,
+                    nsFrameList&& aFrameList) override {
     NS_ASSERTION(aListID == kPrincipalList || aListID == kNoReflowPrincipalList,
                  "unexpected frame list");
     nsInlineFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
-                                aFrameList);
+                                std::move(aFrameList));
     if (MOZ_LIKELY(aListID == kPrincipalList))
       nsMathMLContainerFrame::ReLayoutChildren(this);
   }

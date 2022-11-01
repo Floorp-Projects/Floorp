@@ -117,7 +117,7 @@ class nsContainerFrame : public nsSplittableFrame {
    */
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                             const nsLineList::iterator* aPrevFrameLine,
-                            nsFrameList& aFrameList);
+                            nsFrameList&& aFrameList);
 
   /**
    * This method is responsible for removing a frame in the frame

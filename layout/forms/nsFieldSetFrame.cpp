@@ -806,12 +806,12 @@ void nsFieldSetFrame::AppendFrames(ChildListID aListID,
 
 void nsFieldSetFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                                    const nsLineList::iterator* aPrevFrameLine,
-                                   nsFrameList& aFrameList) {
+                                   nsFrameList&& aFrameList) {
   MOZ_ASSERT(aListID == kPrincipalList && !aPrevFrame && !GetLegend(),
              "InsertFrames should only be used to prepend a rendered legend "
              "from nsCSSFrameConstructor::ConstructFramesFromItemList");
   nsContainerFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
-                                 aFrameList);
+                                 std::move(aFrameList));
   MOZ_ASSERT(GetLegend());
   if (nsBlockFrame* legend = do_QueryFrame(GetLegend())) {
     // A rendered legend always establish a new formatting context.

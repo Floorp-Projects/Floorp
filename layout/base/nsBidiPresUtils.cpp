@@ -650,7 +650,7 @@ static void SplitInlineAncestors(nsContainerFrame* aParent,
       MOZ_ASSERT(!newParent->IsBlockFrameOrSubclass(),
                  "blocks should not be IsBidiSplittable");
       newParent->InsertFrames(nsIFrame::kNoReflowPrincipalList, nullptr,
-                              nullptr, tail);
+                              nullptr, std::move(tail));
 
       // While passing &aLine to InsertFrames for a non-block isn't harmful
       // because it's a no-op, it doesn't really make sense.  However, the
@@ -666,9 +666,8 @@ static void SplitInlineAncestors(nsContainerFrame* aParent,
 
       // The list name kNoReflowPrincipalList would indicate we don't want
       // reflow
-      nsFrameList temp(newParent, newParent);
       grandparent->InsertFrames(nsIFrame::kNoReflowPrincipalList, parent,
-                                parentLine, temp);
+                                parentLine, nsFrameList(newParent, newParent));
     }
 
     frame = parent;
@@ -762,9 +761,8 @@ static void CreateContinuation(nsIFrame* aFrame,
 
   // The list name kNoReflowPrincipalList would indicate we don't want reflow
   // XXXbz this needs higher-level framelist love
-  nsFrameList temp(*aNewFrame, *aNewFrame);
   parent->InsertFrames(nsIFrame::kNoReflowPrincipalList, aFrame, parentLine,
-                       temp);
+                       nsFrameList(*aNewFrame, *aNewFrame));
 
   if (!aIsFluid) {
     // Split inline ancestor frames
