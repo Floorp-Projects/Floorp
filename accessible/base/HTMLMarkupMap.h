@@ -232,7 +232,9 @@ MARKUPMAP(
             aElement, aContext->Document());
       }
       if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                nsGkAtoms::date, eIgnoreCase)) {
+                                nsGkAtoms::date, eIgnoreCase) ||
+          aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                nsGkAtoms::datetime_local, eIgnoreCase)) {
         return new HTMLDateTimeAccessible<roles::DATE_EDITOR>(
             aElement, aContext->Document());
       }
