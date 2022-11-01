@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-function ModuleLoader(base, depth, proto) {
+export function ModuleLoader(base, depth, proto) {
   const modules = {};
 
   const principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
@@ -61,5 +61,3 @@ function ModuleLoader(base, depth, proto) {
 
   return Object.create(null, returnObj);
 }
-
-const EXPORTED_SYMBOLS = ["ModuleLoader"];

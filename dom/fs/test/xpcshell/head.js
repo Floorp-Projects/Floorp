@@ -5,8 +5,8 @@
 
 async function require_module(id) {
   if (!require_module.moduleLoader) {
-    const { ModuleLoader } = ChromeUtils.import(
-      "resource://testing-common/dom/quota/test/modules/ModuleLoader.jsm"
+    const { ModuleLoader } = ChromeUtils.importESModule(
+      "resource://testing-common/dom/quota/test/modules/ModuleLoader.sys.mjs"
     );
 
     const base = Services.io.newFileURI(do_get_file("")).spec;
@@ -30,8 +30,8 @@ async function require_module(id) {
 }
 
 async function run_test_in_worker(script) {
-  const { runTestInWorker } = ChromeUtils.import(
-    "resource://testing-common/dom/quota/test/modules/WorkerDriver.jsm"
+  const { runTestInWorker } = ChromeUtils.importESModule(
+    "resource://testing-common/dom/quota/test/modules/WorkerDriver.sys.mjs"
   );
 
   const base = "resource://testing-common/dom/fs/test/xpcshell/";
@@ -56,8 +56,8 @@ add_setup(async function() {
     setStoragePrefs,
     clearStoragePrefs,
     clearStoragesForOrigin,
-  } = ChromeUtils.import(
-    "resource://testing-common/dom/quota/test/modules/StorageUtils.jsm"
+  } = ChromeUtils.importESModule(
+    "resource://testing-common/dom/quota/test/modules/StorageUtils.sys.mjs"
   );
 
   const optionalPrefsToSet = [["dom.fs.enabled", true]];

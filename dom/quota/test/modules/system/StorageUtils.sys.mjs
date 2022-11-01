@@ -12,7 +12,7 @@ class RequestError extends Error {
   }
 }
 
-function setStoragePrefs(optionalPrefsToSet) {
+export function setStoragePrefs(optionalPrefsToSet) {
   const prefsToSet = [
     // Not needed right now, but might be needed in future.
     // ["dom.quotaManager.testing", true],
@@ -31,7 +31,7 @@ function setStoragePrefs(optionalPrefsToSet) {
   }
 }
 
-function clearStoragePrefs(optionalPrefsToClear) {
+export function clearStoragePrefs(optionalPrefsToClear) {
   const prefsToClear = [
     "dom.quotaManager.testing",
     "dom.simpleDB.enabled",
@@ -51,7 +51,7 @@ function clearStoragePrefs(optionalPrefsToClear) {
   }
 }
 
-async function clearStoragesForOrigin(principal) {
+export async function clearStoragesForOrigin(principal) {
   const request = Services.qms.clearStoragesForPrincipal(principal);
 
   await new Promise(function(resolve) {
@@ -66,9 +66,3 @@ async function clearStoragesForOrigin(principal) {
 
   return request.result;
 }
-
-const EXPORTED_SYMBOLS = [
-  "setStoragePrefs",
-  "clearStoragePrefs",
-  "clearStoragesForOrigin",
-];
