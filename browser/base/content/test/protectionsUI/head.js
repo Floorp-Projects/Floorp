@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Sqlite } = ChromeUtils.importESModule(
   "resource://gre/modules/Sqlite.sys.mjs"
 );
@@ -14,7 +13,7 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 XPCOMUtils.defineLazyGetter(this, "TRACK_DB_PATH", function() {
-  return OS.Path.join(OS.Constants.Path.profileDir, "protections.sqlite");
+  return PathUtils.join(PathUtils.profileDir, "protections.sqlite");
 });
 
 ChromeUtils.defineModuleGetter(
