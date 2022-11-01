@@ -478,22 +478,16 @@ class VirtualenvMixin(object):
                 src_dir
                 / "third_party"
                 / "python"
-                / "virtualenv"
-                / "virtualenv"
-                / "seed"
+                / "_venv"
                 / "wheels"
-                / "embed"
                 / "pip-21.2.3-py3-none-any.whl"
             )
             setuptools_wheel_path = (
                 src_dir
                 / "third_party"
                 / "python"
-                / "virtualenv"
-                / "virtualenv"
-                / "seed"
+                / "_venv"
                 / "wheels"
-                / "embed"
                 / "setuptools-51.2.0-py3-none-any.whl"
             )
 
