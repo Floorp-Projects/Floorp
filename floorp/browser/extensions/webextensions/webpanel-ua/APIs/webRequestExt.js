@@ -24,10 +24,12 @@ this.webRequestExt = class extends ExtensionAPI {
           context,
           register: (fire) => {
             function listener(e) {
-              let webpanelid = e.browserElement.id;
-              const uaPref = `floorp.enable.useragent.override.${webpanelid}`;
-              if (typeof e.browserElement !== "undefined" && e.browserElement.id.startsWith("webpanel") && Services.prefs.getBoolPref(uaPref, false) === true) {
-                return fire.async(e.requestId);
+              if (typeof e.browserElement !== "undefined") {
+                const webpanelid = e.browserElement.id;
+                const uaPref = `floorp.enable.useragent.override.${webpanelid}`;
+                if (Services.prefs.getBoolPref(uaPref, false)) {
+                  return fire.async(e.requestId);
+                }
               }
             }
             WebRequest.onBeforeRequest.addListener(
