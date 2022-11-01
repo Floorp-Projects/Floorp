@@ -13,6 +13,9 @@ namespace mozilla::gfx {
 
 static StaticRefPtr<CanvasRenderThread> sCanvasRenderThread;
 static mozilla::BackgroundHangMonitor* sBackgroundHangMonitor;
+#ifdef DEBUG
+static bool sCanvasRenderThreadEverStarted = false;
+#endif
 
 CanvasRenderThread::CanvasRenderThread(RefPtr<nsIThread> aThread)
     : mThread(std::move(aThread)) {}
@@ -26,6 +29,13 @@ CanvasRenderThread* CanvasRenderThread::Get() { return sCanvasRenderThread; }
 void CanvasRenderThread::Start() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sCanvasRenderThread);
+
+#ifdef DEBUG
+  // Check to ensure nobody will try to ever start us more than once during
+  // the process' lifetime (in particular after Stop).
+  MOZ_ASSERT(!sCanvasRenderThreadEverStarted);
+  sCanvasRenderThreadEverStarted = true;
+#endif
 
   // This is 512K, which is higher than the default 256K.
   // Increased to accommodate Mesa in bug 1753340.
@@ -73,19 +83,14 @@ void CanvasRenderThread::ShutDown() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sCanvasRenderThread);
 
-  layers::SynchronousTask task("CanvasRenderThreadShutdown");
-  RefPtr<Runnable> runnable =
-      WrapRunnable(RefPtr<CanvasRenderThread>(sCanvasRenderThread.get()),
-                   &CanvasRenderThread::ShutDownTask, &task);
-  sCanvasRenderThread->PostRunnable(runnable.forget());
-  task.Wait();
-
+  // Null out sCanvasRenderThread before we enter synchronous Shutdown,
+  // from here on we are to be considered shut down for our consumers.
+  nsCOMPtr<nsIThread> oldThread = sCanvasRenderThread->GetCanvasRenderThread();
   sCanvasRenderThread = nullptr;
-}
 
-void CanvasRenderThread::ShutDownTask(layers::SynchronousTask* aTask) {
-  layers::AutoCompleteTask complete(aTask);
-  MOZ_ASSERT(IsInCanvasRenderThread());
+  // We do a synchronous shutdown here while spinning the MT event loop.
+  MOZ_ASSERT(oldThread);
+  oldThread->Shutdown();
 }
 
 // static
