@@ -16,10 +16,19 @@
 #include "nsThreadManager.h"
 #include "nsThreadSyncDispatch.h"
 #include "nsThreadUtils.h"
-#include "nsXPCOMPrivate.h"  // for gXPCOMThreadsShutDown
 #include "ThreadDelay.h"
 
 using namespace mozilla;
+
+#ifdef DEBUG
+// This flag will be set right after XPCOMShutdownThreads finished but before
+// we continue with other processing. It is exclusively meant to prime the
+// assertion of ThreadEventTarget::Dispatch as early as possible.
+// Please use AppShutdown::IsInOrBeyond(ShutdownPhase::???)
+// elsewhere to check for shutdown phases.
+static mozilla::Atomic<bool, mozilla::SequentiallyConsistent>
+    gXPCOMThreadsShutDownNotified(false);
+#endif
 
 ThreadEventTarget::ThreadEventTarget(ThreadTargetSink* aSink,
                                      bool aIsMainThread)
@@ -47,6 +56,13 @@ ThreadEventTarget::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) {
   return Dispatch(do_AddRef(aRunnable), aFlags);
 }
 
+#ifdef DEBUG
+// static
+void ThreadEventTarget::XPCOMShutdownThreadsNotificationFinished() {
+  gXPCOMThreadsShutDownNotified = true;
+}
+#endif
+
 NS_IMETHODIMP
 ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
                             uint32_t aFlags) {
@@ -57,7 +73,7 @@ ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
     return NS_ERROR_INVALID_ARG;
   }
 
-  NS_ASSERTION(!gXPCOMThreadsShutDown || mIsMainThread ||
+  NS_ASSERTION(!gXPCOMThreadsShutDownNotified || mIsMainThread ||
                    PR_GetCurrentThread() == mThread,
                "Dispatch to non-main thread after xpcom-shutdown-threads");
 

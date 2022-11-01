@@ -43,6 +43,10 @@ class ThreadEventTarget final : public nsISerialEventTarget {
     return aMallocSizeOf(this) + n;
   }
 
+#ifdef DEBUG
+  static void XPCOMShutdownThreadsNotificationFinished();
+#endif
+
  private:
   ~ThreadEventTarget();
 
