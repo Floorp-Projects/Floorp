@@ -4,8 +4,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-
 import fnmatch
+import json
 import multiprocessing
 import os
 import re
@@ -13,21 +13,16 @@ import subprocess
 import sys
 import tempfile
 import time
-import yaml
 import uuid
-import mozpack.path as mozpath
-import sentry_sdk
-
 from functools import partial
 from pprint import pprint
 
+import mozpack.path as mozpath
+import sentry_sdk
+import yaml
+from mach.decorators import Command, CommandArgument, SubCommand
 from mach.registrar import Registrar
 from mozbuild.util import memoize
-from mach.decorators import (
-    Command,
-    CommandArgument,
-    SubCommand,
-)
 
 here = os.path.abspath(os.path.dirname(__file__))
 topsrcdir = os.path.abspath(os.path.dirname(os.path.dirname(here)))
@@ -95,6 +90,9 @@ BASE_LINK = "http://gecko-docs.mozilla.org-l1.s3-website.us-west-2.amazonaws.com
 @CommandArgument(
     "--linkcheck", action="store_true", help="Check if the links are still valid"
 )
+@CommandArgument(
+    "--dump-trees", default=None, help="Dump the Sphinx trees to specified file."
+)
 @CommandArgument("--verbose", action="store_true", help="Run Sphinx in verbose mode")
 def build_docs(
     command_context,
@@ -109,6 +107,7 @@ def build_docs(
     jobs=None,
     write_url=None,
     linkcheck=None,
+    dump_trees=None,
     verbose=None,
 ):
     # TODO: Bug 1704891 - move the ESLint setup tools to a shared place.
@@ -135,6 +134,7 @@ def build_docs(
     )
 
     import webbrowser
+
     from livereload import Server
     from moztreedocs.package import create_tarball
 
@@ -183,6 +183,13 @@ def build_docs(
             fp.write(unique_link)
             fp.flush()
         print("Generated " + write_url)
+
+    if dump_trees is not None:
+        parent = os.path.dirname(dump_trees)
+        if parent and not os.path.isdir(parent):
+            os.makedirs(parent)
+        with open(dump_trees, "w") as fh:
+            json.dump(manager().trees, fh)
 
     if archive:
         archive_path = os.path.join(outdir, "%s.tar.gz" % project())
@@ -352,13 +359,13 @@ def _find_doc_dir(path):
 
 
 def _s3_upload(root, project, unique_id, version=None):
-    from moztreedocs.package import distribution_files
-    from moztreedocs.upload import s3_upload, s3_set_redirects
-
     # Workaround the issue
     # BlockingIOError: [Errno 11] write could not complete without blocking
     # https://github.com/travis-ci/travis-ci/issues/8920
     import fcntl
+
+    from moztreedocs.package import distribution_files
+    from moztreedocs.upload import s3_set_redirects, s3_upload
 
     fcntl.fcntl(1, fcntl.F_SETFL, 0)
 
