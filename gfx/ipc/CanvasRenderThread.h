@@ -20,10 +20,11 @@ class CanvasRenderThread final {
       CanvasRenderThread)
 
  public:
-  /// Can be called from any thread.
+  /// Can be called from any thread, may return nullptr late in shutdown.
   static CanvasRenderThread* Get();
 
-  /// Can only be called from the main thread.
+  /// Can only be called from the main thread, expected to be called at most
+  /// once during a process' lifetime.
   static void Start();
 
   /// Can only be called from the main thread.
@@ -32,14 +33,13 @@ class CanvasRenderThread final {
   /// Can be called from any thread.
   static bool IsInCanvasRenderThread();
 
-  /// Can be called from any thread.
+  /// Can be called from any thread, may return nullptr late in shutdown.
   static already_AddRefed<nsIThread> GetCanvasRenderThread();
 
  private:
   explicit CanvasRenderThread(RefPtr<nsIThread> aThread);
   ~CanvasRenderThread();
 
-  void ShutDownTask(layers::SynchronousTask* aTask);
   void PostRunnable(already_AddRefed<nsIRunnable> aRunnable);
 
   RefPtr<nsIThread> const mThread;
