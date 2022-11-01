@@ -144,11 +144,11 @@ class MozconfigLoader(object):
             shell = shell + ".exe"
 
         command = [
-            shell,
+            mozpath.normsep(shell),
             mozpath.normsep(self._loader_script),
             mozpath.normsep(self.topsrcdir),
-            path,
-            sys.executable,
+            mozpath.normsep(path),
+            mozpath.normsep(sys.executable),
             mozpath.join(mozpath.dirname(self._loader_script), "action", "dump_env.py"),
         ]
 

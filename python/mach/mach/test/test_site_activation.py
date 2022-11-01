@@ -71,14 +71,8 @@ def test_new_package_appears_in_pkg_resources():
         subprocess.check_call(
             [
                 sys.executable,
-                os.path.join(
-                    buildconfig.topsrcdir,
-                    "third_party",
-                    "python",
-                    "virtualenv",
-                    "virtualenv.py",
-                ),
-                "--no-download",
+                "-m",
+                "venv",
                 venv_dir,
             ]
         )
@@ -327,6 +321,7 @@ def _activation_context():
         topsrcdir / "python" / "mach",
         topsrcdir / "third_party" / "python" / "packaging",
         topsrcdir / "third_party" / "python" / "pyparsing",
+        topsrcdir / "third_party" / "python" / "pip",
     ]
 
     with tempfile.TemporaryDirectory() as work_dir:
