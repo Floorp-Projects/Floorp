@@ -120,7 +120,7 @@ void nsFrameList::DestroyFrame(nsIFrame* aFrame) {
 
 nsFrameList::Slice nsFrameList::InsertFrames(nsContainerFrame* aParent,
                                              nsIFrame* aPrevSibling,
-                                             nsFrameList& aFrameList) {
+                                             nsFrameList&& aFrameList) {
   MOZ_ASSERT(aFrameList.NotEmpty(), "Unexpected empty list");
 
   if (aParent) {

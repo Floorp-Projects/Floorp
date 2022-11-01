@@ -133,5 +133,5 @@ void nsPopupSetFrame::AddPopupFrameList(nsFrameList& aPopupFrameList) {
         "adding wrong type of frame in popupset's ::popupList");
   }
 #endif
-  mPopupList.InsertFrames(nullptr, nullptr, aPopupFrameList);
+  mPopupList.InsertFrames(nullptr, nullptr, std::move(aPopupFrameList));
 }

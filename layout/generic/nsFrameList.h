@@ -163,7 +163,7 @@ class nsFrameList {
    * returns a list slice represening the newly-appended frames.
    */
   Slice AppendFrames(nsContainerFrame* aParent, nsFrameList& aFrameList) {
-    return InsertFrames(aParent, LastChild(), aFrameList);
+    return InsertFrames(aParent, LastChild(), std::move(aFrameList));
   }
 
   /**
@@ -250,8 +250,7 @@ class nsFrameList {
    */
   void InsertFrame(nsContainerFrame* aParent, nsIFrame* aPrevSibling,
                    nsIFrame* aFrame) {
-    nsFrameList temp(aFrame, aFrame);
-    InsertFrames(aParent, aPrevSibling, temp);
+    InsertFrames(aParent, aPrevSibling, nsFrameList(aFrame, aFrame));
   }
 
   /**
@@ -261,7 +260,7 @@ class nsFrameList {
    * newly-inserted frames.
    */
   Slice InsertFrames(nsContainerFrame* aParent, nsIFrame* aPrevSibling,
-                     nsFrameList& aFrameList);
+                     nsFrameList&& aFrameList);
 
   /**
    * Split this list just before the first frame that matches aPredicate,

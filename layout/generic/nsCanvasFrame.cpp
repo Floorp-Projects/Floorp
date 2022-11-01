@@ -710,7 +710,7 @@ void nsCanvasFrame::Reflow(nsPresContext* aPresContext,
       // Prepend overflow to the our child list. There may already be
       // children placeholders for fixed-pos elements, which don't get
       // reflowed but must not be lost until the canvas frame is destroyed.
-      mFrames.InsertFrames(this, nullptr, *overflow);
+      mFrames.InsertFrames(this, nullptr, std::move(*overflow));
     }
   }
 

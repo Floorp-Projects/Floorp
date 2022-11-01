@@ -388,7 +388,7 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
     if (prevOverflowFrames) {
       nsContainerFrame::ReparentFrameViewList(*prevOverflowFrames, prevInFlow,
                                               this);
-      mFrames.InsertFrames(this, nullptr, *prevOverflowFrames);
+      mFrames.InsertFrames(this, nullptr, std::move(*prevOverflowFrames));
     }
   }
 

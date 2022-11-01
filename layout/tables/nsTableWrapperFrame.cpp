@@ -132,7 +132,7 @@ void nsTableWrapperFrame::InsertFrames(
              "inserting non-caption frame into captionList");
   MOZ_ASSERT(!aPrevFrame || aPrevFrame->GetParent() == this,
              "inserting after sibling frame with different parent");
-  mCaptionFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
+  mCaptionFrames.InsertFrames(nullptr, aPrevFrame, std::move(aFrameList));
 
   // Reflow the new caption frame. It's already marked dirty, so
   // just tell the pres shell.

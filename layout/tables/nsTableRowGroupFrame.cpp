@@ -1064,7 +1064,7 @@ void nsTableRowGroupFrame::UndoContinuedRow(nsPresContext* aPresContext,
 
   // Put the overflow rows into our child list
   if (!overflows->IsEmpty()) {
-    mFrames.InsertFrames(nullptr, rowBefore, *overflows);
+    mFrames.InsertFrames(nullptr, rowBefore, std::move(*overflows));
   }
 }
 
@@ -1517,7 +1517,7 @@ void nsTableRowGroupFrame::InsertFrames(
 
   int32_t startRowIndex = GetStartRowIndex();
   // Insert the frames in the sibling chain
-  mFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
+  mFrames.InsertFrames(nullptr, aPrevFrame, std::move(aFrameList));
 
   int32_t numRows = rows.Length();
   if (numRows > 0) {
