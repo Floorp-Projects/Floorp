@@ -587,27 +587,33 @@ function prompt(aActor, aBrowser, aRequest) {
     "privacy.webrtc.allowSilencingNotifications"
   );
 
+  const isNotNowLabelEnabled = allowedOrActiveCameraOrMicrophone(aBrowser);
   let secondaryActions = [];
   if (notificationSilencingEnabled && sharingScreen) {
     // We want to free up the checkbox at the bottom of the permission
     // panel for the notification silencing option, so we use a
     // different configuration for the permissions panel when
     // notification silencing is enabled.
-    actionL10nIds.push(
-      { id: "webrtc-action-block" },
-      { id: "webrtc-action-always-block" }
-    );
+
+    // If we have a (temporary) allow permission for some mic/cam device
+    // we offer a 'Not now' label instead of 'Block'.
+    const id = isNotNowLabelEnabled
+      ? "webrtc-action-not-now"
+      : "webrtc-action-block";
+    actionL10nIds.push({ id }, { id: "webrtc-action-always-block" });
     secondaryActions = [
       {
         callback(aState) {
           aActor.denyRequest(aRequest);
-          lazy.SitePermissions.setForPrincipal(
-            principal,
-            "screen",
-            lazy.SitePermissions.BLOCK,
-            lazy.SitePermissions.SCOPE_TEMPORARY,
-            notification.browser
-          );
+          if (!isNotNowLabelEnabled) {
+            lazy.SitePermissions.setForPrincipal(
+              principal,
+              "screen",
+              lazy.SitePermissions.BLOCK,
+              lazy.SitePermissions.SCOPE_TEMPORARY,
+              notification.browser
+            );
+          }
         },
       },
       {
@@ -624,8 +630,6 @@ function prompt(aActor, aBrowser, aRequest) {
       },
     ];
   } else {
-    const isNotNowLabelEnabled =
-      allowedOrActiveCameraOrMicrophone(aBrowser) && !sharingScreen;
     // We have a (temporary) allow permission for some device
     // hence we offer a 'Not now' label instead of 'Block'.
     const id = isNotNowLabelEnabled
