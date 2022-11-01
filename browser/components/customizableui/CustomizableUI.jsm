@@ -50,7 +50,6 @@ const kPrefProtonToolbarVersion = "browser.proton.toolbar.version";
 const kPrefHomeButtonUsed = "browser.engagement.home-button.has-used";
 const kPrefLibraryButtonUsed = "browser.engagement.library-button.has-used";
 const kPrefSidebarButtonUsed = "browser.engagement.sidebar-button.has-used";
-const kPrefUnifiedExtensionsEnabled = "extensions.unifiedExtensions.enabled";
 
 const kExpectedWindowURL = AppConstants.BROWSER_CHROME_URL;
 
@@ -194,13 +193,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
       lazy.log.maxLogLevel = newVal ? "all" : "log";
     }
   }
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "gUnifiedExtensionsEnabled",
-  kPrefUnifiedExtensionsEnabled,
-  false
 );
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
@@ -3395,15 +3387,9 @@ var CustomizableUIInternal = {
     }
     addUnskippedChildren(this.getCustomizationTarget(container));
     if (container.getAttribute("overflowing") == "true") {
-      let overflowTarget = container.getAttribute("default-overflowtarget");
+      let overflowTarget = container.getAttribute("overflowtarget");
       addUnskippedChildren(
         container.ownerDocument.getElementById(overflowTarget)
-      );
-      let webExtOverflowTarget = container.getAttribute(
-        "addon-webext-overflowtarget"
-      );
-      addUnskippedChildren(
-        container.ownerDocument.getElementById(webExtOverflowTarget)
       );
     }
     // Then get the sorted list of placements, and filter based on the nodes
@@ -4992,24 +4978,12 @@ function XULWidgetSingleWrapper(aWidgetId, aNode, aDocument) {
 
 /**
  * OverflowableToolbar is a class that gives a <xul:toolbar> the ability to send
- * toolbar items that are "overflowable" to lists in separate panels if and
+ * toolbar items that are "overflowable" to a list in a separate panel if and
  * when the toolbar shrinks enough so that those items overflow out of bounds.
- * Secondly, this class manages moving things out from those panels and back
- * into the toolbar once it underflows and has the space to accommodate the
- * items that had originally overflowed out.
- *
- * There are two panels that toolbar items can be overflowed to:
- *
- * 1. The default items overflow panel
- *   This is where built-in default toolbar items will go to.
- * 2. The Unified Extensions panel
- *   This is where browser_action toolbar buttons created by WebExtensions will
- *   go to if the Unified Extensions UI is enabled - otherwise, those items will
- *   go to the default items overflow panel.
- *
- * Finally, OverflowableToolbar manages the showing of the default items
- * overflow panel when the associated anchor is clicked or dragged over. The
- * Unified Extensions panel is managed separately by the WebExtensions code.
+ * Secondly, this class manages moving things out from the panel and back into
+ * the toolbar once it underflows and has the space to accommodate the items
+ * that had originally overflowed out. Finally, it manages the showing of the
+ * panel when the associated anchor is clicked or dragged over.
  *
  * In theory, we could have multiple overflowable toolbars, but in practice,
  * only the nav-bar (CustomizableUI.AREA_NAVBAR) makes use of this class.
@@ -5047,7 +5021,7 @@ class OverflowableToolbar {
    *
    * @type {Map<string, number>}
    */
-  #overflowedInfo = new Map();
+  #collapsed = new Map();
 
   /**
    * True if the overflowable toolbar is actively handling overflows and
@@ -5064,7 +5038,7 @@ class OverflowableToolbar {
    *
    * @type {Element}
    */
-  #defaultList = null;
+  #list = null;
 
   /**
    * A reference to the button that opens the overflow panel. This is also
@@ -5072,24 +5046,15 @@ class OverflowableToolbar {
    *
    * @type {Element}
    */
-  #defaultListButton = null;
+  #chevron = null;
 
   /**
-   * A reference to the <xul:panel> overflow panel that contains the #defaultList
+   * A reference to the <xul:panel> overflow panel that contains the #list
    * element.
    *
    * @type {Element}
    */
-  #defaultListPanel = null;
-
-  /**
-   * A reference to the the element that overflowed WebExtension browser action
-   * toolbar items will be appended to as children upon overflow if the
-   * Unified Extension UI is enabled.
-   *
-   * @type {Element}
-   */
-  #webExtList = null;
+  #panel = null;
 
   /**
    * An empty object that is created in #checkOverflow to identify individual
@@ -5103,8 +5068,8 @@ class OverflowableToolbar {
 
   /**
    * A timeout ID returned by setTimeout that identifies a timeout function that
-   * runs to hide the #defaultListPanel if the user happened to open the panel by dragging
-   * over the #defaultListButton and then didn't hover any part of the #defaultListPanel.
+   * runs to hide the #panel if the user happened to open the panel by dragging
+   * over the #chevron and then didn't hover any part of the #panel.
    *
    * @type {number}
    */
@@ -5126,26 +5091,16 @@ class OverflowableToolbar {
    * certain attributes to be set on the <xul:toolbar> that is overflowable.
    * Those attributes are:
    *
-   * default-overflowbutton:
+   * overflowbutton:
    *   The ID of the button that is used to open and anchor the overflow panel.
-   * default-overflowtarget:
+   * overflowtarget:
    *   The ID of the element that overflowed items will be appended to as
    *   children. Note that the overflowed toolbar items are moved into and out
    *   of this overflow target, so it is definitely advisable to let
-   *   OverflowableToolbar own managing the children of default-overflowtarget,
-   *   and to not modify it outside of this class.
-   * default-overflowpanel:
-   *   The ID of the <xul:panel> that contains the default-overflowtarget.
-   * addon-webext-overflowbutton:
-   *   The ID of the button that is used to open and anchor the Unified
-   *   WebExtensions panel.
-   * addon-webext-overflowtarget:
-   *   The ID of the element that overflowed WebExtension toolbar buttons will
-   *   be appended to as children if the Unified Extensions UI is enabled.
-   *   Note that the overflowed toolbar items are moved into and out of this
-   *   overflow target, so it is definitely advisable to let OverflowableToolbar
-   *   own managing the children of addon-webext-overflowtarget, and to not
-   *   modify it outside of this class.
+   *   OverflowableToolbar own managing the children of overflowtarget, and to
+   *   not modify it outside of this class.
+   * overflowpanel:
+   *   The ID of the <xul:panel> that contains the overflowtarget.
    *
    * @param {Element} aToolbarNode The <xul:toolbar> that will be overflowable.
    * @throws {Error} Throws if the customization target of the toolbar somehow
@@ -5162,13 +5117,12 @@ class OverflowableToolbar {
 
     this.#toolbar.setAttribute("overflowable", "true");
     let doc = this.#toolbar.ownerDocument;
-    this.#defaultList = doc.getElementById(
-      this.#toolbar.getAttribute("default-overflowtarget")
+    this.#list = doc.getElementById(
+      this.#toolbar.getAttribute("overflowtarget")
     );
-    this.#defaultList._customizationTarget = this.#defaultList;
+    this.#list._customizationTarget = this.#list;
 
     let window = this.#toolbar.ownerGlobal;
-
     if (window.gBrowserInit.delayedStartupFinished) {
       this.init();
     } else {
@@ -5188,19 +5142,17 @@ class OverflowableToolbar {
     window.gNavToolbox.addEventListener("customizationstarting", this);
     window.gNavToolbox.addEventListener("aftercustomization", this);
 
-    let defaultListButton = this.#toolbar.getAttribute(
-      "default-overflowbutton"
-    );
-    this.#defaultListButton = doc.getElementById(defaultListButton);
-    this.#defaultListButton.addEventListener("mousedown", this);
-    this.#defaultListButton.addEventListener("keypress", this);
-    this.#defaultListButton.addEventListener("dragover", this);
-    this.#defaultListButton.addEventListener("dragend", this);
+    let chevronId = this.#toolbar.getAttribute("overflowbutton");
+    this.#chevron = doc.getElementById(chevronId);
+    this.#chevron.addEventListener("mousedown", this);
+    this.#chevron.addEventListener("keypress", this);
+    this.#chevron.addEventListener("dragover", this);
+    this.#chevron.addEventListener("dragend", this);
 
-    let panelId = this.#toolbar.getAttribute("default-overflowpanel");
-    this.#defaultListPanel = doc.getElementById(panelId);
-    this.#defaultListPanel.addEventListener("popuphiding", this);
-    CustomizableUIInternal.addPanelCloseListeners(this.#defaultListPanel);
+    let panelId = this.#toolbar.getAttribute("overflowpanel");
+    this.#panel = doc.getElementById(panelId);
+    this.#panel.addEventListener("popuphiding", this);
+    CustomizableUIInternal.addPanelCloseListeners(this.#panel);
 
     CustomizableUI.addListener(this);
 
@@ -5227,44 +5179,43 @@ class OverflowableToolbar {
     window.removeEventListener("resize", this);
     window.gNavToolbox.removeEventListener("customizationstarting", this);
     window.gNavToolbox.removeEventListener("aftercustomization", this);
-    this.#defaultListButton.removeEventListener("mousedown", this);
-    this.#defaultListButton.removeEventListener("keypress", this);
-    this.#defaultListButton.removeEventListener("dragover", this);
-    this.#defaultListButton.removeEventListener("dragend", this);
-    this.#defaultListPanel.removeEventListener("popuphiding", this);
-
+    this.#chevron.removeEventListener("mousedown", this);
+    this.#chevron.removeEventListener("keypress", this);
+    this.#chevron.removeEventListener("dragover", this);
+    this.#chevron.removeEventListener("dragend", this);
+    this.#panel.removeEventListener("popuphiding", this);
     CustomizableUI.removeListener(this);
-    CustomizableUIInternal.removePanelCloseListeners(this.#defaultListPanel);
+    CustomizableUIInternal.removePanelCloseListeners(this.#panel);
   }
 
   /**
-   * Opens the overflow #defaultListPanel if it's not already open. If the panel is in
+   * Opens the overflow #panel if it's not already open. If the panel is in
    * the midst of hiding when this is called, the panel will be re-opened.
    *
    * @returns {Promise}
    * @resolves {undefined} once the panel is open.
    */
   show(aEvent) {
-    if (this.#defaultListPanel.state == "open") {
+    if (this.#panel.state == "open") {
       return Promise.resolve();
     }
     return new Promise(resolve => {
-      let doc = this.#defaultListPanel.ownerDocument;
-      this.#defaultListPanel.hidden = false;
-      let multiview = this.#defaultListPanel.querySelector("panelmultiview");
+      let doc = this.#panel.ownerDocument;
+      this.#panel.hidden = false;
+      let multiview = this.#panel.querySelector("panelmultiview");
       let mainViewId = multiview.getAttribute("mainViewId");
       let mainView = doc.getElementById(mainViewId);
       let contextMenu = doc.getElementById(mainView.getAttribute("context"));
       Services.els.addSystemEventListener(contextMenu, "command", this, true);
-      let anchor = this.#defaultListButton.icon;
+      let anchor = this.#chevron.icon;
 
       let popupshown = false;
-      this.#defaultListPanel.addEventListener(
+      this.#panel.addEventListener(
         "popupshown",
         () => {
           popupshown = true;
-          this.#defaultListPanel.addEventListener("dragover", this);
-          this.#defaultListPanel.addEventListener("dragend", this);
+          this.#panel.addEventListener("dragover", this);
+          this.#panel.addEventListener("dragend", this);
           // Wait until the next tick to resolve so all popupshown
           // handlers have a chance to run before our promise resolution
           // handlers do.
@@ -5276,7 +5227,7 @@ class OverflowableToolbar {
       let openPanel = () => {
         // Ensure we update the gEditUIVisible flag when opening the popup, in
         // case the edit controls are in it.
-        this.#defaultListPanel.addEventListener(
+        this.#panel.addEventListener(
           "popupshowing",
           () => {
             doc.defaultView.updateEditUIVisibility();
@@ -5284,7 +5235,7 @@ class OverflowableToolbar {
           { once: true }
         );
 
-        this.#defaultListPanel.addEventListener(
+        this.#panel.addEventListener(
           "popuphidden",
           () => {
             if (!popupshown) {
@@ -5296,14 +5247,10 @@ class OverflowableToolbar {
           { once: true }
         );
 
-        lazy.PanelMultiView.openPopup(
-          this.#defaultListPanel,
-          anchor || this.#defaultListButton,
-          {
-            triggerEvent: aEvent,
-          }
-        );
-        this.#defaultListButton.open = true;
+        lazy.PanelMultiView.openPopup(this.#panel, anchor || this.#chevron, {
+          triggerEvent: aEvent,
+        });
+        this.#chevron.open = true;
       };
 
       openPanel();
@@ -5358,11 +5305,11 @@ class OverflowableToolbar {
         // in the overflow panel before it.
         if (
           newNodeCanOverflow &&
-          this.#overflowedInfo.has(nextNodeId) &&
+          this.#collapsed.has(nextNodeId) &&
           nextNode &&
-          nextNode.parentNode == this.#defaultList
+          nextNode.parentNode == this.#list
         ) {
-          return [this.#defaultList, nextNode];
+          return [this.#list, nextNode];
         }
         // Otherwise (if either we can't overflow, or the previous node
         // wasn't overflown), and the next node is in the toolbar itself,
@@ -5379,24 +5326,19 @@ class OverflowableToolbar {
         ) {
           return [this.#target, nextNode];
         }
-      } else if (
-        loopIndex < nodeIndex &&
-        this.#overflowedInfo.has(nextNodeId)
-      ) {
+      } else if (loopIndex < nodeIndex && this.#collapsed.has(nextNodeId)) {
         nodeBeforeNewNodeIsOverflown = true;
       }
     }
 
     let containerForAppending =
-      this.#overflowedInfo.size && newNodeCanOverflow
-        ? this.#defaultList
-        : this.#target;
+      this.#collapsed.size && newNodeCanOverflow ? this.#list : this.#target;
     return [containerForAppending, null];
   }
 
   /**
    * Allows callers to query for the current parent of a toolbar item that may
-   * or may not be overflowed. That parent will either be #defaultList or #target.
+   * or may not be overflowed. That parent will either be #list or #target.
    *
    * Note: It is assumed that the caller has verified that aNode is placed
    * within the toolbar customizable area according to CustomizableUI.
@@ -5407,7 +5349,7 @@ class OverflowableToolbar {
    */
   getContainerFor(aNode) {
     if (aNode.getAttribute("overflowedItem") == "true") {
-      return this.#defaultList;
+      return this.#list;
     }
     return this.#target;
   }
@@ -5426,9 +5368,6 @@ class OverflowableToolbar {
 
     let win = this.#target.ownerGlobal;
     let checkOverflowHandle = this.#checkOverflowHandle;
-    let webExtButtonID = this.#toolbar.getAttribute(
-      "addon-webext-overflowbutton"
-    );
 
     let { isOverflowing, targetContentWidth } = await this.#getOverflowInfo();
 
@@ -5439,15 +5378,14 @@ class OverflowableToolbar {
       return;
     }
 
-    let webExtList = this.#getWebExtList();
-
     let child = this.#target.lastElementChild;
     while (child && isOverflowing) {
       let prevChild = child.previousElementSibling;
 
       if (child.getAttribute("overflows") != "false") {
-        this.#overflowedInfo.set(child.id, targetContentWidth);
+        this.#collapsed.set(child.id, targetContentWidth);
         child.setAttribute("overflowedItem", true);
+        child.setAttribute("cui-anchorid", this.#chevron.id);
         CustomizableUIInternal.ensureButtonContextMenu(
           child,
           this.#toolbar,
@@ -5459,22 +5397,9 @@ class OverflowableToolbar {
           this.#target
         );
 
-        if (
-          lazy.gUnifiedExtensionsEnabled &&
-          webExtList &&
-          child.classList.contains("webextension-browser-action")
-        ) {
-          child.setAttribute("cui-anchorid", webExtButtonID);
-          webExtList.insertBefore(child, webExtList.firstElementChild);
-        } else {
-          child.setAttribute("cui-anchorid", this.#defaultListButton.id);
-          this.#defaultList.insertBefore(
-            child,
-            this.#defaultList.firstElementChild
-          );
-          if (!CustomizableUI.isSpecialWidget(child.id)) {
-            this.#toolbar.setAttribute("overflowing", "true");
-          }
+        this.#list.insertBefore(child, this.#list.firstElementChild);
+        if (!CustomizableUI.isSpecialWidget(child.id)) {
+          this.#toolbar.setAttribute("overflowing", "true");
         }
       }
       child = prevChild;
@@ -5586,31 +5511,11 @@ class OverflowableToolbar {
     );
     let placements = gPlacements.get(this.#toolbar.id);
     let win = this.#target.ownerGlobal;
-    let doc = this.#target.ownerDocument;
     let checkOverflowHandle = this.#checkOverflowHandle;
 
-    let overflowedItemStack = Array.from(this.#overflowedInfo.entries());
-
-    for (let i = overflowedItemStack.length - 1; i >= 0; --i) {
-      let [childID, minSize] = overflowedItemStack[i];
-
-      // The item may have been placed inside of a <xul:panel> that is lazily
-      // loaded and still in the view cache. PanelMultiView.getViewNode will
-      // do the work of checking the DOM for the child, and then falling back to
-      // the cache if that is the case.
-      let child = lazy.PanelMultiView.getViewNode(doc, childID);
-
-      if (!child) {
-        // This really shouldn't be possible, but let's be defensive and not
-        // explode in the event that we can't find the node associated with
-        // this ID.
-        lazy.log.error(
-          `Could not find item with ID ${childID} in the DOM when putting ` +
-            `items back into the toolbar.`
-        );
-        continue;
-      }
-
+    while (this.#list.firstElementChild) {
+      let child = this.#list.firstElementChild;
+      let minSize = this.#collapsed.get(child.id);
       lazy.log.debug(
         `Considering moving ${child.id} back, minSize: ${minSize}`
       );
@@ -5635,7 +5540,7 @@ class OverflowableToolbar {
       }
 
       lazy.log.debug(`Moving ${child.id} back`);
-      this.#overflowedInfo.delete(child.id);
+      this.#collapsed.delete(child.id);
       let beforeNodeIndex = placements.indexOf(child.id) + 1;
       // If this is a skipintoolbarset item, meaning it doesn't occur in the placements list,
       // we're inserting it at the end. This will mean first-in, first-out (more or less)
@@ -5673,8 +5578,7 @@ class OverflowableToolbar {
 
     win.UpdateUrlbarSearchSplitterState();
 
-    let defaultListItems = Array.from(this.#defaultList.children);
-    let collapsedWidgetIds = defaultListItems.map(item => item.id);
+    let collapsedWidgetIds = Array.from(this.#collapsed.keys());
     if (collapsedWidgetIds.every(w => CustomizableUI.isSpecialWidget(w))) {
       this.#toolbar.removeAttribute("overflowing");
     }
@@ -5763,32 +5667,11 @@ class OverflowableToolbar {
         window.clearTimeout(this.#hideTimeoutId);
       }
       this.#hideTimeoutId = window.setTimeout(() => {
-        if (!this.#defaultListPanel.firstElementChild.matches(":hover")) {
-          lazy.PanelMultiView.hidePopup(this.#defaultListPanel);
+        if (!this.#panel.firstElementChild.matches(":hover")) {
+          lazy.PanelMultiView.hidePopup(this.#panel);
         }
       }, OVERFLOW_PANEL_HIDE_DELAY_MS);
     });
-  }
-
-  /**
-   * Gets and caches a reference to the DOM node with the ID set as the value
-   * of addon-webext-overflowtarget. If a cache already exists, that's returned
-   * instead. If addon-webext-overflowtarget has no value, null is returned.
-   *
-   * @returns {Element|null} the list that overflowed WebExtension toolbar
-   *   buttons should go to if the Unified Extensions UI is enabled, or null
-   *   if no such list exists.
-   */
-  #getWebExtList() {
-    if (!this.#webExtList) {
-      let targetID = this.#toolbar.getAttribute("addon-webext-overflowtarget");
-      if (targetID) {
-        let win = this.#toolbar.ownerGlobal;
-        let { panel } = win.gUnifiedExtensions;
-        this.#webExtList = panel.querySelector(`#${targetID}`);
-      }
-    }
-    return this.#webExtList;
   }
 
   /**
@@ -5796,39 +5679,36 @@ class OverflowableToolbar {
    */
 
   /**
-   * Handles clicks on the #defaultListButton element.
+   * Handles clicks on the #chevron element.
    *
    * @param {MouseEvent} aEvent the click event.
    */
-  #onClickDefaultListButton(aEvent) {
-    if (this.#defaultListButton.open) {
-      this.#defaultListButton.open = false;
-      lazy.PanelMultiView.hidePopup(this.#defaultListPanel);
-    } else if (
-      this.#defaultListPanel.state != "hiding" &&
-      !this.#defaultListButton.disabled
-    ) {
+  #onClickChevron(aEvent) {
+    if (this.#chevron.open) {
+      this.#chevron.open = false;
+      lazy.PanelMultiView.hidePopup(this.#panel);
+    } else if (this.#panel.state != "hiding" && !this.#chevron.disabled) {
       this.show(aEvent);
     }
   }
 
   /**
-   * Handles the popuphiding event firing on the #defaultListPanel.
+   * Handles the popuphiding event firing on the #panel.
    *
    * @param {WidgetMouseEvent} aEvent the popuphiding event that fired on the
-   *   #defaultListPanel.
+   *   #panel.
    */
   #onPanelHiding(aEvent) {
-    if (aEvent.target != this.#defaultListPanel) {
+    if (aEvent.target != this.#panel) {
       // Ignore context menus, <select> popups, etc.
       return;
     }
-    this.#defaultListButton.open = false;
-    this.#defaultListPanel.removeEventListener("dragover", this);
-    this.#defaultListPanel.removeEventListener("dragend", this);
+    this.#chevron.open = false;
+    this.#panel.removeEventListener("dragover", this);
+    this.#panel.removeEventListener("dragend", this);
     let doc = aEvent.target.ownerDocument;
     doc.defaultView.updateEditUIVisibility();
-    let contextMenuId = this.#defaultListPanel.getAttribute("context");
+    let contextMenuId = this.#panel.getAttribute("context");
     if (contextMenuId) {
       let contextMenu = doc.getElementById(contextMenuId);
       Services.els.removeSystemEventListener(
@@ -5865,26 +5745,24 @@ class OverflowableToolbar {
     // to handle that change.
     if (
       !this.#enabled ||
-      (aContainer != this.#target && aContainer != this.#defaultList)
+      (aContainer != this.#target && aContainer != this.#list)
     ) {
       return;
     }
     // When we (re)move an item, update all the items that come after it in the list
     // with the minsize *of the item before the to-be-removed node*. This way, we
     // ensure that we try to move items back as soon as that's possible.
-    if (aNode.parentNode == this.#defaultList) {
+    if (aNode.parentNode == this.#list) {
       let updatedMinSize;
       if (aNode.previousElementSibling) {
-        updatedMinSize = this.#overflowedInfo.get(
-          aNode.previousElementSibling.id
-        );
+        updatedMinSize = this.#collapsed.get(aNode.previousElementSibling.id);
       } else {
         // Force (these) items to try to flow back into the bar:
         updatedMinSize = 1;
       }
       let nextItem = aNode.nextElementSibling;
       while (nextItem) {
-        this.#overflowedInfo.set(nextItem.id, updatedMinSize);
+        this.#collapsed.set(nextItem.id, updatedMinSize);
         nextItem = nextItem.nextElementSibling;
       }
     }
@@ -5897,13 +5775,13 @@ class OverflowableToolbar {
     // causes overflow or underflow of the toolbar.
     if (
       !this.#enabled ||
-      (aContainer != this.#target && aContainer != this.#defaultList)
+      (aContainer != this.#target && aContainer != this.#list)
     ) {
       return;
     }
 
-    let nowOverflowed = aNode.parentNode == this.#defaultList;
-    let wasOverflowed = this.#overflowedInfo.has(aNode.id);
+    let nowOverflowed = aNode.parentNode == this.#list;
+    let wasOverflowed = this.#collapsed.has(aNode.id);
 
     // If this wasn't overflowed before...
     if (!wasOverflowed) {
@@ -5916,10 +5794,10 @@ class OverflowableToolbar {
         // toolbar immediately by specifying a very low minimum size.
         let sourceOfMinSize = aNode.previousElementSibling;
         let minSize = sourceOfMinSize
-          ? this.#overflowedInfo.get(sourceOfMinSize.id)
+          ? this.#collapsed.get(sourceOfMinSize.id)
           : 1;
-        this.#overflowedInfo.set(aNode.id, minSize);
-        aNode.setAttribute("cui-anchorid", this.#defaultListButton.id);
+        this.#collapsed.set(aNode.id, minSize);
+        aNode.setAttribute("cui-anchorid", this.#chevron.id);
         aNode.setAttribute("overflowedItem", true);
         CustomizableUIInternal.ensureButtonContextMenu(aNode, aContainer, true);
         CustomizableUIInternal.notifyListeners(
@@ -5931,7 +5809,7 @@ class OverflowableToolbar {
     } else if (!nowOverflowed) {
       // If it used to be overflowed...
       // ... and isn't anymore, let's remove our bookkeeping:
-      this.#overflowedInfo.delete(aNode.id);
+      this.#collapsed.delete(aNode.id);
       aNode.removeAttribute("cui-anchorid");
       aNode.removeAttribute("overflowedItem");
       CustomizableUIInternal.ensureButtonContextMenu(aNode, aContainer);
@@ -5941,15 +5819,15 @@ class OverflowableToolbar {
         this.#target
       );
 
-      let collapsedWidgetIds = Array.from(this.#overflowedInfo.keys());
+      let collapsedWidgetIds = Array.from(this.#collapsed.keys());
       if (collapsedWidgetIds.every(w => CustomizableUI.isSpecialWidget(w))) {
         this.#toolbar.removeAttribute("overflowing");
       }
     } else if (aNode.previousElementSibling) {
       // but if it still is, it must have changed places. Bookkeep:
       let prevId = aNode.previousElementSibling.id;
-      let minSize = this.#overflowedInfo.get(prevId);
-      this.#overflowedInfo.set(aNode.id, minSize);
+      let minSize = this.#collapsed.get(prevId);
+      this.#collapsed.set(aNode.id, minSize);
     }
 
     // We might overflow now if an item was added, or we may be able to move
@@ -5961,7 +5839,7 @@ class OverflowableToolbar {
    * @returns {Boolean} whether the given node is in the overflow list.
    */
   isInOverflowList(node) {
-    return node.parentNode == this.#defaultList;
+    return node.parentNode == this.#list;
   }
 
   /**
@@ -5994,19 +5872,19 @@ class OverflowableToolbar {
         if (aEvent.button != 0) {
           break;
         }
-        if (aEvent.target == this.#defaultListButton) {
-          this.#onClickDefaultListButton(aEvent);
+        if (aEvent.target == this.#chevron) {
+          this.#onClickChevron(aEvent);
         } else {
-          lazy.PanelMultiView.hidePopup(this.#defaultListPanel);
+          lazy.PanelMultiView.hidePopup(this.#panel);
         }
         break;
       }
       case "keypress": {
         if (
-          aEvent.target == this.#defaultListButton &&
+          aEvent.target == this.#chevron &&
           (aEvent.key == " " || aEvent.key == "Enter")
         ) {
-          this.#onClickDefaultListButton(aEvent);
+          this.#onClickChevron(aEvent);
         }
         break;
       }
@@ -6021,7 +5899,7 @@ class OverflowableToolbar {
         break;
       }
       case "dragend": {
-        lazy.PanelMultiView.hidePopup(this.#defaultListPanel);
+        lazy.PanelMultiView.hidePopup(this.#panel);
         break;
       }
       case "popuphiding": {

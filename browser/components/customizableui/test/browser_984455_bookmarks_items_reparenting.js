@@ -6,7 +6,7 @@
 
 var gNavBar = document.getElementById(CustomizableUI.AREA_NAVBAR);
 var gOverflowList = document.getElementById(
-  gNavBar.getAttribute("default-overflowtarget")
+  gNavBar.getAttribute("overflowtarget")
 );
 
 const kBookmarksButton = "bookmarks-menu-button";

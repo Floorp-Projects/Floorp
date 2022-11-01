@@ -6,7 +6,7 @@
 
 var navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
 var overflowList = document.getElementById(
-  navbar.getAttribute("default-overflowtarget")
+  navbar.getAttribute("overflowtarget")
 );
 
 const kTestBtn1 = "test-addWidgetToArea-overflow";
