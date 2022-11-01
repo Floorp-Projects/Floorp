@@ -474,6 +474,11 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: '{alias}'
+        image:
+            provisioner: '{trust-domain}-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: '{alias}'
         images-gcp:
             provisioner: '{trust-domain}-{level}'
             implementation: docker-worker
