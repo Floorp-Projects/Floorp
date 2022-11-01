@@ -289,6 +289,8 @@ class SettingsSubMenuSearchRobot {
         )
     }
 
+    fun verifyShowSearchEnginesToggleState(enabled: Boolean) = assertShowSearchEnginesToggle(enabled)
+
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
             mDevice.waitForIdle()
@@ -384,6 +386,33 @@ private fun assertEngineListDoesNotContain(searchEngineName: String) {
 
 private fun assertThreeDotButtonIsNotDisplayed(searchEngineName: String) =
     threeDotMenu(searchEngineName).check(matches(not(isDisplayed())))
+
+private fun assertShowSearchEnginesToggle(enabled: Boolean) =
+    if (enabled) {
+        onView(withText(R.string.preferences_show_search_engines))
+            .check(
+                matches(
+                    hasCousin(
+                        allOf(
+                            withClassName(endsWith("Switch")),
+                            ViewMatchers.isChecked(),
+                        ),
+                    ),
+                ),
+            )
+    } else {
+        onView(withText(R.string.preferences_show_search_engines))
+            .check(
+                matches(
+                    hasCousin(
+                        allOf(
+                            withClassName(endsWith("Switch")),
+                            ViewMatchers.isNotChecked(),
+                        ),
+                    ),
+                ),
+            )
+    }
 
 private fun threeDotMenu(searchEngineName: String) =
     onView(

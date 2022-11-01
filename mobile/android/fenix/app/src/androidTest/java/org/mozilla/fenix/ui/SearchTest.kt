@@ -152,8 +152,8 @@ class SearchTest {
         }.goBack {
         }.openSearch {
             scrollToSearchEngineSettings(activityTestRule)
-            clickSearchEngineSettings(activityTestRule)
-            verifySearchSettings()
+        }.clickSearchEngineSettings(activityTestRule) {
+            verifySearchToolbar()
         }
     }
 

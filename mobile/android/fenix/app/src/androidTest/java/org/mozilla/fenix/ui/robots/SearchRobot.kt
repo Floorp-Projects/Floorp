@@ -286,13 +286,6 @@ class SearchRobot {
             .performScrollToIndex(5)
     }
 
-    fun clickSearchEngineSettings(rule: ComposeTestRule) {
-        rule.onNodeWithText("Search engine settings")
-            .assertIsDisplayed()
-            .assertHasClickAction()
-            .performClick()
-    }
-
     fun clickClearButton() {
         clearButton().click()
     }
@@ -334,6 +327,17 @@ class SearchRobot {
         for (searchEngine in searchEngines) {
             rule.waitForIdle()
             rule.onNodeWithText(searchEngine).assertIsDisplayed()
+        }
+    }
+
+    fun verifySearchEngineShortcutsAreNotDisplayed(rule: ComposeTestRule, vararg searchEngines: String) {
+        mDevice.findObject(
+            UiSelector().resourceId("$packageName:id/pill_wrapper_divider"),
+        ).waitForExists(waitingTime)
+
+        for (searchEngine in searchEngines) {
+            rule.waitForIdle()
+            rule.onNodeWithText(searchEngine).assertDoesNotExist()
         }
     }
 
@@ -398,6 +402,19 @@ class SearchRobot {
         fun goToSearchEngine(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
             NavigationToolbarRobot().interact()
             return NavigationToolbarRobot.Transition()
+        }
+
+        fun clickSearchEngineSettings(
+            rule: ComposeTestRule,
+            interact: SettingsSubMenuSearchRobot.() -> Unit,
+        ): SettingsSubMenuSearchRobot.Transition {
+            rule.onNodeWithText("Search engine settings")
+                .assertIsDisplayed()
+                .assertHasClickAction()
+                .performClick()
+
+            SettingsSubMenuSearchRobot().interact()
+            return SettingsSubMenuSearchRobot.Transition()
         }
     }
 }

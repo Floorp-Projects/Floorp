@@ -428,4 +428,60 @@ class SettingsSearchTest {
             )
         }
     }
+
+    // Expected for en-us defaults
+    @Test
+    fun toggleSearchEnginesShortcutListTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            verifyShowSearchEnginesToggleState(false)
+            toggleShowSearchShortcuts()
+            verifyShowSearchEnginesToggleState(true)
+        }
+
+        exitMenu()
+
+        homeScreen {
+        }.openSearch {
+            verifySearchEngineShortcuts(
+                activityTestRule,
+                "Google",
+                "Bing",
+                "Amazon.com",
+                "DuckDuckGo",
+                "eBay",
+                "Wikipedia",
+            )
+        }.clickSearchEngineSettings(activityTestRule) {
+            toggleShowSearchShortcuts()
+            verifyShowSearchEnginesToggleState(false)
+        }
+
+        exitMenu()
+
+        homeScreen {
+        }.openSearch {
+            verifySearchEngineShortcutsAreNotDisplayed(
+                activityTestRule,
+                "Google",
+                "Bing",
+                "Amazon.com",
+                "DuckDuckGo",
+                "eBay",
+                "Wikipedia",
+            )
+            clickSearchEngineShortcutButton()
+            verifySearchEngineShortcuts(
+                activityTestRule,
+                "Google",
+                "Bing",
+                "Amazon.com",
+                "DuckDuckGo",
+                "eBay",
+                "Wikipedia",
+            )
+        }
+    }
 }
