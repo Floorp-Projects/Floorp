@@ -54,7 +54,7 @@ object Versions {
         const val androidx_uiautomator = "2.2.0"
         const val falcon = "2.2.0"
         const val fastlane = "2.0.0"
-        const val junit = "5.8.2"
+        const val junit = "5.9.1"
         const val ktlint = "0.47.0"
         const val mockito = "3.12.4"
         const val mockwebserver = "4.10.0"
