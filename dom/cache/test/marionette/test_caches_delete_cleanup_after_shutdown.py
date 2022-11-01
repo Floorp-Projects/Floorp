@@ -45,6 +45,9 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
         )
 
     def doCacheWork(self, n):
+        # max timeout for this script to execute is 5 minutes
+        maxTimeout = 5 * 60 * 1000
+
         return self.marionette.execute_script(
             """
                 const [cacheId, n] = arguments;
@@ -55,6 +58,7 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
                 n,
             ),
             new_sandbox=False,
+            script_timeout=maxTimeout,
         )
 
     def openCache(self):
@@ -122,6 +126,7 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
             )
 
     def create_and_cleanup_cache(self, ensureCleanCallback, in_app):
+        # create 640 cache entries
         self.doCacheWork(640)
 
         self.marionette.restart(in_app=in_app)
@@ -135,6 +140,13 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
         beforeUsage = self.getUsage()
 
         def ensureCleanCallback():
+
+            Wait(self.marionette, timeout=60).until(
+                lambda x: (self.getUsage() - beforeUsage)
+                < EXPECTED_CACHEDIR_SIZE_AFTER_CLEANUP,
+                message="Cache directory is not cleaned up properly",
+            )
+
             return (
                 abs(beforeUsage - self.getUsage())
                 <= EXPECTED_CACHEDIR_SIZE_AFTER_CLEANUP
