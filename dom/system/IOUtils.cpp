@@ -30,7 +30,6 @@
 #include "mozilla/TextUtils.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"
-#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerCommon.h"
@@ -1050,72 +1049,6 @@ already_AddRefed<Promise> IOUtils::DelMacXAttr(GlobalObject& aGlobal,
 }
 
 #endif
-
-/* static */
-already_AddRefed<Promise> IOUtils::GetFile(
-    GlobalObject& aGlobal, const Sequence<nsString>& aComponents,
-    ErrorResult& aError) {
-  return WithPromiseAndState(
-      aGlobal, aError, [&](Promise* promise, auto& state) {
-        ErrorResult joinErr;
-        nsCOMPtr<nsIFile> file = PathUtils::Join(aComponents, joinErr);
-        if (joinErr.Failed()) {
-          promise->MaybeReject(std::move(joinErr));
-          return;
-        }
-
-        nsCOMPtr<nsIFile> parent;
-        if (nsresult rv = file->GetParent(getter_AddRefs(parent));
-            NS_FAILED(rv)) {
-          RejectJSPromise(promise, IOError(rv).WithMessage(
-                                       "Could not get parent directory"));
-          return;
-        }
-
-        state->mEventQueue
-            ->template Dispatch<Ok>([parent = std::move(parent)]() {
-              return MakeDirectorySync(parent, /* aCreateAncestors = */ true,
-                                       /* aIgnoreExisting = */ true, 0755);
-            })
-            ->Then(
-                GetCurrentSerialEventTarget(), __func__,
-                [file = std::move(file), promise = RefPtr(promise)](const Ok&) {
-                  promise->MaybeResolve(file);
-                },
-                [promise = RefPtr(promise)](const IOError& err) {
-                  RejectJSPromise(promise, err);
-                });
-      });
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::GetDirectory(
-    GlobalObject& aGlobal, const Sequence<nsString>& aComponents,
-    ErrorResult& aError) {
-  return WithPromiseAndState(
-      aGlobal, aError, [&](Promise* promise, auto& state) {
-        ErrorResult joinErr;
-        nsCOMPtr<nsIFile> dir = PathUtils::Join(aComponents, joinErr);
-        if (joinErr.Failed()) {
-          promise->MaybeReject(std::move(joinErr));
-          return;
-        }
-
-        state->mEventQueue
-            ->template Dispatch<Ok>([dir]() {
-              return MakeDirectorySync(dir, /* aCreateAncestors = */ true,
-                                       /* aIgnoreExisting = */ true, 0755);
-            })
-            ->Then(
-                GetCurrentSerialEventTarget(), __func__,
-                [dir, promise = RefPtr(promise)](const Ok&) {
-                  promise->MaybeResolve(dir);
-                },
-                [promise = RefPtr(promise)](const IOError& err) {
-                  RejectJSPromise(promise, err);
-                });
-      });
-}
 
 /* static */
 already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal,

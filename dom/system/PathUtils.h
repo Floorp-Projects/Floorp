@@ -50,20 +50,6 @@ class PathUtils final {
   static void Join(const GlobalObject&, const Sequence<nsString>& aComponents,
                    nsString& aResult, ErrorResult& aErr);
 
-  /**
-   * Join a sequence of path components and return an nsIFile with the resulting
-   * path.
-   *
-   * @param aComponents  A sequence of path components. The first component must
-   *                     be an absolute path.
-   * @param aErr  The error result, if any.
-   *
-   * @return An nsIFile with the resulting path, if there were no errors.
-   * Otherwise, nullptr is returned.
-   */
-  static already_AddRefed<nsIFile> Join(const Span<const nsString>& aComponents,
-                                        ErrorResult& aErr);
-
   static void JoinRelative(const GlobalObject&, const nsAString& aBasePath,
                            const nsAString& aRelativePath, nsString& aResult,
                            ErrorResult& aErr);
