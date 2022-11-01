@@ -104,7 +104,10 @@ ChromeProfileMigrator.prototype.getResources = async function Chrome_getResource
 ) {
   let chromeUserDataPath = await this._getChromeUserDataPathIfExists();
   if (chromeUserDataPath) {
-    let profileFolder = lazy.OS.Path.join(chromeUserDataPath, aProfile.id);
+    let profileFolder = chromeUserDataPath;
+    if (aProfile) {
+      profileFolder = PathUtils.join(chromeUserDataPath, aProfile.id);
+    }
     if (await lazy.OS.File.exists(profileFolder)) {
       let possibleResourcePromises = [
         GetBookmarksResource(profileFolder, this.getBrowserKey()),
@@ -742,3 +745,19 @@ Chromium360seMigrator.prototype.contractID =
 Chromium360seMigrator.prototype.classID = Components.ID(
   "{2e1a182e-ce4f-4dc9-a22c-d4125b931552}"
 );
+
+export function OperaProfileMigrator() {
+  this._chromeUserDataPathSuffix = "Opera";
+  this._keychainServiceName = "Opera Browser Safe Storage";
+  this._keychainAccountName = "Opera Browser";
+}
+OperaProfileMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
+OperaProfileMigrator.prototype.classDescription = "Opera Browser Migrator";
+OperaProfileMigrator.prototype.contractID =
+  "@mozilla.org/profile/migrator;1?app=browser&type=opera";
+OperaProfileMigrator.prototype.classID = Components.ID(
+  "{16c5d501-e411-41eb-93f2-af6c9ba64dee}"
+);
+OperaProfileMigrator.prototype.getSourceProfiles = function() {
+  return null;
+};

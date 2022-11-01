@@ -42,6 +42,7 @@ const gAvailableMigratorKeys = (function() {
       "firefox",
       "edge",
       "ie",
+      "opera",
       "brave",
       "chrome",
       "chromium-edge",
@@ -56,6 +57,7 @@ const gAvailableMigratorKeys = (function() {
     return [
       "firefox",
       "safari",
+      "opera",
       "brave",
       "chrome",
       "chromium-edge",
@@ -67,6 +69,7 @@ const gAvailableMigratorKeys = (function() {
   if (AppConstants.XP_UNIX) {
     return [
       "firefox",
+      "opera",
       "brave",
       "chrome",
       "chrome-beta",
@@ -746,6 +749,7 @@ export var MigrationUtils = Object.seal({
       Safari: "safari",
       Firefox: "firefox",
       Nightly: "firefox",
+      Opera: "opera",
       "Brave Web Browser": "brave", // Windows, Linux
       Brave: "brave", // OS X
       "Google Chrome": "chrome", // Windows, Linux
@@ -1243,6 +1247,7 @@ export var MigrationUtils = Object.seal({
     "chromium-edge": 10,
     "chromium-edge-beta": 10,
     brave: 11,
+    opera: 12,
   },
   getSourceIdForTelemetry(sourceName) {
     return this._sourceNameToIdMapping[sourceName] || 0;
