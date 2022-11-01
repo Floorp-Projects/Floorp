@@ -39,7 +39,7 @@ body {
   --newtab-text-primary-color: #15141a;
   --newtab-primary-action-background: #0061e0;
   --newtab-primary-action-background-pocket: #008078;
-  --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 80%, transparent);
+  --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 70%, transparent);
   --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 90%, #000);
   --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 80%, #000);
   --newtab-element-secondary-color: color-mix(in srgb, currentColor 5%, transparent);
@@ -81,6 +81,12 @@ body[lwt-newtab-brighttext] {
   --newtab-primary-element-text-color: #2b2a33;
   --newtab-wordmark-color: #fbfbfe;
   --newtab-status-success: #7C6;
+}
+
+@media (prefers-contrast) {
+  body {
+    --newtab-text-secondary-color: var(--newtab-text-primary-color);
+  }
 }
 
 .icon {
