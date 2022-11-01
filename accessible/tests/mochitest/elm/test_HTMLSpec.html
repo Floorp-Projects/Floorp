@@ -911,6 +911,30 @@
       testElm("input_date", obj);
 
       // ////////////////////////////////////////////////////////////////////////
+      // HTML:input@type="datetime-local"
+
+      obj = {
+        role: ROLE_DATE_EDITOR,
+        name: "datetime-local label",
+        attributes: { "text-input-type": "datetime-local" },
+        children: [
+          { role: ROLE_SPINBUTTON }, // Month
+          { role: ROLE_TEXT_LEAF },  // "/""
+          { role: ROLE_SPINBUTTON }, // Day
+          { role: ROLE_TEXT_LEAF },  // "/"
+          { role: ROLE_SPINBUTTON }, // Year
+          { role: ROLE_TEXT_LEAF },  // " "
+          { role: ROLE_SPINBUTTON }, // Hours
+          { role: ROLE_TEXT_LEAF },  // ":"
+          { role: ROLE_SPINBUTTON }, // Minutes
+          { role: ROLE_TEXT_LEAF },  // " "
+          { role: ROLE_ENTRY },      // "AM" or "PM"
+          { role: ROLE_PUSHBUTTON }, // Calendar
+        ],
+      };
+      testElm("input_datetime_local", obj);
+
+      // ////////////////////////////////////////////////////////////////////////
       // HTML:ins contained by paragraph
 
       obj = {
@@ -1834,6 +1858,9 @@
   </label>
   <label>date label
     <input id="input_date" type="date" value="2017-11-10">
+  </label>
+  <label>datetime-local label
+    <input id="input_datetime_local" type="datetime-local" value="2017-11-10T23:23">
   </label>
 
   <p id="ins_container">normal<ins>Inserted</ins></p>
