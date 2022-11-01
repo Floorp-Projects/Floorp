@@ -95,10 +95,10 @@ class ComponentModuleLoader : public JS::loader::ModuleLoaderBase {
 
 // Data specific to ComponentModuleLoader that is associated with each load
 // request.
-class ComponentLoadContext : public JS::loader::LoadContextBase {
+class ComponentLoadContext : public JS::loader::LoadContextCCBase {
  public:
   ComponentLoadContext()
-      : LoadContextBase(JS::loader::ContextKind::Component) {}
+      : LoadContextCCBase(JS::loader::ContextKind::Component) {}
 
  public:
   // The result of compiling a module script. These fields are used temporarily
