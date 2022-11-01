@@ -13833,7 +13833,9 @@
 
 - name: webgl.out-of-process
   type: RelaxedAtomicBool
-#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX)
+# (When reading the next line, know that preprocessor.py doesn't
+# understand parentheses, but && is higher precedence than ||.)
+#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX) && !defined(ANDROID)
   value: true
 #elif defined(ANDROID) && defined(NIGHTLY_BUILD)
   value: true
