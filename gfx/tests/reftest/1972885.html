@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<title>Test for Bug 1972885</title>
+<style>
+body {
+  margin: 0;
+}
+canvas {
+  /* Height would round up to 101px, but subpixel snaps to 100. */
+  margin-top: 1.6px;
+  width: 100px;
+  height: 100.5px;
+}
+</style>
+<canvas id="canvas"></canvas>
+<script>
+function draw(canvas, width, height) {
+  const ctx = canvas.getContext('2d');
+  canvas.width = width;
+  canvas.height = height;
+  const imgData = ctx.createImageData(width, height);
+  const u32View = new Uint32Array(imgData.data.buffer);
+  u32View.fill(0xFFFFFFFF);
+  for (let y = 0; y < height; y += 2) {
+    for (let x = 0; x < width; x++) {
+      u32View[y * width + x] = 0xFF000000;
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+const ro = new ResizeObserver((entries) => {
+  for (const entry of entries) {
+    if (entry.target !== canvas) {
+      continue;
+    }
+    draw(
+      canvas,
+      entry.devicePixelContentBoxSize[0].inlineSize,
+      entry.devicePixelContentBoxSize[0].blockSize);
+  }
+  document.documentElement.removeAttribute("class");
+});
+
+// Get the properly subpixel snapped size through ResizeObserver.
+ro.observe(canvas);
+</script>
