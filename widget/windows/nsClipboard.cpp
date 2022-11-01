@@ -180,16 +180,9 @@ nsresult nsClipboard::SetupNativeDataObject(
   }
 
   auto* dObj = static_cast<nsDataObj*>(aDataObj);
-
   if (aMightNeedToFlush) {
     *aMightNeedToFlush = MightNeedToFlush::No;
   }
-
-  auto MarkAsPotentiallyNeedingToFlush = [&] {
-    if (aMightNeedToFlush) {
-      *aMightNeedToFlush = MightNeedToFlush::Yes;
-    }
-  };
 
   // Now give the Transferable to the DataObject
   // for getting the data out of it
@@ -224,7 +217,9 @@ nsresult nsClipboard::SetupNativeDataObject(
       FORMATETC textFE;
       SET_FORMATETC(textFE, CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
       dObj->AddDataFlavor(kTextMime, &textFE);
-      MarkAsPotentiallyNeedingToFlush();
+      if (aMightNeedToFlush) {
+        *aMightNeedToFlush = MightNeedToFlush::Yes;
+      }
     } else if (flavorStr.EqualsLiteral(kHTMLMime)) {
       // if we find text/html, also advertise win32's html flavor (which we will
       // convert on our own in nsDataObj::GetText().
@@ -232,7 +227,6 @@ nsresult nsClipboard::SetupNativeDataObject(
       SET_FORMATETC(htmlFE, GetHtmlClipboardFormat(), 0, DVASPECT_CONTENT, -1,
                     TYMED_HGLOBAL);
       dObj->AddDataFlavor(kHTMLMime, &htmlFE);
-      MarkAsPotentiallyNeedingToFlush();
     } else if (flavorStr.EqualsLiteral(kURLMime)) {
       // if we're a url, in addition to also being text, we need to register
       // the "file" flavors so that the win32 shell knows to create an internet
@@ -255,7 +249,6 @@ nsresult nsClipboard::SetupNativeDataObject(
       SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_INETURLW), 0,
                     DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
       dObj->AddDataFlavor(kURLMime, &shortcutFE);
-      MarkAsPotentiallyNeedingToFlush();
     } else if (flavorStr.EqualsLiteral(kPNGImageMime) ||
                flavorStr.EqualsLiteral(kJPEGImageMime) ||
                flavorStr.EqualsLiteral(kJPGImageMime) ||
@@ -462,23 +455,6 @@ static void RepeatedlyTryOleSetClipboard(IDataObject* aDataObj) {
   RepeatedlyTry(::OleSetClipboard, LogOleSetClipboardResult, aDataObj);
 }
 
-static bool ShouldFlushClipboardAfterWriting() {
-  switch (StaticPrefs::widget_windows_sync_clipboard_flush()) {
-    case 0:
-      return false;
-    case 1:
-      return true;
-    default:
-      // Bug 1774285: Windows Suggested Actions (introduced in Windows 11 22H2)
-      // walks the entire a11y tree using UIA if something is placed on the
-      // clipboard using delayed rendering. (The OLE clipboard always uses
-      // delayed rendering.) This a11y tree walk causes an unacceptable hang,
-      // particularly when the a11y cache is disabled. We choose the lesser of
-      // the two performance/memory evils here and force immediate rendering.
-      return NeedsWindows11SuggestedActionsWorkaround();
-  }
-}
-
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
   MOZ_LOG(gWin32ClipboardLog, LogLevel::Debug, ("%s", __FUNCTION__));
@@ -504,8 +480,26 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
                                           getter_AddRefs(dataObj), nullptr,
                                           &mightNeedToFlush))) {
     RepeatedlyTryOleSetClipboard(dataObj);
-    if (mightNeedToFlush == MightNeedToFlush::Yes &&
-        ShouldFlushClipboardAfterWriting()) {
+
+    const bool doFlush = [&] {
+      switch (StaticPrefs::widget_windows_sync_clipboard_flush()) {
+        case 0:
+          return false;
+        case 1:
+          return true;
+        default:
+          // Bug 1774285: Windows Suggested Actions (introduced in Windows 11
+          // 22H2) walks the entire a11y tree using UIA if something is placed
+          // on the clipboard using delayed rendering. (The OLE clipboard always
+          // uses delayed rendering.) This a11y tree walk causes an unacceptable
+          // hang, particularly when the a11y cache is disabled. We choose the
+          // lesser of the two performance/memory evils here and force immediate
+          // rendering.
+          return mightNeedToFlush == MightNeedToFlush::Yes &&
+                 NeedsWindows11SuggestedActionsWorkaround();
+      }
+    }();
+    if (doFlush) {
       RepeatedlyTry(::OleFlushClipboard, [](HRESULT) {});
     }
   } else {
