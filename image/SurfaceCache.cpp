@@ -19,6 +19,7 @@
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"
 #include "imgFrame.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
@@ -1398,7 +1399,8 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
     bool needsDispatch = mReleasingImagesOnMainThread.IsEmpty();
     mReleasingImagesOnMainThread.AppendElement(image);
 
-    if (!needsDispatch || gXPCOMThreadsShutDown) {
+    if (!needsDispatch ||
+        AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownFinal)) {
       // Either there is already a ongoing task for ClearReleasingImages() or
       // it's too late in shutdown to dispatch.
       return;
@@ -1933,7 +1935,7 @@ void SurfaceCache::ReleaseImageOnMainThread(
 
   // Don't try to dispatch the release after shutdown, we'll just leak the
   // runnable.
-  if (gXPCOMThreadsShutDown) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownFinal)) {
     return;
   }
 
