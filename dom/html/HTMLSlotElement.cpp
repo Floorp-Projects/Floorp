@@ -11,6 +11,7 @@
 #include "mozilla/dom/HTMLUnknownElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Text.h"
+#include "mozilla/AppShutdown.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 
@@ -341,7 +342,7 @@ void HTMLSlotElement::EnqueueSlotChangeEvent() {
 
   // FIXME(bug 1459704): Need to figure out how to deal with microtasks posted
   // during shutdown.
-  if (gXPCOMThreadsShutDown) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
     return;
   }
 
