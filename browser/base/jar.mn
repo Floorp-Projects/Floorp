@@ -30,6 +30,7 @@ browser.jar:
         content/browser/aboutTabCrashed.css           (content/aboutTabCrashed.css)
         content/browser/aboutTabCrashed.js            (content/aboutTabCrashed.js)
         content/browser/aboutTabCrashed.xhtml         (content/aboutTabCrashed.xhtml)
+        content/browser/blanktab.html                 (content/blanktab.html)
         content/browser/browser.css                   (content/browser.css)
         content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xhtml                 (content/browser.xhtml)

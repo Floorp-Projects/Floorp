@@ -20,6 +20,14 @@ add_task(async function test_newtab_enabled() {
     set: [["browser.newtabpage.enabled", false]],
   });
 
-  checkSpec("about:newtab", is, "got blank when newtab is not enabled");
+  const { spec } = NetUtil.newChannel({
+    loadUsingSystemPrincipal: true,
+    uri: "about:newtab",
+  }).URI;
+
+  ok(
+    spec.endsWith("/blanktab.html"),
+    "got special blank page when newtab is not enabled"
+  );
   checkSpec("about:home", isnot, "still did not get blank for about:home");
 });
