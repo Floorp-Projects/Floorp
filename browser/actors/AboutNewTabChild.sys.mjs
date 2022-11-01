@@ -24,6 +24,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
 export class AboutNewTabChild extends JSWindowActorChild {
   handleEvent(event) {
     if (event.type == "DOMContentLoaded") {
+      if (!this.contentWindow.document.body.firstElementChild) {
+        return; // about:newtab is a blank page
+      }
+
       // If the separate about:welcome page is enabled, we can skip all of this,
       // since that mode doesn't load any of the Activity Stream bits.
       if (
