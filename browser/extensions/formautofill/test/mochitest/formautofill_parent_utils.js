@@ -8,8 +8,8 @@ const { FormAutofill } = ChromeUtils.import(
 const { FormAutofillUtils } = ChromeUtils.import(
   "resource://autofill/FormAutofillUtils.jsm"
 );
-const { OSKeyStoreTestUtils } = ChromeUtils.import(
-  "resource://testing-common/OSKeyStoreTestUtils.jsm"
+const { OSKeyStoreTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/OSKeyStoreTestUtils.sys.mjs"
 );
 
 let { formAutofillStorage } = ChromeUtils.import(

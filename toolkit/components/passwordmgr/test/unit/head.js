@@ -24,8 +24,8 @@ const { FileTestUtils } = ChromeUtils.import(
 const { LoginTestUtils } = ChromeUtils.import(
   "resource://testing-common/LoginTestUtils.jsm"
 );
-const { MockDocument } = ChromeUtils.import(
-  "resource://testing-common/MockDocument.jsm"
+const { MockDocument } = ChromeUtils.importESModule(
+  "resource://testing-common/MockDocument.sys.mjs"
 );
 
 const lazy = {};

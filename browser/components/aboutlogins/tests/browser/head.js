@@ -10,8 +10,8 @@ let { RemoteSettings } = ChromeUtils.import(
 let { _AboutLogins } = ChromeUtils.import(
   "resource:///actors/AboutLoginsParent.jsm"
 );
-let { OSKeyStoreTestUtils } = ChromeUtils.import(
-  "resource://testing-common/OSKeyStoreTestUtils.jsm"
+let { OSKeyStoreTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/OSKeyStoreTestUtils.sys.mjs"
 );
 var { LoginTestUtils } = ChromeUtils.import(
   "resource://testing-common/LoginTestUtils.jsm"

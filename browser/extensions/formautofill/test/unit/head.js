@@ -22,8 +22,8 @@ var { ExtensionTestUtils } = ChromeUtils.import(
 var { FileTestUtils } = ChromeUtils.import(
   "resource://testing-common/FileTestUtils.jsm"
 );
-var { MockDocument } = ChromeUtils.import(
-  "resource://testing-common/MockDocument.jsm"
+var { MockDocument } = ChromeUtils.importESModule(
+  "resource://testing-common/MockDocument.sys.mjs"
 );
 var { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 var { TestUtils } = ChromeUtils.import(
@@ -353,8 +353,8 @@ add_setup(async function head_initialize() {
 
 let OSKeyStoreTestUtils;
 add_setup(async function os_key_store_setup() {
-  ({ OSKeyStoreTestUtils } = ChromeUtils.import(
-    "resource://testing-common/OSKeyStoreTestUtils.jsm"
+  ({ OSKeyStoreTestUtils } = ChromeUtils.importESModule(
+    "resource://testing-common/OSKeyStoreTestUtils.sys.mjs"
   ));
   OSKeyStoreTestUtils.setup();
   registerCleanupFunction(async function cleanup() {

@@ -7,8 +7,8 @@ const { Sanitizer } = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
 const { SiteDataTestUtils } = ChromeUtils.import(
   "resource://testing-common/SiteDataTestUtils.jsm"
 );
-const { PromiseTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm"
+const { PromiseTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromiseTestUtils.sys.mjs"
 );
 
 XPCOMUtils.defineLazyServiceGetter(

@@ -3,8 +3,8 @@
 var { ObjectUtils } = ChromeUtils.import(
   "resource://gre/modules/ObjectUtils.jsm"
 );
-var { PromiseTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm"
+var { PromiseTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromiseTestUtils.sys.mjs"
 );
 
 add_task(async function test_strict() {

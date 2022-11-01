@@ -4,8 +4,8 @@ const PAGE =
 // The tab closing code leaves an uncaught rejection. This test has been
 // whitelisted until the issue is fixed.
 if (!gMultiProcessBrowser) {
-  const { PromiseTestUtils } = ChromeUtils.import(
-    "resource://testing-common/PromiseTestUtils.jsm"
+  const { PromiseTestUtils } = ChromeUtils.importESModule(
+    "resource://testing-common/PromiseTestUtils.sys.mjs"
   );
   PromiseTestUtils.expectUncaughtRejection(/is no longer, usable/);
 }

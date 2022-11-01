@@ -2445,8 +2445,8 @@ const protocolHandler = Services.io
   .getProtocolHandler("resource")
   .QueryInterface(Ci.nsIResProtocolHandler);
 if (protocolHandler.hasSubstitution("testing-common")) {
-  const { PromiseTestUtils } = ChromeUtils.import(
-    "resource://testing-common/PromiseTestUtils.jsm"
+  const { PromiseTestUtils } = ChromeUtils.importESModule(
+    "resource://testing-common/PromiseTestUtils.sys.mjs"
   );
 
   // Debugger operations that are canceled because they were rendered obsolete by

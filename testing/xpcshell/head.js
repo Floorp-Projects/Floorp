@@ -48,8 +48,8 @@ let { AppConstants: _AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
-let { PromiseTestUtils: _PromiseTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm"
+let { PromiseTestUtils: _PromiseTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromiseTestUtils.sys.mjs"
 );
 
 let { NetUtil: _NetUtil } = ChromeUtils.import(

@@ -8,8 +8,8 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  RegionTestUtils: "resource://testing-common/RegionTestUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  RegionTestUtils: "resource://testing-common/RegionTestUtils.sys.mjs",
 });
 
 function setLocation(location) {

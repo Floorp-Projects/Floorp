@@ -8,8 +8,8 @@
 //
 // NOTE: Allowing a whole class of rejections should be avoided. Normally you
 //       should use "expectUncaughtRejection" to flag individual failures.
-const { PromiseTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm"
+const { PromiseTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromiseTestUtils.sys.mjs"
 );
 PromiseTestUtils.allowMatchingRejectionsGlobally(/aborted by the user agent/);
 const { BrowserWindowTracker } = ChromeUtils.import(
