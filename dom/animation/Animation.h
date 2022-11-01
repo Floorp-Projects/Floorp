@@ -672,6 +672,8 @@ class Animation : public DOMEventTargetHelper,
 
   nsString mId;
 
+  bool mResetCurrentTimeOnResume = false;
+
  private:
   // The id for this animaiton on the compositor.
   uint64_t mIdOnCompositor = 0;

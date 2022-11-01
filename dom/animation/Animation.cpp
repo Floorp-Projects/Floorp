@@ -250,6 +250,18 @@ void Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline) {
   StickyTimeDuration activeTime =
       mEffect ? mEffect->GetComputedTiming().mActiveTime : StickyTimeDuration();
 
+  const AnimationPlayState previousPlayState = PlayState();
+  const Nullable<TimeDuration> previousCurrentTime = GetCurrentTimeAsDuration();
+  // FIXME: The definition of end time in web-animation-1 is different from that
+  // in web-animation-2, which includes the start time. We are still using the
+  // definition in web-animation-1 here for now.
+  const TimeDuration endTime = TimeDuration(EffectEnd());
+  double previousProgress = 0.0;
+  if (!previousCurrentTime.IsNull() && !endTime.IsZero()) {
+    previousProgress =
+        previousCurrentTime.Value().ToSeconds() / endTime.ToSeconds();
+  }
+
   RefPtr<AnimationTimeline> oldTimeline = mTimeline;
   if (oldTimeline) {
     oldTimeline->RemoveAnimation(this);
@@ -257,8 +269,46 @@ void Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline) {
 
   mTimeline = aTimeline;
 
+  mResetCurrentTimeOnResume = false;
+
   if (mEffect) {
     mEffect->UpdateNormalizedTiming();
+  }
+
+  if (mTimeline && !mTimeline->IsMonotonicallyIncreasing()) {
+    // If "to finite timeline" is true.
+
+    ApplyPendingPlaybackRate();
+    Nullable<TimeDuration> seekTime;
+    if (mPlaybackRate >= 0.0) {
+      seekTime.SetValue(TimeDuration());
+    } else {
+      seekTime.SetValue(TimeDuration(EffectEnd()));
+    }
+
+    switch (previousPlayState) {
+      case AnimationPlayState::Running:
+      case AnimationPlayState::Finished:
+        mStartTime = seekTime;
+        break;
+      case AnimationPlayState::Paused:
+        if (!previousCurrentTime.IsNull()) {
+          mResetCurrentTimeOnResume = true;
+          mStartTime.SetNull();
+          mHoldTime.SetValue(
+              TimeDuration(EffectEnd().MultDouble(previousProgress)));
+        } else {
+          mStartTime = seekTime;
+        }
+        break;
+      case AnimationPlayState::Idle:
+      default:
+        break;
+    }
+  } else if (oldTimeline && !oldTimeline->IsMonotonicallyIncreasing() &&
+             !previousCurrentTime.IsNull()) {
+    // If "from finite timeline" and previous progress is resolved.
+    SetCurrentTime(TimeDuration(EffectEnd().MultDouble(previousProgress)));
   }
 
   if (!mStartTime.IsNull()) {
@@ -301,6 +351,8 @@ void Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime) {
 
   ApplyPendingPlaybackRate();
   mStartTime = aNewStartTime;
+
+  mResetCurrentTimeOnResume = false;
 
   if (!aNewStartTime.IsNull()) {
     if (mPlaybackRate != 0.0) {
@@ -1029,19 +1081,25 @@ TimeStamp Animation::ElapsedTimeToTimeStamp(
 
 // https://drafts.csswg.org/web-animations/#silently-set-the-current-time
 void Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime) {
+  // TODO: Bug 1762238: Introduce "valid seek time" after introducing
+  // CSSNumberish time values.
+  // https://drafts.csswg.org/web-animations-2/#silently-set-the-current-time
+
   if (!mHoldTime.IsNull() || mStartTime.IsNull() || !mTimeline ||
       mTimeline->GetCurrentTimeAsDuration().IsNull() || mPlaybackRate == 0.0) {
     mHoldTime.SetValue(aSeekTime);
-    if (!mTimeline || mTimeline->GetCurrentTimeAsDuration().IsNull()) {
-      mStartTime.SetNull();
-    }
   } else {
     mStartTime =
         StartTimeFromTimelineTime(mTimeline->GetCurrentTimeAsDuration().Value(),
                                   aSeekTime, mPlaybackRate);
   }
 
+  if (!mTimeline || mTimeline->GetCurrentTimeAsDuration().IsNull()) {
+    mStartTime.SetNull();
+  }
+
   mPreviousCurrentTime.SetNull();
+  mResetCurrentTimeOnResume = false;
 }
 
 bool Animation::ShouldBeSynchronizedWithMainThread(
@@ -1388,6 +1446,11 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
   double effectivePlaybackRate = CurrentOrPendingPlaybackRate();
 
   Nullable<TimeDuration> currentTime = GetCurrentTimeAsDuration();
+  if (mResetCurrentTimeOnResume) {
+    currentTime.SetNull();
+    mResetCurrentTimeOnResume = false;
+  }
+
   Nullable<TimeDuration> seekTime;
   if (isAutoRewind) {
     if (effectivePlaybackRate >= 0.0 &&
