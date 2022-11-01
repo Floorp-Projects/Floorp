@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ThreadEventTarget.h"
 #include "XPCOMModule.h"
 
 #include "base/basictypes.h"
@@ -146,8 +147,6 @@ nsresult nsLocalFileConstructor(const nsIID& aIID, void** aInstancePtr) {
 
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = nullptr;
 bool gXPCOMShuttingDown = false;
-mozilla::Atomic<bool, mozilla::SequentiallyConsistent> gXPCOMThreadsShutDown(
-    false);
 bool gXPCOMMainThreadEventsAreDoomed = false;
 char16_t* gGREBinPath = nullptr;
 
@@ -591,7 +590,11 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
 
     mozilla::AppShutdown::AdvanceShutdownPhase(
         mozilla::ShutdownPhase::XPCOMShutdownThreads);
-    gXPCOMThreadsShutDown = true;
+#ifdef DEBUG
+    // Prime an assertion at ThreadEventTarget::Dispatch to avoid late
+    // dispatches to non main-thread threads.
+    ThreadEventTarget::XPCOMShutdownThreadsNotificationFinished();
+#endif
     NS_ProcessPendingEvents(thread);
 
     // Shutdown the timer thread and all timers that might still be alive

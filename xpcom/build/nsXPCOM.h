@@ -31,8 +31,6 @@ DECL_CLASS(nsIDebug2);
 
 #ifdef __cplusplus
 extern bool gXPCOMShuttingDown;
-extern mozilla::Atomic<bool, mozilla::SequentiallyConsistent>
-    gXPCOMThreadsShutDown;
 extern bool gXPCOMMainThreadEventsAreDoomed;
 #endif
 
