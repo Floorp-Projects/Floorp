@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
 ChromeUtils.defineESModuleGetters(this, {
   IgnoreLists: "resource://gre/modules/IgnoreLists.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",

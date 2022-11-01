@@ -5,8 +5,8 @@
  * Tests that preferences are properly set by distribution.ini
  */
 
-const { PromiseTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm"
+const { PromiseTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromiseTestUtils.sys.mjs"
 );
 
 // This test causes BrowserGlue to start but not fully initialise, when the

@@ -11,8 +11,8 @@ const { AddonTestUtils } = ChromeUtils.import(
 // exception raised from JSActor::AfterDestroy, because of a race between
 // when the WebExtensions API event is being emitted from the parent process
 // and the navigation triggered on the test extension pages.
-const { PromiseTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm"
+const { PromiseTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromiseTestUtils.sys.mjs"
 );
 PromiseTestUtils.allowMatchingRejectionsGlobally(
   /Actor 'Conduits' destroyed before query 'RunListener' was resolved/

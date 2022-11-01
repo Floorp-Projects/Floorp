@@ -7,8 +7,8 @@
 // errors. If your test catches all its asynchronous errors, please
 // put it in another file.
 //
-const { PromiseTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm"
+const { PromiseTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromiseTestUtils.sys.mjs"
 );
 PromiseTestUtils.thisTestLeaksUncaughtRejectionsAndShouldBeFixed();
 

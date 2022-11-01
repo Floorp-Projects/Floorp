@@ -1,9 +1,6 @@
 var { NewTabUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/NewTabUtils.sys.mjs"
 );
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 Cu.importGlobalProperties(["btoa"]);
 
 ChromeUtils.defineESModuleGetters(this, {

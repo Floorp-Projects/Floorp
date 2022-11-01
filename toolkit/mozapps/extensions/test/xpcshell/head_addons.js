@@ -87,11 +87,10 @@ ChromeUtils.defineModuleGetter(
   "MockRegistry",
   "resource://testing-common/MockRegistry.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "PromiseTestUtils",
-  "resource://testing-common/PromiseTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PromiseTestUtils: "resource://testing-common/PromiseTestUtils.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   this,
   "RemoteSettings",
@@ -102,9 +101,6 @@ ChromeUtils.defineModuleGetter(
   "TestUtils",
   "resource://testing-common/TestUtils.jsm"
 );
-ChromeUtils.defineESModuleGetters(this, {
-  setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
