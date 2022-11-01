@@ -31,7 +31,7 @@ body {
   --newtab-primary-action-background: #{$primary-blue};
   // A button colour closer to the Pocket brand for usage in the Pocket section.
   --newtab-primary-action-background-pocket: #{$primary-green};
-  --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 80%, transparent);
+  --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 70%, transparent);
 
   // --newtab-element-*-color is used when an element needs to be set off from
   // the primary background color.
@@ -89,5 +89,11 @@ body {
     --newtab-primary-element-text-color: #{$primary-text-color-dark};
     --newtab-wordmark-color: #{$newtab-wordmark-darktheme-color};
     --newtab-status-success: #{$status-dark-green};
+  }
+}
+
+@media (prefers-contrast) {
+  body {
+    --newtab-text-secondary-color: var(--newtab-text-primary-color);
   }
 }
