@@ -284,12 +284,16 @@ updatebot:
   # Bugzilla email address for a maintainer of the library, used for needinfos
   maintainer-bz: tom@mozilla.com
 
-  # Optional: A query string for ./mach try fuzzy. If it and fuzzy-paths are omitted then
-  # ./mach try auto will be used
+  # Optional: A preset for ./mach try to use. If present, fuzzy-query and fuzzy-paths will
+  # be ignored. If it, fuzzy-query, and fuzzy-path are omitted, ./mach try auto will be used
+  try-preset: media
+
+  # Optional: A query string for ./mach try fuzzy. If try-preset, it and fuzzy-paths are omitted
+  # then ./mach try auto will be used
   fuzzy-query: media
 
-  # Optional: An array of test paths for ./mach try fuzzy. If it and fuzzy-query are omitted then
-  # ./mach try auto will be used
+  # Optional: An array of test paths for ./mach try fuzzy. If try-preset, it and fuzzy-query are
+  # omitted then ./mach try auto will be used
   fuzzy-paths: ['media']
 
   # The tasks that Updatebot can run. Only one of each task is currently permitted
@@ -389,6 +393,7 @@ def _schema_1():
             "updatebot": {
                 Required("maintainer-phab"): All(str, Length(min=1)),
                 Required("maintainer-bz"): All(str, Length(min=1)),
+                "try-preset": All(str, Length(min=1)),
                 "fuzzy-query": All(str, Length(min=1)),
                 "fuzzy-paths": All([str], Length(min=1)),
                 "tasks": All(
@@ -570,6 +575,14 @@ def _schema_1_additional(filename, manifest, require_license_file=True):
             raise ValueError(
                 "The individual-files flavor of update must include 'individual-files'"
             )
+
+    if "updatebot" in manifest:
+        if "try-preset" in manifest["updatebot"]:
+            for f in ["fuzzy-query", "fuzzy-paths"]:
+                if f in manifest["updatebot"]:
+                    raise ValueError(
+                        "If 'try-preset' is specified, then %s cannot be" % f
+                    )
 
     # Check for a simple YAML file
     with open(filename, "r") as f:

@@ -174,6 +174,46 @@ updatebot:
                             "license": ["MPL-1.1", "LGPL-2.1"],
                             "name": "cairo",
                             "release": "version 1.6.4",
+                            "revision": "001122334455",
+                            "url": "https://www.cairographics.org/",
+                        },
+                        "bugzilla": {"component": "Graphics", "product": "Core"},
+                        "updatebot": {
+                            "try-preset": "foo",
+                            "maintainer-phab": "tjr",
+                            "maintainer-bz": "a@example.com",
+                        },
+                    },
+                    b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: 001122334455
+bugzilla:
+  product: Core
+  component: Graphics
+updatebot:
+  try-preset: foo
+  maintainer-phab: tjr
+  maintainer-bz: a@example.com
+            """.strip(),
+                ),
+                # -------------------------------------------------
+                (
+                    {
+                        "schema": "1",
+                        "origin": {
+                            "description": "2D Graphics Library",
+                            "license": ["MPL-1.1", "LGPL-2.1"],
+                            "name": "cairo",
+                            "release": "version 1.6.4",
                             "revision": "AA001122334455",
                             "url": "https://www.cairographics.org/",
                         },
@@ -208,6 +248,36 @@ bugzilla:
   product: Core
   component: Graphics
 updatebot:
+  fuzzy-query: "!linux64"
+  maintainer-phab: tjr
+  maintainer-bz: a@example.com
+  tasks:
+    - type: commit-alert
+            """.strip(),
+                ),
+                # -------------------------------------------------
+                (
+                    "exception",
+                    b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: AA001122334455
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
+bugzilla:
+  product: Core
+  component: Graphics
+updatebot:
+  try-preset: foo
   fuzzy-query: "!linux64"
   maintainer-phab: tjr
   maintainer-bz: a@example.com
