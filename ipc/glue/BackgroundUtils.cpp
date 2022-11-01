@@ -656,7 +656,6 @@ nsresult LoadInfoArgsToLoadInfo(
     principalToInherit = flattenedPrincipalToInherit;
   }
 
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIPrincipal> topLevelPrincipal;
   if (loadInfoArgs.topLevelPrincipalInfo().isSome()) {
     auto topLevelPrincipalOrErr =
@@ -678,7 +677,7 @@ nsresult LoadInfoArgsToLoadInfo(
        loadInfoArgs.redirectChainIncludingInternalRedirects()) {
     nsCOMPtr<nsIRedirectHistoryEntry> redirectHistoryEntry =
         RHEntryInfoToRHEntry(entryInfo);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(redirectHistoryEntry, NS_ERROR_UNEXPECTED);
     redirectChainIncludingInternalRedirects.AppendElement(
         redirectHistoryEntry.forget());
   }
@@ -688,7 +687,7 @@ nsresult LoadInfoArgsToLoadInfo(
        loadInfoArgs.redirectChain()) {
     nsCOMPtr<nsIRedirectHistoryEntry> redirectHistoryEntry =
         RHEntryInfoToRHEntry(entryInfo);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(redirectHistoryEntry, NS_ERROR_UNEXPECTED);
     redirectChain.AppendElement(redirectHistoryEntry.forget());
   }
   nsTArray<nsCOMPtr<nsIPrincipal>> ancestorPrincipals;
@@ -784,7 +783,7 @@ nsresult LoadInfoArgsToLoadInfo(
          interceptionInfoArg.redirectChain()) {
       nsCOMPtr<nsIRedirectHistoryEntry> redirectHistoryEntry =
           RHEntryInfoToRHEntry(entryInfo);
-      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_TRUE(redirectHistoryEntry, NS_ERROR_UNEXPECTED);
       redirectChain.AppendElement(redirectHistoryEntry.forget());
     }
 
