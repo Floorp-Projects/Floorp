@@ -1375,7 +1375,19 @@ void DisplayListBuilder::PushIFrame(const LayoutDeviceRect& aDevPxBounds,
                                     PipelineId aPipeline,
                                     bool aIgnoreMissingPipeline) {
   mRemotePipelineIds.AppendElement(aPipeline);
-  const auto bounds = wr::ToLayoutRect(aDevPxBounds);
+  // If the incoming bounds size has decimals (As it could when zoom is
+  // involved), and is pushed straight through here, the compositor would end up
+  // calculating the destination rect to paint the rendered iframe into
+  // with those decimal values, rounding the result, instead of snapping. This
+  // can cause the rendered iframe rect and its destination rect to be
+  // mismatched, resulting in interpolation artifacts.
+  auto snapped = aDevPxBounds;
+  auto tl = snapped.TopLeft().Round();
+  auto br = snapped.BottomRight().Round();
+
+  snapped.SizeTo(LayoutDeviceSize(br.x - tl.x, br.y - tl.y));
+
+  const auto bounds = wr::ToLayoutRect(snapped);
   wr_dp_push_iframe(mWrState, bounds, MergeClipLeaf(bounds), aIsBackfaceVisible,
                     &mCurrentSpaceAndClipChain, aPipeline,
                     aIgnoreMissingPipeline);
