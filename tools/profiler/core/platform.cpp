@@ -3591,8 +3591,10 @@ static void PrintUsage() {
       "  This variable is used to propagate the activeTabID of\n"
       "  the profiler init params to subprocesses.\n"
       "\n"
-      "  MOZ_PROFILER_SHUTDOWN\n"
+      "  MOZ_PROFILER_SHUTDOWN=<Filename>\n"
       "  If set, the profiler saves a profile to the named file on shutdown.\n"
+      "  If the Filename contains \"%%p\", this will be replaced with the'\n"
+      "  process id of the parent process.\n"
       "\n"
       "  MOZ_PROFILER_SYMBOLICATE\n"
       "  If set, the profiler will pre-symbolicate profiles.\n"
@@ -5551,12 +5553,23 @@ static void locked_profiler_save_profile_to_file(
     PSLockRef aLock, const char* aFilename,
     const PreRecordedMetaInformation& aPreRecordedMetaInformation,
     bool aIsShuttingDown = false) {
-  LOG("locked_profiler_save_profile_to_file(%s)", aFilename);
+  nsAutoCString processedFilename(aFilename);
+  const auto processInsertionIndex = processedFilename.Find("%p");
+  if (processInsertionIndex != kNotFound) {
+    // Replace "%p" with the process id.
+    nsAutoCString process;
+    process.AppendInt(profiler_current_process_id().ToNumber());
+    processedFilename.Replace(processInsertionIndex, 2, process);
+    LOG("locked_profiler_save_profile_to_file(\"%s\" -> \"%s\")", aFilename,
+        processedFilename.get());
+  } else {
+    LOG("locked_profiler_save_profile_to_file(\"%s\")", aFilename);
+  }
 
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
   std::ofstream stream;
-  stream.open(aFilename);
+  stream.open(processedFilename.get());
   if (stream.is_open()) {
     OStreamJSONWriteFunc sw(stream);
     SpliceableJSONWriter w(sw, FailureLatchInfallibleSource::Singleton());
