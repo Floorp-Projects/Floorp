@@ -382,6 +382,7 @@ add_task(async function test_button_opens_discopane_when_no_extension() {
   const { button } = win.gUnifiedExtensions;
   ok(button, "expected button");
 
+  // Primary click should open about:addons.
   const tabPromise = BrowserTestUtils.waitForNewTab(
     win.gBrowser,
     "about:addons",
@@ -402,6 +403,19 @@ add_task(async function test_button_opens_discopane_when_no_extension() {
     "expected about:addons to show the recommendations"
   );
   BrowserTestUtils.removeTab(tab);
+
+  // "Right-click" should open the context menu only.
+  const contextMenu = win.document.getElementById("toolbar-context-menu");
+  const popupShownPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popupshown"
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    button,
+    { type: "contextmenu", button: 2 },
+    win
+  );
+  await popupShownPromise;
 
   win.gUnifiedExtensions.getActiveExtensions = origGetActionExtensions;
 });
