@@ -256,12 +256,13 @@ impl ImageData {
                             kind: RenderTaskCacheKeyKind::Image(image_cache_key),
                         },
                         frame_state.gpu_cache,
+                        frame_state.frame_gpu_data,
                         frame_state.rg_builder,
                         None,
                         descriptor.is_opaque(),
                         RenderTaskParent::Surface(parent_surface),
                         &mut frame_state.surface_builder,
-                        |rg_builder| {
+                        |rg_builder, _| {
                             // Create a task to blit from the texture cache to
                             // a normal transient render task surface.
                             // TODO: figure out if/when we can do a blit instead.

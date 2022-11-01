@@ -526,7 +526,7 @@ impl GlyphInstance {
 
 pub struct SplitCompositeInstance {
     pub prim_header_index: PrimitiveHeaderIndex,
-    pub polygons_address: GpuCacheAddress,
+    pub polygons_address: i32,
     pub z: ZBufferId,
     pub render_task_address: RenderTaskAddress,
 }
@@ -536,7 +536,7 @@ impl From<SplitCompositeInstance> for PrimitiveInstanceData {
         PrimitiveInstanceData {
             data: [
                 instance.prim_header_index.0,
-                instance.polygons_address.as_int(),
+                instance.polygons_address,
                 instance.z.0,
                 instance.render_task_address.0 as i32,
             ],

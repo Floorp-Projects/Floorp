@@ -22,6 +22,7 @@ use crate::resource_cache::CacheItem;
 use std::{mem, usize, f32, i32};
 use crate::surface::SurfaceBuilder;
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction, TargetShader};
+use crate::renderer::GpuBufferBuilder;
 use crate::render_target::RenderTargetKind;
 use crate::render_task::{RenderTask, StaticRenderTaskSurface, RenderTaskLocation, RenderTaskKind, CachedTask};
 use crate::render_task_graph::{RenderTaskGraphBuilder, RenderTaskId};
@@ -227,6 +228,7 @@ impl RenderTaskCache {
         key: RenderTaskCacheKey,
         texture_cache: &mut TextureCache,
         gpu_cache: &mut GpuCache,
+        gpu_buffer_builder: &mut GpuBufferBuilder,
         rg_builder: &mut RenderTaskGraphBuilder,
         user_data: Option<[f32; 4]>,
         is_opaque: bool,
@@ -235,7 +237,7 @@ impl RenderTaskCache {
         f: F,
     ) -> Result<RenderTaskId, ()>
     where
-        F: FnOnce(&mut RenderTaskGraphBuilder) -> Result<RenderTaskId, ()>,
+        F: FnOnce(&mut RenderTaskGraphBuilder, &mut GpuBufferBuilder) -> Result<RenderTaskId, ()>,
     {
         let frame_id = self.frame_id;
         let size = key.size;
@@ -260,7 +262,7 @@ impl RenderTaskCache {
         if texture_cache.request(&cache_entry.handle, gpu_cache) {
             // Invoke user closure to get render task chain
             // to draw this into the texture cache.
-            let render_task_id = f(rg_builder)?;
+            let render_task_id = f(rg_builder, gpu_buffer_builder)?;
 
             cache_entry.user_data = user_data;
             cache_entry.is_opaque = is_opaque;

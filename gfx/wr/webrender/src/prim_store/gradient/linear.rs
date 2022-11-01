@@ -14,7 +14,6 @@ use api::{ExtendMode, GradientStop, LineOrientation, PremultipliedColorF, ColorF
 use api::units::*;
 use crate::scene_building::IsVisible;
 use crate::frame_builder::FrameBuildingState;
-use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::image_tiling::simplify_repeated_primitive;
@@ -25,6 +24,7 @@ use crate::prim_store::{NinePatchDescriptor, PointKey, SizeKey, InternablePrimit
 use crate::render_task::{RenderTask, RenderTaskKind};
 use crate::render_task_graph::RenderTaskId;
 use crate::render_task_cache::{RenderTaskCacheKeyKind, RenderTaskCacheKey, RenderTaskParent};
+use crate::renderer::GpuBufferAddress;
 use crate::segment::EdgeAaSegmentMask;
 use crate::picture::{SurfaceIndex};
 use crate::util::pack_as_float;
@@ -93,7 +93,6 @@ pub struct LinearGradientTemplate {
     pub reverse_stops: bool,
     pub is_fast_path: bool,
     pub cached: bool,
-    pub stops_handle: GpuCacheHandle,
     pub src_color: Option<RenderTaskId>,
 }
 
@@ -438,7 +437,6 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
             reverse_stops: item.reverse_stops,
             is_fast_path,
             cached: item.cached,
-            stops_handle: GpuCacheHandle::new(),
             src_color: None,
         }
     }
@@ -495,17 +493,6 @@ impl LinearGradientTemplate {
             }
         }
 
-        // The fast path passes gradient stops as vertex attributes directly.
-        if !self.is_fast_path {
-            if let Some(mut request) = frame_state.gpu_cache.request(&mut self.stops_handle) {
-                GradientGpuBlockBuilder::build(
-                    self.reverse_stops,
-                    &mut request,
-                    &self.stops,
-                );
-            }
-        }
-
         // Tile spacing is always handled by decomposing into separate draw calls so the
         // primitive opacity is equivalent to stops opacity. This might change to being
         // set to non-opaque in the presence of tile spacing if/when tile spacing is handled
@@ -535,12 +522,13 @@ impl LinearGradientTemplate {
                     kind: RenderTaskCacheKeyKind::FastLinearGradient(gradient),
                 },
                 frame_state.gpu_cache,
+                frame_state.frame_gpu_data,
                 frame_state.rg_builder,
                 None,
                 false,
                 RenderTaskParent::Surface(parent_surface),
                 &mut frame_state.surface_builder,
-                |rg_builder| {
+                |rg_builder, _| {
                     rg_builder.add().init(RenderTask::new_dynamic(
                         self.task_size,
                         RenderTaskKind::FastLinearGradient(gradient),
@@ -564,12 +552,19 @@ impl LinearGradientTemplate {
                     kind: RenderTaskCacheKeyKind::LinearGradient(cache_key),
                 },
                 frame_state.gpu_cache,
+                frame_state.frame_gpu_data,
                 frame_state.rg_builder,
                 None,
                 false,
                 RenderTaskParent::Surface(parent_surface),
                 &mut frame_state.surface_builder,
-                |rg_builder| {
+                |rg_builder, gpu_buffer_builder| {
+                    let stops = Some(GradientGpuBlockBuilder::build(
+                        self.reverse_stops,
+                        gpu_buffer_builder,
+                        &self.stops,
+                    ));
+
                     rg_builder.add().init(RenderTask::new_dynamic(
                         self.task_size,
                         RenderTaskKind::LinearGradient(LinearGradientTask {
@@ -577,7 +572,7 @@ impl LinearGradientTemplate {
                             end: self.end_point,
                             scale: self.scale,
                             extend_mode: self.extend_mode,
-                            stops: self.stops_handle,
+                            stops: stops.unwrap(),
                         }),
                     ))
                 }
@@ -709,18 +704,18 @@ pub struct LinearGradientTask {
     pub end: DevicePoint,
     pub scale: DeviceVector2D,
     pub extend_mode: ExtendMode,
-    pub stops: GpuCacheHandle,
+    pub stops: GpuBufferAddress,
 }
 
 impl LinearGradientTask {
-    pub fn to_instance(&self, target_rect: &DeviceIntRect, gpu_cache: &mut GpuCache) -> LinearGradientInstance {
+    pub fn to_instance(&self, target_rect: &DeviceIntRect) -> LinearGradientInstance {
         LinearGradientInstance {
             task_rect: target_rect.to_f32(),
             start: self.start,
             end: self.end,
             scale: self.scale,
             extend_mode: self.extend_mode as i32,
-            gradient_stops_address: self.stops.as_int(gpu_cache),
+            gradient_stops_address: self.stops.as_int(),
         }
     }
 }

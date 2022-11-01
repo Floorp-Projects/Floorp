@@ -157,6 +157,12 @@ impl<'a> GpuBufferWriter<'a> {
     }
 }
 
+impl<'a> Drop for GpuBufferWriter<'a> {
+    fn drop(&mut self) {
+        assert_eq!(self.buffer.len(), self.index + self.block_count, "Claimed block_count was not written");
+    }
+}
+
 pub struct GpuBufferBuilder {
     data: Vec<GpuBufferBlock>,
     deferred: Vec<DeferredBlock>,
