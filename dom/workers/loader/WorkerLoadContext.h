@@ -28,7 +28,7 @@ class CacheCreator;
 }
 
 /*
- * WorkerScriptLoadContext (for all workers)
+ * WorkerLoadContext (for all workers)
  *
  * LoadContexts augment the loading of a ScriptLoadRequest. They
  * describe how a ScriptLoadRequests loading and evaluation needs to be
@@ -51,7 +51,7 @@ class CacheCreator;
  *
  */
 
-class WorkerLoadContext : public JS::loader::LoadContextBase {
+class WorkerLoadContext : public JS::loader::LoadContextNoCCBase {
  public:
   /* Worker Load Context Kinds
    *
@@ -79,8 +79,6 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
   };
 
   explicit WorkerLoadContext(Kind aKind, const Maybe<ClientInfo>& aClientInfo);
-
-  ~WorkerLoadContext() = default;
 
   // Used to detect if the `is top-level` bit is set on a given module.
   bool IsTopLevel() {

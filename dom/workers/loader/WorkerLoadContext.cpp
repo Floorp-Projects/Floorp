@@ -12,7 +12,7 @@ namespace dom {
 
 WorkerLoadContext::WorkerLoadContext(Kind aKind,
                                      const Maybe<ClientInfo>& aClientInfo)
-    : JS::loader::LoadContextBase(JS::loader::ContextKind::Worker),
+    : JS::loader::LoadContextNoCCBase(JS::loader::ContextKind::Worker),
       mKind(aKind),
       mClientInfo(aClientInfo){};
 
