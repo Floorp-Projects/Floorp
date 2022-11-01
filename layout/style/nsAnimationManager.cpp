@@ -175,19 +175,10 @@ static void UpdateOldAnimationPropertiesWithNew(
     }
   }
 
-  // Replace the timeline if
-  // 1. The old timeline is null and the new one is non-null.
-  // 2. The old timeline is non-null and the new one is null.
-  // 3. Both timelines are scroll-timeline but they have different members
-  //    (i.e. different owner documents, sources, or directions).
-  // FIXME: I believe we can do better if both are scroll-timelines, e.g. just
-  // replace the different members, instead of the entire timeline.
-  // We will do that in Bug 1738135.
-  dom::AnimationTimeline* oldTimeline = aOld.GetTimeline();
-  if (!oldTimeline != !aTimeline ||
-      (oldTimeline && aTimeline &&
-       oldTimeline->AsScrollTimeline() != aTimeline->AsScrollTimeline())) {
-    aOld.SetTimelineNoUpdate(aTimeline);
+  // Checking pointers should be enough. If both are scroll-timeline, we reuse
+  // the scroll-timeline object if their scrollers and axes are the same.
+  if (aOld.GetTimeline() != aTimeline) {
+    aOld.SetTimeline(aTimeline);
     animationChanged = true;
   }
 
