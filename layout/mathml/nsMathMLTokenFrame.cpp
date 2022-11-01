@@ -96,8 +96,8 @@ void nsMathMLTokenFrame::SetInitialChildList(ChildListID aListID,
 }
 
 void nsMathMLTokenFrame::AppendFrames(ChildListID aListID,
-                                      nsFrameList& aChildList) {
-  nsMathMLContainerFrame::AppendFrames(aListID, aChildList);
+                                      nsFrameList&& aChildList) {
+  nsMathMLContainerFrame::AppendFrames(aListID, std::move(aChildList));
   MarkTextFramesAsTokenMathML();
 }
 

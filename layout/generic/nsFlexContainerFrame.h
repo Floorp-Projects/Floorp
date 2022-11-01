@@ -193,7 +193,7 @@ class nsFlexContainerFrame final : public nsContainerFrame,
 
   // nsContainerFrame overrides
   bool DrainSelfOverflowList() override;
-  void AppendFrames(ChildListID aListID, nsFrameList& aFrameList) override;
+  void AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) override;
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList& aFrameList) override;

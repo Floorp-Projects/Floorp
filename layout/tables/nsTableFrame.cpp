@@ -2098,7 +2098,7 @@ void nsTableFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   }
 }
 
-void nsTableFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
+void nsTableFrame::AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) {
   NS_ASSERTION(aListID == kPrincipalList || aListID == kColGroupList,
                "unexpected child list");
 
@@ -2117,7 +2117,7 @@ void nsTableFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
       if (MOZ_UNLIKELY(GetPrevInFlow())) {
         nsFrameList colgroupFrame(f, f);
         auto firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
-        firstInFlow->AppendFrames(aListID, colgroupFrame);
+        firstInFlow->AppendFrames(aListID, std::move(colgroupFrame));
         continue;
       }
       nsTableColGroupFrame* lastColGroup =
@@ -2169,7 +2169,7 @@ void nsTableFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   if ((aPrevFrame && !aPrevFrame->GetNextSibling()) ||
       (!aPrevFrame && GetChildList(aListID).IsEmpty())) {
     // Treat this like an append; still a workaround for bug 343048.
-    AppendFrames(aListID, aFrameList);
+    AppendFrames(aListID, std::move(aFrameList));
     return;
   }
 
@@ -2219,7 +2219,7 @@ void nsTableFrame::HomogenousInsertFrames(ChildListID aListID,
 #endif
   if (MOZ_UNLIKELY(isColGroup && GetPrevInFlow())) {
     auto firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
-    firstInFlow->AppendFrames(aListID, aFrameList);
+    firstInFlow->AppendFrames(aListID, std::move(aFrameList));
     return;
   }
   if (aPrevFrame) {

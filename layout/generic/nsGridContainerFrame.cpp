@@ -9446,9 +9446,9 @@ bool nsGridContainerFrame::DrainSelfOverflowList() {
 }
 
 void nsGridContainerFrame::AppendFrames(ChildListID aListID,
-                                        nsFrameList& aFrameList) {
+                                        nsFrameList&& aFrameList) {
   NoteNewChildren(aListID, aFrameList);
-  nsContainerFrame::AppendFrames(aListID, aFrameList);
+  nsContainerFrame::AppendFrames(aListID, std::move(aFrameList));
 }
 
 void nsGridContainerFrame::InsertFrames(

@@ -113,7 +113,7 @@ void nsContainerFrame::SetInitialChildList(ChildListID aListID,
 }
 
 void nsContainerFrame::AppendFrames(ChildListID aListID,
-                                    nsFrameList& aFrameList) {
+                                    nsFrameList&& aFrameList) {
   MOZ_ASSERT(aListID == kPrincipalList || aListID == kNoReflowPrincipalList,
              "unexpected child list");
 

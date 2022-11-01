@@ -1451,7 +1451,7 @@ void nsTableRowGroupFrame::DidSetComputedStyle(
 }
 
 void nsTableRowGroupFrame::AppendFrames(ChildListID aListID,
-                                        nsFrameList& aFrameList) {
+                                        nsFrameList&& aFrameList) {
   NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
 
   DrainSelfOverflowList();  // ensure the last frame is in mFrames

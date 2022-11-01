@@ -39,12 +39,12 @@ void nsPopupSetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 
 void nsPopupSetFrame::AppendFrames(ChildListID aListID,
-                                   nsFrameList& aFrameList) {
+                                   nsFrameList&& aFrameList) {
   if (aListID == kPopupList) {
     AddPopupFrameList(aFrameList);
     return;
   }
-  nsBoxFrame::AppendFrames(aListID, aFrameList);
+  nsBoxFrame::AppendFrames(aListID, std::move(aFrameList));
 }
 
 void nsPopupSetFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {

@@ -1235,9 +1235,9 @@ bool nsFlexContainerFrame::DrainSelfOverflowList() {
 }
 
 void nsFlexContainerFrame::AppendFrames(ChildListID aListID,
-                                        nsFrameList& aFrameList) {
+                                        nsFrameList&& aFrameList) {
   NoteNewChildren(aListID, aFrameList);
-  nsContainerFrame::AppendFrames(aListID, aFrameList);
+  nsContainerFrame::AppendFrames(aListID, std::move(aFrameList));
 }
 
 void nsFlexContainerFrame::InsertFrames(

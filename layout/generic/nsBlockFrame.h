@@ -117,7 +117,7 @@ class nsBlockFrame : public nsContainerFrame {
             nsIFrame* aPrevInFlow) override;
   void SetInitialChildList(ChildListID aListID,
                            nsFrameList&& aChildList) override;
-  void AppendFrames(ChildListID aListID, nsFrameList& aFrameList) override;
+  void AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) override;
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList& aFrameList) override;
@@ -513,7 +513,7 @@ class nsBlockFrame : public nsContainerFrame {
    * aPrevSiblingLine, if present, must be the line containing aPrevSibling.
    * Providing it will make this function faster.
    */
-  void AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling,
+  void AddFrames(nsFrameList&& aFrameList, nsIFrame* aPrevSibling,
                  const nsLineList::iterator* aPrevSiblingLine);
 
   // Return the :-moz-block-ruby-content child frame, if any.

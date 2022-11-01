@@ -206,7 +206,7 @@ void nsTableRowFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
 }
 
 void nsTableRowFrame::AppendFrames(ChildListID aListID,
-                                   nsFrameList& aFrameList) {
+                                   nsFrameList&& aFrameList) {
   NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
 
   DrainSelfOverflowList();  // ensure the last frame is in mFrames
@@ -237,7 +237,7 @@ void nsTableRowFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
     // This is actually an append (though our caller didn't figure that out),
     // and our append codepath is both simpler/faster _and_ less buggy.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1388898 tracks the bugginess
-    AppendFrames(aListID, aFrameList);
+    AppendFrames(aListID, std::move(aFrameList));
     return;
   }
 

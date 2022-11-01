@@ -795,12 +795,12 @@ void nsFieldSetFrame::SetInitialChildList(ChildListID aListID,
 }
 
 void nsFieldSetFrame::AppendFrames(ChildListID aListID,
-                                   nsFrameList& aFrameList) {
+                                   nsFrameList&& aFrameList) {
   MOZ_ASSERT(aListID == kNoReflowPrincipalList &&
                  HasAnyStateBits(NS_FRAME_FIRST_REFLOW),
              "AppendFrames should only be used from "
              "nsCSSFrameConstructor::ConstructFieldSetFrame");
-  nsContainerFrame::AppendFrames(aListID, aFrameList);
+  nsContainerFrame::AppendFrames(aListID, std::move(aFrameList));
   MOZ_ASSERT(GetInner(), "at this point we should have an inner frame");
 }
 

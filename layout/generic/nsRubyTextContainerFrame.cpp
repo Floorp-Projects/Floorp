@@ -66,8 +66,8 @@ void nsRubyTextContainerFrame::SetInitialChildList(ChildListID aListID,
 
 /* virtual */
 void nsRubyTextContainerFrame::AppendFrames(ChildListID aListID,
-                                            nsFrameList& aFrameList) {
-  nsContainerFrame::AppendFrames(aListID, aFrameList);
+                                            nsFrameList&& aFrameList) {
+  nsContainerFrame::AppendFrames(aListID, std::move(aFrameList));
   UpdateSpanFlag();
 }
 

@@ -5695,7 +5695,7 @@ nsFrameList* nsBlockFrame::RemovePushedFloats() {
 //////////////////////////////////////////////////////////////////////
 // Frame list manipulation routines
 
-void nsBlockFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
+void nsBlockFrame::AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) {
   if (aFrameList.IsEmpty()) {
     return;
   }
@@ -5735,7 +5735,7 @@ void nsBlockFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
     GetParent()->AddStateBits(NS_STATE_SVG_TEXT_CORRESPONDENCE_DIRTY);
   }
 
-  AddFrames(aFrameList, lastKid, nullptr);
+  AddFrames(std::move(aFrameList), lastKid, nullptr);
   if (aListID != kNoReflowPrincipalList) {
     PresShell()->FrameNeedsReflow(
         this, IntrinsicDirty::TreeChange,
@@ -5771,7 +5771,7 @@ void nsBlockFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   printf("\n");
 #endif
 
-  AddFrames(aFrameList, aPrevFrame, aPrevFrameLine);
+  AddFrames(std::move(aFrameList), aPrevFrame, aPrevFrameLine);
   if (aListID != kNoReflowPrincipalList) {
     PresShell()->FrameNeedsReflow(
         this, IntrinsicDirty::TreeChange,
@@ -5832,7 +5832,7 @@ static bool ShouldPutNextSiblingOnNewLine(nsIFrame* aLastFrame) {
   return false;
 }
 
-void nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling,
+void nsBlockFrame::AddFrames(nsFrameList&& aFrameList, nsIFrame* aPrevSibling,
                              const nsLineList::iterator* aPrevSiblingLine) {
   // Clear our line cursor, since our lines may change.
   ClearLineCursors();
@@ -7511,7 +7511,7 @@ void nsBlockFrame::SetInitialChildList(ChildListID aListID,
                  "NS_BLOCK_HAS_FIRST_LETTER_STYLE state out of sync");
 #endif
 
-    AddFrames(aChildList, nullptr, nullptr);
+    AddFrames(std::move(aChildList), nullptr, nullptr);
   } else {
     nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
   }
