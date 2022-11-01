@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -17,7 +18,9 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.switchmaterial.SwitchMaterial
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.translateName
 import org.mozilla.fenix.HomeActivity
@@ -32,7 +35,8 @@ import org.mozilla.fenix.ext.showToolbar
  */
 @Suppress("LargeClass", "TooManyFunctions")
 class InstalledAddonDetailsFragment : Fragment() {
-    private lateinit var addon: Addon
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal lateinit var addon: Addon
     private var _binding: FragmentInstalledAddOnDetailsBinding? = null
     private val binding get() = _binding!!
 
@@ -124,8 +128,8 @@ class InstalledAddonDetailsFragment : Fragment() {
             switch.isClickable = false
             binding.removeAddOn.isEnabled = false
             if (isChecked) {
-                addonManager.enableAddon(
-                    addon,
+                enableAddon(
+                    addonManager,
                     onSuccess = {
                         runIfFragmentIsAttached {
                             this.addon = it
@@ -204,6 +208,28 @@ class InstalledAddonDetailsFragment : Fragment() {
                     },
                 )
             }
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun enableAddon(
+        addonManager: AddonManager,
+        onSuccess: (Addon) -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        // If the addon is migrated from Fennec and supported in Fenix, for the addon to be enabled,
+        // we need to also request the addon to be enabled as supported by the app
+        if (addon.isSupported() && addon.isDisabledAsUnsupported()) {
+            addonManager.enableAddon(
+                addon,
+                EnableSource.APP_SUPPORT,
+                { enabledAddon ->
+                    addonManager.enableAddon(enabledAddon, EnableSource.USER, onSuccess, onError)
+                },
+                onError,
+            )
+        } else {
+            addonManager.enableAddon(addon, EnableSource.USER, onSuccess, onError)
         }
     }
 
