@@ -142,7 +142,7 @@ class SearchTest {
     }
 
     @Test
-    fun shortcutSearchEngineSettingsTest() {
+    fun setDefaultSearchEngineFromShortcutsTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -153,7 +153,15 @@ class SearchTest {
         }.openSearch {
             scrollToSearchEngineSettings(activityTestRule)
         }.clickSearchEngineSettings(activityTestRule) {
-            verifySearchToolbar()
+            changeDefaultSearchEngine("DuckDuckGo")
+        }
+
+        exitMenu()
+
+        homeScreen {
+        }.openSearch {
+        }.submitQuery("firefox") {
+            verifyUrl("duckduckgo.com/?q=firefox")
         }
     }
 
