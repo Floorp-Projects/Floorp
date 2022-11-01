@@ -147,8 +147,6 @@ class nsFrameList {
 
   void Clear() { mFirstChild = mLastChild = nullptr; }
 
-  void SetFrames(nsIFrame* aFrameList);
-
   void SetFrames(nsFrameList& aFrameList) {
     MOZ_ASSERT(!mFirstChild, "Losing frames");
 
