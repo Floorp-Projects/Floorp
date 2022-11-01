@@ -5021,7 +5021,7 @@ class OverflowableToolbar {
    *
    * @type {Map<string, number>}
    */
-  #collapsed = new Map();
+  #overflowedInfo = new Map();
 
   /**
    * True if the overflowable toolbar is actively handling overflows and
@@ -5305,7 +5305,7 @@ class OverflowableToolbar {
         // in the overflow panel before it.
         if (
           newNodeCanOverflow &&
-          this.#collapsed.has(nextNodeId) &&
+          this.#overflowedInfo.has(nextNodeId) &&
           nextNode &&
           nextNode.parentNode == this.#list
         ) {
@@ -5326,13 +5326,18 @@ class OverflowableToolbar {
         ) {
           return [this.#target, nextNode];
         }
-      } else if (loopIndex < nodeIndex && this.#collapsed.has(nextNodeId)) {
+      } else if (
+        loopIndex < nodeIndex &&
+        this.#overflowedInfo.has(nextNodeId)
+      ) {
         nodeBeforeNewNodeIsOverflown = true;
       }
     }
 
     let containerForAppending =
-      this.#collapsed.size && newNodeCanOverflow ? this.#list : this.#target;
+      this.#overflowedInfo.size && newNodeCanOverflow
+        ? this.#list
+        : this.#target;
     return [containerForAppending, null];
   }
 
@@ -5383,7 +5388,7 @@ class OverflowableToolbar {
       let prevChild = child.previousElementSibling;
 
       if (child.getAttribute("overflows") != "false") {
-        this.#collapsed.set(child.id, targetContentWidth);
+        this.#overflowedInfo.set(child.id, targetContentWidth);
         child.setAttribute("overflowedItem", true);
         child.setAttribute("cui-anchorid", this.#chevron.id);
         CustomizableUIInternal.ensureButtonContextMenu(
@@ -5511,11 +5516,20 @@ class OverflowableToolbar {
     );
     let placements = gPlacements.get(this.#toolbar.id);
     let win = this.#target.ownerGlobal;
+    let doc = this.#target.ownerDocument;
     let checkOverflowHandle = this.#checkOverflowHandle;
 
-    while (this.#list.firstElementChild) {
-      let child = this.#list.firstElementChild;
-      let minSize = this.#collapsed.get(child.id);
+    let overflowedItemStack = Array.from(this.#overflowedInfo.entries());
+
+    for (let i = overflowedItemStack.length - 1; i >= 0; --i) {
+      let [childID, minSize] = overflowedItemStack[i];
+      let child = doc.getElementById(childID);
+
+      if (!child) {
+        this.#overflowedInfo.delete(childID);
+        continue;
+      }
+
       lazy.log.debug(
         `Considering moving ${child.id} back, minSize: ${minSize}`
       );
@@ -5540,7 +5554,7 @@ class OverflowableToolbar {
       }
 
       lazy.log.debug(`Moving ${child.id} back`);
-      this.#collapsed.delete(child.id);
+      this.#overflowedInfo.delete(child.id);
       let beforeNodeIndex = placements.indexOf(child.id) + 1;
       // If this is a skipintoolbarset item, meaning it doesn't occur in the placements list,
       // we're inserting it at the end. This will mean first-in, first-out (more or less)
@@ -5578,7 +5592,7 @@ class OverflowableToolbar {
 
     win.UpdateUrlbarSearchSplitterState();
 
-    let collapsedWidgetIds = Array.from(this.#collapsed.keys());
+    let collapsedWidgetIds = Array.from(this.#overflowedInfo.keys());
     if (collapsedWidgetIds.every(w => CustomizableUI.isSpecialWidget(w))) {
       this.#toolbar.removeAttribute("overflowing");
     }
@@ -5755,14 +5769,16 @@ class OverflowableToolbar {
     if (aNode.parentNode == this.#list) {
       let updatedMinSize;
       if (aNode.previousElementSibling) {
-        updatedMinSize = this.#collapsed.get(aNode.previousElementSibling.id);
+        updatedMinSize = this.#overflowedInfo.get(
+          aNode.previousElementSibling.id
+        );
       } else {
         // Force (these) items to try to flow back into the bar:
         updatedMinSize = 1;
       }
       let nextItem = aNode.nextElementSibling;
       while (nextItem) {
-        this.#collapsed.set(nextItem.id, updatedMinSize);
+        this.#overflowedInfo.set(nextItem.id, updatedMinSize);
         nextItem = nextItem.nextElementSibling;
       }
     }
@@ -5781,7 +5797,7 @@ class OverflowableToolbar {
     }
 
     let nowOverflowed = aNode.parentNode == this.#list;
-    let wasOverflowed = this.#collapsed.has(aNode.id);
+    let wasOverflowed = this.#overflowedInfo.has(aNode.id);
 
     // If this wasn't overflowed before...
     if (!wasOverflowed) {
@@ -5794,9 +5810,9 @@ class OverflowableToolbar {
         // toolbar immediately by specifying a very low minimum size.
         let sourceOfMinSize = aNode.previousElementSibling;
         let minSize = sourceOfMinSize
-          ? this.#collapsed.get(sourceOfMinSize.id)
+          ? this.#overflowedInfo.get(sourceOfMinSize.id)
           : 1;
-        this.#collapsed.set(aNode.id, minSize);
+        this.#overflowedInfo.set(aNode.id, minSize);
         aNode.setAttribute("cui-anchorid", this.#chevron.id);
         aNode.setAttribute("overflowedItem", true);
         CustomizableUIInternal.ensureButtonContextMenu(aNode, aContainer, true);
@@ -5809,7 +5825,7 @@ class OverflowableToolbar {
     } else if (!nowOverflowed) {
       // If it used to be overflowed...
       // ... and isn't anymore, let's remove our bookkeeping:
-      this.#collapsed.delete(aNode.id);
+      this.#overflowedInfo.delete(aNode.id);
       aNode.removeAttribute("cui-anchorid");
       aNode.removeAttribute("overflowedItem");
       CustomizableUIInternal.ensureButtonContextMenu(aNode, aContainer);
@@ -5819,15 +5835,15 @@ class OverflowableToolbar {
         this.#target
       );
 
-      let collapsedWidgetIds = Array.from(this.#collapsed.keys());
+      let collapsedWidgetIds = Array.from(this.#overflowedInfo.keys());
       if (collapsedWidgetIds.every(w => CustomizableUI.isSpecialWidget(w))) {
         this.#toolbar.removeAttribute("overflowing");
       }
     } else if (aNode.previousElementSibling) {
       // but if it still is, it must have changed places. Bookkeep:
       let prevId = aNode.previousElementSibling.id;
-      let minSize = this.#collapsed.get(prevId);
-      this.#collapsed.set(aNode.id, minSize);
+      let minSize = this.#overflowedInfo.get(prevId);
+      this.#overflowedInfo.set(aNode.id, minSize);
     }
 
     // We might overflow now if an item was added, or we may be able to move
