@@ -28,12 +28,15 @@
 #include "prnetdb.h"
 #include "prtime.h"
 #include "ssl.h"
+#include "sslexp.h"
 #include "sslproto.h"
 
 namespace mozilla {
 namespace test {
 
 static const uint16_t LISTEN_PORT = 8443;
+
+SSLAntiReplayContext* antiReplay = nullptr;
 
 DebugLevel gDebugLevel = DEBUG_ERRORS;
 uint16_t gCallbackPort = 0;
@@ -290,9 +293,21 @@ nsresult SetupTLS(Connection* aConn, PRFileDesc* aModelSocket) {
   }
   aConn->mSocket = sslSocket;
 
+  /* anti-replay must be configured to accept 0RTT */
+  if (antiReplay) {
+    SECStatus rv = SSL_SetAntiReplayContext(sslSocket, antiReplay);
+    if (rv != SECSuccess) {
+      PrintPRError("error configuring anti-replay ");
+      return NS_ERROR_FAILURE;
+    }
+  }
+
   SSL_OptionSet(sslSocket, SSL_SECURITY, true);
   SSL_OptionSet(sslSocket, SSL_HANDSHAKE_AS_CLIENT, false);
   SSL_OptionSet(sslSocket, SSL_HANDSHAKE_AS_SERVER, true);
+  // Unconditionally enabling 0RTT makes test_session_resumption.js fail
+  SSL_OptionSet(sslSocket, SSL_ENABLE_0RTT_DATA,
+                !!PR_GetEnv("MOZ_TLS_SERVER_0RTT"));
 
   SSL_ResetHandshake(sslSocket, /* asServer */ 1);
 
@@ -467,6 +482,8 @@ SECStatus ConfigSecureServerWithNamedCert(
 
   SSL_OptionSet(fd, SSL_NO_CACHE, false);
   SSL_OptionSet(fd, SSL_ENABLE_SESSION_TICKETS, true);
+  // Unconditionally enabling 0RTT makes test_session_resumption.js fail
+  SSL_OptionSet(fd, SSL_ENABLE_0RTT_DATA, !!PR_GetEnv("MOZ_TLS_SERVER_0RTT"));
 
   return SECSuccess;
 }
@@ -586,6 +603,14 @@ int StartServer(int argc, char* argv[], SSLSNISocketConfig sniSocketConfig,
     range.max = SSL_LIBRARY_VERSION_TLS_1_3;
     if (SSL_VersionRangeSet(modelSocket.get(), &range) != SECSuccess) {
       PrintPRError("SSL_VersionRangeSet failed");
+      return 1;
+    }
+  }
+
+  if (PR_GetEnv("MOZ_TLS_SERVER_0RTT")) {
+    if (SSL_CreateAntiReplayContext(PR_Now(), 1L * PR_USEC_PER_SEC, 7, 14,
+                                    &antiReplay) != SECSuccess) {
+      PrintPRError("Unable to create anti-replay context for 0-RTT.");
       return 1;
     }
   }
