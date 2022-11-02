@@ -15,12 +15,19 @@ unlike Nightly builds, which use rust optimization level 2. This setting
 reduces build times significantly but comes with a serious hit to
 runtime performance for any rust code ([for example stylo and
 webrender](https://groups.google.com/d/msg/mozilla.dev.platform/pN9O5EB_1q4/ooXNuqMECAAJ)).
-Add the following to your
-[mozconfig](/setup/configuring_build_options.html#using-a-mozconfig-configuration-file)
-in order to build with level 2:
+Add the following to your [mozconfig] in order to build with level 2:
 
 ```
 ac_add_options RUSTC_OPT_LEVEL=2
+```
+
+## Profile Guided Optimization (PGO)
+[Profile Guided
+Optimization](/build/buildsystem/pgo.html#profile-guided-optimization) is
+disabled by default and may improve runtime by up to 20%. However, it takes a
+long time to build. To enable, add the following to your [mozconfig]:
+```
+ac_add_options MOZ_PGO=1
 ```
 
 ## GC Poisoning
@@ -87,3 +94,5 @@ or finding the hot loop inside a large function, etc. Some example tools
 include Instruments on OSX (part of XCode), [RotateRight
 Zoom](http://www.rotateright.com/) on Linux (uses perf underneath), and
 Intel VTune on Windows or Linux.
+
+[mozconfig]: /setup/configuring_build_options.html#using-a-mozconfig-configuration-file
