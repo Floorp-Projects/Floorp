@@ -31,7 +31,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Downloads: "resource://gre/modules/Downloads.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
 });
 
 // Places query used to retrieve all history downloads for the related list.
@@ -481,7 +480,7 @@ HistoryDownload.prototype = {
    */
   async refresh() {
     try {
-      this.target.size = (await lazy.OS.File.stat(this.target.path)).size;
+      this.target.size = (await IOUtils.stat(this.target.path)).size;
       this.target.exists = true;
     } catch (ex) {
       // We keep the known file size from the metadata, if any.
