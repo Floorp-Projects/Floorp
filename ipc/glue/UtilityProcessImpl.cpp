@@ -22,16 +22,6 @@ namespace mozilla::ipc {
 
 UtilityProcessImpl::~UtilityProcessImpl() = default;
 
-#if defined(XP_WIN)
-/* static */
-void UtilityProcessImpl::LoadLibraryOrCrash(LPCWSTR aLib) {
-  HMODULE module = ::LoadLibraryW(aLib);
-  if (!module) {
-    MOZ_CRASH("Unable to preload module");
-  }
-}
-#endif  // defined(XP_WIN)
-
 bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
   Maybe<uint64_t> sandboxingKind = geckoargs::sSandboxingKind.Get(aArgc, aArgv);
   if (sandboxingKind.isNothing()) {
@@ -46,7 +36,7 @@ bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
   // We delay load winmm.dll so that its dependencies don't interfere with COM
   // initialization when win32k is locked down. We need to load it before we
   // lower the sandbox in processes where the policy will prevent loading.
-  LoadLibraryOrCrash(L"winmm.dll");
+  ::LoadLibraryW(L"winmm.dll");
 
   if (*sandboxingKind == SandboxingKind::GENERIC_UTILITY) {
     // Preload audio generic libraries required for ffmpeg only
