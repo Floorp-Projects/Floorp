@@ -751,7 +751,7 @@ class QSTestUtils {
 
     Services.telemetry.clearEvents();
     lazy.NimbusFeatures.urlbar._didSendExposureEvent = false;
-    lazy.UrlbarQuickSuggest._recordedExposureEvent = false;
+    lazy.QuickSuggest._recordedExposureEvent = false;
   }
 
   /**
@@ -762,7 +762,7 @@ class QSTestUtils {
    */
   async assertExposureEvent(expectedRecorded) {
     this.Assert.equal(
-      lazy.UrlbarQuickSuggest._recordedExposureEvent,
+      lazy.QuickSuggest._recordedExposureEvent,
       expectedRecorded,
       "_recordedExposureEvent is correct"
     );
