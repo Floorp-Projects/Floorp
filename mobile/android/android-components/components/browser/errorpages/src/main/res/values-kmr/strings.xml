@@ -285,17 +285,46 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proxy server nehate dîtin</string>
 
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>Gerok li gorî bikarînana rajekara proxyê hatiye vesazkirin, lê rajekara proxyê nehat dîtin</p>
+      <ul>
+        <li>Vesazkirina proxyê rast e? Sazkariyan kontrol bike û dîsa biceribîne.</li>
+        <li>Cîhaza te bi toreke çalak ve girêdayî ye?</li>
+        <li>Hîn jî pirsgirêk dewam dike? Ji bo alîkariyê bi rêvebirê tora xwe an jî bi dabînkera înternetê re bişêwire.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Pirsgirêka malpera nebaş (malware)</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Malpera %1$sê wekî malpereke erîşkar hate ragihandin û ew li gorî tercîhên te yên ewlehiyê hate astengkirin.</p>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Pirsgirêka malpera nexwestî</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Malpera %1$sê wekî nermalava ku nayê xwestin hate ragihandin û ew li gorî tercîhên te yên ewlehiyê hate astengkirin.</p>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">Pirsgirêka malpera ziyandar</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Malpera %1$sê wekî malpereke ziyandar hate ragihandin û li gorî tercîhên te yên ewlehiyê malper hate astengkirin.</p>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Pirsgirêka malpera xapîner</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Malpera webê ya %1$sê wekî malpereke xapînok hate ragihandin û ev malper li gorî tercîhên te yên ewlehiyê hate astengkirin.</p>
+    ]]></string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
     <string name="mozac_browser_errorpages_httpsonly_title">Malpera ewle ne berdest e</string>
