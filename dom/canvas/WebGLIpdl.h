@@ -34,6 +34,13 @@ class RaiiShmem final {
     return {allocator, shmem};
   }
 
+  static RaiiShmem AllocUnsafe(mozilla::ipc::IProtocol* const allocator,
+                               const size_t size) {
+    mozilla::ipc::Shmem shmem;
+    if (!allocator->AllocUnsafeShmem(size, &shmem)) return {};
+    return {allocator, shmem};
+  }
+
   // -
 
   RaiiShmem() = default;

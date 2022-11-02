@@ -4314,6 +4314,8 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
 
   // -
 
+  std::shared_ptr<webgl::RaiiShmem> tempShmem;
+
   const bool doInlineUpload = !desc->sd;
   // Why always de-inline SDs here?
   // 1. This way we always send SDs down the same handling path, which
@@ -4347,20 +4349,34 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     // transport.
     if (pShmem) {
       MOZ_ASSERT(desc->sd);
-      const auto byteCount = pShmem->Size<uint8_t>();
-      const auto* const src = pShmem->get<uint8_t>();
-      mozilla::ipc::Shmem shmemForResend;
-      if (!child->AllocShmem(byteCount, &shmemForResend)) {
+      const auto srcBytes = ShmemRange<uint8_t>(*pShmem);
+      tempShmem = std::make_shared<webgl::RaiiShmem>();
+
+      // We need Unsafe because we want to dictate when to destroy it from the
+      // client side.
+      *tempShmem = webgl::RaiiShmem::AllocUnsafe(child, srcBytes.length());
+      if (!*tempShmem) {
         NS_WARNING("AllocShmem failed in TexImage");
         return;
       }
-      auto* const dst = shmemForResend.get<uint8_t>();
-      memcpy(dst, src, byteCount);
-      *pShmem = shmemForResend;
+      const auto dstBytes = ShmemRange<uint8_t>(tempShmem->Shmem());
+      Memcpy(&dstBytes, srcBytes.begin());
+
+      *pShmem = tempShmem->Shmem();
+      // Not Extract, because we free tempShmem manually below, after the remote
+      // side has finished executing SendTexImage.
     }
 
     (void)child->SendTexImage(static_cast<uint32_t>(level), respecFormat,
                               CastUvec3(offset), pi, std::move(*desc));
+
+    if (tempShmem) {
+      const auto eventTarget = GetCurrentSerialEventTarget();
+      MOZ_ASSERT(eventTarget);
+      child->SendPing()->Then(eventTarget, __func__, [tempShmem]() {
+        // Cleans up when (our copy of) sendableShmem goes out of scope.
+      });
+    }
   }
 }
 
