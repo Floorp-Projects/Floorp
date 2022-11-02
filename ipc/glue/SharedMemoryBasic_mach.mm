@@ -81,7 +81,7 @@ bool SharedMemoryBasic::Create(size_t size) {
     return false;
   }
 
-  Mapped(size);
+  Created(size);
   return true;
 }
 
