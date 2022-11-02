@@ -373,6 +373,3 @@ TEST_F(FOGFixture, TestCppUrlWorks) {
 
 extern "C" void Rust_TestRustInGTest();
 TEST_F(FOGFixture, TestRustInGTest) { Rust_TestRustInGTest(); }
-
-extern "C" void Rust_TestJogfile();
-TEST_F(FOGFixture, TestJogfile) { Rust_TestJogfile(); }
