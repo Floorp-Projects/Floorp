@@ -1,21 +1,18 @@
-Preferences
-===========
+# Preferences
 
 There are a couple of [Remote Agent preferences] associated with the Gecko remote
 protocol. Those listed below are additional ones uniquely used for Marionette.
 
 [Remote Agent preferences]: /remote/Prefs.md
 
-`marionette.debugging.clicktostart`
------------------------------------
+## `marionette.debugging.clicktostart`
 
 Delay server startup until a modal dialogue has been clicked to
 allow time for user to set breakpoints in the [Browser Toolbox].
 
 [Browser Toolbox]: /devtools-user/browser_toolbox/index.rst
 
-`marionette.port`
------------------
+## `marionette.port`
 
 Defines the port on which the Marionette server will listen.  Defaults
 to port 2828.

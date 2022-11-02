@@ -1,5 +1,4 @@
-Introduction to Marionette
-==========================
+# Introduction to Marionette
 
 Marionette is an automation driver for Mozilla's Gecko engine.
 It can remotely control either the UI or the internal JavaScript of
@@ -19,17 +18,13 @@ send commands to remotely control a user agent.
 
 [Selenium/WebDriver]: https://dvcs.w3.org/hg/webdriver/raw-file/tip/webdriver-spec.html
 
-
-How does it work?
------------------
+## How does it work?
 
 Marionette consists of two parts: a server which takes requests and
 executes them in Gecko, and a client.  The client sends commands to
 the server and the server executes the command inside the browser.
 
-
-When would I use it?
---------------------
+## When would I use it?
 
 If you want to perform UI tests with browser chrome or content,
 Marionette is the tool you're looking for!  You can use it to
@@ -42,24 +37,22 @@ the browser, Marionette can be used to return information about
 the state of the browser which can then be used to validate that
 the action was performed correctly.
 
-
-Using Marionette
-----------------
+## Using Marionette
 
 Marionette combines a gecko component (the Marionette server) with an
 outside component (the Marionette client), which drives the tests.
 The Marionette server ships with Firefox, and to use it you will
 need to download a Marionette client or use the in-tree client.
 
-  * [Download and setup the Python client for Marionette][1]
-  * [Run Tests with Python][2] – How to run tests using the
-    Python client
-  * You might want to experiment with [using Marionette interactively
-    at a Python command prompt][2]
-  * Start [writing and running][3] tests
-  * Tips on [debugging][4] Marionette code
-  * [Download and setup the Marionette JS client][5]
-  * [Protocol definition][6]
+* [Download and setup the Python client for Marionette][1]
+* [Run Tests with Python][2] – How to run tests using the
+  Python client
+* You might want to experiment with [using Marionette interactively
+  at a Python command prompt][2]
+* Start [writing and running][3] tests
+* Tips on [debugging][4] Marionette code
+* [Download and setup the Marionette JS client][5]
+* [Protocol definition][6]
 
 [1]: /python/marionette_driver.rst
 [2]: /python/marionette_driver.rst
@@ -68,9 +61,7 @@ need to download a Marionette client or use the in-tree client.
 [5]: https://github.com/mozilla-b2g/marionette_js_client
 [6]: Protocol.md
 
-
-Bugs
-----
+## Bugs
 
 Please file any bugs you may find in the `Testing :: Marionette`
 component in Bugzilla.  You can view a [list of current bugs]
