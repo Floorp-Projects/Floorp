@@ -144,6 +144,11 @@ interface nsISearchEngine : nsISupports
   readonly attribute AString name;
 
   /**
+   * The display of the search engine id. This is a unique identifier.
+   */
+  readonly attribute AString id;
+
+  /**
    * A URL string pointing to the engine's search form.
    */
   readonly attribute AString searchForm;
@@ -361,6 +366,17 @@ interface nsISearchService : nsISupports
    *          exist.
    */
   nsISearchEngine getEngineByName(in AString aEngineName);
+
+
+  /**
+   * Returns an engine with the specified Id.
+   *
+   * @param   aEngineId
+   *          The Id of the engine.
+   * @returns The corresponding nsISearchEngine object, or null if it doesn't
+   *          exist.
+   */
+  nsISearchEngine getEngineById(in AString aEngineId);
 
   /**
    * Returns an array of all installed search engines.

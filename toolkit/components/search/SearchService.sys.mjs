@@ -290,6 +290,9 @@ export class SearchService {
   }
 
   /**
+   * If possible, please call getEngineById() rather than getEngineByName()
+   * because engines are stored as { id: object } in this._engine Map.
+   *
    * Returns the engine associated with the name.
    *
    * @param {string} engineName
@@ -299,7 +302,38 @@ export class SearchService {
    */
   getEngineByName(engineName) {
     this.#ensureInitialized();
-    return this._engines.get(engineName) || null;
+    return this.#getEngineByName(engineName);
+  }
+
+  /**
+   * Returns the engine associated with the name without initialization checks.
+   *
+   * @param {string} engineName
+   *   The name of the engine.
+   * @returns {SearchEngine}
+   *   The associated engine if found, null otherwise.
+   */
+  #getEngineByName(engineName) {
+    for (let engine of this._engines.values()) {
+      if (engine.name == engineName) {
+        return engine;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Returns the engine associated with the id.
+   *
+   * @param {string} engineId
+   *   The id of the engine.
+   * @returns {SearchEngine}
+   *   The associated engine if found, null otherwise.
+   */
+  getEngineById(engineId) {
+    this.#ensureInitialized();
+    return this._engines.get(engineId) || null;
   }
 
   async getEngineByAlias(alias) {
@@ -432,7 +466,7 @@ export class SearchService {
   async maybeSetAndOverrideDefault(extension) {
     let searchProvider =
       extension.manifest.chrome_settings_overrides.search_provider;
-    let engine = this._engines.get(searchProvider.name);
+    let engine = this.getEngineByName(searchProvider.name);
     if (!engine || !engine.isAppProvided || engine.hidden) {
       // If the engine is not application provided, then we shouldn't simply
       // set default to it.
@@ -521,7 +555,7 @@ export class SearchService {
    */
   async #addPolicyEngine(details) {
     let newEngine = new lazy.PolicySearchEngine({ details });
-    let existingEngine = this._engines.get(newEngine.name);
+    let existingEngine = this.#getEngineByName(newEngine.name);
     if (existingEngine) {
       throw Components.Exception(
         "An engine with that name already exists!",
@@ -545,7 +579,7 @@ export class SearchService {
     let newEngine = new lazy.UserSearchEngine({
       details: { name, url, alias },
     });
-    let existingEngine = this._engines.get(newEngine.name);
+    let existingEngine = this.#getEngineByName(newEngine.name);
     if (existingEngine) {
       throw Components.Exception(
         "An engine with that name already exists!",
@@ -1196,9 +1230,12 @@ export class SearchService {
     }
 
     // No default loaded, so find it from settings.
-    const attributeName = privateMode ? "private" : "current";
-    let name = this._settings.getMetaDataAttribute(attributeName);
-    let engine = this._engines.get(name) || null;
+    const attributeName = privateMode
+      ? "privateDefaultEngineId"
+      : "defaultEngineId";
+
+    let engineId = this._settings.getMetaDataAttribute(attributeName);
+    let engine = this._engines.get(engineId) || null;
     if (
       engine &&
       (engine.isAppProvided ||
@@ -1213,7 +1250,7 @@ export class SearchService {
         this.#currentEngine = engine;
       }
     }
-    if (!name) {
+    if (!engineId) {
       if (privateMode) {
         this.#currentPrivateEngine = this.appPrivateDefaultEngine;
       } else {
@@ -1511,8 +1548,8 @@ export class SearchService {
     // Get user's current settings and search engine before we load engines from
     // config. These values will be compared after engines are loaded.
     let prevMetaData = { ...settings?.metaData };
-    let prevCurrentEngine = prevMetaData.current;
-    let prevAppDefaultEngine = prevMetaData?.appDefaultEngine;
+    let prevCurrentEngineId = prevMetaData.defaultEngineId;
+    let prevAppDefaultEngineId = prevMetaData?.appDefaultEngineId;
 
     lazy.logConsole.debug("#loadEngines: start");
     let { engines, privateDefault } = await this._fetchEngineSelectorEngines();
@@ -1549,24 +1586,24 @@ export class SearchService {
 
     lazy.logConsole.debug("#loadEngines: done");
 
-    let newCurrentEngine = this._getEngineDefault(false);
+    let newCurrentEngineId = this._getEngineDefault(false)?.id;
     this._settings.setMetaDataAttribute(
-      "appDefaultEngine",
-      this.appDefaultEngine?.name
+      "appDefaultEngineId",
+      this.appDefaultEngine?.id
     );
 
     if (
       this.#shouldDisplayRemovalOfEngineNotificationBox(
         settings,
         prevMetaData,
-        newCurrentEngine,
-        prevCurrentEngine,
-        prevAppDefaultEngine
+        newCurrentEngineId,
+        prevCurrentEngineId,
+        prevAppDefaultEngineId
       )
     ) {
       this._showRemovalOfSearchEngineNotificationBox(
-        prevCurrentEngine || prevAppDefaultEngine,
-        newCurrentEngine.name
+        prevCurrentEngineId || prevAppDefaultEngineId,
+        newCurrentEngineId
       );
     }
   }
@@ -1579,12 +1616,12 @@ export class SearchService {
    *   The user's search engine settings.
    * @param { object } prevMetaData
    *   The user's previous search settings metadata.
-   * @param { object } newCurrentEngine
+   * @param { object } newCurrentEngineId
    *   The user's new current default engine.
-   * @param { string } prevCurrentEngine
-   *   The name of the user's previous default engine.
-   * @param { string } prevAppDefaultEngine
-   *   The name of the user's previous app default engine.
+   * @param { object } prevCurrentEngineId
+   *   The user's previous default engine.
+   * @param { object } prevAppDefaultEngineId
+   *   The user's previous app default engine.
    * @returns { boolean }
    *   Return true if the previous default engine has been removed and
    *   notification box should be displayed.
@@ -1592,9 +1629,9 @@ export class SearchService {
   #shouldDisplayRemovalOfEngineNotificationBox(
     settings,
     prevMetaData,
-    newCurrentEngine,
-    prevCurrentEngine,
-    prevAppDefaultEngine
+    newCurrentEngineId,
+    prevCurrentEngineId,
+    prevAppDefaultEngineId
   ) {
     if (
       !Services.prefs.getBoolPref("browser.search.removeEngineInfobar.enabled")
@@ -1604,39 +1641,39 @@ export class SearchService {
 
     // If for some reason we were unable to install any engines and hence no
     // default engine, do not display the notification box
-    if (!newCurrentEngine) {
+    if (!newCurrentEngineId) {
       return false;
     }
 
     // If the previous engine is still available, don't show the notification
     // box.
-    if (prevCurrentEngine && this._engines.has(prevCurrentEngine)) {
+    if (prevCurrentEngineId && this._engines.has(prevCurrentEngineId)) {
       return false;
     }
-    if (!prevCurrentEngine && this._engines.has(prevAppDefaultEngine)) {
+    if (!prevCurrentEngineId && this._engines.has(prevAppDefaultEngineId)) {
       return false;
     }
 
     // Don't show the notification if the previous engine was an enterprise engine -
     // the text doesn't quite make sense.
-    if (prevCurrentEngine) {
+    if (prevCurrentEngineId) {
       let engineSettings = settings.engines.find(
-        e => e._name == prevCurrentEngine
+        e => e.id == prevCurrentEngineId
       );
       if (engineSettings?._loadPath?.includes("set-via-policy")) {
         return false;
       }
     }
 
-    // If the user's previous engine is different than the new current engine,
-    // or if the user was using the app default engine and the app default
-    // engine is different than the new current engine, we check if the user's
-    // settings metadata has been upddated.
+    // If the user's previous engine id is different than the new current
+    // engine id, or if the user was using the app default engine and the
+    // app default engine id is different than the new current engine id,
+    // we check if the user's settings metadata has been upddated.
     if (
-      (prevCurrentEngine && prevCurrentEngine !== newCurrentEngine.name) ||
-      (!prevCurrentEngine &&
-        prevAppDefaultEngine &&
-        prevAppDefaultEngine !== newCurrentEngine.name)
+      (prevCurrentEngineId && prevCurrentEngineId !== newCurrentEngineId) ||
+      (!prevCurrentEngineId &&
+        prevAppDefaultEngineId &&
+        prevAppDefaultEngineId !== newCurrentEngineId)
     ) {
       // Check settings metadata to detect an update to locale. Sometimes when
       // the user changes their locale it causes a change in engines.
@@ -1851,10 +1888,10 @@ export class SearchService {
     // reset the stored setting, so that we correctly detect the change in
     // in default.
     if (prevCurrentEngine?.pendingRemoval) {
-      this._settings.setMetaDataAttribute("current", "");
+      this._settings.setMetaDataAttribute("defaultEngineId", "");
     }
     if (prevPrivateEngine?.pendingRemoval) {
-      this._settings.setMetaDataAttribute("private", "");
+      this._settings.setMetaDataAttribute("privateDefaultEngineId", "");
     }
 
     this.#setDefaultAndOrdersFromSelector(
@@ -1969,8 +2006,8 @@ export class SearchService {
     // Save app default engine to the user's settings metaData incase it has
     // been updated
     this._settings.setMetaDataAttribute(
-      "appDefaultEngine",
-      this.appDefaultEngine?.name
+      "appDefaultEngineId",
+      this.appDefaultEngine?.id
     );
 
     // If we are leaving an experiment, and the default is the same as the
@@ -1981,13 +2018,16 @@ export class SearchService {
       !this._settings.getMetaDataAttribute("experiment")
     ) {
       if (this.defaultEngine == this.appDefaultEngine) {
-        this._settings.setVerifiedMetaDataAttribute("current", "");
+        this._settings.setVerifiedMetaDataAttribute("defaultEngineId", "");
       }
       if (
         this.#separatePrivateDefault &&
         this.defaultPrivateEngine == this.appPrivateDefaultEngine
       ) {
-        this._settings.setVerifiedMetaDataAttribute("private", "");
+        this._settings.setVerifiedMetaDataAttribute(
+          "privateDefaultEngineId",
+          ""
+        );
       }
     }
 
@@ -2015,7 +2055,7 @@ export class SearchService {
       engine._engineToUpdate && engine.name == engine._engineToUpdate.name;
     if (
       !skipDuplicateCheck &&
-      this._engines.has(engine.name) &&
+      this.#getEngineByName(engine.name) &&
       !hasSameNameAsUpdate
     ) {
       lazy.logConsole.debug(
@@ -2025,34 +2065,38 @@ export class SearchService {
     }
 
     if (engine._engineToUpdate) {
-      // We need to replace engineToUpdate with the engine that just loaded.
-      var oldEngine = engine._engineToUpdate;
-
-      // Remove the old engine from the hash, since it's keyed by name, and our
-      // name might change (the update might have a new name).
-      this._engines.delete(oldEngine.name);
-
-      // Hack: we want to replace the old engine with the new one, but since
-      // people may be holding refs to the nsISearchEngine objects themselves,
-      // we'll just copy over all "private" properties (those without a getter
-      // or setter) from one object to the other.
-      for (var p in engine) {
-        if (!(engine.__lookupGetter__(p) || engine.__lookupSetter__(p))) {
-          oldEngine[p] = engine[p];
+      // Update the old engine by copying over the properties of the new engine
+      // that is loaded. It is necessary to copy over all the "private"
+      // properties (those without a getter or setter) from one object to the
+      // other. Other callers may hold a reference to the old engine, therefore,
+      // anywhere else that has a reference to the old engine will receive
+      // the properties that are updated because those other callers
+      // are referencing the same nsISearchEngine object in memory.
+      for (let p in engine) {
+        if (
+          !(
+            Object.getOwnPropertyDescriptor(engine, p)?.get ||
+            Object.getOwnPropertyDescriptor(engine, p)?.set
+          )
+        ) {
+          engine._engineToUpdate[p] = engine[p];
         }
       }
-      engine = oldEngine;
+
+      // The old engine is now updated
+      engine = engine._engineToUpdate;
       engine._engineToUpdate = null;
 
-      // Add the engine back
-      this._engines.set(engine.name, engine);
+      // Update the engine Map with the updated engine
+      this._engines.set(engine.id, engine);
+
       lazy.SearchUtils.notifyAction(
         engine,
         lazy.SearchUtils.MODIFIED_TYPE.CHANGED
       );
     } else {
       // Not an update, just add the new engine.
-      this._engines.set(engine.name, engine);
+      this._engines.set(engine.id, engine);
       // Only add the engine to the list of sorted engines if the initial list
       // has already been built (i.e. if this._cachedSortedEngines is non-null). If
       // it hasn't, we're loading engines from disk and the sorted engine list
@@ -2078,27 +2122,26 @@ export class SearchService {
     }
   }
 
-  #loadEnginesMetadataFromSettings(engines) {
-    if (!engines) {
+  #loadEnginesMetadataFromSettings(engineSettings) {
+    if (!engineSettings) {
       return;
     }
 
-    for (let engine of engines) {
-      let name = engine._name;
-      if (this._engines.has(name)) {
+    for (let engineSetting of engineSettings) {
+      if (this._engines.has(engineSetting.id)) {
         lazy.logConsole.debug(
           "#loadEnginesMetadataFromSettings, transfering metadata for",
-          name,
-          engine._metaData
+          engineSetting.name,
+          engineSetting._metaData
         );
-        let eng = this._engines.get(name);
+        let eng = this._engines.get(engineSetting.id);
         // We used to store the alias in metadata.alias, in 1621892 that was
         // changed to only store the user set alias in metadata.alias, remove
         // it from metadata if it was previously set to the internal value.
-        if (eng._alias === engine?._metaData?.alias) {
-          delete engine._metaData.alias;
+        if (eng._alias === engineSetting?._metaData?.alias) {
+          delete engineSetting._metaData.alias;
         }
-        eng._metaData = engine._metaData || {};
+        eng._metaData = engineSetting._metaData || {};
       }
     }
   }
@@ -2643,7 +2686,7 @@ export class SearchService {
       },
     });
 
-    let existingEngine = this._engines.get(newEngine.name);
+    let existingEngine = this.#getEngineByName(newEngine.name);
     if (existingEngine) {
       throw Components.Exception(
         "An engine with that name already exists!",
@@ -2679,7 +2722,7 @@ export class SearchService {
 
       let appDefaultName = engine.name;
       let name = manifest.chrome_settings_overrides.search_provider.name.trim();
-      if (appDefaultName != name && this._engines.has(name)) {
+      if (appDefaultName != name && this.getEngineByName(name)) {
         throw new Error("Can't upgrade to the same name as an existing engine");
       }
 
@@ -2695,13 +2738,17 @@ export class SearchService {
       );
 
       if (appDefaultName != engine.name) {
-        this._engines.delete(appDefaultName);
-        this._engines.set(engine.name, engine);
         if (isDefault) {
-          this._settings.setVerifiedMetaDataAttribute("current", engine.name);
+          this._settings.setVerifiedMetaDataAttribute(
+            "defaultEngineId",
+            engine.id
+          );
         }
         if (isDefaultPrivate) {
-          this._settings.setVerifiedMetaDataAttribute("private", engine.name);
+          this._settings.setVerifiedMetaDataAttribute(
+            "privateDefaultEngineId",
+            engine.id
+          );
         }
         this._cachedSortedEngines = null;
       }
@@ -2782,7 +2829,7 @@ export class SearchService {
     }
 
     // Remove the engine from the internal store
-    this._engines.delete(engine.name);
+    this._engines.delete(engine.id);
   }
 
   /**
@@ -2890,7 +2937,7 @@ export class SearchService {
       );
     }
 
-    const newCurrentEngine = this._engines.get(newEngine.name);
+    const newCurrentEngine = this._engines.get(newEngine.id);
     if (!newCurrentEngine) {
       throw Components.Exception(
         "Can't find engine in store!",
@@ -2943,7 +2990,7 @@ export class SearchService {
     // experiment must preseve the user's choice of default engine during it's
     // runtime and when it ends. Once the experiment ends, we will reset the
     // attribute elsewhere.
-    let newName = newCurrentEngine.name;
+    let newId = newCurrentEngine.id;
     const appDefaultEngine = privateMode
       ? this.appPrivateDefaultEngine
       : this.appDefaultEngine;
@@ -2951,12 +2998,12 @@ export class SearchService {
       newCurrentEngine == appDefaultEngine &&
       !lazy.NimbusFeatures.search.getVariable("experiment")
     ) {
-      newName = "";
+      newId = "";
     }
 
     this._settings.setVerifiedMetaDataAttribute(
-      privateMode ? "private" : "current",
-      newName
+      privateMode ? "privateDefaultEngineId" : "defaultEngineId",
+      newId
     );
 
     // Only do this if we're initialized though - this function can get called
@@ -3031,7 +3078,7 @@ export class SearchService {
       // The defaultEngine getter will throw if there's no engine at all,
       // which shouldn't happen unless an add-on or a test deleted all of them.
       // Our preferences UI doesn't let users do that.
-      Cu.reportError("getEngineInfo: No default engine");
+      Cu.reportError("getDefaultEngineInfo: No default engine");
       return ["NONE", { name: "NONE" }];
     }
 
