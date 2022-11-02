@@ -5,8 +5,8 @@
 const { GeckoViewUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/GeckoViewUtils.sys.mjs"
 );
-const { EventDispatcher } = ChromeUtils.import(
-  "resource://gre/modules/Messaging.jsm"
+const { EventDispatcher } = ChromeUtils.importESModule(
+  "resource://gre/modules/Messaging.sys.mjs"
 );
 
 var EXPORTED_SYMBOLS = ["GeckoViewActorChild"];

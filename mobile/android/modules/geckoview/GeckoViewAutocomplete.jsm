@@ -22,8 +22,11 @@ const { GeckoViewUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  EventDispatcher: "resource://gre/modules/Messaging.jsm",
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
 });
 

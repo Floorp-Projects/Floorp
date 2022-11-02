@@ -1305,8 +1305,6 @@
     "mobile/android/modules/geckoview/MediaUtils.jsm",
   "resource://gre/modules/MessageManagerProxy.jsm":
     "toolkit/components/extensions/MessageManagerProxy.jsm",
-  "resource://gre/modules/Messaging.jsm":
-    "mobile/android/modules/geckoview/Messaging.jsm",
   "resource://gre/modules/ModulesPing.jsm":
     "toolkit/components/telemetry/pings/ModulesPing.jsm",
   "resource://gre/modules/MozProtocolHandler.jsm":
