@@ -478,16 +478,14 @@ fn f64_pattern_to_js_value(pattern: &wast::core::NanPattern<wast::token::Float64
     }
 }
 
-fn assert_expression_to_js_value(v: &wast::WastRet<'_>) -> Result<String> {
+fn return_value_to_js_value(v: &wast::core::WastRetCore<'_>) -> Result<String> {
     use wast::core::WastRetCore::*;
-    use wast::WastRet::*;
-
-    Ok(match &v {
-        Core(I32(x)) => format!("value('i32', {})", x),
-        Core(I64(x)) => format!("value('i64', {}n)", x),
-        Core(F32(x)) => f32_pattern_to_js_value(x),
-        Core(F64(x)) => f64_pattern_to_js_value(x),
-        Core(RefNull(x)) => match x {
+    Ok(match v {
+        I32(x) => format!("value('i32', {})", x),
+        I64(x) => format!("value('i64', {}n)", x),
+        F32(x) => f32_pattern_to_js_value(x),
+        F64(x) => f64_pattern_to_js_value(x),
+        RefNull(x) => match x {
             Some(wast::core::HeapType::Func) => format!("value('anyfunc', null)"),
             Some(wast::core::HeapType::Extern) => format!("value('externref', null)"),
             other => bail!(
@@ -495,8 +493,8 @@ fn assert_expression_to_js_value(v: &wast::WastRet<'_>) -> Result<String> {
                 other
             ),
         },
-        Core(RefExtern(x)) => format!("value('externref', externref({}))", x),
-        Core(V128(x)) => {
+        RefExtern(x) => format!("value('externref', externref({}))", x),
+        V128(x) => {
             use wast::core::V128Pattern::*;
             match x {
                 I8x16(elements) => format!(
@@ -534,6 +532,24 @@ fn assert_expression_to_js_value(v: &wast::WastRet<'_>) -> Result<String> {
                 }
             }
         }
+        Either(v) => {
+            format!(
+                "either({})",
+                v.iter()
+                    .map(return_value_to_js_value)
+                    .collect::<Result<Vec<String>>>()?
+                    .join(",")
+            )
+        }
+        other => bail!("couldn't convert Core({:?}) to a js assertion value", other),
+    })
+}
+
+fn assert_expression_to_js_value(v: &wast::WastRet<'_>) -> Result<String> {
+    use wast::WastRet::*;
+
+    Ok(match &v {
+        Core(x) => return_value_to_js_value(x)?,
         other => bail!("couldn't convert {:?} to a js assertion value", other),
     })
 }

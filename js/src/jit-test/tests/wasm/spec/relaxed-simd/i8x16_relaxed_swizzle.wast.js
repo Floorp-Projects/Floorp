@@ -1,0 +1,264 @@
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast
+
+// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:3
+let $0 = instantiate(`(module
+    (func (export "i8x16.relaxed_swizzle") (param v128 v128) (result v128) (i8x16.relaxed_swizzle (local.get 0) (local.get 1)))
+)`);
+
+// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:7
+assert_return(
+  () =>
+    invoke($0, `i8x16.relaxed_swizzle`, [
+      i8x16([
+        0x0,
+        0x1,
+        0x2,
+        0x3,
+        0x4,
+        0x5,
+        0x6,
+        0x7,
+        0x8,
+        0x9,
+        0xa,
+        0xb,
+        0xc,
+        0xd,
+        0xe,
+        0xf,
+      ]),
+      i8x16([
+        0x0,
+        0x1,
+        0x2,
+        0x3,
+        0x4,
+        0x5,
+        0x6,
+        0x7,
+        0x8,
+        0x9,
+        0xa,
+        0xb,
+        0xc,
+        0xd,
+        0xe,
+        0xf,
+      ]),
+    ]),
+  [either(
+    i8x16([
+      0x0,
+      0x1,
+      0x2,
+      0x3,
+      0x4,
+      0x5,
+      0x6,
+      0x7,
+      0x8,
+      0x9,
+      0xa,
+      0xb,
+      0xc,
+      0xd,
+      0xe,
+      0xf,
+    ]),
+    i8x16([
+      0x0,
+      0x1,
+      0x2,
+      0x3,
+      0x4,
+      0x5,
+      0x6,
+      0x7,
+      0x8,
+      0x9,
+      0xa,
+      0xb,
+      0xc,
+      0xd,
+      0xe,
+      0xf,
+    ]),
+  )],
+);
+
+// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:14
+assert_return(
+  () =>
+    invoke($0, `i8x16.relaxed_swizzle`, [
+      i8x16([
+        0x0,
+        0x1,
+        0x2,
+        0x3,
+        0x4,
+        0x5,
+        0x6,
+        0x7,
+        0x8,
+        0x9,
+        0xa,
+        0xb,
+        0xc,
+        0xd,
+        0xe,
+        0xf,
+      ]),
+      i8x16([
+        0x10,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x18,
+        0x19,
+        0x1a,
+        0x1b,
+        0x1c,
+        0x1d,
+        0x1e,
+        0x1f,
+      ]),
+    ]),
+  [either(
+    i8x16([
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+    ]),
+    i8x16([
+      0x0,
+      0x1,
+      0x2,
+      0x3,
+      0x4,
+      0x5,
+      0x6,
+      0x7,
+      0x8,
+      0x9,
+      0xa,
+      0xb,
+      0xc,
+      0xd,
+      0xe,
+      0xf,
+    ]),
+  )],
+);
+
+// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:21
+assert_return(
+  () =>
+    invoke($0, `i8x16.relaxed_swizzle`, [
+      i8x16([
+        0x0,
+        0x1,
+        0x2,
+        0x3,
+        0x4,
+        0x5,
+        0x6,
+        0x7,
+        0x8,
+        0x9,
+        0xa,
+        0xb,
+        0xc,
+        0xd,
+        0xe,
+        0xf,
+      ]),
+      i8x16([
+        0x80,
+        0x81,
+        0x82,
+        0x83,
+        0x84,
+        0x85,
+        0x86,
+        0x87,
+        0xf8,
+        0xf9,
+        0xfa,
+        0xfb,
+        0xfc,
+        0xfd,
+        0xfe,
+        0xff,
+      ]),
+    ]),
+  [either(
+    i8x16([
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+      0x0,
+    ]),
+    i8x16([
+      0x0,
+      0x1,
+      0x2,
+      0x3,
+      0x4,
+      0x5,
+      0x6,
+      0x7,
+      0x8,
+      0x9,
+      0xa,
+      0xb,
+      0xc,
+      0xd,
+      0xe,
+      0xf,
+    ]),
+  )],
+);

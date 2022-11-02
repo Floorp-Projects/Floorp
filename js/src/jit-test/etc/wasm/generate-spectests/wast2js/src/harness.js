@@ -55,6 +55,10 @@ function f64x2(elements) {
   return wasmGlobalFromArrayBuffer('v128', typedBuffer.buffer);
 }
 
+function either(...arr) {
+  return new EitherVariants(arr);
+}
+
 class F32x4Pattern {
   constructor(x, y, z, w) {
     this.x = x;
@@ -250,10 +254,22 @@ function formatExpected(expected) {
     return `f32x4(${formatExpected(expected.x)}, ${formatExpected(expected.y)}, ${formatExpected(expected.z)}, ${formatExpected(expected.w)})`
   } else if (expected instanceof F64x2Pattern) {
     return `f64x2(${formatExpected(expected.x)}, ${formatExpected(expected.y)})`
+  } else if (expected instanceof EitherVariants) {
+    return expected.formatExpected();
   } else if (typeof(expected) === 'object') {
     return wasmGlobalToString(expected);
   } else {
     throw new Error('unknown expected result');
+  }
+}
+
+class EitherVariants {
+  constructor(arr) { this.arr = arr; }
+  matches(v) {
+    return this.arr.some(e => compareResult(v, e));
+  }
+  formatExpected() {
+    return `either(${this.arr.map(formatExpected).join(", ")})`;
   }
 }
 
@@ -262,6 +278,9 @@ function compareResults(results, expected) {
     return false;
   }
   for (let i in results) {
+    if (expected[i] instanceof EitherVariants) {
+      return expected[i].matches(results[i]);
+    }
     if (!compareResult(results[i], expected[i])) {
       return false;
     }
