@@ -38,7 +38,7 @@ namespace PathUtils {
    * Join the given components into a full path.
    *
    * @param components The path components. The first component must be an
-   *                   absolute path.
+   *                   absolute path. There must be at least one component.
    */
   [Throws]
   DOMString join(DOMString... components);

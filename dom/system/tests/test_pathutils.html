@@ -200,10 +200,10 @@
   });
 
   add_task(function test_join() {
-    is(
-      PathUtils.join(),
-      "",
-      "PathUtils.join() with an empty sequence"
+    Assert.throws(
+      () => PathUtils.join(),
+      EMPTY_PATH,
+      "PathUtils.join() does not support empty paths"
     );
     Assert.throws(
       () => PathUtils.join(""),
