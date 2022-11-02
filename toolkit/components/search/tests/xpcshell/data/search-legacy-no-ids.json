@@ -1,0 +1,87 @@
+{
+  "version": 6,
+  "engines": [
+    { "_name": "Google", "_isAppProvided": true, "_metaData": { "order": 1 } },
+    {
+      "_name": "Wikipedia (en)",
+      "_isAppProvided": true,
+      "_metaData": { "order": 7 }
+    },
+    { "_name": "Bing", "_isAppProvided": true, "_metaData": { "order": 3 } },
+    {
+      "_name": "Amazon.co.uk",
+      "_isAppProvided": true,
+      "_metaData": { "order": 2 }
+    },
+    {
+      "_name": "DuckDuckGo",
+      "_isAppProvided": true,
+      "_metaData": { "order": 4 }
+    },
+    { "_name": "eBay", "_isAppProvided": true, "_metaData": { "order": 5 } },
+    {
+      "_name": "Policy",
+      "_loadPath": "[other]addEngineWithDetails:set-via-policy",
+      "_metaData": { "alias": "PolicyAlias", "order": 6 }
+    },
+    {
+      "_name": "Bugzilla@Mozilla",
+      "_loadPath": "[https]bugzilla.mozilla.org/bugzillamozilla.xml",
+      "description": "Bugzilla@Mozilla Quick Search",
+      "_metaData": {
+        "loadPathHash": "Bxz6jVe3IIBxLLaafUus536LMyLKoGZm7xsBv/yiTw8=",
+        "order": 8,
+        "alias": "bugzillaAlias"
+      },
+      "_urls": [
+        {
+          "params": [],
+          "rels": [],
+          "template": "https://bugzilla.mozilla.org/buglist.cgi?quicksearch={searchTerms}"
+        }
+      ],
+      "_orderHint": null,
+      "_telemetryId": null,
+      "_updateInterval": null,
+      "_updateURL": null,
+      "_iconUpdateURL": null,
+      "_extensionID": null,
+      "_locale": null,
+      "_definedAliases": []
+    },
+    {
+      "_name": "User",
+      "_loadPath": "[other]addEngineWithDetails:set-via-user",
+      "_metaData": {
+        "order": 9,
+        "alias": "UserAlias"
+      },
+      "_urls": [
+        {
+          "params": [],
+          "rels": [],
+          "template": "https://example.com/test?q={searchTerms}"
+        }
+      ],
+      "_telemetryId": null,
+      "_updateInterval": null,
+      "_updateURL": null,
+      "_iconUpdateURL": null,
+      "_extensionID": null,
+      "_locale": null,
+      "_hasPreferredIcon": null
+    },
+    { "_name": "Amazon.com", "_isAppProvided": true, "_metaData": {} }
+  ],
+  "metaData": {
+    "useSavedOrder": true,
+    "locale": "en-US",
+    "region": "GB",
+    "channel": "default",
+    "experiment": "",
+    "distroID": "",
+    "appDefaultEngine": "Google",
+    "current": "Bing",
+    "hash": "5Of6s1D+BDjPRti1wqtFyBTH1PnOf9n6cRwWlEXZhd0="
+  }
+}
