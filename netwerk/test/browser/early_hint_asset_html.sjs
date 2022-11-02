@@ -6,6 +6,9 @@ function handleRequest(request, response) {
   let asset = qs.get("as");
   let hinted = qs.get("hinted") !== "0";
   let httpCode = qs.get("code");
+  let redirect = qs.get("redirect") === "1";
+  let crossOrigin = qs.get("crossOrigin") === "1";
+
   // eslint-disable-next-line mozilla/use-services
   let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
     Ci.nsIUUIDGenerator
@@ -91,15 +94,25 @@ function handleRequest(request, response) {
   `;
   }
 
-  if (!httpCode) {
-    response.write(`HTTP/1.1 ${httpCode} OK\r\n`);
+  if (redirect) {
+    response.write(`HTTP/1.1 301 Moved Permanently\r\n`);
+    let redirectUrl = crossOrigin
+      ? `https://example.net/browser/netwerk/test/browser/early_hint_main_html.sjs`
+      : `https://example.com/browser/netwerk/test/browser/early_hint_main_html.sjs`;
+
+    response.write(`Location: ${redirectUrl}\r\n`);
+    response.write("testing early hint redirect");
   } else {
-    response.write(`HTTP/1.1 ${httpCode} Error\r\n`);
+    if (!httpCode) {
+      response.write(`HTTP/1.1 200 OK\r\n`);
+    } else {
+      response.write(`HTTP/1.1 ${httpCode} Error\r\n`);
+    }
+    response.write("Content-Type: text/html;charset=utf-8\r\n");
+    response.write("Cache-Control: no-cache\r\n");
+    response.write(`Content-Length: ${body.length}\r\n`);
+    response.write("\r\n");
+    response.write(body);
   }
-  response.write("Content-Type: text/html;charset=utf-8\r\n");
-  response.write("Cache-Control: no-cache\r\n");
-  response.write(`Content-Length: ${body.length}\r\n`);
-  response.write("\r\n");
-  response.write(body);
   response.finish();
 }
