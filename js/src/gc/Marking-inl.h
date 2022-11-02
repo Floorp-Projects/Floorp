@@ -125,8 +125,7 @@ inline T& MaybeForwardedObjectAs(JSObject* obj) {
 inline RelocationOverlay::RelocationOverlay(Cell* dst) {
   MOZ_ASSERT(dst->flags() == 0);
   uintptr_t ptr = uintptr_t(dst);
-  MOZ_ASSERT((ptr & RESERVED_MASK) == 0);
-  header_ = ptr | FORWARD_BIT;
+  header_.setForwardingAddress(ptr);
 }
 
 /* static */
