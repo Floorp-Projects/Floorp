@@ -47,11 +47,28 @@ this.declarativeNetRequest = class extends ExtensionAPI {
           return ExtensionDNR.getRuleManager(extension).getSessionRules();
         },
 
-        async testMatchOutcome(request) {
-          // TODO bug 1745758: Implement rule evaluation engine.
-          // Since rule registration has not been implemented yet, the result
-          // is always an empty list.
-          return [];
+        async testMatchOutcome(request, options) {
+          let { url, initiator, ...req } = request;
+          req.requestURI = Services.io.newURI(url);
+          if (initiator) {
+            req.initiatorURI = Services.io.newURI(initiator);
+          }
+          const matchedRules = ExtensionDNR.getMatchedRulesForRequest(
+            req,
+            options?.includeOtherExtensions ? null : extension
+          ).map(matchedRule => {
+            // Converts an internal MatchedRule instance to an object described
+            // by the "MatchedRule" type in declarative_net_request.json.
+            const result = {
+              ruleId: matchedRule.rule.id,
+              rulesetId: matchedRule.ruleset.id,
+            };
+            if (matchedRule.ruleManager.extension !== extension) {
+              result.extensionId = matchedRule.ruleManager.extension.id;
+            }
+            return result;
+          });
+          return { matchedRules };
         },
       },
     };
