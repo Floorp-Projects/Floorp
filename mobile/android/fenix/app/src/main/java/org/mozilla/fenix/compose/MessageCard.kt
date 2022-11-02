@@ -9,12 +9,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
@@ -22,6 +22,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,10 +37,11 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * Message Card.
  *
  * @param messageText The message card's body text to be displayed.
- * @param titleText An optional title of message card. If the title is blank or null is provided,
+ * @param titleText An optional title of message card. If the provided title text is blank or null,
  * the title will not be shown.
- * @param buttonText An optional button text of the message card. If the button text is blank or null is provided,
+ * @param buttonText An optional button text of the message card. If the provided button text is blank or null,
  * the button won't be shown.
+ * @param messageColors The color set defined by [MessageCardColors] used to style the message card.
  * @param onClick Invoked when user clicks on the message card.
  * @param onCloseButtonClick Invoked when user clicks on close button to remove message.
  */
@@ -49,6 +51,7 @@ fun MessageCard(
     messageText: String,
     titleText: String? = null,
     buttonText: String? = null,
+    messageColors: MessageCardColors = MessageCardColors.buildMessageCardColors(),
     onClick: () -> Unit,
     onCloseButtonClick: () -> Unit,
 ) {
@@ -63,7 +66,7 @@ fun MessageCard(
                 },
             ),
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = FirefoxTheme.colors.layer2,
+        backgroundColor = messageColors.backgroundColor,
     ) {
         Column(
             Modifier
@@ -77,31 +80,23 @@ fun MessageCard(
                     Text(
                         text = titleText,
                         modifier = Modifier.weight(1f),
-                        color = FirefoxTheme.colors.textPrimary,
+                        color = messageColors.titleTextColor,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 2,
                         style = FirefoxTheme.typography.headline7,
                     )
 
-                    IconButton(
-                        modifier = Modifier.size(20.dp),
-                        onClick = onCloseButtonClick,
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.mozac_ic_close_20),
-                            contentDescription = stringResource(
-                                R.string.content_description_close_button,
-                            ),
-                            tint = FirefoxTheme.colors.iconPrimary,
-                        )
-                    }
+                    MessageCardIconButton(
+                        iconTint = messageColors.iconColor,
+                        onCloseButtonClick = onCloseButtonClick,
+                    )
                 }
 
                 Text(
                     text = messageText,
                     modifier = Modifier.fillMaxWidth(),
                     fontSize = 14.sp,
-                    color = FirefoxTheme.colors.textSecondary,
+                    color = messageColors.messageTextColor,
                 )
             } else {
                 Row(
@@ -111,21 +106,13 @@ fun MessageCard(
                         text = messageText,
                         modifier = Modifier.weight(1f),
                         fontSize = 14.sp,
-                        color = FirefoxTheme.colors.textPrimary,
+                        color = messageColors.titleTextColor,
                     )
 
-                    IconButton(
-                        modifier = Modifier.size(20.dp),
-                        onClick = onCloseButtonClick,
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.mozac_ic_close_20),
-                            contentDescription = stringResource(
-                                R.string.content_description_close_button,
-                            ),
-                            tint = FirefoxTheme.colors.iconPrimary,
-                        )
-                    }
+                    MessageCardIconButton(
+                        iconTint = messageColors.iconColor,
+                        onCloseButtonClick = onCloseButtonClick,
+                    )
                 }
             }
 
@@ -134,10 +121,80 @@ fun MessageCard(
 
                 PrimaryButton(
                     text = buttonText,
+                    textColor = messageColors.buttonTextColor,
+                    backgroundColor = messageColors.buttonColor,
                     onClick = onClick,
                 )
             }
         }
+    }
+}
+
+/**
+ * IconButton within a MessageCard.
+ *
+ * @param iconTint The [Color] used to tint the button's icon.
+ * @param onCloseButtonClick Invoked when user clicks on close button to remove message.
+ */
+@Composable
+private fun MessageCardIconButton(
+    iconTint: Color,
+    onCloseButtonClick: () -> Unit,
+) {
+    IconButton(
+        modifier = Modifier.size(20.dp),
+        onClick = onCloseButtonClick,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.mozac_ic_close_20),
+            contentDescription = stringResource(
+                R.string.content_description_close_button,
+            ),
+            tint = iconTint,
+        )
+    }
+}
+
+/**
+ * Wrapper for the color parameters of [MessageCard].
+ *
+ * @param backgroundColor The background [Color] of the message.
+ * @param titleTextColor [Color] to apply to the message's title, or the body text when there is no title.
+ * @param messageTextColor [Color] to apply to the message's body text.
+ * @param iconColor [Color] to apply to the message's icon.
+ * @param buttonColor The background [Color] of the message's button.
+ * @param buttonTextColor [Color] to apply to the button text.
+ */
+data class MessageCardColors(
+    val backgroundColor: Color,
+    val titleTextColor: Color,
+    val messageTextColor: Color,
+    val iconColor: Color,
+    val buttonColor: Color,
+    val buttonTextColor: Color,
+) {
+    companion object {
+
+        /**
+         * Builder function used to construct an instance of [MessageCardColors].
+         */
+        @Composable
+        fun buildMessageCardColors(
+            backgroundColor: Color = FirefoxTheme.colors.layer2,
+            titleTextColor: Color = FirefoxTheme.colors.textPrimary,
+            messageTextColor: Color = FirefoxTheme.colors.textSecondary,
+            iconColor: Color = FirefoxTheme.colors.iconPrimary,
+            buttonColor: Color = FirefoxTheme.colors.actionPrimary,
+            buttonTextColor: Color = FirefoxTheme.colors.textActionPrimary,
+        ): MessageCardColors =
+            MessageCardColors(
+                backgroundColor = backgroundColor,
+                titleTextColor = titleTextColor,
+                messageTextColor = messageTextColor,
+                iconColor = iconColor,
+                buttonColor = buttonColor,
+                buttonTextColor = buttonTextColor,
+            )
     }
 }
 
