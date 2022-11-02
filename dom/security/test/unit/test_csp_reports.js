@@ -117,22 +117,31 @@ function run_test() {
   );
 
   // test that inline script violations cause a report.
-  makeTest(0, { "blocked-uri": "inline" }, false, function(csp) {
-    let inlineOK = true;
-    inlineOK = csp.getAllowsInline(
-      Ci.nsIContentSecurityPolicy.SCRIPT_SRC_ELEM_DIRECTIVE,
-      "", // aNonce
-      false, // aParserCreated
-      null, // aTriggeringElement
-      null, // nsICSPEventListener
-      "", // aContentOfPseudoScript
-      0, // aLineNumber
-      0
-    ); // aColumnNumber
+  makeTest(
+    0,
+    {
+      "blocked-uri": "inline",
+      "effective-directive": "script-src-elem",
+      disposition: "enforce",
+    },
+    false,
+    function(csp) {
+      let inlineOK = true;
+      inlineOK = csp.getAllowsInline(
+        Ci.nsIContentSecurityPolicy.SCRIPT_SRC_ELEM_DIRECTIVE,
+        "", // aNonce
+        false, // aParserCreated
+        null, // aTriggeringElement
+        null, // nsICSPEventListener
+        "", // aContentOfPseudoScript
+        0, // aLineNumber
+        0
+      ); // aColumnNumber
 
-    // this is not a report only policy, so it better block inline scripts
-    Assert.ok(!inlineOK);
-  });
+      // this is not a report only policy, so it better block inline scripts
+      Assert.ok(!inlineOK);
+    }
+  );
 
   // test that eval violations cause a report.
   makeTest(
@@ -189,22 +198,27 @@ function run_test() {
   });
 
   // test that inline script violations cause a report in report-only policy
-  makeTest(3, { "blocked-uri": "inline" }, true, function(csp) {
-    let inlineOK = true;
-    inlineOK = csp.getAllowsInline(
-      Ci.nsIContentSecurityPolicy.SCRIPT_SRC_ELEM_DIRECTIVE,
-      "", // aNonce
-      false, // aParserCreated
-      null, // aTriggeringElement
-      null, // nsICSPEventListener
-      "", // aContentOfPseudoScript
-      0, // aLineNumber
-      0
-    ); // aColumnNumber
+  makeTest(
+    3,
+    { "blocked-uri": "inline", disposition: "report" },
+    true,
+    function(csp) {
+      let inlineOK = true;
+      inlineOK = csp.getAllowsInline(
+        Ci.nsIContentSecurityPolicy.SCRIPT_SRC_ELEM_DIRECTIVE,
+        "", // aNonce
+        false, // aParserCreated
+        null, // aTriggeringElement
+        null, // nsICSPEventListener
+        "", // aContentOfPseudoScript
+        0, // aLineNumber
+        0
+      ); // aColumnNumber
 
-    // this is a report only policy, so it better allow inline scripts
-    Assert.ok(inlineOK);
-  });
+      // this is a report only policy, so it better allow inline scripts
+      Assert.ok(inlineOK);
+    }
+  );
 
   // test that eval violations cause a report in report-only policy
   makeTest(4, { "blocked-uri": "inline" }, true, function(csp) {
