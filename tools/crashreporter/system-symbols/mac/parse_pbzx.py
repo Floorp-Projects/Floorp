@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This code is from https://gist.github.com/pudquick/ff412bcb29c9c1fa4b8d
 #
 # v2 pbzx stream handler
@@ -49,8 +49,8 @@ def parse_pbzx(pbzx_path):
     # pbzx = f.read()
     # f.close()
     magic = seekread(f, length=4)
-    if magic != "pbzx":
-        raise "Error: Not a pbzx file"
+    if magic != b"pbzx":
+        raise Exception("Error: Not a pbzx file")
     # Read 8 bytes for initial flags
     flags = seekread(f, length=8)
     # Interpret the flags as a 64-bit big-endian unsigned int
@@ -64,7 +64,7 @@ def parse_pbzx(pbzx_path):
         f_length = seekread(f, length=8)
         f_length = struct.unpack(">Q", f_length)[0]
         xzmagic = seekread(f, length=6)
-        if xzmagic != "\xfd7zXZ\x00":
+        if xzmagic != b"\xfd7zXZ\x00":
             # This isn't xz content, this is actually _raw decompressed cpio_
             # chunk of 16MB in size...
             # Let's back up ...
@@ -89,9 +89,9 @@ def parse_pbzx(pbzx_path):
             tail = seekread(f, offset=-2, length=2)
             xar_f.write(xzmagic)
             xar_f.write(f_content)
-            if tail != "YZ":
+            if tail != b"YZ":
                 xar_f.close()
-                raise "Error: Footer is not xar file footer"
+                raise Exception("Error: Footer is not xar file footer")
     try:
         f.close()
         xar_f.close()
