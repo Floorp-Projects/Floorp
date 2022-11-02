@@ -36,6 +36,8 @@ class WritableStream : public nsISupports, public nsWrapperCache {
  protected:
   virtual ~WritableStream();
 
+  virtual void LastRelease() {}
+
  public:
   explicit WritableStream(const GlobalObject& aGlobal);
   explicit WritableStream(nsIGlobalObject* aGlobal);
