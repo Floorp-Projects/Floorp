@@ -177,14 +177,15 @@ void HTMLLinkElement::CreateAndDispatchEvent(Document* aDoc,
   // this should never actually happen and the performance hit is minimal,
   // doing the "right" thing costs virtually nothing here, even if it doesn't
   // make much sense.
-  static Element::AttrValuesArray strings[] = {nsGkAtoms::_empty,
-                                               nsGkAtoms::stylesheet, nullptr};
+  static AttrArray::AttrValuesArray strings[] = {
+      nsGkAtoms::_empty, nsGkAtoms::stylesheet, nullptr};
 
   if (!nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
                                        nsGkAtoms::rev) &&
       FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::rel, strings,
-                      eIgnoreCase) != ATTR_VALUE_NO_MATCH)
+                      eIgnoreCase) != AttrArray::ATTR_VALUE_NO_MATCH) {
     return;
+  }
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
       this, aEventName, CanBubble::eYes, ChromeOnlyDispatch::eYes);

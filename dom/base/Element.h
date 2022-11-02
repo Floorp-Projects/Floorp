@@ -605,6 +605,8 @@ class Element : public FragmentOrElement {
    */
   virtual void SetCustomElementDefinition(CustomElementDefinition* aDefinition);
 
+  const AttrArray& GetAttrs() const { return mAttrs; }
+
   void SetDefined(bool aSet) {
     if (aSet) {
       AddStates(ElementState::DEFINED);
@@ -910,7 +912,6 @@ class Element : public FragmentOrElement {
   bool AttrValueIs(int32_t aNameSpaceID, const nsAtom* aName,
                    const nsAtom* aValue, nsCaseTreatment aCaseSensitive) const;
 
-  enum { ATTR_MISSING = -1, ATTR_VALUE_NO_MATCH = -2 };
   /**
    * Check whether this Element's given attribute has one of a given list of
    * values. If there is a match, we return the index in the list of the first
@@ -927,9 +928,9 @@ class Element : public FragmentOrElement {
    * @return ATTR_MISSING, ATTR_VALUE_NO_MATCH or the non-negative index
    * indicating the first value of aValues that matched
    */
-  typedef nsStaticAtom* const AttrValuesArray;
+  using AttrValuesArray = AttrArray::AttrValuesArray;
   int32_t FindAttrValueIn(int32_t aNameSpaceID, const nsAtom* aName,
-                          AttrValuesArray* aValues,
+                          AttrArray::AttrValuesArray* aValues,
                           nsCaseTreatment aCaseSensitive) const;
 
   /**
@@ -2104,22 +2105,13 @@ inline bool Element::HasNonEmptyAttr(int32_t aNameSpaceID,
 inline bool Element::AttrValueIs(int32_t aNameSpaceID, const nsAtom* aName,
                                  const nsAString& aValue,
                                  nsCaseTreatment aCaseSensitive) const {
-  NS_ASSERTION(aName, "Must have attr name");
-  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
-
-  const nsAttrValue* val = mAttrs.GetAttr(aName, aNameSpaceID);
-  return val && val->Equals(aValue, aCaseSensitive);
+  return mAttrs.AttrValueIs(aNameSpaceID, aName, aValue, aCaseSensitive);
 }
 
 inline bool Element::AttrValueIs(int32_t aNameSpaceID, const nsAtom* aName,
                                  const nsAtom* aValue,
                                  nsCaseTreatment aCaseSensitive) const {
-  NS_ASSERTION(aName, "Must have attr name");
-  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
-  NS_ASSERTION(aValue, "Null value atom");
-
-  const nsAttrValue* val = mAttrs.GetAttr(aName, aNameSpaceID);
-  return val && val->Equals(aValue, aCaseSensitive);
+  return mAttrs.AttrValueIs(aNameSpaceID, aName, aValue, aCaseSensitive);
 }
 
 }  // namespace dom

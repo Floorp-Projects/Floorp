@@ -265,8 +265,8 @@ bool aria::MapToState(EStateRule aRule, dom::Element* aElement,
     }
 
     case eIndeterminateIfNoValue: {
-      if (!aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_valuenow) &&
-          !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_valuetext)) {
+      if (!nsAccUtils::HasARIAAttr(aElement, nsGkAtoms::aria_valuenow) &&
+          !nsAccUtils::HasARIAAttr(aElement, nsGkAtoms::aria_valuetext)) {
         *aState |= states::MIXED;
       }
 
@@ -276,8 +276,8 @@ bool aria::MapToState(EStateRule aRule, dom::Element* aElement,
     case eFocusableUntilDisabled: {
       if (!nsAccUtils::HasDefinedARIAToken(aElement,
                                            nsGkAtoms::aria_disabled) ||
-          aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_disabled,
-                                nsGkAtoms::_false, eCaseMatters)) {
+          nsAccUtils::ARIAAttrValueIs(aElement, nsGkAtoms::aria_disabled,
+                                      nsGkAtoms::_false, eCaseMatters)) {
         *aState |= states::FOCUSABLE;
       }
 
@@ -291,8 +291,8 @@ bool aria::MapToState(EStateRule aRule, dom::Element* aElement,
 
 static void MapEnumType(dom::Element* aElement, uint64_t* aState,
                         const EnumTypeData& aData) {
-  switch (aElement->FindAttrValueIn(kNameSpaceID_None, aData.mAttrName,
-                                    aData.mValues, eCaseMatters)) {
+  switch (nsAccUtils::FindARIAAttrValueIn(aElement, aData.mAttrName,
+                                          aData.mValues, eCaseMatters)) {
     case 0:
       *aState = (*aState & ~aData.mClearState) | aData.mStates[0];
       return;
@@ -308,8 +308,8 @@ static void MapEnumType(dom::Element* aElement, uint64_t* aState,
 static void MapTokenType(dom::Element* aElement, uint64_t* aState,
                          const TokenTypeData& aData) {
   if (nsAccUtils::HasDefinedARIAToken(aElement, aData.mAttrName)) {
-    if (aElement->AttrValueIs(kNameSpaceID_None, aData.mAttrName,
-                              nsGkAtoms::mixed, eCaseMatters)) {
+    if (nsAccUtils::ARIAAttrValueIs(aElement, aData.mAttrName, nsGkAtoms::mixed,
+                                    eCaseMatters)) {
       if (aData.mType & eMixedType) {
         *aState |= aData.mPermanentState | states::MIXED;
       } else {  // unsupported use of 'mixed' is an authoring error
@@ -318,8 +318,8 @@ static void MapTokenType(dom::Element* aElement, uint64_t* aState,
       return;
     }
 
-    if (aElement->AttrValueIs(kNameSpaceID_None, aData.mAttrName,
-                              nsGkAtoms::_false, eCaseMatters)) {
+    if (nsAccUtils::ARIAAttrValueIs(aElement, aData.mAttrName,
+                                    nsGkAtoms::_false, eCaseMatters)) {
       *aState |= aData.mPermanentState | aData.mFalseState;
       return;
     }

@@ -6,7 +6,9 @@
 #ifndef nsCoreUtils_h_
 #define nsCoreUtils_h_
 
+#include "AttrArray.h"
 #include "mozilla/EventForwards.h"
+#include "nsCaseTreatment.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIContent.h"
 #include "mozilla/FlushType.h"
@@ -16,6 +18,8 @@
 #include "nsTArray.h"
 #include "Units.h"
 
+class nsAttrValue;
+class nsGenericHTMLElement;
 class nsRange;
 class nsTreeColumn;
 class nsIFrame;
@@ -222,6 +226,7 @@ class nsCoreUtils {
    * attribute or wrong value then false is returned.
    */
   static bool GetUIntAttr(nsIContent* aContent, nsAtom* aAttr, int32_t* aUInt);
+  static bool GetUIntAttrValue(const nsAttrValue* aVal, int32_t* aUInt);
 
   /**
    * Returns language for the given node.

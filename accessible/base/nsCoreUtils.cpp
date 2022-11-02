@@ -5,9 +5,11 @@
 
 #include "nsCoreUtils.h"
 
+#include "nsAttrValue.h"
 #include "nsIAccessibleTypes.h"
 
 #include "mozilla/dom/Document.h"
+#include "nsAccUtils.h"
 #include "nsRange.h"
 #include "nsXULElement.h"
 #include "nsIDocShell.h"
@@ -43,6 +45,8 @@ using mozilla::dom::DOMRect;
 using mozilla::dom::Element;
 using mozilla::dom::Selection;
 using mozilla::dom::XULTreeElement;
+
+using mozilla::a11y::nsAccUtils;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsCoreUtils
@@ -372,11 +376,19 @@ bool nsCoreUtils::GetID(nsIContent* aContent, nsAString& aID) {
 
 bool nsCoreUtils::GetUIntAttr(nsIContent* aContent, nsAtom* aAttr,
                               int32_t* aUInt) {
-  nsAutoString value;
   if (!aContent->IsElement()) {
     return false;
   }
-  aContent->AsElement()->GetAttr(kNameSpaceID_None, aAttr, value);
+  return GetUIntAttrValue(nsAccUtils::GetARIAAttr(aContent->AsElement(), aAttr),
+                          aUInt);
+}
+
+bool nsCoreUtils::GetUIntAttrValue(const nsAttrValue* aVal, int32_t* aUInt) {
+  if (!aVal) {
+    return false;
+  }
+  nsAutoString value;
+  aVal->ToString(value);
   if (!value.IsEmpty()) {
     nsresult error = NS_OK;
     int32_t integer = value.ToInteger(&error);

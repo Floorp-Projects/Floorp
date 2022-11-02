@@ -530,8 +530,7 @@ void RootAccessible::HandlePopupShownEvent(LocalAccessible* aAccessible) {
     // menulist containing div elements instead of XUL menuitems. XUL menuitems
     // fire DOMMenuItemActive events from layout instead.
     MOZ_ASSERT(aAccessible->Elm());
-    if (aAccessible->Elm()->HasAttr(kNameSpaceID_None,
-                                    nsGkAtoms::aria_activedescendant)) {
+    if (aAccessible->Elm()->HasAttr(nsGkAtoms::aria_activedescendant)) {
       LocalAccessible* activeDescendant = aAccessible->CurrentItem();
       if (activeDescendant) {
         FocusMgr()->ActiveItemChanged(activeDescendant, false);

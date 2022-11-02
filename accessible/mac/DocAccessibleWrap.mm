@@ -40,9 +40,8 @@ void DocAccessibleWrap::AttributeChanged(dom::Element* aElement,
 
     static const dom::Element::AttrValuesArray sLiveRegionValues[] = {
         nsGkAtoms::OFF, nsGkAtoms::polite, nsGkAtoms::assertive, nullptr};
-    int32_t attrValue =
-        aElement->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::aria_live,
-                                  sLiveRegionValues, eIgnoreCase);
+    int32_t attrValue = nsAccUtils::FindARIAAttrValueIn(
+        aElement, nsGkAtoms::aria_live, sLiveRegionValues, eIgnoreCase);
     if (attrValue > 0) {
       if (!aOldValue || aOldValue->IsEmptyString() ||
           aOldValue->Equals(nsGkAtoms::OFF, eIgnoreCase)) {

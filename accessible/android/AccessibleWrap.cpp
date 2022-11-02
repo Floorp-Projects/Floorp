@@ -672,8 +672,8 @@ bool AccessibleWrap::HandleLiveRegionEvent(AccEvent* aEvent) {
          parent = parent->LocalParent()) {
       dom::Element* element = parent->Elm();
       if (element &&
-          element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_atomic,
-                               nsGkAtoms::_true, eCaseMatters)) {
+          nsAccUtils::ARIAAttrValueIs(element, nsGkAtoms::aria_atomic,
+                                      nsGkAtoms::_true, eCaseMatters)) {
         atomicAncestor = parent;
         break;
       }

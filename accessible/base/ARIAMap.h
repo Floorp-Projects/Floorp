@@ -14,6 +14,7 @@
 
 #include "nsAtom.h"
 #include "nsIContent.h"
+#include "nsTHashSet.h"
 
 class nsINode;
 
@@ -311,6 +312,11 @@ class AttrIterator {
   AttrIterator& operator=(const AttrIterator&) = delete;
 
   dom::Element* mElement;
+
+  bool mIteratingDefaults;
+  nsTHashSet<nsRefPtrHashKey<nsAtom>> mOverriddenAttrs;
+
+  const AttrArray* mAttrs;
   uint32_t mAttrIdx;
   uint32_t mAttrCount;
   RefPtr<nsAtom> mAttrAtom;

@@ -520,3 +520,22 @@ size_t AttrArray::SizeOfExcludingThis(
 
   return n;
 }
+
+int32_t AttrArray::FindAttrValueIn(int32_t aNameSpaceID, const nsAtom* aName,
+                                   AttrValuesArray* aValues,
+                                   nsCaseTreatment aCaseSensitive) const {
+  NS_ASSERTION(aName, "Must have attr name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
+  NS_ASSERTION(aValues, "Null value array");
+
+  const nsAttrValue* val = GetAttr(aName, aNameSpaceID);
+  if (val) {
+    for (int32_t i = 0; aValues[i]; ++i) {
+      if (val->Equals(aValues[i], aCaseSensitive)) {
+        return i;
+      }
+    }
+    return ATTR_VALUE_NO_MATCH;
+  }
+  return ATTR_MISSING;
+}

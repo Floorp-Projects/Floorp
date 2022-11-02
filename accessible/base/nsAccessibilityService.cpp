@@ -1522,7 +1522,7 @@ void nsAccessibilityService::MarkupAttributes(
       }
 
       nsString value;
-      el->GetAttr(kNameSpaceID_None, info->DOMAttrName, value);
+      el->GetAttr(info->DOMAttrName, value);
 
       if (!value.IsEmpty()) {
         aAttributes->SetAttribute(info->name, std::move(value));

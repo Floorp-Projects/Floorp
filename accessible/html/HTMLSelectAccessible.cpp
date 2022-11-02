@@ -146,8 +146,8 @@ void HTMLSelectOptionAccessible::DOMAttributeChanged(
 
   if (aAttribute == nsGkAtoms::label) {
     dom::Element* elm = Elm();
-    if (!elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_labelledby) &&
-        !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label)) {
+    if (!nsAccUtils::HasARIAAttr(elm, nsGkAtoms::aria_labelledby) &&
+        !nsAccUtils::HasARIAAttr(elm, nsGkAtoms::aria_label)) {
       mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
     }
   }
