@@ -771,9 +771,8 @@ Relation RemoteAccessibleBase<Derived>::RelationByType(
     Relation rel = Relation();
     // HTML radio buttons with cached names should be grouped.
     if (IsHTMLRadioButton()) {
-      auto maybeName =
-          mCachedFields->GetAttribute<nsString>(nsGkAtoms::radioLabel);
-      if (!maybeName) {
+      nsString name = GetCachedHTMLNameAttribute();
+      if (name.IsEmpty()) {
         return rel;
       }
 
@@ -782,7 +781,7 @@ Relation RemoteAccessibleBase<Derived>::RelationByType(
         ancestor = ancestor->RemoteParent();
       }
       Pivot p = Pivot(ancestor);
-      PivotRadioNameRule rule(*maybeName);
+      PivotRadioNameRule rule(name);
       Accessible* match = p.Next(ancestor, rule);
       while (match) {
         rel.AppendTarget(match->AsRemote());
