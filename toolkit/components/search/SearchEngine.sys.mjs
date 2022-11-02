@@ -334,7 +334,7 @@ export class EngineURL {
   rels = [];
 
   /**
-   * Constructor
+   * Creates an EngineURL.
    *
    * @param {string} mimeType
    *   The name of the MIME type of the search results returned by this URL.
@@ -632,7 +632,7 @@ export class SearchEngine {
   #id;
 
   /**
-   * Constructor.
+   *  Creates a Search Engine.
    *
    * @param {object} options
    *   The options for this search engine.
@@ -1110,7 +1110,7 @@ export class SearchEngine {
    *   The json record to use.
    */
   _initWithJSON(json) {
-    this.#id = json.id;
+    this.#id = json.id ?? this.#id;
     this._name = json._name;
     this._description = json.description;
     this._hasPreferredIcon = json._hasPreferredIcon == undefined;

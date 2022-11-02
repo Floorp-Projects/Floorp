@@ -25,10 +25,19 @@ add_task(async function setup() {
   await Services.search.init();
 });
 
-async function loadSettingsFile(settingsFile, setVersion) {
+async function loadSettingsFile(settingsFile, setVersion, setHashes) {
   settingsTemplate = await readJSONFile(do_get_file(settingsFile));
   if (setVersion) {
     settingsTemplate.version = SearchUtils.SETTINGS_VERSION;
+  }
+
+  if (setHashes) {
+    settingsTemplate.metaData.hash = SearchUtils.getVerificationHash(
+      settingsTemplate.metaData.current
+    );
+    settingsTemplate.metaData.privateHash = SearchUtils.getVerificationHash(
+      settingsTemplate.metaData.private
+    );
   }
 
   delete settingsTemplate.visibleDefaultEngines;
@@ -72,6 +81,8 @@ async function checkLoadSettingProperties(
   );
   Assert.equal(engines[0].alias, "testAlias", "Should have set the alias");
   Assert.equal(engines[0].hidden, false, "Should have not hidden the engine");
+  Assert.equal(engines[0].id, "engine1@search.mozilla.orgdefault");
+
   Assert.equal(
     engines[1].name,
     "engine2",
@@ -79,9 +90,11 @@ async function checkLoadSettingProperties(
   );
   Assert.equal(engines[1].alias, "", "Should have not set the alias");
   Assert.equal(engines[1].hidden, true, "Should have hidden the engine");
+  Assert.equal(engines[1].id, "engine2@search.mozilla.orgdefault");
 
   // The extra engine is the second in the list.
   isSubObjectOf(EXPECTED_ENGINE.engine, engines[2]);
+  Assert.ok(engines[2].id, "test-addon-id@mozilla.orgdefault");
 
   let engineFromSS = ss.getEngineByName(EXPECTED_ENGINE.engine.name);
   Assert.ok(!!engineFromSS);
@@ -99,11 +112,29 @@ async function checkLoadSettingProperties(
     "Should have set the useSavedOrder metadata correctly."
   );
 
+  let migratedSettingsFile = await promiseSettingsData();
+
+  Assert.equal(
+    migratedSettingsFile.engines[0].id,
+    "engine1@search.mozilla.orgdefault"
+  );
+
   removeSettingsFile();
 }
 
 add_task(async function test_legacy_setting_engine_properties() {
   Services.prefs.setBoolPref(legacyUseSavedOrderPrefName, true);
+
+  let legacySettings = await readJSONFile(
+    do_get_file("data/search-legacy.json")
+  );
+
+  // Assert the engine ids have not been migrated yet
+  for (let engine of legacySettings.engines) {
+    Assert.ok(!("id" in engine));
+  }
+  Assert.ok(!("defaultEngineId" in legacySettings.metaData));
+  Assert.ok(!("privateDefaultEngineId" in legacySettings.metaData));
 
   await checkLoadSettingProperties("data/search-legacy.json", false, true);
 
@@ -112,6 +143,103 @@ add_task(async function test_legacy_setting_engine_properties() {
     "Should have cleared the legacy pref."
   );
 });
+
+add_task(
+  async function test_legacy_setting_migration_with_undefined_metaData_current_and_private() {
+    let ss = Services.search.wrappedJSObject;
+
+    await loadSettingsFile("data/search-legacy.json", false);
+    const settingsFileWritten = promiseAfterSettings();
+
+    await ss.reset();
+    await Services.search.init();
+
+    await settingsFileWritten;
+
+    let migratedSettingsFile = await promiseSettingsData();
+
+    Assert.equal(
+      migratedSettingsFile.metaData.defaultEngineId,
+      "",
+      "When there is no metaData.current attribute in settings file, the migration should set the defaultEngineId to an empty string."
+    );
+    Assert.equal(
+      migratedSettingsFile.metaData.privateDefaultEngineId,
+      "",
+      "When there is no metaData.private attribute in settings file, the migration should set the privateDefaultEngineId to an empty string."
+    );
+
+    removeSettingsFile();
+  }
+);
+
+add_task(
+  async function test_legacy_setting_migration_with_correct_metaData_current_and_private_hashes() {
+    let ss = Services.search.wrappedJSObject;
+
+    await loadSettingsFile(
+      "data/search-legacy-correct-default-engine-hashes.json",
+      false,
+      true
+    );
+    const settingsFileWritten = promiseAfterSettings();
+
+    await ss.reset();
+    await Services.search.init();
+
+    await settingsFileWritten;
+
+    let migratedSettingsFile = await promiseSettingsData();
+
+    Assert.equal(
+      migratedSettingsFile.metaData.defaultEngineId,
+      "engine2@search.mozilla.orgdefault",
+      "When the metaData.current and associated hash are correct, the migration should set the defaultEngineId to the engine id."
+    );
+    Assert.equal(
+      migratedSettingsFile.metaData.privateDefaultEngineId,
+      "engine2@search.mozilla.orgdefault",
+      "When the metaData.private and associated hash are correct, the migration should set the privateDefaultEngineId to the private engine id."
+    );
+
+    removeSettingsFile();
+  }
+);
+
+add_task(
+  async function test_legacy_setting_migration_with_incorrect_metaData_current_and_private_hashes() {
+    let ss = Services.search.wrappedJSObject;
+
+    await loadSettingsFile(
+      "data/search-legacy-wrong-default-engine-hashes.json",
+      false,
+      false
+    );
+    const settingsFileWritten = promiseAfterSettings();
+
+    await ss.reset();
+    await Services.search.init();
+
+    await settingsFileWritten;
+
+    let migratedSettingsFile = await promiseSettingsData();
+
+    Assert.equal(
+      migratedSettingsFile.metaData.defaultEngineId,
+      "",
+
+      "When metaData.hash is not the correct hash for metaData.current, the migration should reset the defaultEngineId to an empty string."
+    );
+
+    Assert.equal(
+      migratedSettingsFile.metaData.privateDefaultEngineId,
+      "",
+      "When metaData.privateHash is not the correct hash for metaData.private, the migration should reset the privateDefaultEngineId to an empty string."
+    );
+
+    removeSettingsFile();
+  }
+);
 
 add_task(async function test_current_setting_engine_properties() {
   await checkLoadSettingProperties("data/search.json", true, false);
