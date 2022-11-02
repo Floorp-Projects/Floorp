@@ -1538,7 +1538,7 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 .tab-background {
   /* rounded top corners */
   --uc-tab-corner-bg: transparent;
-  margin-block: 0 !important;
+  margin-block: 4px;
   border-radius: 8px 8px 0 0 !important;
   position: relative !important;
   border: 0 !important;
