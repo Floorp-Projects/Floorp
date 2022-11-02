@@ -16,6 +16,7 @@ from collections import defaultdict
 import itertools
 import logging
 import os
+import re
 import shutil
 import sys
 import subprocess
@@ -192,10 +193,12 @@ def get_appconstants_sys_mjs_values(finder, *args):
     names and returns an iterator of the unique such value found for each name.
     Raises an exception if a name is not found or if multiple values are found.
     """
-
     lines = defaultdict(list)
     for _, f in finder.find("**/modules/AppConstants.sys.mjs"):
-        for line in f.open().read().decode("utf-8").splitlines():
+        # MOZ_OFFICIAL_BRANDING is split across two lines, so remove line breaks
+        # immediately following ":"s so those values can be read.
+        data = f.open().read().decode("utf-8").replace(":\n", ":")
+        for line in data.splitlines():
             for arg in args:
                 if arg in line:
                     lines[arg].append(line)
@@ -205,6 +208,66 @@ def get_appconstants_sys_mjs_values(finder, *args):
         _, _, value = value.partition(":")
         value = value.strip().strip('",;')
         yield value
+
+
+def get_branding(use_official, build_app, finder, log=None):
+    """Figure out which branding directory to use."""
+    conf_vars = mozpath.join(build_app, "confvars.sh")
+
+    def conf_vars_value(key):
+        lines = open(conf_vars).readlines()
+        for line in lines:
+            if key not in line:
+                continue
+            _, _, value = line.partition("=")
+            value = value.strip()
+            log(
+                logging.INFO,
+                "msix",
+                {"key": key, "conf_vars": conf_vars, "value": value},
+                "Read '{key}' from {conf_vars}: {value}",
+            )
+            return value
+        log(
+            logging.ERROR,
+            "msix",
+            {"key": key, "conf_vars": conf_vars},
+            "Unable to find '{key}' in {conf_vars}!",
+        )
+
+    # Branding defaults
+    branding_reason = "No branding set"
+    branding = conf_vars_value("MOZ_BRANDING_DIRECTORY")
+
+    if use_official:
+        # Read MOZ_OFFICIAL_BRANDING_DIRECTORY from confvars.sh
+        branding_reason = "'MOZ_OFFICIAL_BRANDING' set"
+        branding = conf_vars_value("MOZ_OFFICIAL_BRANDING_DIRECTORY")
+    else:
+        # Check if --with-branding was used when building
+        log(
+            logging.INFO,
+            "msix",
+            {},
+            "Checking buildconfig.html for --with-branding build flag.",
+        )
+        for _, f in finder.find("**/chrome/toolkit/content/global/buildconfig.html"):
+            data = f.open().read().decode("utf-8")
+            match = re.search(r"--with-branding=([a-z/]+)", data)
+            if match:
+                branding_reason = "'--with-branding' set"
+                branding = match.group(1)
+
+    log(
+        logging.INFO,
+        "msix",
+        {
+            "branding_reason": branding_reason,
+            "branding": branding,
+        },
+        "{branding_reason}; Using branding from '{branding}'.",
+    )
+    return branding
 
 
 def unpack_msix(input_msix, output, log=None, verbose=False):
@@ -275,15 +338,13 @@ def unpack_msix(input_msix, output, log=None, verbose=False):
 
 def repackage_msix(
     dir_or_package,
+    topsrcdir,
     channel=None,
-    branding=None,
-    template=None,
     distribution_dirs=[],
-    locale_allowlist=set(),
     version=None,
     vendor=None,
     displayname=None,
-    app_name="firefox",
+    app_name=None,
     identity=None,
     publisher=None,
     publisher_display_name="Mozilla Corporation",
@@ -296,13 +357,14 @@ def repackage_msix(
 ):
     if not channel:
         raise Exception("channel is required")
-    if channel not in ["official", "beta", "aurora", "nightly", "unofficial"]:
+    if channel not in (
+        "official",
+        "beta",
+        "aurora",
+        "nightly",
+        "unofficial",
+    ):
         raise Exception("channel is unrecognized: {}".format(channel))
-
-    if not branding:
-        raise Exception("branding dir is required")
-    if not os.path.isdir(branding):
-        raise Exception("branding dir {} does not exist".format(branding))
 
     # TODO: maybe we can fish this from the package directly?  Maybe from a DLL,
     # maybe from application.ini?
@@ -369,10 +431,28 @@ def repackage_msix(
     # builds. The nested langpack XPI files can't be read by `mozjar.py`.
     unpack_finder = UnpackFinder(finder, unpack_xpi=False)
 
+    values = get_appconstants_sys_mjs_values(
+        unpack_finder,
+        "MOZ_OFFICIAL_BRANDING",
+        "MOZ_BUILD_APP",
+        "MOZ_APP_NAME",
+        "MOZ_APP_VERSION_DISPLAY",
+        "MOZ_BUILDID",
+    )
+    try:
+        use_official_branding = {"true": True, "false": False}[next(values)]
+    except KeyError as err:
+        raise Exception(
+            f"Unexpected value '{err.args[0]}' found for 'MOZ_OFFICIAL_BRANDING'."
+        ) from None
+
+    build_app = next(values)
+
+    _temp = next(values)
+    if not app_name:
+        app_name = _temp
+
     if not version:
-        values = get_appconstants_sys_mjs_values(
-            unpack_finder, "MOZ_APP_VERSION_DISPLAY", "MOZ_BUILDID"
-        )
         display_version = next(values)
         buildid = next(values)
         version = get_embedded_version(display_version, buildid)
@@ -403,6 +483,21 @@ def repackage_msix(
     if channel == "beta":
         # Release (official) and Beta share branding.  Differentiate Beta a little bit.
         brandFullName += " Beta"
+
+    branding = os.path.join(
+        topsrcdir, get_branding(use_official_branding, build_app, unpack_finder, log)
+    )
+    if not os.path.isdir(branding):
+        raise Exception("branding dir {} does not exist".format(branding))
+
+    template = os.path.join(topsrcdir, build_app, "installer", "windows", "msix")
+
+    # Discard everything after a '#' comment character.
+    locale_allowlist = set(
+        locale.partition("#")[0].strip().lower()
+        for locale in open(os.path.join(template, "msix-all-locales")).readlines()
+        if locale.partition("#")[0].strip()
+    )
 
     # We don't have a build at repackage-time to give us these values, and the
     # source of truth is a branding-specific `configure.sh` shell script that we
@@ -476,7 +571,7 @@ def repackage_msix(
     for p, f in finder:
         if not os.path.isdir(dir_or_package):
             # In archived builds, `p` is like "firefox/firefox.exe"; we want just "firefox.exe".
-            pp = os.path.relpath(p, "firefox")
+            pp = os.path.relpath(p, app_name)
         else:
             # In local builds and unpacked MSIX directories, `p` is like "firefox.exe" already.
             pp = p
@@ -526,7 +621,7 @@ def repackage_msix(
                     mozpath.join(
                         base,
                         f"locale-{locale}",
-                        f"langpack-{locale}@firefox.mozilla.org.xpi",
+                        f"langpack-{locale}@{app_name}.mozilla.org.xpi",
                     )
                 )
 
