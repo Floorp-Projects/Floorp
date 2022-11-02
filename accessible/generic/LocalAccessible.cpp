@@ -849,7 +849,7 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
     nsAutoCString strMarker;
     strMarker.AppendLiteral("A11y Event - ");
     strMarker.Append(strEventType);
-    PROFILER_MARKER_UNTYPED(strMarker, OTHER);
+    PROFILER_MARKER_UNTYPED(strMarker, A11Y);
   }
 
   if (IPCAccessibilityActive() && Document()) {

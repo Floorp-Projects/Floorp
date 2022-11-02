@@ -270,6 +270,15 @@
     - name: MEDIA_RT
       label: Real-time rendering
 
+# We don't name this category ACCESSIBILITY
+# because it's already defined as a macro.
+- name: A11Y
+  label: Accessibility
+  color: brown
+  subcategories:
+    - name: A11Y
+      label: Other
+
 - name: PROFILER
   label: Profiler
   color: lightred
