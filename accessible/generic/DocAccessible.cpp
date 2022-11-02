@@ -12,6 +12,7 @@
 #include "DocAccessibleChild.h"
 #include "EventTree.h"
 #include "HTMLImageMapAccessible.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "nsAccCache.h"
 #include "nsAccessiblePivot.h"
 #include "nsAccUtils.h"
@@ -1579,6 +1580,9 @@ void DocAccessible::NotifyOfLoading(bool aIsReloading) {
 }
 
 void DocAccessible::DoInitialUpdate() {
+  AUTO_PROFILER_MARKER_TEXT("DocAccessible::DoInitialUpdate", A11Y, {}, ""_ns);
+  // DO NOT ADD CODE ABOVE THIS BLOCK: THIS CODE IS MEASURING TIMINGS.
+
   if (nsCoreUtils::IsTopLevelContentDocInProcess(mDocumentNode)) {
     mDocFlags |= eTopLevelContentDocInProcess;
     if (IPCAccessibilityActive()) {

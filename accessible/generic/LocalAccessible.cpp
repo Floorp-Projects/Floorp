@@ -3141,6 +3141,18 @@ void LocalAccessible::SendCache(uint64_t aCacheDomain,
   nsTArray<CacheData> data;
   data.AppendElement(CacheData(ID(), fields));
   ipcDoc->SendCache(aUpdateType, data, true);
+
+  if (profiler_thread_is_being_profiled_for_markers()) {
+    nsAutoCString updateTypeStr;
+    if (aUpdateType == CacheUpdateType::Initial) {
+      updateTypeStr = "Initial";
+    } else if (aUpdateType == CacheUpdateType::Update) {
+      updateTypeStr = "Update";
+    } else {
+      updateTypeStr = "Other";
+    }
+    PROFILER_MARKER_TEXT("LocalAccessible::SendCache", A11Y, {}, updateTypeStr);
+  }
 }
 
 already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
