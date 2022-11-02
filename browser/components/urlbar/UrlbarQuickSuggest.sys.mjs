@@ -11,6 +11,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   QUICK_SUGGEST_SOURCE:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   TaskQueue: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderQuickSuggest:
@@ -69,7 +70,7 @@ const ADD_RESULTS_CHUNK_SIZE = 1000;
  * Fetches the suggestions data from RemoteSettings and builds the structures
  * to provide suggestions for UrlbarProviderQuickSuggest.
  */
-class QuickSuggest extends EventEmitter {
+class _UrlbarQuickSuggest extends EventEmitter {
   init() {
     if (this._initialized) {
       return;
@@ -176,23 +177,6 @@ class QuickSuggest extends EventEmitter {
   }
 
   /**
-   * Records the Nimbus exposure event if it hasn't already been recorded during
-   * the app session. This method actually queues the recording on idle because
-   * it's potentially an expensive operation.
-   */
-  ensureExposureEventRecorded() {
-    // `recordExposureEvent()` makes sure only one event is recorded per app
-    // session even if it's called many times, but since it may be expensive, we
-    // also keep `_recordedExposureEvent`.
-    if (!this._recordedExposureEvent) {
-      this._recordedExposureEvent = true;
-      Services.tm.idleDispatchToMainThread(() =>
-        lazy.NimbusFeatures.urlbar.recordExposureEvent({ once: true })
-      );
-    }
-  }
-
-  /**
    * Gets the full keyword (i.e., suggestion) for a result and query.  The data
    * doesn't include full keywords, so we make our own based on the result's
    * keyword phrases and a particular query.  We use two heuristics:
@@ -292,7 +276,7 @@ class QuickSuggest extends EventEmitter {
     }
 
     if (lazy.UrlbarPrefs.get("experimentType") === "modal") {
-      this.ensureExposureEventRecorded();
+      lazy.QuickSuggest.ensureExposureEventRecorded();
     }
 
     if (!lazy.UrlbarPrefs.get("quickSuggestShouldShowOnboardingDialog")) {
@@ -559,4 +543,4 @@ class QuickSuggest extends EventEmitter {
   }
 }
 
-export let UrlbarQuickSuggest = new QuickSuggest();
+export const UrlbarQuickSuggest = new _UrlbarQuickSuggest();

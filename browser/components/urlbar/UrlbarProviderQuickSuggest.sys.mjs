@@ -296,10 +296,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
         (!lazy.UrlbarPrefs.get("bestMatchEnabled") ||
           lazy.UrlbarPrefs.get("suggest.bestmatch"))
       ) {
-        lazy.UrlbarQuickSuggest.ensureExposureEventRecorded();
+        lazy.QuickSuggest.ensureExposureEventRecorded();
       }
     } else if (lazy.UrlbarPrefs.get("experimentType") !== "modal") {
-      lazy.UrlbarQuickSuggest.ensureExposureEventRecorded();
+      lazy.QuickSuggest.ensureExposureEventRecorded();
     }
   }
 
