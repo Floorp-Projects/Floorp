@@ -164,24 +164,24 @@ def git_clone_firefox(git: Path, dest: Path, watchman: Path):
     try:
         cinnabar = which("git-cinnabar")
         if not cinnabar:
+            from urllib.request import urlopen
+
             cinnabar_url = "https://github.com/glandium/git-cinnabar/"
             # If git-cinnabar isn't installed already, that's fine; we can
-            # download a temporary copy. `mach bootstrap` will clone a full copy
-            # of the repo in the state dir; we don't want to copy all that logic
-            # to this tiny bootstrapping script.
+            # download a temporary copy. `mach bootstrap` will install a copy
+            # in the state dir; we don't want to copy all that logic to this
+            # tiny bootstrapping script.
             tempdir = Path(tempfile.mkdtemp())
-            cinnabar_dir = tempdir / "git-cinnabar-master"
+            with open(tempdir / "download.py", "wb") as fh:
+                shutil.copyfileobj(
+                    urlopen(f"{cinnabar_url}/raw/master/download.py"), fh
+                )
+
             subprocess.check_call(
-                [str(git), "clone", "--depth=1", str(cinnabar_url), str(cinnabar_dir)],
+                [sys.executable, str(tempdir / "download.py")],
                 cwd=str(tempdir),
-                env=env,
             )
-            env["PATH"] = str(cinnabar_dir) + os.pathsep + env["PATH"]
-            subprocess.check_call(
-                [sys.executable, str(cinnabar_dir / "download.py")],
-                cwd=str(cinnabar_dir),
-                env=env,
-            )
+            env["PATH"] = str(tempdir) + os.pathsep + env["PATH"]
             print(
                 "WARNING! git-cinnabar is required for Firefox development  "
                 "with git. After the clone is complete, the bootstrapper "
