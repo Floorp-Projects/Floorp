@@ -812,6 +812,10 @@ public class GeckoViewActivity extends AppCompatActivity
       if (extras != null) {
         runtimeSettingsBuilder.extras(extras);
       }
+      final @ContentBlocking.CBCookieBehavior int cookieBehavior =
+          preferences.getBoolean(getString(R.string.key_dfpi), true)
+              ? ContentBlocking.CookieBehavior.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS
+              : ContentBlocking.CookieBehavior.ACCEPT_NON_TRACKERS;
       runtimeSettingsBuilder
           .remoteDebuggingEnabled(mRemoteDebugging.value())
           .consoleOutput(true)
@@ -820,8 +824,8 @@ public class GeckoViewActivity extends AppCompatActivity
                   .antiTracking(
                       ContentBlocking.AntiTracking.DEFAULT | ContentBlocking.AntiTracking.STP)
                   .safeBrowsing(ContentBlocking.SafeBrowsing.DEFAULT)
-                  .cookieBehavior(ContentBlocking.CookieBehavior.ACCEPT_NON_TRACKERS)
-                  .cookieBehaviorPrivateMode(ContentBlocking.CookieBehavior.ACCEPT_NON_TRACKERS)
+                  .cookieBehavior(cookieBehavior)
+                  .cookieBehaviorPrivateMode(cookieBehavior)
                   .enhancedTrackingProtectionLevel(ContentBlocking.EtpLevel.DEFAULT)
                   .build())
           .crashHandler(ExampleCrashHandler.class)
