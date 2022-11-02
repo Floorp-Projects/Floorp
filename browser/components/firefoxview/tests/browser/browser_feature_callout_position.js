@@ -297,3 +297,41 @@ add_task(
     sandbox.restore();
   }
 );
+
+add_task(
+  async function feature_callout_custom_position_override_properties_are_applied() {
+    const testMessage = {
+      message: FeatureCalloutMessages.getMessages().find(
+        m => m.id === "FIREFOX_VIEW_FEATURE_TOUR_1"
+      ),
+    };
+    testMessage.message.content.screens[0].content.callout_position_override = {
+      top: "500px",
+      left: "500px",
+    };
+
+    const sandbox = sinon.createSandbox();
+    const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
+    sendTriggerStub.resolves(testMessage);
+
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url: "about:firefoxview",
+      },
+      async browser => {
+        const { document } = browser.contentWindow;
+        await waitForCalloutScreen(document, 1);
+        let container = document.querySelector(calloutSelector);
+        let containerLeft = container.getBoundingClientRect().left;
+        let containerTop = container.getBoundingClientRect().top;
+        ok(
+          containerLeft === 500 && containerTop === 500,
+          "Feature callout container has a top position of 500, and left position of 500"
+        );
+      }
+    );
+
+    sandbox.restore();
+  }
+);
