@@ -11,7 +11,12 @@ import { E10SUtils } from "resource://gre/modules/E10SUtils.sys.mjs";
 const { FeatureGate } = ChromeUtils.import(
   "resource://featuregates/FeatureGate.jsm"
 );
-import { PlacesDBUtils } from "resource://gre/modules/PlacesDBUtils.sys.mjs";
+
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
+});
 
 // We use a list of prefs for display to make sure we only show prefs that
 // are useful for support and won't compromise the user's privacy.  Note that
@@ -488,7 +493,10 @@ var dataProviders = {
   },
 
   places: async function places(done) {
-    done(await PlacesDBUtils.getEntitiesStatsAndCounts());
+    const data = AppConstants.MOZ_PLACES
+      ? await lazy.PlacesDBUtils.getEntitiesStatsAndCounts()
+      : [];
+    done(data);
   },
 
   printingPreferences: function printingPreferences(done) {
