@@ -896,6 +896,8 @@ class LayerViewSupport final
   Atomic<bool, ReleaseAcquire> mCompositorPaused;
   java::sdk::Surface::GlobalRef mSurface;
   java::sdk::SurfaceControl::GlobalRef mSurfaceControl;
+  int32_t mX;
+  int32_t mY;
   int32_t mWidth;
   int32_t mHeight;
   // Used to communicate with the gecko compositor from the UI thread.
@@ -1039,7 +1041,7 @@ class LayerViewSupport final
         }
       }
 
-      mUiCompositorControllerChild->Resume();
+      mUiCompositorControllerChild->ResumeAndResize(mX, mY, mWidth, mHeight);
     }
   }
 
@@ -1237,6 +1239,8 @@ class LayerViewSupport final
       MOZ_CRASH("Compositor resumed with abandoned Surface");
     }
 
+    mX = aX;
+    mY = aY;
     mWidth = aWidth;
     mHeight = aHeight;
     mSurfaceControl =
