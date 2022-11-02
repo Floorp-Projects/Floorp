@@ -4,17 +4,6 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "env",
-  "@mozilla.org/process/environment;1",
-  "nsIEnvironment"
-);
-
 const {
   Branch,
   EnvironmentPrefs,
@@ -94,14 +83,14 @@ add_test(function test_EnvironmentPrefs_from() {
     "test.int": 888,
     "test.string": "bar",
   };
-  env.set("FOO", JSON.stringify(prefsTable));
+  Services.env.set("FOO", JSON.stringify(prefsTable));
 
   try {
     for (let [key, value] of EnvironmentPrefs.from("FOO")) {
       equal(prefsTable[key], value);
     }
   } finally {
-    env.set("FOO", null);
+    Services.env.set("FOO", null);
   }
 
   run_next_test();
