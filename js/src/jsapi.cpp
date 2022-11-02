@@ -1803,6 +1803,7 @@ JS_PUBLIC_API JSObject* JS_NewObject(JSContext* cx, const JSClass* clasp) {
 
   MOZ_ASSERT(!clasp->isJSFunction());
   MOZ_ASSERT(clasp != &PlainObject::class_);
+  MOZ_ASSERT(clasp != &ArrayObject::class_);
   MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
   return NewBuiltinClassInstance(cx, clasp);
@@ -1823,6 +1824,7 @@ JS_PUBLIC_API JSObject* JS_NewObjectWithGivenProto(JSContext* cx,
 
   MOZ_ASSERT(!clasp->isJSFunction());
   MOZ_ASSERT(clasp != &PlainObject::class_);
+  MOZ_ASSERT(clasp != &ArrayObject::class_);
   MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
   return NewObjectWithGivenProto(cx, clasp, proto);
@@ -1842,13 +1844,25 @@ JS_PUBLIC_API JSObject* JS_NewObjectForConstructor(JSContext* cx,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
+  MOZ_ASSERT(!clasp->isJSFunction());
+  MOZ_ASSERT(clasp != &PlainObject::class_);
+  MOZ_ASSERT(clasp != &ArrayObject::class_);
+  MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
+
   if (!ThrowIfNotConstructing(cx, args, clasp->name)) {
     return nullptr;
   }
 
   RootedObject newTarget(cx, &args.newTarget().toObject());
   cx->check(newTarget);
-  return CreateThis(cx, clasp, newTarget);
+
+  RootedObject proto(cx);
+  if (!GetPrototypeFromConstructor(cx, newTarget,
+                                   JSCLASS_CACHED_PROTO_KEY(clasp), &proto)) {
+    return nullptr;
+  }
+
+  return NewObjectWithClassProto(cx, clasp, proto);
 }
 
 JS_PUBLIC_API bool JS_IsNative(JSObject* obj) {
