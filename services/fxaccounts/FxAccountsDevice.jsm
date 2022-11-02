@@ -89,7 +89,10 @@ class FxAccountsDevice {
 
   // Generate a client name if we don't have a useful one yet
   getDefaultLocalName() {
-    let user = Services.env.get("USER") || Services.env.get("USERNAME");
+    let env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    let user = env.get("USER") || env.get("USERNAME");
     // Note that we used to fall back to the "services.sync.username" pref here,
     // but that's no longer suitable in a world where sync might not be
     // configured. However, we almost never *actually* fell back to that, and
@@ -98,8 +101,8 @@ class FxAccountsDevice {
 
     // A little hack for people using the the moz-build environment on Windows
     // which sets USER to the literal "%USERNAME%" (yes, really)
-    if (user == "%USERNAME%" && Services.env.get("USERNAME")) {
-      user = Services.env.get("USERNAME");
+    if (user == "%USERNAME%" && env.get("USERNAME")) {
+      user = env.get("USERNAME");
     }
 
     let brand = Services.strings.createBundle(

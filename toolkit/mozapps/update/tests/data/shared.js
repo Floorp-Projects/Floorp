@@ -147,6 +147,13 @@ XPCOMUtils.defineLazyGetter(this, "gPrefRoot", function test_gPR() {
   return Services.prefs.getBranch(null);
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gEnv",
+  "@mozilla.org/process/environment;1",
+  "nsIEnvironment"
+);
+
 /**
  * Waits for the specified topic and (optionally) status.
  *

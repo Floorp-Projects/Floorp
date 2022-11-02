@@ -212,7 +212,9 @@ Submitter.prototype = {
     delete this.extraKeyVals.ServerURL;
 
     // Override the submission URL from the environment
-    let envOverride = Services.env.get("MOZ_CRASHREPORTER_URL");
+    let envOverride = Cc["@mozilla.org/process/environment;1"]
+      .getService(Ci.nsIEnvironment)
+      .get("MOZ_CRASHREPORTER_URL");
     if (envOverride != "") {
       serverURL = envOverride;
     }

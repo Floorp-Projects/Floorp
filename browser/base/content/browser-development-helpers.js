@@ -15,7 +15,11 @@ var DevelopmentHelpers = {
 
   quickRestart() {
     Services.obs.notifyObservers(null, "startupcache-invalidate");
-    Services.env.set("MOZ_DISABLE_SAFE_MODE_KEY", "1");
+
+    let env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    env.set("MOZ_DISABLE_SAFE_MODE_KEY", "1");
 
     Services.startup.quit(
       Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart

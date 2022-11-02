@@ -20,7 +20,10 @@ var httpBarOrigin; // http://bar.example.com:PORT/
 var httpsBarOrigin; // https://bar.example.com:PORT/
 
 function run_test() {
-  h3Port = Services.env.get("MOZHTTP3_PORT");
+  var env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  h3Port = env.get("MOZHTTP3_PORT");
   Assert.notEqual(h3Port, null);
   Assert.notEqual(h3Port, "");
 

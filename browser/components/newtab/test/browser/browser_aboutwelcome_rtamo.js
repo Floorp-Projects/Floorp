@@ -55,7 +55,10 @@ async function openRTAMOWelcomePage() {
   registerCleanupFunction(async () => {
     BrowserTestUtils.removeTab(tab);
     // Clear cache call is only possible in a testing environment
-    Services.env.set("XPCSHELL_TEST_PROFILE_DIR", "testing");
+    let env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    env.set("XPCSHELL_TEST_PROFILE_DIR", "testing");
     await ASRouter.forceAttribution({
       source: "",
       medium: "",

@@ -24,15 +24,18 @@ const certOverrideService = Cc[
 add_setup(async function setup() {
   trr_test_setup();
 
-  h2Port = Services.env.get("MOZHTTP2_PORT");
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  h2Port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
 
-  h3Port = Services.env.get("MOZHTTP3_PORT");
+  h3Port = env.get("MOZHTTP3_PORT");
   Assert.notEqual(h3Port, null);
   Assert.notEqual(h3Port, "");
 
-  h3NoResponsePort = Services.env.get("MOZHTTP3_PORT_NO_RESPONSE");
+  h3NoResponsePort = env.get("MOZHTTP3_PORT_NO_RESPONSE");
   Assert.notEqual(h3NoResponsePort, null);
   Assert.notEqual(h3NoResponsePort, "");
 

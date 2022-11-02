@@ -152,8 +152,12 @@ async function plInit() {
 
     // for pageloader tests the profiling info is found in an env variable
     // because it is not available early enough to set it as a browser pref
-    if (Services.env.exists("TPPROFILINGINFO")) {
-      profilingInfo = Services.env.get("TPPROFILINGINFO");
+    var env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+
+    if (env.exists("TPPROFILINGINFO")) {
+      profilingInfo = env.get("TPPROFILINGINFO");
       if (profilingInfo !== null) {
         TalosParentProfiler.initFromObject(JSON.parse(profilingInfo));
       }

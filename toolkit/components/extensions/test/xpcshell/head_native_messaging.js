@@ -49,7 +49,10 @@ const ID = "native@tests.mozilla.org";
 async function setupHosts(scripts) {
   const PERMS = { unixMode: 0o755 };
 
-  const pythonPath = await Subprocess.pathSearch(Services.env.get("PYTHON"));
+  const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  const pythonPath = await Subprocess.pathSearch(env.get("PYTHON"));
 
   async function writeManifest(script, scriptPath, path) {
     let body = `#!${pythonPath} -u\n${script.script}`;

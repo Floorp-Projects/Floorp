@@ -14,7 +14,7 @@ async function getExpectedRuntime() {
 
 async function getExpectedRuntimeAll() {
   const runtimesPath = _getExpectedRuntimesPath();
-  const currentPath = Services.env.get("PWD");
+  const currentPath = env.get("PWD");
   const path = `${currentPath}/${runtimesPath}`;
   info(`Load ${path}`);
   const buffer = await IOUtils.read(path);
@@ -50,5 +50,8 @@ async function openAboutDebuggingWithADB() {
 /* exported openAboutDebuggingWithADB */
 
 function _getExpectedRuntimesPath() {
-  return Services.env.get("USB_RUNTIMES");
+  const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  return env.get("USB_RUNTIMES");
 }

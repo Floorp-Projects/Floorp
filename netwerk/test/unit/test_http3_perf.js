@@ -62,10 +62,13 @@ function run_next_test() {
 
 // eslint-disable-next-line no-unused-vars
 function run_test() {
-  let h2Port = Services.env.get("MOZHTTP2_PORT");
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  let h2Port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
-  let h3Port = Services.env.get("MOZHTTP3_PORT");
+  let h3Port = env.get("MOZHTTP3_PORT");
   Assert.notEqual(h3Port, null);
   Assert.notEqual(h3Port, "");
   h3AltSvc = ":" + h3Port;

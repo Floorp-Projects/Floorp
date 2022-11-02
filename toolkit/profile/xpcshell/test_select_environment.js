@@ -32,8 +32,11 @@ add_task(async () => {
   writeProfilesIni(profileData);
   checkProfileService(profileData);
 
-  Services.env.set("XRE_PROFILE_PATH", dir.path);
-  Services.env.set("XRE_PROFILE_LOCAL_PATH", dir.path);
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  env.set("XRE_PROFILE_PATH", dir.path);
+  env.set("XRE_PROFILE_LOCAL_PATH", dir.path);
 
   let { rootDir, localDir, profile, didCreate } = selectStartupProfile();
   checkStartupReason("restart");

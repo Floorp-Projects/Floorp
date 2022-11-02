@@ -29,7 +29,10 @@ function getChainRootIdentifier() {
   if (normandy_url.includes("dev.")) {
     return Ci.nsIContentSignatureVerifier.ContentSignatureDevRoot;
   }
-  if (Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  if (env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
     return Ci.nsIX509CertDB.AppXPCShellRoot;
   }
   return Ci.nsIContentSignatureVerifier.ContentSignatureLocalRoot;

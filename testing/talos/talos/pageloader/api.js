@@ -50,6 +50,13 @@ XPCOMUtils.defineLazyServiceGetter(
   "amIAddonManagerStartup"
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "env",
+  "@mozilla.org/process/environment;1",
+  "nsIEnvironment"
+);
+
 async function talosStart() {
   // Tests are driven from pageloader.xhtml.  We need to be careful to open
   // pageloader.xhtml before dismissing the default browser window or we
@@ -105,7 +112,7 @@ this.pageloader = class extends ExtensionAPI {
       ["content", "pageloader", "chrome/"],
     ]);
 
-    if (Services.env.exists("MOZ_USE_PAGELOADER")) {
+    if (env.exists("MOZ_USE_PAGELOADER")) {
       // TalosPowers is a separate WebExtension that may or may not already have
       // finished loading. tryLoad is used to wait for TalosPowers to be around
       // before continuing.

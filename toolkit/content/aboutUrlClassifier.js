@@ -644,11 +644,14 @@ var Debug = {
 
     // Disable configure log modules if log modules are already set
     // by environment variable.
+    let env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
 
     let logModules =
-      Services.env.get("MOZ_LOG") ||
-      Services.env.get("MOZ_LOG_MODULES") ||
-      Services.env.get("NSPR_LOG_MODULES");
+      env.get("MOZ_LOG") ||
+      env.get("MOZ_LOG_MODULES") ||
+      env.get("NSPR_LOG_MODULES");
 
     if (logModules.length) {
       document.getElementById("set-log-modules").disabled = true;
@@ -662,8 +665,7 @@ var Debug = {
 
     // Disable set log file if log file is already set
     // by environment variable.
-    let logFile =
-      Services.env.get("MOZ_LOG_FILE") || Services.env.get("NSPR_LOG_FILE");
+    let logFile = env.get("MOZ_LOG_FILE") || env.get("NSPR_LOG_FILE");
     if (logFile.length) {
       document.getElementById("set-log-file").disabled = true;
       document.getElementById("log-file").value = logFile;

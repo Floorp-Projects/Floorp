@@ -62,7 +62,10 @@ let cancelDuringOnStartListener = {
       var uri = ios.newURI("http://site3.com/");
 
       // Need to set NECKO_ERRORS_ARE_FATAL=0 else we'll abort process
-      Services.env.set("NECKO_ERRORS_ARE_FATAL", "0");
+      var env = Cc["@mozilla.org/process/environment;1"].getService(
+        Ci.nsIEnvironment
+      );
+      env.set("NECKO_ERRORS_ARE_FATAL", "0");
       // we expect setting referrer to fail
       try {
         request.referrerInfo = new ReferrerInfo(

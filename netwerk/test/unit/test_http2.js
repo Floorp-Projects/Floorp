@@ -1388,7 +1388,10 @@ function resetPrefs() {
 }
 
 function run_test() {
-  serverPort = Services.env.get("MOZHTTP2_PORT");
+  var env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  serverPort = env.get("MOZHTTP2_PORT");
   Assert.notEqual(serverPort, null);
   dump("using port " + serverPort + "\n");
 

@@ -37,7 +37,10 @@ function run_test() {
     Services.prefs.clearUserPref("network.dns.localDomains");
   });
 
-  var serverPort = Services.env.get("MOZHTTP2_PORT");
+  var env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  var serverPort = env.get("MOZHTTP2_PORT");
   make_and_open_channel(
     "https://foo.example.com:" + serverPort + "/server-timing",
     readServerContent

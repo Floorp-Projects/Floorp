@@ -5,6 +5,10 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
 
+const env = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
+
 const MAX_ROUND_TRIP_TIME_MS = AppConstants.DEBUG || AppConstants.ASAN ? 18 : 9;
 const MAX_RETRIES = 5;
 
@@ -31,7 +35,7 @@ let readAll = async function(pipe) {
 };
 
 add_task(async function setup() {
-  PYTHON = await Subprocess.pathSearch(Services.env.get("PYTHON"));
+  PYTHON = await Subprocess.pathSearch(env.get("PYTHON"));
 
   PYTHON_BIN = PathUtils.filename(PYTHON);
   PYTHON_DIR = PathUtils.parent(PYTHON);
@@ -675,13 +679,13 @@ add_task(async function test_subprocess_environment() {
   // PATH variables.
   if (AppConstants.platform == "win") {
     Object.assign(environment, {
-      PATH: Services.env.get("PATH"),
-      PATHEXT: Services.env.get("PATHEXT"),
-      SYSTEMROOT: Services.env.get("SYSTEMROOT"),
+      PATH: env.get("PATH"),
+      PATHEXT: env.get("PATHEXT"),
+      SYSTEMROOT: env.get("SYSTEMROOT"),
     });
   }
 
-  Services.env.set("BAR", "BAZ");
+  env.set("BAR", "BAZ");
 
   let proc = await Subprocess.call({
     command: PYTHON,
@@ -705,9 +709,9 @@ add_task(async function test_subprocess_environment() {
 });
 
 add_task(async function test_subprocess_environmentAppend() {
-  Services.env.set("VALUE_FROM_BASE_ENV", "untouched");
-  Services.env.set("VALUE_FROM_BASE_ENV_EMPTY", "untouched");
-  Services.env.set("VALUE_FROM_BASE_ENV_REMOVED", "untouched");
+  env.set("VALUE_FROM_BASE_ENV", "untouched");
+  env.set("VALUE_FROM_BASE_ENV_EMPTY", "untouched");
+  env.set("VALUE_FROM_BASE_ENV_REMOVED", "untouched");
 
   let proc = await Subprocess.call({
     command: PYTHON,
@@ -810,7 +814,7 @@ if (AppConstants.platform !== "win") {
 
     equal(foo, val, "Got expected $FOO value");
 
-    Services.env.set("FOO", "");
+    env.set("FOO", "");
 
     let { exitCode } = await proc.wait();
 

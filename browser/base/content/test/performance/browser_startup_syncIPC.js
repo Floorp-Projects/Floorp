@@ -417,7 +417,9 @@ add_task(async function() {
     ok(shouldPass, "No unexpected sync IPC during startup");
   } else {
     const filename = "profile_startup_syncIPC.json";
-    let path = Services.env.get("MOZ_UPLOAD_DIR");
+    let path = Cc["@mozilla.org/process/environment;1"]
+      .getService(Ci.nsIEnvironment)
+      .get("MOZ_UPLOAD_DIR");
     let profilePath = PathUtils.join(path, filename);
     await IOUtils.writeJSON(profilePath, startupRecorder.data.profile);
     ok(

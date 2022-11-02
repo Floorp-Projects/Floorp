@@ -45,8 +45,11 @@ add_task(async () => {
   writeProfilesIni(profileData);
   checkProfileService(profileData);
 
-  Services.env.set("XRE_PROFILE_PATH", root.path);
-  Services.env.set("XRE_PROFILE_LOCAL_PATH", local.path);
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  env.set("XRE_PROFILE_PATH", root.path);
+  env.set("XRE_PROFILE_LOCAL_PATH", local.path);
 
   let { rootDir, localDir, profile, didCreate } = selectStartupProfile();
   checkStartupReason("restart-skipped-default");

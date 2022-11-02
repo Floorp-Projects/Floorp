@@ -24,6 +24,13 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
 
 XPCOMUtils.defineLazyGetter(lazy, "textEncoder", () => new TextEncoder());
 
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "env",
+  "@mozilla.org/process/environment;1",
+  "nsIEnvironment"
+);
+
 const NOTIFY_LISTENING = "marionette-listening";
 
 // Complements -marionette flag for starting the Marionette server.
@@ -65,7 +72,7 @@ class MarionetteParentProcess {
     this.helpInfo = "  --marionette       Enable remote control server.\n";
 
     // Initially set the enabled state based on the environment variable.
-    this.enabled = Services.env.exists(ENV_ENABLED);
+    this.enabled = lazy.env.exists(ENV_ENABLED);
 
     Services.ppmm.addMessageListener("Marionette:IsRunning", this);
 
@@ -231,7 +238,7 @@ class MarionetteParentProcess {
       return;
     }
 
-    Services.env.set(ENV_ENABLED, "1");
+    lazy.env.set(ENV_ENABLED, "1");
     Services.obs.notifyObservers(this, NOTIFY_LISTENING, true);
     lazy.logger.debug("Marionette is listening");
 

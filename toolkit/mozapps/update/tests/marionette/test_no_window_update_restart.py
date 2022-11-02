@@ -244,7 +244,10 @@ class TestNoWindowUpdateRestart(MarionetteTestCase):
                 await updateDownloadedPromise;
 
                 Services.obs.addObserver((aSubject, aTopic, aData) => {
-                    let silent_restart = Services.env.get("MOZ_APP_SILENT_START") == 1 && Services.env.get("MOZ_APP_RESTART") == 1;
+                    let env = Cc["@mozilla.org/process/environment;1"].getService(
+                        Ci.nsIEnvironment
+                    );
+                    let silent_restart = env.get("MOZ_APP_SILENT_START") == 1 && env.get("MOZ_APP_RESTART") == 1;
                     Services.prefs.setBoolPref("testing.no_window_update_restart.silent_restart_env", silent_restart);
                 }, "quit-application-granted");
 
