@@ -57,6 +57,7 @@
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
+#include "vm/PlainObject-inl.h"
 #include "vm/StringObject-inl.h"
 #include "wasm/WasmInstance-inl.h"
 
@@ -9217,6 +9218,51 @@ AttachDecision InlinableNativeIRGenerator::tryAttachObjectCreate() {
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachObjectConstructor() {
+  // Expecting no arguments.
+  if (argc_ != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Stub doesn't support metadata builder
+  if (cx_->realm()->hasAllocationMetadataBuilder()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Create a temporary object to act as the template object.
+  auto* templateObj = NewPlainObjectWithAllocKind(cx_, NewObjectGCKind());
+  if (!templateObj) {
+    cx_->recoverFromOutOfMemory();
+    return AttachDecision::NoAction;
+  }
+
+  // TODO: Support pre-tenuring.
+  gc::AllocSite* site = script()->zone()->unknownAllocSite();
+  MOZ_ASSERT(site);
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Guard callee and newTarget (if constructing) are this Object constructor
+  // function.
+  emitNativeCalleeGuard();
+
+  uint32_t numFixedSlots = templateObj->numUsedFixedSlots();
+  uint32_t numDynamicSlots = templateObj->numDynamicSlots();
+  gc::AllocKind allocKind = templateObj->allocKindForTenure();
+  Shape* shape = templateObj->shape();
+
+  writer.guardNoAllocationMetadataBuilder(
+      cx_->realm()->addressOfMetadataBuilder());
+  writer.newPlainObjectResult(numFixedSlots, numDynamicSlots, allocKind, shape,
+                              site);
+
+  writer.returnFromIC();
+
+  trackAttached("ObjectConstructor");
+  return AttachDecision::Attach;
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachArrayConstructor() {
   // Only optimize the |Array()| and |Array(n)| cases (with or without |new|)
   // for now. Note that self-hosted code calls this without |new| via std_Array.
@@ -9661,6 +9707,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
         return tryAttachTypedArrayConstructor();
       case InlinableNative::String:
         return tryAttachStringConstructor();
+      case InlinableNative::Object:
+        return tryAttachObjectConstructor();
       default:
         break;
     }
