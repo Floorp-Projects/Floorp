@@ -140,20 +140,27 @@ def _sort_requirements_in(requirements_in: Path):
 
 
 def remove_environment_markers_from_requirements_txt(requirements_txt: Path):
-    with open(requirements_txt) as f:
+    with requirements_txt.open(mode="r") as f:
         lines = f.readlines()
     markerless_lines = []
+    continuation_token = " \\"
     for line in lines:
-        if not line.startswith(" ") and not line.startswith("#"):
+        line = line.rstrip()
+
+        if not line.startswith(" ") and not line.startswith("#") and ";" in line:
+            has_continuation_token = line.endswith(continuation_token)
             # The first line of each requirement looks something like:
             #   package-name==X.Y; python_version>=3.7
-            # We can scrub the environment marker by splitting on the
-            # semicolon
-            markerless_lines.append(line.split(";")[0])
+            # We can scrub the environment marker by splitting on the semicolon
+            line = line.split(";")[0]
+            if has_continuation_token:
+                line += continuation_token
+            markerless_lines.append(line)
         else:
             markerless_lines.append(line)
-    with open(requirements_txt, "w") as f:
-        f.writelines(markerless_lines)
+
+    with requirements_txt.open(mode="w") as f:
+        f.write("\n".join(markerless_lines))
 
 
 def _purge_vendor_dir(vendor_dir):
