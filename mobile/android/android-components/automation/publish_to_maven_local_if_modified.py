@@ -24,10 +24,11 @@ def run_cmd_checked(*args, **kwargs):
 
 def find_project_root():
     """Find the absolute path of the project repository root."""
-    cur_dir = Path(__file__).parent
-    while not Path(cur_dir, "LICENSE").exists():
-        cur_dir = cur_dir.parent
-    return cur_dir.absolute()
+    # As a convention, we expect this file in [project-root]/automation/. 
+    automation_dir = Path(__file__).parent
+
+    # Therefore the automation dir's parent is the project root we're looking for.
+    return automation_dir.parent
 
 LAST_CONTENTS_HASH_FILE = ".lastAutoPublishContentsHash"
 
