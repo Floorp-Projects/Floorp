@@ -74,7 +74,7 @@ function adjustGeneralPaths() {
         // test, so its path can serve to provide the unique key that the update
         // sync manager requires (it doesn't need for this to be the actual
         // path to any real file, it's only used as an opaque string).
-        let tempPath = Services.env.get("MOZ_PROCESS_LOG");
+        let tempPath = gEnv.get("MOZ_PROCESS_LOG");
         let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         file.initWithPath(tempPath);
         return file;
@@ -119,7 +119,7 @@ function adjustGeneralPaths() {
  *   See the files in toolkit/mozapps/update/tests/browser.
  */
 async function initUpdate(params) {
-  Services.env.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
+  gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
   await SpecialPowers.pushPrefEnv({
     set: [
       [PREF_APP_UPDATE_DISABLEDFORTESTING, false],

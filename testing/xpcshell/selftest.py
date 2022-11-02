@@ -419,15 +419,21 @@ add_test(function test_child_mozinfo () {
 
 HEADLESS_TRUE = """
 add_task(function headless_true() {
-  Assert.equal(Services.env.get("MOZ_HEADLESS"), "1", "Check MOZ_HEADLESS");
-  Assert.equal(Services.env.get("DISPLAY"), "77", "Check DISPLAY");
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  Assert.equal(env.get("MOZ_HEADLESS"), "1", "Check MOZ_HEADLESS");
+  Assert.equal(env.get("DISPLAY"), "77", "Check DISPLAY");
 });
 """
 
 HEADLESS_FALSE = """
 add_task(function headless_false() {
-  Assert.notEqual(services.env.get("MOZ_HEADLESS"), "1", "Check MOZ_HEADLESS");
-  Assert.notEqual(Services.env.get("DISPLAY"), "77", "Check DISPLAY");
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  Assert.notEqual(env.get("MOZ_HEADLESS"), "1", "Check MOZ_HEADLESS");
+  Assert.notEqual(env.get("DISPLAY"), "77", "Check DISPLAY");
 });
 """
 

@@ -3,6 +3,9 @@
 "use strict";
 
 const uuidGenerator = Services.uuid;
+const environment = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
 
 /*
  * Utility functions for the browser content sandbox tests.
@@ -304,13 +307,17 @@ function GetDir(path) {
 }
 
 function GetDirFromEnvVariable(varName) {
-  return GetDir(Services.env.get(varName));
+  return GetDir(environment.get(varName));
 }
 
 function GetFile(path) {
   let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   file.initWithPath(path);
   return file;
+}
+
+function GetEnvironmentVariable(varName) {
+  return environment.get(varName);
 }
 
 function GetBrowserType(type) {

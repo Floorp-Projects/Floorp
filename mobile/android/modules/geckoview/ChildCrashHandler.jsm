@@ -49,7 +49,9 @@ var ChildCrashHandler = {
 
     aSubject.QueryInterface(Ci.nsIPropertyBag2);
 
-    const disableReporting = Services.env.get("MOZ_CRASHREPORTER_NO_REPORT");
+    const disableReporting = Cc["@mozilla.org/process/environment;1"]
+      .getService(Ci.nsIEnvironment)
+      .get("MOZ_CRASHREPORTER_NO_REPORT");
 
     if (
       !aSubject.get("abnormal") ||

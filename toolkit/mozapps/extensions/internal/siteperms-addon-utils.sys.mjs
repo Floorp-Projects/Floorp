@@ -56,7 +56,10 @@ export function isKnownPublicSuffix(siteOrigin) {
  * @throws if not called from xpcshell test
  */
 export function addGatedPermissionTypesForXpcShellTests(permissionTypes) {
-  if (!Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  if (!env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
     throw new Error("This should only be called from XPCShell tests");
   }
 

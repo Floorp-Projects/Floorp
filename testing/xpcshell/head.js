@@ -390,10 +390,13 @@ function _setupDevToolsServer(breakpointFiles, callback) {
   _Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
   // for debugging-the-debugging, let an env var cause log spew.
-  if (_Services.env.get("DEVTOOLS_DEBUGGER_LOG")) {
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  if (env.get("DEVTOOLS_DEBUGGER_LOG")) {
     _Services.prefs.setBoolPref("devtools.debugger.log", true);
   }
-  if (_Services.env.get("DEVTOOLS_DEBUGGER_LOG_VERBOSE")) {
+  if (env.get("DEVTOOLS_DEBUGGER_LOG_VERBOSE")) {
     _Services.prefs.setBoolPref("devtools.debugger.log.verbose", true);
   }
 
@@ -1245,8 +1248,11 @@ function do_disable_fast_shutdown() {
  * @return nsIFile of the temporary directory
  */
 function do_get_tempdir() {
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   // the python harness sets this in the environment for us
-  let path = _Services.env.get("XPCSHELL_TEST_TEMP_DIR");
+  let path = env.get("XPCSHELL_TEST_TEMP_DIR");
   let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   file.initWithPath(path);
   return file;
@@ -1258,8 +1264,11 @@ function do_get_tempdir() {
  * @return nsIFile of the minidump directory
  */
 function do_get_minidumpdir() {
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   // the python harness may set this in the environment for us
-  let path = _Services.env.get("XPCSHELL_MINIDUMP_DIR");
+  let path = env.get("XPCSHELL_MINIDUMP_DIR");
   if (path) {
     let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     file.initWithPath(path);
@@ -1281,8 +1290,11 @@ function do_get_profile(notifyProfileAfterChange = false) {
     return null;
   }
 
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   // the python harness sets this in the environment for us
-  let profd = Services.env.get("XPCSHELL_TEST_PROFILE_DIR");
+  let profd = env.get("XPCSHELL_TEST_PROFILE_DIR");
   let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   file.initWithPath(profd);
 
@@ -1344,6 +1356,7 @@ function do_get_profile(notifyProfileAfterChange = false) {
 
   // The methods of 'provider' will retain this scope so null out everything
   // to avoid spurious leak reports.
+  env = null;
   profd = null;
   provider = null;
   return file.clone();

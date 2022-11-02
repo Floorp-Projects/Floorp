@@ -18,11 +18,14 @@ add_task(async function test_check_download_dir() {
   // system download dir to fail:
   let newXDGRoot = FileTestUtils.getTempFile("xdgstuff");
   newXDGRoot.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
-  let oldXDG = Services.env.exists("XDG_CONFIG_HOME")
-    ? Services.env.get("XDG_CONFIG_HOME")
+  const gEnv = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  let oldXDG = gEnv.exists("XDG_CONFIG_HOME")
+    ? gEnv.get("XDG_CONFIG_HOME")
     : "";
-  registerCleanupFunction(() => Services.env.set("XDG_CONFIG_HOME", oldXDG));
-  Services.env.set("XDG_CONFIG_HOME", newXDGRoot.path + "/");
+  registerCleanupFunction(() => gEnv.set("XDG_CONFIG_HOME", oldXDG));
+  gEnv.set("XDG_CONFIG_HOME", newXDGRoot.path + "/");
 
   let propBundle = Services.strings.createBundle(
     "chrome://mozapps/locale/downloads/downloads.properties"

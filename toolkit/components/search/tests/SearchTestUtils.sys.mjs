@@ -23,7 +23,10 @@ var gTestScope;
 export var SearchTestUtils = {
   init(testScope) {
     gTestScope = testScope;
-    this._isMochitest = !Services.env.exists("XPCSHELL_TEST_PROFILE_DIR");
+    let env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    this._isMochitest = !env.exists("XPCSHELL_TEST_PROFILE_DIR");
     if (this._isMochitest) {
       this._isMochitest = true;
       lazy.AddonTestUtils.initMochitest(testScope);

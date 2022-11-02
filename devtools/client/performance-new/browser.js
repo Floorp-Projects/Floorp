@@ -15,6 +15,7 @@
  * @typedef {import("./@types/perf").PerformancePref} PerformancePref
  * @typedef {import("./@types/perf").RecordingSettings} RecordingSettings
  * @typedef {import("./@types/perf").RestartBrowserWithEnvironmentVariable} RestartBrowserWithEnvironmentVariable
+ * @typedef {import("./@types/perf").GetEnvironmentVariable} GetEnvironmentVariable
  * @typedef {import("./@types/perf").GetActiveBrowserID} GetActiveBrowserID
  * @typedef {import("./@types/perf").MinimallyTypedGeckoProfile} MinimallyTypedGeckoProfile
  * * @typedef {import("./@types/perf").ProfilerViewMode} ProfilerViewMode
@@ -136,11 +137,26 @@ function sharedLibrariesFromProfile(profile) {
  * @type {RestartBrowserWithEnvironmentVariable}
  */
 function restartBrowserWithEnvironmentVariable(envName, value) {
-  Services.env.set(envName, value);
+  const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  env.set(envName, value);
 
   Services.startup.quit(
     Services.startup.eForceQuit | Services.startup.eRestart
   );
+}
+
+/**
+ * Gets an environment variable from the browser.
+ *
+ * @type {GetEnvironmentVariable}
+ */
+function getEnvironmentVariable(envName) {
+  const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  return env.get(envName);
 }
 
 /**
@@ -168,5 +184,6 @@ module.exports = {
   openProfilerTab,
   sharedLibrariesFromProfile,
   restartBrowserWithEnvironmentVariable,
+  getEnvironmentVariable,
   openFilePickerForObjdir,
 };

@@ -10,12 +10,15 @@ let global = this;
 // if they include non-ascii characters (see bug 1428234 for an example of
 // a past bug with such paths)
 add_task(async function test_non_ascii_path() {
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   const PROFILE_VAR = "XPCSHELL_TEST_PROFILE_DIR";
   let profileDir = PathUtils.join(
-    Services.env.get(PROFILE_VAR),
+    env.get(PROFILE_VAR),
     "\u00ce \u00e5m \u00f1\u00f8t \u00e5s\u00e7ii"
   );
-  Services.env.set(PROFILE_VAR, profileDir);
+  env.set(PROFILE_VAR, profileDir);
 
   AddonTestUtils.init(global);
   AddonTestUtils.overrideCertDB();

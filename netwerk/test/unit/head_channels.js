@@ -384,13 +384,16 @@ async function asyncStartTLSTestServer(
 
   const CALLBACK_PORT = 8444;
 
+  let envSvc = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   let greBinDir = Services.dirsvc.get("GreBinD", Ci.nsIFile);
-  Services.env.set("DYLD_LIBRARY_PATH", greBinDir.path);
+  envSvc.set("DYLD_LIBRARY_PATH", greBinDir.path);
   // TODO(bug 1107794): Android libraries are in /data/local/xpcb, but "GreBinD"
   // does not return this path on Android, so hard code it here.
-  Services.env.set("LD_LIBRARY_PATH", greBinDir.path + ":/data/local/xpcb");
-  Services.env.set("MOZ_TLS_SERVER_DEBUG_LEVEL", "3");
-  Services.env.set("MOZ_TLS_SERVER_CALLBACK_PORT", CALLBACK_PORT);
+  envSvc.set("LD_LIBRARY_PATH", greBinDir.path + ":/data/local/xpcb");
+  envSvc.set("MOZ_TLS_SERVER_DEBUG_LEVEL", "3");
+  envSvc.set("MOZ_TLS_SERVER_CALLBACK_PORT", CALLBACK_PORT);
 
   let httpServer = new HttpServer();
   let serverReady = new Promise(resolve => {

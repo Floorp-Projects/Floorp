@@ -27,9 +27,13 @@ registerCleanupFunction(async () => {
 });
 
 add_task(async function setup() {
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+
   Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
 
-  h3Port = Services.env.get("MOZHTTP3_PORT");
+  h3Port = env.get("MOZHTTP3_PORT");
   Assert.notEqual(h3Port, null);
   Assert.notEqual(h3Port, "");
   host = "foo.example.com:" + h3Port;

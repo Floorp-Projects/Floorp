@@ -88,14 +88,17 @@ var AttributionCode = {
       try {
         file = Services.dirsvc.get("UpdRootD", Ci.nsIFile);
       } catch (ex) {
+        let env = Cc["@mozilla.org/process/environment;1"].getService(
+          Ci.nsIEnvironment
+        );
         // It's most common to test for the profile dir, even though we actually
         // are using the temp dir.
         if (
           ex instanceof Ci.nsIException &&
           ex.result == Cr.NS_ERROR_FAILURE &&
-          Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")
+          env.exists("XPCSHELL_TEST_PROFILE_DIR")
         ) {
-          let path = Services.env.get("XPCSHELL_TEST_TEMP_DIR");
+          let path = env.get("XPCSHELL_TEST_TEMP_DIR");
           file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
           file.initWithPath(path);
           file.append("nested_UpdRootD_1");
@@ -435,7 +438,10 @@ var AttributionCode = {
    * Does nothing if called from outside of an xpcshell test.
    */
   _clearCache() {
-    if (Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
+    let env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    if (env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
       gCachedAttrData = null;
     }
   },

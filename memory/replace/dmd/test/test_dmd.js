@@ -11,7 +11,10 @@ const { FileUtils } = ChromeUtils.importESModule(
 );
 
 // The xpcshell test harness sets PYTHON so we can read it here.
-var gPythonName = Services.env.get("PYTHON");
+var gEnv = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
+var gPythonName = gEnv.get("PYTHON");
 
 // If we're testing locally, the executable file is in "CurProcD". Otherwise,
 // it is in another location that we have to find.
@@ -134,7 +137,7 @@ function run_test() {
   // in-place (to fix stacks) when it runs dmd.py, and that's not safe to do
   // asynchronously.
 
-  Services.env.set("DMD", "1");
+  gEnv.set("DMD", "1");
 
   runProcess(gDmdTestFile, []);
 

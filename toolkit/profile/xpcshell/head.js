@@ -64,13 +64,19 @@ ShellService.register();
 let gIsLegacy = false;
 
 function simulateSnapEnvironment() {
-  Services.env.set("SNAP_INSTANCE_NAME", AppConstants.MOZ_APP_NAME);
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  env.set("SNAP_INSTANCE_NAME", AppConstants.MOZ_APP_NAME);
 
   gIsLegacy = true;
 }
 
 function enableLegacyProfiles() {
-  Services.env.set("MOZ_LEGACY_PROFILES", "1");
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  env.set("MOZ_LEGACY_PROFILES", "1");
 
   gIsLegacy = true;
 }

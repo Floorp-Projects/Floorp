@@ -57,7 +57,10 @@ SpecialPowers.pushPrefEnv({
 });
 
 // Set DEBUG_DEVTOOLS_ALLOCATIONS=allocations|leaks in order print debug informations.
-const DEBUG_ALLOCATIONS = Services.env.get("DEBUG_DEVTOOLS_ALLOCATIONS");
+const env = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
+const DEBUG_ALLOCATIONS = env.get("DEBUG_DEVTOOLS_ALLOCATIONS");
 
 async function addTab(url) {
   const tab = BrowserTestUtils.addTab(gBrowser, url);

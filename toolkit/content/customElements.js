@@ -24,7 +24,10 @@
   const { AppConstants } = ChromeUtils.importESModule(
     "resource://gre/modules/AppConstants.sys.mjs"
   );
-  const instrumentClasses = Services.env.get("MOZ_INSTRUMENT_CUSTOM_ELEMENTS");
+  const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  const instrumentClasses = env.get("MOZ_INSTRUMENT_CUSTOM_ELEMENTS");
   const instrumentedClasses = instrumentClasses ? new Set() : null;
   const instrumentedBaseClasses = instrumentClasses ? new WeakSet() : null;
 

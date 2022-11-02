@@ -62,7 +62,10 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   });
 });
 
-const isXpcshell = Services.env.exists("XPCSHELL_TEST_PROFILE_DIR");
+let env = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
+const isXpcshell = env.exists("XPCSHELL_TEST_PROFILE_DIR");
 
 // We're only testing for empty objects, not
 // empty strings or empty arrays.

@@ -5,12 +5,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import {
   BaseProcess,
   PromiseWorker,
 } from "resource://gre/modules/subprocess/subprocess_common.sys.mjs";
 
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+
+const lazy = {};
+
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "env",
+  "@mozilla.org/process/environment;1",
+  "nsIEnvironment"
+);
 
 var obj = { ctypes };
 Services.scriptloader.loadSubScript(
@@ -40,7 +50,7 @@ class WinPromiseWorker extends PromiseWorker {
           "win",
           "6.2"
         ),
-        comspec: Services.env.get("COMSPEC"),
+        comspec: lazy.env.get("COMSPEC"),
         signalEvent: String(
           ctypes.cast(this.signalEvent, ctypes.uintptr_t).value
         ),

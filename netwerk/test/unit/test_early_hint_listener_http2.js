@@ -57,7 +57,10 @@ let http2Port;
 
 add_task(async function setup() {
   Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
-  http2Port = Services.env.get("MOZHTTP2_PORT");
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  http2Port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(http2Port, null);
   Assert.notEqual(http2Port, "");
 

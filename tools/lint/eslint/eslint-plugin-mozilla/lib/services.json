@@ -22,7 +22,6 @@
     "nsIDroppedLinkHandler": "droppedLinkHandler",
     "nsIEffectiveTLDService": "eTLD",
     "nsIEnterprisePolicies": "policies",
-    "nsIEnvironment": "env",
     "nsIEventListenerService": "els",
     "nsIFOG": "fog",
     "nsIFocusManager": "focus",

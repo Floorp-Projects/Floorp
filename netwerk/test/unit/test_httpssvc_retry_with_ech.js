@@ -56,11 +56,14 @@ function setup() {
     "../../../security/manager/ssl/tests/unit/test_encrypted_client_hello"
   );
 
-  h3Port = Services.env.get("MOZHTTP3_PORT_ECH");
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  h3Port = env.get("MOZHTTP3_PORT_ECH");
   Assert.notEqual(h3Port, null);
   Assert.notEqual(h3Port, "");
 
-  h3EchConfig = Services.env.get("MOZHTTP3_ECH");
+  h3EchConfig = env.get("MOZHTTP3_ECH");
   Assert.notEqual(h3EchConfig, null);
   Assert.notEqual(h3EchConfig, "");
 }

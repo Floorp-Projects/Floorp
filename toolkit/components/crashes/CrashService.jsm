@@ -24,7 +24,10 @@ var gRunningProcesses = new Set();
  * don't want to block shutdown waiting for it.
  */
 async function maybeRunMinidumpAnalyzer(minidumpPath, allThreads) {
-  let shutdown = Services.env.exists("MOZ_CRASHREPORTER_SHUTDOWN");
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  let shutdown = env.exists("MOZ_CRASHREPORTER_SHUTDOWN");
 
   if (gQuitting || shutdown) {
     return;

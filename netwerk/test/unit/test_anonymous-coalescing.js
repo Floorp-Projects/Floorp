@@ -13,7 +13,10 @@ var http2pref;
 var extpref;
 
 function run_test() {
-  h2Port = Services.env.get("MOZHTTP2_PORT");
+  var env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  h2Port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
 

@@ -20,8 +20,11 @@ let tmp = do_get_profile();
 tmp.append("Temp");
 
 add_setup(() => {
-  if (Services.env.exists("MOZ_LOG")) {
-    moz_log += `,${Services.env.get("MOZ_LOG")}`;
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  if (env.exists("MOZ_LOG")) {
+    moz_log += `,${env.get("MOZ_LOG")}`;
   }
 
   tmp.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o700);

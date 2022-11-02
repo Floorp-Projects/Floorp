@@ -2,7 +2,9 @@ const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // Returns the test H/2 server port, throwing if it's missing or invalid.
 function getTestServerPort() {
-  let portEnv = Services.env.get("MOZHTTP2_PORT");
+  let portEnv = Cc["@mozilla.org/process/environment;1"]
+    .getService(Ci.nsIEnvironment)
+    .get("MOZHTTP2_PORT");
   let port = parseInt(portEnv, 10);
   if (!Number.isFinite(port) || port < 1 || port > 65535) {
     throw new Error(`Invalid port in MOZHTTP2_PORT env var: ${portEnv}`);

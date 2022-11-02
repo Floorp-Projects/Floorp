@@ -127,7 +127,10 @@ const gUpdateElevationDialog = {
 
     // If already in safe mode restart in safe mode (bug 327119)
     if (Services.appinfo.inSafeMode) {
-      Services.env.set("MOZ_SAFE_MODE_RESTART", "1");
+      let env = Cc["@mozilla.org/process/environment;1"].getService(
+        Ci.nsIEnvironment
+      );
+      env.set("MOZ_SAFE_MODE_RESTART", "1");
     }
 
     // Restart the application

@@ -85,7 +85,10 @@ export var ResetProfile = {
     }
 
     // Set the reset profile environment variable.
-    Services.env.set("MOZ_RESET_PROFILE_RESTART", "1");
+    let env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    env.set("MOZ_RESET_PROFILE_RESTART", "1");
 
     Services.startup.quit(
       Ci.nsIAppStartup.eForceQuit | Ci.nsIAppStartup.eRestart
