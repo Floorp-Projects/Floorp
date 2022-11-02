@@ -365,10 +365,6 @@
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">Vel føretrekt søkjemotor:</string>
 
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Vis tips på starskjermen</string>
-
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Legg til søkjemotor</string>
 
@@ -497,32 +493,63 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Velkomen til %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">Velkomen til %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Lat att</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Velkomen til %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Rask. Privat. Ingen distraksjonar.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Kom i gang</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s er ikkje som andre nettlesarar</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Vi slettar historikken din for ekstra personvern, når du lét att appen.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Gjer %1$s til din standard-nettlesar for å beskytte dataa dine, kvar gong du opnar ei lenke.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Bruk som standard nettleser</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Hopp over</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Privat surfing på neste nivå når du ønskjer det</string>
+    <string moz:removedIn="106" name="onboarding_description">Privat surfing på neste nivå når du ønskjer det</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Der inkognito møter usynleg</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Der inkognito møter usynleg</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s er ein personvern-først nettlesar med ekstra sterkt sporings- og infokapselvern innebygd.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s er ein personvern-først nettlesar med ekstra sterkt sporings- og infokapselvern innebygd.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Surf som om det aldri skjedde</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Surf som om det aldri skjedde</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Eitt trykk slettar nettlesarhistorikken og infokapslane — og hindrar annonsar i å spore deg.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Eitt trykk slettar nettlesarhistorikken og infokapslane — og hindrar annonsar i å spore deg.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Personvern som passar alle situasjonar</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Personvern som passar alle situasjonar</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Dersom nettlesingsbehova dine endrar seg, er det enkelt å skalere personverninnstillingane opp eller ned.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Dersom nettlesingsbehova dine endrar seg, er det enkelt å skalere personverninnstillingane opp eller ned.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Start nettlesinga</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Start nettlesinga</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Styrk personvernet ditt</string>
@@ -758,10 +785,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Ekstern debugging via USB/Wi-Fi</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">Lås opp %1$s</string>
-
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">Lås opp</string>
 
@@ -770,13 +793,6 @@
 
     <!-- Subtitle text for biometric prompt pop-up -->
     <string name="biometric_prompt_subtitle">Du kan bruke fingeravtrykket for å fortsetje denne appøkta.</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">Trykk på fingeravtrykks-sensoren for å fortsetja.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">Ny økt</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -818,11 +834,6 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Oppfører sida seg uventa?\n Prøv å deaktivera sporingsvern</string>
 
-    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Manglar nettstaden innhald eller oppfører han seg merkeleg?\n
-    Prøv å slå av utvida sporingsvern</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Få tilgang dei meste besøkte nettstedene med eit knapptrykk%1$s Meny > Legg til på startskjermen]]></string>
@@ -840,28 +851,8 @@ The new line here must be kept as the second half of the string is clickable for
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Opna ei lenke i ei ny fane\n Trykk og hald på ei lenke på ei side</string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-      %1$s is a placeholder for the app name. -->
-    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Vil du sjå den fullstendige versjonen av ein nettstad?\n
-        Slå på datamaskinversjon frå %1$s-menyen</string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Slå av tips på startskjermen</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Vil du behalde utvida sporingsvern avslått for ein nettstad du stolar på?\n
-        Legg han til i løyvelista i innstillingar
-    </string>
-
-    <!-- Tip displayed on the home view about the changes in the new release.
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Ja, vi har ein ny utsjånad!\n Finn ut meir om dette og andre oppdateringar for %1$s.</string>
-
-    <!-- Tip displayed on the home view about shortcuts
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Lag snarvegar til nettstadane du besøkjer mest:\n
-    Vel Legg til i snarvegar frå %1$s-menyen</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Ny fane opna</string>
@@ -985,7 +976,8 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Det ser ut til at denne nettstaden prøvde å spore deg. Klikk på skjoldet for nettstadinnstillingar og sporingsblokkeringsstatistikk.</string>
+    <string name="cfr_for_toolbar_shield_icon2">Tatt på fersk gjerning! Vi hindra denne nettstaden i å spionere på deg. Trykk på skjoldet når som helst for å sjå kva vi blokerer.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Lat att sprettoppvindauge</string>
 
@@ -998,7 +990,30 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Avvis</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Bli kvitt dei personlege dataa dine, nettlesarhistorikk og meir frå denne økta ved å trykkje på søppelknappen. Prøv det!</string>
     <string name="cfr_for_toolbar_delete_icon2">Trykk her for å kvitte deg med alt — historikk, infokapslar, alt — for å byrje på nytt på ei ny fane.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Lat att</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Søkje-widget</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Nettlesarhistorikk er sletta! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Vi overlèt deg til den private nettlesinga di, men får ein raskare start neste gong med %1$s-widgeten på startskjermen.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Legg til widget på startskjermen</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Widget lagt til på startskjermen</string>
 </resources>
