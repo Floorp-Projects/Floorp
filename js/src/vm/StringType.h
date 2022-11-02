@@ -312,7 +312,7 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   static const uint32_t INIT_DEPENDENT_FLAGS = LINEAR_BIT | DEPENDENT_BIT;
 
   static const uint32_t TYPE_FLAGS_MASK = js::BitMask(9) - js::BitMask(3);
-  static_assert((TYPE_FLAGS_MASK & RESERVED_MASK) == 0,
+  static_assert((TYPE_FLAGS_MASK & js::gc::HeaderWord::RESERVED_MASK) == 0,
                 "GC reserved bits must not be used for Strings");
 
   static const uint32_t LATIN1_CHARS_BIT = js::Bit(9);
