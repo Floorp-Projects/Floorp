@@ -29,16 +29,24 @@ export class AddonSearchEngine extends SearchEngine {
    * Creates a AddonSearchEngine.
    *
    * @param {object} options
+   * @param {boolean} options.isAppProvided
+   *   Indicates whether the engine is provided by Firefox, either
+   *   shipped in omni.ja or via Normandy. If it is, it will
+   *   be treated as read-only.
    * @param {object} [options.details]
    *   An object that simulates the manifest object from a WebExtension.
    * @param {object} [options.json]
    *   An object that represents the saved JSON settings for the engine.
    */
   constructor({ isAppProvided, details, json } = {}) {
+    let extensionId =
+      details?.extensionID ?? json.extensionID ?? json._extensionID;
+    let id = extensionId + (details?.locale ?? json._locale);
+
     super({
-      loadPath:
-        "[other]addEngineWithDetails:" +
-        (details?.extensionID ?? json.extensionID ?? json._extensionID ?? null),
+      loadPath: "[other]addEngineWithDetails:" + extensionId,
+      isAppProvided,
+      id,
     });
 
     this.#isAppProvided = isAppProvided;
@@ -135,6 +143,7 @@ export class AddonSearchEngine extends SearchEngine {
     // file so just store the relevant metadata.
     if (this.#isAppProvided) {
       return {
+        id: this.id,
         _name: this.name,
         _isAppProvided: true,
         _metaData: this._metaData,

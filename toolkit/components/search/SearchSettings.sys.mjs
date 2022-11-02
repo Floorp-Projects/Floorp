@@ -409,8 +409,8 @@ export class SearchSettings {
 
   /**
    * Returns the name for the hash for a particular attribute. This is
-   * necessary because the normal default engine is named `current` with
-   * its hash as `hash`. All other hashes are in the `<name>Hash` format.
+   * necessary because the default engine ID property is named `current`
+   * with its hash as `hash`. All other hashes are in the `<name>Hash` format.
    *
    * @param {string} name
    *   The name of the attribute to get the hash name for.
@@ -418,6 +418,10 @@ export class SearchSettings {
    *   The hash name to use.
    */
   getHashName(name) {
+    // The "current" check remains here because we need to retrieve the
+    // "current" hash name for the migration of engine ids. After the migration,
+    // the "current" property is no longer used because we now store
+    // "defaultEngineId" instead.
     if (name == "current") {
       return "hash";
     }

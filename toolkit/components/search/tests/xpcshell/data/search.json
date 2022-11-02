@@ -5,6 +5,7 @@
   "metaData": {},
   "engines": [
     {
+      "id": "engine1@search.mozilla.orgdefault",
       "_name": "engine1",
       "_metaData": {
         "alias": "testAlias"
@@ -12,6 +13,7 @@
       "_isAppProvided": true
     },
     {
+      "id": "engine2@search.mozilla.orgdefault",
       "_name": "engine2",
       "_metaData": {
         "alias": null,
@@ -20,6 +22,7 @@
       "_isAppProvided": true
     },
     {
+      "id": "test-addon-id@mozilla.orgdefault",
       "_name": "Test search engine",
       "_shortName": "test-search-engine",
       "description": "A test search engine (based on Google search)",

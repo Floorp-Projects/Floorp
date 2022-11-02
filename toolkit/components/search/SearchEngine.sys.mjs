@@ -623,16 +623,27 @@ export class SearchEngine {
   // The known public suffix of the search url, cached in memory to avoid
   // repeated look-ups.
   _searchUrlPublicSuffix = null;
+  /**
+   * The unique id of the Search Engine.
+   * The id is an UUID.
+   *
+   * @type {string}
+   */
+  #id;
 
   /**
    * Constructor.
    *
    * @param {object} options
    *   The options for this search engine.
+   * @param {string} [options.id]
+   *   The identifier to use for this engine, if none is specified a random
+   *   uuid is created.
    * @param {string} options.loadPath
    *   The path of the engine was originally loaded from. Should be anonymized.
    */
   constructor(options = {}) {
+    this.#id = options.id ?? this.#uuid();
     if (!("loadPath" in options)) {
       throw new Error("loadPath missing from options.");
     }
@@ -1099,6 +1110,7 @@ export class SearchEngine {
    *   The json record to use.
    */
   _initWithJSON(json) {
+    this.#id = json.id;
     this._name = json._name;
     this._description = json.description;
     this._hasPreferredIcon = json._hasPreferredIcon == undefined;
@@ -1141,6 +1153,7 @@ export class SearchEngine {
    */
   toJSON() {
     const fieldsToCopy = [
+      "id",
       "_name",
       "_loadPath",
       "description",
@@ -1669,6 +1682,25 @@ export class SearchEngine {
         }
       }
     }
+  }
+
+  /**
+   * @returns {string}
+   *   The identifier of the Search Engine.
+   */
+  get id() {
+    return this.#id;
+  }
+
+  /**
+   * Generates an UUID.
+   *
+   * @returns {string}
+   *   An UUID string, without leading or trailing braces.
+   */
+  #uuid() {
+    let uuid = Services.uuid.generateUUID().toString();
+    return uuid.slice(1, uuid.length - 1);
   }
 }
 

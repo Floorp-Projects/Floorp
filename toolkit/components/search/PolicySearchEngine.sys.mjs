@@ -28,8 +28,11 @@ export class PolicySearchEngine extends SearchEngine {
    *   An object that represents the saved JSON settings for the engine.
    */
   constructor(options = {}) {
+    let id = "policy-" + (options.details?.name ?? options.json._name);
+
     super({
       loadPath: "[other]addEngineWithDetails:set-via-policy",
+      id,
     });
 
     if (options.details) {
@@ -94,6 +97,7 @@ export class PolicySearchEngine extends SearchEngine {
     // We only want to return a sub-set of fields, as the details for this engine
     // are loaded on each startup from the enterprise policies.
     return {
+      id: json.id,
       _name: json._name,
       // Load path is included so that we know this is an enterprise engine.
       _loadPath: json._loadPath,
