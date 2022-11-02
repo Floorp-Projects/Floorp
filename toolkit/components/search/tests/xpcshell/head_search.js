@@ -65,13 +65,13 @@ SearchSettings.SETTNGS_INVALIDATION_DELAY = 250;
 
 async function promiseSettingsData() {
   let path = PathUtils.join(PathUtils.profileDir, SETTINGS_FILENAME);
-  return JSON.parse(await IOUtils.readUTF8(path, { decompress: true }));
+  return IOUtils.readJSON(path, { decompress: true });
 }
 
 function promiseSaveSettingsData(data) {
-  return IOUtils.write(
+  return IOUtils.writeJSON(
     PathUtils.join(PathUtils.profileDir, SETTINGS_FILENAME),
-    new TextEncoder().encode(JSON.stringify(data)),
+    data,
     { compress: true }
   );
 }
