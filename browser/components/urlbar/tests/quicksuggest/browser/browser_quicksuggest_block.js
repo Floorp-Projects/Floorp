@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource:///modules/PartnerLinkAttribution.jsm",
 });
 
+const { TELEMETRY_SCALARS } = UrlbarProviderQuickSuggest;
 const { TIMESTAMP_TEMPLATE } = QuickSuggest;
 
 // Include the timestamp template in the suggestion URLs so we can make sure
@@ -181,26 +182,25 @@ async function doBasicBlockTest({ suggestion, isBestMatch, block }) {
   // Check telemetry scalars.
   let index = 2;
   let scalars = {
-    [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index,
+    [TELEMETRY_SCALARS.IMPRESSION]: index,
   };
   if (isSponsored) {
-    scalars[QuickSuggestTestUtils.SCALARS.BLOCK_SPONSORED] = index;
+    scalars[TELEMETRY_SCALARS.BLOCK_SPONSORED] = index;
   } else {
-    scalars[QuickSuggestTestUtils.SCALARS.BLOCK_NONSPONSORED] = index;
+    scalars[TELEMETRY_SCALARS.BLOCK_NONSPONSORED] = index;
   }
   if (isBestMatch) {
     if (isSponsored) {
       scalars = {
         ...scalars,
-        [QuickSuggestTestUtils.SCALARS.IMPRESSION_SPONSORED_BEST_MATCH]: index,
-        [QuickSuggestTestUtils.SCALARS.BLOCK_SPONSORED_BEST_MATCH]: index,
+        [TELEMETRY_SCALARS.IMPRESSION_SPONSORED_BEST_MATCH]: index,
+        [TELEMETRY_SCALARS.BLOCK_SPONSORED_BEST_MATCH]: index,
       };
     } else {
       scalars = {
         ...scalars,
-        [QuickSuggestTestUtils.SCALARS
-          .IMPRESSION_NONSPONSORED_BEST_MATCH]: index,
-        [QuickSuggestTestUtils.SCALARS.BLOCK_NONSPONSORED_BEST_MATCH]: index,
+        [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH]: index,
+        [TELEMETRY_SCALARS.BLOCK_NONSPONSORED_BEST_MATCH]: index,
       };
     }
   }
@@ -210,7 +210,7 @@ async function doBasicBlockTest({ suggestion, isBestMatch, block }) {
   let match_type = isBestMatch ? "best-match" : "firefox-suggest";
   QuickSuggestTestUtils.assertEvents([
     {
-      category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+      category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
       method: "engagement",
       object: "block",
       extra: {

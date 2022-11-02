@@ -48,12 +48,6 @@ const TELEMETRY_SCALARS = {
     "contextual.services.quicksuggest.impression_sponsored_bestmatch",
 };
 
-// Identifies the source of the QuickSuggest suggestion.
-export const QUICK_SUGGEST_SOURCE = {
-  REMOTE_SETTINGS: "remote-settings",
-  MERINO: "merino",
-};
-
 /**
  * A provider that returns a suggested url to the user based on what
  * they have currently typed so they can navigate directly.
@@ -566,10 +560,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       query: searchString,
     });
 
-    return suggestions?.map(suggestion => ({
-      ...suggestion,
-      source: QUICK_SUGGEST_SOURCE.MERINO,
-    }));
+    return suggestions;
   }
 
   /**

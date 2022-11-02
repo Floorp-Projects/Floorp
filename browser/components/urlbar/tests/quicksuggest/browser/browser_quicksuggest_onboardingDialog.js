@@ -94,12 +94,12 @@ add_task(async function escKey_focusInsideDialog() {
     },
     telemetryEvents: [
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "data_collect_toggled",
         object: "disabled",
       },
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "dismiss_2",
       },
@@ -134,12 +134,12 @@ add_task(async function escKey_focusOutsideDialog() {
     },
     telemetryEvents: [
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "data_collect_toggled",
         object: "disabled",
       },
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "dismiss_2",
       },
@@ -165,7 +165,7 @@ async function doQueuedEscKeyTest(otherDialogKey) {
   await doDialogTest({
     callback: async () => {
       // Create promises that will resolve when each dialog is opened.
-      let uris = [OTHER_DIALOG_URI, ONBOARDING_URI];
+      let uris = [OTHER_DIALOG_URI, QuickSuggest.ONBOARDING_URI];
       let [otherOpenedPromise, onboardingOpenedPromise] = uris.map(uri =>
         TestUtils.topicObserved(
           "subdialog-loaded",
@@ -202,12 +202,12 @@ async function doQueuedEscKeyTest(otherDialogKey) {
     },
     telemetryEvents: [
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "data_collect_toggled",
         object: "disabled",
       },
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "dismiss_1",
       },
@@ -230,12 +230,12 @@ add_task(async function dismissed_other_on_introduction() {
     },
     telemetryEvents: [
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "data_collect_toggled",
         object: "disabled",
       },
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "dismiss_1",
       },
@@ -272,7 +272,7 @@ add_task(async function nimbus_override_wait_after_n_restarts() {
       info("Simulating second restart");
       const dialogPromise = BrowserTestUtils.promiseAlertDialogOpen(
         null,
-        ONBOARDING_URI,
+        QuickSuggest.ONBOARDING_URI,
         { isSubDialog: true }
       );
       const maybeShowPromise = QuickSuggest.maybeShowOnboardingDialog();
@@ -1051,12 +1051,12 @@ async function onboardingClose(variation) {
     },
     telemetryEvents: [
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "data_collect_toggled",
         object: "disabled",
       },
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "close_1",
       },
@@ -1102,12 +1102,12 @@ async function onboardingNext(variation) {
     },
     telemetryEvents: [
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "data_collect_toggled",
         object: "disabled",
       },
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "dismiss_2",
       },
@@ -1147,12 +1147,12 @@ async function onboardingAccept(variation, skipIntroduction) {
     },
     telemetryEvents: [
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "data_collect_toggled",
         object: "enabled",
       },
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "accept_2",
       },
@@ -1191,12 +1191,12 @@ async function onboardingReject(variation, skipIntroduction) {
     },
     telemetryEvents: [
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "data_collect_toggled",
         object: "disabled",
       },
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "reject_2",
       },
@@ -1238,12 +1238,12 @@ async function onboardingSkipLink(variation, skipIntroduction) {
     },
     telemetryEvents: [
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "data_collect_toggled",
         object: "disabled",
       },
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "not_now_2",
       },
@@ -1279,7 +1279,7 @@ async function doLearnMoreTest(variation, skipIntroduction, target, telemetry) {
       info("Commit the learn more link");
       const loadPromise = BrowserTestUtils.waitForNewTab(
         gBrowser,
-        QuickSuggestTestUtils.LEARN_MORE_URL
+        QuickSuggest.HELP_URL
       ).then(tab => {
         info("Saw new tab");
         return tab;
@@ -1296,7 +1296,7 @@ async function doLearnMoreTest(variation, skipIntroduction, target, telemetry) {
       Assert.equal(gBrowser.selectedTab, tab, "Current tab is the new tab");
       Assert.equal(
         gBrowser.currentURI.spec,
-        QuickSuggestTestUtils.LEARN_MORE_URL,
+        QuickSuggest.HELP_URL,
         "Current tab is the support page"
       );
       BrowserTestUtils.removeTab(tab);
@@ -1313,12 +1313,12 @@ async function doLearnMoreTest(variation, skipIntroduction, target, telemetry) {
     },
     telemetryEvents: [
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "data_collect_toggled",
         object: "disabled",
       },
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: telemetry,
       },
@@ -1487,7 +1487,7 @@ async function doDialogTest({
 async function showOnboardingDialog({ skipIntroduction } = {}) {
   const dialogPromise = BrowserTestUtils.promiseAlertDialogOpen(
     null,
-    ONBOARDING_URI,
+    QuickSuggest.ONBOARDING_URI,
     { isSubDialog: true }
   );
 
@@ -1580,12 +1580,12 @@ async function canTabMoveFocus() {
     },
     telemetryEvents: [
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "data_collect_toggled",
         object: "disabled",
       },
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "dismiss_2",
       },

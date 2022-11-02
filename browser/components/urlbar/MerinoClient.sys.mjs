@@ -251,7 +251,11 @@ export class MerinoClient {
       return [];
     }
 
-    return suggestions.map(suggestion => ({ ...suggestion, request_id }));
+    return suggestions.map(suggestion => ({
+      ...suggestion,
+      request_id,
+      source: "merino",
+    }));
   }
 
   /**

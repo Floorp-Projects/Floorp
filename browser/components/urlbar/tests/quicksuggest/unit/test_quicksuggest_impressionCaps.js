@@ -3854,7 +3854,7 @@ async function checkTelemetryEvents(expectedEvents) {
   QuickSuggestTestUtils.assertEvents(
     expectedEvents.map(event => ({
       ...event,
-      category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+      category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
       method: "impression_cap",
     })),
     // Filter in only impression_cap events.

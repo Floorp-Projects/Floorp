@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
+const { TELEMETRY_SCALARS } = UrlbarProviderQuickSuggest;
+
 const SUGGESTIONS = [
   {
     id: 1,
@@ -199,27 +201,25 @@ async function doImpressionTest({
     });
 
     let scalars = {
-      [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
+      [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
     };
     if (isBestMatch) {
       if (isSponsored) {
         scalars = {
           ...scalars,
-          [QuickSuggestTestUtils.SCALARS.IMPRESSION_SPONSORED_BEST_MATCH]:
-            index + 1,
+          [TELEMETRY_SCALARS.IMPRESSION_SPONSORED_BEST_MATCH]: index + 1,
         };
       } else {
         scalars = {
           ...scalars,
-          [QuickSuggestTestUtils.SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH]:
-            index + 1,
+          [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH]: index + 1,
         };
       }
     }
     QuickSuggestTestUtils.assertScalars(scalars);
     QuickSuggestTestUtils.assertEvents([
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "engagement",
         object: "impression_only",
         extra: {
@@ -492,24 +492,21 @@ async function doClickTest({
     });
 
     let scalars = {
-      [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
-      [QuickSuggestTestUtils.SCALARS.CLICK]: index + 1,
+      [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
+      [TELEMETRY_SCALARS.CLICK]: index + 1,
     };
     if (isBestMatch) {
       if (isSponsored) {
         scalars = {
           ...scalars,
-          [QuickSuggestTestUtils.SCALARS.IMPRESSION_SPONSORED_BEST_MATCH]:
-            index + 1,
-          [QuickSuggestTestUtils.SCALARS.CLICK_SPONSORED_BEST_MATCH]: index + 1,
+          [TELEMETRY_SCALARS.IMPRESSION_SPONSORED_BEST_MATCH]: index + 1,
+          [TELEMETRY_SCALARS.CLICK_SPONSORED_BEST_MATCH]: index + 1,
         };
       } else {
         scalars = {
           ...scalars,
-          [QuickSuggestTestUtils.SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH]:
-            index + 1,
-          [QuickSuggestTestUtils.SCALARS.CLICK_NONSPONSORED_BEST_MATCH]:
-            index + 1,
+          [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH]: index + 1,
+          [TELEMETRY_SCALARS.CLICK_NONSPONSORED_BEST_MATCH]: index + 1,
         };
       }
     }
@@ -518,7 +515,7 @@ async function doClickTest({
     let match_type = isBestMatch ? "best-match" : "firefox-suggest";
     QuickSuggestTestUtils.assertEvents([
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "engagement",
         object: "click",
         extra: {
@@ -591,12 +588,12 @@ add_task(async function click_beforeSearchSuggestions() {
       });
       // Arrow down to the quick suggest result and press Enter.
       QuickSuggestTestUtils.assertScalars({
-        [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
-        [QuickSuggestTestUtils.SCALARS.CLICK]: index + 1,
+        [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
+        [TELEMETRY_SCALARS.CLICK]: index + 1,
       });
       QuickSuggestTestUtils.assertEvents([
         {
-          category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+          category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
           method: "engagement",
           object: "click",
           extra: {
@@ -702,28 +699,26 @@ async function doHelpTest({ suggestion, useKeyboard, isBestMatch = false }) {
   await helpLoadPromise;
   Assert.equal(
     gBrowser.currentURI.spec,
-    QuickSuggestTestUtils.LEARN_MORE_URL,
+    QuickSuggest.HELP_URL,
     "Help URL loaded"
   );
 
   let scalars = {
-    [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
-    [QuickSuggestTestUtils.SCALARS.HELP]: index + 1,
+    [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
+    [TELEMETRY_SCALARS.HELP]: index + 1,
   };
   if (isBestMatch) {
     if (isSponsored) {
       scalars = {
         ...scalars,
-        [QuickSuggestTestUtils.SCALARS.IMPRESSION_SPONSORED_BEST_MATCH]:
-          index + 1,
-        [QuickSuggestTestUtils.SCALARS.HELP_SPONSORED_BEST_MATCH]: index + 1,
+        [TELEMETRY_SCALARS.IMPRESSION_SPONSORED_BEST_MATCH]: index + 1,
+        [TELEMETRY_SCALARS.HELP_SPONSORED_BEST_MATCH]: index + 1,
       };
     } else {
       scalars = {
         ...scalars,
-        [QuickSuggestTestUtils.SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH]:
-          index + 1,
-        [QuickSuggestTestUtils.SCALARS.HELP_NONSPONSORED_BEST_MATCH]: index + 1,
+        [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH]: index + 1,
+        [TELEMETRY_SCALARS.HELP_NONSPONSORED_BEST_MATCH]: index + 1,
       };
     }
   }
@@ -732,7 +727,7 @@ async function doHelpTest({ suggestion, useKeyboard, isBestMatch = false }) {
   let match_type = isBestMatch ? "best-match" : "firefox-suggest";
   QuickSuggestTestUtils.assertEvents([
     {
-      category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+      category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
       method: "engagement",
       object: "help",
       extra: {
@@ -773,7 +768,7 @@ add_task(async function enableToggled() {
     UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", enabled);
     QuickSuggestTestUtils.assertEvents([
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "enable_toggled",
         object: enabled ? "enabled" : "disabled",
       },
@@ -816,7 +811,7 @@ add_task(async function sponsoredToggled() {
     UrlbarPrefs.set("suggest.quicksuggest.sponsored", enabled);
     QuickSuggestTestUtils.assertEvents([
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "sponsored_toggled",
         object: enabled ? "enabled" : "disabled",
       },
@@ -859,7 +854,7 @@ add_task(async function dataCollectionToggled() {
     UrlbarPrefs.set("quicksuggest.dataCollection.enabled", enabled);
     QuickSuggestTestUtils.assertEvents([
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "data_collect_toggled",
         object: enabled ? "enabled" : "disabled",
       },
@@ -956,7 +951,7 @@ add_task(async function bestmatchLearnMore() {
   link.scrollIntoView();
   const onLearnMoreOpenedByClick = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    QuickSuggestTestUtils.BEST_MATCH_LEARN_MORE_URL
+    QuickSuggest.HELP_URL
   );
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "#" + learnMoreLinkId,
@@ -977,7 +972,7 @@ add_task(async function bestmatchLearnMore() {
   link.focus();
   const onLearnMoreOpenedByKey = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    QuickSuggestTestUtils.BEST_MATCH_LEARN_MORE_URL
+    QuickSuggest.HELP_URL
   );
   await BrowserTestUtils.synthesizeKey(
     "KEY_Enter",

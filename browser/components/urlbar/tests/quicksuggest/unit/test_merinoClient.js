@@ -30,6 +30,7 @@ add_task(async function init() {
     EXPECTED_MERINO_SUGGESTIONS.push({
       ...suggestion,
       request_id: MerinoTestUtils.server.response.body.request_id,
+      source: "merino",
     });
   }
 });
