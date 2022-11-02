@@ -12,52 +12,6 @@
   );
 
   class MozDialog extends MozXULElement {
-    constructor() {
-      super();
-
-      this.attachShadow({ mode: "open" });
-
-      document.addEventListener(
-        "keypress",
-        event => {
-          if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
-            this._hitEnter(event);
-          } else if (
-            event.keyCode == KeyEvent.DOM_VK_ESCAPE &&
-            !event.defaultPrevented
-          ) {
-            this.cancelDialog();
-          }
-        },
-        { mozSystemGroup: true }
-      );
-
-      if (AppConstants.platform == "macosx") {
-        document.addEventListener(
-          "keypress",
-          event => {
-            if (event.key == "." && event.metaKey) {
-              this.cancelDialog();
-            }
-          },
-          true
-        );
-      } else {
-        this.addEventListener("focus", this, true);
-        this.shadowRoot.addEventListener("focus", this, true);
-      }
-
-      // listen for when window is closed via native close buttons
-      window.addEventListener("close", event => {
-        if (!this.cancelDialog()) {
-          event.preventDefault();
-        }
-      });
-
-      // for things that we need to initialize after onload fires
-      window.addEventListener("load", () => this._postLoadInit());
-    }
-
     static get observedAttributes() {
       return super.observedAttributes.concat("subdialog");
     }
@@ -127,6 +81,11 @@
       if (this.delayConnectedCallback()) {
         return;
       }
+      if (this.hasConnected) {
+        return;
+      }
+      this.hasConnected = true;
+      this.attachShadow({ mode: "open" });
 
       document.documentElement.setAttribute("role", "dialog");
 
@@ -147,6 +106,50 @@
 
       window.moveToAlertPosition = this.moveToAlertPosition;
       window.centerWindowOnScreen = this.centerWindowOnScreen;
+
+      document.addEventListener(
+        "keypress",
+        event => {
+          if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
+            this._hitEnter(event);
+          } else if (
+            event.keyCode == KeyEvent.DOM_VK_ESCAPE &&
+            !event.defaultPrevented
+          ) {
+            this.cancelDialog();
+          }
+        },
+        { mozSystemGroup: true }
+      );
+
+      if (AppConstants.platform == "macosx") {
+        document.addEventListener(
+          "keypress",
+          event => {
+            if (event.key == "." && event.metaKey) {
+              this.cancelDialog();
+            }
+          },
+          true
+        );
+      } else {
+        this.addEventListener("focus", this, true);
+        this.shadowRoot.addEventListener("focus", this, true);
+      }
+
+      // listen for when window is closed via native close buttons
+      window.addEventListener("close", event => {
+        if (!this.cancelDialog()) {
+          event.preventDefault();
+        }
+      });
+
+      // Call postLoadInit for things that we need to initialize after onload.
+      if (document.readyState == "complete") {
+        this._postLoadInit();
+      } else {
+        window.addEventListener("load", event => this._postLoadInit());
+      }
     }
 
     set buttons(val) {
