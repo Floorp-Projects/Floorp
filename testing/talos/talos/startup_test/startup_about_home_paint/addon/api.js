@@ -57,12 +57,8 @@ this.startup_about_home_paint = class extends ExtensionAPI {
       dump("__start_report" + measurement + "__end_report\n\n");
       dump("__startTimestamp" + win.performance.now() + "__endTimestamp\n");
 
-      let env = Cc["@mozilla.org/process/environment;1"].getService(
-        Ci.nsIEnvironment
-      );
-
-      if (env.exists("TPPROFILINGINFO")) {
-        let profilingInfo = env.get("TPPROFILINGINFO");
+      if (Services.env.exists("TPPROFILINGINFO")) {
+        let profilingInfo = Services.env.get("TPPROFILINGINFO");
         if (profilingInfo !== null) {
           TalosParentProfiler.initFromObject(JSON.parse(profilingInfo));
           await TalosParentProfiler.finishStartupProfiling();
