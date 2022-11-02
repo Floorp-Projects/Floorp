@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.service.sync.logins.InvalidRecordException
-import mozilla.components.service.sync.logins.LoginsStorageException
+import mozilla.components.service.sync.logins.LoginsApiException
 import mozilla.components.service.sync.logins.NoSuchRecordException
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import org.mozilla.fenix.R
@@ -90,7 +90,7 @@ open class SavedLoginsStorageController(
         try {
             val encryptedLogin = passwordsStorage.add(loginEntryToSave)
             syncAndUpdateList(passwordsStorage.decryptLogin(encryptedLogin))
-        } catch (loginException: LoginsStorageException) {
+        } catch (loginException: LoginsApiException) {
             Log.e(
                 "Add new login",
                 "Failed to add new login.",
@@ -140,7 +140,7 @@ open class SavedLoginsStorageController(
         try {
             val encryptedLogin = passwordsStorage.update(guid, loginEntryToSave)
             syncAndUpdateList(passwordsStorage.decryptLogin(encryptedLogin))
-        } catch (loginException: LoginsStorageException) {
+        } catch (loginException: LoginsApiException) {
             when (loginException) {
                 is NoSuchRecordException,
                 is InvalidRecordException,
@@ -194,7 +194,7 @@ open class SavedLoginsStorageController(
         val validEntry = if (entry.password.isNotEmpty()) entry else entry.copy(password = "password")
         var dupe = try {
             passwordsStorage.findLoginToUpdate(validEntry)?.mapToSavedLogin()
-        } catch (e: LoginsStorageException) {
+        } catch (e: LoginsApiException) {
             // If the entry was invalid, then consider it not a dupe
             null
         }

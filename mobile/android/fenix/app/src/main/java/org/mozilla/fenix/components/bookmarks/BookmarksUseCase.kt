@@ -6,7 +6,7 @@ package org.mozilla.fenix.components.bookmarks
 
 import androidx.annotation.WorkerThread
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.appservices.places.uniffi.PlacesException
+import mozilla.appservices.places.uniffi.PlacesApiException
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.concept.storage.HistoryStorage
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
@@ -42,7 +42,7 @@ class BookmarksUseCase(
                     )
                 }
                 canAdd
-            } catch (e: PlacesException.UrlParseFailed) {
+            } catch (e: PlacesApiException.UrlParseFailed) {
                 false
             }
         }
