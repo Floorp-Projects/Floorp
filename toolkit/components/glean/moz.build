@@ -113,6 +113,7 @@ tags_yamls = ["../../../" + x for x in tags_yamls]
 deps = [
     "metrics_index.py",
     "build_scripts/glean_parser_ext/cpp.py",
+    "build_scripts/glean_parser_ext/jog.py",
     "build_scripts/glean_parser_ext/js.py",
     "build_scripts/glean_parser_ext/run_glean_parser.py",
     "build_scripts/glean_parser_ext/rust.py",
@@ -175,7 +176,7 @@ GeneratedFile(
 
 # JOG provides both the Rust factory for building runtime-registered metrics
 # and pings _and_ the YAML file used at runtime to register those metrics and
-# pings for Artefact Builds.
+# pings for Artifact Builds.
 # The factory lives inside the `fog` crate to avoid a circular dependency.
 GeneratedFile(
     "api/src/factory.rs",
@@ -185,22 +186,18 @@ GeneratedFile(
     inputs=deps + pings_yamls + metrics_yamls + tags_yamls,
 )
 
-# Only generate artefact_metrics.yaml in Artefact Builds since
+# Only generate jogfile.json in Artifact Builds since
 # its presence triggers main-thread I/O (!MOZILLA_OFFICIAL builds only).
 if not CONFIG["COMPILE_ENVIRONMENT"]:
     GeneratedFile(
-        "artefact_metrics.yaml",
+        "jogfile.json",
         script="build_scripts/glean_parser_ext/run_glean_parser.py",
-        entry_point="jog_yaml",
+        entry_point="jog_file",
         flags=[CONFIG["MOZ_APP_VERSION"]],
-        inputs=deps + metrics_yamls + tags_yamls,
+        inputs=deps + pings_yamls + metrics_yamls + tags_yamls,
     )
-else:
-    # TODO: Remove artefact_metrics.yaml if exists?
-    # Otherwise a single artefact build will build artefact_metrics.yaml,
-    # meaning all subsequent builds (Artefact or not) will treat the list of
-    # metrics in artefact_metrics.yaml as authoritative.
-    pass
+    # Once generated, it needs to be placed in GreD so it can be found.
+    FINAL_TARGET_FILES += ["!jogfile.json"]
 
 DIRS += [
     "tests",  # Must be in DIRS, not TEST_DIRS or python-test won't find it.

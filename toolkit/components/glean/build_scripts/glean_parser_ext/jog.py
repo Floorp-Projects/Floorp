@@ -8,16 +8,21 @@
 Outputter to generate Rust code for metrics.
 """
 
+import enum
 import jinja2
+import json
+import sys
 
 from js import ID_BITS, PING_INDEX_BITS
 from util import type_ids_and_categories
 from glean_parser import util
+from glean_parser.metrics import Rate
 
 
 # The list of all args to CommonMetricData.
 # No particular order is required, but I have these in common_metric_data.rs
 # order just to be organized.
+# Note that this is util.common_metric_args + "dynamic_label"
 common_metric_data_args = [
     "name",
     "category",
@@ -26,6 +31,45 @@ common_metric_data_args = [
     "disabled",
     "dynamic_label",
 ]
+
+# List of all metric-type-specific args that JOG understands.
+known_extra_args = [
+    "time_unit",
+    "memory_unit",
+    "allowed_extra_keys",
+    "reason_codes",
+    "range_min",
+    "range_max",
+    "bucket_count",
+    "histogram_type",
+    "numerators",
+]
+
+# List of all ping-specific args that JOG undertsands.
+known_ping_args = [
+    "name",
+    "include_client_id",
+    "send_if_empty",
+    "reason_codes",
+]
+
+
+def ensure_jog_support_for_args():
+    """
+    glean_parser or the Glean SDK might add new metric/ping args.
+    To ensure JOG doesn't fall behind in support,
+    we check the list of JOG-supported args vs glean_parser's.
+    We fail the build if glean_parser has one or more we haven't seen before.
+    """
+
+    unknown_args = set(util.extra_metric_args) - set(known_extra_args)
+
+    unknown_args |= set(util.ping_args) - set(known_ping_args)
+
+    if len(unknown_args):
+        print(f"Unknown glean_parser args {unknown_args}")
+        print("JOG must be updated to support the new args")
+        sys.exit(1)
 
 
 def load_monkeypatches():
@@ -60,6 +104,7 @@ def output_factory(objs, output_fd, options={}):
     :param options: options dictionary, presently unused.
     """
 
+    ensure_jog_support_for_args()
     load_monkeypatches()
 
     # Get the metric type ids. Must be the same ids generated in js.py
@@ -84,15 +129,73 @@ def output_factory(objs, output_fd, options={}):
     output_fd.write("\n")
 
 
-def output_yaml(objs, output_fd, options={}):
+def camel_to_snake(s):
+    assert "_" not in s, "JOG doesn't encode metric typenames with underscores"
+    return "".join(["_" + c.lower() if c.isupper() else c for c in s]).lstrip("_")
+
+
+def output_file(objs, output_fd, options={}):
     """
-    Given a tree of objects, output YAML to the file-like object `output_fd`.
-    Specifically, YAML that describes all the metrics and pings defined in objs.
+    Given a tree of objects, output them to the file-like object `output_fd`.
+    Specifically, in a format that describes all the metrics and pings defined in objs.
 
     :param objs: A tree of objects (metrics and pings) as returned from
-    `parser.parse_objects`.
+                 `parser.parse_objects`.
+                 Presently a dictionary with keys of literals "pings" and "tags"
+                 as well as one key per metric category mapped to lists of
+                 pings, tags, and metrics (respecitvely)
     :param output_fd: Writeable file to write the output to.
     :param options: options dictionary, presently unused.
     """
 
-    load_monkeypatches()
+    ensure_jog_support_for_args()
+
+    jog_data = {"pings": [], "metrics": {}}
+
+    if "tags" in objs:
+        del objs["tags"]  # JOG has no use for tags.
+
+    pings = objs["pings"]
+    del objs["pings"]
+    for ping in pings.values():
+        ping_arg_list = []
+        for arg in known_ping_args:
+            if hasattr(ping, arg):
+                ping_arg_list.append(getattr(ping, arg))
+        jog_data["pings"].append(ping_arg_list)
+
+    def encode(value):
+        if isinstance(value, enum.Enum):
+            return value.name
+        if isinstance(value, Rate):  # `numerators` for an external Denominator metric
+            args = []
+            for arg_name in common_metric_data_args[:-1]:
+                args.append(getattr(value, arg_name))
+
+            # These are deserialized as CommonMetricData.
+            # CMD have a final param JOG never uses: `dynamic_label`
+            # It's optional, so we should be able to omit it, but we'd need to
+            # annotate it with #[serde(default)]... so here we add the sixth
+            # param as None.
+            args.append(None)
+            return args
+        return json.dumps(value)
+
+    for category, metrics in objs.items():
+        dict_cat = jog_data["metrics"].setdefault(category, [])
+        for metric in metrics.values():
+            metric_arg_list = [camel_to_snake(metric.__class__.__name__)]
+            for arg in common_metric_data_args[:-1]:
+                if arg in ["category"]:
+                    continue  # We don't include the category in each metric.
+                metric_arg_list.append(getattr(metric, arg))
+            extra = {}
+            for arg in known_extra_args:
+                if hasattr(metric, arg):
+                    extra[arg] = getattr(metric, arg)
+            if len(extra):
+                metric_arg_list.append(extra)
+            dict_cat.append(metric_arg_list)
+
+    # TODO: Measure the speed gain of removing `indent=2`
+    json.dump(jog_data, output_fd, sort_keys=True, default=encode, indent=2)
