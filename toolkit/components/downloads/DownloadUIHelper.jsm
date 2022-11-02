@@ -19,6 +19,8 @@ const { AppConstants } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
+
 // BrowserWindowTracker and PrivateBrowsingUtils are only used when opening downloaded files into a browser window
 ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -204,7 +206,7 @@ DownloadPrompter.prototype = {
       // If the preference does not exist, continue with the prompt.
     }
 
-    let leafName = PathUtils.filename(path);
+    let leafName = lazy.OS.Path.basename(path);
 
     let s = DownloadUIHelper.strings;
     return this._prompter.confirm(

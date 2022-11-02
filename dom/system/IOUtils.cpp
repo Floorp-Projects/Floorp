@@ -592,8 +592,7 @@ already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
           return;
         }
 
-        if (opts.inspect().mMode == WriteMode::Append ||
-            opts.inspect().mMode == WriteMode::AppendOrCreate) {
+        if (opts.inspect().mMode == WriteMode::Append) {
           promise->MaybeRejectWithNotSupportedError(
               "IOUtils.writeJSON does not support appending to files."_ns);
           return;
@@ -1258,10 +1257,6 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
 
     case WriteMode::Append:
       flags |= PR_APPEND;
-      break;
-
-    case WriteMode::AppendOrCreate:
-      flags |= PR_APPEND | PR_CREATE_FILE;
       break;
 
     case WriteMode::Create:
