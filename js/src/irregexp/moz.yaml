@@ -29,7 +29,7 @@ vendoring:
 updatebot:
   maintainer-phab: iain
   maintainer-bz: iireland@mozilla.com
-  fuzzy-query: sm-shell
+  try-preset: sm-shell
   tasks:
     - type: vendoring
       enabled: True
