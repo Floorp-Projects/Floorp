@@ -50,10 +50,9 @@ contents_hash.update(
 )
 contents_hash.update(b"\x00")
 
-# Git can efficiently tell us about changes to tracked files, including
-# the diff of their contents, if you give it enough "-v"s.
+# Get a diff of all tracked (staged and unstaged) files.
 
-changes = run_cmd_checked(["git", "status", "-v", "-v"], capture_output=True).stdout
+changes = run_cmd_checked(["git", "diff", "HEAD", "."], capture_output=True).stdout
 contents_hash.update(changes)
 contents_hash.update(b"\x00")
 
@@ -63,7 +62,7 @@ contents_hash.update(b"\x00")
 
 untracked_files = []
 
-# First, get a list of all untracked files sans standard exclusions.
+# Get a list of all untracked files sans standard exclusions.
 
 # -o is for getting other (i.e. untracked) files
 # --exclude-standard is to handle standard Git exclusions: .git/info/exclude, .gitignore in each directory,
