@@ -32,13 +32,8 @@ endif
 
 MOZ_MAKE = $(MAKE) $(MOZ_MAKE_FLAGS) -C $(OBJDIR)
 
-### Rules
-# The default rule is build
-build::
-
 # In automation, manage an sccache daemon. The starting of the server
 # needs to be in a make file so sccache inherits the jobserver.
-ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
 SCCACHE_STOP = $(MOZBUILD_MANAGE_SCCACHE_DAEMON) --stop-server
 
 # When a command fails, make is going to abort, but we need to terminate the
@@ -48,7 +43,9 @@ SCCACHE_STOP = $(MOZBUILD_MANAGE_SCCACHE_DAEMON) --stop-server
 # gymnastics.
 SCCACHE_STOP_ON_FAILURE = || (x=$$?; $(SCCACHE_STOP) || true; exit $$x)
 
-build::
+# The default rule is build
+build:
+ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
 	# Terminate any sccache server that might still be around.
 	-$(SCCACHE_STOP) > /dev/null 2>&1
 	# Start a new server, ensuring it gets the jobserver file descriptors
@@ -57,16 +54,12 @@ build::
 	mkdir -p $(UPLOAD_PATH)
 	$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env SCCACHE_LOG=sccache=debug SCCACHE_ERROR_LOG=$(UPLOAD_PATH)/sccache.log $(MOZBUILD_MANAGE_SCCACHE_DAEMON) --start-server
 endif
-
-### Build it
-build::
+	### Build it
 	+$(MOZ_MAKE) $(SCCACHE_STOP_ON_FAILURE)
 ifdef MOZ_AUTOMATION
 	+$(MOZ_MAKE) automation/build $(SCCACHE_STOP_ON_FAILURE)
 endif
-
 ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
-build::
 	# Terminate sccache server. This prints sccache stats.
 	-$(SCCACHE_STOP)
 endif
