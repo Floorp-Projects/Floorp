@@ -1519,7 +1519,12 @@ var SessionStoreInternal = {
       case "TabClose":
         // `adoptedBy` will be set if the tab was closed because it is being
         // moved to a new window.
-        if (!aEvent.detail.adoptedBy) {
+        if (aEvent.detail.adoptedBy) {
+          this.onMoveToNewWindow(
+            target.linkedBrowser,
+            aEvent.detail.adoptedBy.linkedBrowser
+          );
+        } else {
           this.onTabClose(win, target);
         }
         this.onTabRemove(win, target);
@@ -2604,6 +2609,20 @@ var SessionStoreInternal = {
 
     // Store closed-tab data for undo.
     this.maybeSaveClosedTab(aWindow, aTab, tabState);
+  },
+
+  /**
+   * Flush and copy tab state when moving a tab to a new window.
+   * @param aFromBrowser
+   *        Browser reference.
+   * @param aToBrowser
+   *        Browser reference.
+   */
+  onMoveToNewWindow(aFromBrowser, aToBrowser) {
+    lazy.TabStateFlusher.flush(aFromBrowser).then(() => {
+      let tabState = lazy.TabStateCache.get(aFromBrowser.permanentKey);
+      lazy.TabStateCache.update(aToBrowser.permanentKey, tabState);
+    });
   },
 
   /**
