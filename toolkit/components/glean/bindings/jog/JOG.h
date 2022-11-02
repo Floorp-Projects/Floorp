@@ -25,11 +25,8 @@ class JOG {
    *
    * Locates the runtime metrics file and, if present, loads and processes it.
    *
-   * Only does any work at all if mozilla::IsDevelopmentBuild()
-   *
-   * **Note:** When this function does something, it is expensive, running
-   * synchronous file I/O to ensure that the registration is complete when this
-   * call returns.
+   * **Note:** This is expensive, running synchronous file I/O to ensure that
+   * the registration is complete when this calls returns.
    *
    * @param aForce Set to `true` if you want to force the I/O to run. Defaults
    *        to `false`, which doesn't run the I/O if it's already run and
