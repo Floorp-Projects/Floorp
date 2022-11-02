@@ -20,6 +20,7 @@ add_task(async function test_cancel_after_asyncOpen() {
     Ci.nsIX509CertDB
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
+  addCertFromFile(certdb, "proxy-ca.pem", "CTu,u,u");
 
   let proxies = [
     NodeHTTPProxyServer,
@@ -77,6 +78,7 @@ add_task(async function test_cancel_after_connect_http2proxy() {
     Ci.nsIX509CertDB
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
+  addCertFromFile(certdb, "proxy-ca.pem", "CTu,u,u");
 
   await with_node_servers(
     [NodeHTTPServer, NodeHTTPSServer, NodeHTTP2Server],
@@ -174,6 +176,7 @@ add_task(async function test_cancel_after_sending_request() {
     Ci.nsIX509CertDB
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
+  addCertFromFile(certdb, "proxy-ca.pem", "CTu,u,u");
 
   await with_node_servers(
     [NodeHTTPServer, NodeHTTPSServer, NodeHTTP2Server],
@@ -265,6 +268,7 @@ add_task(async function test_cancel_during_response() {
     Ci.nsIX509CertDB
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
+  addCertFromFile(certdb, "proxy-ca.pem", "CTu,u,u");
 
   await with_node_servers(
     [NodeHTTPServer, NodeHTTPSServer, NodeHTTP2Server],

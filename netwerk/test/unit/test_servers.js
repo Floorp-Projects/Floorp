@@ -196,6 +196,7 @@ add_task(async function test_https_proxy() {
     Ci.nsIX509CertDB
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
+  addCertFromFile(certdb, "proxy-ca.pem", "CTu,u,u");
 
   let proxy = new NodeHTTPSProxyServer();
   await proxy.start();
@@ -244,6 +245,7 @@ add_task(async function test_http2_proxy() {
     Ci.nsIX509CertDB
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
+  addCertFromFile(certdb, "proxy-ca.pem", "CTu,u,u");
 
   let proxy = new NodeHTTP2ProxyServer();
   await proxy.start();

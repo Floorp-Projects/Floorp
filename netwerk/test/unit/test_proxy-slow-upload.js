@@ -17,6 +17,7 @@ add_task(async function test_slow_upload() {
     Ci.nsIX509CertDB
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
+  addCertFromFile(certdb, "proxy-ca.pem", "CTu,u,u");
 
   let proxies = [
     NodeHTTPProxyServer,
