@@ -2710,12 +2710,17 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   }
 
   if (GetDocumentBrowsingContext()) {
+    nsCOMPtr<nsIURI> oldURI;
+    aOldChannel->GetURI(getter_AddRefs(oldURI));
     if (!net::ChannelIsPost(aOldChannel)) {
       AddURIVisit(aOldChannel, 0);
-
-      nsCOMPtr<nsIURI> oldURI;
-      aOldChannel->GetURI(getter_AddRefs(oldURI));
       nsDocShell::SaveLastVisit(aNewChannel, oldURI, aFlags);
+    }
+
+    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+    nsresult rv = ssm->CheckSameOriginURI(oldURI, uri, false, false);
+    if (NS_FAILED(rv)) {
+      GetLoadingBrowsingContext()->mEarlyHintsService.Cancel();
     }
   }
   mHaveVisibleRedirect |= true;
