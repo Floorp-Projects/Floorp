@@ -6,18 +6,14 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
-  const { QuickSuggestTestUtils: module } = ChromeUtils.importESModule(
+  const { QuickSuggestTestUtils: Utils } = ChromeUtils.importESModule(
     "resource://testing-common/QuickSuggestTestUtils.sys.mjs"
   );
-  module.init(this);
-  registerCleanupFunction(() => module.uninit());
-  return module;
+  return new Utils(this);
 });
 
 const CONTAINER_ID = "firefoxSuggestContainer";
@@ -485,7 +481,7 @@ add_task(async function clickLearnMore() {
   for (let link of learnMoreLinks) {
     let tabPromise = BrowserTestUtils.waitForNewTab(
       gBrowser,
-      UrlbarProviderQuickSuggest.helpUrl
+      QuickSuggest.HELP_URL
     );
     info("Clicking learn-more link: " + link.id);
     Assert.ok(link.id, "Sanity check: Learn-more link has an ID");
@@ -574,7 +570,6 @@ async function doBestMatchVisibilityTest({
     "browser.urlbar.bestMatch.enabled",
     initialBestMatch
   );
-  await UrlbarQuickSuggest.readyPromise;
 
   // Open prefs and check the initial visibility.
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
@@ -592,7 +587,6 @@ async function doBestMatchVisibilityTest({
     newQuickSuggest
   );
   Services.prefs.setBoolPref("browser.urlbar.bestMatch.enabled", newBestMatch);
-  await UrlbarQuickSuggest.readyPromise;
 
   // Check visibility again.
   Assert.equal(
@@ -605,7 +599,6 @@ async function doBestMatchVisibilityTest({
   gBrowser.removeCurrentTab();
   Services.prefs.clearUserPref("browser.urlbar.quicksuggest.enabled");
   Services.prefs.clearUserPref("browser.urlbar.bestMatch.enabled");
-  await UrlbarQuickSuggest.readyPromise;
 }
 
 // Tests the visibility of the best match checkbox when the best match feature
@@ -720,7 +713,7 @@ add_task(async function clickBestMatchLearnMore() {
 
   const tabPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    UrlbarProviderQuickSuggest.bestMatchHelpUrl
+    QuickSuggest.HELP_URL
   );
 
   info("Clicking learn-more link");

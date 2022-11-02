@@ -23,12 +23,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
-  const { QuickSuggestTestUtils: module } = ChromeUtils.importESModule(
+  const { QuickSuggestTestUtils: Utils } = ChromeUtils.importESModule(
     "resource://testing-common/QuickSuggestTestUtils.sys.mjs"
   );
-  module.init(this);
-  registerCleanupFunction(() => module.uninit());
-  return module;
+  return new Utils(this);
 });
 
 XPCOMUtils.defineLazyGetter(this, "MerinoTestUtils", () => {
