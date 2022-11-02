@@ -1797,9 +1797,6 @@ name = "fog-gtest"
 version = "0.1.0"
 dependencies = [
  "fog",
- "jog",
- "mozbuild",
- "nsstring",
 ]
 
 [[package]]
