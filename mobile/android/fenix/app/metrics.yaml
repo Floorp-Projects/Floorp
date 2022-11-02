@@ -1315,6 +1315,7 @@ metrics:
       `other` option for the source but it should never enter on this case.
     send_in_pings:
       - metrics
+      - baseline
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/1158
       - https://github.com/mozilla-mobile/fenix/issues/6556
@@ -1333,6 +1334,8 @@ metrics:
       - android-probes@mozilla.com
       - kbrosnan@mozilla.com
     expires: never
+    no_lint:
+      - BASELINE_PING
     metadata:
       tags:
         - Search
@@ -2364,6 +2367,7 @@ search.default_engine:
       value will be "custom"
     send_in_pings:
       - metrics
+      - baseline
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/800
     data_reviews:
@@ -2380,6 +2384,8 @@ search.default_engine:
       - android-probes@mozilla.com
       - kbrosnan@mozilla.com
     expires: never
+    no_lint:
+      - BASELINE_PING
   name:
     type: string
     lifetime: application
@@ -2390,6 +2396,7 @@ search.default_engine:
       value will be "custom"
     send_in_pings:
       - metrics
+      - baseline
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/800
     data_reviews:
@@ -2406,6 +2413,8 @@ search.default_engine:
       - android-probes@mozilla.com
       - kbrosnan@mozilla.com
     expires: never
+    no_lint:
+      - BASELINE_PING
   search_url:
     type: url
     lifetime: application
@@ -6125,6 +6134,7 @@ browser.search:
       The key format is `<provider-name>`.
     send_in_pings:
       - metrics
+      - baseline
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6558
     data_reviews:
@@ -6139,6 +6149,8 @@ browser.search:
       - android-probes@mozilla.com
       - kbrosnan@mozilla.com
     expires: never
+    no_lint:
+      - BASELINE_PING
   ad_clicks:
     type: labeled_counter
     description: |
@@ -6146,6 +6158,7 @@ browser.search:
       The key format is `<provider-name>`.
     send_in_pings:
       - metrics
+      - baseline
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6558
     data_reviews:
@@ -6160,12 +6173,15 @@ browser.search:
       - android-probes@mozilla.com
       - kbrosnan@mozilla.com
     expires: never
+    no_lint:
+      - BASELINE_PING
   in_content:
     type: labeled_counter
     description: |
       Records the type of interaction a user has on SERP pages.
     send_in_pings:
       - metrics
+      - baseline
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6557
     data_reviews:
@@ -6180,7 +6196,8 @@ browser.search:
       - android-probes@mozilla.com
       - kbrosnan@mozilla.com
     expires: never
-
+    no_lint:
+      - BASELINE_PING
 addons:
   open_addons_in_settings:
     type: event
