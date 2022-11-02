@@ -31,5 +31,13 @@ CK_RV C_GetFunctionList(CK_FUNCTION_LIST_PTR_PTR ppFunctionList) {
 // https://github.com/rust-lang/rust/issues/79609#issuecomment-987107562.
 #ifdef __MINGW32__
 #  include "mozilla/Assertions.h"
-void _Unwind_Resume() { MOZ_CRASH("Unexpected call to _Unwind_Resume"); }
+void _Unwind_Resume() { MOZ_CRASH("Unexpected call to _Unwind_*"); }
+void _Unwind_GetDataRelBase() { _Unwind_Resume(); }
+void _Unwind_GetTextRelBase() { _Unwind_Resume(); }
+void _Unwind_GetLanguageSpecificData() { _Unwind_Resume(); }
+void _Unwind_GetIPInfo() { _Unwind_Resume(); }
+void _Unwind_GetRegionStart() { _Unwind_Resume(); }
+void _Unwind_SetGR() { _Unwind_Resume(); }
+void _Unwind_SetIP() { _Unwind_Resume(); }
+void _GCC_specific_handler() { _Unwind_Resume(); }
 #endif
