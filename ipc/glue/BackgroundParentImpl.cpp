@@ -1259,6 +1259,16 @@ bool BackgroundParentImpl::DeallocPMIDIManagerParent(
   return true;
 }
 
+mozilla::ipc::IPCResult BackgroundParentImpl::RecvHasMIDIDevice(
+    HasMIDIDeviceResolver&& aResolver) {
+  AssertIsInMainOrSocketProcess();
+  AssertIsOnBackgroundThread();
+
+  bool hasDevice = MIDIPlatformService::Get()->HasDevice();
+  aResolver(hasDevice);
+  return IPC_OK();
+}
+
 mozilla::dom::PClientManagerParent*
 BackgroundParentImpl::AllocPClientManagerParent() {
   return mozilla::dom::AllocClientManagerParent();

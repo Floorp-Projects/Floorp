@@ -254,6 +254,7 @@ parent:
 
   async PMIDIManager();
   async PMIDIPort(MIDIPortInfo portInfo, bool sysexEnabled);
+  async HasMIDIDevice() returns (bool hasDevice);
 
   // This method is used to propagate storage activities from the child actor
   // to the parent actor. See StorageActivityService.
