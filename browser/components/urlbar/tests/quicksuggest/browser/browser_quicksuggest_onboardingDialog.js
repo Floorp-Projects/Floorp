@@ -7,10 +7,6 @@
  * Tests the buttons in the onboarding dialog for quick suggest/Firefox Suggest.
  */
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
 });
@@ -48,7 +44,7 @@ add_task(async function dataCollectionAlreadyEnabled() {
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
 
   info("Calling maybeShowOnboardingDialog");
-  let showed = await UrlbarQuickSuggest.maybeShowOnboardingDialog();
+  let showed = await QuickSuggest.maybeShowOnboardingDialog();
   Assert.ok(!showed, "The dialog was not shown");
 
   UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
@@ -59,7 +55,7 @@ add_task(async function aboutWelcome() {
   setDialogPrereqPrefs();
   await BrowserTestUtils.withNewTab("about:welcome", async () => {
     info("Calling maybeShowOnboardingDialog");
-    let showed = await UrlbarQuickSuggest.maybeShowOnboardingDialog();
+    let showed = await QuickSuggest.maybeShowOnboardingDialog();
     Assert.ok(!showed, "The dialog was not shown");
   });
 });
@@ -183,7 +179,7 @@ async function doQueuedEscKeyTest(otherDialogKey) {
 
       info("Queuing dialogs for opening");
       let otherClosedPromise = gDialogBox.open(OTHER_DIALOG_URI);
-      let onboardingClosedPromise = UrlbarQuickSuggest.maybeShowOnboardingDialog();
+      let onboardingClosedPromise = QuickSuggest.maybeShowOnboardingDialog();
 
       info("Waiting for the other dialog to open");
       await otherOpenedPromise;
@@ -271,7 +267,7 @@ add_task(async function nimbus_override_wait_after_n_restarts() {
       // on startup, the first restart would be where MR1 was shown then
       // we will show onboarding the 2nd restart after that.
       info("Simulating first restart");
-      await UrlbarQuickSuggest.maybeShowOnboardingDialog();
+      await QuickSuggest.maybeShowOnboardingDialog();
 
       info("Simulating second restart");
       const dialogPromise = BrowserTestUtils.promiseAlertDialogOpen(
@@ -279,7 +275,7 @@ add_task(async function nimbus_override_wait_after_n_restarts() {
         ONBOARDING_URI,
         { isSubDialog: true }
       );
-      const maybeShowPromise = UrlbarQuickSuggest.maybeShowOnboardingDialog();
+      const maybeShowPromise = QuickSuggest.maybeShowOnboardingDialog();
       const win = await dialogPromise;
       if (win.document.readyState != "complete") {
         await BrowserTestUtils.waitForEvent(win, "load");
@@ -307,7 +303,7 @@ add_task(async function nimbus_skip_onboarding_dialog() {
       // Simulate 3 restarts.
       for (let i = 0; i < 3; i++) {
         info(`Simulating restart ${i + 1}`);
-        await UrlbarQuickSuggest.maybeShowOnboardingDialog();
+        await QuickSuggest.maybeShowOnboardingDialog();
       }
       Assert.ok(
         !Services.prefs.getBoolPref(
@@ -1486,7 +1482,7 @@ async function doDialogTest({
  *   If true, return dialog with skipping the introduction section.
  * @returns {{ window, maybeShowPromise: Promise }}
  *   win: window object of the dialog.
- *   maybeShowPromise: Promise of UrlbarQuickSuggest.maybeShowOnboardingDialog().
+ *   maybeShowPromise: Promise of QuickSuggest.maybeShowOnboardingDialog().
  */
 async function showOnboardingDialog({ skipIntroduction } = {}) {
   const dialogPromise = BrowserTestUtils.promiseAlertDialogOpen(
@@ -1495,7 +1491,7 @@ async function showOnboardingDialog({ skipIntroduction } = {}) {
     { isSubDialog: true }
   );
 
-  const maybeShowPromise = UrlbarQuickSuggest.maybeShowOnboardingDialog();
+  const maybeShowPromise = QuickSuggest.maybeShowOnboardingDialog();
 
   const win = await dialogPromise;
   if (win.document.readyState != "complete") {

@@ -11,15 +11,11 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   QUICK_SUGGEST_SOURCE:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
-  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   TaskQueue: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
 });
@@ -35,26 +31,6 @@ const RS_COLLECTION = "quicksuggest";
 const NONSPONSORED_IAB_CATEGORIES = new Set(["5 - Education"]);
 
 const FEATURE_AVAILABLE = "quickSuggestEnabled";
-const SEEN_DIALOG_PREF = "quicksuggest.showedOnboardingDialog";
-const RESTARTS_PREF = "quicksuggest.seenRestarts";
-const DIALOG_VERSION_PREF = "quicksuggest.onboardingDialogVersion";
-const DIALOG_VARIATION_PREF = "quickSuggestOnboardingDialogVariation";
-
-// Values returned by the onboarding dialog depending on the user's response.
-// These values are used in telemetry events, so be careful about changing them.
-export const ONBOARDING_CHOICE = {
-  ACCEPT_2: "accept_2",
-  CLOSE_1: "close_1",
-  DISMISS_1: "dismiss_1",
-  DISMISS_2: "dismiss_2",
-  LEARN_MORE_1: "learn_more_1",
-  LEARN_MORE_2: "learn_more_2",
-  NOT_NOW_2: "not_now_2",
-  REJECT_2: "reject_2",
-};
-
-const ONBOARDING_URI =
-  "chrome://browser/content/urlbar/quicksuggestOnboarding.html";
 
 // This is a score in the range [0, 1] used by the provider to compare
 // suggestions. All suggestions require a score, so if a remote settings
@@ -226,113 +202,6 @@ class _UrlbarQuickSuggest extends EventEmitter {
       }
     }
     return longerPhrase || trimmedQuery;
-  }
-
-  /**
-   * An onboarding dialog can be shown to the users who are enrolled into
-   * the QuickSuggest experiments or rollouts. This behavior is controlled
-   * by the pref `browser.urlbar.quicksuggest.shouldShowOnboardingDialog`
-   * which can be remotely configured by Nimbus.
-   *
-   * Given that the release may overlap with another onboarding dialog, we may
-   * wait for a few restarts before showing the QuickSuggest dialog. This can
-   * be remotely configured by Nimbus through
-   * `quickSuggestShowOnboardingDialogAfterNRestarts`, the default is 0.
-   *
-   * @returns {boolean}
-   *   True if the dialog was shown and false if not.
-   */
-  async maybeShowOnboardingDialog() {
-    // The call to this method races scenario initialization on startup, and the
-    // Nimbus variables we rely on below depend on the scenario, so wait for it
-    // to be initialized.
-    await lazy.UrlbarPrefs.firefoxSuggestScenarioStartupPromise;
-
-    // If the feature is disabled, the user has already seen the dialog, or the
-    // user has already opted in, don't show the onboarding.
-    if (
-      !lazy.UrlbarPrefs.get(FEATURE_AVAILABLE) ||
-      lazy.UrlbarPrefs.get(SEEN_DIALOG_PREF) ||
-      lazy.UrlbarPrefs.get("quicksuggest.dataCollection.enabled")
-    ) {
-      return false;
-    }
-
-    // Wait a number of restarts before showing the dialog.
-    let restartsSeen = lazy.UrlbarPrefs.get(RESTARTS_PREF);
-    if (
-      restartsSeen <
-      lazy.UrlbarPrefs.get("quickSuggestShowOnboardingDialogAfterNRestarts")
-    ) {
-      lazy.UrlbarPrefs.set(RESTARTS_PREF, restartsSeen + 1);
-      return false;
-    }
-
-    let win = lazy.BrowserWindowTracker.getTopWindow();
-
-    // Don't show the dialog on top of about:welcome for new users.
-    if (win.gBrowser?.currentURI?.spec == "about:welcome") {
-      return false;
-    }
-
-    if (lazy.UrlbarPrefs.get("experimentType") === "modal") {
-      lazy.QuickSuggest.ensureExposureEventRecorded();
-    }
-
-    if (!lazy.UrlbarPrefs.get("quickSuggestShouldShowOnboardingDialog")) {
-      return false;
-    }
-
-    let variationType;
-    try {
-      // An error happens if the pref is not in user prefs.
-      variationType = lazy.UrlbarPrefs.get(DIALOG_VARIATION_PREF).toLowerCase();
-    } catch (e) {}
-
-    let params = { choice: undefined, variationType, visitedMain: false };
-    await win.gDialogBox.open(ONBOARDING_URI, params);
-
-    lazy.UrlbarPrefs.set(SEEN_DIALOG_PREF, true);
-    lazy.UrlbarPrefs.set(
-      DIALOG_VERSION_PREF,
-      JSON.stringify({ version: 1, variation: variationType })
-    );
-
-    // Record the user's opt-in choice on the user branch. This pref is sticky,
-    // so it will retain its user-branch value regardless of what the particular
-    // default was at the time.
-    let optedIn = params.choice == ONBOARDING_CHOICE.ACCEPT_2;
-    lazy.UrlbarPrefs.set("quicksuggest.dataCollection.enabled", optedIn);
-
-    switch (params.choice) {
-      case ONBOARDING_CHOICE.LEARN_MORE_1:
-      case ONBOARDING_CHOICE.LEARN_MORE_2:
-        win.openTrustedLinkIn(lazy.UrlbarProviderQuickSuggest.helpUrl, "tab", {
-          fromChrome: true,
-        });
-        break;
-      case ONBOARDING_CHOICE.ACCEPT_2:
-      case ONBOARDING_CHOICE.REJECT_2:
-      case ONBOARDING_CHOICE.NOT_NOW_2:
-      case ONBOARDING_CHOICE.CLOSE_1:
-        // No other action required.
-        break;
-      default:
-        params.choice = params.visitedMain
-          ? ONBOARDING_CHOICE.DISMISS_2
-          : ONBOARDING_CHOICE.DISMISS_1;
-        break;
-    }
-
-    lazy.UrlbarPrefs.set("quicksuggest.onboardingDialogChoice", params.choice);
-
-    Services.telemetry.recordEvent(
-      "contextservices.quicksuggest",
-      "opt_in_dialog",
-      params.choice
-    );
-
-    return true;
   }
 
   /**

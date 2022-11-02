@@ -39,6 +39,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
@@ -4442,7 +4443,7 @@ BrowserGlue.prototype = {
     if (willPrompt) {
       let win = lazy.BrowserWindowTracker.getTopWindow();
       DefaultBrowserCheck.prompt(win);
-    } else if (await lazy.UrlbarQuickSuggest.maybeShowOnboardingDialog()) {
+    } else if (await lazy.QuickSuggest.maybeShowOnboardingDialog()) {
       return;
     }
 
