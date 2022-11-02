@@ -28,7 +28,7 @@ function run_test() {
   );
 
   // Bypass the manifest and run as invoker
-  gEnv.set("__COMPAT_LAYER", "RunAsInvoker");
+  Services.env.set("__COMPAT_LAYER", "RunAsInvoker");
 
   let dummyInstallPath = "---";
   let maintenanceServiceBinArgs = [

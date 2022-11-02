@@ -5,10 +5,7 @@
 "use strict";
 
 XPCOMUtils.defineLazyGetter(this, "isXpcshell", function() {
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  return env.exists("XPCSHELL_TEST_PROFILE_DIR");
+  return Services.env.exists("XPCSHELL_TEST_PROFILE_DIR");
 });
 
 /**

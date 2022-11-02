@@ -2,11 +2,8 @@
 var cwd = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
 
 // get the temp dir
-var env = Cc["@mozilla.org/process/environment;1"].getService(
-  Ci.nsIEnvironment
-);
 var _tmpd = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-_tmpd.initWithPath(env.get("XPCSHELL_TEST_TEMP_DIR"));
+_tmpd.initWithPath(Services.env.get("XPCSHELL_TEST_TEMP_DIR"));
 
 // Allow `crashReporter` to be used as an alias in the tests.
 var crashReporter = Services.appinfo;

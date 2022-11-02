@@ -198,9 +198,7 @@ add_task(async function test_xpcom_graph_wait() {
     }
   }
 
-  let profilePath = Cc["@mozilla.org/process/environment;1"]
-    .getService(Ci.nsIEnvironment)
-    .get("MOZ_UPLOAD_DIR");
+  let profilePath = Services.env.get("MOZ_UPLOAD_DIR");
   profilePath =
     profilePath ||
     (await IOUtils.createUniqueDirectory(
