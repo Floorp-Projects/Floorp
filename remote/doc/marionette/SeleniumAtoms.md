@@ -9,7 +9,8 @@ be removed step by step.
 Currently the following atoms are in use:
 
 - `getElementText`
-- `isDisplayed`
+- `isElementDisplayed`
+- `isElementEnabled`
 
 To use one of those atoms Javascript modules will have to import
 [atom.sys.mjs].
@@ -30,29 +31,40 @@ The canonical GitHub repository for Selenium is
 
   <https://github.com/SeleniumHQ/selenium.git>
 
-so make sure to have a local copy of it. For the cloning process
-it is recommended to specify the `--depth=1` argument, so only the
-last changeset is getting downloaded (which itself will already be
-more than 100 MB). Once the clone is ready the export of the atoms
-can be triggered by running the following commands:
+so make sure to have an up-to-date local copy of it. If you have to clone
+it first, it is recommended to specify the `--depth=1` argument, so only the
+last changeset is getting downloaded (which itself might already be
+more than 100 MB).
 
-    % cd selenium
-    % ./go
-    % python buck-out/crazy-fun/%changeset%/buck.pex build --show-output %atom%
+```bash
+git clone --depth=1 https://github.com/SeleniumHQ/selenium.git
+```
 
-Hereby `%changeset%` corresponds to the currently used version of
-buck, and `%atom%` to the atom to export. The following targets
-for exporting are available:
+To export the correct version of the atoms identify the changeset id (SHA1) of
+the Selenium repository in the [index section] of the WebDriver specification.
 
-- `//javascript/webdriver/atoms:clear-element-firefox`
-- `//javascript/webdriver/atoms:get-text-firefox`
-- `//javascript/webdriver/atoms:is-displayed-firefox`
-- `//javascript/webdriver/atoms:is-enabled-firefox`
-- `//javascript/webdriver/atoms:is-selected-firefox`
+Fetch that changeset and check it out:
+
+```bash
+git fetch --depth=1 origin SHA1
+git checkout SHA1
+```
+
+Now you can export all the required atoms by running the following
+commands. Make sure to [install bazelisk] first.
+
+```bash
+bazel build //javascript/atoms/fragments:get-text
+bazel build //javascript/atoms/fragments:is-displayed
+bazel build //javascript/atoms/fragments:is-enabled
+```
 
 For each of the exported atoms a file can now be found in the folder
-`buck-out/gen/javascript/webdriver/atoms/`.  They contain all the
+`bazel-bin/javascript/atoms/fragments/`.  They contain all the
 code including dependencies for the atom wrapped into a single function.
+
+[index section]: <https://w3c.github.io/webdriver/#index>
+[install bazelisk]: <https://github.com/bazelbuild/bazelisk#installation>
 
 ### Update atom.sys.mjs
 
