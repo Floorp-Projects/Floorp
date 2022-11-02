@@ -7,6 +7,7 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 import android.view.View
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.flow.map
@@ -19,6 +20,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.databinding.NoCollectionsMessageBinding
 import org.mozilla.fenix.ext.increaseTapArea
+import org.mozilla.fenix.ext.isSystemInDarkTheme
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
 import org.mozilla.fenix.utils.view.ViewHolder
 
@@ -58,9 +60,10 @@ class NoCollectionsMessageViewHolder(
         }
 
         appStore.flowScoped(viewLifecycleOwner) { flow ->
-            flow.map { state -> state.wallpaperState.currentWallpaper.textColor }
+            flow.map { state -> state.wallpaperState }
                 .ifChanged()
-                .collect { textColor ->
+                .collect { wallpaperState ->
+                    val textColor = wallpaperState.currentWallpaper.textColor
                     if (textColor == null) {
                         val context = view.context
                         binding.noCollectionsHeader.setTextColor(
@@ -78,6 +81,25 @@ class NoCollectionsMessageViewHolder(
                         binding.noCollectionsDescription.setTextColor(color)
                         binding.removeCollectionPlaceholder.setColorFilter(color)
                     }
+
+                    var buttonColor = ContextCompat.getColor(view.context, R.color.fx_mobile_action_color_primary)
+                    var buttonTextColor = ContextCompat.getColor(
+                        view.context,
+                        R.color.fx_mobile_text_color_action_primary,
+                    )
+                    wallpaperState.runIfWallpaperCardColorsAreAvailable { _, _ ->
+                        buttonColor = ContextCompat.getColor(view.context, R.color.fx_mobile_layer_color_1)
+
+                        if (!view.context.isSystemInDarkTheme()) {
+                            buttonTextColor = ContextCompat.getColor(
+                                view.context,
+                                R.color.fx_mobile_text_color_action_secondary,
+                            )
+                        }
+                    }
+
+                    binding.addTabsToCollectionsButton.setBackgroundColor(buttonColor)
+                    binding.addTabsToCollectionsButton.setTextColor(buttonTextColor)
                 }
         }
     }
