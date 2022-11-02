@@ -471,7 +471,12 @@ var WinTaskbarJumpList = {
 
     if (lazy.PrivateBrowsingUtils.enabled) {
       tasksCfg.push(privateWindowTask);
+    } else {
+      // If Private Browsing is disabled, just pretend we already did all the
+      // work for it, to avoid doing any unnecessary later.
+      this._builtPb = true;
     }
+
     // Store our task list config data
     this._builder._tasks = tasksCfg;
     this._pbBuilder._tasks = tasksCfg;

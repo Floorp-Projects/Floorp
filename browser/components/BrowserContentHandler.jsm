@@ -230,6 +230,9 @@ function openBrowserWindow(
   postData = null,
   forcePrivate = false
 ) {
+  // If Private Browsing is disabled (eg: by Enterprise Policy) we can't
+  // open a private window no matter how badly the caller wants it...
+  forcePrivate = lazy.PrivateBrowsingUtils.enabled ? forcePrivate : false;
   let chromeURL = AppConstants.BROWSER_CHROME_URL;
   const isStartup =
     cmdLine && cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;
