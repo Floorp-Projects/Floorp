@@ -407,7 +407,7 @@ async function testFileAccessLinuxOnly() {
   // allows to handle both $HOME/.config/ or $XDG_CONFIG_HOME
   let configDir = GetHomeSubdir(".config");
 
-  const xdgConfigHome = GetEnvironmentVariable("XDG_CONFIG_HOME");
+  const xdgConfigHome = Services.env.get("XDG_CONFIG_HOME");
 
   if (xdgConfigHome.length > 1) {
     configDir = GetDir(xdgConfigHome);
@@ -633,7 +633,7 @@ async function testFileAccessLinuxSnap() {
 
   // Assert that if we run with SNAP= env, then we allow access to it in the
   // content process
-  let snap = GetEnvironmentVariable("SNAP");
+  let snap = Services.env.get("SNAP");
   let snapExpectedResult = false;
   if (snap.length > 1) {
     snapExpectedResult = true;
