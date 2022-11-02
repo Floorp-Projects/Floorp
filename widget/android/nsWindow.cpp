@@ -119,7 +119,7 @@ using mozilla::gfx::Matrix;
 using mozilla::gfx::SurfaceFormat;
 using mozilla::java::GeckoSession;
 using mozilla::java::sdk::IllegalStateException;
-
+using GeckoPrintException = GeckoSession::GeckoPrintException;
 static mozilla::LazyLogModule sGVSupportLog("GeckoViewSupport");
 
 // All the toplevel windows that have been created; these are in
@@ -1780,7 +1780,7 @@ void GeckoViewSupport::PrintToPdf(
     jni::Object::Param aResult) {
   auto stream = java::GeckoInputStream::New(nullptr);
   auto geckoResult = java::GeckoResult::Ref::From(aResult);
-  const auto pdfErrorMsg = "Coud not save this page as PDF.";
+  const auto pdfErrorMsg = "Could not save this page as PDF.";
   RefPtr<GeckoViewOutputStream> streamListener =
       new GeckoViewOutputStream(stream);
 
@@ -1788,7 +1788,9 @@ void GeckoViewSupport::PrintToPdf(
       do_GetService("@mozilla.org/gfx/printsettings-service;1");
   if (!printSettingsService) {
     geckoResult->CompleteExceptionally(
-        IllegalStateException::New(pdfErrorMsg).Cast<jni::Throwable>());
+        GeckoPrintException::New(
+            GeckoPrintException::ERROR_PRINT_SETTINGS_SERVICE_NOT_AVAILABLE)
+            .Cast<jni::Throwable>());
     GVS_LOG("Could not create print settings service.");
     return;
   }
@@ -1798,7 +1800,9 @@ void GeckoViewSupport::PrintToPdf(
       getter_AddRefs(printSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     geckoResult->CompleteExceptionally(
-        IllegalStateException::New(pdfErrorMsg).Cast<jni::Throwable>());
+        GeckoPrintException::New(
+            GeckoPrintException::ERROR_UNABLE_TO_CREATE_PRINT_SETTINGS)
+            .Cast<jni::Throwable>());
     GVS_LOG("Could not create print settings.");
   }
 
@@ -1812,7 +1816,10 @@ void GeckoViewSupport::PrintToPdf(
   RefPtr<CanonicalBrowsingContext> cbc = GetContentCanonicalBrowsingContext();
   if (!cbc) {
     geckoResult->CompleteExceptionally(
-        IllegalStateException::New(pdfErrorMsg).Cast<jni::Throwable>());
+        GeckoPrintException::New(
+            GeckoPrintException::
+                ERROR_UNABLE_TO_RETRIEVE_CANONICAL_BROWSING_CONTEXT)
+            .Cast<jni::Throwable>());
     GVS_LOG("Could not retrieve content canonical browsing context.");
     return;
   }
