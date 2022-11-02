@@ -341,10 +341,7 @@ function OnLDBLoad() {
 
   if (gArgs.profile) {
     if (Services.profiler) {
-      let env = Cc["@mozilla.org/process/environment;1"].getService(
-        Ci.nsIEnvironment
-      );
-      if (!env.exists("MOZ_PROFILER_SYMBOLICATE")) {
+      if (!Services.env.exists("MOZ_PROFILER_SYMBOLICATE")) {
         dump(
           "Warning: MOZ_PROFILER_SYMBOLICATE environment variable not set; " +
             "profile will not be symbolicated.\n"

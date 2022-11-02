@@ -186,9 +186,6 @@ function OnRefTestLoad(win)
     g.pendingCrashDumpDir.append("Crash Reports");
     g.pendingCrashDumpDir.append("pending");
 
-    var env = Cc["@mozilla.org/process/environment;1"].
-              getService(Ci.nsIEnvironment);
-
     g.browserIsRemote = Services.appinfo.browserTabsRemoteAutostart;
     g.browserIsFission = Services.appinfo.fissionAutostart;
 
