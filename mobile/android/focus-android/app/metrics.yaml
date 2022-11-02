@@ -39,6 +39,11 @@ browser:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
+    send_in_pings:
+      - baseline
+      - metrics
+    no_lint:
+      - BASELINE_PING
     expires: 119
   locale_override:
     type: string
@@ -73,6 +78,11 @@ browser:
     notification_emails:
       - android-probes@mozilla.com
       - mcarare@mozilla.com
+    send_in_pings:
+      - metrics
+      - baseline
+    no_lint:
+      - BASELINE_PING
     expires: never
   install_source:
     type: string
@@ -263,6 +273,9 @@ browser.search:
       The key format is `<provider-name>`.
     send_in_pings:
       - metrics
+      - baseline
+    no_lint:
+      - BASELINE_PING
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4967
     data_reviews:
@@ -279,6 +292,9 @@ browser.search:
       Records the type of interaction a user has on SERP pages.
     send_in_pings:
       - metrics
+      - baseline
+    no_lint:
+      - BASELINE_PING
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/4967
     data_reviews:
@@ -303,6 +319,9 @@ browser.search:
       `source` will be: `action`, `suggestion`
     send_in_pings:
       - metrics
+      - baseline
+    no_lint:
+      - BASELINE_PING
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/6229
     data_reviews:
@@ -1331,7 +1350,7 @@ search_engines:
       - rtestard@mozilla.com
     expires: never
     extra_keys:
-      current_engines_count:
+      current_:
         description: How many search engines did the user had at that point.
         type: quantity
   learn_more_tapped:
