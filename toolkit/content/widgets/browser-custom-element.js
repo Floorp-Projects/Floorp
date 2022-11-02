@@ -1556,6 +1556,7 @@
             "_contentPrincipal",
             "_contentPartitionedPrincipal",
             "_isSyntheticDocument",
+            "_originalURI",
           ]
         );
       }
