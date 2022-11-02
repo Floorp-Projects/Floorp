@@ -17,13 +17,13 @@ const TEST_URI =
 const STUB_FILE = "cssMessage.js";
 
 add_task(async function() {
-  const isStubsUpdate = env.get(STUBS_UPDATE_ENV) == "true";
+  const isStubsUpdate = Services.env.get(STUBS_UPDATE_ENV) == "true";
   info(`${isStubsUpdate ? "Update" : "Check"} ${STUB_FILE}`);
 
   const generatedStubs = await generateCssMessageStubs();
 
   if (isStubsUpdate) {
-    await writeStubsToFile(env, STUB_FILE, generatedStubs);
+    await writeStubsToFile(STUB_FILE, generatedStubs);
     ok(true, `${STUB_FILE} was updated`);
     return;
   }
