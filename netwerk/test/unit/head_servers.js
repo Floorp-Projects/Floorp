@@ -404,8 +404,8 @@ class HTTPSProxyCode {
   static async startServer(port) {
     const fs = require("fs");
     const options = {
-      key: fs.readFileSync(__dirname + "/http2-cert.key"),
-      cert: fs.readFileSync(__dirname + "/http2-cert.pem"),
+      key: fs.readFileSync(__dirname + "/proxy-cert.key"),
+      cert: fs.readFileSync(__dirname + "/proxy-cert.pem"),
     };
     const https = require("https");
     global.proxy = https.createServer(options, BaseProxyCode.proxyHandler);
@@ -442,8 +442,8 @@ class HTTP2ProxyCode {
   static async startServer(port) {
     const fs = require("fs");
     const options = {
-      key: fs.readFileSync(__dirname + "/http2-cert.key"),
-      cert: fs.readFileSync(__dirname + "/http2-cert.pem"),
+      key: fs.readFileSync(__dirname + "/proxy-cert.key"),
+      cert: fs.readFileSync(__dirname + "/proxy-cert.pem"),
     };
     const http2 = require("http2");
     global.proxy = http2.createSecureServer(options);
