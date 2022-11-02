@@ -22,7 +22,8 @@ add_task(async function test_open_firefoxview_and_colorways_modal() {
   const tab = await tabPromise;
 
   ok(tab, "should open about:firefoxview in a new tab");
-  ok(spy.calledOnce, "openModal was called once for ColorwayClosetOpener");
+  ok(spy.calledOnce, "ColorwayClosetOpener's openModal was called once");
 
   BrowserTestUtils.removeTab(tab);
+  sandbox.restore();
 });
