@@ -387,6 +387,57 @@ describe("MultiStageAboutWelcome module", () => {
           type: "SHOW_MIGRATION_WIZARD",
         });
       });
+      it("should handle SHOW_MIGRATION_WIZARD INSIDE MULTI_ACTION", () => {
+        const MULTI_ACTION_SCREEN_PROPS = {
+          content: {
+            title: "test title",
+            subtitle: "test subtitle",
+            primary_button: {
+              action: {
+                type: "MULTI_ACTION",
+                navigate: true,
+                data: {
+                  actions: [
+                    {
+                      type: "PIN_FIREFOX_TO_TASKBAR",
+                    },
+                    {
+                      type: "SET_DEFAULT_BROWSER",
+                    },
+                    {
+                      type: "SHOW_MIGRATION_WIZARD",
+                      data: {},
+                    },
+                  ],
+                },
+              },
+              label: "test button",
+            },
+          },
+          navigate: sandbox.stub(),
+        };
+        const wrapper = mount(<WelcomeScreen {...MULTI_ACTION_SCREEN_PROPS} />);
+
+        wrapper.find(".primary").simulate("click");
+        assert.calledWith(AboutWelcomeUtils.handleUserAction, {
+          type: "MULTI_ACTION",
+          navigate: true,
+          data: {
+            actions: [
+              {
+                type: "PIN_FIREFOX_TO_TASKBAR",
+              },
+              {
+                type: "SET_DEFAULT_BROWSER",
+              },
+              {
+                type: "SHOW_MIGRATION_WIZARD",
+                data: {},
+              },
+            ],
+          },
+        });
+      });
     });
   });
 });
