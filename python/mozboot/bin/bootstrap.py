@@ -52,16 +52,16 @@ def which(name):
 
     It returns the path of an executable or None if it couldn't be found.
     """
-    # git-cinnabar.exe doesn't exist, but .exe versions of the other executables
-    # do.
-    if WINDOWS and name != "git-cinnabar":
-        name += ".exe"
     search_dirs = os.environ["PATH"].split(os.pathsep)
+    potential_names = [name]
+    if WINDOWS:
+        potential_names.append(name + ".exe")
 
     for path in search_dirs:
-        test = Path(path) / name
-        if test.is_file() and os.access(test, os.X_OK):
-            return test
+        for executable_name in potential_names:
+            test = Path(path) / executable_name
+            if test.is_file() and os.access(test, os.X_OK):
+                return test
 
     return None
 
