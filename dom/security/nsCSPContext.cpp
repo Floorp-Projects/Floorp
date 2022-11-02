@@ -1198,9 +1198,19 @@ nsresult nsCSPContext::SendReports(
   // referrer
   report.mCsp_report.mReferrer = aViolationEventInit.mReferrer;
 
+  // effective-directive
+  report.mCsp_report.mEffective_directive =
+      aViolationEventInit.mEffectiveDirective;
+
   // violated-directive
   report.mCsp_report.mViolated_directive =
-      aViolationEventInit.mViolatedDirective;
+      aViolationEventInit.mEffectiveDirective;
+
+  // disposition
+  report.mCsp_report.mDisposition = aViolationEventInit.mDisposition;
+
+  // status-code
+  report.mCsp_report.mStatus_code = aViolationEventInit.mStatusCode;
 
   // source-file
   if (!aViolationEventInit.mSourceFile.IsEmpty()) {
