@@ -11,6 +11,7 @@ const {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
@@ -630,10 +631,7 @@ class QSTestUtils {
    *   ```
    */
   assertTimestampsReplaced(result, urls) {
-    let {
-      TIMESTAMP_TEMPLATE,
-      TIMESTAMP_LENGTH,
-    } = lazy.UrlbarProviderQuickSuggest;
+    let { TIMESTAMP_TEMPLATE, TIMESTAMP_LENGTH } = lazy.QuickSuggest;
 
     // Parse the timestamp strings from each payload property and save them in
     // `urls[key].timestamp`.

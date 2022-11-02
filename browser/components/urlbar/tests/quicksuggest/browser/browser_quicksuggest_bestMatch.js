@@ -42,8 +42,8 @@ add_setup(async function() {
   await PlacesUtils.bookmarks.eraseEverything();
   await UrlbarTestUtils.formHistory.clear();
 
-  await UrlbarProviderQuickSuggest._blockTaskQueue.emptyPromise;
-  await UrlbarProviderQuickSuggest.clearBlockedSuggestions();
+  await QuickSuggest._blockTaskQueue.emptyPromise;
+  await QuickSuggest.clearBlockedSuggestions();
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit(
     SUGGESTIONS.concat(NON_BEST_MATCH_SUGGESTION)

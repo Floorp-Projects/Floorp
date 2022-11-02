@@ -16,6 +16,7 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
@@ -879,7 +880,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       state.quickSuggestResult &&
       !result.heuristic &&
       result.type == UrlbarUtils.RESULT_TYPE.URL &&
-      lazy.UrlbarProviderQuickSuggest.isURLEquivalentToResultURL(
+      lazy.QuickSuggest.isURLEquivalentToResultURL(
         result.payload.url,
         state.quickSuggestResult
       )

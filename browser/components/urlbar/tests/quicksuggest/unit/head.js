@@ -4,6 +4,7 @@
 /* import-globals-from ../../unit/head.js */
 
 ChromeUtils.defineESModuleGetters(this, {
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
