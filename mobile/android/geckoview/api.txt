@@ -1904,7 +1904,8 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public GeckoResult<Void> clearDataFromHost(@NonNull String, long);
     method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getAllPermissions();
     method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getPermissions(@NonNull String);
-    method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getPermissions(@NonNull String, @Nullable String);
+    method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getPermissions(@NonNull String, boolean);
+    method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getPermissions(@NonNull String, @Nullable String, boolean);
     method @AnyThread public void setPermission(@NonNull GeckoSession.PermissionDelegate.ContentPermission, int);
     method @AnyThread public void setPrivateBrowsingPermanentPermission(@NonNull GeckoSession.PermissionDelegate.ContentPermission, int);
   }
@@ -2297,6 +2298,7 @@ package org.mozilla.geckoview {
     field public static final Parcelable.Creator<WebNotification> CREATOR;
     field @Nullable public final String imageUrl;
     field @Nullable public final String lang;
+    field public final boolean privateBrowsing;
     field @NonNull public final boolean requireInteraction;
     field public final boolean silent;
     field @Nullable public final String source;

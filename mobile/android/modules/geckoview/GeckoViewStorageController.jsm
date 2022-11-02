@@ -133,7 +133,12 @@ const GeckoViewStorageController = {
         const uri = Services.io.newURI(aData.uri);
         const principal = Services.scriptSecurityManager.createContentPrincipal(
           uri,
-          aData.contextId ? { geckoViewSessionContextId: aData.contextId } : {}
+          aData.contextId
+            ? {
+                geckoViewSessionContextId: aData.contextId,
+                privateBrowsingId: aData.privateBrowsingId,
+              }
+            : { privateBrowsingId: aData.privateBrowsingId }
         );
         const rawPerms = Services.perms.getAllForPrincipal(principal);
         const permissions = rawPerms.map(p => {
@@ -162,17 +167,23 @@ const GeckoViewStorageController = {
             aData.newValue
           );
         } else {
+          const expirePolicy = aData.privateMode
+            ? Ci.nsIPermissionManager.EXPIRE_SESSION
+            : Ci.nsIPermissionManager.EXPIRE_NEVER;
           Services.perms.addFromPrincipal(
             principal,
             key,
             aData.newValue,
-            Ci.nsIPermissionManager.EXPIRE_NEVER
+            expirePolicy
           );
         }
         break;
       }
       case "GeckoView:SetPermissionByURI": {
         const uri = Services.io.newURI(aData.uri);
+        const expirePolicy = aData.privateId
+          ? Ci.nsIPermissionManager.EXPIRE_SESSION
+          : Ci.nsIPermissionManager.EXPIRE_NEVER;
         const principal = Services.scriptSecurityManager.createContentPrincipal(
           uri,
           {
@@ -184,7 +195,7 @@ const GeckoViewStorageController = {
           principal,
           aData.perm,
           aData.newValue,
-          Ci.nsIPermissionManager.EXPIRE_NEVER
+          expirePolicy
         );
         break;
       }
