@@ -469,6 +469,34 @@ describe("<TopSiteLink>", () => {
     const wrapper = shallow(<TopSiteLink className="foo bar" />);
     assert.ok(wrapper.find("li").hasClass("top-site-outer foo bar"));
   });
+  describe("#_allowDrop", () => {
+    let wrapper;
+    let event;
+    beforeEach(() => {
+      event = {
+        dataTransfer: {
+          types: ["text/topsite-index"],
+        },
+      };
+      wrapper = shallow(
+        <TopSiteLink isDraggable={true} onDragEvent={() => {}} />
+      );
+    });
+    it("should be droppable for basic case", () => {
+      const result = wrapper.instance()._allowDrop(event);
+      assert.isTrue(result);
+    });
+    it("should not be droppable for sponsored_position", () => {
+      wrapper.setProps({ link: { sponsored_position: 1 } });
+      const result = wrapper.instance()._allowDrop(event);
+      assert.isFalse(result);
+    });
+    it("should not be droppable for link.shim", () => {
+      wrapper.setProps({ link: { shim: "foo" } });
+      const result = wrapper.instance()._allowDrop(event);
+      assert.isFalse(result);
+    });
+  });
   describe("#onDragEvent", () => {
     let simulate;
     let wrapper;
@@ -524,6 +552,32 @@ describe("<TopSiteLink>", () => {
       const event = simulate("click");
 
       assert.notOk(event.prevented);
+    });
+    it("should prevent dragging with sponsored_position from dragstart", () => {
+      const preventDefault = sinon.stub();
+      const blur = sinon.stub();
+      wrapper.setProps({ link: { sponsored_position: 1 } });
+      wrapper.instance().onDragEvent({
+        type: "dragstart",
+        preventDefault,
+        target: { blur },
+      });
+      assert.calledOnce(preventDefault);
+      assert.calledOnce(blur);
+      assert.isUndefined(wrapper.instance().dragged);
+    });
+    it("should prevent dragging with link.shim from dragstart", () => {
+      const preventDefault = sinon.stub();
+      const blur = sinon.stub();
+      wrapper.setProps({ link: { shim: "foo" } });
+      wrapper.instance().onDragEvent({
+        type: "dragstart",
+        preventDefault,
+        target: { blur },
+      });
+      assert.calledOnce(preventDefault);
+      assert.calledOnce(blur);
+      assert.isUndefined(wrapper.instance().dragged);
     });
   });
 

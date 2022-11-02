@@ -11632,7 +11632,7 @@ class TopSiteLink extends (external_React_default()).PureComponent {
 
 
   _allowDrop(e) {
-    return (this.dragged || !this.props.link.sponsored_position) && e.dataTransfer.types.includes("text/topsite-index");
+    return (this.dragged || !this.props.link.sponsored_position && !this.props.link.shim) && e.dataTransfer.types.includes("text/topsite-index");
   }
 
   onDragEvent(event) {
@@ -11648,7 +11648,7 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       case "dragstart":
         event.target.blur();
 
-        if (this.props.link.sponsored_position) {
+        if (this.props.link.sponsored_position || this.props.link.shim) {
           event.preventDefault();
           break;
         }
