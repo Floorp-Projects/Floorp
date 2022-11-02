@@ -185,9 +185,7 @@ add_task(async function test_redirect_https() {
   Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, false);
   equal(cps.state, Ci.nsICaptivePortalService.UNKNOWN);
 
-  let h2Port = Cc["@mozilla.org/process/environment;1"]
-    .getService(Ci.nsIEnvironment)
-    .get("MOZHTTP2_PORT");
+  let h2Port = Services.env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
 

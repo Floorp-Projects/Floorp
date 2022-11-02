@@ -930,10 +930,7 @@ class NodeServer {
   // Issues a request to the node server (handler defined in moz-http2.js)
   // This method should not be called directly.
   static sendCommand(command, path) {
-    let env = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
-    );
-    let h2Port = env.get("MOZNODE_EXEC_PORT");
+    let h2Port = Services.env.get("MOZNODE_EXEC_PORT");
     if (!h2Port) {
       throw new Error("Could not find MOZNODE_EXEC_PORT");
     }
