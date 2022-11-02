@@ -29,11 +29,14 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 
+let gTestScope;
+
 XPCOMUtils.defineLazyGetter(lazy, "UrlbarTestUtils", () => {
   const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/UrlbarTestUtils.sys.mjs"
   );
-  module.init(QuickSuggestTestUtils._testScope);
+  module.init(gTestScope);
+  gTestScope.registerCleanupFunction?.(() => module.uninit());
   return module;
 });
 
@@ -81,10 +84,10 @@ const LEARN_MORE_URL =
 
 const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
 
-// On `init`, the following properties and methods are copied from the test
-// scope to the `TestUtils` object so they can be easily accessed. Be careful
-// about assuming a particular property will be defined because depending on the
-// scope -- browser test or xpcshell test -- some may not be.
+// The following properties and methods are copied from the test scope to the
+// test utils object so they can be easily accessed. Be careful about assuming a
+// particular property will be defined because depending on the scope -- browser
+// test or xpcshell test -- some may not be.
 const TEST_SCOPE_PROPERTIES = [
   "Assert",
   "EventUtils",
@@ -95,7 +98,41 @@ const TEST_SCOPE_PROPERTIES = [
 /**
  * Test utils for quick suggest.
  */
-class QSTestUtils {
+export class QuickSuggestTestUtils {
+  /**
+   * @param {object} scope
+   *   The global JS scope where tests are being run. This allows the instance
+   *   to access test helpers like `Assert` that are available in the scope.
+   */
+  constructor(scope) {
+    if (!scope) {
+      throw new Error("QuickSuggestTestUtils() must be called with a scope");
+    }
+    gTestScope = scope;
+    for (let p of TEST_SCOPE_PROPERTIES) {
+      this[p] = scope[p];
+    }
+    // If you add other properties to `this`, null them in `uninit()`.
+
+    Services.telemetry.clearScalars();
+
+    scope.registerCleanupFunction?.(() => this.uninit());
+  }
+
+  /**
+   * Uninitializes the utils. If they were created with a test scope that
+   * defines `registerCleanupFunction()`, you don't need to call this yourself
+   * because it will automatically be called as a cleanup function. Otherwise
+   * you'll need to call this.
+   */
+  uninit() {
+    gTestScope = null;
+    for (let p of TEST_SCOPE_PROPERTIES) {
+      this[p] = null;
+    }
+    Services.telemetry.clearScalars();
+  }
+
   get LEARN_MORE_URL() {
     return LEARN_MORE_URL;
   }
@@ -115,41 +152,6 @@ class QSTestUtils {
   get DEFAULT_CONFIG() {
     // Return a clone so callers can modify it.
     return Cu.cloneInto(DEFAULT_CONFIG, this);
-  }
-
-  /**
-   * Call to init the utils. This allows this instance to access test helpers
-   * available in the test's scope like Assert.
-   *
-   * @param {object} scope
-   *   The global scope where tests are being run.
-   */
-  init(scope) {
-    if (!scope) {
-      throw new Error(
-        "QuickSuggestTestUtils.init() must be called with a scope"
-      );
-    }
-    this._testScope = scope;
-    for (let p of TEST_SCOPE_PROPERTIES) {
-      this[p] = scope[p];
-    }
-    // If you add other properties to `this`, null them in uninit().
-
-    Services.telemetry.clearScalars();
-  }
-
-  /**
-   * Tests that call `init` should call this function in their cleanup callback,
-   * or else their scope will affect subsequent tests. This is usually only
-   * required for tests outside browser/components/urlbar.
-   */
-  uninit() {
-    this._testScope = null;
-    for (let p of TEST_SCOPE_PROPERTIES) {
-      this[p] = null;
-    }
-    Services.telemetry.clearScalars();
   }
 
   /**
@@ -794,5 +796,3 @@ class QSTestUtils {
     });
   }
 }
-
-export var QuickSuggestTestUtils = new QSTestUtils();

@@ -188,7 +188,7 @@ add_task(async function() {
         sponsoredAdvertiser: qsResult.advertiser,
         sponsoredIabCategory: qsResult.iab_category,
         icon: null,
-        helpUrl: UrlbarProviderQuickSuggest.helpUrl,
+        helpUrl: QuickSuggest.HELP_URL,
         helpL10nId: "firefox-suggest-urlbar-learn-more",
         source: "remote-settings",
       },

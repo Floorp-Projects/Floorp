@@ -38,11 +38,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
-  const { QuickSuggestTestUtils: module } = ChromeUtils.importESModule(
+  const { QuickSuggestTestUtils: Utils } = ChromeUtils.importESModule(
     "resource://testing-common/QuickSuggestTestUtils.sys.mjs"
   );
-  module.init(this);
-  return module;
+  return new Utils(this);
 });
 
 XPCOMUtils.defineLazyGetter(this, "MerinoTestUtils", () => {

@@ -13,8 +13,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
   clearInterval: "resource://gre/modules/Timer.sys.mjs",
   setInterval: "resource://gre/modules/Timer.sys.mjs",
@@ -109,6 +107,16 @@ class _QuickSuggest {
    */
   get TIMESTAMP_LENGTH() {
     return TIMESTAMP_LENGTH;
+  }
+
+  /**
+   * @returns {string} The help URL for the Quick Suggest feature.
+   */
+  get HELP_URL() {
+    return (
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "firefox-suggest"
+    );
   }
 
   get logger() {
@@ -525,7 +533,7 @@ class _QuickSuggest {
     switch (params.choice) {
       case ONBOARDING_CHOICE.LEARN_MORE_1:
       case ONBOARDING_CHOICE.LEARN_MORE_2:
-        win.openTrustedLinkIn(lazy.UrlbarProviderQuickSuggest.helpUrl, "tab", {
+        win.openTrustedLinkIn(this.HELP_URL, "tab", {
           fromChrome: true,
         });
         break;

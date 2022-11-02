@@ -282,6 +282,10 @@ class _UrlbarQuickSuggest extends EventEmitter {
    */
   async _queueSettingsSync(event = null) {
     await this._settingsTaskQueue.queue(async () => {
+      if (!this._rs) {
+        return;
+      }
+
       // Remove local files of deleted records
       if (event?.data?.deleted) {
         await Promise.all(

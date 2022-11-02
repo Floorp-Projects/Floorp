@@ -156,7 +156,7 @@ function createExpectedQuickSuggestResult(suggest) {
       sponsoredAdvertiser: suggest.advertiser,
       sponsoredIabCategory: suggest.iab_category,
       isSponsored: suggest.iab_category !== "5 - Education",
-      helpUrl: UrlbarProviderQuickSuggest.helpUrl,
+      helpUrl: QuickSuggest.HELP_URL,
       helpL10nId: "firefox-suggest-urlbar-learn-more",
       displayUrl: suggest.url,
       source: "remote-settings",

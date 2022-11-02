@@ -82,23 +82,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
   }
 
   /**
-   * @returns {string} The help URL for the Quick Suggest feature.
-   */
-  get helpUrl() {
-    return (
-      Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "firefox-suggest"
-    );
-  }
-
-  /**
-   * @returns {string} The help URL for the Quick Suggest best match feature.
-   */
-  get bestMatchHelpUrl() {
-    return this.helpUrl;
-  }
-
-  /**
    * @returns {object} An object mapping from mnemonics to scalar names.
    */
   get TELEMETRY_SCALARS() {
@@ -209,7 +192,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       sponsoredAdvertiser: suggestion.advertiser,
       sponsoredIabCategory: suggestion.iab_category,
       isSponsored: suggestion.is_sponsored,
-      helpUrl: this.helpUrl,
+      helpUrl: lazy.QuickSuggest.HELP_URL,
       helpL10nId: "firefox-suggest-urlbar-learn-more",
       source: suggestion.source,
       requestId: suggestion.request_id,
