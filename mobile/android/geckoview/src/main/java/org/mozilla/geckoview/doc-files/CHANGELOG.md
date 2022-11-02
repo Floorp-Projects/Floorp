@@ -14,6 +14,7 @@ exclude: true
 ⚠️  breaking change and deprecation notices
 
 ## v108
+- Set Total Cookie Protection (Dynamic First Party Isolation) as the default cookie protection mode. Read more about Total Cookie Protection [here](https://blog.mozilla.org/en/mozilla/firefox-rolls-out-total-cookie-protection-by-default-to-all-users-worldwide/).
 - Added [`ContentBlocking.CookieBannerMode`][108.1]; [`cookieBannerHandlingMode`][108.2] and [`cookieBannerHandlingModePrivateBrowsing`][108.3] to [`ContentBlocking.Settings.Builder`][81.1];
   [`getCookieBannerMode`][108.4], [`setCookieBannerMode`][108.5], [`getCookieBannerModePrivateBrowsing`][108.6] and [`setCookieBannerModePrivateBrowsing`][108.7] to [`ContentBlocking.Settings`][81.2]
   ([bug 1790724]({{bugzilla}}1790724))

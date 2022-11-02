@@ -10,10 +10,12 @@ package org.mozilla.geckoview.test
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.Matchers.*
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlocking.CookieBannerMode
+import org.mozilla.geckoview.ContentBlocking.CookieBehavior
 import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
@@ -191,5 +193,28 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         assertThat("Initial value is correct", actualPrefs[0] as Int, equalTo(contentBlocking.cookieBannerMode))
         assertThat("Initial value is correct", actualPrefs[1] as Int, equalTo(contentBlocking.cookieBannerModePrivateBrowsing))
 
+    }
+
+    @Test
+    fun `DefaultCookieBehaviorIsDynamicFirstPartyIsolation`() {
+        // Check the defaults.
+        assertEquals(
+            CookieBehavior.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
+            sessionRule.getPrefs("network.cookie.cookieBehavior")[0]
+        )
+        assertEquals(
+            CookieBehavior.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
+            sessionRule.getPrefs("network.cookie.cookieBehavior.pbmode")[0]
+        )
+
+        // Check that the defaults are applied.
+        assertEquals(
+            CookieBehavior.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
+            sessionRule.runtime.settings.contentBlocking.cookieBehavior
+        )
+        assertEquals(
+            CookieBehavior.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
+            sessionRule.runtime.settings.contentBlocking.cookieBehaviorPrivateMode
+        )
     }
 }
