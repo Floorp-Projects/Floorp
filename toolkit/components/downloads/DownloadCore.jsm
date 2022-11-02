@@ -41,6 +41,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   DownloadHistory: "resource://gre/modules/DownloadHistory.jsm",
   DownloadPaths: "resource://gre/modules/DownloadPaths.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -2201,15 +2202,16 @@ DownloadCopySaver.prototype = {
     // download is in progress.
     try {
       // If the file already exists, don't delete its contents yet.
-      await IOUtils.writeUTF8(targetPath, "", { mode: "appendOrCreate" });
+      let file = await lazy.OS.File.open(targetPath, { write: true });
+      await file.close();
     } catch (ex) {
-      if (!DOMException.isInstance(ex)) {
+      if (!(ex instanceof lazy.OS.File.Error)) {
         throw ex;
       }
       // Throw a DownloadError indicating that the operation failed because of
       // the target file.  We cannot translate this into a specific result
-      // code, but we preserve the original message.
-      let error = new DownloadError({ message: ex.message });
+      // code, but we preserve the original message using the toString method.
+      let error = new DownloadError({ message: ex.toString() });
       error.becauseTargetFailed = true;
       throw error;
     }
@@ -2950,14 +2952,12 @@ DownloadLegacySaver.prototype = {
       if (!this.download.target.partFilePath) {
         try {
           // This atomic operation is more efficient than an existence check.
-          await IOUtils.writeUTF8(this.download.target.path, "", {
-            mode: "create",
+          let file = await lazy.OS.File.open(this.download.target.path, {
+            create: true,
           });
+          await file.close();
         } catch (ex) {
-          if (
-            !DOMException.isInstance(ex) ||
-            ex.name !== "NoModificationAllowedError"
-          ) {
+          if (!(ex instanceof lazy.OS.File.Error) || !ex.becauseExists) {
             throw ex;
           }
         }

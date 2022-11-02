@@ -467,10 +467,6 @@ enum WriteMode {
    */
   "append",
   /**
-   * Append to the end of the file, or create it if it does not exist.
-   */
-  "appendOrCreate",
-  /**
    * Create a new file.
    *
    * This mode will refuse to overwrite an existing file.
