@@ -22,6 +22,16 @@ namespace mozilla::ipc {
 
 UtilityProcessImpl::~UtilityProcessImpl() = default;
 
+#if defined(XP_WIN)
+/* static */
+void UtilityProcessImpl::LoadLibraryOrCrash(LPCWSTR aLib) {
+  HMODULE module = ::LoadLibraryW(aLib);
+  if (!module) {
+    MOZ_CRASH("Unable to preload module");
+  }
+}
+#endif  // defined(XP_WIN)
+
 bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
   Maybe<uint64_t> sandboxingKind = geckoargs::sSandboxingKind.Get(aArgc, aArgv);
   if (sandboxingKind.isNothing()) {
