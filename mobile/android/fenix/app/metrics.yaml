@@ -468,6 +468,23 @@ events:
     metadata:
       tags:
         - Sharing
+  save_to_pdf_failure:
+    type: event
+    description: |
+      A user tapped the save pdf but an error ocurred
+      and the process failed.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/27635
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/27661#issuecomment-1300505370
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
+    metadata:
+      tags:
+        - Sharing
 
 onboarding:
   syn_cfr_shown:
