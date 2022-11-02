@@ -3,6 +3,139 @@
     {
       "stash": {
         "blocked": [
+          "{c296c812-5841-4f0d-9919-31ce5b0263f7}:1.0.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1667306237998,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1667327707711,
+      "id": "cb88c127-9db2-4481-a891-22e273649134",
+      "last_modified": 1667327836006
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{ef793b42-d7cb-46e9-82f3-de44644bf2c4}:1.0.0",
+          "adblockultimate@developer.net:1.0.0",
+          "{1af5b42b-01c4-4e50-95ed-db681e07a220}:0.0.4",
+          "{1af5b42b-01c4-4e50-95ed-db681e07a220}:0.0.1",
+          "{83417181-1987-4a62-a9ec-1bc8d2f403dd}:1.0.2",
+          "{1af5b42b-01c4-4e50-95ed-db681e07a220}:0.0.2",
+          "{1af5b42b-01c4-4e50-95ed-db681e07a220}:0.0.3"
+        ],
+        "unblocked": []
+      },
+      "schema": 1667241435815,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1667306107296,
+      "id": "c9fc5aeb-2b2a-4318-8e6c-04594f6acf98",
+      "last_modified": 1667306237916
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{595749be-c49d-4c5a-b975-344b396e7f39}:2.0.0",
+          "{595749be-c49d-4c5a-b975-344b396e7f39}:1.0",
+          "{f2585948-c71c-43de-9315-4d02391af629}:1.1.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1666966484877,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1667241307152,
+      "id": "f27efd94-139f-49e6-9200-50afee6ec021",
+      "last_modified": 1667241435724
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{a4c38322-a307-45e5-bcf4-9994c5509cc4}:1.0",
+          "{23bcb1d2-a715-42e2-87c5-43ba10d23ace}:1.0.0.0",
+          "{db3d723d-bc52-446c-b2f7-170a7d8e4318}:0.5",
+          "{0a8ef487-879b-4e40-9fbc-09c52333a736}:0.5",
+          "{23bcb1d2-a715-42e2-87c5-43ba10d23ace}:0.0.0.1",
+          "{a4c38322-a307-45e5-bcf4-9994c5509cc4}:1.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1666869510153,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1666874107703,
+      "id": "77e9b7dd-f2ce-4289-a651-ba24886e969a",
+      "last_modified": 1666874241541
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{05b317e7-448b-43e7-8357-a0edb28e8c39}:0.0.118"
+        ],
+        "unblocked": []
+      },
+      "schema": 1666793397412,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1666809307591,
+      "id": "fb4382c7-8c91-4ce8-b8b2-859786a7c761",
+      "last_modified": 1666809440582
+    },
+    {
+      "stash": {
+        "blocked": [
+          "sp@GetEmailAccessHere:1.2.0",
+          "sp@QuickForms:1.0.0",
+          "sp@GetEmailAccessHere:1.0.1",
+          "sp@MapsAndDirectionsPlus:2.1.0",
+          "sp@MapsAndDirectionsPlus:2.0.1",
+          "sp@QuickForms:1.1.2",
+          "sp@QuickForms:1.1.3",
+          "sp@MapsAndDirectionsPlus:2021.11.24",
+          "sp@MapsAndDrivingDirections:1.0.2",
+          "sp@MapsAndDirectionsPlus:1.0.0",
+          "sp@GetEmailAccessHere:1.1.2",
+          "sp@GetEmailAccessHere:1.0.0",
+          "sp@QuickForms:1.1.0",
+          "sp@MapsAndDirectionsPlus:2.0.0",
+          "sp@GetEmailAccessHere:1.2.1",
+          "sp@MapsAndDrivingDirections:1.0.0",
+          "webext@AccessTvStreaming:1.0.2",
+          "sp@QuickForms:1.0.1",
+          "sp@GamesPlayer:2021.11.24",
+          "sp@QuickForms:1.2.0",
+          "sp@QuickForms:2021.11.24",
+          "webext@AccessTvStreaming:2021.11.24",
+          "sp@QuickForms:1.1.1",
+          "sp@GetEmailAccessHere:2021.11.24",
+          "webext@AccessTvStreaming:1.0.1",
+          "sp@GamesPlayer:1.0.0",
+          "webext@AccessTvStreaming:1.0.0",
+          "sp@QuickForms:1.1.4",
+          "sp@GetEmailAccessHere:1.0.2",
+          "sp@MapsAndDrivingDirections:1.0.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1666701441214,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1666787707469,
+      "id": "8e3e4801-b66f-46d0-8d46-d49fd0a2faaa",
+      "last_modified": 1666787843187
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{d8d619e8-bca3-464f-803f-4459ada243d5}:0.2.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1666628238245,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1666701307307,
+      "id": "0a29fcc5-1255-4edb-83be-a1097e113532",
+      "last_modified": 1666701441079
+    },
+    {
+      "stash": {
+        "blocked": [
           "{13136230-8576-4f1d-be14-e707b0c6f39f}:2.0.0",
           "{13136230-8576-4f1d-be14-e707b0c6f39f}:5.3.0"
         ],
@@ -2309,5 +2442,5 @@
       "last_modified": 1656333551168
     }
   ],
-  "timestamp": 1666204638208
+  "timestamp": 1667327836006
 }
