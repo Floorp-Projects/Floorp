@@ -37,7 +37,8 @@ export class TopSiteLink extends React.PureComponent {
    */
   _allowDrop(e) {
     return (
-      (this.dragged || !this.props.link.sponsored_position) &&
+      (this.dragged ||
+        (!this.props.link.sponsored_position && !this.props.link.shim)) &&
       e.dataTransfer.types.includes("text/topsite-index")
     );
   }
@@ -52,7 +53,7 @@ export class TopSiteLink extends React.PureComponent {
         break;
       case "dragstart":
         event.target.blur();
-        if (this.props.link.sponsored_position) {
+        if (this.props.link.sponsored_position || this.props.link.shim) {
           event.preventDefault();
           break;
         }
