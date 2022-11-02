@@ -11,6 +11,7 @@ import android.os.Build
 import android.view.textclassifier.TextClassifier
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.getSystemService
+import mozilla.components.support.ktx.kotlin.MAX_URI_LENGTH
 import mozilla.components.support.utils.SafeUrl
 import mozilla.components.support.utils.WebURLFinder
 import org.mozilla.fenix.perf.Performance.logger
@@ -58,6 +59,10 @@ class ClipboardHandler(val context: Context) {
      */
     fun extractURL(): String? {
         return text?.let {
+            if (it.length > MAX_URI_LENGTH) {
+                return null
+            }
+
             val finder = WebURLFinder(it)
             finder.bestWebURL()
         }
