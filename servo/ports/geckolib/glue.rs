@@ -3902,6 +3902,7 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
     parent_style_or_null: Option<&ComputedValues>,
     pseudo: PseudoStyleType,
     raw_data: &RawServoStyleSet,
+    page_name: *const nsAtom,
 ) -> Strong<ComputedValues> {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
@@ -3912,9 +3913,6 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
 
     // If the pseudo element is PageContent, we should append @page rules to the
     // precomputed pseudo.
-    //
-    // TODO(emilio): We'll need a separate code path or extra arguments for
-    // named pages, etc.
     let mut extra_declarations = vec![];
     if pseudo == PseudoElement::PageContent {
         let iter = data.stylist.iter_extra_data_origins_rev();
@@ -3924,14 +3922,28 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
                 Origin::User => CascadeLevel::UserNormal,
                 Origin::Author => CascadeLevel::same_tree_author_normal(),
             };
-            for &(ref rule, _layer_id) in data.pages.global.iter() {
+            extra_declarations.reserve(data.pages.global.len());
+            let mut add_rule = |rule: &Arc<Locked<PageRule>>| {
                 extra_declarations.push(ApplicableDeclarationBlock::from_declarations(
-                    rule.0.read_with(level.guard(&guards)).block.clone(),
+                    rule.read_with(level.guard(&guards)).block.clone(),
                     level,
                     LayerOrder::root(),
                 ));
+            };
+            for &(ref rule, _layer_id) in data.pages.global.iter() {
+                add_rule(&rule.0);
+            }
+            if !page_name.is_null() {
+                Atom::with(page_name, |name| {
+                    if let Some(rules) = data.pages.named.get(name) {
+                        // Rules are already sorted by source order.
+                        rules.iter().for_each(|d| add_rule(&d.rule));
+                    }
+                });
             }
         }
+    } else {
+        debug_assert!(page_name_or_null.is_null());
     }
 
     let rule_node =
