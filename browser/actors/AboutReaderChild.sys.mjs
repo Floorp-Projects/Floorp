@@ -140,13 +140,10 @@ export class AboutReaderChild extends JSWindowActorChild {
         // this._isLeavingReaderableReaderMode is used here to keep the Reader Mode icon
         // visible in the location bar when transitioning from reader-mode page
         // back to the readable source page.
-        // Should only be sent when leaving a reader page.
-        if (this.isAboutReader) {
-          this.sendAsyncMessage("Reader:UpdateReaderButton", {
-            isArticle: this._isLeavingReaderableReaderMode,
-          });
-          this._isLeavingReaderableReaderMode = false;
-        }
+        this.sendAsyncMessage("Reader:UpdateReaderButton", {
+          isArticle: this._isLeavingReaderableReaderMode,
+        });
+        this._isLeavingReaderableReaderMode = false;
         break;
 
       case "pageshow":
