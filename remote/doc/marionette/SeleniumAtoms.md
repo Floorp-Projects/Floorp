@@ -1,5 +1,4 @@
-Selenium atoms
-==============
+# Selenium atoms
 
 Marionette uses a small list of [Selenium atoms] to interact with
 web elements.  Initially those have been added to ensure a better
@@ -19,20 +18,17 @@ To use one of those atoms Javascript modules will have to import
 [WebDriver specification]: https://w3c.github.io/webdriver/webdriver-spec.html
 [atom.sys.mjs]: https://searchfox.org/mozilla-central/source/remote/marionette/atom.sys.mjs
 
-
-Update required Selenium atoms
-------------------------------
+## Update required Selenium atoms
 
 In regular intervals the atoms, which are still in use, have to
 be updated.  Therefore they have to be exported from the Selenium
 repository first, and then updated in [atom.sys.mjs].
 
-
 ### Export Selenium Atoms
 
 The canonical GitHub repository for Selenium is
 
-	https://github.com/SeleniumHQ/selenium.git
+  <https://github.com/SeleniumHQ/selenium.git>
 
 so make sure to have a local copy of it. For the cloning process
 it is recommended to specify the `--depth=1` argument, so only the
@@ -40,24 +36,23 @@ last changeset is getting downloaded (which itself will already be
 more than 100 MB). Once the clone is ready the export of the atoms
 can be triggered by running the following commands:
 
-	% cd selenium
-	% ./go
-	% python buck-out/crazy-fun/%changeset%/buck.pex build --show-output %atom%
+    % cd selenium
+    % ./go
+    % python buck-out/crazy-fun/%changeset%/buck.pex build --show-output %atom%
 
 Hereby `%changeset%` corresponds to the currently used version of
 buck, and `%atom%` to the atom to export. The following targets
 for exporting are available:
 
-  - `//javascript/webdriver/atoms:clear-element-firefox`
-  - `//javascript/webdriver/atoms:get-text-firefox`
-  - `//javascript/webdriver/atoms:is-displayed-firefox`
-  - `//javascript/webdriver/atoms:is-enabled-firefox`
-  - `//javascript/webdriver/atoms:is-selected-firefox`
+- `//javascript/webdriver/atoms:clear-element-firefox`
+- `//javascript/webdriver/atoms:get-text-firefox`
+- `//javascript/webdriver/atoms:is-displayed-firefox`
+- `//javascript/webdriver/atoms:is-enabled-firefox`
+- `//javascript/webdriver/atoms:is-selected-firefox`
 
 For each of the exported atoms a file can now be found in the folder
 `buck-out/gen/javascript/webdriver/atoms/`.  They contain all the
 code including dependencies for the atom wrapped into a single function.
-
 
 ### Update atom.sys.mjs
 
@@ -75,7 +70,6 @@ each atom to be updated the steps as laid out below have to be performed:
 
 4. Copy the whole content of the file, and replace the existing
    code for the atom in `atom.sys.mjs`.
-
 
 ### Test the changes
 

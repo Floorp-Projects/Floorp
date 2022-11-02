@@ -1,5 +1,4 @@
-Submitting patches
-==================
+# Submitting patches
 
 You can submit patches by using [Phabricator]. Walk through its documentation
 in how to set it up, and uploading patches for review. Don't worry about which
@@ -14,13 +13,13 @@ granted commit access level 1 you will have permission to use the
 
 You can use the `remote-protocol` [try preset]:
 
-	mach try --preset remote-protocol
+    mach try --preset remote-protocol
 
 This preset will schedule tests related to the Remote Protocol component on
 various platforms. You can reduce the number of tasks by filtering on platforms
 (e.g. linux) or build type (e.g. opt):
 
-	mach try --preset remote-protocol -xq "'linux 'opt"
+    mach try --preset remote-protocol -xq "'linux 'opt"
 
 But you can also schedule tests by selecting relevant jobs yourself:
 

@@ -1,5 +1,4 @@
-New contributors
-================
+# New contributors
 
 This page is aimed at people who are new to Mozilla and want to contribute
 to Mozilla source code related to Marionette Python tests, WebDriver
@@ -12,9 +11,7 @@ steps is to make sure you have the basics of your development environment
 working. Once you do, we can get you started with working on an
 actual bug, yay!
 
-
-Accounts, communication
------------------------
+## Accounts, communication
 
   1. Set up a [Bugzilla] account (and, if you like, a [Mozillians] profile).
      Please include your Element nickname in both of these accounts so we can work
@@ -44,43 +41,38 @@ Accounts, communication
 [Bugzilla]: https://bugzilla.mozilla.org/
 [Mozillians]: https://mozillians.org/
 
-Getting the code, running tests
--------------------------------
+## Getting the code, running tests
 
 Follow the documentation on [Contributing](Contributing.md) to get a sense of
 our projects, and which is of most interest for you. You will also learn how to
 get the Firefox source code, build your custom Firefox build, and how to run the
 tests.
 
-
-Work on bugs and get code review
---------------------------------
+## Work on bugs and get code review
 
 Once you are familiar with the code of the test harnesses, and the tests you might
 want to start with your first contribution. The necessary steps to submit and verify
 your patches are laid out in [Patches](Patches.md).
 
+## Resources
 
-Resources
----------
+* Search Mozilla's code repository with searchfox to find the [code for
+  Marionette] and the [Marionette client/harness].
 
-  * Search Mozilla's code repository with searchfox to find the [code for
-    Marionette] and the [Marionette client/harness].
+* Another [guide for new contributors].  It has not been updated in a long
+  time but it's a good general resource if you ever get stuck on something.
+  The most relevant sections to you are about Bugzilla, Mercurial, Python and the
+  Development Process.
 
-  * Another [guide for new contributors].  It has not been updated in a long
-    time but it's a good general resource if you ever get stuck on something.
-    The most relevant sections to you are about Bugzilla, Mercurial, Python and the
-    Development Process.
+* [Mercurial for Mozillians]
 
-  * [Mercurial for Mozillians]
+* More general resources are available in this little [guide] :maja_zf wrote
+  in 2015 to help a student get started with open source contributions.
 
-  * More general resources are available in this little [guide] :maja_zf wrote
-    in 2015 to help a student get started with open source contributions.
+* Textbook about general open source practices: [Practical Open Source Software Exploration]
 
-  * Textbook about general open source practices: [Practical Open Source Software Exploration]
-
-  * If you'd rather use git instead of hg, see [git workflow for
-    Gecko development] and/or [this blog post by :ato].
+* If you'd rather use git instead of hg, see [git workflow for
+  Gecko development] and/or [this blog post by :ato].
 
 [code for Marionette]: https://searchfox.org/mozilla-central/source/remote/marionette/
 [Marionette client/harness]: https://searchfox.org/mozilla-central/source/testing/marionette/
