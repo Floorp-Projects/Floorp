@@ -80,7 +80,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     private fun createNodeInfo(id: Int): AccessibilityNodeInfo {
         val node = provider.createAccessibilityNodeInfo(id);
-        nodeInfos.add(node)
+        nodeInfos.add(node!!)
         return node;
     }
 
@@ -152,7 +152,12 @@ class AccessibilityTest : BaseSessionTest() {
     @After fun teardown() {
         sessionRule.runtime.settings.forceEnableAccessibility = false
         mainSession.accessibility.view = null
-        nodeInfos.forEach { node -> node.recycle() }
+        if (Build.VERSION.SDK_INT < 33){
+            nodeInfos.forEach { node ->
+                @Suppress("DEPRECATION")
+                node.recycle()
+            }
+        }
     }
 
     private fun waitForInitialFocus(moveToFirstChild: Boolean = false) {
