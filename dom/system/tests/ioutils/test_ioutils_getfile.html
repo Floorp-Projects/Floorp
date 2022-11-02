@@ -43,6 +43,37 @@
 
       await IOUtils.remove(TEST_PATH, { recursive: true });
     });
+
+    add_task(async function test_getDirectory() {
+      const expectedPath = PathUtils.join(TEST_PATH, "qux", "quux", "corge");
+
+      ok(!(await IOUtils.exists(PathUtils.parent(expectedPath))), "Parent directory should not exist");
+
+      const file = await IOUtils.getDirectory(TEST_PATH, "qux", "quux", "corge");
+
+      is(file.path, expectedPath, "Should have the correct path");
+      ok(await IOUtils.exists(expectedPath), "Directory should be created");
+
+      const info = await IOUtils.stat(expectedPath);
+      is(info.type, "directory", "Should create a directory");
+
+      await IOUtils.remove(TEST_PATH, { recursive: true });
+    });
+
+    add_task(async function test_getDirectory_exists() {
+      const expectedPath = PathUtils.join(TEST_PATH, "qux", "quux", "corge");
+
+      await IOUtils.makeDirectory(expectedPath);
+
+      const file = await IOUtils.getDirectory(TEST_PATH, "qux", "quux", "corge");
+      is(file.path, expectedPath, "Should have the correct path");
+      ok(await IOUtils.exists(expectedPath), "Directory should still exist");
+
+      const info = await IOUtils.stat(expectedPath);
+      is(info.type, "directory", "Should still be a directory");
+
+      await IOUtils.remove(TEST_PATH, { recursive: true });
+    });
   </script>
 </head>
 

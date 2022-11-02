@@ -348,6 +348,18 @@ namespace IOUtils {
    */
   [NewObject]
   Promise<nsIFile> getFile(DOMString... components);
+
+  /**
+   * Return an nsIFile corresponding to a directory. It will be created
+   * off-main-thread if it does not already exist.
+   *
+   * @param components The path components. The first component must be an
+   *                   absolute path.
+   *
+   * @return A promise that resolves to an nsIFile for the requested directory.
+   */
+  [NewObject]
+  Promise<nsIFile> getDirectory(DOMString... components);
 };
 
 [Exposed=Window]
