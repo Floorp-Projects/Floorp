@@ -198,11 +198,12 @@ export class ProgressListener {
 
       if (this.#unloadTimerId !== null) {
         lazy.clearTimeout(this.#unloadTimerId);
+        this.#trace("Cleared the unload timer");
         this.#unloadTimerId = null;
       }
 
       if (this.#resolveWhenStarted) {
-        // Return immediately when the load should not be awaited.
+        this.#trace("Request to stop listening when navigation started");
         this.stop();
         return;
       }
@@ -220,7 +221,7 @@ export class ProgressListener {
           this.browsingContext.currentWindowGlobal.isInitialDocument
         ) {
           this.#trace(
-            `Ignore aborted navigation error to the initial document, real document will be loaded.`
+            "Ignore aborted navigation error to the initial document, real document will be loaded."
           );
           return;
         }
@@ -244,7 +245,7 @@ export class ProgressListener {
 
       // Otherwise wait for a potential additional page load.
       this.#trace(
-        `Initial document loaded. Wait for a potential further navigation.`
+        "Initial document loaded. Wait for a potential further navigation."
       );
       this.#seenStartFlag = false;
       this.#setUnloadTimer();
@@ -260,7 +261,9 @@ export class ProgressListener {
   }
 
   #setUnloadTimer() {
-    if (!this.#expectNavigation) {
+    if (this.#expectNavigation) {
+      this.#trace("Skip setting the unload timer");
+    } else {
       this.#trace(`Setting unload timer (${this.#unloadTimeout}ms)`);
 
       this.#unloadTimerId = lazy.setTimeout(() => {
@@ -311,13 +314,22 @@ export class ProgressListener {
       throw new Error(`Progress listener already started`);
     }
 
+    this.#trace(
+      `Start: expectNavigation=${this.#expectNavigation} resolveWhenStarted=${
+        this.#resolveWhenStarted
+      } unloadTimeout=${this.#unloadTimeout} waitForExplicitStart=${
+        this.#waitForExplicitStart
+      }`
+    );
+
     if (this.#webProgress.isLoadingDocument) {
       this.#targetURI = this.#getTargetURI(this.#webProgress.documentRequest);
+      this.#trace(`Document already loading ${this.#targetURI?.spec}`);
 
       if (this.#resolveWhenStarted && !this.#waitForExplicitStart) {
-        // Resolve immediately when the page is already loading and there
-        // is no requirement to wait for it to finish.
-        this.#trace(`Document already loading ${this.#targetURI}`);
+        this.#trace(
+          "Resolve on document loading if not waiting for a load or a new navigation"
+        );
         return Promise.resolve();
       }
     }
@@ -356,8 +368,10 @@ export class ProgressListener {
   stop(options = {}) {
     const { error } = options;
 
+    this.#trace(`Stop: has error=${!!error}`);
+
     if (!this.#deferredNavigation) {
-      throw new Error(`Progress listener not yet started`);
+      throw new Error("Progress listener not yet started");
     }
 
     lazy.clearTimeout(this.#unloadTimerId);
