@@ -7,6 +7,7 @@
 #include "AccGroupInfo.h"
 #include "DocAccessible-inl.h"
 #include "XULTreeAccessible.h"
+#include "nsAccUtils.h"
 
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
@@ -213,7 +214,7 @@ IDRefsIterator::IDRefsIterator(DocAccessible* aDoc, nsIContent* aContent,
                                nsAtom* aIDRefsAttr)
     : mContent(aContent), mDoc(aDoc), mCurrIdx(0) {
   if (mContent->IsElement()) {
-    mContent->AsElement()->GetAttr(kNameSpaceID_None, aIDRefsAttr, mIDs);
+    mContent->AsElement()->GetAttr(aIDRefsAttr, mIDs);
   }
 }
 

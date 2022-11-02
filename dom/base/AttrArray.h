@@ -120,6 +120,49 @@ class AttrArray {
   // unmapped attributes of |aOther|.
   nsresult EnsureCapacityToClone(const AttrArray& aOther);
 
+  enum AttrValuesState { ATTR_MISSING = -1, ATTR_VALUE_NO_MATCH = -2 };
+  using AttrValuesArray = nsStaticAtom* const;
+  int32_t FindAttrValueIn(int32_t aNameSpaceID, const nsAtom* aName,
+                          AttrValuesArray* aValues,
+                          nsCaseTreatment aCaseSensitive) const;
+
+  inline bool GetAttr(int32_t aNameSpaceID, const nsAtom* aName,
+                      nsAString& aResult) const {
+    MOZ_ASSERT(aResult.IsEmpty(), "Should have empty string coming in");
+
+    const nsAttrValue* val = GetAttr(aName, aNameSpaceID);
+    if (val) {
+      val->ToString(aResult);
+      return true;
+    }
+    return false;
+  }
+
+  inline bool HasAttr(int32_t aNameSpaceID, const nsAtom* aName) const {
+    return GetAttr(aName, aNameSpaceID) != nullptr;
+  }
+
+  inline bool AttrValueIs(int32_t aNameSpaceID, const nsAtom* aName,
+                          const nsAString& aValue,
+                          nsCaseTreatment aCaseSensitive) const {
+    NS_ASSERTION(aName, "Must have attr name");
+    NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
+
+    const nsAttrValue* val = GetAttr(aName, aNameSpaceID);
+    return val && val->Equals(aValue, aCaseSensitive);
+  }
+
+  inline bool AttrValueIs(int32_t aNameSpaceID, const nsAtom* aName,
+                          const nsAtom* aValue,
+                          nsCaseTreatment aCaseSensitive) const {
+    NS_ASSERTION(aName, "Must have attr name");
+    NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
+    NS_ASSERTION(aValue, "Null value atom");
+
+    const nsAttrValue* val = GetAttr(aName, aNameSpaceID);
+    return val && val->Equals(aValue, aCaseSensitive);
+  }
+
   struct InternalAttr {
     nsAttrName mName;
     nsAttrValue mValue;

@@ -10,6 +10,7 @@
 #include "ARIAMap.h"
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
+#include "nsGenericHTMLElement.h"
 #include "DocAccessible.h"
 #include "DocAccessibleParent.h"
 #include "HyperTextAccessible.h"
@@ -26,6 +27,7 @@
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ElementInternals.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "nsAccessibilityService.h"
 
@@ -127,37 +129,46 @@ bool nsAccUtils::HasDefinedARIAToken(nsIContent* aContent, nsAtom* aAtom) {
   if (!aContent->IsElement()) return false;
 
   dom::Element* element = aContent->AsElement();
-  if (!element->HasAttr(kNameSpaceID_None, aAtom) ||
-      element->AttrValueIs(kNameSpaceID_None, aAtom, nsGkAtoms::_empty,
-                           eCaseMatters) ||
-      element->AttrValueIs(kNameSpaceID_None, aAtom, nsGkAtoms::_undefined,
-                           eCaseMatters)) {
-    return false;
+  if (auto* htmlElement = nsGenericHTMLElement::FromNode(element);
+      htmlElement && !element->HasAttr(aAtom)) {
+    const auto* defaults = GetARIADefaults(htmlElement);
+    if (!defaults) {
+      return false;
+    }
+    return HasDefinedARIAToken(defaults, aAtom);
   }
-  return true;
+  return HasDefinedARIAToken(&element->GetAttrs(), aAtom);
 }
 
-nsStaticAtom* nsAccUtils::NormalizeARIAToken(dom::Element* aElement,
+bool nsAccUtils::HasDefinedARIAToken(const AttrArray* aAttrs, nsAtom* aAtom) {
+  return aAttrs->HasAttr(kNameSpaceID_None, aAtom) &&
+         !aAttrs->AttrValueIs(kNameSpaceID_None, aAtom, nsGkAtoms::_empty,
+                              eCaseMatters) &&
+         !aAttrs->AttrValueIs(kNameSpaceID_None, aAtom, nsGkAtoms::_undefined,
+                              eCaseMatters);
+}
+
+nsStaticAtom* nsAccUtils::NormalizeARIAToken(const AttrArray* aAttrs,
                                              nsAtom* aAttr) {
-  if (!HasDefinedARIAToken(aElement, aAttr)) {
+  if (!HasDefinedARIAToken(aAttrs, aAttr)) {
     return nsGkAtoms::_empty;
   }
 
   if (aAttr == nsGkAtoms::aria_current) {
-    static dom::Element::AttrValuesArray tokens[] = {
+    static AttrArray::AttrValuesArray tokens[] = {
         nsGkAtoms::page, nsGkAtoms::step, nsGkAtoms::location_,
         nsGkAtoms::date, nsGkAtoms::time, nsGkAtoms::_true,
         nullptr};
-    int32_t idx = aElement->FindAttrValueIn(kNameSpaceID_None, aAttr, tokens,
-                                            eCaseMatters);
+    int32_t idx =
+        aAttrs->FindAttrValueIn(kNameSpaceID_None, aAttr, tokens, eCaseMatters);
     // If the token is present, return it, otherwise TRUE as per spec.
     return (idx >= 0) ? tokens[idx] : nsGkAtoms::_true;
   }
 
-  static dom::Element::AttrValuesArray tokens[] = {
+  static AttrArray::AttrValuesArray tokens[] = {
       nsGkAtoms::_false, nsGkAtoms::_true, nsGkAtoms::mixed, nullptr};
   int32_t idx =
-      aElement->FindAttrValueIn(kNameSpaceID_None, aAttr, tokens, eCaseMatters);
+      aAttrs->FindAttrValueIn(kNameSpaceID_None, aAttr, tokens, eCaseMatters);
   if (idx >= 0) {
     return tokens[idx];
   }
@@ -181,8 +192,7 @@ LocalAccessible* nsAccUtils::GetSelectableContainer(
 bool nsAccUtils::IsDOMAttrTrue(const LocalAccessible* aAccessible,
                                nsAtom* aAttr) {
   dom::Element* el = aAccessible->Elm();
-  return el && el->AttrValueIs(kNameSpaceID_None, aAttr, nsGkAtoms::_true,
-                               eCaseMatters);
+  return el && ARIAAttrValueIs(el, aAttr, nsGkAtoms::_true, eCaseMatters);
 }
 
 Accessible* nsAccUtils::TableFor(Accessible* aAcc) {
@@ -432,8 +442,7 @@ bool nsAccUtils::IsARIALive(const LocalAccessible* aAccessible) {
     }
     nsAutoString live;
     if (HasDefinedARIAToken(ancestor, nsGkAtoms::aria_live)) {
-      ancestor->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_live,
-                                     live);
+      GetARIAAttr(ancestor->AsElement(), nsGkAtoms::aria_live, live);
     } else if (role) {
       GetLiveAttrValue(role->liveAttRule, live);
     } else if (nsStaticAtom* value = GetAccService()->MarkupAttribute(
@@ -492,4 +501,97 @@ void nsAccUtils::DocumentURL(Accessible* aDoc, nsAString& aURL) {
     return localAcc->AsDoc()->URL(aURL);
   }
   return aDoc->AsRemote()->AsDoc()->URL(aURL);
+}
+
+// ARIA Accessibility Default Accessors
+const AttrArray* nsAccUtils::GetARIADefaults(dom::Element* aElement) {
+  auto* element = nsGenericHTMLElement::FromNode(aElement);
+  if (!element) {
+    return nullptr;
+  }
+  auto* internals = element->GetInternals();
+  if (!internals) {
+    return nullptr;
+  }
+  return &internals->GetAttrs();
+}
+
+bool nsAccUtils::HasARIAAttr(dom::Element* aElement, const nsAtom* aName) {
+  if (aElement->HasAttr(kNameSpaceID_None, aName)) {
+    return true;
+  }
+  const auto* defaults = GetARIADefaults(aElement);
+  if (!defaults) {
+    return false;
+  }
+  return defaults->HasAttr(kNameSpaceID_None, aName);
+}
+
+bool nsAccUtils::GetARIAAttr(dom::Element* aElement, const nsAtom* aName,
+                             nsAString& aResult) {
+  if (aElement->GetAttr(kNameSpaceID_None, aName, aResult)) {
+    return true;
+  }
+  const auto* defaults = GetARIADefaults(aElement);
+  if (!defaults) {
+    return false;
+  }
+  return defaults->GetAttr(kNameSpaceID_None, aName, aResult);
+}
+
+const nsAttrValue* nsAccUtils::GetARIAAttr(dom::Element* aElement,
+                                           const nsAtom* aName) {
+  if (const auto* val = aElement->GetParsedAttr(aName, kNameSpaceID_None)) {
+    return val;
+  }
+  const auto* defaults = GetARIADefaults(aElement);
+  if (!defaults) {
+    return nullptr;
+  }
+  return defaults->GetAttr(aName, kNameSpaceID_None);
+}
+
+bool nsAccUtils::ARIAAttrValueIs(dom::Element* aElement, const nsAtom* aName,
+                                 const nsAString& aValue,
+                                 nsCaseTreatment aCaseSensitive) {
+  if (aElement->AttrValueIs(kNameSpaceID_None, aName, aValue, aCaseSensitive)) {
+    return true;
+  }
+  const auto* defaults = GetARIADefaults(aElement);
+  if (!defaults) {
+    return false;
+  }
+  return defaults->AttrValueIs(kNameSpaceID_None, aName, aValue,
+                               aCaseSensitive);
+}
+
+bool nsAccUtils::ARIAAttrValueIs(dom::Element* aElement, const nsAtom* aName,
+                                 const nsAtom* aValue,
+                                 nsCaseTreatment aCaseSensitive) {
+  if (aElement->AttrValueIs(kNameSpaceID_None, aName, aValue, aCaseSensitive)) {
+    return true;
+  }
+  const auto* defaults = GetARIADefaults(aElement);
+  if (!defaults) {
+    return false;
+  }
+  return defaults->AttrValueIs(kNameSpaceID_None, aName, aValue,
+                               aCaseSensitive);
+}
+
+int32_t nsAccUtils::FindARIAAttrValueIn(dom::Element* aElement,
+                                        const nsAtom* aName,
+                                        AttrArray::AttrValuesArray* aValues,
+                                        nsCaseTreatment aCaseSensitive) {
+  int32_t index = aElement->FindAttrValueIn(kNameSpaceID_None, aName, aValues,
+                                            aCaseSensitive);
+  if (index == AttrArray::ATTR_MISSING) {
+    const auto* defaults = GetARIADefaults(aElement);
+    if (!defaults) {
+      return index;
+    }
+    index = defaults->FindAttrValueIn(kNameSpaceID_None, aName, aValues,
+                                      aCaseSensitive);
+  }
+  return index;
 }

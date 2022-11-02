@@ -137,22 +137,11 @@ class ElementInternals final : public nsIFormControl,
   ARIA_REFLECT_ATTR(AriaValueNow, aria_valuenow)
   ARIA_REFLECT_ATTR(AriaValueText, aria_valuetext)
 
-  void GetAttr(const nsAtom* aName, nsAString& aResult) const {
-    MOZ_ASSERT(aResult.IsEmpty(), "Should have empty string coming in");
+  void GetAttr(const nsAtom* aName, nsAString& aResult) const;
 
-    nsAutoString attrName;
-    aName->ToString(attrName);
-    const nsAttrValue* val = mAttrs.GetAttr(attrName);
-    if (val) {
-      val->ToString(aResult);
-    }
-  }
+  nsresult SetAttr(nsAtom* aName, const nsAString& aValue);
 
-  nsresult SetAttr(nsAtom* aName, const nsAString& aValue) {
-    bool attrHadValue;
-    nsAttrValue attrValue(aValue);
-    return mAttrs.SetAndSwapAttr(aName, attrValue, &attrHadValue);
-  }
+  const AttrArray& GetAttrs() const { return mAttrs; }
 
   DocGroup* GetDocGroup();
 

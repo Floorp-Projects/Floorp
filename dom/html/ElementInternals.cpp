@@ -6,15 +6,19 @@
 
 #include "mozilla/dom/ElementInternals.h"
 
+#include "mozAutoDocUpdate.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/ElementInternalsBinding.h"
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/HTMLElement.h"
 #include "mozilla/dom/HTMLFieldSetElement.h"
+#include "mozilla/dom/MutationEventBinding.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/ValidityState.h"
 #include "nsContentUtils.h"
+#include "nsDebug.h"
 #include "nsGenericHTMLElement.h"
 
 namespace mozilla::dom {
@@ -411,6 +415,40 @@ void ElementInternals::Unlink() {
   if (mFieldSet) {
     mFieldSet->RemoveElement(mTarget);
   }
+}
+
+void ElementInternals::GetAttr(const nsAtom* aName, nsAString& aResult) const {
+  MOZ_ASSERT(aResult.IsEmpty(), "Should have empty string coming in");
+
+  const nsAttrValue* val = mAttrs.GetAttr(aName);
+  if (val) {
+    val->ToString(aResult);
+    return;
+  }
+  SetDOMStringToNull(aResult);
+}
+
+nsresult ElementInternals::SetAttr(nsAtom* aName, const nsAString& aValue) {
+  Document* document = mTarget->GetComposedDoc();
+  mozAutoDocUpdate updateBatch(document, true);
+
+  uint8_t modType = mAttrs.HasAttr(kNameSpaceID_None, aName)
+                        ? MutationEvent_Binding::MODIFICATION
+                        : MutationEvent_Binding::ADDITION;
+
+  MutationObservers::NotifyARIAAttributeDefaultWillChange(mTarget, aName,
+                                                          modType);
+
+  bool attrHadValue;
+  nsAttrValue attrValue(aValue);
+  nsresult rs = mAttrs.SetAndSwapAttr(aName, attrValue, &attrHadValue);
+  nsMutationGuard::DidMutate();
+
+  MutationObservers::NotifyARIAAttributeDefaultChanged(mTarget, aName, modType);
+
+  mTarget->UpdateState(true);
+
+  return rs;
 }
 
 DocGroup* ElementInternals::GetDocGroup() {

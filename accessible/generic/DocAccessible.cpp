@@ -866,10 +866,36 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
   }
 }
 
+void DocAccessible::ARIAAttributeDefaultWillChange(dom::Element* aElement,
+                                                   nsAtom* aAttribute,
+                                                   int32_t aModType) {
+  NS_ASSERTION(!IsDefunct(),
+               "Attribute changed called on defunct document accessible!");
+
+  if (aElement->HasAttr(aAttribute)) {
+    return;
+  }
+
+  AttributeWillChange(aElement, kNameSpaceID_None, aAttribute, aModType);
+}
+
+void DocAccessible::ARIAAttributeDefaultChanged(dom::Element* aElement,
+                                                nsAtom* aAttribute,
+                                                int32_t aModType) {
+  NS_ASSERTION(!IsDefunct(),
+               "Attribute changed called on defunct document accessible!");
+
+  if (aElement->HasAttr(aAttribute)) {
+    return;
+  }
+
+  AttributeChanged(aElement, kNameSpaceID_None, aAttribute, aModType, nullptr);
+}
+
 void DocAccessible::ARIAActiveDescendantChanged(LocalAccessible* aAccessible) {
   if (dom::Element* elm = aAccessible->Elm()) {
     nsAutoString id;
-    if (elm->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_activedescendant, id)) {
+    if (elm->GetAttr(nsGkAtoms::aria_activedescendant, id)) {
       dom::Element* activeDescendantElm = IDRefsIterator::GetElem(elm, id);
       if (activeDescendantElm) {
         LocalAccessible* activeDescendant = GetAccessible(activeDescendantElm);
@@ -1139,8 +1165,8 @@ void DocAccessible::BindToDocument(LocalAccessible* aAccessible,
     AddDependentIDsFor(aAccessible);
 
     nsIContent* content = aAccessible->GetContent();
-    if (content->IsElement() && content->AsElement()->HasAttr(
-                                    kNameSpaceID_None, nsGkAtoms::aria_owns)) {
+    if (content->IsElement() &&
+        content->AsElement()->HasAttr(nsGkAtoms::aria_owns)) {
       mNotificationController->ScheduleRelocation(aAccessible);
     }
   }

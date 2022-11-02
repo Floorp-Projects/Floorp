@@ -115,6 +115,20 @@ class MutationObserverWrapper final : public nsIMutationObserver {
     mOwner->ParentChainChanged(aContent);
   }
 
+  void ARIAAttributeDefaultWillChange(mozilla::dom::Element* aElement,
+                                      nsAtom* aAttribute,
+                                      int32_t aModType) override {
+    MOZ_ASSERT(mOwner);
+    mOwner->ARIAAttributeDefaultWillChange(aElement, aAttribute, aModType);
+  }
+
+  void ARIAAttributeDefaultChanged(mozilla::dom::Element* aElement,
+                                   nsAtom* aAttribute,
+                                   int32_t aModType) override {
+    MOZ_ASSERT(mOwner);
+    mOwner->ARIAAttributeDefaultChanged(aElement, aAttribute, aModType);
+  }
+
   MozExternalRefCountType AddRefWrapper() {
     nsrefcnt count = ++mRefCnt;
     NS_LOG_ADDREF(this, count, "MutationObserverWrapper", sizeof(*this));

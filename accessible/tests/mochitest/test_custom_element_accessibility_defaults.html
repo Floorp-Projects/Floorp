@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1665151
+-->
+<head>
+  <title>Test for default accessibility semantics for custom elements</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="common.js"></script>
+  <script src="attributes.js"></script>
+  <script src="role.js"></script>
+  <script src="states.js"></script>
+  <script src="value.js"></script>
+  <script src="name.js"></script>
+  <script src="promisified-events.js"></script>
+  <script>
+[
+  ["role", "math", () => {}],
+  ["atomic", "toolbar", internals => internals.ariaAtomic = "true"],
+  ["autocomplete", "textbox", internals => internals.ariaAutoComplete = "inline"],
+  ["busy", "feed", internals => internals.ariaBusy = "true"],
+  ["checked", "checkbox", internals => internals.ariaChecked = "true"],
+  ["colcount", "grid", internals => internals.ariaColCount = "1"],
+  ["col", "gridcell", internals => {
+    internals.ariaColIndex = "1";
+    internals.ariaColIndexText = "Default";
+    internals.ariaColSpan = "1";
+  }],
+  ["current", "listitem", internals => internals.ariaCurrent = "page"],
+  ["description", "note", internals => internals.ariaDescription = "Default"],
+  ["disabled", "button", internals => internals.ariaDisabled = "true"],
+  ["expanded", "button", internals => internals.ariaExpanded = "true"],
+  ["haspopup", "button", internals => internals.ariaHasPopup = "true"],
+  ["hidden", "region", internals => internals.ariaHidden = "false"],
+  ["invalid", "textbox", internals => internals.ariaInvalid = "true"],
+  ["keyshortcuts", "button", internals => internals.ariaKeyShortcuts = "Alt+Shift+A"],
+  ["label", "button", internals => internals.ariaLabel = "Default"],
+  ["level", "heading", internals => internals.ariaLevel = "1"],
+  ["live", "region", internals => internals.ariaLive = "polite"],
+  ["modal", "dialog", internals => internals.ariaModal = "true"],
+  ["multiline", "textbox", internals => internals.ariaMultiLine = "true"],
+  ["multiselectable", "listbox", internals => internals.ariaMultiSelectable = "true"],
+  ["orientation", "menu", internals => internals.ariaOrientation = "vertical"],
+  ["placeholder", "textbox", internals => internals.ariaPlaceholder = "Default"],
+  ["posinset", "option", internals => internals.ariaPosInSet = "1"],
+  ["pressed", "button", internals => internals.ariaPressed = "true"],
+  ["readonly", "textbox", internals => internals.ariaReadOnly = "true"],
+  ["relevant", "region", internals => internals.ariaRelevant = "all"],
+  ["required", "textbox", internals => internals.ariaRequired = "true"],
+  ["roledescription", "region", internals => internals.ariaRoleDescription = "Default"],
+  ["rowcount", "grid", internals => internals.ariaRowCount = "1"],
+  ["row", "row", internals => {
+    internals.ariaRowIndex = "1";
+    internals.ariaRowIndexText = "Default";
+  }],
+  ["rowspan", "cell", internals => internals.ariaRowSpan = "1"],
+  ["selected", "option", internals => internals.ariaSelected = "true"],
+  ["setsize", "listitem", internals => internals.ariaSetSize = "1"],
+  ["sort", "columnheader", internals => internals.ariaSort = "ascending"],
+  ["value", "slider", internals => {
+    internals.ariaValueNow = "5";
+    internals.ariaValueMin = "1";
+    internals.ariaValueMax = "10";
+    internals.ariaValueText = "Default";
+  }],
+].forEach(([name, role, apply]) => {
+  customElements.define(`custom-${name}`,
+    class extends HTMLElement {
+      constructor() {
+        super();
+        this._internals = this.attachInternals();
+        this._internals.role = role;
+        apply(this._internals);
+      }
+      get internals() {
+        return this._internals;
+      }
+    }
+  );
+});
+
+async function runTest() {
+  // Test for proper overriding of default attributes.
+  testAttrs("default-role", {"xml-roles": "math"}, true);
+  testAttrs("custom-role", {"xml-roles": "note"}, true);
+
+  testAttrs("default-atomic", {"atomic": "true"}, true);
+  testAbsentAttrs("custom-atomic", {"atomic": "false"});
+
+  testAttrs("default-autocomplete", {"autocomplete": "inline"}, true);
+  testAttrs("custom-autocomplete", {"autocomplete": "list"}, true);
+
+  testStates("default-busy", STATE_BUSY);
+  testStates("custom-busy", 0, 0, STATE_BUSY);
+
+  testStates("default-checked", STATE_CHECKED);
+  testStates("custom-checked", 0, 0, STATE_CHECKED);
+
+  testAttrs("default-colCount", {"colcount": "1"}, true);
+  testAttrs("default-col", {"colindex": "1"}, true);
+  testAttrs("default-col", {"colindextext": "Default"}, true);
+  testAttrs("default-col", {"colspan": "1"}, true);
+  testAttrs("custom-colCount", {"colcount": "3"}, true);
+  testAttrs("custom-col", {"colindex": "2"}, true);
+  testAttrs("custom-col", {"colindextext": "Custom"}, true);
+  testAttrs("custom-col", {"colspan": "2"}, true);
+
+  testAttrs("default-current", {"current": "page"}, true);
+  testAttrs("custom-current", {"current": "step"}, true);
+
+  testDescr("default-description", "Default");
+  testDescr("custom-description", "Custom");
+
+  testStates("default-disabled", STATE_UNAVAILABLE);
+  testStates("custom-disabled", 0, 0, STATE_UNAVAILABLE);
+
+  testStates("default-expanded", STATE_EXPANDED);
+  testStates("custom-expanded", STATE_COLLAPSED);
+
+  testAttrs("default-haspopup", {"haspopup": "true"}, true);
+  testAbsentAttrs("custom-haspopup", {"haspopup": "false"});
+
+  ok(isAccessible("default-hidden"), "Accessible for not aria-hidden");
+  ok(!isAccessible("custom-hidden"), "No accessible for aria-hidden");
+
+  testStates("default-invalid", STATE_INVALID);
+  testStates("custom-invalid", 0, 0, STATE_INVALID);
+
+  testAttrs("default-keyshortcuts", {"keyshortcuts": "Alt+Shift+A"}, true);
+  testAttrs("custom-keyshortcuts", {"keyshortcuts": "A"}, true);
+
+  testName("default-label", "Default");
+  testName("custom-label", "Custom");
+
+  testAttrs("default-level", {"level": "1"}, true);
+  testAttrs("custom-level", {"level": "2"}, true);
+
+  testAttrs("default-live", {"live": "polite"}, true);
+  testAttrs("custom-live", {"live": "assertive"}, true);
+
+  testStates("default-modal", 0, EXT_STATE_MODAL);
+  testStates("custom-modal", 0, 0, 0, EXT_STATE_MODAL);
+
+  testStates("default-multiline", 0, EXT_STATE_MULTI_LINE, 0, EXT_STATE_SINGLE_LINE);
+  testStates("custom-multiline", 0, EXT_STATE_SINGLE_LINE, 0, EXT_STATE_MULTI_LINE);
+
+  testStates("default-multiselectable", STATE_MULTISELECTABLE);
+  testStates("custom-multiselectable", 0, 0, STATE_MULTISELECTABLE);
+
+  testStates("default-orientation", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+  testStates("custom-orientation", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+
+  testAttrs("default-posinset", {"posinset": "1"}, true);
+  testAttrs("custom-posinset", {"posinset": "2"}, true);
+
+  testStates("default-pressed", STATE_PRESSED);
+  testStates("custom-pressed", 0, 0, STATE_PRESSED);
+
+  testStates("default-readonly", STATE_READONLY);
+  testStates("custom-readonly", 0, 0, STATE_READONLY);
+
+  testAttrs("default-relevant", {"relevant": "all"}, true);
+  testAttrs("custom-relevant", {"relevant": "text"}, true);
+
+  testStates("default-required", STATE_REQUIRED);
+  testStates("custom-required", 0, 0, STATE_REQUIRED);
+
+  testAttrs("default-roledescription", {"roledescription": "Default"}, true);
+  testAttrs("custom-roledescription", {"roledescription": "Custom"}, true);
+
+  testAttrs("default-rowcount", {"rowcount": "1"}, true);
+  testAttrs("default-row", {"rowindex": "1"}, true);
+  testAttrs("default-row", {"rowindextext": "Default"}, true);
+  testAttrs("default-rowspan", {"rowspan": "1"}, true);
+  testAttrs("custom-rowcount", {"rowcount": "3"}, true);
+  testAttrs("custom-row", {"rowindex": "2"}, true);
+  testAttrs("custom-row", {"rowindextext": "Custom"}, true);
+  testAttrs("custom-rowspan", {"rowspan": "2"}, true);
+
+  testStates("default-selected", STATE_SELECTED);
+  testStates("custom-selected", 0, 0, STATE_SELECTED);
+
+  testAttrs("default-setsize", {"setsize": "1"}, true);
+  testAttrs("custom-setsize", {"setsize": "2"}, true);
+
+  testAttrs("default-sort", {"sort": "ascending"}, true);
+  testAttrs("custom-sort", {"sort": "descending"}, true);
+
+  testValue("default-value", "Default", 5, 1, 10, 0);
+  testValue("custom-value", "Custom", 15, 10, 20, 0);
+
+  // Test that changes of defaults fire the proper events.
+  info("Changing ElementInternals ariaLabel");
+  let nameChanged = waitForEvent(EVENT_NAME_CHANGE, "default-label");
+  let customLabelElement = document.getElementById("default-label");
+  customLabelElement.internals.ariaLabel = "Changed Default";
+  await nameChanged;
+  testName("default-label", "Changed Default");
+
+  info("Changing ElementInternals ariaRequired");
+  let stateChanged = waitForEvent(EVENT_STATE_CHANGE, "default-required");
+  let requiredElement = document.getElementById("default-required");
+  requiredElement.internals.ariaRequired = "false";
+  await stateChanged;
+  testStates("default-required", 0, 0, STATE_REQUIRED);
+
+  info("Changing ElementInternals ariaSort");
+  let attributeChanged = waitForEvent(EVENT_OBJECT_ATTRIBUTE_CHANGED, "default-sort");
+  let sortElement = document.getElementById("default-sort");
+  sortElement.internals.ariaSort = "descending";
+  await attributeChanged;
+  testAttrs("default-sort", {"sort": "descending"}, true);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+Services.prefs.setBoolPref("accessibility.ARIAReflection.enabled", true);
+addA11yLoadEvent(runTest);
+  </script>
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1665151">Bug 1665151</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<custom-role id="default-role"></custom-role>
+<custom-role id="custom-role" role="note"></custom-role>
+
+<custom-autocomplete id="default-autocomplete"></custom-autocomplete>
+<custom-autocomplete id="custom-autocomplete" aria-autocomplete="list"></custom-autocomplete>
+
+<custom-atomic id="default-atomic"></custom-atomic>
+<custom-atomic id="custom-atomic" aria-atomic="false"></custom-atomic>
+
+<custom-busy id="default-busy"></custom-busy>
+<custom-busy id="custom-busy" aria-busy="false"></custom-busy>
+
+<custom-checked id="default-checked"></custom-checked>
+<custom-checked id="custom-checked" aria-checked="false"></custom-checked>
+
+<custom-colcount id="default-colCount">
+  <div role="rowgroup">
+    <div role="row">
+      <custom-col id="default-col"></custom-col>
+    </div>
+  </div>
+</custom-colcount>
+<custom-colcount id="custom-colCount" aria-colcount="3">
+  <div role="rowgroup">
+    <div role="row">
+      <custom-col
+          id="custom-col"
+          aria-colindex="2"
+          aria-colindextext="Custom"
+          aria-colspan="2">
+      </custom-col>
+    </div>
+  </div>
+</custom-colcount>
+
+<custom-current id="default-current"></custom-current>
+<custom-current id="custom-current" aria-current="step"></custom-current>
+
+<custom-description id="default-description"></custom-description>
+<custom-description id="custom-description" aria-description="Custom"></custom-description>
+
+<custom-disabled id="default-disabled"></custom-disabled>
+<custom-disabled id="custom-disabled" aria-disabled="false"></custom-disabled>
+
+<custom-expanded id="default-expanded"></custom-expanded>
+<custom-expanded id="custom-expanded" aria-expanded="false"></custom-expanded>
+
+<custom-haspopup id="default-haspopup"></custom-haspopup>
+<custom-haspopup id="custom-haspopup" aria-haspopup="false"></custom-haspopup>
+
+<custom-hidden id="default-hidden"></custom-hidden>
+<custom-hidden id="custom-hidden" aria-hidden="true"></custom-hidden>
+
+<custom-invalid id="default-invalid"></custom-invalid>
+<custom-invalid id="custom-invalid" aria-invalid="false"></custom-invalid>
+
+<custom-keyshortcuts id="default-keyshortcuts"></custom-keyshortcuts>
+<custom-keyshortcuts id="custom-keyshortcuts" aria-keyshortcuts="A"></custom-keyshortcuts>
+
+<custom-label id="default-label"></custom-label>
+<custom-label id="custom-label" aria-label="Custom"></custom-label>
+
+<custom-level id="default-level"></custom-level>
+<custom-level id="custom-level" aria-level="2"></custom-level>
+
+<custom-live id="default-live"></custom-live>
+<custom-live id="custom-live" aria-live="assertive"></custom-live>
+
+<custom-modal id="default-modal"></custom-modal>
+<custom-modal id="custom-modal" aria-modal="false"></custom-modal>
+
+<custom-multiline id="default-multiline"></custom-multiline>
+<custom-multiline id="custom-multiline" aria-multiline="false"></custom-multiline>
+
+<custom-multiselectable id="default-multiselectable"></custom-multiselectable>
+<custom-multiselectable id="custom-multiselectable" aria-multiselectable="false"></custom-multiselectable>
+
+<custom-orientation id="default-orientation"></custom-orientation>
+<custom-orientation id="custom-orientation" aria-orientation="horizontal"></custom-orientation>
+
+<custom-posinset id="default-posinset"></custom-posinset>
+<custom-posinset id="custom-posinset" aria-posinset="2"></custom-posinset>
+
+<custom-pressed id="default-pressed"></custom-pressed>
+<custom-pressed id="custom-pressed" aria-pressed="false"></custom-pressed>
+
+<custom-readonly id="default-readonly"></custom-readonly>
+<custom-readonly id="custom-readonly" aria-readonly="false"></custom-readonly>
+
+<custom-relevant id="default-relevant"></custom-relevant>
+<custom-relevant id="custom-relevant" aria-relevant="text"></custom-relevant>
+
+<custom-required id="default-required"></custom-required>
+<custom-required id="custom-required" aria-required="false"></custom-required>
+
+<custom-roledescription id="default-roledescription"></custom-roledescription>
+<custom-roledescription id="custom-roledescription" aria-roledescription="Custom"></custom-roledescription>
+
+<custom-rowcount id="default-rowcount">
+  <div role="rowgroup">
+    <custom-row id="default-row">
+      <custom-rowspan id="default-rowspan"></custom-rowspan>
+    </custom-row>
+  </div>
+</custom-rowcount>
+<custom-rowcount id="custom-rowcount" aria-rowcount="3">
+  <div role="rowgroup">
+    <custom-row
+        id="custom-row"
+        aria-rowindex="2"
+        aria-rowindextext="Custom">
+      <custom-rowspan id="custom-rowspan" aria-rowspan="2"></custom-rowspan>
+    </custom-row>
+  </div>
+</custom-rowcount>
+
+<custom-selected id="default-selected"></custom-selected>
+<custom-selected id="custom-selected" aria-selected="false"></custom-selected>
+
+<div role="listbox">
+  <custom-setsize id="default-setsize"></custom-setsize>
+</div>
+<div role="listbox">
+  <custom-setsize id="custom-setsize" aria-setsize="2"></custom-setsize>
+  <div role="listitem" aria-setsize="2"></div>
+</div>
+
+<div role="grid">
+  <div role="rowgroup">
+    <div role="row">
+      <custom-sort id="default-sort"></custom-sort>
+    </div>
+  </div>
+</div>
+<div role="grid">
+  <div role="rowgroup">
+    <div role="row">
+      <custom-sort id="custom-sort" aria-sort="descending"></custom-sort>
+    </div>
+  </div>
+</div>
+
+<custom-value id="default-value"></custom-value>
+<custom-value
+    id="custom-value"
+    aria-valuenow="15"
+    aria-valuemin="10"
+    aria-valuemax="20"
+    aria-valuetext="Custom">
+</custom-value>
+</pre>
+
+</body>
+</html>

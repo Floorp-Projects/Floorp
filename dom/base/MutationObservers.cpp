@@ -197,6 +197,26 @@ void MutationObservers::NotifyContentRemoved(nsINode* aContainer,
   Notify<IsRemoval::Yes>(aContainer, notifyPresShell, notifyObserver);
 }
 
+void MutationObservers::NotifyARIAAttributeDefaultWillChange(
+    mozilla::dom::Element* aElement, nsAtom* aAttribute, int32_t aModType) {
+  // We don't notify the PresShell, so pass an empty lambda.
+  auto notifyPresShell = [](PresShell* aPresShell) {};
+  auto notifyObserver = [&](nsIMutationObserver* aObserver) {
+    aObserver->ARIAAttributeDefaultWillChange(aElement, aAttribute, aModType);
+  };
+  Notify(aElement, notifyPresShell, notifyObserver);
+}
+
+void MutationObservers::NotifyARIAAttributeDefaultChanged(
+    mozilla::dom::Element* aElement, nsAtom* aAttribute, int32_t aModType) {
+  // We don't notify the PresShell, so pass an empty lambda.
+  auto notifyPresShell = [](PresShell* aPresShell) {};
+  auto notifyObserver = [&](nsIMutationObserver* aObserver) {
+    aObserver->ARIAAttributeDefaultChanged(aElement, aAttribute, aModType);
+  };
+  Notify(aElement, notifyPresShell, notifyObserver);
+}
+
 }  // namespace mozilla
 
 void MutationObservers::NotifyAnimationMutated(

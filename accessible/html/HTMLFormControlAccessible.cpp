@@ -243,8 +243,8 @@ void HTMLButtonAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
         (elm->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type, nsGkAtoms::image,
                           eCaseMatters) &&
          !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::alt))) {
-      if (!elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_labelledby) &&
-          !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label)) {
+      if (!nsAccUtils::HasARIAAttr(elm, nsGkAtoms::aria_labelledby) &&
+          !nsAccUtils::HasARIAAttr(elm, nsGkAtoms::aria_label)) {
         mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
       }
     }
