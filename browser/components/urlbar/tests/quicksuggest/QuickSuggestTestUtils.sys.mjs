@@ -77,12 +77,6 @@ const DEFAULT_PING_PAYLOADS = {
   },
 };
 
-const LEARN_MORE_URL =
-  Services.urlFormatter.formatURLPref("app.support.baseURL") +
-  "firefox-suggest";
-
-const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
-
 // The following properties and methods are copied from the test scope to the
 // test utils object so they can be easily accessed. Be careful about assuming a
 // particular property will be defined because depending on the scope -- browser
@@ -130,22 +124,6 @@ export class QuickSuggestTestUtils {
       this[p] = null;
     }
     Services.telemetry.clearScalars();
-  }
-
-  get LEARN_MORE_URL() {
-    return LEARN_MORE_URL;
-  }
-
-  get BEST_MATCH_LEARN_MORE_URL() {
-    return lazy.UrlbarProviderQuickSuggest.bestMatchHelpUrl;
-  }
-
-  get SCALARS() {
-    return lazy.UrlbarProviderQuickSuggest.TELEMETRY_SCALARS;
-  }
-
-  get TELEMETRY_EVENT_CATEGORY() {
-    return TELEMETRY_EVENT_CATEGORY;
   }
 
   get DEFAULT_CONFIG() {
@@ -383,7 +361,11 @@ export class QuickSuggestTestUtils {
 
     let helpButton = row._buttons.get("help");
     this.Assert.ok(helpButton, "The help button should be present");
-    this.Assert.equal(result.payload.helpUrl, LEARN_MORE_URL, "Result helpURL");
+    this.Assert.equal(
+      result.payload.helpUrl,
+      lazy.QuickSuggest.HELP_URL,
+      "Result helpURL"
+    );
 
     let blockButton = row._buttons.get("block");
     if (!isBestMatch) {
@@ -449,7 +431,9 @@ export class QuickSuggestTestUtils {
       true,
       true
     );
-    for (let scalarName of Object.values(this.SCALARS)) {
+    for (let scalarName of Object.values(
+      lazy.UrlbarProviderQuickSuggest.TELEMETRY_SCALARS
+    )) {
       if (scalarName in expectedIndexesByScalarName) {
         lazy.TelemetryTestUtils.assertKeyedScalar(
           scalars,
@@ -484,7 +468,7 @@ export class QuickSuggestTestUtils {
     lazy.TelemetryTestUtils.assertEvents(
       expectedEvents,
       {
-        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        category: lazy.QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         ...filterOverrides,
       },
       options

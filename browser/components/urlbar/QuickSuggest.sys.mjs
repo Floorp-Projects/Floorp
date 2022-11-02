@@ -39,7 +39,7 @@ const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
 // characters in length, which some stats object keys exceed. It also forces us
 // to be deliberate about keys we add to the `extra` object, since the `extra`
 // object is limited to 10 keys.
-let TELEMETRY_IMPRESSION_CAP_EXTRA_KEYS = {
+const TELEMETRY_IMPRESSION_CAP_EXTRA_KEYS = {
   // stats object key -> `extra` telemetry event object key
   intervalSeconds: "intervalSeconds",
   startDateMs: "startDate",
@@ -50,7 +50,7 @@ let TELEMETRY_IMPRESSION_CAP_EXTRA_KEYS = {
 
 // Values returned by the onboarding dialog depending on the user's response.
 // These values are used in telemetry events, so be careful about changing them.
-export const ONBOARDING_CHOICE = {
+const ONBOARDING_CHOICE = {
   ACCEPT_2: "accept_2",
   CLOSE_1: "close_1",
   DISMISS_1: "dismiss_1",
@@ -70,34 +70,46 @@ const ONBOARDING_URI =
  */
 class _QuickSuggest {
   /**
-   * @returns {string} The name of the quick suggest telemetry event category.
+   * @returns {string}
+   *   The name of the quick suggest telemetry event category.
    */
   get TELEMETRY_EVENT_CATEGORY() {
     return TELEMETRY_EVENT_CATEGORY;
   }
 
   /**
-   * @returns {string} The timestamp template string used in quick suggest URLs.
+   * @returns {string}
+   *   The timestamp template string used in quick suggest URLs.
    */
   get TIMESTAMP_TEMPLATE() {
     return TIMESTAMP_TEMPLATE;
   }
 
   /**
-   * @returns {number} The length of the timestamp in quick suggest URLs.
+   * @returns {number}
+   *   The length of the timestamp in quick suggest URLs.
    */
   get TIMESTAMP_LENGTH() {
     return TIMESTAMP_LENGTH;
   }
 
   /**
-   * @returns {string} The help URL for the Quick Suggest feature.
+   * @returns {string}
+   *   The help URL for the Quick Suggest feature.
    */
   get HELP_URL() {
     return (
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
       "firefox-suggest"
     );
+  }
+
+  get ONBOARDING_CHOICE() {
+    return { ...ONBOARDING_CHOICE };
+  }
+
+  get ONBOARDING_URI() {
+    return ONBOARDING_URI;
   }
 
   /**

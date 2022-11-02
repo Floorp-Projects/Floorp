@@ -8,8 +8,6 @@ import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  QUICK_SUGGEST_SOURCE:
-    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   TaskQueue: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -168,7 +166,7 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
         typeof result.score == "number"
           ? result.score
           : DEFAULT_SUGGESTION_SCORE,
-      source: lazy.QUICK_SUGGEST_SOURCE.REMOTE_SETTINGS,
+      source: "remote-settings",
       icon: icons.shift(),
       position: result.position,
       _test_is_best_match: result._test_is_best_match,

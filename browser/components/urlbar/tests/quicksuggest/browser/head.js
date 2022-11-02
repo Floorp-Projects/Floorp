@@ -42,6 +42,3 @@ registerCleanupFunction(async () => {
   // interfering with the next test.
   await UrlbarTestUtils.promisePopupClose(window);
 });
-
-const ONBOARDING_URI =
-  "chrome://browser/content/urlbar/quicksuggestOnboarding.html";
