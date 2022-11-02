@@ -807,10 +807,6 @@ MOZ_ALWAYS_INLINE bool GetPrototypeFromBuiltinConstructor(
                                      proto);
 }
 
-// Generic call for constructing |this|.
-extern JSObject* CreateThis(JSContext* cx, const JSClass* clasp,
-                            js::HandleObject callee);
-
 /* ES6 draft rev 32 (2015 Feb 2) 6.2.4.5 ToPropertyDescriptor(Obj) */
 bool ToPropertyDescriptor(JSContext* cx, HandleValue descval,
                           bool checkAccessors,

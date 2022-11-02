@@ -61,27 +61,37 @@ using mozilla::Maybe;
 using mozilla::Range;
 using mozilla::RangedPtr;
 
+static PlainObject* CreateThis(JSContext* cx, HandleObject newTarget) {
+  RootedObject proto(cx);
+  if (!GetPrototypeFromConstructor(cx, newTarget, JSProto_Object, &proto)) {
+    return nullptr;
+  }
+
+  gc::AllocKind allocKind = NewObjectGCKind();
+
+  if (proto) {
+    return NewPlainObjectWithProtoAndAllocKind(cx, proto, allocKind);
+  }
+  return NewPlainObjectWithAllocKind(cx, allocKind);
+}
+
 bool js::obj_construct(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  RootedObject obj(cx, nullptr);
+  JSObject* obj;
   if (args.isConstructing() &&
       (&args.newTarget().toObject() != &args.callee())) {
     RootedObject newTarget(cx, &args.newTarget().toObject());
-    obj = CreateThis(cx, &PlainObject::class_, newTarget);
-    if (!obj) {
-      return false;
-    }
+    obj = CreateThis(cx, newTarget);
   } else if (args.length() > 0 && !args[0].isNullOrUndefined()) {
     obj = ToObject(cx, args[0]);
-    if (!obj) {
-      return false;
-    }
   } else {
     /* Make an object whether this was called with 'new' or not. */
-    if (!NewObjectScriptedCall(cx, &obj)) {
-      return false;
-    }
+    gc::AllocKind allocKind = NewObjectGCKind();
+    obj = NewPlainObjectWithAllocKind(cx, allocKind);
+  }
+  if (!obj) {
+    return false;
   }
 
   args.rval().setObject(*obj);
