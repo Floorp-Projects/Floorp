@@ -140,3 +140,30 @@ addAccessibleTask(
     },
   }
 );
+
+/**
+ * Test document bounds change notifications.
+ * Note: This uses iframes to change the doc container size in order
+ * to have the doc accessible's bounds change.
+ */
+addAccessibleTask(
+  `<div id="div" style="width: 30px; height: 30px"></div>`,
+  async function(browser, accDoc, foo) {
+    const docWidth = () => {
+      let width = {};
+      accDoc.getBounds({}, {}, width, {});
+      return width.value;
+    };
+
+    await untilCacheIs(docWidth, 0, "Doc width is 0");
+    await invokeSetStyleIframe(browser, DEFAULT_IFRAME_ID, "width", `300px`);
+    await untilCacheIs(docWidth, 300, "Doc width is 300");
+  },
+  {
+    chrome: false,
+    topLevel: false,
+    iframe: true,
+    remoteIframe: isCacheEnabled /* works, but timing is tricky with no cache */,
+    iframeAttrs: { style: "width: 0;" },
+  }
+);
