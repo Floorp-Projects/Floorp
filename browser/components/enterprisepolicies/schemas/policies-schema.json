@@ -391,7 +391,8 @@
     },
 
     "DisplayBookmarksToolbar": {
-      "type": "boolean"
+      "type": ["boolean", "string"],
+      "enum": ["always", "never", "newtab"]
     },
 
     "DisplayMenuBar": {
