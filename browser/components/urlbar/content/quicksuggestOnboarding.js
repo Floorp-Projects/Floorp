@@ -5,7 +5,7 @@
 "use strict";
 
 const { ONBOARDING_CHOICE } = ChromeUtils.importESModule(
-  "resource:///modules/UrlbarQuickSuggest.sys.mjs"
+  "resource:///modules/QuickSuggest.sys.mjs"
 );
 
 const VARIATION_MAP = {
