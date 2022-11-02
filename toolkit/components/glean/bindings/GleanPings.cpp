@@ -59,6 +59,9 @@ already_AddRefed<GleanPing> GleanPings::NamedGetter(const nsAString& aName,
   aFound = false;
 
   NS_ConvertUTF16toUTF8 pingName(aName);
+
+  JOG::EnsureRuntimeMetricsRegistered();
+
   Maybe<uint32_t> pingId = JOG::GetPing(pingName);
   if (pingId.isNothing() && !JOG::AreRuntimeMetricsComprehensive()) {
     pingId = PingByNameLookup(pingName);
