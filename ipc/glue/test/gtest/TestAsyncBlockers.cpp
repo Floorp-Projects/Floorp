@@ -8,11 +8,10 @@
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/ipc/AsyncBlockers.h"
 
-#include "nsServiceManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
 #include "nsINamed.h"
-#include "nsICrashReporter.h"
+#include "TestUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -158,14 +157,6 @@ TEST_F(TestAsyncBlockers, Register_WaitUntilClear_0s) {
 
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED) && !defined(ANDROID) && \
     !(defined(XP_DARWIN) && !defined(MOZ_DEBUG))
-static void DisableCrashReporter() {
-  nsCOMPtr<nsICrashReporter> crashreporter =
-      do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-  if (crashreporter) {
-    crashreporter->SetEnabled(false);
-  }
-}
-
 static void DeregisterEmpty_Test() {
   DisableCrashReporter();
 
