@@ -172,15 +172,12 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(
   let dictionary = getFileResource(types.OTHERDATA, ["persdict.dat"]);
 
   let session;
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  if (env.get("MOZ_RESET_PROFILE_MIGRATE_SESSION")) {
+  if (Services.env.get("MOZ_RESET_PROFILE_MIGRATE_SESSION")) {
     // We only want to restore the previous firefox session if the profile refresh was
     // triggered by user. The MOZ_RESET_PROFILE_MIGRATE_SESSION would be set when a user-triggered
     // profile refresh happened in nsAppRunner.cpp. Hence, we detect the MOZ_RESET_PROFILE_MIGRATE_SESSION
     // to see if session data migration is required.
-    env.set("MOZ_RESET_PROFILE_MIGRATE_SESSION", "");
+    Services.env.set("MOZ_RESET_PROFILE_MIGRATE_SESSION", "");
     let sessionCheckpoints = this._getFileObject(
       sourceProfileDir,
       "sessionCheckpoints.json"
