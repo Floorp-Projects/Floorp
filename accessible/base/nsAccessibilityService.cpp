@@ -369,7 +369,11 @@ void nsAccessibilityService::NotifyOfPossibleBoundsChange(
       StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     DocAccessible* document = GetDocAccessible(aPresShell);
     if (document) {
-      LocalAccessible* accessible = document->GetAccessible(aContent);
+      // DocAccessible::GetAccessible() won't return the document if a root
+      // element like body is passed.
+      LocalAccessible* accessible = aContent == document->GetContent()
+                                        ? document
+                                        : document->GetAccessible(aContent);
       if (accessible) {
         document->QueueCacheUpdate(accessible, CacheDomain::Bounds);
       }
@@ -386,7 +390,11 @@ void nsAccessibilityService::NotifyOfComputedStyleChange(
 
   DocAccessible* document = GetDocAccessible(aPresShell);
   if (document) {
-    LocalAccessible* accessible = document->GetAccessible(aContent);
+    // DocAccessible::GetAccessible() won't return the document if a root
+    // element like body is passed.
+    LocalAccessible* accessible = aContent == document->GetContent()
+                                      ? document
+                                      : document->GetAccessible(aContent);
     if (accessible) {
       accessible->MaybeQueueCacheUpdateForStyleChanges();
     }
