@@ -11170,6 +11170,11 @@
   value: 1
   mirror: always
 
+- name: network.allow_large_stack_size_for_socket_thread
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
