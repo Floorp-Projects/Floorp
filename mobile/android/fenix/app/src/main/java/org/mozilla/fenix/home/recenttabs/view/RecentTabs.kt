@@ -195,17 +195,14 @@ private fun RecentTabItem(
  * @param tab [RecentTab] that was recently viewed.
  * @param modifier [Modifier] used to draw the image content.
  * @param contentScale [ContentScale] used to draw image content.
- * @param alignment [Alignment] used to draw the image content.
  */
 @Composable
 fun RecentTabImage(
     tab: RecentTab.Tab,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.FillWidth,
-    alignment: Alignment = Alignment.TopCenter,
 ) {
     val previewImageUrl = tab.state.content.previewImageUrl
-    val thumbnail = tab.state.content.thumbnail
 
     when {
         !previewImageUrl.isNullOrEmpty() -> {
@@ -214,15 +211,6 @@ fun RecentTabImage(
                 modifier = modifier,
                 targetSize = 108.dp,
                 contentScale = ContentScale.Crop,
-            )
-        }
-        thumbnail != null -> {
-            Image(
-                painter = BitmapPainter(thumbnail.asImageBitmap()),
-                contentDescription = null,
-                modifier = modifier,
-                contentScale = contentScale,
-                alignment = alignment,
             )
         }
         else -> ThumbnailCard(
