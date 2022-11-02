@@ -72,6 +72,7 @@
 #include "mozilla/dom/HTMLTableElement.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/SVGGeometryFrame.h"
@@ -1218,6 +1219,9 @@ mozilla::Monitor& nsAccessibilityService::GetAndroidMonitor() {
 // nsAccessibilityService private
 
 bool nsAccessibilityService::Init() {
+  AUTO_PROFILER_MARKER_TEXT("nsAccessibilityService::Init", A11Y, {}, ""_ns);
+  // DO NOT ADD CODE ABOVE HERE: THIS CODE IS MEASURING TIMINGS.
+
   // Initialize accessible document manager.
   if (!DocManager::Init()) return false;
 
