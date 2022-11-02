@@ -128,7 +128,7 @@ media/openmax_il/
 media/webrtc/signaling/gtest/MockCall.h
 mfbt/double-conversion/double-conversion/
 mfbt/lz4/.*
-mobile/android/geckoview/src/thirdparty/
+mobile/android/exoplayer2/
 modules/brotli/
 modules/fdlibm/
 modules/freetype2/
