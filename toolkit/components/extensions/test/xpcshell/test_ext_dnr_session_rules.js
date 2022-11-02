@@ -385,6 +385,80 @@ add_task(async function validate_domains() {
         excludedInitiatorDomains: [],
       });
 
+      // "null" is valid as a way to match an opaque initiator.
+      await testInvalidCondition(
+        { requestDomains: [null] },
+        /requestDomains\.0: Expected string instead of null/,
+        /* isSchemaError */ true
+      );
+      await testValidCondition({ requestDomains: ["null"] });
+
+      // IPv4 adress should be 4 digits separated by a dot.
+      await testInvalidCondition(
+        { requestDomains: ["1.2"] },
+        /requestDomains\.0: Error: Invalid domain 1.2/,
+        /* isSchemaError */ true
+      );
+      await testValidCondition({ requestDomains: ["0.0.1.2"] });
+
+      // IPv6 should be wrapped in brackets.
+      await testInvalidCondition(
+        { requestDomains: ["::1"] },
+        /requestDomains\.0: Error: Invalid domain ::1/,
+        /* isSchemaError */ true
+      );
+      // IPv6 addresses cannot contain dots.
+      await testInvalidCondition(
+        { requestDomains: ["[::ffff:127.0.0.1]"] },
+        /requestDomains\.0: Error: Invalid domain \[::ffff:127\.0\.0\.1\]/,
+        /* isSchemaError */ true
+      );
+      await testValidCondition({
+        // "[::ffff:7f00:1]" is the canonical form of "[::ffff:127.0.0.1]".
+        requestDomains: ["[::1]", "[::ffff:7f00:1]"],
+      });
+
+      // International Domain Names should be punycode-encoded.
+      await testInvalidCondition(
+        { requestDomains: ["straß.de"] },
+        /requestDomains\.0: Error: Invalid domain straß.de/,
+        /* isSchemaError */ true
+      );
+      await testValidCondition({ requestDomains: ["xn--stra-yna.de"] });
+
+      // Domain may not contain a port.
+      await testInvalidCondition(
+        { requestDomains: ["a.com:1234"] },
+        /requestDomains\.0: Error: Invalid domain a.com:1234/,
+        /* isSchemaError */ true
+      );
+      // Upper case is not canonical.
+      await testInvalidCondition(
+        { requestDomains: ["UPPERCASE"] },
+        /requestDomains\.0: Error: Invalid domain UPPERCASE/,
+        /* isSchemaError */ true
+      );
+      // URL encoded is not canonical.
+      await testInvalidCondition(
+        { requestDomains: ["ex%61mple.com"] },
+        /requestDomains\.0: Error: Invalid domain ex%61mple.com/,
+        /* isSchemaError */ true
+      );
+
+      // Verify that the validation is applied to all domain-related keys.
+      for (let domainsKey of [
+        "initiatorDomains",
+        "excludedInitiatorDomains",
+        "requestDomains",
+        "excludedRequestDomains",
+      ]) {
+        await testInvalidCondition(
+          { [domainsKey]: [""] },
+          new RegExp(String.raw`${domainsKey}\.0: Error: Invalid domain \)`),
+          /* isSchemaError */ true
+        );
+      }
+
       browser.test.notifyPass();
     },
   });

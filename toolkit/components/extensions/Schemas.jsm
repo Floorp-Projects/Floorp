@@ -1060,6 +1060,8 @@ class InjectionContext extends Context {
  */
 const FORMATS = {
   hostname(string, context) {
+    // TODO bug 1797376: Despite the name, this format is NOT a "hostname",
+    // but hostname + port and may fail with IPv6. Use canonicalDomain instead.
     let valid = true;
 
     try {
@@ -1070,6 +1072,25 @@ const FORMATS = {
 
     if (!valid) {
       throw new Error(`Invalid hostname ${string}`);
+    }
+
+    return string;
+  },
+
+  canonicalDomain(string, context) {
+    let valid;
+
+    try {
+      valid = new URL(`http://${string}`).hostname === string;
+    } catch (e) {
+      valid = false;
+    }
+
+    if (!valid) {
+      // Require the input to be a canonical domain.
+      // Rejects obvious non-domains such as URLs,
+      // but also catches non-IDN (punycode) domains.
+      throw new Error(`Invalid domain ${string}`);
     }
 
     return string;

@@ -429,6 +429,350 @@ add_task(async function match_condition_types_and_methods() {
   });
 });
 
+// Tests: requestDomains, excludedRequestDomains
+add_task(async function match_request_domains() {
+  await runAsDNRExtension({
+    background: async dnrTestUtils => {
+      const dnr = browser.declarativeNetRequest;
+      const { makeDummyAction, testMatchesRequest } = dnrTestUtils;
+
+      // "modifyHeaders" is the only action that allows multiple rule matches.
+      const action = makeDummyAction("modifyHeaders");
+
+      await dnr.updateSessionRules({
+        addRules: [
+          {
+            id: 1,
+            condition: {
+              requestDomains: ["a.com", "www.b.com"],
+            },
+            action,
+          },
+          {
+            id: 2,
+            condition: {
+              excludedRequestDomains: ["a.com", "www.b.com", "127.0.0.1"],
+            },
+            action,
+          },
+          {
+            id: 3,
+            condition: {
+              requestDomains: ["one.net"],
+              excludedRequestDomains: ["sub.one.net"],
+            },
+            action,
+          },
+          {
+            id: 4,
+            condition: {
+              // This can never match.
+              requestDomains: ["sub.one.net"],
+              excludedRequestDomains: ["one.net"],
+            },
+            action,
+          },
+          {
+            id: 5,
+            condition: {
+              requestDomains: ["127.0.0.1", "[::1]"],
+            },
+            action,
+          },
+          {
+            id: 6,
+            condition: {
+              requestDomains: [
+                "~b.com", // "~" should not be interpreted as pattern negation.
+              ],
+            },
+            action,
+          },
+          {
+            id: 7,
+            condition: {
+              // A canonical domain does not start with a ".". Domains filters
+              // starting with a "." are therefore not matching anything.
+              requestDomains: [".a.com"],
+            },
+            action,
+          },
+        ],
+      });
+
+      const type = "sub_frame";
+      // Tests related to a.com:
+      await testMatchesRequest(
+        { url: "https://a.com:1234/path", type },
+        [1],
+        "a.com: url's domain is equal to a.com"
+      );
+      await testMatchesRequest(
+        { url: "http://sub.a.com/", type },
+        [1],
+        "sub.a.com: url is subdomain of a.com"
+      );
+      await testMatchesRequest(
+        { url: "http://nota.com/a.com?a.com#a.com", type },
+        [2],
+        "nota.com: url's domain does not match a.com"
+      );
+      await testMatchesRequest(
+        { url: "http://a.com.not/a.com?a.com#a.com", type },
+        [2],
+        "a.com.not: url's domain does not match a.com"
+      );
+      await testMatchesRequest(
+        { url: "http://a.com./a.com?a.com#a.com", type },
+        [2],
+        "a.com.: url's domain (ending with dot) does not match a.com"
+      );
+
+      // Tests related to www.b.com:
+      await testMatchesRequest(
+        { url: "http://www.b.com/", type },
+        [1],
+        "www.b.com: url's domain is equal to www.b.com"
+      );
+      await testMatchesRequest(
+        { url: "http://sub.www.b.com", type },
+        [1],
+        "sub.www.b.com: url's domain is a subdomain of www.b.com"
+      );
+      await testMatchesRequest(
+        { url: "http://b.com/", type },
+        [2],
+        "b.com: url's domain is a superdomain, NOT a subdomain of www.b.com"
+      );
+
+      // Tests related to sub.one.net / one.net
+      await testMatchesRequest(
+        { url: "http://one.net/", type },
+        [2, 3],
+        "one.net: url's domain matches one.net, but not sub.one.net"
+      );
+      await testMatchesRequest(
+        { url: "http://sub.one.net/", type },
+        [2], // Rule 4 was a candidate, but excluded anyway.
+        "sub.one.net: url's domain matches sub.one.net, but excluded by one.net"
+      );
+
+      // Tests related to IP addresses
+      await testMatchesRequest(
+        { url: "http://127.0.0.1:8080/", type },
+        [5],
+        "127.0.0.1: IP address is exact match for 127.0.0.1"
+      );
+      await testMatchesRequest(
+        { url: "http://8.8.8.8/", type },
+        [2],
+        "8.8.8.8: not matched by any of the domains"
+      );
+      await testMatchesRequest(
+        { url: "http://9.127.0.0.1/", type },
+        [5],
+        "9.127.0.0.1: while not a valid IP, it looks like a subdomain"
+      );
+      await testMatchesRequest(
+        { url: "http://[::1]/", type },
+        [2, 5],
+        "[::1]: IPv6 matches with bracket"
+      );
+
+      // For completeness, verify that the non-resolving domain "~b.com"
+      // matches the input, so that we know that "~" was not given special
+      // treatment. In filter list syntax, "~" before the domain negates the
+      // meaning, but that should not be supported in DNR.
+      await testMatchesRequest(
+        { url: "http://~b.com/", type },
+        [2, 6],
+        "~b.com: Although a non-resolving domain, it matches the pattern"
+      );
+
+      // match_initiator_domains has more tests; here we just confirm that
+      // requestDomains rules don't match initiator.
+      await testMatchesRequest(
+        { url: "http://url.does.not.match/", type, initiator: "http://a.com/" },
+        [2],
+        "requestDomains should not match initiator URL"
+      );
+
+      browser.test.notifyPass();
+    },
+  });
+});
+
+add_task(async function match_request_domains_punycode() {
+  await runAsDNRExtension({
+    background: async dnrTestUtils => {
+      const dnr = browser.declarativeNetRequest;
+      const { makeDummyAction, testMatchesRequest } = dnrTestUtils;
+
+      // "modifyHeaders" is the only action that allows multiple rule matches.
+      const action = makeDummyAction("modifyHeaders");
+
+      // Note that the non-punycode domains are rejected by schema validation,
+      // and checked by test validate_domains in test_ext_dnr_session_rules.js.
+
+      await dnr.updateSessionRules({
+        addRules: [
+          {
+            id: 1,
+            condition: {
+              // straß.de
+              requestDomains: ["xn--stra-yna.de"],
+            },
+            action,
+          },
+          {
+            id: 2,
+            condition: {
+              // IDNA2003 converted ß to ss. But IDNA2008 requires punycode.
+              requestDomains: ["strass.de", "stras.de"],
+            },
+            action,
+          },
+        ],
+      });
+
+      const type = "sub_frame";
+
+      await testMatchesRequest(
+        { url: "https://straß.de/", type },
+        [1],
+        "straß.de matches"
+      );
+      await testMatchesRequest(
+        { url: "https://xn--stra-yna.de/", type },
+        [1],
+        "xn--stra-yna.de matches"
+      );
+      await testMatchesRequest(
+        { url: "https://strass.de/", type },
+        [2],
+        "strass.de does not match the punycode pattern of straß"
+      );
+      await testMatchesRequest(
+        { url: "https://stras.de/", type },
+        [2],
+        "stras.de does not match the punycode pattern of straß"
+      );
+
+      browser.test.notifyPass();
+    },
+  });
+});
+
+// Tests: initiatorDomains, excludedInitiatorDomains
+add_task(async function match_initiator_domains() {
+  await runAsDNRExtension({
+    background: async dnrTestUtils => {
+      const dnr = browser.declarativeNetRequest;
+      const { makeDummyAction, testMatchesRequest } = dnrTestUtils;
+
+      // "modifyHeaders" is the only action that allows multiple rule matches.
+      const action = makeDummyAction("modifyHeaders");
+
+      // The validation of initiatorDomains and requestDomains are shared.
+      // The match_request_domains and match_request_domains_punycode tests
+      // already verify semantics; this test just tests that the conditional
+      // logic works as expected, plus coverage for initiator being void.
+
+      await dnr.updateSessionRules({
+        addRules: [
+          {
+            id: 1,
+            condition: {
+              initiatorDomains: ["a.com"],
+            },
+            action,
+          },
+          {
+            id: 2,
+            condition: {
+              excludedInitiatorDomains: ["a.com"],
+            },
+            action,
+          },
+          {
+            id: 3,
+            condition: {
+              initiatorDomains: ["c.com"],
+              excludedInitiatorDomains: ["c.com"],
+            },
+            action,
+          },
+          {
+            id: 4, // To verify that it does not match a void initiator.
+            condition: {
+              initiatorDomains: ["null"],
+            },
+            action,
+          },
+          {
+            id: 5,
+            condition: {
+              excludedInitiatorDomains: ["null", "undefined"],
+            },
+            action,
+          },
+          {
+            id: 6, // To verify that it does not match a void initiator.
+            condition: {
+              initiatorDomains: ["undefined"],
+            },
+            action,
+          },
+        ],
+      });
+
+      const url = "https://do.not.look.here/look_at_initator_instead";
+      const type = "image";
+      await testMatchesRequest(
+        { url, type, initiator: "http://a.com/" },
+        [1, 5],
+        "initiatorDomains matches"
+      );
+      await testMatchesRequest(
+        { url, type, initiator: "http://b.com/" },
+        [2, 5],
+        "excludedInitiatorDomains does not match, so request matched"
+      );
+      await testMatchesRequest(
+        { url, type, initiator: "http://c.com/" },
+        [2, 5], // 3 is not here, despite containing "c.com".
+        "excludedInitiatorDomains takes precedence over initiatorDomains"
+      );
+      // When initiator is not specified, rules with initiatorDomains should not
+      // match, and rules with excludedInitiatorDomains may match.
+      await testMatchesRequest(
+        { url, type },
+        [2, 5],
+        "request without initiator matches every excludedInitiatorDomains"
+      );
+      // http://null is unlikely to exist in practice. Regardless, verify that
+      // it won't match a void initiators.
+      await testMatchesRequest(
+        { url, type, initiator: "http://null/" },
+        [2, 4],
+        "http://null is matched by the 'null' domain"
+      );
+      await testMatchesRequest(
+        { url, type, initiator: "http://undefined/" },
+        [2, 6],
+        "http://null is matched by the 'undefined' domain"
+      );
+      await testMatchesRequest(
+        { url: "http://a.com/", type },
+        [2, 5],
+        "initiatorDomains should not match the request URL (initiator=null)"
+      );
+
+      browser.test.notifyPass();
+    },
+  });
+});
+
 // Tests: tabIds, excludedTabIds
 add_task(async function match_tabIds() {
   await runAsDNRExtension({
