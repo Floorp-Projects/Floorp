@@ -5,17 +5,24 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.LifecycleOwner
+import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.compose.MessageCard
+import org.mozilla.fenix.compose.MessageCardColors
 import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
+import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.wallpapers.Wallpaper
+import org.mozilla.fenix.wallpapers.WallpaperState
 
 /**
  * View holder for the Nimbus Message Card.
@@ -47,11 +54,31 @@ class MessageCardViewHolder(
     @Composable
     override fun Content() {
         val message by remember { mutableStateOf(messageGlobal) }
+        val wallpaperState = components.appStore
+            .observeAsComposableState { state -> state.wallpaperState }.value ?: WallpaperState.default
+        val isWallpaperNotDefault = !Wallpaper.nameIsDefault(wallpaperState.currentWallpaper.name)
+
+        var (_, _, _, _, buttonColor, buttonTextColor) = MessageCardColors.buildMessageCardColors()
+
+        if (isWallpaperNotDefault) {
+            buttonColor = FirefoxTheme.colors.layer1
+
+            if (!isSystemInDarkTheme()) {
+                buttonTextColor = FirefoxTheme.colors.textActionSecondary
+            }
+        }
+
+        val messageCardColors = MessageCardColors.buildMessageCardColors(
+            backgroundColor = wallpaperState.wallpaperCardColor,
+            buttonColor = buttonColor,
+            buttonTextColor = buttonTextColor,
+        )
 
         MessageCard(
             messageText = message.data.text,
             titleText = message.data.title,
             buttonText = message.data.buttonLabel,
+            messageColors = messageCardColors,
             onClick = { interactor.onMessageClicked(message) },
             onCloseButtonClick = { interactor.onMessageClosedClicked(message) },
         )
