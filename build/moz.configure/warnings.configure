@@ -98,6 +98,7 @@ check_and_add_warning("-Wno-range-loop-analysis")
 check_and_add_warning("-Wc++2a-compat", cxx_compiler)
 check_and_add_warning("-Wcomma-subscript", cxx_compiler)
 check_and_add_warning("-Wenum-compare-conditional")
+check_and_add_warning("-Wenum-float-conversion")
 
 # Downgrade some C++20 warnings-as-errors to warnings that we can fix after we
 # compile as C++20 (bug 1768116). They don't need to block upgrading to C++20.
@@ -105,7 +106,6 @@ check_and_add_warning("-Wno-ambiguous-reversed-operator", cxx_compiler)
 check_and_add_warning("-Wno-error=deprecated", cxx_compiler)
 check_and_add_warning("-Wno-error=deprecated-anon-enum-enum-conversion", cxx_compiler)
 check_and_add_warning("-Wno-error=deprecated-enum-enum-conversion", cxx_compiler)
-check_and_add_warning("-Wno-error=deprecated-enum-float-conversion", cxx_compiler)
 check_and_add_warning("-Wno-error=deprecated-pragma", cxx_compiler)
 check_and_add_warning("-Wno-error=deprecated-this-capture", cxx_compiler)
 check_and_add_warning("-Wno-error=deprecated-volatile", cxx_compiler)
