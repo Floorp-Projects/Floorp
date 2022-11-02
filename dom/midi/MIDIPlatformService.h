@@ -97,6 +97,9 @@ class MIDIPlatformService {
   // before/at now, and schedules MIDI Port connection closing.
   void Close(MIDIPortParent* aPort);
 
+  // Returns whether there are currently any MIDI devices.
+  bool HasDevice() { return !mPortInfo.IsEmpty(); }
+
  protected:
   MIDIPlatformService();
   virtual ~MIDIPlatformService();

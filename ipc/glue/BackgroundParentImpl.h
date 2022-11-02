@@ -347,6 +347,9 @@ class BackgroundParentImpl : public PBackgroundParent {
 
   bool DeallocPMIDIManagerParent(PMIDIManagerParent* aActor) override;
 
+  mozilla::ipc::IPCResult RecvHasMIDIDevice(
+      HasMIDIDeviceResolver&& aResolver) override;
+
   mozilla::ipc::IPCResult RecvStorageActivity(
       const PrincipalInfo& aPrincipalInfo) override;
 
