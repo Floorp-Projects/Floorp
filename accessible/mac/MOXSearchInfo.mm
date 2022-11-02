@@ -123,7 +123,9 @@ using namespace mozilla::a11y;
 
 - (BOOL)shouldApplyPostFilter {
   // We currently only support AXSearchText as a post-search filter.
-  return !!mSearchText;
+  // In some cases, VO passes a non-null, empty string for AXSearchText.
+  // In that case, we should act as if no AXSearchText was given.
+  return !!mSearchText && [mSearchText length] > 0;
 }
 
 - (NSArray<mozAccessible*>*)applyPostFilter:(NSArray<mozAccessible*>*)matches {
