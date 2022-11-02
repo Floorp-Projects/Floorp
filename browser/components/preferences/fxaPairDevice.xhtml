@@ -9,14 +9,14 @@
 <?xml-stylesheet href="chrome://browser/skin/preferences/fxaPairDevice.css" type="text/css"?>
 
 <window id="fxaPairDeviceDialog"
-        type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
+        role="dialog"
         onload="gFxaPairDeviceDialog.init();"
         onunload="gFxaPairDeviceDialog.uninit()"
         data-l10n-id="fxa-pair-device-dialog-sync2"
         data-l10n-attrs="style">
-<dialog id="fxaPairDeviceDialog1" buttons="accept">
+
   <linkset>
     <html:link rel="localization" href="branding/brand.ftl"/>
     <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
@@ -52,5 +52,4 @@
       </vbox>
     </vbox>
   </vbox>
-</dialog>
 </window>
