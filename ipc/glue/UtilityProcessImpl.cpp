@@ -46,7 +46,7 @@ bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
   // We delay load winmm.dll so that its dependencies don't interfere with COM
   // initialization when win32k is locked down. We need to load it before we
   // lower the sandbox in processes where the policy will prevent loading.
-  ::LoadLibraryW(L"winmm.dll");
+  LoadLibraryOrCrash(L"winmm.dll");
 
   if (*sandboxingKind == SandboxingKind::GENERIC_UTILITY) {
     // Preload audio generic libraries required for ffmpeg only
