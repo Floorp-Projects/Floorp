@@ -20,16 +20,13 @@ function ensureRemove(file) {
 }
 
 async function run_test() {
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
   let prefs = Services.prefs.getBranch(null);
 
   let testDir = do_get_cwd();
   let confDir = testDir.clone();
   confDir.append("MozSystemConfigDir");
-  env.set("MOZ_SYSTEM_CONFIG_DIR", confDir.path);
-  env.set("SNAP_INSTANCE_NAME", "xpcshell");
+  Services.env.set("MOZ_SYSTEM_CONFIG_DIR", confDir.path);
+  Services.env.set("SNAP_INSTANCE_NAME", "xpcshell");
 
   updateAppInfo();
 
