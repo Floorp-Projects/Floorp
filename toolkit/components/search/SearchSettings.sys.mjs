@@ -32,7 +32,7 @@ const SETTINGS_FILENAME = "search.json.mozlz4";
  */
 export class SearchSettings {
   constructor(searchService) {
-    this._searchService = searchService;
+    this.#searchService = searchService;
   }
 
   QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver]);
@@ -48,7 +48,7 @@ export class SearchSettings {
   /**
    * A reference to the search service so that we can save the engines list.
    */
-  _searchService = null;
+  #searchService = null;
 
   /*
    * The user's settings file read from disk so we can persist metadata for
@@ -57,7 +57,7 @@ export class SearchSettings {
    * This is the JSON we read from disk and save to disk when there's an update
    * to the settings.
    *
-   * Structre of settings:
+   * Structure of settings:
    * Object { version: <number>,
    *          engines: [...],
    *          metaData: {...},
@@ -94,10 +94,10 @@ export class SearchSettings {
 
   /**
    * @type {object} A deep copy of #settings.
-   *  #cachedSettings is updated when we read the settings from disk and when we
-   *  write settings to disk. #cachedSettings is compared with #settings before
-   *  we do a write to disk. If there's no change to the settings attributes,
-   *  then we don't write to disk.
+   *   #cachedSettings is updated when we read the settings from disk and when
+   *   we write settings to disk. #cachedSettings is compared with #settings
+   *   before we do a write to disk. If there's no change to the settings
+   *   attributes, then we don't write the settings to disk.
    */
   #cachedSettings = {};
 
@@ -176,8 +176,8 @@ export class SearchSettings {
     } else {
       let task = async () => {
         if (
-          !this._searchService.isInitialized ||
-          this._searchService._reloadingEngines
+          !this.#searchService.isInitialized ||
+          this.#searchService._reloadingEngines
         ) {
           // Re-arm the task as we don't want to save potentially incomplete
           // information during the middle of (re-)initializing.
@@ -232,7 +232,7 @@ export class SearchSettings {
 
     // Allows us to force a settings refresh should the settings format change.
     settings.version = lazy.SearchUtils.SETTINGS_VERSION;
-    settings.engines = [...this._searchService._engines.values()].map(engine =>
+    settings.engines = [...this.#searchService._engines.values()].map(engine =>
       JSON.parse(JSON.stringify(engine))
     );
     settings.metaData = this.#settings.metaData;
@@ -382,7 +382,7 @@ export class SearchSettings {
    *   The value to set.
    */
   setEngineMetaDataAttribute(engineName, property, value) {
-    let engines = [...this._searchService._engines.values()];
+    let engines = [...this.#searchService._engines.values()];
     let engine = engines.find(engine => engine._name == engineName);
     if (engine) {
       engine._metaData[property] = value;
@@ -484,5 +484,88 @@ export class SearchSettings {
    */
   isCurrentAndCachedSettingsEqual() {
     return lazy.ObjectUtils.deepEqual(this.#settings, this.#cachedSettings);
+  }
+
+  /**
+   * This function writes to settings versions 6 and below. It does two
+   * updates:
+   *   1) Store engine ids.
+   *   2) Store "defaultEngineId" and "privateDefaultEngineId" to replace
+   *      "current" and "private" because we are no longer referencing the
+   *      "current" and "private" attributes with engine names as their values.
+   *
+   * @param {object} clonedSettings
+   *   The SearchService holds a deep copy of the settings file object. This
+   *   clonedSettings is passed in as an argument from SearchService.
+   */
+  migrateEngineIds(clonedSettings) {
+    if (clonedSettings.version <= 6) {
+      lazy.logConsole.debug("migrateEngineIds: start");
+
+      for (let engineSettings of clonedSettings.engines) {
+        let engine = this.#getEngineByName(engineSettings._name);
+
+        if (engine) {
+          // Store the engine id
+          engineSettings.id = engine.id;
+        }
+      }
+
+      let currentDefaultEngine = this.#getEngineByName(
+        clonedSettings.metaData.current
+      );
+      let privateDefaultEngine = this.#getEngineByName(
+        clonedSettings.metaData.private
+      );
+
+      if (
+        currentDefaultEngine &&
+        lazy.SearchUtils.getVerificationHash(clonedSettings.metaData.current) ==
+          clonedSettings.metaData[this.getHashName("current")]
+      ) {
+        // Store the defaultEngineId
+        this.setVerifiedMetaDataAttribute(
+          "defaultEngineId",
+          currentDefaultEngine.id
+        );
+      } else {
+        this.setVerifiedMetaDataAttribute("defaultEngineId", "");
+      }
+
+      if (
+        privateDefaultEngine &&
+        lazy.SearchUtils.getVerificationHash(clonedSettings.metaData.private) ==
+          clonedSettings.metaData[this.getHashName("private")]
+      ) {
+        // Store the privateDefaultEngineId
+        this.setVerifiedMetaDataAttribute(
+          "privateDefaultEngineId",
+          privateDefaultEngine.id
+        );
+      } else {
+        this.setVerifiedMetaDataAttribute("privateDefaultEngineId", "");
+      }
+
+      lazy.logConsole.debug("migrateEngineIds: done");
+    }
+  }
+
+  /**
+   * Returns the engine associated with the name without SearchService
+   * initialization checks.
+   *
+   * @param {string} engineName
+   *   The name of the engine.
+   * @returns {SearchEngine}
+   *   The associated engine if found, null otherwise.
+   */
+  #getEngineByName(engineName) {
+    for (let engine of this.#searchService._engines.values()) {
+      if (engine.name == engineName) {
+        return engine;
+      }
+    }
+
+    return null;
   }
 }

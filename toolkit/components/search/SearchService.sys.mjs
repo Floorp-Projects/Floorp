@@ -1582,6 +1582,10 @@ export class SearchService {
 
     this.#loadEnginesFromSettings(settings.engines);
 
+    // Settings file version 6 and below will need a migration to store the
+    // engine ids rather than engine names.
+    this._settings.migrateEngineIds(settings);
+
     this.#loadEnginesMetadataFromSettings(settings.engines);
 
     lazy.logConsole.debug("#loadEngines: done");
@@ -2131,10 +2135,11 @@ export class SearchService {
       if (this._engines.has(engineSetting.id)) {
         lazy.logConsole.debug(
           "#loadEnginesMetadataFromSettings, transfering metadata for",
-          engineSetting.name,
+          engineSetting._name,
           engineSetting._metaData
         );
         let eng = this._engines.get(engineSetting.id);
+
         // We used to store the alias in metadata.alias, in 1621892 that was
         // changed to only store the user set alias in metadata.alias, remove
         // it from metadata if it was previously set to the internal value.
