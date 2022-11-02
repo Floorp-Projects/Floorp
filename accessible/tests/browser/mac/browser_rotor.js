@@ -59,6 +59,54 @@ addAccessibleTask(
 );
 
 /**
+ * Test rotor with heading and empty search text
+ */
+addAccessibleTask(
+  `<h1 id="hello">hello</h1><br><h2 id="world">world</h2><br>goodbye`,
+  async (browser, accDoc) => {
+    const searchPred = {
+      AXSearchKey: "AXHeadingSearchKey",
+      AXImmediateDescendantsOnly: 1,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+      AXSearchText: "",
+    };
+
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    is(
+      webArea.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
+    );
+
+    const headingCount = webArea.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(headingCount, 2, "Found two headings");
+
+    const headings = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    const hello = getNativeInterface(accDoc, "hello");
+    const world = getNativeInterface(accDoc, "world");
+    is(
+      headings[0].getAttributeValue("AXTitle"),
+      hello.getAttributeValue("AXTitle"),
+      "Found correct first heading"
+    );
+    is(
+      headings[1].getAttributeValue("AXTitle"),
+      world.getAttributeValue("AXTitle"),
+      "Found correct second heading"
+    );
+  }
+);
+
+/**
  * Test rotor with articles
  */
 addAccessibleTask(
