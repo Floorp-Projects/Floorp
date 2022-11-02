@@ -9,9 +9,12 @@ import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AndroidLog: "resource://gre/modules/AndroidLog.jsm",
-  EventDispatcher: "resource://gre/modules/Messaging.jsm",
 });
 
 /**

@@ -1,13 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-var EXPORTED_SYMBOLS = ["EventDispatcher"];
 
 const IS_PARENT_PROCESS =
   Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT;
@@ -202,7 +195,7 @@ DispatcherDelegate.prototype = {
   },
 };
 
-var EventDispatcher = {
+export var EventDispatcher = {
   instance: new DispatcherDelegate(
     IS_PARENT_PROCESS ? Services.androidBridge : undefined
   ),

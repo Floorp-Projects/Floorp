@@ -6,13 +6,8 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "EventDispatcher",
-  "resource://gre/modules/Messaging.jsm"
-);
-
 ChromeUtils.defineESModuleGetters(lazy, {
+  EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });

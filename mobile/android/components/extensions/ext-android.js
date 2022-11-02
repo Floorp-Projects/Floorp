@@ -19,8 +19,8 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/GeckoViewWebExtension.jsm"
 );
 
-var { EventDispatcher } = ChromeUtils.import(
-  "resource://gre/modules/Messaging.jsm"
+var { EventDispatcher } = ChromeUtils.importESModule(
+  "resource://gre/modules/Messaging.sys.mjs"
 );
 
 var { ExtensionCommon } = ChromeUtils.import(

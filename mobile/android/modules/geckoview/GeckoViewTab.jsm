@@ -20,8 +20,11 @@ const { ExtensionError } = ExtensionUtils;
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  EventDispatcher: "resource://gre/modules/Messaging.jsm",
   mobileWindowTracker: "resource://gre/modules/GeckoViewWebExtension.jsm",
 });
 

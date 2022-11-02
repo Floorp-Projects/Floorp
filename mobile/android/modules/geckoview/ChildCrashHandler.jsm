@@ -6,9 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["ChildCrashHandler"];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { GeckoViewUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/GeckoViewUtils.sys.mjs"
 );
@@ -18,8 +15,8 @@ const { AppConstants } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  EventDispatcher: "resource://gre/modules/Messaging.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
 });
 
 const { debug, warn } = GeckoViewUtils.initLogging("ChildCrashHandler");

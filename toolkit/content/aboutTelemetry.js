@@ -176,8 +176,8 @@ var Settings = {
       el.parentElement.addEventListener("click", function(event) {
         if (event.target.localName === "a") {
           if (AppConstants.platform == "android") {
-            var { EventDispatcher } = ChromeUtils.import(
-              "resource://gre/modules/Messaging.jsm"
+            var { EventDispatcher } = ChromeUtils.importESModule(
+              "resource://gre/modules/Messaging.sys.mjs"
             );
             EventDispatcher.instance.sendRequest({
               type: "Settings:Show",
