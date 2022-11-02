@@ -485,7 +485,7 @@ add_task(async function timestamps() {
 
   // Set up the Merino response with template URLs.
   let suggestion = MerinoTestUtils.server.response.body.suggestions[0];
-  let { TIMESTAMP_TEMPLATE } = UrlbarProviderQuickSuggest;
+  let { TIMESTAMP_TEMPLATE } = QuickSuggest;
 
   suggestion.url = `http://example.com/time-${TIMESTAMP_TEMPLATE}`;
   suggestion.click_url = `http://example.com/time-${TIMESTAMP_TEMPLATE}-foo`;
@@ -574,7 +574,7 @@ add_task(async function block() {
   UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   for (const suggestion of MerinoTestUtils.server.response.body.suggestions) {
-    await UrlbarProviderQuickSuggest.blockSuggestion(suggestion.url);
+    await QuickSuggest.blockSuggestion(suggestion.url);
   }
 
   const context = createContext(SEARCH_STRING, {
@@ -587,7 +587,7 @@ add_task(async function block() {
     matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
   });
 
-  await UrlbarProviderQuickSuggest.clearBlockedSuggestions();
+  await QuickSuggest.clearBlockedSuggestions();
   MerinoTestUtils.server.reset();
   gClient.resetSession();
 });

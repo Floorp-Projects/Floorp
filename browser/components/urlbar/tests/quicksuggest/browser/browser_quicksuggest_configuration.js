@@ -28,8 +28,8 @@ add_setup(async function() {
   await QuickSuggestTestUtils.ensureQuickSuggestInit();
 });
 
-// Makes sure `UrlbarProviderQuickSuggest._updateFeatureState()` is called
-// when the `browser.urlbar.quicksuggest.enabled` pref is changed.
+// Makes sure `QuickSuggest._updateFeatureState()` is called when the
+// `browser.urlbar.quicksuggest.enabled` pref is changed.
 add_task(async function test_updateFeatureState_pref() {
   Assert.ok(
     UrlbarPrefs.get("quicksuggest.enabled"),
@@ -37,7 +37,7 @@ add_task(async function test_updateFeatureState_pref() {
   );
 
   let sandbox = sinon.createSandbox();
-  let spy = sandbox.spy(UrlbarProviderQuickSuggest, "_updateFeatureState");
+  let spy = sandbox.spy(QuickSuggest, "_updateFeatureState");
 
   UrlbarPrefs.set("quicksuggest.enabled", false);
   await UrlbarQuickSuggest.readyPromise;
@@ -58,11 +58,11 @@ add_task(async function test_updateFeatureState_pref() {
   sandbox.restore();
 });
 
-// Makes sure `UrlbarProviderQuickSuggest._updateFeatureState()` is called
-// when a Nimbus experiment is installed and uninstalled.
+// Makes sure `QuickSuggest._updateFeatureState()` is called when a Nimbus
+// experiment is installed and uninstalled.
 add_task(async function test_updateFeatureState_experiment() {
   let sandbox = sinon.createSandbox();
-  let spy = sandbox.spy(UrlbarProviderQuickSuggest, "_updateFeatureState");
+  let spy = sandbox.spy(QuickSuggest, "_updateFeatureState");
 
   await QuickSuggestTestUtils.withExperiment({
     callback: () => {
