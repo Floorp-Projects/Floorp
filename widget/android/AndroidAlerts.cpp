@@ -91,6 +91,10 @@ AndroidAlerts::ShowPersistentNotification(const nsAString& aPersistentData,
   rv = aAlert->GetSilent(&silent);
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
+  bool privateBrowsing;
+  rv = aAlert->GetInPrivateBrowsing(&privateBrowsing);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
   nsTArray<uint32_t> vibrate;
   rv = aAlert->GetVibrate(vibrate);
   NS_ENSURE_SUCCESS(rv, NS_OK);
@@ -105,7 +109,7 @@ AndroidAlerts::ShowPersistentNotification(const nsAString& aPersistentData,
 
   java::WebNotification::LocalRef notification = notification->New(
       title, name, cookie, text, imageUrl, dir, lang, requireInteraction, spec,
-      silent, jni::IntArray::From(vibrate));
+      silent, privateBrowsing, jni::IntArray::From(vibrate));
   java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
   if (runtime != NULL) {
     runtime->NotifyOnShow(notification);
