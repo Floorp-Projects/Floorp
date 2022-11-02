@@ -18,22 +18,24 @@ setup/cleanup of the session.
 
 The test structure is illustrated here:
 
-    from marionette_test import MarionetteTestCase
+```python
+from marionette_harness import MarionetteTestCase
 
-    class TestSomething(MarionetteTestCase):
-        def setUp(self):
-            # code to execute before any tests are run
-            MarionetteTestCase.setUp(self)
+class TestSomething(MarionetteTestCase):
+    def setUp(self):
+        # code to execute before any tests are run
+        MarionetteTestCase.setUp(self)
 
-        def test_foo(self):
-            # run test for 'foo'
+    def test_foo(self):
+        # run test for 'foo'
 
-        def test_bar(self):
-            # run test for 'bar'
+    def test_bar(self):
+        # run test for 'bar'
 
-        def tearDown(self):
-            # code to execute after all tests are run
-            MarionetteTestCase.tearDown(self)
+    def tearDown(self):
+        # code to execute after all tests are run
+        MarionetteTestCase.tearDown(self)
+```
 
 [remote protocol]: Protocol.md
 [unittest]: https://docs.python.org/3/library/unittest.html
@@ -46,12 +48,14 @@ The test structure is illustrated here:
 
 Assertions are provided courtesy of [unittest].  For example:
 
-    from marionette_test import MarionetteTestCase
+```python
+from marionette_harness import MarionetteTestCase
 
-    class TestSomething(MarionetteTestCase):
-        def test_foo(self):
-            self.assertEqual(9, 3 * 3, '3 x 3 should be 9')
-            self.assertTrue(type(2) == int, '2 should be an integer')
+class TestSomething(MarionetteTestCase):
+    def test_foo(self):
+        self.assertEqual(9, 3 * 3, '3 x 3 should be 9')
+        self.assertTrue(type(2) == int, '2 should be an integer')
+```
 
 ## The API
 
@@ -60,7 +64,6 @@ The full API documentation is found [here], but the key objects are:
 * `MarionetteTestCase`: a subclass for `unittest.TestCase`
   used as a base class for all tests to run.
 
-* [`Marionette`]: client that speaks to Firefox.
+* {class}`Marionette <marionette_driver.marionette.Marionette>`: client that speaks to Firefox
 
 [here]: /python/marionette_driver.rst
-[`Marionette`]: /python/marionette_driver.rst#marionette_driver.marionette.Marionette
