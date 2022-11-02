@@ -147,6 +147,11 @@ declare namespace MockedExports {
   }
 
   type Services = {
+    env: {
+      set: (name: string, value: string) => void;
+      get: (name: string) => string;
+      exists: (name: string) => boolean;
+    },
     prefs: nsIPrefBranch;
     profiler: {
       StartProfiler: (

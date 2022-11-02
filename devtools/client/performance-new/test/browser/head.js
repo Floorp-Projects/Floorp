@@ -19,18 +19,14 @@ const { require } = ChromeUtils.importESModule(
 );
 
 {
-  const {
-    getEnvironmentVariable,
-  } = require("resource://devtools/client/performance-new/browser.js");
-
-  if (getEnvironmentVariable("MOZ_PROFILER_SHUTDOWN")) {
+  if (Services.env.get("MOZ_PROFILER_SHUTDOWN")) {
     throw new Error(
       "These tests cannot be run with shutdown profiling as they rely on manipulating " +
         "the state of the profiler."
     );
   }
 
-  if (getEnvironmentVariable("MOZ_PROFILER_STARTUP")) {
+  if (Services.env.get("MOZ_PROFILER_STARTUP")) {
     throw new Error(
       "These tests cannot be run with startup profiling as they rely on manipulating " +
         "the state of the profiler."

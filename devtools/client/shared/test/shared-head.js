@@ -23,10 +23,7 @@ const { Constructor: CC } = Components;
 
 // Print allocation count if DEBUG_DEVTOOLS_ALLOCATIONS is set to "normal",
 // and allocation sites if DEBUG_DEVTOOLS_ALLOCATIONS is set to "verbose".
-const env = Cc["@mozilla.org/process/environment;1"].getService(
-  Ci.nsIEnvironment
-);
-const DEBUG_ALLOCATIONS = env.get("DEBUG_DEVTOOLS_ALLOCATIONS");
+const DEBUG_ALLOCATIONS = Services.env.get("DEBUG_DEVTOOLS_ALLOCATIONS");
 if (DEBUG_ALLOCATIONS) {
   // Use a custom loader with `invisibleToDebugger` flag for the allocation tracker
   // as it instantiates custom Debugger API instances and has to be running in a distinct
