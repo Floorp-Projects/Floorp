@@ -99,22 +99,18 @@ function run_test() {
   outFile.append(kOutputFile);
 
   // Set an environment variable for WriteArgument to pick up
-  var envSvc = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-
   // The Write Argument file needs to know where its libraries are, so
   // just force the path variable
   // For mac
   var greDir = Services.dirsvc.get("GreD", Ci.nsIFile);
 
-  envSvc.set("DYLD_LIBRARY_PATH", greDir.path);
+  Services.env.set("DYLD_LIBRARY_PATH", greDir.path);
   // For Linux
-  envSvc.set("LD_LIBRARY_PATH", greDir.path);
+  Services.env.set("LD_LIBRARY_PATH", greDir.path);
   // XXX: handle windows
 
   // Now tell it where we want the file.
-  envSvc.set("WRITE_ARGUMENT_FILE", outFile.path);
+  Services.env.set("WRITE_ARGUMENT_FILE", outFile.path);
 
   var uri = ioService.newURI(kTestURI);
 
