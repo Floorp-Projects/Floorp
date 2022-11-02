@@ -56,7 +56,9 @@ def push(id, filename):
         run(['adb', 'shell', 'am', 'set-debug-app', '--persistent', id])
         print('\nStartup profiling enabled on all future start ups, possibly even after reinstall.')
         print('Call script with `deactivate` to disable it.')
-        print('DON\'T FORGET TO ENABLE \'Remote debugging via USB\' IN THE APP SETTINGS!')
+        print('DISABLE \'Remote debugging via USB\' IN THE APP SETTINGS BEFORE STARTING THE APP & RE-ENABLE TO CAPTURE THE PROFILE.',
+              'This avoids the additional overhead added when \'Remote debugging via USB\' is enabled during start up.',
+              sep=os.linesep)
     finally:
         os.remove(config.name)
 
