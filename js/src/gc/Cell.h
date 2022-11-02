@@ -117,10 +117,14 @@ class HeaderWord {
   static constexpr uintptr_t FORWARD_BIT = Bit(0);
   // Bits 1 and 2 are reserved for future use by the GC.
 
-  mozilla::Atomic<uintptr_t, mozilla::MemoryOrdering::Relaxed> value_;
+  uintptr_t value_;
 
-  uintptr_t getAtomic() const { return value_; }
-  void setAtomic(uintptr_t value) { value_ = value; }
+  uintptr_t getAtomic() const {
+    return __atomic_load_n(&value_, __ATOMIC_RELAXED);
+  }
+  void setAtomic(uintptr_t value) {
+    __atomic_store_n(&value_, value, __ATOMIC_RELAXED);
+  }
 
  public:
   static constexpr uintptr_t RESERVED_MASK =
@@ -172,6 +176,11 @@ struct Cell {
   HeaderWord header_;
 
  public:
+  Cell() = default;
+
+  Cell(const Cell&) = delete;
+  void operator=(const Cell&) = delete;
+
   bool isForwarded() const { return header_.isForwarded(); }
   uintptr_t flags() const { return header_.flags(); }
 
