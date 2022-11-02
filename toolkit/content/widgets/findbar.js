@@ -49,9 +49,12 @@
           data-l10n-id="findbar-match-diacritics" oncommand="_setDiacriticMatching(this.checked ? 1 : 0);"/>
         <checkbox anonid="find-entire-word" class="findbar-entire-word tabbable"
           data-l10n-id="findbar-entire-word" oncommand="toggleEntireWord(this.checked);"/>
-        <label anonid="match-case-status" class="findbar-label" data-l10n-attrs="value" />
-        <label anonid="match-diacritics-status" class="findbar-label" data-l10n-attrs="value" />
-        <label anonid="entire-word-status" class="findbar-label" data-l10n-attrs="value" />
+        <label anonid="match-case-status" class="findbar-label"
+          data-l10n-id="findbar-case-sensitive-status" hidden="true" />
+        <label anonid="match-diacritics-status" class="findbar-label"
+          data-l10n-id="findbar-match-diacritics-status" hidden="true" />
+        <label anonid="entire-word-status" class="findbar-label"
+          data-l10n-id="findbar-entire-word-status" hidden="true" />
         <label anonid="found-matches" class="findbar-label found-matches" hidden="true" />
         <image anonid="find-status-icon" class="find-status-icon" />
         <description anonid="find-status" control="findbar-textbox" class="findbar-label findbar-find-status" />
@@ -557,19 +560,18 @@
       let statusLabel = this.getElement("match-case-status");
       checkbox.checked = caseSensitive;
 
-      document.l10n.setAttributes(
-        statusLabel,
-        caseSensitive ? "findbar-case-sensitive-status" : ""
-      );
-
       // Show the checkbox on the full Find bar in non-auto mode.
       // Show the label in all other cases.
-      let hideCheckbox =
-        this.findMode != this.FIND_NORMAL ||
-        (this._typeAheadCaseSensitive != 0 &&
-          this._typeAheadCaseSensitive != 1);
-      checkbox.hidden = hideCheckbox;
-      statusLabel.hidden = !hideCheckbox;
+      if (
+        this.findMode == this.FIND_NORMAL &&
+        (this._typeAheadCaseSensitive == 0 || this._typeAheadCaseSensitive == 1)
+      ) {
+        checkbox.hidden = false;
+        statusLabel.hidden = true;
+      } else {
+        checkbox.hidden = true;
+        statusLabel.hidden = !caseSensitive;
+      }
 
       this.browser.finder.caseSensitive = caseSensitive;
     }
@@ -611,18 +613,18 @@
       let statusLabel = this.getElement("match-diacritics-status");
       checkbox.checked = matchDiacritics;
 
-      document.l10n.setAttributes(
-        statusLabel,
-        matchDiacritics ? "findbar-match-diacritics-status" : ""
-      );
-
       // Show the checkbox on the full Find bar in non-auto mode.
       // Show the label in all other cases.
-      let hideCheckbox =
-        this.findMode != this.FIND_NORMAL ||
-        (this._matchDiacritics != 0 && this._matchDiacritics != 1);
-      checkbox.hidden = hideCheckbox;
-      statusLabel.hidden = !hideCheckbox;
+      if (
+        this.findMode == this.FIND_NORMAL &&
+        (this._matchDiacritics == 0 || this._matchDiacritics == 1)
+      ) {
+        checkbox.hidden = false;
+        statusLabel.hidden = true;
+      } else {
+        checkbox.hidden = true;
+        statusLabel.hidden = !matchDiacritics;
+      }
 
       this.browser.finder.matchDiacritics = matchDiacritics;
     }
@@ -656,16 +658,15 @@
       let statusLabel = this.getElement("entire-word-status");
       checkbox.checked = entireWord;
 
-      document.l10n.setAttributes(
-        statusLabel,
-        entireWord ? "findbar-entire-word-status" : ""
-      );
-
-      // Show the checkbox on the full Find bar in non-auto mode.
+      // Show the checkbox on the full Find bar.
       // Show the label in all other cases.
-      let hideCheckbox = this.findMode != this.FIND_NORMAL;
-      checkbox.hidden = hideCheckbox;
-      statusLabel.hidden = !hideCheckbox;
+      if (this.findMode == this.FIND_NORMAL) {
+        checkbox.hidden = false;
+        statusLabel.hidden = true;
+      } else {
+        checkbox.hidden = true;
+        statusLabel.hidden = !entireWord;
+      }
 
       this.browser.finder.entireWord = entireWord;
     }
@@ -1055,6 +1056,7 @@
           this._findStatusDesc.setAttribute("status", "notfound");
           this._findStatusIcon.setAttribute("status", "notfound");
           this._findField.setAttribute("status", "notfound");
+          this._foundMatches.hidden = true;
           statusL10nId = "findbar-not-found";
           break;
         case Ci.nsITypeAheadFind.FIND_PENDING:
@@ -1294,21 +1296,18 @@
      *                 - {Number} current Vector of the current result.
      */
     onMatchesCountResult(result) {
-      let l10nId;
-      switch (result.total) {
-        case 0:
-          l10nId = "";
-          this._foundMatches.hidden = true;
-          break;
-        case -1:
-          l10nId = "findbar-found-matches-count-limit";
-          this._foundMatches.hidden = false;
-          break;
-        default:
-          l10nId = "findbar-found-matches";
-          this._foundMatches.hidden = false;
+      if (!result.total) {
+        delete this._foundMatches.dataset.l10nId;
+        this._foundMatches.hidden = true;
+        this._foundMatches.setAttribute("value", "");
+      } else {
+        const l10nId =
+          result.total === -1
+            ? "findbar-found-matches-count-limit"
+            : "findbar-found-matches";
+        this._foundMatches.hidden = false;
+        document.l10n.setAttributes(this._foundMatches, l10nId, result);
       }
-      document.l10n.setAttributes(this._foundMatches, l10nId, result);
     }
 
     onHighlightFinished(result) {
