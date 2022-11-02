@@ -42,9 +42,7 @@ async function test() {
 }
 
 function isOnChaosMode() {
-  const env = SpecialPowers.Cc["@mozilla.org/process/environment;1"]
-                           .getService(SpecialPowers.Ci.nsIEnvironment);
-  return env.get("MOZ_CHAOSMODE");
+  return Services.env.get("MOZ_CHAOSMODE");
 }
 
 if ((getPlatform() == "mac" || getPlatform() == "windows") &&
