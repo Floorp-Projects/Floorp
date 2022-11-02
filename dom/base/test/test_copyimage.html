@@ -77,10 +77,7 @@ function testCopyImage () {
 }
 
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
-  SpecialPowers.pushPrefEnv({"set": [["clipboard.plainTextOnly", false]]}, testCopyImage);
-});
-
+addLoadEvent(testCopyImage);
 </script>
 </pre>
 <div>
