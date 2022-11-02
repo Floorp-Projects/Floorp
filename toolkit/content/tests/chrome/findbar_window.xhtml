@@ -402,11 +402,11 @@
          "match case label is hidden in automatic mode");
 
       await enterStringIntoFindField("a");
-      const insensitiveL10nId = matchCaseLabel.dataset.l10nId;
+      ok(matchCaseLabel.hidden,
+         "match case label is hidden in automatic mode with lower-case input");
       await enterStringIntoFindField("A");
-      const sensitiveL10nId = matchCaseLabel.dataset.l10nId;
-      ok(insensitiveL10nId != sensitiveL10nId,
-         "Case Sensitive label was not correctly updated");
+      ok(!matchCaseLabel.hidden,
+         "match case label is visible in automatic mode with upper-case input");
 
       // bug 365551
       gFindBar.onFindAgainCommand();
