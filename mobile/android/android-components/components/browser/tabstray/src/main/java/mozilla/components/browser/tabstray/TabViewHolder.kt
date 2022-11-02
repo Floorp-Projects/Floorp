@@ -108,14 +108,12 @@ class DefaultTabViewHolder(
         updateSelectedTabIndicator(isSelected)
 
         // In the final else case, we have no cache or fresh screenshot; do nothing instead of clearing the image.
-        if (thumbnailLoader != null && tab.content.thumbnail == null) {
+        if (thumbnailLoader != null) {
             val thumbnailSize = THUMBNAIL_SIZE.dpToPx(thumbnailView.context.resources.displayMetrics)
             thumbnailLoader.loadIntoView(
                 thumbnailView,
                 ImageLoadRequest(id = tab.id, size = thumbnailSize),
             )
-        } else if (tab.content.thumbnail != null) {
-            thumbnailView.setImageBitmap(tab.content.thumbnail)
         }
 
         iconView?.setImageBitmap(tab.content.icon)

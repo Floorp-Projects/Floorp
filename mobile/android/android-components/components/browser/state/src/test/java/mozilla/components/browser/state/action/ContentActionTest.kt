@@ -266,40 +266,6 @@ class ContentActionTest {
     }
 
     @Test
-    fun `UpdateThumbnailAction updates thumbnail`() {
-        val thumbnail = spy(Bitmap::class.java)
-
-        assertNotEquals(thumbnail, tab.content.thumbnail)
-        assertNotEquals(thumbnail, otherTab.content.thumbnail)
-
-        store.dispatch(
-            ContentAction.UpdateThumbnailAction(tab.id, thumbnail),
-        ).joinBlocking()
-
-        assertEquals(thumbnail, tab.content.thumbnail)
-        assertNotEquals(thumbnail, otherTab.content.thumbnail)
-    }
-
-    @Test
-    fun `RemoveThumbnailAction removes thumbnail`() {
-        val thumbnail = spy(Bitmap::class.java)
-
-        assertNotEquals(thumbnail, tab.content.thumbnail)
-
-        store.dispatch(
-            ContentAction.UpdateThumbnailAction(tab.id, thumbnail),
-        ).joinBlocking()
-
-        assertEquals(thumbnail, tab.content.thumbnail)
-
-        store.dispatch(
-            ContentAction.RemoveThumbnailAction(tab.id),
-        ).joinBlocking()
-
-        assertNull(tab.content.thumbnail)
-    }
-
-    @Test
     fun `UpdateIconAction updates icon`() {
         val icon = spy(Bitmap::class.java)
 

@@ -6,13 +6,16 @@ package mozilla.components.browser.thumbnails
 
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,6 +37,20 @@ class ThumbnailsMiddlewareTest {
         val bitmap: Bitmap = mock()
         store.dispatch(ContentAction.UpdateThumbnailAction(request, bitmap)).joinBlocking()
         verify(thumbnailStorage).saveThumbnail(request, bitmap)
+    }
+
+    @Test
+    fun `thumbnail storage deletes the thumbnail on remove thumbnail action`() {
+        val request = "test-tab1"
+        val tab = createTab("https://www.mozilla.org", id = "test-tab1")
+        val thumbnailStorage: ThumbnailStorage = mock()
+        val store = BrowserStore(
+            initialState = BrowserState(tabs = listOf(tab)),
+            middleware = listOf(ThumbnailsMiddleware(thumbnailStorage)),
+        )
+
+        store.dispatch(ContentAction.RemoveThumbnailAction(request)).joinBlocking()
+        verify(thumbnailStorage).deleteThumbnail(request)
     }
 
     @Test
@@ -129,5 +146,27 @@ class ThumbnailsMiddlewareTest {
 
         store.dispatch(TabListAction.RemoveTabsAction(listOf(sessionIdOrUrl))).joinBlocking()
         verify(thumbnailStorage).deleteThumbnail(sessionIdOrUrl)
+    }
+
+    @Test
+    fun `UpdateThumbnailAction is consumed by the middleware`() {
+        val capture = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab1"),
+                    createTab("https://www.firefox.com", id = "test-tab2"),
+                ),
+            ),
+            middleware = listOf(
+                ThumbnailsMiddleware(mock()),
+                capture,
+            ),
+        )
+
+        store.dispatch(ContentAction.UpdateThumbnailAction("test-tab1", mock())).joinBlocking()
+        store.dispatch(EngineAction.KillEngineSessionAction("test-tab1")).joinBlocking()
+
+        capture.assertNotDispatched(ContentAction.UpdateThumbnailAction::class)
     }
 }
