@@ -4,7 +4,12 @@
 
 package mozilla.components.browser.storage.sync
 
+import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.work.Configuration
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.appservices.places.PlacesReaderConnection
@@ -27,6 +32,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
+import org.hamcrest.core.Is.`is`
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -34,6 +40,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThat
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
@@ -43,7 +50,9 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.robolectric.annotation.Config
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 @ExperimentalCoroutinesApi // for runTestOnMain
 @RunWith(AndroidJUnit4::class)
@@ -587,8 +596,50 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `can run maintanence on the store`() = runTestOnMain {
-        history.runMaintenance()
+    fun `can run maintenance on the store`() = runTestOnMain {
+        history.runMaintenance(0U)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `When periodicStorageWorkRequest is called, worker with input specs is created`() {
+        val request = history.periodicStorageWorkRequest<PlacesHistoryStorageWorker>(
+            tag = PlacesHistoryStorageWorker.UNIQUE_NAME,
+        ) {
+            constraints {
+                setRequiresBatteryNotLow(true)
+                setRequiresDeviceIdle(true)
+            }
+        }
+
+        assertEquals(request.workSpec.isPeriodic, true)
+        assertEquals(request.workSpec.intervalDuration, TimeUnit.HOURS.toMillis(StorageMaintenanceWorker.WORKER_PERIOD_IN_HOURS))
+        assertEquals(request.workSpec.constraints.requiresBatteryNotLow(), true)
+        assertEquals(request.workSpec.constraints.requiresDeviceIdle(), true)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.M])
+    fun `When storage maintenance work request is registered, the worker is enqueued`() {
+        val config = Configuration.Builder().build()
+        WorkManagerTestInitHelper.initializeTestWorkManager(testContext, config)
+
+        val request = history.periodicStorageWorkRequest<PlacesHistoryStorageWorker>(
+            tag = PlacesHistoryStorageWorker.UNIQUE_NAME,
+        ) {
+            constraints {
+                setRequiresBatteryNotLow(true)
+                setRequiresDeviceIdle(true)
+            }
+        }
+
+        val workManager = WorkManager.getInstance(testContext)
+        val testDriver = WorkManagerTestInitHelper.getTestDriver(testContext)
+        workManager.enqueue(request).result.get()
+        testDriver?.setPeriodDelayMet(request.id)
+
+        val workInfo = workManager.getWorkInfoById(request.id).get()
+        assertThat(workInfo.state, `is`(WorkInfo.State.ENQUEUED))
     }
 
     @Test

@@ -11,6 +11,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.appservices.Megazord
 import mozilla.components.browser.state.action.SystemAction
+import mozilla.components.browser.storage.sync.GlobalPlacesDependencyProvider
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.glean.BuildInfo
@@ -85,6 +86,7 @@ class SampleApplication : Application() {
         }
         components.downloadsUseCases.restoreDownloads()
         try {
+            GlobalPlacesDependencyProvider.initialize(components.historyStorage)
             GlobalAddonDependencyProvider.initialize(
                 components.addonManager,
                 components.addonUpdater,

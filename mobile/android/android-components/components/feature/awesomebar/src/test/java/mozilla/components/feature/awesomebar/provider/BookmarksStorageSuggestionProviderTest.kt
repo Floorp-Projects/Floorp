@@ -246,7 +246,7 @@ class BookmarksStorageSuggestionProviderTest {
             throw NotImplementedError()
         }
 
-        override suspend fun runMaintenance() {
+        override suspend fun runMaintenance(dbSizeLimit: UInt) {
             // "Not needed for the test"
             throw NotImplementedError()
         }

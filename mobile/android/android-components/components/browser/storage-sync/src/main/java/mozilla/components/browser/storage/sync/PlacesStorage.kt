@@ -16,6 +16,7 @@ import mozilla.appservices.places.PlacesWriterConnection
 import mozilla.appservices.places.uniffi.PlacesException
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.storage.Storage
+import mozilla.components.concept.storage.StorageMaintenanceRegistry
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
@@ -29,7 +30,7 @@ import java.util.concurrent.Executors
 abstract class PlacesStorage(
     context: Context,
     val crashReporter: CrashReporting? = null,
-) : Storage, SyncableStore {
+) : Storage, SyncableStore, StorageMaintenanceRegistry {
     internal var writeScope =
         CoroutineScope(
             Executors.newSingleThreadExecutor(
@@ -61,10 +62,13 @@ abstract class PlacesStorage(
 
     /**
      * Internal database maintenance tasks. Ideally this should be called once a day.
+     *
+     * @param dbSizeLimit Maximum DB size to aim for, in bytes. If the
+     * database exceeds this size, a small number of visits will be pruned.
      */
-    override suspend fun runMaintenance() {
+    override suspend fun runMaintenance(dbSizeLimit: UInt) {
         withContext(writeScope.coroutineContext) {
-            places.writer().runMaintenance()
+            places.writer().runMaintenance(dbSizeLimit)
         }
     }
 
@@ -182,5 +186,22 @@ abstract class PlacesStorage(
             logger.error("Places exception while syncing", e)
             SyncStatus.Error(e)
         }
+    }
+
+    /**
+     * Registers a storage maintenance worker that prunes database when its size exceeds a size limit.
+     * */
+    override fun registerStorageMaintenanceWorker() {
+        // See child classes for implementation details, it is not implemented by default
+    }
+
+    /**
+     * Unregisters the storage maintenance worker that is registered
+     * by [PlacesStorage.registerStorageMaintenanceWorker].
+     *
+     * @param uniqueWorkName Unique name of the work request that needs to be unregistered
+     * */
+    override fun unregisterStorageMaintenanceWorker(uniqueWorkName: String) {
+        // See child classes for implementation details, it is not implemented by default
     }
 }

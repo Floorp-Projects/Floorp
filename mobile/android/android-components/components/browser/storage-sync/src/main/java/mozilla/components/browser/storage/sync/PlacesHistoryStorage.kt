@@ -6,7 +6,10 @@ package mozilla.components.browser.storage.sync
 
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import androidx.annotation.VisibleForTesting
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.WorkManager
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.PlacesApi
 import mozilla.appservices.places.PlacesReaderConnection
@@ -43,7 +46,7 @@ const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
  */
 @Suppress("TooManyFunctions", "LargeClass")
 open class PlacesHistoryStorage(
-    context: Context,
+    private val context: Context,
     crashReporter: CrashReporting? = null,
 ) : PlacesStorage(context, crashReporter), HistoryStorage, HistoryMetadataStorage, SyncableStore {
     /**
@@ -245,6 +248,27 @@ open class PlacesHistoryStorage(
                 places.writer().pruneDestructively()
             }
         }
+    }
+
+    /**
+     * Enqueues a periodic storage maintenance worker to WorkManager that prunes database entries
+     * when it exceeds [PlacesHistoryStorageWorker.DB_SIZE_LIMIT_IN_BYTES].
+     */
+    override fun registerStorageMaintenanceWorker() {
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            PlacesHistoryStorageWorker.UNIQUE_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicStorageWorkRequest<PlacesHistoryStorageWorker>(
+                tag = PlacesHistoryStorageWorker.UNIQUE_NAME,
+            ) {
+                constraints {
+                    setRequiresBatteryNotLow(true)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        setRequiresDeviceIdle(true)
+                    }
+                }
+            },
+        )
     }
 
     /**

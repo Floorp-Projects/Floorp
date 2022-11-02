@@ -39,6 +39,7 @@ dependencies {
     implementation project(':support-sync-telemetry')
 
     implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.androidx_work_runtime
 
     testImplementation project(':support-test')
 
@@ -47,6 +48,8 @@ dependencies {
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_coroutines
+    testImplementation Dependencies.androidx_work_testing
+    testImplementation Dependencies.kotlin_reflect
 
     testImplementation Dependencies.mozilla_places
     testImplementation Dependencies.mozilla_remote_tabs

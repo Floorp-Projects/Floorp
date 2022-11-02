@@ -16,5 +16,5 @@ interface Storage : Cancellable {
     /**
      * Runs internal database maintenance tasks
      */
-    suspend fun runMaintenance()
+    suspend fun runMaintenance(dbSizeLimit: UInt)
 }

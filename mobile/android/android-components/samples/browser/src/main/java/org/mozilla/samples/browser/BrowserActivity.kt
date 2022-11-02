@@ -49,6 +49,7 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
         }
 
         lifecycle.addObserver(webExtensionPopupFeature)
+        components.historyStorage.registerStorageMaintenanceWorker()
     }
 
     override fun onBackPressed() {

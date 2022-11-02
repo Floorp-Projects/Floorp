@@ -25,6 +25,15 @@ permalink: /changelog/
 
 * **concept-engine**:
   * Added support for changing the cookie banner handling setting in regular and private browsing. [Bugzilla](https://bugzilla.mozilla.org/show_bug.cgi?id=1796144)
+  
+* **concept-storage**:
+  * 🆕 New API: `StorageMaintenanceRegistry` in `concept-storage` that deals with registering/unregistering storage maintenance workers.
+  * ⚠️ **This is a breaking change**: Added a new parameter `dbSizeLimit` to `Storage.runMaintenance` API to indicate Maximum DB size to aim for, in bytes.
+
+* **browser-storage-sync**:
+  * 🆕 New: An abstract WorkManager Worker class `StorageMaintenanceWorker` is introduced. [Bugzilla](https://bugzilla.mozilla.org/show_bug.cgi?id=1795903)
+  * 🆕 New: A Kotlin object `GlobalPlacesDependencyProvider` is introduced to provide `placesStorage: PlacesStorage` globally when needed.
+  * ⚠️ **This is a breaking change**: `PlacesStorage.runMaintenance` API has changed. Now it needs `dbSizeLimit` parameter as it implements new version of `Storage` API.
 
 * **support-ktx**:
   * The colors of the icons from the status bar should be in contrast with the status bar background color [#1795650](https://bugzilla.mozilla.org/show_bug.cgi?id=1795650)
