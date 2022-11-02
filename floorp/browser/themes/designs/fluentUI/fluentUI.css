@@ -2659,12 +2659,9 @@ menuitem[id="placesContext_new:separator"] {
   #tabbrowser-tabs:not([secondarytext-unsupported]) .tab-label-container {
     height: var(--tab-min-height) !important;
   }
-  
-  .tab-icon-stack:is([soundplaying], [muted], [activemedia-blocked])>.tab-icon-overlay,
-  .tabbrowser-tab:hover .tab-icon-stack:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked])> :not(.tab-icon-overlay) {
+  :root[uidensity="compact"] .tab-icon-stack[indicator-replaces-favicon] > :not(.tab-icon-overlay), #tabbrowser-tabs[secondarytext-unsupported] .tab-icon-stack[indicator-replaces-favicon] > :not(.tab-icon-overlay), :root:not([uidensity="compact"]) #tabbrowser-tabs:not([secondarytext-unsupported]) .tabbrowser-tab:not(:hover) .tab-icon-overlay[indicator-replaces-favicon], :root:not([uidensity="compact"]) #tabbrowser-tabs:not([secondarytext-unsupported]) .tabbrowser-tab:hover .tab-icon-stack[indicator-replaces-favicon] > :not(.tab-icon-overlay) {
     opacity: 1 !important;
   }
-  
   .tab-icon-overlay:not([pinned]) {
     margin-inline: 22px 6px !important;
   }
@@ -3073,8 +3070,4 @@ menuitem[id="placesContext_new:separator"] {
 
   :root:not([lwtheme-mozlightdark], [style*="--lwt-accent-color: rgb(28, 27, 34); --lwt-text-color: rgba(251, 251, 254);"]) #TabsToolbar[brighttext] #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected="true"], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
     box-shadow: none !important;
-  }
-
-  #tab-icon-image{
-    opacity: 1 !important;
   }
