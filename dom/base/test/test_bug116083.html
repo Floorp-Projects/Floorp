@@ -114,10 +114,7 @@ function nextTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set": [["clipboard.plainTextOnly", false]]}, nextTest);
-});
-
+SimpleTest.waitForFocus(nextTest);
 </script>
 </body>
 </html>
