@@ -272,9 +272,13 @@ add_task(async function() {
         checkVisibility("html");
 
         const text = document.querySelector(".html-preview iframe").src;
+        const expectedText =
+          "data:text/html;charset=UTF-8," +
+          encodeURIComponent("<blink>Not Found</blink>");
+
         is(
           text,
-          "data:text/html,<blink>Not Found</blink>",
+          expectedText,
           "The text shown in the iframe is incorrect for the html request."
         );
         break;
