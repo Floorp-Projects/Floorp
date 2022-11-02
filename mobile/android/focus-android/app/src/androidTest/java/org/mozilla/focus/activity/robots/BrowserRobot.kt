@@ -105,9 +105,6 @@ class BrowserRobot {
         }
     }
 
-    fun verifyEraseBrowsingButton(): ViewInteraction =
-        eraseBrowsingButton.check(matches(isDisplayed()))
-
     fun longPressLink(linkText: String) = longClickPageObject(webPageItemWithText(linkText))
 
     fun openLinkInNewTab() {
@@ -217,29 +214,23 @@ class BrowserRobot {
 
     fun clickOpenLinksInAppsOpenButton() = openLinksInAppsOpenButton.click()
 
-    fun clickDropDownForm() = clickPageObject(dropDownForm)
+    fun clickDropDownForm() = clickPageObject(webPageItemWithResourceId("dropDown"))
 
-    fun clickCalendarForm() = clickPageObject(calendarForm)
+    fun clickCalendarForm() = clickPageObject(webPageItemWithResourceId("calendar"))
 
     fun selectDate() {
         mDevice.findObject(UiSelector().resourceId("android:id/month_view")).waitForExists(waitingTime)
 
-        val monthViewerCurrentDay =
-            mDevice.findObject(
-                UiSelector()
-                    .textContains("$currentDay")
-                    .descriptionContains("$currentDay $currentMonth $currentYear"),
-            )
-
-        monthViewerCurrentDay.click()
+        mDevice.findObject(
+            UiSelector()
+                .textContains("$currentDay")
+                .descriptionContains("$currentDay $currentMonth $currentYear"),
+        ).click()
     }
 
-    fun clickFormViewButton(button: String) {
-        val clockAndCalendarButton = mDevice.findObject(UiSelector().textContains(button))
-        clockAndCalendarButton.click()
-    }
+    fun clickButtonWithText(button: String) = mDevice.findObject(UiSelector().textContains(button)).click()
 
-    fun clickSubmitDateButton() = clickPageObject(submitDateButton)
+    fun clickSubmitDateButton() = clickPageObject(webPageItemWithResourceId("submitDate"))
 
     fun verifySelectedDate() {
         mDevice.findObject(
@@ -257,27 +248,11 @@ class BrowserRobot {
     }
 
     fun clickAndWriteTextInInputBox(text: String) {
-        for (i in 1..RETRY_COUNT) {
-            try {
-                textInputBox.waitForExists(waitingTime)
-                textInputBox.click()
-                textInputBox.setText(text)
-                break
-            } catch (e: UiObjectNotFoundException) {
-                if (i == RETRY_COUNT) {
-                    throw e
-                } else {
-                    browserScreen {
-                    }.openMainMenu {
-                    }.clickReloadButton {
-                    }
-                    progressBar.waitUntilGone(waitingTime)
-                }
-            }
-        }
+        clickPageObject(webPageItemWithResourceId("textInput"))
+        setPageObjectText(webPageItemWithResourceId("textInput"), text)
     }
 
-    fun longPressTextInputBox() = longClickPageObject(textInputBox)
+    fun longPressTextInputBox() = longClickPageObject(webPageItemWithResourceId("textInput"))
 
     fun longClickText(expectedText: String) = longClickPageObject(webPageItemContainingText(expectedText))
 
@@ -315,7 +290,7 @@ class BrowserRobot {
         }
     }
 
-    fun clickSubmitTextInputButton() = clickPageObject(submitTextInputButton)
+    fun clickSubmitTextInputButton() = clickPageObject(webPageItemWithResourceId("submitInput"))
 
     fun selectDropDownOption(optionName: String) {
         mDevice.findObject(
@@ -324,7 +299,7 @@ class BrowserRobot {
         mDevice.findObject(UiSelector().textContains(optionName)).click()
     }
 
-    fun clickSubmitDropDownButton() = clickPageObject(submitDropDownButton)
+    fun clickSubmitDropDownButton() = clickPageObject(webPageItemWithResourceId("submitOption"))
 
     fun verifySelectedDropDownOption(optionName: String) {
         mDevice.findObject(
@@ -377,7 +352,7 @@ class BrowserRobot {
         )
     }
 
-    fun clickSetCookiesButton() = clickPageObject(setCookiesButton)
+    fun clickSetCookiesButton() = clickPageObject(webPageItemWithResourceId("setCookies"))
 
     fun clickPageObject(webPageItem: UiObject) {
         for (i in 1..RETRY_COUNT) {
@@ -395,8 +370,8 @@ class BrowserRobot {
                     browserScreen {
                     }.openMainMenu {
                     }.clickReloadButton {
+                        progressBar.waitUntilGone(waitingTime)
                     }
-                    progressBar.waitUntilGone(waitingTime)
                 }
             }
         }
@@ -418,8 +393,31 @@ class BrowserRobot {
                     browserScreen {
                     }.openMainMenu {
                     }.clickReloadButton {
+                        progressBar.waitUntilGone(waitingTime)
                     }
-                    progressBar.waitUntilGone(waitingTime)
+                }
+            }
+        }
+    }
+
+    private fun setPageObjectText(webPageItem: UiObject, text: String) {
+        for (i in 1..RETRY_COUNT) {
+            try {
+                webPageItem.also {
+                    it.waitForExists(waitingTime)
+                    it.setText(text)
+                }
+
+                break
+            } catch (e: UiObjectNotFoundException) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openMainMenu {
+                    }.clickReloadButton {
+                        progressBar.waitUntilGone(waitingTime)
+                    }
                 }
             }
         }
@@ -599,50 +597,6 @@ private val currentDay = currentDate.dayOfMonth
 private val currentMonth = currentDate.month
 private val currentYear = currentDate.year
 
-private val dropDownForm =
-    mDevice.findObject(
-        UiSelector()
-            .resourceId("dropDown")
-            .className("android.view.View")
-            .packageName(packageName),
-    )
-
-private val submitDropDownButton =
-    mDevice.findObject(
-        UiSelector()
-            .textContains("Submit drop down option")
-            .resourceId("submitOption"),
-    )
-
-private val textInputBox =
-    mDevice.findObject(
-        UiSelector()
-            .resourceId("textInput")
-            .packageName(packageName),
-    )
-
-private val submitTextInputButton =
-    mDevice.findObject(
-        UiSelector()
-            .textContains("Submit input")
-            .resourceId("submitInput"),
-    )
-
-private val calendarForm =
-    mDevice.findObject(
-        UiSelector()
-            .resourceId("calendar")
-            .className("android.widget.Spinner")
-            .packageName(packageName),
-    )
-
-val submitDateButton =
-    mDevice.findObject(
-        UiSelector()
-            .textContains("Submit date")
-            .resourceId("submitDate"),
-    )
-
 private val permissionAllowBtn = mDevice.findObject(
     UiSelector()
         .resourceId("$packageName:id/allow_button"),
@@ -653,15 +607,11 @@ private val permissionDenyBtn = mDevice.findObject(
         .resourceId("$packageName:id/deny_button"),
 )
 
-private val setCookiesButton =
-    mDevice.findObject(
-        UiSelector()
-            .textContains("Set cookies")
-            .resourceId("setCookies"),
-    )
-
 private fun webPageItemContainingText(itemText: String) =
     mDevice.findObject(UiSelector().textContains(itemText))
 
 private fun webPageItemWithText(itemText: String) =
     mDevice.findObject(UiSelector().text(itemText))
+
+private fun webPageItemWithResourceId(resourceId: String) =
+    mDevice.findObject(UiSelector().resourceId(resourceId))
