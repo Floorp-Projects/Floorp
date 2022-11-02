@@ -15,7 +15,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
@@ -170,27 +169,23 @@ export class QuickSuggestTestUtils {
    *   otherwise.
    */
   async ensureQuickSuggestInit(results = null, config = DEFAULT_CONFIG) {
-    this.info?.("ensureQuickSuggestInit calling UrlbarQuickSuggest.init()");
-    lazy.UrlbarQuickSuggest.init();
+    this.info?.("ensureQuickSuggestInit calling QuickSuggest.init()");
+    lazy.QuickSuggest.init();
 
-    this.info?.(
-      "ensureQuickSuggestInit awaiting UrlbarQuickSuggest.readyPromise"
-    );
-    await lazy.UrlbarQuickSuggest.readyPromise;
-    this.info?.(
-      "ensureQuickSuggestInit done awaiting UrlbarQuickSuggest.readyPromise"
-    );
+    this.info?.("ensureQuickSuggestInit awaiting readyPromise");
+    await lazy.QuickSuggest.remoteSettings.readyPromise;
+    this.info?.("ensureQuickSuggestInit done awaiting readyPromise");
 
     // Stub _queueSettingsSync() so any actual remote settings syncs that happen
     // during the test are ignored.
     let sandbox = lazy.sinon.createSandbox();
-    sandbox.stub(lazy.UrlbarQuickSuggest, "_queueSettingsSync");
+    sandbox.stub(lazy.QuickSuggest.remoteSettings, "_queueSettingsSync");
     let cleanup = () => sandbox.restore();
     this.registerCleanupFunction?.(cleanup);
 
     if (results) {
-      lazy.UrlbarQuickSuggest._resultsByKeyword.clear();
-      await lazy.UrlbarQuickSuggest._addResults(results);
+      lazy.QuickSuggest.remoteSettings._resultsByKeyword.clear();
+      await lazy.QuickSuggest.remoteSettings._addResults(results);
     }
     if (config) {
       this.setConfig(config);
@@ -241,10 +236,11 @@ export class QuickSuggestTestUtils {
    * `DEFAULT_CONFIG` before your test finishes. See also `withConfig()`.
    *
    * @param {object} config
-   *   The config to be applied. See {@link UrlbarQuickSuggest._setConfig}
+   *   The config to be applied. See
+   *   {@link QuickSuggestRemoteSettingsClient._setConfig}
    */
   setConfig(config) {
-    lazy.UrlbarQuickSuggest._setConfig(config);
+    lazy.QuickSuggest.remoteSettings._setConfig(config);
   }
 
   /**

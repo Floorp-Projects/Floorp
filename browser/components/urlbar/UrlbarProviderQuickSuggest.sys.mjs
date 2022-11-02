@@ -15,7 +15,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
 
@@ -24,9 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource:///modules/PartnerLinkAttribution.jsm",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
 });
-
-const TELEMETRY_REMOTE_SETTINGS_LATENCY =
-  "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS";
 
 const TELEMETRY_SCALARS = {
   BLOCK_SPONSORED: "contextual.services.quicksuggest.block_sponsored",
@@ -135,13 +131,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
     // affect the suggestions.
     let searchString = queryContext.searchString.trimStart();
 
-    // There are two sources for quick suggest: remote settings (from
-    // `UrlbarQuickSuggest`) and Merino.
+    // There are two sources for quick suggest: remote settings and Merino.
     let promises = [];
     if (lazy.UrlbarPrefs.get("quickSuggestRemoteSettingsEnabled")) {
-      promises.push(
-        this._fetchRemoteSettingsSuggestions(queryContext, searchString)
-      );
+      promises.push(lazy.QuickSuggest.remoteSettings.fetch(searchString));
     }
     if (
       lazy.UrlbarPrefs.get("merinoEnabled") &&
@@ -202,8 +195,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
     let isSuggestionBestMatch = false;
     if (typeof suggestion._test_is_best_match == "boolean") {
       isSuggestionBestMatch = suggestion._test_is_best_match;
-    } else if (lazy.UrlbarQuickSuggest.config.best_match) {
-      let { best_match } = lazy.UrlbarQuickSuggest.config;
+    } else if (lazy.QuickSuggest.remoteSettings.config.best_match) {
+      let { best_match } = lazy.QuickSuggest.remoteSettings.config;
       isSuggestionBestMatch =
         best_match.min_search_string_length <= searchString.length &&
         !best_match.blocked_suggestion_ids.includes(suggestion.block_id);
@@ -539,42 +532,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     // Don't abort the Merino fetch if one is ongoing. By design we allow
     // fetches to finish so we can record their latency.
-  }
-
-  /**
-   * Fetches remote settings suggestions.
-   *
-   * @param {UrlbarQueryContext} queryContext
-   *   The query context.
-   * @param {string} searchString
-   *   The search string.
-   * @returns {Array}
-   *   The remote settings suggestions. If there are no matches, an empty array
-   *   is returned.
-   */
-  async _fetchRemoteSettingsSuggestions(queryContext, searchString) {
-    let instance = this.queryInstance;
-
-    let suggestions;
-    TelemetryStopwatch.start(TELEMETRY_REMOTE_SETTINGS_LATENCY, queryContext);
-    try {
-      suggestions = await lazy.UrlbarQuickSuggest.query(searchString);
-      TelemetryStopwatch.finish(
-        TELEMETRY_REMOTE_SETTINGS_LATENCY,
-        queryContext
-      );
-      if (instance != this.queryInstance) {
-        return [];
-      }
-    } catch (error) {
-      TelemetryStopwatch.cancel(
-        TELEMETRY_REMOTE_SETTINGS_LATENCY,
-        queryContext
-      );
-      this.logger.error("Couldn't fetch remote settings suggestions: " + error);
-    }
-
-    return suggestions || [];
   }
 
   /**

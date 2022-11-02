@@ -12,8 +12,9 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  QuickSuggestRemoteSettingsClient:
+    "resource:///modules/QuickSuggestRemoteSettingsClient.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
   clearInterval: "resource://gre/modules/Timer.sys.mjs",
   setInterval: "resource://gre/modules/Timer.sys.mjs",
 });
@@ -68,26 +69,6 @@ const ONBOARDING_URI =
  * related helpers.
  */
 class _QuickSuggest {
-  constructor() {
-    lazy.UrlbarQuickSuggest.on("config-set", () =>
-      this._validateImpressionStats()
-    );
-
-    this._updateFeatureState();
-    lazy.NimbusFeatures.urlbar.onUpdate(() => this._updateFeatureState());
-
-    lazy.UrlbarPrefs.addObserver(this);
-
-    // Periodically record impression counters reset telemetry.
-    this._setImpressionCountersResetInterval();
-
-    // On shutdown, record any final impression counters reset telemetry.
-    lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
-      "QuickSuggest: Record impression counters reset telemetry",
-      () => this._resetElapsedImpressionCounters()
-    );
-  }
-
   /**
    * @returns {string} The name of the quick suggest telemetry event category.
    */
@@ -119,11 +100,49 @@ class _QuickSuggest {
     );
   }
 
+  /**
+   * @returns {QuickSuggestRemoteSettingsClient}
+   *   Quick suggest's remote settings client, which manages configuration and
+   *   suggestions stored in remote settings.
+   */
+  get remoteSettings() {
+    return this._remoteSettings;
+  }
+
   get logger() {
     if (!this._logger) {
       this._logger = UrlbarUtils.getLogger({ prefix: "QuickSuggest" });
     }
     return this._logger;
+  }
+
+  /**
+   * Initializes the quick suggest feature. This must be called before using
+   * quick suggest. It's safe to call more than once.
+   */
+  init() {
+    if (this._remoteSettings) {
+      return;
+    }
+
+    this._remoteSettings = new lazy.QuickSuggestRemoteSettingsClient();
+    this._remoteSettings.on("config-set", () =>
+      this._validateImpressionStats()
+    );
+
+    this._updateFeatureState();
+    lazy.NimbusFeatures.urlbar.onUpdate(() => this._updateFeatureState());
+
+    lazy.UrlbarPrefs.addObserver(this);
+
+    // Periodically record impression counters reset telemetry.
+    this._setImpressionCountersResetInterval();
+
+    // On shutdown, record any final impression counters reset telemetry.
+    lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
+      "QuickSuggest: Record impression counters reset telemetry",
+      () => this._resetElapsedImpressionCounters()
+    );
   }
 
   /**
@@ -354,7 +373,7 @@ class _QuickSuggest {
       JSON.stringify({
         type,
         currentStats: this._impressionStats,
-        impression_caps: lazy.UrlbarQuickSuggest.config.impression_caps,
+        impression_caps: this.remoteSettings.config.impression_caps,
       })
     );
 
@@ -592,7 +611,7 @@ class _QuickSuggest {
    *   for more info.
    */
   _validateImpressionStats() {
-    let { impression_caps } = lazy.UrlbarQuickSuggest.config;
+    let { impression_caps } = this.remoteSettings.config;
 
     this.logger.info("Validating impression stats");
     this.logger.debug(
@@ -713,7 +732,7 @@ class _QuickSuggest {
     this.logger.debug(
       JSON.stringify({
         currentStats: this._impressionStats,
-        impression_caps: lazy.UrlbarQuickSuggest.config.impression_caps,
+        impression_caps: this.remoteSettings.config.impression_caps,
       })
     );
 
@@ -929,6 +948,9 @@ class _QuickSuggest {
     }
   }
 
+  // The quick suggest remote settings client.
+  _remoteSettings = null;
+
   // The most recently cached value of `UrlbarPrefs.get("quickSuggestEnabled")`.
   // The purpose of this property is only to detect changes in the feature's
   // enabled status. To determine the current status, call
@@ -975,7 +997,7 @@ class _QuickSuggest {
   // non-sponsored) and interval. See `_validateImpressionStats()` for more.
   //
   // Impression caps are stored in the remote settings config. See
-  // `UrlbarQuickSuggest.confg.impression_caps`.
+  // `QuickSuggestRemoteSettingsClient.confg.impression_caps`.
   _impressionStats = {};
 
   // Whether impression stats are currently being updated.

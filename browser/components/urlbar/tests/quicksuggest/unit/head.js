@@ -5,9 +5,10 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  QuickSuggestRemoteSettingsClient:
+    "resource:///modules/QuickSuggestRemoteSettingsClient.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
