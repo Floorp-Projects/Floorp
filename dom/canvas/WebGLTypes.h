@@ -878,6 +878,11 @@ class RawBuffer final {
   RawBuffer& operator=(RawBuffer&&) = default;
 };
 
+template <class T>
+inline Range<T> ShmemRange(const mozilla::ipc::Shmem& shmem) {
+  return {shmem.get<T>(), shmem.Size<T>()};
+}
+
 // -
 
 template <typename C, typename K>
@@ -1164,6 +1169,17 @@ inline void Memcpy(const RangedPtr<uint8_t>& destBytes,
   (void)(destBytes + byteSize);
 
   memcpy(destBytes.get(), srcBytes.get(), byteSize);
+}
+
+template <class T, class U>
+inline void Memcpy(const Range<T>* const destRange,
+                   const RangedPtr<U>& srcBegin) {
+  Memcpy(destRange->begin(), srcBegin, destRange->length());
+}
+template <class T, class U>
+inline void Memcpy(const RangedPtr<T>* const destBegin,
+                   const Range<U>& srcRange) {
+  Memcpy(destBegin, srcRange->begin(), srcRange->length());
 }
 
 // -
