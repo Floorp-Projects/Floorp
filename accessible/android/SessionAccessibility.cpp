@@ -1115,7 +1115,21 @@ void SessionAccessibility::UnregisterAll(PresShell* aPresShell) {
 
   nsAccessibilityService::GetAndroidMonitor().AssertCurrentThreadOwns();
   RefPtr<SessionAccessibility> sessionAcc = GetInstanceFor(aPresShell);
-  if (sessionAcc) {
-    sessionAcc->mIDToAccessibleMap.Clear();
+
+  if (!sessionAcc) {
+    return;
+  }
+
+  for (auto iter = sessionAcc->mIDToAccessibleMap.Iter(); !iter.Done();
+       iter.Next()) {
+    int32_t virtualViewID = iter.Key();
+    if (virtualViewID > kNoID) {
+      sIDSet.ReleaseID(virtualViewID);
+    }
+
+    Accessible* accessible = iter.Data();
+    AccessibleWrap::SetVirtualViewID(accessible, kUnsetID);
+
+    iter.Remove();
   }
 }
