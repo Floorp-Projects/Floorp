@@ -8,7 +8,10 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MIDIAccessManager.h"
 #include "mozilla/dom/MIDIOptionsBinding.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/RandomNum.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsIGlobalObject.h"
 #include "mozilla/Preferences.h"
@@ -63,6 +66,8 @@ MIDIPermissionRequest::GetTypes(nsIArray** aTypes) {
 
 NS_IMETHODIMP
 MIDIPermissionRequest::Cancel() {
+  mCancelTimer = nullptr;
+
   if (StaticPrefs::dom_sitepermsaddon_provider_enabled()) {
     mPromise->MaybeRejectWithSecurityError(
         "WebMIDI requires a site permission add-on to activate");
@@ -141,9 +146,40 @@ MIDIPermissionRequest::Run() {
     return NS_OK;
   }
 
-  // We can only get here for localhost, if add-on gating is disabled or if the
-  // add-on is installed but the user has subsequently changed the permission
-  // from ALLOW to ASK. In that unusual case, throw up a prompt.
+  // Before we bother the user with a prompt, see if they have any devices. If
+  // they don't, just report denial.
+  MOZ_ASSERT(NS_IsMainThread());
+  mozilla::ipc::PBackgroundChild* actor =
+      mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!actor)) {
+    return NS_ERROR_FAILURE;
+  }
+  RefPtr<MIDIPermissionRequest> self = this;
+  actor->SendHasMIDIDevice(
+      [=](bool aHasDevices) {
+        MOZ_ASSERT(NS_IsMainThread());
+
+        if (aHasDevices) {
+          self->DoPrompt();
+        } else {
+          // For auto-deny, we randomize the response time between 3 and 13
+          // seconds to make it harder for the site to determine if auto-deny
+          // occurred.
+          uint32_t baseDelayMS = 3 * 1000;
+          uint32_t randomDelayMS = RandomUint64OrDie() % (10 * 1000);
+          auto delay =
+              TimeDuration::FromMilliseconds(baseDelayMS + randomDelayMS);
+          NS_NewTimerWithCallback(
+              getter_AddRefs(self->mCancelTimer), [=](auto) { self->Cancel(); },
+              delay, nsITimer::TYPE_ONE_SHOT, __func__);
+        }
+      },
+      [=](auto) { self->Cancel(); });
+
+  return NS_OK;
+}
+
+nsresult MIDIPermissionRequest::DoPrompt() {
   if (NS_FAILED(nsContentPermissionUtils::AskPermission(this, mWindow))) {
     Cancel();
     return NS_ERROR_FAILURE;
