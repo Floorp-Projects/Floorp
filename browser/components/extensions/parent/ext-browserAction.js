@@ -196,6 +196,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
       id: this.id,
       viewId: this.viewId,
       type: "view",
+      webExtension: true,
       removable: true,
       label: this.action.getProperty(null, "title"),
       tooltiptext: this.action.getProperty(null, "title"),

@@ -4,13 +4,13 @@
 
 "use strict";
 
-const kButton = "test_button_for_addon";
+const kButton = "test_dynamically_created_button";
 var initialLocation = gBrowser.currentURI.spec;
 
 add_task(async function() {
-  info("Check addon button functionality");
+  info("Check dynamically created button functionality");
 
-  // create mocked addon button on the navigation bar
+  // Let's create a simple button that will open about:addons.
   let widgetSpec = {
     id: kButton,
     type: "button",
@@ -20,13 +20,17 @@ add_task(async function() {
   };
   CustomizableUI.createWidget(widgetSpec);
   CustomizableUI.addWidgetToArea(kButton, CustomizableUI.AREA_NAVBAR);
+  ok(
+    !CustomizableUI.isWebExtensionWidget(kButton),
+    "This button should not be considered an extension widget."
+  );
 
   // check the button's functionality in navigation bar
-  let addonButton = document.getElementById(kButton);
+  let button = document.getElementById(kButton);
   let navBar = document.getElementById("nav-bar");
-  ok(addonButton, "Addon button exists");
-  ok(navBar.contains(addonButton), "Addon button is in the navbar");
-  await checkButtonFunctionality(addonButton);
+  ok(button, "Dynamically created button exists");
+  ok(navBar.contains(button), "Dynamically created button is in the navbar");
+  await checkButtonFunctionality(button);
 
   resetTabs();
 
@@ -36,21 +40,21 @@ add_task(async function() {
     CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
   );
   ok(
-    !navBar.contains(addonButton),
-    "Addon button was removed from the browser bar"
+    !navBar.contains(button),
+    "Dynamically created button was removed from the browser bar"
   );
 
   await waitForOverflowButtonShown();
 
-  // check the addon button's functionality in the Panel Menu
+  // check the button's functionality in the Overflow Panel.
   await document.getElementById("nav-bar").overflowable.show();
   var panelMenu = document.getElementById("widget-overflow-mainView");
-  let addonButtonInPanel = panelMenu.getElementsByAttribute("id", kButton);
+  let buttonInPanel = panelMenu.getElementsByAttribute("id", kButton);
   ok(
-    panelMenu.contains(addonButton),
-    "Addon button was added to the Panel Menu"
+    panelMenu.contains(button),
+    "Dynamically created button was added to the Panel Menu"
   );
-  await checkButtonFunctionality(addonButtonInPanel[0]);
+  await checkButtonFunctionality(buttonInPanel[0]);
 });
 
 add_task(async function asyncCleanup() {

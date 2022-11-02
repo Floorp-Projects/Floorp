@@ -2899,6 +2899,7 @@ var CustomizableUIInternal = {
       _introducedInVersion: -1,
       keepBroadcastAttributesWhenCustomizing: false,
       disallowSubView: false,
+      webExtension: false,
     };
 
     if (typeof aData.id != "string" || !/^[a-z0-9-_]{1,}$/i.test(aData.id)) {
@@ -2942,6 +2943,7 @@ var CustomizableUIInternal = {
       "localized",
       "keepBroadcastAttributesWhenCustomizing",
       "disallowSubView",
+      "webExtension",
     ];
     for (let prop of kOptBoolProps) {
       if (typeof aData[prop] == "boolean") {
@@ -4016,6 +4018,8 @@ var CustomizableUI = {
    * - locationSpecific: If true, closes the panel if the location changes.
    *                     This is similar to tabSpecific, but also if the location
    *                     changes in the same tab, we may want to close the panel.
+   * - webExtension:  Set to true if this widget is being created on behalf of an
+   *                  extension.
    *
    * @param aProperties the specifications for the widget.
    * @return a wrapper around the created widget (see getWidget)
@@ -4425,6 +4429,24 @@ var CustomizableUI = {
     return CustomizableUIInternal.isSpecialWidget(aWidgetId);
   },
   /**
+   * Check if a widget is provided by an extension. This effectively checks
+   * whether `webExtension: true` passed when the widget was being created.
+   *
+   * If the widget being referred to hasn't yet been created, or has been
+   * destroyed, we fallback to checking the ID for the "-browser-action"
+   * suffix.
+   *
+   * @param aWidgetId the widget ID to check.
+   * @return true if the widget was provided by an extension, false otherwise.
+   */
+  isWebExtensionWidget(aWidgetId) {
+    let widget = this.getWidget(aWidgetId);
+    if (widget) {
+      return widget.webExtension;
+    }
+    return aWidgetId.endsWith("-browser-action");
+  },
+  /**
    * Add listeners to a panel that will close it. For use from the menu panel
    * and overflowable toolbar implementations, unlikely to be useful for
    * consumers.
@@ -4736,6 +4758,7 @@ function WidgetGroupWrapper(aWidget) {
     "showInPrivateBrowsing",
     "viewId",
     "disallowSubView",
+    "webExtension",
   ];
   for (let prop of kBareProps) {
     let propertyName = prop;
@@ -4862,6 +4885,8 @@ function XULWidgetGroupWrapper(aWidgetId) {
   this.isGroup = true;
   this.id = aWidgetId;
   this.type = "custom";
+  // XUL Widgets can never be provided by extensions.
+  this.webExtension = false;
   this.provider = CustomizableUI.PROVIDER_XUL;
 
   this.forWindow = function XULWidgetGroupWrapper_forWindow(aWindow) {
@@ -5003,13 +5028,13 @@ function XULWidgetSingleWrapper(aWidgetId, aNode, aDocument) {
  * 1. The default items overflow panel
  *   This is where built-in default toolbar items will go to.
  * 2. The Unified Extensions panel
- *   This is where browser_action toolbar buttons created by WebExtensions will
+ *   This is where browser_action toolbar buttons created by extensions will
  *   go to if the Unified Extensions UI is enabled - otherwise, those items will
  *   go to the default items overflow panel.
  *
  * Finally, OverflowableToolbar manages the showing of the default items
  * overflow panel when the associated anchor is clicked or dragged over. The
- * Unified Extensions panel is managed separately by the WebExtensions code.
+ * Unified Extensions panel is managed separately by the extension code.
  *
  * In theory, we could have multiple overflowable toolbars, but in practice,
  * only the nav-bar (CustomizableUI.AREA_NAVBAR) makes use of this class.
@@ -5083,7 +5108,7 @@ class OverflowableToolbar {
   #defaultListPanel = null;
 
   /**
-   * A reference to the the element that overflowed WebExtension browser action
+   * A reference to the the element that overflowed extension browser action
    * toolbar items will be appended to as children upon overflow if the
    * Unified Extension UI is enabled.
    *
@@ -5138,9 +5163,9 @@ class OverflowableToolbar {
    *   The ID of the <xul:panel> that contains the default-overflowtarget.
    * addon-webext-overflowbutton:
    *   The ID of the button that is used to open and anchor the Unified
-   *   WebExtensions panel.
+   *   Extensions panel.
    * addon-webext-overflowtarget:
-   *   The ID of the element that overflowed WebExtension toolbar buttons will
+   *   The ID of the element that overflowed extension toolbar buttons will
    *   be appended to as children if the Unified Extensions UI is enabled.
    *   Note that the overflowed toolbar items are moved into and out of this
    *   overflow target, so it is definitely advisable to let OverflowableToolbar
@@ -5462,7 +5487,7 @@ class OverflowableToolbar {
         if (
           lazy.gUnifiedExtensionsEnabled &&
           webExtList &&
-          child.classList.contains("webextension-browser-action")
+          CustomizableUI.isWebExtensionWidget(child.id)
         ) {
           child.setAttribute("cui-anchorid", webExtButtonID);
           webExtList.insertBefore(child, webExtList.firstElementChild);
@@ -5769,7 +5794,7 @@ class OverflowableToolbar {
    * of addon-webext-overflowtarget. If a cache already exists, that's returned
    * instead. If addon-webext-overflowtarget has no value, null is returned.
    *
-   * @returns {Element|null} the list that overflowed WebExtension toolbar
+   * @returns {Element|null} the list that overflowed extension toolbar
    *   buttons should go to if the Unified Extensions UI is enabled, or null
    *   if no such list exists.
    */
