@@ -71,8 +71,15 @@ class VendorPython(MozbuildObject):
                 _purge_vendor_dir(vendor_dir)
                 self._extract(tmp, vendor_dir, keep_extra_files)
 
-            shutil.copy(lockfiles.pip_lockfile, str(vendor_dir / "requirements.txt"))
-            shutil.copy(lockfiles.poetry_lockfile, str(poetry_lockfile))
+            requirements_out = vendor_dir / "requirements.txt"
+
+            # since requirements.out and poetry.lockfile are both outputs from
+            # third party code, they may contain carriage returns on Windows. We
+            # should strip the carriage returns to maintain consistency in our output
+            # regardless of which platform is doing the vendoring. We can do this and
+            # the copying at the same time to minimize reads and writes.
+            _copy_file_strip_carriage_return(lockfiles.pip_lockfile, requirements_out)
+            _copy_file_strip_carriage_return(lockfiles.poetry_lockfile, poetry_lockfile)
             self.repository.add_remove_files(vendor_dir)
 
     def _extract(self, src, dest, keep_extra_files=False):
@@ -121,7 +128,7 @@ class VendorPython(MozbuildObject):
 
 def _sort_requirements_in(requirements_in: Path):
     requirements = {}
-    with open(requirements_in) as f:
+    with requirements_in.open(mode="r", newline="\n") as f:
         comments = []
         for line in f.readlines():
             line = line.strip()
@@ -132,7 +139,7 @@ def _sort_requirements_in(requirements_in: Path):
             requirements[name] = version, comments
             comments = []
 
-    with open(requirements_in, "w") as f:
+    with requirements_in.open(mode="w", newline="\n") as f:
         for name, (version, comments) in sorted(requirements.items()):
             if comments:
                 f.write("{}\n".format("\n".join(comments)))
@@ -140,7 +147,7 @@ def _sort_requirements_in(requirements_in: Path):
 
 
 def remove_environment_markers_from_requirements_txt(requirements_txt: Path):
-    with requirements_txt.open(mode="r") as f:
+    with requirements_txt.open(mode="r", newline="\n") as f:
         lines = f.readlines()
     markerless_lines = []
     continuation_token = " \\"
@@ -159,7 +166,7 @@ def remove_environment_markers_from_requirements_txt(requirements_txt: Path):
         else:
             markerless_lines.append(line)
 
-    with requirements_txt.open(mode="w") as f:
+    with requirements_txt.open(mode="w", newline="\n") as f:
         f.write("\n".join(markerless_lines))
 
 
@@ -194,3 +201,7 @@ def _denormalize_symlinks(target):
             link_target = os.path.realpath(f.path)
             os.unlink(f.path)
             shutil.copyfile(link_target, f.path)
+
+
+def _copy_file_strip_carriage_return(file_src: Path, file_dst):
+    shutil.copyfileobj(file_src.open(mode="r"), file_dst.open(mode="w", newline="\n"))
