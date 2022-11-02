@@ -159,9 +159,6 @@ browser.urlbar.quicksuggest.enabled (boolean, default: false)
   the individual prefs ``browser.urlbar.suggest.quicksuggest.nonsponsored`` and
   ``browser.urlbar.suggest.quicksuggest.sponsored``.
 
-browser.urlbar.quicksuggest.log (boolean, default: false)
-  Whether to show QuickSuggest related logs, by default only logs Warnings.
-
 browser.urlbar.quicksuggest.remoteSettings.enabled (boolean, default: true)
   Whether remote settings is enabled as a quick suggest source.
 

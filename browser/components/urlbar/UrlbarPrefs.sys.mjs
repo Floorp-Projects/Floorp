@@ -281,9 +281,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // impression frequency caps for quick suggest suggestions.
   ["quicksuggest.impressionCaps.stats", ""],
 
-  // Whether to show QuickSuggest related logs.
-  ["quicksuggest.log", false],
-
   // The user's response to the Firefox Suggest online opt-in dialog.
   ["quicksuggest.onboardingDialogChoice", ""],
 

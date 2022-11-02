@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
 
 const lazy = {};
@@ -13,6 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   TaskQueue: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -20,52 +20,41 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
 });
 
-const log = console.createInstance({
-  prefix: "QuickSuggest",
-  maxLogLevel: lazy.UrlbarPrefs.get("quicksuggest.log") ? "All" : "Warn",
-});
-
 const RS_COLLECTION = "quicksuggest";
 
 // Categories that should show "Firefox Suggest" instead of "Sponsored"
 const NONSPONSORED_IAB_CATEGORIES = new Set(["5 - Education"]);
 
-const FEATURE_AVAILABLE = "quickSuggestEnabled";
-
-// This is a score in the range [0, 1] used by the provider to compare
-// suggestions. All suggestions require a score, so if a remote settings
-// suggestion does not have one, it's assigned this value. We choose a low value
-// to allow Merino to experiment with a broad range of scores server side.
+// Default score for remote settings suggestions.
 const DEFAULT_SUGGESTION_SCORE = 0.2;
 
 // Entries are added to the `_resultsByKeyword` map in chunks, and each chunk
 // will add at most this many entries.
 const ADD_RESULTS_CHUNK_SIZE = 1000;
 
+const TELEMETRY_LATENCY = "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS";
+
 /**
  * Fetches the suggestions data from RemoteSettings and builds the structures
  * to provide suggestions for UrlbarProviderQuickSuggest.
  */
-class _UrlbarQuickSuggest extends EventEmitter {
-  init() {
-    if (this._initialized) {
-      return;
-    }
-    this._initialized = true;
+export class QuickSuggestRemoteSettingsClient extends EventEmitter {
+  /**
+   * @returns {number}
+   *   The default score for remote settings suggestions, a value in the range
+   *   [0, 1]. All suggestions require a score that can be used for comparison,
+   *   so if a remote settings suggestion does not have one, it's assigned this
+   *   value.
+   */
+  static get DEFAULT_SUGGESTION_SCORE() {
+    return DEFAULT_SUGGESTION_SCORE;
+  }
 
+  constructor() {
+    super();
     lazy.UrlbarPrefs.addObserver(this);
     lazy.NimbusFeatures.urlbar.onUpdate(() => this._queueSettingsSetup());
     this._queueSettingsSetup();
-  }
-
-  /**
-   * @returns {number}
-   *   A score in the range [0, 1] that can be used to compare suggestions. All
-   *   suggestions require a score, so if a remote settings suggestion does not
-   *   have one, it's assigned this value.
-   */
-  get DEFAULT_SUGGESTION_SCORE() {
-    return DEFAULT_SUGGESTION_SCORE;
   }
 
   /**
@@ -105,8 +94,41 @@ class _UrlbarQuickSuggest extends EventEmitter {
     return this._config;
   }
 
+  get logger() {
+    if (!this._logger) {
+      this._logger = lazy.UrlbarUtils.getLogger({
+        prefix: "QuickSuggestRemoteSettingsClient",
+      });
+    }
+    return this._logger;
+  }
+
   /**
-   * Handle queries from the Urlbar.
+   * Fetches remote settings suggestions.
+   *
+   * @param {string} searchString
+   *   The search string.
+   * @returns {Array}
+   *   The remote settings suggestions. If there are no matches, an empty array
+   *   is returned.
+   */
+  async fetch(searchString) {
+    let suggestions;
+    let stopwatchInstance = (this._telemetryStopwatchInstance = {});
+    TelemetryStopwatch.start(TELEMETRY_LATENCY, stopwatchInstance);
+    try {
+      suggestions = await this._fetchHelper(searchString);
+      TelemetryStopwatch.finish(TELEMETRY_LATENCY, stopwatchInstance);
+    } catch (error) {
+      TelemetryStopwatch.cancel(TELEMETRY_LATENCY, stopwatchInstance);
+      this.logger.error("Error fetching suggestions: " + error);
+    }
+
+    return suggestions || [];
+  }
+
+  /**
+   * Helper for `fetch()` that actually looks up the matching suggestions.
    *
    * @param {string} phrase
    *   The search string.
@@ -114,8 +136,9 @@ class _UrlbarQuickSuggest extends EventEmitter {
    *   The matched suggestion objects. If there are no matches, an empty array
    *   is returned.
    */
-  async query(phrase) {
-    log.info("Handling query for", phrase);
+  async _fetchHelper(phrase) {
+    this.logger.info("Handling query: " + JSON.stringify(phrase));
+
     phrase = phrase.toLowerCase();
     let object = this._resultsByKeyword.get(phrase);
     if (!object) {
@@ -221,8 +244,6 @@ class _UrlbarQuickSuggest extends EventEmitter {
     }
   }
 
-  _initialized = false;
-
   // The RemoteSettings client.
   _rs = null;
 
@@ -256,7 +277,7 @@ class _UrlbarQuickSuggest extends EventEmitter {
   _queueSettingsSetup() {
     this._settingsTaskQueue.queue(() => {
       let enabled =
-        lazy.UrlbarPrefs.get(FEATURE_AVAILABLE) &&
+        lazy.UrlbarPrefs.get("quickSuggestEnabled") &&
         (lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
           lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored"));
       if (enabled && !this._rs) {
@@ -301,7 +322,7 @@ class _UrlbarQuickSuggest extends EventEmitter {
       }
 
       let dataType = lazy.UrlbarPrefs.get("quickSuggestRemoteSettingsDataType");
-      log.debug("Loading data with type:", dataType);
+      this.logger.debug("Loading data with type: " + dataType);
 
       let [configArray, data] = await Promise.all([
         this._rs.get({ filters: { type: "configuration" } }),
@@ -313,16 +334,16 @@ class _UrlbarQuickSuggest extends EventEmitter {
           ),
       ]);
 
-      log.debug("Got configuration:", configArray);
+      this.logger.debug("Got configuration: " + JSON.stringify(configArray));
       this._setConfig(configArray?.[0]?.configuration || {});
 
       this._resultsByKeyword.clear();
 
-      log.debug(`Got data with ${data.length} records`);
+      this.logger.debug(`Got data with ${data.length} records`);
       for (let record of data) {
         let { buffer } = await this._rs.attachments.download(record);
         let results = JSON.parse(new TextDecoder("utf-8").decode(buffer));
-        log.debug(`Adding ${results.length} results`);
+        this.logger.debug(`Adding ${results.length} results`);
         await this._addResults(results);
       }
     });
@@ -415,5 +436,3 @@ class _UrlbarQuickSuggest extends EventEmitter {
     return this._rs.attachments.downloadToDisk(record);
   }
 }
-
-export const UrlbarQuickSuggest = new _UrlbarQuickSuggest();

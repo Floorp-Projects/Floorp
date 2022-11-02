@@ -90,9 +90,9 @@ add_task(async function init() {
   await QuickSuggestTestUtils.ensureQuickSuggestInit(REMOTE_SETTINGS_DATA);
 
   Assert.equal(
-    typeof UrlbarQuickSuggest.DEFAULT_SUGGESTION_SCORE,
+    typeof QuickSuggestRemoteSettingsClient.DEFAULT_SUGGESTION_SCORE,
     "number",
-    "Sanity check: UrlbarQuickSuggest.DEFAULT_SUGGESTION_SCORE is defined"
+    "Sanity check: DEFAULT_SUGGESTION_SCORE is defined"
   );
 });
 
@@ -107,7 +107,7 @@ add_task(async function oneEnabled_merino() {
   // Use a score lower than the remote settings score to make sure the
   // suggestion is included regardless.
   MerinoTestUtils.server.response.body.suggestions[0].score =
-    UrlbarQuickSuggest.DEFAULT_SUGGESTION_SCORE / 2;
+    QuickSuggestRemoteSettingsClient.DEFAULT_SUGGESTION_SCORE / 2;
 
   let context = createContext(SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
@@ -182,7 +182,7 @@ add_task(async function higherScore() {
   let histograms = MerinoTestUtils.getAndClearHistograms();
 
   MerinoTestUtils.server.response.body.suggestions[0].score =
-    2 * UrlbarQuickSuggest.DEFAULT_SUGGESTION_SCORE;
+    2 * QuickSuggestRemoteSettingsClient.DEFAULT_SUGGESTION_SCORE;
 
   let context = createContext(SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
@@ -214,7 +214,7 @@ add_task(async function lowerScore() {
   let histograms = MerinoTestUtils.getAndClearHistograms();
 
   MerinoTestUtils.server.response.body.suggestions[0].score =
-    UrlbarQuickSuggest.DEFAULT_SUGGESTION_SCORE / 2;
+    QuickSuggestRemoteSettingsClient.DEFAULT_SUGGESTION_SCORE / 2;
 
   let context = createContext(SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
@@ -246,7 +246,7 @@ add_task(async function sameScore() {
   let histograms = MerinoTestUtils.getAndClearHistograms();
 
   MerinoTestUtils.server.response.body.suggestions[0].score =
-    UrlbarQuickSuggest.DEFAULT_SUGGESTION_SCORE;
+    QuickSuggestRemoteSettingsClient.DEFAULT_SUGGESTION_SCORE;
 
   let context = createContext(SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
