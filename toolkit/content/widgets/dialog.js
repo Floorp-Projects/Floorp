@@ -329,9 +329,8 @@
       this._setInitialFocusIfNeeded();
       if (this._l10nButtons.length) {
         await document.l10n.translateElements(this._l10nButtons);
-        // FIXME(emilio): Should this be outside the if condition?
-        this._sizeToPreferredSize();
       }
+      this._sizeToPreferredSize();
       await this._snapCursorToDefaultButtonIfNeeded();
     }
 
