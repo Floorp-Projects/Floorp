@@ -26,11 +26,6 @@ class ThumbnailsMiddleware(
         action: BrowserAction,
     ) {
         when (action) {
-            is ContentAction.UpdateThumbnailAction -> {
-                // Store the captured tab screenshot from the EngineView when the session's
-                // thumbnail is updated.
-                thumbnailStorage.saveThumbnail(action.sessionId, action.thumbnail)
-            }
             is TabListAction.RemoveAllNormalTabsAction -> {
                 context.state.tabs.filterNot { it.content.private }.forEach { tab ->
                     thumbnailStorage.deleteThumbnail(tab.id)
@@ -51,11 +46,20 @@ class ThumbnailsMiddleware(
             is TabListAction.RemoveTabsAction -> {
                 action.tabIds.forEach { thumbnailStorage.deleteThumbnail(it) }
             }
+            is ContentAction.UpdateThumbnailAction -> {
+                // Store the captured tab screenshot from the EngineView when the session's
+                // thumbnail is updated.
+                thumbnailStorage.saveThumbnail(action.sessionId, action.thumbnail)
+                return // Do not let the thumbnail actions continue through to the reducer.
+            }
+            is ContentAction.RemoveThumbnailAction -> {
+                thumbnailStorage.deleteThumbnail(action.sessionId)
+                return // Do not let the thumbnail actions continue through to the reducer.
+            }
             else -> {
                 // no-op
             }
         }
-
         next(action)
     }
 }
