@@ -41,7 +41,7 @@
         </hbox>
         <html:input class="searchbar-textbox" is="autocomplete-input" type="search" data-l10n-id="searchbar-input" autocompletepopup="PopupSearchAutoComplete" autocompletesearch="search-autocomplete" autocompletesearchparam="searchbar-history" maxrows="10" completeselectedindex="true" minresultsforpopup="0"/>
         <menupopup class="textbox-contextmenu"></menupopup>
-        <hbox class="search-go-container">
+        <hbox class="search-go-container" align="center">
           <image class="search-go-button urlbar-icon" hidden="true" onclick="handleSearchCommand(event);" data-l10n-id="searchbar-submit"></image>
         </hbox>
       `;

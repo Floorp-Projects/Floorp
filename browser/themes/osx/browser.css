@@ -226,12 +226,6 @@
   }
 }
 
-/* Ensure diacritics and other edge-of-font-box glyphs do not get clipped,
- * even in non-Latin scripts. */
-#urlbar-input {
-  line-height: 1.745em;
-}
-
 /* Move the margin to the parent element to properly position the ::after badge */
 moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left > .menu-iconic-icon {
   margin-inline: 0;

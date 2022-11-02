@@ -396,12 +396,6 @@
   color: inherit;
 }
 
-:root[uidensity=compact] .urlbar-page-action,
-:root[uidensity=compact] #urlbar-go-button,
-:root[uidensity=compact] .search-go-button {
-  margin-inline: 1px;
-}
-
 .urlbar-page-action:not([disabled]):hover,
 #urlbar-go-button:hover,
 .search-go-button:hover {
@@ -662,6 +656,10 @@
      around the searchbar in case the searchbar and panel background are the
      same color. */
   border-color: var(--panel-separator-color);
+}
+
+.search-go-button {
+  margin-inline: 1px;
 }
 
 .searchbar-search-button {
