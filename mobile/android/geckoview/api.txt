@@ -1012,6 +1012,17 @@ package org.mozilla.geckoview {
     field public final boolean wrapped;
   }
 
+  public static class GeckoSession.GeckoPrintException extends Exception {
+    ctor protected GeckoPrintException();
+    field public static final int ERROR_PRINT_SETTINGS_SERVICE_NOT_AVAILABLE = -1;
+    field public static final int ERROR_UNABLE_TO_CREATE_PRINT_SETTINGS = -2;
+    field public static final int ERROR_UNABLE_TO_RETRIEVE_CANONICAL_BROWSING_CONTEXT = -3;
+    field public final int code;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.GeckoPrintException.Codes {
+  }
+
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.HeaderFilter {
   }
 
