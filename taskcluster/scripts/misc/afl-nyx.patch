@@ -428,7 +428,7 @@ diff --git a/llvm_mode/afl-clang-fast.c b/llvm_mode/afl-clang-fast.c
 index 6d4171c..5e00286 100644
 --- a/llvm_mode/afl-clang-fast.c
 +++ b/llvm_mode/afl-clang-fast.c
-@@ -178,14 +178,13 @@ static void edit_params(u32 argc, char** argv) {
+@@ -178,14 +178,12 @@ static void edit_params(u32 argc, char** argv) {
       http://clang.llvm.org/docs/SanitizerCoverage.html#tracing-pcs-with-guards */
  if (should_instrument) {
  #ifdef USE_TRACE_PC
@@ -441,7 +441,6 @@ index 6d4171c..5e00286 100644
 -  cc_params[cc_par_cnt++] = "-load";
 -  cc_params[cc_par_cnt++] = "-Xclang";
 -  cc_params[cc_par_cnt++] = alloc_printf("%s/afl-llvm-pass.so", obj_path);
-+  cc_params[cc_par_cnt++] = "-fexperimental-new-pass-manager";
 +  cc_params[cc_par_cnt++] = alloc_printf("-fpass-plugin=%s/afl-llvm-pass.so", obj_path);
  #endif /* ^USE_TRACE_PC */
  }
@@ -698,7 +697,7 @@ diff --git a/llvm_mode/afl-clang-fast.c b/llvm_mode/afl-clang-fast.c
 index 70b6af2..0d1e76b 100644
 --- a/llvm_mode/afl-clang-fast.c
 +++ b/llvm_mode/afl-clang-fast.c
-@@ -180,24 +180,6 @@ static void edit_params(u32 argc, char** argv) {
+@@ -180,23 +180,6 @@ static void edit_params(u32 argc, char** argv) {
  
    }
  
@@ -715,7 +714,6 @@ index 70b6af2..0d1e76b 100644
 -  cc_params[cc_par_cnt++] = "-mllvm";
 -  cc_params[cc_par_cnt++] = "-sanitizer-coverage-block-threshold=0";
 -#else
--  cc_params[cc_par_cnt++] = "-fexperimental-new-pass-manager";
 -  cc_params[cc_par_cnt++] = alloc_printf("-fpass-plugin=%s/afl-llvm-pass.so", obj_path);
 -#endif /* ^USE_TRACE_PC */
 -}
@@ -735,7 +733,7 @@ index 70b6af2..0d1e76b 100644
  
      if (!strcmp(cur, "-Wl,-z,defs") ||
          !strcmp(cur, "-Wl,--no-undefined")) continue;
-@@ -231,6 +216,24 @@ if (should_instrument) {
+@@ -231,6 +216,23 @@ if (should_instrument) {
  
    }
  
@@ -752,7 +750,6 @@ index 70b6af2..0d1e76b 100644
 +    cc_params[cc_par_cnt++] = "-mllvm";
 +    cc_params[cc_par_cnt++] = "-sanitizer-coverage-block-threshold=0";
 +#else
-+    cc_params[cc_par_cnt++] = "-fexperimental-new-pass-manager";
 +    cc_params[cc_par_cnt++] = alloc_printf("-fpass-plugin=%s/afl-llvm-pass.so", obj_path);
 +#endif /* ^USE_TRACE_PC */
 +  }
