@@ -63,7 +63,7 @@
     <item type="bool" name="remote_debugging_default">true</item>
 
     <string name="key_dfpi">dfpi</string>
-    <item type="bool" name="dfpi_default">true</item>
+    <item type="bool" name="dfpi_default">false</item>
 
     <string name="key_autoplay">autoplay</string>
     <item type="bool" name="autoplay_default">false</item>
