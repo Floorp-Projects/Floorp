@@ -5,14 +5,14 @@
 package org.mozilla.focus.telemetry
 
 import androidx.lifecycle.Lifecycle
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.support.ktx.kotlin.crossProduct
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.telemetry.glean.testing.GleanTestRule
-import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
+import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
