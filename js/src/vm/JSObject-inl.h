@@ -504,9 +504,6 @@ inline T* NewBuiltinClassInstance(JSContext* cx, gc::AllocKind allocKind,
   return obj ? &obj->as<T>() : nullptr;
 }
 
-// Used to optimize calls to (new Object())
-bool NewObjectScriptedCall(JSContext* cx, MutableHandleObject obj);
-
 static inline gc::AllocKind GuessArrayGCKind(size_t numElements) {
   if (numElements) {
     return gc::GetGCArrayKind(numElements);
