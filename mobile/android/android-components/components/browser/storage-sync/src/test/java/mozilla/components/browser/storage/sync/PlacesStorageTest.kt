@@ -8,7 +8,7 @@ import android.content.Context
 import kotlinx.coroutines.cancelChildren
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
-import mozilla.appservices.places.uniffi.PlacesException
+import mozilla.appservices.places.uniffi.PlacesApiException
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.test.mock
 import org.junit.Test
@@ -23,7 +23,7 @@ class PlacesStorageTest {
     @Test
     fun `WHEN all reads are interrupted THEN no exception is thrown`() {
         doAnswer {
-            throw PlacesException.OperationInterrupted("This should be caught")
+            throw PlacesApiException.OperationInterrupted("This should be caught")
         }.`when`(storage.reader).interrupt()
 
         storage.interruptCurrentReads()
@@ -34,7 +34,7 @@ class PlacesStorageTest {
     @Test
     fun `WHEN all writes are interrupted THEN no exception is thrown`() {
         doAnswer {
-            throw PlacesException.OperationInterrupted("This should be caught")
+            throw PlacesApiException.OperationInterrupted("This should be caught")
         }.`when`(storage.writer).interrupt()
 
         storage.interruptCurrentWrites()

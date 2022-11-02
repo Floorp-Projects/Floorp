@@ -56,9 +56,9 @@ typealias SyncTelemetryPing = mozilla.appservices.sync15.SyncTelemetryPing
  *
  * For example, caught Rust panics, SQL errors, failure to generate secure
  * random numbers, etc. are all examples of things which will result in a
- * concrete `LoginsStorageException`.
+ * concrete `LoginsApiException`.
  */
-typealias LoginsStorageException = mozilla.appservices.logins.LoginsStorageException
+typealias LoginsApiException = mozilla.appservices.logins.LoginsApiException
 
 /**
  * This indicates that the authentication information (e.g. the [SyncUnlockInfo])
@@ -66,13 +66,13 @@ typealias LoginsStorageException = mozilla.appservices.logins.LoginsStorageExcep
  * stale and should be refreshed with FxA (however, care should be taken not to
  * get into a loop refreshing this information).
  */
-typealias SyncAuthInvalidException = mozilla.appservices.logins.LoginsStorageException.SyncAuthInvalid
+typealias SyncAuthInvalidException = mozilla.appservices.logins.LoginsApiException.SyncAuthInvalid
 
 /**
  * This is thrown if `update()` is performed with a record whose GUID
  * does not exist.
  */
-typealias NoSuchRecordException = mozilla.appservices.logins.LoginsStorageException.NoSuchRecord
+typealias NoSuchRecordException = mozilla.appservices.logins.LoginsApiException.NoSuchRecord
 
 /**
  * This is thrown on attempts to insert or update a record so that it
@@ -83,17 +83,12 @@ typealias NoSuchRecordException = mozilla.appservices.logins.LoginsStorageExcept
  * - A record that doesn't have a `formSubmitURL` nor a `httpRealm` is invalid.
  * - A record that has both a `formSubmitURL` and a `httpRealm` is invalid.
  */
-typealias InvalidRecordException = mozilla.appservices.logins.LoginsStorageException.InvalidRecord
+typealias InvalidRecordException = mozilla.appservices.logins.LoginsApiException.InvalidRecord
 
 /**
  * Error encrypting/decrypting logins data
  */
-typealias IncorrectKey = mozilla.appservices.logins.LoginsStorageException.IncorrectKey
-
-/**
- * This error is emitted if a request to a sync server failed.
- */
-typealias RequestFailedException = mozilla.appservices.logins.LoginsStorageException.RequestFailed
+typealias IncorrectKey = mozilla.appservices.logins.LoginsApiException.IncorrectKey
 
 /**
  * Implements [LoginsStorage] and [SyncableStore] using the application-services logins library.
@@ -127,56 +122,56 @@ class SyncableLoginsStorage(
     }
 
     /**
-     * @throws [LoginsStorageException] if the storage is locked, and on unexpected
+     * @throws [LoginsApiException] if the storage is locked, and on unexpected
      *              errors (IO failure, rust panics, etc)
      */
-    @Throws(LoginsStorageException::class)
+    @Throws(LoginsApiException::class)
     override suspend fun wipe() = withContext(coroutineContext) {
         conn.getStorage().wipe()
     }
 
     /**
-     * @throws [LoginsStorageException] if the storage is locked, and on unexpected
+     * @throws [LoginsApiException] if the storage is locked, and on unexpected
      *              errors (IO failure, rust panics, etc)
      */
-    @Throws(LoginsStorageException::class)
+    @Throws(LoginsApiException::class)
     override suspend fun wipeLocal() = withContext(coroutineContext) {
         conn.getStorage().wipeLocal()
     }
 
     /**
-     * @throws [LoginsStorageException] if the storage is locked, and on unexpected
+     * @throws [LoginsApiException] if the storage is locked, and on unexpected
      *              errors (IO failure, rust panics, etc)
      */
-    @Throws(LoginsStorageException::class)
+    @Throws(LoginsApiException::class)
     override suspend fun delete(guid: String): Boolean = withContext(coroutineContext) {
         conn.getStorage().delete(guid)
     }
 
     /**
-     * @throws [LoginsStorageException] if the storage is locked, and on unexpected
+     * @throws [LoginsApiException] if the storage is locked, and on unexpected
      *              errors (IO failure, rust panics, etc)
      */
-    @Throws(LoginsStorageException::class)
+    @Throws(LoginsApiException::class)
     override suspend fun get(guid: String): Login? = withContext(coroutineContext) {
         conn.getStorage().get(guid)?.toEncryptedLogin()?.let { crypto.decryptLogin(it) }
     }
 
     /**
      * @throws [NoSuchRecordException] if the login does not exist.
-     * @throws [LoginsStorageException] if the storage is locked, and on unexpected
+     * @throws [LoginsApiException] if the storage is locked, and on unexpected
      *              errors (IO failure, rust panics, etc)
      */
-    @Throws(NoSuchRecordException::class, LoginsStorageException::class)
+    @Throws(NoSuchRecordException::class, LoginsApiException::class)
     override suspend fun touch(guid: String) = withContext(coroutineContext) {
         conn.getStorage().touch(guid)
     }
 
     /**
-     * @throws [LoginsStorageException] if the storage is locked, and on unexpected
+     * @throws [LoginsApiException] if the storage is locked, and on unexpected
      *              errors (IO failure, rust panics, etc)
      */
-    @Throws(LoginsStorageException::class)
+    @Throws(LoginsApiException::class)
     override suspend fun list(): List<Login> = withContext(coroutineContext) {
         val key = crypto.getOrGenerateKey()
         conn.getStorage().list().map { crypto.decryptLogin(it.toEncryptedLogin(), key) }
@@ -185,10 +180,10 @@ class SyncableLoginsStorage(
     /**
      * @throws [InvalidRecordException] if the record is invalid.
      * @throws [IncorrectKey] if the encryption key can't decrypt the login
-     * @throws [LoginsStorageException] if the storage is locked, and on unexpected
+     * @throws [LoginsApiException] if the storage is locked, and on unexpected
      *              errors (IO failure, rust panics, etc)
      */
-    @Throws(IncorrectKey::class, InvalidRecordException::class, LoginsStorageException::class)
+    @Throws(IncorrectKey::class, InvalidRecordException::class, LoginsApiException::class)
     override suspend fun add(entry: LoginEntry) = withContext(coroutineContext) {
         conn.getStorage().add(entry.toLoginEntry(), crypto.getOrGenerateKey().key).toEncryptedLogin()
     }
@@ -197,14 +192,14 @@ class SyncableLoginsStorage(
      * @throws [NoSuchRecordException] if the login does not exist.
      * @throws [IncorrectKey] if the encryption key can't decrypt the login
      * @throws [InvalidRecordException] if the update would create an invalid record.
-     * @throws [LoginsStorageException] if the storage is locked, and on unexpected
+     * @throws [LoginsApiException] if the storage is locked, and on unexpected
      *              errors (IO failure, rust panics, etc)
      */
     @Throws(
         IncorrectKey::class,
         NoSuchRecordException::class,
         InvalidRecordException::class,
-        LoginsStorageException::class,
+        LoginsApiException::class,
     )
     override suspend fun update(guid: String, entry: LoginEntry) = withContext(coroutineContext) {
         conn.getStorage().update(guid, entry.toLoginEntry(), crypto.getOrGenerateKey().key).toEncryptedLogin()
@@ -213,10 +208,10 @@ class SyncableLoginsStorage(
     /**
      * @throws [InvalidRecordException] if the update would create an invalid record.
      * @throws [IncorrectKey] if the encryption key can't decrypt the login
-     * @throws [LoginsStorageException] if the storage is locked, and on unexpected
+     * @throws [LoginsApiException] if the storage is locked, and on unexpected
      *              errors (IO failure, rust panics, etc)
      */
-    @Throws(IncorrectKey::class, InvalidRecordException::class, LoginsStorageException::class)
+    @Throws(IncorrectKey::class, InvalidRecordException::class, LoginsApiException::class)
     override suspend fun addOrUpdate(entry: LoginEntry) = withContext(coroutineContext) {
         conn.getStorage().addOrUpdate(entry.toLoginEntry(), crypto.getOrGenerateKey().key).toEncryptedLogin()
     }
@@ -227,18 +222,18 @@ class SyncableLoginsStorage(
 
     /**
      * @throws [IncorrectKey] if the encryption key can't decrypt the login
-     * @throws [LoginsStorageException] If DB isn't empty during an import; also, on unexpected errors
+     * @throws [LoginsApiException] If DB isn't empty during an import; also, on unexpected errors
      * (IO failure, rust panics, etc).
      */
-    @Throws(IncorrectKey::class, LoginsStorageException::class)
+    @Throws(IncorrectKey::class, LoginsApiException::class)
     override suspend fun importLoginsAsync(logins: List<Login>): Unit = withContext(coroutineContext) {
         conn.getStorage().importMultiple(logins.map { it.toLogin() }, crypto.getOrGenerateKey().key)
     }
 
     /**
-     * @throws [LoginsStorageException] On unexpected errors (IO failure, rust panics, etc)
+     * @throws [LoginsApiException] On unexpected errors (IO failure, rust panics, etc)
      */
-    @Throws(LoginsStorageException::class)
+    @Throws(LoginsApiException::class)
     override suspend fun getByBaseDomain(origin: String): List<Login> = withContext(coroutineContext) {
         val key = crypto.getOrGenerateKey()
         conn.getStorage().getByBaseDomain(origin).map { crypto.decryptLogin(it.toEncryptedLogin(), key) }
@@ -246,9 +241,9 @@ class SyncableLoginsStorage(
 
     /**
      * @throws [IncorrectKey] if the encryption key can't decrypt the login
-     * @throws [LoginsStorageException] On unexpected errors (IO failure, rust panics, etc)
+     * @throws [LoginsApiException] On unexpected errors (IO failure, rust panics, etc)
      */
-    @Throws(LoginsStorageException::class)
+    @Throws(LoginsApiException::class)
     override suspend fun findLoginToUpdate(entry: LoginEntry): Login? = withContext(coroutineContext) {
         conn.getStorage().findLoginToUpdate(entry.toLoginEntry(), crypto.getOrGenerateKey().key)?.toLogin()
     }

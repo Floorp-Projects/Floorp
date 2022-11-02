@@ -7,7 +7,7 @@ package mozilla.components.browser.storage.sync
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.appservices.places.uniffi.PlacesException
+import mozilla.appservices.places.uniffi.PlacesApiException
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
@@ -197,7 +197,7 @@ class PlacesBookmarksStorageTest {
             try {
                 bookmarks.deleteNode(root.id)
                 fail("Expected root deletion for ${root.id} to fail")
-            } catch (e: PlacesException.CannotUpdateRoot) {}
+            } catch (e: PlacesApiException.InvalidBookmarkOperation) {}
         }
 
         with(bookmarks.searchBookmarks("mozilla")) {
@@ -212,9 +212,7 @@ class PlacesBookmarksStorageTest {
         try {
             bookmarks.importFromFennec(path)
             fail("Expected v0 database to be unsupported")
-        } catch (e: PlacesException) {
-            // This is a little brittle, but the places library doesn't have a proper error type for this.
-            assertEquals("Unexpected error: Can not import from database version 0", e.message)
+        } catch (e: PlacesApiException) {
         }
     }
 

@@ -13,7 +13,7 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
-import mozilla.appservices.places.uniffi.PlacesException
+import mozilla.appservices.places.uniffi.PlacesApiException
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.storage.Storage
 import mozilla.components.concept.storage.StorageMaintenanceRegistry
@@ -122,16 +122,16 @@ abstract class PlacesStorage(
     protected inline fun handlePlacesExceptions(operation: String, block: () -> Unit) {
         try {
             block()
-        } catch (e: PlacesException.UnexpectedPlacesException) {
+        } catch (e: PlacesApiException.UnexpectedPlacesException) {
             throw e
-        } catch (e: PlacesException.OperationInterrupted) {
+        } catch (e: PlacesApiException.OperationInterrupted) {
             logger.debug("Ignoring expected OperationInterrupted exception when running $operation", e)
-        } catch (e: PlacesException.UrlParseFailed) {
+        } catch (e: PlacesApiException.UrlParseFailed) {
             // it's not uncommon to get a mal-formed url, probably the user typing.
             logger.debug("Ignoring invalid URL while running $operation", e)
-        } catch (e: PlacesException) {
+        } catch (e: PlacesApiException) {
             crashReporter?.submitCaughtException(e)
-            logger.warn("Ignoring PlacesException while running $operation", e)
+            logger.warn("Ignoring PlacesApiException while running $operation", e)
         }
     }
 
@@ -151,25 +151,25 @@ abstract class PlacesStorage(
     ): T {
         return try {
             block()
-        } catch (e: PlacesException.UnexpectedPlacesException) {
+        } catch (e: PlacesApiException.UnexpectedPlacesException) {
             throw e
-        } catch (e: PlacesException.OperationInterrupted) {
+        } catch (e: PlacesApiException.OperationInterrupted) {
             logger.debug("Ignoring expected OperationInterrupted exception when running $operation", e)
             default
-        } catch (e: PlacesException.UrlParseFailed) {
+        } catch (e: PlacesApiException.UrlParseFailed) {
             // it's not uncommon to get a mal-formed url, probably the user typing.
             logger.debug("Ignoring invalid URL while running $operation", e)
             default
-        } catch (e: PlacesException) {
+        } catch (e: PlacesApiException) {
             crashReporter?.submitCaughtException(e)
-            logger.warn("Ignoring PlacesException while running $operation", e)
+            logger.warn("Ignoring PlacesApiException while running $operation", e)
             default
         }
     }
 
     /**
      * Runs a [syncBlock], re-throwing any panics that may be encountered.
-     * @return [SyncStatus.Ok] on success, or [SyncStatus.Error] on non-panic [PlacesException].
+     * @return [SyncStatus.Ok] on success, or [SyncStatus.Error] on non-panic [PlacesApiException].
      */
     protected inline fun syncAndHandleExceptions(syncBlock: () -> Unit): SyncStatus {
         return try {
@@ -179,10 +179,10 @@ abstract class PlacesStorage(
             SyncStatus.Ok
 
             // Order of these catches matters: UnexpectedPlacesException extends PlacesException
-        } catch (e: PlacesException.UnexpectedPlacesException) {
+        } catch (e: PlacesApiException.UnexpectedPlacesException) {
             logger.error("Places panic while syncing", e)
             throw e
-        } catch (e: PlacesException) {
+        } catch (e: PlacesApiException) {
             logger.error("Places exception while syncing", e)
             SyncStatus.Error(e)
         }

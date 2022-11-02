@@ -14,7 +14,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
-import mozilla.appservices.places.uniffi.PlacesException
+import mozilla.appservices.places.uniffi.PlacesApiException
 import mozilla.appservices.places.uniffi.VisitObservation
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.DocumentType
@@ -775,8 +775,8 @@ class PlacesHistoryStorageTest {
 
     @Test
     fun `storage passes through sync exceptions`() = runTestOnMain {
-        // Can be any PlacesException
-        val exception = PlacesException.UrlParseFailed("test error")
+        // Can be any PlacesApiException
+        val exception = PlacesApiException.UrlParseFailed("test error")
         val conn = object : Connection {
             override fun reader(): PlacesReaderConnection {
                 fail()
@@ -829,14 +829,11 @@ class PlacesHistoryStorageTest {
         val result = storage.sync(SyncAuthInfo("kid", "token", 123L, "key", "serverUrl"))
 
         assertTrue(result is SyncStatus.Error)
-
-        val error = result as SyncStatus.Error
-        assertEquals("test error", error.exception.message)
     }
 
-    @Test(expected = PlacesException::class)
+    @Test(expected = PlacesApiException::class)
     fun `storage re-throws sync panics`() = runTestOnMain {
-        val exception = PlacesException.UnexpectedPlacesException("test panic")
+        val exception = PlacesApiException.UnexpectedPlacesException("test panic")
         val conn = object : Connection {
             override fun reader(): PlacesReaderConnection {
                 fail()
@@ -896,9 +893,7 @@ class PlacesHistoryStorageTest {
         try {
             history.importFromFennec(path)
             fail("Expected v0 database to be unsupported")
-        } catch (e: PlacesException) {
-            // This is a little brittle, but the places library doesn't have a proper error type for this.
-            assertEquals("Unexpected error: Can not import from database version 0", e.message)
+        } catch (e: PlacesApiException) {
         }
     }
 
@@ -909,9 +904,7 @@ class PlacesHistoryStorageTest {
         try {
             history.importFromFennec(path)
             fail("Expected v23 database to be unsupported")
-        } catch (e: PlacesException) {
-            // This is a little brittle, but the places library doesn't have a proper error type for this.
-            assertEquals("Unexpected error: Can not import from database version 23", e.message)
+        } catch (e: PlacesApiException) {
         }
     }
 
@@ -1394,7 +1387,7 @@ class PlacesHistoryStorageTest {
     fun `safe read from places`() = runTestOnMain {
         val result = history.handlePlacesExceptions("test", default = emptyList<HistoryMetadata>()) {
             // Can be any PlacesException error
-            throw PlacesException.PlacesConnectionBusy("test")
+            throw PlacesApiException.PlacesConnectionBusy("test")
         }
         assertEquals(emptyList<HistoryMetadata>(), result)
     }
@@ -1402,7 +1395,7 @@ class PlacesHistoryStorageTest {
     @Test
     fun `interrupted read from places is not reported to crash services and returns the default`() = runTestOnMain {
         val result = history.handlePlacesExceptions("test", default = emptyList<HistoryMetadata>()) {
-            throw PlacesException.OperationInterrupted("An interrupted in progress query will throw")
+            throw PlacesApiException.OperationInterrupted("An interrupted in progress query will throw")
         }
 
         verify(history.crashReporter!!, never()).submitCaughtException(any())

@@ -6,7 +6,7 @@ package mozilla.components.service.sync.autofill
 
 import android.content.Context
 import android.content.SharedPreferences
-import mozilla.appservices.autofill.AutofillException
+import mozilla.appservices.autofill.AutofillApiException
 import mozilla.appservices.autofill.decryptString
 import mozilla.appservices.autofill.encryptString
 import mozilla.components.concept.storage.CreditCardCrypto
@@ -41,10 +41,7 @@ class AutofillCrypto(
     ): CreditCardNumber.Encrypted? {
         return try {
             CreditCardNumber.Encrypted(encryptString(key.key, plaintextCardNumber.number))
-        } catch (e: AutofillException.JsonException) {
-            logger.warn("Failed to encrypt", e)
-            null
-        } catch (e: AutofillException.CryptoException) {
+        } catch (e: AutofillApiException) {
             logger.warn("Failed to encrypt", e)
             null
         }
@@ -56,10 +53,7 @@ class AutofillCrypto(
     ): CreditCardNumber.Plaintext? {
         return try {
             CreditCardNumber.Plaintext(decryptString(key.key, encryptedCardNumber.number))
-        } catch (e: AutofillException.JsonException) {
-            logger.warn("Failed to decrypt", e)
-            null
-        } catch (e: AutofillException.CryptoException) {
+        } catch (e: AutofillApiException) {
             logger.warn("Failed to decrypt", e)
             null
         }
@@ -74,9 +68,7 @@ class AutofillCrypto(
             } else {
                 KeyGenerationReason.RecoveryNeeded.Corrupt
             }
-        } catch (e: AutofillException.JsonException) {
-            KeyGenerationReason.RecoveryNeeded.Corrupt
-        } catch (e: AutofillException.CryptoException) {
+        } catch (e: AutofillApiException) {
             KeyGenerationReason.RecoveryNeeded.Corrupt
         }
     }

@@ -35,7 +35,7 @@ class DefaultLoginValidationDelegate(
         return scope.async {
             val foundLogin = try {
                 storage.value.findLoginToUpdate(entry)
-            } catch (e: LoginsStorageException) {
+            } catch (e: LoginsApiException) {
                 logger.warn("Failure in shouldUpdateOrCreateAsync: $e")
                 crashReporting?.submitCaughtException(e)
                 null

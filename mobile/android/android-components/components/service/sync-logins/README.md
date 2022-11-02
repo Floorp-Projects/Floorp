@@ -51,17 +51,15 @@ This implements the login-related interfaces from `mozilla.components.concept.st
 
 ### Which exceptions do I need to handle?
 
-It depends, but probably only `SyncAuthInvalidException`, but potentially `CryptoError`.
+It depends, but probably only `SyncAuthInvalid`, but potentially `IncorrectKey`.
 
-- You need to handle `SyncAuthInvalidException`. You can do this by refreshing the FxA authentication (you should only do this once, and not in e.g. a loop). Most/All consumers will need to do this.
+- You need to handle `SyncAuthInvalid`. You can do this by refreshing the FxA authentication (you should only do this once, and not in e.g. a loop). Most/All consumers will need to do this.
 
-- `CryptoError`: If you're sure the key you have used is valid, the only way to handle this is likely to delete the file containing the database (as the data is unreadable without the key). On the bright side, for sync users it should all be pulled down on the next sync.
+- `IncorrectKey`: If you're sure the key you have used is valid, the only way to handle this is likely to delete the file containing the database (as the data is unreadable without the key). On the bright side, for sync users it should all be pulled down on the next sync.
 
-- `MismatchedLockException`, `NoSuchRecordException`, `InvalidRecordException` all indicate problems with either your code or the arguments given to various functions. You may trigger and handle these if you like (it may be more convenient in some scenarios), but code that wishes to completely avoid them should be able to.
+- `NoSuchRecord`, `InvalidRecord` all indicate problems with either your code or the arguments given to various functions. You may trigger and handle these if you like (it may be more convenient in some scenarios), but code that wishes to completely avoid them should be able to.
 
-- `RequestFailedException`: This indicates a network error and it's probably safe to ignore this; or rather, you probably have some idea already about how you want to handle network errors.
-
-The errors reported as "raw" `LoginsStorageException` are things like Rust panics, errors reported by OpenSSL or SQLcipher, corrupt data on the server (things that are not JSON after decryption), bugs in our code, etc. You don't need to handle these, and it would likely be beneficial (but of course not necessary) to report them via some sort of telemetry, if any is available.
+The errors reported as "raw" `LoginsApiException` are things like Rust panics, errors reported by OpenSSL or SQLcipher, corrupt data on the server (things that are not JSON after decryption), bugs in our code, etc. You don't need to handle these, and it would likely be beneficial (but of course not necessary) to report them via some sort of telemetry, if any is available.
 
 ### Can I use an in-memory SQLcipher connection with `DatabaseLoginsStorage`?
 

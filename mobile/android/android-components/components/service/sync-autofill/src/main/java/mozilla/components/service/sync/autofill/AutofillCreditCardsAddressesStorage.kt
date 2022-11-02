@@ -10,7 +10,7 @@ import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
-import mozilla.appservices.autofill.AutofillException.NoSuchRecord
+import mozilla.appservices.autofill.AutofillApiException.NoSuchRecord
 import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardNumber
