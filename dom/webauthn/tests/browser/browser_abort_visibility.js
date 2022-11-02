@@ -211,11 +211,8 @@ add_task(async function test_new_window_get() {
 });
 
 add_task(async function test_minimize_make() {
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
   // Minimizing windows doesn't supported in headless mode.
-  if (env.get("MOZ_HEADLESS")) {
+  if (Services.env.get("MOZ_HEADLESS")) {
     return;
   }
 
@@ -244,11 +241,8 @@ add_task(async function test_minimize_make() {
 });
 
 add_task(async function test_minimize_get() {
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
   // Minimizing windows doesn't supported in headless mode.
-  if (env.get("MOZ_HEADLESS")) {
+  if (Services.env.get("MOZ_HEADLESS")) {
     return;
   }
 
