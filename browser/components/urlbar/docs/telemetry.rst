@@ -500,6 +500,16 @@ Top Sites Impression
   - ``locale``
     User's current locale.
 
+Changelog
+  Firefox 108.0
+    The impression ping is sent for Pocket sponsored tiles as well. Pocket sponsored tiles have different values for ``advertiser`` and ``reporting_url`` is null. [Bug 1794022_]
+
+  Firefox 87.0
+    Introduced. [Non_public_doc_]
+
+.. _Non_public_doc: https://docs.google.com/document/d/1qLb4hUwR8YQj5QnjJtwxQIoDCPLQ6XuAmJPQ6_WmS4E/edit
+.. _1794022: https://bugzilla.mozilla.org/show_bug.cgi?id=1794022
+
 Top Sites Click
   This records a click ping when a sponsored top site is clicked by the user.
 
@@ -523,6 +533,14 @@ Top Sites Click
     Firefox release channel.
   - ``locale``
     User's current locale.
+
+Changelog
+  Firefox 108.0
+    The click ping is sent for Pocket sponsored tiles as well. Pocket sponsored tiles have different values for ``advertiser`` and ``reporting_url`` is null. [Bug 1794022_]
+
+  Firefox 87.0
+    Introduced. [Non_public_doc_]
+
 
 Other telemetry relevant to the Address Bar
 -------------------------------------------
