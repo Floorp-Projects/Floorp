@@ -50,6 +50,12 @@ def register(graph_config):
     from gecko_taskgraph import (  # noqa: trigger target task method registration
         target_tasks,
     )
+    from gecko_taskgraph import generator
     from gecko_taskgraph import morph  # noqa: trigger morph registration
+    from gecko_taskgraph.util.verify import verifications
+
+    # Don't use the upstream verifications, and replace them with our own.
+    # TODO Investigate merging our verifications with upstream.
+    generator.verifications = verifications
 
     register_parameters()
