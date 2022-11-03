@@ -6,13 +6,9 @@ package mozilla.components.feature.contextmenu
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.LabeledIntent
 import android.net.Uri
-import android.os.Build
-import android.os.Parcelable
 import android.view.View
 import androidx.annotation.VisibleForTesting
 import com.google.android.material.snackbar.Snackbar
@@ -24,10 +20,10 @@ import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion.MAX_TITLE_LENGTH
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.android.content.addContact
+import mozilla.components.support.ktx.android.content.createChooserExcludingCurrentApp
 import mozilla.components.support.ktx.android.content.share
 import mozilla.components.support.ktx.kotlin.stripMailToProtocol
 import mozilla.components.support.ktx.kotlin.takeOrReplace
-import mozilla.components.support.utils.ext.queryIntentActivitiesCompat
 
 /**
  * A candidate for an item to be displayed in the context menu.
@@ -443,72 +439,13 @@ data class ContextMenuCandidate(
                     putExtra(Intent.EXTRA_TEXT, hitResult.getLink())
                 }
                 context.startActivity(
-                    createShareIntent(
-                        intent,
+                    intent.createChooserExcludingCurrentApp(
                         context,
                         context.getString(R.string.mozac_feature_contextmenu_share_link),
                     ),
                 )
             },
         )
-
-        /**
-         * Create a "Share link" intent chooser excluding the current app
-         */
-        private fun createShareIntent(
-            intent: Intent,
-            context: Context,
-            title: CharSequence,
-        ): Intent {
-            val chooserIntent: Intent
-            val resolveInfos = context.packageManager.queryIntentActivitiesCompat(intent, 0).toHashSet()
-
-            val excludedComponentNames = resolveInfos
-                .map { it.activityInfo }
-                .filter { it.packageName == context.packageName }
-                .map { ComponentName(it.packageName, it.name) }
-
-            // Starting with Android N we can use Intent.EXTRA_EXCLUDE_COMPONENTS to exclude components
-            // other way we are constrained to use Intent.EXTRA_INITIAL_INTENTS.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                chooserIntent = Intent.createChooser(intent, title)
-                    .putExtra(
-                        Intent.EXTRA_EXCLUDE_COMPONENTS,
-                        excludedComponentNames.toTypedArray(),
-                    )
-            } else {
-                var targetIntents = resolveInfos
-                    .filterNot { it.activityInfo.packageName == context.packageName }
-                    .map { resolveInfo ->
-                        val activityInfo = resolveInfo.activityInfo
-                        val targetIntent = Intent(intent).apply {
-                            component = ComponentName(activityInfo.packageName, activityInfo.name)
-                        }
-                        LabeledIntent(
-                            targetIntent,
-                            activityInfo.packageName,
-                            resolveInfo.labelRes,
-                            resolveInfo.icon,
-                        )
-                    }
-
-                // Sometimes on Android M and below an empty chooser is displayed, problem reported also here
-                // https://issuetracker.google.com/issues/37085761
-                // To fix that we are creating a chooser with an empty intent
-                chooserIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    Intent.createChooser(Intent(), title)
-                } else {
-                    targetIntents = targetIntents.toMutableList()
-                    Intent.createChooser(targetIntents.removeAt(0), title)
-                }
-                chooserIntent.putExtra(
-                    Intent.EXTRA_INITIAL_INTENTS,
-                    targetIntents.toTypedArray<Parcelable>(),
-                )
-            }
-            chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            return chooserIntent
-        }
 
         /**
          * Context Menu item: "Share image"
