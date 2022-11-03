@@ -9434,10 +9434,10 @@ void nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   CSSOrderAwareFrameIterator iter(
       this, kPrincipalList, CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
       order);
+  const auto flags = DisplayFlagsForFlexOrGridItem();
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* child = *iter;
-    BuildDisplayListForChild(aBuilder, child, aLists,
-                             child->DisplayFlagForFlexOrGridItem());
+    BuildDisplayListForChild(aBuilder, child, aLists, flags);
   }
 }
 

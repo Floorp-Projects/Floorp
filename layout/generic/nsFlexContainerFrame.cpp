@@ -2859,10 +2859,10 @@ void nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       this, kPrincipalList, CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
       OrderStateForIter(this), OrderingPropertyForIter(this));
 
+  const auto flags = DisplayFlagsForFlexOrGridItem();
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* childFrame = *iter;
-    BuildDisplayListForChild(aBuilder, childFrame, childLists,
-                             childFrame->DisplayFlagForFlexOrGridItem());
+    BuildDisplayListForChild(aBuilder, childFrame, childLists, flags);
   }
 
   tempLists.MoveTo(aLists);
