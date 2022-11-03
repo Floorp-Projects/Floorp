@@ -1,0 +1,14 @@
+schema: 1
+
+bugzilla:
+  product: "Toolkit"
+  component: "XUL Widgets"
+
+origin:
+  name: "lit"
+  description:
+    "Lit is a simple library for building fast, lightweight web components."
+  url: "https://github.com/lit/lit"
+  license: "BSD-3-Clause"
+  release: "2.4.0"
+  revision: "lit@2.4.0"

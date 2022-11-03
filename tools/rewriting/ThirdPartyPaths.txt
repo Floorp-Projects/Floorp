@@ -176,6 +176,7 @@ toolkit/components/url-classifier/chromium/
 toolkit/components/utils/mozjexl.js
 toolkit/components/viaduct/fetch_msg_types.pb.cc
 toolkit/components/viaduct/fetch_msg_types.pb.h
+toolkit/content/widgets/vendor/lit.all.mjs
 toolkit/crashreporter/breakpad-client/
 toolkit/crashreporter/google-breakpad/
 tools/fuzzing/libfuzzer/
