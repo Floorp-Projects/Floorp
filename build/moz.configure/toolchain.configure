@@ -1492,10 +1492,12 @@ set_config("CXX_IS_ICECREAM", cxx_is_icecream)
 # For other OSes:
 # - on local developer builds: lld is used if present. Otherwise gold is used if present
 #   otherwise, BFD ld is used.
-# - on release/official builds: whatever "ld" resolves to is used, except on Android x86/x86_64
-#   where BFD ld is used. Usually, "ld" resolves to BFD ld, except with the Android NDK,
-#   where it resolves to gold. lld is not used by default on Linux and Android because
-#   it introduces layout changes that prevent elfhack from working. See e.g.
+# - on release/official builds: whatever the compiler uses by default, except on Android
+#   (see enable_linker_default below). Usually what the compiler uses by default is BFD
+#   ld, except with the Android NDK compiler, where the default varies depending on the
+#   NDK version. The default also varies by platform and clang version.
+#   lld is not used by default on Linux and Android because it introduces layout changes
+#   that prevent elfhack from working. See e.g.
 #   https://bugzilla.mozilla.org/show_bug.cgi?id=1563654#c2.
 @depends(target)
 def is_linker_option_enabled(target):
@@ -1513,11 +1515,17 @@ def enable_gold(value):
 
 @depends(target, developer_options)
 def enable_linker_default(target, developer_options):
-    # x86-64 gold has bugs in how it lays out .note.* sections. See bug 1573820.
-    # x86-32 gold has a bug when assembly files are built. See bug 1651699.
-    # lld is faster, so prefer that for developer builds.
-    if target.os == "Android" and target.cpu in ("x86", "x86_64"):
-        return "lld" if developer_options else "bfd"
+    # Recent versions of clang default to lld when targetting Android, but we don't
+    # want that as the default for non developer builds (see above).
+    # So we want to force the default to whatever it was with older versions of clang,
+    # but with caveats/workarounds:
+    # - x86-64 gold has bugs in how it lays out .note.* sections. See bug 1573820.
+    # - x86-32 gold has a bug when assembly files are built. See bug 1651699.
+    # That leaves us with aarch64 and armv7, which respectively defaulted to
+    # bfd and gold.
+    # On developer builds, select_linker will pick lld if it's not the default.
+    if target.os == "Android" and not developer_options:
+        return "bfd" if target.cpu in ("x86", "x86_64", "aarch64") else "gold"
 
 
 option(
