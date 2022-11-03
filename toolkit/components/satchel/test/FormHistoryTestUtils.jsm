@@ -130,13 +130,7 @@ var FormHistoryTestUtils = {
    * @resolves {Array} Array of found form history entries.
    */
   search(fieldname, filters = {}) {
-    return new Promise((resolve, reject) => {
-      lazy.FormHistory.search(
-        null,
-        Object.assign({ fieldname }, filters),
-        this.makeListener(resolve, reject)
-      );
-    });
+    return lazy.FormHistory.search(null, Object.assign({ fieldname }, filters));
   },
 
   /**

@@ -1043,7 +1043,7 @@ FormHistory = {
     return defaultHandlers;
   },
 
-  search(aSelectTerms, aSearchData, aRowFuncOrHandlers) {
+  async search(aSelectTerms, aSearchData, aRowFunc) {
     // if no terms selected, select everything
     if (!aSelectTerms) {
       // Source is not a valid column in moz_formhistory.
@@ -1058,45 +1058,21 @@ FormHistory = {
       query += " WHERE " + queryTerms;
     }
 
-    let handlers;
-
-    if (typeof aRowFuncOrHandlers == "function") {
-      handlers = this._prepareHandlers();
-      handlers.handleResult = aRowFuncOrHandlers;
-    } else if (typeof aRowFuncOrHandlers == "object") {
-      handlers = this._prepareHandlers(aRowFuncOrHandlers);
-    }
-
     let allResults = [];
 
-    return new Promise((resolve, reject) => {
-      this.db.then(async conn => {
-        try {
-          await conn.executeCached(query, params, row => {
-            let result = {};
-            for (let field of aSelectTerms) {
-              result[field] = row.getResultByName(field);
-            }
-
-            if (handlers) {
-              handlers.handleResult(result);
-            } else {
-              allResults.push(result);
-            }
-          });
-          if (handlers) {
-            handlers.handleCompletion(0);
-          }
-          resolve(allResults);
-        } catch (e) {
-          if (handlers) {
-            handlers.handleError(e);
-            handlers.handleCompletion(1);
-          }
-          reject(e);
-        }
-      });
+    let conn = await this.db;
+    await conn.executeCached(query, params, row => {
+      let result = {};
+      for (let field of aSelectTerms) {
+        result[field] = row.getResultByName(field);
+      }
+      if (aRowFunc) {
+        aRowFunc(result);
+      }
+      allResults.push(result);
     });
+
+    return allResults;
   },
 
   count(aSearchData, aHandlers) {
@@ -1128,12 +1104,6 @@ FormHistory = {
   },
 
   async update(aChanges, aHandlers) {
-    // Used to keep track of how many searches have been started. When that number
-    // are finished, updateFormHistoryWrite can be called.
-    let numSearches = 0;
-    let completedSearches = 0;
-    let searchFailed = false;
-
     function validIdentifier(change) {
       // The identifier is only valid if one of either the guid
       // or the (fieldname/value) are set (so an X-OR)
@@ -1206,68 +1176,37 @@ FormHistory = {
           );
       }
 
-      numSearches++;
-      let changeToUpdate = change;
-      FormHistory.search(
-        ["guid"],
-        {
+      try {
+        let results = await FormHistory.search(["guid"], {
           fieldname: change.fieldname,
           value: change.value,
-        },
-        {
-          foundResult: false,
-          handleResult(aResult) {
-            if (this.foundResult) {
-              log(
-                "Database contains multiple entries with the same fieldname/value pair."
-              );
-              handlers.handleError({
-                message:
-                  "Database contains multiple entries with the same fieldname/value pair.",
-                result: 19, // Constraint violation
-              });
-
-              searchFailed = true;
-              return;
-            }
-
-            this.foundResult = true;
-            changeToUpdate.guid = aResult.guid;
-          },
-
-          handleError(aError) {
-            handlers.handleError(aError);
-          },
-
-          async handleCompletion(aReason) {
-            completedSearches++;
-            if (completedSearches == numSearches) {
-              if (!aReason && !searchFailed) {
-                try {
-                  await updateFormHistoryWrite(aChanges);
-                  handlers.handleCompletion(0);
-                } catch (e) {
-                  handlers.handleError(e);
-                  handlers.handleCompletion(1);
-                }
-              } else {
-                handlers.handleCompletion(1);
-              }
-            }
-          },
+        });
+        if (results.length > 1) {
+          log(
+            "Database contains multiple entries with the same fieldname/value pair."
+          );
+          handlers.handleError({
+            message:
+              "Database contains multiple entries with the same fieldname/value pair.",
+            result: 19, // Constraint violation
+          });
+          handlers.handleCompletion(1);
+          return;
         }
-      );
-    }
-
-    if (numSearches == 0) {
-      // We don't have to wait for any statements to return.
-      try {
-        await updateFormHistoryWrite(aChanges);
-        handlers.handleCompletion(0);
+        change.guid = results[0]?.guid;
       } catch (e) {
         handlers.handleError(e);
         handlers.handleCompletion(1);
+        return;
       }
+    }
+
+    try {
+      await updateFormHistoryWrite(aChanges);
+      handlers.handleCompletion(0);
+    } catch (e) {
+      handlers.handleError(e);
+      handlers.handleCompletion(1);
     }
   },
 

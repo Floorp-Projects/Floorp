@@ -322,17 +322,8 @@ class TestFirefoxRefresh(MarionetteTestCase):
             """
           let resolve = arguments[arguments.length - 1];
           let results = [];
-          global.FormHistory.search(["value"], {fieldname: arguments[0]}, {
-            handleError(error) {
-              results = error;
-            },
-            handleResult(result) {
-              results.push(result);
-            },
-            handleCompletion() {
-              resolve(results);
-            },
-          });
+          global.FormHistory.search(["value"], {fieldname: arguments[0]})
+            .then(resolve);
         """,
             script_args=(self._formHistoryFieldName,),
         )
