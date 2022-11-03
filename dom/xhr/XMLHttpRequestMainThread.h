@@ -571,35 +571,17 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
     NS_DECL_NSIHTTPHEADERVISITOR
     nsHeaderVisitor(const XMLHttpRequestMainThread& aXMLHttpRequest,
                     NotNull<nsIHttpChannel*> aHttpChannel);
-
-    void MergeDuplicateHeaders() {
-      if (mHeaderList.IsEmpty()) {
-        return;
-      }
-
-      mHeaders.Append(mHeaderList.ElementAt(0).mName);
-      mHeaders.AppendLiteral(": ");
-      mHeaders.Append(mHeaderList.ElementAt(0).mValue);
-
-      for (uint32_t i = 1; i < mHeaderList.Length(); i++) {
+    const nsACString& Headers() {
+      for (uint32_t i = 0; i < mHeaderList.Length(); i++) {
         HeaderEntry& header = mHeaderList.ElementAt(i);
-        HeaderEntry& prevHeader = mHeaderList.ElementAt(i - 1);
 
-        if (header.mName != prevHeader.mName) {
-          mHeaders.AppendLiteral("\r\n");
-          mHeaders.Append(header.mName);
-          mHeaders.AppendLiteral(": ");
-          mHeaders.Append(header.mValue);
-        } else {
-          mHeaders.AppendLiteral(", ");
-          mHeaders.Append(header.mValue);
-        }
+        mHeaders.Append(header.mName);
+        mHeaders.AppendLiteral(": ");
+        mHeaders.Append(header.mValue);
+        mHeaders.AppendLiteral("\r\n");
       }
-
-      mHeaders.AppendLiteral("\r\n");
+      return mHeaders;
     }
-
-    const nsACString& Headers() { return mHeaders; }
 
    private:
     virtual ~nsHeaderVisitor();
