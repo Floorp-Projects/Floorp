@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">பக்கத்தை ஏற்றுவதில் சிக்கல்</string>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">மீண்டும் முயற்சி செய்</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">பின் செல்க</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">கோரிக்கையை முடிக்க முடியவில்லை</string>
@@ -47,6 +42,15 @@
 
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">இடரை ஏற்றுத் தொடருங்கள்</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">இந்த இணையத் தளத்திற்குப் பாதுகாப்பான இணைப்பு தேவை.</string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">மேம்பட்டது…</string>
+
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">பின் செல்க</string>
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">இணைப்பில் தடங்கல் உள்ளது</string>
@@ -268,4 +272,11 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
       <p>%1$s இல் உள்ள இந்த வலைப்பக்கம் ஒரு ஏமாற்றும் தளமாக புகாரளிக்கப்பட்டுள்ளது மற்றும் உங்கள் பாதுகாப்பு விருப்பங்களின் அடிப்படையில் தடுக்கப்பட்டுள்ளது.</p>
     ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">பாதுகாப்பான தளம் கிடைக்கப்பெறவில்லை</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[மேம்படுத்தப்பட்ட பாதுகாப்பிற்காக நீங்கள் HTTPS-மட்டும் பயன்முறையை இயக்கியுள்ளீர்கள், ஆனால் <em>%1$s</em> இன் HTTPS பதிப்பு கிடைக்கவில்லை.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">HTTP தளத்தில் தொடரவும்</string>
 </resources>

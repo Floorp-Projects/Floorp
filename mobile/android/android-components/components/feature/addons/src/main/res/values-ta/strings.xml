@@ -160,6 +160,8 @@
     <string name="mozac_add_on_install_progress_caption">மேற்சேர்க்கையைப் பதிவிறக்கிச் சரிபார்க்கிறது…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
     <string name="mozac_feature_addons_failed_to_query_add_ons">மேற்சேர்க்கை வினவல் தோல்வி!</string>
+    <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
+    <string name="mozac_feature_addons_failed_to_translate">மொழிபெயர்ப்பு %1$s மொழிக்கும், இயல்பு மொழி %2$sக்கும்  கிடைக்கவில்லை</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">%1$s வெற்றிகரமாக நிறுவப்பட்டது</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
