@@ -1790,8 +1790,8 @@ inline bool OpIter<Policy>::readLinearMemoryAddress(
 
   IndexType it = env_.memory->indexType();
 
-  uint8_t alignLog2;
-  if (!readFixedU8(&alignLog2)) {
+  uint32_t alignLog2;
+  if (!readVarU32(&alignLog2)) {
     return fail("unable to read load alignment");
   }
 
