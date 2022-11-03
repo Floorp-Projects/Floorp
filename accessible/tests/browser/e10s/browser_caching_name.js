@@ -225,20 +225,6 @@ const markupTests = [
     ],
   },
   {
-    id: "imgemptyalt",
-    ruleset: "HTMLImgEmptyAlt",
-    markup: `
-    <span id="l1">test2</span>
-    <span id="l2">test3</span>
-    <img id="imgemptyalt"
-         aria-label="Logo of Mozilla"
-         aria-labelledby="l1 l2"
-         title="This is a logo"
-         alt=""
-         src="http://example.com/a11y/accessible/tests/mochitest/moz.png"/>`,
-    expected: ["test2 test3", "Logo of Mozilla", "This is a logo", ""],
-  },
-  {
     id: "tc",
     ruleset: "HTMLElm",
     markup: `

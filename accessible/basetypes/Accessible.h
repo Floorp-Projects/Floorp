@@ -41,12 +41,6 @@ enum ENameValueFlag {
   eNameOK,
 
   /**
-   * Name was left empty by the author on purpose:
-   * name.IsEmpty() && !name.IsVoid().
-   */
-  eNoNameOnPurpose,
-
-  /**
    * Name was computed from the subtree.
    */
   eNameFromSubtree,
