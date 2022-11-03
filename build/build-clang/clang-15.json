@@ -15,6 +15,7 @@
         "llvmorg-16-init-7778-g232e0a011e8c.patch",
         "llvmorg-16-init-8264-gc34caa9120a4.patch",
         "llvmorg-16-init-9438-g8c49b01a1ee0.patch",
+        "compiler-rt-rss-limit-heap-profile.patch",
         "profdata-compat.patch"
     ]
 }
