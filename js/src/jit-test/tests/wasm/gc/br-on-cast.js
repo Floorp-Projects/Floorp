@@ -52,7 +52,7 @@ invalidTyping('(type $a (struct))', '$a', ['i32', 'f32', 'eqref'], ['f32', 'i32'
 {
   let { makeA, makeB, isA, isB } = wasmEvalText(`(module
     (type $a (struct))
-    (type $b (struct (field i32)))
+    (sub $a (type $b (struct (field i32))))
 
     (func (export "makeA") (result eqref)
       struct.new_default $a
@@ -91,7 +91,7 @@ invalidTyping('(type $a (struct))', '$a', ['i32', 'f32', 'eqref'], ['f32', 'i32'
   let b = makeB();
 
   assertEq(isA(a), 1);
-  assertEq(isA(b), 0);
+  assertEq(isA(b), 1);
   assertEq(isB(a), 0);
   assertEq(isB(b), 1);
 }

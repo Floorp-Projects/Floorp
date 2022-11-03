@@ -117,7 +117,7 @@ function checkInvalid(body, errorMessage) {
 wasmEvalText(
     `(module
       (type $node (struct (field (mut (ref null $node)))))
-      (type $nix (struct (field (mut (ref null $node))) (field i32)))
+      (sub $node (type $nix (struct (field (mut (ref null $node))) (field i32))))
       (func $f (param $p (ref null $node)) (param $q (ref null $nix))
        (struct.set $node 0 (local.get $p) (local.get $q))))`);
 
@@ -139,7 +139,7 @@ assertErrorMessage(() => wasmEvalText(
 assertEq(wasmEvalText(
     `(module
       (type $node (struct (field i32)))
-      (type $node2 (struct (field i32) (field f32)))
+      (sub $node (type $node2 (struct (field i32) (field f32))))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
        (ref.cast $node2 (local.get $p)))
       (func (export "test") (result i32)
@@ -153,7 +153,7 @@ assertEq(wasmEvalText(
 assertEq(wasmEvalText(
     `(module
       (type $node (struct (field (mut i32))))
-      (type $node2 (struct (field (mut i32)) (field f32)))
+      (sub $node (type $node2 (struct (field (mut i32)) (field f32))))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
        (ref.cast $node2 (local.get $p)))
       (func (export "test") (result i32)
