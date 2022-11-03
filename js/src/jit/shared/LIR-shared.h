@@ -19,6 +19,57 @@ namespace jit {
 
 LIR_OPCODE_CLASS_GENERATED
 
+#ifdef FUZZING_JS_FUZZILLI
+class LFuzzilliHashT : public LInstructionHelper<1, 1, 2> {
+ public:
+  LIR_HEADER(FuzzilliHashT);
+
+  LFuzzilliHashT(const LAllocation& value, const LDefinition& temp,
+                 const LDefinition& tempFloat)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, value);
+    setTemp(0, temp);
+    setTemp(1, tempFloat);
+  }
+
+  const LAllocation* value() { return getOperand(0); }
+
+  MFuzzilliHash* mir() const { return mir_->toFuzzilliHash(); }
+};
+
+class LFuzzilliHashV : public LInstructionHelper<1, BOX_PIECES, 2> {
+ public:
+  LIR_HEADER(FuzzilliHashV);
+
+  LFuzzilliHashV(const LBoxAllocation& value, const LDefinition& temp,
+                 const LDefinition& tempFloat)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(0, value);
+    setTemp(0, temp);
+    setTemp(1, tempFloat);
+  }
+
+  MFuzzilliHash* mir() const { return mir_->toFuzzilliHash(); }
+};
+
+class LFuzzilliHashStore : public LInstructionHelper<0, 1, 2> {
+ public:
+  LIR_HEADER(FuzzilliHashStore);
+
+  LFuzzilliHashStore(const LAllocation& value, const LDefinition& temp1,
+                     const LDefinition& temp2)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, value);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
+  }
+
+  const LAllocation* value() { return getOperand(0); }
+
+  MFuzzilliHashStore* mir() const { return mir_->toFuzzilliHashStore(); }
+};
+#endif
+
 class LBox : public LInstructionHelper<BOX_PIECES, 1, 0> {
   MIRType type_;
 

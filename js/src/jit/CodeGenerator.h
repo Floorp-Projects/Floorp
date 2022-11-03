@@ -369,6 +369,13 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   // Bit mask of JitRealm stubs that are to be read-barriered.
   uint32_t realmStubsToReadBarrier_;
 
+#ifdef FUZZING_JS_FUZZILLI
+  void emitFuzzilliHashDouble(FloatRegister floatDouble, Register scratch,
+                              Register output);
+  void emitFuzzilliHashObject(LInstruction* lir, Register obj, Register output);
+  void emitFuzzilliHashBigInt(Register bigInt, Register output);
+#endif
+
 #define LIR_OP(op) void visit##op(L##op* ins);
   LIR_OPCODE_LIST(LIR_OP)
 #undef LIR_OP
