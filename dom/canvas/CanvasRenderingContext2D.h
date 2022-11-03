@@ -372,6 +372,18 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
                double aRotation, double aStartAngle, double aEndAngle,
                bool aAnticlockwise, ErrorResult& aError) override;
 
+  void GetMozCurrentTransform(JSContext* aCx,
+                              JS::MutableHandle<JSObject*> aResult,
+                              mozilla::ErrorResult& aError);
+  void SetMozCurrentTransform(JSContext* aCx,
+                              JS::Handle<JSObject*> aCurrentTransform,
+                              mozilla::ErrorResult& aError);
+  void GetMozCurrentTransformInverse(JSContext* aCx,
+                                     JS::MutableHandle<JSObject*> aResult,
+                                     mozilla::ErrorResult& aError);
+  void SetMozCurrentTransformInverse(JSContext* aCx,
+                                     JS::Handle<JSObject*> aCurrentTransform,
+                                     mozilla::ErrorResult& aError);
   void GetFillRule(nsAString& aFillRule);
   void SetFillRule(const nsAString& aFillRule);
 
