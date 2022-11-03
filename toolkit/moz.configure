@@ -1459,7 +1459,16 @@ with only_when("--enable-compile-environment"):
             help="{Enable|Disable} elf hacks",
         )
 
-        set_config("USE_ELF_HACK", depends_if("--enable-elf-hack")(lambda _: True))
+        @depends(select_linker, when="--enable-elf-hack")
+        def use_elf_hack(linker):
+            if linker and linker.KIND == "lld":
+                die(
+                    "Cannot enable elfhack with lld."
+                    " Use --enable-linker=bfd, --enable-linker=gold, or --disable-elf-hack"
+                )
+            return True
+
+        set_config("USE_ELF_HACK", use_elf_hack)
 
 
 @depends(build_environment)
