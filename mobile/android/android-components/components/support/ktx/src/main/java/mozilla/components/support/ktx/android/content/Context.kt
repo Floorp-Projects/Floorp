@@ -107,11 +107,12 @@ fun Context.share(text: String, subject: String = getString(R.string.mozac_suppo
             flags = FLAG_ACTIVITY_NEW_TASK
         }
 
-        val shareIntent = Intent.createChooser(intent, getString(R.string.mozac_support_ktx_menu_share_with)).apply {
-            flags = FLAG_ACTIVITY_NEW_TASK
-        }
-
-        startActivity(shareIntent)
+        startActivity(
+            intent.createChooserExcludingCurrentApp(
+                this,
+                getString(R.string.mozac_support_ktx_menu_share_with),
+            ),
+        )
         true
     } catch (e: ActivityNotFoundException) {
         Log.log(Log.Priority.WARN, message = "No activity to share to found", throwable = e, tag = "Reference-Browser")
