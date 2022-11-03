@@ -398,6 +398,35 @@ void nsMenuBarX::SetSystemHelpMenu() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+nsMenuX* nsMenuBarX::GetXULWindowMenu() {
+  // The Window menu is usually one of the last ones, so we start there and
+  // count back.
+  for (int32_t i = GetMenuCount() - 1; i >= 0; --i) {
+    nsMenuX* aMenu = GetMenuAt(i);
+    if (aMenu && nsMenuX::IsXULWindowMenu(aMenu->Content())) {
+      return aMenu;
+    }
+  }
+  return nil;
+}
+
+// We want to tell the OS which one of our menus is the Window menu in order
+// to get 'free' functionality from the OS that varies based on the version of
+// macOS, such as moving windows to the left/right of the screen on macOS 13.
+void nsMenuBarX::SetSystemWindowMenu() {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  nsMenuX* xulWindowMenu = GetXULWindowMenu();
+  if (xulWindowMenu) {
+    NSMenu* windowMenu = xulWindowMenu->NativeNSMenu();
+    if (windowMenu) {
+      NSApp.windowsMenu = windowMenu;
+    }
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 nsresult nsMenuBarX::Paint() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -419,6 +448,7 @@ nsresult nsMenuBarX::Paint() {
   // Set menu bar and event target.
   NSApp.mainMenu = mNativeMenu;
   SetSystemHelpMenu();
+  SetSystemWindowMenu();
   nsMenuBarX::sLastGeckoMenuBarPainted = this;
 
   gSomeMenuBarPainted = YES;
