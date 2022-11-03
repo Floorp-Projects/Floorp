@@ -136,7 +136,6 @@
 #include "WidgetUtils.h"
 #include "WinWindowOcclusionTracker.h"
 #include "nsIWidgetListener.h"
-#include "nsIEnterprisePolicies.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/Touch.h"
@@ -1102,47 +1101,36 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     }
   }
 
-  nsCOMPtr<nsIEnterprisePolicies> policies(
-      do_GetService("@mozilla.org/enterprisepolicies;1"));
-  // Just assume Private Browsing is allowed if we fail to look up the
-  // policy...we don't want to fail window creation because of this.
-  bool pbAllowed = true;
-  policies->IsAllowed("privatebrowsing"_ns, &pbAllowed);
-  if (NimbusFeatures::GetBool("majorRelease2022"_ns,
-                              "feltPrivacyWindowSeparation"_ns, true) &&
-      // Ideally no window would ever have this set if Private Browsing mode has
-      // has been disabled, but in practice it's difficult to guarantee this,
-      // so this is a good safeguard to have. The consequences of setting the
-      // icon and AUMID when the window is not _actually_ private will be
-      // the appearance of Private Browsing while still saving history, etc.,
-      // which we greatly want to avoid.
-      pbAllowed &&
-      // Although permanent Private Browsing mode is indeed Private Browsing,
-      // we choose to make it look like regular Firefox in terms of the icon
-      // it uses (which also means we shouldn't use the Private Browsing
-      // AUMID).
-      !StaticPrefs::browser_privatebrowsing_autostart()) {
-    RefPtr<IPropertyStore> pPropStore;
-    if (!FAILED(SHGetPropertyStoreForWindow(mWnd, IID_IPropertyStore,
-                                            getter_AddRefs(pPropStore)))) {
-      PROPVARIANT pv;
-      nsAutoString aumid;
-      // make sure we're using the private browsing AUMID so that taskbar
-      // grouping works properly
-      Unused << NS_WARN_IF(
-          !mozilla::widget::WinTaskbar::GenerateAppUserModelID(aumid, true));
-      if (!FAILED(InitPropVariantFromString(aumid.get(), &pv))) {
-        if (!FAILED(pPropStore->SetValue(PKEY_AppUserModel_ID, pv))) {
-          pPropStore->Commit();
-        }
+  if (aInitData->mIsPrivate) {
+    if (NimbusFeatures::GetBool("majorRelease2022"_ns,
+                                "feltPrivacyWindowSeparation"_ns, true) &&
+        // Although permanent Private Browsing mode is indeed Private Browsing,
+        // we choose to make it look like regular Firefox in terms of the icon
+        // it uses (which also means we shouldn't use the Private Browsing
+        // AUMID).
+        !StaticPrefs::browser_privatebrowsing_autostart()) {
+      RefPtr<IPropertyStore> pPropStore;
+      if (!FAILED(SHGetPropertyStoreForWindow(mWnd, IID_IPropertyStore,
+                                              getter_AddRefs(pPropStore)))) {
+        PROPVARIANT pv;
+        nsAutoString aumid;
+        // make sure we're using the private browsing AUMID so that taskbar
+        // grouping works properly
+        Unused << NS_WARN_IF(
+            !mozilla::widget::WinTaskbar::GenerateAppUserModelID(aumid, true));
+        if (!FAILED(InitPropVariantFromString(aumid.get(), &pv))) {
+          if (!FAILED(pPropStore->SetValue(PKEY_AppUserModel_ID, pv))) {
+            pPropStore->Commit();
+          }
 
-        PropVariantClear(&pv);
+          PropVariantClear(&pv);
+        }
       }
+      HICON icon = ::LoadIconW(::GetModuleHandleW(nullptr),
+                               MAKEINTRESOURCEW(IDI_PBMODE));
+      SetBigIcon(icon);
+      SetSmallIcon(icon);
     }
-    HICON icon =
-        ::LoadIconW(::GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDI_PBMODE));
-    SetBigIcon(icon);
-    SetSmallIcon(icon);
   }
 
   mDeviceNotifyHandle = InputDeviceUtils::RegisterNotification(mWnd);
