@@ -16,6 +16,7 @@ $split-screen-height: 550px;
 $small-main-section-height: 450px;
 $small-secondary-section-height: 100px;
 $noodle-buffer: 106px;
+$video-section-width: 800px;
 
 html {
   height: 100%;
@@ -237,6 +238,23 @@ html {
 
         .section-main {
           height: $main-section-width;
+        }
+      }
+
+      &.with-video {
+        justify-content: center;
+        background: none;
+        align-items: center;
+
+        .section-main {
+          width: $video-section-width;
+          height: $split-screen-height;
+        }
+
+        .main-content {
+          background-color: var(--mr-welcome-background-color);
+          border-radius: 8px;
+          box-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
         }
       }
     }
