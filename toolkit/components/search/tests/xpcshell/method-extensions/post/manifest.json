@@ -3,7 +3,7 @@
   "manifest_version": 2,
   "version": "1.0",
   "description": "Get engine to test ost params",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "post@search.mozilla.org"
     }

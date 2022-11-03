@@ -3,7 +3,7 @@
   "manifest_version": 2,
   "version": "1.0",
   "description": "Get engine to test get params",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "get@search.mozilla.org"
     }

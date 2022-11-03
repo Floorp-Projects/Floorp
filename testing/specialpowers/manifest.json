@@ -3,7 +3,7 @@
   "name": "Special Powers",
   "version": "2018.6.27",
 
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "special-powers@mozilla.org"
     }

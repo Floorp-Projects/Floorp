@@ -4,7 +4,7 @@
   "name": "Theme test",
   "version": "1.0",
 
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "theme@tests.mozilla.org"
     }

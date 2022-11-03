@@ -2,7 +2,7 @@
   "name": "IconsTest",
   "manifest_version": 2,
   "version": "1.0",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "engineImages@search.mozilla.org"
     }

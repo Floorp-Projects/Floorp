@@ -4,7 +4,7 @@
   "description": "https://wiki.mozilla.org/Buildbot/Talos/Tests",
   "version": "1.1",
 
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "tresize@mozilla.org"
     }

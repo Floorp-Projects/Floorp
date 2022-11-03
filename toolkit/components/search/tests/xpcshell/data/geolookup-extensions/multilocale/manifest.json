@@ -2,7 +2,7 @@
   "name": "__MSG_extensionName__",
   "manifest_version": 2,
   "version": "1.0",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "multilocale@search.mozilla.org"
     }

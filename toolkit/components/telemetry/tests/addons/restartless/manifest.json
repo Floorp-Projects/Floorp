@@ -4,7 +4,7 @@
   "description": "A restartless addon which gets enabled without a reboot.",
   "version": "1.0",
 
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "tel-restartless-webext@tests.mozilla.org"
     }

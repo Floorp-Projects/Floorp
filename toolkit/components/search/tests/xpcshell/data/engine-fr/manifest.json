@@ -2,7 +2,7 @@
   "name": "Test search engine (fr)",
   "manifest_version": 2,
   "version": "1.0",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "engine-fr@search.mozilla.org"
     }

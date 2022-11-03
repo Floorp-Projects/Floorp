@@ -2,7 +2,7 @@
   "name": "engine1",
   "manifest_version": 2,
   "version": "1.0",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "engine1@search.mozilla.org"
     }

@@ -3,7 +3,7 @@
   "manifest_version": 2,
   "version": "1.0",
   "description": "Hidden engine to test bug 1194265",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "hidden@search.mozilla.org"
     }

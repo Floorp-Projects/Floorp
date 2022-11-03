@@ -3,7 +3,7 @@
   "manifest_version": 2,
   "version": "1.0",
   "description": "another",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "another@search.mozilla.org"
     }

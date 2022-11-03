@@ -4,7 +4,7 @@
   "description": "Bug 936630, bug 1098357. This add-on broadcasts the duration of session restore.",
   "version": "2.1",
 
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "session-restore-test-2@mozilla.org"
     }
