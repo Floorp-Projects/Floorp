@@ -12,10 +12,6 @@ updater.app/Contents/MacOS/org.mozilla.updater
 plugin-container.app/Contents/PkgInfo
 updater.app/Contents/PkgInfo
 
-# Duplicated for XUL persistence, see PlacesUIUtils.jsm
-browser/chrome/browser/content/browser/places/bookmarkProperties.xhtml
-browser/chrome/browser/content/browser/places/bookmarkProperties2.xhtml
-
 # Duplicated on Linux by browser/branding/branding-common.mozbuild
 #ifdef XP_LINUX
 browser/chrome/browser/content/branding/icon16.png
