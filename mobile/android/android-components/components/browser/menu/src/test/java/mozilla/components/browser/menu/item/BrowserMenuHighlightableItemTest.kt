@@ -34,9 +34,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.robolectric.Shadows
+import mozilla.components.ui.colors.R as colorsR
 
 @RunWith(AndroidJUnit4::class)
 class BrowserMenuHighlightableItemTest {
+
+    private val colorId = colorsR.color.photonRed50
 
     @Suppress("Deprecation")
     @Test
@@ -49,8 +52,8 @@ class BrowserMenuHighlightableItemTest {
             textColorResource = android.R.color.black,
             highlight = BrowserMenuHighlightableItem.Highlight(
                 endImageResource = android.R.drawable.ic_menu_report_image,
-                backgroundResource = R.color.photonRed50,
-                colorResource = R.color.photonRed50,
+                backgroundResource = colorId,
+                colorResource = colorId,
             ),
         ) {
             onClickWasPress = true
@@ -74,8 +77,8 @@ class BrowserMenuHighlightableItemTest {
             highlight = BrowserMenuHighlightableItem.Highlight(
                 startImageResource = android.R.drawable.ic_menu_camera,
                 endImageResource = android.R.drawable.ic_menu_add,
-                backgroundResource = R.color.photonRed50,
-                colorResource = R.color.photonRed50,
+                backgroundResource = colorId,
+                colorResource = colorId,
             ),
             isHighlighted = { shouldHighlight },
         )
@@ -98,7 +101,7 @@ class BrowserMenuHighlightableItemTest {
         assertEquals(android.R.drawable.ic_menu_camera, Shadows.shadowOf(view.startImageView.drawable).createdFromResId)
         assertEquals(android.R.drawable.ic_menu_add, Shadows.shadowOf(view.endImageView.drawable).createdFromResId)
         assertNotNull(view.endImageView.imageTintList)
-        assertEquals(R.color.photonRed50, Shadows.shadowOf(view.background).createdFromResId)
+        assertEquals(colorId, Shadows.shadowOf(view.background).createdFromResId)
     }
 
     @Test

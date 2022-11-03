@@ -5,6 +5,7 @@
 package org.mozilla.samples.browser.integration
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import mozilla.components.browser.state.selector.selectedTab
@@ -16,6 +17,8 @@ import mozilla.components.feature.readerview.view.ReaderViewControlsView
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.samples.browser.R
+import mozilla.components.ui.colors.R as colorsR
+import mozilla.components.ui.icons.R as iconsR
 
 @Suppress("UndocumentedPublicClass")
 class ReaderViewIntegration(
@@ -30,9 +33,9 @@ class ReaderViewIntegration(
     private var readerViewButtonVisible = false
 
     private val readerViewButton: BrowserToolbar.ToggleButton = BrowserToolbar.ToggleButton(
-        image = ContextCompat.getDrawable(context, R.drawable.mozac_ic_reader_mode)!!,
-        imageSelected = ContextCompat.getDrawable(context, R.drawable.mozac_ic_reader_mode)!!.mutate().apply {
-            setTint(ContextCompat.getColor(context, R.color.photonBlue40))
+        image = getReaderDrawable(context),
+        imageSelected = getReaderDrawable(context).mutate().apply {
+            setTint(ContextCompat.getColor(context, colorsR.color.photonBlue40))
         },
         contentDescription = context.getString(R.string.mozac_reader_view_description),
         contentDescriptionSelected = context.getString(R.string.mozac_reader_view_description_selected),
@@ -73,4 +76,9 @@ class ReaderViewIntegration(
     override fun onBackPressed(): Boolean {
         return feature.onBackPressed()
     }
+}
+
+private fun getReaderDrawable(context: Context): Drawable {
+    val drawable = iconsR.drawable.mozac_ic_reader_mode
+    return ContextCompat.getDrawable(context, drawable)!!
 }

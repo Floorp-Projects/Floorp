@@ -48,6 +48,10 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.util.URLStringUtils
 import mozilla.components.ui.tabcounter.TabCounter
 import org.mozilla.samples.toolbar.databinding.ActivityToolbarBinding
+import mozilla.components.browser.menu.R as menuR
+import mozilla.components.browser.toolbar.R as toolbarR
+import mozilla.components.ui.colors.R as colorsR
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * This sample application shows how to use and customize the browser-toolbar component.
@@ -100,7 +104,7 @@ class ToolbarActivity : AppCompatActivity() {
      */
     private fun setupDefaultToolbar(private: Boolean = false) {
         binding.toolbar.setBackgroundColor(
-            ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80),
+            ContextCompat.getColor(this, colorsR.color.photonBlue80),
         )
 
         binding.toolbar.private = private
@@ -124,7 +128,7 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val back = BrowserToolbar.Button(
-            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_back)!!,
+            resources.getThemedDrawable(iconsR.drawable.mozac_ic_back)!!,
             "Back",
         ) {
             simulateReload()
@@ -133,7 +137,7 @@ class ToolbarActivity : AppCompatActivity() {
         binding.toolbar.addNavigationAction(back)
 
         val forward = BrowserToolbar.Button(
-            resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_forward)!!,
+            resources.getThemedDrawable(iconsR.drawable.mozac_ic_forward)!!,
             "Forward",
         ) {
             simulateReload()
@@ -146,9 +150,9 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val reload = BrowserToolbar.TwoStateButton(
-            primaryImage = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_refresh)!!,
+            primaryImage = resources.getThemedDrawable(iconsR.drawable.mozac_ic_refresh)!!,
             primaryContentDescription = "Reload",
-            secondaryImage = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_stop)!!,
+            secondaryImage = resources.getThemedDrawable(iconsR.drawable.mozac_ic_stop)!!,
             secondaryContentDescription = "Stop",
             isInPrimaryState = { loading.value != true },
             disableInSecondaryState = false,
@@ -186,7 +190,7 @@ class ToolbarActivity : AppCompatActivity() {
      */
     private fun setupCustomMenu() {
         binding.toolbar.setBackgroundColor(
-            ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80),
+            ContextCompat.getColor(this, colorsR.color.photonBlue80),
         )
 
         // //////////////////////////////////////////////////////////////////////////////////////////
@@ -195,12 +199,12 @@ class ToolbarActivity : AppCompatActivity() {
 
         val share = TextMenuCandidate(
             "Share",
-            start = DrawableMenuIcon(this, R.drawable.mozac_ic_share),
+            start = DrawableMenuIcon(this, iconsR.drawable.mozac_ic_share),
         ) { /* Do nothing */ }
 
         val search = TextMenuCandidate(
             "Search",
-            start = DrawableMenuIcon(this, R.drawable.mozac_ic_search),
+            start = DrawableMenuIcon(this, iconsR.drawable.mozac_ic_search),
         ) { /* Do nothing */ }
 
         binding.toolbar.display.menuController = BrowserMenuController(Side.START).apply {
@@ -230,7 +234,7 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val forward = BrowserMenuItemToolbar.Button(
-            mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
+            iconsR.drawable.mozac_ic_forward,
             "Forward",
             isEnabled = { canGoForward() },
         ) {
@@ -238,9 +242,9 @@ class ToolbarActivity : AppCompatActivity() {
         }
 
         val reload = BrowserMenuItemToolbar.TwoStateButton(
-            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
+            primaryImageResource = iconsR.drawable.mozac_ic_refresh,
             primaryContentDescription = "Reload",
-            secondaryImageResource = R.drawable.mozac_ic_stop,
+            secondaryImageResource = iconsR.drawable.mozac_ic_stop,
             secondaryContentDescription = "Stop",
             isInPrimaryState = { loading.value != true },
             disableInSecondaryState = false,
@@ -344,10 +348,10 @@ class ToolbarActivity : AppCompatActivity() {
         val homeScreen = TextMenuCandidate("Add to Home screen") { /* Do nothing */ }
         val open = TextMenuCandidate("Open in…") { /* Do nothing */ }
         val settings = NestedMenuCandidate(
-            id = R.id.mozac_browser_toolbar_menu,
+            id = toolbarR.id.mozac_browser_toolbar_menu,
             text = "Settings",
             subMenuItems = listOf(
-                NestedMenuCandidate(id = R.id.container, text = "Back", subMenuItems = null),
+                NestedMenuCandidate(id = menuR.id.container, text = "Back", subMenuItems = null),
                 TextMenuCandidate("Setting 1") { /* Do nothing */ },
                 TextMenuCandidate("Setting 2") { /* Do nothing */ },
             ),
@@ -376,7 +380,7 @@ class ToolbarActivity : AppCompatActivity() {
             ContextCompat.getDrawable(this, R.drawable.fenix_url_background),
         )
         binding.toolbar.edit.setIcon(
-            ContextCompat.getDrawable(this, R.drawable.mozac_ic_search)!!,
+            ContextCompat.getDrawable(this, iconsR.drawable.mozac_ic_search)!!,
             "Search",
         )
 
@@ -424,7 +428,7 @@ class ToolbarActivity : AppCompatActivity() {
 
         binding.toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
 
-        val drawableIcon = ContextCompat.getDrawable(this, R.drawable.mozac_ic_close)
+        val drawableIcon = ContextCompat.getDrawable(this, iconsR.drawable.mozac_ic_close)
 
         drawableIcon?.apply {
             setTint(0xFF20123a.toInt())
@@ -438,7 +442,7 @@ class ToolbarActivity : AppCompatActivity() {
             binding.toolbar.addNavigationAction(button)
         }
 
-        val drawable = ContextCompat.getDrawable(this, R.drawable.mozac_ic_share)?.apply {
+        val drawable = ContextCompat.getDrawable(this, iconsR.drawable.mozac_ic_share)?.apply {
             setTint(0xFF20123a.toInt())
         }
 

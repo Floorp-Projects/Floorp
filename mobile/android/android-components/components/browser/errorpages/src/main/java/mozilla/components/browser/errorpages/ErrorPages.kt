@@ -9,6 +9,7 @@ import android.content.Context
 import androidx.annotation.StringRes
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.kotlin.urlEncode
+import mozilla.components.ui.icons.R as iconsR
 
 object ErrorPages {
 
@@ -111,113 +112,113 @@ enum class ErrorType(
     ERROR_SECURITY_SSL(
         R.string.mozac_browser_errorpages_security_ssl_title,
         R.string.mozac_browser_errorpages_security_ssl_message,
-        imageNameRes = R.string.mozac_error_lock,
+        imageNameRes = iconsR.string.mozac_error_lock,
     ),
     ERROR_SECURITY_BAD_CERT(
         R.string.mozac_browser_errorpages_security_bad_cert_title,
         R.string.mozac_browser_errorpages_security_bad_cert_message,
-        imageNameRes = R.string.mozac_error_lock,
+        imageNameRes = iconsR.string.mozac_error_lock,
     ),
     ERROR_NET_INTERRUPT(
         R.string.mozac_browser_errorpages_net_interrupt_title,
         R.string.mozac_browser_errorpages_net_interrupt_message,
-        imageNameRes = R.string.mozac_error_eye_roll,
+        imageNameRes = iconsR.string.mozac_error_eye_roll,
     ),
     ERROR_NET_TIMEOUT(
         R.string.mozac_browser_errorpages_net_timeout_title,
         R.string.mozac_browser_errorpages_net_timeout_message,
-        imageNameRes = R.string.mozac_error_asleep,
+        imageNameRes = iconsR.string.mozac_error_asleep,
     ),
     ERROR_CONNECTION_REFUSED(
         R.string.mozac_browser_errorpages_connection_failure_title,
         R.string.mozac_browser_errorpages_connection_failure_message,
-        imageNameRes = R.string.mozac_error_confused,
+        imageNameRes = iconsR.string.mozac_error_confused,
     ),
     ERROR_UNKNOWN_SOCKET_TYPE(
         R.string.mozac_browser_errorpages_unknown_socket_type_title,
         R.string.mozac_browser_errorpages_unknown_socket_type_message,
-        imageNameRes = R.string.mozac_error_confused,
+        imageNameRes = iconsR.string.mozac_error_confused,
     ),
     ERROR_REDIRECT_LOOP(
         R.string.mozac_browser_errorpages_redirect_loop_title,
         R.string.mozac_browser_errorpages_redirect_loop_message,
-        imageNameRes = R.string.mozac_error_surprised,
+        imageNameRes = iconsR.string.mozac_error_surprised,
     ),
     ERROR_OFFLINE(
         R.string.mozac_browser_errorpages_offline_title,
         R.string.mozac_browser_errorpages_offline_message,
-        imageNameRes = R.string.mozac_error_no_internet,
+        imageNameRes = iconsR.string.mozac_error_no_internet,
     ),
     ERROR_PORT_BLOCKED(
         R.string.mozac_browser_errorpages_port_blocked_title,
         R.string.mozac_browser_errorpages_port_blocked_message,
-        imageNameRes = R.string.mozac_error_lock,
+        imageNameRes = iconsR.string.mozac_error_lock,
     ),
     ERROR_NET_RESET(
         R.string.mozac_browser_errorpages_net_reset_title,
         R.string.mozac_browser_errorpages_net_reset_message,
-        imageNameRes = R.string.mozac_error_unplugged,
+        imageNameRes = iconsR.string.mozac_error_unplugged,
     ),
     ERROR_UNSAFE_CONTENT_TYPE(
         R.string.mozac_browser_errorpages_unsafe_content_type_title,
         R.string.mozac_browser_errorpages_unsafe_content_type_message,
-        imageNameRes = R.string.mozac_error_inspect,
+        imageNameRes = iconsR.string.mozac_error_inspect,
     ),
     ERROR_CORRUPTED_CONTENT(
         R.string.mozac_browser_errorpages_corrupted_content_title,
         R.string.mozac_browser_errorpages_corrupted_content_message,
-        imageNameRes = R.string.mozac_error_shred_file,
+        imageNameRes = iconsR.string.mozac_error_shred_file,
     ),
     ERROR_CONTENT_CRASHED(
         R.string.mozac_browser_errorpages_content_crashed_title,
         R.string.mozac_browser_errorpages_content_crashed_message,
-        imageNameRes = R.string.mozac_error_surprised,
+        imageNameRes = iconsR.string.mozac_error_surprised,
     ),
     ERROR_INVALID_CONTENT_ENCODING(
         R.string.mozac_browser_errorpages_invalid_content_encoding_title,
         R.string.mozac_browser_errorpages_invalid_content_encoding_message,
-        imageNameRes = R.string.mozac_error_surprised,
+        imageNameRes = iconsR.string.mozac_error_surprised,
     ),
     ERROR_UNKNOWN_HOST(
         R.string.mozac_browser_errorpages_unknown_host_title,
         R.string.mozac_browser_errorpages_unknown_host_message,
-        imageNameRes = R.string.mozac_error_confused,
+        imageNameRes = iconsR.string.mozac_error_confused,
     ),
     ERROR_NO_INTERNET(
         R.string.mozac_browser_errorpages_no_internet_title,
         R.string.mozac_browser_errorpages_no_internet_message,
         R.string.mozac_browser_errorpages_no_internet_refresh_button,
-        imageNameRes = R.string.mozac_error_no_internet,
+        imageNameRes = iconsR.string.mozac_error_no_internet,
     ),
     ERROR_MALFORMED_URI(
         R.string.mozac_browser_errorpages_malformed_uri_title,
         R.string.mozac_browser_errorpages_malformed_uri_message,
-        imageNameRes = R.string.mozac_error_confused,
+        imageNameRes = iconsR.string.mozac_error_confused,
     ),
     ERROR_UNKNOWN_PROTOCOL(
         R.string.mozac_browser_errorpages_unknown_protocol_title,
         R.string.mozac_browser_errorpages_unknown_protocol_message,
-        imageNameRes = R.string.mozac_error_confused,
+        imageNameRes = iconsR.string.mozac_error_confused,
     ),
     ERROR_FILE_NOT_FOUND(
         R.string.mozac_browser_errorpages_file_not_found_title,
         R.string.mozac_browser_errorpages_file_not_found_message,
-        imageNameRes = R.string.mozac_error_confused,
+        imageNameRes = iconsR.string.mozac_error_confused,
     ),
     ERROR_FILE_ACCESS_DENIED(
         R.string.mozac_browser_errorpages_file_access_denied_title,
         R.string.mozac_browser_errorpages_file_access_denied_message,
-        imageNameRes = R.string.mozac_error_question_file,
+        imageNameRes = iconsR.string.mozac_error_question_file,
     ),
     ERROR_PROXY_CONNECTION_REFUSED(
         R.string.mozac_browser_errorpages_proxy_connection_refused_title,
         R.string.mozac_browser_errorpages_proxy_connection_refused_message,
-        imageNameRes = R.string.mozac_error_confused,
+        imageNameRes = iconsR.string.mozac_error_confused,
     ),
     ERROR_UNKNOWN_PROXY_HOST(
         R.string.mozac_browser_errorpages_unknown_proxy_host_title,
         R.string.mozac_browser_errorpages_unknown_proxy_host_message,
-        imageNameRes = R.string.mozac_error_unplugged,
+        imageNameRes = iconsR.string.mozac_error_unplugged,
     ),
     ERROR_SAFEBROWSING_MALWARE_URI(
         R.string.mozac_browser_errorpages_safe_browsing_malware_uri_title,
@@ -238,11 +239,11 @@ enum class ErrorType(
     ERROR_HTTPS_ONLY(
         R.string.mozac_browser_errorpages_httpsonly_title,
         R.string.mozac_browser_errorpages_httpsonly_message,
-        imageNameRes = R.string.mozac_error_lock,
+        imageNameRes = iconsR.string.mozac_error_lock,
     ),
     ERROR_BAD_HSTS_CERT(
         R.string.mozac_browser_errorpages_security_bad_hsts_cert_title,
         R.string.mozac_browser_errorpages_security_bad_hsts_cert_message,
-        imageNameRes = R.string.mozac_error_lock,
+        imageNameRes = iconsR.string.mozac_error_lock,
     ),
 }

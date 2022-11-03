@@ -38,6 +38,7 @@ import mozilla.components.compose.browser.awesomebar.AwesomeBarColors
 import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.compose.browser.awesomebar.R
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.ui.icons.R as iconsR
 
 // We only show one row of text, covering at max screen width.
 // Limit bigger texts that could cause slowdowns or even crashes.
@@ -165,7 +166,7 @@ private fun AutocompleteButton(
     modifier: Modifier,
 ) {
     Image(
-        painterResource(R.drawable.mozac_ic_edit_suggestion),
+        painterResource(iconsR.drawable.mozac_ic_edit_suggestion),
         colorFilter = ColorFilter.tint(colors.autocompleteIcon),
         contentDescription = stringResource(R.string.mozac_browser_awesomebar_edit_suggestion),
         modifier = modifier

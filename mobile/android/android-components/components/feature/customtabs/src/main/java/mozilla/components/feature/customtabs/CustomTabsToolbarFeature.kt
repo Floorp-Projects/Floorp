@@ -39,6 +39,7 @@ import mozilla.components.support.ktx.android.view.setNavigationBarTheme
 import mozilla.components.support.ktx.android.view.setStatusBarTheme
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.support.utils.ColorUtils.getReadableTextColor
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig.
@@ -164,7 +165,7 @@ class CustomTabsToolbarFeature(
     @VisibleForTesting
     internal fun addCloseButton(tab: CustomTabSessionState, bitmap: Bitmap?) {
         val drawableIcon = bitmap?.toDrawable(context.resources)
-            ?: getDrawable(context, R.drawable.mozac_ic_close)!!.mutate()
+            ?: getDrawable(context, iconsR.drawable.mozac_ic_close)!!.mutate()
 
         drawableIcon.setTint(readableColor)
 
@@ -215,7 +216,7 @@ class CustomTabsToolbarFeature(
      */
     @VisibleForTesting
     internal fun addShareButton(tab: CustomTabSessionState) {
-        val drawableIcon = getDrawable(context, R.drawable.mozac_ic_share)!!
+        val drawableIcon = getDrawable(context, iconsR.drawable.mozac_ic_share)!!
         drawableIcon.setTint(readableColor)
 
         val button = Toolbar.ActionButton(

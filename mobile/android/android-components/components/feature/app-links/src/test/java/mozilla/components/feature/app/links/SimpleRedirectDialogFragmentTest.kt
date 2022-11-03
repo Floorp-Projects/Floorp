@@ -19,10 +19,12 @@ import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.robolectric.Shadows.shadowOf
+import androidx.appcompat.R as appcompatR
 
 @RunWith(AndroidJUnit4::class)
 class SimpleRedirectDialogFragmentTest {
     private val webUrl = "https://example.com"
+    private val themeResId = appcompatR.style.Theme_AppCompat_Light
 
     @Test
     fun `Dialog confirmed callback is called correctly`() {
@@ -32,7 +34,7 @@ class SimpleRedirectDialogFragmentTest {
         val onConfirm = { onConfirmCalled = true }
         val onCancel = { onCancelCalled = true }
 
-        val fragment = spy(SimpleRedirectDialogFragment.newInstance(themeResId = R.style.Theme_AppCompat_Light))
+        val fragment = spy(SimpleRedirectDialogFragment.newInstance(themeResId = themeResId))
         doNothing().`when`(fragment).dismiss()
 
         doReturn(testContext).`when`(fragment).requireContext()
@@ -62,7 +64,7 @@ class SimpleRedirectDialogFragmentTest {
         val onConfirm = { onConfirmCalled = true }
         val onCancel = { onCancelCalled = true }
 
-        val fragment = spy(SimpleRedirectDialogFragment.newInstance(themeResId = R.style.Theme_AppCompat_Light))
+        val fragment = spy(SimpleRedirectDialogFragment.newInstance(themeResId = themeResId))
         doNothing().`when`(fragment).dismiss()
 
         doReturn(testContext).`when`(fragment).requireContext()
@@ -92,7 +94,7 @@ class SimpleRedirectDialogFragmentTest {
         val onConfirm = { onConfirmCalled = true }
         val onCancel = { onCancelCalled = true }
 
-        val fragment = spy(SimpleRedirectDialogFragment.newInstance(themeResId = R.style.Theme_AppCompat_Light))
+        val fragment = spy(SimpleRedirectDialogFragment.newInstance(themeResId = themeResId))
         doNothing().`when`(fragment).dismiss()
 
         doReturn(testContext).`when`(fragment).requireContext()

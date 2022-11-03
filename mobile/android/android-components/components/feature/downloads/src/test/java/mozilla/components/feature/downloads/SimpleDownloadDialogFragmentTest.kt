@@ -28,6 +28,7 @@ import org.mockito.Mockito
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.robolectric.annotation.Config
+import androidx.appcompat.R as appcompatR
 
 @RunWith(AndroidJUnit4::class)
 @Config(application = TestApplication::class)
@@ -149,6 +150,6 @@ class SimpleDownloadDialogFragmentTest {
 class TestApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        setTheme(R.style.Theme_AppCompat)
+        setTheme(appcompatR.style.Theme_AppCompat)
     }
 }

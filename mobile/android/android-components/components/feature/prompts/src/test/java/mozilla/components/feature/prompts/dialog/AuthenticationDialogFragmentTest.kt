@@ -23,6 +23,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.openMocks
 import org.robolectric.Shadows.shadowOf
+import androidx.appcompat.R as appcompatR
 
 @RunWith(AndroidJUnit4::class)
 class AuthenticationDialogFragmentTest {
@@ -56,7 +57,7 @@ class AuthenticationDialogFragmentTest {
 
         dialog.show()
 
-        val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
+        val titleTextView = dialog.findViewById<TextView>(appcompatR.id.alertTitle)
         val messageTextView = dialog.findViewById<TextView>(android.R.id.message)
         val usernameEditText = dialog.findViewById<AutofillEditText>(id.username)
         val passwordEditText = dialog.findViewById<AutofillEditText>(id.password)
@@ -132,7 +133,7 @@ class AuthenticationDialogFragmentTest {
 
         dialog.show()
 
-        val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
+        val titleTextView = dialog.findViewById<TextView>(appcompatR.id.alertTitle)
 
         val defaultTitle = appCompatContext.getString(AuthenticationDialogFragment.DEFAULT_TITLE)
         assertEquals(titleTextView.text.toString(), defaultTitle)

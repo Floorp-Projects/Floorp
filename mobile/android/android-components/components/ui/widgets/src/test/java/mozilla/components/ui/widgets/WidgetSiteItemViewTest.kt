@@ -19,6 +19,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import mozilla.components.ui.icons.R as iconsR
 
 @RunWith(AndroidJUnit4::class)
 class WidgetSiteItemViewTest {
@@ -69,8 +70,8 @@ class WidgetSiteItemViewTest {
         val secondaryButton = view.findViewById<ImageButton>(R.id.secondary_button)
         var clicked = false
         view.setSecondaryButton(
-            icon = R.drawable.mozac_ic_lock,
-            contentDescription = R.string.mozac_error_lock,
+            icon = iconsR.drawable.mozac_ic_lock,
+            contentDescription = iconsR.string.mozac_error_lock,
             onClickListener = { clicked = true },
         )
         assertTrue(secondaryButton.isVisible)

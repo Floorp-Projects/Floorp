@@ -9,12 +9,12 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.ui.AddonPermissionsAdapter.PermissionViewHolder
 import mozilla.components.feature.addons.ui.AddonPermissionsAdapter.Style
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
+import mozilla.components.ui.colors.R
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify

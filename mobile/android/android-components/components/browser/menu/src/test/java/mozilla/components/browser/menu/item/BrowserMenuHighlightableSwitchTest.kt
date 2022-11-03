@@ -24,6 +24,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.robolectric.Shadows
+import mozilla.components.ui.colors.R as colorsR
 
 @RunWith(AndroidJUnit4::class)
 class BrowserMenuHighlightableSwitchTest {
@@ -70,7 +71,7 @@ class BrowserMenuHighlightableSwitchTest {
             iconTintColorResource = android.R.color.black,
             textColorResource = android.R.color.black,
             highlight = BrowserMenuHighlight.LowPriority(
-                notificationTint = R.color.photonRed50,
+                notificationTint = colorsR.color.photonRed50,
                 label = "highlight",
             ),
             isHighlighted = { shouldHighlight },

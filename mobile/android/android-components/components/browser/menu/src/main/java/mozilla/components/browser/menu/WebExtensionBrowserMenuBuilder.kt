@@ -16,6 +16,7 @@ import mozilla.components.browser.menu.item.WebExtensionBrowserMenuItem
 import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Browser menu builder with web extension support. It allows [WebExtensionBrowserMenu] to add
@@ -158,8 +159,8 @@ class WebExtensionBrowserMenuBuilder(
         @ColorRes
         val webExtIconTintColorResource: Int = NO_ID,
         @DrawableRes
-        val backPressMenuItemDrawableRes: Int = R.drawable.mozac_ic_back,
+        val backPressMenuItemDrawableRes: Int = iconsR.drawable.mozac_ic_back,
         @DrawableRes
-        val addonsManagerMenuItemDrawableRes: Int = R.drawable.mozac_ic_extensions,
+        val addonsManagerMenuItemDrawableRes: Int = iconsR.drawable.mozac_ic_extensions,
     )
 }

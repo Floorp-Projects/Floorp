@@ -43,6 +43,7 @@ import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.util.ReflectionHelpers
+import mozilla.components.ui.icons.R as iconsR
 
 @RunWith(AndroidJUnit4::class)
 class DisplayToolbarTest {
@@ -553,7 +554,10 @@ class DisplayToolbarTest {
         assertNull(displayToolbar.views.background.drawable)
 
         displayToolbar.setUrlBackground(
-            ContextCompat.getDrawable(testContext, R.drawable.mozac_ic_broken_lock),
+            ContextCompat.getDrawable(
+                testContext,
+                iconsR.drawable.mozac_ic_broken_lock,
+            ),
         )
 
         assertNotNull(displayToolbar.views.background.drawable)

@@ -13,7 +13,7 @@ import mozilla.components.concept.menu.candidate.ContainerStyle
 import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.concept.menu.candidate.TextMenuIcon
 import mozilla.components.concept.menu.candidate.TextStyle
-import mozilla.components.feature.addons.R
+import mozilla.components.ui.icons.R
 
 /**
  * Create a browser menu item for displaying a web extension action.

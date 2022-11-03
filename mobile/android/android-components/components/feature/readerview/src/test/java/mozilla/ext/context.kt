@@ -5,8 +5,8 @@
 package mozilla.ext
 
 import android.content.Context
+import androidx.appcompat.R
 import androidx.appcompat.view.ContextThemeWrapper
-import mozilla.components.feature.readerview.R
 import mozilla.components.support.test.robolectric.testContext
 
 /**

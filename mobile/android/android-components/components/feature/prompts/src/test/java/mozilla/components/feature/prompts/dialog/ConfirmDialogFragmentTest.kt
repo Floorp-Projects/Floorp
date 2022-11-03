@@ -23,6 +23,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.openMocks
 import org.robolectric.Shadows.shadowOf
+import androidx.appcompat.R as appcompatR
 
 @RunWith(AndroidJUnit4::class)
 class ConfirmDialogFragmentTest {
@@ -54,7 +55,7 @@ class ConfirmDialogFragmentTest {
 
         dialog.show()
 
-        val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
+        val titleTextView = dialog.findViewById<TextView>(appcompatR.id.alertTitle)
         val messageTextView = dialog.findViewById<TextView>(R.id.message)
 
         assertEquals(fragment.sessionId, "sessionId")

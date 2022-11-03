@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import kotlinx.coroutines.CoroutineScope
@@ -20,6 +21,7 @@ import mozilla.components.support.utils.ext.getParcelableExtraCompat
 import org.mozilla.samples.browser.BrowserActivity
 import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.ext.components
+import mozilla.components.feature.addons.R as addonsR
 
 /**
  * An activity to show the details of a installed add-on.
@@ -53,7 +55,7 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
                 scope.launch(Dispatchers.Main) {
                     Toast.makeText(
                         baseContext,
-                        R.string.mozac_feature_addons_failed_to_query_add_ons,
+                        addonsR.string.mozac_feature_addons_failed_to_query_add_ons,
                         Toast.LENGTH_SHORT,
                     ).show()
                 }
@@ -86,18 +88,16 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
                     addon,
                     onSuccess = {
                         switch.setState(true)
-                        Toast.makeText(
-                            this,
-                            getString(R.string.mozac_feature_addons_successfully_enabled, addon.translateName(this)),
-                            Toast.LENGTH_SHORT,
-                        ).show()
+                        showAddonToast(
+                            addonsR.string.mozac_feature_addons_successfully_enabled,
+                            addon,
+                        )
                     },
                     onError = {
-                        Toast.makeText(
-                            this,
-                            getString(R.string.mozac_feature_addons_failed_to_enable, addon.translateName(this)),
-                            Toast.LENGTH_SHORT,
-                        ).show()
+                        showAddonToast(
+                            addonsR.string.mozac_feature_addons_failed_to_enable,
+                            addon,
+                        )
                     },
                 )
             } else {
@@ -105,18 +105,16 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
                     addon,
                     onSuccess = {
                         switch.setState(false)
-                        Toast.makeText(
-                            this,
-                            getString(R.string.mozac_feature_addons_successfully_disabled, addon.translateName(this)),
-                            Toast.LENGTH_SHORT,
-                        ).show()
+                        showAddonToast(
+                            addonsR.string.mozac_feature_addons_successfully_disabled,
+                            addon,
+                        )
                     },
                     onError = {
-                        Toast.makeText(
-                            this,
-                            getString(R.string.mozac_feature_addons_failed_to_disable, addon.translateName(this)),
-                            Toast.LENGTH_SHORT,
-                        ).show()
+                        showAddonToast(
+                            addonsR.string.mozac_feature_addons_failed_to_disable,
+                            addon,
+                        )
                     },
                 )
             }
@@ -176,29 +174,35 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
             this.components.addonManager.uninstallAddon(
                 addon,
                 onSuccess = {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.mozac_feature_addons_successfully_uninstalled, addon.translateName(this)),
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                    showAddonToast(
+                        addonsR.string.mozac_feature_addons_successfully_uninstalled,
+                        addon,
+                    )
                     finish()
                 },
                 onError = { _, _ ->
-                    Toast.makeText(
-                        this,
-                        getString(R.string.mozac_feature_addons_failed_to_uninstall, addon.translateName(this)),
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                    showAddonToast(
+                        addonsR.string.mozac_feature_addons_failed_to_uninstall,
+                        addon,
+                    )
                 },
             )
         }
     }
 
+    private fun showAddonToast(@StringRes textId: Int, addon: Addon) {
+        Toast.makeText(
+            this,
+            getString(textId, addon.translateName(context = this)),
+            Toast.LENGTH_SHORT,
+        ).show()
+    }
+
     private fun SwitchCompat.setState(checked: Boolean) {
         val text = if (checked) {
-            R.string.mozac_feature_addons_enabled
+            addonsR.string.mozac_feature_addons_enabled
         } else {
-            R.string.mozac_feature_addons_disabled
+            addonsR.string.mozac_feature_addons_disabled
         }
         setText(text)
         isChecked = checked

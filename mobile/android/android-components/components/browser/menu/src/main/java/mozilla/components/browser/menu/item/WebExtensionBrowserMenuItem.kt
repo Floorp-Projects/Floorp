@@ -24,6 +24,7 @@ import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.concept.menu.candidate.TextMenuIcon
 import mozilla.components.concept.menu.candidate.TextStyle
 import mozilla.components.support.base.log.Log
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * A browser menu item displaying a web extension action.
@@ -129,7 +130,7 @@ class WebExtensionBrowserMenuItem(
                 "Failed to load browser action icon, falling back to default.",
             )
 
-            getDrawable(context, R.drawable.mozac_ic_web_extension_default_icon)
+            getDrawable(context, iconsR.drawable.mozac_ic_web_extension_default_icon)
         }
     }
 

@@ -33,6 +33,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.notNull
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import androidx.appcompat.R as appcompatR
 
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -288,7 +289,7 @@ class WebExtensionBrowserMenuItemTest {
     @Test
     fun `GIVEN setIcon was called, WHEN bind is called, icon setup uses the tint set`() = runTest {
         val webExtMenuItem = spy(WebExtensionBrowserMenuItem(mock(), mock()))
-        val testIconTintColorResource = R.color.accent_material_dark
+        val testIconTintColorResource = appcompatR.color.accent_material_dark
         val menu: WebExtensionBrowserMenu = mock()
         val imageView: ImageView = mock()
         val badgeView: TextView = mock()

@@ -25,6 +25,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.robolectric.Shadows
+import mozilla.components.ui.icons.R as iconsR
 
 @RunWith(AndroidJUnit4::class)
 class SaveLoginDialogFragmentTest : TestCase() {
@@ -96,7 +97,7 @@ class SaveLoginDialogFragmentTest : TestCase() {
                 icon,
             ),
         )
-        val defaultIconResource = R.drawable.mozac_ic_globe
+        val defaultIconResource = iconsR.drawable.mozac_ic_globe
         doReturn(appCompatContext).`when`(fragment).requireContext()
         doAnswer {
             FrameLayout(appCompatContext).apply {

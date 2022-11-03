@@ -14,11 +14,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.Engine
-import mozilla.components.feature.awesomebar.R
 import mozilla.components.feature.awesomebar.facts.emitClipboardSuggestionClickedFact
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.utils.WebURLFinder
 import java.util.UUID
+import mozilla.components.ui.icons.R as iconsR
 
 private const val MIME_TYPE_TEXT_PLAIN = "text/plain"
 private const val MINIMUM_CONFIDENCE_SCORE_FOR_URL = 0.7F
@@ -69,7 +69,7 @@ class ClipboardSuggestionProvider(
                 description = url,
                 editSuggestion = url,
                 flags = setOf(AwesomeBar.Suggestion.Flag.CLIPBOARD),
-                icon = icon ?: ContextCompat.getDrawable(context, R.drawable.mozac_ic_search)?.toBitmap(),
+                icon = icon ?: getSearchIcon(),
                 title = title,
                 onSuggestionClicked = {
                     loadUrlUseCase.invoke(url)
@@ -77,6 +77,11 @@ class ClipboardSuggestionProvider(
                 },
             ),
         )
+    }
+
+    private fun getSearchIcon(): Bitmap? {
+        val drawable = iconsR.drawable.mozac_ic_search
+        return ContextCompat.getDrawable(context, drawable)?.toBitmap()
     }
 }
 

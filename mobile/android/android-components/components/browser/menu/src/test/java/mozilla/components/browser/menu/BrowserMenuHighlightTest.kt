@@ -13,6 +13,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import mozilla.components.ui.colors.R as colorsR
 
 @RunWith(AndroidJUnit4::class)
 class BrowserMenuHighlightTest {
@@ -36,12 +37,13 @@ class BrowserMenuHighlightTest {
     @Suppress("Deprecation")
     @Test
     fun `classic highlight effect converts background tint`() {
+        val colorId = colorsR.color.photonRed50
         val highlight = BrowserMenuHighlight.ClassicHighlight(
             startImageResource = 0,
             endImageResource = 0,
             backgroundResource = 0,
-            colorResource = R.color.photonRed50,
+            colorResource = colorId,
         )
-        assertEquals(HighPriorityHighlightEffect(testContext.getColor(R.color.photonRed50)), highlight.asEffect(testContext))
+        assertEquals(HighPriorityHighlightEffect(testContext.getColor(colorId)), highlight.asEffect(testContext))
     }
 }

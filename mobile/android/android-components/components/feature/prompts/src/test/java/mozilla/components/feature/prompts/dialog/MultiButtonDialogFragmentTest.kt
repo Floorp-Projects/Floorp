@@ -28,6 +28,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.openMocks
 import org.robolectric.Shadows.shadowOf
+import androidx.appcompat.R as appcompatR
 
 @RunWith(AndroidJUnit4::class)
 class MultiButtonDialogFragmentTest {
@@ -61,7 +62,7 @@ class MultiButtonDialogFragmentTest {
 
         dialog.show()
 
-        val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
+        val titleTextView = dialog.findViewById<TextView>(appcompatR.id.alertTitle)
         val messageTextView = dialog.findViewById<TextView>(R.id.message)
         val checkBox = dialog.findViewById<CheckBox>(id.mozac_feature_prompts_no_more_dialogs_check_box)
         val positiveButton = (dialog as AlertDialog).getButton(BUTTON_POSITIVE)

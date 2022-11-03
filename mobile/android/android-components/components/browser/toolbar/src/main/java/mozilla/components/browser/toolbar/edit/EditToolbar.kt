@@ -33,6 +33,7 @@ import mozilla.components.support.base.utils.NamedThreadFactory
 import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import java.util.concurrent.Executors
+import mozilla.components.ui.colors.R as colorsR
 
 private const val AUTOCOMPLETE_QUERY_THREADS = 3
 
@@ -132,7 +133,7 @@ class EditToolbar internal constructor(
      * Customizable colors in "edit mode".
      */
     var colors: Colors = Colors(
-        clear = ContextCompat.getColor(context, R.color.photonWhite),
+        clear = ContextCompat.getColor(context, colorsR.color.photonWhite),
         icon = null,
         hint = views.url.currentHintTextColor,
         text = views.url.currentTextColor,

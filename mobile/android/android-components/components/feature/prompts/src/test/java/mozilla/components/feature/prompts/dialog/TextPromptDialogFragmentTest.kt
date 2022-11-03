@@ -26,6 +26,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 import org.robolectric.Shadows.shadowOf
+import androidx.appcompat.R as appcompatR
 
 @RunWith(AndroidJUnit4::class)
 class TextPromptDialogFragmentTest {
@@ -49,7 +50,7 @@ class TextPromptDialogFragmentTest {
 
         dialog.show()
 
-        val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
+        val titleTextView = dialog.findViewById<TextView>(appcompatR.id.alertTitle)
         val inputLabel = dialog.findViewById<TextView>(id.input_label)
         val inputValue = dialog.findViewById<TextView>(id.input_value)
         val checkBox = dialog.findViewById<CheckBox>(id.mozac_feature_prompts_no_more_dialogs_check_box)

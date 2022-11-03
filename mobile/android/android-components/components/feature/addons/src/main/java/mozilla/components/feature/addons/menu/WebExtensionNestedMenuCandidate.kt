@@ -17,16 +17,17 @@ import mozilla.components.concept.menu.candidate.MenuCandidate
 import mozilla.components.concept.menu.candidate.NestedMenuCandidate
 import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.feature.addons.R
+import mozilla.components.ui.icons.R as iconsR
 
 private fun createBackMenuItem(
     context: Context,
     @ColorInt webExtIconTintColor: Int?,
 ) = NestedMenuCandidate(
-    id = R.drawable.mozac_ic_back,
+    id = iconsR.drawable.mozac_ic_back,
     text = context.getString(R.string.mozac_feature_addons_addons),
     start = DrawableMenuIcon(
         context,
-        R.drawable.mozac_ic_back,
+        iconsR.drawable.mozac_ic_back,
         tint = webExtIconTintColor,
     ),
     subMenuItems = null,
@@ -40,7 +41,7 @@ private fun createAddonsManagerItem(
     text = context.getString(R.string.mozac_feature_addons_addons_manager),
     start = DrawableMenuIcon(
         context,
-        R.drawable.mozac_ic_extensions,
+        iconsR.drawable.mozac_ic_extensions,
         tint = webExtIconTintColor,
     ),
     onClick = onAddonsManagerTapped,

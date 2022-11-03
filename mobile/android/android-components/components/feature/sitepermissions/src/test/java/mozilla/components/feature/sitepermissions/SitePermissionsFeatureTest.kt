@@ -82,6 +82,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import java.security.InvalidParameterException
 import java.util.UUID
+import mozilla.components.ui.icons.R as iconsR
 
 @RunWith(AndroidJUnit4::class)
 class SitePermissionsFeatureTest {
@@ -1094,7 +1095,7 @@ class SitePermissionsFeatureTest {
             ),
             dialog.title,
         )
-        assertEquals(R.drawable.mozac_ic_cookies, dialog.icon)
+        assertEquals(iconsR.drawable.mozac_ic_cookies, dialog.icon)
         assertEquals(permissionRequest.id, dialog.permissionRequestId)
         assertEquals(sitePermissionFeature, dialog.feature)
         assertEquals(false, dialog.shouldShowDoNotAskAgainCheckBox)

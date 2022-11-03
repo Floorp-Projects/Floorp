@@ -24,6 +24,7 @@ import mozilla.components.feature.autofill.R
 import mozilla.components.feature.autofill.response.dataset.createInlinePresentation
 import mozilla.components.feature.autofill.structure.ParsedStructure
 import mozilla.components.feature.autofill.ui.AbstractAutofillUnlockActivity
+import androidx.biometric.R as biometricR
 
 internal data class AuthFillResponseBuilder(
     private val parsedStructure: ParsedStructure,
@@ -82,7 +83,10 @@ internal data class AuthFillResponseBuilder(
         )
         val intentSender: IntentSender = authPendingIntent.intentSender
 
-        val icon: Icon = Icon.createWithResource(context, R.drawable.fingerprint_dialog_fp_icon)
+        val icon: Icon = Icon.createWithResource(
+            context,
+            biometricR.drawable.fingerprint_dialog_fp_icon,
+        )
         val authInlinePresentation = createInlinePresentation(authPendingIntent, imeSpec, title, icon)
         builder.setAuthentication(
             autofillIds.toTypedArray(),

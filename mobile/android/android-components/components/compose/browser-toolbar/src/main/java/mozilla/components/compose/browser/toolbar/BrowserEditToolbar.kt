@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Sub-component of the [BrowserToolbar] responsible for allowing the user to edit the current
@@ -84,7 +85,7 @@ fun ClearButton(onButtonClicked: () -> Unit = {}) {
         onClick = { onButtonClicked() },
     ) {
         Icon(
-            painter = painterResource(R.drawable.mozac_ic_clear),
+            painter = painterResource(iconsR.drawable.mozac_ic_clear),
             contentDescription = stringResource(R.string.mozac_clear_button_description),
             tint = Color.Black,
         )

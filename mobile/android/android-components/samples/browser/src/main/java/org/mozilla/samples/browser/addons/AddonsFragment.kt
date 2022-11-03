@@ -29,6 +29,9 @@ import org.mozilla.samples.browser.databinding.FragmentAddOnsBinding
 import org.mozilla.samples.browser.databinding.OverlayAddOnProgressBinding
 import org.mozilla.samples.browser.ext.components
 import java.util.concurrent.CancellationException
+import androidx.browser.R as androidxBrowserR
+import mozilla.components.browser.menu.R as menuR
+import mozilla.components.feature.addons.R as addonsR
 
 /**
  * Fragment use for managing add-ons.
@@ -82,8 +85,8 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                 val addons = context.components.addonManager.getAddons()
 
                 val style = AddonsManagerAdapter.Style(
-                    dividerColor = R.color.browser_actions_divider_color,
-                    dividerHeight = R.dimen.mozac_browser_menu_item_divider_height,
+                    dividerColor = androidxBrowserR.color.browser_actions_divider_color,
+                    dividerHeight = menuR.dimen.mozac_browser_menu_item_divider_height,
                 )
 
                 scope.launch(Dispatchers.Main) {
@@ -103,7 +106,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                 scope.launch(Dispatchers.Main) {
                     Toast.makeText(
                         activity,
-                        R.string.mozac_feature_addons_failed_to_query_add_ons,
+                        addonsR.string.mozac_feature_addons_failed_to_query_add_ons,
                         Toast.LENGTH_SHORT,
                     ).show()
                 }
@@ -213,7 +216,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                     Toast.makeText(
                         requireContext(),
                         getString(
-                            R.string.mozac_feature_addons_failed_to_install,
+                            addonsR.string.mozac_feature_addons_failed_to_install,
                             addon.translateName(requireContext()),
                         ),
                         Toast.LENGTH_SHORT,

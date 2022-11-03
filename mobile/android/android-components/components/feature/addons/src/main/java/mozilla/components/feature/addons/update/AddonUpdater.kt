@@ -51,6 +51,7 @@ import java.util.Date
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Contract to define the behavior for updating addons.
@@ -281,7 +282,7 @@ class DefaultAddonUpdater(
 
         logger.info("Created update notification for add-on ${extension.id}")
         return NotificationCompat.Builder(applicationContext, channelId)
-            .setSmallIcon(mozilla.components.ui.icons.R.drawable.mozac_ic_extensions)
+            .setSmallIcon(iconsR.drawable.mozac_ic_extensions)
             .setContentTitle(getNotificationTitle(extension))
             .setContentText(text)
             .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -358,7 +359,7 @@ class DefaultAddonUpdater(
             applicationContext.getString(R.string.mozac_feature_addons_updater_notification_allow_button)
 
         return NotificationCompat.Action.Builder(
-            mozilla.components.ui.icons.R.drawable.mozac_ic_extensions,
+            iconsR.drawable.mozac_ic_extensions,
             allowText,
             allowPendingIntent,
         ).build()
@@ -378,7 +379,7 @@ class DefaultAddonUpdater(
             applicationContext.getString(R.string.mozac_feature_addons_updater_notification_deny_button)
 
         return NotificationCompat.Action.Builder(
-            mozilla.components.ui.icons.R.drawable.mozac_ic_extensions,
+            iconsR.drawable.mozac_ic_extensions,
             denyText,
             denyPendingIntent,
         ).build()

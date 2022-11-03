@@ -38,6 +38,8 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(':support-utils')
 
+    implementation project(':ui-icons')
+
     implementation Dependencies.androidx_core_ktx
     implementation Dependencies.kotlin_stdlib
 

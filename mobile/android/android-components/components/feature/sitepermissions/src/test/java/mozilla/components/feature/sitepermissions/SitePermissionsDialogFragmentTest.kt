@@ -25,11 +25,13 @@ import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import androidx.core.R as coreR
 
 @RunWith(AndroidJUnit4::class)
 class SitePermissionsDialogFragmentTest {
 
     private val permissionRequestId = "permissionID"
+    private val titleIcon = coreR.drawable.notification_icon_background
 
     @Test
     fun `build dialog`() {
@@ -37,7 +39,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = true,
@@ -61,7 +63,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = true,
@@ -86,7 +88,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = true,
@@ -111,7 +113,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = false,
@@ -135,7 +137,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = false,
@@ -159,7 +161,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = false,
@@ -184,7 +186,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = false,
@@ -208,7 +210,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = feature,
                 shouldShowDoNotAskAgainCheckBox = false,
@@ -237,7 +239,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
@@ -269,7 +271,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
@@ -297,7 +299,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = false,
@@ -319,7 +321,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = false,
@@ -341,7 +343,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
@@ -374,7 +376,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
@@ -407,7 +409,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
@@ -443,7 +445,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mockFeature,
                 shouldShowDoNotAskAgainCheckBox = false,
@@ -468,7 +470,7 @@ class SitePermissionsDialogFragmentTest {
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
-                R.drawable.notification_icon_background,
+                titleIcon,
                 permissionRequestId = permissionRequestId,
                 feature = mock(),
                 shouldShowDoNotAskAgainCheckBox = true,

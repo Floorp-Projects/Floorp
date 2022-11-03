@@ -22,6 +22,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import mozilla.components.ui.icons.R as iconsR
 
 @RunWith(AndroidJUnit4::class)
 class ParentBrowserMenuItemTest {
@@ -77,7 +78,7 @@ class ParentBrowserMenuItemTest {
     fun `onBackPressed after sub menu is shown will dismiss the sub menu`() {
         val backPressMenuItem = BackPressMenuItem(
             label = "back",
-            imageResource = R.drawable.mozac_ic_back,
+            imageResource = iconsR.drawable.mozac_ic_back,
         )
         val backPressView = LayoutInflater.from(testContext).inflate(backPressMenuItem.getLayoutResource(), null)
         val subMenuItem = SimpleBrowserMenuItem("test")
@@ -109,7 +110,7 @@ class ParentBrowserMenuItemTest {
     fun `menu item image text item can be converted to candidate`() {
         val backPressMenuItem = BackPressMenuItem(
             label = "back",
-            imageResource = R.drawable.mozac_ic_back,
+            imageResource = iconsR.drawable.mozac_ic_back,
         )
         val subMenuItem = SimpleBrowserMenuItem("test")
         val subMenuAdapter = BrowserMenuAdapter(testContext, listOf(backPressMenuItem, subMenuItem))

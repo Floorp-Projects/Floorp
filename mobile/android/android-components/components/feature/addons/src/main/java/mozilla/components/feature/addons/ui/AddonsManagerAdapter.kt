@@ -38,6 +38,7 @@ import mozilla.components.feature.addons.ui.CustomViewHolder.UnsupportedSectionV
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import java.io.IOException
+import mozilla.components.ui.icons.R as iconsR
 
 private const val VIEW_HOLDER_TYPE_SECTION = 0
 private const val VIEW_HOLDER_TYPE_NOT_YET_SUPPORTED_SECTION = 1
@@ -273,7 +274,10 @@ class AddonsManagerAdapter(
                     val att = context.theme.resolveAttribute(android.R.attr.textColorPrimary)
                     iconView.setColorFilter(ContextCompat.getColor(context, att))
                     iconView.setImageDrawable(
-                        ContextCompat.getDrawable(context, R.drawable.mozac_ic_extensions),
+                        ContextCompat.getDrawable(
+                            context,
+                            iconsR.drawable.mozac_ic_extensions,
+                        ),
                     )
                 }
                 logger.error("Attempt to fetch the ${addon.id} icon failed", e)

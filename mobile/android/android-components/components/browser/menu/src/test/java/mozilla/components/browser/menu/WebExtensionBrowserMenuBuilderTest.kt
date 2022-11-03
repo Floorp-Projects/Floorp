@@ -27,6 +27,8 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import androidx.appcompat.R as appcompatR
+import mozilla.components.ui.icons.R as iconsR
 
 @RunWith(AndroidJUnit4::class)
 class WebExtensionBrowserMenuBuilderTest {
@@ -70,8 +72,8 @@ class WebExtensionBrowserMenuBuilderTest {
 
         val store = BrowserStore(BrowserState(extensions = extensions))
         val style = WebExtensionBrowserMenuBuilder.Style(
-            addonsManagerMenuItemDrawableRes = R.drawable.mozac_ic_extensions,
-            backPressMenuItemDrawableRes = R.drawable.mozac_ic_back,
+            addonsManagerMenuItemDrawableRes = iconsR.drawable.mozac_ic_extensions,
+            backPressMenuItemDrawableRes = iconsR.drawable.mozac_ic_back,
         )
         val builder = WebExtensionBrowserMenuBuilder(
             listOf(mockMenuItem()),
@@ -251,7 +253,7 @@ class WebExtensionBrowserMenuBuilderTest {
     fun `web extension is moved to main menu when extension id equals WebExtensionPlaceholderMenuItem id`() {
         val promotableWebExtensionId = "promotable extension id"
         val promotableWebExtensionTitle = "promotable extension action title"
-        val testIconTintColorResource = R.color.accent_material_dark
+        val testIconTintColorResource = appcompatR.color.accent_material_dark
 
         val pageAction = WebExtensionBrowserAction("page_action", true, mock(), "", 0, 0) {}
         val pageActionPromotableWebExtension = WebExtensionBrowserAction(promotableWebExtensionTitle, true, mock(), "", 0, 0) {}

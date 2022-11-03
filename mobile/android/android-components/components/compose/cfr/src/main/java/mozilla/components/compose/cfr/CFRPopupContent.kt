@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.cfr.CFRPopup.IndicatorDirection.DOWN
 import mozilla.components.compose.cfr.CFRPopup.IndicatorDirection.UP
-import mozilla.components.compose.cfr.R.drawable
+import mozilla.components.ui.icons.R
 
 /**
  * Complete content of the popup.
@@ -122,7 +122,7 @@ fun CFRPopupContent(
                 .size(48.dp),
         ) {
             Icon(
-                painter = painterResource(drawable.mozac_ic_close_20),
+                painter = painterResource(R.drawable.mozac_ic_close_20),
                 contentDescription = "Test",
                 modifier = Modifier
                     // Following alignment and padding are intended to visually align the middle

@@ -29,7 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.compose.browser.tabstray.R
+import mozilla.components.ui.icons.R
 
 /**
  * Renders a single [TabSessionState] as a list item.

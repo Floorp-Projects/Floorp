@@ -87,6 +87,8 @@ import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.request.SampleUrlEncodedRequestInterceptor
 import java.util.concurrent.TimeUnit
+import mozilla.components.ui.colors.R.color as photonColors
+import mozilla.components.ui.icons.R as iconsR
 
 private const val DAY_IN_MINUTES = 24 * 60L
 
@@ -253,7 +255,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             menuItems,
             store = store,
             style = WebExtensionBrowserMenuBuilder.Style(
-                webExtIconTintColorResource = R.color.photonGrey90,
+                webExtIconTintColorResource = photonColors.photonGrey90,
             ),
             onAddonsManagerTapped = {
                 val intent = Intent(applicationContext, AddonsActivity::class.java)
@@ -268,7 +270,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             menuToolbar,
             BrowserMenuHighlightableItem(
                 "No Highlight",
-                R.drawable.mozac_ic_share,
+                iconsR.drawable.mozac_ic_share,
                 android.R.color.black,
                 highlight = BrowserMenuHighlight.LowPriority(
                     notificationTint = ContextCompat.getColor(applicationContext, android.R.color.holo_green_dark),
@@ -277,7 +279,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             ) {
                 Toast.makeText(applicationContext, "Highlight", Toast.LENGTH_SHORT).show()
             },
-            BrowserMenuImageText("Share", R.drawable.mozac_ic_share, android.R.color.black) {
+            BrowserMenuImageText("Share", iconsR.drawable.mozac_ic_share, android.R.color.black) {
                 Toast.makeText(applicationContext, "Share", Toast.LENGTH_SHORT).show()
             },
             SimpleBrowserMenuItem("Settings") {
@@ -350,41 +352,41 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     private val menuToolbar by lazy {
         val back = BrowserMenuItemToolbar.TwoStateButton(
-            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_back,
-            primaryImageTintResource = R.color.photonBlue90,
+            primaryImageResource = iconsR.drawable.mozac_ic_back,
+            primaryImageTintResource = photonColors.photonBlue90,
             primaryContentDescription = "Back",
             isInPrimaryState = {
                 store.state.selectedTab?.content?.canGoBack ?: true
             },
             disableInSecondaryState = true,
-            secondaryImageTintResource = R.color.photonGrey40,
+            secondaryImageTintResource = photonColors.photonGrey40,
         ) {
             sessionUseCases.goBack()
         }
 
         val forward = BrowserMenuItemToolbar.TwoStateButton(
-            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
+            primaryImageResource = iconsR.drawable.mozac_ic_forward,
             primaryContentDescription = "Forward",
-            primaryImageTintResource = R.color.photonBlue90,
+            primaryImageTintResource = photonColors.photonBlue90,
             isInPrimaryState = {
                 store.state.selectedTab?.content?.canGoForward ?: true
             },
             disableInSecondaryState = true,
-            secondaryImageTintResource = R.color.photonGrey40,
+            secondaryImageTintResource = photonColors.photonGrey40,
         ) {
             sessionUseCases.goForward()
         }
 
         val refresh = BrowserMenuItemToolbar.TwoStateButton(
-            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
+            primaryImageResource = iconsR.drawable.mozac_ic_refresh,
             primaryContentDescription = "Refresh",
-            primaryImageTintResource = R.color.photonBlue90,
+            primaryImageTintResource = photonColors.photonBlue90,
             isInPrimaryState = {
                 store.state.selectedTab?.content?.loading == false
             },
-            secondaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
+            secondaryImageResource = iconsR.drawable.mozac_ic_stop,
             secondaryContentDescription = "Stop",
-            secondaryImageTintResource = R.color.photonBlue90,
+            secondaryImageTintResource = photonColors.photonBlue90,
             disableInSecondaryState = false,
         ) {
             if (store.state.selectedTab?.content?.loading == true) {

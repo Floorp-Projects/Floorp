@@ -27,6 +27,7 @@ import org.mozilla.samples.browser.R
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
+import mozilla.components.feature.addons.R as addonsR
 
 /**
  * An activity to show the details of an add-on.
@@ -65,7 +66,9 @@ class AddonDetailsActivity : AppCompatActivity() {
             val ratingView = findViewById<RatingBar>(R.id.rating_view)
             val userCountView = findViewById<TextView>(R.id.users_count)
 
-            val ratingContentDescription = getString(R.string.mozac_feature_addons_rating_content_description)
+            val ratingContentDescription = getString(
+                addonsR.string.mozac_feature_addons_rating_content_description,
+            )
             ratingView.contentDescription = String.format(ratingContentDescription, it.average)
             ratingView.rating = it.average
 

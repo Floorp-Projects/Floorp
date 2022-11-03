@@ -19,6 +19,7 @@ import mozilla.components.concept.toolbar.Toolbar.Action
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.ktx.android.view.setPadding
 import mozilla.components.support.utils.DrawableUtils.loadAndTintDrawable
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * An action button that represents a container to be added to the toolbar.
@@ -56,19 +57,19 @@ class ContainerToolbarAction(
         @ColorInt val tint = getTint(context, container.color)
 
         return when (container.icon) {
-            Icon.FINGERPRINT -> loadAndTintDrawable(context, R.drawable.mozac_ic_fingerprint, tint)
-            Icon.BRIEFCASE -> loadAndTintDrawable(context, R.drawable.mozac_ic_briefcase, tint)
-            Icon.DOLLAR -> loadAndTintDrawable(context, R.drawable.mozac_ic_dollar, tint)
-            Icon.CART -> loadAndTintDrawable(context, R.drawable.mozac_ic_cart, tint)
-            Icon.CIRCLE -> loadAndTintDrawable(context, R.drawable.mozac_ic_circle, tint)
-            Icon.GIFT -> loadAndTintDrawable(context, R.drawable.mozac_ic_gift, tint)
-            Icon.VACATION -> loadAndTintDrawable(context, R.drawable.mozac_ic_vacation, tint)
-            Icon.FOOD -> loadAndTintDrawable(context, R.drawable.mozac_ic_food, tint)
-            Icon.FRUIT -> loadAndTintDrawable(context, R.drawable.mozac_ic_fruit, tint)
-            Icon.PET -> loadAndTintDrawable(context, R.drawable.mozac_ic_pet, tint)
-            Icon.TREE -> loadAndTintDrawable(context, R.drawable.mozac_ic_tree, tint)
-            Icon.CHILL -> loadAndTintDrawable(context, R.drawable.mozac_ic_chill, tint)
-            Icon.FENCE -> loadAndTintDrawable(context, R.drawable.mozac_ic_fence, tint)
+            Icon.FINGERPRINT -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_fingerprint, tint)
+            Icon.BRIEFCASE -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_briefcase, tint)
+            Icon.DOLLAR -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_dollar, tint)
+            Icon.CART -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_cart, tint)
+            Icon.CIRCLE -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_circle, tint)
+            Icon.GIFT -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_gift, tint)
+            Icon.VACATION -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_vacation, tint)
+            Icon.FOOD -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_food, tint)
+            Icon.FRUIT -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_fruit, tint)
+            Icon.PET -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_pet, tint)
+            Icon.TREE -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_tree, tint)
+            Icon.CHILL -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_chill, tint)
+            Icon.FENCE -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_fence, tint)
         }
     }
 

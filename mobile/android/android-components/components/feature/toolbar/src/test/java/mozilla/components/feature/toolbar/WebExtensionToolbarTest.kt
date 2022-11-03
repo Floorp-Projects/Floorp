@@ -30,6 +30,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import mozilla.components.ui.icons.R as iconsR
 
 @RunWith(AndroidJUnit4::class)
 class WebExtensionToolbarTest {
@@ -97,7 +98,9 @@ class WebExtensionToolbarTest {
         action.iconJob?.joinBlocking()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        verify(imageView).setImageResource(R.drawable.mozac_ic_web_extension_default_icon)
+        verify(imageView).setImageResource(
+            iconsR.drawable.mozac_ic_web_extension_default_icon,
+        )
     }
 
     @Test

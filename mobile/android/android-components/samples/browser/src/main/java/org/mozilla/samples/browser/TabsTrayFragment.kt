@@ -21,6 +21,7 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.samples.browser.databinding.FragmentTabstrayBinding
 import org.mozilla.samples.browser.ext.components
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * A fragment for displaying the tabs tray.
@@ -35,7 +36,7 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
         super.onViewCreated(view, savedInstanceState)
 
         val binding = FragmentTabstrayBinding.bind(view)
-        binding.toolbar.setNavigationIcon(R.drawable.mozac_ic_back)
+        binding.toolbar.setNavigationIcon(iconsR.drawable.mozac_ic_back)
         binding.toolbar.setNavigationOnClickListener {
             closeTabsTray()
         }

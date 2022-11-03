@@ -22,6 +22,7 @@ import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.utils.PendingIntentUtils
+import mozilla.components.ui.icons.R as iconsR
 
 private const val NOTIFICATION_TAG = "mozac.feature.media.recordingDevices"
 private const val NOTIFICATION_ID = 1
@@ -126,17 +127,17 @@ internal sealed class RecordingState {
         get() = this !is None
 
     object CameraAndMicrophone : RecordingState() {
-        override val iconResource = R.drawable.mozac_ic_video
+        override val iconResource = iconsR.drawable.mozac_ic_video
         override val titleResource = R.string.mozac_feature_media_sharing_camera_and_microphone
     }
 
     object Camera : RecordingState() {
-        override val iconResource = R.drawable.mozac_ic_video
+        override val iconResource = iconsR.drawable.mozac_ic_video
         override val titleResource = R.string.mozac_feature_media_sharing_camera
     }
 
     object Microphone : RecordingState() {
-        override val iconResource = R.drawable.mozac_ic_microphone
+        override val iconResource = iconsR.drawable.mozac_ic_microphone
         override val titleResource = R.string.mozac_feature_media_sharing_microphone
     }
 

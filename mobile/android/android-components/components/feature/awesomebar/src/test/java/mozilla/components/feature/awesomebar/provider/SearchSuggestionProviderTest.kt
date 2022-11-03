@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import android.graphics.Bitmap
 import androidx.core.graphics.drawable.toBitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -12,7 +13,6 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
-import mozilla.components.feature.awesomebar.R
 import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.search.ext.createSearchEngine
@@ -36,6 +36,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import java.io.IOException
+import mozilla.components.ui.icons.R as iconsR
 
 private const val GOOGLE_MOCK_RESPONSE = "[\"firefox\",[\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]"
 private const val GOOGLE_MOCK_RESPONSE_WITH_DUPLICATES = "[\"firefox\",[\"firefox\",\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]"
@@ -242,6 +243,16 @@ class SearchSuggestionProviderTest {
         }
     }
 
+    private fun getDeviceDesktopIcon(): Bitmap {
+        val drawable = iconsR.drawable.mozac_ic_device_desktop
+        return testContext.getDrawable(drawable)!!.toBitmap()
+    }
+
+    private fun getSearchIcon(): Bitmap {
+        val drawable = iconsR.drawable.mozac_ic_search
+        return testContext.getDrawable(drawable)!!.toBitmap()
+    }
+
     @Test
     fun `Provider should use engine icon by default`() {
         runTest {
@@ -249,7 +260,7 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
 
-            val engineIcon = testContext.getDrawable(R.drawable.mozac_ic_device_desktop)!!.toBitmap()
+            val engineIcon = getDeviceDesktopIcon()
 
             val searchEngine = createSearchEngine(
                 name = "Test",
@@ -276,7 +287,7 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
 
-            val engineIcon = testContext.getDrawable(R.drawable.mozac_ic_device_desktop)!!.toBitmap()
+            val engineIcon = getDeviceDesktopIcon()
 
             val searchEngine = createSearchEngine(
                 name = "Test",
@@ -285,7 +296,7 @@ class SearchSuggestionProviderTest {
                 suggestUrl = server.url("/").toString(),
             )
 
-            val paramIcon = testContext.getDrawable(R.drawable.mozac_ic_search)!!.toBitmap()
+            val paramIcon = getSearchIcon()
 
             val provider = SearchSuggestionProvider(
                 searchEngine,
