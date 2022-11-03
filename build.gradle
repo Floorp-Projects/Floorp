@@ -151,10 +151,11 @@ ext.geckoBinariesOnlyIf = { task ->
         return false
     }
 
-    // Multi-l10n builds set `AB_CD=multi`, which isn't a valid locale.  To
-    // avoid failures, if Gradle is invoked with AB_CD=multi, we don't invoke
-    // Make at all.
-    if ('multi' == System.env.AB_CD) {
+    // Multi-l10n builds set `AB_CD=multi`, which isn't a valid locale, and
+    // `MOZ_CHROME_MULTILOCALE`.  To avoid failures, if Gradle is invoked with
+    // either, we don't invoke Make at all; this allows a multi-locale omnijar
+    // to be consumed without modification.
+    if ('multi' == System.env.AB_CD || System.env.MOZ_CHROME_MULTILOCALE) {
         rootProject.logger.lifecycle("Skipping task ${task.path} because: AB_CD=multi")
         return false
     }
