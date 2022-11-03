@@ -76,6 +76,8 @@ rejected-words:
             - '**/*.cpp'
             - '**/*.c'
             - '**/*.h'
+            - '**/*.idl'
+            - '**/*.webidl'
             - '**/*.configure'
             - '**/*.py'
             - '**/*.properties'

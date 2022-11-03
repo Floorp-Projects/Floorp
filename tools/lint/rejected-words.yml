@@ -6,12 +6,14 @@ avoid-blacklist-and-whitelist:
     type: regex
     payload: (black|white)[-_]?list
     ignore-case: true
-    # same as codespell
+    # Based on codespell with idl and webidl added.
     extensions:
         - js
         - jsm
         - mjs
         - jxs
+        - idl
+        - webidl
         - xml
         - html
         - xhtml
@@ -210,13 +212,17 @@ avoid-blacklist-and-whitelist:
         - mozglue/baseprofiler/core/platform.cpp
         - mozglue/build/AsanOptions.cpp
         - mozglue/misc/StackWalk.cpp
+        - netwerk/base/nsIPermissionManager.idl
+        - netwerk/base/nsIProtocolHandler.idl
         - netwerk/base/nsIOService.cpp
         - netwerk/base/nsIOService.h
+        - netwerk/base/nsIURI.idl
         - netwerk/base/nsURLHelper.cpp
         - netwerk/cookie/CookieCommons.h
         - netwerk/dns/nsHostRecord.cpp
         - netwerk/dns/nsIDNService.cpp
         - netwerk/dns/nsIDNService.h
+        - netwerk/dns/nsIIDNService.idl
         - netwerk/dns/TRR.cpp
         - netwerk/ipc/DocumentLoadListener.cpp
         - netwerk/protocol/about/nsAboutProtocolHandler.cpp
