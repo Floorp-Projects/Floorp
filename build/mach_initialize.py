@@ -369,6 +369,7 @@ def initialize(topsrcdir):
         "storybook": MachCommandReference(
             "browser/components/storybook/mach_commands.py"
         ),
+        "widgets": MachCommandReference("toolkit/content/widgets/mach_commands.py"),
     }
 
     # Set a reasonable limit to the number of open files.
