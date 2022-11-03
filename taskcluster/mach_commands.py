@@ -331,7 +331,7 @@ def setup_logging(command_context, quiet=False, verbose=True):
 def show_actions(command_context, options):
     import gecko_taskgraph
     import gecko_taskgraph.actions
-    import gecko_taskgraph.generator
+    from taskgraph.generator import TaskGraphGenerator
     from taskgraph.parameters import parameters_loader
 
     try:
@@ -340,7 +340,7 @@ def show_actions(command_context, options):
         )
         parameters = parameters_loader(options["parameters"])
 
-        tgg = gecko_taskgraph.generator.TaskGraphGenerator(
+        tgg = TaskGraphGenerator(
             root_dir=options.get("root"),
             parameters=parameters,
         )

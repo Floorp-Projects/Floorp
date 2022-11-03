@@ -46,11 +46,11 @@ def register(graph_config):
     Args:
         graph_config: The graph configuration object.
     """
+    from taskgraph import generator
     from gecko_taskgraph.parameters import register_parameters
     from gecko_taskgraph import (  # noqa: trigger target task method registration
         target_tasks,
     )
-    from gecko_taskgraph import generator
     from gecko_taskgraph import morph  # noqa: trigger morph registration
     from gecko_taskgraph.util.verify import verifications
 
