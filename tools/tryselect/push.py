@@ -176,6 +176,7 @@ def push_to_try(
     dry_run=False,
     closed_tree=False,
     files_to_change=None,
+    allow_log_capture=False,
 ):
     push = not stage_changes and not dry_run
     check_working_directory(push)
@@ -223,7 +224,7 @@ def push_to_try(
         vcs.add_remove_files(*changed_files)
 
         try:
-            vcs.push_to_try(commit_message)
+            vcs.push_to_try(commit_message, allow_log_capture=allow_log_capture)
         except MissingVCSExtension as e:
             if e.ext == "push-to-try":
                 print(HG_PUSH_TO_TRY_NOT_FOUND)
