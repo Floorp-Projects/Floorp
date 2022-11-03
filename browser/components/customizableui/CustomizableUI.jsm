@@ -1807,18 +1807,31 @@ var CustomizableUIInternal = {
     lazy.log.debug("Building " + aWidget.id + " of type " + aWidget.type);
 
     let node;
+    let button;
     if (aWidget.type == "custom") {
       if (aWidget.onBuild) {
         node = aWidget.onBuild(aDocument);
       }
-      if (!node || !aDocument.defaultView.XULElement.isInstance(node)) {
+      if (
+        !node ||
+        !aDocument.defaultView.XULElement.isInstance(node) ||
+        (aWidget.viewId && !node.viewButton)
+      ) {
         lazy.log.error(
           "Custom widget with id " +
             aWidget.id +
             " does not return a valid node"
         );
       }
-    } else {
+      // A custom widget can define a viewId for the panel and a viewButton
+      // property for the panel anchor.  With that, it will be treated as a view
+      // type where necessary to hook up the view panel.
+      if (aWidget.viewId) {
+        button = node.viewButton;
+      }
+    }
+    // Button and view widget types, plus custom widgets that have a viewId and thus a button.
+    if (button || aWidget.type != "custom") {
       if (
         aWidget.onBeforeCreated &&
         aWidget.onBeforeCreated(aDocument) === false
@@ -1826,7 +1839,10 @@ var CustomizableUIInternal = {
         return null;
       }
 
-      let button = aDocument.createXULElement("toolbarbutton");
+      if (!button) {
+        button = aDocument.createXULElement("toolbarbutton");
+        node = button;
+      }
       button.classList.add("toolbarbutton-1");
       button.setAttribute("delegatesanchor", "true");
 
@@ -1844,11 +1860,9 @@ var CustomizableUIInternal = {
         node.classList.add("toolbaritem-combined-buttons");
         node.append(button, dropmarker);
         viewbutton = dropmarker;
-      } else {
-        node = button;
-        if (aWidget.type == "view") {
-          viewbutton = button;
-        }
+      } else if (aWidget.viewId) {
+        // Also set viewbutton for anything with a view
+        viewbutton = button;
       }
 
       node.setAttribute("id", aWidget.id);
@@ -2107,17 +2121,18 @@ var CustomizableUIInternal = {
     // Note that aEvent can be a keypress event for widgets of type "view".
     lazy.log.debug("handleWidgetCommand");
 
+    let action;
     if (aWidget.onBeforeCommand) {
       try {
-        aWidget.onBeforeCommand.call(null, aEvent);
+        action = aWidget.onBeforeCommand.call(null, aEvent, aNode);
       } catch (e) {
         lazy.log.error(e);
       }
     }
 
-    if (aWidget.type == "button") {
+    if (aWidget.type == "button" || action == "command") {
       this.doWidgetCommand(aWidget, aNode, aEvent);
-    } else if (aWidget.type == "view") {
+    } else if (aWidget.type == "view" || action == "view") {
       this.showWidgetView(aWidget, aNode, aEvent);
     } else if (aWidget.type == "button-and-view") {
       // Do the command if we're in the toolbar and the button was clicked.
@@ -2260,7 +2275,8 @@ var CustomizableUIInternal = {
       if (
         target.getAttribute("closemenu") == "none" ||
         target.getAttribute("widget-type") == "view" ||
-        target.getAttribute("widget-type") == "button-and-view"
+        target.getAttribute("widget-type") == "button-and-view" ||
+        target.hasAttribute("view-button-id")
       ) {
         return;
       }
@@ -2990,11 +3006,14 @@ var CustomizableUIInternal = {
       widget.onBeforeCommand = aData.onBeforeCommand;
     }
 
-    if (widget.type == "button" || widget.type == "button-and-view") {
-      widget.onCommand =
-        typeof aData.onCommand == "function" ? aData.onCommand : null;
+    if (typeof aData.onCommand == "function") {
+      widget.onCommand = aData.onCommand;
     }
-    if (widget.type == "view" || widget.type == "button-and-view") {
+    if (
+      widget.type == "view" ||
+      widget.type == "button-and-view" ||
+      aData.viewId
+    ) {
       if (typeof aData.viewId != "string") {
         lazy.log.error(
           "Expected a string for widget " +
@@ -3008,7 +3027,8 @@ var CustomizableUIInternal = {
 
       this.wrapWidgetEventHandler("onViewShowing", widget);
       this.wrapWidgetEventHandler("onViewHiding", widget);
-    } else if (widget.type == "custom") {
+    }
+    if (widget.type == "custom") {
       this.wrapWidgetEventHandler("onBuild", widget);
     }
 
@@ -3097,7 +3117,11 @@ var CustomizableUIInternal = {
           true
         );
       }
-      if (widget.type == "view" || widget.type == "button-and-view") {
+      if (
+        widget.type == "view" ||
+        widget.type == "button-and-view" ||
+        widget.viewId
+      ) {
         let viewNode = window.document.getElementById(widget.viewId);
         if (viewNode) {
           for (let eventName of kSubviewEvents) {
@@ -3944,7 +3968,9 @@ var CustomizableUI = {
    *                             of the widget.
    * - viewId:        Only useful for views and button-and-view widgets (and
    *                  required there): the id of the <panelview> that should be
-   *                  shown when clicking the widget.
+   *                  shown when clicking the widget.  If used with a custom
+   *                  widget, the widget must also provide a toolbaritem where
+   *                  the first child is the view button.
    * - onBuild(aDoc): Only useful for custom widgets (and required there); a
    *                  function that will be invoked with the document in which
    *                  to build a widget. Should return the DOM node that has
@@ -3964,15 +3990,20 @@ var CustomizableUI = {
    *                  passing the document from which it was removed. This is
    *                  useful especially for 'view' type widgets that need to
    *                  cleanup after views that were constructed on the fly.
-   * - onBeforeCommand(aEvt): A function that will be invoked when the user
+   * - onBeforeCommand(aEvt, aNode): A function that will be invoked when the user
    *                          activates the button but before the command
    *                          is evaluated. Useful if code needs to run to
    *                          change the button's icon in preparation to the
-   *                          pending command action. Called for both type=button
-   *                          and type=view.
-   * - onCommand(aEvt): Only useful for button and button-and-view widgets; a
+   *                          pending command action. Called for any type that
+   *                          supports the handler.  The command type, either
+   *                          "view" or "command", may be returned to force the
+   *                          action that will occur.  View will open the panel
+   *                          and command will result in calling onCommand.
+   * - onCommand(aEvt): Useful for custom, button and button-and-view widgets; a
    *                    function that will be invoked when the user activates
-   *                    the button.
+   *                    the button. A custom widget with a view should
+   *                    return "view" or "command" to continue processing
+   *                    the command per the needs of the widget.
    * - onClick(aEvt): Attached to all widgets; a function that will be invoked
    *                  when the user clicks the widget.
    * - onViewShowing(aEvt): Only useful for views and button-and-view widgets; a
@@ -4856,6 +4887,9 @@ function WidgetSingleWrapper(aWidget, aNode) {
     }
     if (!anchorId) {
       anchorId = aNode.getAttribute("cui-anchorid");
+    }
+    if (!anchorId) {
+      anchorId = aNode.getAttribute("view-button-id");
     }
     if (anchorId) {
       return aNode.ownerDocument.getElementById(anchorId);
