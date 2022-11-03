@@ -107,6 +107,8 @@ class nsMenuBarX : public nsMenuParentX, public nsChangeObserver, public mozilla
   nsMenuX* GetMenuAt(uint32_t aIndex);
   nsMenuX* GetXULHelpMenu();
   void SetSystemHelpMenu();
+  nsMenuX* GetXULWindowMenu();
+  void SetSystemWindowMenu();
   nsresult Paint();
   void ForceUpdateNativeMenuAt(const nsAString& aIndexString);
   void ForceNativeMenuReload();  // used for testing
