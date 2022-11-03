@@ -54,11 +54,12 @@ bool nsTransitionManager::UpdateTransitions(dom::Element* aElement,
                                             PseudoStyleType aPseudoType,
                                             const ComputedStyle& aOldStyle,
                                             const ComputedStyle& aNewStyle) {
-  if (!mPresContext->IsDynamic()) {
+  if (mPresContext->Medium() == nsGkAtoms::print) {
     // For print or print preview, ignore transitions.
     return false;
   }
 
+  MOZ_ASSERT(mPresContext->IsDynamic());
   if (aNewStyle.StyleDisplay()->mDisplay == StyleDisplay::None) {
     StopAnimationsForElement(aElement, aPseudoType);
     return false;
