@@ -40,6 +40,16 @@ XPCOMUtils.defineLazyGetter(lazy, "getCookieStoreIdForOriginAttributes", () => {
 // internals neither, which would likely trigger unexpected behaviors).
 const ALLOWED_SERVICEWORKER_SCHEMES = ["https", "http", "moz-extension"];
 
+// Response HTTP Headers matching the following patterns are restricted for changes
+// applied by MV3 extensions.
+const MV3_RESTRICTED_HEADERS_PATTERNS = [
+  /^cross-origin-embedder-policy$/,
+  /^cross-origin-opener-policy$/,
+  /^cross-origin-resource-policy$/,
+  /^x-frame-options$/,
+  /^access-control-/,
+];
+
 // Classes of requests that should be sent immediately instead of batched.
 // Covers basically anything that can delay first paint or DOMContentLoaded:
 // top frame HTML, <head> blocking CSS, fonts preflight, sync JS and XHR.
@@ -269,12 +279,31 @@ class ResponseHeaderChanger extends HeaderChanger {
       }
 
       this.didModifyCSP = true;
+    } else if (
+      opts.policy.manifestVersion > 2 &&
+      this.isResponseHeaderRestricted(lowerCaseName)
+    ) {
+      // TODO (Bug 1787155 and Bug 1273281) open this up to MV3 extensions,
+      // locked behind manifest.json declarative permission and a separate
+      // explicit user-controlled permission (and ideally also check for
+      // changes that would lead to security downgrades).
+      Cu.reportError(
+        `Disallowed change restricted response header ${name} on ${this.channel.finalURL} from ${opts.policy.debugName}`
+      );
+      return;
     }
+
     try {
       this.channel.setResponseHeader(name, value, merge);
     } catch (e) {
       Cu.reportError(new Error(`Error setting response header ${name}: ${e}`));
     }
+  }
+
+  isResponseHeaderRestricted(lowerCaseHeaderName) {
+    return MV3_RESTRICTED_HEADERS_PATTERNS.some(regex =>
+      regex.test(lowerCaseHeaderName)
+    );
   }
 
   readHeaders() {
