@@ -2074,12 +2074,6 @@
 # Prefs starting with "dom."
 #---------------------------------------------------------------------------
 
-# Whether CanvasRenderingContext2D.mozCurrentTransform is enabled.
-- name: dom.mozCurrentTransform.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Allow cut/copy
 - name: dom.allow_cut_copy
   type: bool
