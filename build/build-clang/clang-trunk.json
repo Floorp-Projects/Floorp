@@ -7,6 +7,7 @@
         "bug47258-extract-symbols-mbcs.patch",
         "fuzzing_ccov_build_clang_12.patch",
         "win64-no-symlink_clang_16.patch",
+        "revert-llvmorg-16-init-9324-g01859da84bad.patch",
         "revert-llvmorg-16-init-8201-ge0fb01e97b6b.patch",
         "revert-llvmorg-16-init-7694-g19e984ef8f49.patch",
         "revert-llvmorg-16-init-7598-g54bfd0484615.patch",
