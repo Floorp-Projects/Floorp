@@ -33,13 +33,6 @@ hw-a51-aarch64:
         symbol: perftest-a51
     platform: android-hw-a51-11-0-aarch64-shippable/opt
 
-hw-p2:
-    worker-type: t-bitbar-gw-perf-p2
-    description: Run ./mach perftest on a Pixel 2
-    treeherder:
-        symbol: perftest-p2
-    platform: android-hw-p2-8-0-android-aarch64-shippable/opt
-
 hw-a51-view-fenix:
     worker-type: t-bitbar-gw-perf-a51
     description: Run VIEW perftest on Fenix on a Samsung A51
@@ -100,37 +93,6 @@ hw-a51-aarch64-view-fenix:
             --output $MOZ_FETCHES_DIR/../artifacts
             testing/performance/perftest_android_view.js
 
-hw-p2-view-fenix:
-    worker-type: t-bitbar-gw-perf-p2
-    description: Run VIEW perftest on Fenix on a Pixel2
-    treeherder:
-        symbol: perftest(view-fenix)
-    platform: android-hw-p2-8-0-android-aarch64-shippable/opt
-    attributes:
-        cron: true
-        batch: true
-    run:
-        command: >-
-            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
-            cd $GECKO_PATH &&
-            python3 python/mozperftest/mozperftest/runner.py
-            --flavor mobile-browser
-            --android
-            --android-app-name org.mozilla.fenix
-            --perfherder-metrics name:processLaunchToNavStart,shouldAlert:True
-            --android-install-apk fenix_nightly_arm64_v8a
-            --android-activity org.mozilla.fenix.IntentReceiverActivity
-            --android-clear-logcat
-            --android-capture-logcat logcat
-            --android-perf-tuning
-            --hooks testing/performance/hooks_android_view.py
-            --perfherder
-            --perfherder-app fenix
-            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-            --browsertime-iterations 25
-            --output $MOZ_FETCHES_DIR/../artifacts
-            testing/performance/perftest_android_view.js
-
 hw-a51-view-gv:
     worker-type: t-bitbar-gw-perf-a51
     description: Run VIEW perftest on GV on a Samsung A51
@@ -179,36 +141,6 @@ hw-a51-aarch64-view-gv:
             --android-activity org.mozilla.geckoview_example.GeckoViewActivity
             --android-clear-logcat
             --android-capture-logcat logcat
-            --perfherder-metrics processLaunchToNavStart
-            --android-install-apk gve_nightly_aarch64
-            --hooks testing/performance/hooks_android_view.py
-            --perfherder
-            --perfherder-app geckoview
-            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-            --browsertime-iterations 14
-            --output $MOZ_FETCHES_DIR/../artifacts
-            testing/performance/perftest_android_view.js
-
-hw-p2-view-gv:
-    worker-type: t-bitbar-gw-perf-p2
-    description: Run VIEW perftest on GV on a Pixel 2
-    treeherder:
-        symbol: perftest(view-gv)
-    platform: android-hw-p2-8-0-android-aarch64-shippable/opt
-    attributes:
-        cron: true
-    run:
-        command: >-
-            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
-            cd $GECKO_PATH &&
-            python3 python/mozperftest/mozperftest/runner.py
-            --flavor mobile-browser
-            --android
-            --android-clear-logcat
-            --android-capture-logcat logcat
-            --android-app-name org.mozilla.geckoview_example
-            --android-activity org.mozilla.geckoview_example.GeckoViewActivity
-            --android-perf-tuning
             --perfherder-metrics processLaunchToNavStart
             --android-install-apk gve_nightly_aarch64
             --hooks testing/performance/hooks_android_view.py
@@ -283,39 +215,6 @@ hw-a51-aarch64-main-fenix:
             --browsertime-iterations 14
             testing/performance/perftest_android_main.js
 
-hw-p2-main-fenix:
-    worker-type: t-bitbar-gw-perf-p2
-    description: Run main (home activity) perftest on Fenix on a Pixel 2
-    treeherder:
-        symbol: perftest(main-fenix)
-    platform: android-hw-p2-8-0-android-aarch64-shippable/opt
-    attributes:
-        cron: false
-    run:
-        command: >-
-            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
-            cd $GECKO_PATH &&
-            python3 python/mozperftest/mozperftest/runner.py
-            --flavor mobile-browser
-            --android
-            --android-app-name org.mozilla.fenix
-            --android-activity .App
-            --android-clear-logcat
-            --android-capture-logcat logcat
-            --android-perf-tuning
-            --androidlog
-            --androidlog-first-timestamp ".*Start proc.*org\.mozilla\..*\..*App.*"
-            --androidlog-second-timestamp ".*Fully drawn.*org\.mozilla\..*"
-            --androidlog-subtest-name "MAIN"
-            --android-install-apk fenix_nightly_arm64_v8a
-            --hooks testing/performance/hooks_android_main.py
-            --perfherder
-            --perfherder-app fenix
-            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-            --output $MOZ_FETCHES_DIR/../artifacts
-            --browsertime-iterations 14
-            testing/performance/perftest_android_main.js
-
 hw-a51-perfstats-gv:
     worker-type: t-bitbar-gw-perf-a51
     description: Run PerfStats perftest on GeckoView on a Samsung A51
@@ -351,35 +250,6 @@ hw-a51-aarch64-perfstats-gv:
     treeherder:
         symbol: perftest(perfstats-gv)
     platform: android-hw-a51-11-0-aarch64-shippable/opt
-    attributes:
-        cron: false
-    run:
-        command: >-
-            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
-            cd $GECKO_PATH &&
-            python3 python/mozperftest/mozperftest/runner.py
-            --flavor mobile-browser
-            --android
-            --android-app-name org.mozilla.geckoview_example
-            --android-activity org.mozilla.geckoview_example.GeckoViewActivity
-            --android-clear-logcat
-            --android-capture-logcat logcat
-            --android-install-apk gve_nightly_aarch64
-            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-            --output $MOZ_FETCHES_DIR/../artifacts
-            --perfherder
-            --perfherder-app geckoview
-            --perfherder-metrics name:HttpChannelCompletion,unit:ms name:HttpChannelCompletion_Cache,unit:ms name:HttpChannelCompletion_Network,unit:ms name:DisplayListBuilding,unit:ms name:Reflowing,unit:ms name:Styling,unit:ms
-            --browsertime-iterations 10
-            --hooks testing/performance/hooks_perfstats.py
-            testing/performance/perftest_perfstats.js
-
-hw-p2-perfstats-gv:
-    worker-type: t-bitbar-gw-perf-p2
-    description: Run PerfStats pageload test on GeckoView on a Pixel 2
-    treeherder:
-        symbol: perftest(perfstats-gv)
-    platform: android-hw-p2-8-0-android-aarch64-shippable/opt
     attributes:
         cron: false
     run:
@@ -490,43 +360,14 @@ hw-a51-aarch64-perfstats-fenix:
             --hooks testing/performance/hooks_perfstats.py
             testing/performance/perftest_perfstats.js
 
-hw-p2-perfstats-fenix:
-    worker-type: t-bitbar-gw-perf-p2
-    description: Run PerfStats perftest on Fenix on a Pixel2
-    treeherder:
-        symbol: perftest(perfstats-fenix)
-    platform: android-hw-p2-8-0-android-aarch64-shippable/opt
-    attributes:
-        cron: false
-    run:
-        command: >-
-            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
-            cd $GECKO_PATH &&
-            python3 python/mozperftest/mozperftest/runner.py
-            --flavor mobile-browser
-            --android
-            --android-app-name org.mozilla.fenix
-            --android-activity org.mozilla.fenix.IntentReceiverActivity
-            --android-clear-logcat
-            --android-capture-logcat logcat
-            --android-install-apk fenix_nightly_arm64_v8a
-            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-            --output $MOZ_FETCHES_DIR/../artifacts
-            --perfherder
-            --perfherder-app fenix
-            --perfherder-metrics name:HttpChannelCompletion,unit:ms name:HttpChannelCompletion_Cache,unit:ms name:HttpChannelCompletion_Network,unit:ms name:DisplayListBuilding,unit:ms name:Reflowing,unit:ms name:Styling,unit:ms
-            --browsertime-iterations 10
-            --hooks testing/performance/hooks_perfstats.py
-            testing/performance/perftest_perfstats.js
-
-hw-p2-record-websites:
-    worker-type: t-bitbar-gw-perf-p2
-    description: Run perftest to record desktop websites
+hw-a51-record-websites:
+    worker-type: t-bitbar-gw-perf-a51
+    description: Run perftest to record mobile websites
     treeherder:
         symbol: perftest(rec)
-    platform: android-hw-p2-8-0-android-aarch64-shippable/opt
+    platform: android-hw-a51-11-0-aarch64-shippable/opt
     require-build:
-        android-hw-p2-8-0-android-aarch64-shippable/opt: build-android-aarch64-shippable/opt
+        android-hw-a51-11-0-aarch64-shippable/opt: build-android-aarch64-shippable/opt
     attributes:
         cron: false
     run-on-projects: []

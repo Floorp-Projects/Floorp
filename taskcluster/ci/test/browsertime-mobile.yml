@@ -7,13 +7,7 @@ job-defaults:
     suite: raptor
     variants:
         - geckoview-no-fission
-    run-on-projects:
-        by-app:
-            refbrow: []
-            default:
-                by-test-platform:
-                    android-hw-p2-.*aarch64-shippable-qr.*: [mozilla-central]
-                    default: []
+    run-on-projects: []
     tier: 3
     test-manifest-loader: null  # don't load tests in the taskgraph
     target:
@@ -109,24 +103,20 @@ browsertime-tp6m:
                     geckoview-no-fission:
                         by-test-platform:
                             android-hw-(g5|a51).*shippable-qr.*: [trunk]
-                            android-hw-p2.*aarch64-shippable-qr.*: [trunk]
                             default: []
                     default:
                         by-subtest:
                             wikipedia:
                                 by-test-platform:
                                     android-hw-(g5|a51).*shippable-qr.*: [trunk]
-                                    android-hw-p2.*aarch64-shippable-qr.*: [trunk]
                                     default: []
                             google-search-restaurants:
                                 by-test-platform:
                                     android-hw-(g5|a51).*shippable-qr.*: [trunk]
-                                    android-hw-p2.*aarch64-shippable-qr.*: [trunk]
                                     default: []
                             default:
                                 by-test-platform:
                                     android-hw-(g5|a51).*shippable-qr.*: [mozilla-central]
-                                    android-hw-p2.*aarch64-shippable-qr.*: [mozilla-central]
                                     default: []
             default: []
 
@@ -149,7 +139,6 @@ browsertime-tp6m-essential:
             geckoview:
                 by-test-platform:
                     android-hw-(g5|a51).*shippable.*: [trunk]
-                    android-hw-p2.*aarch64-shippable.*: [trunk]
                     default: []
             default: []
     tier:
@@ -207,7 +196,6 @@ browsertime-youtube-playback-mobile:
             geckoview:
                 by-test-platform:
                     android-hw-(g5|a51).*shippable.*: [mozilla-central]
-                    android-hw-p2.*aarch64-shippable.*: [mozilla-central]
                     default: []
             default: []
     max-run-time: 3600
@@ -271,7 +259,6 @@ browsertime-tp6m-live:
                     geckoview:
                         by-test-platform:
                             android-hw-(g5|a51).*shippable-qr.*: [autoland]
-                            android-hw-p2.*aarch64-shippable-qr.*: [autoland]
                             default: []
                     default: []
             default: []
@@ -295,7 +282,7 @@ browsertime-tp6m-profiling:
             - --gecko-profile
     run-on-projects:
         by-test-platform:
-            android-hw-p2-.*aarch64-shippable-qr/opt: [mozilla-central]
+            android-hw-(a51).*aarch64-shippable-qr/opt: [mozilla-central]
             default: []
 
 browsertime-speedometer-mobile:
@@ -313,12 +300,8 @@ browsertime-speedometer-mobile:
             geckoview:
                 by-test-platform:
                     android-hw-(g5|a51).*shippable-qr.*: [trunk]
-                    android-hw-p2.*aarch64-shippable-qr.*: [trunk]
                     default: []
-            default:
-                by-test-platform:
-                    android-hw-p2-.*aarch64-shippable-qr.*: [mozilla-central]
-                    default: []
+            default: []
     treeherder-symbol: Btime(sp)
     mozharness:
         extra-options:
@@ -335,12 +318,11 @@ browsertime-unity-webgl-mobile:
             refbrow: []
             geckoview:
                 by-test-platform:
-                    android-hw-(g5|a51).*shippable-qr.*: [trunk]
-                    android-hw-p2.*aarch64-shippable-qr.*: [trunk]
+                    android-hw-a51-.*aarch64-shippable-qr.*: [trunk]
                     default: []
             default:
                 by-test-platform:
-                    android-hw-p2-.*aarch64-shippable-qr.*: [mozilla-central]
+                    android-hw-a51-.*aarch64-shippable-qr.*: [mozilla-central]
                     default: []
     max-run-time:
         by-test-platform:
