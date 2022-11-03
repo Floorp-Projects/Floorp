@@ -2963,6 +2963,18 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
   return NS_OK;
 }
 
+bool nsExternalHelperAppService::GetMIMETypeFromDefaultForExtension(
+    const nsACString& aExtension, nsACString& aMIMEType) {
+  // First of all, check our default entries
+  for (auto& entry : defaultMimeEntries) {
+    if (aExtension.LowerCaseEqualsASCII(entry.mFileExtension)) {
+      aMIMEType = entry.mMimeType;
+      return true;
+    }
+  }
+  return false;
+}
+
 NS_IMETHODIMP
 nsExternalHelperAppService::GetTypeFromExtension(const nsACString& aFileExt,
                                                  nsACString& aContentType) {
@@ -2982,11 +2994,8 @@ nsExternalHelperAppService::GetTypeFromExtension(const nsACString& aFileExt,
   }
 
   // First of all, check our default entries
-  for (auto& entry : defaultMimeEntries) {
-    if (aFileExt.LowerCaseEqualsASCII(entry.mFileExtension)) {
-      aContentType = entry.mMimeType;
-      return NS_OK;
-    }
+  if (GetMIMETypeFromDefaultForExtension(aFileExt, aContentType)) {
+    return NS_OK;
   }
 
   // Ask OS.
@@ -3032,6 +3041,35 @@ NS_IMETHODIMP nsExternalHelperAppService::GetPrimaryExtension(
 
   return mi->GetPrimaryExtension(_retval);
 }
+
+NS_IMETHODIMP nsExternalHelperAppService::GetDefaultTypeFromURI(
+    nsIURI* aURI, nsACString& aContentType) {
+  NS_ENSURE_ARG_POINTER(aURI);
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+  aContentType.Truncate();
+
+  // Now try to get an nsIURL so we don't have to do our own parsing
+  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+  if (!url) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsAutoCString ext;
+  rv = url->GetFileExtension(ext);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!ext.IsEmpty()) {
+    UnescapeFragment(ext, url, ext);
+
+    if (GetMIMETypeFromDefaultForExtension(ext, aContentType)) {
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_NOT_AVAILABLE;
+};
 
 NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(
     nsIURI* aURI, nsACString& aContentType) {

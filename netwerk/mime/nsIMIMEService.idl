@@ -62,6 +62,17 @@ interface nsIMIMEService : nsISupports {
      */
     ACString getTypeFromURI(in nsIURI aURI);
 
+    /**
+     * Retrieves a ACString representation of the MIME type
+     * associated with this file extension.  Only the default
+     * builtin list is examined.  Unless you need a restricted
+     * set use getTypeFromURI.
+     *
+     * @param  The URI the user wants MIME info on.
+     * @return The MIME type, if any.
+     */
+    ACString getDefaultTypeFromURI(in nsIURI aURI);
+
     //
     ACString getTypeFromFile(in nsIFile aFile);
 
