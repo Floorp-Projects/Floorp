@@ -7170,15 +7170,17 @@ bool BaseCompiler::emitRefCast() {
   return true;
 }
 
-bool BaseCompiler::emitBrOnCast() {
+bool BaseCompiler::emitBrOnCastCommon(bool onSuccess) {
   MOZ_ASSERT(!hasLatentOp());
 
-  uint32_t relativeDepth;
+  uint32_t labelRelativeDepth;
   BaseNothingVector unused_values{};
-  uint32_t typeIndex;
-  ResultType branchTargetType;
-  if (!iter_.readBrOnCast(&relativeDepth, &typeIndex, &branchTargetType,
-                          &unused_values)) {
+  uint32_t castTypeIndex;
+  ResultType labelType;
+  if (onSuccess ? !iter_.readBrOnCast(&labelRelativeDepth, &castTypeIndex,
+                                      &labelType, &unused_values)
+                : !iter_.readBrOnCastFail(&labelRelativeDepth, &castTypeIndex,
+                                          &labelType, &unused_values)) {
     return false;
   }
 
@@ -7186,7 +7188,7 @@ bool BaseCompiler::emitBrOnCast() {
     return true;
   }
 
-  Control& target = controlItem(relativeDepth);
+  Control& target = controlItem(labelRelativeDepth);
   target.bceSafeOnExit &= bceSafe_;
 
   RegRef refPtr = popRef();
@@ -7196,7 +7198,7 @@ bool BaseCompiler::emitBrOnCast() {
   moveRef(refPtr, castedPtr);
   pushRef(castedPtr);
   pushRef(refPtr);
-  emitGcCanon(typeIndex);
+  emitGcCanon(castTypeIndex);
 
   // 2. ref.test : [ref, rtt] -> [i32]
   if (!emitInstanceCall(SASigRefTest)) {
@@ -7205,7 +7207,7 @@ bool BaseCompiler::emitBrOnCast() {
 
   // 3. br_if $l : [T*, ref, i32] -> [T*, ref]
   BranchState b(&target.label, target.stackHeight, InvertBranch(false),
-                branchTargetType);
+                labelType);
   if (b.hasBlockResults()) {
     needResultRegisters(b.resultType);
   }
@@ -7213,8 +7215,9 @@ bool BaseCompiler::emitBrOnCast() {
   if (b.hasBlockResults()) {
     freeResultRegisters(b.resultType);
   }
-  if (!jumpConditionalWithResults(&b, Assembler::NotEqual, condition,
-                                  Imm32(0))) {
+  if (!jumpConditionalWithResults(
+          &b, (onSuccess ? Assembler::NotEqual : Assembler::Equal), condition,
+          Imm32(0))) {
     return false;
   }
   freeI32(condition);
@@ -9366,7 +9369,9 @@ bool BaseCompiler::emitBody() {
           case uint32_t(GcOp::RefCast):
             CHECK_NEXT(emitRefCast());
           case uint32_t(GcOp::BrOnCast):
-            CHECK_NEXT(emitBrOnCast());
+            CHECK_NEXT(emitBrOnCastCommon(/*onSuccess=*/true));
+          case uint32_t(GcOp::BrOnCastFail):
+            CHECK_NEXT(emitBrOnCastCommon(/*onSuccess=*/false));
           default:
             break;
         }  // switch (op.b1)
