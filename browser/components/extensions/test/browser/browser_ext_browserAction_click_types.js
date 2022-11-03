@@ -89,22 +89,24 @@ async function test_clickData({ manifest_version, persistent }) {
 
     for (let modifier of Object.keys(map)) {
       for (let i = 0; i < 2; i++) {
+        info(`test click with button ${i} modifier ${modifier}`);
         let clickEventData = { button: i };
         clickEventData[modifier] = true;
         await clickBrowserAction(extension, window, clickEventData);
-        let info = await extension.awaitMessage("onClick");
+        let details = await extension.awaitMessage("onClick");
 
-        is(info.button, i, `Correct button in ${area} click`);
-        assertSingleModifier(info, modifier, area);
+        is(details.button, i, `Correct button in ${area} click`);
+        assertSingleModifier(details, modifier, area);
       }
 
+      info(`test keypress with modifier ${modifier}`);
       let keypressEventData = {};
       keypressEventData[modifier] = true;
       await triggerBrowserActionWithKeyboard(extension, " ", keypressEventData);
-      let info = await extension.awaitMessage("onClick");
+      let details = await extension.awaitMessage("onClick");
 
-      is(info.button, 0, `Key command emulates left click`);
-      assertSingleModifier(info, modifier, area);
+      is(details.button, 0, `Key command emulates left click`);
+      assertSingleModifier(details, modifier, area);
     }
   }
 

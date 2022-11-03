@@ -175,7 +175,7 @@ add_task(async function test_new_tab_ignore_settings() {
   );
   is(
     panel.anchorNode.closest("toolbarbutton").id,
-    "newtabignore_mochi_test-browser-action",
+    "newtabignore_mochi_test-BAP",
     "The doorhanger is anchored to the browser action"
   );
 

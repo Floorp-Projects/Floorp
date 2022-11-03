@@ -152,7 +152,8 @@ async function runTests(options) {
       browserActionId = `${makeWidgetId(extension.id)}-browser-action`;
     }
 
-    let button = document.getElementById(browserActionId);
+    let node = document.getElementById(browserActionId);
+    let button = node.firstElementChild;
 
     ok(button, "button exists");
 
@@ -163,7 +164,7 @@ async function runTests(options) {
     is(button.getAttribute("label"), title, "image label is correct");
     is(button.getAttribute("badge"), details.badge, "badge text is correct");
     is(
-      button.getAttribute("disabled") == "true",
+      node.getAttribute("disabled") == "true",
       !details.enabled,
       "disabled state is correct"
     );
@@ -534,7 +535,7 @@ add_task(async function testBadgeColorPersistence() {
 
   function getBadgeForWindow(win) {
     const widget = getBrowserActionWidget(extension).forWindow(win).node;
-    return widget.badgeLabel;
+    return widget.firstElementChild.badgeLabel;
   }
 
   let badge = getBadgeForWindow(window);

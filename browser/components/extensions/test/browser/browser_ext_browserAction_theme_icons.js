@@ -21,11 +21,21 @@ async function testBrowserAction(extension, expectedIcon) {
   let browserActionWidget = getBrowserActionWidget(extension);
   await promiseAnimationFrame();
   let browserActionButton = browserActionWidget.forWindow(window).node;
-  let image = getListStyleImage(browserActionButton);
+  let image = getListStyleImage(browserActionButton.firstElementChild);
   ok(
     image.includes(expectedIcon),
     `Expected browser action icon (${image}) to be ${expectedIcon}`
   );
+}
+
+function waitForElementShown(element) {
+  let win = element.ownerGlobal;
+  let dwu = win.windowUtils;
+  return BrowserTestUtils.waitForCondition(() => {
+    info("Waiting for overflow button to have non-0 size");
+    let bounds = dwu.getBoundsWithoutFlushing(element);
+    return bounds.width > 0 && bounds.height > 0;
+  });
 }
 
 async function testStaticTheme(options) {
@@ -51,6 +61,18 @@ async function testStaticTheme(options) {
   let extension = ExtensionTestUtils.loadExtension({ manifest });
 
   await extension.startup();
+
+  // Ensure we show the menupanel at least once. This makes sure that the
+  // elements we're going to query the style of are in the flat tree.
+  if (defaultArea == "menupanel") {
+    let overflowButton = document.getElementById("nav-bar-overflow-button");
+    await waitForElementShown(overflowButton.icon);
+    info("Open overflow menu");
+    let menu = document.getElementById("widget-overflow");
+    let shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
+    overflowButton.click();
+    await shown;
+  }
 
   // Confirm that the browser action has the correct default icon before a theme is loaded.
   let toolbarId = TOOLBAR_MAPPING[defaultArea];
@@ -257,10 +279,6 @@ add_task(async function browseraction_theme_icons_overflow_panel() {
       },
     ],
   });
-
-  // Ensure we show the menupanel at least once. This makes sure that the
-  // elements we're going to query the style of are in the flat tree.
-  document.getElementById("nav-bar-overflow-button").click();
 
   await testStaticTheme({
     themeData,

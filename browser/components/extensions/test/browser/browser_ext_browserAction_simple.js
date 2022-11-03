@@ -75,7 +75,7 @@ async function testAction(manifest_version) {
     clickBrowserAction(extension);
 
     let widget = widgetGroup.forWindow(window);
-    let image = getComputedStyle(widget.node).listStyleImage;
+    let image = getComputedStyle(widget.node.firstElementChild).listStyleImage;
 
     ok(image.includes("/icon.png"), "The extension's icon is used");
     await extension.awaitMessage("popup");
