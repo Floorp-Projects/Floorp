@@ -10,6 +10,7 @@ import androidx.test.runner.permission.PermissionRequester
 import androidx.test.uiautomator.UiDevice
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -157,6 +158,7 @@ class DownloadTest {
           - downloads appear in the list
           - deleting a download from device storage, removes it from the Downloads Menu too
         */
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/27220")
     @SmokeTest
     @Test
     fun manageDownloadsInDownloadsMenuTest() {
