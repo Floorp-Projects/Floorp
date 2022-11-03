@@ -1,4 +1,4 @@
-const ua = "Mozilla/5.0 (Android 12; Mobile; rv:102.0) Gecko/102.0 Firefox/102.0";
+const ua = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36 Edg/107.0.1418.26";
 
 browser.webRequestExt.onBeforeRequest_webpanel_requestId.addListener(function(requestId){
   function listener(e) {
