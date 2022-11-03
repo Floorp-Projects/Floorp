@@ -2623,6 +2623,18 @@ def package_l10n(command_context, verbose=False, locales=[]):
             cwd=mozpath.join(command_context.topsrcdir),
         )
 
+        # This is tricky: most Android build commands will regenerate the
+        # omnijar, producing a `res/multilocale.txt` that does not contain the
+        # set of locales packaged by this command.  To avoid regenerating, we
+        # set a special environment variable.
+        print(
+            "Execute `env MOZ_CHROME_MULTILOCALE='{}' ".format(
+                append_env["MOZ_CHROME_MULTILOCALE"]
+            )
+            + "mach android install-geckoview_example` "
+            + "to install the multi-locale geckoview_example and test APKs."
+        )
+
     return 0
 
 
