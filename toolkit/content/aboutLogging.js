@@ -75,9 +75,34 @@ function updateLogFile() {
   if (logPath.length) {
     currentLogFile.innerText = logPath;
     setLogFileButton.disabled = true;
-  } else {
+  } else if (gDashboard.getLogPath() != ".moz_log") {
     // There may be a value set by a pref.
     currentLogFile.innerText = gDashboard.getLogPath();
+  } else {
+    try {
+      let file = gDirServ.getFile("TmpD", {});
+      file.append("log.txt");
+      document.getElementById("log-file").value = file.path;
+    } catch (e) {
+      console.error(e);
+    }
+    // Fall back to the temp dir
+    currentLogFile.innerText = document.getElementById("log-file").value;
+  }
+
+  let openLogFileButton = document.getElementById("open-log-file-button");
+  openLogFileButton.disabled = true;
+
+  if (currentLogFile.innerText.length) {
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    file.initWithPath(currentLogFile.innerText);
+
+    if (file.exists()) {
+      openLogFileButton.disabled = false;
+      openLogFileButton.onclick = function(e) {
+        file.reveal();
+      };
+    }
   }
 }
 
