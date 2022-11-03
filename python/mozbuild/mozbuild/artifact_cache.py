@@ -32,9 +32,16 @@ import six.moves.urllib.parse as urlparse
 
 from mozbuild.util import mkdir
 import mozpack.path as mozpath
-from dlmanager import (
-    DownloadManager,
-    PersistLimit,
+import dlmanager
+
+# Using 'DownloadManager' through the provided interface we
+# can't directly specify a 'chunk_size' for the 'Download' it manages.
+# One way to get it to use the 'chunk_size' we want is to monkeypatch
+# the defaults of the init function for the 'Download' class.
+CHUNK_SIZE = 16 * 1024 * 1024  # 16 MB in bytes.
+dl_init = dlmanager.Download.__init__
+dl_init.__defaults__ = (
+    dl_init.__defaults__[:1] + (CHUNK_SIZE,) + dl_init.__defaults__[2:]
 )
 
 
@@ -46,7 +53,7 @@ MIN_CACHED_ARTIFACTS = 12
 MAX_CACHED_ARTIFACTS_SIZE = 2 * 1024 * 1024 * 1024
 
 
-class ArtifactPersistLimit(PersistLimit):
+class ArtifactPersistLimit(dlmanager.PersistLimit):
     """Handle persistence for a cache of artifacts.
 
     When instantiating a DownloadManager, it starts by filling the
@@ -148,7 +155,7 @@ class ArtifactCache(object):
         self._log = log
         self._skip_cache = skip_cache
         self._persist_limit = ArtifactPersistLimit(log)
-        self._download_manager = DownloadManager(
+        self._download_manager = dlmanager.DownloadManager(
             self._cache_dir, persist_limit=self._persist_limit
         )
         self._last_dl_update = -1
