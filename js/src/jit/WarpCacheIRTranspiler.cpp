@@ -656,7 +656,7 @@ bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
   MDefinition* obj = getOperand(objId);
   PropertyName* name = stringStubField(nameOffset)->asAtom().asPropertyName();
 
-  auto* ins = MMegamorphicLoadSlot::New(alloc(), obj, name);
+  auto* ins = MMegamorphicLoadSlot::New(alloc(), obj, NameToId(name));
   add(ins);
 
   pushResult(ins);
