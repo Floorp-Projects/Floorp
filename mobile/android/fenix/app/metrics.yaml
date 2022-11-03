@@ -6198,6 +6198,7 @@ browser.search:
     expires: never
     no_lint:
       - BASELINE_PING
+
 addons:
   open_addons_in_settings:
     type: event
