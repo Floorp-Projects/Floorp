@@ -1350,7 +1350,7 @@ search_engines:
       - rtestard@mozilla.com
     expires: never
     extra_keys:
-      current_:
+      current_engines_count:
         description: How many search engines did the user had at that point.
         type: quantity
   learn_more_tapped:
