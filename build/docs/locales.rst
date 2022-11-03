@@ -90,20 +90,63 @@ If you want to create a single build with multiple locales, you will do
       ./mach build
       ./mach package
 
-#. For each locale you want to include in the build:
+#. Create the multi-locale package:
 
    .. code-block:: shell
 
-      export MOZ_CHROME_MULTILOCALE="de it zh-TW"
-      for AB_CD in $MOZ_CHROME_MULTILOCALE; do
-         ./mach build chrome-$AB_CD
-      done
+      ./mach package-multi-locale --locales de it zh-TW
 
-#. Create the multilingual package:
+On Android, this produces a multi-locale GeckoView AAR and multi-locale APKs,
+including GeckoViewExample.  You can test different locales by changing your
+Android OS locale and restarting GeckoViewExample.  You'll need to install with
+the ``MOZ_CHROME_MULTILOCALE`` variable set, like:
 
    .. code-block:: shell
 
-      AB_CD=multi ./mach package
+       env MOZ_CHROME_MULTILOCALE=en-US,de,it,zh-TW ./mach android install-geckoview_example
+
+Multi-locale builds without compiling
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For deep technical reasons, artifact builds do not support multi-locale builds.
+However, with a little work, we can achieve the same effect:
+
+#. Arrange a ``mozconfig`` without a compilation environment but with support
+   for the ``RecursiveMake`` build backend, like:
+
+   .. code-block:: shell
+
+      ac_add_options --disable-compile-environment
+      export BUILD_BACKENDS=FasterMake,RecursiveMake
+      ... other options ...
+
+#. Configure.
+
+   .. code-block:: shell
+
+      ./mach configure
+
+#. Manually provide compiled artifacts.
+
+   .. code-block:: shell
+
+      ./mach artifact install [-v]
+
+#. Build.
+
+   .. code-block:: shell
+
+      ./mach build
+
+#. Produce a multi-locale package.
+
+   .. code-block:: shell
+
+      ./mach package-multi-locale --locales de it zh-TW
+
+This build configuration is fragile and not generally useful for active
+development (for that, use a full/compiled build), but it certainly speeds
+testing multi-locale packaging.
 
 General flow of repacks
 -----------------------
