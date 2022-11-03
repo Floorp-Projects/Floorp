@@ -136,7 +136,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
 
     let widgetId = makeWidgetId(extension.id);
     this.id = actionWidgetId(widgetId);
-    this.viewId = `PanelUI-webext-${widgetId}-browser-action-view`;
+    this.viewId = `PanelUI-webext-${widgetId}-BAV`;
     this.widget = null;
 
     this.pendingPopup = null;
@@ -192,21 +192,59 @@ this.browserAction = class extends ExtensionAPIPersistent {
   }
 
   build() {
+    let { extension } = this;
+    let widgetId = makeWidgetId(extension.id);
     let widget = CustomizableUI.createWidget({
       id: this.id,
       viewId: this.viewId,
-      type: "view",
+      type: "custom",
       webExtension: true,
       removable: true,
       label: this.action.getProperty(null, "title"),
       tooltiptext: this.action.getProperty(null, "title"),
       defaultArea: browserAreas[this.action.getDefaultArea()],
-      showInPrivateBrowsing: this.extension.privateBrowsingAllowed,
+      showInPrivateBrowsing: extension.privateBrowsingAllowed,
       disallowSubView: true,
 
       // Don't attempt to load properties from the built-in widget string
       // bundle.
       localized: false,
+
+      // Build a custom widget that looks like a `unified-extensions-item`
+      // custom element.
+      onBuild(document) {
+        let viewId = widgetId + "-BAP";
+        let button = document.createXULElement("toolbarbutton");
+        button.setAttribute("id", viewId);
+        // Ensure the extension context menuitems are available by setting this
+        // on all button children and the item.
+        button.setAttribute("data-extensionid", extension.id);
+        button.classList.add("toolbarbutton-1");
+
+        let cog = document.createXULElement("toolbarbutton");
+        cog.classList.add(
+          "unified-extensions-item-open-menu",
+          "subviewbutton",
+          "subviewbutton-iconic"
+        );
+
+        // Hook up the context menu.
+        cog.setAttribute("context", "customizationPanelItemContextMenu");
+        cog.setAttribute("closemenu", "none");
+        cog.setAttribute("data-extensionid", extension.id);
+
+        let node = document.createXULElement("toolbaritem");
+        node.classList.add(
+          "toolbaritem-combined-buttons",
+          "unified-extensions-item"
+        );
+        node.setAttribute("view-button-id", viewId);
+        node.setAttribute("data-extensionid", extension.id);
+        node.append(button, cog);
+        node.viewButton = button;
+
+        return node;
+      },
 
       onBeforeCreated: document => {
         let view = document.createXULElement("panelview");
@@ -238,28 +276,62 @@ this.browserAction = class extends ExtensionAPIPersistent {
       },
 
       onCreated: node => {
-        node.classList.add("panel-no-padding");
-        node.classList.add("webextension-browser-action");
-        node.setAttribute("badged", "true");
-        node.setAttribute("constrain-size", "true");
-        node.setAttribute("data-extensionid", this.extension.id);
+        let button = node.firstElementChild;
+        button.classList.add("panel-no-padding");
+        button.classList.add("webextension-browser-action");
+        button.setAttribute("badged", "true");
+        button.setAttribute("constrain-size", "true");
+        button.setAttribute("data-extensionid", this.extension.id);
 
-        node.onmousedown = event => this.handleEvent(event);
-        node.onmouseover = event => this.handleEvent(event);
-        node.onmouseout = event => this.handleEvent(event);
-        node.onauxclick = event => this.handleEvent(event);
+        button.onmousedown = event => this.handleEvent(event);
+        button.onmouseover = event => this.handleEvent(event);
+        button.onmouseout = event => this.handleEvent(event);
+        button.onauxclick = event => this.handleEvent(event);
 
         this.updateButton(node, this.action.getContextData(null), true, false);
       },
 
-      onBeforeCommand: event => {
+      onBeforeCommand: (event, node) => {
         this.lastClickInfo = {
           button: event.button || 0,
           modifiers: clickModifiersFromEvent(event),
         };
+
         // The openPopupWithoutUserInteraction flag may be set by openPopup.
         this.openPopupWithoutUserInteraction =
           event.detail?.openPopupWithoutUserInteraction === true;
+
+        // TODO: use class name when we update the style of the extensions in
+        // the panel, see Bug 1798324. For now, the first element is always the
+        // main/action button.
+        if (event.target == node.firstElementChild) {
+          return "view";
+        } else if (
+          event.target.classList.contains("unified-extensions-item-open-menu")
+        ) {
+          return "command";
+        }
+      },
+
+      onCommand: event => {
+        const { target } = event;
+
+        if (event.button !== 0) {
+          return;
+        }
+
+        const popup = target.ownerDocument.getElementById(
+          "customizationPanelItemContextMenu"
+        );
+        popup.openPopup(
+          target,
+          "after_end",
+          0,
+          0,
+          true /* isContextMenu */,
+          false /* attributesOverride */,
+          event
+        );
       },
 
       onViewShowing: async event => {
@@ -353,7 +425,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
     // immediately triggers a popuphidden event)
     window.focus();
 
-    if (widgetForWindow.node.open) {
+    if (widgetForWindow.node.firstElementChild.open) {
       return;
     }
 
@@ -375,7 +447,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
         openPopupWithoutUserInteraction,
       },
     });
-    widgetForWindow.node.dispatchEvent(event);
+    widgetForWindow.node.firstElementChild.dispatchEvent(event);
   }
 
   /**
@@ -605,17 +677,18 @@ this.browserAction = class extends ExtensionAPIPersistent {
   // Update the toolbar button |node| with the tab context data
   // in |tabData|.
   updateButton(node, tabData, sync = false, attention = false) {
+    let button = node.firstElementChild;
     let title = tabData.title || this.extension.name;
     let callback = () => {
-      node.setAttribute("tooltiptext", title);
-      node.setAttribute("label", title);
+      button.setAttribute("tooltiptext", title);
+      button.setAttribute("label", title);
 
-      node.setAttribute("attention", attention);
+      button.setAttribute("attention", attention);
 
       if (tabData.badgeText) {
-        node.setAttribute("badge", tabData.badgeText);
+        button.setAttribute("badge", tabData.badgeText);
       } else {
-        node.removeAttribute("badge");
+        button.removeAttribute("badge");
       }
 
       if (tabData.enabled) {
@@ -626,7 +699,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
 
       let serializeColor = ([r, g, b, a]) =>
         `rgba(${r}, ${g}, ${b}, ${a / 255})`;
-      node.setAttribute(
+      button.setAttribute(
         "badgeStyle",
         [
           `background-color: ${serializeColor(tabData.badgeBackgroundColor)}`,
@@ -635,7 +708,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
       );
 
       let style = this.iconData.get(tabData.icon);
-      node.setAttribute("style", style);
+      button.setAttribute("style", style);
     };
     if (sync) {
       callback();

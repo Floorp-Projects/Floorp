@@ -83,7 +83,7 @@ async function testOriginControls(
 
   switch (contextMenuId) {
     case "toolbar-context-menu":
-      let target = `#${CSS.escape(makeWidgetId(extension.id))}-browser-action`;
+      let target = `#${CSS.escape(makeWidgetId(extension.id))}-BAP`;
       button = win.document.querySelector(target);
       menu = await openChromeContextMenu(contextMenuId, target, win);
       manageExtensionClassName = "customize-context-manageExtension";

@@ -159,6 +159,7 @@ add_task(async function browseraction_popup_image_contextmenu() {
 });
 
 function openContextMenu(menuId, targetId, win = window) {
+  info(`Open context menu ${menuId} at ${targetId}`);
   return openChromeContextMenu(menuId, "#" + CSS.escape(targetId), win);
 }
 
@@ -177,7 +178,8 @@ add_task(async function browseraction_contextmenu_manage_extension() {
   // with other tests.
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let id = "addon_id@example.com";
-  let buttonId = `${makeWidgetId(id)}-browser-action`;
+  let buttonId = `${makeWidgetId(id)}-BAP`;
+  let nodeId = `${makeWidgetId(id)}-browser-action`;
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       browser_specific_settings: {
@@ -232,7 +234,7 @@ add_task(async function browseraction_contextmenu_manage_extension() {
   }
 
   async function testContextMenu(menuId, customizing) {
-    info(`Open browserAction context menu in ${menuId}`);
+    info(`Open browserAction context menu in ${menuId} on ${buttonId}`);
     let menu = await openContextMenu(menuId, buttonId, win);
     await checkVisibility(menu, true);
 
@@ -307,7 +309,7 @@ add_task(async function browseraction_contextmenu_manage_extension() {
 
     info("Pin the browserAction and another button to the overflow menu");
     CustomizableUI.addWidgetToArea(
-      buttonId,
+      nodeId,
       CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
     );
     CustomizableUI.addWidgetToArea(
@@ -341,7 +343,7 @@ add_task(async function browseraction_contextmenu_manage_extension() {
     await testContextMenu(overflowMenuCtxMenu.id, customizing);
 
     info("Restore initial state");
-    CustomizableUI.addWidgetToArea(buttonId, CustomizableUI.AREA_NAVBAR);
+    CustomizableUI.addWidgetToArea(nodeId, CustomizableUI.AREA_NAVBAR);
     CustomizableUI.addWidgetToArea(otherButtonId, CustomizableUI.AREA_NAVBAR);
 
     if (customizing) {
@@ -392,12 +394,9 @@ add_task(async function browseraction_contextmenu_manage_extension() {
   await BrowserTestUtils.closeWindow(win);
 });
 
-async function runTestContextMenu({
-  buttonId,
-  customizing,
-  testContextMenu,
-  win,
-}) {
+async function runTestContextMenu({ id, customizing, testContextMenu, win }) {
+  let widgetId = makeWidgetId(id);
+  let nodeId = `${widgetId}-browser-action`;
   if (customizing) {
     info("Enter customize mode");
     let customizationReady = BrowserTestUtils.waitForEvent(
@@ -413,7 +412,7 @@ async function runTestContextMenu({
 
   info("Pin the browserAction and another button to the overflow menu");
   CustomizableUI.addWidgetToArea(
-    buttonId,
+    nodeId,
     CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
   );
 
@@ -434,7 +433,7 @@ async function runTestContextMenu({
   await testContextMenu("customizationPanelItemContextMenu", customizing);
 
   info("Restore initial state");
-  CustomizableUI.addWidgetToArea(buttonId, CustomizableUI.AREA_NAVBAR);
+  CustomizableUI.addWidgetToArea(nodeId, CustomizableUI.AREA_NAVBAR);
 
   if (customizing) {
     info("Exit customize mode");
@@ -453,7 +452,7 @@ add_task(async function browseraction_contextmenu_remove_extension() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let id = "addon_id@example.com";
   let name = "Awesome Add-on";
-  let buttonId = `${makeWidgetId(id)}-browser-action`;
+  let buttonId = `${makeWidgetId(id)}-BAP`;
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name,
@@ -509,7 +508,7 @@ add_task(async function browseraction_contextmenu_remove_extension() {
 
   info("Run tests in normal mode");
   await runTestContextMenu({
-    buttonId,
+    id,
     customizing: false,
     testContextMenu,
     win,
@@ -532,7 +531,7 @@ add_task(async function browseraction_contextmenu_remove_extension() {
 
   info("Run tests in customize mode");
   await runTestContextMenu({
-    buttonId,
+    id,
     customizing: true,
     testContextMenu,
     win,
@@ -702,7 +701,7 @@ add_task(async function browseraction_contextmenu_report_extension() {
 
   info("Run tests in normal mode");
   await runTestContextMenu({
-    buttonId,
+    id,
     customizing: false,
     testContextMenu,
     win,
@@ -710,7 +709,7 @@ add_task(async function browseraction_contextmenu_report_extension() {
 
   info("Run tests in customize mode");
   await runTestContextMenu({
-    buttonId,
+    id,
     customizing: true,
     testContextMenu,
     win,

@@ -499,5 +499,5 @@ function clickOnAddonWidget(addonId) {
   ok(browserActionEl, "Got the browserAction button from the browser UI");
 
   info("Show the web extension popup");
-  browserActionEl.click();
+  browserActionEl.firstElementChild.click();
 }

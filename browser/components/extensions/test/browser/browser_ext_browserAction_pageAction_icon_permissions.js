@@ -121,7 +121,8 @@ add_task(async function testDefaultDetails() {
 
     await promiseAnimationFrame();
 
-    let browserActionButton = document.getElementById(browserActionId);
+    let browserActionButton = document.getElementById(browserActionId)
+      .firstElementChild;
     let image = getListStyleImage(browserActionButton);
 
     ok(

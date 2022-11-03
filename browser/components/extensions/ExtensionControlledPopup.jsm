@@ -336,7 +336,9 @@ class ExtensionControlledPopup {
         `${makeWidgetId(extensionId)}-browser-action`
       );
       if (action) {
-        action = action.areaType == "toolbar" && action.forWindow(win).node;
+        action =
+          action.areaType == "toolbar" &&
+          action.forWindow(win).node.firstElementChild;
       }
 
       // Anchor to a toolbar browserAction if found, otherwise use the menu button.
