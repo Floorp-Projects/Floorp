@@ -121,4 +121,9 @@ object FeatureFlags {
      * Enables the save to PDF feature.
      */
     const val saveToPDF = true
+
+    /**
+     * Enables storage maintenance feature
+     * */
+    val storageMaintenanceFeature = Config.channel.isNightlyOrDebug
 }

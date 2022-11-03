@@ -28,6 +28,7 @@ import mozilla.appservices.Megazord
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.storage.sync.GlobalPlacesDependencyProvider
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.isUnsupported
@@ -210,6 +211,14 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                 components.core.engine.warmUp()
             }
             initializeWebExtensionSupport()
+            if (FeatureFlags.storageMaintenanceFeature) {
+                // Make sure to call this function before registering a storage worker
+                // (e.g. components.core.historyStorage.registerStorageMaintenanceWorker())
+                // as the storage maintenance worker needs a places storage globally when
+                // it is needed while the app is not running and WorkManager wakes up the app
+                // for the periodic task.
+                GlobalPlacesDependencyProvider.initialize(components.core.historyStorage)
+            }
             restoreBrowserState()
             restoreDownloads()
 
@@ -228,12 +237,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         visibilityLifecycleCallback = VisibilityLifecycleCallback(getSystemService())
         registerActivityLifecycleCallbacks(visibilityLifecycleCallback)
         registerActivityLifecycleCallbacks(MarkersActivityLifecycleCallbacks(components.core.engine))
-
-        // Storage maintenance disabled, for now, as it was interfering with background migrations.
-        // See https://github.com/mozilla-mobile/fenix/issues/7227 for context.
-        // if ((System.currentTimeMillis() - settings().lastPlacesStorageMaintenance) > ONE_DAY_MILLIS) {
-        //    runStorageMaintenance()
-        // }
 
         components.appStartReasonProvider.registerInAppOnCreate(this)
         components.startupActivityLog.registerInAppOnCreate(this)
@@ -343,6 +346,18 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             }
         }
 
+        fun queueStorageMaintenance() {
+            if (FeatureFlags.storageMaintenanceFeature) {
+                queue.runIfReadyOrQueue {
+                    // Make sure GlobalPlacesDependencyProvider.initialize(components.core.historyStorage)
+                    // is called before this call. When app is not running and WorkManager wakes up
+                    // the app for the periodic task, it will require a globally provided places storage
+                    // to run the maintenance on.
+                    components.core.historyStorage.registerStorageMaintenanceWorker()
+                }
+            }
+        }
+
         initQueue()
 
         // We init these items in the visual completeness queue to avoid them initing in the critical
@@ -351,6 +366,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         queueMetrics()
         queueReviewPrompt()
         queueRestoreLocale()
+        queueStorageMaintenance()
     }
 
     private fun startMetricsIfEnabled() {
@@ -362,20 +378,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             components.analytics.metrics.start(MetricServiceType.Marketing)
         }
     }
-
-    // See https://github.com/mozilla-mobile/fenix/issues/7227 for context.
-    // To re-enable this, we need to do so in a way that won't interfere with any startup operations
-    // which acquire reserved+ sqlite lock. Currently, Fennec migrations need to write to storage
-    // on startup, and since they run in a background service we can't simply order these operations.
-    // @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
-    // private fun runStorageMaintenance() {
-    //     GlobalScope.launch(Dispatchers.IO) {
-    //        // Bookmarks and history storage sit on top of the same db file so we only need to
-    //        // run maintenance on one - arbitrarily using bookmarks.
-    //        // components.core.bookmarksStorage.runMaintenance()
-    //     }
-    //     settings().lastPlacesStorageMaintenance = System.currentTimeMillis()
-    // }
 
     protected open fun setupLeakCanary() {
         // no-op, LeakCanary is disabled by default

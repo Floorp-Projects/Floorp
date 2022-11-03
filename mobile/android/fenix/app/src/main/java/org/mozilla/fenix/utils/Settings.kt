@@ -1035,11 +1035,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true,
     )
 
-    var lastPlacesStorageMaintenance by longPreference(
-        appContext.getPreferenceKey(R.string.pref_key_last_maintenance),
-        default = 0,
-    )
-
     fun addSearchWidgetInstalled(count: Int) {
         val key = appContext.getPreferenceKey(R.string.pref_key_search_widget_installed)
         val newValue = preferences.getInt(key, 0) + count
