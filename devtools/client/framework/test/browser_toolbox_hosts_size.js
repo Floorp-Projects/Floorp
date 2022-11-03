@@ -6,7 +6,7 @@
 
 const URL = "data:text/html;charset=utf8,test for host sizes";
 
-var { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
+const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 add_task(async function() {
   // Set size prefs to make the hosts way too big, so that the size has
@@ -37,6 +37,12 @@ add_task(async function() {
     "The iframe fits within the available space"
   );
 
+  iframe.style.height = "10000px"; // Set height to something unreasonably large.
+  ok(
+    iframe.clientHeight < panelHeight,
+    `The iframe fits within the available space (${iframe.clientHeight} < ${panelHeight})`
+  );
+
   await toolbox.switchHost(Toolbox.HostType.RIGHT);
   iframe = panel.querySelector(".devtools-toolbox-side-iframe");
   iframe.style.minWidth = "1px"; // Disable the min width set in css
@@ -46,8 +52,18 @@ add_task(async function() {
     "The iframe fits within the available space"
   );
 
+  const oldWidth = iframe.style.width;
+  iframe.style.width = "10000px"; // Set width to something unreasonably large.
+  ok(
+    iframe.clientWidth < panelWidth,
+    `The iframe fits within the available space (${iframe.clientWidth} < ${panelWidth})`
+  );
+  iframe.style.width = oldWidth;
+
   // on shutdown, the sidebar width will be set to the clientWidth of the iframe
   const expectedWidth = iframe.clientWidth;
+
+  info("waiting for cleanup");
   await cleanup(toolbox);
   // Wait until the toolbox-host-manager was destroyed and updated the preferences
   // to avoid side effects in the next test.
@@ -55,6 +71,7 @@ add_task(async function() {
     const savedWidth = Services.prefs.getIntPref(
       "devtools.toolbox.sidebar.width"
     );
+    info(`waiting for saved pref: ${savedWidth}, ${expectedWidth}`);
     return savedWidth === expectedWidth;
   });
 });
