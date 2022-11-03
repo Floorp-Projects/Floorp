@@ -240,13 +240,16 @@ class Repository(object):
         """
 
     @abc.abstractmethod
-    def push_to_try(self, message):
+    def push_to_try(self, message, allow_log_capture=False):
         """Create a temporary commit, push it to try and clean it up
         afterwards.
 
         With mercurial, MissingVCSExtension will be raised if the `push-to-try`
         extension is not installed. On git, MissingVCSExtension will be raised
         if git cinnabar is not present.
+
+        If `allow_log_capture` is set to `True`, then the push-to-try will be run using
+        Popen instead of check_call so that the logs can be captured elsewhere.
         """
 
     @abc.abstractmethod
@@ -274,6 +277,29 @@ class Repository(object):
         if paths is not None:
             args = args + paths
         self._run(*args)
+
+    def _push_to_try_with_log_capture(self, cmd, subprocess_opts):
+        """Push to try but with the ability for the user to capture logs.
+
+        We need to use Popen for this because neither the run method nor
+        check_call will allow us to reasonably catch the logs. With check_call,
+        hg hangs, and with the run method, the logs are output too slowly
+        so you're left wondering if it's working (prime candidate for
+        corrupting local repos).
+        """
+        process = subprocess.Popen(cmd, **subprocess_opts)
+
+        # Print out the lines as they appear so they can be
+        # parsed for information
+        for line in process.stdout or []:
+            print(line)
+        process.stdout.close()
+        process.wait()
+
+        if process.returncode != 0:
+            for line in process.stderr or []:
+                print(line)
+            raise subprocess.CalledProcessError("Failed to push-to-try")
 
 
 class HgRepository(Repository):
@@ -500,13 +526,27 @@ class HgRepository(Repository):
     def update(self, ref):
         return self._run("update", "--check", ref)
 
-    def push_to_try(self, message):
+    def push_to_try(self, message, allow_log_capture=False):
         try:
-            subprocess.check_call(
-                (str(self._tool), "push-to-try", "-m", message),
-                cwd=self.path,
-                env=self._env,
-            )
+            cmd = (str(self._tool), "push-to-try", "-m", message)
+            if allow_log_capture:
+                self._push_to_try_with_log_capture(
+                    cmd,
+                    {
+                        "stdout": subprocess.PIPE,
+                        "stderr": subprocess.PIPE,
+                        "cwd": self.path,
+                        "env": self._env,
+                        "universal_newlines": True,
+                        "bufsize": 1,
+                    },
+                )
+            else:
+                subprocess.check_call(
+                    cmd,
+                    cwd=self.path,
+                    env=self._env,
+                )
         except subprocess.CalledProcessError:
             try:
                 self._run("showconfig", "extensions.push-to-try")
@@ -660,7 +700,7 @@ class GitRepository(Repository):
     def update(self, ref):
         self._run("checkout", ref)
 
-    def push_to_try(self, message):
+    def push_to_try(self, message, allow_log_capture=False):
         if not self.has_git_cinnabar:
             raise MissingVCSExtension("cinnabar")
 
@@ -668,15 +708,24 @@ class GitRepository(Repository):
             "-c", "commit.gpgSign=false", "commit", "--allow-empty", "-m", message
         )
         try:
-            subprocess.check_call(
-                (
-                    str(self._tool),
-                    "push",
-                    "hg::ssh://hg.mozilla.org/try",
-                    "+HEAD:refs/heads/branches/default/tip",
-                ),
-                cwd=self.path,
+            cmd = (
+                str(self._tool),
+                "push",
+                "hg::ssh://hg.mozilla.org/try",
+                "+HEAD:refs/heads/branches/default/tip",
             )
+            if allow_log_capture:
+                self._push_to_try_with_log_capture(
+                    cmd,
+                    {
+                        "stdout": subprocess.PIPE,
+                        "cwd": self.path,
+                        "universal_newlines": True,
+                        "bufsize": 1,
+                    },
+                )
+            else:
+                subprocess.check_call(cmd, cwd=self.path)
         finally:
             self._run("reset", "HEAD~")
 
