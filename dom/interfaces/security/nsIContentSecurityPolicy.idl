@@ -155,18 +155,18 @@ interface nsIContentSecurityPolicy : nsISerializable
    * policy.
    * @param aURI The target URI
    * @param aIsFormSubmission True if the navigation was initiated by a form submission. This
-   *        is important since the form-action directive overrides navigate-to in that case.  
+   *        is important since the form-action directive overrides navigate-to in that case.
    * @param aWasRedirect True if a redirect has happened. Important for path-sensitivity.
-   * @param aEnforceWhitelist True if the whitelist of allowed targets must be enforced. If 
-   *        this is true, the whitelist must be enforced even if 'unsafe-allow-redirects' is 
-   *        used. If 'unsafe-allow-redirects' is not used then the whitelist is always enforced
+   * @param aEnforceAllowlist True if the allowlist of allowed targets must be enforced. If
+   *        this is true, the allowlist must be enforced even if 'unsafe-allow-redirects' is
+   *        used. If 'unsafe-allow-redirects' is not used then the allowlist is always enforced
    * @return
    *     Whether or not the effects of the navigation is allowed
    */
-  boolean getAllowsNavigateTo(in nsIURI aURI, 
+  boolean getAllowsNavigateTo(in nsIURI aURI,
                               in boolean aIsFormSubmission,
                               in boolean aWasRedirected,
-                              in boolean aEnforceWhitelist);
+                              in boolean aEnforceAllowlist);
 
   /**
    * Whether this policy allows eval and eval-like functions
