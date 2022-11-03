@@ -9,22 +9,23 @@
  * Used to store values that have been entered into forms which may later
  * be used to automatically fill in the values when the form is visited again.
  *
- * search(terms, queryData, callback)
+ * async search(terms, queryData)
  *   Look up values that have been previously stored.
  *     terms - array of terms to return data for
  *     queryData - object that contains the query terms
  *       The query object contains properties for each search criteria to match, where the value
  *       of the property specifies the value that term must have. For example,
  *       { term1: value1, term2: value2 }
- *     callback - callback that is called when results are available or an error occurs.
- *       The callback is passed a result array containing each found entry. Each element in
- *       the array is an object containing a property for each search term specified by 'terms'.
- * count(queryData, callback)
+ *   Resolves to an array containing the found results. Each element in
+ *   the array is an object containing a property for each search term
+ *   specified by 'terms'.
+ *   Rejects in case of errors.
+ * async count(queryData)
  *   Find the number of stored entries that match the given criteria.
  *     queryData - array of objects that indicate the query. See the search method for details.
- *     callback - callback that is called when results are available or an error occurs.
- *       The callback is passed the number of found entries.
- * update(changes, callback)
+ *   Resolves to the number of found entries.
+ *   Rejects in case of errors.
+ * async update(changes)
  *    Write data to form history storage.
  *      changes - an array of changes to be made. If only one change is to be made, it
  *                may be passed as an object rather than a one-element array.
@@ -38,11 +39,10 @@
  *        The terms specified allow matching of one or more specific entries. If no terms
  *        are specified then all entries are matched. This means that { op: "remove" } is
  *        used to remove all entries and clear the form history.
- *      callback - callback that is called when results have been stored.
- * getAutoCompeteResults(searchString, params, callback)
+ *   Resolves once the operation is complete.
+ *   Rejects in case of errors.
+ * async getAutoCompeteResults(searchString, params, callback)
  *   Retrieve an array of form history values suitable for display in an autocomplete list.
- *   Returns an mozIStoragePendingStatement that can be used to cancel the operation if
- *   needed.
  *     searchString - the string to search for, typically the entered value of a textbox
  *     params - zero or more filter arguments:
  *       fieldname - form field name
@@ -54,9 +54,13 @@
  *       prefixWeight
  *       boundaryWeight
  *       source
- *     callback - callback that is called with the array of results. Each result in the array
- *                is an object with four arguments:
+ *     callback - callback that is invoked for each result, the second argument
+ *                is a function that can be used to cancel the operation.
+ *                Each result is an object with four properties:
  *                  text, textLowerCase, frecency, totalScore
+ *   Resolves with an array of results, once the operation is complete.
+ *   Rejects in case of errors.
+ *
  * schemaVersion
  *   This property holds the version of the database schema
  *
@@ -76,13 +80,6 @@
  *            other term which can be used (ie, you can not also specify a
  *            fieldname, value etc) and indicates the guid of the existing
  *            record that should be updated.
- *
- * In all of the above methods, the callback argument should be an object with
- * handleResult(result), handleFailure(error) and handleCompletion(reason) functions.
- * For search and getAutoCompeteResults, result is an object containing the desired
- * properties. For count, result is the integer count. For, update, handleResult is
- * not called. For handleCompletion, reason is either 0 if successful or 1 if
- * an error occurred.
  */
 
 const EXPORTED_SYMBOLS = ["FormHistory"];
@@ -101,7 +98,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const DB_SCHEMA_VERSION = 5;
 const DAY_IN_MS = 86400000; // 1 day in milliseconds
 const MAX_SEARCH_TOKENS = 10;
-const NOOP = function noop() {};
 const DB_FILENAME = "formhistory.sqlite";
 
 var supportsDeletedTable = AppConstants.platform == "android";
@@ -653,7 +649,11 @@ async function updateFormHistoryWrite(aChanges) {
   }
 
   try {
-    await runUpdateQueries(conn, queries);
+    await conn.executeTransaction(async () => {
+      for (let { query, params } of queries) {
+        await conn.executeCached(query, params);
+      }
+    });
     for (let [notification, param] of notifications) {
       // We're either sending a GUID or nothing at all.
       sendNotification(notification, param);
@@ -661,24 +661,6 @@ async function updateFormHistoryWrite(aChanges) {
   } finally {
     InProgressInserts.clear(adds);
   }
-}
-
-/**
- * Runs queries for an update operation to the database. This
- * is separated out from updateFormHistoryWrite to avoid shutdown
- * leaks where the handlers passed to updateFormHistoryWrite would
- * leak from the closure around the executeTransaction function.
- *
- * @param {SqliteConnection} conn the database connection
- * @param {Object} queries query string and param pairs generated
- *                 by updateFormHistoryWrite
- */
-async function runUpdateQueries(conn, queries) {
-  await conn.executeTransaction(async () => {
-    for (let { query, params } of queries) {
-      await conn.executeCached(query, params);
-    }
-  });
 }
 
 /**
@@ -995,30 +977,6 @@ FormHistory = {
     return Prefs.enabled;
   },
 
-  _prepareHandlers(handlers) {
-    let defaultHandlers = {
-      handleResult: NOOP,
-      handleError: NOOP,
-      handleCompletion: NOOP,
-    };
-
-    if (!handlers) {
-      return defaultHandlers;
-    }
-
-    if (handlers.handleResult) {
-      defaultHandlers.handleResult = handlers.handleResult;
-    }
-    if (handlers.handleError) {
-      defaultHandlers.handleError = handlers.handleError;
-    }
-    if (handlers.handleCompletion) {
-      defaultHandlers.handleCompletion = handlers.handleCompletion;
-    }
-
-    return defaultHandlers;
-  },
-
   async search(aSelectTerms, aSearchData, aRowFunc) {
     // if no terms selected, select everything
     if (!aSelectTerms) {
@@ -1151,7 +1109,28 @@ FormHistory = {
     await updateFormHistoryWrite(aChanges);
   },
 
-  getAutoCompleteResults(searchString, params, aHandlers) {
+  /**
+   * Gets results for the autocomplete widget.
+   * @param {string} searchString The string to search for.
+   * @param {object} params zero or more filter properties:
+   *   - fieldname
+   *   - agedWeight
+   *   - bucketSize
+   *   - expiryDate
+   *   - maxTimeGroundings
+   *   - timeGroupingSize
+   *   - prefixWeight
+   *   - boundaryWeight
+   *   - source
+   * @param {function} [callback] if provided, it is invoked for each result.
+   *   the first argument is the result with four properties (text,
+   *   textLowerCase, frecency, totalScore), the second argument is a cancel
+   *   function that can be invoked to cancel the search.
+   * @returns {Promise} resolved once the search is complete.
+   * @resolves {array} array of results. If the search was canceled it will be
+   *   an empty array.
+   */
+  async getAutoCompleteResults(searchString, params, callback) {
     // only do substring matching when the search string contains more than one character
     let searchTokens;
     let where = "";
@@ -1213,8 +1192,6 @@ FormHistory = {
       )`;
     }
 
-    let handlers = this._prepareHandlers(aHandlers);
-
     /* Three factors in the frecency calculation for an entry (in order of use in calculation):
      * 1) average number of times used - items used more are ranked higher
      * 2) how recently it was last used - items used recently are ranked higher
@@ -1241,44 +1218,37 @@ FormHistory = {
       where +
       "ORDER BY ROUND(frecency * boundaryBonuses) DESC, UPPER(value) ASC";
 
+    let results = [];
     let cancelled = false;
+    function cancelFn() {
+      cancelled = true;
+    }
 
-    let cancellableQuery = {
-      cancel() {
-        cancelled = true;
-      },
-    };
-
-    this.db.then(async conn => {
-      try {
-        await conn.executeCached(query, params, (row, cancel) => {
-          if (cancelled) {
-            cancel();
-            return;
-          }
-
-          let value = row.getResultByName("value");
-          let guid = row.getResultByName("guid");
-          let frecency = row.getResultByName("frecency");
-          let entry = {
-            text: value,
-            guid,
-            textLowerCase: value.toLowerCase(),
-            frecency,
-            totalScore: Math.round(
-              frecency * row.getResultByName("boundaryBonuses")
-            ),
-          };
-          handlers.handleResult(entry);
-        });
-        handlers.handleCompletion(0);
-      } catch (e) {
-        handlers.handleError(e);
-        handlers.handleCompletion(1);
+    let conn = await this.db;
+    await conn.executeCached(query, params, (row, cancel) => {
+      if (cancelled) {
+        cancel();
+        return;
       }
-    });
 
-    return cancellableQuery;
+      let value = row.getResultByName("value");
+      let guid = row.getResultByName("guid");
+      let frecency = row.getResultByName("frecency");
+      let entry = {
+        text: value,
+        guid,
+        textLowerCase: value.toLowerCase(),
+        frecency,
+        totalScore: Math.round(
+          frecency * row.getResultByName("boundaryBonuses")
+        ),
+      };
+      if (callback) {
+        callback(entry, cancelFn);
+      }
+      results.push(entry);
+    });
+    return cancelled ? [] : results;
   },
 
   // This is used only so that the test can verify deleted table support.

@@ -36,7 +36,6 @@ FormHistoryStartup.prototype = {
   },
 
   inited: false,
-  pendingQuery: null,
 
   init() {
     if (this.inited) {
@@ -66,43 +65,26 @@ FormHistoryStartup.prototype = {
 
         let { id, searchString, params } = message.data;
 
-        if (this.pendingQuery) {
-          this.pendingQuery.cancel();
-          this.pendingQuery = null;
-        }
-
-        let query = null;
-
-        let results = [];
-        let processResults = {
-          handleResult: aResult => {
-            results.push(aResult);
-          },
-          handleCompletion: aReason => {
-            // Check that the current query is still the one we created. Our
-            // query might have been canceled shortly before completing, in
-            // that case we don't want to call the callback anymore.
-            if (query === this.pendingQuery) {
-              this.pendingQuery = null;
-              if (!aReason) {
-                message.target.sendAsyncMessage(
-                  "FormHistory:AutoCompleteSearchResults",
-                  {
-                    id,
-                    results,
-                  }
-                );
-              }
-            }
-          },
-        };
-
-        query = lazy.FormHistory.getAutoCompleteResults(
+        let instance = (this._queryInstance = {});
+        lazy.FormHistory.getAutoCompleteResults(
           searchString,
           params,
-          processResults
-        );
-        this.pendingQuery = query;
+          (row, cancel) => {
+            if (this._queryInstance != instance) {
+              cancel();
+            }
+          }
+        ).then(results => {
+          if (this._queryInstance == instance) {
+            message.target.sendAsyncMessage(
+              "FormHistory:AutoCompleteSearchResults",
+              {
+                id,
+                results,
+              }
+            );
+          }
+        });
         break;
       }
 

@@ -42,28 +42,7 @@ class FormHistoryParent extends JSWindowActorParent {
 
   autoCompleteSearch(message) {
     let { searchString, params } = message.data;
-
-    return new Promise((resolve, reject) => {
-      let results = [];
-      let processResults = {
-        handleResult: aResult => {
-          results.push(aResult);
-        },
-        handleCompletion: aReason => {
-          if (!aReason) {
-            resolve(results);
-          } else {
-            reject();
-          }
-        },
-      };
-
-      lazy.FormHistory.getAutoCompleteResults(
-        searchString,
-        params,
-        processResults
-      );
-    });
+    return lazy.FormHistory.getAutoCompleteResults(searchString, params);
   }
 
   removeEntry(message) {
