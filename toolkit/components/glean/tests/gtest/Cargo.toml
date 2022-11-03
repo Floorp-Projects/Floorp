@@ -7,6 +7,8 @@ description = "Tests for the FOG crate"
 
 [dependencies]
 fog = { path = "../../api" }
+jog = { path = "../../bindings/jog" }
+nsstring = { path = "../../../../../xpcom/rust/nsstring" }
 
 [lib]
 path = "test.rs"

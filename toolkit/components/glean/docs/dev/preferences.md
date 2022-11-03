@@ -64,10 +64,19 @@ This mode can be overridden at runtime in two ways:
   then pings are sent to a server operating locally at that port
   (even if the ping has a Debug Tag), to enable testing.
 
+Also, if set, [JOG](./jog) is disabled.
+Artifact builds will not exhibit changes to their Glean metrics.
+
 `MOZILLA_OFFICIAL` tends to be set on most builds released to users,
 including builds distributed by Linux distributions.
 It tends to not be set on local developer builds.
 See [bug 1680025](https://bugzilla.mozilla.org/show_bug.cgi?id=1680025) for details.
+
+`COMPILE_ENVIRONMENT`
+
+If `COMPILE_ENVIRONMENT` isn't set in the build config,
+[JOG](./jog) will generate a file for the runtime-registration of metrics and pings.
+This is to support [Artifact Builds](/contributing/build/artifact_builds).
 
 `OS_TARGET`
 
