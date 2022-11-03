@@ -66,10 +66,6 @@ add_task(async function() {
       ancestorRulesData: ["@container mycontainer (1px < width < 10000px)"],
     },
     {
-      selector: `h1, [test-hint="unknowncontainer"]`,
-      ancestorRulesData: ["@container unknowncontainer (min-width: 2vw)"],
-    },
-    {
       selector: `h1, [test-hint="nocontainername"]`,
       ancestorRulesData: ["@container (width > 0px)"],
     },
@@ -77,12 +73,6 @@ add_task(async function() {
 
   info("Check that the 'jump to container' button works as expected");
   await assertJumpToContainerButton(inspector, view, 1, "body");
-
-  info(
-    "Check that we do fallback to the documentElement node when the container name isn't set anywhere"
-  );
-  await selectNode("h1", inspector);
-  await assertJumpToContainerButton(inspector, view, 2, "html");
 
   info("Check that inherited rules display container query data as expected");
   await selectNode("h2", inspector);
