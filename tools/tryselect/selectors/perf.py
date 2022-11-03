@@ -242,6 +242,74 @@ class PerfParser(CompareParser):
         ],
     ]
 
+    def get_tasks(base_cmd, queries, query_arg=None, candidate_tasks=None):
+        cmd = base_cmd[:]
+        if query_arg:
+            cmd.extend(["-f", query_arg])
+
+        query_str, tasks = run_fzf(cmd, sorted(candidate_tasks))
+        queries.append(query_str)
+        return set(tasks)
+
+    def get_perf_tasks(base_cmd, all_tg_tasks, perf_categories):
+        # Convert the categories to tasks
+        selected_tasks = set()
+        queries = []
+
+        selected_categories = PerfParser.get_tasks(
+            base_cmd, queries, None, perf_categories
+        )
+
+        for category, category_info in perf_categories.items():
+            if category not in selected_categories:
+                continue
+            print("Gathering tasks for %s category" % category)
+
+            # Either perform a query to get the tasks (recommended), or
+            # use a hardcoded task list
+            category_tasks = set()
+            if category_info["queries"]:
+                print("Executing queries: %s" % ", ".join(category_info["queries"]))
+
+                for perf_query in category_info["queries"]:
+                    if not category_tasks:
+                        # Get all tasks selected with the first query
+                        category_tasks |= PerfParser.get_tasks(
+                            base_cmd, queries, perf_query, all_tg_tasks
+                        )
+                    else:
+                        # Keep only those tasks that matched in all previous queries
+                        category_tasks &= PerfParser.get_tasks(
+                            base_cmd, queries, perf_query, category_tasks
+                        )
+
+                    if len(category_tasks) == 0:
+                        print("Failed to find any tasks for query: %s" % perf_query)
+                        break
+            else:
+                category_tasks = set(category_info["tasks"]) & all_tg_tasks
+                if category_tasks != set(category_info["tasks"]):
+                    print(
+                        "Some expected tasks could not be found: %s"
+                        % ", ".join(category_info["tasks"] - category_tasks)
+                    )
+
+            if not category_tasks:
+                print("Could not find any tasks for category %s" % category)
+            else:
+                # Add the new tasks to the currently selected ones
+                selected_tasks |= category_tasks
+
+        if len(selected_tasks) > MAX_PERF_TASKS:
+            print(
+                "That's a lot of tests selected (%s)!\n"
+                "These tests won't be triggered. If this was unexpected, "
+                "please file a bug in Testing :: Performance." % MAX_PERF_TASKS
+            )
+            return [], [], []
+
+        return selected_tasks, selected_categories, queries
+
     def expand_categories(
         android=False,
         chrome=False,
