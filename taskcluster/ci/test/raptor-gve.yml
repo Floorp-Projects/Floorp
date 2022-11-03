@@ -7,8 +7,6 @@ job-defaults:
     suite: raptor
     run-on-projects:
         by-test-platform:
-            android-hw-p2-.*-arm7-qr/(?!opt).*: []
-            android-hw-p2-.*-arm7-shippable-qr/opt: []
             android-hw(?!-p2).*(?<!-arm7-shippable)-qr/opt.*: []
             default: [mozilla-central]
     target: geckoview_example.apk
