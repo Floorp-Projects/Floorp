@@ -458,11 +458,10 @@ function getAddSourceToGuidQueries(source, guid) {
  * inputted changes.
  *
  * @param {Array.<Object>} aChanges changes to form history
- * @param {Object} aPreparedHandlers
  */
 // XXX This should be split up and the complexity reduced.
 // eslint-disable-next-line complexity
-async function updateFormHistoryWrite(aChanges, aPreparedHandlers) {
+async function updateFormHistoryWrite(aChanges) {
   log("updateFormHistoryWrite  " + aChanges.length);
 
   // pass 'now' down so that every entry in the batch has the same timestamp
@@ -659,11 +658,6 @@ async function updateFormHistoryWrite(aChanges, aPreparedHandlers) {
       // We're either sending a GUID or nothing at all.
       sendNotification(notification, param);
     }
-
-    aPreparedHandlers.handleCompletion(0);
-  } catch (e) {
-    aPreparedHandlers.handleError(e);
-    aPreparedHandlers.handleCompletion(1);
   } finally {
     InProgressInserts.clear(adds);
   }
@@ -1133,7 +1127,7 @@ FormHistory = {
     });
   },
 
-  update(aChanges, aHandlers) {
+  async update(aChanges, aHandlers) {
     // Used to keep track of how many searches have been started. When that number
     // are finished, updateFormHistoryWrite can be called.
     let numSearches = 0;
@@ -1245,11 +1239,17 @@ FormHistory = {
             handlers.handleError(aError);
           },
 
-          handleCompletion(aReason) {
+          async handleCompletion(aReason) {
             completedSearches++;
             if (completedSearches == numSearches) {
               if (!aReason && !searchFailed) {
-                updateFormHistoryWrite(aChanges, handlers);
+                try {
+                  await updateFormHistoryWrite(aChanges);
+                  handlers.handleCompletion(0);
+                } catch (e) {
+                  handlers.handleError(e);
+                  handlers.handleCompletion(1);
+                }
               } else {
                 handlers.handleCompletion(1);
               }
@@ -1261,7 +1261,13 @@ FormHistory = {
 
     if (numSearches == 0) {
       // We don't have to wait for any statements to return.
-      updateFormHistoryWrite(aChanges, handlers);
+      try {
+        await updateFormHistoryWrite(aChanges);
+        handlers.handleCompletion(0);
+      } catch (e) {
+        handlers.handleError(e);
+        handlers.handleCompletion(1);
+      }
     }
   },
 
