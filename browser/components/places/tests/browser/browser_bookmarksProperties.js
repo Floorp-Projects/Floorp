@@ -32,8 +32,6 @@ const TYPE_BOOKMARK = 1;
 const TEST_URL = "http://www.example.com/";
 
 const DIALOG_URL = "chrome://browser/content/places/bookmarkProperties.xhtml";
-const DIALOG_URL_MINIMAL_UI =
-  "chrome://browser/content/places/bookmarkProperties2.xhtml";
 
 function add_bookmark(url) {
   return PlacesUtils.bookmarks.insert({
@@ -309,7 +307,7 @@ gTests.push({
   desc:
     " Bug 491269 - Test that editing folder name in bookmarks properties dialog does not accept the dialog",
   sidebar: SIDEBAR_HISTORY_ID,
-  dialogUrl: DIALOG_URL_MINIMAL_UI,
+  dialogUrl: DIALOG_URL,
   action: ACTION_ADD,
   historyView: SIDEBAR_HISTORY_BYLASTVISITED_VIEW,
   window: null,
