@@ -9,6 +9,7 @@ module.exports = {
     module: true,
     reportError: true,
     require: true,
+    dampWindow: true,
   },
   rules: {
     "no-unused-vars": ["error", { args: "none", vars: "all" }],

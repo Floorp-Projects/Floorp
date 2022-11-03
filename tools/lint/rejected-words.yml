@@ -320,6 +320,7 @@ avoid-blacklist-and-whitelist:
         - testing/raptor/raptor/control_server.py
         - testing/specialpowers/content/SpecialPowersChild.jsm
         - testing/talos/talos/tests/devtools/addon/content/pages/custom/debugger/static/js/main.js
+        - testing/talos/talos/tests/devtools/addon/content/tests/source-map/angular-min.js.map
         - testing/web-platform/tests/common/security-features/README.md
         - testing/web-platform/tests/docs/writing-tests/general-guidelines.md
         - testing/web-platform/tests/docs/writing-tests/lint-tool.md
