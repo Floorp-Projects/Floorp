@@ -343,14 +343,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
         formHistoryCount = self.runAsyncCode(
             """
           let [resolve] = arguments;
-          let count;
-          let callbacks = {
-            handleResult: rv => count = rv,
-            handleCompletion() {
-              resolve(count);
-            },
-          };
-          global.FormHistory.count({}, callbacks);
+          global.FormHistory.count({}).then(resolve);
         """
         )
         self.assertEqual(

@@ -40,28 +40,13 @@ add_task(async function test() {
   await onHistoryReady();
 });
 
-function countEntries(name, message, check) {
-  return new Promise((resolve, reject) => {
-    var obj = {};
-    if (name !== null) {
-      obj.fieldname = name;
-    }
-
-    let count;
-    FormHistory.count(obj, {
-      handleResult: result => (count = result),
-      handleError(error) {
-        reject(error);
-        throw new Error("Error occurred searching form history: " + error);
-      },
-      handleCompletion(reason) {
-        if (!reason) {
-          check(count, message);
-          resolve();
-        }
-      },
-    });
-  });
+async function countEntries(name, message, check) {
+  var obj = {};
+  if (name !== null) {
+    obj.fieldname = name;
+  }
+  let count = await FormHistory.count(obj);
+  check(count, message);
 }
 
 async function onHistoryReady() {

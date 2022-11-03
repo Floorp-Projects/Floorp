@@ -27,7 +27,7 @@ FormHistoryStartup.prototype = {
         break;
       case "idle-daily":
       case "formhistory-expire-now":
-        lazy.FormHistory.expireOldEntries();
+        lazy.FormHistory.expireOldEntries().catch(Cu.reportError);
         break;
       case "profile-after-change":
         this.init();
