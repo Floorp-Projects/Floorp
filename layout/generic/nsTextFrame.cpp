@@ -8332,11 +8332,11 @@ bool ClusterIterator::NextCluster() {
 ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
                                  int32_t aDirection, nsString& aContext,
                                  bool aTrimSpaces)
-    : mTextFrame(aTextFrame),
+    : mIterator(aTextFrame->EnsureTextRun(nsTextFrame::eInflated)),
+      mTextFrame(aTextFrame),
       mDirection(aDirection),
       mCharIndex(-1),
       mHaveWordBreak(false) {
-  mIterator = aTextFrame->EnsureTextRun(nsTextFrame::eInflated);
   gfxTextRun* textRun = aTextFrame->GetTextRun(nsTextFrame::eInflated);
   if (!textRun) {
     mDirection = 0;  // signal failure
