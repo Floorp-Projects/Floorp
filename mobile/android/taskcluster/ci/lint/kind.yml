@@ -22,7 +22,10 @@ task-defaults:
             - android-gradle-dependencies
     run:
         use-caches: false
-    run-on-tasks-for: [github-pull-request, github-push]
+    run-on-tasks-for:
+        - github-pull-request
+        - github-pull-request-untrusted
+        - github-push
     treeherder:
         kind: test
         platform: 'lint/opt'

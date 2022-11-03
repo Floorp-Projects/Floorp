@@ -113,7 +113,10 @@ task-defaults:
         by-build-type:
             release: []
             nightly: []
-            default: [github-pull-request, github-push]
+            default:
+                - github-pull-request
+                - github-pull-request-untrusted
+                - github-push
     treeherder:
         kind: build
         symbol:

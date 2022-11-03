@@ -120,7 +120,7 @@ def loader(kind, path, config, params, loaded_tasks):
     # Disable the affected_components optimization to make sure we execute all tests to get
     # a complete code coverage report for pushes to 'main'.
     # See https://github.com/mozilla-mobile/android-components/issues/9382#issuecomment-760506327
-    if params["tasks_for"] in ("github-pull-request", "github-push") and params["head_ref"] != "refs/heads/main":
+    if params["tasks_for"] in ("github-pull-request", "github-pull-request-untrusted", "github-push") and params["head_ref"] != "refs/heads/main":
         logger.info("Looking for changed files to rebuild the modified components only...")
         files_changed = get_changed_files(params["head_repository"], params["head_rev"], params["base_rev"])
         affected_components = get_affected_components(files_changed, config.get("files-affecting-components"), upstream_component_dependencies, downstream_component_dependencies)

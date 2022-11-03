@@ -43,7 +43,9 @@ task-defaults:
 tasks:
     pr:
         description: PR Summary Task
-        run-on-tasks-for: [github-pull-request]
+        run-on-tasks-for:
+            - github-pull-request
+            - github-pull-request-untrusted
 
     push:
         description: Push Summary Task

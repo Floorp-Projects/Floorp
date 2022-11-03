@@ -32,6 +32,7 @@ task-defaults:
               json: true
         using: gradlew
         use-caches: false
+    # TODO Bug 1797997 - part 7: Enable these jobs on github-pull-requests
     run-on-tasks-for: [github-push]
     treeherder:
             kind: test
