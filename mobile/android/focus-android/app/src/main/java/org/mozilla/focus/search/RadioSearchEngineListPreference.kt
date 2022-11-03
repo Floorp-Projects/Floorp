@@ -39,11 +39,14 @@ class RadioSearchEngineListPreference : SearchEngineListPreference, RadioGroup.O
     }
 
     override fun onCheckedChanged(group: RadioGroup, checkedId: Int) {
+        val selectedEngine = group.getChildAt(checkedId)
+
+        // check if the corresponding button was pressed or a11y focused.
+        val hasProperState = selectedEngine.isPressed || selectedEngine.isAccessibilityFocused
+
         /* onCheckedChanged is called intermittently before the search engine table is full, so we
            must check these conditions to prevent crashes and inconsistent states. */
-        if (group.childCount != searchEngines.count() || group.getChildAt(checkedId) == null ||
-            !group.getChildAt(checkedId).isPressed
-        ) {
+        if (group.childCount != searchEngines.count() || selectedEngine == null || !hasProperState) {
             return
         }
 
