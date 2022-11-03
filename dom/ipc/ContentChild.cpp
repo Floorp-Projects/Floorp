@@ -2638,14 +2638,15 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
   }
 
   if (!mRemoteType.IsVoid()) {
-    // Preallocated processes are type PREALLOC_REMOTE_TYPE; they can become
-    // anything except a File: process.
+    // Preallocated processes are type PREALLOC_REMOTE_TYPE; they may not
+    // become a File: process, or Privileged About Content Process
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("Changing remoteType of process %d from %s to %s", getpid(),
              mRemoteType.get(), aRemoteType.get()));
     // prealloc->anything (but file) or web->web allowed, and no-change
-    MOZ_RELEASE_ASSERT(aRemoteType != FILE_REMOTE_TYPE &&
-                       mRemoteType == PREALLOC_REMOTE_TYPE);
+    MOZ_RELEASE_ASSERT(mRemoteType == PREALLOC_REMOTE_TYPE &&
+                       aRemoteType != FILE_REMOTE_TYPE &&
+                       aRemoteType != PRIVILEGEDABOUT_REMOTE_TYPE);
   } else {
     // Initial setting of remote type.  Either to 'prealloc' or the actual
     // final type (if we didn't use a preallocated process)

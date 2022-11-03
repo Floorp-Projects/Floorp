@@ -465,10 +465,10 @@ static inline NameArena& PrefNameArena() {
 
 class PrefWrapper;
 
-// Two forward declarations for immediately below
+// Three forward declarations for immediately below
 class Pref;
-static bool ShouldSanitizePreference(const Pref* const aPref,
-                                     bool aIsWebContentProcess = true);
+static bool IsPreferenceSanitized(const Pref* const aPref);
+static bool ShouldSanitizePreference(const Pref* const aPref);
 
 // Note that this never changes in the parent process, and is only read in
 // content processes.
@@ -527,7 +527,7 @@ class Pref {
   template <typename T>
   void AddToMap(SharedPrefMapBuilder& aMap) {
     // Sanitized preferences should never be added to the shared pref map
-    MOZ_ASSERT(!ShouldSanitizePreference(this, true));
+    MOZ_ASSERT(!ShouldSanitizePreference(this));
     aMap.Add(NameString(),
              {HasDefaultValue(), HasUserValue(), IsSticky(), IsLocked(),
               /* isSanitized */ false, IsSkippedByIteration()},
@@ -550,8 +550,7 @@ class Pref {
   // Other operations.
 
 #define CHECK_SANITIZATION()                                                \
-  if (!XRE_IsParentProcess() && gContentProcessPrefsAreInited &&            \
-      ShouldSanitizePreference(this, XRE_IsContentProcess())) {             \
+  if (IsPreferenceSanitized(this)) {                                        \
     if (!sPrefTelemetryEventEnabled.exchange(true)) {                       \
       sPrefTelemetryEventEnabled = true;                                    \
       Telemetry::SetEventRecordingEnabled("security"_ns, true);             \
@@ -607,7 +606,7 @@ class Pref {
     return nsDependentCString(GetBareStringValue(aKind));
   }
 
-  void ToDomPref(dom::Pref* aDomPref, bool aIsDestinationContentProcess) {
+  void ToDomPref(dom::Pref* aDomPref, bool aIsDestinationWebContentProcess) {
     MOZ_ASSERT(XRE_IsParentProcess());
 
     aDomPref->name() = mName;
@@ -615,7 +614,7 @@ class Pref {
     aDomPref->isLocked() = mIsLocked;
 
     aDomPref->isSanitized() =
-        ShouldSanitizePreference(this, aIsDestinationContentProcess);
+        aIsDestinationWebContentProcess && ShouldSanitizePreference(this);
 
     if (mHasDefaultValue) {
       aDomPref->defaultValue() = Some(dom::PrefValue());
@@ -1065,8 +1064,7 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
       case PrefType::None:
         // This check will be performed in the above functions; but for NoneType
         // we need to do it explicitly, then fall-through.
-        if (!XRE_IsParentProcess() && gContentProcessPrefsAreInited &&
-            ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
+        if (IsPreferenceSanitized(Name())) {
           if (!sPrefTelemetryEventEnabled.exchange(true)) {
             sPrefTelemetryEventEnabled = true;
             Telemetry::SetEventRecordingEnabled("security"_ns, true);
@@ -1094,9 +1092,7 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
                                                 PrefValueKind aKind) const {
     // WantValueKind may short-circuit GetValue functions and cause them to
     // return early, before this check occurs in GetFooValue()
-    if (this->is<Pref*>() && !XRE_IsParentProcess() &&
-        gContentProcessPrefsAreInited &&
-        ShouldSanitizePreference(this->as<Pref*>(), XRE_IsContentProcess())) {
+    if (this->is<Pref*>() && IsPreferenceSanitized(this->as<Pref*>())) {
       if (!sPrefTelemetryEventEnabled.exchange(true)) {
         sPrefTelemetryEventEnabled = true;
         Telemetry::SetEventRecordingEnabled("security"_ns, true);
@@ -1115,8 +1111,7 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
       // While we could use Name() above, and avoid the Variant checks, it
       // would less efficient than needed and we can instead do a debug-only
       // assert here to limit the inefficientcy
-      MOZ_ASSERT(!(!XRE_IsParentProcess() && gContentProcessPrefsAreInited &&
-                   ShouldSanitizePreference(Name(), XRE_IsContentProcess())),
+      MOZ_ASSERT(!IsPreferenceSanitized(Name()),
                  "We should never have a sanitized SharedPrefMap::Pref.");
     }
 
@@ -2523,8 +2518,7 @@ nsresult nsPrefBranch::CheckSanityOfStringLength(const char* aPrefName,
   nsAutoCString message(nsPrintfCString(
       "Warning: attempting to write %d bytes to preference %s. This is bad "
       "for general performance and memory usage. Such an amount of data "
-      "should rather be written to an external file. This preference will "
-      "not be sent to any content processes.",
+      "should rather be written to an external file.",
       aLength, GetPrefName(aPrefName).get()));
 
   rv = console->LogStringMessage(NS_ConvertUTF8toUTF16(message).get());
@@ -3713,9 +3707,8 @@ void Preferences::SerializePreferences(nsCString& aStr,
   for (auto iter = HashTable()->iter(); !iter.done(); iter.next()) {
     Pref* pref = iter.get().get();
     if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues()) {
-      pref->SerializeAndAppend(
-          aStr,
-          ShouldSanitizePreference(pref, aIsDestinationWebContentProcess));
+      pref->SerializeAndAppend(aStr, aIsDestinationWebContentProcess &&
+                                         ShouldSanitizePreference(pref));
     }
   }
 
@@ -3755,7 +3748,7 @@ FileDescriptor Preferences::EnsureSnapshot(size_t* aSize) {
     nsTArray<Pref*> toRepopulate;
     NameArena* newPrefNameArena = new NameArena();
     for (auto iter = HashTable()->modIter(); !iter.done(); iter.next()) {
-      if (!ShouldSanitizePreference(iter.get().get(), true)) {
+      if (!ShouldSanitizePreference(iter.get().get())) {
         iter.get()->AddToMap(builder);
       } else {
         Pref* pref = iter.getMutable().release();
@@ -4044,7 +4037,8 @@ void Preferences::GetPreference(dom::Pref* aDomPref,
   bool destIsWebContent =
       aDestinationProcessType == GeckoProcessType_Content &&
       (StringBeginsWith(aDestinationRemoteType, WEB_REMOTE_TYPE) ||
-       StringBeginsWith(aDestinationRemoteType, PREALLOC_REMOTE_TYPE));
+       StringBeginsWith(aDestinationRemoteType, PREALLOC_REMOTE_TYPE) ||
+       StringBeginsWith(aDestinationRemoteType, PRIVILEGEDMOZILLA_REMOTE_TYPE));
 
   Pref* pref = pref_HashTableLookup(aDomPref->name().get());
   if (pref && pref->HasAdvisablySizedValues()) {
@@ -5269,8 +5263,7 @@ int32_t Preferences::GetType(const char* aPrefName) {
       return PREF_BOOL;
 
     case PrefType::None:
-      if (!XRE_IsParentProcess() && gContentProcessPrefsAreInited &&
-          ShouldSanitizePreference(aPrefName, XRE_IsContentProcess())) {
+      if (IsPreferenceSanitized(aPrefName)) {
         if (!sPrefTelemetryEventEnabled.exchange(true)) {
           sPrefTelemetryEventEnabled = true;
           Telemetry::SetEventRecordingEnabled("security"_ns, true);
@@ -5873,9 +5866,7 @@ static void InitStaticPrefsFromShared() {
 #define ALWAYS_PREF(name, base_id, full_id, cpp_type, default_value)    \
   {                                                                     \
     StripAtomic<cpp_type> val;                                          \
-    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&          \
-        gContentProcessPrefsAreInited &&                                \
-        ShouldSanitizePreference(name, XRE_IsContentProcess())) {       \
+    if (IsString<cpp_type>::value && IsPreferenceSanitized(name)) {     \
       if (!sPrefTelemetryEventEnabled.exchange(true)) {                 \
         sPrefTelemetryEventEnabled = true;                              \
         Telemetry::SetEventRecordingEnabled("security"_ns, true);       \
@@ -5894,9 +5885,7 @@ static void InitStaticPrefsFromShared() {
 #define ALWAYS_DATAMUTEX_PREF(name, base_id, full_id, cpp_type, default_value) \
   {                                                                            \
     StripAtomic<cpp_type> val;                                                 \
-    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
-        gContentProcessPrefsAreInited &&                                       \
-        ShouldSanitizePreference(name, XRE_IsContentProcess())) {              \
+    if (IsString<cpp_type>::value && IsPreferenceSanitized(name)) {            \
       if (!sPrefTelemetryEventEnabled.exchange(true)) {                        \
         sPrefTelemetryEventEnabled = true;                                     \
         Telemetry::SetEventRecordingEnabled("security"_ns, true);              \
@@ -5916,9 +5905,7 @@ static void InitStaticPrefsFromShared() {
 #define ONCE_PREF(name, base_id, full_id, cpp_type, default_value)    \
   {                                                                   \
     cpp_type val;                                                     \
-    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&        \
-        gContentProcessPrefsAreInited &&                              \
-        ShouldSanitizePreference(name, XRE_IsContentProcess())) {     \
+    if (IsString<cpp_type>::value && IsPreferenceSanitized(name)) {   \
       if (!sPrefTelemetryEventEnabled.exchange(true)) {               \
         sPrefTelemetryEventEnabled = true;                            \
         Telemetry::SetEventRecordingEnabled("security"_ns, true);     \
@@ -6094,92 +6081,84 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
 
 #undef PREF_LIST_ENTRY
 
-// Forward Declaration - it's not defined in the .h, because we don't need to;
-// it's only used here.
-template <class T>
-static bool ShouldSanitizePreference_Impl(const T& aPref,
-                                          bool aIsDestWebContentProcess);
-
-static bool ShouldSanitizePreference(const Pref* const aPref,
-                                     bool aIsDestWebContentProcess) {
-  return ShouldSanitizePreference_Impl(*aPref, aIsDestWebContentProcess);
-}
-
-static bool ShouldSanitizePreference(const PrefWrapper& aPref,
-                                     bool aIsDestWebContentProcess) {
-  return ShouldSanitizePreference_Impl(aPref, aIsDestWebContentProcess);
-}
-
-template <class T>
-static bool ShouldSanitizePreference_Impl(const T& aPref,
-                                          bool aIsDestWebContentProcess) {
+static bool ShouldSanitizePreference(const Pref* const aPref) {
   // In the parent process, we use a heuristic to decide if a pref
   // value should be sanitized before sending to subprocesses.
-  if (XRE_IsParentProcess()) {
-    const char* prefName = aPref.Name();
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
 
-    // If a pref starts with this magic string, it is a Once-Initialized pref
-    // from Static Prefs. It should* not be in the above list and while it looks
-    // like a dnyamically named pref, it is not.
-    // * nothing enforces this
-    if (strncmp(prefName, "$$$", 3) == 0) {
-      return false;
-    }
+  const char* prefName = aPref->Name();
 
-    // First check against the denylist, the denylist is used for
-    // all subprocesses to reduce IPC traffic.
-    // The services pref is an annoying one - it's much easier to blocklist
-    // the whole branch and then add this one check to let this one annoying
-    // pref through.
-    for (const auto& entry : sParentOnlyPrefBranchList) {
-      if (strncmp(entry.mPrefBranch, prefName, entry.mLen) == 0) {
-        auto p = prefName;  // This avoids clang-format doing ugly things.
-        if (strncmp("services.settings.clock_skew_seconds", p, 36) == 0 ||
-            strncmp("services.settings.last_update_seconds", p, 37) == 0 ||
-            strncmp("services.settings.server", p, 24) == 0) {
-          return false;
-        } else {
-          return true;
-        }
-      }
-    }
-
-    if (!aIsDestWebContentProcess) {
-      return false;
-    }
-
-    // If it's a Web Content Process, also check if it's a dynamically
-    // named string preference
-    if (aPref.Type() == PrefType::String && !aPref.HasDefaultValue()) {
-      for (const auto& entry : sDynamicPrefOverrideList) {
-        if (strncmp(entry.mPrefBranch, prefName, entry.mLen) == 0) {
-          return false;
-        }
-      }
-      return true;
-    }
-
+  // If a pref starts with this magic string, it is a Once-Initialized pref
+  // from Static Prefs. It should* not be in the above list and while it looks
+  // like a dnyamically named pref, it is not.
+  // * nothing enforces this
+  if (strncmp(prefName, "$$$", 3) == 0) {
     return false;
   }
 
-  // In subprocesses we only check the sanitized bit
-  return aPref.IsSanitized();
+  // First check against the denylist.
+  // The services pref is an annoying one - it's much easier to blocklist
+  // the whole branch and then add this one check to let this one annoying
+  // pref through.
+  for (const auto& entry : sParentOnlyPrefBranchList) {
+    if (strncmp(entry.mPrefBranch, prefName, entry.mLen) == 0) {
+      const auto* p = prefName;  // This avoids clang-format doing ugly things.
+      return !(strncmp("services.settings.clock_skew_seconds", p, 36) == 0 ||
+               strncmp("services.settings.last_update_seconds", p, 37) == 0 ||
+               strncmp("services.settings.server", p, 24) == 0);
+    }
+  }
+
+  // Then check if it's a dynamically named string preference and not
+  // in the override list
+  if (aPref->Type() == PrefType::String && !aPref->HasDefaultValue()) {
+    for (const auto& entry : sDynamicPrefOverrideList) {
+      if (strncmp(entry.mPrefBranch, prefName, entry.mLen) == 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  return false;
+}
+
+// Forward Declaration - it's not defined in the .h, because we don't need to;
+// it's only used here.
+template <class T>
+static bool IsPreferenceSanitized_Impl(const T& aPref);
+
+static bool IsPreferenceSanitized(const Pref* const aPref) {
+  return IsPreferenceSanitized_Impl(*aPref);
+}
+
+static bool IsPreferenceSanitized(const PrefWrapper& aPref) {
+  return IsPreferenceSanitized_Impl(aPref);
+}
+
+template <class T>
+static bool IsPreferenceSanitized_Impl(const T& aPref) {
+  if (aPref.IsSanitized()) {
+    MOZ_DIAGNOSTIC_ASSERT(!XRE_IsParentProcess());
+    MOZ_DIAGNOSTIC_ASSERT(XRE_IsContentProcess());
+    return true;
+  }
+  return false;
 }
 
 namespace mozilla {
 
-// Of these four ShouldSanitizePreference* fuctions, this is the
-// only one exposed outside of Preferences.cpp, because this is the
-// only one ever called from outside this file.
-bool ShouldSanitizePreference(const char* aPrefName,
-                              bool aIsDestWebContentProcess) {
-  if (!aIsDestWebContentProcess) {
-    return false;
-  }
-
+// This is the only Check Sanitization function exposed outside of
+// Preferences.cpp, because this is the only one ever called from
+// outside this file.
+bool IsPreferenceSanitized(const char* aPrefName) {
   // Perform this comparison (see notes above) early to avoid a lookup
   // if we can avoid it.
   if (strncmp(aPrefName, "$$$", 3) == 0) {
+    return false;
+  }
+
+  if (!gContentProcessPrefsAreInited) {
     return false;
   }
 
@@ -6187,7 +6166,7 @@ bool ShouldSanitizePreference(const char* aPrefName,
     if (pref.isNothing()) {
       return true;
     }
-    return ShouldSanitizePreference(pref.value(), aIsDestWebContentProcess);
+    return IsPreferenceSanitized(pref.value());
   }
 
   return true;
