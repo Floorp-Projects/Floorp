@@ -104,6 +104,10 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
         requirePreference<SwitchPreference>(R.string.pref_key_pocket_homescreen_recommendations).apply {
             isVisible = FeatureFlags.isPocketRecommendationsFeatureEnabled(context)
             isChecked = context.settings().showPocketRecommendationsFeature
+            summary = context.getString(
+                R.string.customize_toggle_pocket_summary,
+                context.getString(R.string.pocket_product_name),
+            )
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
                     CustomizeHome.preferenceToggled.record(

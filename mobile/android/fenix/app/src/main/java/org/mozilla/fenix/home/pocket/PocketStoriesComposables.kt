@@ -457,7 +457,10 @@ fun PoweredByPocketHeader(
 
             Column {
                 Text(
-                    text = stringResource(R.string.pocket_stories_feature_title),
+                    text = stringResource(
+                        R.string.pocket_stories_feature_title_2,
+                        LocalContext.current.getString(R.string.pocket_product_name),
+                    ),
                     color = textColor,
                     style = FirefoxTheme.typography.caption,
                 )
