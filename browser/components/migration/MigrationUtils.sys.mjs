@@ -1125,6 +1125,43 @@ export var MigrationUtils = Object.seal({
     }
   },
 
+  /**
+   * Iterates through the favicons, sniffs for a mime type,
+   * and uses the mime type to properly import the favicon.
+   * @param {Object[]} favicons
+   *   An array of Objects with these properties:
+   *     {Uint8Array} faviconData: The binary data of a favicon
+   *     {nsIURI} uri: The URI of the associated page
+   */
+  insertManyFavicons(favicons) {
+    let sniffer = Cc["@mozilla.org/image/loader;1"].createInstance(
+      Ci.nsIContentSniffer
+    );
+    for (let faviconDataItem of favicons) {
+      let mimeType = sniffer.getMIMETypeFromContent(
+        null,
+        faviconDataItem.faviconData,
+        faviconDataItem.faviconData.length
+      );
+      let fakeFaviconURI = Services.io.newURI(
+        "fake-favicon-uri:" + faviconDataItem.uri.spec
+      );
+      lazy.PlacesUtils.favicons.replaceFaviconData(
+        fakeFaviconURI,
+        faviconDataItem.faviconData,
+        mimeType
+      );
+      lazy.PlacesUtils.favicons.setAndFetchFaviconForPage(
+        faviconDataItem.uri,
+        fakeFaviconURI,
+        true,
+        lazy.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+        null,
+        Services.scriptSecurityManager.getSystemPrincipal()
+      );
+    }
+  },
+
   initializeUndoData() {
     gKeepUndoData = true;
     gUndoData = new Map([

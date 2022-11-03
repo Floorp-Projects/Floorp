@@ -399,14 +399,33 @@ Bookmarks.prototype = {
   },
 
   async _migrateFolder(aSourceFolder, aDestFolderGuid) {
-    let bookmarks = await this._getBookmarksInFolder(aSourceFolder);
+    let { bookmarks, favicons } = await this._getBookmarksInFolder(
+      aSourceFolder
+    );
     if (!bookmarks.length) {
       return;
     }
 
     await MigrationUtils.insertManyBookmarksWrapper(bookmarks, aDestFolderGuid);
+    MigrationUtils.insertManyFavicons(favicons);
   },
 
+  /**
+   * Iterates through a bookmark folder to obtain whatever information from each bookmark is needed elsewhere. This function also recurses into child folders.
+   * @param {nsIFile} aSourceFolder the folder to search for bookmarks and subfolders.
+   * @returns {Promise}
+   * @resolves {Object} An object with the following properties:
+   * {Object[]} bookmarks:
+   *   An array of Objects with these properties:
+   *     {number} type: A type mapping to one of the types in nsINavBookmarksService
+   *     {string} title: The title of the bookmark
+   *     {Object[]} children: An array of objects with the same structure as this one.
+   *
+   * {Object[]} favicons
+   *   An array of Objects with these properties:
+   *     {Uint8Array} faviconData: The binary data of a favicon
+   *     {nsIURI} uri: The URI of the associated bookmark
+   */
   async _getBookmarksInFolder(aSourceFolder) {
     // TODO (bug 741993): the favorites order is stored in the Registry, at
     // HCU\Software\Microsoft\Windows\CurrentVersion\Explorer\MenuOrder\Favorites
@@ -414,6 +433,7 @@ Bookmarks.prototype = {
     // Until we support it, bookmarks are imported in alphabetical order.
     let entries = aSourceFolder.directoryEntries;
     let rv = [];
+    let favicons = [];
     while (entries.hasMoreElements()) {
       let entry = entries.nextFile;
       try {
@@ -431,7 +451,11 @@ Bookmarks.prototype = {
             await this._migrateFolder(entry, folderGuid);
             lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
           } else if (entry.isReadable()) {
-            let childBookmarks = await this._getBookmarksInFolder(entry);
+            let {
+              bookmarks: childBookmarks,
+              favicons: childFavicons,
+            } = await this._getBookmarksInFolder(entry);
+            favicons = favicons.concat(childFavicons);
             rv.push({
               type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
               title: entry.leafName,
@@ -447,6 +471,12 @@ Bookmarks.prototype = {
               "@mozilla.org/network/protocol;1?name=file"
             ].getService(Ci.nsIFileProtocolHandler);
             let uri = fileHandler.readURLFile(entry);
+            // Silently failing in the event that the alternative data stream for the favicon doesn't exist
+            try {
+              let faviconData = await IOUtils.read(entry.path + ":favicon");
+              favicons.push({ faviconData, uri });
+            } catch {}
+
             rv.push({ url: uri, title: matches[1] });
           }
         }
@@ -461,7 +491,7 @@ Bookmarks.prototype = {
         );
       }
     }
-    return rv;
+    return { bookmarks: rv, favicons };
   },
 };
 
