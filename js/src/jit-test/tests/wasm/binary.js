@@ -381,3 +381,19 @@ function testValidNameSectionWithProfiling() {
     disableGeckoProfiling();
 }
 testValidNameSectionWithProfiling();
+
+// Memory alignment can use non-minimal LEB128
+wasmEval(moduleWithSections([
+    v2vSigSection,
+    declSection([0]),
+    memorySection(0),
+    bodySection([
+        funcBody({locals: [], body: [
+            I32ConstCode, 0x00, // i32.const 0
+            I32Load,
+                0x81, 0x00, // alignment 1, non-minimal
+                0x00, // offset 0
+            DropCode,
+        ]}),
+    ]),
+]));
