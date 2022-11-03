@@ -1457,7 +1457,8 @@ def set_implementation(config, tasks):
         tags = task.setdefault("tags", {})
         tags["worker-implementation"] = impl
         if os:
-            task["tags"]["os"] = os
+            tags["os"] = os
+
         worker = task.setdefault("worker", {})
         worker["implementation"] = impl
         if os:
@@ -1534,12 +1535,11 @@ def setup_raptor(config, tasks):
 @transforms.add
 def task_name_from_label(config, tasks):
     for task in tasks:
+        taskname = task.pop("name", None)
         if "label" not in task:
-            if "name" not in task:
+            if taskname is None:
                 raise Exception("task has neither a name nor a label")
-            task["label"] = "{}-{}".format(config.kind, task["name"])
-        if task.get("name"):
-            del task["name"]
+            task["label"] = "{}-{}".format(config.kind, taskname)
         yield task
 
 
@@ -1793,6 +1793,10 @@ def add_index_routes(config, tasks):
 def try_task_config_env(config, tasks):
     """Set environment variables in the task."""
     env = config.params["try_task_config"].get("env")
+    if not env:
+        yield from tasks
+        return
+
     # Find all implementations that have an 'env' key.
     implementations = {
         name
@@ -1800,7 +1804,7 @@ def try_task_config_env(config, tasks):
         if "env" in builder.schema.schema
     }
     for task in tasks:
-        if env and task["worker"]["implementation"] in implementations:
+        if task["worker"]["implementation"] in implementations:
             task["worker"]["env"].update(env)
         yield task
 
@@ -1809,8 +1813,12 @@ def try_task_config_env(config, tasks):
 def try_task_config_chemspill_prio(config, tasks):
     """Increase the priority from lowest and very-low -> low, but leave others unchanged."""
     chemspill_prio = config.params["try_task_config"].get("chemspill-prio")
+    if not chemspill_prio:
+        yield from tasks
+        return
+
     for task in tasks:
-        if chemspill_prio and task["priority"] in ("lowest", "very-low"):
+        if task["priority"] in ("lowest", "very-low"):
             task["priority"] = "low"
         yield task
 
@@ -1859,18 +1867,16 @@ def build_task(config, tasks):
     for task in tasks:
         level = str(config.params["level"])
 
-        if task["worker-type"] in config.params["try_task_config"].get(
-            "worker-overrides", {}
-        ):
-            worker_pool = config.params["try_task_config"]["worker-overrides"][
-                task["worker-type"]
-            ]
+        task_worker_type = task["worker-type"]
+        worker_overrides = config.params["try_task_config"].get("worker-overrides", {})
+        if task_worker_type in worker_overrides:
+            worker_pool = worker_overrides[task_worker_type]
             provisioner_id, worker_type = worker_pool.split("/", 1)
         else:
             provisioner_id, worker_type = get_worker_type(
                 config.graph_config,
                 config.params,
-                task["worker-type"],
+                task_worker_type,
             )
         task["worker-type"] = "/".join([provisioner_id, worker_type])
         project = config.params["project"]
