@@ -5,7 +5,6 @@
 browser.jar:
 # Provide another URI for the bookmarkProperties dialog so we can persist the
 # attributes separately
-*   content/browser/places/bookmarkProperties2.xhtml     (content/bookmarkProperties.xhtml)
 *   content/browser/places/places.xhtml                  (content/places.xhtml)
     content/browser/places/places.js                     (content/places.js)
     content/browser/places/places.css                    (content/places.css)
