@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+extern crate nsstring;
+use nsstring::nsString;
+
 fn nonfatal_fail(msg: String) {
     extern "C" {
         fn GTest_FOG_ExpectFailure(message: *const ::std::os::raw::c_char);
@@ -36,4 +39,14 @@ pub extern "C" fn Rust_TestRustInGTest() {
     // does so we remember how to do this rust-in-gtest pattern.
     fog::metrics::test_only::bad_code.add(12);
     expect!(fog::metrics::test_only::bad_code.test_get_value(None) == Some(12));
+}
+
+#[no_mangle]
+pub extern "C" fn Rust_TestJogfile() {
+    // Ensure that the generated jogfile in t/c/g/tests/pytest
+    // (which is installed nearby using TEST_HARNESS_FILES)
+    // can be consumed by JOG's inner workings
+    //
+    // If it can't, that's perhaps a sign that the inner workings need to be updated.
+    expect!(jog::jog_load_jogfile(&nsString::from("jogfile_output")));
 }

@@ -73,8 +73,7 @@ you can find the specific value in the list of all Telemetry C++ enum identifier
 
 ## Artifact Build Support
 
-Sadly, GIFFT will have no support for Artifact builds even when
-[support is added to FOG](https://bugzilla.mozilla.org/show_bug.cgi?id=1698184).
+Sadly, GIFFT does not support Artifact builds.
 You must build Firefox when you add the mirrored metric so the C++ enum value is present,
 even if you only use the metric from Javascript.
 

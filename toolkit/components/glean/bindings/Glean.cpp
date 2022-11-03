@@ -63,18 +63,8 @@ bool Glean::DefineGlean(JSContext* aCx, JS::Handle<JSObject*> aGlobal) {
 already_AddRefed<Category> Glean::NamedGetter(const nsAString& aName,
                                               bool& aFound) {
   MOZ_ASSERT(NS_IsMainThread());
-#ifndef MOZILLA_OFFICIAL
-  // We only entertain the idea this might be an artefact build if
-  // !MOZILLA_OFFICAL to avoid doing _main thread I/O_ (dun dun dunnn) on
-  // important builds.
-  static bool sRuntimeRegistrarRan = false;
-  if (!sRuntimeRegistrarRan) {
-    sRuntimeRegistrarRan = true;
 
-    // Run the runtime metrics registrar.
-    gRuntimeMetricsComprehensive = jog::jog_runtime_registrar();
-  }
-#endif  // MOZILLA_OFFICIAL
+  JOG::EnsureRuntimeMetricsRegistered();
 
   NS_ConvertUTF16toUTF8 categoryName(aName);
   if (JOG::HasCategory(categoryName)) {
