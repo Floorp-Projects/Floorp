@@ -34,6 +34,43 @@ PERFHERDER_BASE_URL = (
 # Prevent users from running more than 300 tests at once. It's possible, but
 # it's more likely that a query is broken and is selecting far too much.
 MAX_PERF_TASKS = 300
+REVISION_MATCHER = re.compile(r"remote:.*/try/rev/([\w]*)[ \t]*$")
+
+
+class LogProcessor:
+    def __init__(self):
+        self.buf = ""
+        self.stdout = sys.__stdout__
+        self._revision = None
+
+    @property
+    def revision(self):
+        return self._revision
+
+    def write(self, buf):
+        while buf:
+            try:
+                newline_index = buf.index("\n")
+            except ValueError:
+                # No newline, wait for next call
+                self.buf += buf
+                break
+
+            # Get data up to next newline and combine with previously buffered data
+            data = self.buf + buf[: newline_index + 1]
+            buf = buf[newline_index + 1 :]
+
+            # Reset buffer then output line
+            self.buf = ""
+            if data.strip() == "":
+                continue
+            self.stdout.write(data.strip("\n") + "\n")
+
+            # Check if a temporary commit wa created
+            match = REVISION_MATCHER.match(data)
+            if match:
+                # Last line found is the revision we want
+                self._revision = match.group(1)
 
 
 class PerfParser(CompareParser):
@@ -483,3 +520,77 @@ class PerfParser(CompareParser):
             expanded_categories.update(new_categories)
 
         return expanded_categories
+
+    def perf_push_to_try(
+        selected_tasks, selected_categories, queries, try_config, dry_run
+    ):
+        """Perf-specific push to try method.
+
+        This makes use of logic from the CompareParser to do something
+        very similar except with log redirection. We get the comparison
+        revisions, then use the repository object to update between revisions
+        and the LogProcessor for parsing out the revisions that are used
+        to build the Perfherder links.
+        """
+        vcs = get_repository_object(build.topsrcdir)
+        compare_commit, current_revision_ref = PerfParser.get_revisions_to_run(
+            vcs, None
+        )
+
+        # Build commit message
+        msg = "Perf selections={} (queries={})".format(
+            ",".join(selected_categories),
+            "&".join([q for q in queries if q is not None and len(q) > 0]),
+        )
+
+        updated = False
+        new_revision_treeherder = ""
+        base_revision_treeherder = ""
+        try:
+            # redirect_stdout allows us to feed each line into
+            # a processor that we can use to catch the revision
+            # while providing real-time output
+            log_processor = LogProcessor()
+            with redirect_stdout(log_processor):
+                push_to_try(
+                    "perf",
+                    "{msg}".format(msg=msg),
+                    # XXX Figure out if changing `fuzzy` to `perf` will break something
+                    try_task_config=generate_try_task_config(
+                        "fuzzy", selected_tasks, try_config
+                    ),
+                    stage_changes=False,
+                    dry_run=dry_run,
+                    closed_tree=False,
+                    allow_log_capture=True,
+                )
+
+            new_revision_treeherder = log_processor.revision
+
+            if not dry_run:
+                vcs.update(compare_commit)
+                updated = True
+
+                with redirect_stdout(log_processor):
+                    # XXX Figure out if we can use the `again` selector in some way
+                    # Right now we would need to modify it to be able to do this.
+                    # XXX Fix up the again selector for the perf selector (if it makes sense to)
+                    push_to_try(
+                        "perf-again",
+                        "{msg}".format(msg=msg),
+                        try_task_config=generate_try_task_config(
+                            "fuzzy", selected_tasks, try_config
+                        ),
+                        stage_changes=False,
+                        dry_run=dry_run,
+                        closed_tree=False,
+                        allow_log_capture=True,
+                    )
+
+                base_revision_treeherder = log_processor.revision
+        finally:
+            if updated:
+                vcs.update(current_revision_ref)
+
+        return base_revision_treeherder, new_revision_treeherder
+
