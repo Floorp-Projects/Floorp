@@ -494,7 +494,9 @@ const SitePermsAddonProvider = {
   },
 
   shutdown() {
-    Services.obs.removeObserver(this, "perm-changed");
+    if (this._initPromise) {
+      Services.obs.removeObserver(this, "perm-changed");
+    }
     this.wrappersMapByOrigin.clear();
     this._initPromise = null;
   },
