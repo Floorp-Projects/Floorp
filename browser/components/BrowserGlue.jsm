@@ -2524,8 +2524,6 @@ BrowserGlue.prototype = {
       {
         condition:
           AppConstants.platform == "win" &&
-          // No Private Browsing shortcut if there's no Private Browsing :)
-          lazy.PrivateBrowsingUtils.enabled &&
           // Pref'ed off until Private Browsing window separation is enabled by default
           // to avoid a situation where a user pins the Private Browsing shortcut to
           // the Taskbar, which will end up launching into a different Taskbar icon.
