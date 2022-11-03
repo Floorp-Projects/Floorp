@@ -291,7 +291,7 @@ class TabPickupList extends HTMLElement {
 
     const favicon = createFaviconElement(tab.icon, targetURI);
 
-    const lastUsedMs = tab.lastUsed * 1000;
+    const lastUsedMs = tab.lastUsed;
     const time = document.createElement("span");
     time.textContent = convertTimestamp(lastUsedMs, this.fluentStrings);
     time.classList.add("synced-tab-li-time");
