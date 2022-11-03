@@ -870,19 +870,7 @@ async function setupHistory() {
 
 async function setupFormHistory() {
   function searchEntries(terms, params) {
-    return new Promise((resolve, reject) => {
-      let results = [];
-      FormHistory.search(terms, params, {
-        handleResult: result => results.push(result),
-        handleError(error) {
-          reject(error);
-          throw new Error("Error occurred searching form history: " + error);
-        },
-        handleCompletion(reason) {
-          resolve(results);
-        },
-      });
-    });
+    return FormHistory.search(terms, params);
   }
 
   function update(changes) {

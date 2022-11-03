@@ -89,33 +89,15 @@ var FormDB = {
    *         or an object containing the row's guid, lastUsed, and firstUsed
    *         values>
    */
-  getDataForValue(fieldname, value) {
-    return new Promise((resolve, reject) => {
-      let result = null;
-      let handlers = {
-        handleResult(oneResult) {
-          if (result != null) {
-            reject("more than 1 result for this query");
-            return;
-          }
-          result = oneResult;
-        },
-        handleError(error) {
-          Logger.logError(
-            "Error occurred updating form history: " + Log.exceptionStr(error)
-          );
-          reject(error);
-        },
-        handleCompletion(reason) {
-          resolve(result);
-        },
-      };
-      FormHistory.search(
-        ["guid", "lastUsed", "firstUsed"],
-        { fieldname, value },
-        handlers
-      );
+  async getDataForValue(fieldname, value) {
+    let results = await FormHistory.search(["guid", "lastUsed", "firstUsed"], {
+      fieldname,
+      value,
     });
+    if (results.length > 1) {
+      throw new Error("more than 1 result for this query");
+    }
+    return results;
   },
 
   /**
