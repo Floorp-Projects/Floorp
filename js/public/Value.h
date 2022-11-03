@@ -74,7 +74,9 @@ class JS_PUBLIC_API Value;
 //
 // With a 52-bit fraction field, and 47 bits needed for the 'payload', we
 // have up to five bits left to store a 'tag' value, to indicate which
-// branch of our discriminated union is live.
+// branch of our discriminated union is live. (In practice, one of those
+// bits is used up to simplify NaN representation; see micro-optimization 5
+// below.)
 //
 // Thus, we define JS::Value representations in terms of the IEEE 64-bit
 // floating-point format:
@@ -117,7 +119,23 @@ class JS_PUBLIC_API Value;
 //    ValueLowerInclGCThingTag)
 // 4. The tags for Object and Null differ by a single flipped bit, to simplify
 //    toObjectOrNull. (See ValueObjectOrNullBit)
+// 5. In PUNBOX64, the most significant bit of every non-Double tag is always
+//    set. This is to simplify isDouble checks. Note that the highest bitstring
+//    that corresponds to a non-NaN double is -Infinity:
+//      0xfff0_0000_0000_0000
+//    But the canonical hardware NaN (produced by, for example, 0/0) is:
+//      0x?ff8_0000_0000_0000
+//    on all platforms with JIT support*. (The most significant bit is the sign
+//    bit; it is 1 on x86, but 0 on ARM.) The most significant bit of the
+//    fraction field is set, which corresponds to the most significant of the 5
+//    tag bits. Because we only use tags that have the high bit set, any Value
+//    represented by a bitstring less than or equal to 0xfff8_..._0000 is a
+//    Double. (If we wanted to use all five bits, we could define 0x10 as
+//    JSVAL_TYPE_NAN, and mask off the most significant bit of the tag for
+//    IsDouble checks. This is not yet necessary, because we still have room
+//    left to allocate new tags.)
 //
+//    * But see JS_NONCANONICAL_HARDWARE_NAN below.
 
 /* JS::Value can store a full int32_t. */
 #define JSVAL_INT_BITS 32
@@ -387,9 +405,9 @@ constexpr uint64_t InfinityBits =
     mozilla::InfinityBits<double, detail::InfinitySignBit>::value;
 
 // This is a quiet NaN on IEEE-754[2008] compatible platforms, including X86,
-// ARM, SPARC and modern MIPS.
+// ARM, SPARC, RISC-V and modern MIPS.
 //
-// Note: The default sign bit for a hardware sythesized NaN differs between X86
+// Note: The default sign bit for a hardware synthesized NaN differs between X86
 //       and ARM. Both values are considered compatible values on both
 //       platforms.
 constexpr int CanonicalizedNaNSignBit = 0;
