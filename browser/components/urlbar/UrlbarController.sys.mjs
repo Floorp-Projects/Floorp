@@ -656,17 +656,12 @@ export class UrlbarController {
       let { url } = lazy.UrlbarUtils.getUrlFromResult(result);
       lazy.PlacesUtils.history.remove(url).catch(Cu.reportError);
       // Now remove form history.
-      lazy.FormHistory.update(
-        {
-          op: "remove",
-          fieldname: queryContext.formHistoryName,
-          value: result.payload.suggestion,
-        },
-        {
-          handleError(error) {
-            Cu.reportError(`Removing form history failed: ${error}`);
-          },
-        }
+      lazy.FormHistory.update({
+        op: "remove",
+        fieldname: queryContext.formHistoryName,
+        value: result.payload.suggestion,
+      }).catch(error =>
+        Cu.reportError(`Removing form history failed: ${error}`)
       );
       return true;
     }

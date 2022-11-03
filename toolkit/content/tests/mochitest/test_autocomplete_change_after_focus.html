@@ -23,10 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=998893
         FormHistory.update([
           { op: "bump", fieldname: "field1", value: "Default text option" },
           { op: "bump", fieldname: "field1", value: "New value option" },
-        ], {
-          handleCompletion() {
-            sendAsyncMessage("Test:Resume");
-          },
+        ]).then(() => {
+          sendAsyncMessage("Test:Resume");
         });
       });
 

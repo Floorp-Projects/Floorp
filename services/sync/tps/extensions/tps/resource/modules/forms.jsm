@@ -14,9 +14,6 @@ const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 const { FormHistory } = ChromeUtils.import(
   "resource://gre/modules/FormHistory.jsm"
 );
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
 
 /**
  * FormDB
@@ -24,21 +21,8 @@ const { Log } = ChromeUtils.importESModule(
  * Helper object containing methods to interact with the FormHistory module.
  */
 var FormDB = {
-  _update(data) {
-    return new Promise((resolve, reject) => {
-      let handlers = {
-        handleError(error) {
-          Logger.logError(
-            "Error occurred updating form history: " + Log.exceptionStr(error)
-          );
-          reject(error);
-        },
-        handleCompletion(reason) {
-          resolve();
-        },
-      };
-      FormHistory.update(data, handlers);
-    });
+  async _update(data) {
+    await FormHistory.update(data);
   },
 
   /**

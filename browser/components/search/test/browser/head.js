@@ -211,11 +211,6 @@ async function searchInSearchbar(inputText, win = window) {
 }
 
 function clearSearchbarHistory(win = window) {
-  return new Promise((resolve, reject) => {
-    info("cleanup the search history");
-    FormHistory.update(
-      { op: "remove", fieldname: "searchbar-history" },
-      { handleCompletion: resolve, handleError: reject }
-    );
-  });
+  info("cleanup the search history");
+  return FormHistory.update({ op: "remove", fieldname: "searchbar-history" });
 }

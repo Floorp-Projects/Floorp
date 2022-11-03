@@ -336,20 +336,12 @@ export let ContentSearch = {
       return false;
     }
     let browserData = this._suggestionDataForBrowser(browser, true);
-    lazy.FormHistory.update(
-      {
-        op: "bump",
-        fieldname: browserData.controller.formHistoryParam,
-        value: entry.value,
-        source: entry.engineName,
-      },
-      {
-        handleCompletion: () => {},
-        handleError: err => {
-          Cu.reportError("Error adding form history entry: " + err);
-        },
-      }
-    );
+    lazy.FormHistory.update({
+      op: "bump",
+      fieldname: browserData.controller.formHistoryParam,
+      value: entry.value,
+      source: entry.engineName,
+    }).catch(err => Cu.reportError("Error adding form history entry: " + err));
     return true;
   },
 

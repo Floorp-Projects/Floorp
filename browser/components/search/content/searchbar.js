@@ -402,20 +402,15 @@
         aData.length <=
           lazy.SearchSuggestionController.SEARCH_HISTORY_MAX_VALUE_LENGTH
       ) {
-        lazy.FormHistory.update(
-          {
-            op: "bump",
-            fieldname: textBox.getAttribute("autocompletesearchparam"),
-            value: aData,
-            source: engine.name,
-          },
-          {
-            handleError(aError) {
-              Cu.reportError(
-                "Saving search to form history failed: " + aError.message
-              );
-            },
-          }
+        lazy.FormHistory.update({
+          op: "bump",
+          fieldname: textBox.getAttribute("autocompletesearchparam"),
+          value: aData,
+          source: engine.name,
+        }).catch(error =>
+          Cu.reportError(
+            "Saving search to form history failed: " + error.message
+          )
         );
       }
 
@@ -888,7 +883,7 @@
             break;
           case clearHistoryItem:
             let param = this.textbox.getAttribute("autocompletesearchparam");
-            lazy.FormHistory.update({ op: "remove", fieldname: param }, null);
+            lazy.FormHistory.update({ op: "remove", fieldname: param });
             this.textbox.value = "";
             break;
           default:

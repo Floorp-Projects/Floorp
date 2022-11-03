@@ -35,23 +35,7 @@ add_task(async function() {
       });
 
       // Clear any search history results
-      await new Promise((resolve, reject) => {
-        FormHistory.update(
-          { op: "remove" },
-          {
-            handleError(error) {
-              reject(error);
-            },
-            handleCompletion(reason) {
-              if (!reason) {
-                resolve();
-              } else {
-                reject();
-              }
-            },
-          }
-        );
-      });
+      await FormHistory.update({ op: "remove" });
 
       await SpecialPowers.spawn(browser, [], async function() {
         // Start composition and type "x"

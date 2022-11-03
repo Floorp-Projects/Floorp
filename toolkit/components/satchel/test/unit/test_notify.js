@@ -73,25 +73,11 @@ add_task(async function removeEntry() {
   const guid = TestObserver.observed[0].subject;
   TestObserver.reset();
 
-  await new Promise(res => {
-    FormHistory.update(
-      {
-        op: "remove",
-        fieldname: entry1[0],
-        value: entry1[1],
-        guid,
-      },
-      {
-        handleError(error) {
-          do_throw("Error occurred updating form history: " + error);
-        },
-        handleCompletion(reason) {
-          if (!reason) {
-            res();
-          }
-        },
-      }
-    );
+  await FormHistory.update({
+    op: "remove",
+    fieldname: entry1[0],
+    value: entry1[1],
+    guid,
   });
   Assert.equal(TestObserver.observed.length, 1);
   const { subject, data } = TestObserver.observed[0];
@@ -160,24 +146,10 @@ add_task(async function removeEntriesByTimeframe() {
   await promiseAddEntry(entry3[0], entry3[1]);
   TestObserver.reset();
 
-  await new Promise(res => {
-    FormHistory.update(
-      {
-        op: "remove",
-        firstUsedStart: 10,
-        firstUsedEnd: cutoffDate * 1000,
-      },
-      {
-        handleCompletion(reason) {
-          if (!reason) {
-            res();
-          }
-        },
-        handleErrors(error) {
-          do_throw("Error occurred updating form history: " + error);
-        },
-      }
-    );
+  await FormHistory.update({
+    op: "remove",
+    firstUsedStart: 10,
+    firstUsedEnd: cutoffDate * 1000,
   });
   Assert.equal(TestObserver.observed.length, 2);
   for (const notification of TestObserver.observed) {

@@ -30,18 +30,15 @@ var ParentUtils = {
   },
 
   updateFormHistory(changes) {
-    let handler = {
-      handleError(error) {
-        assert.ok(false, error);
+    FormHistory.update(changes).then(
+      () => {
+        sendAsyncMessage("formHistoryUpdated", { ok: true });
+      },
+      error => {
         sendAsyncMessage("formHistoryUpdated", { ok: false });
-      },
-      handleCompletion(reason) {
-        if (!reason) {
-          sendAsyncMessage("formHistoryUpdated", { ok: true });
-        }
-      },
-    };
-    FormHistory.update(changes, handler);
+        assert.ok(false, error);
+      }
+    );
   },
 
   popupshownListener() {

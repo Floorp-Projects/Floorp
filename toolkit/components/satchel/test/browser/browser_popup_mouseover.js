@@ -20,11 +20,7 @@ add_task(async function test() {
       { op: "add", fieldname: "field1", value: "value4" },
     ];
 
-    await new Promise(resolve =>
-      FormHistory.update([{ op: "remove" }, ...mockHistory], {
-        handleCompletion: resolve,
-      })
-    );
+    await FormHistory.update([{ op: "remove" }, ...mockHistory]);
     await SpecialPowers.spawn(browser, [], async function() {
       const input = content.document.querySelector("input");
 

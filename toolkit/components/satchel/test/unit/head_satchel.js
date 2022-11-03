@@ -141,33 +141,13 @@ function promiseAddEntry(name, value) {
 
 // Wrapper around FormHistory.update which handles errors. Calls then() when done.
 function updateFormHistory(changes, then) {
-  FormHistory.update(changes, {
-    handleError(error) {
-      do_throw("Error occurred updating form history: " + error);
-    },
-    handleCompletion(reason) {
-      if (!reason) {
-        then();
-      }
-    },
+  FormHistory.update(changes).then(then, error => {
+    do_throw("Error occurred updating form history: " + error);
   });
 }
 
 function promiseUpdate(change) {
-  return new Promise((resolve, reject) => {
-    FormHistory.update(change, {
-      handleError(error) {
-        this._error = error;
-      },
-      handleCompletion(reason) {
-        if (reason) {
-          reject(this._error);
-        } else {
-          resolve();
-        }
-      },
-    });
-  });
+  return FormHistory.update(change);
 }
 
 /**

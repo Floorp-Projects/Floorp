@@ -118,18 +118,11 @@ class TestFirefoxRefresh(MarionetteTestCase):
             value: arguments[1],
             firstUsed: (Date.now() - 5000) * 1000,
           };
-          let finished = false;
           let resolve = arguments[arguments.length - 1];
-          global.FormHistory.update(updateDefinition, {
-            handleError(error) {
-              finished = true;
-              resolve(error);
-            },
-            handleCompletion() {
-              if (!finished) {
-                resolve(false);
-              }
-            }
+          global.FormHistory.update(updateDefinition).then(() => {
+            resolve(false);
+          }, error => {
+            resolve("Unexpected error in adding formhistory: " + error);
           });
         """,
             script_args=(self._formHistoryFieldName, self._formHistoryValue),

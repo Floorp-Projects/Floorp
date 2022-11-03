@@ -858,22 +858,8 @@ async function setupFormHistory() {
     return FormHistory.search(terms, params);
   }
 
-  function update(changes) {
-    return new Promise((resolve, reject) => {
-      FormHistory.update(changes, {
-        handleError(error) {
-          reject(error);
-          throw new Error("Error occurred searching form history: " + error);
-        },
-        handleCompletion(reason) {
-          resolve();
-        },
-      });
-    });
-  }
-
   // Make sure we've got a clean DB to start with, then add the entries we'll be testing.
-  await update([
+  await FormHistory.update([
     {
       op: "remove",
     },
@@ -927,31 +913,59 @@ async function setupFormHistory() {
   // Artifically age the entries to the proper vintage.
   let timestamp = now_uSec - 10 * kUsecPerMin;
   let results = await searchEntries(["guid"], { fieldname: "10minutes" });
-  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  await FormHistory.update({
+    op: "update",
+    firstUsed: timestamp,
+    guid: results[0].guid,
+  });
 
   timestamp = now_uSec - 45 * kUsecPerMin;
   results = await searchEntries(["guid"], { fieldname: "1hour" });
-  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  await FormHistory.update({
+    op: "update",
+    firstUsed: timestamp,
+    guid: results[0].guid,
+  });
 
   timestamp = now_uSec - 70 * kUsecPerMin;
   results = await searchEntries(["guid"], { fieldname: "1hour10minutes" });
-  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  await FormHistory.update({
+    op: "update",
+    firstUsed: timestamp,
+    guid: results[0].guid,
+  });
 
   timestamp = now_uSec - 90 * kUsecPerMin;
   results = await searchEntries(["guid"], { fieldname: "2hour" });
-  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  await FormHistory.update({
+    op: "update",
+    firstUsed: timestamp,
+    guid: results[0].guid,
+  });
 
   timestamp = now_uSec - 130 * kUsecPerMin;
   results = await searchEntries(["guid"], { fieldname: "2hour10minutes" });
-  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  await FormHistory.update({
+    op: "update",
+    firstUsed: timestamp,
+    guid: results[0].guid,
+  });
 
   timestamp = now_uSec - 180 * kUsecPerMin;
   results = await searchEntries(["guid"], { fieldname: "4hour" });
-  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  await FormHistory.update({
+    op: "update",
+    firstUsed: timestamp,
+    guid: results[0].guid,
+  });
 
   timestamp = now_uSec - 250 * kUsecPerMin;
   results = await searchEntries(["guid"], { fieldname: "4hour10minutes" });
-  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  await FormHistory.update({
+    op: "update",
+    firstUsed: timestamp,
+    guid: results[0].guid,
+  });
 
   let today = new Date();
   today.setHours(0);
@@ -960,13 +974,21 @@ async function setupFormHistory() {
   today.setMilliseconds(1);
   timestamp = today.getTime() * 1000;
   results = await searchEntries(["guid"], { fieldname: "today" });
-  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  await FormHistory.update({
+    op: "update",
+    firstUsed: timestamp,
+    guid: results[0].guid,
+  });
 
   let lastYear = new Date();
   lastYear.setFullYear(lastYear.getFullYear() - 1);
   timestamp = lastYear.getTime() * 1000;
   results = await searchEntries(["guid"], { fieldname: "b4today" });
-  await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
+  await FormHistory.update({
+    op: "update",
+    firstUsed: timestamp,
+    guid: results[0].guid,
+  });
 
   var checks = 0;
   let checkOne = function(num, message) {
