@@ -5,7 +5,7 @@
   "description": "A system addon which is shipped with Firefox.",
   "version": "1.0",
 
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "tel-system-xpi@tests.mozilla.org"
     }

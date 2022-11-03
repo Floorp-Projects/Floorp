@@ -3,7 +3,7 @@
   "manifest_version": 2,
   "version": "1.0",
   "description": "A test private engine",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "private@search.mozilla.org"
     }

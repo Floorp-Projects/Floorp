@@ -2,7 +2,7 @@
   "name": "MozParamsTest2",
   "manifest_version": 2,
   "version": "1.0",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "test2@search.mozilla.org"
     }

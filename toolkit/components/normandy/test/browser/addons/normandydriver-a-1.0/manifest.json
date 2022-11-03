@@ -3,7 +3,7 @@
     "name": "normandy_fixture_a",
     "version": "1.0",
     "description": "Dummy test fixture that's a webextension, branch A",
-    "applications": {
+    "browser_specific_settings": {
         "gecko": {
             "id": "normandydriver-a@example.com"
         }

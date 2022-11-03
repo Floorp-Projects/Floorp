@@ -3,7 +3,7 @@
   "name": "TART - Tab Animation regression Test",
   "version": "2.0",
 
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "bug848358@mozilla.org"
     }

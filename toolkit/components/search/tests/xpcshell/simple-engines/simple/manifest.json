@@ -3,7 +3,7 @@
   "manifest_version": 2,
   "version": "1.0",
   "description": "Simple engine with a different name from the WebExtension id prefix",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "simple@search.mozilla.org"
     }

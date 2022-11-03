@@ -3,7 +3,7 @@
   "name": "Mochitest",
   "version": "2.0",
 
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "mochikit@mozilla.org"
     }

@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "test-addon-1",
   "version": "1.0",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "test-addon-1@mozilla.org"
     }

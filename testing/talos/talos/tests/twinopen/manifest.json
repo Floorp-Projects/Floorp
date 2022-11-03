@@ -3,7 +3,7 @@
   "name": "twinopen",
   "version": "0.1",
 
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "bug1388159@mozilla.org"
     }

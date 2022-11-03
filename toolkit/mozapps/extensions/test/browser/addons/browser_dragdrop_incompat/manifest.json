@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
 
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "dragdrop-incompat@tests.mozilla.org",
       "strict_max_version": "45.0"

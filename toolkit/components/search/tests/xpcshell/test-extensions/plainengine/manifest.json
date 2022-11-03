@@ -3,7 +3,7 @@
   "description": "Plain Engine",
   "manifest_version": 2,
   "version": "1.0",
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "plainengine@search.mozilla.org"
     }
