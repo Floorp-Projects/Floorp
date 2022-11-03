@@ -4193,12 +4193,14 @@ JSFunction* WasmFunctionCreate(JSContext* cx, HandleFunction func,
                                   DebugEnabled::False);
   compilerEnv.computeParameters();
 
-  // Initialize the type section
-  if (!moduleEnv.initTypes(1)) {
+  if (!moduleEnv.init()) {
     return nullptr;
   }
+
   FuncType funcType = FuncType(std::move(params), std::move(results));
-  (*moduleEnv.types)[0] = std::move(funcType);
+  if (!moduleEnv.types->addType(std::move(funcType))) {
+    return nullptr;
+  }
 
   // Add an (import (func ...))
   FuncDesc funcDesc = FuncDesc(&(*moduleEnv.types)[0].funcType(), 0);

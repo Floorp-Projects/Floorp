@@ -1491,7 +1491,7 @@ static bool DecodeValTypeVector(Decoder& d, ModuleEnvironment* env,
 }
 
 static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
-                           uint32_t typeIndex) {
+                           FuncType* funcType) {
   uint32_t numArgs;
   if (!d.readVarU32(&numArgs)) {
     return d.fail("bad number of function args");
@@ -1516,15 +1516,12 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
     return false;
   }
 
-  FuncType funcType = FuncType(std::move(args), std::move(results));
-
-  (*env->types)[typeIndex] = std::move(funcType);
-
+  *funcType = FuncType(std::move(args), std::move(results));
   return true;
 }
 
 static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
-                             uint32_t typeIndex) {
+                             StructType* structType) {
   if (!env->gcEnabled()) {
     return d.fail("Structure types not enabled");
   }
@@ -1558,20 +1555,17 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
     fields[i].isMutable = flags & uint8_t(FieldFlags::Mutable);
   }
 
-  StructType structType = StructType(std::move(fields));
+  *structType = StructType(std::move(fields));
 
   // Compute the struct layout, and fail if the struct is too large
-  if (!structType.init()) {
+  if (!structType->init()) {
     return d.fail("too many fields in struct");
   }
-
-  (*env->types)[typeIndex] = std::move(structType);
-
   return true;
 }
 
 static bool DecodeArrayType(Decoder& d, ModuleEnvironment* env,
-                            uint32_t typeIndex) {
+                            ArrayType* arrayType) {
   if (!env->gcEnabled()) {
     return d.fail("gc types not enabled");
   }
@@ -1590,8 +1584,7 @@ static bool DecodeArrayType(Decoder& d, ModuleEnvironment* env,
   }
   bool isMutable = flags & uint8_t(FieldFlags::Mutable);
 
-  (*env->types)[typeIndex] = ArrayType(elementType, isMutable);
-
+  *arrayType = ArrayType(elementType, isMutable);
   return true;
 }
 
@@ -1601,46 +1594,100 @@ static bool DecodeTypeSection(Decoder& d, ModuleEnvironment* env) {
     return false;
   }
   if (!range) {
-    return env->initTypes(0);
+    return true;
   }
 
-  uint32_t numTypes;
-  if (!d.readVarU32(&numTypes)) {
+  uint32_t numRecGroups;
+  if (!d.readVarU32(&numRecGroups)) {
     return d.fail("expected number of types");
   }
 
-  if (numTypes > MaxTypes) {
+  // Check if we've reached our implementation defined limit of recursion
+  // groups.
+  if (numRecGroups > MaxRecGroups) {
     return d.fail("too many types");
   }
 
-  if (!env->initTypes(numTypes)) {
-    return false;
-  }
+  for (uint32_t recGroupIndex = 0; recGroupIndex < numRecGroups;
+       recGroupIndex++) {
+    uint32_t recGroupLength = 1;
 
-  for (uint32_t typeIndex = 0; typeIndex < numTypes; typeIndex++) {
-    uint8_t form;
-    if (!d.readFixedU8(&form)) {
-      return d.fail("expected type form");
+    // Decode an optional recursion group length, if the GC proposal is
+    // enabled.
+    if (env->gcEnabled()) {
+      uint8_t firstTypeCode;
+      if (!d.peekByte(&firstTypeCode)) {
+        return d.fail("expected type form");
+      }
+
+      if (firstTypeCode == (uint8_t)TypeCode::RecGroup) {
+        // Skip over the prefix byte that was peeked.
+        d.uncheckedReadFixedU8();
+
+        // Read the number of types in this recursion group
+        if (!d.readVarU32(&recGroupLength)) {
+          return d.fail("expected recursion group length");
+        }
+      }
     }
 
-    switch (form) {
-      case uint8_t(TypeCode::Func):
-        if (!DecodeFuncType(d, env, typeIndex)) {
-          return false;
-        }
-        break;
-      case uint8_t(TypeCode::Struct):
-        if (!DecodeStructType(d, env, typeIndex)) {
-          return false;
-        }
-        break;
-      case uint8_t(TypeCode::Array):
-        if (!DecodeArrayType(d, env, typeIndex)) {
-          return false;
-        }
-        break;
-      default:
+    // Start a recursion group. This will extend the type context with empty
+    // type definitions to be filled.
+    MutableRecGroup recGroup = env->types->startRecGroup(recGroupLength);
+    if (!recGroup) {
+      return false;
+    }
+
+    for (uint32_t recGroupTypeIndex = 0; recGroupTypeIndex < recGroupLength;
+         recGroupTypeIndex++) {
+      uint32_t typeIndex =
+          env->types->length() - recGroupLength + recGroupTypeIndex;
+
+      // Check if we've reached our implementation defined limit of type
+      // definitions.
+      if (typeIndex > MaxTypes) {
+        return d.fail("too many types");
+      }
+
+      // Decode the kind of type definition
+      uint8_t form;
+      if (!d.readFixedU8(&form)) {
         return d.fail("expected type form");
+      }
+
+      switch (form) {
+        case uint8_t(TypeCode::Func): {
+          FuncType funcType;
+          if (!DecodeFuncType(d, env, &funcType)) {
+            return false;
+          }
+          recGroup->type(recGroupTypeIndex) = std::move(funcType);
+          break;
+        }
+        case uint8_t(TypeCode::Struct): {
+          StructType structType;
+          if (!DecodeStructType(d, env, &structType)) {
+            return false;
+          }
+          recGroup->type(recGroupTypeIndex) = std::move(structType);
+          break;
+        }
+        case uint8_t(TypeCode::Array): {
+          ArrayType arrayType;
+          if (!DecodeArrayType(d, env, &arrayType)) {
+            return false;
+          }
+          recGroup->type(recGroupTypeIndex) = std::move(arrayType);
+          break;
+        }
+        default:
+          return d.fail("expected type form");
+      }
+    }
+
+    // Finish the recursion group, which will canonicalize the types.
+    if (!env->types->endRecGroup()) {
+      return false;
     }
   }
 
@@ -3067,6 +3114,10 @@ bool wasm::Validate(JSContext* cx, const ShareableBytes& bytecode,
 
   FeatureArgs features = FeatureArgs::build(cx, options);
   ModuleEnvironment env(features);
+  if (!env.init()) {
+    return false;
+  }
+
   if (!DecodeModuleEnvironment(d, &env)) {
     return false;
   }

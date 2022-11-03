@@ -22,8 +22,10 @@
 
 #include "jit/JitOptions.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
+#include "js/HashTable.h"
 #include "js/Printf.h"
 #include "js/Value.h"
+#include "threading/ExclusiveData.h"
 #include "vm/StringType.h"
 #include "wasm/WasmJS.h"
 
@@ -273,6 +275,87 @@ size_t TypeDef::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   }
   MOZ_ASSERT_UNREACHABLE();
   return 0;
+}
+
+struct RecGroupHashPolicy {
+  using Lookup = const SharedRecGroup&;
+
+  static HashNumber hash(Lookup lookup) { return lookup->hash(); }
+
+  static bool match(const SharedRecGroup& lhs, Lookup rhs) {
+    return RecGroup::matches(*rhs, *lhs);
+  }
+};
+
+// A global hash set of recursion groups for use in fast type equality checks.
+class TypeIdSet {
+  using Set = HashSet<SharedRecGroup, RecGroupHashPolicy, SystemAllocPolicy>;
+  Set set_;
+
+ public:
+  ~TypeIdSet() {
+    // We should clean out all dead entries deterministically before shutdown.
+    MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), set_.empty());
+  }
+
+  // Attempt to insert a recursion group into the set, returning an existing
+  // recursion group if there was one.
+  SharedRecGroup insert(SharedRecGroup recGroup) {
+    Set::AddPtr p = set_.lookupForAdd(recGroup);
+    if (p) {
+      // A canonical recursion group already existed, return it.
+      return *p;
+    }
+
+    // Insert this recursion group into the set, and return it as the canonical
+    // recursion group instance.
+    if (!set_.add(p, recGroup)) {
+      return nullptr;
+    }
+    return recGroup;
+  }
+
+  // Release the provided recursion group reference and remove it from the
+  // canonical set if it was the last reference. This is one unified method
+  // because we need to perform the lookup before releasing the reference, but
+  // need to release the reference in order to see if it was the last reference
+  // outside the canonical set.
+  void clearRecGroup(SharedRecGroup* recGroupCell) {
+    if (Set::Ptr p = set_.lookup(*recGroupCell)) {
+      *recGroupCell = nullptr;
+      if ((*p)->hasOneRef()) {
+        set_.remove(p);
+      }
+    } else {
+      *recGroupCell = nullptr;
+    }
+  }
+};
+
+ExclusiveData<TypeIdSet> typeIdSet(mutexid::WasmTypeIdSet);
+
+SharedRecGroup TypeContext::canonicalizeGroup(SharedRecGroup recGroup) {
+  ExclusiveData<TypeIdSet>::Guard locked = typeIdSet.lock();
+  return locked->insert(recGroup);
+}
+
+TypeContext::~TypeContext() {
+  ExclusiveData<TypeIdSet>::Guard locked = typeIdSet.lock();
+
+  // Clear out the recursion groups in this module, freeing them from the
+  // canonical type set if needed.
+  //
+  // We iterate backwards here so that we free every previous recursion group
+  // that may be referring to the current recursion group we're freeing. This
+  // is possible due to recursion groups being ordered.
+  for (int32_t groupIndex = recGroups_.length() - 1; groupIndex >= 0;
+       groupIndex--) {
+    // Try to remove this entry from the canonical set if we have the last
+    // strong reference. The entry may not exist if canonicalization failed
+    // and this type context was aborted. This will clear the reference in the
+    // vector.
+    locked->clearRecGroup(&recGroups_[groupIndex]);
+  }
 }
 
 TypeResult TypeContext::isRefEquivalent(RefType first, RefType second,

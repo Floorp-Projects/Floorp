@@ -92,6 +92,11 @@ struct ModuleEnvironment {
         funcImportsOffsetStart(0),
         typeIdsOffsetStart(0) {}
 
+  [[nodiscard]] bool init() {
+    types = js_new<TypeContext>(features);
+    return types;
+  }
+
   size_t numTables() const { return tables.length(); }
   size_t numTypes() const { return types->length(); }
   size_t numFuncs() const { return funcs.length(); }
@@ -118,11 +123,6 @@ struct ModuleEnvironment {
   bool usesMemory() const { return memory.isSome(); }
   bool usesSharedMemory() const {
     return memory.isSome() && memory->isShared();
-  }
-
-  bool initTypes(uint32_t numTypes) {
-    types = js_new<TypeContext>(features);
-    return types && types->addTypes(numTypes);
   }
 
   void declareFuncExported(uint32_t funcIndex, bool eager, bool canRefFunc) {
