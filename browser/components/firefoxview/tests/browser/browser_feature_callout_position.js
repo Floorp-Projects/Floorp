@@ -335,3 +335,100 @@ add_task(
     sandbox.restore();
   }
 );
+
+add_task(
+  async function feature_callout_smaller_parent_container_than_callout_container() {
+    await ASRouter.waitForInitialized;
+
+    let message = {
+      weight: 100,
+      id: "FIREFOX_VIEW_FEATURE_TOUR_1",
+      template: "feature_callout",
+      content: {
+        id: "FIREFOX_VIEW_FEATURE_TOUR",
+        template: "multistage",
+        backdrop: "transparent",
+        transitions: false,
+        disableHistoryUpdates: true,
+        screens: [
+          {
+            id: "FEATURE_CALLOUT_1",
+            parent_selector: "#colorways-button",
+            content: {
+              position: "callout",
+              arrow_position: "end",
+              title: "callout-firefox-view-colorways-reminder-title",
+              subtitle: {
+                string_id: "callout-firefox-view-colorways-reminder-subtitle",
+              },
+              logo: {
+                imageURL: "chrome://browser/content/callout-tab-pickup.svg",
+                darkModeImageURL:
+                  "chrome://browser/content/callout-tab-pickup-dark.svg",
+                height: "128px", //#colorways-button has a height of 35px
+              },
+              dismiss_button: {
+                action: {
+                  navigate: true,
+                },
+              },
+            },
+          },
+          { content: {} },
+          { content: {} },
+        ],
+      },
+      priority: 1,
+      targeting: 'source == "firefoxview"',
+      trigger: {
+        id: "featureCalloutCheck",
+      },
+      groups: [],
+      provider: "onboarding",
+    };
+    let previousMessages = ASRouter.state.messages;
+    ASRouter.setState({ messages: [message] });
+
+    await SpecialPowers.pushPrefEnv({
+      set: [[featureTourPref, getPrefValueByScreen(1)]],
+    });
+
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url: "about:firefoxview",
+      },
+      async browser => {
+        const { document } = browser.contentWindow;
+        await waitForCalloutScreen(document, 1);
+        let parentHeight = document.querySelector("#colorways-button")
+          .offsetHeight;
+        let containerHeight = document.querySelector(calloutSelector)
+          .offsetHeight;
+
+        let parentPositionTop =
+          document.querySelector("#colorways-button").getBoundingClientRect()
+            .top + window.scrollY;
+        let containerPositionTop =
+          document.querySelector(calloutSelector).getBoundingClientRect().top +
+          window.scrollY;
+        ok(
+          containerHeight > parentHeight,
+          "Feature Callout is height is larger than parent element when callout is configured at end of callout"
+        );
+        ok(
+          containerPositionTop < parentPositionTop,
+          "Feature Callout is positioned higher that parent element when callout is configured at end of callout"
+        );
+        ok(
+          // difference in centering may be off due to rounding, thus +/- 1px for
+          // eslint-disable-next-line prettier/prettier
+          Math.abs(((containerHeight / 2) + containerPositionTop) - ((parentHeight / 2) + parentPositionTop)) <= 1,
+          "Feature Callout is centered equally to parent element when callout is configured at end of callout"
+        );
+        await ASRouter.setState({ messages: [...previousMessages] });
+        await ASRouter.resetMessageState();
+      }
+    );
+  }
+);

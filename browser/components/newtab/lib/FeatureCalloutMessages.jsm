@@ -506,7 +506,7 @@ const MESSAGES = () => {
         screens: [
           {
             id: "FIREFOX_VIEW_COLORWAYS_REMINDER",
-            parent_selector: "#colorways-collection-description",
+            parent_selector: "#colorways-button",
             content: {
               position: "callout",
               arrow_position: "end",
