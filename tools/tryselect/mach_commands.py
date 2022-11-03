@@ -520,3 +520,14 @@ def try_scriptworker(command_context, **kwargs):
 def try_compare(command_context, **kwargs):
     init(command_context)
     return run(command_context, **kwargs)
+
+
+@SubCommand(
+    "try",
+    "perf",
+    description="Try selector for running performance tests.",
+    parser=get_parser("perf"),
+)
+def try_perf(command_context, **kwargs):
+    init(command_context)
+    return run(command_context, **kwargs)

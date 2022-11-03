@@ -594,3 +594,100 @@ class PerfParser(CompareParser):
 
         return base_revision_treeherder, new_revision_treeherder
 
+    def run(
+        update=False,
+        show_all=False,
+        android=False,
+        chrome=False,
+        live_sites=False,
+        parameters=None,
+        profile=False,
+        requested_variants=[],
+        requested_platforms=[],
+        requested_apps=[],
+        try_config=None,
+        dry_run=False,
+        **kwargs
+    ):
+        # Setup fzf
+        fzf = fzf_bootstrap(update)
+
+        if not fzf:
+            print(FZF_NOT_FOUND)
+            return 1
+
+        all_tasks, dep_cache, cache_dir = setup_tasks_for_fzf(
+            not dry_run,
+            parameters,
+            full=True,
+            disable_target_task_filter=False,
+        )
+        base_cmd = build_base_cmd(fzf, dep_cache, cache_dir, show_estimates=False)
+
+        # Perform the selection, then push to try and return the revisions
+        queries = []
+        selected_categories = []
+        if not show_all:
+            # Expand the categories first
+            expanded_categories = PerfParser.expand_categories(
+                android=android,
+                chrome=chrome,
+                live_sites=live_sites,
+                profile=profile,
+                requested_variants=requested_variants,
+                requested_platforms=requested_platforms,
+                requested_apps=requested_apps,
+            )
+            selected_tasks, selected_categories, queries = PerfParser.get_perf_tasks(
+                base_cmd, all_tasks, expanded_categories
+            )
+        else:
+            selected_tasks = PerfParser.get_tasks(base_cmd, queries, None, all_tasks)
+
+        return PerfParser.perf_push_to_try(
+            selected_tasks, selected_categories, queries, try_config, dry_run
+        )
+
+
+def run(
+    dry_run=False,
+    show_all=False,
+    android=False,
+    chrome=False,
+    live_sites=False,
+    parameters=None,
+    profile=False,
+    requested_variants=[],
+    requested_platforms=[],
+    requested_apps=[],
+    **kwargs
+):
+    revisions = PerfParser.run(
+        dry_run=dry_run,
+        show_all=show_all,
+        android=android,
+        chrome=chrome,
+        live_sites=live_sites,
+        parameters=parameters,
+        profile=profile,
+        requested_variants=requested_variants,
+        requested_platforms=requested_platforms,
+        requested_apps=requested_apps,
+        **kwargs
+    )
+
+    # Provide link to perfherder for comparisons now
+    perfcompare_url = PERFHERDER_BASE_URL % revisions
+    print(
+        "\n!!!NOTE!!!\n You'll be able to find a performance comparison here "
+        "once the tests are complete (ensure you select the right "
+        "framework): %s\n" % perfcompare_url
+    )
+    print(
+        "If you need any help, you can find us in the #perf-help Element channel:\n"
+        "https://matrix.to/#/#perf-help:mozilla.org"
+    )
+    print(
+        "For more information on the performance tests, see our PerfDocs here:\n"
+        "https://firefox-source-docs.mozilla.org/testing/perfdocs/"
+    )
