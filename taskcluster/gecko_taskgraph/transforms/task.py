@@ -9,6 +9,7 @@ complexities of worker implementations, scopes, and treeherder annotations.
 """
 
 
+import datetime
 import hashlib
 import os
 import re
@@ -523,10 +524,13 @@ def build_docker_worker_payload(config, task, task_def):
         expires_policy = get_expiration(
             config, task.get("expiration-policy", "default")
         )
+        now = datetime.datetime.utcnow()
         for artifact in worker["artifacts"]:
             art_exp = artifact.get("expires-after", expires_policy)
             task_exp = task_def["expires"]["relative-datestamp"]
-            expires = art_exp if fromNow(art_exp) < fromNow(task_exp) else task_exp
+            expires = (
+                art_exp if fromNow(art_exp, now) < fromNow(task_exp, now) else task_exp
+            )
             artifacts[artifact["name"]] = {
                 "path": artifact["path"],
                 "type": artifact["type"],
@@ -753,10 +757,13 @@ def build_generic_worker_payload(config, task, task_def):
     artifacts = []
 
     expires_policy = get_expiration(config, task.get("expiration-policy", "default"))
+    now = datetime.datetime.utcnow()
     for artifact in worker.get("artifacts", []):
         art_exp = artifact.get("expires-after", expires_policy)
         task_exp = task_def["expires"]["relative-datestamp"]
-        expires = art_exp if fromNow(art_exp) < fromNow(task_exp) else task_exp
+        expires = (
+            art_exp if fromNow(art_exp, now) < fromNow(task_exp, now) else task_exp
+        )
         a = {
             "path": artifact["path"],
             "type": artifact["type"],
@@ -1840,25 +1847,24 @@ def set_task_and_artifact_expiry(config, jobs):
 
     These values are read from ci/config.yml
     """
+    now = datetime.datetime.utcnow()
     for job in jobs:
         expires = get_expiration(config, job.get("expiration-policy", "default"))
-        if "expires-after" not in job:
-            job["expires-after"] = expires
-        task_expiry = job["expires-after"]
+        job_expiry = job.setdefault("expires-after", expires)
+        job_expiry_from_now = fromNow(job_expiry)
 
-        if "artifacts" in job["worker"]:
-            for a in job["worker"]["artifacts"]:
-                if "expires-after" not in a:
-                    a["expires-after"] = expires
+        for artifact in job["worker"].get("artifacts", ()):
+            artifact_expiry = artifact.setdefault("expires-after", expires)
 
-                # By using > instead of >=, there's a chance of mismatch
-                #   where the artifact expires sooner than the task.
-                #   There is no chance, however, of mismatch where artifacts
-                #   expire _after_ the task.
-                # Currently this leads to some build tasks having logs
-                #   that expire in 1 year while the task expires in 3 years.
-                if fromNow(a["expires-after"]) > fromNow(task_expiry):
-                    a["expires-after"] = task_expiry
+            # By using > instead of >=, there's a chance of mismatch
+            #   where the artifact expires sooner than the task.
+            #   There is no chance, however, of mismatch where artifacts
+            #   expire _after_ the task.
+            # Currently this leads to some build tasks having logs
+            #   that expire in 1 year while the task expires in 3 years.
+            if fromNow(artifact_expiry, now) > job_expiry_from_now:
+                artifact["expires-after"] = job_expiry
+
         yield job
 
 
