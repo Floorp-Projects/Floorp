@@ -10,7 +10,9 @@ def test_lint_single_file(lint, paths):
     results = lint(paths("bad.py"))
     assert len(results) == 2
     assert results[0].rule == "F401"
+    assert results[0].level == "error"
     assert results[1].rule == "E501"
+    assert results[1].level == "error"
     assert results[1].lineno == 5
 
     # run lint again to make sure the previous results aren't counted twice
@@ -37,12 +39,12 @@ def foobar():
 
     path = create_temp_file(contents, name="bad.py")
     results = lint([path])
-    assert len(results) == 2
+    assert len(results) == 3
 
     # Make sure the missing blank line is fixed, but the unused import isn't.
     results = lint([path], fix=True)
     assert len(results) == 1
-    assert fixed == 1
+    assert fixed == 2
 
     fixed = 0
 
@@ -51,7 +53,7 @@ def foobar():
     results = lint([path], fix=True)
     # There should now be two files with 2 combined errors
     assert len(results) == 2
-    assert fixed == 1
+    assert fixed == 2
     assert all(r.rule != "E501" for r in results)
 
 
@@ -109,6 +111,26 @@ def test_lint_excluded_file_with_no_filter(lint, paths, config):
 def test_lint_uses_custom_extensions(lint, paths):
     assert len(lint(paths("ext"))) == 1
     assert len(lint(paths("ext/bad.configure"))) == 1
+
+
+def test_lint_isort(lint, create_temp_file):
+    contents = """
+import prova
+import collections
+
+
+def foobar():
+    c = collections.Counter()
+    prova.ciao(c)
+""".lstrip()
+
+    path = create_temp_file(contents, name="bad.py")
+    results = lint([path])
+    assert len(results) == 2
+    assert results[0].rule == "I003"
+    assert results[0].level == "warning"
+    assert results[1].rule == "I001"
+    assert results[1].level == "warning"
 
 
 if __name__ == "__main__":
