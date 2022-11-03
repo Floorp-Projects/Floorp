@@ -38,9 +38,13 @@ def getNDKDirectory() {
     return null
 }
 
+// Whether to include compiled artifacts: `libs/**/*.so` and `assets/omni.ja`.
+// Multi-locale packaging wants to include compiled artifacts but *not* rebuild
+// them: see also `rootProject.{machStagePackage,geckoBinariesOnlyIf}`.
 def hasCompileArtifacts() {
-    return project.mozconfig.substs.COMPILE_ENVIRONMENT
-        || project.mozconfig.substs.MOZ_ARTIFACT_BUILDS
+    return project.mozconfig.substs.COMPILE_ENVIRONMENT // Full builds.
+        || project.mozconfig.substs.MOZ_ARTIFACT_BUILDS // Artifact builds.
+        || System.getenv("MOZ_CHROME_MULTILOCALE") // Multi-locale packaging.
 }
 
 // Get the LLVM bin folder, either from the currently used toolchain or, if
