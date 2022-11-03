@@ -613,9 +613,13 @@ class SettingsPrivacyTest {
     @SmokeTest
     @Test
     fun deleteCookiesTest() {
+        val genericPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val cookiesTestPage = getStorageTestAsset(mockWebServer, "storage_write.html").url
 
+        // Browsing a generic page to allow GV to load on a fresh run
         navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericPage.url) {
+        }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(cookiesTestPage) {
             verifyPageContent("No cookies set")
             clickSetCookiesButton()
