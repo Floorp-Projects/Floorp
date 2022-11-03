@@ -312,7 +312,7 @@ def open_tar_stream(path: pathlib.Path):
     """"""
     if path.suffix == ".bz2":
         return bz2.open(str(path), "rb")
-    elif path.suffix == ".gz":
+    elif path.suffix in (".gz", ".tgz") :
         return gzip.open(str(path), "rb")
     elif path.suffix == ".xz":
         return lzma.open(str(path), "rb")
@@ -327,7 +327,7 @@ def open_tar_stream(path: pathlib.Path):
 
 def archive_type(path: pathlib.Path):
     """Attempt to identify a path as an extractable archive."""
-    if path.suffixes[-2:-1] == [".tar"]:
+    if path.suffixes[-2:-1] == [".tar"] or path.suffixes[-1:] == [".tgz"]:
         return "tar"
     elif path.suffix == ".zip":
         return "zip"
