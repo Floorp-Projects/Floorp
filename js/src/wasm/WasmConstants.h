@@ -474,6 +474,7 @@ enum class GcOp {
   RefTest = 0x44,
   RefCast = 0x45,
   BrOnCast = 0x46,
+  BrOnCastFail = 0x47,
 
   Limit
 };

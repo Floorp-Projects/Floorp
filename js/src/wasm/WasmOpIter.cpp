@@ -333,6 +333,7 @@ OpKind wasm::Classify(OpBytes op) {
         case GcOp::RefCast:
           WASM_GC_OP(OpKind::RefCast);
         case GcOp::BrOnCast:
+        case GcOp::BrOnCastFail:
           WASM_GC_OP(OpKind::BrOnCast);
       }
       break;

@@ -458,11 +458,6 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool checkBranchValueAndPush(uint32_t relativeDepth,
                                              ResultType* type,
                                              ValueVector* values);
-  [[nodiscard]] bool checkCastedBranchValueAndPush(uint32_t relativeDepth,
-                                                   ValType castedFromType,
-                                                   ValType castedToType,
-                                                   ResultType* branchTargetType,
-                                                   ValueVector* values);
   [[nodiscard]] bool checkBrTableEntryAndPush(uint32_t* relativeDepth,
                                               ResultType prevBranchType,
                                               ResultType* branchType,
@@ -726,9 +721,13 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                    Value* numElements);
   [[nodiscard]] bool readRefTest(uint32_t* typeIndex, Value* ref);
   [[nodiscard]] bool readRefCast(uint32_t* typeIndex, Value* ref);
-  [[nodiscard]] bool readBrOnCast(uint32_t* relativeDepth, uint32_t* typeIndex,
-                                  ResultType* branchTargetType,
-                                  ValueVector* values);
+  [[nodiscard]] bool readBrOnCast(uint32_t* labelRelativeDepth,
+                                  uint32_t* castTypeIndex,
+                                  ResultType* labelType, ValueVector* values);
+  [[nodiscard]] bool readBrOnCastFail(uint32_t* labelRelativeDepth,
+                                      uint32_t* castTypeIndex,
+                                      ResultType* labelType,
+                                      ValueVector* values);
 #endif
 
 #ifdef ENABLE_WASM_SIMD
@@ -1398,64 +1397,6 @@ inline bool OpIter<Policy>::checkBranchValueAndPush(uint32_t relativeDepth,
 
   *type = block->branchTargetType();
   return checkTopTypeMatches(*type, values, /*retypePolymorphics=*/false);
-}
-
-// Check the typing of a branch instruction which casts an input type to
-// an output type, branching on success to a target which takes the output
-// type along with extra values from the stack. On casting failure, the
-// original input type and extra values are left on the stack.
-template <typename Policy>
-inline bool OpIter<Policy>::checkCastedBranchValueAndPush(
-    uint32_t relativeDepth, ValType castedFromType, ValType castedToType,
-    ResultType* branchTargetType, ValueVector* values) {
-  // Get the branch target type, which will determine the type of extra values
-  // that are passed along with the casted type.
-  Control* block = nullptr;
-  if (!getControl(relativeDepth, &block)) {
-    return false;
-  }
-  *branchTargetType = block->branchTargetType();
-
-  // Check we at least have one type in the branch target type, which will take
-  // the casted type.
-  if (branchTargetType->length() < 1) {
-    UniqueChars expectedText = ToString(castedToType, env_.types);
-    if (!expectedText) {
-      return false;
-    }
-
-    UniqueChars error(JS_smprintf("type mismatch: expected [_, %s], got []",
-                                  expectedText.get()));
-    if (!error) {
-      return false;
-    }
-    return fail(error.get());
-  }
-
-  // The top of the stack is the type that is being cast. This is the last type
-  // in the branch target type. This is guaranteed to exist by the above check.
-  const size_t castTypeIndex = branchTargetType->length() - 1;
-
-  // Check that the branch target type can accept the castedToType. The branch
-  // target may specify a super type of the castedToType, and this is okay.
-  if (!checkIsSubtypeOf(castedToType, (*branchTargetType)[castTypeIndex])) {
-    return false;
-  }
-
-  // Create a copy of the branch target type, with the castTypeIndex replaced
-  // with the castedFromType. Use this to check that the stack has the proper
-  // types to branch to the target type.
-  //
-  // TODO: We could avoid a potential allocation here by handwriting a custom
-  //       topWithTypeAndPush that handles this case.
-  ValTypeVector stackTargetType;
-  if (!branchTargetType->cloneToVector(&stackTargetType)) {
-    return false;
-  }
-  stackTargetType[castTypeIndex] = castedFromType;
-
-  return checkTopTypeMatches(ResultType::Vector(stackTargetType), values,
-                             /*retypePolymorphics=*/false);
 }
 
 template <typename Policy>
@@ -3488,31 +3429,164 @@ inline bool OpIter<Policy>::readRefCast(uint32_t* typeIndex, Value* ref) {
   return push(RefType::fromTypeDef(&typeDef, false));
 }
 
+// `br_on_cast <labelRelativeDepth> null? <castTypeIndex>`
+//  branches if a reference has a given heap type
+//
+// br_on_cast $label null? castType : [t0* (ref null argType)] ->
+//                                    [t0* (ref null2? argType)]
+// (1) iff $label : [t0* labelType]
+// (2) and (ref null3? castType) <: labelType
+// (3) and castType <: topType and argType <: topType
+//         where topType is a common super type
+// (4) and null? = null3? =/= null2?
+//
+// - passes operand along with branch under target type,
+//   plus possible extra args
+// - if null? is present, branches on null, otherwise does not
+//
+// Currently unhandled:
+//   (3) partial check, and not really right
+//   (4) neither checked nor implemented
+
 template <typename Policy>
-inline bool OpIter<Policy>::readBrOnCast(uint32_t* relativeDepth,
-                                         uint32_t* typeIndex,
-                                         ResultType* branchTargetType,
+inline bool OpIter<Policy>::readBrOnCast(uint32_t* labelRelativeDepth,
+                                         uint32_t* castTypeIndex,
+                                         ResultType* labelType,
                                          ValueVector* values) {
   MOZ_ASSERT(Classify(op_) == OpKind::BrOnCast);
 
-  if (!readVarU32(relativeDepth)) {
+  if (!readVarU32(labelRelativeDepth)) {
     return fail("unable to read br_on_cast depth");
   }
 
-  if (!readGcTypeIndex(typeIndex)) {
+  if (!readGcTypeIndex(castTypeIndex)) {
     return false;
   }
 
   // The casted from type is any subtype of eqref.
-  ValType castedFromType(RefType::eq());
+  ValType eqrefType(RefType::eq());
 
   // The casted to type is a non-nullable reference to the type index
   // specified as an immediate.
-  const TypeDef& typeDef = env_.types->type(*typeIndex);
-  ValType castedToType(RefType::fromTypeDef(&typeDef, false));
+  const TypeDef& castTypeDef = env_.types->type(*castTypeIndex);
+  ValType castType(RefType::fromTypeDef(&castTypeDef, false));
 
-  return checkCastedBranchValueAndPush(*relativeDepth, castedFromType,
-                                       castedToType, branchTargetType, values);
+  // Get the branch target type, which will also determine the type of extra
+  // values that are passed along with the casted type.  This validates
+  // requirement (1).
+  Control* block = nullptr;
+  if (!getControl(*labelRelativeDepth, &block)) {
+    return false;
+  }
+  *labelType = block->branchTargetType();
+
+  // Check we have at least one value slot in the branch target type, so as to
+  // receive the casted type in the case where the cast succeeds.
+  const size_t labelTypeNumValues = labelType->length();
+  if (labelTypeNumValues < 1) {
+    return fail("type mismatch: branch target type has no value slots");
+  }
+
+  // The last value slot in the branch target type is what is being cast.
+  // This slot is guaranteed to exist by the above check.
+
+  // Check that the branch target type can accept castType.  The branch target
+  // may specify a supertype of castType, and this is okay.  Validates (2).
+  if (!checkIsSubtypeOf(castType, (*labelType)[labelTypeNumValues - 1])) {
+    return false;
+  }
+
+  // Create a copy of the branch target type, with the relevant value slot
+  // replaced by eqrefType.  Use this to check that the stack has the proper
+  // types to branch to the target type.
+  //
+  // TODO: We could avoid a potential allocation here by handwriting a custom
+  //       checkTopTypeMatches that handles this case.
+  ValTypeVector fallthroughType;
+  if (!labelType->cloneToVector(&fallthroughType)) {
+    return false;
+  }
+  fallthroughType[labelTypeNumValues - 1] = eqrefType;
+
+  // Validates the first half of (3), if we pretend that topType is eqref,
+  // which it isn't really.
+  return checkTopTypeMatches(ResultType::Vector(fallthroughType), values,
+                             /*retypePolymorphics=*/false);
+}
+
+// `br_on_cast_fail <labelRelativeDepth> null? <castTypeIndex>`
+//  branches if a reference does not have a given heap type
+//
+// br_on_cast_fail $label null? castType : [t0* (ref null argType)] ->
+//                                         [t0* (ref null2? castType)]
+// (1) iff $label : [t0* labelType]
+// (2) and (ref null3? argType) <: labelType
+// (3) and castType <: topType and argType <: topType
+//         where topType is a common super type
+// (4) and null? = null2? =/= null3?
+//
+// - passes operand along with branch, plus possible extra args
+// - if null? is present, does not branch on null, otherwise does
+//
+// Currently unhandled:
+//   (3) partial check, and not really right
+//   (4) neither checked nor implemented
+
+template <typename Policy>
+inline bool OpIter<Policy>::readBrOnCastFail(uint32_t* labelRelativeDepth,
+                                             uint32_t* castTypeIndex,
+                                             ResultType* labelType,
+                                             ValueVector* values) {
+  MOZ_ASSERT(Classify(op_) == OpKind::BrOnCast);
+
+  if (!readVarU32(labelRelativeDepth)) {
+    return fail("unable to read br_on_cast_fail depth");
+  }
+
+  if (!readGcTypeIndex(castTypeIndex)) {
+    return false;
+  }
+
+  // The casted from type is any subtype of eqref.
+  ValType eqrefType(RefType::eq());
+
+  // The casted to type is a non-nullable reference to the type index
+  // specified as an immediate.
+  const TypeDef& castTypeDef = env_.types->type(*castTypeIndex);
+  ValType castType(RefType::fromTypeDef(&castTypeDef, false));
+
+  // Get the branch target type, which will also determine the type of extra
+  // values that are passed along with the casted type.  This validates
+  // requirement (1).
+  Control* block = nullptr;
+  if (!getControl(*labelRelativeDepth, &block)) {
+    return false;
+  }
+  *labelType = block->branchTargetType();
+
+  // Check we at least have one value slot in the branch target type, so as to
+  // receive the argument value in the case where the cast fails.
+  if (labelType->length() < 1) {
+    return fail("type mismatch: branch target type has no value slots");
+  }
+
+  // Check all operands match the failure label's target type.  Validates (2).
+  if (!checkTopTypeMatches(*labelType, values,
+                           /*retypePolymorphics=*/false)) {
+    return false;
+  }
+
+  // The top operand needs to be compatible with the casted from type.
+  // Validates the first half of (3), if we pretend that topType is eqref,
+  // which it isn't really.
+  Value ignored;
+  if (!popWithType(eqrefType, &ignored)) {
+    return false;
+  }
+
+  // The top result in the fallthrough case is the casted to type.
+  infalliblePush(castType);
+  return true;
 }
 
 #endif  // ENABLE_WASM_GC

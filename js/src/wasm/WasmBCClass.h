@@ -1627,7 +1627,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitArrayCopy();
   [[nodiscard]] bool emitRefTest();
   [[nodiscard]] bool emitRefCast();
-  [[nodiscard]] bool emitBrOnCast();
+  [[nodiscard]] bool emitBrOnCastCommon(bool onSuccess);
 
   void emitGcCanon(uint32_t typeIndex);
   void emitGcNullCheck(RegRef rp);
