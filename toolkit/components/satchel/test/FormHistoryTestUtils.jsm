@@ -23,24 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  * use-cases.
  */
 var FormHistoryTestUtils = {
-  makeListener(resolve, reject) {
-    let results = [];
-    return {
-      _results: results,
-      handleResult(result) {
-        results.push(result);
-      },
-      handleError(error) {
-        reject(error);
-      },
-      handleCompletion(errored) {
-        if (!errored) {
-          resolve(results);
-        }
-      },
-    };
-  },
-
   /**
    * Adds values to form history.
    *
@@ -127,12 +109,9 @@ var FormHistoryTestUtils = {
    * @resolves {Array} Array of found form history entries.
    */
   autocomplete(searchString, fieldname, filters = {}) {
-    return new Promise((resolve, reject) => {
-      lazy.FormHistory.getAutoCompleteResults(
-        searchString,
-        Object.assign({ fieldname }, filters),
-        this.makeListener(resolve, reject)
-      );
-    });
+    return lazy.FormHistory.getAutoCompleteResults(
+      searchString,
+      Object.assign({ fieldname }, filters)
+    );
   },
 };
