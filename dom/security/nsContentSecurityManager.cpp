@@ -36,7 +36,9 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozilla/Components.h"
+#include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
@@ -1354,6 +1356,74 @@ static nsresult CheckAllowFileProtocolScriptLoad(nsIChannel* aChannel) {
   return NS_OK;
 }
 
+// We should not allow loading non-JavaScript files as scripts using
+// a moz-extension:// URL.
+static nsresult CheckAllowExtensionProtocolScriptLoad(nsIChannel* aChannel) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  ExtContentPolicyType type = loadInfo->GetExternalContentPolicyType();
+
+  // Only check script loads.
+  if (type != ExtContentPolicy::TYPE_SCRIPT) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!uri || !uri->SchemeIs("moz-extension")) {
+    return NS_OK;
+  }
+
+  // We expect this code to never be hit off-the-main-thread (even worker
+  // scripts are currently hitting only on the main thread, see
+  // WorkerScriptLoader::DispatchLoadScript calling NS_DispatchToMainThread
+  // internally), this diagnostic assertion is meant to let us notice if that
+  // isn't the case anymore.
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread(),
+                        "Unexpected off-the-main-thread call to "
+                        "CheckAllowFileProtocolScriptLoad");
+
+  nsAutoCString host;
+  rv = uri->GetHost(host);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  RefPtr<extensions::WebExtensionPolicyCore> targetPolicy =
+      ExtensionPolicyService::GetCoreByHost(host);
+
+  if (NS_WARN_IF(!targetPolicy) || targetPolicy->ManifestVersion() < 3) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // GetDefaultTypeFromExtension fails for missing or unknown file-extensions.
+  nsAutoCString contentType;
+  rv = mime->GetDefaultTypeFromURI(uri, contentType);
+  if (NS_FAILED(rv) || !nsContentUtils::IsJavascriptMIMEType(
+                           NS_ConvertUTF8toUTF16(contentType))) {
+    nsCOMPtr<Document> doc;
+    if (nsINode* node = loadInfo->LoadingNode()) {
+      doc = node->OwnerDoc();
+    }
+
+    nsAutoCString spec;
+    uri->GetSpec(spec);
+
+    AutoTArray<nsString, 1> params;
+    CopyUTF8toUTF16(NS_UnescapeURL(spec), *params.AppendElement());
+
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    "EXTENSION_SCRIPT_BLOCKED"_ns, doc,
+                                    nsContentUtils::eSECURITY_PROPERTIES,
+                                    "BlockExtensionScriptWithWrongExt", params);
+
+    return NS_ERROR_CONTENT_BLOCKED;
+  }
+
+  return NS_OK;
+}
+
 /*
  * Based on the security flags provided in the loadInfo of the channel,
  * doContentSecurityCheck() performs the following content security checks
@@ -1384,6 +1454,11 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CheckAllowLoadInPrivilegedAboutContext(aChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We want to also check redirected requests to ensure
+  // the target maintains the proper javascript file extensions.
+  rv = CheckAllowExtensionProtocolScriptLoad(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CheckChannelHasProtocolSecurityFlag(aChannel);
