@@ -53,8 +53,7 @@
         android:id="@+id/addtohomescreen_dialog_add"
         style="@style/ButtonStyle"
         android:layout_marginTop="36dp"
-        android:contentDescription="@string/dialog_addtohomescreen_action_add"
-        android:text="@string/dialog_addtohomescreen_action_yes"
+        android:text="@string/dialog_addtohomescreen_action_add"
         app:layout_constraintBottom_toBottomOf="@id/homescreen_dialog_warning_layout"
         app:layout_constraintBottom_toTopOf="@id/homescreen_dialog_warning_layout"
         app:layout_constraintEnd_toEndOf="parent"
@@ -63,8 +62,7 @@
     <Button
         android:id="@+id/addtohomescreen_dialog_cancel"
         style="@style/ButtonStyle"
-        android:contentDescription="@string/dialog_addtohomescreen_action_cancel"
-        android:text="@string/dialog_addtohomescreen_action_no"
+        android:text="@string/dialog_addtohomescreen_action_cancel"
         app:layout_constraintEnd_toStartOf="@id/addtohomescreen_dialog_add"
         app:layout_constraintTop_toTopOf="@id/addtohomescreen_dialog_add" />
 
