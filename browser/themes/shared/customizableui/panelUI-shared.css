@@ -1149,7 +1149,7 @@ panelview .toolbarbutton-1,
   border-radius: 0;
 }
 
-.toolbaritem-combined-buttons:not([widget-type="button-and-view"]),
+.toolbaritem-combined-buttons:not([widget-type="button-and-view"], [widget-type="custom"]),
 .toolbaritem-menu-buttons {
   margin-inline-end: 8px;
 }
