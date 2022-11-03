@@ -31,8 +31,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.components.IntentProcessorType
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.components.IntentProcessorType
 import org.mozilla.fenix.components.IntentProcessors
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components

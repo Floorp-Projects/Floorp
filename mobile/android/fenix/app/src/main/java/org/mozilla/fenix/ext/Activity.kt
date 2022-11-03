@@ -5,16 +5,16 @@
 package org.mozilla.fenix.ext
 
 import android.app.Activity
-import android.view.View
-import android.view.WindowManager
-import mozilla.components.concept.base.crash.Breadcrumb
 import android.app.role.RoleManager
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
+import android.view.View
+import android.view.WindowManager
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
+import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.engine.EngineSession
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity

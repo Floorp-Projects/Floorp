@@ -15,17 +15,17 @@ class LicenseDetector : Detector(), SourceCodeScanner {
 
         private val Implementation = Implementation(
             LicenseDetector::class.java,
-            Scope.JAVA_FILE_SCOPE
+            Scope.JAVA_FILE_SCOPE,
         )
 
         val ISSUE_MISSING_LICENSE = Issue.create(
             id = "MissingLicense",
             briefDescription = "File doesn't start with the license comment",
             explanation = "Every file must start with the license comment:\n" +
-                    LicenseCommentChecker.ValidLicenseForKotlinFiles,
+                LicenseCommentChecker.ValidLicenseForKotlinFiles,
             category = Category.CORRECTNESS,
             severity = Severity.WARNING,
-            implementation = Implementation
+            implementation = Implementation,
         )
 
         val ISSUE_INVALID_LICENSE_FORMAT = Issue.create(
@@ -34,7 +34,7 @@ class LicenseDetector : Detector(), SourceCodeScanner {
             explanation = "The license must be:\n${LicenseCommentChecker.ValidLicenseForKotlinFiles}",
             category = Category.CORRECTNESS,
             severity = Severity.WARNING,
-            implementation = Implementation
+            implementation = Implementation,
         )
     }
 
@@ -42,5 +42,4 @@ class LicenseDetector : Detector(), SourceCodeScanner {
 
     override fun createUastHandler(context: JavaContext): UElementHandler? =
         LicenseCommentChecker(context)
-
 }

@@ -18,7 +18,6 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
-
 import org.mozilla.fenix.utils.Settings
 
 class CrashReporterControllerTest {

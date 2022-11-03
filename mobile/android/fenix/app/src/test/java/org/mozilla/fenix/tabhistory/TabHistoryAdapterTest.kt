@@ -9,10 +9,10 @@ import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
 import io.mockk.MockKAnnotations
 import io.mockk.every
-import io.mockk.verify
-import io.mockk.spyk
-import io.mockk.mockk
 import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse

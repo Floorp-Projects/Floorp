@@ -5,8 +5,8 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
-import mozilla.components.service.fxa.ServerConfig.Server
 import mozilla.components.service.fxa.ServerConfig
+import mozilla.components.service.fxa.ServerConfig.Server
 
 /**
  * Utility to configure Firefox Account stage servers.

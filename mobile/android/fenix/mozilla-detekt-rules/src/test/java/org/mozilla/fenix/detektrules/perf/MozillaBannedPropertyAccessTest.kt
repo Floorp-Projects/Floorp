@@ -27,14 +27,13 @@ internal class MozillaBannedPropertyAccessTest {
     @BeforeEach
     fun setup() {
         config = yamlConfig("/config.yml")
-
     }
 
     @Test
     internal fun `non compliant property access should warn`() {
         val findings =
             MozillaBannedPropertyAccess(config).lint(
-                NONCOMPLIANT_ACCESS.trimIndent()
+                NONCOMPLIANT_ACCESS.trimIndent(),
             )
         assertEquals(1, findings.size)
         assertEquals(DESCR, findings[0].issue.description)
@@ -46,7 +45,7 @@ internal class MozillaBannedPropertyAccessTest {
     internal fun testCompliantWhen(source: String) {
         val findings =
             MozillaBannedPropertyAccess(config).lint(
-                source
+                source,
             )
         assertTrue(findings.isEmpty())
     }
@@ -55,7 +54,7 @@ internal class MozillaBannedPropertyAccessTest {
         @JvmStatic
         fun compliantProvider(): Stream<Arguments> =
             Stream.of(
-                arguments(COMPLIANT_ACCESS, "Safe property access")
+                arguments(COMPLIANT_ACCESS, "Safe property access"),
             )
     }
 }

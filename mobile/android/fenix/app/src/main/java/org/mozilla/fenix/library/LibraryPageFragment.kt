@@ -6,8 +6,8 @@ package org.mozilla.fenix.library
 
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
-import mozilla.components.support.ktx.android.content.getColorFromAttr
 import androidx.navigation.fragment.findNavController
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode

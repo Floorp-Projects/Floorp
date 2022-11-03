@@ -18,9 +18,9 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.session.behavior.EngineViewBrowserToolbarBehavior
-import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.ui.widgets.VerticalSwipeRefreshLayout
 import org.junit.Before

@@ -19,7 +19,7 @@ private val FRAMEWORK_ELEMENTS = setOf(
     "androidx.constraintlayout.widget.ConstraintLayout",
 
     // Android framework views that extend ConstraintLayout
-    "androidx.constraintlayout.motion.widget.MotionLayout"
+    "androidx.constraintlayout.motion.widget.MotionLayout",
 )
 private val FRAMEWORK_ELEMENTS_BULLETED_LIST = FRAMEWORK_ELEMENTS.map { "- `$it`" }.joinToString("\n")
 
@@ -43,7 +43,7 @@ private val CUSTOM_VIEW_ELEMENTS = setOf(
     "$AC_PREFIX.feature.findinpage.view.FindInPageBar",
     "$AC_PREFIX.feature.prompts.login.LoginSelectBar",
     "$AC_PREFIX.ui.widgets.WidgetSiteItemView",
-    "$AC_PREFIX.browser.toolbar.display.DisplayToolbarView"
+    "$AC_PREFIX.browser.toolbar.display.DisplayToolbarView",
 )
 private val CUSTOM_VIEW_ELEMENTS_BULLETED_LIST = CUSTOM_VIEW_ELEMENTS.map { "- `$it`" }.joinToString("\n")
 
@@ -116,8 +116,8 @@ private val FRAMEWORK_ISSUE = Issue.create(
     severity = Severity.ERROR,
     implementation = Implementation(
         ConstraintLayoutPerfDetector::class.java,
-        Scope.RESOURCE_FILE_SCOPE
-    )
+        Scope.RESOURCE_FILE_SCOPE,
+    ),
 )
 
 /**
@@ -133,8 +133,8 @@ private val CUSTOM_VIEW_ISSUE = Issue.create(
     severity = Severity.WARNING,
     implementation = Implementation(
         ConstraintLayoutPerfDetector::class.java,
-        Scope.RESOURCE_FILE_SCOPE
-    )
+        Scope.RESOURCE_FILE_SCOPE,
+    ),
 )
 
 /**
@@ -152,7 +152,7 @@ class ConstraintLayoutPerfDetector : ResourceXmlDetector() {
     companion object {
         val ISSUES = listOf(
             FRAMEWORK_ISSUE,
-            CUSTOM_VIEW_ISSUE
+            CUSTOM_VIEW_ISSUE,
         )
     }
 

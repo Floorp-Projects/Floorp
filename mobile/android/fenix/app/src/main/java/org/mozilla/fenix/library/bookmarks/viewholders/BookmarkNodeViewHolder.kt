@@ -12,11 +12,11 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.removeAndDisable
-import org.mozilla.fenix.ext.hideAndDisable
-import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.loadIntoView
+import org.mozilla.fenix.ext.removeAndDisable
+import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentState
 import org.mozilla.fenix.library.bookmarks.BookmarkItemMenu

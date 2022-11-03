@@ -6,7 +6,7 @@
 // /docs/architecture-overview.md
 class ContactsView(
     private val container: ViewGroup,
-    private val interactor: ContactsInteractor
+    private val interactor: ContactsInteractor,
 ) {
 
     val view: View = LayoutInflater.from(container.context)

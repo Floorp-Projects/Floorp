@@ -8,8 +8,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
-import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.library.history.viewholders.HistoryListItemViewHolder
+import org.mozilla.fenix.selection.SelectionHolder
 
 /**
  * Adapter for the list of visited pages, that uses Paging 3 versions of the Paging library.

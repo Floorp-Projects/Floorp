@@ -5,14 +5,14 @@
 package org.mozilla.fenix.ext
 
 import android.view.View
+import android.widget.ImageButton
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Test
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Assert.assertEquals
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import android.widget.ImageButton
 
 @RunWith(FenixRobolectricTestRunner::class)
 class ImageButtonTest {

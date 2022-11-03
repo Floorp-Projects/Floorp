@@ -8,7 +8,6 @@ import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import kotlinx.coroutines.test.runTest
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -17,8 +16,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.perf.StrictModeManager
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.helpers.perf.TestStrictModeManager
+import org.mozilla.fenix.perf.StrictModeManager
 
 @RunWith(FenixRobolectricTestRunner::class)
 class AccountAbnormalitiesTest {

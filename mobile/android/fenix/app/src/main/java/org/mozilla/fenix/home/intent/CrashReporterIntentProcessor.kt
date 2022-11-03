@@ -9,9 +9,9 @@ import android.util.Log
 import androidx.navigation.NavController
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.Crash.NativeCodeCrash
+import mozilla.components.lib.crash.CrashReporter
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
-import mozilla.components.lib.crash.CrashReporter
 
 /**
  * Process the [Intent] from [CrashReporter] through which the app is informed about

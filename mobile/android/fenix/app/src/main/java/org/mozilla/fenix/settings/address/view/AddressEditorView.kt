@@ -8,11 +8,11 @@ import android.content.Context
 import android.content.DialogInterface
 import android.view.View
 import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
-import mozilla.components.concept.storage.Address
-import android.widget.ArrayAdapter
 import mozilla.components.browser.state.search.RegionState
+import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.UpdatableAddressFields
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard

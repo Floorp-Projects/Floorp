@@ -32,8 +32,8 @@ class ButtonStyleXmlDetector : ResourceXmlDetector() {
             severity = Severity.ERROR,
             implementation = Implementation(
                 ButtonStyleXmlDetector::class.java,
-                Scope.RESOURCE_FILE_SCOPE
-            )
+                Scope.RESOURCE_FILE_SCOPE,
+            ),
         )
     }
 
@@ -47,7 +47,7 @@ class ButtonStyleXmlDetector : ResourceXmlDetector() {
         return setOf(
             SdkConstants.FQCN_BUTTON,
             SdkConstants.MATERIAL_BUTTON,
-            SdkConstants.BUTTON
+            SdkConstants.BUTTON,
         )
     }
 
@@ -58,7 +58,7 @@ class ButtonStyleXmlDetector : ResourceXmlDetector() {
             issue = ISSUE_XML_STYLE,
             scope = element,
             location = context.getElementLocation(element),
-            message = ERROR_MESSAGE
+            message = ERROR_MESSAGE,
         )
     }
 }

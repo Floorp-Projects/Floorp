@@ -57,21 +57,27 @@ internal class MozillaUseLazyMonitoredTest {
         assertNoFindings(text)
     }
 
-    @ParameterizedTest @ValueSource(strings = [
-        "val example by lazy { 4 }",
-        "val example    by    lazy    {    4    }",
-        "val example\nby\nlazy\n{\n4\n}"
-    ])
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "val example by lazy { 4 }",
+            "val example    by    lazy    {    4    }",
+            "val example\nby\nlazy\n{\n4\n}",
+        ],
+    )
     fun `GIVEN a snippet with by lazy THEN there is a finding`(innerText: String) {
         val text = getCodeInClass(innerText)
         assertOneFinding(text)
     }
 
-    @ParameterizedTest @ValueSource(strings = [
-        "val example = lazy(::exampleFun)",
-        "val example   =   lazy   (  ::exampleFun)",
-        "val example\n=\nlazy\n(\n::exampleFun\n)"
-    ])
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "val example = lazy(::exampleFun)",
+            "val example   =   lazy   (  ::exampleFun)",
+            "val example\n=\nlazy\n(\n::exampleFun\n)",
+        ],
+    )
     fun `GIVEN a snippet with = lazy THEN there is a finding`(innerText: String) {
         val text = getCodeInClass(innerText)
         assertOneFinding(text)

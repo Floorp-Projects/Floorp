@@ -19,13 +19,13 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import java.util.concurrent.TimeUnit
 import mozilla.components.support.base.ids.SharedIdsHelper
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.IntentUtils
 import org.mozilla.fenix.utils.Settings
+import java.util.concurrent.TimeUnit
 
 class DefaultBrowserNotificationWorker(
     context: Context,

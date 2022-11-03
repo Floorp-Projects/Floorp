@@ -10,8 +10,8 @@ import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.withContext
-import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.GleanMetrics.ReviewPrompt
+import org.mozilla.fenix.utils.Settings
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

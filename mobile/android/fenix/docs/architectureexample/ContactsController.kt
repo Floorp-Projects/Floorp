@@ -6,7 +6,7 @@
 // /docs/architecture-overview.md
 class ContactsController(
     private val store: ContactsStore,
-    private val navController: NavController
+    private val navController: NavController,
 ) {
 
     fun contactRenamed(contactId: Int, newName: String) {
@@ -17,7 +17,7 @@ class ContactsController(
         // This is how we pass arguments between fragments using Google's navigation library.
         // See https://developer.android.com/guide/navigation/navigation-getting-started
         val directions = ContactsFragment.actionContactsFragmentToChatFragment(
-            contactId = contactId
+            contactId = contactId,
         )
         navController.nav(R.id.contactFragment, directions)
     }

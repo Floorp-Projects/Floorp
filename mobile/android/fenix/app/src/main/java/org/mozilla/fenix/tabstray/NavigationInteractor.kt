@@ -12,7 +12,6 @@ import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.browser.storage.sync.Tab as SyncTab
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.glean.private.NoExtras
@@ -29,6 +28,7 @@ import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.tabstray.ext.getTabSessionState
 import org.mozilla.fenix.tabstray.ext.isActiveDownload
 import kotlin.coroutines.CoroutineContext
+import mozilla.components.browser.storage.sync.Tab as SyncTab
 
 /**
  * An interactor that helps with navigating to different parts of the app from the tabs tray.

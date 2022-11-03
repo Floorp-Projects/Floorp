@@ -42,21 +42,21 @@ class LicenseCommentChecker(private val context: JavaContext) : UElementHandler(
         LicenseDetector.ISSUE_MISSING_LICENSE,
         context.getLocation(node.sourcePsi.firstChild),
         "The file must start with a comment containing the license",
-        addLicenseQuickFix()
+        addLicenseQuickFix(),
     )
 
     private fun reportInvalidLicenseFormat(comment: UComment) = context.report(
         LicenseDetector.ISSUE_INVALID_LICENSE_FORMAT,
         context.getLocation(comment),
         "The license comment doesn't have the appropriate format",
-        replaceCommentWithValidLicenseFix(comment)
+        replaceCommentWithValidLicenseFix(comment),
     )
 
     private fun reportMissingLeadingNewLineCharacter(licenseComment: UComment) = context.report(
         LicenseDetector.ISSUE_INVALID_LICENSE_FORMAT,
         context.getRangeLocation(licenseComment, licenseComment.text.lastIndex, 1),
         "The license comment must be followed by a newline character",
-        addLeadingNewLineQuickFix(licenseComment)
+        addLeadingNewLineQuickFix(licenseComment),
     )
 
     private fun addLicenseQuickFix() = LintFix.create()

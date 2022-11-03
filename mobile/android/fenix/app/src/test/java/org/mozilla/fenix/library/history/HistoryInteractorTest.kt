@@ -15,8 +15,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.GleanMetrics.History as GleanHistory
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.GleanMetrics.History as GleanHistory
 
 @RunWith(FenixRobolectricTestRunner::class) // For GleanTestRule
 class HistoryInteractorTest {

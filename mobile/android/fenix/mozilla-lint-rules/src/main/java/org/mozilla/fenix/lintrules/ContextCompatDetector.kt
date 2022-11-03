@@ -16,7 +16,7 @@ class ContextCompatDetector : Detector(), SourceCodeScanner {
 
         private val Implementation = Implementation(
             ContextCompatDetector::class.java,
-            Scope.JAVA_FILE_SCOPE
+            Scope.JAVA_FILE_SCOPE,
         )
 
         val ISSUE_GET_DRAWABLE_CALL = Issue.create(
@@ -25,7 +25,7 @@ class ContextCompatDetector : Detector(), SourceCodeScanner {
             explanation = "Using this method can lead to crashes in older Android versions as newer features might not be available",
             category = Category.CORRECTNESS,
             severity = Severity.ERROR,
-            implementation = Implementation
+            implementation = Implementation,
         )
 
         val ISSUE_GET_COLOR_STATE_LIST_CALL = Issue.create(
@@ -34,18 +34,18 @@ class ContextCompatDetector : Detector(), SourceCodeScanner {
             explanation = "Using this method can lead to crashes in older Android versions as newer features might not be available",
             category = Category.CORRECTNESS,
             severity = Severity.ERROR,
-            implementation = Implementation
+            implementation = Implementation,
         )
 
         val ISSUES = listOf(
             ISSUE_GET_DRAWABLE_CALL,
-            ISSUE_GET_COLOR_STATE_LIST_CALL
+            ISSUE_GET_COLOR_STATE_LIST_CALL,
         )
     }
 
     override fun getApplicableMethodNames(): List<String>? = listOf(
         "getDrawable",
-        "getColorStateList"
+        "getColorStateList",
     )
 
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
@@ -65,7 +65,7 @@ class ContextCompatDetector : Detector(), SourceCodeScanner {
         ISSUE_GET_DRAWABLE_CALL,
         context.getLocation(node),
         "This call can lead to crashes, replace with AppCompatResources.getDrawable",
-        replaceUnsafeGetDrawableQuickFix(node)
+        replaceUnsafeGetDrawableQuickFix(node),
     )
 
     private fun reportGetColorStateListCall(context: JavaContext, node: UCallExpression) =
@@ -73,7 +73,7 @@ class ContextCompatDetector : Detector(), SourceCodeScanner {
             ISSUE_GET_COLOR_STATE_LIST_CALL,
             context.getLocation(node),
             "This call can lead to crashes, replace with AppCompatResources.getColorStateList",
-            replaceUnsafeGetColorStateListCallQuickFix(node)
+            replaceUnsafeGetColorStateListCallQuickFix(node),
         )
 
     private fun replaceUnsafeGetDrawableQuickFix(node: UCallExpression): LintFix {
@@ -99,5 +99,4 @@ class ContextCompatDetector : Detector(), SourceCodeScanner {
             .with(newText)
             .build()
     }
-
 }

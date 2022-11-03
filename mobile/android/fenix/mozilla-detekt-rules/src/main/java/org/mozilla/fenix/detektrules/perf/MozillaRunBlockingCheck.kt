@@ -8,7 +8,7 @@ import io.gitlab.arturbosch.detekt.api.*
 import org.jetbrains.kotlin.psi.*
 
 private const val VIOLATION_MSG = "Please use `org.mozilla.fenix.perf.runBlockingImplement` instead" +
-        "because it allows us to monitor the code for performance regressions."
+    "because it allows us to monitor the code for performance regressions."
 
 /**
  * A check to prevent us from working around mechanisms we implemented in
@@ -21,8 +21,8 @@ class MozillaRunBlockingCheck(config: Config) : Rule(config) {
         "MozillaRunBlockingCheck",
         Severity.Performance,
         "Prevents us from working around mechanisms we implemented to count how many " +
-                "runBlocking are used",
-        Debt.TWENTY_MINS
+            "runBlocking are used",
+        Debt.TWENTY_MINS,
     )
 
     override fun visitImportDirective(importDirective: KtImportDirective) {

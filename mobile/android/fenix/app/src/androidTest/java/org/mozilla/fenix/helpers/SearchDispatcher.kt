@@ -7,14 +7,14 @@ package org.mozilla.fenix.helpers
 import android.os.Handler
 import android.os.Looper
 import androidx.test.platform.app.InstrumentationRegistry
-import java.io.IOException
-import java.io.InputStream
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 import okio.Buffer
 import okio.source
+import java.io.IOException
+import java.io.InputStream
 
 /**
  * A [MockWebServer] [Dispatcher] that will return a generic search results page in the body of

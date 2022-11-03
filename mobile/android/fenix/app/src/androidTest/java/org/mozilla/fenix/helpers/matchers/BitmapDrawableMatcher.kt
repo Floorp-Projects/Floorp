@@ -5,13 +5,13 @@
 package org.mozilla.fenix.helpers.matchers
 
 import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.StateListDrawable
 import android.view.View
 import android.widget.ImageView
 import androidx.test.espresso.matcher.BoundedMatcher
 import org.hamcrest.Description
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.StateListDrawable
-import android.graphics.drawable.Drawable
 
 class BitmapDrawableMatcher(private val bitmap: Bitmap, private val name: String) :
     BoundedMatcher<View, ImageView>(ImageView::class.java) {

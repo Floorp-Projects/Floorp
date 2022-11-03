@@ -31,12 +31,12 @@ open class MozillaUseLazyMonitored(config: Config) : Rule(config) {
         this::class.java.simpleName,
         Severity.Performance,
         "Prevents use of lazy in component groups files where lazyMonitored should be used instead",
-        Debt.FIVE_MINS
+        Debt.FIVE_MINS,
     )
 
     override val filters = PathFilters.of(
         includes = COMPONENT_GROUP_FILES.map { "**$it" },
-        excludes = emptyList()
+        excludes = emptyList(),
     )
 
     override fun visitPropertyDelegate(delegate: KtPropertyDelegate) {
@@ -79,7 +79,7 @@ open class MozillaUseLazyMonitored(config: Config) : Rule(config) {
             "PerformanceComponent",
             "Push",
             "Services",
-            "UseCases"
+            "UseCases",
         ).map { "app/src/main/java/org/mozilla/fenix/components/$it.kt" }
     }
 }

@@ -23,8 +23,8 @@ import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.logins.LoginsAction
 import org.mozilla.fenix.settings.logins.LoginsFragmentStore
-import org.mozilla.fenix.settings.logins.fragment.EditLoginFragmentDirections
 import org.mozilla.fenix.settings.logins.fragment.AddLoginFragmentDirections
+import org.mozilla.fenix.settings.logins.fragment.EditLoginFragmentDirections
 import org.mozilla.fenix.settings.logins.mapToSavedLogin
 
 /**

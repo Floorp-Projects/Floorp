@@ -14,17 +14,17 @@ import android.widget.PopupWindow
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import com.google.android.material.snackbar.Snackbar
+import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
-import org.mozilla.fenix.R
-import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.ext.components
-import java.lang.ref.WeakReference
-import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.R
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.databinding.BrowserToolbarPopupWindowBinding
+import org.mozilla.fenix.ext.components
+import java.lang.ref.WeakReference
 
 object ToolbarPopupWindow {
     fun show(

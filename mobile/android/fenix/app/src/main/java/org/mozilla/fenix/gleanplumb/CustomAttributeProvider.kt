@@ -9,8 +9,8 @@ import org.json.JSONObject
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.BrowsersCache
 import java.text.SimpleDateFormat
-import java.util.Locale
 import java.util.Calendar
+import java.util.Locale
 
 /**
  * Custom attributes that the messaging framework will use to evaluate if message is eligible

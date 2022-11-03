@@ -37,7 +37,6 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.RangeInfoCom
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
-
 import java.text.NumberFormat
 import kotlin.math.PI
 import kotlin.math.abs

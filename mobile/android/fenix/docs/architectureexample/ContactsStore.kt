@@ -5,7 +5,7 @@
 // This is example code for the 'Simplified Example' section of
 // /docs/architecture-overview.md
 class ContactsStore(
-    private val initialState: ContactsState
+    private val initialState: ContactsState,
 ) : Store<ContactsState, Reducer<ContactState, ContactsAction>>(initialState, ::reducer)
 
 sealed class ContactsAction {
@@ -15,13 +15,13 @@ sealed class ContactsAction {
 
 data class ContactsState(
     val contacts: List<Contact>,
-    val theme: Theme
+    val theme: Theme,
 )
 
 data class Contact(
     val name: String,
     val id: Int,
-    val imageUrl: Uri
+    val imageUrl: Uri,
 )
 
 enum class Theme {

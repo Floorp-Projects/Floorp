@@ -3,11 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.fenix.settings
 
+import androidx.preference.ListPreference
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
-
-import androidx.preference.ListPreference
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test

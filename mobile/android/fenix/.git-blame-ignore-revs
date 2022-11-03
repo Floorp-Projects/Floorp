@@ -1,3 +1,5 @@
 # .git-blame-ignore-revs
-# 26901: Fix issues from ktlint baseline
+# For #27667 - Remove import-ordering from the list of disabled ktlint rules (#27680)
+463fcd53b8db5a43b0be7bf1a4c4bbe8f2a163e0
+# For #26844: Fix ktlint issues and remove them from baseline. (#26901)
 ffcef5ff2e3f78b6972dd16551f3f653b7035ccc

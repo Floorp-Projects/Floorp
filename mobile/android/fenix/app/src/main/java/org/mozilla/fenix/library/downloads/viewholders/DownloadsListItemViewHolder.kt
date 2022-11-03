@@ -10,14 +10,14 @@ import mozilla.components.feature.downloads.toMegabyteOrKilobyteString
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.DownloadListItemBinding
 import org.mozilla.fenix.databinding.LibrarySiteItemBinding
-import org.mozilla.fenix.selection.SelectionHolder
-import org.mozilla.fenix.library.downloads.DownloadInteractor
-import org.mozilla.fenix.library.downloads.DownloadItem
 import org.mozilla.fenix.ext.getIcon
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.library.downloads.DownloadFragmentState
+import org.mozilla.fenix.library.downloads.DownloadInteractor
+import org.mozilla.fenix.library.downloads.DownloadItem
 import org.mozilla.fenix.library.downloads.DownloadItemMenu
+import org.mozilla.fenix.selection.SelectionHolder
 
 class DownloadsListItemViewHolder(
     view: View,

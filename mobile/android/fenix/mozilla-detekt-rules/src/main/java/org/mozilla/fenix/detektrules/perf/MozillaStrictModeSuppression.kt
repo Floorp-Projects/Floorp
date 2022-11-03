@@ -25,7 +25,7 @@ class MozillaStrictModeSuppression(config: Config) : Rule(config) {
         "MozillaStrictModeSuppression",
         Severity.Performance,
         "Prevents us from working around mechanisms we implemented to prevent suppressing StrictMode",
-        Debt.TEN_MINS
+        Debt.TEN_MINS,
     )
 
     override fun visitImportDirective(importDirective: KtImportDirective) {
@@ -55,9 +55,10 @@ class MozillaStrictModeSuppression(config: Config) : Rule(config) {
         if (receiver == "StrictMode") {
             val violationMsg = when (calledMethod) {
                 "setThreadPolicy" -> VIOLATION_MSG
-                "setVmPolicy" -> "NOT YET IMPLEMENTED: please consult the perf team about implementing" +
-                    "`StrictModeManager.resetAfter`: we want to understand the performance implications " +
-                    "of suppressing setVmPolicy before allowing it."
+                "setVmPolicy" ->
+                    "NOT YET IMPLEMENTED: please consult the perf team about implementing" +
+                        "`StrictModeManager.resetAfter`: we want to understand the performance implications " +
+                        "of suppressing setVmPolicy before allowing it."
                 else -> null
             }
 

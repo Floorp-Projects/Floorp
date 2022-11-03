@@ -6,13 +6,13 @@ package org.mozilla.fenix.library.recentlyclosed
 
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
-import io.mockk.mockk
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.verify
-import io.mockk.coVerify
-import io.mockk.just
 import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runCurrent

@@ -12,9 +12,9 @@ import android.os.SystemClock
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import org.junit.rules.ExternalResource
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import java.util.Date
 import kotlin.random.Random
-import org.mozilla.fenix.helpers.TestHelper.mDevice
 
 private const val mockProviderName = LocationManager.GPS_PROVIDER
 

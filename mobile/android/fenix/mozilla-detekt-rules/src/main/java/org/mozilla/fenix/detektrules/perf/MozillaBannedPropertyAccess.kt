@@ -18,7 +18,7 @@ class MozillaBannedPropertyAccess(config: Config = Config.empty) : Rule(config) 
         "MozillaBannedPropertyAccess",
         Severity.Defect,
         DESCR,
-        Debt.FIVE_MINS
+        Debt.FIVE_MINS,
     )
 
     private val banned by lazy {
@@ -43,7 +43,7 @@ class MozillaBannedPropertyAccess(config: Config = Config.empty) : Rule(config) 
             CodeSmell(
                 issue,
                 Entity.from(expression),
-                "Using $possiblyBannedPropertyAccess is not allowed because accessing property $it is against Mozilla policy. See 'mozilla-detekt-rules' stanza in 'config/detekt.yml' for more information.\n"
+                "Using $possiblyBannedPropertyAccess is not allowed because accessing property $it is against Mozilla policy. See 'mozilla-detekt-rules' stanza in 'config/detekt.yml' for more information.\n",
             )
         }.forEach { report(it) }
     }

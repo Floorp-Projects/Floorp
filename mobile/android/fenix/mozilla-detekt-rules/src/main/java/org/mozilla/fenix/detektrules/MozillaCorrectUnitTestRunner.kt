@@ -17,7 +17,7 @@ import org.jetbrains.kotlin.psi.KtAnnotationEntry
 private val BANNED_TEST_RUNNERS = setOf(
     // When updating this list, also update the violation message.
     "AndroidJUnit4",
-    "RobolectricTestRunner"
+    "RobolectricTestRunner",
 )
 
 // There is a change to how we output violations in a different PR so the formatting for message
@@ -48,13 +48,13 @@ class MozillaCorrectUnitTestRunner(config: Config) : Rule(config) {
         MozillaCorrectUnitTestRunner::class.simpleName!!,
         Severity.Defect,
         "Verifies we're using the correct Robolectric unit test runner",
-        Debt.FIVE_MINS
+        Debt.FIVE_MINS,
     )
 
     override val filters: PathFilters?
         get() = PathFilters.of(
             includes = listOf("**/test/**"), // unit tests only.
-            excludes = emptyList()
+            excludes = emptyList(),
         )
 
     override fun visitAnnotationEntry(annotationEntry: KtAnnotationEntry) {

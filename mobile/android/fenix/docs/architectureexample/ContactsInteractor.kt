@@ -6,7 +6,7 @@
 // /docs/architecture-overview.md
 class ContactsInteractor(
     private val contactsController: ContactsController,
-    private val themeController: ThemeController
+    private val themeController: ThemeController,
 ) {
 
     fun onThemeSelected(theme: Theme) {
