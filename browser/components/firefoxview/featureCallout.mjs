@@ -288,7 +288,12 @@ function _positionCallout() {
         let containerLeft =
           getOffset(parentEl).left - container.clientWidth + overlap;
         container.style.left = `${Math.max(0, containerLeft)}px`;
-        container.style.top = `${getOffset(parentEl).top}px`;
+        if (container.offsetHeight <= parentEl.offsetHeight) {
+          container.style.top = `${getOffset(parentEl).top}px`;
+        } else {
+          centerVertically(container, parentEl);
+        }
+        container.classList.add("arrow-inline-end");
       },
     },
     left: {
@@ -301,7 +306,12 @@ function _positionCallout() {
         let containerLeft =
           getOffset(parentEl).left + parentEl.clientWidth - overlap;
         container.style.left = `${Math.max(0, containerLeft)}px`;
-        container.style.top = `${getOffset(parentEl).top}px`;
+        if (container.offsetHeight <= parentEl.offsetHeight) {
+          container.style.top = `${getOffset(parentEl).top}px`;
+        } else {
+          centerVertically(container, parentEl);
+        }
+        container.classList.add("arrow-inline-start");
       },
     },
     "top-end": {
@@ -388,6 +398,10 @@ function _positionCallout() {
     container.style.left = `${Math.max(containerSide, 0)}px`;
   }
 
+  function centerVertically() {
+    let topOffset = (container.offsetHeight - parentEl.offsetHeight) / 2;
+    container.style.top = `${getOffset(parentEl).top - topOffset}px`;
+  }
   clearPosition(container);
 
   if (customPosition) {
