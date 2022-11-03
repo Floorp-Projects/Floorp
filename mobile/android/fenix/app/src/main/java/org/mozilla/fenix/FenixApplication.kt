@@ -377,6 +377,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         if (settings().isMarketingTelemetryEnabled) {
             components.analytics.metrics.start(MetricServiceType.Marketing)
         }
+
+        components.appStore.dispatch(AppAction.MetricsInitializedAction)
     }
 
     protected open fun setupLeakCanary() {

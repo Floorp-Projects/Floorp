@@ -1413,4 +1413,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             HttpsOnlyMode.ENABLED
         }
     }
+
+    var setAsDefaultGrowthSent by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_growth_set_as_default),
+        default = false,
+    )
 }

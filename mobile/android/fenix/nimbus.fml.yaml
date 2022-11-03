@@ -219,6 +219,18 @@ features:
         value:
           enabled: false
 
+  growth-data:
+    description: A feature measuring campaign growth data
+    variables:
+      enabled:
+        description: If true, the feature is active
+        type: Boolean
+        default: false
+    defaults:
+      - channel: release
+        value:
+          enabled: true
+
 types:
   objects:
     MessageData:

@@ -10,12 +10,23 @@ import android.os.Bundle
 import android.util.Log
 import com.adjust.sdk.Adjust
 import com.adjust.sdk.AdjustConfig
+import com.adjust.sdk.AdjustEvent
 import com.adjust.sdk.LogLevel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import mozilla.components.lib.crash.CrashReporter
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.ext.settings
 
-class AdjustMetricsService(private val application: Application) : MetricsService {
+class AdjustMetricsService(
+    private val application: Application,
+    private val storage: MetricsStorage,
+    private val crashReporter: CrashReporter,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+) : MetricsService {
     override val type = MetricServiceType.Marketing
 
     override fun start() {
@@ -70,9 +81,22 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
         Adjust.gdprForgetMe(application.applicationContext)
     }
 
-    // We're not currently sending events directly to Adjust
-    override fun track(event: Event) { /* noop */ }
-    override fun shouldTrack(event: Event): Boolean = false
+    @Suppress("TooGenericExceptionCaught")
+    override fun track(event: Event) {
+        CoroutineScope(dispatcher).launch {
+            try {
+                if (event is Event.GrowthData && storage.shouldTrack(event)) {
+                    Adjust.trackEvent(AdjustEvent(event.tokenName))
+                    storage.updateSentState(event)
+                }
+            } catch (e: Exception) {
+                crashReporter.submitCaughtException(e)
+            }
+        }
+    }
+
+    override fun shouldTrack(event: Event): Boolean =
+        event is Event.GrowthData
 
     companion object {
         private const val LOGTAG = "AdjustMetricsService"

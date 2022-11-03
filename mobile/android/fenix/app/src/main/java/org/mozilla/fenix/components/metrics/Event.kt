@@ -12,4 +12,14 @@ sealed class Event {
 
     internal open val extras: Map<*, String>?
         get() = null
+
+    /**
+     * Events related to growth campaigns.
+     */
+    sealed class GrowthData(val tokenName: String) : Event() {
+        /**
+         * Event recording whether Firefox has been set as the default browser.
+         */
+        object SetAsDefault : GrowthData("xgpcgt")
+    }
 }

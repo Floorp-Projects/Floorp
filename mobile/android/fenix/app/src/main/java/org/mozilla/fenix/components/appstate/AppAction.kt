@@ -191,4 +191,9 @@ sealed class AppAction : Action {
             val imageState: Wallpaper.ImageFileState,
         ) : WallpaperAction()
     }
+
+    /**
+     * Indicates that the app's metrics have been initialized and startup data can be sent.
+     */
+    object MetricsInitializedAction : AppAction()
 }

@@ -1,4 +1,12 @@
 ---
+growth-data:
+  description: A feature measuring campaign growth data
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "If true, the feature is active"
 homescreen:
   description: The homescreen that the user goes to when they press home or new tab.
   hasExposure: true
