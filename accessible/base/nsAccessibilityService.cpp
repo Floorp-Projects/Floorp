@@ -145,6 +145,34 @@ static bool MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument) {
   return false;
 }
 
+bool nsAccessibilityService::ShouldCreateImgAccessible(
+    mozilla::dom::Element* aElement, DocAccessible* aDocument) {
+  // We must have an img element to create this accessible.
+  if (!aElement->IsHTMLElement(nsGkAtoms::img)) {
+    return false;
+  }
+
+  nsAutoString newAltText;
+  const bool hasAlt = aElement->GetAttr(nsGkAtoms::alt, newAltText);
+  if (!hasAlt || !newAltText.IsEmpty()) {
+    // If there is no alt attribute, we should create an accessible. The
+    // author may have missed the attribute, and the AT may want to provide a
+    // name. If there is alt text, we should create an accessible.
+    return true;
+  }
+
+  if (newAltText.IsEmpty() && (nsCoreUtils::HasClickListener(aElement) ||
+                               MustBeAccessible(aElement, aDocument))) {
+    // If there is empty alt text, but there is a click listener for this img,
+    // or if it otherwise must be an accessible (e.g., if it has an aria-label
+    // attribute), we should create an accessible.
+    return true;
+  }
+
+  // Otherwise, no alt text means we should not create an accessible.
+  return false;
+}
+
 /**
  * Return true if the SVG element should be accessible
  */
@@ -987,6 +1015,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
     }
 
     newAcc = CreateAccessibleByFrameType(frame, content, aContext);
+    MOZ_ASSERT(newAcc, "Accessible not created for text node!");
     document->BindToDocument(newAcc, nullptr);
     newAcc->AsTextLeaf()->SetText(text.mString);
     return newAcc;
@@ -1494,7 +1523,10 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       break;
     }
     case eImageType:
-      newAcc = new ImageAccessibleWrap(aContent, document);
+      if (aContent->IsElement() &&
+          ShouldCreateImgAccessible(aContent->AsElement(), document)) {
+        newAcc = new ImageAccessibleWrap(aContent, document);
+      }
       break;
     case eOuterDocType:
       newAcc = new OuterDocAccessible(aContent, document);

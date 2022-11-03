@@ -251,6 +251,12 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
   static bool IsShutdown() { return gConsumers == 0; };
 
   /**
+   * Return true if there should be an image accessible for the given element.
+   */
+  static bool ShouldCreateImgAccessible(mozilla::dom::Element* aElement,
+                                        DocAccessible* aDocument);
+
+  /**
    * Creates an accessible for the given DOM node.
    *
    * @param  aNode             [in] the given node

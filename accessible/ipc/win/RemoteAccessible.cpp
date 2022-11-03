@@ -156,6 +156,9 @@ ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
     return eNameOK;
   }
   aName = (wchar_t*)resultWrap;
+  if (!resultWrap) {
+    aName.SetIsVoid(true);
+  }
   return eNameOK;
 }
 

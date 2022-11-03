@@ -158,12 +158,6 @@
       <rule attr="title" type="string"/>
     </ruleset>
 
-    <ruleset id="HTMLImgEmptyAlt">
-      <ruleset ref="ARIA"/>
-      <rule attr="title" type="string"/>
-      <rule attr="alt" type="string"/>
-    </ruleset>
-
     <ruleset id="HTMLTable">
       <ruleset ref="ARIA"/>
       <rule elm="caption"/>
@@ -302,18 +296,6 @@
                 alt="Mozilla logo"
                 title="This is a logo"
                 src="../moz.png"/>
-    </markup>
-
-    <markup id="HTMLImageEmptyAltTest"
-            ref="html:img" ruleset="HTMLImgEmptyAlt">
-      <html:span id="l1" textequiv="test2">test2</html:span>
-      <html:span id="l2" textequiv="test3">test3</html:span>
-      <html:img id="imgemptyalt"
-                 aria-label="Logo of Mozilla"
-                 aria-labelledby="l1 l2"
-                 title="This is a logo"
-                 alt=""
-                 src="../moz.png"/>
     </markup>
 
     <markup id="HTMLTdTest"

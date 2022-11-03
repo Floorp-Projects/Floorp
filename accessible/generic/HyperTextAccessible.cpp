@@ -2074,10 +2074,8 @@ void HyperTextAccessible::RangeAtPoint(int32_t aX, int32_t aY,
 // LocalAccessible protected
 ENameValueFlag HyperTextAccessible::NativeName(nsString& aName) const {
   // Check @alt attribute for invalid img elements.
-  bool hasImgAlt = false;
   if (mContent->IsHTMLElement(nsGkAtoms::img)) {
-    hasImgAlt = mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                               nsGkAtoms::alt, aName);
+    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName);
     if (!aName.IsEmpty()) return eNameOK;
   }
 
@@ -2092,7 +2090,7 @@ ENameValueFlag HyperTextAccessible::NativeName(nsString& aName) const {
     aName.CompressWhitespace();
   }
 
-  return hasImgAlt ? eNoNameOnPurpose : eNameOK;
+  return eNameOK;
 }
 
 void HyperTextAccessible::Shutdown() {
