@@ -96,6 +96,9 @@ enum class TypeCode {
   // Type constructor for recursion groups - gc proposal
   RecGroup = 0x45,
 
+  // Type prefix for parent types - gc proposal
+  SubType = 0x50,
+
   Limit = 0x80
 };
 
