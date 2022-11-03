@@ -1894,7 +1894,9 @@ class nsIFrame : public nsQueryFrame {
    * Flex items also have the same special-case described in
    * https://drafts.csswg.org/css-flexbox/#painting
    */
-  DisplayChildFlag DisplayFlagForFlexOrGridItem() const;
+  static DisplayChildFlags DisplayFlagsForFlexOrGridItem() {
+    return DisplayChildFlags {DisplayChildFlag::ForcePseudoStackingContext};
+  }
 
   bool RefusedAsyncAnimation() const {
     return GetProperty(RefusedAsyncAnimationProperty());
