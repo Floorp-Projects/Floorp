@@ -694,7 +694,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
   Decoder d(bytecode.bytes, 0, error, warnings);
 
   ModuleEnvironment moduleEnv(args.features);
-  if (!moduleEnv.init() || !DecodeModuleEnvironment(d, &moduleEnv)) {
+  if (!DecodeModuleEnvironment(d, &moduleEnv)) {
     return nullptr;
   }
   CompilerEnvironment compilerEnv(args);
@@ -722,7 +722,7 @@ bool wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
   Decoder d(bytecode, 0, error);
 
   ModuleEnvironment moduleEnv(args.features);
-  if (!moduleEnv.init() || !DecodeModuleEnvironment(d, &moduleEnv)) {
+  if (!DecodeModuleEnvironment(d, &moduleEnv)) {
     return false;
   }
   CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Optimized,
@@ -829,9 +829,6 @@ SharedModule wasm::CompileStreaming(
     UniqueCharsVector* warnings) {
   CompilerEnvironment compilerEnv(args);
   ModuleEnvironment moduleEnv(args.features);
-  if (!moduleEnv.init()) {
-    return nullptr;
-  }
 
   {
     Decoder d(envBytes, 0, error, warnings);

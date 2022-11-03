@@ -304,11 +304,11 @@ CoderResult CodeRefPtr(Coder<mode>& coder, CoderArg<mode, RefPtr<T>> item) {
       return Err(OutOfMemory());
     }
 
-    // Initialize the RefPtr
-    *item = allocated;
-
     // Decode the inner type
     MOZ_TRY(CodeT(coder, allocated));
+
+    // Initialize the RefPtr
+    *item = allocated;
     return Ok();
   } else {
     // Encode the inner type
@@ -576,57 +576,21 @@ CoderResult CodeTypeDef(Coder<mode>& coder, CoderArg<mode, TypeDef> item) {
 template <CoderMode mode>
 CoderResult CodeTypeContext(Coder<mode>& coder,
                             CoderArg<mode, TypeContext> item) {
+  // Subsequent decoding needs to reference type definitions
   if constexpr (mode == MODE_DECODE) {
-    // Decoding type definitions needs to reference the type context of the
-    // module
     MOZ_ASSERT(!coder.types_);
     coder.types_ = item;
+  }
 
-    // Decode the number of recursion groups in the module
-    uint32_t numRecGroups;
-    MOZ_TRY(CodePod(coder, &numRecGroups));
-
-    // Decode each recursion group
-    for (uint32_t recGroupIndex = 0; recGroupIndex < numRecGroups;
-         recGroupIndex++) {
-      // Decode the number of types in the recursion group
-      uint32_t numTypes;
-      MOZ_TRY(CodePod(coder, &numTypes));
-
-      MutableRecGroup recGroup = item->startRecGroup(numTypes);
-      if (!recGroup) {
-        return Err(OutOfMemory());
-      }
-
-      // Decode the type definitions
-      for (uint32_t groupTypeIndex = 0; groupTypeIndex < numTypes;
-           groupTypeIndex++) {
-        MOZ_TRY(CodeTypeDef(coder, &recGroup->type(groupTypeIndex)));
-      }
-
-      // Finish the recursion group
-      if (!item->endRecGroup()) {
-        return Err(OutOfMemory());
-      }
+  size_t length = item->length();
+  MOZ_TRY(CodePod(coder, &length));
+  if constexpr (mode == MODE_DECODE) {
+    if (!item->addTypes(length)) {
+      return Err(OutOfMemory());
     }
-  } else {
-    // Encode the number of recursion groups in the module
-    uint32_t numRecGroups = item->groups().length();
-    MOZ_TRY(CodePod(coder, &numRecGroups));
-
-    // Encode each recursion group
-    for (uint32_t groupIndex = 0; groupIndex < numRecGroups; groupIndex++) {
-      SharedRecGroup group = item->groups()[groupIndex];
-
-      // Encode the number of types in the recursion group
-      uint32_t numTypes = group->numTypes();
-      MOZ_TRY(CodePod(coder, &numTypes));
-
-      // Encode the type definitions
-      for (uint32_t i = 0; i < numTypes; i++) {
-        MOZ_TRY(CodeTypeDef(coder, &group->type(i)));
-      }
-    }
+  }
+  for (uint32_t typeIndex = 0; typeIndex < item->length(); typeIndex++) {
+    MOZ_TRY(CodeTypeDef(coder, &item->type(typeIndex)));
   }
   return Ok();
 }

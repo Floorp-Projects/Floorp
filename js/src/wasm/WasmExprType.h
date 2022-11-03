@@ -313,7 +313,7 @@ class BlockType {
       case VoidToSingleKind:
         return tagged_.bits() == rhs.tagged_.bits();
       case FuncKind:
-        return FuncType::strictlyEquals(funcType(), rhs.funcType());
+        return funcType() == rhs.funcType();
       case FuncResultsKind:
         return EqualContainers(funcType().results(), rhs.funcType().results());
       default:

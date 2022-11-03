@@ -390,6 +390,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   Kind kind_;
   Decoder& d_;
   const ModuleEnvironment& env_;
+  TypeCache cache_;
 
   TypeAndValueStack valueStack_;
   TypeAndValueStack elseParamStack_;
@@ -836,7 +837,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
 template <typename Policy>
 inline bool OpIter<Policy>::checkIsSubtypeOf(FieldType actual,
                                              FieldType expected) {
-  return CheckIsSubtypeOf(d_, env_, lastOpcodeOffset(), actual, expected);
+  return CheckIsSubtypeOf(d_, env_, lastOpcodeOffset(), actual, expected,
+                          &cache_);
 }
 
 template <typename Policy>
@@ -867,10 +869,10 @@ inline bool OpIter<Policy>::checkIsSubtypeOf(uint32_t actualTypeIndex,
                                              uint32_t expectedTypeIndex) {
   const TypeDef& actualTypeDef = env_.types->type(actualTypeIndex);
   const TypeDef& expectedTypeDef = env_.types->type(expectedTypeIndex);
-  return CheckIsSubtypeOf(
-      d_, env_, lastOpcodeOffset(),
-      ValType(RefType::fromTypeDef(&actualTypeDef, true)),
-      ValType(RefType::fromTypeDef(&expectedTypeDef, true)));
+  return CheckIsSubtypeOf(d_, env_, lastOpcodeOffset(),
+                          ValType(RefType::fromTypeDef(&actualTypeDef, true)),
+                          ValType(RefType::fromTypeDef(&expectedTypeDef, true)),
+                          &cache_);
 }
 #endif
 

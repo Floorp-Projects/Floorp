@@ -554,7 +554,7 @@ bool Module::instantiateFunctions(JSContext* cx,
     const FuncType& importFuncType =
         metadata().getFuncImportType(metadata(tier).funcImports[i]);
 
-    if (!FuncType::strictlyEquals(exportFuncType, importFuncType)) {
+    if (exportFuncType != importFuncType) {
       const Import& import = FindImportFunction(imports_, i);
       UniqueChars importModuleName = import.module.toQuotedString(cx);
       UniqueChars importFieldName = import.field.toQuotedString(cx);
