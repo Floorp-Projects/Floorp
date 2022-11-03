@@ -242,3 +242,176 @@ class PerfParser(CompareParser):
         ],
     ]
 
+    def expand_categories(
+        android=False,
+        chrome=False,
+        live_sites=False,
+        profile=False,
+        requested_variants=[],
+        requested_platforms=[],
+        requested_apps=[],
+    ):
+        """Setup the perf categories.
+
+        This has multiple steps:
+            (1) Expand the variants to all possible combinations
+            (2) Expand the test categories for all valid platform+app combinations
+            (3) Expand the categories from (2) into all possible combinations,
+                by combining them with those created in (1). At this stage,
+                we also check to make sure the variant combination is valid
+                in the sense that it COULD run on the platform. It may still
+                be undefined.
+
+        We make use of global queries to provide a thorough protection
+        against unwillingly scheduling tasks we very often don't want.
+
+        Note that the flags are not intersectional. This means that if you
+        have live_sites=True, and profile=False, you will get tasks which
+        have profiling available to them. However, all of those tasks must
+        also be live sites.
+        """
+        expanded_categories = {}
+
+        # These global queries get applied to all of the categories. They make it
+        # simpler to prevent, for example, chrome tests running in the
+        # "Pageload desktop" category
+        global_queries = []
+
+        # Rather than dealing with these flags below, simply add the
+        # variants related to them here
+        if live_sites:
+            requested_variants.append("live-sites")
+        else:
+            global_queries.append(PerfParser.variants["live-sites"]["negation"])
+        if profile:
+            requested_variants.append("profiling")
+        else:
+            global_queries.append(PerfParser.variants["profiling"]["negation"])
+
+        if not chrome:
+            global_queries.append("!chrom")
+
+        # Start by expanding the variants the variants to include combinatorial
+        # options, searching for these tasks is "best-effort" and we can't
+        # guarantee all of them will have tasks selected as some may not be
+        # defined in the Taskcluster config files
+        expanded_variants = [
+            variant_combination
+            for set_size in range(len(PerfParser.variants.keys()) + 1)
+            for variant_combination in itertools.combinations(
+                list(PerfParser.variants.keys()), set_size
+            )
+        ]
+
+        # Expand the test categories to show combined platforms and apps. By default,
+        # we'll show all desktop platforms and no variants.
+        for category, category_info in PerfParser.categories.items():
+
+            # Setup the platforms
+            for platform, platform_info in PerfParser.platforms.items():
+                if len(requested_platforms) > 0 and platform not in requested_platforms:
+                    # Skip the platform because it wasn't requested
+                    continue
+
+                platform_type = platform_info["platform"]
+                if not android and platform_type == "android":
+                    # Skip android if it wasn't requested
+                    continue
+
+                # The queries field will hold all the queries needed to run
+                # (in any order). Combinations of queries are used to make the
+                # selected tests increasingly more specific.
+                new_category = category + " %s" % platform
+                cur_cat = {
+                    "queries": [category_info["query"]]
+                    + [platform_info["query"]]
+                    + global_queries,
+                    "tasks": category_info["tasks"],
+                    "platform": platform_type,
+                }
+                # If we didn't request apps, add the global category
+                if len(requested_apps) == 0:
+                    expanded_categories[new_category] = cur_cat
+
+                for app, app_info in PerfParser.apps.items():
+                    if len(requested_apps) > 0 and app not in requested_apps:
+                        # Skip the app because it wasn't requested
+                        continue
+
+                    if app.lower() in ("chrome", "chromium", "chrome-m") and not chrome:
+                        # Skip chrome tests if not requested
+                        continue
+                    if platform_type not in app_info["platforms"]:
+                        # Ensure this app can run on this platform
+                        continue
+
+                    new_app_category = new_category + " %s" % app
+                    expanded_categories[new_app_category] = {
+                        "queries": cur_cat["queries"] + [app_info["query"]],
+                        "tasks": category_info["tasks"],
+                        "platform": platform_type,
+                    }
+
+        # Finally, handle expanding the variants. This needs to be done
+        # outside the upper for-loop because variants can apply to all
+        # of the expanded categories that get produced there.
+        if len(requested_variants) > 0:
+            new_categories = {}
+
+            for expanded_category, info in expanded_categories.items():
+                for variant_combination in expanded_variants:
+                    if not variant_combination:
+                        continue
+                    # Check if the combination contains the requested variant
+                    if not any(
+                        variant in variant_combination for variant in requested_variants
+                    ):
+                        continue
+
+                    # Ensure that this variant combination can run on this platform
+                    runnable = True
+                    for variant in variant_combination:
+                        if (
+                            info["platform"]
+                            not in PerfParser.variants[variant]["platforms"]
+                        ):
+                            runnable = False
+                            break
+                    if not runnable:
+                        continue
+
+                    # Build the category name, and setup the queries/tasks
+                    # that it would use/select
+                    new_variant_category = expanded_category + " %s" % "+".join(
+                        variant_combination
+                    )
+                    variant_queries = [
+                        v_info["query"]
+                        for v, v_info in PerfParser.variants.items()
+                        if v in variant_combination
+                    ]
+                    new_categories[new_variant_category] = {
+                        "queries": info["queries"] + variant_queries,
+                        "tasks": info["tasks"],
+                    }
+
+                    # Now ensure that the queries for this new category
+                    # don't contain negations for the variant which could
+                    # come from the global queries
+                    new_queries = []
+                    for query in new_categories[new_variant_category]["queries"]:
+                        if any(
+                            [
+                                query == PerfParser.variants.get(variant)["negation"]
+                                for variant in variant_combination
+                            ]
+                        ):
+                            # This query is a negation of one of the variants,
+                            # exclude it
+                            continue
+                        new_queries.append(query)
+                    new_categories[new_variant_category]["queries"] = new_queries
+
+            expanded_categories.update(new_categories)
+
+        return expanded_categories
