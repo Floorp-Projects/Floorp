@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["AboutPocketParent"];
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -18,7 +15,7 @@ ChromeUtils.defineModuleGetter(
   "chrome://pocket/content/SaveToPocket.jsm"
 );
 
-class AboutPocketParent extends JSWindowActorParent {
+export class AboutPocketParent extends JSWindowActorParent {
   sendResponseMessageToPanel(messageId, payload) {
     this.sendAsyncMessage(`${messageId}_response`, payload);
   }

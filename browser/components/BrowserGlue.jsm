@@ -288,10 +288,10 @@ let JSWINDOWACTORS = {
 
   AboutPocket: {
     parent: {
-      moduleURI: "resource:///actors/AboutPocketParent.jsm",
+      esModuleURI: "resource:///actors/AboutPocketParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/AboutPocketChild.jsm",
+      esModuleURI: "resource:///actors/AboutPocketChild.sys.mjs",
 
       events: {
         DOMDocElementInserted: { capture: true },
