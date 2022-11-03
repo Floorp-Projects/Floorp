@@ -196,7 +196,7 @@ enum class FuncFlags : uint8_t {
 // A FuncDesc describes a single function definition.
 
 struct FuncDesc {
-  const FuncType* type;
+  FuncType* type;
   // Bit pack to keep this struct small on 32-bit systems
   uint32_t typeIndex : 24;
   FuncFlags flags : 8;
@@ -206,7 +206,7 @@ struct FuncDesc {
   static_assert(sizeof(FuncFlags) == sizeof(uint8_t));
 
   FuncDesc() = default;
-  FuncDesc(const FuncType* type, uint32_t typeIndex)
+  FuncDesc(FuncType* type, uint32_t typeIndex)
       : type(type), typeIndex(typeIndex), flags(FuncFlags::None) {}
 
   bool isExported() const {

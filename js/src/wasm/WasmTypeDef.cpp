@@ -22,10 +22,8 @@
 
 #include "jit/JitOptions.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
-#include "js/HashTable.h"
 #include "js/Printf.h"
 #include "js/Value.h"
-#include "threading/ExclusiveData.h"
 #include "vm/StringType.h"
 #include "wasm/WasmJS.h"
 
@@ -277,83 +275,301 @@ size_t TypeDef::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return 0;
 }
 
-struct RecGroupHashPolicy {
-  using Lookup = const SharedRecGroup&;
-
-  static HashNumber hash(Lookup lookup) { return lookup->hash(); }
-
-  static bool match(const SharedRecGroup& lhs, Lookup rhs) {
-    return RecGroup::matches(*rhs, *lhs);
-  }
-};
-
-// A global hash set of recursion groups for use in fast type equality checks.
-class TypeIdSet {
-  using Set = HashSet<SharedRecGroup, RecGroupHashPolicy, SystemAllocPolicy>;
-  Set set_;
-
- public:
-  ~TypeIdSet() {
-    // We should clean out all dead entries deterministically before shutdown.
-    MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), set_.empty());
+TypeResult TypeContext::isRefEquivalent(RefType first, RefType second,
+                                        TypeCache* cache) const {
+  // Anything's equal to itself.
+  if (first == second) {
+    return TypeResult::True;
   }
 
-  // Attempt to insert a recursion group into the set, returning an existing
-  // recursion group if there was one.
-  SharedRecGroup insert(SharedRecGroup recGroup) {
-    Set::AddPtr p = set_.lookupForAdd(recGroup);
-    if (p) {
-      // A canonical recursion group already existed, return it.
-      return *p;
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  if (features_.functionReferences) {
+    // References must have the same nullability to be equal
+    if (first.isNullable() != second.isNullable()) {
+      return TypeResult::False;
     }
 
-    // Insert this recursion group into the set, and return it as the canonical
-    // recursion group instance.
-    if (!set_.add(p, recGroup)) {
-      return nullptr;
+    // Non type-index references are equal if they have the same kind
+    if (!first.isTypeRef() && !second.isTypeRef() &&
+        first.kind() == second.kind()) {
+      return TypeResult::True;
     }
-    return recGroup;
-  }
 
-  // Release the provided recursion group reference and remove it from the
-  // canonical set if it was the last reference. This is one unified method
-  // because we need to perform the lookup before releasing the reference, but
-  // need to release the reference in order to see if it was the last reference
-  // outside the canonical set.
-  void clearRecGroup(SharedRecGroup* recGroupCell) {
-    if (Set::Ptr p = set_.lookup(*recGroupCell)) {
-      *recGroupCell = nullptr;
-      if ((*p)->hasOneRef()) {
-        set_.remove(p);
-      }
-    } else {
-      *recGroupCell = nullptr;
+    // Type-index references can be equal
+    if (first.isTypeRef() && second.isTypeRef()) {
+      return isTypeDefEquivalent(first.typeDef(), second.typeDef(), cache);
     }
   }
-};
-
-ExclusiveData<TypeIdSet> typeIdSet(mutexid::WasmTypeIdSet);
-
-SharedRecGroup TypeContext::canonicalizeGroup(SharedRecGroup recGroup) {
-  ExclusiveData<TypeIdSet>::Guard locked = typeIdSet.lock();
-  return locked->insert(recGroup);
+#endif
+  return TypeResult::False;
 }
 
-TypeContext::~TypeContext() {
-  ExclusiveData<TypeIdSet>::Guard locked = typeIdSet.lock();
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+TypeResult TypeContext::isTypeDefEquivalent(const TypeDef* first,
+                                            const TypeDef* second,
+                                            TypeCache* cache) const {
+  MOZ_ASSERT(features_.functionReferences);
 
-  // Clear out the recursion groups in this module, freeing them from the
-  // canonical type set if needed.
-  //
-  // We iterate backwards here so that we free every previous recursion group
-  // that may be referring to the current recursion group we're freeing. This
-  // is possible due to recursion groups being ordered.
-  for (int32_t groupIndex = recGroups_.length() - 1; groupIndex >= 0;
-       groupIndex--) {
-    // Try to remove this entry from the canonical set if we have the last
-    // strong reference. The entry may not exist if canonicalization failed
-    // and this type context was aborted. This will clear the reference in the
-    // vector.
-    locked->clearRecGroup(&recGroups_[groupIndex]);
+  // Anything's equal to itself.
+  if (first == second) {
+    return TypeResult::True;
   }
+
+#  ifdef ENABLE_WASM_GC
+  if (features_.gc) {
+    // A struct may be equal to a struct
+    if (first->isStructType() && second->isStructType()) {
+      return isStructEquivalent(first, second, cache);
+    }
+
+    // An array may be equal to an array
+    if (first->isArrayType() && second->isArrayType()) {
+      return isArrayEquivalent(first, second, cache);
+    }
+  }
+#  endif
+
+  return TypeResult::False;
 }
+#endif
+
+#ifdef ENABLE_WASM_GC
+TypeResult TypeContext::isStructEquivalent(const TypeDef* first,
+                                           const TypeDef* second,
+                                           TypeCache* cache) const {
+  if (cache->isEquivalent(first, second)) {
+    return TypeResult::True;
+  }
+
+  const StructType& firstStruct = first->structType();
+  const StructType& secondStruct = second->structType();
+
+  // Structs must have the same number of fields to be equal
+  if (firstStruct.fields_.length() != secondStruct.fields_.length()) {
+    return TypeResult::False;
+  }
+
+  // Assume these structs are equal while checking fields. If any field is
+  // not equal then we remove the assumption.
+  if (!cache->markEquivalent(first, second)) {
+    return TypeResult::OOM;
+  }
+
+  for (uint32_t i = 0; i < secondStruct.fields_.length(); i++) {
+    TypeResult result = isStructFieldEquivalent(firstStruct.fields_[i],
+                                                secondStruct.fields_[i], cache);
+    if (result != TypeResult::True) {
+      cache->unmarkEquivalent(first, second);
+      return result;
+    }
+  }
+  return TypeResult::True;
+}
+
+TypeResult TypeContext::isStructFieldEquivalent(const StructField first,
+                                                const StructField second,
+                                                TypeCache* cache) const {
+  // Struct fields must share the same mutability to equal
+  if (first.isMutable != second.isMutable) {
+    return TypeResult::False;
+  }
+  // Struct field types must be equal
+  return isEquivalent(first.type, second.type, cache);
+}
+
+TypeResult TypeContext::isArrayEquivalent(const TypeDef* firstDef,
+                                          const TypeDef* secondDef,
+                                          TypeCache* cache) const {
+  if (cache->isEquivalent(firstDef, secondDef)) {
+    return TypeResult::True;
+  }
+
+  const ArrayType& firstArray = firstDef->arrayType();
+  const ArrayType& secondArray = secondDef->arrayType();
+
+  // Assume these arrays are equal while checking fields. If the array
+  // element is not equal then we remove the assumption.
+  if (!cache->markEquivalent(firstDef, secondDef)) {
+    return TypeResult::OOM;
+  }
+
+  TypeResult result = isArrayElementEquivalent(firstArray, secondArray, cache);
+  if (result != TypeResult::True) {
+    cache->unmarkEquivalent(firstDef, secondDef);
+  }
+  return result;
+}
+
+TypeResult TypeContext::isArrayElementEquivalent(const ArrayType& first,
+                                                 const ArrayType& second,
+                                                 TypeCache* cache) const {
+  // Array elements must share the same mutability to be equal
+  if (first.isMutable_ != second.isMutable_) {
+    return TypeResult::False;
+  }
+  // Array elements must be equal
+  return isEquivalent(first.elementType_, second.elementType_, cache);
+}
+#endif
+
+TypeResult TypeContext::isRefSubtypeOf(RefType subType, RefType superType,
+                                       TypeCache* cache) const {
+  // Anything's a subtype of itself.
+  if (subType == superType) {
+    return TypeResult::True;
+  }
+
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  if (features_.functionReferences) {
+    // A subtype must have the same nullability as the supertype or the
+    // supertype must be nullable.
+    if (!(subType.isNullable() == superType.isNullable() ||
+          superType.isNullable())) {
+      return TypeResult::False;
+    }
+
+    // Non type-index references are subtypes if they have the same kind
+    if (!subType.isTypeRef() && !superType.isTypeRef() &&
+        subType.kind() == superType.kind()) {
+      return TypeResult::True;
+    }
+
+    // Structs are subtypes of eqref
+    if (subType.isTypeRef() && subType.typeDef()->isStructType() &&
+        superType.isEq()) {
+      return TypeResult::True;
+    }
+
+    // Arrays are subtypes of eqref
+    if (subType.isTypeRef() && subType.typeDef()->isArrayType() &&
+        superType.isEq()) {
+      return TypeResult::True;
+    }
+
+    // Funcs are subtypes of funcref
+    if (subType.isTypeRef() && subType.typeDef()->isFuncType() &&
+        superType.isFunc()) {
+      return TypeResult::True;
+    }
+
+    // Type-index references can be subtypes
+    if (subType.isTypeRef() && superType.isTypeRef()) {
+      return isTypeDefSubtypeOf(subType.typeDef(), superType.typeDef(), cache);
+    }
+  }
+#endif
+  return TypeResult::False;
+}
+
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+TypeResult TypeContext::isTypeDefSubtypeOf(const TypeDef* subType,
+                                           const TypeDef* superType,
+                                           TypeCache* cache) const {
+  MOZ_ASSERT(features_.functionReferences);
+
+  // Anything's a subtype of itself.
+  if (subType == superType) {
+    return TypeResult::True;
+  }
+
+#  ifdef ENABLE_WASM_GC
+  if (features_.gc) {
+    // Structs may be subtypes of structs
+    if (subType->isStructType() && superType->isStructType()) {
+      return isStructSubtypeOf(subType, superType, cache);
+    }
+
+    // Arrays may be subtypes of arrays
+    if (subType->isArrayType() && superType->isArrayType()) {
+      return isArraySubtypeOf(subType, superType, cache);
+    }
+  }
+#  endif
+  return TypeResult::False;
+}
+#endif
+
+#ifdef ENABLE_WASM_GC
+TypeResult TypeContext::isStructSubtypeOf(const TypeDef* subType,
+                                          const TypeDef* superType,
+                                          TypeCache* cache) const {
+  if (cache->isSubtypeOf(subType, superType)) {
+    return TypeResult::True;
+  }
+
+  const StructType& subStruct = subType->structType();
+  const StructType& superStruct = superType->structType();
+
+  // A subtype must have at least as many fields as its supertype
+  if (subStruct.fields_.length() < superStruct.fields_.length()) {
+    return TypeResult::False;
+  }
+
+  // Assume these structs are subtypes while checking fields. If any field
+  // fails a check then we remove the assumption.
+  if (!cache->markSubtypeOf(subType, superType)) {
+    return TypeResult::OOM;
+  }
+
+  for (uint32_t i = 0; i < superStruct.fields_.length(); i++) {
+    TypeResult result = isStructFieldSubtypeOf(subStruct.fields_[i],
+                                               superStruct.fields_[i], cache);
+    if (result != TypeResult::True) {
+      cache->unmarkSubtypeOf(subType, superType);
+      return result;
+    }
+  }
+  return TypeResult::True;
+}
+
+TypeResult TypeContext::isStructFieldSubtypeOf(const StructField subType,
+                                               const StructField superType,
+                                               TypeCache* cache) const {
+  // Mutable fields are invariant w.r.t. field types
+  if (subType.isMutable && superType.isMutable) {
+    return isEquivalent(subType.type, superType.type, cache);
+  }
+  // Immutable fields are covariant w.r.t. field types
+  if (!subType.isMutable && !superType.isMutable) {
+    return isSubtypeOf(subType.type, superType.type, cache);
+  }
+  return TypeResult::False;
+}
+
+TypeResult TypeContext::isArraySubtypeOf(const TypeDef* subType,
+                                         const TypeDef* superType,
+                                         TypeCache* cache) const {
+  if (cache->isSubtypeOf(subType, superType)) {
+    return TypeResult::True;
+  }
+
+  const ArrayType& subArray = subType->arrayType();
+  const ArrayType& superArray = superType->arrayType();
+
+  // Assume these arrays are subtypes while checking elements. If the elements
+  // fail the check then we remove the assumption.
+  if (!cache->markSubtypeOf(subType, superType)) {
+    return TypeResult::OOM;
+  }
+
+  TypeResult result = isArrayElementSubtypeOf(subArray, superArray, cache);
+  if (result != TypeResult::True) {
+    cache->unmarkSubtypeOf(subType, superType);
+  }
+  return result;
+}
+
+TypeResult TypeContext::isArrayElementSubtypeOf(const ArrayType& subType,
+                                                const ArrayType& superType,
+                                                TypeCache* cache) const {
+  // Mutable elements are invariant w.r.t. field types
+  if (subType.isMutable_ && superType.isMutable_) {
+    return isEquivalent(subType.elementType_, superType.elementType_, cache);
+  }
+  // Immutable elements are covariant w.r.t. field types
+  if (!subType.isMutable_ && !superType.isMutable_) {
+    return isSubtypeOf(subType.elementType_, superType.elementType_, cache);
+  }
+  return TypeResult::False;
+}
+#endif

@@ -1323,9 +1323,9 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
 
     // Implement HashPolicy:
     using Lookup = const FuncType&;
-    static HashNumber hash(Lookup l) { return l.hash(nullptr); }
+    static HashNumber hash(Lookup l) { return l.hash(); }
     static bool match(HashableSig lhs, Lookup rhs) {
-      return FuncType::strictlyEquals(lhs.funcType(), rhs);
+      return lhs.funcType() == rhs;
     }
   };
 
@@ -1347,11 +1347,10 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     };
     static HashNumber hash(Lookup l) {
       return HashGeneric(TaggedParserAtomIndexHasher::hash(l.name),
-                         l.funcType.hash(nullptr));
+                         l.funcType.hash());
     }
     static bool match(NamedSig lhs, Lookup rhs) {
-      return lhs.name() == rhs.name &&
-             FuncType::strictlyEquals(lhs.funcType(), rhs.funcType);
+      return lhs.name() == rhs.name && lhs.funcType() == rhs.funcType;
     }
   };
 
@@ -1421,7 +1420,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   }
 
  protected:
-  [[nodiscard]] bool initModuleEnvironment() { return moduleEnv_.init(); }
+  [[nodiscard]] bool initModuleEnvironment() { return moduleEnv_.initTypes(0); }
 
   [[nodiscard]] bool addStandardLibraryMathInfo() {
     static constexpr struct {
@@ -1942,14 +1941,18 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
     }
 
     *sigIndex = moduleEnv_.types->length();
-    return moduleEnv_.types->addType(std::move(sig));
+    MutableTypeDef typeDef = moduleEnv_.types->addType();
+    if (!typeDef) {
+      return false;
+    }
+    *typeDef = std::move(sig);
+    return true;
   }
   bool declareSig(FuncType&& sig, uint32_t* sigIndex) {
     SigSet::AddPtr p = sigSet_.lookupForAdd(sig);
     if (p) {
       *sigIndex = p->sigIndex();
-      MOZ_ASSERT(FuncType::strictlyEquals(
-          moduleEnv_.types->type(*sigIndex).funcType(), sig));
+      MOZ_ASSERT(moduleEnv_.types->type(*sigIndex).funcType() == sig);
       return true;
     }
 
@@ -4016,7 +4019,7 @@ static bool CheckCallArgs(FunctionValidator<Unit>& f, ParseNode* callNode,
 static bool CheckSignatureAgainstExisting(ModuleValidatorShared& m,
                                           ParseNode* usepn, const FuncType& sig,
                                           const FuncType& existing) {
-  if (!FuncType::strictlyEquals(sig, existing)) {
+  if (sig != existing) {
     return m.failf(usepn, "incompatible argument types to function");
   }
   return true;
@@ -6280,7 +6283,7 @@ static bool CheckFuncPtrTable(ModuleValidator<Unit>& m, ParseNode* decl) {
 
     const FuncType& funcSig = m.env().types->type(func->sigIndex()).funcType();
     if (sig) {
-      if (!FuncType::strictlyEquals(*sig, funcSig)) {
+      if (*sig != funcSig) {
         return m.fail(elem, "all functions in table must have same signature");
       }
     } else {

@@ -93,6 +93,51 @@ static_assert(Instance::offsetOfLastCommonJitField() < 128);
 //
 // Functions and invocation.
 
+class FuncTypeIdSet {
+  using Map =
+      HashMap<const FuncType*, uint32_t, FuncTypeHashPolicy, SystemAllocPolicy>;
+  Map map_;
+
+ public:
+  ~FuncTypeIdSet() {
+    MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), map_.empty());
+  }
+
+  bool allocateFuncTypeId(JSContext* cx, const FuncType& funcType,
+                          const void** funcTypeId) {
+    Map::AddPtr p = map_.lookupForAdd(funcType);
+    if (p) {
+      MOZ_ASSERT(p->value() > 0);
+      p->value()++;
+      *funcTypeId = p->key();
+      return true;
+    }
+
+    UniquePtr<FuncType> clone = MakeUnique<FuncType>();
+    if (!clone || !clone->clone(funcType) || !map_.add(p, clone.get(), 1)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+
+    *funcTypeId = clone.release();
+    MOZ_ASSERT(!(uintptr_t(*funcTypeId) & FuncType::ImmediateBit));
+    return true;
+  }
+
+  void deallocateFuncTypeId(const FuncType& funcType, const void* funcTypeId) {
+    Map::Ptr p = map_.lookup(funcType);
+    MOZ_RELEASE_ASSERT(p && p->key() == funcTypeId && p->value() > 0);
+
+    p->value()--;
+    if (!p->value()) {
+      js_delete(p->key());
+      map_.remove(p);
+    }
+  }
+};
+
+ExclusiveData<FuncTypeIdSet> funcTypeIdSet(mutexid::WasmFuncTypeIdSet);
+
 const void** Instance::addressOfTypeId(const uint32_t typeIndex) const {
   return (const void**)(globalData() + typeIndex * sizeof(void*));
 }
@@ -1669,27 +1714,49 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
   // Allocate in the global type sets for structural type checks
   const SharedTypeContext& types = metadata().types;
   if (!types->empty()) {
+#ifdef ENABLE_WASM_GC
+    if (GcAvailable(cx)) {
+      for (uint32_t typeIndex = 0; typeIndex < types->length(); typeIndex++) {
+        const TypeDef& typeDef = types->type(typeIndex);
+        if ((!typeDef.isStructType() && !typeDef.isArrayType())) {
+          continue;
+        }
+
+        Rooted<RttValue*> rttValue(
+            cx, RttValue::rttCanon(cx, TypeHandle(types, typeIndex)));
+        if (!rttValue) {
+          return false;
+        }
+        // We do not need to use a barrier here because RttValue is always
+        // tenured
+        MOZ_ASSERT(rttValue.get()->isTenured());
+        *((GCPtr<JSObject*>*)addressOfTypeId(typeIndex)) = rttValue;
+        hasGcTypes_ = true;
+      }
+    }
+#endif
+
+    // Handle functions specially (for now) as they're guaranteed to be
+    // acyclical and can use simpler hash-consing logic.
+    ExclusiveData<FuncTypeIdSet>::Guard lockedFuncTypeIdSet =
+        funcTypeIdSet.lock();
+
     for (uint32_t typeIndex = 0; typeIndex < types->length(); typeIndex++) {
       const TypeDef& typeDef = types->type(typeIndex);
       switch (typeDef.kind()) {
         case TypeDefKind::Func: {
-          *addressOfTypeId(typeIndex) = &typeDef;
+          const FuncType& funcType = typeDef.funcType();
+          const void* funcTypeId;
+          if (!lockedFuncTypeIdSet->allocateFuncTypeId(cx, funcType,
+                                                       &funcTypeId)) {
+            return false;
+          }
+          *addressOfTypeId(typeIndex) = funcTypeId;
           break;
         }
         case TypeDefKind::Struct:
-        case TypeDefKind::Array: {
-          Rooted<RttValue*> rttValue(
-              cx, RttValue::rttCanon(cx, TypeHandle(types, typeIndex)));
-          if (!rttValue) {
-            return false;
-          }
-          // We do not need to use a barrier here because RttValue is always
-          // tenured
-          MOZ_ASSERT(rttValue.get()->isTenured());
-          *((GCPtr<JSObject*>*)addressOfTypeId(typeIndex)) = rttValue;
-          hasGcTypes_ = true;
-          break;
-        }
+        case TypeDefKind::Array:
+          continue;
         default:
           MOZ_CRASH();
       }
@@ -1771,6 +1838,23 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
 
 Instance::~Instance() {
   realm_->wasm.unregisterInstance(*this);
+
+  const SharedTypeContext& types = metadata().types;
+  if (!types->empty()) {
+    ExclusiveData<FuncTypeIdSet>::Guard lockedFuncTypeIdSet =
+        funcTypeIdSet.lock();
+
+    for (uint32_t typeIndex = 0; typeIndex < types->length(); typeIndex++) {
+      const TypeDef& typeDef = types->type(typeIndex);
+      if (!typeDef.isFuncType()) {
+        continue;
+      }
+      const FuncType& funcType = typeDef.funcType();
+      if (const void* funcTypeId = *addressOfTypeId(typeIndex)) {
+        lockedFuncTypeIdSet->deallocateFuncTypeId(funcType, funcTypeId);
+      }
+    }
+  }
 
   if (debugFilter_) {
     js_free(debugFilter_);

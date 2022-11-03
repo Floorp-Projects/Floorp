@@ -93,12 +93,6 @@ enum class TypeCode {
   // The 'empty' case of blocktype.
   BlockVoid = 0x40,  // SLEB128(-0x40)
 
-  // Type constructor for recursion groups - gc proposal
-  RecGroup = 0x45,
-
-  // Type prefix for parent types - gc proposal
-  SubType = 0x50,
-
   Limit = 0x80
 };
 
@@ -1022,7 +1016,6 @@ static const unsigned MaxTypeIndex = 1000000;
 static const unsigned MaxTypeIndex = 15000;
 #endif
 
-static const unsigned MaxRecGroups = 1000000;
 static const unsigned MaxTags = 1000000;
 
 // These limits pertain to our WebAssembly implementation only.

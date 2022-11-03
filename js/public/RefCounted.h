@@ -82,11 +82,6 @@ class AtomicRefCounted {
     }
   }
 
-  bool hasOneRef() const {
-    MOZ_ASSERT(mRefCnt > 0);
-    return mRefCnt == 1;
-  }
-
  private:
   mutable mozilla::Atomic<MozRefCountType> mRefCnt{0};
 };

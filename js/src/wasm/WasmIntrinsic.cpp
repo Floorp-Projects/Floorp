@@ -110,10 +110,6 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
 
   // Build a module environment
   ModuleEnvironment moduleEnv(compileArgs->features);
-  if (!moduleEnv.init()) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
 
   // Add (import (memory 0))
   CacheableName emptyString;
@@ -130,6 +126,12 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
   }
   moduleEnv.memory = Some(MemoryDesc(Limits(0, Nothing(), sharedMemory)));
 
+  // Initialize the type section
+  if (!moduleEnv.initTypes(ids.size())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
   // Add (type (func (params ...))) for each intrinsic. The function types will
   // be deduplicated by the runtime
   for (uint32_t funcIndex = 0; funcIndex < ids.size(); funcIndex++) {
@@ -137,11 +139,11 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
     const Intrinsic& intrinsic = Intrinsic::getFromId(id);
 
     FuncType type;
-    if (!intrinsic.funcType(&type) ||
-        !moduleEnv.types->addType(std::move(type))) {
+    if (!intrinsic.funcType(&type)) {
       ReportOutOfMemory(cx);
       return false;
     }
+    (*moduleEnv.types)[funcIndex] = std::move(type);
   }
 
   // Add (func (type $i)) declarations. Do this after all types have been added

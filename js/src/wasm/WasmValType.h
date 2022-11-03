@@ -19,7 +19,6 @@
 #ifndef wasm_valtype_h
 #define wasm_valtype_h
 
-#include "mozilla/HashTable.h"
 #include "mozilla/Maybe.h"
 
 #include <type_traits>
@@ -34,7 +33,6 @@ namespace wasm {
 
 using mozilla::Maybe;
 
-class RecGroup;
 class TypeDef;
 class TypeContext;
 
@@ -200,91 +198,6 @@ union SerializableTypeCode {
 WASM_DECLARE_CACHEABLE_POD(SerializableTypeCode);
 static_assert(sizeof(SerializableTypeCode) == sizeof(uintptr_t), "packed");
 
-// [SMDOC] Matching type definitions
-//
-// WebAssembly type equality is structural, and we implement canonicalization
-// such that equality of pointers to type definitions means that the type
-// definitions are structurally equal.
-//
-// 'Matching' is the algorithm used to determine if two types are equal while
-// canonicalizing types.
-//
-// A match type code encodes a type code for use in equality and hashing
-// matching. It normalizes type references that are local to a recursion group
-// so that they can be bitwise compared to type references from other recursion
-// groups.
-//
-// This is useful for the following example:
-//   (rec (func $a))
-//   (rec
-//     (func $b)
-//     (struct
-//       (field (ref $a)))
-//       (field (ref $b)))
-//   )
-//   (rec
-//     (func $c)
-//     (struct
-//       (field (ref $a)))
-//       (field (ref $c)))
-//   )
-//
-// The last two recursion groups are identical and should canonicalize to the
-// same instance. However, they will be initially represented as two separate
-// recursion group instances each with an array type instance with element
-// types that point to the function type instance before them. A bitwise
-// comparison of the element type pointers would fail.
-//
-// To solve this, we use `MatchTypeCode` to convert the example to:
-//   (rec (func $a))
-//   (rec
-//     (func $b)
-//     (struct
-//       (field (ref nonlocal $a)))
-//       (field (ref local 0)))
-//   )
-//   (rec
-//     (func $c)
-//     (struct
-//       (field (ref nonlocal $a)))
-//       (field (ref local 0)))
-//   )
-//
-// Now, comparing the element types will see that these are local type
-// references of the same kinds. `MatchTypeCode` performs the same mechanism
-// as `tie` in the MVP presentation of type equality [1].
-//
-// [1]
-// https://github.com/WebAssembly/gc/blob/main/proposals/gc/MVP.md#equivalence
-union MatchTypeCode {
-  using PackedRepr = uint64_t;
-
-  static constexpr size_t NullableBits = 1;
-  static constexpr size_t TypeCodeBits = 8;
-  static constexpr size_t TypeRefBits = 48;
-
-  PackedRepr bits;
-  struct {
-    PackedRepr nullable : NullableBits;
-    PackedRepr typeCode : TypeCodeBits;
-    PackedRepr typeRef : TypeRefBits;
-  };
-
-  WASM_CHECK_CACHEABLE_POD(bits);
-
-  static_assert(NullableBits + TypeCodeBits + TypeRefBits <=
-                    (sizeof(PackedRepr) * 8),
-                "enough bits");
-
-  // Defined in WasmTypeDef.h to avoid a cycle while allowing inlining
-  static inline MatchTypeCode forMatch(PackedTypeCode ptc,
-                                       const RecGroup* recGroup);
-
-  bool operator==(MatchTypeCode other) const { return bits == other.bits; }
-  bool operator!=(MatchTypeCode other) const { return bits != other.bits; }
-  HashNumber hash() const { return HashNumber(bits); }
-};
-
 // An enum that describes the representation classes for tables; The table
 // element type is mapped into this by Table::repr().
 
@@ -376,9 +289,6 @@ class RefType {
     }
     MOZ_CRASH("switch is exhaustive");
   }
-
-  // Defined in WasmTypeDef.h to avoid a cycle while allowing inlining
-  static bool isSubTypeOf(RefType subType, RefType superType);
 
   bool operator==(const RefType& that) const { return ptc_ == that.ptc_; }
   bool operator!=(const RefType& that) const { return ptc_ != that.ptc_; }
@@ -617,10 +527,6 @@ class PackedType : public T {
     return T::isValidTypeCode(tc_.typeCode());
   }
 
-  MatchTypeCode forMatch(const RecGroup* recGroup) const {
-    return MatchTypeCode::forMatch(tc_, recGroup);
-  }
-
   PackedTypeCode packed() const {
     MOZ_ASSERT(isValid());
     return tc_;
@@ -787,20 +693,6 @@ class PackedType : public T {
   PackedType<FieldTypeTraits> fieldType() const {
     MOZ_ASSERT(isValid());
     return PackedType<FieldTypeTraits>(tc_);
-  }
-
-  static bool isSubTypeOf(PackedType subType, PackedType superType) {
-    // Anything is a subtype of itself.
-    if (subType == superType) {
-      return true;
-    }
-
-    // A reference may be a subtype of another reference
-    if (subType.isRefType() && superType.isRefType()) {
-      return RefType::isSubTypeOf(subType.refType(), superType.refType());
-    }
-
-    return false;
   }
 
   bool operator==(const PackedType& that) const {

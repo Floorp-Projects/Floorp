@@ -7,8 +7,7 @@
 
 const wat = `
 (module
-  (type $S2 (struct))
-  (sub $S2 (type $S
+  (type $S
     (struct
       (field (mut i64))
       (field (mut i64))
@@ -28,7 +27,8 @@ const wat = `
       (field (mut i64))
       (field (mut i64))
       (field (mut i64))
-      (field (mut eqref)))))
+      (field (mut eqref))))
+  (type $S2 (struct))
 
   (func $main
     (struct.set $S 18
@@ -61,6 +61,27 @@ wasmEvalText(wat);
 
 wasmEvalText(`
 (module
+  (type $outline
+    (struct
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))
+      (field (mut i64))))
   (type $inline
     (struct
       (field (mut i64))
@@ -69,28 +90,7 @@ wasmEvalText(`
       (field (mut i64))
       (field (mut i64))
     ))
-  (sub $inline (type $outline
-    (struct
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64))
-      (field (mut i64)))))
-  
+
   (func $main
     (local $outline (ref null $outline))
     (local $inline (ref null $inline))
