@@ -1480,7 +1480,7 @@
   operands:
     object: Object
   arguments:
-    name: PropertyName*
+    name: PropertyKey
   result_type: Value
   # Bails when non-native or accessor properties are encountered, so we can't
   # DCE this instruction.
@@ -1497,6 +1497,7 @@
   # Bails when non-native or accessor properties are encountered, so we can't
   # DCE this instruction.
   guard: true
+  folds_to: custom
   congruent_to: if_operands_equal
   alias_set: custom
   possibly_calls: true

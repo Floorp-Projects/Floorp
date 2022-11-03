@@ -549,7 +549,7 @@ bool GetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
                                Value* vp);
 
 bool GetNativeDataPropertyPureFallback(JSContext* cx, JSObject* obj,
-                                       PropertyName* name, Value* vp);
+                                       PropertyKey id, Value* vp);
 
 bool GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj, Value* vp);
 

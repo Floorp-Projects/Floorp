@@ -4224,8 +4224,8 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
 
   Label bail, cacheHit;
   if (JitOptions.enableWatchtowerMegamorphic) {
-    masm.emitMegamorphicCacheLookup(NameToId(lir->mir()->name()), obj, temp0,
-                                    temp1, temp2, output, &bail, &cacheHit);
+    masm.emitMegamorphicCacheLookup(lir->mir()->name(), obj, temp0, temp1,
+                                    temp2, output, &bail, &cacheHit);
   }
 
   masm.branchIfNonNativeObj(obj, temp0, &bail);
@@ -4234,12 +4234,12 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   masm.moveStackPtrTo(temp2);
 
   using Fn =
-      bool (*)(JSContext * cx, JSObject * obj, PropertyName * name, Value * vp);
+      bool (*)(JSContext * cx, JSObject * obj, PropertyKey id, Value * vp);
   masm.setupAlignedABICall();
   masm.loadJSContext(temp0);
   masm.passABIArg(temp0);
   masm.passABIArg(obj);
-  masm.movePtr(ImmGCPtr(lir->mir()->name()), temp1);
+  masm.movePropertyKey(lir->mir()->name(), temp1);
   masm.passABIArg(temp1);
   masm.passABIArg(temp2);
 
