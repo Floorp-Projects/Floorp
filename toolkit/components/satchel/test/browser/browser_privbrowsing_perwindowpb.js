@@ -21,32 +21,13 @@ add_task(async function test() {
     // Wait for the page to reload itself.
     await BrowserTestUtils.browserLoaded(browser);
 
-    let count = 0;
-    let doneCounting = {};
-    doneCounting.promise = new Promise(
-      resolve => (doneCounting.resolve = resolve)
-    );
-    FormHistory.count(
-      { fieldname: "field", value: "value" },
-      {
-        handleResult(result) {
-          count = result;
-        },
-        handleError(error) {
-          Assert.ok(false, "Error occurred searching form history: " + error);
-        },
-        handleCompletion(num) {
-          if (aShouldValueExist) {
-            is(count, 1, "In non-PB mode, we add a single entry");
-          } else {
-            is(count, 0, "In PB mode, we don't add any entries");
-          }
+    let count = await FormHistory.count({ fieldname: "field", value: "value" });
 
-          doneCounting.resolve();
-        },
-      }
-    );
-    await doneCounting.promise;
+    if (aShouldValueExist) {
+      is(count, 1, "In non-PB mode, we add a single entry");
+    } else {
+      is(count, 0, "In PB mode, we don't add any entries");
+    }
   }
 
   function testOnWindow(aOptions, aCallback) {

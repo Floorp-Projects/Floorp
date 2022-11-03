@@ -13,18 +13,9 @@ ChromeUtils.defineESModuleGetters(this, {
 
 const REFERENCE_DATE = Date.now();
 
-function countEntries(fieldname, message, expected) {
-  return new Promise((resolve, reject) => {
-    let callback = {
-      handleResult: result => {
-        is(result, expected, message);
-        resolve();
-      },
-      handleError: reject,
-    };
-
-    FormHistory.count({ fieldname }, callback);
-  });
+async function countEntries(fieldname, message, expected) {
+  let count = await FormHistory.count({ fieldname });
+  is(count, expected, message);
 }
 
 async function setupFormHistory() {

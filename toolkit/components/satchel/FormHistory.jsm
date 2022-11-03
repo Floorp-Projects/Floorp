@@ -704,7 +704,9 @@ function expireOldEntriesDeletion(aExpireTime, aBeginningCount) {
     ],
     {
       handleCompletion() {
-        expireOldEntriesVacuum(aExpireTime, aBeginningCount);
+        expireOldEntriesVacuum(aExpireTime, aBeginningCount).catch(
+          Cu.reportError
+        );
       },
       handleError(aError) {
         log("expireOldEntriesDeletionFailure");
@@ -719,30 +721,14 @@ function expireOldEntriesDeletion(aExpireTime, aBeginningCount) {
  * @param {number} aExpireTime expiration timestamp
  * @param {number} aBeginningCount number of entries at first
  */
-function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
-  FormHistory.count(
-    {},
-    {
-      handleResult(aEndingCount) {
-        if (aBeginningCount - aEndingCount > 500) {
-          log("expireOldEntriesVacuum");
-
-          FormHistory.db.then(async conn => {
-            try {
-              await conn.executeCached("VACUUM");
-            } catch (e) {
-              log("expireVacuumError");
-            }
-          });
-        }
-
-        sendNotification("formhistory-expireoldentries", aExpireTime);
-      },
-      handleError(aError) {
-        log("expireEndCountFailure");
-      },
-    }
-  );
+async function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
+  let count = await FormHistory.count({});
+  if (aBeginningCount - count > 500) {
+    log("expireOldEntriesVacuum");
+    let conn = await FormHistory.db;
+    await conn.executeCached("VACUUM");
+  }
+  sendNotification("formhistory-expireoldentries", aExpireTime);
 }
 
 async function createTable(conn, tableName) {
@@ -1075,7 +1061,7 @@ FormHistory = {
     return allResults;
   },
 
-  count(aSearchData, aHandlers) {
+  async count(aSearchData) {
     validateSearchData(aSearchData, "Count");
 
     let query = "SELECT COUNT(*) AS numEntries FROM moz_formhistory";
@@ -1084,23 +1070,9 @@ FormHistory = {
       query += " WHERE " + queryTerms;
     }
 
-    let handlers = this._prepareHandlers(aHandlers);
-
-    return new Promise((resolve, reject) => {
-      this.db.then(async conn => {
-        try {
-          let rows = await conn.executeCached(query, params);
-          let count = rows[0].getResultByName("numEntries");
-          handlers.handleResult(count);
-          handlers.handleCompletion(0);
-          resolve(count);
-        } catch (e) {
-          handlers.handleError(e);
-          handlers.handleCompletion(1);
-          reject(e);
-        }
-      });
-    });
+    let conn = await this.db;
+    let rows = await conn.executeCached(query, params);
+    return rows[0].getResultByName("numEntries");
   },
 
   async update(aChanges, aHandlers) {
@@ -1353,7 +1325,7 @@ FormHistory = {
     Prefs.initialized = false;
   },
 
-  expireOldEntries() {
+  async expireOldEntries() {
     log("expireOldEntries");
 
     // Determine how many days of history we're supposed to keep.
@@ -1362,17 +1334,8 @@ FormHistory = {
 
     sendNotification("formhistory-beforeexpireoldentries", expireTime);
 
-    FormHistory.count(
-      {},
-      {
-        handleResult(aBeginningCount) {
-          expireOldEntriesDeletion(expireTime, aBeginningCount);
-        },
-        handleError(aError) {
-          log("expireStartCountFailure");
-        },
-      }
-    );
+    let count = await FormHistory.count({});
+    expireOldEntriesDeletion(expireTime, count);
   },
 };
 

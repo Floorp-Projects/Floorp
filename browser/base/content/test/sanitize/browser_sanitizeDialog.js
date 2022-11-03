@@ -250,7 +250,7 @@ add_task(async function test_history_downloads_unchecked() {
 
     for (let entry of formEntries) {
       let exists = await formNameExists(entry);
-      is(exists, 0, "form entry " + entry + " should no longer exist");
+      ok(!exists, "form entry " + entry + " should no longer exist");
     }
 
     // OK, done, cleanup after ourselves.
@@ -403,11 +403,7 @@ add_task(async function test_cannot_clear_history() {
     await promiseHistoryClearedState(uris, true);
 
     let exists = await formNameExists(formEntries[0]);
-    is(
-      Boolean(exists),
-      false,
-      "form entry " + formEntries[0] + " should no longer exist"
-    );
+    ok(!exists, "form entry " + formEntries[0] + " should no longer exist");
   };
   dh.open();
   await dh.promiseClosed;
@@ -476,11 +472,7 @@ add_task(async function test_form_entries() {
   dh.onunload = async function() {
     await promiseSanitized;
     let exists = await formNameExists(formEntry);
-    is(
-      Boolean(exists),
-      false,
-      "form entry " + formEntry + " should no longer exist"
-    );
+    ok(!exists, "form entry " + formEntry + " should no longer exist");
   };
   dh.open();
   await dh.promiseClosed;
@@ -759,25 +751,8 @@ function promiseAddFormEntryWithMinutesAgo(aMinutesAgo) {
 /**
  * Checks if a form entry exists.
  */
-function formNameExists(name) {
-  return new Promise((resolve, reject) => {
-    let count = 0;
-    FormHistory.count(
-      { fieldname: name },
-      {
-        handleResult: result => (count = result),
-        handleError(error) {
-          reject(error);
-          throw new Error("Error occurred searching form history: " + error);
-        },
-        handleCompletion(reason) {
-          if (!reason) {
-            resolve(count);
-          }
-        },
-      }
-    );
-  });
+async function formNameExists(name) {
+  return !!(await FormHistory.count({ fieldname: name }));
 }
 
 /**

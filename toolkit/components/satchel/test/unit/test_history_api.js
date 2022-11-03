@@ -142,22 +142,8 @@ add_task(async function() {
     // Cannot use promiseCountEntries when name and value are null
     // because it treats null values as not set
     // and here a search should be done explicity for null.
-    deferred = PromiseUtils.defer();
-    await FormHistory.count(
-      { fieldname: null, value: null },
-      {
-        handleResult: result => checkNotExists(result),
-        handleError(error) {
-          do_throw("Error occurred searching form history: " + error);
-        },
-        handleCompletion(reason) {
-          if (!reason) {
-            deferred.resolve();
-          }
-        },
-      }
-    );
-    await deferred.promise;
+    let count = await FormHistory.count({ fieldname: null, value: null });
+    checkNotExists(count);
 
     // ===== 3 =====
     // Test removeEntriesForName with a single matching value

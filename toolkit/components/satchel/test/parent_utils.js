@@ -58,23 +58,15 @@ var ParentUtils = {
       obj.value = value;
     }
 
-    let count = 0;
-    let listener = {
-      handleResult(result) {
-        count = result;
+    FormHistory.count(obj).then(
+      count => {
+        sendAsyncMessage("entriesCounted", { ok: true, count });
       },
-      handleError(error) {
+      error => {
         assert.ok(false, error);
         sendAsyncMessage("entriesCounted", { ok: false });
-      },
-      handleCompletion(reason) {
-        if (!reason) {
-          sendAsyncMessage("entriesCounted", { ok: true, count });
-        }
-      },
-    };
-
-    FormHistory.count(obj, listener);
+      }
+    );
   },
 
   checkRowCount(expectedCount, expectedFirstValue = null) {

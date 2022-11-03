@@ -123,21 +123,8 @@ function addFormHistory() {
   });
 }
 
-function getFormHistoryCount() {
-  return new Promise((resolve, reject) => {
-    let count = -1;
-    FormHistory.count(
-      { fieldname: "testfield" },
-      {
-        handleResult(result) {
-          count = result;
-        },
-        handleCompletion(reason) {
-          resolve(count);
-        },
-      }
-    );
-  });
+async function getFormHistoryCount() {
+  return FormHistory.count({ fieldname: "testfield" });
 }
 
 function storeCache(aURL, aContent) {

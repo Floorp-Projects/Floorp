@@ -80,18 +80,14 @@ function countEntries(name, value, then) {
     obj.value = value;
   }
 
-  let count = 0;
-  FormHistory.count(obj, {
-    handleResult: result => (count = result),
-    handleError(error) {
+  FormHistory.count(obj).then(
+    count => {
+      then(count);
+    },
+    error => {
       do_throw("Error occurred searching form history: " + error);
-    },
-    handleCompletion(reason) {
-      if (!reason) {
-        then(count);
-      }
-    },
-  });
+    }
+  );
 }
 
 // Perform a single form history update and call then() when done.
