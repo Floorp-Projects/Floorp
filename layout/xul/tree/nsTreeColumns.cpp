@@ -88,8 +88,12 @@ nsresult nsTreeColumn::GetRect(nsTreeBodyFrame* aBodyFrame, nscoord aY,
     return NS_ERROR_FAILURE;
   }
 
-  bool isRTL = aBodyFrame->StyleVisibility()->mDirection == StyleDirection::Rtl;
+  const bool isRTL =
+      aBodyFrame->StyleVisibility()->mDirection == StyleDirection::Rtl;
   *aResult = frame->GetRect();
+  if (frame->StyleVisibility()->IsCollapse()) {
+    aResult->SizeTo(nsSize());
+  }
   aResult->y = aY;
   aResult->height = aHeight;
   if (isRTL)
