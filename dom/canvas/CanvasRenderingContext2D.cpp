@@ -2062,67 +2062,6 @@ static bool ObjectToMatrix(JSContext* aCx, JS::Handle<JSObject*> aObj,
   return true;
 }
 
-void CanvasRenderingContext2D::SetMozCurrentTransform(
-    JSContext* aCx, JS::Handle<JSObject*> aCurrentTransform,
-    ErrorResult& aError) {
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  Matrix newCTM;
-  if (ObjectToMatrix(aCx, aCurrentTransform, newCTM, aError) &&
-      newCTM.IsFinite()) {
-    mTarget->SetTransform(newCTM);
-  }
-}
-
-void CanvasRenderingContext2D::GetMozCurrentTransform(
-    JSContext* aCx, JS::MutableHandle<JSObject*> aResult, ErrorResult& aError) {
-  EnsureTarget();
-
-  MatrixToJSObject(aCx, mTarget ? mTarget->GetTransform() : Matrix(), aResult,
-                   aError);
-}
-
-void CanvasRenderingContext2D::SetMozCurrentTransformInverse(
-    JSContext* aCx, JS::Handle<JSObject*> aCurrentTransform,
-    ErrorResult& aError) {
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  Matrix newCTMInverse;
-  if (ObjectToMatrix(aCx, aCurrentTransform, newCTMInverse, aError)) {
-    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-    if (newCTMInverse.Invert() && newCTMInverse.IsFinite()) {
-      mTarget->SetTransform(newCTMInverse);
-    }
-  }
-}
-
-void CanvasRenderingContext2D::GetMozCurrentTransformInverse(
-    JSContext* aCx, JS::MutableHandle<JSObject*> aResult, ErrorResult& aError) {
-  EnsureTarget();
-
-  if (!mTarget) {
-    MatrixToJSObject(aCx, Matrix(), aResult, aError);
-    return;
-  }
-
-  Matrix ctm = mTarget->GetTransform();
-
-  if (!ctm.Invert()) {
-    double NaN = JS::GenericNaN();
-    ctm = Matrix(NaN, NaN, NaN, NaN, NaN, NaN);
-  }
-
-  MatrixToJSObject(aCx, ctm, aResult, aError);
-}
-
 //
 // colors
 //
