@@ -1187,7 +1187,9 @@ this.DateTimeBoxWidget = class {
             break;
 
           case value < 12:
-            this.setDayPeriodValue(this.mAMIndicator);
+            if (!this.getDayPeriodValue()) {
+              this.setDayPeriodValue(this.mAMIndicator);
+            }
             break;
 
           case value > 12 && value < 24:
@@ -1503,7 +1505,7 @@ this.DateTimeBoxWidget = class {
     this.setInputValueFromFields();
   }
 
-  getDayPeriodValue(aValue) {
+  getDayPeriodValue() {
     if (!this.mDayPeriodField) {
       return "";
     }
