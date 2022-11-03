@@ -691,28 +691,18 @@ async function runUpdateQueries(conn, queries) {
  *
  * @param {number} aExpireTime expiration timestamp
  * @param {number} aBeginningCount numer of entries at first
+ * @returns {Promise} resolved once the work is complete
  */
-function expireOldEntriesDeletion(aExpireTime, aBeginningCount) {
+async function expireOldEntriesDeletion(aExpireTime, aBeginningCount) {
   log("expireOldEntriesDeletion(" + aExpireTime + "," + aBeginningCount + ")");
 
-  FormHistory.update(
-    [
-      {
-        op: "remove",
-        lastUsedEnd: aExpireTime,
-      },
-    ],
+  await FormHistory.update([
     {
-      handleCompletion() {
-        expireOldEntriesVacuum(aExpireTime, aBeginningCount).catch(
-          Cu.reportError
-        );
-      },
-      handleError(aError) {
-        log("expireOldEntriesDeletionFailure");
-      },
-    }
-  );
+      op: "remove",
+      lastUsedEnd: aExpireTime,
+    },
+  ]);
+  await expireOldEntriesVacuum(aExpireTime, aBeginningCount);
 }
 
 /**
@@ -1075,7 +1065,7 @@ FormHistory = {
     return rows[0].getResultByName("numEntries");
   },
 
-  async update(aChanges, aHandlers) {
+  async update(aChanges) {
     function validIdentifier(change) {
       // The identifier is only valid if one of either the guid
       // or the (fieldname/value) are set (so an X-OR)
@@ -1086,18 +1076,13 @@ FormHistory = {
       aChanges = [aChanges];
     }
 
-    let handlers = this._prepareHandlers(aHandlers);
-
     let isRemoveOperation = aChanges.every(
       change => change && change.op && change.op == "remove"
     );
     if (!Prefs.enabled && !isRemoveOperation) {
-      handlers.handleError({
-        message: "Form history is disabled, only remove operations are allowed",
-        result: Ci.mozIStorageError.MISUSE,
-      });
-      handlers.handleCompletion(1);
-      return;
+      throw new Error(
+        "Form history is disabled, only remove operations are allowed"
+      );
     }
 
     for (let change of aChanges) {
@@ -1148,38 +1133,22 @@ FormHistory = {
           );
       }
 
-      try {
-        let results = await FormHistory.search(["guid"], {
-          fieldname: change.fieldname,
-          value: change.value,
-        });
-        if (results.length > 1) {
-          log(
-            "Database contains multiple entries with the same fieldname/value pair."
-          );
-          handlers.handleError({
-            message:
-              "Database contains multiple entries with the same fieldname/value pair.",
-            result: 19, // Constraint violation
-          });
-          handlers.handleCompletion(1);
-          return;
-        }
-        change.guid = results[0]?.guid;
-      } catch (e) {
-        handlers.handleError(e);
-        handlers.handleCompletion(1);
-        return;
+      let results = await FormHistory.search(["guid"], {
+        fieldname: change.fieldname,
+        value: change.value,
+      });
+      if (results.length > 1) {
+        log(
+          "Database contains multiple entries with the same fieldname/value pair."
+        );
+        throw new Error(
+          "Database contains multiple entries with the same fieldname/value pair."
+        );
       }
+      change.guid = results[0]?.guid;
     }
 
-    try {
-      await updateFormHistoryWrite(aChanges);
-      handlers.handleCompletion(0);
-    } catch (e) {
-      handlers.handleError(e);
-      handlers.handleCompletion(1);
-    }
+    await updateFormHistoryWrite(aChanges);
   },
 
   getAutoCompleteResults(searchString, params, aHandlers) {
@@ -1335,7 +1304,7 @@ FormHistory = {
     sendNotification("formhistory-beforeexpireoldentries", expireTime);
 
     let count = await FormHistory.count({});
-    expireOldEntriesDeletion(expireTime, count);
+    await expireOldEntriesDeletion(expireTime, count);
   },
 };
 

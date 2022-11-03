@@ -923,25 +923,10 @@ add_task(async function suggestions_contain_escaped_unicode() {
 // Helpers
 
 function updateSearchHistory(operation, value) {
-  return new Promise((resolve, reject) => {
-    FormHistory.update(
-      {
-        op: operation,
-        fieldname: "searchbar-history",
-        value,
-      },
-      {
-        handleError(error) {
-          do_throw("Error occurred updating form history: " + error);
-          reject(error);
-        },
-        handleCompletion(reason) {
-          if (!reason) {
-            resolve();
-          }
-        },
-      }
-    );
+  return FormHistory.update({
+    op: operation,
+    fieldname: "searchbar-history",
+    value,
   });
 }
 

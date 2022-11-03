@@ -103,23 +103,14 @@ add_task(async function test_execute() {
 });
 
 function addFormHistory() {
-  return new Promise(resolve => {
-    let now = Date.now() * 1000;
-    FormHistory.update(
-      {
-        op: "add",
-        fieldname: "testfield",
-        value: "test",
-        timesUsed: 1,
-        firstUsed: now,
-        lastUsed: now,
-      },
-      {
-        handleCompletion(reason) {
-          resolve();
-        },
-      }
-    );
+  let now = Date.now() * 1000;
+  return FormHistory.update({
+    op: "add",
+    fieldname: "testfield",
+    value: "test",
+    timesUsed: 1,
+    firstUsed: now,
+    lastUsed: now,
   });
 }
 

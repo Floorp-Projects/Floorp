@@ -732,20 +732,12 @@ function promiseAddFormEntryWithMinutesAgo(aMinutesAgo) {
   // Artifically age the entry to the proper vintage.
   let timestamp = now_uSec - aMinutesAgo * kUsecPerMin;
 
-  return new Promise((resolve, reject) =>
-    FormHistory.update(
-      { op: "add", fieldname: name, value: "dummy", firstUsed: timestamp },
-      {
-        handleError(error) {
-          reject();
-          throw new Error("Error occurred updating form history: " + error);
-        },
-        handleCompletion(reason) {
-          resolve(name);
-        },
-      }
-    )
-  );
+  return FormHistory.update({
+    op: "add",
+    fieldname: name,
+    value: "dummy",
+    firstUsed: timestamp,
+  });
 }
 
 /**
@@ -766,23 +758,7 @@ async function blankSlate() {
     await download.finalize(true);
   }
 
-  await new Promise((resolve, reject) => {
-    FormHistory.update(
-      { op: "remove" },
-      {
-        handleCompletion(reason) {
-          if (!reason) {
-            resolve();
-          }
-        },
-        handleError(error) {
-          reject(error);
-          throw new Error("Error occurred updating form history: " + error);
-        },
-      }
-    );
-  });
-
+  await FormHistory.update({ op: "remove" });
   await PlacesUtils.history.clear();
 }
 

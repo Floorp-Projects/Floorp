@@ -51,16 +51,11 @@ add_setup(async function() {
 
   await clearSearchbarHistory();
 
-  await new Promise((resolve, reject) => {
-    info("adding search history values: " + kValues);
-    let addOps = kValues.map(value => {
-      return { op: "add", fieldname: "searchbar-history", value };
-    });
-    FormHistory.update(addOps, {
-      handleCompletion: resolve,
-      handleError: reject,
-    });
+  let addOps = kValues.map(value => {
+    return { op: "add", fieldname: "searchbar-history", value };
   });
+  info("adding search history values: " + kValues);
+  await FormHistory.update(addOps);
 
   registerCleanupFunction(async () => {
     await clearSearchbarHistory();

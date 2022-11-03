@@ -1084,19 +1084,11 @@ export var UrlbarUtils = {
     ) {
       return Promise.resolve();
     }
-    return new Promise((resolve, reject) => {
-      lazy.FormHistory.update(
-        {
-          op: "bump",
-          fieldname: input.formHistoryName,
-          value,
-          source,
-        },
-        {
-          handleError: reject,
-          handleCompletion: resolve,
-        }
-      );
+    return lazy.FormHistory.update({
+      op: "bump",
+      fieldname: input.formHistoryName,
+      value,
+      source,
     });
   },
 

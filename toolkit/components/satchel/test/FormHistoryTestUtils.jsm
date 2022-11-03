@@ -55,12 +55,9 @@ var FormHistoryTestUtils = {
     // applied.
     additions = additions.map(v => (typeof v == "string" ? { value: v } : v));
     for (let { value, source } of additions) {
-      await new Promise((resolve, reject) => {
-        lazy.FormHistory.update(
-          Object.assign({ fieldname }, { op: "bump", value, source }),
-          this.makeListener(resolve, reject)
-        );
-      });
+      await lazy.FormHistory.update(
+        Object.assign({ fieldname }, { op: "bump", value, source })
+      );
     }
   },
 
@@ -92,9 +89,7 @@ var FormHistoryTestUtils = {
       let criteria = typeof v == "string" ? { value: v } : v;
       return Object.assign({ fieldname, op: "remove" }, criteria);
     });
-    return new Promise((resolve, reject) => {
-      lazy.FormHistory.update(changes, this.makeListener(resolve, reject));
-    });
+    return lazy.FormHistory.update(changes);
   },
 
   /**
@@ -106,13 +101,8 @@ var FormHistoryTestUtils = {
    * @returns {Promise} Resolved once the operation is complete.
    */
   clear(fieldname) {
-    return new Promise((resolve, reject) => {
-      let baseChange = fieldname ? { fieldname } : {};
-      lazy.FormHistory.update(
-        Object.assign(baseChange, { op: "remove" }),
-        this.makeListener(resolve, reject)
-      );
-    });
+    let baseChange = fieldname ? { fieldname } : {};
+    return lazy.FormHistory.update(Object.assign(baseChange, { op: "remove" }));
   },
 
   /**

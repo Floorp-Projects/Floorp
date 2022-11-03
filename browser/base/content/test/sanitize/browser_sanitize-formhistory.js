@@ -8,23 +8,7 @@ add_task(async function test() {
   // The TabContextMenu initializes its strings only on a focus or mouseover event.
   // Calls focus event on the TabContextMenu early in the test.
   gBrowser.selectedTab.focus();
-  await new Promise((resolve, reject) => {
-    FormHistory.update(
-      { op: "remove" },
-      {
-        handleError(error) {
-          reject(error);
-        },
-        handleCompletion(reason) {
-          if (!reason) {
-            resolve();
-          } else {
-            reject();
-          }
-        },
-      }
-    );
-  });
+  await FormHistory.update({ op: "remove" });
 
   // Sanitize now so we can test the baseline point.
   await Sanitizer.sanitize(["formdata"]);
