@@ -358,10 +358,13 @@ class AliasSet {
     // The pendingException slot on the wasm instance object.
     WasmPendingException = 1 << 18,
 
-    Last = WasmPendingException,
+    // The fuzzilliHash slot
+    FuzzilliHash = 1 << 19,
+
+    Last = FuzzilliHash,
 
     Any = Last | (Last - 1),
-    NumCategories = 19,
+    NumCategories = 20,
 
     // Indicates load or store.
     Store_ = 1 << 31
@@ -10817,6 +10820,55 @@ class MWasmStoreObjectDataRefField : public MAryInstruction<4>,
     return AliasSet::Store(AliasSet::Any);
   }
 };
+
+#ifdef FUZZING_JS_FUZZILLI
+class MFuzzilliHash : public MUnaryInstruction, public NoTypePolicy::Data {
+  explicit MFuzzilliHash(MDefinition* obj)
+      : MUnaryInstruction(classOpcode, obj) {
+    setResultType(MIRType::Int32);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(FuzzilliHash);
+  TRIVIAL_NEW_WRAPPERS
+  ALLOW_CLONE(MFuzzilliHash)
+
+#  ifdef DEBUG
+  bool isConsistentFloat32Use(MUse* use) const override { return true; }
+#  endif
+
+  AliasSet getAliasSet() const override {
+    MDefinition* obj = getOperand(0);
+    if (obj->type() == MIRType::Object || obj->type() == MIRType::Value) {
+      return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                            AliasSet::DynamicSlot | AliasSet::Element |
+                            AliasSet::UnboxedElement);
+    }
+    return AliasSet::None();
+  }
+};
+
+class MFuzzilliHashStore : public MUnaryInstruction, public NoTypePolicy::Data {
+  explicit MFuzzilliHashStore(MDefinition* obj)
+      : MUnaryInstruction(classOpcode, obj) {
+    MOZ_ASSERT(obj->type() == MIRType::Int32);
+
+    setResultType(MIRType::None);
+  }
+
+ public:
+  INSTRUCTION_HEADER(FuzzilliHashStore);
+  TRIVIAL_NEW_WRAPPERS
+  ALLOW_CLONE(MFuzzilliHashStore)
+
+  // this is a store and hence effectful, however no other load can
+  // alias with the store
+  AliasSet getAliasSet() const override {
+    return AliasSet::Store(AliasSet::FuzzilliHash);
+  }
+};
+#endif
 
 #undef INSTRUCTION_HEADER
 
