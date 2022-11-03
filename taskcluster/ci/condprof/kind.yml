@@ -87,7 +87,7 @@ jobs:
                 - linux64-geckodriver
         run:
             command: >-
-                python3.7 virtualenv/virtualenv.py . &&
+                python3.7 -m venv . &&
                 bin/python3.7 condprof/main.py
                 ${EXTRA_ARGS}
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
