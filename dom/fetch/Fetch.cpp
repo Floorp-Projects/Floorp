@@ -21,7 +21,6 @@
 #include "nsProxyRelease.h"
 
 #include "mozilla/ErrorResult.h"
-#include "mozilla/dom/MimeType.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BodyConsumer.h"
 #include "mozilla/dom/Exceptions.h"
@@ -1281,40 +1280,20 @@ template already_AddRefed<Promise> FetchBody<EmptyBody>::ConsumeBody(
 template <class Derived>
 void FetchBody<Derived>::GetMimeType(nsACString& aMimeType,
                                      nsACString& aMixedCaseMimeType) {
+  // Extract mime type.
   ErrorResult result;
-  nsAutoCString contentTypeValues, contentTypeUtf8;
+  nsCString contentTypeValues;
   MOZ_ASSERT(DerivedClass()->GetInternalHeaders());
   DerivedClass()->GetInternalHeaders()->Get("Content-Type"_ns,
                                             contentTypeValues, result);
   MOZ_ALWAYS_TRUE(!result.Failed());
 
-  nsCCharSeparatedTokenizer contentTypeTokens(contentTypeValues, ',');
-
-  // currently we extract the MIME-type from the first content type header
-  // In order to fully comply with the fetch spec we must be able to
-  // parse multiple content-type headers and extrace headers from it
-  // To achieve this we need to modify CMimeType::Parse and implement the
-  // algorithm https://fetch.spec.whatwg.org/#concept-header-extract-mime-type
-  // This issue is tracked by
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1510180
-  auto contentStr = contentTypeTokens.nextToken();
-
-  CopyLatin1toUTF8(contentStr, contentTypeUtf8);
-  UniquePtr<CMimeType> contentTypeRecord = CMimeType::Parse(contentTypeUtf8);
-  if (contentTypeRecord) {
-    contentTypeRecord->Serialize(aMixedCaseMimeType);
-    // validate invalid/empty parameter checks
-    // according to https://mimesniff.spec.whatwg.org/#parsing-a-mime-type
-    // CMimeType::Parse parses the parameters and discards ill-formed parameters
-    // If we have invalid/illformed paramters we need to discard the parsed
-    // mime-type
-    if (contentStr.Contains(';') && !aMixedCaseMimeType.Contains(';')) {
-      // parameters were discarded after parsing.
-      // This should result in invalid MimeType
-      aMixedCaseMimeType = "";
-    }
-
-    aMimeType = aMixedCaseMimeType;
+  // HTTP ABNF states Content-Type may have only one value.
+  // This is from the "parse a header value" of the fetch spec.
+  if (!contentTypeValues.IsVoid() && contentTypeValues.Find(",") == -1) {
+    // Convert from a bytestring to a UTF8 CString.
+    CopyLatin1toUTF8(contentTypeValues, aMimeType);
+    aMixedCaseMimeType = aMimeType;
     ToLowerCase(aMimeType);
   }
 }
