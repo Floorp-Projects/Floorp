@@ -1136,12 +1136,8 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       nodeFront.rawNode
     );
 
-    // queryContainerFor returns null when the container name wasn't find in any ancestor.
-    // In practice, the container query uses the viewport, so we can return documentElement.
     if (!containerEl) {
-      return this.pageStyle.walker.getNode(
-        nodeFront.rawNode.ownerDocument.documentElement
-      );
+      return null;
     }
 
     return this.pageStyle.walker.getNode(containerEl);
