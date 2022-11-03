@@ -163,10 +163,12 @@ nsresult nsHttpResponseHead::SetHeader(const nsHttpAtom& hdr,
   return SetHeader_locked(hdr, ""_ns, val, merge);
 }
 
-nsresult nsHttpResponseHead::SetHeader_locked(
-    const nsHttpAtom& atom, const nsACString& hdr, const nsACString& val,
-    bool merge, const nsHttpHeaderArray::HeaderVariety& variety) {
-  nsresult rv = mHeaders.SetHeader(atom, hdr, val, merge, variety);
+nsresult nsHttpResponseHead::SetHeader_locked(const nsHttpAtom& atom,
+                                              const nsACString& hdr,
+                                              const nsACString& val,
+                                              bool merge) {
+  nsresult rv = mHeaders.SetHeader(atom, hdr, val, merge,
+                                   nsHttpHeaderArray::eVarietyResponse);
   if (NS_FAILED(rv)) return rv;
 
   // respond to changes in these headers.  we need to reparse the entire
@@ -891,95 +893,48 @@ bool nsHttpResponseHead::ExpiresInPast_locked() const {
          NS_SUCCEEDED(GetDateValue_locked(&dateVal)) && expiresVal < dateVal;
 }
 
-void nsHttpResponseHead::UpdateOriginalHeaders(nsHttpResponseHead* aOther) {
-  mRecursiveMutex.AssertCurrentThreadIn();
-  aOther->mRecursiveMutex.AssertCurrentThreadIn();
-
-  uint32_t i, count = aOther->mHeaders.Count();
-
-  // container to maintain a list of entries purged
-  nsTHashSet<nsCString> purgedEntries;
-
-  for (i = 0; i < count; ++i) {
-    nsHttpAtom header;
-    nsHttpHeaderArray::HeaderVariety variety;
-    nsAutoCString headerNameOriginal;
-    nsAutoCString val;
-
-    if (!aOther->mHeaders.PeekHeaderAt(i, header, headerNameOriginal, variety,
-                                       val)) {
-      continue;
-    }
-
-    if (CanIgnoreResponseHeaderTypes(header) ||
-        !IsOriginalResponseHeader(variety)) {
-      continue;
-    }
-
-    // remove old response header entries as we have received updated
-    // response headers from 304/206 response
-    if (purgedEntries.EnsureInserted(header.val())) {
-      mHeaders.PurgeHeaderEntries(header);
-    }
-
-    DebugOnly<nsresult> rv =
-        mHeaders.SetHeaderFromNet(header, headerNameOriginal, val, true);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-  }
-}
-
-bool nsHttpResponseHead::CanIgnoreResponseHeaderTypes(
-    const nsHttpAtom& header) const {
-  return (header == nsHttp::Connection || header == nsHttp::Proxy_Connection ||
-          header == nsHttp::Keep_Alive ||
-          header == nsHttp::Proxy_Authenticate ||
-          header == nsHttp::Proxy_Authorization ||
-          // not a response header!
-          header == nsHttp::TE || header == nsHttp::Trailer ||
-          header == nsHttp::Transfer_Encoding || header == nsHttp::Upgrade ||
-          // Ignore any non-modifiable headers...
-          header == nsHttp::Content_Location || header == nsHttp::Content_MD5 ||
-          header == nsHttp::ETag ||
-          // Assume Cache-Control: "no-transform"
-          header == nsHttp::Content_Encoding ||
-          header == nsHttp::Content_Range || header == nsHttp::Content_Type ||
-          // Ignore wacky headers too...
-          // this one is for MS servers that send "Content-Length: 0"
-          // on 304 responses
-          header == nsHttp::Content_Length);
-}
-
 void nsHttpResponseHead::UpdateHeaders(nsHttpResponseHead* aOther) {
   LOG(("nsHttpResponseHead::UpdateHeaders [this=%p]\n", this));
 
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
   RecursiveMutexAutoLock monitorOther(aOther->mRecursiveMutex);
 
-  UpdateOriginalHeaders(aOther);
-
   uint32_t i, count = aOther->mHeaders.Count();
-
   for (i = 0; i < count; ++i) {
     nsHttpAtom header;
     nsAutoCString headerNameOriginal;
-    nsHttpHeaderArray::HeaderVariety variety;
-    nsAutoCString val;
 
-    if (!aOther->mHeaders.PeekHeaderAt(i, header, headerNameOriginal, variety,
-                                       val)) {
+    if (!aOther->mHeaders.PeekHeaderAt(i, header, headerNameOriginal)) {
       continue;
     }
 
-    if (CanIgnoreResponseHeaderTypes(header)) {
+    nsAutoCString val;
+    if (NS_FAILED(aOther->GetHeader(header, val))) {
+      continue;
+    }
+
+    // Ignore any hop-by-hop headers...
+    if (header == nsHttp::Connection || header == nsHttp::Proxy_Connection ||
+        header == nsHttp::Keep_Alive || header == nsHttp::Proxy_Authenticate ||
+        header == nsHttp::Proxy_Authorization ||  // not a response header!
+        header == nsHttp::TE || header == nsHttp::Trailer ||
+        header == nsHttp::Transfer_Encoding || header == nsHttp::Upgrade ||
+        // Ignore any non-modifiable headers...
+        header == nsHttp::Content_Location || header == nsHttp::Content_MD5 ||
+        header == nsHttp::ETag ||
+        // Assume Cache-Control: "no-transform"
+        header == nsHttp::Content_Encoding || header == nsHttp::Content_Range ||
+        header == nsHttp::Content_Type ||
+        // Ignore wacky headers too...
+        // this one is for MS servers that send "Content-Length: 0"
+        // on 304 responses
+        header == nsHttp::Content_Length) {
       LOG(("ignoring response header [%s: %s]\n", header.get(), val.get()));
     } else {
       LOG(("new response header [%s: %s]\n", header.get(), val.get()));
 
-      if (NS_FAILED(aOther->GetHeader(header, val))) {
-        continue;
-      }
+      // overwrite the current header value with the new value...
       DebugOnly<nsresult> rv =
-          // overwrite the current header value with the new value...
           SetHeader_locked(header, headerNameOriginal, val);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
