@@ -127,6 +127,11 @@ SI U32 if_then_else(I32 c, U32 t, U32 e) {
   return bit_cast<U32>((c & bit_cast<I32>(t)) | (~c & bit_cast<I32>(e)));
 }
 
+// Cheaper version of if_then_else that returns Float(0) if condition is false.
+SI Float if_then(I32 c, Float t) {
+  return bit_cast<Float>(c & bit_cast<I32>(t));
+}
+
 SI Float if_then_else(I32 c, Float t, Float e) {
   return bit_cast<Float>((c & bit_cast<I32>(t)) | (~c & bit_cast<I32>(e)));
 }
@@ -195,7 +200,7 @@ SI Float sqrt(Float v) {
   Float e = vrsqrteq_f32(v);
   e *= vrsqrtsq_f32(v, e * e);
   e *= vrsqrtsq_f32(v, e * e);
-  return v * e;
+  return if_then(v != Float(0.0f), v * e);
 #else
   return (Float){sqrtf(v.x), sqrtf(v.y), sqrtf(v.z), sqrtf(v.w)};
 #endif
@@ -246,9 +251,7 @@ SI Float inversesqrt(Float v) {
 
 SI float step(float edge, float x) { return float(x >= edge); }
 
-SI Float step(Float edge, Float x) {
-  return if_then_else(x < edge, Float(0), Float(1));
-}
+SI Float step(Float edge, Float x) { return if_then(x >= edge, Float(1)); }
 
 /*
 enum RGBA {
@@ -682,7 +685,7 @@ float floor(float a) { return floorf(a); }
 
 Float floor(Float v) {
   Float roundtrip = cast(cast(v));
-  return roundtrip - if_then_else(roundtrip > v, Float(1), Float(0));
+  return roundtrip - if_then(roundtrip > v, Float(1));
 }
 
 vec2 floor(vec2 v) { return vec2(floor(v.x), floor(v.y)); }
@@ -697,7 +700,7 @@ float ceil(float a) { return ceilf(a); }
 
 Float ceil(Float v) {
   Float roundtrip = cast(cast(v));
-  return roundtrip + if_then_else(roundtrip < v, Float(1), Float(0));
+  return roundtrip + if_then(roundtrip < v, Float(1));
 }
 
 // Round to nearest even
