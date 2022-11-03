@@ -118,26 +118,30 @@ addAccessibleTask(
     ok(one.isAttributeSettable("AXSelected"), "Option can have AXSelected set");
 
     is(select.getAttributeValue("AXSelectedChildren").length, 1);
+    let evt = waitForMacEvent("AXSelectedChildrenChanged");
     one.setAttributeValue("AXSelected", false);
+    await evt;
     is(select.getAttributeValue("AXSelectedChildren").length, 0);
-
+    evt = waitForMacEvent("AXSelectedChildrenChanged");
     three.setAttributeValue("AXSelected", true);
+    await evt;
     is(select.getAttributeValue("AXSelectedChildren").length, 1);
     ok(getSelectedIds(select).includes("three"), "'three' is selected");
-
+    evt = waitForMacEvent("AXSelectedChildrenChanged");
     select.setAttributeValue("AXSelectedChildren", [one, two]);
-    Assert.deepEqual(
-      getSelectedIds(select),
-      ["one", "two"],
-      "one and two are selected"
-    );
+    await evt;
+    await untilCacheOk(() => {
+      let ids = getSelectedIds(select);
+      return ids[0] == "one" && ids[1] == "two";
+    }, "Got correct selected children");
 
+    evt = waitForMacEvent("AXSelectedChildrenChanged");
     select.setAttributeValue("AXSelectedChildren", [three, two, four]);
-    Assert.deepEqual(
-      getSelectedIds(select),
-      ["two", "three"],
-      "two and three are selected, four is disabled so it's not"
-    );
+    await evt;
+    await untilCacheOk(() => {
+      let ids = getSelectedIds(select);
+      return ids[0] == "two" && ids[1] == "three";
+    }, "Got correct selected children");
 
     ok(!four.getAttributeValue("AXEnabled"), "Disabled option is disabled");
   }
@@ -314,23 +318,25 @@ addAccessibleTask(
     });
     await evt;
     is(select.getAttributeValue("AXSelectedChildren").length, 0);
-
+    evt = waitForMacEvent("AXSelectedChildrenChanged");
     three.setAttributeValue("AXSelected", true);
+    await evt;
     is(select.getAttributeValue("AXSelectedChildren").length, 1);
     ok(getSelectedIds(select).includes("three"), "'three' is selected");
-
+    evt = waitForMacEvent("AXSelectedChildrenChanged");
     select.setAttributeValue("AXSelectedChildren", [one, two]);
-    Assert.deepEqual(
-      getSelectedIds(select),
-      ["one", "two"],
-      "one and two are selected"
-    );
+    await evt;
+    await untilCacheOk(() => {
+      let ids = getSelectedIds(select);
+      return ids[0] == "one" && ids[1] == "two";
+    }, "Got correct selected children");
 
+    evt = waitForMacEvent("AXSelectedChildrenChanged");
     select.setAttributeValue("AXSelectedChildren", [three, two, four]);
-    Assert.deepEqual(
-      getSelectedIds(select),
-      ["two", "three"],
-      "two and three are selected, four is disabled so it's not"
-    );
+    await evt;
+    await untilCacheOk(() => {
+      let ids = getSelectedIds(select);
+      return ids[0] == "two" && ids[1] == "three";
+    }, "Got correct selected children");
   }
 );
