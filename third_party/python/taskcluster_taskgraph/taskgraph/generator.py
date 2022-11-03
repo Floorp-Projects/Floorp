@@ -14,7 +14,7 @@ from .config import GraphConfig, load_graph_config
 from .graph import Graph
 from .morph import morph
 from .optimize.base import optimize_task_graph
-from .parameters import Parameters
+from .parameters import parameters_loader
 from .task import Task
 from .taskgraph import TaskGraph
 from .transforms.base import TransformConfig, TransformSequence
@@ -249,15 +249,15 @@ class TaskGraphGenerator:
                     continue
 
     def _run(self):
-        # Initial verifications that don't depend on any generation state.
-        verifications("initial")
-
         logger.info("Loading graph configuration.")
         graph_config = load_graph_config(self.root_dir)
 
         yield ("graph_config", graph_config)
 
         graph_config.register()
+
+        # Initial verifications that don't depend on any generation state.
+        verifications("initial")
 
         if callable(self._parameters):
             parameters = self._parameters(graph_config)
@@ -360,11 +360,14 @@ class TaskGraphGenerator:
             if t.attributes["kind"] == "docker-image"
         }
         # include all tasks with `always_target` set
-        always_target_tasks = {
-            t.label
-            for t in full_task_graph.tasks.values()
-            if t.attributes.get("always_target")
-        }
+        if parameters["enable_always_target"]:
+            always_target_tasks = {
+                t.label
+                for t in full_task_graph.tasks.values()
+                if t.attributes.get("always_target")
+            }
+        else:
+            always_target_tasks = set()
         logger.info(
             "Adding %d tasks with `always_target` attribute"
             % (len(always_target_tasks) - len(always_target_tasks & target_tasks))
@@ -383,6 +386,14 @@ class TaskGraphGenerator:
         do_not_optimize = set(parameters.get("do_not_optimize", []))
         if not parameters.get("optimize_target_tasks", True):
             do_not_optimize = set(target_task_set.graph.nodes).union(do_not_optimize)
+
+        # this is used for testing experimental optimization strategies
+        strategies = os.environ.get(
+            "TASKGRAPH_OPTIMIZE_STRATEGIES", parameters.get("optimize_strategies")
+        )
+        if strategies:
+            strategies = find_object(strategies)
+
         optimized_task_graph, label_to_taskid = optimize_task_graph(
             target_task_graph,
             requested_tasks,
@@ -390,6 +401,7 @@ class TaskGraphGenerator:
             do_not_optimize,
             self._decision_task_id,
             existing_tasks=existing_tasks,
+            strategy_override=strategies,
         )
 
         yield self.verify(
@@ -428,7 +440,7 @@ def load_tasks_for_kind(parameters, kind, root_dir=None):
     # make parameters read-write
     parameters = dict(parameters)
     parameters["target-kind"] = kind
-    parameters = Parameters(strict=False, **parameters)
+    parameters = parameters_loader(spec=None, strict=False, overrides=parameters)
     tgg = TaskGraphGenerator(root_dir=root_dir, parameters=parameters)
     return {
         task.task["metadata"]["name"]: task

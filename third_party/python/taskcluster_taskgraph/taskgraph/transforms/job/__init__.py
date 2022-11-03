@@ -79,6 +79,7 @@ job_description_schema = Schema(
                     Required("artifact"): str,
                     Optional("dest"): str,
                     Optional("extract"): bool,
+                    Optional("verify-hash"): bool,
                 },
             ],
         },
@@ -298,10 +299,12 @@ def use_fetches(config, jobs):
                         path = artifact
                         dest = None
                         extract = True
+                        verify_hash = False
                     else:
                         path = artifact["artifact"]
                         dest = artifact.get("dest")
                         extract = artifact.get("extract", True)
+                        verify_hash = artifact.get("verify-hash", False)
 
                     fetch = {
                         "artifact": f"{prefix}/{path}",
@@ -310,6 +313,8 @@ def use_fetches(config, jobs):
                     }
                     if dest is not None:
                         fetch["dest"] = dest
+                    if verify_hash:
+                        fetch["verify-hash"] = verify_hash
                     job_fetches.append(fetch)
 
         job_artifact_prefixes = {
