@@ -89,10 +89,17 @@ export class MozLitElement extends LitElement {
    * the `./mach addwidget` command.
    */
   static get stylesheetUrl() {
-    if (typeof AppConstants != "undefined") {
+    if (this.useChromeStylesheet) {
       return `chrome://global/content/elements/${this.LOCAL_NAME}.css`;
     }
     return `./${this.LOCAL_NAME}/${this.LOCAL_NAME}.css`;
+  }
+
+  static get useChromeStylesheet() {
+    return (
+      typeof AppConstants != "undefined" ||
+      (typeof Cu != "undefined" && Cu.isInAutomation)
+    );
   }
 
   connectedCallback() {
@@ -110,6 +117,8 @@ export class MozLitElement extends LitElement {
 
   update() {
     super.update();
-    document.l10n.translateFragment(this.renderRoot);
+    if (document.l10n) {
+      document.l10n.translateFragment(this.renderRoot);
+    }
   }
 }
