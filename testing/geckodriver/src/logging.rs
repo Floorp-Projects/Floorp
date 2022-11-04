@@ -36,10 +36,14 @@ use std::io;
 use std::io::Write;
 use std::str;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use unicode_segmentation::UnicodeSegmentation;
 
 use mozprofile::preferences::Pref;
 
 static MAX_LOG_LEVEL: AtomicUsize = AtomicUsize::new(0);
+
+const MAX_STRING_LENGTH: usize = 250;
+
 const LOGGED_TARGETS: &[&str] = &[
     "geckodriver",
     "mozdevice",
@@ -165,14 +169,24 @@ impl log::Log for Logger {
 
     fn log(&self, record: &log::Record) {
         if self.enabled(record.metadata()) {
-            let ts = format_ts(chrono::Local::now());
-            println!(
-                "{}\t{}\t{}\t{}",
-                ts,
-                record.target(),
-                record.level(),
-                record.args()
-            );
+            if let Some((s1, s2)) = truncate_message(record.args()) {
+                println!(
+                    "{}\t{}\t{}\t{} ... {}",
+                    format_ts(chrono::Local::now()),
+                    record.target(),
+                    record.level(),
+                    s1,
+                    s2
+                );
+            } else {
+                println!(
+                    "{}\t{}\t{}\t{}",
+                    format_ts(chrono::Local::now()),
+                    record.target(),
+                    record.level(),
+                    record.args()
+                )
+            }
         }
     }
 
@@ -212,9 +226,24 @@ fn format_ts(ts: chrono::DateTime<chrono::Local>) -> String {
     format!("{}{:03}", ts.timestamp(), ts.timestamp_subsec_millis())
 }
 
+/// Truncate a log message if it's too long
+fn truncate_message(args: &fmt::Arguments) -> Option<(String, String)> {
+    let message = format!("{}", args);
+    let chars = message.graphemes(true).collect::<Vec<&str>>();
+
+    if chars.len() > MAX_STRING_LENGTH {
+        let middle: usize = MAX_STRING_LENGTH / 2;
+        let s1 = chars[0..middle].concat();
+        let s2 = chars[chars.len() - middle..].concat();
+        Some((s1, s2))
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{format_ts, init_with_level, max_level, set_max_level, Level};
+    use super::*;
 
     use std::str::FromStr;
     use std::sync::Mutex;
@@ -332,5 +361,21 @@ mod tests {
         let ts = chrono::Local::now();
         let s = format_ts(ts);
         assert_eq!(s.len(), 13);
+    }
+
+    #[test]
+    fn test_truncate() {
+        let short_message = (0..MAX_STRING_LENGTH).map(|_| "x").collect::<String>();
+        // A message up to MAX_STRING_LENGTH is not truncated
+        assert_eq!(truncate_message(&format_args!("{}", short_message)), None);
+
+        let long_message = (0..MAX_STRING_LENGTH + 1).map(|_| "x").collect::<String>();
+        let part = (0..MAX_STRING_LENGTH / 2).map(|_| "x").collect::<String>();
+
+        // A message longer than MAX_STRING_LENGTH is truncated
+        assert_eq!(
+            truncate_message(&format_args!("{}", long_message)),
+            Some((part.to_owned(), part.to_owned()))
+        );
     }
 }

@@ -2049,6 +2049,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "tempfile",
+ "unicode-segmentation",
  "url",
  "uuid",
  "webdriver",
