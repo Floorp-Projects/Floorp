@@ -550,6 +550,7 @@ asserts(0-3) load 914501.html # bug 1144852 - all platforms
 load 914891.html
 load 915475.xhtml
 load 927558.html
+load 942794-1.html
 load 943509-1.html
 load 944909-1.html
 load 946167-1.html
