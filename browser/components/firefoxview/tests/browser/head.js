@@ -10,6 +10,9 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
+const MOBILE_PROMO_DISMISSED_PREF =
+  "browser.tabs.firefox-view.mobilePromo.dismissed";
+
 const syncedTabsData1 = [
   {
     id: 1,
@@ -347,13 +350,42 @@ async function touchLastTabFetch() {
   await TestUtils.waitForTick();
 }
 
+let gUIStateSyncEnabled;
+function setupMocks({ fxaDevices = null, state, syncEnabled = true }) {
+  gUIStateStatus = state || UIState.STATUS_SIGNED_IN;
+  gUIStateSyncEnabled = syncEnabled;
+  if (gSandbox) {
+    gSandbox.restore();
+  }
+  const sandbox = (gSandbox = sinon.createSandbox());
+  gMockFxaDevices = fxaDevices;
+  sandbox.stub(fxAccounts.device, "recentDeviceList").get(() => fxaDevices);
+  sandbox.stub(UIState, "get").callsFake(() => {
+    return {
+      status: gUIStateStatus,
+      // Sometimes syncEnabled is not present on UIState, for example when the user signs
+      // out the state is just { status: "not_configured" }
+      ...(gUIStateSyncEnabled != undefined && {
+        syncEnabled: gUIStateSyncEnabled,
+      }),
+    };
+  });
+  return sandbox;
+}
+
+async function tearDown(sandbox) {
+  sandbox?.restore();
+  Services.prefs.clearUserPref("services.sync.lastTabFetch");
+  Services.prefs.clearUserPref(MOBILE_PROMO_DISMISSED_PREF);
+}
+
 /**
- * Opens and then closes a tab so that Firefox View can have
- * a tab available in the recently closed list
+ * Helper function to open and close a tab so the recently
+ * closed tabs list can have data.
  *
  * @param {string} url
- * @return {Promise} Promise that is resolved when the session
- * store has observed that the newly created tab has been closed
+ * @return {Promise} Promise that resolves when the session store
+ * has been updated after closing the tab.
  */
 async function open_then_close(url) {
   let { updatePromise } = await BrowserTestUtils.withNewTab(
@@ -370,6 +402,10 @@ async function open_then_close(url) {
   return TestUtils.topicObserved("sessionstore-closed-objects-changed");
 }
 
+/**
+ * Clears session history. Used to clear out the recently closed tabs list.
+ *
+ */
 function clearHistory() {
   Services.obs.notifyObservers(null, "browser:purge-session-history");
 }

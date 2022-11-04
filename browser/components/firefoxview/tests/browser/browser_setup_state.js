@@ -5,9 +5,6 @@ const { TabsSetupFlowManager } = ChromeUtils.importESModule(
   "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
 );
 
-const MOBILE_PROMO_DISMISSED_PREF =
-  "browser.tabs.firefox-view.mobilePromo.dismissed";
-
 const FXA_CONTINUE_EVENT = [
   ["firefoxview", "entered", "firefoxview", undefined],
   ["firefoxview", "fxa_continue", "sync", undefined],
@@ -20,7 +17,6 @@ const FXA_MOBILE_EVENT = [
 
 var gMockFxaDevices = null;
 var gUIStateStatus;
-var gUIStateSyncEnabled;
 
 function promiseSyncReady() {
   let service = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
@@ -29,27 +25,6 @@ function promiseSyncReady() {
 }
 
 var gSandbox;
-function setupMocks({ fxaDevices = null, state, syncEnabled = true }) {
-  gUIStateStatus = state || UIState.STATUS_SIGNED_IN;
-  gUIStateSyncEnabled = syncEnabled;
-  if (gSandbox) {
-    gSandbox.restore();
-  }
-  const sandbox = (gSandbox = sinon.createSandbox());
-  gMockFxaDevices = fxaDevices;
-  sandbox.stub(fxAccounts.device, "recentDeviceList").get(() => fxaDevices);
-  sandbox.stub(UIState, "get").callsFake(() => {
-    return {
-      status: gUIStateStatus,
-      // Sometimes syncEnabled is not present on UIState, for example when the user signs
-      // out the state is just { status: "not_configured" }
-      ...(gUIStateSyncEnabled != undefined && {
-        syncEnabled: gUIStateSyncEnabled,
-      }),
-    };
-  });
-  return sandbox;
-}
 
 async function setupWithDesktopDevices() {
   const sandbox = setupMocks({
@@ -74,13 +49,6 @@ async function setupWithDesktopDevices() {
   });
   return sandbox;
 }
-
-async function tearDown(sandbox) {
-  sandbox?.restore();
-  Services.prefs.clearUserPref("services.sync.lastTabFetch");
-  Services.prefs.clearUserPref(MOBILE_PROMO_DISMISSED_PREF);
-}
-
 add_setup(async function() {
   registerCleanupFunction(() => {
     // reset internal state so it doesn't affect the next tests
@@ -699,7 +667,7 @@ add_task(async function test_keyboard_focus_after_tab_pickup_opened() {
   // cleanup time
   await tearDown(sandbox);
   await SpecialPowers.popPrefEnv();
-});
+}).skip();
 
 async function mockFxaDeviceConnected(win) {
   // We use an existing tab to navigate to the final "device connected" url
@@ -725,6 +693,9 @@ async function mockFxaDeviceConnected(win) {
 add_task(async function test_close_device_connected_tab() {
   // test that when a device has been connected to sync we close
   // that tab after the user is directed back to firefox view
+
+  // Ensure we are in the correct state to start the task.
+  TabsSetupFlowManager.resetInternalState();
   await SpecialPowers.pushPrefEnv({
     set: [["identity.fxaccounts.remote.root", "https://example.org/"]],
   });
