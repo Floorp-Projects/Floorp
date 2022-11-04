@@ -3538,12 +3538,6 @@ void StyleCalcNode::ScaleLengthsBy(float aScale) {
       ScaleNode(*clamp.max);
       break;
     }
-    case Tag::Round: {
-      const auto& round = AsRound();
-      ScaleNode(*round.value);
-      ScaleNode(*round.step);
-      break;
-    }
     case Tag::MinMax: {
       for (auto& child : AsMinMax()._0.AsSpan()) {
         ScaleNode(child);
@@ -3585,53 +3579,6 @@ ResultT StyleCalcNode::ResolveInternal(ResultT aPercentageBasis,
       auto center = clamp.center->ResolveInternal(aPercentageBasis, aConverter);
       auto max = clamp.max->ResolveInternal(aPercentageBasis, aConverter);
       return std::max(min, std::min(center, max));
-    }
-    case Tag::Round: {
-      const auto& round = AsRound();
-
-      // Make sure to do the math in CSS pixels, so that floor() and ceil()
-      // below round to an integer number of CSS pixels, not app units.
-      CSSCoord step, value;
-      if constexpr (std::is_same_v<ResultT, CSSCoord>) {
-        step = round.step->ResolveInternal(aPercentageBasis, aConverter);
-        value = round.value->ResolveInternal(aPercentageBasis, aConverter);
-      } else {
-        step = CSSPixel::FromAppUnits(
-            round.step->ResolveInternal(aPercentageBasis, aConverter));
-        value = CSSPixel::FromAppUnits(
-            round.value->ResolveInternal(aPercentageBasis, aConverter));
-      }
-
-      const float div = value / step;
-      const CSSCoord lowerBound = std::floor(div) * step;
-      const CSSCoord upperBound = std::ceil(div) * step;
-
-      const CSSCoord result = [&] {
-        switch (round.strategy) {
-          case StyleRoundingStrategy::Nearest: {
-            // In case of a tie, use the upper bound
-            if (value - lowerBound < upperBound - value) {
-              return lowerBound;
-            }
-            return upperBound;
-          }
-          case StyleRoundingStrategy::Up:
-            return upperBound;
-          case StyleRoundingStrategy::Down:
-            return lowerBound;
-          case StyleRoundingStrategy::ToZero: {
-            // In case of a tie, use the upper bound
-            return std::abs(lowerBound) < std::abs(upperBound) ? lowerBound
-                                                               : upperBound;
-          }
-        }
-      }();
-
-      if constexpr (std::is_same_v<ResultT, CSSCoord>) {
-        return result;
-      } else {
-        return CSSPixel::ToAppUnits(result);
-      }
     }
     case Tag::MinMax: {
       auto children = AsMinMax()._0.AsSpan();
