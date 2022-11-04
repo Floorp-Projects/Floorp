@@ -179,14 +179,18 @@ add_setup(async function enableHtmlViews() {
       updateDate: new Date("2022-03-07T01:00:00"),
     },
     {
+      // NOTE: Keep the mock properties in sync with the one that
+      // SitePermsAddonWrapper would be providing in real synthetic
+      // addon entries managed by the SitePermsAddonProvider.
       id: "sitepermission@mochi.test",
+      version: "2.0",
       name: "Test site permission add-on",
-      creator: { name: "you got it" },
       description: "permission description",
       fullDescription: "detailed description",
       siteOrigin: "http://mochi.test",
       sitePermissions: ["midi"],
       type: "sitepermission",
+      permissions: AddonManager.PERM_CAN_UNINSTALL,
     },
     {
       id: "theme1@mochi.test",
@@ -867,7 +871,6 @@ add_task(async function testStaticTheme() {
 
 add_task(async function testSitePermission() {
   let win = await loadInitialView("sitepermission");
-  let doc = win.document;
 
   // The list card.
   let card = getAddonCard(win, "sitepermission@mochi.test");
@@ -883,38 +886,21 @@ add_task(async function testSitePermission() {
   // Check all the deck buttons are hidden.
   assertDeckHeadingHidden(card.details.tabGroup);
 
-  let rows = getDetailRows(card);
-  is(rows.length, 4, "There are 4 rows");
-
   let sitepermissionsRow = card.querySelector(".addon-detail-sitepermissions");
   is(
-    sitepermissionsRow.hidden,
-    false,
+    BrowserTestUtils.is_visible(sitepermissionsRow),
+    true,
     "AddonSitePermissionsList should be visible for this addon type"
   );
 
-  // Automatic updates.
-  let row = rows.shift();
-  checkLabel(row, "updates");
+  let [versionRow, ...restRows] = getDetailRows(card);
+  checkLabel(versionRow, "version");
 
-  // Private browsing.
-  let privateRow = rows.shift();
-  checkLabel(privateRow, "private-browsing");
-
-  let help = rows.shift();
-  ok(help.classList.contains("addon-detail-help-row"), "There's a help row");
-  ok(!row.hidden, "The help row is shown");
-  is(
-    doc.l10n.getAttributes(help).id,
-    "addon-detail-private-browsing-help",
-    "The help row is for private browsing"
+  Assert.deepEqual(
+    restRows.map(row => row.getAttribute("class")),
+    [],
+    "All other details row are hidden as expected"
   );
-
-  // Author.
-  let author = rows.shift();
-  checkLabel(author, "author");
-
-  is(rows.length, 0, "There was only 1 row");
 
   let permissions = Array.from(
     card.querySelectorAll(".addon-permissions-list .permission-info")

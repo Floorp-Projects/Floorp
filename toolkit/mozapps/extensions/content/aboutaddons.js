@@ -2906,10 +2906,12 @@ class AddonDetails extends HTMLElement {
       "upgrade"
     );
 
-    // By default, all private browsing rows are hidden. Possibly show one.
-    if (addon.type != "extension" && addon.type != "sitepermission") {
-      // All add-addons of this type are allowed in private browsing mode, so
-      // do not show any UI.
+    if (addon.type != "extension") {
+      // Don't show any private browsing related section for non-extension
+      // addon types, because not relevant or they are either always allowed
+      // (e.g. static themes).
+      //
+      // TODO(Bug 1799090): introduce ad-hoc UI for "sitepermission" addon type.
     } else if (addon.incognito == "not_allowed") {
       let pbRowNotAllowed = this.querySelector(
         ".addon-detail-row-private-browsing-disallowed"
@@ -3443,10 +3445,9 @@ class AddonCard extends HTMLElement {
     }
 
     // Set the private browsing badge visibility.
-    if (
-      addon.incognito != "not_allowed" &&
-      (addon.type == "extension" || addon.type == "sitepermission")
-    ) {
+    // TODO: We don't show the badge for SitePermsAddon for now, but this should
+    // be handled in Bug 1799090.
+    if (addon.incognito != "not_allowed" && addon.type == "extension") {
       // Keep update synchronous, the badge can appear later.
       isAllowedInPrivateBrowsing(addon).then(isAllowed => {
         card.querySelector(
