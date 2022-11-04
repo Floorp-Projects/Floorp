@@ -12,9 +12,10 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 
 const MOBILE_PROMO_DISMISSED_PREF =
   "browser.tabs.firefox-view.mobilePromo.dismissed";
-
 const RECENTLY_CLOSED_STATE_PREF =
   "browser.tabs.firefox-view.ui-state.recently-closed-tabs.open";
+const TAB_PICKUP_STATE_PREF =
+  "browser.tabs.firefox-view.ui-state.tab-pickup.open";
 
 const calloutId = "root";
 const calloutSelector = `#${calloutId}.featureCallout`;
@@ -478,4 +479,14 @@ async function open_then_close(url) {
  */
 function clearHistory() {
   Services.obs.notifyObservers(null, "browser:purge-session-history");
+}
+
+/**
+ * Cleanup function for tab pickup tests.
+ *
+ */
+function cleanup_tab_pickup() {
+  Services.prefs.clearUserPref("services.sync.engine.tabs");
+  Services.prefs.clearUserPref("services.sync.lastTabFetch");
+  Services.prefs.clearUserPref(TAB_PICKUP_STATE_PREF);
 }

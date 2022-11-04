@@ -83,3 +83,24 @@ add_task(async function test_keyboard_focus_after_tab_pickup_opened() {
   await tearDown(sandbox);
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function test_keyboard_accessibility_tab_pickup() {
+  await withFirefoxView({}, async browser => {
+    const win = browser.ownerGlobal;
+    const { document } = browser.contentWindow;
+    const enter = async () => {
+      info("Enter");
+      EventUtils.synthesizeKey("KEY_Enter", {}, win);
+    };
+    let details = document.getElementById("tab-pickup-container");
+    let summary = details.querySelector("summary");
+    ok(summary, "summary element should exist");
+    ok(details.open, "Tab pickup container should be initially open on load");
+    summary.focus();
+    await enter();
+    ok(!details.open, "Tab pickup container should be closed");
+    await enter();
+    ok(details.open, "Tab pickup container should be opened");
+  });
+  cleanup_tab_pickup();
+});
