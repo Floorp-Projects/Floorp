@@ -90,7 +90,7 @@ class CookieCommons final {
 
   static bool CheckName(const CookieStruct& aCookieData);
 
-  static bool CheckHttpValue(const CookieStruct& aCookieData);
+  static bool CheckValue(const CookieStruct& aCookieData);
 
   static bool CheckCookiePermission(nsIChannel* aChannel,
                                     CookieStruct& aCookieData);
