@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "nsUpdateDriver.h"
+
+#include "nsDebug.h"
 #include "nsXULAppAPI.h"
 #include "nsAppRunner.h"
 #include "nsIFile.h"
@@ -23,10 +25,12 @@
 #include "mozilla/Preferences.h"
 #include "nsPrintfCString.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/ErrorNames.h"
 #include "mozilla/Printf.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIObserverService.h"
 #include "nsNetCID.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Promise.h"
 
@@ -209,14 +213,14 @@ static bool GetStatusFileContents(nsIFile* statusFile, char (&buf)[Size]) {
   return (n >= 0);
 }
 
-typedef enum {
+enum UpdateStatus {
   eNoUpdateAction,
   ePendingUpdate,
   ePendingService,
   ePendingElevate,
   eAppliedUpdate,
   eAppliedService,
-} UpdateStatus;
+};
 
 /**
  * Returns a value indicating what needs to be done in order to handle an
@@ -788,7 +792,7 @@ nsUpdateProcessor::ProcessUpdate() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Copy the parameters to the StagedUpdateInfo structure shared with the
-  // watcher thread.
+  // worker thread.
   mInfo.mGREDir = greDir;
   mInfo.mAppDir = appDir;
   mInfo.mUpdateRoot = updRoot;
@@ -800,39 +804,60 @@ nsUpdateProcessor::ProcessUpdate() {
   nsCOMPtr<nsIRunnable> r =
       NewRunnableMethod("nsUpdateProcessor::StartStagedUpdate", this,
                         &nsUpdateProcessor::StartStagedUpdate);
-  return NS_NewNamedThread("Update Watcher", getter_AddRefs(mProcessWatcher),
-                           r);
+  return NS_NewNamedThread("UpdateProcessor", getter_AddRefs(mWorkerThread), r);
 }
 
 void nsUpdateProcessor::StartStagedUpdate() {
   MOZ_ASSERT(!NS_IsMainThread(), "main thread");
 
+  // If we fail to launch the updater process or its monitor for some reason, we
+  // need to shut down the worker thread, as there isn't anything more for us to
+  // do.
+  auto onExitStopThread = mozilla::MakeScopeExit([&] {
+    nsresult rv = NS_DispatchToMainThread(
+        NewRunnableMethod("nsUpdateProcessor::ShutdownWorkerThread", this,
+                          &nsUpdateProcessor::ShutdownWorkerThread));
+    NS_ENSURE_SUCCESS_VOID(rv);
+  });
+
+  // Launch updater. (We do this on a worker thread to avoid blocking the main
+  // thread with file I/O.)
   nsresult rv = ProcessUpdates(mInfo.mGREDir, mInfo.mAppDir, mInfo.mUpdateRoot,
                                mInfo.mArgc, mInfo.mArgv,
                                mInfo.mAppVersion.get(), false, &mUpdaterPID);
-  NS_ENSURE_SUCCESS_VOID(rv);
-
-  if (mUpdaterPID) {
-    // Track the state of the updater process while it is staging an update.
-    rv = NS_DispatchToCurrentThread(
-        NewRunnableMethod("nsUpdateProcessor::WaitForProcess", this,
-                          &nsUpdateProcessor::WaitForProcess));
-    NS_ENSURE_SUCCESS_VOID(rv);
-  } else {
-    // Failed to launch the updater process for some reason.
-    // We need to shutdown the current thread as there isn't anything more for
-    // us to do...
-    rv = NS_DispatchToMainThread(
-        NewRunnableMethod("nsUpdateProcessor::ShutdownWatcherThread", this,
-                          &nsUpdateProcessor::ShutdownWatcherThread));
-    NS_ENSURE_SUCCESS_VOID(rv);
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(sUpdateLog, mozilla::LogLevel::Error,
+            ("could not start updater process: %s", GetStaticErrorName(rv)));
+    return;
   }
+
+  if (!mUpdaterPID) {
+    // not an error
+    MOZ_LOG(sUpdateLog, mozilla::LogLevel::Verbose,
+            ("ProcessUpdates() indicated nothing to do"));
+    return;
+  }
+
+  // Monitor the state of the updater process while it is staging an update.
+  rv = NS_DispatchToCurrentThread(
+      NewRunnableMethod("nsUpdateProcessor::WaitForProcess", this,
+                        &nsUpdateProcessor::WaitForProcess));
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(sUpdateLog, mozilla::LogLevel::Error,
+            ("could not start updater process poll: error %s",
+             GetStaticErrorName(rv)));
+    return;
+  }
+
+  // Leave the worker thread alive to run WaitForProcess. Either it or its
+  // successors will be responsible for shutting down the worker thread.
+  onExitStopThread.release();
 }
 
-void nsUpdateProcessor::ShutdownWatcherThread() {
+void nsUpdateProcessor::ShutdownWorkerThread() {
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
-  mProcessWatcher->Shutdown();
-  mProcessWatcher = nullptr;
+  mWorkerThread->Shutdown();
+  mWorkerThread = nullptr;
 }
 
 void nsUpdateProcessor::WaitForProcess() {
@@ -859,7 +884,7 @@ void nsUpdateProcessor::UpdateDone() {
     um->RefreshUpdateStatus(getter_AddRefs(outPromise));
   }
 
-  ShutdownWatcherThread();
+  ShutdownWorkerThread();
 }
 
 NS_IMETHODIMP
