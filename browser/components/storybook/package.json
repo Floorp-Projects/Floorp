@@ -22,8 +22,5 @@
     "@storybook/web-components": "^6.4.8",
     "babel-loader": "^8.2.3",
     "lit": "^2.2.2"
-  },
-  "dependencies": {
-    "mozilla-central": "file:../../.."
   }
 }
