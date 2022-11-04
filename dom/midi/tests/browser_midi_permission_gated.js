@@ -45,6 +45,7 @@ add_setup(async function() {
 add_task(async function testRequestMIDIAccess() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, EXAMPLE_COM_URL);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  const testPageHost = gBrowser.selectedTab.linkedBrowser.documentURI.host;
 
   info("Check that midi-sysex isn't set");
   ok(
@@ -68,6 +69,28 @@ add_task(async function testRequestMIDIAccess() {
 
   info("Deny site permission addon install");
   let addonInstallPanel = await onAddonInstallBlockedNotification;
+  const [
+    installPopupHeader,
+    installPopupMessage,
+  ] = addonInstallPanel.querySelectorAll(
+    "description.popup-notification-description"
+  );
+  is(
+    installPopupHeader.textContent,
+    gNavigatorBundle.getFormattedString("xpinstallPromptMessage.header", [
+      testPageHost,
+    ]),
+    "First popup has expected header text"
+  );
+  is(
+    installPopupMessage.textContent,
+    gNavigatorBundle.getFormattedString(
+      "sitePermissionsInstallPromptMessage.message",
+      [testPageHost]
+    ),
+    "First popup has expected message"
+  );
+
   let notification = addonInstallPanel.childNodes[0];
   // secondaryButton is the "Don't allow" button
   notification.secondaryButton.click();
@@ -108,6 +131,24 @@ add_task(async function testRequestMIDIAccess() {
   let dialogPromise = waitForInstallDialog();
   notification.button.click();
   let installDialog = await dialogPromise;
+  is(
+    installDialog.querySelector(".popup-notification-description").textContent,
+    gNavigatorBundle.getFormattedString(
+      "webextSitePerms.headerWithGatedPerms.midi-sysex",
+      [`Site Permissions for ${testPageHost}`, testPageHost]
+    ),
+    "Install dialog has expected header text"
+  );
+  is(
+    installDialog.querySelector("popupnotificationcontent description")
+      .textContent,
+    gNavigatorBundle.getFormattedString(
+      "webextSitePerms.descriptionGatedPerms",
+      [testPageHost]
+    ),
+    "Install dialog has expected description"
+  );
+
   installDialog.button.click();
 
   info("Wait for the midi-sysex access request promise to resolve");
@@ -174,6 +215,25 @@ add_task(async function testRequestMIDIAccess() {
   dialogPromise = waitForInstallDialog();
   notification.button.click();
   installDialog = await dialogPromise;
+
+  is(
+    installDialog.querySelector(".popup-notification-description").textContent,
+    gNavigatorBundle.getFormattedString(
+      "webextSitePerms.headerWithGatedPerms.midi",
+      [`Site Permissions for ${testPageHost}`, testPageHost]
+    ),
+    "Install dialog has expected header text"
+  );
+  is(
+    installDialog.querySelector("popupnotificationcontent description")
+      .textContent,
+    gNavigatorBundle.getFormattedString(
+      "webextSitePerms.descriptionGatedPerms",
+      [testPageHost]
+    ),
+    "Install dialog has expected description"
+  );
+
   installDialog.button.click();
 
   info("Wait for the midi access request promise to resolve");
