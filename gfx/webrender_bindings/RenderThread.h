@@ -306,7 +306,7 @@ class RenderThread final {
   explicit RenderThread(RefPtr<nsIThread> aThread);
 
   void DeferredRenderTextureHostDestroy();
-  void ShutDownTask(layers::SynchronousTask* aTask);
+  void ShutDownTask();
   void InitDeviceTask();
   void PostRunnable(already_AddRefed<nsIRunnable> aRunnable);
 
