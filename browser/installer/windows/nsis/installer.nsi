@@ -41,6 +41,7 @@ Var AddStartMenuSC
 Var AddTaskbarSC
 Var AddQuickLaunchSC
 Var AddDesktopSC
+Var AddPrivateBrowsingSC
 Var InstallMaintenanceService
 Var InstallOptionalExtensions
 Var ExtensionRecommender
@@ -395,6 +396,10 @@ Section "-Application" APP_IDX
     StrCpy $AddStartMenuSC "1"
   ${EndIf}
 
+  ${If} $AddPrivateBrowsingSC == ""
+    StrCpy $AddPrivateBrowsingSC "1"
+  ${EndIf}
+
   ; Default for creating Quick Launch shortcut (1 = create, 0 = don't create)
   ${If} $AddQuickLaunchSC == ""
     ; Don't install the quick launch shortcut on Windows 7
@@ -619,7 +624,9 @@ Section "-Application" APP_IDX
   ; native "Pin to Taskbar" functionality can find an appropriate shortcut.
   ; See https://bugzilla.mozilla.org/show_bug.cgi?id=1762994 for additional
   ; background.
-  ${AddPrivateBrowsingShortcut}
+  ${If} $AddPrivateBrowsingSC == 1
+    ${AddPrivateBrowsingShortcut}
+  ${EndIf}
 
   ; Update lastwritetime of the Start Menu shortcut to clear the tile cache.
   ; Do this for both shell contexts in case the user has shortcuts in multiple
