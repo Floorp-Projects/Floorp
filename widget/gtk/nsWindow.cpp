@@ -2086,6 +2086,9 @@ void nsWindow::WaylandPopupSetDirectPosition() {
 
   GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
   nsWindow* window = get_window_for_gtk_widget(GTK_WIDGET(parentGtkWindow));
+  if (!window) {
+    return;
+  }
   GdkWindow* gdkWindow =
       gtk_widget_get_window(GTK_WIDGET(window->GetMozContainer()));
 
