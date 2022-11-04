@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { html } from "lit";
-
+// Imported for side-effects.
+// eslint-disable-next-line import/no-unassigned-import
 import "toolkit-widgets/message-bar.js";
 
 const MESSAGE_TYPES = {
