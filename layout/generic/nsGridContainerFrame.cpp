@@ -6247,6 +6247,7 @@ void nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
 
       // Check if we need to apply "Automatic Minimum Size" and cache it.
       if ((state & TrackSize::eAutoMinSizing) &&
+          !(state & TrackSize::eFlexMaxSizing) &&
           gridItem.ShouldApplyAutoMinSize(wm, mAxis, aPercentageBasis)) {
         gridItem.mState[mAxis] |= ItemState::eApplyAutoMinSize;
       }
