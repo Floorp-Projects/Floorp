@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: taskcluster-taskgraph
-Version: 3.5.1
+Version: 3.2.1
 Summary: Build taskcluster taskgraphs
 Home-page: https://github.com/taskcluster/taskgraph
 License: UNKNOWN
@@ -26,8 +26,6 @@ Requires-Dist: requests-unixsocket (>=0.2)
 Requires-Dist: slugid (>=2.0)
 Requires-Dist: taskcluster-urls (>=11.0)
 Requires-Dist: voluptuous (>=0.12.1)
-Provides-Extra: load-image
-Requires-Dist: zstandard ; extra == 'load-image'
 
 UNKNOWN
 

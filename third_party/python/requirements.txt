@@ -328,9 +328,9 @@ six==1.13.0; (python_version >= "2.6" and python_full_version < "3.0.0") or (pyt
 slugid==2.0.0 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297
-taskcluster-taskgraph==3.5.1 \
-    --hash=sha256:e08b935175349ef8728ff5f19c7e9866a562256180f5580b291da3217cb5016c \
-    --hash=sha256:dc56b87228fb8eb1ef611750202344817a8cf5d825c0dc7e2dcc0f8b2795cbcd
+taskcluster-taskgraph==3.2.1 \
+    --hash=sha256:87498ce08c5d2bfe0fd0b1a860e3dc2b9eba4d7acb883e9e5c2b6f7f15281a34 \
+    --hash=sha256:c638724f0d514a3fc2d6ba34ddd395cfe021312dcf78b01c789ec4c7bf068cf0
 taskcluster-urls==13.0.1 \
     --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
     --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \
