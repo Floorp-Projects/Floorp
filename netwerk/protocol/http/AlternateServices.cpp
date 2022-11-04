@@ -898,8 +898,8 @@ void AltSvcCache::EnsureStorageInited() {
   }
 
   SyncRunnable::DispatchToThread(
-      main, new SyncRunnable(NS_NewRunnableFunction(
-                "AltSvcCache::EnsureStorageInited", initTask)));
+      main,
+      NS_NewRunnableFunction("AltSvcCache::EnsureStorageInited", initTask));
 }
 
 already_AddRefed<AltSvcMapping> AltSvcCache::LookupMapping(

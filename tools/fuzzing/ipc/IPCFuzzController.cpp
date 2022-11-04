@@ -622,12 +622,11 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
 
   SyncRunnable::DispatchToThread(
       GetMainThreadEventTarget(),
-      new SyncRunnable(NS_NewRunnableFunction(
-          "IPCFuzzController::StartFuzzing", [&]() -> void {
-            MOZ_FUZZING_NYX_PRINT("INFO: Main thread runnable start.\n");
-            NS_ProcessPendingEvents(NS_GetCurrentThread());
-            MOZ_FUZZING_NYX_PRINT("INFO: Main thread runnable done.\n");
-          })));
+      NS_NewRunnableFunction("IPCFuzzController::StartFuzzing", [&]() -> void {
+        MOZ_FUZZING_NYX_PRINT("INFO: Main thread runnable start.\n");
+        NS_ProcessPendingEvents(NS_GetCurrentThread());
+        MOZ_FUZZING_NYX_PRINT("INFO: Main thread runnable done.\n");
+      }));
 
   MOZ_FUZZING_NYX_PRINT("INFO: Performing snapshot...\n");
   Nyx::instance().start();
