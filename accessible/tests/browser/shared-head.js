@@ -512,10 +512,6 @@ function accessibleTask(doc, task, options = {}) {
         }
 
         await SimpleTest.promiseFocus(browser);
-        await loadContentScripts(browser, {
-          script: "Common.sys.mjs",
-          symbol: "CommonUtils",
-        });
 
         if (options.chrome) {
           ok(!browser.isRemoteBrowser, "Not remote browser");
@@ -550,6 +546,11 @@ function accessibleTask(doc, task, options = {}) {
                   .firstChild;
           }
         }
+
+        await loadContentScripts(browser, {
+          script: "Common.sys.mjs",
+          symbol: "CommonUtils",
+        });
 
         await task(
           browser,
