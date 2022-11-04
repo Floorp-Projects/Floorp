@@ -65,7 +65,7 @@ addAccessibleTask(
 );
 
 /**
- * radios
+ * HTML radios
  */
 addAccessibleTask(
   `<form>
@@ -74,12 +74,15 @@ addAccessibleTask(
   </form>
 
   <input type="radio" id="radio3" name="group2"/>
-  <input type="radio" id="radio4" name="group2"/>
+  <label><input type="radio" id="radio4" name="group2"/></label>
 
   <form>
     <input type="radio" style="display: none;" name="group3">
     <input type="radio" id="radio5" name="group3">
-  </form>`,
+    <input type="radio" id="radio6" name="group4">
+  </form>
+
+  <input type="radio" id="radio7">`,
   async function(browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
@@ -91,11 +94,20 @@ addAccessibleTask(
     // ////////////////////////////////////////////////////////////////////////
     // HTML input@type="radio" within document
     testGroupAttrs(getAcc("radio3"), 1, 2);
+    // radio4 is wrapped in a label
     testGroupAttrs(getAcc("radio4"), 2, 2);
 
     // ////////////////////////////////////////////////////////////////////////
     // Hidden HTML input@type="radio"
     testGroupAttrs(getAcc("radio5"), 1, 1);
+
+    // ////////////////////////////////////////////////////////////////////////
+    // HTML input@type="radio" with different name but same parent
+    testGroupAttrs(getAcc("radio6"), 1, 1);
+
+    // ////////////////////////////////////////////////////////////////////////
+    // HTML input@type="radio" with no name
+    testGroupAttrs(getAcc("radio7"), 0, 0);
   },
   {
     topLevel: !isWinNoCache,
