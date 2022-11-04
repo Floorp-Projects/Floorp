@@ -127,6 +127,9 @@
 !define MOZ_OPTIONAL_EXTENSIONS
 !endif
 
+# To add Private Browsing shortcut argument to setup.exe
+!define MOZ_PRIVATE_BROWSING
+
 # File details shared by both the installer and uninstaller
 VIProductVersion "1.0.0.0"
 VIAddVersionKey "ProductName"     "${BrandShortName}"
