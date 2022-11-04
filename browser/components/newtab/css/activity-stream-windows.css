@@ -88,7 +88,6 @@ body[lwt-newtab-brighttext] {
     --newtab-text-secondary-color: var(--newtab-text-primary-color);
   }
 }
-
 .icon {
   background-position: center center;
   background-repeat: no-repeat;
