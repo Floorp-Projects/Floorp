@@ -47,7 +47,9 @@ def argument(*args, **kwargs):
 
 def format_taskgraph_labels(taskgraph):
     return "\n".join(
-        taskgraph.tasks[index].label for index in taskgraph.graph.visit_postorder()
+        sorted(
+            taskgraph.tasks[index].label for index in taskgraph.graph.visit_postorder()
+        )
     )
 
 

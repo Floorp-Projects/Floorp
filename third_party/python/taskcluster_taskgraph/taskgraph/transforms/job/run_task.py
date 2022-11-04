@@ -157,7 +157,6 @@ def docker_worker_run_task(config, job, taskdesc):
     if isinstance(run_command, str) or isinstance(run_command, dict):
         exec_cmd = EXEC_COMMANDS[run.pop("exec-with", "bash")]
         run_command = exec_cmd + [run_command]
-    command.append("--fetch-hgfingerprint")
     if run["run-as-root"]:
         command.extend(("--user", "root", "--group", "root"))
     command.append("--")

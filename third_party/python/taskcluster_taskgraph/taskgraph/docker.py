@@ -7,6 +7,12 @@ import json
 import os
 import tarfile
 from io import BytesIO
+from textwrap import dedent
+
+try:
+    import zstandard as zstd
+except ImportError as e:
+    zstd = e
 
 from taskgraph.util import docker
 from taskgraph.util.taskcluster import get_artifact_url, get_session
@@ -115,7 +121,15 @@ def load_image(url, imageName=None, imageTag=None):
 
     Returns an object with properties 'image', 'tag' and 'layer'.
     """
-    import zstandard as zstd
+    if isinstance(zstd, ImportError):
+        raise ImportError(
+            dedent(
+                """
+                zstandard is not installed! Use `pip install taskcluster-taskgraph[load-image]`
+                to use this feature.
+                """
+            )
+        ) from zstd
 
     # If imageName is given and we don't have an imageTag
     # we parse out the imageTag from imageName, or default it to 'latest'

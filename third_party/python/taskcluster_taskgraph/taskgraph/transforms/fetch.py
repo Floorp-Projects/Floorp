@@ -157,6 +157,10 @@ def make_task(config, jobs):
                 "tier": 1,
             }
 
+        if job.get("secret", None):
+            task["scopes"] = ["secrets:get:" + job.get("secret")]
+            task["worker"]["taskcluster-proxy"] = True
+
         if not taskgraph.fast:
             cache_name = task["label"].replace(f"{config.kind}-", "", 1)
 
@@ -282,8 +286,14 @@ def create_fetch_url_task(config, name, fetch):
     schema={
         Required("repo"): str,
         Required("revision"): str,
+        Optional("include-dot-git"): bool,
         Optional("artifact-name"): str,
         Optional("path-prefix"): str,
+        # ssh-key is a taskcluster secret path (e.g. project/civet/github-deploy-key)
+        # In the secret dictionary, the key should be specified as
+        #  "ssh_privkey": "-----BEGIN OPENSSH PRIVATE KEY-----\nkfksnb3jc..."
+        # n.b. The OpenSSH private key file format requires a newline at the end of the file.
+        Optional("ssh-key"): str,
     },
 )
 def create_git_fetch_task(config, name, fetch):
@@ -307,8 +317,19 @@ def create_git_fetch_task(config, name, fetch):
         "/builds/worker/artifacts/%s" % artifact_name,
     ]
 
+    ssh_key = fetch.get("ssh-key")
+    if ssh_key:
+        args.append("--ssh-key-secret")
+        args.append(ssh_key)
+
+    digest_data = [fetch["revision"], path_prefix, artifact_name]
+    if fetch.get("include-dot-git", False):
+        args.append("--include-dot-git")
+        digest_data.append(".git")
+
     return {
         "command": args,
         "artifact_name": artifact_name,
-        "digest_data": [fetch["revision"], path_prefix, artifact_name],
+        "digest_data": digest_data,
+        "secret": ssh_key,
     }
