@@ -822,7 +822,7 @@ function checkCellUneditable(id, column) {
 function showColumn(id, state) {
   const columns = gUI.table.columns;
   const column = columns.get(id);
-  column.wrapper.hidden = !state;
+  column.column.hidden = !state;
 }
 
 /**
@@ -1068,7 +1068,7 @@ async function performAdd(store) {
 // Cell css selector that can be used to count or select cells.
 // The selector is restricted to a single column to avoid counting duplicates.
 const CELL_SELECTOR =
-  "#storage-table .table-widget-wrapper:first-child .table-widget-cell";
+  "#storage-table .table-widget-column:first-child .table-widget-cell";
 
 function getCellLength() {
   return gPanelWindow.document.querySelectorAll(CELL_SELECTOR).length;

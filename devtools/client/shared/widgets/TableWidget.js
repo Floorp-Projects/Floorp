@@ -731,7 +731,7 @@ TableWidget.prototype = {
       menuitem.setAttribute("label", column.header.getAttribute("value"));
       menuitem.setAttribute("data-id", column.id);
       menuitem.setAttribute("type", "checkbox");
-      menuitem.setAttribute("checked", !column.wrapper.hidden);
+      menuitem.setAttribute("checked", !column.hidden);
       if (column.id == this.uniqueId) {
         menuitem.setAttribute("disabled", "true");
       }
@@ -1105,22 +1105,14 @@ function Column(table, id, header) {
 
   this.highlightUpdated = table.highlightUpdated;
 
-  // This wrapping element is required solely so that position:sticky works on
-  // the headers of the columns.
-  this.wrapper = this.document.createXULElement("vbox");
-  this.wrapper.className = "table-widget-wrapper";
-  this.wrapper.setAttribute("flex", "1");
-  this.wrapper.setAttribute("tabindex", "0");
-  this.tbody.appendChild(this.wrapper);
+  this.column = this.document.createElementNS(HTML_NS, "div");
+  this.column.id = id;
+  this.column.className = "table-widget-column";
+  this.tbody.appendChild(this.column);
 
   this.splitter = this.document.createXULElement("splitter");
   this.splitter.className = "devtools-side-splitter";
   this.tbody.appendChild(this.splitter);
-
-  this.column = this.document.createElementNS(HTML_NS, "div");
-  this.column.id = id;
-  this.column.className = "table-widget-column";
-  this.wrapper.appendChild(this.column);
 
   this.header = this.document.createXULElement("label");
   this.header.className = "devtools-toolbar table-widget-column-header";
@@ -1178,7 +1170,7 @@ Column.prototype = {
    * Returns a boolean indicating whether the column is hidden.
    */
   get hidden() {
-    return this.wrapper.hidden;
+    return this.column.hidden;
   },
 
   /**
@@ -1326,7 +1318,7 @@ Column.prototype = {
     this.column.removeEventListener("mousedown", this.onMousedown);
 
     this.splitter.remove();
-    this.column.parentNode.remove();
+    this.column.remove();
     this.cells = null;
     this.items = null;
     this.selectedRow = null;
@@ -1447,16 +1439,16 @@ Column.prototype = {
     if (!arguments.length) {
       // Act like a toggling method when called with no params
       id = this.id;
-      checked = this.wrapper.hidden;
+      checked = this.column.hidden;
     }
     if (id != this.id) {
       return;
     }
     if (checked) {
-      this.wrapper.hidden = false;
-      this.tbody.insertBefore(this.splitter, this.wrapper.nextSibling);
+      this.column.hidden = false;
+      this.tbody.insertBefore(this.splitter, this.column.nextSibling);
     } else {
-      this.wrapper.hidden = true;
+      this.column.hidden = true;
       this.splitter.remove();
     }
   },
