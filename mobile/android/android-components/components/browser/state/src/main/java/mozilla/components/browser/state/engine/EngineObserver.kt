@@ -401,7 +401,7 @@ internal class EngineObserver(
         )
     }
 
-    override fun onSaveToPdfError(throwable: Throwable) {
+    override fun onSaveToPdfException(throwable: Throwable) {
         store.dispatch(EngineAction.SaveToPdfExceptionAction(tabId, throwable))
     }
 }

@@ -15,6 +15,7 @@ permalink: /changelog/
 
 * **concept-engine**
   * [bug #1798359](https://bugzilla.mozilla.org/show_bug.cgi?id=1798359) Set Total Cookie Protection as the default cookie policy for all Tracking Protection modes. Read more about Total Cookie Protection [here](https://blog.mozilla.org/en/mozilla/firefox-rolls-out-total-cookie-protection-by-default-to-all-users-worldwide/).
+  * Renamed `EngineSession.onSaveToPdfError` to `EngineSession.onSaveToPdfException`.
 
 * **browser-engine-gecko**
   * 🆕 A new action `SaveToPdfExceptionAction` was added to the `EngineAction` to allow for notifying consumers on unsuccessful Save to PDF requests. For more references see [bug #1796482](https://bugzilla.mozilla.org/show_bug.cgi?id=1796482).
@@ -28,7 +29,7 @@ permalink: /changelog/
 
 * **concept-engine**:
   * Added support for changing the cookie banner handling setting in regular and private browsing. [Bugzilla](https://bugzilla.mozilla.org/show_bug.cgi?id=1796144)
-  
+
 * **concept-storage**:
   * 🆕 New API: `StorageMaintenanceRegistry` in `concept-storage` that deals with registering/unregistering storage maintenance workers.
   * ⚠️ **This is a breaking change**: Added a new parameter `dbSizeLimit` to `Storage.runMaintenance` API to indicate Maximum DB size to aim for, in bytes.

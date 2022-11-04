@@ -247,11 +247,11 @@ abstract class EngineSession(
         fun onHistoryStateChanged(historyList: List<HistoryItem>, currentIndex: Int) = Unit
 
         /**
-         * Event to indicate that an issue happened while generating a PDF.
+         * Event to indicate that an exception was thrown while generating a PDF.
          *
-         * @param throwable The list of items in the session history.
+         * @param throwable The throwable from the exception.
          */
-        fun onSaveToPdfError(throwable: Throwable) = Unit
+        fun onSaveToPdfException(throwable: Throwable) = Unit
     }
 
     /**
