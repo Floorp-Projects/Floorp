@@ -206,7 +206,8 @@ def _install_host_utils(build_obj):
             ):
                 os.environ["MOZ_HOST_BIN"] = path
                 installed = True
-                break
+            elif os.path.isfile(path):
+                os.remove(path)
         if not installed:
             _log_warning("Unable to install host utilities.")
     else:
