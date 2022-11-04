@@ -18,6 +18,29 @@ class PictureInPictureVideoWrapper {
       this.setVolume(video, 1);
     }
   }
+  setCaptionContainerObserver(video, updateCaptionsFunction) {
+    let container = document.querySelector('[data-testid="CueBoxContainer"]')
+      .parentElement;
+
+    if (container) {
+      updateCaptionsFunction("");
+      const callback = function(mutationsList, observer) {
+        let text = container.querySelector('[data-testid="CueBoxContainer"]')
+          ?.innerText;
+        updateCaptionsFunction(text);
+      };
+
+      callback([1], null);
+
+      let captionsObserver = new MutationObserver(callback);
+
+      captionsObserver.observe(container, {
+        attributes: false,
+        childList: true,
+        subtree: true,
+      });
+    }
+  }
 }
 
 this.PictureInPictureVideoWrapper = PictureInPictureVideoWrapper;
