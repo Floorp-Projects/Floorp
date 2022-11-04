@@ -34,6 +34,10 @@ struct DllBlockInfoT {
   //
   // If the CHILD_PROCESSES_ONLY flag is set, then the dll is blocked
   // only when we are a child process.
+  //
+  // If the UTILITY_PROCESSES_ONLY or SOCKET_PROCESSES_ONLY flags are
+  // set, the dll will only be blocked for these specific child
+  // processes. Note that these are a subset of CHILD_PROCESSES_ONLY.
   enum Flags {
     FLAGS_DEFAULT = 0,
     BLOCK_WIN7_AND_OLDER = 1 << 0,
@@ -43,6 +47,7 @@ struct DllBlockInfoT {
     BROWSER_PROCESS_ONLY = 1 << 4,
     REDIRECT_TO_NOOP_ENTRYPOINT = 1 << 5,
     UTILITY_PROCESSES_ONLY = 1 << 6,
+    SOCKET_PROCESSES_ONLY = 1 << 7,
   } mFlags;
 
   bool IsVersionBlocked(const uint64_t aOther) const {

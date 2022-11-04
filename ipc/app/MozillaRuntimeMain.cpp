@@ -87,6 +87,8 @@ int main(int argc, char* argv[]) {
     // our own.
     if (GetGeckoProcessType() == GeckoProcessType_Utility) {
       initFlags |= eDllBlocklistInitFlagIsUtilityProcess;
+    } else if (GetGeckoProcessType() == GeckoProcessType_Socket) {
+      initFlags |= eDllBlocklistInitFlagIsSocketProcess;
     }
     DllBlocklist_Initialize(initFlags);
 #endif

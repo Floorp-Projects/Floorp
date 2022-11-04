@@ -315,6 +315,8 @@ int main(int argc, char* argv[], char* envp[]) {
     // our own.
     if (GetGeckoProcessType() == GeckoProcessType_Utility) {
       initFlags |= eDllBlocklistInitFlagIsUtilityProcess;
+    } else if (GetGeckoProcessType() == GeckoProcessType_Socket) {
+      initFlags |= eDllBlocklistInitFlagIsSocketProcess;
     }
     DllBlocklist_Initialize(initFlags);
 #  endif  // HAS_DLL_BLOCKLIST

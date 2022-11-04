@@ -198,6 +198,11 @@ static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo,
     return BlockAction::Allow;
   }
 
+  if ((aInfo->mFlags & DllBlockInfo::SOCKET_PROCESSES_ONLY) &&
+      !(gBlocklistInitFlags & eDllBlocklistInitFlagIsSocketProcess)) {
+    return BlockAction::Allow;
+  }
+
   if ((aInfo->mFlags & DllBlockInfo::BROWSER_PROCESS_ONLY) &&
       (gBlocklistInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
     return BlockAction::Allow;
