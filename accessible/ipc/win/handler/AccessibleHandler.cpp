@@ -687,6 +687,25 @@ AccessibleHandler::get_accChildCount(long* pcountChildren) {
   }
 
   BEGIN_CACHE_ACCESS;
+  if (mCachedData.mDynamicData.mIA2Role == ROLE_SYSTEM_DOCUMENT) {
+    RefPtr<AccessibleHandlerControl> ctl(
+        gControlFactory.GetOrCreateSingleton());
+    if (!ctl) {
+      return E_OUTOFMEMORY;
+    }
+    if (ctl->IsA11ySuppressedForClipboardCopy()) {
+      // Bug 1798098: Windows Suggested Actions (introduced in Windows 11
+      // 22H2) might walk the document a11y tree using UIA whenever anything
+      // is copied to the clipboard. This causes an unacceptable hang,
+      // particularly when the cache is disabled. Even though we lie about the
+      // selection in nSelections, it falls back to a normal tree walk on the
+      // document if it doesn't get a proper text selection. Prevent that by
+      // returning a 0 child count on the document.
+      *pcountChildren = 0;
+      return S_OK;
+    }
+  }
+
   GET_FIELD(mChildCount, *pcountChildren);
   return S_OK;
 }
@@ -1824,7 +1843,30 @@ AccessibleHandler::get_nSelections(long* nSelections) {
     return hr;
   }
 
-  return mIAHypertextPassThru->get_nSelections(nSelections);
+  hr = mIAHypertextPassThru->get_nSelections(nSelections);
+  if (SUCCEEDED(hr) && *nSelections == 0 && HasPayload()) {
+    BEGIN_CACHE_ACCESS;
+    if (mCachedData.mDynamicData.mIA2Role == ROLE_SYSTEM_DOCUMENT) {
+      RefPtr<AccessibleHandlerControl> ctl(
+          gControlFactory.GetOrCreateSingleton());
+      if (!ctl) {
+        return E_OUTOFMEMORY;
+      }
+      if (ctl->IsA11ySuppressedForClipboardCopy()) {
+        // Bug 1798098: Windows Suggested Actions (introduced in Windows 11
+        // 22H2) might walk the document a11y tree using UIA whenever anything
+        // is copied to the clipboard. This causes an unacceptable hang,
+        // particularly when the cache is disabled. It walks using
+        // IAccessibleText/IAccessibleHyperText if the document reports no
+        // selection, so we lie here and say that there is a selection even
+        // though there isn't. It will subsequently call get_selection, which
+        // will fail, but this hack here seems to be enough to avoid further
+        // text calls.
+        *nSelections = 1;
+      }
+    }
+  }
+  return hr;
 }
 
 HRESULT
