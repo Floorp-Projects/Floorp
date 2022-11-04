@@ -11,6 +11,7 @@
 #include "ia2AccessibleTable.h"
 #include "ia2AccessibleTableCell.h"
 #include "mozilla/a11y/AccessibleWrap.h"
+#include "mozilla/a11y/Compatibility.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
@@ -932,6 +933,15 @@ MsaaAccessible::get_accChildCount(long __RPC_FAR* pcountChildren) {
   *pcountChildren = 0;
 
   if (!mAcc) return CO_E_OBJNOTCONNECTED;
+
+  if (Compatibility::IsA11ySuppressedForClipboardCopy() && mAcc->IsRoot()) {
+    // Bug 1798098: Windows Suggested Actions (introduced in Windows 11 22H2)
+    // might walk the entire a11y tree using UIA whenever anything is copied to
+    // the clipboard. This causes an unacceptable hang, particularly when the
+    // cache is disabled. We prevent this tree walk by returning a 0 child count
+    // for the root window, from which Windows might walk.
+    return S_OK;
+  }
 
   if (nsAccUtils::MustPrune(mAcc)) return S_OK;
 
