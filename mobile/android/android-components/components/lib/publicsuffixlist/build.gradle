@@ -2,10 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+plugins {
+    id 'mozac.PublicSuffixListPlugin'
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-
-apply plugin: plugins.PublicSuffixListPlugin
+apply plugin: 'mozac.PublicSuffixListPlugin'
 
 android {
     compileSdkVersion config.compileSdkVersion

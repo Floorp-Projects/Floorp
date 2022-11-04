@@ -17,3 +17,15 @@ repositories {
         mavenCentral()
     }
 }
+
+dependencies {
+    implementation "com.squareup.okhttp3:okhttp:3.12.1"
+    implementation "com.squareup.okio:okio:1.17.2@jar"
+}
+
+gradlePlugin {
+    plugins.register("mozac.PublicSuffixListPlugin") {
+        id = "mozac.PublicSuffixListPlugin"
+        implementationClass = "PublicSuffixListPlugin"
+    }
+}
