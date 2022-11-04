@@ -161,7 +161,7 @@ class DoubleBufferQueueImpl
 
             ResolveValue(global, manager, value, aResult);
           },
-          [](nsresult aRv) {});
+          [aResult](nsresult aRv) { aResult->MaybeReject(aRv); });
       promise->AppendNativeHandler(listener);
 
       FileSystemRequestHandler{}.GetEntries(aManager, mEntryId, mPageNumber,
