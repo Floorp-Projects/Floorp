@@ -23,6 +23,10 @@ ChromeUtils.defineModuleGetter(
   "ExtensionPermissions",
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
+ChromeUtils.defineESModuleGetters(lazy, {
+  SITEPERMS_ADDON_TYPE:
+    "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs",
+});
 
 customElements.define(
   "addon-progress-notification",
@@ -662,7 +666,20 @@ var gXPInstallObserver = {
           while (message.firstChild) {
             message.firstChild.remove();
           }
-          if (hasHost) {
+
+          if (
+            // Use a install prompt message when the only addon being installed is a SitePerms addon
+            // (NOTE: AOM doesn't support anymore installing multiple addons at the same time anymore,
+            // and so a sitepermission addon type is expected to be always the only entry in installInfo.installs).
+            installInfo.installs.every(
+              ({ addon }) => addon?.type === lazy.SITEPERMS_ADDON_TYPE
+            )
+          ) {
+            message.textContent = gNavigatorBundle.getFormattedString(
+              "sitePermissionsInstallPromptMessage.message",
+              [options.name]
+            );
+          } else if (hasHost) {
             let text = gNavigatorBundle.getString(
               "xpinstallPromptMessage.message"
             );
