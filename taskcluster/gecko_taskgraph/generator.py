@@ -2,25 +2,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import copy
 import logging
 import os
-from typing import AnyStr
+import copy
 
 import attr
+from taskgraph import filter_tasks
+from taskgraph.config import GraphConfig, load_graph_config
+from taskgraph.graph import Graph
+from taskgraph.morph import morph
+from taskgraph.optimize.base import optimize_task_graph
+from taskgraph.parameters import parameters_loader
+from taskgraph.task import Task
+from taskgraph.taskgraph import TaskGraph
+from taskgraph.transforms.base import TransformSequence, TransformConfig
+from taskgraph.util.python_path import find_object
+from taskgraph.util.yaml import load_yaml
 
-from . import filter_tasks
-from .config import GraphConfig, load_graph_config
-from .graph import Graph
-from .morph import morph
-from .optimize.base import optimize_task_graph
-from .parameters import Parameters
-from .task import Task
-from .taskgraph import TaskGraph
-from .transforms.base import TransformConfig, TransformSequence
-from .util.python_path import find_object
 from .util.verify import verifications
-from .util.yaml import load_yaml
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +33,8 @@ class KindNotFound(Exception):
 @attr.s(frozen=True)
 class Kind:
 
-    name = attr.ib(type=AnyStr)
-    path = attr.ib(type=AnyStr)
+    name = attr.ib(type=str)
+    path = attr.ib(type=str)
     config = attr.ib(type=dict)
     graph_config = attr.ib(type=GraphConfig)
 
@@ -125,7 +124,7 @@ class TaskGraphGenerator:
     ):
         """
         @param root_dir: root directory, with subdirectories for each kind
-        @param parameters: parameters for this task-graph generation, or callable
+        @param paramaters: parameters for this task-graph generation, or callable
             taking a `GraphConfig` and returning parameters
         @type parameters: Union[Parameters, Callable[[GraphConfig], Parameters]]
         """
@@ -171,7 +170,7 @@ class TaskGraphGenerator:
     @property
     def target_task_set(self):
         """
-        The set of targeted tasks (a graph without edges)
+        The set of targetted tasks (a graph without edges)
 
         @type: TaskGraph
         """
@@ -180,7 +179,7 @@ class TaskGraphGenerator:
     @property
     def target_task_graph(self):
         """
-        The set of targeted tasks and all of their dependencies
+        The set of targetted tasks and all of their dependencies
 
         @type: TaskGraph
         """
@@ -189,7 +188,7 @@ class TaskGraphGenerator:
     @property
     def optimized_task_graph(self):
         """
-        The set of targeted tasks and all of their dependencies; tasks that
+        The set of targetted tasks and all of their dependencies; tasks that
         have been optimized out are either omitted or replaced with a Task
         instance containing only a task_id.
 
@@ -249,9 +248,6 @@ class TaskGraphGenerator:
                     continue
 
     def _run(self):
-        # Initial verifications that don't depend on any generation state.
-        verifications("initial")
-
         logger.info("Loading graph configuration.")
         graph_config = load_graph_config(self.root_dir)
 
@@ -259,13 +255,16 @@ class TaskGraphGenerator:
 
         graph_config.register()
 
+        # Initial verifications that don't depend on any generation state.
+        verifications("initial")
+
         if callable(self._parameters):
             parameters = self._parameters(graph_config)
         else:
             parameters = self._parameters
 
-        logger.info(f"Using {parameters}")
-        logger.debug(f"Dumping parameters:\n{repr(parameters)}")
+        logger.info("Using {}".format(parameters))
+        logger.debug("Dumping parameters:\n{}".format(repr(parameters)))
 
         filters = parameters.get("filters", [])
         # Always add legacy target tasks method until we deprecate that API.
@@ -360,11 +359,14 @@ class TaskGraphGenerator:
             if t.attributes["kind"] == "docker-image"
         }
         # include all tasks with `always_target` set
-        always_target_tasks = {
-            t.label
-            for t in full_task_graph.tasks.values()
-            if t.attributes.get("always_target")
-        }
+        if parameters["enable_always_target"]:
+            always_target_tasks = {
+                t.label
+                for t in full_task_graph.tasks.values()
+                if t.attributes.get("always_target")
+            }
+        else:
+            always_target_tasks = set()
         logger.info(
             "Adding %d tasks with `always_target` attribute"
             % (len(always_target_tasks) - len(always_target_tasks & target_tasks))
@@ -383,6 +385,14 @@ class TaskGraphGenerator:
         do_not_optimize = set(parameters.get("do_not_optimize", []))
         if not parameters.get("optimize_target_tasks", True):
             do_not_optimize = set(target_task_set.graph.nodes).union(do_not_optimize)
+
+        # this is used for testing experimental optimization strategies
+        strategies = os.environ.get(
+            "TASKGRAPH_OPTIMIZE_STRATEGIES", parameters.get("optimize_strategies")
+        )
+        if strategies:
+            strategies = find_object(strategies)
+
         optimized_task_graph, label_to_taskid = optimize_task_graph(
             target_task_graph,
             requested_tasks,
@@ -390,6 +400,7 @@ class TaskGraphGenerator:
             do_not_optimize,
             self._decision_task_id,
             existing_tasks=existing_tasks,
+            strategy_override=strategies,
         )
 
         yield self.verify(
@@ -428,7 +439,7 @@ def load_tasks_for_kind(parameters, kind, root_dir=None):
     # make parameters read-write
     parameters = dict(parameters)
     parameters["target-kind"] = kind
-    parameters = Parameters(strict=False, **parameters)
+    parameters = parameters_loader(spec=None, strict=False, overrides=parameters)
     tgg = TaskGraphGenerator(root_dir=root_dir, parameters=parameters)
     return {
         task.task["metadata"]["name"]: task
