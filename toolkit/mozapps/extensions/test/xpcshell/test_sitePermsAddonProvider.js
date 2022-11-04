@@ -16,6 +16,8 @@ const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"
 );
 
+const addonsBundle = new Localization(["toolkit/about/aboutAddons.ftl"], true);
+
 AddonTestUtils.init(this);
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
@@ -107,8 +109,6 @@ add_task(
       !AddonManager.hasProvider("SitePermsAddonProvider"),
       "Expect no SitePermsAddonProvider to be registered"
     );
-
-    await promiseShutdownManager();
   }
 );
 
@@ -120,8 +120,6 @@ add_task(
     ],
   },
   async function test_sitepermsaddon_provider_enabled() {
-    await promiseStartupManager();
-
     // The SitePermsAddonProvider does not register until the first content process
     // is launched, so we simulate that by firing this notification.
     Services.obs.notifyObservers(null, "ipc:first-content-process-created");
@@ -161,7 +159,9 @@ add_task(
     );
     Assert.equal(
       comAddon.name,
-      `Site Permissions for example.com`,
+      await addonsBundle.formatValue("addon-sitepermission-host", {
+        host: PRINCIPAL_COM.host,
+      }),
       "addon has expected name"
     );
 
@@ -818,5 +818,7 @@ add_task(
 
     addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
     Assert.equal(addons.length, 1, "...and addon is uninstalled");
+
+    await promiseShutdownManager();
   }
 );
