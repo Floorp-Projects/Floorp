@@ -208,7 +208,12 @@ bool a11y::ShouldA11yBeEnabled() {
   sChecked = true;
 
   EPlatformDisabledState disabledState = PlatformDisabledState();
-  if (disabledState == ePlatformIsDisabled) return sShouldEnable = false;
+  if (disabledState == ePlatformIsDisabled) {
+    return sShouldEnable = false;
+  }
+  if (disabledState == ePlatformIsForceEnabled) {
+    return sShouldEnable = true;
+  }
 
   // check if accessibility enabled/disabled by environment variable
   const char* envValue = PR_GetEnv(sAccEnv);
