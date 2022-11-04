@@ -22,7 +22,6 @@ from taskgraph.decision import (
     _determine_more_accurate_base_rev,
     _get_env_prefix,
 )
-from taskgraph.generator import TaskGraphGenerator
 from taskgraph.parameters import Parameters
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.util.python_path import find_object
@@ -34,6 +33,7 @@ from voluptuous import Any, Optional, Required
 
 from . import GECKO
 from .actions import render_actions_json
+from .generator import TaskGraphGenerator
 from .parameters import get_app_version, get_version
 from .try_option_syntax import parse_message
 from .util.backstop import BACKSTOP_INDEX, is_backstop
