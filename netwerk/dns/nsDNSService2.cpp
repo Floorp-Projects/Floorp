@@ -682,9 +682,8 @@ already_AddRefed<nsIDNSService> GetOrInitDNSService() {
       return nullptr;
     }
 
-    SyncRunnable::DispatchToThread(mainThread,
-                                   new SyncRunnable(NS_NewRunnableFunction(
-                                       "GetOrInitDNSService", initTask)));
+    SyncRunnable::DispatchToThread(
+        mainThread, NS_NewRunnableFunction("GetOrInitDNSService", initTask));
   } else {
     initTask();
   }

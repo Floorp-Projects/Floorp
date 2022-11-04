@@ -1839,9 +1839,10 @@ nsresult nsHttpHandler::SetAcceptLanguages() {
 
     // Forward to the main thread synchronously.
     SyncRunnable::DispatchToThread(
-        mainThread, new SyncRunnable(NS_NewRunnableFunction(
-                        "nsHttpHandler::SetAcceptLanguages",
-                        [&rv]() { rv = gHttpHandler->SetAcceptLanguages(); })));
+        mainThread,
+        NS_NewRunnableFunction("nsHttpHandler::SetAcceptLanguages", [&rv]() {
+          rv = gHttpHandler->SetAcceptLanguages();
+        }));
     return rv;
   }
 

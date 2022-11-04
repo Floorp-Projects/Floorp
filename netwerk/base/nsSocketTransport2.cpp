@@ -976,8 +976,8 @@ nsresult nsSocketTransport::ResolveHost() {
 
     SyncRunnable::DispatchToThread(
         mainThread,
-        new SyncRunnable(NS_NewRunnableFunction(
-            "nsSocketTransport::ResolveHost->GetDNSService", initTask)));
+        NS_NewRunnableFunction("nsSocketTransport::ResolveHost->GetDNSService",
+                               initTask));
   } else {
     initTask();
   }

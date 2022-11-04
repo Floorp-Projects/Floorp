@@ -17,7 +17,7 @@
 namespace mozilla {
 
 /**
- * This class will wrap a nsIRunnable and dispatch it to the main thread
+ * This class will wrap a nsIRunnable and dispatch it to the target thread
  * synchronously. This is different from nsIEventTarget.DISPATCH_SYNC:
  * this class does not spin the event loop waiting for the event to be
  * dispatched. This means that you don't risk reentrance from pending
@@ -25,11 +25,12 @@ namespace mozilla {
  * on this thread, or else you will deadlock.
  *
  * Typical usage:
- * RefPtr<SyncRunnable> sr = new SyncRunnable(new myrunnable...());
- * sr->DispatchToThread(t);
+ *   RefPtr<SyncRunnable> sr = new SyncRunnable(new myrunnable...());
+ *   sr->DispatchToThread(t);
  *
- * We also provide a convenience wrapper:
- * SyncRunnable::DispatchToThread(new myrunnable...());
+ * We also provide convenience wrappers:
+ *   SyncRunnable::DispatchToThread(pThread, new myrunnable...());
+ *   SyncRunnable::DispatchToThread(pThread, NS_NewRunnableFunction(...));
  *
  */
 class SyncRunnable : public Runnable {
@@ -108,6 +109,29 @@ class SyncRunnable : public Runnable {
     RefPtr<SyncRunnable> s(new SyncRunnable(aRunnable));
     return s->DispatchToThread(aThread, aForceDispatch);
   }
+
+  static nsresult DispatchToThread(nsIEventTarget* aThread,
+                                   already_AddRefed<nsIRunnable> aRunnable,
+                                   bool aForceDispatch = false) {
+    RefPtr<SyncRunnable> s(new SyncRunnable(std::move(aRunnable)));
+    return s->DispatchToThread(aThread, aForceDispatch);
+  }
+
+  static nsresult DispatchToThread(AbstractThread* aThread,
+                                   already_AddRefed<nsIRunnable> aRunnable,
+                                   bool aForceDispatch = false) {
+    RefPtr<SyncRunnable> s(new SyncRunnable(std::move(aRunnable)));
+    return s->DispatchToThread(aThread, aForceDispatch);
+  }
+
+  // These deleted overloads prevent accidentally (if harmlessly) double-
+  // wrapping SyncRunnable, which was previously a common anti-pattern.
+  static nsresult DispatchToThread(nsIEventTarget* aThread,
+                                   SyncRunnable* aRunnable,
+                                   bool aForceDispatch = false) = delete;
+  static nsresult DispatchToThread(AbstractThread* aThread,
+                                   SyncRunnable* aRunnable,
+                                   bool aForceDispatch = false) = delete;
 
  protected:
   NS_IMETHOD Run() override {

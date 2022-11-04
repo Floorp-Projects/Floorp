@@ -58,8 +58,8 @@ nsresult DNSUtils::CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult) {
     if (main) {
       // Forward to the main thread synchronously.
       SyncRunnable::DispatchToThread(
-          main, new SyncRunnable(NS_NewRunnableFunction(
-                    "InitHttpHandler", []() { InitHttpHandler(); })));
+          main, NS_NewRunnableFunction("InitHttpHandler",
+                                       []() { InitHttpHandler(); }));
     }
   }
 
