@@ -8,6 +8,7 @@
 #include "nsAutoWindowStateHelper.h"
 
 #include "nsCRT.h"
+#include "nsDebug.h"
 #include "nsNetUtil.h"
 #include "nsIAuthPrompt.h"
 #include "nsIAuthPrompt2.h"
@@ -1411,7 +1412,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       // being active the whole time a modal dialog is open.
       AutoPopupStatePusher popupStatePusher(PopupBlocker::openAbused);
 
-      newChrome->ShowAsModal();
+      auto rv = newChrome->ShowAsModal();
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
   // If a website opens a popup exit DOM fullscreen
