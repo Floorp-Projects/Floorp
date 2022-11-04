@@ -284,6 +284,8 @@ class MediaDecoderStateMachine::StateObject {
                GetState() == DECODER_STATE_SEEKING_VIDEOONLY);
 
     SLOG("change state to: %s", ToStateStr(s->GetState()));
+    PROFILER_MARKER_TEXT("MDSM::StateChange", MEDIA_PLAYBACK, {},
+                         nsPrintfCString("%s", ToStateStr(s->GetState())));
 
     Exit();
 
@@ -386,7 +388,6 @@ class MediaDecoderStateMachine::DormantState
   explicit DormantState(Master* aPtr) : StateObject(aPtr) {}
 
   void Enter() {
-    PROFILER_MARKER_UNTYPED("MDSM::EnterDormantState", MEDIA_PLAYBACK);
     if (mMaster->IsPlaying()) {
       mMaster->StopPlayback();
     }
@@ -655,6 +656,7 @@ class MediaDecoderStateMachine::DecodingState
       return;
     }
 
+    PROFILER_MARKER_UNTYPED("MDSM::EnterVideoSuspend", MEDIA_PLAYBACK);
     mMaster->mVideoDecodeSuspended = true;
     mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::EnterVideoSuspend);
     Reader()->SetVideoBlankDecode(true);
@@ -1937,7 +1939,6 @@ class MediaDecoderStateMachine::BufferingState
   explicit BufferingState(Master* aPtr) : StateObject(aPtr) {}
 
   void Enter() {
-    PROFILER_MARKER_UNTYPED("MDSM::EnterBufferingState", MEDIA_PLAYBACK);
     if (mMaster->IsPlaying()) {
       mMaster->StopPlayback();
     }
@@ -2697,7 +2698,6 @@ void MediaDecoderStateMachine::BufferingState::HandleEndOfVideo() {
 }
 
 RefPtr<ShutdownPromise> MediaDecoderStateMachine::ShutdownState::Enter() {
-  PROFILER_MARKER_UNTYPED("MDSM::EnterShutdownState", MEDIA_PLAYBACK);
   auto* master = mMaster;
 
   master->mDelayedScheduler.Reset();
@@ -3747,6 +3747,8 @@ void MediaDecoderStateMachine::LoopingChanged() {
                       MEDIA_PLAYBACK);
   MOZ_ASSERT(OnTaskQueue());
   LOGV("LoopingChanged, looping=%d", mLooping.Ref());
+  PROFILER_MARKER_TEXT("MDSM::LoopingChanged", MEDIA_PLAYBACK, {},
+                       mLooping ? "true"_ns : "false"_ns);
   if (mSeamlessLoopingAllowed) {
     mStateObj->HandleLoopingChanged();
   }
