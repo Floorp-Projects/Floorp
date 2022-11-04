@@ -18,8 +18,7 @@ from taskgraph.taskgraph import TaskGraph
 from taskgraph.transforms.base import TransformSequence, TransformConfig
 from taskgraph.util.python_path import find_object
 from taskgraph.util.yaml import load_yaml
-
-from .util.verify import verifications
+from taskgraph.util.verify import verifications
 
 logger = logging.getLogger(__name__)
 
