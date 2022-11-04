@@ -27,6 +27,7 @@ namespace base {
 //
 // Typical usage:
 //
+// ```
 //   class MyClass : public base::ObjectWatcher::Delegate {
 //    public:
 //     void DoStuffWhenSignaled(HANDLE object) {
@@ -38,11 +39,29 @@ namespace base {
 //    private:
 //     base::ObjectWatcher watcher_;
 //   };
+// ```
 //
 // In the above example, MyClass wants to "do stuff" when object becomes
 // signaled.  ObjectWatcher makes this task easy.  When MyClass goes out of
 // scope, the watcher_ will be destroyed, and there is no need to worry about
 // OnObjectSignaled being called on a deleted MyClass pointer.  Easy!
+//
+//////
+//
+// Mozilla/Gecko addendum:
+//
+// An undocumented (but runtime-asserted) requirement for the above is that
+// `MyClass` must be strictly thread-affine. In particular, `StartWatching()`
+// and `StopWatching()` -- including the implicit `StopWatching()` call in
+// `~ObjectWatcher()` -- must always be called on the same thread and from
+// within the same `MessageLoop`.
+//
+// (If this did not hold, `OnObjectSignaled()` might be called on one thread
+// while `MyClass` is in the middle of being destroyed on another.)
+//
+// This condition cannot be guaranteed for potentially-asynchronously-destroyed
+// classes, nor for their owned or shared subobjects, nor for anything which
+// might be sent to a non-thread-affine task queue.
 //
 class ObjectWatcher : public MessageLoop::DestructionObserver {
  public:
