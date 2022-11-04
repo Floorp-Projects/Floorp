@@ -110,6 +110,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "TestAvailableMemoryWatcherWin.cpp",
         "TestFileNTFSSpecialPaths.cpp",
         "TestFilePreferencesWin.cpp",
+        "TestHandleWatcher.cpp",
     ]
 else:
     UNIFIED_SOURCES += [
