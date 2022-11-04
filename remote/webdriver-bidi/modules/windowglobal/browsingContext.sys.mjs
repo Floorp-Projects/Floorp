@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 class BrowsingContextModule extends Module {
-  #listeningToDOMContentLoaded;
+  #listeningToDocumentInteractive;
   #listeningToLoad;
   #loadListener;
 
@@ -29,16 +29,16 @@ class BrowsingContextModule extends Module {
   }
 
   #startListening() {
-    if (!this.#listeningToDOMContentLoaded && !this.#listeningToLoad) {
+    if (!this.#listeningToDocumentInteractive && !this.#listeningToLoad) {
       this.#loadListener.startListening();
     }
   }
 
   #subscribeEvent(event) {
     switch (event) {
-      case "browsingContext.DOMContentLoaded":
+      case "browsingContext._documentInteractive":
         this.#startListening();
-        this.#listeningToDOMContentLoaded = true;
+        this.#listeningToDocumentInteractive = true;
         break;
       case "browsingContext.load":
         this.#startListening();
@@ -49,22 +49,22 @@ class BrowsingContextModule extends Module {
 
   #unsubscribeEvent(event) {
     switch (event) {
-      case "browsingContext.DOMContentLoaded":
-        this.#listeningToDOMContentLoaded = false;
+      case "browsingContext._documentInteractive":
+        this.#listeningToDocumentInteractive = false;
         break;
       case "browsingContext.load":
         this.#listeningToLoad = false;
         break;
     }
 
-    if (!this.#listeningToDOMContentLoaded && !this.#listeningToLoad) {
+    if (!this.#listeningToDocumentInteractive && !this.#listeningToLoad) {
       this.#loadListener.stopListening();
     }
   }
 
   #onDOMContentLoaded = (eventName, data) => {
-    if (this.#listeningToDOMContentLoaded) {
-      this.messageHandler.emitEvent("browsingContext.DOMContentLoaded", {
+    if (this.#listeningToDocumentInteractive) {
+      this.messageHandler.emitEvent("browsingContext._documentInteractive", {
         baseURL: data.target.baseURI,
         contextId: this.messageHandler.contextId,
         documentURL: data.target.URL,
