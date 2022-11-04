@@ -104,6 +104,10 @@ url = "=2.1.0"
 # Force mio to stay at 0.8.0 to avoid windows-sys dependencies.
 mio = "=0.8.0"
 
+# Since we're building with at least rustc 1.61, enable rust 1.57 features.
+# This happens to work around issues the older code has with 1.65.
+fallible_collections = { version = "0.4", features = ["rust_1_57"] }
+
 [target.'cfg(not(target_os = "android"))'.dependencies]
 viaduct = "0.1"
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
