@@ -170,6 +170,10 @@ class nsNavHistoryResult final
 
   void HandlePlacesEvent(const PlacesEventSequence& aEvents) override;
 
+  // Optimisation: refreshing containers is much faster than incremental
+  // updates when handling multiple Page_removed events.
+  bool IsBulkPageRemovedEvent(const PlacesEventSequence& aEvents);
+
   void OnMobilePrefChanged();
 
   bool IsBatching() const { return mBatchInProgress > 0; };
