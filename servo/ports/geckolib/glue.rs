@@ -6,7 +6,7 @@ use super::error_reporter::ErrorReporter;
 use super::stylesheet_loader::{AsyncStylesheetParser, StylesheetLoader};
 use bincode::{deserialize, serialize};
 use cssparser::ToCss as ParserToCss;
-use cssparser::{ParseErrorKind, Parser, ParserInput, SourceLocation, UnicodeRange};
+use cssparser::{Parser, ParserInput, SourceLocation, UnicodeRange};
 use dom::{DocumentState, ElementState};
 use malloc_size_of::MallocSizeOfOps;
 use nsstring::{nsCString, nsString};
@@ -26,7 +26,7 @@ use style::counter_style;
 use style::data::{self, ElementStyles};
 use style::dom::{ShowSubtreeData, TDocument, TElement, TNode};
 use style::driver;
-use style::error_reporting::{ContextualParseError, ParseErrorReporter};
+use style::error_reporting::ParseErrorReporter;
 use style::font_face::{self, FontFaceSourceFormat, FontFaceSourceListComponent, Source};
 use style::gecko::data::{GeckoStyleSheet, PerDocumentStyleData, PerDocumentStyleDataImpl};
 use style::gecko::restyle_damage::GeckoRestyleDamage;
@@ -146,7 +146,7 @@ use style::values::generics::easing::BeforeFlag;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
 use style::values::{specified, AtomIdent, CustomIdent, KeyframesName};
-use style_traits::{CssWriter, ParsingMode, StyleParseErrorKind, ToCss};
+use style_traits::{CssWriter, ParsingMode, ToCss};
 use to_shmem::SharedMemoryBuilder;
 
 trait ClosureHelper {
@@ -6950,49 +6950,20 @@ pub unsafe extern "C" fn Servo_SelectorList_Drop(list: *mut RawServoSelectorList
     SelectorList::drop_ffi(list)
 }
 
-fn parse_color(
-    value: &str,
-    error_reporter: Option<&dyn ParseErrorReporter>,
-) -> Result<specified::Color, ()> {
-    let mut input = ParserInput::new(value);
-    let mut parser = Parser::new(&mut input);
-    let url_data = unsafe { dummy_url_data() };
+#[no_mangle]
+pub unsafe extern "C" fn Servo_IsValidCSSColor(value: &nsACString) -> bool {
+    let mut input = ParserInput::new(value.as_str_unchecked());
+    let mut input = Parser::new(&mut input);
     let context = ParserContext::new(
         Origin::Author,
-        url_data,
+        dummy_url_data(),
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
-        error_reporter,
+        None,
         None,
     );
-
-    let start_position = parser.position();
-    parser
-        .parse_entirely(|i| specified::Color::parse(&context, i))
-        .map_err(|err| {
-            if error_reporter.is_some() {
-                match err.kind {
-                    ParseErrorKind::Custom(StyleParseErrorKind::ValueError(..)) => {
-                        let location = err.location.clone();
-                        let error = ContextualParseError::UnsupportedValue(
-                            parser.slice_from(start_position),
-                            err,
-                        );
-                        context.log_css_error(location, error);
-                    },
-                    // Ignore other kinds of errors that might be reported, such as
-                    // ParseErrorKind::Basic(BasicParseErrorKind::UnexpectedToken),
-                    // since Gecko doesn't report those to the error console.
-                    _ => {},
-                }
-            }
-        })
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn Servo_IsValidCSSColor(value: &nsACString) -> bool {
-    parse_color(value.as_str_unchecked(), None).is_ok()
+    specified::Color::is_valid(&context, &mut input)
 }
 
 #[no_mangle]
@@ -7004,47 +6975,44 @@ pub unsafe extern "C" fn Servo_ComputeColor(
     was_current_color: *mut bool,
     loader: *mut Loader,
 ) -> bool {
-    use style::gecko;
-
-    let current_color = gecko::values::convert_nscolor_to_rgba(current_color);
-
+    let mut input = ParserInput::new(value.as_str_unchecked());
+    let mut input = Parser::new(&mut input);
     let reporter = loader.as_mut().and_then(|loader| {
         // Make an ErrorReporter that will report errors as being "from DOM".
         ErrorReporter::new(ptr::null_mut(), loader, ptr::null_mut())
     });
 
-    let specified_color = match parse_color(
-        value.as_str_unchecked(),
-        reporter.as_ref().map(|r| r as &dyn ParseErrorReporter),
-    ) {
-        Ok(c) => c,
-        Err(..) => return false,
-    };
+    let context = ParserContext::new(
+        Origin::Author,
+        dummy_url_data(),
+        Some(CssRuleType::Style),
+        ParsingMode::DEFAULT,
+        QuirksMode::NoQuirks,
+        reporter.as_ref().map(|e| e as &dyn ParseErrorReporter),
+        None,
+    );
 
-    let computed_color = match raw_data {
-        Some(raw_data) => {
-            let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
-            let device = data.stylist.device();
-            let quirks_mode = data.stylist.quirks_mode();
-            Context::for_media_query_evaluation(device, quirks_mode, |context| {
-                specified_color.to_computed_color(Some(&context))
-            })
+    let data;
+    let device = match raw_data {
+        Some(d) => {
+            data = PerDocumentStyleData::from_ffi(d).borrow();
+            Some(data.stylist.device())
         },
-        None => specified_color.to_computed_color(None),
+        None => None,
     };
 
-    let computed_color = match computed_color {
+    let computed = match specified::Color::parse_and_compute(&context, &mut input, device) {
         Some(c) => c,
         None => return false,
     };
 
+    let current_color = style::gecko::values::convert_nscolor_to_rgba(current_color);
     if !was_current_color.is_null() {
-        *was_current_color = computed_color.is_currentcolor();
+        *was_current_color = computed.is_currentcolor();
     }
 
-    let rgba = computed_color.into_rgba(current_color);
-    *result_color = gecko::values::convert_rgba_to_nscolor(&rgba);
-
+    let rgba = computed.into_rgba(current_color);
+    *result_color = style::gecko::values::convert_rgba_to_nscolor(&rgba);
     true
 }
 
