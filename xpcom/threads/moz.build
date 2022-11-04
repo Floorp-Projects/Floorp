@@ -124,6 +124,10 @@ UNIFIED_SOURCES += [
     "VsyncTaskManager.cpp",
 ]
 
+if CONFIG["OS_ARCH"] == "WINNT":
+    EXPORTS.mozilla += ["WinHandleWatcher.h"]
+    UNIFIED_SOURCES += ["WinHandleWatcher.cpp"]
+
 LOCAL_INCLUDES += [
     "../build",
     "/caps",
