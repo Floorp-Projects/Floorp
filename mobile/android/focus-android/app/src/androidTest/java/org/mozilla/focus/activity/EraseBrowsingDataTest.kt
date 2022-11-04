@@ -12,7 +12,6 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -61,7 +60,6 @@ class EraseBrowsingDataTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
-    @Ignore("https://github.com/mozilla-mobile/focus-android/issues/7695")
     @SmokeTest
     @Test
     fun trashButtonTest() {
