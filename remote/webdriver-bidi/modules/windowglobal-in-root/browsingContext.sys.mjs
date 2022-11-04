@@ -14,7 +14,10 @@ class BrowsingContextModule extends Module {
   destroy() {}
 
   interceptEvent(name, payload) {
-    if (name == "browsingContext.load") {
+    if (
+      name == "browsingContext.domContentLoaded" ||
+      name == "browsingContext.load"
+    ) {
       // Resolve browsing context to a TabManager id.
       payload.context = lazy.TabManager.getIdForBrowsingContext(
         payload.context

@@ -11,9 +11,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 class BrowsingContextModule extends Module {
-  #listeningToDocumentInteractive;
-  #listeningToLoad;
   #loadListener;
+  #subscribedEvents;
 
   constructor(messageHandler) {
     super(messageHandler);
@@ -22,15 +21,35 @@ class BrowsingContextModule extends Module {
     this.#loadListener = new lazy.LoadListener(this.messageHandler.window);
     this.#loadListener.on("DOMContentLoaded", this.#onDOMContentLoaded);
     this.#loadListener.on("load", this.#onLoad);
+
+    // Set of event names which have active subscriptions
+    this.#subscribedEvents = new Set();
   }
 
   destroy() {
     this.#loadListener.destroy();
+    this.#subscribedEvents = null;
+  }
+
+  #getNavigationInfo(data) {
+    return {
+      context: this.messageHandler.context,
+      // TODO: The navigation id should be a real id mapped to the navigation.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1763122
+      navigation: null,
+      url: data.target.baseURI,
+    };
   }
 
   #startListening() {
-    if (!this.#listeningToDocumentInteractive && !this.#listeningToLoad) {
+    if (this.#subscribedEvents.size == 0) {
       this.#loadListener.startListening();
+    }
+  }
+
+  #stopListening() {
+    if (this.#subscribedEvents.size == 0) {
+      this.#loadListener.stopListening();
     }
   }
 
@@ -38,11 +57,15 @@ class BrowsingContextModule extends Module {
     switch (event) {
       case "browsingContext._documentInteractive":
         this.#startListening();
-        this.#listeningToDocumentInteractive = true;
+        this.#subscribedEvents.add("browsingContext._documentInteractive");
+        break;
+      case "browsingContext.domContentLoaded":
+        this.#startListening();
+        this.#subscribedEvents.add("browsingContext.domContentLoaded");
         break;
       case "browsingContext.load":
         this.#startListening();
-        this.#listeningToLoad = true;
+        this.#subscribedEvents.add("browsingContext.load");
         break;
     }
   }
@@ -50,20 +73,21 @@ class BrowsingContextModule extends Module {
   #unsubscribeEvent(event) {
     switch (event) {
       case "browsingContext._documentInteractive":
-        this.#listeningToDocumentInteractive = false;
+        this.#subscribedEvents.remove("browsingContext._documentInteractive");
+        break;
+      case "browsingContext.domContentLoaded":
+        this.#subscribedEvents.remove("browsingContext.domContentLoaded");
         break;
       case "browsingContext.load":
-        this.#listeningToLoad = false;
+        this.#subscribedEvents.remove("browsingContext.load");
         break;
     }
 
-    if (!this.#listeningToDocumentInteractive && !this.#listeningToLoad) {
-      this.#loadListener.stopListening();
-    }
+    this.#stopListening();
   }
 
   #onDOMContentLoaded = (eventName, data) => {
-    if (this.#listeningToDocumentInteractive) {
+    if (this.#subscribedEvents.has("browsingContext._documentInteractive")) {
       this.messageHandler.emitEvent("browsingContext._documentInteractive", {
         baseURL: data.target.baseURI,
         contextId: this.messageHandler.contextId,
@@ -72,17 +96,18 @@ class BrowsingContextModule extends Module {
         readyState: data.target.readyState,
       });
     }
+
+    if (this.#subscribedEvents.has("browsingContext.domContentLoaded")) {
+      this.emitEvent(
+        "browsingContext.domContentLoaded",
+        this.#getNavigationInfo(data)
+      );
+    }
   };
 
   #onLoad = (eventName, data) => {
-    if (this.#listeningToLoad) {
-      this.emitEvent("browsingContext.load", {
-        context: this.messageHandler.context,
-        // TODO: The navigation id should be a real id mapped to the navigation.
-        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1763122
-        navigation: null,
-        url: data.target.baseURI,
-      });
+    if (this.#subscribedEvents.has("browsingContext.load")) {
+      this.emitEvent("browsingContext.load", this.#getNavigationInfo(data));
     }
   };
 
