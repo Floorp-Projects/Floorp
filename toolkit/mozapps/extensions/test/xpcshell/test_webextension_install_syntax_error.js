@@ -11,7 +11,7 @@ add_task(async function install_xpi() {
     files: {
       "manifest.json": String.raw`{
         "manifest_version: 2,
-        "applications": {"gecko": {"id": "${ADDON_ID}"}},
+        "browser_specific_settings": {"gecko": {"id": "${ADDON_ID}"}},
         "name": "Temp WebExt with Error",
         "version": "0.1"
       }`,
@@ -23,7 +23,7 @@ add_task(async function install_xpi() {
     files: {
       "manifest.json": String.raw`{
         "manifest_version": 2,
-        "applications": {"gecko": {"id": "${ADDON_ID}"}},
+        "browser_specific_settings": {"gecko": {"id": "${ADDON_ID}"}},
         "name": "Temp WebExt without Error",
         "version": "0.1"
       }`,
