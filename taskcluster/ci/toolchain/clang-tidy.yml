@@ -18,9 +18,9 @@ job-defaults:
             - 'build/clang-plugin/**/*.h'
             - 'build/clang-plugin/*.inc'
             - 'build/clang-plugin/*.py'
+            - 'build/clang-plugin/*.txt'
             - 'build/clang-plugin/moz.build'
             - 'build/clang-plugin/Makefile.in'
-            - 'build/clang-plugin/ThreadAllows.txt'
             - 'build/build-clang/build-clang.py'
     fetches:
         fetch:
