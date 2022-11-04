@@ -383,6 +383,10 @@ already_AddRefed<Screen> ScreenGetterWayland::MakeScreenWayland(gint aMonitor) {
       "DPI %f, refresh %d]",
       aMonitor, rect.x, rect.y, rect.width, rect.height, pixelDepth,
       contentsScale.scale, defaultCssScale.scale, dpi, monitor->refresh);
+
+  // We report zero screen shift on Wayland. All popups positions are relative
+  // to toplevel and we can't get toplevel position from Wayland compositor.
+  rect.x = rect.y = 0;
   return MakeAndAddRef<Screen>(rect, rect, pixelDepth, pixelDepth,
                                monitor->refresh, contentsScale, defaultCssScale,
                                dpi, Screen::IsPseudoDisplay::No);
