@@ -130,6 +130,7 @@ enum Operation {
     Version,
     Server {
         log_level: Option<Level>,
+        log_truncate: bool,
         address: SocketAddr,
         allow_hosts: Vec<Host>,
         allow_origins: Vec<Url>,
@@ -332,6 +333,7 @@ fn parse_args(cmd: &mut Command) -> ProgramResult<Operation> {
     };
     Ok(Operation::Server {
         log_level,
+        log_truncate: !args.is_present("log_no_truncate"),
         allow_hosts,
         allow_origins,
         address,
@@ -347,6 +349,7 @@ fn inner_main(cmd: &mut Command) -> ProgramResult<()> {
 
         Operation::Server {
             log_level,
+            log_truncate,
             address,
             allow_hosts,
             allow_origins,
@@ -354,9 +357,9 @@ fn inner_main(cmd: &mut Command) -> ProgramResult<()> {
             deprecated_storage_arg,
         } => {
             if let Some(ref level) = log_level {
-                logging::init_with_level(*level).unwrap();
+                logging::init_with_level(*level, log_truncate).unwrap();
             } else {
-                logging::init().unwrap();
+                logging::init(log_truncate).unwrap();
             }
 
             if deprecated_storage_arg {
@@ -476,6 +479,11 @@ fn make_command<'a>() -> Command<'a> {
                 .value_name("LEVEL")
                 .possible_values(&["fatal", "error", "warn", "info", "config", "debug", "trace"])
                 .help("Set Gecko log level"),
+        )
+        .arg(
+            Arg::new("log_no_truncate")
+                .long("log-no-truncate")
+                .help("Disable truncation of long log lines"),
         )
         .arg(
             Arg::new("help")

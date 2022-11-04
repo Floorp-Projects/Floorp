@@ -161,6 +161,10 @@ argument is passed to geckodriver.
 Set the Gecko and geckodriver log level.  Possible values are `fatal`,
 `error`, `warn`, `info`, `config`, `debug`, and `trace`.
 
+## <code>&#x2D;&#x2D;log-no-truncate</code>
+
+Disables truncation of long log lines.
+
 ## <code>&#x2D;&#x2D;marionette-host <var>HOST</var></code>
 
 Selects the host for geckodriver’s connection to the [Marionette]
