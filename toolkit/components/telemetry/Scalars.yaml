@@ -83,24 +83,6 @@ a11y:
     release_channel_collection: opt-out
     keyed: false
 
-  invert_colors:
-    bug_numbers:
-      - 1794626
-    description: >
-      Boolean tracking if the user has an invert colors OS
-      setting enabled.
-    expires: never
-    kind: boolean
-    notification_emails:
-      - accessibility@mozilla.com
-      - mreschenberg@mozilla.com
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-    release_channel_collection: opt-out
-    keyed: false
-
   theme:
     bug_numbers:
       - 1022528
