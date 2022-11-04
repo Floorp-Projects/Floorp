@@ -202,7 +202,7 @@
 
 #identity-popup[mixedcontent~=active-loaded] .identity-popup-connection-not-secure,
 #identity-popup:not([mixedcontent]) .identity-popup-connection-not-secure {
-  font-weight: bold;
+  color: var(--error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
 }
 
 #identity-popup-mainView > .panel-subview-body {
