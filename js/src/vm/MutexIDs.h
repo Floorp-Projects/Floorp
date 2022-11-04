@@ -46,7 +46,7 @@
   _(BufferStreamState, 500)           \
   _(SharedArrayGrow, 500)             \
   _(SharedImmutableScriptData, 500)   \
-  _(WasmFuncTypeIdSet, 500)           \
+  _(WasmTypeIdSet, 500)               \
   _(WasmCodeProfilingLabels, 500)     \
   _(WasmCodeBytesEnd, 500)            \
   _(WasmStreamEnd, 500)               \

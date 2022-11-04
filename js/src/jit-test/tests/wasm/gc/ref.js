@@ -3,17 +3,19 @@
 // Parsing and resolving.
 
 var text = `(module
-      (type $cons (struct
-                   (field $car i32)
-                   (field $cdr (ref null $cons))))
+      (rec
+        (type $cons (struct
+                     (field $car i32)
+                     (field $cdr (ref null $cons))))
 
-      (type $odd (struct
-                  (field $odd.x i32)
-                  (field $to_even (ref null $even))))
+        (type $odd (struct
+                    (field $odd.x i32)
+                    (field $to_even (ref null $even))))
 
-      (type $even (struct
-                   (field $even.x i32)
-                   (field $to_odd (ref null $odd))))
+        (type $even (struct
+                     (field $even.x i32)
+                     (field $to_odd (ref null $odd))))
+      )
 
       ;; Use eqref on the API since struct types cannot be exposed outside the module yet.
 
