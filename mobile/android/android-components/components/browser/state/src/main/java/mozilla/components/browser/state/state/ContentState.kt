@@ -30,6 +30,8 @@ import mozilla.components.concept.engine.window.WindowRequest
  * @property securityInfo the security information as [SecurityInfoState],
  * describing whether or not the this session is for a secure URL, as well
  * as the host and SSL certificate authority.
+ * @property thumbnail the last generated [Bitmap] of this session's content, to
+ * be used as a preview in e.g. a tab switcher.
  * @property icon the icon of the page currently loaded by this session.
  * @property download Last unhandled download request.
  * @property share Last unhandled request to share an internet resource that first needs to be downloaded.
@@ -69,6 +71,7 @@ data class ContentState(
     val loading: Boolean = false,
     val searchTerms: String = "",
     val securityInfo: SecurityInfoState = SecurityInfoState(),
+    val thumbnail: Bitmap? = null,
     val icon: Bitmap? = null,
     val download: DownloadState? = null,
     val share: ShareInternetResourceState? = null,

@@ -5,6 +5,7 @@
 package mozilla.components.concept.engine
 
 import android.content.Intent
+import android.graphics.Bitmap
 import androidx.annotation.CallSuper
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS
@@ -76,6 +77,7 @@ abstract class EngineSession(
          * @param layoutInDisplayCutoutMode value of defined in https://developer.android.com/reference/android/view/WindowManager.LayoutParams#layoutInDisplayCutoutMode
          */
         fun onMetaViewportFitChanged(layoutInDisplayCutoutMode: Int) = Unit
+        fun onThumbnailChange(bitmap: Bitmap?) = Unit
         fun onAppPermissionRequest(permissionRequest: PermissionRequest) = permissionRequest.reject()
         fun onContentPermissionRequest(permissionRequest: PermissionRequest) = permissionRequest.reject()
         fun onCancelContentPermissionRequest(permissionRequest: PermissionRequest) = Unit

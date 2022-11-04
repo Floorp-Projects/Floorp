@@ -29,8 +29,8 @@ internal object ContentStateReducer {
             is ContentAction.RemoveIconAction -> updateContentState(state, action.sessionId) {
                 it.copy(icon = null)
             }
-            is ContentAction.RemoveThumbnailAction -> {
-                throw IllegalStateException("You need to add ThumbnailsMiddleware to your BrowserStore. ($action)")
+            is ContentAction.RemoveThumbnailAction -> updateContentState(state, action.sessionId) {
+                it.copy(thumbnail = null)
             }
             is ContentAction.UpdateUrlAction -> updateContentState(state, action.sessionId) {
                 it.copy(
@@ -92,8 +92,8 @@ internal object ContentStateReducer {
                     it
                 }
             }
-            is ContentAction.UpdateThumbnailAction -> {
-                throw IllegalStateException("You need to add ThumbnailsMiddleware to your BrowserStore. ($action)")
+            is ContentAction.UpdateThumbnailAction -> updateContentState(state, action.sessionId) {
+                it.copy(thumbnail = action.thumbnail)
             }
             is ContentAction.UpdateDownloadAction -> updateContentState(state, action.sessionId) {
                 it.copy(download = action.download.copy(sessionId = action.sessionId))

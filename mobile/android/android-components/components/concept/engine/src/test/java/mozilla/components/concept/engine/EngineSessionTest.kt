@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.engine
 
+import android.graphics.Bitmap
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
@@ -35,6 +36,7 @@ class EngineSessionTest {
         val session = spy(DummyEngineSession())
 
         val observer = mock(EngineSession.Observer::class.java)
+        val emptyBitmap = spy(Bitmap::class.java)
         val permissionRequest = mock(PermissionRequest::class.java)
         val windowRequest = mock(WindowRequest::class.java)
         session.register(observer)
@@ -61,6 +63,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
         session.notifyInternalObservers { onMetaViewportFitChanged(1) }
+        session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
         session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
@@ -94,6 +97,7 @@ class EngineSessionTest {
         verify(observer).onFindResult(0, 1, true)
         verify(observer).onFullScreenChange(true)
         verify(observer).onMetaViewportFitChanged(1)
+        verify(observer).onThumbnailChange(emptyBitmap)
         verify(observer).onAppPermissionRequest(permissionRequest)
         verify(observer).onContentPermissionRequest(permissionRequest)
         verify(observer).onCancelContentPermissionRequest(permissionRequest)
@@ -123,6 +127,7 @@ class EngineSessionTest {
         val otherPermissionRequest = mock(PermissionRequest::class.java)
         val windowRequest = mock(WindowRequest::class.java)
         val otherWindowRequest = mock(WindowRequest::class.java)
+        val emptyBitmap = spy(Bitmap::class.java)
         val tracker = Tracker("tracker")
 
         session.register(observer)
@@ -139,6 +144,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
         session.notifyInternalObservers { onMetaViewportFitChanged(1) }
+        session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
         session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
@@ -167,6 +173,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, false) }
         session.notifyInternalObservers { onFullScreenChange(false) }
         session.notifyInternalObservers { onMetaViewportFitChanged(2) }
+        session.notifyInternalObservers { onThumbnailChange(null) }
         session.notifyInternalObservers { onContentPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onAppPermissionRequest(otherPermissionRequest) }
@@ -196,6 +203,7 @@ class EngineSessionTest {
         verify(observer).onFindResult(0, 1, true)
         verify(observer).onFullScreenChange(true)
         verify(observer).onMetaViewportFitChanged(1)
+        verify(observer).onThumbnailChange(emptyBitmap)
         verify(observer).onAppPermissionRequest(permissionRequest)
         verify(observer).onContentPermissionRequest(permissionRequest)
         verify(observer).onCancelContentPermissionRequest(permissionRequest)
@@ -216,6 +224,7 @@ class EngineSessionTest {
         verify(observer, never()).onFindResult(0, 1, false)
         verify(observer, never()).onFullScreenChange(false)
         verify(observer, never()).onMetaViewportFitChanged(2)
+        verify(observer, never()).onThumbnailChange(null)
         verify(observer, never()).onAppPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onContentPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onCancelContentPermissionRequest(otherPermissionRequest)
@@ -243,6 +252,7 @@ class EngineSessionTest {
         val windowRequest = mock(WindowRequest::class.java)
         val otherWindowRequest = mock(WindowRequest::class.java)
         val otherHitResult = HitResult.UNKNOWN("file://foobaz")
+        val emptyBitmap = spy(Bitmap::class.java)
         val tracker = Tracker("tracker")
 
         session.register(observer)
@@ -260,6 +270,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
         session.notifyInternalObservers { onMetaViewportFitChanged(1) }
+        session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
         session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
@@ -286,6 +297,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, false) }
         session.notifyInternalObservers { onFullScreenChange(false) }
         session.notifyInternalObservers { onMetaViewportFitChanged(2) }
+        session.notifyInternalObservers { onThumbnailChange(null) }
         session.notifyInternalObservers { onContentPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onAppPermissionRequest(otherPermissionRequest) }
@@ -312,6 +324,7 @@ class EngineSessionTest {
         verify(observer).onFindResult(0, 1, true)
         verify(observer).onFullScreenChange(true)
         verify(observer).onMetaViewportFitChanged(1)
+        verify(observer).onThumbnailChange(emptyBitmap)
         verify(observer).onAppPermissionRequest(permissionRequest)
         verify(observer).onContentPermissionRequest(permissionRequest)
         verify(observer).onCancelContentPermissionRequest(permissionRequest)
@@ -329,6 +342,7 @@ class EngineSessionTest {
         verify(observer, never()).onFindResult(0, 1, false)
         verify(observer, never()).onFullScreenChange(false)
         verify(observer, never()).onMetaViewportFitChanged(2)
+        verify(observer, never()).onThumbnailChange(null)
         verify(observer, never()).onAppPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onContentPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onCancelContentPermissionRequest(otherPermissionRequest)
@@ -353,6 +367,7 @@ class EngineSessionTest {
         verify(otherObserver, never()).onFindResult(0, 1, false)
         verify(otherObserver, never()).onFullScreenChange(false)
         verify(otherObserver, never()).onMetaViewportFitChanged(2)
+        verify(otherObserver, never()).onThumbnailChange(null)
         verify(otherObserver, never()).onAppPermissionRequest(otherPermissionRequest)
         verify(otherObserver, never()).onContentPermissionRequest(otherPermissionRequest)
         verify(otherObserver, never()).onCancelContentPermissionRequest(otherPermissionRequest)
@@ -376,6 +391,7 @@ class EngineSessionTest {
         val otherPermissionRequest = mock(PermissionRequest::class.java)
         val windowRequest = mock(WindowRequest::class.java)
         val otherWindowRequest = mock(WindowRequest::class.java)
+        val emptyBitmap = spy(Bitmap::class.java)
         val tracker = Tracker("tracker")
 
         session.register(observer)
@@ -392,6 +408,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
         session.notifyInternalObservers { onMetaViewportFitChanged(1) }
+        session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
         session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
@@ -418,6 +435,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, false) }
         session.notifyInternalObservers { onFullScreenChange(false) }
         session.notifyInternalObservers { onMetaViewportFitChanged(2) }
+        session.notifyInternalObservers { onThumbnailChange(null) }
         session.notifyInternalObservers { onContentPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onAppPermissionRequest(otherPermissionRequest) }
@@ -444,6 +462,7 @@ class EngineSessionTest {
         verify(observer).onFindResult(0, 1, true)
         verify(observer).onFullScreenChange(true)
         verify(observer).onMetaViewportFitChanged(1)
+        verify(observer).onThumbnailChange(emptyBitmap)
         verify(observer).onAppPermissionRequest(permissionRequest)
         verify(observer).onContentPermissionRequest(permissionRequest)
         verify(observer).onCancelContentPermissionRequest(permissionRequest)
@@ -461,6 +480,7 @@ class EngineSessionTest {
         verify(observer, never()).onFindResult(0, 1, false)
         verify(observer, never()).onFullScreenChange(false)
         verify(observer, never()).onMetaViewportFitChanged(2)
+        verify(observer, never()).onThumbnailChange(null)
         verify(observer, never()).onAppPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onContentPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onCancelContentPermissionRequest(otherPermissionRequest)
@@ -482,6 +502,7 @@ class EngineSessionTest {
         val otherSession = spy(DummyEngineSession())
         val permissionRequest = mock(PermissionRequest::class.java)
         val windowRequest = mock(WindowRequest::class.java)
+        val emptyBitmap = spy(Bitmap::class.java)
         val observer = mock(EngineSession.Observer::class.java)
         val tracker = Tracker("tracker")
         var mediaSessionController: MediaSession.Controller = mock()
@@ -504,6 +525,7 @@ class EngineSessionTest {
         otherSession.notifyInternalObservers { onFindResult(0, 1, true) }
         otherSession.notifyInternalObservers { onFullScreenChange(true) }
         otherSession.notifyInternalObservers { onMetaViewportFitChanged(1) }
+        otherSession.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
         otherSession.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
         otherSession.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
         otherSession.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
@@ -529,6 +551,7 @@ class EngineSessionTest {
         verify(observer, never()).onFindResult(0, 1, true)
         verify(observer, never()).onFullScreenChange(true)
         verify(observer, never()).onMetaViewportFitChanged(1)
+        verify(observer, never()).onThumbnailChange(emptyBitmap)
         verify(observer, never()).onAppPermissionRequest(permissionRequest)
         verify(observer, never()).onContentPermissionRequest(permissionRequest)
         verify(observer, never()).onCancelContentPermissionRequest(permissionRequest)
@@ -555,6 +578,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
         session.notifyInternalObservers { onMetaViewportFitChanged(1) }
+        session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
         session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
@@ -580,6 +604,7 @@ class EngineSessionTest {
         verify(observer, times(1)).onFindResult(0, 1, true)
         verify(observer, times(1)).onFullScreenChange(true)
         verify(observer, times(1)).onMetaViewportFitChanged(1)
+        verify(observer, times(1)).onThumbnailChange(emptyBitmap)
         verify(observer, times(1)).onAppPermissionRequest(permissionRequest)
         verify(observer, times(1)).onContentPermissionRequest(permissionRequest)
         verify(observer, times(1)).onCancelContentPermissionRequest(permissionRequest)
@@ -816,6 +841,7 @@ class EngineSessionTest {
         defaultObserver.onNavigationStateChange()
         defaultObserver.onProgress(123)
         defaultObserver.onLoadingStateChange(true)
+        defaultObserver.onThumbnailChange(spy(Bitmap::class.java))
         defaultObserver.onFullScreenChange(true)
         defaultObserver.onMetaViewportFitChanged(1)
         defaultObserver.onAppPermissionRequest(mock(PermissionRequest::class.java))
@@ -897,6 +923,7 @@ class EngineSessionTest {
     @Test
     fun `engine session observer has default methods`() {
         val observer = object : EngineSession.Observer { }
+        val bitmap: Bitmap = mock()
         val permissionRequest = mock(PermissionRequest::class.java)
         val windowRequest = mock(WindowRequest::class.java)
         val tracker: Tracker = mock()
@@ -916,6 +943,7 @@ class EngineSessionTest {
         observer.onFindResult(0, 1, true)
         observer.onFullScreenChange(true)
         observer.onMetaViewportFitChanged(1)
+        observer.onThumbnailChange(bitmap)
         observer.onContentPermissionRequest(permissionRequest)
         observer.onCancelContentPermissionRequest(permissionRequest)
         observer.onAppPermissionRequest(permissionRequest)

@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.state
 
+import android.graphics.Bitmap
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.manifest.WebAppManifest
@@ -80,6 +81,7 @@ fun createTab(
     extensions: Map<String, WebExtensionState> = emptyMap(),
     readerState: ReaderState = ReaderState(),
     title: String = "",
+    thumbnail: Bitmap? = null,
     contextId: String? = null,
     lastAccess: Long = 0L,
     createdAt: Long = System.currentTimeMillis(),
@@ -102,6 +104,7 @@ fun createTab(
             url,
             private,
             title = title,
+            thumbnail = thumbnail,
             webAppManifest = webAppManifest,
             searchTerms = searchTerms,
             previewImageUrl = previewImageUrl,

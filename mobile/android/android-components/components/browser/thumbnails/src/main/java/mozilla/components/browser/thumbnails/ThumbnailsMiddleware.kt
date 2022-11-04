@@ -31,9 +31,6 @@ class ThumbnailsMiddleware(
                 // thumbnail is updated.
                 thumbnailStorage.saveThumbnail(action.sessionId, action.thumbnail)
             }
-            is ContentAction.RemoveThumbnailAction -> {
-                thumbnailStorage.deleteThumbnail(action.sessionId)
-            }
             is TabListAction.RemoveAllNormalTabsAction -> {
                 context.state.tabs.filterNot { it.content.private }.forEach { tab ->
                     thumbnailStorage.deleteThumbnail(tab.id)
@@ -55,8 +52,10 @@ class ThumbnailsMiddleware(
                 action.tabIds.forEach { thumbnailStorage.deleteThumbnail(it) }
             }
             else -> {
-                next(action)
+                // no-op
             }
         }
+
+        next(action)
     }
 }

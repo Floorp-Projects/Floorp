@@ -5,6 +5,7 @@
 package mozilla.components.browser.state.engine
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Job
@@ -48,6 +49,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -780,6 +782,21 @@ class EngineObserverTest {
             assertEquals("tab-id", action.sessionId)
             assertEquals(123, action.layoutInDisplayCutoutMode)
         }
+    }
+
+    @Test
+    fun `Engine observer notified when thumbnail is assigned`() {
+        val store: BrowserStore = mock()
+        val observer = EngineObserver("tab-id", store)
+        val emptyBitmap = spy(Bitmap::class.java)
+        observer.onThumbnailChange(emptyBitmap)
+
+        verify(store).dispatch(
+            ContentAction.UpdateThumbnailAction(
+                "tab-id",
+                emptyBitmap,
+            ),
+        )
     }
 
     @Test

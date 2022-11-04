@@ -5,6 +5,7 @@
 package mozilla.components.browser.tabstray
 
 import android.content.res.ColorStateList
+import android.graphics.Bitmap
 import android.graphics.drawable.ColorDrawable
 import android.view.LayoutInflater
 import android.view.View
@@ -22,8 +23,10 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
@@ -122,11 +125,32 @@ class DefaultTabViewHolderTest {
     }
 
     @Test
+    fun `thumbnail from session is assigned to thumbnail image view`() {
+        val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val thumbnailView = view.findViewById<ImageView>(R.id.mozac_browser_tabstray_thumbnail)
+
+        val holder = DefaultTabViewHolder(view)
+        assertEquals(null, thumbnailView.drawable)
+
+        val emptyBitmap = Bitmap.createBitmap(40, 40, Bitmap.Config.ARGB_8888)
+        val session = createTab(id = "a", url = "https://www.mozilla.org", thumbnail = emptyBitmap)
+
+        holder.bind(session, isSelected = false, styling = mock(), mock())
+        assertTrue(thumbnailView.drawable != null)
+    }
+
+    @Test
     fun `thumbnail is set from loader`() {
         val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
         val loader: ImageLoader = mock()
         val viewHolder = DefaultTabViewHolder(view, loader)
+        val tabWithThumbnail =
+            createTab(id = "123", url = "https://example.com", thumbnail = mock())
         val tab = createTab(id = "123", url = "https://example.com")
+
+        viewHolder.bind(tabWithThumbnail, false, mock(), mock())
+
+        verify(loader, never()).loadIntoView(any(), eq(ImageLoadRequest("123", 100)), nullable(), nullable())
 
         viewHolder.bind(tab, false, mock(), mock())
 
