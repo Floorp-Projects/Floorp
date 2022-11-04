@@ -18,7 +18,6 @@
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/StaticPrefs_widget.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
 #include "SDKDeclarations.h"
 
@@ -577,11 +576,6 @@ bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName, gfxFontStyle&
   NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
-void nsLookAndFeel::RecordAccessibilityTelemetry() {
-  Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_INVERT_COLORS,
-                       [[NSWorkspace sharedWorkspace] accessibilityDisplayShouldInvertColors]);
-}
-
 @implementation MOZLookAndFeelDynamicChangeObserver
 
 + (void)startObserving {
@@ -669,10 +663,6 @@ void nsLookAndFeel::RecordAccessibilityTelemetry() {
 }
 
 - (void)mediaQueriesChanged {
-  // Changing`Invert Colors` sends AccessibilityDisplayOptionsDidChangeNotifications.
-  // We monitor that setting via telemetry, so call into that
-  // recording method here.
-  nsLookAndFeel::RecordAccessibilityTelemetry();
   LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind::MediaQueriesOnly);
 }
 
