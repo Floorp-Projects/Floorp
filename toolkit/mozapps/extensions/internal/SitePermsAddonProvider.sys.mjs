@@ -21,11 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
 });
-XPCOMUtils.defineLazyGetter(
-  lazy,
-  "addonsBundle",
-  () => new Localization(["toolkit/about/aboutAddons.ftl"], true)
-);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -116,9 +111,8 @@ class SitePermsAddonWrapper {
   }
 
   get name() {
-    return lazy.addonsBundle.formatValueSync("addon-sitepermission-host", {
-      host: this.principal.host,
-    });
+    // TODO: Localize this string (See Bug 1790313).
+    return `Site Permissions for ${this.principal.host}`;
   }
 
   get creator() {}

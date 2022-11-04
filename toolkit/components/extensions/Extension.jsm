@@ -52,8 +52,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
-  SITEPERMS_ADDON_TYPE:
-    "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -1996,33 +1994,13 @@ class ExtensionData {
       );
     }
 
-    // Synthetic addon install can only grant access to a single permission so we can have
-    // a less-generic message than addons with site permissions.
+    // Generate a map of site_permission names to permission strings for site
+    // permissions.  Since SitePermission addons cannot have regular permissions,
+    // we reuse msgs to pass the strings to the permissions panel.
     // NOTE: this is used as part of the synthetic addon install flow implemented for the
     // SitePermissionAddonProvider.
     // (and so it should not be removed as part of Bug 1789718 changes, while this additional note should be).
-    if (info.addon?.type === lazy.SITEPERMS_ADDON_TYPE) {
-      // We simplify the origin to make it more user friendly. The origin is assured to be
-      // available because the SitePermsAddon install is always expected to be triggered
-      // from a website, making the siteOrigin always available through the installing principal.
-      const host = new URL(info.siteOrigin).hostname;
-
-      // messages are specific to the type of gated permission being installed
-      result.header = bundle.formatStringFromName(
-        `webextSitePerms.headerWithGatedPerms.${info.sitePermissions[0]}`,
-        ["<>", host]
-      );
-      result.text = bundle.formatStringFromName(
-        `webextSitePerms.descriptionGatedPerms`,
-        [host]
-      );
-
-      return result;
-    }
-
-    // TODO(Bug 1789718): Remove after the deprecated XPIProvider-based implementation is also removed.
     if (info.sitePermissions) {
-      // Generate a map of site_permission names to permission strings for site permissions.
       for (let permission of info.sitePermissions) {
         try {
           result.msgs.push(
@@ -2042,15 +2020,16 @@ class ExtensionData {
         }
       }
 
-      // We simplify the origin to make it more user friendly.  The origin is
-      // assured to be available via schema requirement.
-      const host = new URL(info.siteOrigin).hostname;
-
+      // Generate header message
       headerKey = info.unsigned
         ? "webextSitePerms.headerUnsignedWithPerms"
         : "webextSitePerms.headerWithPerms";
-      result.header = bundle.formatStringFromName(headerKey, ["<>", host]);
-
+      // We simplify the origin to make it more user friendly.  The origin is
+      // assured to be available via schema requirement.
+      result.header = bundle.formatStringFromName(headerKey, [
+        "<>",
+        new URL(info.siteOrigin).hostname,
+      ]);
       return result;
     }
 
