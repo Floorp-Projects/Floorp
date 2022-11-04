@@ -1047,8 +1047,9 @@
     }
 
     /**
-     * This is necessary because the destructor doesn't always get called when
-     * we are removed from a tabbrowser. This will be explicitly called by tabbrowser.
+     * This is necessary because custom elements don't have a "real" destructor.
+     * This method is called explicitly by tabbrowser, when changing remoteness,
+     * and when we're disconnected or the window unloads.
      */
     destroy() {
       elementsToDestroyOnUnload.delete(this);

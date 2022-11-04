@@ -165,7 +165,7 @@ this.TextRecognitionWidget = class {
     }
   }
 
-  destructor() {
+  teardown() {
     this.shadowRoot.firstChild.remove();
     this.resizeObserver.disconnect();
     this.spanRects.clear();

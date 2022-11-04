@@ -158,9 +158,9 @@ class UAWidgetsChild extends JSWindowActorChild {
       return;
     }
     let { widget } = this.widgets.get(aElement);
-    if (typeof widget.destructor == "function") {
+    if (typeof widget.teardown == "function") {
       try {
-        widget.destructor();
+        widget.teardown();
       } catch (ex) {
         Cu.reportError(ex);
       }

@@ -72,7 +72,7 @@ this.VideoControlsWidget = class {
       return;
     }
     if (this.impl) {
-      this.impl.destructor();
+      this.impl.teardown();
       this.shadowRoot.firstChild.remove();
     }
     if (newImpl) {
@@ -90,11 +90,11 @@ this.VideoControlsWidget = class {
     }
   }
 
-  destructor() {
+  teardown() {
     if (!this.impl) {
       return;
     }
-    this.impl.destructor();
+    this.impl.teardown();
     this.shadowRoot.firstChild.remove();
     delete this.impl;
   }
@@ -2949,7 +2949,7 @@ this.VideoControlsImplWidget = class {
     return this.isShowingPictureInPictureMessage == elementInPiP;
   }
 
-  destructor() {
+  teardown() {
     this.Utils.terminate();
     this.TouchUtils.terminate();
     this.Utils.updateOrientationState(false);
@@ -3116,7 +3116,7 @@ this.NoControlsMobileImplWidget = class {
     return true;
   }
 
-  destructor() {
+  teardown() {
     this.Utils.terminate();
   }
 
@@ -3170,7 +3170,7 @@ this.NoControlsPictureInPictureImplWidget = class {
     return true;
   }
 
-  destructor() {}
+  teardown() {}
 
   onPrefChange(prefName, prefValue) {
     this.prefs[prefName] = prefValue;
@@ -3350,7 +3350,7 @@ this.NoControlsDesktopImplWidget = class {
     return true;
   }
 
-  destructor() {
+  teardown() {
     this.Utils.terminate();
   }
 
