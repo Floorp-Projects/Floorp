@@ -2277,12 +2277,6 @@ bool DebuggerScript::CallData::isInCatchScope() {
 }
 
 bool DebuggerScript::CallData::getOffsetsCoverage() {
-  Debugger* dbg = obj->owner();
-  if (dbg->observesCoverage() != Debugger::Observing) {
-    args.rval().setNull();
-    return true;
-  }
-
   if (!ensureScript()) {
     return false;
   }
