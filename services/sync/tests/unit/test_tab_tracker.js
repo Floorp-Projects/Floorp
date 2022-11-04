@@ -172,8 +172,8 @@ add_task(async function run_test() {
     Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT
   );
   Assert.ok(
-    !tracker.modified,
-    "location change within the same document request didn't flag as modified"
+    tracker.modified,
+    "location change within the same document request did flag as modified"
   );
 
   tracker.onLocationChange(

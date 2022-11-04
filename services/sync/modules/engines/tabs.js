@@ -522,10 +522,11 @@ TabTracker.prototype = {
 
   // web progress listeners.
   onLocationChange(webProgress, request, locationURI, flags) {
-    // We only care about top-level location changes which are not in the same
-    // document.
+    // We only care about top-level location changes. We do want location changes in the
+    // same document because if a page uses the `pushState()` API, they *appear* as though
+    // they are in the same document even if the URL changes. It also doesn't hurt to accurately
+    // reflect the fragment changing - so we allow LOCATION_CHANGE_SAME_DOCUMENT
     if (
-      flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT ||
       flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_RELOAD ||
       !webProgress.isTopLevel ||
       !locationURI
@@ -588,7 +589,14 @@ TabTracker.prototype = {
         "tabsQuickWriteTimer"
       );
     } else if (scoreIncrement) {
+      this._log.debug(
+        "Detected a tab change, but conditions aren't met for a quick write - bumping score"
+      );
       this.score += scoreIncrement;
+    } else {
+      this._log.debug(
+        "Detected a tab change, but conditions aren't met for a quick write or a score bump"
+      );
     }
   },
 };
