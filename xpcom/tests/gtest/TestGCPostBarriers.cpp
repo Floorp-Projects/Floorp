@@ -22,14 +22,14 @@
 
 #include "mozilla/CycleCollectedJSContext.h"
 
-using namespace JS;
 using namespace mozilla;
 
 template <class ArrayT>
 static void TraceArray(JSTracer* trc, void* data) {
   ArrayT* array = static_cast<ArrayT*>(data);
-  for (unsigned i = 0; i < array->Length(); ++i)
+  for (unsigned i = 0; i < array->Length(); ++i) {
     JS::TraceEdge(trc, &array->ElementAt(i), "array-element");
+  }
 }
 
 /*
@@ -52,12 +52,12 @@ static void TestGrow(JSContext* cx) {
    * Create the array and fill it with new JS objects. With GGC these will be
    * allocated in the nursery.
    */
-  RootedValue value(cx);
+  JS::RootedValue value(cx);
   const char* property = "foo";
   for (size_t i = 0; i < ElementCount; ++i) {
-    RootedObject obj(cx, JS_NewPlainObject(cx));
+    JS::RootedObject obj(cx, JS_NewPlainObject(cx));
     ASSERT_FALSE(JS::ObjectIsTenured(obj));
-    value = Int32Value(i);
+    value = JS::Int32Value(static_cast<int32_t>(i));
     ASSERT_TRUE(JS_SetProperty(cx, obj, property, value));
     ASSERT_TRUE(array->AppendElement(obj, fallible));
   }
@@ -73,7 +73,7 @@ static void TestGrow(JSContext* cx) {
    */
   ASSERT_EQ(array->Length(), ElementCount);
   for (size_t i = 0; i < array->Length(); i++) {
-    RootedObject obj(cx, array->ElementAt(i));
+    JS::RootedObject obj(cx, array->ElementAt(i));
     ASSERT_TRUE(JS::ObjectIsTenured(obj));
     ASSERT_TRUE(JS_GetProperty(cx, obj, property, &value));
     ASSERT_TRUE(value.isInt32());
@@ -96,12 +96,12 @@ static void TestShrink(JSContext* cx) {
    * Create the array and fill it with new JS objects. With GGC these will be
    * allocated in the nursery.
    */
-  RootedValue value(cx);
+  JS::RootedValue value(cx);
   const char* property = "foo";
   for (size_t i = 0; i < ElementCount; ++i) {
-    RootedObject obj(cx, JS_NewPlainObject(cx));
+    JS::RootedObject obj(cx, JS_NewPlainObject(cx));
     ASSERT_FALSE(JS::ObjectIsTenured(obj));
-    value = Int32Value(i);
+    value = JS::Int32Value(static_cast<int32_t>(i));
     ASSERT_TRUE(JS_SetProperty(cx, obj, property, value));
     ASSERT_TRUE(array->AppendElement(obj, fallible));
   }
@@ -114,7 +114,7 @@ static void TestShrink(JSContext* cx) {
 
   ASSERT_EQ(array->Length(), InitialElements);
   for (size_t i = 0; i < array->Length(); i++) {
-    RootedObject obj(cx, array->ElementAt(i));
+    JS::RootedObject obj(cx, array->ElementAt(i));
     ASSERT_TRUE(JS::ObjectIsTenured(obj));
     ASSERT_TRUE(JS_GetProperty(cx, obj, property, &value));
     ASSERT_TRUE(value.isInt32());
@@ -142,7 +142,7 @@ static void CreateGlobalAndRunTest(JSContext* cx) {
 
   JS::Realm* oldRealm = JS::EnterRealm(cx, global);
 
-  using ElementT = Heap<JSObject*>;
+  using ElementT = JS::Heap<JSObject*>;
 
   TestArrayType<nsTArray<ElementT>>(cx);
   TestArrayType<FallibleTArray<ElementT>>(cx);
