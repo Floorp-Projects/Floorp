@@ -2128,6 +2128,7 @@ dependencies = [
  "detect_win32k_conflicts",
  "dom",
  "encoding_glue",
+ "fallible_collections",
  "fluent",
  "fluent-fallback",
  "fluent-ffi",
