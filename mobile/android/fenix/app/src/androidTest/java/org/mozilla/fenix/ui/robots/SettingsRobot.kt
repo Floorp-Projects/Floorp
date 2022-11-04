@@ -44,6 +44,7 @@ import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_PLAY_SERVICES
+import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
@@ -575,7 +576,21 @@ private fun rateOnGooglePlayHeading(): UiObject {
 }
 
 private fun aboutFirefoxHeading(): UiObject {
-    settingsList().scrollToEnd(LISTS_MAXSWIPES)
+    for (i in 1..RETRY_COUNT) {
+        try {
+            settingsList().scrollToEnd(LISTS_MAXSWIPES)
+            assertTrue(
+                mDevice.findObject(UiSelector().text("About $appName"))
+                    .waitForExists(waitingTime),
+            )
+
+            break
+        } catch (e: AssertionError) {
+            if (i == RETRY_COUNT) {
+                throw e
+            }
+        }
+    }
     return mDevice.findObject(UiSelector().text("About $appName"))
 }
 
