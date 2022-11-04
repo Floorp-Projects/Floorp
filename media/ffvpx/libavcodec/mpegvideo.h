@@ -40,7 +40,6 @@
 #include "me_cmp.h"
 #include "motion_est.h"
 #include "mpegpicture.h"
-#include "mpegvideodsp.h"
 #include "mpegvideoencdsp.h"
 #include "pixblockdsp.h"
 #include "put_bits.h"
@@ -57,6 +56,15 @@
 #define MAX_B_FRAMES 16
 
 /**
+ * Scantable.
+ */
+typedef struct ScanTable {
+    const uint8_t *scantable;
+    uint8_t permutated[64];
+    uint8_t raster_end[64];
+} ScanTable;
+
+/**
  * MpegEncContext.
  */
 typedef struct MpegEncContext {
@@ -69,12 +77,13 @@ typedef struct MpegEncContext {
 
     /* scantables */
     ScanTable inter_scantable; ///< if inter == intra then intra should be used to reduce the cache usage
-    ScanTable intra_scantable;
-    ScanTable intra_h_scantable;
-    ScanTable intra_v_scantable;
 
     /* WARNING: changes above this line require updates to hardcoded
      *          offsets used in ASM. */
+
+    ScanTable intra_scantable;
+    uint8_t permutated_intra_h_scantable[64];
+    uint8_t permutated_intra_v_scantable[64];
 
     struct AVCodecContext *avctx;
     /* The following pointer is intended for codecs sharing code
@@ -209,7 +218,6 @@ typedef struct MpegEncContext {
     HpelDSPContext hdsp;
     IDCTDSPContext idsp;
     MECmpContext mecc;
-    MpegVideoDSPContext mdsp;
     MpegvideoEncDSPContext mpvencdsp;
     PixblockDSPContext pdsp;
     QpelDSPContext qdsp;
@@ -235,6 +243,15 @@ typedef struct MpegEncContext {
     int16_t (*b_field_mv_table[2][2][2])[2];///< MV table (4MV per MB) interlaced B-frame encoding
     uint8_t (*p_field_select_table[2]);  ///< Only the first element is allocated
     uint8_t (*b_field_select_table[2][2]); ///< Only the first element is allocated
+
+    /* The following fields are encoder-only */
+    uint16_t *mb_var;           ///< Table for MB variances
+    uint16_t *mc_mb_var;        ///< Table for motion compensated MB variances
+    uint8_t *mb_mean;           ///< Table for MB luminance
+    int64_t mb_var_sum;         ///< sum of MB variance for current frame
+    int64_t mc_mb_var_sum;      ///< motion compensated MB variance for current frame
+    uint64_t encoding_error[MPEGVIDEO_MAX_PLANES];
+
     int motion_est;                      ///< ME algorithm
     int me_penalty_compensation;
     int me_pre;                          ///< prepass for motion estimation
@@ -369,13 +386,9 @@ typedef struct MpegEncContext {
     uint16_t pb_time;               ///< time distance between the last b and p,s,i frame
     uint16_t pp_field_time;
     uint16_t pb_field_time;         ///< like above, just for interlaced
-    int real_sprite_warping_points;
-    int sprite_offset[2][2];         ///< sprite offset[isChroma][isMVY]
-    int sprite_delta[2][2];          ///< sprite_delta [isY][isMVY]
     int mcsel;
     int quant_precision;
     int quarter_sample;              ///< 1->qpel, 0->half pel ME/MC
-    int sprite_warping_accuracy;
     int data_partitioning;           ///< data partitioning flag from header
     int partitioned_frame;           ///< is current frame partitioned
     int low_delay;                   ///< no reordering needed / has no B-frames
@@ -436,12 +449,6 @@ typedef struct MpegEncContext {
     int brd_scale;
     int intra_vlc_format;
     int alternate_scan;
-#define VIDEO_FORMAT_COMPONENT   0
-#define VIDEO_FORMAT_PAL         1
-#define VIDEO_FORMAT_NTSC        2
-#define VIDEO_FORMAT_SECAM       3
-#define VIDEO_FORMAT_MAC         4
-#define VIDEO_FORMAT_UNSPECIFIED 5
     int repeat_first_field;
     int chroma_420_type;
     int chroma_format;
@@ -573,26 +580,28 @@ void ff_mpv_free_context_frame(MpegEncContext *s);
 
 void ff_mpv_common_end(MpegEncContext *s);
 
-void ff_mpv_reconstruct_mb(MpegEncContext *s, int16_t block[12][64]);
-
 void ff_clean_intra_table_entries(MpegEncContext *s);
 
 int ff_update_duplicate_context(MpegEncContext *dst, const MpegEncContext *src);
 void ff_set_qscale(MpegEncContext * s, int qscale);
 
 void ff_mpv_idct_init(MpegEncContext *s);
+void ff_init_scantable(const uint8_t *permutation, ScanTable *st,
+                       const uint8_t *src_scantable);
 void ff_init_block_index(MpegEncContext *s);
 
 void ff_mpv_motion(MpegEncContext *s,
                    uint8_t *dest_y, uint8_t *dest_cb,
                    uint8_t *dest_cr, int dir,
-                   uint8_t **ref_picture,
+                   uint8_t *const *ref_picture,
                    op_pixels_func (*pix_op)[4],
                    qpel_mc_func (*qpix_op)[16]);
 
-static inline void ff_update_block_index(MpegEncContext *s){
-    const int bytes_per_pixel = 1 + (s->avctx->bits_per_raw_sample > 8);
-    const int block_size= (8*bytes_per_pixel) >> s->avctx->lowres;
+static inline void ff_update_block_index(MpegEncContext *s, int bits_per_raw_sample,
+                                         int lowres, int chroma_x_shift)
+{
+    const int bytes_per_pixel = 1 + (bits_per_raw_sample > 8);
+    const int block_size = (8 * bytes_per_pixel) >> lowres;
 
     s->block_index[0]+=2;
     s->block_index[1]+=2;
@@ -601,8 +610,8 @@ static inline void ff_update_block_index(MpegEncContext *s){
     s->block_index[4]++;
     s->block_index[5]++;
     s->dest[0]+= 2*block_size;
-    s->dest[1]+= (2 >> s->chroma_x_shift) * block_size;
-    s->dest[2]+= (2 >> s->chroma_x_shift) * block_size;
+    s->dest[1] += (2 >> chroma_x_shift) * block_size;
+    s->dest[2] += (2 >> chroma_x_shift) * block_size;
 }
 
 #endif /* AVCODEC_MPEGVIDEO_H */

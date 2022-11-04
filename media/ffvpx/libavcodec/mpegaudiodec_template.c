@@ -36,8 +36,8 @@
 #include "libavutil/thread.h"
 
 #include "avcodec.h"
+#include "decode.h"
 #include "get_bits.h"
-#include "internal.h"
 #include "mathops.h"
 #include "mpegaudiodsp.h"
 
@@ -374,7 +374,7 @@ static int handle_crc(MPADecodeContext *s, int sec_len)
         crc_val = av_crc(crc_tab, crc_val, &buf[6], sec_byte_len);
 
         AV_WB32(tmp_buf,
-                ((buf[6 + sec_byte_len] & (0xFF00 >> sec_rem_bits)) << 24) +
+                ((buf[6 + sec_byte_len] & (0xFF00U >> sec_rem_bits)) << 24) +
                 ((s->crc << 16) >> sec_rem_bits));
 
         crc_val = av_crc(crc_tab, crc_val, tmp_buf, 3);

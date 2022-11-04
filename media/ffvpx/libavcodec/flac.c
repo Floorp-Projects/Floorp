@@ -26,6 +26,7 @@
 #include "get_bits.h"
 #include "flac.h"
 #include "flacdata.h"
+#include "flac_parse.h"
 
 static const int8_t sample_size_table[] = { 0, 8, 12, 0, 16, 20, 24, 0 };
 
@@ -145,29 +146,7 @@ int ff_flac_decode_frame_header(AVCodecContext *avctx, GetBitContext *gb,
     return 0;
 }
 
-int ff_flac_get_max_frame_size(int blocksize, int ch, int bps)
-{
-    /* Technically, there is no limit to FLAC frame size, but an encoder
-       should not write a frame that is larger than if verbatim encoding mode
-       were to be used. */
-
-    int count;
-
-    count = 16;                  /* frame header */
-    count += ch * ((7+bps+7)/8); /* subframe headers */
-    if (ch == 2) {
-        /* for stereo, need to account for using decorrelation */
-        count += (( 2*bps+1) * blocksize + 7) / 8;
-    } else {
-        count += ( ch*bps    * blocksize + 7) / 8;
-    }
-    count += 2; /* frame footer */
-
-    return count;
-}
-
 int ff_flac_is_extradata_valid(AVCodecContext *avctx,
-                               enum FLACExtradataFormat *format,
                                uint8_t **streaminfo_start)
 {
     if (!avctx->extradata || avctx->extradata_size < FLAC_STREAMINFO_SIZE) {
@@ -180,14 +159,12 @@ int ff_flac_is_extradata_valid(AVCodecContext *avctx,
             av_log(avctx, AV_LOG_WARNING, "extradata contains %d bytes too many.\n",
                    FLAC_STREAMINFO_SIZE-avctx->extradata_size);
         }
-        *format = FLAC_EXTRADATA_FORMAT_STREAMINFO;
         *streaminfo_start = avctx->extradata;
     } else {
         if (avctx->extradata_size < 8+FLAC_STREAMINFO_SIZE) {
             av_log(avctx, AV_LOG_ERROR, "extradata too small.\n");
             return 0;
         }
-        *format = FLAC_EXTRADATA_FORMAT_FULL_HEADER;
         *streaminfo_start = &avctx->extradata[8];
     }
     return 1;

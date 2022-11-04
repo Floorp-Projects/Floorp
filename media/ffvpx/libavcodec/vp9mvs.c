@@ -22,12 +22,12 @@
  */
 
 #include "threadframe.h"
-#include "vp56.h"
-#include "vp9.h"
+#include "vp89_rac.h"
 #include "vp9data.h"
 #include "vp9dec.h"
+#include "vpx_rac.h"
 
-static av_always_inline void clamp_mv(VP56mv *dst, const VP56mv *src,
+static av_always_inline void clamp_mv(VP9mv *dst, const VP9mv *src,
                                       VP9TileData *td)
 {
     dst->x = av_clip(src->x, td->min_mv.x, td->max_mv.x);
@@ -35,7 +35,7 @@ static av_always_inline void clamp_mv(VP56mv *dst, const VP56mv *src,
 }
 
 static void find_ref_mvs(VP9TileData *td,
-                         VP56mv *pmv, int ref, int z, int idx, int sb)
+                         VP9mv *pmv, int ref, int z, int idx, int sb)
 {
     static const int8_t mv_ref_blk_off[N_BS_SIZES][8][2] = {
         [BS_64x64] = { {  3, -1 }, { -1,  3 }, {  4, -1 }, { -1,  4 },
@@ -65,7 +65,7 @@ static void find_ref_mvs(VP9TileData *td,
         [BS_4x4]   = { {  0, -1 }, { -1,  0 }, { -1, -1 }, {  0, -2 },
                        { -2,  0 }, { -1, -2 }, { -2, -1 }, { -2, -2 } },
     };
-    VP9Context *s = td->s;
+    const VP9Context *s = td->s;
     VP9Block *b = td->b;
     int row = td->row, col = td->col, row7 = td->row7;
     const int8_t (*p)[2] = mv_ref_blk_off[b->bs];
@@ -99,7 +99,7 @@ static void find_ref_mvs(VP9TileData *td,
 #define RETURN_MV(mv)                                                  \
     do {                                                               \
         if (sb > 0) {                                                  \
-            VP56mv tmp;                                                \
+            VP9mv tmp;                                                 \
             uint32_t m;                                                \
             av_assert2(idx == 1);                                      \
             av_assert2(mem != INVALID_MV);                             \
@@ -185,7 +185,7 @@ static void find_ref_mvs(VP9TileData *td,
 #define RETURN_SCALE_MV(mv, scale)              \
     do {                                        \
         if (scale) {                            \
-            VP56mv mv_temp = { -mv.x, -mv.y };  \
+            VP9mv mv_temp = { -mv.x, -mv.y };   \
             RETURN_MV(mv_temp);                 \
         } else {                                \
             RETURN_MV(mv);                      \
@@ -235,10 +235,10 @@ static void find_ref_mvs(VP9TileData *td,
 
 static av_always_inline int read_mv_component(VP9TileData *td, int idx, int hp)
 {
-    VP9Context *s = td->s;
-    int bit, sign = vp56_rac_get_prob(td->c, s->prob.p.mv_comp[idx].sign);
-    int n, c = vp8_rac_get_tree(td->c, ff_vp9_mv_class_tree,
-                                s->prob.p.mv_comp[idx].classes);
+    const VP9Context *s = td->s;
+    int bit, sign = vpx_rac_get_prob(td->c, s->prob.p.mv_comp[idx].sign);
+    int n, c = vp89_rac_get_tree(td->c, ff_vp9_mv_class_tree,
+                                 s->prob.p.mv_comp[idx].classes);
 
     td->counts.mv_comp[idx].sign[sign]++;
     td->counts.mv_comp[idx].classes[c]++;
@@ -246,17 +246,17 @@ static av_always_inline int read_mv_component(VP9TileData *td, int idx, int hp)
         int m;
 
         for (n = 0, m = 0; m < c; m++) {
-            bit = vp56_rac_get_prob(td->c, s->prob.p.mv_comp[idx].bits[m]);
+            bit = vpx_rac_get_prob(td->c, s->prob.p.mv_comp[idx].bits[m]);
             n |= bit << m;
             td->counts.mv_comp[idx].bits[m][bit]++;
         }
         n <<= 3;
-        bit = vp8_rac_get_tree(td->c, ff_vp9_mv_fp_tree,
-                               s->prob.p.mv_comp[idx].fp);
+        bit = vp89_rac_get_tree(td->c, ff_vp9_mv_fp_tree,
+                                s->prob.p.mv_comp[idx].fp);
         n  |= bit << 1;
         td->counts.mv_comp[idx].fp[bit]++;
         if (hp) {
-            bit = vp56_rac_get_prob(td->c, s->prob.p.mv_comp[idx].hp);
+            bit = vpx_rac_get_prob(td->c, s->prob.p.mv_comp[idx].hp);
             td->counts.mv_comp[idx].hp[bit]++;
             n |= bit;
         } else {
@@ -267,14 +267,14 @@ static av_always_inline int read_mv_component(VP9TileData *td, int idx, int hp)
         }
         n += 8 << c;
     } else {
-        n = vp56_rac_get_prob(td->c, s->prob.p.mv_comp[idx].class0);
+        n = vpx_rac_get_prob(td->c, s->prob.p.mv_comp[idx].class0);
         td->counts.mv_comp[idx].class0[n]++;
-        bit = vp8_rac_get_tree(td->c, ff_vp9_mv_fp_tree,
-                               s->prob.p.mv_comp[idx].class0_fp[n]);
+        bit = vp89_rac_get_tree(td->c, ff_vp9_mv_fp_tree,
+                                s->prob.p.mv_comp[idx].class0_fp[n]);
         td->counts.mv_comp[idx].class0_fp[n][bit]++;
         n = (n << 3) | (bit << 1);
         if (hp) {
-            bit = vp56_rac_get_prob(td->c, s->prob.p.mv_comp[idx].class0_hp);
+            bit = vpx_rac_get_prob(td->c, s->prob.p.mv_comp[idx].class0_hp);
             td->counts.mv_comp[idx].class0_hp[bit]++;
             n |= bit;
         } else {
@@ -288,9 +288,9 @@ static av_always_inline int read_mv_component(VP9TileData *td, int idx, int hp)
     return sign ? -(n + 1) : (n + 1);
 }
 
-void ff_vp9_fill_mv(VP9TileData *td, VP56mv *mv, int mode, int sb)
+void ff_vp9_fill_mv(VP9TileData *td, VP9mv *mv, int mode, int sb)
 {
-    VP9Context *s = td->s;
+    const VP9Context *s = td->s;
     VP9Block *b = td->b;
 
     if (mode == ZEROMV) {
@@ -319,8 +319,8 @@ void ff_vp9_fill_mv(VP9TileData *td, VP56mv *mv, int mode, int sb)
             }
         }
         if (mode == NEWMV) {
-            enum MVJoint j = vp8_rac_get_tree(td->c, ff_vp9_mv_joint_tree,
-                                              s->prob.p.mv_joint);
+            enum MVJoint j = vp89_rac_get_tree(td->c, ff_vp9_mv_joint_tree,
+                                               s->prob.p.mv_joint);
 
             td->counts.mv_joint[j]++;
             if (j >= MV_JOINT_V)
@@ -350,8 +350,8 @@ void ff_vp9_fill_mv(VP9TileData *td, VP56mv *mv, int mode, int sb)
                 }
             }
             if (mode == NEWMV) {
-                enum MVJoint j = vp8_rac_get_tree(td->c, ff_vp9_mv_joint_tree,
-                                                  s->prob.p.mv_joint);
+                enum MVJoint j = vp89_rac_get_tree(td->c, ff_vp9_mv_joint_tree,
+                                                   s->prob.p.mv_joint);
 
                 td->counts.mv_joint[j]++;
                 if (j >= MV_JOINT_V)
