@@ -734,6 +734,7 @@ void WorkerScriptLoader::CancelMainThread(
       if (!loadContext->mLoadingFinished) {
         shouldDispatch = true;
       }
+      loadContext->ClearCacheCreator();
     }
     if (shouldDispatch) {
       DispatchAbruptShutdown();

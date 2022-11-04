@@ -116,10 +116,10 @@ void ScriptLoadRequest::Cancel() {
     GetScriptLoadContext()->MaybeCancelOffThreadScript();
   }
   if (HasWorkerLoadContext()) {
-    // Steal and let the worker load context go out of scope, we
-    // no longer need it.
-    RefPtr<mozilla::dom::WorkerLoadContext> droppedContext =
-        StealWorkerLoadContext();
+    // The back reference needs to be cleared for workers, as there is no CC.
+    // However, we don't want to remove our pointer to the worker load
+    // context as it is used to determine load failure information.
+    GetWorkerLoadContext()->mRequest = nullptr;
   }
 }
 
