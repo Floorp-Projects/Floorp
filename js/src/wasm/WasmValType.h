@@ -259,14 +259,12 @@ static_assert(sizeof(SerializableTypeCode) == sizeof(uintptr_t), "packed");
 union MatchTypeCode {
   using PackedRepr = uint64_t;
 
-  static constexpr size_t IsLocalBits = 1;
   static constexpr size_t NullableBits = 1;
   static constexpr size_t TypeCodeBits = 8;
   static constexpr size_t TypeRefBits = 48;
 
   PackedRepr bits;
   struct {
-    PackedRepr isLocal : IsLocalBits;
     PackedRepr nullable : NullableBits;
     PackedRepr typeCode : TypeCodeBits;
     PackedRepr typeRef : TypeRefBits;
@@ -274,7 +272,7 @@ union MatchTypeCode {
 
   WASM_CHECK_CACHEABLE_POD(bits);
 
-  static_assert(IsLocalBits + NullableBits + TypeCodeBits + TypeRefBits <=
+  static_assert(NullableBits + TypeCodeBits + TypeRefBits <=
                     (sizeof(PackedRepr) * 8),
                 "enough bits");
 
@@ -378,6 +376,9 @@ class RefType {
     }
     MOZ_CRASH("switch is exhaustive");
   }
+
+  // Defined in WasmTypeDef.h to avoid a cycle while allowing inlining
+  static bool isSubTypeOf(RefType subType, RefType superType);
 
   bool operator==(const RefType& that) const { return ptc_ == that.ptc_; }
   bool operator!=(const RefType& that) const { return ptc_ != that.ptc_; }
@@ -786,6 +787,20 @@ class PackedType : public T {
   PackedType<FieldTypeTraits> fieldType() const {
     MOZ_ASSERT(isValid());
     return PackedType<FieldTypeTraits>(tc_);
+  }
+
+  static bool isSubTypeOf(PackedType subType, PackedType superType) {
+    // Anything is a subtype of itself.
+    if (subType == superType) {
+      return true;
+    }
+
+    // A reference may be a subtype of another reference
+    if (subType.isRefType() && superType.isRefType()) {
+      return RefType::isSubTypeOf(subType.refType(), superType.refType());
+    }
+
+    return false;
   }
 
   bool operator==(const PackedType& that) const {
