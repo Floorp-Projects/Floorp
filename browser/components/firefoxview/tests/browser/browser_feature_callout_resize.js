@@ -3,28 +3,7 @@
 
 "use strict";
 
-const calloutId = "root";
-const calloutSelector = `#${calloutId}.featureCallout`;
-const primaryButtonSelector = `#${calloutId} .primary`;
 const featureTourPref = "browser.firefox-view.feature-tour";
-const getPrefValueByScreen = screen => {
-  return JSON.stringify({
-    screen: `FEATURE_CALLOUT_${screen}`,
-    complete: false,
-  });
-};
-
-const waitForCalloutScreen = async (doc, screenNumber) => {
-  await BrowserTestUtils.waitForCondition(() => {
-    return doc.querySelector(
-      `${calloutSelector}:not(.hidden) .FEATURE_CALLOUT_${screenNumber}`
-    );
-  });
-};
-
-const clickPrimaryButton = async doc => {
-  doc.querySelector(primaryButtonSelector).click();
-};
 
 add_setup(async function setup() {
   let originalWidth = window.outerWidth;
@@ -39,62 +18,6 @@ add_setup(async function setup() {
     );
     window.resizeTo(originalWidth, originalHeight);
   });
-});
-
-// Tour is accessible using a screen reader and keyboard navigation
-add_task(async function feature_callout_is_accessible() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.firefox-view.feature-tour", getPrefValueByScreen(1)],
-      ["browser.sessionstore.max_tabs_undo", 1],
-    ],
-  });
-
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: "about:firefoxview",
-    },
-    async browser => {
-      const { document } = browser.contentWindow;
-
-      window.FullZoom.setZoom(0.5, browser);
-      browser.contentWindow.resizeTo(1550, 1000);
-
-      await waitForCalloutScreen(document, 1);
-
-      await BrowserTestUtils.waitForCondition(
-        () => document.activeElement.id === calloutId,
-        "Feature Callout is focused on page load"
-      );
-      await BrowserTestUtils.waitForCondition(
-        () =>
-          document.querySelector(
-            `${calloutSelector}[aria-describedby="#${calloutId} .welcome-text"]`
-          ),
-        "The callout container has an aria-describedby value equal to the screen welcome text"
-      );
-
-      // Advance to second screen
-      clickPrimaryButton(document);
-      await waitForCalloutScreen(document, 2);
-
-      const startingTop = document.querySelector(calloutSelector).style.top;
-
-      browser.contentWindow.resizeTo(800, 800);
-      // Wait for callout to be repositioned
-      await BrowserTestUtils.waitForMutationCondition(
-        document.querySelector(calloutSelector),
-        { attributeFilter: ["style"], attributes: true },
-        () => document.querySelector(calloutSelector).style.top != startingTop
-      );
-
-      await BrowserTestUtils.waitForCondition(
-        () => document.activeElement.id === calloutId,
-        "Feature Callout is focused after advancing screens"
-      );
-    }
-  );
 });
 
 add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
@@ -114,7 +37,7 @@ add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
       const { document } = browser.contentWindow;
 
       browser.contentWindow.resizeTo(1550, 1000);
-      await waitForCalloutScreen(document, 1);
+      await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
       ok(
         document.querySelector(`${calloutSelector}.arrow-top`),
         "On first screen at 1550x1000, the callout is positioned below the parent element"
@@ -146,9 +69,9 @@ add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
       );
 
       clickPrimaryButton(document);
-      await waitForCalloutScreen(document, 2);
+      await waitForCalloutScreen(document, "FEATURE_CALLOUT_2");
       clickPrimaryButton(document);
-      await waitForCalloutScreen(document, 3);
+      await waitForCalloutScreen(document, "FEATURE_CALLOUT_3");
 
       ok(
         document.querySelector(`${calloutSelector}.arrow-inline-end`),
@@ -201,7 +124,7 @@ add_task(async function feature_callout_is_repositioned_rtl() {
       const { document } = browser.contentWindow;
 
       browser.contentWindow.resizeTo(1550, 1000);
-      await waitForCalloutScreen(document, 1);
+      await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
       ok(
         document.querySelector(`${calloutSelector}.arrow-top`),
         "On first screen at 1550x1000, the callout is positioned below the parent element"
@@ -233,9 +156,9 @@ add_task(async function feature_callout_is_repositioned_rtl() {
       );
 
       clickPrimaryButton(document);
-      await waitForCalloutScreen(document, 2);
+      await waitForCalloutScreen(document, "FEATURE_CALLOUT_2");
       clickPrimaryButton(document);
-      await waitForCalloutScreen(document, 3);
+      await waitForCalloutScreen(document, "FEATURE_CALLOUT_3");
 
       ok(
         document.querySelector(`${calloutSelector}.arrow-inline-start`),
