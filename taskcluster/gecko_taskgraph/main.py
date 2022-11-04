@@ -101,7 +101,7 @@ FORMAT_METHODS = {
 
 def get_taskgraph_generator(root, parameters):
     """Helper function to make testing a little easier."""
-    from gecko_taskgraph.generator import TaskGraphGenerator
+    from taskgraph.generator import TaskGraphGenerator
 
     return TaskGraphGenerator(root_dir=root, parameters=parameters)
 
