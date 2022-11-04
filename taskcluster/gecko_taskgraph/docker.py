@@ -8,10 +8,10 @@ import os
 import tarfile
 from io import BytesIO
 
+from taskgraph.generator import load_tasks_for_kind
 from taskgraph.parameters import Parameters
 from taskgraph.util.taskcluster import get_session, get_artifact_url
 
-from gecko_taskgraph.generator import load_tasks_for_kind
 from gecko_taskgraph.optimize.strategies import IndexSearch
 from gecko_taskgraph.util import docker
 from . import GECKO
