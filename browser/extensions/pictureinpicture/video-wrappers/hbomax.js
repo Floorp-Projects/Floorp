@@ -5,15 +5,6 @@
 "use strict";
 
 class PictureInPictureVideoWrapper {
-  constructor(video) {
-    this.player = video.wrappedJSObject._dispNode._player;
-  }
-  play() {
-    this.player.play();
-  }
-  pause() {
-    this.player.pause();
-  }
   setVolume(video, volume) {
     video.volume = volume;
   }
