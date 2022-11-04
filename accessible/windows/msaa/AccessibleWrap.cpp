@@ -270,3 +270,20 @@ bool AccessibleWrap::DispatchTextChangeToHandler(Accessible* aAcc,
 
   return SUCCEEDED(hr);
 }
+
+/* static */
+void AccessibleWrap::SuppressHandlerA11yForClipboardCopy() {
+  if (!sHandlerControllers || sHandlerControllers->IsEmpty()) {
+    return;
+  }
+  // The original intent was that AccessibleHandler would be used in any
+  // process that wanted to access Gecko a11y. That didn't work out for various
+  // reasons. In practice, there is only a single AccessibleHandlerControl which
+  // is for our own parent process, used for in-process client calls. That also
+  // means we don't need to worry about async invokation here.
+  auto& controller = sHandlerControllers->ElementAt(0);
+  MOZ_ASSERT(controller.mPid == ::GetCurrentProcessId() &&
+             !controller.mIsProxy);
+  DebugOnly<HRESULT> hr = controller.mCtrl->SuppressA11yForClipboardCopy();
+  MOZ_ASSERT(SUCCEEDED(hr));
+}
