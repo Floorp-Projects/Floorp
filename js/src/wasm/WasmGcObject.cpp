@@ -60,7 +60,7 @@ static const JSClassOps RttValueClassOps = {
     RttValue::finalize,  // finalize
     nullptr,             // call
     nullptr,             // construct
-    RttValue::trace,     // trace
+    nullptr,             // trace
 };
 
 RttValue* RttValue::create(JSContext* cx, const TypeHandle& handle) {
@@ -77,8 +77,6 @@ RttValue* RttValue::create(JSContext* cx, const TypeHandle& handle) {
   rtt->initReservedSlot(RttValue::TypeContext,
                         PrivateValue((void*)typeContext.get()));
   rtt->initReservedSlot(RttValue::TypeDef, PrivateValue((void*)&handle.def()));
-  rtt->initReservedSlot(RttValue::Parent, NullValue());
-  rtt->initReservedSlot(RttValue::Children, PrivateValue(nullptr));
 
   MOZ_ASSERT(!rtt->isNewborn());
 
@@ -98,42 +96,6 @@ const JSClass js::RttValue::class_ = {
 
 RttValue* RttValue::rttCanon(JSContext* cx, const TypeHandle& handle) {
   return RttValue::create(cx, handle);
-}
-
-RttValue* RttValue::rttSub(JSContext* cx, Handle<RttValue*> parent,
-                           Handle<RttValue*> subCanon) {
-  if (!parent->ensureChildren(cx)) {
-    return nullptr;
-  }
-
-  ObjectWeakMap& parentChildren = parent->children();
-  if (JSObject* child = parentChildren.lookup(subCanon)) {
-    return &child->as<RttValue>();
-  }
-
-  Rooted<RttValue*> rtt(cx, create(cx, parent->typeHandle()));
-  if (!rtt) {
-    return nullptr;
-  }
-  rtt->setReservedSlot(RttValue::Parent, ObjectValue(*parent.get()));
-  if (!parentChildren.add(cx, subCanon, rtt)) {
-    return nullptr;
-  }
-  return rtt;
-}
-
-bool RttValue::ensureChildren(JSContext* cx) {
-  if (maybeChildren()) {
-    return true;
-  }
-  Rooted<UniquePtr<ObjectWeakMap>> children(cx,
-                                            cx->make_unique<ObjectWeakMap>(cx));
-  if (!children) {
-    return false;
-  }
-  setReservedSlot(Slot::Children, PrivateValue(children.release()));
-  AddCellMemory(this, sizeof(ObjectWeakMap), MemoryUse::WasmRttValueChildren);
-  return true;
 }
 
 bool RttValue::lookupProperty(JSContext* cx, Handle<WasmGcObject*> object,
@@ -194,18 +156,6 @@ bool RttValue::lookupProperty(JSContext* cx, Handle<WasmGcObject*> object,
 }
 
 /* static */
-void RttValue::trace(JSTracer* trc, JSObject* obj) {
-  auto* rttValue = &obj->as<RttValue>();
-  if (rttValue->isNewborn()) {
-    return;
-  }
-
-  if (ObjectWeakMap* children = rttValue->maybeChildren()) {
-    children->trace(trc);
-  }
-}
-
-/* static */
 void RttValue::finalize(JS::GCContext* gcx, JSObject* obj) {
   auto* rttValue = &obj->as<RttValue>();
 
@@ -218,11 +168,6 @@ void RttValue::finalize(JS::GCContext* gcx, JSObject* obj) {
   // creation
   rttValue->typeContext()->Release();
   rttValue->setReservedSlot(Slot::TypeContext, PrivateValue(nullptr));
-
-  // Free the lazy-allocated children map, if any
-  if (ObjectWeakMap* children = rttValue->maybeChildren()) {
-    gcx->delete_(obj, children, MemoryUse::WasmRttValueChildren);
-  }
 }
 
 //=========================================================================
@@ -447,14 +392,7 @@ bool WasmGcObject::loadValue(JSContext* cx, const RttValue::PropOffset& offset,
 }
 
 bool WasmGcObject::isRuntimeSubtype(Handle<RttValue*> rtt) const {
-  RttValue* current = &rttValue();
-  while (current != nullptr) {
-    if (current == rtt.get()) {
-      return true;
-    }
-    current = current->parent();
-  }
-  return false;
+  return TypeDef::isSubTypeOf(&rttValue().typeDef(), &rtt->typeDef());
 }
 
 bool WasmGcObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
