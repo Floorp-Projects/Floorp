@@ -953,7 +953,13 @@ PlacesController.prototype = {
     }
 
     if (URIs.size) {
-      await PlacesUtils.history.remove([...URIs]);
+      await PlacesUIUtils.batchUpdatesForNode(
+        this._view.result,
+        URIs.size,
+        async () => {
+          await PlacesUtils.history.remove([...URIs]);
+        }
+      );
     }
   },
 
@@ -974,6 +980,8 @@ PlacesController.prototype = {
         (aContainerNode.title == PlacesUtils.getString("localhost")
           ? ""
           : aContainerNode.title);
+      // Will update faster if all children hidden before removing
+      aContainerNode.containerOpen = false;
       await PlacesUtils.history.removeByFilter({ host });
     } else if (PlacesUtils.nodeIsDay(aContainerNode)) {
       // This is a day container.
@@ -983,6 +991,8 @@ PlacesController.prototype = {
       if (!query || !beginTime || !endTime) {
         throw new Error("A valid date container query should exist!");
       }
+      // Will update faster if all children hidden before removing
+      aContainerNode.containerOpen = false;
       // We want to exclude beginTime from the removal because
       // removePagesByTimeframe includes both extremes, while date containers
       // exclude the lower extreme.  So, if we would not exclude it, we would
