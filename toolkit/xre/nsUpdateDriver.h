@@ -95,11 +95,11 @@ class nsUpdateProcessor final : public nsIUpdateProcessor {
   void StartStagedUpdate();
   void WaitForProcess();
   void UpdateDone();
-  void ShutdownWatcherThread();
+  void ShutdownWorkerThread();
 
  private:
   ProcessType mUpdaterPID;
-  nsCOMPtr<nsIThread> mProcessWatcher;
+  nsCOMPtr<nsIThread> mWorkerThread;
   StagedUpdateInfo mInfo;
 };
 #endif  // nsUpdateDriver_h__

@@ -15,8 +15,11 @@
 
 ######
 # Gecko/Firefox thread names
-#
-# (None documented yet -- but see "Unsorted thread names", below.)
+# (See also "Unsorted thread names", below.)
+
+# Used by `nsUpdateProcessor` to check for updates. May also be used for polling
+# the update process.
+UpdateProcessor
 
 ######
 # Thunderbird-only thread names
@@ -97,7 +100,6 @@ Timer
 ToastBgThread
 TRR Background
 URL Classifier
-Update Watcher
 VRService
 VsyncIOThread
 Wifi Monitor
