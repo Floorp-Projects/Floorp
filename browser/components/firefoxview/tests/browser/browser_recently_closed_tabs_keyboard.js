@@ -3,16 +3,6 @@
 
 "use strict";
 
-const RECENTLY_CLOSED_STATE_PREF =
-  "browser.tabs.firefox-view.ui-state.recently-closed-tabs.open";
-
-const URLs = [
-  "http://mochi.test:8888/browser/",
-  "https://www.example.com/",
-  "https://example.net/",
-  "https://example.org/",
-];
-
 /**
  * Tests keyboard navigation of the recently closed tabs component
  */

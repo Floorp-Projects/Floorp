@@ -7,8 +7,6 @@ const { TabsSetupFlowManager } = ChromeUtils.importESModule(
 
 const TAB_PICKUP_STATE_PREF =
   "browser.tabs.firefox-view.ui-state.tab-pickup.open";
-const RECENTLY_CLOSED_STATE_PREF =
-  "browser.tabs.firefox-view.ui-state.recently-closed-tabs.open";
 
 add_task(async function test_state_prefs_unset() {
   await SpecialPowers.clearUserPref(TAB_PICKUP_STATE_PREF);
