@@ -308,7 +308,8 @@ void Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline) {
   } else if (oldTimeline && !oldTimeline->IsMonotonicallyIncreasing() &&
              !previousCurrentTime.IsNull()) {
     // If "from finite timeline" and previous progress is resolved.
-    SetCurrentTime(TimeDuration(EffectEnd().MultDouble(previousProgress)));
+    SetCurrentTimeNoUpdate(
+        TimeDuration(EffectEnd().MultDouble(previousProgress)));
   }
 
   if (!mStartTime.IsNull()) {
@@ -322,6 +323,9 @@ void Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline) {
   UpdatePendingAnimationTracker(oldTimeline, aTimeline);
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
+
+  // FIXME: Bug 1799071: Check if we need to add
+  // MutationObservers::NotifyAnimationChanged(this) here.
 }
 
 // https://drafts.csswg.org/web-animations/#set-the-animation-start-time
@@ -408,6 +412,15 @@ void Animation::SetCurrentTime(const TimeDuration& aSeekTime) {
 
   AutoMutationBatchForAnimation mb(*this);
 
+  SetCurrentTimeNoUpdate(aSeekTime);
+
+  if (IsRelevant()) {
+    MutationObservers::NotifyAnimationChanged(this);
+  }
+  PostUpdate();
+}
+
+void Animation::SetCurrentTimeNoUpdate(const TimeDuration& aSeekTime) {
   SilentlySetCurrentTime(aSeekTime);
 
   if (mPendingState == PendingState::PausePending) {
@@ -424,10 +437,6 @@ void Animation::SetCurrentTime(const TimeDuration& aSeekTime) {
   }
 
   UpdateTiming(SeekFlag::DidSeek, SyncNotifyFlag::Async);
-  if (IsRelevant()) {
-    MutationObservers::NotifyAnimationChanged(this);
-  }
-  PostUpdate();
 }
 
 // https://drafts.csswg.org/web-animations/#set-the-playback-rate
