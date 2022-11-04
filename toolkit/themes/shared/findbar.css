@@ -158,6 +158,10 @@ html|input.findbar-textbox[flash="true"] {
   margin-inline-start: 12px;
 }
 
+.findbar-find-status[status="notfound"] {
+  font-weight: bold;
+}
+
 .find-status-icon {
   display: none;
 }
