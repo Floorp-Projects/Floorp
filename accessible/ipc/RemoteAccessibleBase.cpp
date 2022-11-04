@@ -1480,6 +1480,24 @@ void RemoteAccessibleBase<Derived>::InvalidateGroupInfo() {
 }
 
 template <class Derived>
+void RemoteAccessibleBase<Derived>::GetPositionAndSetSize(int32_t* aPosInSet,
+                                                          int32_t* aSetSize) {
+  if (IsHTMLRadioButton()) {
+    *aSetSize = 0;
+    Relation rel = RelationByType(RelationType::MEMBER_OF);
+    while (Accessible* radio = rel.Next()) {
+      ++*aSetSize;
+      if (radio == this) {
+        *aPosInSet = *aSetSize;
+      }
+    }
+    return;
+  }
+
+  Accessible::GetPositionAndSetSize(aPosInSet, aSetSize);
+}
+
+template <class Derived>
 bool RemoteAccessibleBase<Derived>::HasPrimaryAction() const {
   return mCachedFields && mCachedFields->HasAttribute(nsGkAtoms::action);
 }

@@ -407,6 +407,9 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual AccGroupInfo* GetOrCreateGroupInfo() override;
 
+  virtual void GetPositionAndSetSize(int32_t* aPosInSet,
+                                     int32_t* aSetSize) override;
+
   virtual bool HasPrimaryAction() const override;
 
   nsAtom* GetPrimaryAction() const;
