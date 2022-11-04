@@ -4122,12 +4122,29 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
       RefPtr<BrowsingContext> browsingContext(mBrowsingContext);
       nsCOMPtr<nsIURI> currentURI(mCurrentURI);
       nsCOMPtr<nsIReferrerInfo> referrerInfo(mReferrerInfo);
+      RefPtr<StopDetector> stopDetector = new StopDetector();
+      nsCOMPtr<nsILoadGroup> loadGroup;
+      GetLoadGroup(getter_AddRefs(loadGroup));
+      if (loadGroup) {
+        // loadGroup may be null in theory. In that case stopDetector just
+        // doesn't do anything.
+        loadGroup->AddRequest(stopDetector, nullptr);
+      }
 
       ContentChild::GetSingleton()->SendNotifyOnHistoryReload(
           mBrowsingContext, forceReload,
-          [docShell, doc, loadType, browsingContext, currentURI, referrerInfo](
+          [docShell, doc, loadType, browsingContext, currentURI, referrerInfo,
+           loadGroup, stopDetector](
               Tuple<bool, Maybe<RefPtr<nsDocShellLoadState>>, Maybe<bool>>&&
                   aResult) {
+            auto scopeExit = MakeScopeExit([loadGroup, stopDetector]() {
+              if (loadGroup) {
+                loadGroup->RemoveRequest(stopDetector, nullptr, NS_OK);
+              }
+            });
+            if (stopDetector->Canceled()) {
+              return;
+            }
             bool canReload;
             Maybe<RefPtr<nsDocShellLoadState>> loadState;
             Maybe<bool> reloadingActiveEntry;
