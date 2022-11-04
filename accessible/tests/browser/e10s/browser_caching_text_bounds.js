@@ -373,7 +373,7 @@ addAccessibleTask(
   <style>
     @font-face {
       font-family: Ahem;
-      src: url(./fonts/Ahem.ttf);
+      src: url(${CURRENT_CONTENT_DIR}e10s/fonts/Ahem.sjs);
     }
     pre {
       font: 20px/20px Ahem;
