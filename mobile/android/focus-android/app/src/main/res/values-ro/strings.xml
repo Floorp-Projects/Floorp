@@ -116,6 +116,19 @@
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">Caută într-un mod privat</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s îți oferă controlul.</p>
+<p>Folosește-l ca browser privat:
+  <ul>
+    <li>Caută și navighează direct în aplicație</li>
+    <li>Blochează elementele de urmărire (sau actualizează setările pentru a permite elementele de urmărire)</li>
+    <li>Șterge pentru a elimina cookie-urile, precum și istoricul de căutare și navigare</li>
+  </ul>
+</p>
+<p>%1$s este produs de Mozilla. Misiunea noastră este să promovăm un internet sănătos și deschis.<br/>
+<a href="%2$s">Află mai multe</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Confidențialitate și securitate</string>
 
@@ -305,10 +318,6 @@
     <string name="preference_search_add2">+ Adaugă alt motor de căutare</string>
     <string name="preference_search_remove_title">Elimină motoare de căutare</string>
     <string name="preference_search_remove">Elimină</string>
-
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Afișează ponturi în ecranul principal</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Adaugă motorul de căutare</string>
@@ -552,16 +561,9 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Depanare de la distanță prin USB/Wi-Fi</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">Deblochează %1$s</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">Atinge senzorul de amprentă pentru a continua.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">Sesiune nouă</string>
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Deschide linkul într-o nouă sesiune</string>
 
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">Pictogramă amprentă</string>
@@ -658,4 +660,8 @@
 
     <!-- Tracking protection bottom sheet -->
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
     </resources>

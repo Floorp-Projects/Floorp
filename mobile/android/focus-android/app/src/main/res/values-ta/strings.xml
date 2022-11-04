@@ -1,128 +1,358 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">ரத்து</string>
-  <string name="action_ok">சரி</string>
-  <string name="action_save">சேமி</string>
-  <string name="urlbar_hint">தேட (அ) உலாவ முகவரியை உள்ளிடுக</string>
-  <string name="teaser">தானியக்க அந்தரங்க உலாவல்.\nஉலாவு. அழி. திரும்பச்செய்.</string>
-  <string name="feedback_erase">உங்கள் உலாவல் வரலாறு அழிக்கப்பட்டது.</string>
-  <string name="search_hint">%1$s சொல்லைத் தேடு</string>
-  <string name="menu_share">பகிர்…</string>
-  <string name="menu_report_site_issue">தள சிக்கலைத் தெரிவி</string>
-  <string name="menu_open_with_default_browser2">%1$s உலாவியில் திற</string>
-  <string name="menu_open_with_a_browser2">உலாவியில் திற…</string>
-  <string name="menu_add_to_home_screen">முகப்பு திரைக்கு சேர்</string>
-  <string name="menu_whats_new">புதிதாய் என்ன</string>
-  <string name="menu_settings">அமைவுகள்</string>
-  <string name="menu_about">போக்கசு பற்றி</string>
-  <string name="menu_help">உதவி</string>
-  <string name="menu_rights">உரிமைகள்</string>
-  <string name="menu_trackers_blocked_title">பின்தொடரி</string>
-  <string name="menu_custom_tab_branding">%1$s மூலம் இயக்கப்படுகிறது</string>
-  <string name="share_dialog_title">தோன்றும் செயலிகளின் வழி பகிர்க</string>
-  <string name="notification_erase_text">உலாவல் வரலாற்றை அழி</string>
-  <string name="notification_action_open">திற</string>
-  <string name="notification_action_erase_and_open">துடைத்து திற</string>
-  <string name="shortcut_erase_short_label">அகற்று</string>
-  <string name="shortcut_erase_long_label">உலாவல் வரலாற்றை அகற்று</string>
-  <string name="text_selection_search_action">அந்தரங்க நிலையில் உலாவு</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">தனியுரிமை மற்றும் பாதுகாப்பு</string>
-  <string name="preference_privacy_and_security_summary">தடமறிதல், நினைவிகள், தரவு தேர்வுகள்</string>
-  <string name="preference_search_summary">தானிரப்பியை இயல்பாக அமை</string>
-  <string name="preference_mozilla_summary">%1$s பற்றிய உதவி</string>
-  <string name="preference_category_tracking_protection">தடமறியல் பாதுகாப்பு</string>
-  <string name="preference_category_web_content">வலை உள்ளடக்கம்</string>
-  <string name="preference_category_switching_apps">செயலிகள் இடமாற்றம்</string>
-  <string name="preference_category_general">பொது</string>
-  <string name="preference_category_data_collection_use">தரவு சேகரிப்பு மற்றும் பயனளவு</string>
-  <string name="preference_category_search">தேடல்</string>
-  <string name="preference_search_engine_default">முன்னிருப்பு</string>
-  <string name="preference_state_on">இயக்கு</string>
-  <string name="preference_state_off">அணை</string>
-  <string name="preference_subitem_autocomplete">URL தானியங்கு நிரப்பு</string>
-  <string name="preference_autocomplete_action_add">+ தனிபயன் URL சேர்</string>
-  <string name="preference_autocomplete_title_add">தனிபயன் URL சேர்</string>
-  <string name="custom_autocomplete_quick_add">தனிபயன் URL சேர்</string>
-  <string name="preference_category_cookies">நினைவிகள் மற்றும் தள தரவு</string>
-  <string name="preference_category_data_choices">தரவு தெரிவுகள்</string>
-  <string name="preference_autocomplete_title_remove">தனிபயன் URLs நீக்கு</string>
-  <string name="preference_autocomplete_learn_more">மேலும் அறிய</string>
-  <string name="preference_autocomplete_custom_summary">தனிபயன் தானியங்குநிரப்பு URLs சேர்த்து நிர்வகி.</string>
-  <string name="preference_autocomplete_add_title">சேர்க்க வேண்டிய URL</string>
-  <string name="preference_autocomplete_add_hint">URL ஒட்டு அல்லது உள்ளிடு</string>
-  <string name="preference_autocomplete_add_example2">எ.கா: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">எகா: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">புது தனிபயன் URL சேர்க்கப்பட்டது.</string>
-  <string name="preference_autocomplete_menu_remove">நீக்கு</string>
-  <string name="preference_autocomplete_action_remove_content_description">நீக்கு</string>
-  <string name="preference_autocomplete_add_error">நீங்கள் உள்ளிட்ட URL இருமுறை சரிபார்க்கவும்.</string>
-  <string name="preference_language">மொழி</string>
-  <string name="preference_language_systemdefault">கைப்பேசி முன்னிருப்பு</string>
-  <string name="preference_category_privacy">தனியுரிமை</string>
-  <string name="preference_privacy_block_ads">விளம்பர பின்தொடரிகளைத் தடு</string>
-  <string name="preference_privacy_block_ads_summary">சில விளம்பரங்கள், நீங்கள் அதனை சொடுக்காவிட்டாலும் தள பார்வைகளைப் பின்தொடரும்</string>
-  <string name="preference_privacy_block_analytics">பகுப்பாய்வு பின்தொடரிகளைத் தடு</string>
-  <string name="preference_privacy_block_analytics_summary">தட்டல், உருட்டுதல் போன்ற செயல்களைச் சேகரிக்கும், ஆய்வுசெய்யும் அளவிடும்</string>
-  <string name="preference_privacy_block_social">சமூக பின்தொடரிகளைத் தடு</string>
-  <string name="preference_privacy_block_social_summary">உங்கள் பார்வைகளைப் பின்தொடரவும் பகிர்தல் பொத்தான் போன்றவற்றைக் காட்டவும் தளத்தில் உட்பொதியப்பட்டிருக்கும்</string>
-  <string name="preference_privacy_block_content">உள்ளடக்க பின்தொடரிகளைத் தடு</string>
-  <string name="preference_privacy_block_content_summary2">செயற்படுத்துவது சில பக்கங்கள் எதிர்பாராமல் தவறாகச் செயல்பட காரணமாகலாம்</string>
-  <string name="preference_privacy_category_cookies">நினைவிகளை முடக்கு</string>
-  <string name="preference_privacy_should_block_cookies_no_option">இல்லை</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">3 ஆம் தரப்பு நினைவிகளை மட்டும் முடக்கு</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">ஆம்</string>
-  <string name="preference_privacy_secure_mode">போரியல்</string>
-  <string name="preference_privacy_stealth_summary">செயலிகள் மாறும்பொழுது வலைப்பக்கங்களை மறை மற்றும் திரைப்பிடிப்பு எடுப்பதைத் தடு.</string>
-  <string name="preference_category_performance">செயல்திறன்</string>
-  <string name="preference_performance_block_webfonts">இணைய எழுத்துருக்களைத் தடு</string>
-  <string name="preference_performance_block_webfonts_summary">சின்னம் (அ) படங்கள் காணாமல் போகலாம்</string>
-  <string name="preference_performance_block_javascript">ஜாவாஸ்கிரிப்டை முடக்கு</string>
-  <string name="preference_performance_block_javascript_summary">பக்கம் வேகமாக ஏறும், ஆனால் எதிர்பாரா விதத்தில் செயல்படலாம்</string>
-  <string name="preference_default_browser2">%1$s உங்கள் முன்னிருப்பு உலாவியாக மாற்றவும்</string>
-  <string name="preference_category_mozilla">மொசில்லா</string>
-  <string name="preference_mozilla_telemetry2">பயனளவு தரவை அனுப்பு</string>
-  <string name="preference_mozilla_telemetry_summary">மேலும் அறிய</string>
-  <string name="preference_mozilla_telemetry_summary2">அனைவருக்கும் %1$s வழங்க மற்றும் மேம்படுத்த தேவையானதை மட்டும் சேகரிக்க மொசில்லா உறுதிபூண்டுள்ளது.</string>
-  <string name="preference_privacy_notice">தனியுரிமை கொள்கை</string>
-  <string name="preference_about">%1$s பற்றி</string>
-  <string name="preference_search_installed_search_engines">நிறுவப்பட்ட தேடு பொறிகள்</string>
-  <string name="preference_search_restore">முன்னிருப்பு தேடுபொறிகளை மீட்டமை</string>
-  <string name="preference_search_add2">+ மற்றொரு தேடு பொறியைச் சேர்</string>
-  <string name="preference_search_remove_title">தேடு பொறிகளை நீக்கு</string>
-  <string name="preference_search_remove">நீக்கு</string>
-  <string name="action_option_add_search_engine">தேடுபொறியைச் சேர்</string>
-  <string name="search_add_manually_name_hint">தேடுபொறி பெயர்</string>
-  <string name="search_add_manually_string">பயன்படுத்த வேண்டிய தேடல் தொடர்</string>
-  <string name="search_add_manually_save">சேமி</string>
-  <string name="search_add_manually_example">எகா: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">புது தேடுபொறி சேர்க்கப்பட்டது.</string>
-  <string name="search_add_error_empty_name">தேடுபொறி பெயரை உள்ளிடு</string>
-  <string name="search_add_error_duplicate_name">நிறுவப்பட்ட தேடுபொறி ஏற்கனவே அப்பெயரைப் பயன்படுத்துகிறது.</string>
-  <string name="search_add_error_empty_search">தேடல் தொடரை உள்ளிடு</string>
-  <string name="search_add_error_format">தேடல் தொடர் எகா வடிவத்தை ஒத்திருக்கிறதா என்று பார்</string>
-  <string name="content_description_clear_input">துள்ளிய உள்ளீடு</string>
-  <string name="content_description_dismiss_input">நிராகரி</string>
-  <string name="content_description_erase">உலாவல் வரலாற்றை அகற்று</string>
-  <string name="content_description_tab_counter">திறந்த கீற்றுகள்: %1$s</string>
-  <string name="content_description_lock">பாதுகாப்பான இணைப்பு</string>
-  <string name="accessibility_announcement_loading">ஏற்றுகிறது</string>
-  <string name="accessibility_announcement_loading_finished">வலையத்தளம் ஏற்றப்பட்டது</string>
-  <string name="content_description_menu">கூடுதல் தேர்வுகள்</string>
-  <string name="content_description_forward">வழிசெலுத்தி முன்செல்</string>
-  <string name="content_description_reload">வலைத்தளத்தை மீளேற்று</string>
-  <string name="content_description_back">வழிசெலுத்தி பின்செல்</string>
-  <string name="content_description_stop">வலைத்தளம் ஏற்றுவதை நிறுத்து</string>
-  <string name="content_description_customtab_exit">முந்தைய செயலியிக்கு திரும்பு</string>
-  <string name="content_description_blocking_switch">தடமறிகளைத் தடு</string>
-  <string name="your_rights">உங்கள் உரிமைகள்</string>
-  <string name="external_app_prompt_title">தொடுப்பை இன்னொரு செயலியில் திறக்கும்</string>
-  <string name="external_app_prompt">%1$s உலாவியை விட்டு விலகி %2$s செயலியில் திறக்கும்.</string>
-  <string name="external_app_prompt_no_app_title">தொடுப்பை திறக்கவல்ல ஒரு செயலியைக் கண்டுபிடி</string>
-  <string name="external_app_prompt_no_app">இந்தச் சாதனத்தில் உள்ள எந்த ஒரு செயலியும் இத்தொடுப்பை திறக்கவல்லது. %1$s என்பதை விடுத்து ஒரு செயலியால் %2$s என்பதை தேட முடியும்.</string>
-  <string name="external_multiple_apps_matched_exit">அந்தரங்க உலாவலில் இருந்து வெளியேறவா?</string>
-  <string name="download_snackbar_finished">%1$s முடிந்தது</string>
-  <string name="download_snackbar_open">திற</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">ரத்து</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">சரி</string>
+
+    <string name="action_save">சேமி</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">தேட (அ) உலாவ முகவரியை உள்ளிடுக</string>
+
+    <string name="teaser">தானியக்க அந்தரங்க உலாவல்.\nஉலாவு. அழி. திரும்பச்செய்.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">உங்கள் உலாவல் வரலாறு அழிக்கப்பட்டது.</string>
+    <string name="feedback_erase2">உலாவி வரலாறு அழிக்கப்பட்டது</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">%1$s சொல்லைத் தேடு</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">பகிர்…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">தள சிக்கலைத் தெரிவி</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">%1$s உலாவியில் திற</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">உலாவியில் திற…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">முகப்பு திரைக்கு சேர்</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">குறுக்குவழி சேர்க்கவும்</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">குறுக்குவழி நீக்கு</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">புதிதாய் என்ன</string>
+    <string name="menu_settings">அமைவுகள்</string>
+    <string name="menu_about">போக்கசு பற்றி</string>
+    <string name="menu_help">உதவி</string>
+    <string name="menu_rights">உரிமைகள்</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">பின்தொடரி</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">இதை முடக்குவது சில இணையதளச் சிக்கல்களைச் சரிசெய்யலாம்</string>
+
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">சில இணையதளங்களைச் சரிசெய்ய அணைக்கவும்</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">%1$s மூலம் இயக்கப்படுகிறது</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">தோன்றும் செயலிகளின் வழி பகிர்க</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">உலாவல் வரலாற்றை அழி</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">திற</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">துடைத்து திற</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">அகற்று</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">உலாவல் வரலாற்றை அகற்று</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">அந்தரங்க நிலையில் உலாவு</string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">தனியுரிமை மற்றும் பாதுகாப்பு</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">தடமறிதல், நினைவிகள், தரவு தேர்வுகள்</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">தானிரப்பியை இயல்பாக அமை</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">%1$s பற்றிய உதவி</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">வலை உள்ளடக்கம்</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">செயலிகள் இடமாற்றம்</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">பொது</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">தரவு சேகரிப்பு மற்றும் பயனளவு</string>
+
+    <string name="preference_category_search">தேடல்</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">முன்னிருப்பு</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">இயக்கு</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">அணை</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">URL தானியங்கு நிரப்பு</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ தனிபயன் URL சேர்</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">தனிபயன் URL சேர்</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">தனிபயன் URL சேர்</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">நினைவிகள் மற்றும் தள தரவு</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">தரவு தெரிவுகள்</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">தனிபயன் URLs நீக்கு</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">மேலும் அறிய</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">தனிபயன் தானியங்குநிரப்பு URLs சேர்த்து நிர்வகி.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">சேர்க்க வேண்டிய URL</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">URL ஒட்டு அல்லது உள்ளிடு</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">எ.கா: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">எகா: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">புது தனிபயன் URL சேர்க்கப்பட்டது.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">நீக்கு</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">நீக்கு</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">நீங்கள் உள்ளிட்ட URL இருமுறை சரிபார்க்கவும்.</string>
+
+    <string name="preference_language">மொழி</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">கைப்பேசி முன்னிருப்பு</string>
+
+    <string name="preference_category_privacy">தனியுரிமை</string>
+    <string name="preference_privacy_block_ads">விளம்பர பின்தொடரிகளைத் தடு</string>
+    <string name="preference_privacy_block_ads_summary">சில விளம்பரங்கள், நீங்கள் அதனை சொடுக்காவிட்டாலும் தள பார்வைகளைப் பின்தொடரும்</string>
+    <string name="preference_privacy_block_analytics">பகுப்பாய்வு பின்தொடரிகளைத் தடு</string>
+    <string name="preference_privacy_block_analytics_summary">தட்டல், உருட்டுதல் போன்ற செயல்களைச் சேகரிக்கும், ஆய்வுசெய்யும் அளவிடும்</string>
+    <string name="preference_privacy_block_social">சமூக பின்தொடரிகளைத் தடு</string>
+    <string name="preference_privacy_block_social_summary">உங்கள் பார்வைகளைப் பின்தொடரவும் பகிர்தல் பொத்தான் போன்றவற்றைக் காட்டவும் தளத்தில் உட்பொதியப்பட்டிருக்கும்</string>
+    <string name="preference_privacy_block_content">உள்ளடக்க பின்தொடரிகளைத் தடு</string>
+    <string name="preference_privacy_block_content_summary2">செயற்படுத்துவது சில பக்கங்கள் எதிர்பாராமல் தவறாகச் செயல்பட காரணமாகலாம்</string>
+    <string name="preference_privacy_category_cookies">நினைவிகளை முடக்கு</string>
+
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">3 ஆம் தரப்பு நினைவிகளை மட்டும் முடக்கு</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">போரியல்</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">செயலிகள் மாறும்பொழுது வலைப்பக்கங்களை மறை மற்றும் திரைப்பிடிப்பு எடுப்பதைத் தடு.</string>
+
+    <string name="preference_category_performance">செயல்திறன்</string>
+    <string name="preference_performance_block_webfonts">இணைய எழுத்துருக்களைத் தடு</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">சின்னம் (அ) படங்கள் காணாமல் போகலாம்</string>
+
+    <string name="preference_performance_block_javascript">ஜாவாஸ்கிரிப்டை முடக்கு</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">பக்கம் வேகமாக ஏறும், ஆனால் எதிர்பாரா விதத்தில் செயல்படலாம்</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">%1$s உங்கள் முன்னிருப்பு உலாவியாக மாற்றவும்</string>
+
+    <string name="preference_category_mozilla">மொசில்லா</string>
+    <string name="preference_mozilla_telemetry2">பயனளவு தரவை அனுப்பு</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">மேலும் அறிய</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">அனைவருக்கும் %1$s வழங்க மற்றும் மேம்படுத்த தேவையானதை மட்டும் சேகரிக்க மொசில்லா உறுதிபூண்டுள்ளது.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">தனியுரிமை கொள்கை</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">%1$s பற்றி</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">நிறுவப்பட்ட தேடு பொறிகள்</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">முன்னிருப்பு தேடுபொறிகளை மீட்டமை</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ மற்றொரு தேடு பொறியைச் சேர்</string>
+    <string name="preference_search_remove_title">தேடு பொறிகளை நீக்கு</string>
+    <string name="preference_search_remove">நீக்கு</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">தேடுபொறியைச் சேர்</string>
+
+    <string name="search_add_manually_name_hint">தேடுபொறி பெயர்</string>
+    <string name="search_add_manually_string">பயன்படுத்த வேண்டிய தேடல் தொடர்</string>
+    <string name="search_add_manually_save">சேமி</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">எகா: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">புது தேடுபொறி சேர்க்கப்பட்டது.</string>
+
+    <string name="search_add_error_empty_name">தேடுபொறி பெயரை உள்ளிடு</string>
+    <string name="search_add_error_duplicate_name">நிறுவப்பட்ட தேடுபொறி ஏற்கனவே அப்பெயரைப் பயன்படுத்துகிறது.</string>
+
+    <string name="search_add_error_empty_search">தேடல் தொடரை உள்ளிடு</string>
+
+    <string name="search_add_error_format">தேடல் தொடர் எகா வடிவத்தை ஒத்திருக்கிறதா என்று பார்</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">துள்ளிய உள்ளீடு</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">நிராகரி</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">உலாவல் வரலாற்றை அகற்று</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">திறந்த கீற்றுகள்: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">பாதுகாப்பான இணைப்பு</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">ஏற்றுகிறது</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">வலையத்தளம் ஏற்றப்பட்டது</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">கூடுதல் தேர்வுகள்</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">வழிசெலுத்தி முன்செல்</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">வலைத்தளத்தை மீளேற்று</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">வழிசெலுத்தி பின்செல்</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">வலைத்தளம் ஏற்றுவதை நிறுத்து</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">முந்தைய செயலியிக்கு திரும்பு</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">தடமறிகளைத் தடு</string>
+
+    <string name="your_rights">உங்கள் உரிமைகள்</string>
+
+    <string name="external_app_prompt_title">தொடுப்பை இன்னொரு செயலியில் திறக்கும்</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">%1$s உலாவியை விட்டு விலகி %2$s செயலியில் திறக்கும்.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">தொடுப்பை திறக்கவல்ல ஒரு செயலியைக் கண்டுபிடி</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">இந்தச் சாதனத்தில் உள்ள எந்த ஒரு செயலியும் இத்தொடுப்பை திறக்கவல்லது. %1$s என்பதை விடுத்து ஒரு செயலியால் %2$s என்பதை தேட முடியும்.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">அந்தரங்க உலாவலில் இருந்து வெளியேறவா?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s முடிந்தது</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">திற</string>
 
 
 
@@ -151,48 +381,123 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">தனியுரிமையைத் துரிதப்படுத்துங்கள்</string>
-  <string name="firstrun_defaultbrowser_text2">தனிப்பட்ட உலாவலை அடுத்த நிலைக்கு எடுத்துச் செல்லவும். தளங்கள் எங்கும் உங்களைப் பின்தொடரக்கூடிய மற்றும் பக்க ஏற்று நேரத்தைக் கூட்டும் விளம்பரம் மற்றும் மற்ற உள்ளடக்கங்களை முடக்கு.</string>
-  <string name="firstrun_search_title">உங்களின் தேடல் உங்கள் வழி</string>
-  <string name="firstrun_search_text">வித்தியாசமானதைத் தேடுகிறீர்களா? அமைப்புகளில் வேறொரு இயல்புநிலை தேடியியந்திரத்தைத் தேர்ந்தெடுக்கவும்.</string>
-  <string name="firstrun_shortcut_title">உங்கள் முகப்பு திரையில் சுருக்கு வழிகளைச் சேர்க்கவும்</string>
-  <string name="firstrun_shortcut_text">%1$s உலாவியல் உங்கள் விருப்ப தங்களுக்கு விரைவாகத் திரும்பவும். %1$s மெனுவிலிருந்து \"முகப்பு திரையில் சேர்க்கவும்\" என்பதைத் தேர்ந்தெடுக்கவும்.</string>
-  <string name="firstrun_privacy_title">தனியுரிமையை ஒரு பழக்கமாக்கவும்</string>
-  <string name="firstrun_privacy_text">%1$s உலாவியை முன்னிருப்பாக அமைப்பதன் மூலம் பிற செயலிகளிலிருந்து வலைத்தளங்களைத் திறக்கும்போது அந்தரங்க உலாவலின் நன்மையைப் பெறலாம்.</string>
-  <string name="firstrun_close_button">சரி, புரிந்தது!</string>
-  <string name="firstrun_skip_button">தாவு</string>
-  <string name="firstrun_next_button">அடுத்தது</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">சேர்</string>
-  <string name="dialog_addtohomescreen_action_cancel">ரத்து</string>
-  <string name="dialog_addtohomescreen_tracking_protection">சுருக்குவழி பின்தொடரல் பாதுகாப்பு முடக்கப்பட்டு திறக்கும்</string>
-  <string name="notification_browsing_session_channel_name">அந்தரங்க உலாவல் அமர்வு</string>
-  <string name="notification_browsing_session_channel_description">அறிவிப்புகள் உங்கள் %1$s அமர்வை ஒரு தட்டில் அழிக்க அனுமதிக்கிறது. நீங்கள் செயலியைத் திறக்கவோ உலாவியில் என்ன இருக்கிறது என்று பார்க்கவோ தேவையில்லை.</string>
-  <string name="tabs_tray_action_erase">உலாவல் வரலாற்றை அழி</string>
-  <string name="download_firefox">பயர்பாக்சைப் பதிவிறக்கு</string>
-  <string name="your_rights_content1">%1$s மொசில்லா மற்றும் பிற பங்களிப்பாளர்களால் உருவாக்கப்பட்ட கட்டற்ற திறந்தமூல மென்பொருள் ஆகும்.</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">தனியுரிமையைத் துரிதப்படுத்துங்கள்</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">தனிப்பட்ட உலாவலை அடுத்த நிலைக்கு எடுத்துச் செல்லவும். தளங்கள் எங்கும் உங்களைப் பின்தொடரக்கூடிய மற்றும் பக்க ஏற்று நேரத்தைக் கூட்டும் விளம்பரம் மற்றும் மற்ற உள்ளடக்கங்களை முடக்கு.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">உங்களின் தேடல் உங்கள் வழி</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">வித்தியாசமானதைத் தேடுகிறீர்களா? அமைப்புகளில் வேறொரு இயல்புநிலை தேடியியந்திரத்தைத் தேர்ந்தெடுக்கவும்.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">உங்கள் முகப்பு திரையில் சுருக்கு வழிகளைச் சேர்க்கவும்</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">%1$s உலாவியல் உங்கள் விருப்ப தங்களுக்கு விரைவாகத் திரும்பவும். %1$s மெனுவிலிருந்து \&quot;முகப்பு திரையில் சேர்க்கவும்\&quot; என்பதைத் தேர்ந்தெடுக்கவும்.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">தனியுரிமையை ஒரு பழக்கமாக்கவும்</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">%1$s உலாவியை முன்னிருப்பாக அமைப்பதன் மூலம் பிற செயலிகளிலிருந்து வலைத்தளங்களைத் திறக்கும்போது அந்தரங்க உலாவலின் நன்மையைப் பெறலாம்.</string>
+
+    <string name="firstrun_close_button">சரி, புரிந்தது!</string>
+    <string name="firstrun_skip_button">தாவு</string>
+    <string name="firstrun_next_button">அடுத்தது</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">சேர்</string>
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">ஆம்</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">ரத்து</string>
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">இல்லை</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">அந்தரங்க உலாவல் அமர்வு</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">அறிவிப்புகள் உங்கள் %1$s அமர்வை ஒரு தட்டில் அழிக்க அனுமதிக்கிறது. நீங்கள் செயலியைத் திறக்கவோ உலாவியில் என்ன இருக்கிறது என்று பார்க்கவோ தேவையில்லை.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">உலாவல் வரலாற்றை அழி</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">பயர்பாக்சைப் பதிவிறக்கு</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s மொசில்லா மற்றும் பிற பங்களிப்பாளர்களால் உருவாக்கப்பட்ட கட்டற்ற திறந்தமூல மென்பொருள் ஆகும்.]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">பயனர்பெயர்</string>
-  <string name="gv_prompt_password_hint">கடவுச்சொல்</string>
-  <string name="gv_prompt_clear">துடை</string>
-  <string name="security_popup_secure_connection">பாதுகாப்பான இணைப்பு</string>
-  <string name="security_popup_insecure_connection">பாதுகாப்பற்ற இணைப்பு</string>
-  <string name="security_popup_security_verified">சரிபார்க்கப்பட்டது: %1$s</string>
-  <string name="site_security_icon_content_description">தள பாதுகாப்பு</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL ஏற்கனவே உள்ளது</string>
-  <string name="find_in_page">பக்கத்தில் கண்டுபிடி</string>
-  <string name="find_in_page_input">பக்கத்தில் கண்டுபிடி</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%2$d இல் %1$d</string>
-  <string name="accessibility_next_result">அடுத்த முடிவைக் கண்டுபிடி</string>
-  <string name="accessibility_previous_result">முந்தைய முடிவைக் கண்டுபிடி</string>
-  <string name="accessibility_dismiss_find_in_page">பக்கத்தில் கண்டவற்றை நிராகரி</string>
+  <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">பயனர்பெயர்</string>
+    <string name="gv_prompt_password_hint">கடவுச்சொல்</string>
+    <string name="gv_prompt_clear">துடை</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">பாதுகாப்பான இணைப்பு</string>
+    <string name="security_popup_insecure_connection">பாதுகாப்பற்ற இணைப்பு</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">சரிபார்க்கப்பட்டது: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">தள பாதுகாப்பு</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL ஏற்கனவே உள்ளது</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">பக்கத்தில் கண்டுபிடி</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">பக்கத்தில் கண்டுபிடி</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%2$d இல் %1$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">அடுத்த முடிவைக் கண்டுபிடி</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">முந்தைய முடிவைக் கண்டுபிடி</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">பக்கத்தில் கண்டவற்றை நிராகரி</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">கணினி பக்கத்தைக் கேள்</string>
-  <string name="custom_tab_copy_url_action">தொடுப்பு நகலெடுக்கப்பட்டது</string>
-</resources>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">கணினி பக்கத்தைக் கேள்</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">தொடுப்பு நகலெடுக்கப்பட்டது</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    </resources>
