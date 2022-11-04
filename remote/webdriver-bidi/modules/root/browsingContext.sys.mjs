@@ -390,7 +390,7 @@ class BrowsingContextModule extends Module {
       waitForExplicitStart: true,
     });
 
-    const onDOMContentLoadedEvent = (evtName, wrappedEvt) => {
+    const onDocumentInteractive = (evtName, wrappedEvt) => {
       if (webProgress.browsingContext.id !== wrappedEvt.contextId) {
         // Ignore load events for unrelated browsing contexts.
         return;
@@ -406,13 +406,13 @@ class BrowsingContextModule extends Module {
       id: browserId,
     };
 
-    // Monitor DOMContentLoaded for the Interactive wait condition, to resolve
-    // as soon as the document becomes interactive.
+    // For the Interactive wait condition, resolve as soon as
+    // the document becomes interactive.
     if (wait === WaitCondition.Interactive) {
       await this.messageHandler.eventsDispatcher.on(
-        "browsingContext.DOMContentLoaded",
+        "browsingContext._documentInteractive",
         contextDescriptor,
-        onDOMContentLoadedEvent
+        onDocumentInteractive
       );
     }
 
@@ -424,9 +424,9 @@ class BrowsingContextModule extends Module {
 
       if (wait === WaitCondition.Interactive) {
         await this.messageHandler.eventsDispatcher.off(
-          "browsingContext.DOMContentLoaded",
+          "browsingContext._documentInteractive",
           contextDescriptor,
-          onDOMContentLoadedEvent
+          onDocumentInteractive
         );
       }
     });
