@@ -11,10 +11,6 @@ index 7642b91..e938bd5 100644
  #include "avstring.h"
  #include "timer.h"
  
-diff --git a/media/ffvpx/libavutil/time.h b/media/ffvpx/libavutil/fftime.h
-similarity index 100%
-rename from media/ffvpx/libavutil/time.h
-rename to media/ffvpx/libavutil/fftime.h
 diff --git a/media/ffvpx/libavutil/time.c b/media/ffvpx/libavutil/time.c
 index dbaee02..69419e6 100644
 --- a/media/ffvpx/libavutil/time.c
@@ -73,10 +69,8 @@ diff --git a/media/ffvpx/libavutil/hwcontext_vaapi.c b/media/ffvpx/libavutil/hwc
  
  
  typedef struct VAAPIDevicePriv {
-
-diff -up media/ffvpx/libavcodec/vaapi_decode.c.old media/ffvpx/libavcodec/vaapi_decode.c
-diff -up media/ffvpx/libavutil/fftime.h.old media/ffvpx/libavutil/fftime.h
---- media/ffvpx/libavutil/fftime.h.old	2021-12-06 14:51:40.378642713 +0100
+diff -up media/ffvpx/libavutil/fftime.h media/ffvpx/libavutil/fftime.h
+--- media/ffvpx/libavutil/fftime.h	2021-12-06 14:51:40.378642713 +0100
 +++ media/ffvpx/libavutil/fftime.h	2021-12-06 14:51:54.618098212 +0100
 @@ -22,6 +22,7 @@
  #define AVUTIL_TIME_H
@@ -86,3 +80,26 @@ diff -up media/ffvpx/libavutil/fftime.h.old media/ffvpx/libavutil/fftime.h
  
  /**
   * Get the current time in microseconds.
+  *
+diff --git a/media/ffvpx/compat/w32pthreads.h b/media/ffvpx/compat/w32pthreads.h
+--- a/media/ffvpx/compat/w32pthreads.h
++++ b/media/ffvpx/compat/w32pthreads.h
+@@ -39,17 +39,17 @@
+ #include <windows.h>
+ #include <process.h>
+ #include <time.h>
+ 
+ #include "libavutil/attributes.h"
+ #include "libavutil/common.h"
+ #include "libavutil/internal.h"
+ #include "libavutil/mem.h"
+-#include "libavutil/time.h"
++#include "libavutil/fftime.h"
+ 
+ typedef struct pthread_t {
+     void *handle;
+     void *(*func)(void* arg);
+     void *arg;
+     void *ret;
+ } pthread_t;
+ 
