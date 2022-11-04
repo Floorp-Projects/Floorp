@@ -44,6 +44,7 @@
   <Property Id="TASKBAR_SHORTCUT" Value="true" />
   <Property Id="DESKTOP_SHORTCUT" Value="true" />
   <Property Id="START_MENU_SHORTCUT" Value="true" />
+  <Property Id="PRIVATE_BROWSING_SHORTCUT" Value="true" />
   <Property Id="INSTALL_MAINTENANCE_SERVICE" Value="true" />
   <Property Id="REMOVE_DISTRIBUTION_DIR" Value="true" />
   <Property Id="PREVENT_REBOOT_REQUIRED" Value="false" />
@@ -61,13 +62,13 @@
        too long, but they actually work just fine, the warning is spurious. -->
   <CustomAction Id="RunInstallNoDir" Return="check" Execute="deferred"
                 HideTarget="no" Impersonate="no" BinaryKey="WrappedExe"
-                ExeCommand="/S /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOVE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /RegisterDefaultAgent=[REGISTER_DEFAULT_AGENT] /LaunchedFromMSI" />
+                ExeCommand="/S /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /PrivateBrowsingShortcut=[PRIVATE_BROWSING_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOVE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /RegisterDefaultAgent=[REGISTER_DEFAULT_AGENT] /LaunchedFromMSI" />
   <CustomAction Id="RunInstallDirPath" Return="check" Execute="deferred"
                 HideTarget="no" Impersonate="no" BinaryKey="WrappedExe"
-                ExeCommand="/S /InstallDirectoryPath=[INSTALL_DIRECTORY_PATH] /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOVE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /RegisterDefaultAgent=[REGISTER_DEFAULT_AGENT] /LaunchedFromMSI" />
+                ExeCommand="/S /InstallDirectoryPath=[INSTALL_DIRECTORY_PATH] /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /PrivateBrowsingShortcut=[PRIVATE_BROWSING_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOVE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /RegisterDefaultAgent=[REGISTER_DEFAULT_AGENT] /LaunchedFromMSI" />
   <CustomAction Id="RunInstallDirName" Return="check" Execute="deferred"
                 HideTarget="no" Impersonate="no" BinaryKey="WrappedExe"
-                ExeCommand="/S /InstallDirectoryName=[INSTALL_DIRECTORY_NAME] /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOVE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /RegisterDefaultAgent=[REGISTER_DEFAULT_AGENT] /LaunchedFromMSI" />
+                ExeCommand="/S /InstallDirectoryName=[INSTALL_DIRECTORY_NAME] /TaskbarShortcut=[TASKBAR_SHORTCUT] /DesktopShortcut=[DESKTOP_SHORTCUT] /StartMenuShortcut=[START_MENU_SHORTCUT] /PrivateBrowsingShortcut=[PRIVATE_BROWSING_SHORTCUT] /MaintenanceService=[INSTALL_MAINTENANCE_SERVICE] /RemoveDistributionDir=[REMOVE_DISTRIBUTION_DIR] /PreventRebootRequired=[PREVENT_REBOOT_REQUIRED] /OptionalExtensions=[OPTIONAL_EXTENSIONS] /RegisterDefaultAgent=[REGISTER_DEFAULT_AGENT] /LaunchedFromMSI" />
   <CustomAction Id="RunExtractOnly" Return="check" Execute="deferred"
                 HideTarget="no" Impersonate="no" BinaryKey="WrappedExe"
                 ExeCommand="/ExtractDir=[EXTRACT_DIR]" />

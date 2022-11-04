@@ -43,6 +43,9 @@ For options that accept ``true`` or ``false``, ``=true`` can be left off to get 
 
   For backwards compatibility, this option can also be spelled ``/StartMenuShortcuts`` (plural), however only one shortcut is ever created in the Start menu per installation.
 
+``/PrivateBrowsingShortcut={true,false}``
+  Set to ``false`` to disable creating a private browsing shortcut in the start menu. ``true`` by default.
+
 ``/MaintenanceService={true,false}``
   Set to ``false`` to disable installing the Mozilla Maintenance Service. This will effectively prevent users from installing Firefox updates if they do not have write permissions to the installation directory. ``true`` by default.
 
