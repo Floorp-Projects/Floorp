@@ -13,6 +13,19 @@ const {
   LongStringFront,
 } = require("resource://devtools/client/fronts/string.js");
 
+const SUPPORT_ENUM_ENTRIES_SET = new Set([
+  "Headers",
+  "Map",
+  "WeakMap",
+  "Set",
+  "WeakSet",
+  "Storage",
+  "URLSearchParams",
+  "FormData",
+  "MIDIInputMap",
+  "MIDIOutputMap",
+]);
+
 /**
  * A ObjectFront is used as a front end for the ObjectActor that is
  * created on the server, hiding implementation details.
@@ -142,20 +155,13 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
    * Map/Set-like object.
    */
   enumEntries() {
-    if (
-      ![
-        "Headers",
-        "Map",
-        "WeakMap",
-        "Set",
-        "WeakSet",
-        "Storage",
-        "URLSearchParams",
-        "FormData",
-      ].includes(this._grip.class)
-    ) {
+    if (!SUPPORT_ENUM_ENTRIES_SET.has(this._grip.class)) {
       console.error(
-        "enumEntries is only valid for Map/Set/Storage-like grips."
+        `enumEntries can't be called for "${
+          this._grip.class
+        }" grips. Supported grips are: ${[...SUPPORT_ENUM_ENTRIES_SET].join(
+          ", "
+        )}.`
       );
       return null;
     }
