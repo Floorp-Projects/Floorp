@@ -4230,6 +4230,9 @@
       if (!aTab.selected) {
         return null;
       }
+      if (FirefoxViewHandler.tab) {
+        aExcludeTabs.push(FirefoxViewHandler.tab);
+      }
 
       let excludeTabs = new Set(aExcludeTabs);
 
