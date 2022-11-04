@@ -20,13 +20,6 @@ const { TabsSetupFlowManager } = ChromeUtils.importESModule(
   "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
 );
 
-const URLs = [
-  "http://mochi.test:8888/browser/",
-  "http://www.example.com/",
-  "http://example.net/",
-  "http://example.org/",
-];
-
 const RECENTLY_CLOSED_EVENT = [
   ["firefoxview", "entered", "firefoxview", undefined],
   ["firefoxview", "recently_closed", "tabs", undefined],
@@ -35,9 +28,6 @@ const RECENTLY_CLOSED_EVENT = [
 const CLOSED_TABS_OPEN_EVENT = [
   ["firefoxview", "closed_tabs_open", "tabs", "false"],
 ];
-
-const RECENTLY_CLOSED_STATE_PREF =
-  "browser.tabs.firefox-view.ui-state.recently-closed-tabs.open";
 
 async function add_new_tab(URL) {
   let tab = BrowserTestUtils.addTab(gBrowser, URL);

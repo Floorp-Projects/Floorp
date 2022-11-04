@@ -13,9 +13,23 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 const MOBILE_PROMO_DISMISSED_PREF =
   "browser.tabs.firefox-view.mobilePromo.dismissed";
 
+const RECENTLY_CLOSED_STATE_PREF =
+  "browser.tabs.firefox-view.ui-state.recently-closed-tabs.open";
+
 const calloutId = "root";
 const calloutSelector = `#${calloutId}.featureCallout`;
 const primaryButtonSelector = `#${calloutId} .primary`;
+
+/**
+ * URLs used for browser_recently_closed_tabs_keyboard and
+ * browser_firefoxview_accessibility
+ */
+const URLs = [
+  "http://mochi.test:8888/browser/",
+  "https://www.example.com/",
+  "https://example.net/",
+  "https://example.org/",
+];
 
 const syncedTabsData1 = [
   {
