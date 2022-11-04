@@ -87,6 +87,7 @@ interface IHandlerControl : IUnknown
   HRESULT OnTextChange([in] long aHwnd, [in] long aIA2UniqueId,
                        [in] VARIANT_BOOL aIsInsert,
                        [in] IA2TextSegment* aText);
+  HRESULT SuppressA11yForClipboardCopy();
 }
 
 typedef struct _IARelationData

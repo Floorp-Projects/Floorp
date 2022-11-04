@@ -67,6 +67,8 @@ class AccessibleWrap : public LocalAccessible {
                                           const nsAString& aText,
                                           int32_t aStart, uint32_t aLen);
 
+  static void SuppressHandlerA11yForClipboardCopy();
+
  protected:
   virtual ~AccessibleWrap() = default;
 
