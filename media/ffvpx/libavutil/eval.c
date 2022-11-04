@@ -35,7 +35,7 @@
 #include "internal.h"
 #include "log.h"
 #include "mathematics.h"
-#include "time.h"
+#include "fftime.h"
 #include "avstring.h"
 #include "timer.h"
 #include "reverse.h"

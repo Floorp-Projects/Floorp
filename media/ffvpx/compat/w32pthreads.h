@@ -44,7 +44,7 @@
 #include "libavutil/common.h"
 #include "libavutil/internal.h"
 #include "libavutil/mem.h"
-#include "libavutil/time.h"
+#include "libavutil/fftime.h"
 
 typedef struct pthread_t {
     void *handle;

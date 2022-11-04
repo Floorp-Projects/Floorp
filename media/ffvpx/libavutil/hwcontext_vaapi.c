@@ -44,7 +44,9 @@
 #include "buffer.h"
 #include "common.h"
 #include "hwcontext.h"
+#if CONFIG_LIBDRM
 #include "hwcontext_drm.h"
+#endif
 #include "hwcontext_internal.h"
 #include "hwcontext_vaapi.h"
 #include "mem.h"
