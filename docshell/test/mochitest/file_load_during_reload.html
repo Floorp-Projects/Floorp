@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script>
+     function notifyOpener() {
+       opener.postMessage("loaded", "*");
+     }
+    </script>
+  </head>
+  <body onload="notifyOpener()">
+  </body>
+</html>
