@@ -1,5 +1,4 @@
-Reporting bugs
-==============
+# Reporting bugs
 
 When opening a new issue or commenting on existing issues, please
 make sure discussions are related to concrete technical issues

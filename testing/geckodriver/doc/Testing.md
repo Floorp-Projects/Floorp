@@ -1,5 +1,4 @@
-Testing geckodriver
-===================
+# Testing geckodriver
 
 We verify and test geckodriver in a couple of different ways.
 Since it is an implementation of the WebDriver web standard, we share
@@ -12,24 +11,33 @@ In addition to the WPT tests, geckodriver and webdriver have
 unit tests.  These are written in Rust, but you must explicitly
 tell mach to build these by adding the following line to your [mozconfig]:
 
-	ac_add_options --enable-rust-tests
+```make
+ac_add_options --enable-rust-tests
+```
 
-Tests can then be run by using `cargo test` in the specific source folder:
+Tests can then be run by using the `test` sub command for [cargo] in the
+specific source folder:
 
-	% cd testing/geckodriver/src
-    % cargo test
+```shell
+% cd testing/geckodriver/src
+% cargo test
+```
 
 To run the more extensive WPT tests you can use mach, but first
 make sure you have built Firefox:
 
-	% ./mach build
-	% ./mach wpt testing/web-platform/tests/webdriver
+```shell
+% ./mach build
+% ./mach wpt testing/web-platform/tests/webdriver
+```
 
 As these are functional integration tests and pop up Firefox windows
 sporadically, a helpful tip is to suppress the window whilst you
 are running them by using Firefox’ [headless mode]:
 
-	% ./mach wpt --headless testing/web-platform/tests/webdriver
+```shell
+% ./mach wpt --headless testing/web-platform/tests/webdriver
+```
 
 The `--headless` flag is equivalent to setting the `MOZ_HEADLESS`
 output variable.  In addition to `MOZ_HEADLESS` there is also
@@ -49,7 +57,9 @@ and finally the output—or the HTTP response—back to the client.
 The [trace-level logs] can be surfaced by passing on the `-vv`
 flag to geckodriver through WPT:
 
-	% ./mach wpt --webdriver-arg=-vv testing/web-platform/tests/webdriver
+```shell
+% ./mach wpt --webdriver-arg=-vv testing/web-platform/tests/webdriver
+```
 
 [Web Platform Tests]: http://web-platform-tests.org/
 [cargo]: http://doc.crates.io/guide.html

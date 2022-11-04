@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD033 -->
 # Flags
 
 ## <code>--allow-hosts <var>ALLOW_HOSTS</var>...</code>
@@ -75,7 +76,6 @@ By default `auto` is used.
     is rooted or not.
 </table>
 
-
 ## <code>-b <var>BINARY</var></code> / <code>&#x2D;&#x2D;binary <var>BINARY</var></code>
 
 Path to the Firefox binary to use.  By default geckodriver tries to
@@ -88,8 +88,10 @@ On Linux systems it will use the first _firefox_ binary found
 by searching the `PATH` environmental variable, which is roughly
 equivalent to calling [whereis(1)] and extracting the second column:
 
-	% whereis firefox
-	firefox: /usr/bin/firefox /usr/local/firefox
+```shell
+% whereis firefox
+firefox: /usr/bin/firefox /usr/local/firefox
+```
 
 On macOS, the binary is found by looking for the first _firefox-bin_
 binary in the same fashion as on Linux systems.  This means it is
@@ -101,7 +103,6 @@ scanning the Windows registry.
 
 [creating a new session]: https://w3c.github.io/webdriver/#new-session
 [whereis(1)]: http://www.manpagez.com/man/1/whereis/
-
 
 ## <code>&#x2D;&#x2D;connect-existing</code>
 
@@ -116,8 +117,7 @@ has been user-set, Marionette will listen on port 2828.  So when
 using `--connect-existing` it is likely you will also have to use
 `--marionette-port` to set the correct port.
 
-[`&#x2D;&#x2D;marionette-port`]: #marionette-port
-
+`--marionette-port`: #marionette-port
 
 ## <code>&#x2D;&#x2D;host <var>HOST</var></code>
 
@@ -161,12 +161,10 @@ argument is passed to geckodriver.
 Set the Gecko and geckodriver log level.  Possible values are `fatal`,
 `error`, `warn`, `info`, `config`, `debug`, and `trace`.
 
-
 ## <code>&#x2D;&#x2D;marionette-host <var>HOST</var></code>
 
 Selects the host for geckodriver’s connection to the [Marionette]
 remote protocol. Defaults to 127.0.0.1.
-
 
 ## <code>&#x2D;&#x2D;marionette-port <var>PORT</var></code>
 
@@ -180,8 +178,7 @@ process, it will pick a free port assigned by the system and set the
 When `--connect-existing` is used and the Firefox process is not
 under geckodriver’s control, it will simply connect to <var>PORT</var>.
 
-[`--connect-existing`]: #connect-existing
-
+`--connect-existing`: #connect-existing
 
 ## <code>-p <var>PORT</var></code> / <code>&#x2D;&#x2D;port <var>PORT</var></code>
 
@@ -189,7 +186,6 @@ Port to use for the WebDriver server.  Defaults to 4444.
 
 A helpful trick is that it is possible to bind to 0 to get the
 system to atomically assign a free port.
-
 
 ## <code>&#x2D;&#x2D;profile-root <var>PROFILE_ROOT</var></code>
 
@@ -202,15 +198,11 @@ filesystem such that it doesn't share the same system temporary
 directory as geckodriver (e.g. when running Firefox inside a container
 or packaged as a snap).
 
-
 ## <code>-v<var>[v]</var></code>
 
 Increases the logging verbosity by to debug level when passing
 a single `-v`, or to trace level if `-vv` is passed.  This is
 analogous to passing `--log debug` and `--log trace`, respectively.
-
-[Marionette]: /testing/marionette/index.rst
-
 
 ## <code>&#x2D;&#x2D;websocket-port<var>PORT</var></code>
 
@@ -218,3 +210,5 @@ Port to use to connect to WebDriver BiDi. Defaults to 9222.
 
 A helpful trick is that it is possible to bind to 0 to get the
 system to atomically assign a free port.
+
+[Marionette]: /testing/marionette/index.rst
