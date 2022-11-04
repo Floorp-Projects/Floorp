@@ -154,7 +154,7 @@ static bool AppendRequestsToArray(PLDHashTable* aTable,
   for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
     auto* e = static_cast<RequestMapEntry*>(iter.Get());
     nsIRequest* request = e->mKey;
-    NS_ASSERTION(request, "What? Null key in PLDHashTable entry?");
+    MOZ_DIAGNOSTIC_ASSERT(request, "Null key in mRequests PLDHashTable entry");
 
     // XXX(Bug 1631371) Check if this should use a fallible operation as it
     // pretended earlier.
