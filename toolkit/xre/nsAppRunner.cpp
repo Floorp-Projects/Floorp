@@ -292,7 +292,6 @@ extern const char gToolkitBuildID[];
 static nsIProfileLock* gProfileLock;
 #if defined(MOZ_HAS_REMOTE)
 static nsRemoteService* gRemoteService;
-bool gRestartWithoutRemote = false;
 #endif
 
 int gRestartArgc;
@@ -2598,12 +2597,6 @@ nsresult LaunchChild(bool aBlankCommandLine, bool aTryExec) {
     gRestartArgv[gRestartArgc] = nullptr;
   }
 
-#if defined(MOZ_HAS_REMOTE)
-  if (gRestartWithoutRemote) {
-    SaveToEnv("MOZ_NO_REMOTE=1");
-  }
-#endif
-
   SaveToEnv("MOZ_LAUNCHED_CHILD=1");
 #if defined(MOZ_LAUNCHER_PROCESS)
   SaveToEnv("MOZ_LAUNCHER_PROCESS=1");
@@ -4373,10 +4366,9 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   if (ar == ARG_FOUND || EnvHasValue("MOZ_NO_REMOTE")) {
     mDisableRemoteClient = true;
     mDisableRemoteServer = true;
-    gRestartWithoutRemote = true;
-    // We don't want to propagate MOZ_NO_REMOTE to potential child
-    // process.
-    unsetenv("MOZ_NO_REMOTE");
+    if (!EnvHasValue("MOZ_NO_REMOTE")) {
+      SaveToEnv("MOZ_NO_REMOTE=1");
+    }
   }
 
   ar = CheckArg("new-instance");
