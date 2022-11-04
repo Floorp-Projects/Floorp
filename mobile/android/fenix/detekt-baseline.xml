@@ -664,7 +664,6 @@
     <ID>UndocumentedPublicFunction:FenixSnackbar.kt$FenixSnackbar$fun setLength(duration: Int)</ID>
     <ID>UndocumentedPublicFunction:FenixSnackbar.kt$FenixSnackbar$fun setText(text: String)</ID>
     <ID>UndocumentedPublicFunction:FirefoxTheme.kt$@Composable fun ProvideFirefoxColors( colors: FirefoxColors, content: @Composable () -&gt; Unit, )</ID>
-    <ID>UndocumentedPublicFunction:FirefoxTheme.kt$FirefoxColors$fun copy(): FirefoxColors</ID>
     <ID>UndocumentedPublicFunction:FirefoxTheme.kt$FirefoxColors$fun update(other: FirefoxColors)</ID>
     <ID>UndocumentedPublicFunction:Fragment.kt$fun Fragment.breadcrumb( message: String, data: Map&lt;String, String&gt; = emptyMap(), )</ID>
     <ID>UndocumentedPublicFunction:Fragment.kt$fun Fragment.getPreferenceKey(@StringRes resourceId: Int): String</ID>
