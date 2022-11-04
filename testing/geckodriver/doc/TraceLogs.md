@@ -1,5 +1,4 @@
-Enabling trace logs
-===================
+# Enabling trace logs
 
 geckodriver provides different bands of logs for different audiences.
 The most important log entries are shown to everyone by default,
@@ -51,11 +50,15 @@ and us a favour and provide a trace-level log right away.
 To silence geckodriver altogether you may for example either redirect
 all output to append to some log files:
 
-	% geckodriver >>geckodriver.log 2>>geckodriver.err.log
+```shell
+% geckodriver >>geckodriver.log 2>>geckodriver.err.log
+```
 
 Or a black hole somewhere:
 
-	% geckodriver >/dev/null 2>&1
+```shell
+% geckodriver >/dev/null 2>&1
+```
 
 The log level set for geckodriver is propagated to the Marionette
 logger in Firefox.  Marionette is the remote protocol that geckodriver
@@ -68,7 +71,9 @@ from the list above, or by using the `-v` (for debug) or `-vv`
 (for trace) shorthands.  For example, the following command will
 enable trace logs for both geckodriver and Marionette:
 
-	% geckodriver -vv
+```shell
+% geckodriver -vv
+```
 
 The second way of setting the log level is through capabilities.
 geckodriver accepts a Mozilla-specific configuration object
@@ -86,7 +91,9 @@ It is often advisable to use these helpers instead of encoding the
 JSON Object yourself because it can be difficult to get the exact
 details right, but if you choose to, it should look like this:
 
-	{"moz:firefoxOptions": {"log": {"level": "trace"}}}
+```json
+{"moz:firefoxOptions": {"log": {"level": "trace"}}}
+```
 
 Note that most known WebDriver clients, such as those provided by
 the Selenium project, do not expose a way to actually _see_ the logs
@@ -104,53 +111,54 @@ geckodriver.  If you find your language missing, please consider
 
 [submitting a patch]: Patches.md
 
-
-C#
---
+## C-Sharp
 
 The Selenium [C# client] comes with a [`FirefoxOptions`] helper for
 constructing the [`moz:firefoxOptions`] capabilities object:
 
-	FirefoxOptions options = new FirefoxOptions();
-	options.LogLevel =  FirefoxDriverLogLevel.Trace;
-	IWebDriver driver = new FirefoxDriver(options);
+```csharp
+FirefoxOptions options = new FirefoxOptions();
+options.LogLevel =  FirefoxDriverLogLevel.Trace;
+IWebDriver driver = new FirefoxDriver(options);
+```
 
 The log output is directed to stdout.
 
 [C# client]: https://seleniumhq.github.io/selenium/docs/api/dotnet/
 [`FirefoxOptions`]: https://seleniumhq.github.io/selenium/docs/api/dotnet/html/T_OpenQA_Selenium_Firefox_FirefoxOptions.htm
 
-Java
-----
+## Java
 
 The Selenium [Java client] also comes with
 a [`org.openqa.selenium.firefox.FirefoxOptions`] helper for
 constructing the [`moz:firefoxOptions`] capabilities object:
 
-	FirefoxOptions options = new FirefoxOptions();
-	options.setLogLevel(FirefoxDriverLogLevel.TRACE);
-	WebDriver driver = new FirefoxDriver(options);
+```java
+FirefoxOptions options = new FirefoxOptions();
+options.setLogLevel(FirefoxDriverLogLevel.TRACE);
+WebDriver driver = new FirefoxDriver(options);
+```
 
 As with C#, the log output is helpfully propagated to stdout.
 
 [Java client]: https://seleniumhq.github.io/selenium/docs/api/java/
 [`org.openqa.selenium.firefox.FirefoxOptions`]: https://seleniumhq.github.io/selenium/docs/api/java/org/openqa/selenium/firefox/FirefoxOptions.html
 
-
-Python
-------
+## Python
 
 The Selenium [Python client] comes with a
 [`selenium.webdriver.firefox.options.Options`] helper that can
 be used programmatically to construct the [`moz:firefoxOptions`]
 capabilities object:
 
-	from selenium.webdriver import Firefox
-	from selenium.webdriver.firefox.options import Options
+```python
+from selenium.webdriver import Firefox
+from selenium.webdriver.firefox.options import Options
 
-	opts = Options()
-	opts.log.level = "trace"
-	driver = Firefox(options=opts)
+opts = Options()
+opts.log.level = "trace"
+driver = Firefox(options=opts)
+```
 
 The log output is stored in a file called _geckodriver.log_ in your
 script’s current working directory.
@@ -158,16 +166,16 @@ script’s current working directory.
 [Python client]: https://selenium-python.readthedocs.io/
 [`selenium.webdriver.firefox.options.Options`]: https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py
 
-
-Ruby
-----
+## Ruby
 
 The Selenium [Ruby client] comes with an [`Options`] helper to
 generate the correct [`moz:firefoxOptions`] capabilities object:
 
-	Selenium::WebDriver.logger.level = :debug
-	opts = Selenium::WebDriver::Firefox::Options.new(log_level: :trace)
-	driver = Selenium::WebDriver.for :firefox, options: opts
+```ruby
+Selenium::WebDriver.logger.level = :debug
+opts = Selenium::WebDriver::Firefox::Options.new(log_level: :trace)
+driver = Selenium::WebDriver.for :firefox, options: opts
+```
 
 [Ruby client]: https://seleniumhq.github.io/selenium/docs/api/rb/
 [`Options`]: https://seleniumhq.github.io/selenium/docs/api/rb/Selenium/WebDriver/Firefox/Options.html

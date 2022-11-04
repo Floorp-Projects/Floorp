@@ -158,7 +158,6 @@ have to be set when requesting a new session. See the Android section under
 [Selenium]: https://github.com/seleniumhq/selenium
 [WebDriver]: https://w3c.github.io/webdriver/
 [implementation status]: https://bugzilla.mozilla.org/showdependencytree.cgi?id=721859&hide_resolved=1
-[Firefox Nightly]: https://whattrainisitnow.com/
 [remote protocol]: https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Amarionette
 [specification]: https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aspec
 [issue tracker]: https://github.com/mozilla/geckodriver/issues

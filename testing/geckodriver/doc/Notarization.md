@@ -1,4 +1,4 @@
-# macOS notarization
+# MacOS notarization
 
 With the introduction of macOS 10.15 “Catalina” Apple introduced
 [new notarization requirements] that all software must be signed

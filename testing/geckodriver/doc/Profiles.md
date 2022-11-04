@@ -1,5 +1,4 @@
-Profiles
-========
+# Profiles
 
 geckodriver uses [profiles] to instrument Firefox’ behaviour.  The
 user will usually rely on geckodriver to generate a temporary,
@@ -36,9 +35,7 @@ two distinct systems.
 [`profile` capability]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Capabilities/firefoxOptions#profile_string
 [known bug concerning `--profile`]: https://github.com/mozilla/geckodriver/issues/1058
 
-
-Default locations for temporary profiles
-----------------------------------------
+## Default locations for temporary profiles
 
 When a custom user profile is not provided with the `-profile`
 command-line argument geckodriver generates a temporary, throwaway
@@ -61,11 +58,9 @@ It is not necessary to change the temporary directory system-wide.
 All you have to do is make sure it gets set for the environment of
 the geckodriver process:
 
-	% TMPDIR=/some/location ./geckodriver
+    TMPDIR=/some/location ./geckodriver
 
-
-Automation preferences
-----------------------
+## Automation preferences
 
 As indicated in the introduction, geckodriver configures Firefox
 so it is well-behaved in automation environments.  It uses a
@@ -98,9 +93,7 @@ the Marionette server in Firefox which port to use.
 [user.js file]: http://kb.mozillazine.org/User.js_file
 [`prefs` capability]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Capabilities/firefoxOptions#prefs_preferences_object
 
-
-Temporary profiles not being removed
-------------------------------------
+## Temporary profiles not being removed
 
 It is a known bug that geckodriver in some instances fails to remove
 the temporary profile, particularly when the session is not explicitly

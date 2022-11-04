@@ -1,13 +1,10 @@
-Usage
-=====
+# Usage
 
 geckodriver is an implementation of WebDriver, and WebDriver can
 be used for widely different purposes.  How you invoke geckodriver
 largely depends on your use case.
 
-
-Selenium
---------
+## Selenium
 
 If you are using geckodriver through [Selenium], you must ensure that
 you have version 3.11 or greater.  Because geckodriver implements the
@@ -26,11 +23,15 @@ from your [system’s `PATH` environmental variable][PATH] unless you
 override it by setting the `webdriver.gecko.driver` [Java VM system
 property]:
 
-	System.setProperty("webdriver.gecko.driver", "/home/user/bin");
+```java
+System.setProperty("webdriver.gecko.driver", "/home/user/bin");
+```
 
 Or by passing it as a flag to the [java(1)] launcher:
 
-	% java -Dwebdriver.gecko.driver=/home/user/bin YourApplication
+```shell
+% java -Dwebdriver.gecko.driver=/home/user/bin YourApplication
+```
 
 Your mileage with this approach may vary based on which programming
 language bindings you are using.  It is in any case generally the case
@@ -38,9 +39,11 @@ that geckodriver will be picked up if it is available on the system path.
 In a bash compatible shell, you can make other programs aware of its
 location by exporting or setting the `PATH` variable:
 
-	% export PATH=$PATH:/home/user/bin
-	% whereis geckodriver
-	geckodriver: /home/user/bin/geckodriver
+```shell
+% export PATH=$PATH:/home/user/bin
+% whereis geckodriver
+geckodriver: /home/user/bin/geckodriver
+```
 
 On Window systems you can change the system path by right-clicking **My
 Computer** and choosing **Properties**.  In the dialogue that appears,
@@ -48,11 +51,11 @@ navigate **Advanced** → **Environmental Variables** → **Path**.
 
 Or in the Windows console window:
 
-	$ set PATH=%PATH%;C:\bin\geckodriver
+```shell
+% set PATH=%PATH%;C:\bin\geckodriver
+```
 
-
-Standalone
-----------
+## Standalone
 
 Since geckodriver is a separate HTTP server that is a complete remote end
 implementation of [WebDriver], it is possible to avoid using the Selenium
@@ -65,41 +68,45 @@ to any Selenium server.
 
 Using [curl(1)]:
 
-	% geckodriver &
-	[1] 16010
-	% 1491834109194   geckodriver     INFO    Listening on 127.0.0.1:4444
-	% curl -H 'Content-Type: application/json' -d '{"capabilities": {"alwaysMatch": {"acceptInsecureCerts": true}}}' http://localhost:4444/session
-	{"value":{"sessionId":"d4605710-5a4e-4d64-a52a-778bb0c31e00","capabilities":{"acceptInsecureCerts":true,[...]}}}
-	% curl -H 'Content-Type: application/json' -d '{"url": "https://mozilla.org"}' http://localhost:4444/session/d4605710-5a4e-4d64-a52a-778bb0c31e00/url
-	{}
-	% curl http://localhost:4444/session/d4605710-5a4e-4d64-a52a-778bb0c31e00/url
-	{"value":"https://www.mozilla.org/en-US/"
-	% curl -X DELETE http://localhost:4444/session/d4605710-5a4e-4d64-a52a-778bb0c31e00
-	{}
-	% fg
-	geckodriver
-	^C
-	%
+```shell
+% geckodriver &
+[1] 16010
+% 1491834109194   geckodriver     INFO    Listening on 127.0.0.1:4444
+% curl -H 'Content-Type: application/json' -d '{"capabilities": {"alwaysMatch": {"acceptInsecureCerts": true}}}' http://localhost:4444/session
+{"value":{"sessionId":"d4605710-5a4e-4d64-a52a-778bb0c31e00","capabilities":{"acceptInsecureCerts":true,[...]}}}
+% curl -H 'Content-Type: application/json' -d '{"url": "https://mozilla.org"}' http://localhost:4444/session/d4605710-5a4e-4d64-a52a-778bb0c31e00/url
+{}
+% curl http://localhost:4444/session/d4605710-5a4e-4d64-a52a-778bb0c31e00/url
+{"value":"https://www.mozilla.org/en-US/"
+% curl -X DELETE http://localhost:4444/session/d4605710-5a4e-4d64-a52a-778bb0c31e00
+{}
+% fg
+geckodriver
+^C
+```
 
 Using the Python [wdclient] library:
 
-	import webdriver
+```python
+import webdriver
 
-	with webdriver.Session("127.0.0.1", 4444) as session:
-	    session.url = "https://mozilla.org"
-	    print "The current URL is %s" % session.url
+with webdriver.Session("127.0.0.1", 4444) as session:
+    session.url = "https://mozilla.org"
+    print "The current URL is %s" % session.url
+```
 
 And to run:
 
-	% geckodriver &
-	[1] 16054
-	% python example.py
-	1491835308354   geckodriver     INFO    Listening on 127.0.0.1:4444
-	The current URL is https://www.mozilla.org/en-US/
-	% fg
-	geckodriver
-	^C
-	%
+```shell
+% geckodriver &
+[1] 16054
+% python example.py
+1491835308354   geckodriver     INFO    Listening on 127.0.0.1:4444
+The current URL is https://www.mozilla.org/en-US/
+% fg
+geckodriver
+^C
+```
 
 [Selenium]: http://seleniumhq.org/
 [e10s]: https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox
