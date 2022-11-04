@@ -187,12 +187,14 @@ static int nr_ice_component_create_stun_server_ctx(nr_ice_component *component, 
     snprintf(label, sizeof(label), "server(%s)", addr->as_string);
     if(r=nr_stun_server_ctx_create(label,&isock->stun_server))
       ABORT(r);
-    if(r=nr_ice_socket_register_stun_server(isock,isock->stun_server,&isock->stun_server_handle))
-      ABORT(r);
 
    /* Add the default STUN credentials so that we can respond before
       we hear about the peer.*/
     if(r=nr_stun_server_add_default_client(isock->stun_server, lufrag, pwd, nr_ice_component_stun_server_default_cb, component))
+      ABORT(r);
+
+    /* Do this last; if this function fails, we should not be taking a reference to isock */
+    if(r=nr_ice_socket_register_stun_server(isock,isock->stun_server,&isock->stun_server_handle))
       ABORT(r);
 
     _status = 0;
@@ -233,6 +235,10 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
       }
 
       if(r=nr_ice_socket_create(ctx,component,sock,NR_ICE_SOCKET_TYPE_DGRAM,&isock))
+        ABORT(r);
+
+      /* Create a STUN server context for this socket */
+      if ((r=nr_ice_component_create_stun_server_ctx(component,isock,&addrs[i].addr,lufrag,pwd)))
         ABORT(r);
 
       /* Make sure we don't leak this. Failures might result in it being
@@ -335,10 +341,6 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         cand=0;
       }
 #endif /* USE_TURN */
-
-      /* Create a STUN server context for this socket */
-      if ((r=nr_ice_component_create_stun_server_ctx(component,isock,&addrs[i].addr,lufrag,pwd)))
-        ABORT(r);
     }
 
     _status = 0;
@@ -601,9 +603,14 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         if((r=nr_ice_socket_create(ctx, component, buffered_sock, NR_ICE_SOCKET_TYPE_STREAM_TURN, &turn_isock)))
           ABORT(r);
 
-      /* Make sure we don't leak this. Failures might result in it being
-       * unused, but we hand off references to this in enough places below
-       * that unwinding it all becomes impractical. */
+
+        /* Create a STUN server context for this socket */
+        if ((r=nr_ice_component_create_stun_server_ctx(component,turn_isock,&addr,lufrag,pwd)))
+          ABORT(r);
+
+        /* Make sure we don't leak this. Failures might result in it being
+         * unused, but we hand off references to this in enough places below
+         * that unwinding it all becomes impractical. */
         STAILQ_INSERT_TAIL(&component->sockets,turn_isock,entry);
 
         /* Attach ourselves to it */
@@ -616,11 +623,6 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
         component->candidate_ct++;
         cand=0;
-
-        /* Create a STUN server context for this socket */
-        if ((r=nr_ice_component_create_stun_server_ctx(component,turn_isock,&addr,lufrag,pwd)))
-          ABORT(r);
-
       }
 #endif /* USE_TURN */
     }
