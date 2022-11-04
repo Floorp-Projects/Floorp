@@ -2215,6 +2215,8 @@ struct GlobalProperties {
   bool IOUtils : 1;
   bool InspectorUtils : 1;
   bool MessageChannel : 1;
+  bool MIDIInputMap : 1;
+  bool MIDIOutputMap : 1;
   bool Node : 1;
   bool NodeFilter : 1;
   bool PathUtils : 1;

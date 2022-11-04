@@ -133,6 +133,8 @@ function Sandbox(options) {
       "FormData",
       "Headers",
       "InspectorUtils",
+      "MIDIInputMap",
+      "MIDIOutputMap",
       "Node",
       "TextDecoder",
       "TextEncoder",

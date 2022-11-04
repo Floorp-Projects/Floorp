@@ -59,6 +59,8 @@
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/MessageChannelBinding.h"
 #include "mozilla/dom/MessagePortBinding.h"
+#include "mozilla/dom/MIDIInputMapBinding.h"
+#include "mozilla/dom/MIDIOutputMapBinding.h"
 #include "mozilla/dom/ModuleLoader.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/NodeFilterBinding.h"
@@ -921,6 +923,10 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
       InspectorUtils = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "MessageChannel")) {
       MessageChannel = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "MIDIInputMap")) {
+      MIDIInputMap = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "MIDIOutputMap")) {
+      MIDIOutputMap = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "Node")) {
       Node = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "NodeFilter")) {
@@ -1062,6 +1068,14 @@ bool xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj) {
       (!dom::MessageChannel_Binding::GetConstructorObject(cx) ||
        !dom::MessagePort_Binding::GetConstructorObject(cx)))
     return false;
+
+  if (MIDIInputMap && !dom::MIDIInputMap_Binding::GetConstructorObject(cx)) {
+    return false;
+  }
+
+  if (MIDIOutputMap && !dom::MIDIOutputMap_Binding::GetConstructorObject(cx)) {
+    return false;
+  }
 
   if (Node && !dom::Node_Binding::GetConstructorObject(cx)) {
     return false;
