@@ -156,8 +156,10 @@ void AndroidFlingPhysics::Init(const ParentLayerPoint& aStartingVelocity,
   mDurationSoFar = TimeDuration();
   mLastPos = ParentLayerPoint();
   mCurrentPos = ParentLayerPoint();
-  float coeffX = mVelocity == 0 ? 1.0f : aStartingVelocity.x / mVelocity;
-  float coeffY = mVelocity == 0 ? 1.0f : aStartingVelocity.y / mVelocity;
+  float coeffX =
+      mVelocity == 0 ? 1.0f : aStartingVelocity.x.value / mVelocity.value;
+  float coeffY =
+      mVelocity == 0 ? 1.0f : aStartingVelocity.y.value / mVelocity.value;
   mTargetDistance = ComputeFlingDistance(mVelocity, tuningCoeff);
   mTargetPos =
       ParentLayerPoint(mTargetDistance * coeffX, mTargetDistance * coeffY);

@@ -2033,15 +2033,19 @@ bool EventStateManager::IsEventOutsideDragThreshold(
         LookAndFeel::GetInt(LookAndFeel::IntID::DragThresholdX, 0);
     sPixelThresholdY =
         LookAndFeel::GetInt(LookAndFeel::IntID::DragThresholdY, 0);
-    if (!sPixelThresholdX) sPixelThresholdX = 5;
-    if (!sPixelThresholdY) sPixelThresholdY = 5;
+    if (sPixelThresholdX <= 0) {
+      sPixelThresholdX = 5;
+    }
+    if (sPixelThresholdY <= 0) {
+      sPixelThresholdY = 5;
+    }
   }
 
   LayoutDeviceIntPoint pt =
       aEvent->mWidget->WidgetToScreenOffset() + GetEventRefPoint(aEvent);
   LayoutDeviceIntPoint distance = pt - mGestureDownPoint;
-  return Abs(distance.x) > AssertedCast<uint32_t>(sPixelThresholdX) ||
-         Abs(distance.y) > AssertedCast<uint32_t>(sPixelThresholdY);
+  return Abs(distance.x) > sPixelThresholdX ||
+         Abs(distance.y) > sPixelThresholdY;
 }
 
 //
@@ -2974,14 +2978,16 @@ void EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
   nsIntSize devPixelPageSize(pc->AppUnitsToDevPixels(pageSize.width),
                              pc->AppUnitsToDevPixels(pageSize.height));
   if (!WheelPrefs::GetInstance()->IsOverOnePageScrollAllowedX(aEvent) &&
-      DeprecatedAbs(actualDevPixelScrollAmount.x) > devPixelPageSize.width) {
+      DeprecatedAbs(actualDevPixelScrollAmount.x.value) >
+          devPixelPageSize.width) {
     actualDevPixelScrollAmount.x = (actualDevPixelScrollAmount.x >= 0)
                                        ? devPixelPageSize.width
                                        : -devPixelPageSize.width;
   }
 
   if (!WheelPrefs::GetInstance()->IsOverOnePageScrollAllowedY(aEvent) &&
-      DeprecatedAbs(actualDevPixelScrollAmount.y) > devPixelPageSize.height) {
+      DeprecatedAbs(actualDevPixelScrollAmount.y.value) >
+          devPixelPageSize.height) {
     actualDevPixelScrollAmount.y = (actualDevPixelScrollAmount.y >= 0)
                                        ? devPixelPageSize.height
                                        : -devPixelPageSize.height;
@@ -4101,13 +4107,13 @@ static gfx::IntPoint ComputeHotspot(imgIContainer* aContainer,
     aContainer->GetWidth(&imgWidth);
     aContainer->GetHeight(&imgHeight);
     auto hotspot = gfx::IntPoint::Round(*aHotspot);
-    return {std::max(std::min(hotspot.x, imgWidth - 1), 0),
-            std::max(std::min(hotspot.y, imgHeight - 1), 0)};
+    return {std::max(std::min(hotspot.x.value, imgWidth - 1), 0),
+            std::max(std::min(hotspot.y.value, imgHeight - 1), 0)};
   }
 
   gfx::IntPoint hotspot;
-  aContainer->GetHotspotX(&hotspot.x);
-  aContainer->GetHotspotY(&hotspot.y);
+  aContainer->GetHotspotX(&hotspot.x.value);
+  aContainer->GetHotspotY(&hotspot.y.value);
   return hotspot;
 }
 
@@ -4387,8 +4393,8 @@ nsresult EventStateManager::SetCursor(StyleCursorKind aCursor,
       break;
   }
 
-  uint32_t x = aHotspot ? aHotspot->x : 0;
-  uint32_t y = aHotspot ? aHotspot->y : 0;
+  uint32_t x = aHotspot ? aHotspot->x.value : 0;
+  uint32_t y = aHotspot ? aHotspot->y.value : 0;
   aWidget->SetCursor(nsIWidget::Cursor{c, aContainer, x, y, aResolution});
   return NS_OK;
 }

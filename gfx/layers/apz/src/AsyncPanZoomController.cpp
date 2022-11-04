@@ -5180,10 +5180,11 @@ void AsyncPanZoomController::NotifyLayersUpdated(
   // XXX Suspicious comparison between layout and visual scroll offsets.
   // This may not do the right thing when we're zoomed in.
   CSSPoint lastScrollOffset = mLastContentPaintMetrics.GetLayoutScrollOffset();
-  bool userScrolled = !FuzzyEqualsAdditive(Metrics().GetVisualScrollOffset().x,
-                                           lastScrollOffset.x) ||
-                      !FuzzyEqualsAdditive(Metrics().GetVisualScrollOffset().y,
-                                           lastScrollOffset.y);
+  bool userScrolled =
+      !FuzzyEqualsAdditive(Metrics().GetVisualScrollOffset().x.value,
+                           lastScrollOffset.x.value) ||
+      !FuzzyEqualsAdditive(Metrics().GetVisualScrollOffset().y.value,
+                           lastScrollOffset.y.value);
 
   if (aScrollMetadata.DidContentGetPainted()) {
     mLastContentPaintMetadata = aScrollMetadata;
@@ -6392,8 +6393,8 @@ void AsyncPanZoomController::ScrollSnapToDestination() {
   // If the fling will overscroll, don't scroll snap, because then the user
   // user would not see any overscroll animation.
   bool flingWillOverscroll =
-      IsOverscrolled() && ((velocity.x * mX.GetOverscroll() >= 0) ||
-                           (velocity.y * mY.GetOverscroll() >= 0));
+      IsOverscrolled() && ((velocity.x.value * mX.GetOverscroll() >= 0) ||
+                           (velocity.y.value * mY.GetOverscroll() >= 0));
   if (flingWillOverscroll) {
     return;
   }
@@ -6410,10 +6411,11 @@ void AsyncPanZoomController::ScrollSnapToDestination() {
         "%p fling snapping.  friction: %f velocity: %f, %f "
         "predictedDelta: %f, %f position: %f, %f "
         "snapDestination: %f, %f\n",
-        this, friction, velocity.x, velocity.y, (float)predictedDelta.x,
-        (float)predictedDelta.y, (float)Metrics().GetVisualScrollOffset().x,
-        (float)Metrics().GetVisualScrollOffset().y, (float)startPosition.x,
-        (float)startPosition.y);
+        this, friction, velocity.x.value, velocity.y.value,
+        predictedDelta.x.value, predictedDelta.y.value,
+        Metrics().GetVisualScrollOffset().x.value,
+        Metrics().GetVisualScrollOffset().y.value, startPosition.x.value,
+        startPosition.y.value);
 
     SmoothMsdScrollTo(std::move(*snapTarget), ScrollTriggeredByScript::No);
   }

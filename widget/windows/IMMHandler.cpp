@@ -2322,7 +2322,7 @@ nsresult IMMHandler::OnMouseButtonEvent(
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("IMMHandler::OnMouseButtonEvent, x,y=%d,%d, offset=%d, "
            "positioning=%d",
-           cursorPos.x, cursorPos.y, offset, positioning));
+           cursorPos.x.value, cursorPos.y.value, offset, positioning));
 
   // send MS_MSIME_MOUSE message to default IME window.
   HWND imeWnd = ::ImmGetDefaultIMEWnd(aWindow->GetWindowHandle());

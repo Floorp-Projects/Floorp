@@ -663,8 +663,8 @@ void MouseScrollHandler::HandleScrollMessageAsMouseWheelMessage(
        "mLineOrPageDeltaX: %d, mLineOrPageDeltaY: %d, "
        "isShift: %s, isControl: %s, isAlt: %s, isMeta: %s }",
        aWidget, (aMessage == MOZ_WM_VSCROLL) ? "V" : "H", aWParam, aLParam,
-       wheelEvent.mRefPoint.x, wheelEvent.mRefPoint.y, wheelEvent.mDeltaX,
-       wheelEvent.mDeltaY, wheelEvent.mLineOrPageDeltaX,
+       wheelEvent.mRefPoint.x.value, wheelEvent.mRefPoint.y.value,
+       wheelEvent.mDeltaX, wheelEvent.mDeltaY, wheelEvent.mLineOrPageDeltaX,
        wheelEvent.mLineOrPageDeltaY, GetBoolName(wheelEvent.IsShift()),
        GetBoolName(wheelEvent.IsControl()), GetBoolName(wheelEvent.IsAlt()),
        GetBoolName(wheelEvent.IsMeta())));
@@ -837,7 +837,7 @@ bool MouseScrollHandler::LastEventInfo::InitWheelEvent(
        "isShift: %s, isControl: %s, isAlt: %s, isMeta: %s, "
        "mAllowToOverrideSystemScrollSpeed: %s }, "
        "mAccumulatedDelta: %d",
-       aWidget, aWheelEvent.mRefPoint.x, aWheelEvent.mRefPoint.y,
+       aWidget, aWheelEvent.mRefPoint.x.value, aWheelEvent.mRefPoint.y.value,
        aWheelEvent.mDeltaX, aWheelEvent.mDeltaY, aWheelEvent.mLineOrPageDeltaX,
        aWheelEvent.mLineOrPageDeltaY, GetBoolName(aWheelEvent.IsShift()),
        GetBoolName(aWheelEvent.IsControl()), GetBoolName(aWheelEvent.IsAlt()),

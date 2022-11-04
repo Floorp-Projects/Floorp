@@ -673,8 +673,9 @@ struct BaseRect {
    * edge of the rectangle.
    */
   [[nodiscard]] Point ClampPoint(const Point& aPoint) const {
-    return Point(std::max(x, std::min(XMost(), aPoint.x)),
-                 std::max(y, std::min(YMost(), aPoint.y)));
+    using Coord = decltype(aPoint.x);
+    return Point(std::max(Coord(x), std::min(Coord(XMost()), aPoint.x)),
+                 std::max(Coord(y), std::min(Coord(YMost()), aPoint.y)));
   }
 
   /**

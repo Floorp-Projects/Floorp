@@ -39,10 +39,10 @@ struct gfxQuad {
     min_y = max_y = mPoints[0].y;
 
     for (int i = 1; i < 4; i++) {
-      min_x = std::min(mPoints[i].x, min_x);
-      max_x = std::max(mPoints[i].x, max_x);
-      min_y = std::min(mPoints[i].y, min_y);
-      max_y = std::max(mPoints[i].y, max_y);
+      min_x = std::min(mPoints[i].x.value, min_x);
+      max_x = std::max(mPoints[i].x.value, max_x);
+      min_y = std::min(mPoints[i].y.value, min_y);
+      max_y = std::max(mPoints[i].y.value, max_y);
     }
     return gfxRect(min_x, min_y, max_x - min_x, max_y - min_y);
   }

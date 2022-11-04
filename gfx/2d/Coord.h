@@ -21,6 +21,9 @@ struct IsPixel;
 
 namespace gfx {
 
+// Should only be used to define generic typedefs like Coord, Point, etc.
+struct UnknownUnits {};
+
 template <class Units, class Rep = int32_t>
 struct IntCoordTyped;
 template <class Units, class F = Float>
@@ -88,7 +91,6 @@ struct CoordOperatorsHelper<true, Coord, Primitive> {
 template <class Units, class Rep>
 struct MOZ_EMPTY_BASES IntCoordTyped
     : public BaseCoord<Rep, IntCoordTyped<Units, Rep>>,
-      public Units,
       public CoordOperatorsHelper<true, IntCoordTyped<Units, Rep>, float>,
       public CoordOperatorsHelper<true, IntCoordTyped<Units, Rep>, double> {
   static_assert(IsPixel<Units>::value,
@@ -109,7 +111,6 @@ struct MOZ_EMPTY_BASES IntCoordTyped
 template <class Units, class F>
 struct MOZ_EMPTY_BASES CoordTyped
     : public BaseCoord<F, CoordTyped<Units, F>>,
-      public Units,
       public CoordOperatorsHelper<!std::is_same_v<F, int32_t>,
                                   CoordTyped<Units, F>, int32_t>,
       public CoordOperatorsHelper<!std::is_same_v<F, uint32_t>,
@@ -147,6 +148,8 @@ struct MOZ_EMPTY_BASES CoordTyped
     return IntCoordTyped<Units>(int32_t(this->value));
   }
 };
+
+typedef CoordTyped<UnknownUnits> Coord;
 
 }  // namespace gfx
 }  // namespace mozilla

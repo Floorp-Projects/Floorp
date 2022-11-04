@@ -415,8 +415,8 @@ struct DIGroup {
       aData->mRect = transformedRect.Intersect(mClippedImageBounds);
       GP("CGC %s %d %d %d %d\n", aItem->Name(), clippedBounds.x,
          clippedBounds.y, clippedBounds.width, clippedBounds.height);
-      GP("%d %d,  %f %f\n", mVisibleRect.TopLeft().x, mVisibleRect.TopLeft().y,
-         aMatrix._11, aMatrix._22);
+      GP("%d %d,  %f %f\n", mVisibleRect.TopLeft().x.value,
+         mVisibleRect.TopLeft().y.value, aMatrix._11, aMatrix._22);
       GP("mRect %d %d %d %d\n", aData->mRect.x, aData->mRect.y,
          aData->mRect.width, aData->mRect.height);
       InvalidateRect(aData->mRect);
@@ -722,8 +722,8 @@ struct DIGroup {
                                           PixelCastJustification::LayerIsImage);
 
       auto bottomRight = dirtyRect.BottomRight();
-      GP("check invalid %d %d - %d %d\n", bottomRight.x, bottomRight.y,
-         dtSize.width, dtSize.height);
+      GP("check invalid %d %d - %d %d\n", bottomRight.x.value,
+         bottomRight.y.value, dtSize.width, dtSize.height);
       GP("Update Blob %d %d %d %d\n", mInvalidRect.x, mInvalidRect.y,
          mInvalidRect.width, mInvalidRect.height);
       if (!aResources.UpdateBlobImage(
@@ -805,8 +805,8 @@ struct DIGroup {
         continue;
       }
 
-      GP("paint check invalid %d %d - %d %d\n", bottomRight.x, bottomRight.y,
-         size.width, size.height);
+      GP("paint check invalid %d %d - %d %d\n", bottomRight.x.value,
+         bottomRight.y.value, size.width, size.height);
       // skip empty items
       if (bounds.IsEmpty()) {
         continue;
@@ -1647,8 +1647,9 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
     }
 
     if (group.mResidualOffset != residualOffset) {
-      GP(" Residual Offset %f %f -> %f %f\n", group.mResidualOffset.x,
-         group.mResidualOffset.y, residualOffset.x, residualOffset.y);
+      GP(" Residual Offset %f %f -> %f %f\n", group.mResidualOffset.x.value,
+         group.mResidualOffset.y.value, residualOffset.x.value,
+         residualOffset.y.value);
     }
 
     group.ClearItems();

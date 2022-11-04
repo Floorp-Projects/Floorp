@@ -41,8 +41,8 @@ struct gfxLineSegment {
    */
   bool Intersects(const gfxLineSegment& aOther, gfxPoint& aIntersection) {
     gfxFloat denominator =
-        (aOther.mEnd.y - aOther.mStart.y) * (mEnd.x - mStart.x) -
-        (aOther.mEnd.x - aOther.mStart.x) * (mEnd.y - mStart.y);
+        (aOther.mEnd.y - aOther.mStart.y).value * (mEnd.x - mStart.x).value -
+        (aOther.mEnd.x - aOther.mStart.x).value * (mEnd.y - mStart.y).value;
 
     // Parallel or coincident. We treat coincident as not intersecting since
     // these lines are guaranteed to have corners that intersect instead.
@@ -50,12 +50,14 @@ struct gfxLineSegment {
       return false;
     }
 
-    gfxFloat anumerator =
-        (aOther.mEnd.x - aOther.mStart.x) * (mStart.y - aOther.mStart.y) -
-        (aOther.mEnd.y - aOther.mStart.y) * (mStart.x - aOther.mStart.x);
+    gfxFloat anumerator = (aOther.mEnd.x - aOther.mStart.x).value *
+                              (mStart.y - aOther.mStart.y).value -
+                          (aOther.mEnd.y - aOther.mStart.y).value *
+                              (mStart.x - aOther.mStart.x).value;
 
-    gfxFloat bnumerator = (mEnd.x - mStart.x) * (mStart.y - aOther.mStart.y) -
-                          (mEnd.y - mStart.y) * (mStart.x - aOther.mStart.x);
+    gfxFloat bnumerator =
+        (mEnd.x - mStart.x).value * (mStart.y - aOther.mStart.y).value -
+        (mEnd.y - mStart.y).value * (mStart.x - aOther.mStart.x).value;
 
     gfxFloat ua = anumerator / denominator;
     gfxFloat ub = bnumerator / denominator;

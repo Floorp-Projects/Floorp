@@ -43,15 +43,15 @@ ParentLayerPoint FlingAccelerator::GetFlingStartingVelocity(
         SameDirection(velocity.x, mPreviousFlingStartingVelocity.x)) {
       velocity.x = Accelerate(velocity.x, mPreviousFlingStartingVelocity.x);
       FLING_LOG("%p Applying fling x-acceleration from %f to %f (delta %f)\n",
-                this, aVelocity.x, velocity.x,
-                mPreviousFlingStartingVelocity.x);
+                this, aVelocity.x.value, velocity.x.value,
+                mPreviousFlingStartingVelocity.x.value);
     }
     if (velocity.y != 0 &&
         SameDirection(velocity.y, mPreviousFlingStartingVelocity.y)) {
       velocity.y = Accelerate(velocity.y, mPreviousFlingStartingVelocity.y);
       FLING_LOG("%p Applying fling y-acceleration from %f to %f (delta %f)\n",
-                this, aVelocity.y, velocity.y,
-                mPreviousFlingStartingVelocity.y);
+                this, aVelocity.y.value, velocity.y.value,
+                mPreviousFlingStartingVelocity.y.value);
     }
   }
 

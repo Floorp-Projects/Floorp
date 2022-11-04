@@ -133,8 +133,9 @@ APZEventResult APZInputBridge::ReceiveInputEvent(
 
         result = ReceiveInputEvent(input, std::move(aCallback));
 
-        mouseEvent.mRefPoint.x = input.mOrigin.x;
-        mouseEvent.mRefPoint.y = input.mOrigin.y;
+        mouseEvent.mRefPoint = TruncatedToInt(ViewAs<LayoutDevicePixel>(
+            input.mOrigin,
+            PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
         mouseEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
         mouseEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;
 #ifdef XP_MACOSX
@@ -243,8 +244,9 @@ APZEventResult APZInputBridge::ReceiveInputEvent(
               &input.mUserDeltaMultiplierY);
 
           result = ReceiveInputEvent(input, std::move(aCallback));
-          wheelEvent.mRefPoint.x = input.mOrigin.x;
-          wheelEvent.mRefPoint.y = input.mOrigin.y;
+          wheelEvent.mRefPoint = TruncatedToInt(ViewAs<LayoutDevicePixel>(
+              input.mOrigin, PixelCastJustification::
+                                 LayoutDeviceIsScreenForUntransformedEvent));
           wheelEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
           wheelEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;
           aEvent.mLayersId = input.mLayersId;

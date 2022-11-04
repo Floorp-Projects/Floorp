@@ -2811,8 +2811,8 @@ static inline IntPoint QuantizeOffset(const Matrix& aTransform,
                                       const GlyphBuffer& aBuffer) {
   IntPoint offset =
       RoundedToInt(aTransform.TransformPoint(aBuffer.mGlyphs[0].mPosition));
-  offset.x &= ~(aQuantizeScale.x - 1);
-  offset.y &= ~(aQuantizeScale.y - 1);
+  offset.x.value &= ~(aQuantizeScale.x.value - 1);
+  offset.y.value &= ~(aQuantizeScale.y.value - 1);
   return offset;
 }
 

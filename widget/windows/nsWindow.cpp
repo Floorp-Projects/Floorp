@@ -2730,7 +2730,8 @@ LayoutDeviceIntPoint nsWindow::GetClientOffset() {
   RECT r1;
   GetWindowRect(mWnd, &r1);
   LayoutDeviceIntPoint pt = WidgetToScreenOffset();
-  return LayoutDeviceIntPoint(pt.x - r1.left, pt.y - r1.top);
+  return LayoutDeviceIntPoint(pt.x - LayoutDeviceIntCoord(r1.left),
+                              pt.y - LayoutDeviceIntCoord(r1.top));
 }
 
 void nsWindow::SetDrawsInTitlebar(bool aState) {
@@ -4511,8 +4512,8 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
   // so that we update sLastMouseMovePoint even for touch-induced mousemove
   // events.
   if (aEventMessage == eMouseMove) {
-    if ((sLastMouseMovePoint.x == mpScreen.x) &&
-        (sLastMouseMovePoint.y == mpScreen.y)) {
+    if ((sLastMouseMovePoint.x == mpScreen.x.value) &&
+        (sLastMouseMovePoint.y == mpScreen.y.value)) {
       return result;
     }
     sLastMouseMovePoint.x = mpScreen.x;
@@ -4619,9 +4620,9 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
   static BYTE sLastMouseButton = 0;
 
   bool insideMovementThreshold =
-      (DeprecatedAbs(sLastMousePoint.x - eventPoint.x) <
+      (DeprecatedAbs(sLastMousePoint.x - eventPoint.x.value) <
        (short)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
-      (DeprecatedAbs(sLastMousePoint.y - eventPoint.y) <
+      (DeprecatedAbs(sLastMousePoint.y - eventPoint.y.value) <
        (short)::GetSystemMetrics(SM_CYDOUBLECLK));
 
   BYTE eventButton;
@@ -6656,7 +6657,8 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t aX, int32_t aY) {
       POINT pt = {aX, aY};
       ::ScreenToClient(mWnd, &pt);
 
-      if (pt.x == mCachedHitTestPoint.x && pt.y == mCachedHitTestPoint.y &&
+      if (pt.x == mCachedHitTestPoint.x.value &&
+          pt.y == mCachedHitTestPoint.y.value &&
           TimeStamp::Now() - mCachedHitTestTime <
               TimeDuration::FromMilliseconds(HITTEST_CACHE_LIFETIME_MS)) {
         return mCachedHitTestResult;
@@ -8893,11 +8895,11 @@ bool nsWindow::OnPointerEvents(UINT msg, WPARAM aWParam, LPARAM aLParam) {
         LayoutDeviceIntPoint eventPoint(GET_X_LPARAM(aLParam),
                                         GET_Y_LPARAM(aLParam));
         int32_t movementX = sLastPointerDownPoint.x > eventPoint.x
-                                ? sLastPointerDownPoint.x - eventPoint.x
-                                : eventPoint.x - sLastPointerDownPoint.x;
+                                ? sLastPointerDownPoint.x - eventPoint.x.value
+                                : eventPoint.x.value - sLastPointerDownPoint.x;
         int32_t movementY = sLastPointerDownPoint.y > eventPoint.y
-                                ? sLastPointerDownPoint.y - eventPoint.y
-                                : eventPoint.y - sLastPointerDownPoint.y;
+                                ? sLastPointerDownPoint.y - eventPoint.y.value
+                                : eventPoint.y.value - sLastPointerDownPoint.y;
         bool insideMovementThreshold =
             movementX < (int32_t)::GetSystemMetrics(SM_CXDRAG) &&
             movementY < (int32_t)::GetSystemMetrics(SM_CYDRAG);

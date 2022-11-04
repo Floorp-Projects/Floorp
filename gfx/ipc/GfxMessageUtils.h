@@ -149,12 +149,13 @@ struct ParamTraits<gfxPoint> {
   typedef gfxPoint paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    WriteParam(aWriter, aParam.x);
-    WriteParam(aWriter, aParam.y);
+    WriteParam(aWriter, aParam.x.value);
+    WriteParam(aWriter, aParam.y.value);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
-    return (ReadParam(aReader, &aResult->x) && ReadParam(aReader, &aResult->y));
+    return (ReadParam(aReader, &aResult->x.value) &&
+            ReadParam(aReader, &aResult->y.value));
   }
 };
 

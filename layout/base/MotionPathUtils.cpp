@@ -82,10 +82,10 @@ static CSSCoord ComputeSides(const CSSPoint& aInitialPosition,
   double sint = std::sin(theta);
   double cost = std::cos(theta);
 
-  double b = cost >= 0 ? aInitialPosition.y
-                       : aContainerSize.height - aInitialPosition.y;
-  double bPrime = sint >= 0 ? aContainerSize.width - aInitialPosition.x
-                            : aInitialPosition.x;
+  double b = cost >= 0 ? aInitialPosition.y.value
+                       : aContainerSize.height - aInitialPosition.y.value;
+  double bPrime = sint >= 0 ? aContainerSize.width - aInitialPosition.x.value
+                            : aInitialPosition.x.value;
   sint = std::fabs(sint);
   cost = std::fabs(cost);
 
@@ -240,7 +240,7 @@ static CSSCoord ComputeRayUsedDistance(const RayFunction& aRay,
   float lowerMax = std::numeric_limits<float>::min();
   bool shouldIncreasePathLength = false;
   for (const gfx::Point& p : vertices) {
-    float d = aPathLength.value * aPathLength.value - p.y * p.y;
+    float d = aPathLength.value * aPathLength.value - p.y.value * p.y.value;
     if (d < 0) {
       // Impossible to make the box inside the path circle. Need to increase
       // the path length.
@@ -264,7 +264,7 @@ static CSSCoord ComputeRayUsedDistance(const RayFunction& aRay,
   // Assume we set |usedDistance| to |-vertices[0].x|, so the current radius is
   // fabs(vertices[0].y). This is a possible solution.
   double radius = std::fabs(vertices[0].y);
-  usedDistance = -vertices[0].x;
+  usedDistance = -vertices[0].x.value;
   const double epsilon = 1e-5;
 
   for (size_t i = 0; i < 3; ++i) {

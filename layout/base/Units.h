@@ -348,7 +348,8 @@ struct CSSPixel {
   }
 
   static nsPoint ToAppUnits(const CSSIntPoint& aPoint) {
-    return nsPoint(ToAppUnits(aPoint.x), ToAppUnits(aPoint.y));
+    return nsPoint(ToAppUnits(CSSCoord(aPoint.x)),
+                   ToAppUnits(CSSCoord(aPoint.y)));
   }
 
   static nsSize ToAppUnits(const CSSSize& aSize) {

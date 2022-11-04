@@ -744,8 +744,8 @@ bool RasterImage::SetMetadata(const ImageMetadata& aMetadata,
     MOZ_ASSERT(mOrientation.IsIdentity(), "Would need to orient hotspot point");
 
     auto hotspot = aMetadata.GetHotspot();
-    mHotspot.x = std::max(std::min(hotspot.x, mSize.width - 1), 0);
-    mHotspot.y = std::max(std::min(hotspot.y, mSize.height - 1), 0);
+    mHotspot.x = std::max(std::min(hotspot.x.value, mSize.width - 1), 0);
+    mHotspot.y = std::max(std::min(hotspot.y.value, mSize.height - 1), 0);
   }
 
   return true;

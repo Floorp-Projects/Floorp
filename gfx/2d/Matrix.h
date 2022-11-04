@@ -828,10 +828,10 @@ class Matrix4x4Typed {
     F max_x = -std::numeric_limits<F>::max();
     F max_y = -std::numeric_limits<F>::max();
     for (size_t i = 0; i < vertCount; i++) {
-      min_x = std::min(min_x, verts[i].x);
-      max_x = std::max(max_x, verts[i].x);
-      min_y = std::min(min_y, verts[i].y);
-      max_y = std::max(max_y, verts[i].y);
+      min_x = std::min(min_x, verts[i].x.value);
+      max_x = std::max(max_x, verts[i].x.value);
+      min_y = std::min(min_y, verts[i].y.value);
+      max_y = std::max(max_y, verts[i].y.value);
     }
 
     if (max_x < min_x || max_y < min_y) {

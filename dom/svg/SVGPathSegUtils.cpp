@@ -583,7 +583,7 @@ enum class EdgeDir {
 };
 
 Maybe<EdgeDir> GetDirection(Point v) {
-  if (!std::isfinite(v.x) || !std::isfinite(v.y)) {
+  if (!std::isfinite(v.x.value) || !std::isfinite(v.y.value)) {
     return Nothing();
   }
 

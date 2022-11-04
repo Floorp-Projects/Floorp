@@ -1080,7 +1080,8 @@ gfx::Point3D CompositorOGL::GetLineCoefficients(const gfx::Point& aPoint1,
   gfx::Point3D coeffecients;
   coeffecients.x = aPoint1.y - aPoint2.y;
   coeffecients.y = aPoint2.x - aPoint1.x;
-  coeffecients.z = aPoint1.x * aPoint2.y - aPoint2.x * aPoint1.y;
+  coeffecients.z =
+      aPoint1.x.value * aPoint2.y.value - aPoint2.x.value * aPoint1.y.value;
 
   coeffecients *= 1.0f / sqrtf(coeffecients.x * coeffecients.x +
                                coeffecients.y * coeffecients.y);
@@ -1203,10 +1204,12 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
       while (winding == 0.0f && wp < pointCount) {
         int wp1 = (wp + 1) % pointCount;
         int wp2 = (wp + 2) % pointCount;
-        winding =
-            (points[wp1].x - points[wp].x) * (points[wp1].y + points[wp].y) +
-            (points[wp2].x - points[wp1].x) * (points[wp2].y + points[wp1].y) +
-            (points[wp].x - points[wp2].x) * (points[wp].y + points[wp2].y);
+        winding = (points[wp1].x - points[wp].x).value *
+                      (points[wp1].y + points[wp].y).value +
+                  (points[wp2].x - points[wp1].x).value *
+                      (points[wp2].y + points[wp1].y).value +
+                  (points[wp].x - points[wp2].x).value *
+                      (points[wp].y + points[wp2].y).value;
         wp++;
       }
       bool frontFacing = winding >= 0.0f;

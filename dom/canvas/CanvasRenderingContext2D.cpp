@@ -3162,7 +3162,8 @@ void CanvasRenderingContext2D::ArcTo(double aX1, double aY1, double aX2,
   }
 
   // Check for colinearity
-  dir = (p2.x - p1.x) * (p0.y - p1.y) + (p2.y - p1.y) * (p1.x - p0.x);
+  dir = (p2.x.value - p1.x.value) * (p0.y.value - p1.y.value) +
+        (p2.y.value - p1.y.value) * (p1.x.value - p0.x.value);
   if (dir == 0) {
     LineTo(p1.x, p1.y);
     return;
@@ -3844,7 +3845,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     bool verticalRun = mTextRun->IsVertical();
     RefPtr<gfxPattern> pattern;
 
-    float& inlineCoord = verticalRun ? point.y : point.x;
+    float& inlineCoord = verticalRun ? point.y.value : point.x.value;
     inlineCoord += aXOffset;
 
     // offset is given in terms of left side of string
@@ -5965,7 +5966,8 @@ void CanvasPath::ArcTo(double aX1, double aY1, double aX2, double aY2,
   }
 
   // Check for colinearity
-  dir = (p2.x - p1.x) * (p0.y - p1.y) + (p2.y - p1.y) * (p1.x - p0.x);
+  dir = (p2.x.value - p1.x.value) * (p0.y.value - p1.y.value) +
+        (p2.y.value - p1.y.value) * (p1.x.value - p0.x.value);
   if (dir == 0) {
     LineTo(p1.x, p1.y);
     return;

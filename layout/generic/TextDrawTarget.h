@@ -187,9 +187,9 @@ class TextDrawTarget : public DrawTarget {
     static_assert(
         std::is_same<decltype(aBuffer.mGlyphs[0].mIndex),
                      decltype(glyphs[0].index)>() &&
-            std::is_same<decltype(aBuffer.mGlyphs[0].mPosition.x),
+            std::is_same<decltype(aBuffer.mGlyphs[0].mPosition.x.value),
                          decltype(glyphs[0].point.x)>() &&
-            std::is_same<decltype(aBuffer.mGlyphs[0].mPosition.y),
+            std::is_same<decltype(aBuffer.mGlyphs[0].mPosition.y.value),
                          decltype(glyphs[0].point.y)>() &&
             offsetof(GlyphType, mIndex) == offsetof(wr::GlyphInstance, index) &&
             offsetof(GlyphType, mPosition) ==
