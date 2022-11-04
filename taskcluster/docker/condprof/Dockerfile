@@ -1,5 +1,5 @@
 FROM $DOCKER_IMAGE_PARENT
-MAINTAINER    Tarek Ziade <tarek@mozilla.com>
+MAINTAINER    Gregory Mierzwinski <gmierzwinski@mozilla.com>
 
 VOLUME /builds/worker/.cache
 VOLUME /builds/worker/checkouts
