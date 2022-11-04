@@ -92,10 +92,8 @@ let AVAILABLE_PIP_OVERRIDES;
     },
 
     hbomax: {
-      "https://play.hbomax.com/feature/*": {
-        videoWrapperScriptPath: "video-wrappers/hbomax.js",
-      },
-      "https://play.hbomax.com/episode/*": {
+      "https://play.hbomax.com/page/*": { policy: TOGGLE_POLICIES.HIDDEN },
+      "https://play.hbomax.com/player/*": {
         videoWrapperScriptPath: "video-wrappers/hbomax.js",
       },
     },
