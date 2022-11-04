@@ -167,16 +167,14 @@
     <dimen name="account_settings_device_name_min_height">48dp</dimen>
 
     <!-- Top sites  -->
-    <dimen name="top_sites_item_margin_top">4dp</dimen>
     <dimen name="top_sites_item_margin_bottom">12dp</dimen>
-    <dimen name="top_sites_text_margin_top">2dp</dimen>
+    <dimen name="top_sites_text_margin_top">6dp</dimen>
     <dimen name="top_sites_favicon_size">36dp</dimen>
     <dimen name="top_sites_favicon_elevation">0dp</dimen>
     <dimen name="top_sites_favicon_corner_size">4dp</dimen>
 
-    <dimen name="top_sites_card_height">84dp</dimen>
-    <dimen name="top_sites_card_width">72dp</dimen>
-    <dimen name="top_sites_card_padding">8dp</dimen>
+    <dimen name="top_sites_card_size">60dp</dimen>
+    <dimen name="top_sites_card_padding">12dp</dimen>
     <dimen name="top_sites_card_elevation">6dp</dimen>
     <dimen name="top_sites_card_radius">8dp</dimen>
 
