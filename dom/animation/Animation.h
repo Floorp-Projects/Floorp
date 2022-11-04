@@ -111,7 +111,8 @@ class Animation : public DOMEventTargetHelper,
     return GetCurrentTimeForHoldTime(mHoldTime);
   }
   Nullable<double> GetCurrentTimeAsDouble() const;
-  void SetCurrentTime(const TimeDuration& aNewCurrentTime);
+  void SetCurrentTime(const TimeDuration& aSeekTime);
+  void SetCurrentTimeNoUpdate(const TimeDuration& aSeekTime);
   void SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
                               ErrorResult& aRv);
 
