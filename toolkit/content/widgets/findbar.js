@@ -399,9 +399,9 @@
     }
 
     /**
-     * This is necessary because the destructor isn't called when we are removed
-     * from a document that is not destroyed. This needs to be explicitly called
-     * in this case.
+     * This is necessary because custom elements don't have a "real" destructor.
+     * This method is called explicitly from disconnectedCallback, and from
+     * an unload event handler that we add.
      */
     destroy() {
       if (this._destroyed) {

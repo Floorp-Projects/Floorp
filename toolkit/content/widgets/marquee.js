@@ -47,18 +47,18 @@ this.MarqueeWidget = class {
     if (this.impl && this.impl.constructor == newImpl) {
       return;
     }
-    this.destructor();
+    this.teardown();
     if (newImpl) {
       this.impl = new newImpl(this.shadowRoot);
       this.impl.onsetup();
     }
   }
 
-  destructor() {
+  teardown() {
     if (!this.impl) {
       return;
     }
-    this.impl.destructor();
+    this.impl.teardown();
     this.shadowRoot.firstChild.remove();
     delete this.impl;
   }
@@ -107,7 +107,7 @@ this.MarqueeBaseImplWidget = class {
     this.shadowRoot.addEventListener("marquee-stop", this);
   }
 
-  destructor() {
+  teardown() {
     this._mutationObserver.disconnect();
     this.window.clearTimeout(this.runId);
 

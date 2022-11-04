@@ -43,7 +43,7 @@ this.DateTimeBoxWidget = class {
     }
 
     if (aDestroy) {
-      this.destructor();
+      this.teardown();
     }
     this.type = newType;
     this.setup();
@@ -57,7 +57,7 @@ this.DateTimeBoxWidget = class {
     return this.type == "date" || this.type == "datetime-local";
   }
 
-  destructor() {
+  teardown() {
     this.mResetButton.removeEventListener("mousedown", this, {
       mozSystemGroup: true,
     });

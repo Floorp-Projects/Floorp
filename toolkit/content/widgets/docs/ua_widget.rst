@@ -15,13 +15,13 @@ When the element is appended to the tree, a chrome-only ``UAWidgetSetupOrChange`
 
 UAWidgetsChild then grabs the sandbox for that origin (lazily creating it as needed), loads the script as needed, and initializes an instance by calling the JS constructor with a reference to the UA Widget Shadow Root created by the DOM. We will discuss the sandbox in the latter section.
 
-The ``onsetup`` method is called right after the instance is constructed. The call to constructor must not throw, or UAWidgetsChild will be confused since an instance of the widget will not be returned, but the widget is already half-initalized. If the ``onsetup`` method call throws, UAWidgetsChild will still be able to hold the reference of the widget and call the destructor later on.
+The ``onsetup`` method is called right after the instance is constructed. The call to constructor must not throw, or UAWidgetsChild will be confused since an instance of the widget will not be returned, but the widget is already half-initalized. If the ``onsetup`` method call throws, UAWidgetsChild will still be able to hold the reference of the widget and call the teardown method later on.
 
-When the element is removed from the tree, ``UAWidgetTeardown`` is dispatched so UAWidgetsChild can destroy the widget, if it exists. If so, the UAWidgetsChild calls the ``destructor()`` method on the widget, causing the widget to destruct itself.
+When the element is removed from the tree, ``UAWidgetTeardown`` is dispatched so UAWidgetsChild can destroy the widget, if it exists. If so, the UAWidgetsChild calls the ``teardown()`` method on the widget, causing the widget to destruct itself.
 
-Counter-intuitively, elements are not considered "removed from the tree" when the document is unloaded. This is considered safe as anything the widget touches should be reset or cleaned up when the document unloads. Please do not violate the assumption by having any browser state toggled by the destructor.
+Counter-intuitively, elements are not considered "removed from the tree" when the document is unloaded. This is considered safe as anything the widget touches should be reset or cleaned up when the document unloads. Please do not violate the assumption by having any browser state toggled by the teardown.
 
-When a UA Widget initializes, it should create its own DOM inside the passed UA Widget Shadow Root, including the ``<link>`` element necessary to load the stylesheet, add event listeners, etc. When destroyed (i.e. the destructor method is called), it should do the opposite.
+When a UA Widget initializes, it should create its own DOM inside the passed UA Widget Shadow Root, including the ``<link>`` element necessary to load the stylesheet, add event listeners, etc. When destroyed (i.e. the teardown method is called), it should do the opposite.
 
 **Specialization**: for video controls, we do not want to do the work if the control is not needed (i.e. when the ``<video>`` or ``<audio>`` element has no "controls" attribute set), so we forgo dispatching the event from HTMLMediaElement in the BindToTree method. Instead, another ``UAWidgetSetupOrChange`` event will cause the sandbox and the widget instance to construct when the attribute is set to true. The same event is also responsible for triggering the ``onchange()`` method on UA Widgets if the widget is already initialized.
 
