@@ -18,7 +18,8 @@
           "applications": {
             "$ref": "BrowserSpecificSettings",
             "description": "The applications property is deprecated, please use 'browser_specific_settings'",
-            "optional": true
+            "optional": true,
+            "max_manifest_version": 2
           },
 
           "browser_specific_settings": {

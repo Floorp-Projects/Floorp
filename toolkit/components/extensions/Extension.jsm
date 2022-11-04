@@ -1253,10 +1253,16 @@ class ExtensionData {
 
     manifest = normalized.value;
 
-    // browser_specific_settings is documented, but most internal code is written
-    // using applications.  Use browser_specific_settings if it is in the manifest.  If
-    // both are set, we probably should make it an error, but we don't know if addons
-    // in the wild have done that, so let the chips fall where they may.
+    // `browser_specific_settings` is the recommended key to use in the
+    // manifest, and the only possible choice in MV3+. For MV2 extensions, we
+    // still allow `applications`, though. Because `applications` used to be
+    // the only key in the distant past, most internal code is written using
+    // applications. That's why we end up re-assigning `browser_specific_settings`
+    // to `applications` below.
+    //
+    // Also, when a MV3+ extension specifies `applications`, the key isn't
+    // recognized and therefore filtered out from the normalized manifest as
+    // part of the JSONSchema normalization.
     if (manifest.browser_specific_settings?.gecko) {
       if (manifest.applications) {
         this.manifestWarning(
