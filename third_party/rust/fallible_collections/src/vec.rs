@@ -461,6 +461,7 @@ fn vec_try_extend<T>(v: &mut Vec<T>, new_cap: usize) -> Result<(), TryReserveErr
     let elem_size = core::mem::size_of::<T>();
     let new_alloc_size = new_cap
         .checked_mul(elem_size)
+        .filter(|size| *size <= isize::MAX as usize)
         .ok_or(TryReserveError::CapacityOverflow)?;
 
     // required for alloc safety
