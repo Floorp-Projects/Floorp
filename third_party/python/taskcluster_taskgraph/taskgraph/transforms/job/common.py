@@ -191,11 +191,6 @@ def support_vcs_checkout(config, job, taskdesc, repo_configs, sparse=False):
         if repo_config.ssh_secret_name:
             taskdesc["scopes"].append(f"secrets:get:{repo_config.ssh_secret_name}")
 
-    if any(repo_config.type == "hg" for repo_config in repo_configs.values()):
-        # Give task access to hgfingerprint secret so it can pin the certificate
-        # for hg.mozilla.org.
-        taskdesc["scopes"].append("secrets:get:project/taskcluster/gecko/hgfingerprint")
-
     # only some worker platforms have taskcluster-proxy enabled
     if job["worker"]["implementation"] in ("docker-worker",):
         taskdesc["worker"]["taskcluster-proxy"] = True
