@@ -265,6 +265,28 @@ const char *av_chroma_location_name(enum AVChromaLocation location);
 int av_chroma_location_from_name(const char *name);
 
 /**
+ * Converts AVChromaLocation to swscale x/y chroma position.
+ *
+ * The positions represent the chroma (0,0) position in a coordinates system
+ * with luma (0,0) representing the origin and luma(1,1) representing 256,256
+ *
+ * @param xpos  horizontal chroma sample position
+ * @param ypos  vertical   chroma sample position
+ */
+int av_chroma_location_enum_to_pos(int *xpos, int *ypos, enum AVChromaLocation pos);
+
+/**
+ * Converts swscale x/y chroma position to AVChromaLocation.
+ *
+ * The positions represent the chroma (0,0) position in a coordinates system
+ * with luma (0,0) representing the origin and luma(1,1) representing 256,256
+ *
+ * @param xpos  horizontal chroma sample position
+ * @param ypos  vertical   chroma sample position
+ */
+enum AVChromaLocation av_chroma_location_pos_to_enum(int xpos, int ypos);
+
+/**
  * Return the pixel format corresponding to name.
  *
  * If there is no pixel format with name name, then looks for a
@@ -357,12 +379,15 @@ void av_write_image_line(const uint16_t *src, uint8_t *data[4],
  */
 enum AVPixelFormat av_pix_fmt_swap_endianness(enum AVPixelFormat pix_fmt);
 
-#define FF_LOSS_RESOLUTION  0x0001 /**< loss due to resolution change */
-#define FF_LOSS_DEPTH       0x0002 /**< loss due to color depth change */
-#define FF_LOSS_COLORSPACE  0x0004 /**< loss due to color space conversion */
-#define FF_LOSS_ALPHA       0x0008 /**< loss of alpha bits */
-#define FF_LOSS_COLORQUANT  0x0010 /**< loss due to color quantization */
-#define FF_LOSS_CHROMA      0x0020 /**< loss of chroma (e.g. RGB to gray conversion) */
+#define FF_LOSS_RESOLUTION        0x0001 /**< loss due to resolution change */
+#define FF_LOSS_DEPTH             0x0002 /**< loss due to color depth change */
+#define FF_LOSS_COLORSPACE        0x0004 /**< loss due to color space conversion */
+#define FF_LOSS_ALPHA             0x0008 /**< loss of alpha bits */
+#define FF_LOSS_COLORQUANT        0x0010 /**< loss due to color quantization */
+#define FF_LOSS_CHROMA            0x0020 /**< loss of chroma (e.g. RGB to gray conversion) */
+#define FF_LOSS_EXCESS_RESOLUTION 0x0040 /**< loss due to unneeded extra resolution */
+#define FF_LOSS_EXCESS_DEPTH      0x0080 /**< loss due to unneeded extra color depth */
+
 
 /**
  * Compute what kind of losses will occur when converting from one specific

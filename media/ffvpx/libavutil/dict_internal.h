@@ -16,17 +16,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "libavutil/attributes.h"
-#include "libavutil/cpu.h"
-#include "libavutil/aarch64/cpu.h"
-#include "libavcodec/videodsp.h"
+#ifndef AVUTIL_DICT_INTERNAL_H
+#define AVUTIL_DICT_INTERNAL_H
 
-void ff_prefetch_aarch64(const uint8_t *mem, ptrdiff_t stride, int h);
+#include <stdint.h>
 
-av_cold void ff_videodsp_init_aarch64(VideoDSPContext *ctx, int bpc)
-{
-    int cpu_flags = av_get_cpu_flags();
+#include "dict.h"
 
-    if (have_armv8(cpu_flags))
-        ctx->prefetch = ff_prefetch_aarch64;
-}
+/**
+ * Set a dictionary value to an ISO-8601 compliant timestamp string.
+ *
+ * @param dict pointer to a pointer to a dictionary struct. If *dict is NULL
+ *             a dictionary struct is allocated and put in *dict.
+ * @param key metadata key
+ * @param timestamp unix timestamp in microseconds
+ * @return <0 on error
+ */
+int avpriv_dict_set_timestamp(AVDictionary **dict, const char *key, int64_t timestamp);
+
+#endif /* AVUTIL_DICT_INTERNAL_H */

@@ -38,6 +38,8 @@ av_channel_layout_describe
 av_channel_layout_from_mask
 av_channel_layout_uninit
 av_chroma_location_name
+av_chroma_location_enum_to_pos
+av_chroma_location_pos_to_enum
 av_color_primaries_name
 av_color_range_name
 av_color_space_name

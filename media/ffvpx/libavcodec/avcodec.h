@@ -232,6 +232,16 @@ typedef struct RcOverride{
  */
 #define AV_CODEC_FLAG_DROPCHANGED     (1 <<  5)
 /**
+ * Request the encoder to output reconstructed frames, i.e. frames that would be
+ * produced by decoding the encoded bistream. These frames may be retrieved by
+ * calling avcodec_receive_frame() immediately after a successful call to
+ * avcodec_receive_packet().
+ *
+ * Should only be used with encoders flagged with the
+ * AV_CODEC_CAP_ENCODER_RECON_FRAME capability.
+ */
+#define AV_CODEC_FLAG_RECON_FRAME     (1 <<  6)
+/**
  * Use internal 2pass ratecontrol in first pass mode.
  */
 #define AV_CODEC_FLAG_PASS1           (1 <<  9)
@@ -331,13 +341,12 @@ typedef struct RcOverride{
  * Do not reset ASS ReadOrder field on flush (subtitles decoding)
  */
 #define AV_CODEC_FLAG2_RO_FLUSH_NOOP  (1 << 30)
-
-/* Unsupported options :
- *              Syntax Arithmetic coding (SAC)
- *              Reference Picture Selection
- *              Independent Segment Decoding */
-/* /Fx */
-/* codec capabilities */
+/**
+ * Generate/parse ICC profiles on encode/decode, as appropriate for the type of
+ * file. No effect on codecs which cannot contain embedded ICC profiles, or
+ * when compiled without support for lcms2.
+ */
+#define AV_CODEC_FLAG2_ICC_PROFILES   (1U << 31)
 
 /* Exported side data.
    These flags can be passed in AVCodecContext.export_side_data before initialization.
@@ -1296,13 +1305,9 @@ typedef struct AVCodecContext {
      * unofficial and experimental (that is, they always try to decode things
      * when they can) unless they are explicitly asked to behave stupidly
      * (=strictly conform to the specs)
+     * This may only be set to one of the FF_COMPLIANCE_* values in defs.h.
      */
     int strict_std_compliance;
-#define FF_COMPLIANCE_VERY_STRICT   2 ///< Strictly conform to an older more strict version of the spec or reference software.
-#define FF_COMPLIANCE_STRICT        1 ///< Strictly conform to all the things in the spec no matter what consequences.
-#define FF_COMPLIANCE_NORMAL        0
-#define FF_COMPLIANCE_UNOFFICIAL   -1 ///< Allow unofficial extensions
-#define FF_COMPLIANCE_EXPERIMENTAL -2 ///< Allow nonstandardized experimental things.
 
     /**
      * error concealment flags
@@ -1338,27 +1343,12 @@ typedef struct AVCodecContext {
 
     /**
      * Error recognition; may misdetect some more or less valid parts as errors.
+     * This is a bitfield of the AV_EF_* values defined in defs.h.
+     *
      * - encoding: Set by user.
      * - decoding: Set by user.
      */
     int err_recognition;
-
-/**
- * Verify checksums embedded in the bitstream (could be of either encoded or
- * decoded data, depending on the codec) and print an error message on mismatch.
- * If AV_EF_EXPLODE is also set, a mismatching checksum will result in the
- * decoder returning an error.
- */
-#define AV_EF_CRCCHECK  (1<<0)
-#define AV_EF_BITSTREAM (1<<1)          ///< detect bitstream specification deviations
-#define AV_EF_BUFFER    (1<<2)          ///< detect improper bitstream length
-#define AV_EF_EXPLODE   (1<<3)          ///< abort decoding on minor error detection
-
-#define AV_EF_IGNORE_ERR (1<<15)        ///< ignore errors and continue
-#define AV_EF_CAREFUL    (1<<16)        ///< consider things that violate the spec, are fast to calculate and have not been seen in the wild as errors
-#define AV_EF_COMPLIANT  (1<<17)        ///< consider all spec non compliances as errors
-#define AV_EF_AGGRESSIVE (1<<18)        ///< consider things that a sane encoder should not do as an error
-
 
     /**
      * opaque 64-bit number (generally a PTS) that will be reordered and
@@ -1379,13 +1369,26 @@ typedef struct AVCodecContext {
     const struct AVHWAccel *hwaccel;
 
     /**
-     * Hardware accelerator context.
-     * For some hardware accelerators, a global context needs to be
-     * provided by the user. In that case, this holds display-dependent
-     * data FFmpeg cannot instantiate itself. Please refer to the
-     * FFmpeg HW accelerator documentation to know how to fill this.
-     * - encoding: unused
-     * - decoding: Set by user
+     * Legacy hardware accelerator context.
+     *
+     * For some hardware acceleration methods, the caller may use this field to
+     * signal hwaccel-specific data to the codec. The struct pointed to by this
+     * pointer is hwaccel-dependent and defined in the respective header. Please
+     * refer to the FFmpeg HW accelerator documentation to know how to fill
+     * this.
+     *
+     * In most cases this field is optional - the necessary information may also
+     * be provided to libavcodec through @ref hw_frames_ctx or @ref
+     * hw_device_ctx (see avcodec_get_hw_config()). However, in some cases it
+     * may be the only method of signalling some (optional) information.
+     *
+     * The struct and its contents are owned by the caller.
+     *
+     * - encoding: May be set by the caller before avcodec_open2(). Must remain
+     *             valid until avcodec_free_context().
+     * - decoding: May be set by the caller in the get_format() callback.
+     *             Must remain valid until the next get_format() call,
+     *             or avcodec_free_context() (whichever comes first).
      */
     void *hwaccel_context;
 
@@ -1496,7 +1499,7 @@ typedef struct AVCodecContext {
      *   libavcodec will behave as if this field was always set to 1.
      *   Callers that want to be forward compatible with future libavcodec
      *   versions should wrap access to this field in
-     *     #if LIBAVCODEC_VERSION_MAJOR < 60
+     *     `#if LIBAVCODEC_VERSION_MAJOR < 60`
      */
     attribute_deprecated
     int thread_safe_callbacks;
@@ -1518,7 +1521,6 @@ typedef struct AVCodecContext {
      * It will return only after finishing all tasks.
      * The user may replace this with some multithreaded implementation,
      * the default implementation will execute the parts serially.
-     * Also see avcodec_thread_init and e.g. the --enable-pthread configure option.
      * @param c context passed also to func
      * @param count the number of things to execute
      * @param arg2 argument passed unchanged to func
@@ -2494,6 +2496,7 @@ void avcodec_align_dimensions(AVCodecContext *s, int *width, int *height);
 void avcodec_align_dimensions2(AVCodecContext *s, int *width, int *height,
                                int linesize_align[AV_NUM_DATA_POINTERS]);
 
+#ifdef FF_API_AVCODEC_CHROMA_POS
 /**
  * Converts AVChromaLocation to swscale x/y chroma position.
  *
@@ -2502,7 +2505,9 @@ void avcodec_align_dimensions2(AVCodecContext *s, int *width, int *height,
  *
  * @param xpos  horizontal chroma sample position
  * @param ypos  vertical   chroma sample position
+ * @deprecated Use av_chroma_location_enum_to_pos() instead.
  */
+ attribute_deprecated
 int avcodec_enum_to_chroma_pos(int *xpos, int *ypos, enum AVChromaLocation pos);
 
 /**
@@ -2513,8 +2518,11 @@ int avcodec_enum_to_chroma_pos(int *xpos, int *ypos, enum AVChromaLocation pos);
  *
  * @param xpos  horizontal chroma sample position
  * @param ypos  vertical   chroma sample position
+ * @deprecated Use av_chroma_location_pos_to_enum() instead.
  */
+ attribute_deprecated
 enum AVChromaLocation avcodec_chroma_pos_to_enum(int xpos, int ypos);
+#endif
 
 /**
  * Decode a subtitle message.
@@ -2596,21 +2604,23 @@ int avcodec_decode_subtitle2(AVCodecContext *avctx, AVSubtitle *sub,
 int avcodec_send_packet(AVCodecContext *avctx, const AVPacket *avpkt);
 
 /**
- * Return decoded output data from a decoder.
+ * Return decoded output data from a decoder or encoder (when the
+ * AV_CODEC_FLAG_RECON_FRAME flag is used).
  *
  * @param avctx codec context
  * @param frame This will be set to a reference-counted video or audio
  *              frame (depending on the decoder type) allocated by the
- *              decoder. Note that the function will always call
+ *              codec. Note that the function will always call
  *              av_frame_unref(frame) before doing anything else.
  *
  * @return
  *      0:                 success, a frame was returned
  *      AVERROR(EAGAIN):   output is not available in this state - user must try
  *                         to send new input
- *      AVERROR_EOF:       the decoder has been fully flushed, and there will be
+ *      AVERROR_EOF:       the codec has been fully flushed, and there will be
  *                         no more output frames
- *      AVERROR(EINVAL):   codec not opened, or it is an encoder
+ *      AVERROR(EINVAL):   codec not opened, or it is an encoder without
+ *                         the AV_CODEC_FLAG_RECON_FRAME flag enabled
  *      AVERROR_INPUT_CHANGED:   current decoded frame has changed parameters
  *                               with respect to first decoded frame. Applicable
  *                               when flag AV_CODEC_FLAG_DROPCHANGED is set.
@@ -2781,10 +2791,10 @@ int avcodec_get_hw_frames_parameters(AVCodecContext *avctx,
  */
 
 enum AVPictureStructure {
-    AV_PICTURE_STRUCTURE_UNKNOWN,      //< unknown
-    AV_PICTURE_STRUCTURE_TOP_FIELD,    //< coded as top field
-    AV_PICTURE_STRUCTURE_BOTTOM_FIELD, //< coded as bottom field
-    AV_PICTURE_STRUCTURE_FRAME,        //< coded as frame
+    AV_PICTURE_STRUCTURE_UNKNOWN,      ///< unknown
+    AV_PICTURE_STRUCTURE_TOP_FIELD,    ///< coded as top field
+    AV_PICTURE_STRUCTURE_BOTTOM_FIELD, ///< coded as bottom field
+    AV_PICTURE_STRUCTURE_FRAME,        ///< coded as frame
 };
 
 typedef struct AVCodecParserContext {

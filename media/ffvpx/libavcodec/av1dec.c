@@ -27,8 +27,8 @@
 #include "av1dec.h"
 #include "bytestream.h"
 #include "codec_internal.h"
+#include "decode.h"
 #include "hwconfig.h"
-#include "internal.h"
 #include "profiles.h"
 #include "thread.h"
 
@@ -441,7 +441,8 @@ static int get_pixel_format(AVCodecContext *avctx)
 #define HWACCEL_MAX (CONFIG_AV1_DXVA2_HWACCEL + \
                      CONFIG_AV1_D3D11VA_HWACCEL * 2 + \
                      CONFIG_AV1_NVDEC_HWACCEL + \
-                     CONFIG_AV1_VAAPI_HWACCEL)
+                     CONFIG_AV1_VAAPI_HWACCEL + \
+                     CONFIG_AV1_VDPAU_HWACCEL)
     enum AVPixelFormat pix_fmts[HWACCEL_MAX + 2], *fmtp = pix_fmts;
 
     if (seq->seq_profile == 2 && seq->color_config.high_bitdepth)
@@ -519,6 +520,9 @@ static int get_pixel_format(AVCodecContext *avctx)
 #if CONFIG_AV1_VAAPI_HWACCEL
         *fmtp++ = AV_PIX_FMT_VAAPI;
 #endif
+#if CONFIG_AV1_VDPAU_HWACCEL
+        *fmtp++ = AV_PIX_FMT_VDPAU;
+#endif
         break;
     case AV_PIX_FMT_YUV420P10:
 #if CONFIG_AV1_DXVA2_HWACCEL
@@ -533,6 +537,9 @@ static int get_pixel_format(AVCodecContext *avctx)
 #endif
 #if CONFIG_AV1_VAAPI_HWACCEL
         *fmtp++ = AV_PIX_FMT_VAAPI;
+#endif
+#if CONFIG_AV1_VDPAU_HWACCEL
+        *fmtp++ = AV_PIX_FMT_VDPAU;
 #endif
         break;
     case AV_PIX_FMT_GRAY8:
@@ -1240,7 +1247,7 @@ static const AVClass av1_class = {
 
 const FFCodec ff_av1_decoder = {
     .p.name                = "av1",
-    .p.long_name           = NULL_IF_CONFIG_SMALL("Alliance for Open Media AV1"),
+    CODEC_LONG_NAME("Alliance for Open Media AV1"),
     .p.type                = AVMEDIA_TYPE_VIDEO,
     .p.id                  = AV_CODEC_ID_AV1,
     .priv_data_size        = sizeof(AV1DecContext),
@@ -1248,8 +1255,7 @@ const FFCodec ff_av1_decoder = {
     .close                 = av1_decode_free,
     FF_CODEC_DECODE_CB(av1_decode_frame),
     .p.capabilities        = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_AVOID_PROBING,
-    .caps_internal         = FF_CODEC_CAP_INIT_THREADSAFE |
-                             FF_CODEC_CAP_INIT_CLEANUP |
+    .caps_internal         = FF_CODEC_CAP_INIT_CLEANUP |
                              FF_CODEC_CAP_SETS_PKT_DTS,
     .flush                 = av1_decode_flush,
     .p.profiles            = NULL_IF_CONFIG_SMALL(ff_av1_profiles),
@@ -1271,6 +1277,10 @@ const FFCodec ff_av1_decoder = {
 #if CONFIG_AV1_VAAPI_HWACCEL
         HWACCEL_VAAPI(av1),
 #endif
+#if CONFIG_AV1_VDPAU_HWACCEL
+        HWACCEL_VDPAU(av1),
+#endif
+
         NULL
     },
 };

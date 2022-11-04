@@ -16,17 +16,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "libavutil/attributes.h"
-#include "libavutil/cpu.h"
-#include "libavutil/aarch64/cpu.h"
-#include "libavcodec/videodsp.h"
+#ifndef AVUTIL_ATTRIBUTES_INTERNAL_H
+#define AVUTIL_ATTRIBUTES_INTERNAL_H
 
-void ff_prefetch_aarch64(const uint8_t *mem, ptrdiff_t stride, int h);
+#include "attributes.h"
 
-av_cold void ff_videodsp_init_aarch64(VideoDSPContext *ctx, int bpc)
-{
-    int cpu_flags = av_get_cpu_flags();
+#if (AV_GCC_VERSION_AT_LEAST(4,0) || defined(__clang__)) && (defined(__ELF__) || defined(__MACH__))
+#    define attribute_visibility_hidden __attribute__((visibility("hidden")))
+#    define FF_VISIBILITY_PUSH_HIDDEN   _Pragma("GCC visibility push(hidden)")
+#    define FF_VISIBILITY_POP_HIDDEN    _Pragma("GCC visibility pop")
+#else
+#    define attribute_visibility_hidden
+#    define FF_VISIBILITY_PUSH_HIDDEN
+#    define FF_VISIBILITY_POP_HIDDEN
+#endif
 
-    if (have_armv8(cpu_flags))
-        ctx->prefetch = ff_prefetch_aarch64;
-}
+#endif /* AVUTIL_ATTRIBUTES_INTERNAL_H */

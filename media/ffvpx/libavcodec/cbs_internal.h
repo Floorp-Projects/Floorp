@@ -31,9 +31,7 @@
 
 
 enum CBSContentType {
-    // Unit content is a simple structure.
-    CBS_CONTENT_TYPE_POD,
-    // Unit content contains some references to other structures, but all
+    // Unit content may contain some references to other structures, but all
     // managed via buffer reference counting.  The descriptor defines the
     // structure offsets of every buffer reference.
     CBS_CONTENT_TYPE_INTERNAL_REFS,
@@ -43,9 +41,9 @@ enum CBSContentType {
 };
 
 enum {
-      // Maximum number of unit types described by the same unit type
-      // descriptor.
-      CBS_MAX_UNIT_TYPES  = 3,
+      // Maximum number of unit types described by the same non-range
+      // unit type descriptor.
+      CBS_MAX_LIST_UNIT_TYPES = 3,
       // Maximum number of reference buffer offsets in any one unit.
       CBS_MAX_REF_OFFSETS = 2,
       // Special value used in a unit type descriptor to indicate that it
@@ -60,13 +58,16 @@ typedef const struct CodedBitstreamUnitTypeDescriptor {
     // used instead.
     int nb_unit_types;
 
-    // Array of unit types that this entry describes.
-    const CodedBitstreamUnitType unit_types[CBS_MAX_UNIT_TYPES];
-
-    // Start and end of unit type range, used if nb_unit_types is
-    // CBS_UNIT_TYPE_RANGE.
-    const CodedBitstreamUnitType unit_type_range_start;
-    const CodedBitstreamUnitType unit_type_range_end;
+    union {
+        // Array of unit types that this entry describes.
+        CodedBitstreamUnitType list[CBS_MAX_LIST_UNIT_TYPES];
+        // Start and end of unit type range, used if nb_unit_types is
+        // CBS_UNIT_TYPE_RANGE.
+        struct {
+            CodedBitstreamUnitType start;
+            CodedBitstreamUnitType end;
+        } range;
+    } unit_type;
 
     // The type of content described.
     enum CBSContentType content_type;
@@ -74,18 +75,27 @@ typedef const struct CodedBitstreamUnitTypeDescriptor {
     // the decomposed content of this type of unit.
     size_t content_size;
 
-    // Number of entries in the ref_offsets array.  Only used if the
-    // content_type is CBS_CONTENT_TYPE_INTERNAL_REFS.
-    int nb_ref_offsets;
-    // The structure must contain two adjacent elements:
-    //   type        *field;
-    //   AVBufferRef *field_ref;
-    // where field points to something in the buffer referred to by
-    // field_ref.  This offset is then set to offsetof(struct, field).
-    size_t ref_offsets[CBS_MAX_REF_OFFSETS];
+    union {
+        // This union's state is determined by content_type:
+        // ref for CBS_CONTENT_TYPE_INTERNAL_REFS,
+        // complex for CBS_CONTENT_TYPE_COMPLEX.
+        struct {
+            // Number of entries in the ref_offsets array.
+            // May be zero, then the structure is POD-like.
+            int nb_offsets;
+            // The structure must contain two adjacent elements:
+            //   type        *field;
+            //   AVBufferRef *field_ref;
+            // where field points to something in the buffer referred to by
+            // field_ref.  This offset is then set to offsetof(struct, field).
+            size_t offsets[CBS_MAX_REF_OFFSETS];
+        } ref;
 
-    void (*content_free)(void *opaque, uint8_t *data);
-    int  (*content_clone)(AVBufferRef **ref, CodedBitstreamUnit *unit);
+        struct {
+            void (*content_free)(void *opaque, uint8_t *data);
+            int  (*content_clone)(AVBufferRef **ref, CodedBitstreamUnit *unit);
+        } complex;
+    } type;
 } CodedBitstreamUnitTypeDescriptor;
 
 typedef struct CodedBitstreamType {
@@ -181,28 +191,54 @@ int ff_cbs_write_signed(CodedBitstreamContext *ctx, PutBitContext *pbc,
 // range_min in the above functions.
 #define MIN_INT_BITS(length) (-(INT64_C(1) << ((length) - 1)))
 
-
-#define CBS_UNIT_TYPE_POD(type, structure) { \
+#define TYPE_LIST(...) { __VA_ARGS__ }
+#define CBS_UNIT_TYPE_POD(type_, structure) { \
         .nb_unit_types  = 1, \
-        .unit_types     = { type }, \
-        .content_type   = CBS_CONTENT_TYPE_POD, \
-        .content_size   = sizeof(structure), \
-    }
-#define CBS_UNIT_TYPE_INTERNAL_REF(type, structure, ref_field) { \
-        .nb_unit_types  = 1, \
-        .unit_types     = { type }, \
+        .unit_type.list = { type_ }, \
         .content_type   = CBS_CONTENT_TYPE_INTERNAL_REFS, \
         .content_size   = sizeof(structure), \
-        .nb_ref_offsets = 1, \
-        .ref_offsets    = { offsetof(structure, ref_field) }, \
+        .type.ref       = { .nb_offsets = 0 }, \
     }
-#define CBS_UNIT_TYPE_COMPLEX(type, structure, free_func) { \
-        .nb_unit_types  = 1, \
-        .unit_types     = { type }, \
+#define CBS_UNIT_RANGE_POD(range_start, range_end, structure) { \
+        .nb_unit_types         = CBS_UNIT_TYPE_RANGE, \
+        .unit_type.range.start = range_start, \
+        .unit_type.range.end   = range_end, \
+        .content_type          = CBS_CONTENT_TYPE_INTERNAL_REFS, \
+        .content_size          = sizeof(structure), \
+        .type.ref              = { .nb_offsets = 0 }, \
+    }
+
+#define CBS_UNIT_TYPES_INTERNAL_REF(types, structure, ref_field) { \
+        .nb_unit_types  = FF_ARRAY_ELEMS((CodedBitstreamUnitType[])TYPE_LIST types), \
+        .unit_type.list = TYPE_LIST types, \
+        .content_type   = CBS_CONTENT_TYPE_INTERNAL_REFS, \
+        .content_size   = sizeof(structure), \
+        .type.ref       = { .nb_offsets = 1, \
+                            .offsets    = { offsetof(structure, ref_field) } }, \
+    }
+#define CBS_UNIT_TYPE_INTERNAL_REF(type, structure, ref_field) \
+    CBS_UNIT_TYPES_INTERNAL_REF((type), structure, ref_field)
+
+#define CBS_UNIT_RANGE_INTERNAL_REF(range_start, range_end, structure, ref_field) { \
+        .nb_unit_types         = CBS_UNIT_TYPE_RANGE, \
+        .unit_type.range.start = range_start, \
+        .unit_type.range.end   = range_end, \
+        .content_type          = CBS_CONTENT_TYPE_INTERNAL_REFS, \
+        .content_size          = sizeof(structure), \
+        .type.ref = { .nb_offsets = 1, \
+                      .offsets    = { offsetof(structure, ref_field) } }, \
+    }
+
+#define CBS_UNIT_TYPES_COMPLEX(types, structure, free_func) { \
+        .nb_unit_types  = FF_ARRAY_ELEMS((CodedBitstreamUnitType[])TYPE_LIST types), \
+        .unit_type.list = TYPE_LIST types, \
         .content_type   = CBS_CONTENT_TYPE_COMPLEX, \
         .content_size   = sizeof(structure), \
-        .content_free   = free_func, \
+        .type.complex   = { .content_free = free_func }, \
     }
+#define CBS_UNIT_TYPE_COMPLEX(type, structure, free_func) \
+    CBS_UNIT_TYPES_COMPLEX((type), structure, free_func)
+
 #define CBS_UNIT_TYPE_END_OF_LIST { .nb_unit_types = 0 }
 
 

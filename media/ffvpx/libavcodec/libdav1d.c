@@ -50,6 +50,7 @@ typedef struct Libdav1dContext {
     Dav1dData data;
     int tile_threads;
     int frame_threads;
+    int max_frame_delay;
     int apply_grain;
     int operating_point;
     int all_layers;
@@ -246,7 +247,9 @@ static av_cold int libdav1d_init(AVCodecContext *c)
         s.n_threads = FFMAX(dav1d->frame_threads, dav1d->tile_threads);
     else
         s.n_threads = FFMIN(threads, DAV1D_MAX_THREADS);
-    s.max_frame_delay = (c->flags & AV_CODEC_FLAG_LOW_DELAY) ? 1 : 0;
+    if (dav1d->max_frame_delay > 0 && (c->flags & AV_CODEC_FLAG_LOW_DELAY))
+        av_log(c, AV_LOG_WARNING, "Low delay mode requested, forcing max_frame_delay 1\n");
+    s.max_frame_delay = (c->flags & AV_CODEC_FLAG_LOW_DELAY) ? 1 : dav1d->max_frame_delay;
     av_log(c, AV_LOG_DEBUG, "Using %d threads, %d max_frame_delay\n",
            s.n_threads, s.max_frame_delay);
 #else
@@ -256,6 +259,8 @@ static av_cold int libdav1d_init(AVCodecContext *c)
     s.n_frame_threads = dav1d->frame_threads
                       ? dav1d->frame_threads
                       : FFMIN(ceil(threads / s.n_tile_threads), DAV1D_MAX_FRAME_THREADS);
+    if (dav1d->max_frame_delay > 0)
+        s.n_frame_threads = FFMIN(s.n_frame_threads, dav1d->max_frame_delay);
     av_log(c, AV_LOG_DEBUG, "Using %d frame threads, %d tile threads\n",
            s.n_frame_threads, s.n_tile_threads);
 #endif
@@ -415,7 +420,7 @@ static int libdav1d_receive_frame(AVCodecContext *c, AVFrame *frame)
     frame->pkt_dts = p->m.timestamp;
     frame->pkt_pos = p->m.offset;
     frame->pkt_size = p->m.size;
-    frame->pkt_duration = p->m.duration;
+    frame->duration = p->m.duration;
     frame->key_frame = p->frame_hdr->frame_type == DAV1D_FRAME_TYPE_KEY;
 
     switch (p->frame_hdr->frame_type) {
@@ -555,12 +560,16 @@ static av_cold int libdav1d_close(AVCodecContext *c)
 #ifndef DAV1D_MAX_TILE_THREADS
 #define DAV1D_MAX_TILE_THREADS DAV1D_MAX_THREADS
 #endif
+#ifndef DAV1D_MAX_FRAME_DELAY
+#define DAV1D_MAX_FRAME_DELAY DAV1D_MAX_FRAME_THREADS
+#endif
 
 #define OFFSET(x) offsetof(Libdav1dContext, x)
 #define VD AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_DECODING_PARAM
 static const AVOption libdav1d_options[] = {
     { "tilethreads", "Tile threads", OFFSET(tile_threads), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, DAV1D_MAX_TILE_THREADS, VD | AV_OPT_FLAG_DEPRECATED },
     { "framethreads", "Frame threads", OFFSET(frame_threads), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, DAV1D_MAX_FRAME_THREADS, VD | AV_OPT_FLAG_DEPRECATED },
+    { "max_frame_delay", "Max frame delay", OFFSET(max_frame_delay), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, DAV1D_MAX_FRAME_DELAY, VD },
     { "filmgrain", "Apply Film Grain", OFFSET(apply_grain), AV_OPT_TYPE_BOOL, { .i64 = -1 }, -1, 1, VD | AV_OPT_FLAG_DEPRECATED },
     { "oppoint",  "Select an operating point of the scalable bitstream", OFFSET(operating_point), AV_OPT_TYPE_INT, { .i64 = -1 }, -1, 31, VD },
     { "alllayers", "Output all spatial layers", OFFSET(all_layers), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, VD },
@@ -576,7 +585,7 @@ static const AVClass libdav1d_class = {
 
 const FFCodec ff_libdav1d_decoder = {
     .p.name         = "libdav1d",
-    .p.long_name    = NULL_IF_CONFIG_SMALL("dav1d AV1 decoder by VideoLAN"),
+    CODEC_LONG_NAME("dav1d AV1 decoder by VideoLAN"),
     .p.type         = AVMEDIA_TYPE_VIDEO,
     .p.id           = AV_CODEC_ID_AV1,
     .priv_data_size = sizeof(Libdav1dContext),
@@ -585,7 +594,7 @@ const FFCodec ff_libdav1d_decoder = {
     .flush          = libdav1d_flush,
     FF_CODEC_RECEIVE_FRAME_CB(libdav1d_receive_frame),
     .p.capabilities = AV_CODEC_CAP_DELAY | AV_CODEC_CAP_OTHER_THREADS,
-    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE | FF_CODEC_CAP_SETS_PKT_DTS |
+    .caps_internal  = FF_CODEC_CAP_SETS_PKT_DTS |
                       FF_CODEC_CAP_AUTO_THREADS,
     .p.priv_class   = &libdav1d_class,
     .p.wrapper_name = "libdav1d",

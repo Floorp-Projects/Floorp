@@ -359,7 +359,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
 
         side= av_packet_get_side_data(avci->last_pkt_props, AV_PKT_DATA_SKIP_SAMPLES, &side_size);
         if(side && side_size>=10) {
-            avci->skip_samples = AV_RL32(side) * avci->skip_samples_multiplier;
+            avci->skip_samples = AV_RL32(side);
             avci->skip_samples = FFMAX(0, avci->skip_samples);
             discard_padding = AV_RL32(side + 4);
             av_log(avctx, AV_LOG_DEBUG, "skip %d / discard %d samples due to side data\n",
@@ -394,8 +394,8 @@ FF_ENABLE_DEPRECATION_WARNINGS
                         frame->pts += diff_ts;
                     if(frame->pkt_dts!=AV_NOPTS_VALUE)
                         frame->pkt_dts += diff_ts;
-                    if (frame->pkt_duration >= diff_ts)
-                        frame->pkt_duration -= diff_ts;
+                    if (frame->duration >= diff_ts)
+                        frame->duration -= diff_ts;
                 } else {
                     av_log(avctx, AV_LOG_WARNING, "Could not update timestamps for skipped samples.\n");
                 }
@@ -417,7 +417,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
                     int64_t diff_ts = av_rescale_q(frame->nb_samples - discard_padding,
                                                    (AVRational){1, avctx->sample_rate},
                                                    avctx->pkt_timebase);
-                    frame->pkt_duration = diff_ts;
+                    frame->duration = diff_ts;
                 } else {
                     av_log(avctx, AV_LOG_WARNING, "Could not update timestamps for discarded samples.\n");
                 }
@@ -504,6 +504,54 @@ FF_ENABLE_DEPRECATION_WARNINGS
     return ret < 0 ? ret : 0;
 }
 
+#if CONFIG_LCMS2
+static int detect_colorspace(AVCodecContext *avctx, AVFrame *frame)
+{
+    AVCodecInternal *avci = avctx->internal;
+    enum AVColorTransferCharacteristic trc;
+    AVColorPrimariesDesc coeffs;
+    enum AVColorPrimaries prim;
+    cmsHPROFILE profile;
+    AVFrameSideData *sd;
+    int ret;
+    if (!(avctx->flags2 & AV_CODEC_FLAG2_ICC_PROFILES))
+        return 0;
+
+    sd = av_frame_get_side_data(frame, AV_FRAME_DATA_ICC_PROFILE);
+    if (!sd || !sd->size)
+        return 0;
+
+    if (!avci->icc.avctx) {
+        ret = ff_icc_context_init(&avci->icc, avctx);
+        if (ret < 0)
+            return ret;
+    }
+
+    profile = cmsOpenProfileFromMemTHR(avci->icc.ctx, sd->data, sd->size);
+    if (!profile)
+        return AVERROR_INVALIDDATA;
+
+    ret = ff_icc_profile_read_primaries(&avci->icc, profile, &coeffs);
+    if (!ret)
+        ret = ff_icc_profile_detect_transfer(&avci->icc, profile, &trc);
+    cmsCloseProfile(profile);
+    if (ret < 0)
+        return ret;
+
+    prim = av_csp_primaries_id_from_desc(&coeffs);
+    if (prim != AVCOL_PRI_UNSPECIFIED)
+        frame->color_primaries = prim;
+    if (trc != AVCOL_TRC_UNSPECIFIED)
+        frame->color_trc = trc;
+    return 0;
+}
+#else /* !CONFIG_LCMS2 */
+static int detect_colorspace(av_unused AVCodecContext *c, av_unused AVFrame *f)
+{
+    return 0;
+}
+#endif
+
 static int decode_simple_receive_frame(AVCodecContext *avctx, AVFrame *frame)
 {
     int ret;
@@ -524,7 +572,7 @@ static int decode_receive_frame_internal(AVCodecContext *avctx, AVFrame *frame)
 {
     AVCodecInternal *avci = avctx->internal;
     const FFCodec *const codec = ffcodec(avctx->codec);
-    int ret;
+    int ret, ok;
 
     av_assert0(!frame->buf[0]);
 
@@ -538,6 +586,13 @@ static int decode_receive_frame_internal(AVCodecContext *avctx, AVFrame *frame)
     if (ret == AVERROR_EOF)
         avci->draining_done = 1;
 
+    /* preserve ret */
+    ok = detect_colorspace(avctx, frame);
+    if (ok < 0) {
+        av_frame_unref(frame);
+        return ok;
+    }
+
     if (!(codec->caps_internal & FF_CODEC_CAP_SETS_FRAME_PROPS) &&
         IS_EMPTY(avci->last_pkt_props)) {
         // May fail if the FIFO is empty.
@@ -548,6 +603,12 @@ static int decode_receive_frame_internal(AVCodecContext *avctx, AVFrame *frame)
         frame->best_effort_timestamp = guess_correct_pts(avctx,
                                                          frame->pts,
                                                          frame->pkt_dts);
+
+#if FF_API_PKT_DURATION
+FF_DISABLE_DEPRECATION_WARNINGS
+        frame->pkt_duration = frame->duration;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
 
         /* the only case where decode data is not set should be decoders
          * that do not call ff_get_buffer() */
@@ -636,12 +697,10 @@ static int apply_cropping(AVCodecContext *avctx, AVFrame *frame)
                                           AV_FRAME_CROP_UNALIGNED : 0);
 }
 
-int attribute_align_arg avcodec_receive_frame(AVCodecContext *avctx, AVFrame *frame)
+int ff_decode_receive_frame(AVCodecContext *avctx, AVFrame *frame)
 {
     AVCodecInternal *avci = avctx->internal;
     int ret, changed;
-
-    av_frame_unref(frame);
 
     if (!avcodec_is_open(avctx) || !av_codec_is_decoder(avctx->codec))
         return AVERROR(EINVAL);
@@ -676,12 +735,6 @@ int attribute_align_arg avcodec_receive_frame(AVCodecContext *avctx, AVFrame *fr
             case AVMEDIA_TYPE_AUDIO:
                 avci->initial_sample_rate = frame->sample_rate ? frame->sample_rate :
                                                                  avctx->sample_rate;
-#if FF_API_OLD_CHANNEL_LAYOUT
-FF_DISABLE_DEPRECATION_WARNINGS
-                avci->initial_channels       = frame->ch_layout.nb_channels;
-                avci->initial_channel_layout = frame->channel_layout;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
                 ret = av_channel_layout_copy(&avci->initial_ch_layout, &frame->ch_layout);
                 if (ret < 0) {
                     av_frame_unref(frame);
@@ -700,15 +753,9 @@ FF_ENABLE_DEPRECATION_WARNINGS
                            avci->initial_height != frame->height;
                 break;
             case AVMEDIA_TYPE_AUDIO:
-FF_DISABLE_DEPRECATION_WARNINGS
                 changed |= avci->initial_sample_rate    != frame->sample_rate ||
                            avci->initial_sample_rate    != avctx->sample_rate ||
-#if FF_API_OLD_CHANNEL_LAYOUT
-                           avci->initial_channels       != frame->channels ||
-                           avci->initial_channel_layout != frame->channel_layout ||
-#endif
                            av_channel_layout_compare(&avci->initial_ch_layout, &frame->ch_layout);
-FF_ENABLE_DEPRECATION_WARNINGS
                 break;
             }
 
@@ -1267,7 +1314,7 @@ int ff_decode_frame_props(AVCodecContext *avctx, AVFrame *frame)
     if (!(ffcodec(avctx->codec)->caps_internal & FF_CODEC_CAP_SETS_FRAME_PROPS)) {
         frame->pts = pkt->pts;
         frame->pkt_pos      = pkt->pos;
-        frame->pkt_duration = pkt->duration;
+        frame->duration     = pkt->duration;
         frame->pkt_size     = pkt->size;
 
         for (int i = 0; i < FF_ARRAY_ELEMS(sd); i++) {
@@ -1548,11 +1595,6 @@ FF_DISABLE_DEPRECATION_WARNINGS
 FF_ENABLE_DEPRECATION_WARNINGS
 #endif
 
-    if (avctx->codec_type == AVMEDIA_TYPE_AUDIO && avctx->ch_layout.nb_channels == 0 &&
-        !(avctx->codec->capabilities & AV_CODEC_CAP_CHANNEL_CONF)) {
-        av_log(avctx, AV_LOG_ERROR, "Decoder requires channel count but channels not set\n");
-        return AVERROR(EINVAL);
-    }
     if (avctx->codec->max_lowres < avctx->lowres || avctx->lowres < 0) {
         av_log(avctx, AV_LOG_WARNING, "The maximum value for lowres supported by the decoder is %d\n",
                avctx->codec->max_lowres);

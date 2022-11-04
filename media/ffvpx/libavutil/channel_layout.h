@@ -30,11 +30,17 @@
 
 /**
  * @file
- * audio channel layout utility functions
+ * @ingroup lavu_audio_channels
+ * Public libavutil channel layout APIs header.
  */
 
+
 /**
- * @addtogroup lavu_audio
+ * @defgroup lavu_audio_channels Audio channels
+ * @ingroup lavu_audio
+ *
+ * Audio channel layout utility functions
+ *
  * @{
  */
 
@@ -84,9 +90,9 @@ enum AVChannel {
      * Range of channels between AV_CHAN_AMBISONIC_BASE and
      * AV_CHAN_AMBISONIC_END represent Ambisonic components using the ACN system.
      *
-     * Given a channel id <i> between AV_CHAN_AMBISONIC_BASE and
-     * AV_CHAN_AMBISONIC_END (inclusive), the ACN index of the channel <n> is
-     * <n> = <i> - AV_CHAN_AMBISONIC_BASE.
+     * Given a channel id `<i>` between AV_CHAN_AMBISONIC_BASE and
+     * AV_CHAN_AMBISONIC_END (inclusive), the ACN index of the channel `<n>` is
+     * `<n> = <i> - AV_CHAN_AMBISONIC_BASE`.
      *
      * @note these values are only used for AV_CHANNEL_ORDER_CUSTOM channel
      * orderings, the AV_CHANNEL_ORDER_AMBISONIC ordering orders the channels
@@ -227,6 +233,7 @@ enum AVChannelOrder {
 #define AV_CH_LAYOUT_7POINT1_WIDE      (AV_CH_LAYOUT_5POINT1|AV_CH_FRONT_LEFT_OF_CENTER|AV_CH_FRONT_RIGHT_OF_CENTER)
 #define AV_CH_LAYOUT_7POINT1_WIDE_BACK (AV_CH_LAYOUT_5POINT1_BACK|AV_CH_FRONT_LEFT_OF_CENTER|AV_CH_FRONT_RIGHT_OF_CENTER)
 #define AV_CH_LAYOUT_OCTAGONAL         (AV_CH_LAYOUT_5POINT0|AV_CH_BACK_LEFT|AV_CH_BACK_CENTER|AV_CH_BACK_RIGHT)
+#define AV_CH_LAYOUT_CUBE              (AV_CH_LAYOUT_QUAD|AV_CH_TOP_FRONT_LEFT|AV_CH_TOP_FRONT_RIGHT|AV_CH_TOP_BACK_LEFT|AV_CH_TOP_BACK_RIGHT)
 #define AV_CH_LAYOUT_HEXADECAGONAL     (AV_CH_LAYOUT_OCTAGONAL|AV_CH_WIDE_LEFT|AV_CH_WIDE_RIGHT|AV_CH_TOP_BACK_LEFT|AV_CH_TOP_BACK_RIGHT|AV_CH_TOP_BACK_CENTER|AV_CH_TOP_FRONT_CENTER|AV_CH_TOP_FRONT_LEFT|AV_CH_TOP_FRONT_RIGHT)
 #define AV_CH_LAYOUT_STEREO_DOWNMIX    (AV_CH_STEREO_LEFT|AV_CH_STEREO_RIGHT)
 #define AV_CH_LAYOUT_22POINT2          (AV_CH_LAYOUT_5POINT1_BACK|AV_CH_FRONT_LEFT_OF_CENTER|AV_CH_FRONT_RIGHT_OF_CENTER|AV_CH_BACK_CENTER|AV_CH_LOW_FREQUENCY_2|AV_CH_SIDE_LEFT|AV_CH_SIDE_RIGHT|AV_CH_TOP_FRONT_LEFT|AV_CH_TOP_FRONT_RIGHT|AV_CH_TOP_FRONT_CENTER|AV_CH_TOP_CENTER|AV_CH_TOP_BACK_LEFT|AV_CH_TOP_BACK_RIGHT|AV_CH_TOP_SIDE_LEFT|AV_CH_TOP_SIDE_RIGHT|AV_CH_TOP_BACK_CENTER|AV_CH_BOTTOM_FRONT_CENTER|AV_CH_BOTTOM_FRONT_LEFT|AV_CH_BOTTOM_FRONT_RIGHT)
@@ -266,8 +273,11 @@ typedef struct AVChannelCustom {
  * A channel layout here is defined as a set of channels ordered in a specific
  * way (unless the channel order is AV_CHANNEL_ORDER_UNSPEC, in which case an
  * AVChannelLayout carries only the channel count).
+ * All orders may be treated as if they were AV_CHANNEL_ORDER_UNSPEC by
+ * ignoring everything but the channel count, as long as av_channel_layout_check()
+ * considers they are valid.
  *
- * Unlike most structures in Libav, sizeof(AVChannelLayout) is a part of the
+ * Unlike most structures in FFmpeg, sizeof(AVChannelLayout) is a part of the
  * public ABI and may be used by the caller. E.g. it may be allocated on stack
  * or embedded in caller-defined structs.
  *
@@ -350,6 +360,10 @@ typedef struct AVChannelLayout {
 #define AV_CHANNEL_LAYOUT_MASK(nb, m) \
     { .order = AV_CHANNEL_ORDER_NATIVE, .nb_channels = (nb), .u = { .mask = (m) }}
 
+/**
+ * @name Common pre-defined channel layouts
+ * @{
+ */
 #define AV_CHANNEL_LAYOUT_MONO              AV_CHANNEL_LAYOUT_MASK(1,  AV_CH_LAYOUT_MONO)
 #define AV_CHANNEL_LAYOUT_STEREO            AV_CHANNEL_LAYOUT_MASK(2,  AV_CH_LAYOUT_STEREO)
 #define AV_CHANNEL_LAYOUT_2POINT1           AV_CHANNEL_LAYOUT_MASK(3,  AV_CH_LAYOUT_2POINT1)
@@ -376,15 +390,22 @@ typedef struct AVChannelLayout {
 #define AV_CHANNEL_LAYOUT_7POINT1_WIDE      AV_CHANNEL_LAYOUT_MASK(8,  AV_CH_LAYOUT_7POINT1_WIDE)
 #define AV_CHANNEL_LAYOUT_7POINT1_WIDE_BACK AV_CHANNEL_LAYOUT_MASK(8,  AV_CH_LAYOUT_7POINT1_WIDE_BACK)
 #define AV_CHANNEL_LAYOUT_OCTAGONAL         AV_CHANNEL_LAYOUT_MASK(8,  AV_CH_LAYOUT_OCTAGONAL)
+#define AV_CHANNEL_LAYOUT_CUBE              AV_CHANNEL_LAYOUT_MASK(8,  AV_CH_LAYOUT_CUBE)
 #define AV_CHANNEL_LAYOUT_HEXADECAGONAL     AV_CHANNEL_LAYOUT_MASK(16, AV_CH_LAYOUT_HEXADECAGONAL)
 #define AV_CHANNEL_LAYOUT_STEREO_DOWNMIX    AV_CHANNEL_LAYOUT_MASK(2,  AV_CH_LAYOUT_STEREO_DOWNMIX)
 #define AV_CHANNEL_LAYOUT_22POINT2          AV_CHANNEL_LAYOUT_MASK(24, AV_CH_LAYOUT_22POINT2)
 #define AV_CHANNEL_LAYOUT_AMBISONIC_FIRST_ORDER \
     { .order = AV_CHANNEL_ORDER_AMBISONIC, .nb_channels = 4, .u = { .mask = 0 }}
+/** @} */
 
 struct AVBPrint;
 
 #if FF_API_OLD_CHANNEL_LAYOUT
+/**
+ * @name Deprecated Functions
+ * @{
+ */
+
 /**
  * Return a channel layout id that matches name, or 0 if no match is found.
  *
@@ -429,6 +450,8 @@ int av_get_extended_channel_layout(const char *name, uint64_t* channel_layout, i
  *
  * @param buf put here the string containing the channel layout
  * @param buf_size size in bytes of the buffer
+ * @param nb_channels number of channels
+ * @param channel_layout channel layout bitset
  * @deprecated use av_channel_layout_describe()
  */
 attribute_deprecated
@@ -459,6 +482,7 @@ int64_t av_get_default_channel_layout(int nb_channels);
 /**
  * Get the index of a channel in channel_layout.
  *
+ * @param channel_layout channel layout bitset
  * @param channel a channel layout describing exactly one channel which must be
  *                present in channel_layout.
  *
@@ -511,6 +535,9 @@ const char *av_get_channel_description(uint64_t channel);
 attribute_deprecated
 int av_get_standard_channel_layout(unsigned index, uint64_t *layout,
                                    const char **name);
+/**
+ * @}
+ */
 #endif
 
 /**
@@ -519,6 +546,7 @@ int av_get_standard_channel_layout(unsigned index, uint64_t *layout,
  *
  * @param buf pre-allocated buffer where to put the generated string
  * @param buf_size size in bytes of the buffer.
+ * @param channel the AVChannel whose name to get
  * @return amount of bytes needed to hold the output string, or a negative AVERROR
  *         on failure. If the returned value is bigger than buf_size, then the
  *         string was truncated.
@@ -537,6 +565,7 @@ void av_channel_name_bprint(struct AVBPrint *bp, enum AVChannel channel_id);
  *
  * @param buf pre-allocated buffer where to put the generated string
  * @param buf_size size in bytes of the buffer.
+ * @param channel the AVChannel whose description to get
  * @return amount of bytes needed to hold the output string, or a negative AVERROR
  *         on failure. If the returned value is bigger than buf_size, then the
  *         string was truncated.
@@ -593,7 +622,7 @@ int av_channel_layout_from_string(AVChannelLayout *channel_layout,
 /**
  * Get the default channel layout for a given number of channels.
  *
- * @param channel_layout the layout structure to be initialized
+ * @param ch_layout the layout structure to be initialized
  * @param nb_channels number of channels
  */
 void av_channel_layout_default(AVChannelLayout *ch_layout, int nb_channels);
@@ -658,6 +687,7 @@ int av_channel_layout_describe_bprint(const AVChannelLayout *channel_layout,
  * Get the channel with the given index in a channel layout.
  *
  * @param channel_layout input channel layout
+ * @param idx index of the channel
  * @return channel with the index idx in channel_layout on success or
  *         AV_CHAN_NONE on failure (if idx is not valid or the channel order is
  *         unspecified)
@@ -670,6 +700,7 @@ av_channel_layout_channel_from_index(const AVChannelLayout *channel_layout, unsi
  * channels are found, only the first match will be returned.
  *
  * @param channel_layout input channel layout
+ * @param channel the channel whose index to obtain
  * @return index of channel in channel_layout on success or a negative number if
  *         channel is not present in channel_layout.
  */
@@ -684,6 +715,7 @@ int av_channel_layout_index_from_channel(const AVChannelLayout *channel_layout,
  * @ref av_channel_from_string().
  *
  * @param channel_layout input channel layout
+ * @param name string describing the channel whose index to obtain
  * @return a channel index described by the given string, or a negative AVERROR
  *         value.
  */
@@ -697,6 +729,7 @@ int av_channel_layout_index_from_string(const AVChannelLayout *channel_layout,
  * @ref av_channel_from_string().
  *
  * @param channel_layout input channel layout
+ * @param name string describing the channel to obtain
  * @return a channel described by the given string in channel_layout on success
  *         or AV_CHAN_NONE on failure (if the string is not valid or the channel
  *         order is unspecified)
@@ -742,7 +775,6 @@ int av_channel_layout_check(const AVChannelLayout *channel_layout);
 int av_channel_layout_compare(const AVChannelLayout *chl, const AVChannelLayout *chl1);
 
 /**
- * @}
  * @}
  */
 

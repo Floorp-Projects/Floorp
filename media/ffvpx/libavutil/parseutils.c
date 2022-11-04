@@ -28,10 +28,10 @@
 #include "common.h"
 #include "eval.h"
 #include "log.h"
-/* #include "random_seed.h" */
+#include "random_seed.h"
 #include "time_internal.h"
 #include "parseutils.h"
-#include "fftime.h"
+#include "time.h"
 
 #ifdef TEST
 
@@ -375,7 +375,7 @@ int av_parse_color(uint8_t *rgba_color, const char *color_string, int slen,
     rgba_color[3] = 255;
 
     if (!av_strcasecmp(color_string2, "random") || !av_strcasecmp(color_string2, "bikeshed")) {
-        int rgba = 0xffffffff; /* av_get_random_seed(); */
+        int rgba = av_get_random_seed();
         rgba_color[0] = rgba >> 24;
         rgba_color[1] = rgba >> 16;
         rgba_color[2] = rgba >> 8;
