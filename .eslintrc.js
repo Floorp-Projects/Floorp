@@ -92,7 +92,6 @@ module.exports = {
         "import/named": "error",
         "import/namespace": "error",
         "import/newline-after-import": "error",
-        "import/no-anonymous-default-export": "error",
         "import/no-duplicates": "error",
         "import/no-absolute-path": "error",
         "import/no-named-default": "error",
@@ -115,6 +114,7 @@ module.exports = {
         // from node_modules, as the ESLint setup only installs modules at the
         // top-level.
         "devtools/shared/compatibility/**",
+        "browser/components/storybook/**",
       ],
       rules: {
         "import/no-unresolved": "off",
