@@ -47,7 +47,12 @@ a {
   min-width: unset;
 }
 
+.table-widget-column {
+  flex-grow: 1;
+}
+
 /* Set minimum column widths */
+
 #name {
   min-width: 65px;
 }
@@ -62,6 +67,8 @@ a {
 
 #value {
   min-width: 95px;
+  /* Prevent all columns except for value from shrinking with the panel */
+  flex-shrink: 1;
 }
 
 #hostOnly,
@@ -70,6 +77,7 @@ a {
   min-width: 58px;
 }
 
+#size,
 #isSecure {
   min-width: 48px;
 }
@@ -78,11 +86,6 @@ a {
 #lastAccessed,
 #creationTime {
   min-width: 115px;
-}
-
-/* Prevent all columns except for value from resizing with the panel */
-#storage-table .table-widget-column:not(#value) {
-  -moz-box-flex: 0;
 }
 
 /* Text input in storage table */

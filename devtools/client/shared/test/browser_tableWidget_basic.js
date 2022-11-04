@@ -124,37 +124,38 @@ function testTreeItemInsertedCorrectly(doc, table) {
 
   // Test firstColumn option and check if the nodes are inserted correctly
   is(
-    table.tbody.children[0].firstChild.children.length,
+    table.tbody.children[0].children.length,
     9 + 1,
     "Correct rows in column 4"
   );
   is(
-    table.tbody.children[0].firstChild.firstChild.value,
+    table.tbody.children[0].firstChild.value,
     "Column 4",
     "Correct column header value"
   );
 
   for (let i = 1; i < 4; i++) {
     is(
-      table.tbody.children[i * 2].firstChild.children.length,
+      table.tbody.children[i * 2].children.length,
       9 + 1,
       `Correct rows in column ${i}`
     );
     is(
-      table.tbody.children[i * 2].firstChild.firstChild.value,
+      table.tbody.children[i * 2].firstChild.value,
       `Column ${i}`,
       "Correct column header value"
     );
   }
   for (let i = 1; i < 10; i++) {
     is(
-      table.tbody.children[2].firstChild.children[i].value,
+      table.tbody.children[2].children[i].value,
       `id${i}`,
       `Correct value in row ${i}`
     );
   }
 
   // Remove firstColumn option and reset the table
+  info("resetting table");
   table.clear();
   table.firstColumn = "";
   table.setColumns({
@@ -168,12 +169,12 @@ function testTreeItemInsertedCorrectly(doc, table) {
   // Check if the nodes are inserted correctly without firstColumn option
   for (let i = 0; i < 4; i++) {
     is(
-      table.tbody.children[i * 2].firstChild.children.length,
+      table.tbody.children[i * 2].children.length,
       9 + 1,
       `Correct rows in column ${i}`
     );
     is(
-      table.tbody.children[i * 2].firstChild.firstChild.value,
+      table.tbody.children[i * 2].firstChild.value,
       `Column ${i + 1}`,
       "Correct column header value"
     );
@@ -181,7 +182,7 @@ function testTreeItemInsertedCorrectly(doc, table) {
 
   for (let i = 1; i < 10; i++) {
     is(
-      table.tbody.firstChild.firstChild.children[i].value,
+      table.tbody.firstChild.children[i].value,
       `id${i}`,
       `Correct value in row ${i}`
     );
@@ -319,12 +320,12 @@ function testAPI(doc, table) {
   is(table.tbody.children.length, 4 * 2, "4 columns exist even after clear");
   for (let i = 0; i < 4; i++) {
     is(
-      table.tbody.children[i * 2].firstChild.children.length,
+      table.tbody.children[i * 2].children.length,
       1,
       `Only header in the column ${i} after clear call`
     );
     is(
-      table.tbody.children[i * 2].firstChild.firstChild.value,
+      table.tbody.children[i * 2].firstChild.value,
       `Column ${i + 1}`,
       "Correct column header value"
     );
@@ -343,12 +344,12 @@ function testAPI(doc, table) {
     "2 columns exist after setColumn call"
   );
   is(
-    table.tbody.children[0].firstChild.firstChild.getAttribute("value"),
+    table.tbody.children[0].firstChild.getAttribute("value"),
     "Foobar",
     "Correct column header value for first column"
   );
   is(
-    table.tbody.children[2].firstChild.firstChild.getAttribute("value"),
+    table.tbody.children[2].firstChild.getAttribute("value"),
     "Testing",
     "Correct column header value for second column"
   );
@@ -391,7 +392,7 @@ function testAPI(doc, table) {
   table.sortBy("col1");
   for (let i = 1; i < 10; i++) {
     is(
-      table.tbody.firstChild.firstChild.children[i].value,
+      table.tbody.firstChild.children[i].value,
       `id${10 - i}`,
       `Correct value in row ${i} after descending sort by on col1`
     );
@@ -403,7 +404,7 @@ function testAPI(doc, table) {
 
   // Calling it again should sort by it in descending manner
   table.sortBy("col2");
-  cell = table.tbody.children[2].firstChild.lastChild.previousSibling;
+  cell = table.tbody.children[2].lastChild.previousSibling;
   checkDescendingOrder(cell);
 
   // Calling it again should sort by it in ascending manner
@@ -416,13 +417,13 @@ function testAPI(doc, table) {
 
   // testing if sorting works should sort by ascending manner
   table.sortBy("col4");
-  cell = table.tbody.children[6].firstChild.children[1];
+  cell = table.tbody.children[6].children[1];
   is(cell.textContent, "domnode", "DOMNode sorted correctly");
   checkAscendingOrder(cell.nextSibling);
 
   // Calling it again should sort it in descending order
   table.sortBy("col4");
-  cell = table.tbody.children[6].firstChild.children[9];
+  cell = table.tbody.children[6].children[9];
   is(cell.textContent, "domnode", "DOMNode sorted correctly");
   checkDescendingOrder(cell.previousSibling);
 }

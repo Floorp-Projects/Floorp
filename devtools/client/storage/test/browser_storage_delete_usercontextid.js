@@ -157,7 +157,7 @@ async function testTables(tests) {
     // Check whether correct number of items are present in the table
     is(
       doc.querySelectorAll(
-        ".table-widget-wrapper:first-of-type .table-widget-cell"
+        ".table-widget-column:first-of-type .table-widget-cell"
       ).length,
       items.length,
       "Number of items in table is correct"
