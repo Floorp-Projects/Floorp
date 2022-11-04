@@ -1907,7 +1907,8 @@ bool gfxFont::DrawGlyphs(const gfxShapedText* aShapedText,
                          gfx::Point* aPt,
                          const gfx::Matrix* aOffsetMatrix,  // may be null
                          GlyphBufferAzure& aBuffer) {
-  float& inlineCoord = aBuffer.mFontParams.isVerticalFont ? aPt->y : aPt->x;
+  float& inlineCoord =
+      aBuffer.mFontParams.isVerticalFont ? aPt->y.value : aPt->x.value;
 
   const gfxShapedText::CompressedGlyph* glyphData =
       &aShapedText->GetCharacterGlyphs()[aOffset];
@@ -2123,7 +2124,7 @@ bool gfxFont::DrawMissingGlyph(const TextRunDrawParams& aRunParams,
 void gfxFont::DrawEmphasisMarks(const gfxTextRun* aShapedText, gfx::Point* aPt,
                                 uint32_t aOffset, uint32_t aCount,
                                 const EmphasisMarkDrawParams& aParams) {
-  float& inlineCoord = aParams.isVertical ? aPt->y : aPt->x;
+  float& inlineCoord = aParams.isVertical ? aPt->y.value : aPt->x.value;
   gfxTextRun::Range markRange(aParams.mark);
   gfxTextRun::DrawParams params(aParams.context);
 
@@ -2209,7 +2210,7 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
 
   // Save the current baseline offset for restoring later, in case it is
   // modified.
-  float& baseline = fontParams.isVerticalFont ? aPt->x : aPt->y;
+  float& baseline = fontParams.isVerticalFont ? aPt->x.value : aPt->y.value;
   float origBaseline = baseline;
 
   // The point may be advanced in local-space, while the resulting point on

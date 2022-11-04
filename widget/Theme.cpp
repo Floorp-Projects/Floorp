@@ -1324,7 +1324,7 @@ void Theme::PaintAutoStyleOutline(nsIFrame* aFrame,
     }
   }
 
-  auto offset = LayoutDeviceCoord::FromAppUnits(cssOffset, a2d);
+  auto offset = LayoutDevicePixel::FromAppUnits(cssOffset, a2d);
   RectCornerRadii innerRadii;
   nsCSSRendering::ComputePixelRadii(cssRadii, a2d, &innerRadii);
 

@@ -10,6 +10,7 @@
 #include <ostream>
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MathAlgorithms.h"
 
 namespace mozilla {
 namespace gfx {
@@ -29,6 +30,8 @@ struct BaseCoord {
 
   // Note that '=' isn't defined so we'll get the
   // compiler generated default assignment operator
+
+  friend constexpr Sub Abs(BaseCoord aCoord) { return Abs(aCoord.value); }
 
   constexpr operator T() const { return value; }
 

@@ -160,7 +160,8 @@ bool ImageAccessible::DoAction(uint8_t aIndex) const {
 
 LayoutDeviceIntPoint ImageAccessible::Position(uint32_t aCoordType) {
   LayoutDeviceIntPoint point = Bounds().TopLeft();
-  nsAccUtils::ConvertScreenCoordsTo(&point.x, &point.y, aCoordType, this);
+  nsAccUtils::ConvertScreenCoordsTo(&point.x.value, &point.y.value, aCoordType,
+                                    this);
   return point;
 }
 

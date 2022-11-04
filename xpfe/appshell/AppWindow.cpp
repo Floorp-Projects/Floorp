@@ -176,7 +176,7 @@ nsresult AppWindow::Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
         DesktopIntRect::Round(rect / base->DevicePixelsPerDesktopPixel());
     if (!mOpenerScreenRect.IsEmpty()) {
       initialPos = mOpenerScreenRect.TopLeft();
-      ConstrainToOpenerScreen(&initialPos.x, &initialPos.y);
+      ConstrainToOpenerScreen(&initialPos.x.value, &initialPos.y.value);
     }
   }
 
@@ -1268,10 +1268,11 @@ bool AppWindow::LoadPositionFromXUL(int32_t aSpecWidth, int32_t aSpecHeight) {
           parent->GetPosition() / parent->DevicePixelsPerDesktopPixel());
       specPoint += parentPos;
     } else {
-      StaggerPosition(specPoint.x, specPoint.y, cssSize.width, cssSize.height);
+      StaggerPosition(specPoint.x.value, specPoint.y.value, cssSize.width,
+                      cssSize.height);
     }
   }
-  mWindow->ConstrainPosition(false, &specPoint.x, &specPoint.y);
+  mWindow->ConstrainPosition(false, &specPoint.x.value, &specPoint.y.value);
   if (specPoint != curPoint) {
     SetPositionDesktopPix(specPoint.x, specPoint.y);
   }

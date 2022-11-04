@@ -963,7 +963,7 @@ void nsWindow::ResizeInt(const Maybe<LayoutDeviceIntPoint>& aMove,
   const bool moved = aMove && *aMove != mBounds.TopLeft();
   if (moved) {
     mBounds.MoveTo(*aMove);
-    LOG("  with move to left:%d top:%d", aMove->x, aMove->y);
+    LOG("  with move to left:%d top:%d", aMove->x.value, aMove->y.value);
   }
 
   ConstrainSize(&aSize.width, &aSize.height);
@@ -3645,7 +3645,7 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
   }
   nsIntPoint origin(0, 0);
   if (mGdkWindow) {
-    gdk_window_get_origin(mGdkWindow, &origin.x, &origin.y);
+    gdk_window_get_origin(mGdkWindow, &origin.x.value, &origin.y.value);
   }
   return GdkPointToDevicePixels({origin.x, origin.y});
 }
@@ -9306,11 +9306,15 @@ nsresult nsWindow::SynthesizeNativeTouchPadPinch(
       reinterpret_cast<GdkEventTouchpadPinch*>(&event);
   touchpad_event->type = GDK_TOUCHPAD_PINCH;
 
-  const LayoutDeviceIntPoint widgetToScreenOffset = WidgetToScreenOffset();
-
-  ScreenPoint pointInWindow = ViewAs<ScreenPixel>(
-      aPoint - widgetToScreenOffset,
+  const ScreenIntPoint widgetToScreenOffset = ViewAs<ScreenPixel>(
+      WidgetToScreenOffset(),
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
+
+  ScreenPoint pointInWindow =
+      ViewAs<ScreenPixel>(
+          aPoint,
+          PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent) -
+      widgetToScreenOffset;
 
   gdouble dx = 0, dy = 0;
 
@@ -9342,9 +9346,11 @@ nsresult nsWindow::SynthesizeNativeTouchPadPinch(
   touchpad_event->time = GDK_CURRENT_TIME;
   touchpad_event->scale = aScale;
   touchpad_event->x_root = DevicePixelsToGdkCoordRoundDown(
-      mCurrentSynthesizedTouchpadPinch.mBeginFocus.x + widgetToScreenOffset.x);
+      mCurrentSynthesizedTouchpadPinch.mBeginFocus.x +
+      ScreenCoord(widgetToScreenOffset.x));
   touchpad_event->y_root = DevicePixelsToGdkCoordRoundDown(
-      mCurrentSynthesizedTouchpadPinch.mBeginFocus.y + widgetToScreenOffset.y);
+      mCurrentSynthesizedTouchpadPinch.mBeginFocus.y +
+      ScreenCoord(widgetToScreenOffset.y));
 
   touchpad_event->x = DevicePixelsToGdkCoordRoundDown(
       mCurrentSynthesizedTouchpadPinch.mBeginFocus.x);

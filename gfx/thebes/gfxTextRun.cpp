@@ -733,7 +733,7 @@ void gfxTextRun::DrawEmphasisMarks(gfxContext* aContext, gfxTextRun* aMark,
   params.direction = GetDirection();
   params.isVertical = IsVertical();
 
-  float& inlineCoord = params.isVertical ? aPt.y : aPt.x;
+  float& inlineCoord = params.isVertical ? aPt.y.value : aPt.x.value;
   float direction = params.direction;
 
   GlyphRunIterator iter(this, aRange);
@@ -1829,7 +1829,8 @@ void gfxTextRun::Dump(FILE* out) {
         line += " offsets=";
         for (uint32_t j = 0; j < count; j++) {
           auto offset = GetDetailedGlyphs(i)[j].mOffset;
-          line.AppendPrintf(j ? ",(%g,%g)" : "(%g,%g)", offset.x, offset.y);
+          line.AppendPrintf(j ? ",(%g,%g)" : "(%g,%g)", offset.x.value,
+                            offset.y.value);
         }
       } else {
         line += " (no glyphs)";

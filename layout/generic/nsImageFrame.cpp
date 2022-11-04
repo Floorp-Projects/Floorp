@@ -2550,7 +2550,7 @@ nsresult nsImageFrame::HandleEvent(nsPresContext* aPresContext,
           nsresult rv = uri->GetSpec(spec);
           NS_ENSURE_SUCCESS(rv, rv);
 
-          spec += nsPrintfCString("?%d,%d", p.x, p.y);
+          spec += nsPrintfCString("?%d,%d", p.x.value, p.y.value);
           rv = NS_MutateURI(uri).SetSpec(spec).Finalize(uri);
           NS_ENSURE_SUCCESS(rv, rv);
 

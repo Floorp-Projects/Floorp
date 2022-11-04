@@ -1939,11 +1939,12 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
                    (int32_t)col < (dfOffset.x + aImageSize.width) &&
                    (int32_t)row >= dfOffset.y &&
                    (int32_t)row < (dfOffset.y + aImageSize.height) &&
-                   aAlphaPixels[col - dfOffset.x +
-                                (row - dfOffset.y) * aStride] > threshold) {
+                   aAlphaPixels[col - dfOffset.x.value +
+                                (row - dfOffset.y.value) * aStride] >
+                       threshold) {
           // Case 2: Image pixel that is opaque.
           DebugOnly<uint32_t> alphaIndex =
-              col - dfOffset.x + (row - dfOffset.y) * aStride;
+              col - dfOffset.x.value + (row - dfOffset.y.value) * aStride;
           MOZ_ASSERT(alphaIndex < (aStride * h),
                      "Our aAlphaPixels index should be in-bounds.");
 

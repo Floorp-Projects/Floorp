@@ -5158,10 +5158,12 @@ already_AddRefed<SourceSurface> PresShell::PaintRangePaintInfo(
     // content we're painting, relative to the scale at which it would normally
     // get painted at as part of page rendering (`unclampedResolution`).
     float scaleRelativeToNormalContent = scale / unclampedResolution;
-    aScreenRect->x = NSToIntFloor(aPoint.x - float(aPoint.x - visualPoint.x) *
-                                                 scaleRelativeToNormalContent);
-    aScreenRect->y = NSToIntFloor(aPoint.y - float(aPoint.y - visualPoint.y) *
-                                                 scaleRelativeToNormalContent);
+    aScreenRect->x =
+        NSToIntFloor(aPoint.x - float(aPoint.x.value - visualPoint.x.value) *
+                                    scaleRelativeToNormalContent);
+    aScreenRect->y =
+        NSToIntFloor(aPoint.y - float(aPoint.y.value - visualPoint.y.value) *
+                                    scaleRelativeToNormalContent);
 
     pixelArea.width = NSToIntFloor(float(pixelArea.width) * scale);
     pixelArea.height = NSToIntFloor(float(pixelArea.height) * scale);

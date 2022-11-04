@@ -186,7 +186,8 @@ class APZCPinchLockingTester : public APZCPinchTester {
         StaticPrefs::apz_pinch_lock_scroll_lock_threshold() * 1.2 *
         tm->GetDPI();
 
-    mFocus = ScreenIntPoint((int)(mFocus.x + panDistance), (int)(mFocus.y));
+    mFocus = ScreenIntPoint((int)(mFocus.x.value + panDistance),
+                            (int)(mFocus.y.value));
 
     auto event = CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
                                          mFocus, mSpan, mSpan, mcc->Time());

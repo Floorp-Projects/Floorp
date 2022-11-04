@@ -68,6 +68,10 @@ enum class PixelCastJustification : uint8_t {
   ContentProcessIsLayerInUiProcess,
   // Propagating TransformToAncestorScale to a child process.
   PropagatingToChildProcess,
+  // A quantity represents a proportion of a page length, e.g. "0.5 pages".
+  // The proportion does not need to be scaled when converting between
+  // units (the page length that it's mutlipled by will be scaled instead).
+  DeltaIsPageProportion,
 };
 
 template <class TargetUnits, class SourceUnits>

@@ -4329,8 +4329,8 @@ void nsCSSRendering::PaintDecorationLineInternal(
       rectICoord += lineThickness / 2.0;
 
       Point pt(aRect.TopLeft());
-      Float& ptICoord = aParams.vertical ? pt.y : pt.x;
-      Float& ptBCoord = aParams.vertical ? pt.x : pt.y;
+      Float& ptICoord = aParams.vertical ? pt.y.value : pt.x.value;
+      Float& ptBCoord = aParams.vertical ? pt.x.value : pt.y.value;
       if (aParams.vertical) {
         ptBCoord += adv;
       }

@@ -116,7 +116,8 @@ LayoutDeviceIntSize Accessible::Size() const { return Bounds().Size(); }
 
 LayoutDeviceIntPoint Accessible::Position(uint32_t aCoordType) {
   LayoutDeviceIntPoint point = Bounds().TopLeft();
-  nsAccUtils::ConvertScreenCoordsTo(&point.x, &point.y, aCoordType, this);
+  nsAccUtils::ConvertScreenCoordsTo(&point.x.value, &point.y.value, aCoordType,
+                                    this);
   return point;
 }
 

@@ -5308,9 +5308,9 @@ Point SVGTextFrame::TransformFramePointToTextChild(
       // The point was closer to this rendered run's rect than any others
       // we've seen so far.
       pointInRun.x =
-          clamped(pointInRunUserSpace.x, runRect.X(), runRect.XMost());
+          clamped(pointInRunUserSpace.x.value, runRect.X(), runRect.XMost());
       pointInRun.y =
-          clamped(pointInRunUserSpace.y, runRect.Y(), runRect.YMost());
+          clamped(pointInRunUserSpace.y.value, runRect.Y(), runRect.YMost());
       hit = run;
     }
   }

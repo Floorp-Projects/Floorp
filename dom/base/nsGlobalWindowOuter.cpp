@@ -3688,7 +3688,7 @@ CSSIntPoint nsGlobalWindowOuter::GetScreenXY(CallerType aCallerType,
   }
 
   LayoutDeviceIntPoint windowPos;
-  aError = treeOwnerAsWin->GetPosition(&windowPos.x, &windowPos.y);
+  aError = treeOwnerAsWin->GetPosition(&windowPos.x.value, &windowPos.y.value);
 
   RefPtr<nsPresContext> presContext = mDocShell->GetPresContext();
   if (!presContext) {
@@ -5338,7 +5338,7 @@ void nsGlobalWindowOuter::MoveToOuter(int32_t aXPos, int32_t aYPos,
   }
 
   CSSIntPoint cssPos(aXPos, aYPos);
-  CheckSecurityLeftAndTop(&cssPos.x, &cssPos.y, aCallerType);
+  CheckSecurityLeftAndTop(&cssPos.x.value, &cssPos.y.value, aCallerType);
 
   nsDeviceContext* context = presContext->DeviceContext();
 
@@ -5383,7 +5383,7 @@ void nsGlobalWindowOuter::MoveByOuter(int32_t aXDif, int32_t aYDif,
   cssPos.x += aXDif;
   cssPos.y += aYDif;
 
-  CheckSecurityLeftAndTop(&cssPos.x, &cssPos.y, aCallerType);
+  CheckSecurityLeftAndTop(&cssPos.x.value, &cssPos.y.value, aCallerType);
 
   LayoutDeviceIntPoint newDevPos = RoundedToInt(cssPos * cssScale);
   aError = treeOwnerAsWin->SetPosition(newDevPos.x, newDevPos.y);

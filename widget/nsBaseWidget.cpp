@@ -1599,7 +1599,8 @@ void nsBaseWidget::MoveClient(const DesktopPoint& aOffset) {
     Move(aOffset.x - desktopOffset.x, aOffset.y - desktopOffset.y);
   } else {
     LayoutDevicePoint layoutOffset = aOffset * GetDesktopToDeviceScale();
-    Move(layoutOffset.x - clientOffset.x, layoutOffset.y - clientOffset.y);
+    Move(layoutOffset.x - LayoutDeviceCoord(clientOffset.x),
+         layoutOffset.y - LayoutDeviceCoord(clientOffset.y));
   }
 }
 
@@ -3379,7 +3380,8 @@ void nsBaseWidget::debug_DumpEvent(FILE* aFileOut, nsIWidget* aWidget,
 
   fprintf(aFileOut, "%4d %-26s widget=%-8p name=%-12s id=0x%-6x refpt=%d,%d\n",
           _GetPrintCount(), tempString.get(), (void*)aWidget, aWidgetName,
-          aWindowID, aGuiEvent->mRefPoint.x, aGuiEvent->mRefPoint.y);
+          aWindowID, aGuiEvent->mRefPoint.x.value,
+          aGuiEvent->mRefPoint.y.value);
 }
 //////////////////////////////////////////////////////////////
 /* static */
