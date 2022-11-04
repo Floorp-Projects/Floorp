@@ -204,8 +204,7 @@ var testMouseInteraction = async function() {
 
   info("clicking on second row to select it");
   event = table.once(TableWidget.EVENTS.ROW_SELECTED);
-  const firstColumnSecondRowCell =
-    table.tbody.firstChild.children[2];
+  const firstColumnSecondRowCell = table.tbody.firstChild.children[2];
   // node should not have selected class
   ok(
     !firstColumnSecondRowCell.classList.contains("theme-selected"),
