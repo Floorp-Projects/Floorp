@@ -809,8 +809,6 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator {
   AttachDecision tryAttachBitwise();
   AttachDecision tryAttachStringConcat();
   AttachDecision tryAttachStringObjectConcat();
-  AttachDecision tryAttachStringNumberConcat();
-  AttachDecision tryAttachStringBooleanConcat();
   AttachDecision tryAttachBigInt();
   AttachDecision tryAttachStringInt32Arith();
 
