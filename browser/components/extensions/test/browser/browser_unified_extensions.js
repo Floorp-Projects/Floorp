@@ -172,6 +172,43 @@ add_task(async function test_open_panel_on_button_click() {
   await Promise.all(extensions.map(extension => extension.unload()));
 });
 
+// Verify that the context click doesn't open the panel in addition to the
+// context menu.
+add_task(async function test_clicks_on_unified_extension_button() {
+  const extensions = createExtensions([{ name: "Extension #1" }]);
+  await Promise.all(extensions.map(extension => extension.startup()));
+
+  const { button, panel } = win.gUnifiedExtensions;
+  ok(button, "expected button");
+  ok(panel, "expected panel");
+
+  info("open panel with primary click");
+  await openExtensionsPanel(win);
+  ok(
+    panel.getAttribute("panelopen") === "true",
+    "expected panel to be visible"
+  );
+  await closeExtensionsPanel(win);
+  ok(!panel.hasAttribute("panelopen"), "expected panel to be hidden");
+
+  info("open context menu with non-primary click");
+  const contextMenu = win.document.getElementById("toolbar-context-menu");
+  const popupShownPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popupshown"
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    button,
+    { type: "contextmenu", button: 2 },
+    win
+  );
+  await popupShownPromise;
+  ok(!panel.hasAttribute("panelopen"), "expected panel to remain hidden");
+  await closeChromeContextMenu(contextMenu.id, null, win);
+
+  await Promise.all(extensions.map(extension => extension.unload()));
+});
+
 add_task(async function test_item_shows_the_best_addon_icon() {
   const extensions = createExtensions([
     {
