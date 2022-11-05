@@ -5,10 +5,14 @@
 .searchBarImage {
   height: 36px;
   width: 631px;
-  margin-inline-start: 33px;
   -moz-context-properties: fill, stroke;
   fill: var(--in-content-box-background);
   stroke: var(--in-content-box-border-color);
+}
+
+.searchBarImage,
+#searchShowSearchTermCheckbox {
+  margin-inline-start: 33px;
 }
 
 .searchBarImage:-moz-locale-dir(rtl) {
