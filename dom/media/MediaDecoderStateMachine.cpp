@@ -687,6 +687,7 @@ class MediaDecoderStateMachine::DecodingState
 
  protected:
   virtual void EnsureAudioDecodeTaskQueued();
+  virtual void EnsureVideoDecodeTaskQueued();
 
   virtual bool ShouldStopPrerolling() const {
     return mIsPrerolling &&
@@ -696,7 +697,6 @@ class MediaDecoderStateMachine::DecodingState
 
  private:
   void DispatchDecodeTasksIfNeeded();
-  void EnsureVideoDecodeTaskQueued();
   void MaybeStartBuffering();
 
   // At the start of decoding we want to "preroll" the decode until we've
@@ -819,8 +819,7 @@ class MediaDecoderStateMachine::DecodingState
 /**
  * Purpose: decode audio data for playback when media is in seamless
  * looping, we will adjust media time to make samples time monotonically
- * increasing. Note, it's currently used for audio-only, but we should make it
- * work on video as well in bug 1262276.
+ * increasing.
  *
  * Transition to:
  *   DORMANT if playback is paused for a while.
@@ -828,7 +827,7 @@ class MediaDecoderStateMachine::DecodingState
  *   SHUTDOWN if any decode error.
  *   BUFFERING if playback can't continue due to lack of decoded data.
  *   COMPLETED when having decoded all audio data.
- *   DECODING when media stop seamless looping
+ *   DECODING when media stops seamless looping.
  */
 class MediaDecoderStateMachine::LoopingDecodingState
     : public MediaDecoderStateMachine::DecodingState {
@@ -841,10 +840,14 @@ class MediaDecoderStateMachine::LoopingDecodingState
   }
 
   void Enter() {
-    if (mIsReachingAudioEOS) {
+    UpdatePlaybackPositionToZeroIfNeeded();
+    if (mMaster->HasAudio() && mIsReachingAudioEOS) {
       SLOG("audio has ended, request the data again.");
-      UpdatePlaybackPositionToZeroIfNeeded();
       RequestDataFromStartPosition(TrackInfo::TrackType::kAudioTrack);
+    }
+    if (mMaster->HasVideo() && mIsReachingVideoEOS) {
+      SLOG("video has ended, request the data again.");
+      RequestDataFromStartPosition(TrackInfo::TrackType::kVideoTrack);
     }
     DecodingState::Enter();
   }
@@ -854,8 +857,15 @@ class MediaDecoderStateMachine::LoopingDecodingState
       mMaster->mAudioDataRequest.DisconnectIfExists();
       DiscardLoopedAudioData();
     }
-    if (HasDecodedLastAudioFrame()) {
+    if (ShouldDiscardLoopedVideoData()) {
+      mMaster->mVideoDataRequest.DisconnectIfExists();
+      DiscardLoopedVideoData();
+    }
+    if (mMaster->HasAudio() && HasDecodedLastAudioFrame()) {
       AudioQueue().Finish();
+    }
+    if (mMaster->HasVideo() && HasDecodedLastVideoFrame()) {
+      VideoQueue().Finish();
     }
     mAudioDataRequest.DisconnectIfExists();
     mVideoDataRequest.DisconnectIfExists();
@@ -874,14 +884,27 @@ class MediaDecoderStateMachine::LoopingDecodingState
     }
     mMaster->mDecodedAudioEndTime =
         std::max(aAudio->GetEndTime(), mMaster->mDecodedAudioEndTime);
-    SLOG("sample after time-adjustment [%" PRId64 ",%" PRId64 "]",
+    SLOG("audio sample after time-adjustment [%" PRId64 ",%" PRId64 "]",
          aAudio->mTime.ToMicroseconds(), aAudio->GetEndTime().ToMicroseconds());
     DecodingState::HandleAudioDecoded(aAudio);
   }
 
+  void HandleVideoDecoded(VideoData* aVideo) override {
+    MediaResult rv = LoopingVideoTimeAdjustment(aVideo);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mMaster->DecodeError(rv);
+      return;
+    }
+    mMaster->mDecodedVideoEndTime =
+        std::max(aVideo->GetEndTime(), mMaster->mDecodedVideoEndTime);
+    SLOG("video sample after time-adjustment [%" PRId64 ",%" PRId64 "]",
+         aVideo->mTime.ToMicroseconds(), aVideo->GetEndTime().ToMicroseconds());
+    DecodingState::HandleVideoDecoded(aVideo);
+  }
+
   void HandleEndOfAudio() override {
     mIsReachingAudioEOS = true;
-    // The data time in the audio queue is assumed to be increased linearly,
+    // The data time in the audio queue is assumed to be increasing linearly,
     // so we need to add the last ending time as the offset to correct the
     // audio data time in the next round when seamless looping is enabled.
     mAudioLoopingOffset = mMaster->mDecodedAudioEndTime;
@@ -891,10 +914,28 @@ class MediaDecoderStateMachine::LoopingDecodingState
     }
 
     SLOG(
-        "received EOS when seamless looping, starts seeking, "
+        "received audio EOS when seamless looping, starts seeking, "
         "AudioLoopingOffset=[%" PRId64 "]",
         mAudioLoopingOffset.ToMicroseconds());
     RequestDataFromStartPosition(TrackInfo::TrackType::kAudioTrack);
+  }
+
+  void HandleEndOfVideo() override {
+    mIsReachingVideoEOS = true;
+    // The data time in the video queue is assumed to be increasing linearly,
+    // so we need to add the last ending time as the offset to correct the
+    // video data time in the next round when seamless looping is enabled.
+    mVideoLoopingOffset = mMaster->mDecodedVideoEndTime;
+
+    if (mMaster->mVideoDecodedDuration.isNothing()) {
+      mMaster->mVideoDecodedDuration.emplace(mMaster->mDecodedVideoEndTime);
+    }
+
+    SLOG(
+        "received video EOS when seamless looping, starts seeking, "
+        "VideoLoopingOffset=[%" PRId64 "]",
+        mVideoLoopingOffset.ToMicroseconds());
+    RequestDataFromStartPosition(TrackInfo::TrackType::kVideoTrack);
   }
 
  private:
@@ -903,6 +944,8 @@ class MediaDecoderStateMachine::LoopingDecodingState
                           aType == TrackInfo::TrackType::kVideoTrack);
 
     const bool isAudio = aType == TrackInfo::TrackType::kAudioTrack;
+    MOZ_ASSERT_IF(isAudio, mMaster->HasAudio());
+    MOZ_ASSERT_IF(!isAudio, mMaster->HasVideo());
     auto& seekRequest = isAudio ? mAudioSeekRequest : mVideoSeekRequest;
     Reader()->ResetDecode(aType);
     Reader()
@@ -950,12 +993,13 @@ class MediaDecoderStateMachine::LoopingDecodingState
               } else {
                 mVideoSeekRequest.Complete();
               }
-              HandleError(aReject.mError);
+              HandleError(aReject.mError, isAudio);
             })
         ->Track(seekRequest);
   }
 
   void RequestAudioDataFromReader() {
+    MOZ_ASSERT(mMaster->HasAudio());
     Reader()
         ->RequestAudioData()
         ->Then(
@@ -982,12 +1026,13 @@ class MediaDecoderStateMachine::LoopingDecodingState
                   "RequestDataRejected",
                   MEDIA_PLAYBACK);
               mAudioDataRequest.Complete();
-              HandleError(aError);
+              HandleError(aError, true /* isAudio */);
             })
         ->Track(mAudioDataRequest);
   }
 
   void RequestVideoDataFromReader() {
+    MOZ_ASSERT(mMaster->HasVideo());
     Reader()
         ->RequestVideoData(media::TimeUnit(),
                            false /* aRequestNextVideoKeyFrame */)
@@ -1015,14 +1060,21 @@ class MediaDecoderStateMachine::LoopingDecodingState
                   "RequestDataRejected",
                   MEDIA_PLAYBACK);
               mVideoDataRequest.Complete();
-              HandleError(aError);
+              HandleError(aError, false /* isAudio */);
             })
         ->Track(mVideoDataRequest);
   }
 
   void UpdatePlaybackPositionToZeroIfNeeded() {
-    MOZ_ASSERT(mIsReachingAudioEOS);
-    MOZ_ASSERT(mAudioLoopingOffset == media::TimeUnit::Zero());
+    // Hasn't reached EOS, no need to adjust playback position.
+    if (!mIsReachingAudioEOS && !mIsReachingVideoEOS) {
+      return;
+    }
+
+    MOZ_ASSERT_IF(mIsReachingAudioEOS,
+                  mAudioLoopingOffset == media::TimeUnit::Zero());
+    MOZ_ASSERT_IF(mIsReachingVideoEOS,
+                  mVideoLoopingOffset == media::TimeUnit::Zero());
     // If we have already reached EOS before starting media sink, the sink
     // has not started yet and the current position is larger than last decoded
     // end time, that means we directly seeked to EOS and playback would start
@@ -1032,12 +1084,13 @@ class MediaDecoderStateMachine::LoopingDecodingState
     // duration because decoded data's time which can't be adjusted as offset is
     // zero would be always less than media sink time.
     if (!mMaster->mMediaSink->IsStarted() &&
-        mMaster->mCurrentPosition.Ref() > mMaster->mDecodedAudioEndTime) {
+        (mMaster->mCurrentPosition.Ref() > mMaster->mDecodedAudioEndTime ||
+         mMaster->mCurrentPosition.Ref() > mMaster->mDecodedVideoEndTime)) {
       mMaster->UpdatePlaybackPositionInternal(TimeUnit::Zero());
     }
   }
 
-  void HandleError(const MediaResult& aError);
+  void HandleError(const MediaResult& aError, bool aIsAudio);
 
   void EnsureAudioDecodeTaskQueued() override {
     if (mAudioSeekRequest.Exists() || mAudioDataRequest.Exists()) {
@@ -1046,7 +1099,14 @@ class MediaDecoderStateMachine::LoopingDecodingState
     DecodingState::EnsureAudioDecodeTaskQueued();
   }
 
-  MediaResult LoopingAudioTimeAdjustment(AudioData* aAudio) {
+  void EnsureVideoDecodeTaskQueued() override {
+    if (mVideoSeekRequest.Exists() || mVideoDataRequest.Exists()) {
+      return;
+    }
+    DecodingState::EnsureVideoDecodeTaskQueued();
+  }
+
+  MediaResult LoopingAudioTimeAdjustment(AudioData* aAudio) const {
     if (mAudioLoopingOffset != media::TimeUnit::Zero()) {
       aAudio->mTime += mAudioLoopingOffset;
     }
@@ -1057,12 +1117,26 @@ class MediaDecoderStateMachine::LoopingDecodingState
                      "Audio sample overflow during looping time adjustment");
   }
 
+  MediaResult LoopingVideoTimeAdjustment(VideoData* aVideo) const {
+    if (mVideoLoopingOffset != media::TimeUnit::Zero()) {
+      aVideo->mTime += mVideoLoopingOffset;
+    }
+    return aVideo->mTime.IsValid()
+               ? MediaResult(NS_OK)
+               : MediaResult(
+                     NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+                     "Video sample overflow during looping time adjustment");
+  }
+
   bool ShouldDiscardLoopedAudioData() const {
     if (!mMaster->mMediaSink->IsStarted()) {
       return false;
     }
+    if (!mMaster->HasAudio()) {
+      return false;
+    }
     /**
-     * If media cancels looping, we should check whether there are audio data
+     * If media cancels looping, we should check whether there is audio data
      * whose time is later than EOS. If so, we should discard them because we
      * won't have a chance to play them.
      *
@@ -1078,15 +1152,51 @@ class MediaDecoderStateMachine::LoopingDecodingState
             mAudioLoopingOffset < mMaster->mDecodedAudioEndTime);
   }
 
+  bool ShouldDiscardLoopedVideoData() const {
+    if (!mMaster->mMediaSink->IsStarted()) {
+      return false;
+    }
+    if (!mMaster->HasVideo()) {
+      return false;
+    }
+    /**
+     * If media cancels looping, we should check whether there is video data
+     * whose time is later than EOS. If so, we should discard them because we
+     * won't have a chance to play them.
+     *
+     *    playback                     last decoded
+     *    position          EOS        data time
+     *   ----|---------------|------------|---------> (Increasing timeline)
+     *    mCurrent        mLooping      mMaster's
+     *    ClockTime        Offset      mDecodedVideoEndTime
+     *
+     */
+    return (mVideoLoopingOffset != media::TimeUnit::Zero() &&
+            mMaster->GetClock() < mVideoLoopingOffset &&
+            mVideoLoopingOffset < mMaster->mDecodedVideoEndTime);
+  }
+
   void DiscardLoopedAudioData() {
     if (mAudioLoopingOffset == media::TimeUnit::Zero()) {
       return;
     }
 
-    SLOG("Discard frames after the time=%" PRId64,
+    SLOG("Discard audio frames after the time=%" PRId64,
          mAudioLoopingOffset.ToMicroseconds());
     DiscardFramesFromTail(AudioQueue(), [&](int64_t aSampleTime) {
       return aSampleTime > mAudioLoopingOffset.ToMicroseconds();
+    });
+  }
+
+  void DiscardLoopedVideoData() {
+    if (mVideoLoopingOffset == media::TimeUnit::Zero()) {
+      return;
+    }
+
+    SLOG("Discard video frames after the time=%" PRId64,
+         mVideoLoopingOffset.ToMicroseconds());
+    DiscardFramesFromTail(VideoQueue(), [&](int64_t aSampleTime) {
+      return aSampleTime > mVideoLoopingOffset.ToMicroseconds();
     });
   }
 
@@ -1097,16 +1207,31 @@ class MediaDecoderStateMachine::LoopingDecodingState
            ShouldDiscardLoopedAudioData();
   }
 
+  bool HasDecodedLastVideoFrame() const {
+    // when we're going to leave looping state and have got EOS before, we
+    // should mark video queue as ended because we have got all data we need.
+    return mVideoDataRequest.Exists() || mVideoSeekRequest.Exists() ||
+           ShouldDiscardLoopedVideoData();
+  }
+
   bool ShouldStopPrerolling() const override {
     // When the data has reached EOS, that means the queue has been finished. If
     // MDSM isn't playing now, then we would preroll some data in order to let
     // new data to reopen the queue before starting playback again.
-    return !mIsReachingAudioEOS && DecodingState::ShouldStopPrerolling();
+    bool isWaitingForNewData = false;
+    if (mMaster->HasAudio()) {
+      isWaitingForNewData |= mIsReachingAudioEOS;
+    }
+    if (mMaster->HasVideo()) {
+      isWaitingForNewData |= mIsReachingVideoEOS;
+    }
+    return !isWaitingForNewData && DecodingState::ShouldStopPrerolling();
   }
 
   bool mIsReachingAudioEOS;
   bool mIsReachingVideoEOS;
   media::TimeUnit mAudioLoopingOffset = media::TimeUnit::Zero();
+  media::TimeUnit mVideoLoopingOffset = media::TimeUnit::Zero();
   MozPromiseRequestHolder<MediaFormatReader::SeekPromise> mAudioSeekRequest;
   MozPromiseRequestHolder<MediaFormatReader::SeekPromise> mVideoSeekRequest;
   MozPromiseRequestHolder<AudioDataPromise> mAudioDataRequest;
@@ -2405,11 +2530,9 @@ void MediaDecoderStateMachine::DecodeMetadataState::OnMetadataRead(
                                        std::move(aMetadata.mTags),
                                        MediaDecoderEventVisibility::Observable);
 
-  // Check whether the media satisfies the requirement of seamless looing.
-  // (Before checking the media is audio only, we need to get metadata first.)
-  mMaster->mSeamlessLoopingAllowed = StaticPrefs::media_seamless_looping() &&
-                                     mMaster->HasAudio() &&
-                                     !mMaster->HasVideo();
+  // Check whether the media satisfies the requirement of seamless looping.
+  // TODO : now we don't need to wait for metadata, can move it to other places.
+  mMaster->mSeamlessLoopingAllowed = StaticPrefs::media_seamless_looping();
 
   SetState<DecodingFirstFrameState>();
 }
@@ -2625,16 +2748,23 @@ void MediaDecoderStateMachine::DecodingState::MaybeStartBuffering() {
 }
 
 void MediaDecoderStateMachine::LoopingDecodingState::HandleError(
-    const MediaResult& aError) {
-  SLOG("audio looping failed, aError=%s", aError.ErrorName().get());
+    const MediaResult& aError, bool aIsAudio) {
+  SLOG("%s looping failed, aError=%s", aIsAudio ? "audio" : "video",
+       aError.ErrorName().get());
   switch (aError.Code()) {
     case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
-      HandleWaitingForAudio();
+      if (aIsAudio) {
+        HandleWaitingForAudio();
+      } else {
+        HandleWaitingForVideo();
+      }
       break;
     case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
-      // This would happen after we've closed resource so that we won't be able
-      // to get any sample anymore.
-      SetState<CompletedState>();
+      // This would happen after we've closed resource so that we won't be
+      // able to get any sample anymore.
+      if (mIsReachingAudioEOS && mIsReachingVideoEOS) {
+        SetState<CompletedState>();
+      }
       break;
     default:
       mMaster->DecodeError(aError);
@@ -4201,10 +4331,17 @@ void MediaDecoderStateMachine::CancelSuspendTimer() {
 
 void MediaDecoderStateMachine::AdjustByLooping(media::TimeUnit& aTime) const {
   MOZ_ASSERT(OnTaskQueue());
+  // For audio only or audio-and-video seamless looping.
   if (mAudioDecodedDuration.isSome() &&
       mAudioDecodedDuration.ref().IsPositive()) {
     aTime = aTime % mAudioDecodedDuration.ref();
   }
+  // For video only seamless looping.
+  else if (mVideoDecodedDuration.isSome() &&
+           mVideoDecodedDuration.ref().IsPositive()) {
+    aTime = aTime % mVideoDecodedDuration.ref();
+  }
+  // Otherwise, no need to adjust time.
 }
 
 bool MediaDecoderStateMachine::IsInSeamlessLooping() const {
