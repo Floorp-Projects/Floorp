@@ -511,8 +511,15 @@ class MediaDecoderStateMachine
   // If media was in looping and had reached to the end before, then we need
   // to adjust sample time from clock time to media time.
   void AdjustByLooping(media::TimeUnit& aTime) const;
-  Maybe<media::TimeUnit> mAudioDecodedDuration;
-  Maybe<media::TimeUnit> mVideoDecodedDuration;
+
+  // These are used for seamless looping. When looping has been enable at least
+  // once, `mOriginalDecodedDuration` would be set to the larger duration
+  // between two tracks.
+  media::TimeUnit mOriginalDecodedDuration;
+  Maybe<media::TimeUnit> mAudioTrackDecodedDuration;
+  Maybe<media::TimeUnit> mVideoTrackDecodedDuration;
+
+  bool HasLastDecodedData(MediaData::Type aType);
 
   // Current playback position in the stream in bytes.
   int64_t mPlaybackOffset = 0;
