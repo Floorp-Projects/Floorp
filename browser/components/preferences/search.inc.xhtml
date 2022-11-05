@@ -16,6 +16,10 @@
       <radiogroup id="searchBarVisibleGroup" preference="browser.search.widget.inNavBar" align="start">
         <radio id="searchBarHiddenRadio" value="false" data-l10n-id="search-bar-hidden"/>
         <image class="searchBarImage searchBarHiddenImage" role="presentation"/>
+        <checkbox id="searchShowSearchTermCheckbox"
+                  data-l10n-id="search-show-search-term-option"
+                  preference="browser.urlbar.showSearchTerms.enabled"
+                  hidden="true" />
         <radio id="searchBarShownRadio" value="true" data-l10n-id="search-bar-shown"/>
         <image class="searchBarImage searchBarShownImage" role="presentation"/>
       </radiogroup>

@@ -18,6 +18,7 @@ Preferences.addAll([
   { id: "browser.search.hiddenOneOffs", type: "unichar" },
   { id: "browser.search.widget.inNavBar", type: "bool" },
   { id: "browser.urlbar.showSearchSuggestionsFirst", type: "bool" },
+  { id: "browser.urlbar.showSearchTerms.enabled", type: "bool" },
   { id: "browser.search.separatePrivateDefault", type: "bool" },
   { id: "browser.search.separatePrivateDefault.ui.enabled", type: "bool" },
 ]);
@@ -93,6 +94,7 @@ var gSearchPane = {
     });
 
     this._initDefaultEngines();
+    this._initShowSearchTermsCheckbox();
     this._updateSuggestionCheckboxes();
     this._showAddEngineButton();
   },
@@ -122,6 +124,31 @@ var gSearchPane = {
 
     this._separatePrivateDefaultEnabledPref.on("change", listener);
     this._separatePrivateDefaultPref.on("change", listener);
+  },
+
+  _initShowSearchTermsCheckbox() {
+    let checkbox = document.getElementById("searchShowSearchTermCheckbox");
+
+    // Add Nimbus event to show/hide checkbox.
+    let onNimbus = () => {
+      checkbox.hidden = !UrlbarPrefs.get("showSearchTermsFeatureGate");
+    };
+    NimbusFeatures.urlbar.onUpdate(onNimbus);
+
+    // Add observer of Search Bar preference as showSearchTerms
+    // can't be enabled/disabled while Search Bar is enabled.
+    let searchBarPref = Preferences.get("browser.search.widget.inNavBar");
+    let updateCheckboxEnabled = () => {
+      checkbox.disabled = searchBarPref.value;
+    };
+
+    // Fire once to initialize.
+    onNimbus();
+    updateCheckboxEnabled();
+
+    window.addEventListener("unload", () => {
+      NimbusFeatures.urlbar.off(onNimbus);
+    });
   },
 
   _updatePrivateEngineDisplayBoxes() {
