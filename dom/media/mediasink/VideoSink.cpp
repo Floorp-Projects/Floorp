@@ -472,9 +472,10 @@ void VideoSink::RenderVideoFrames(int32_t aMaxFrames, int64_t aClockTime,
     img->mFrameID = frame->mFrameID;
     img->mProducerID = mProducerID;
 
-    VSINK_LOG_V("playing video frame %" PRId64 " (id=%x) (vq-queued=%zu)",
+    VSINK_LOG_V("playing video frame %" PRId64
+                " (id=%x, vq-queued=%zu, clock=%" PRId64 ")",
                 frame->mTime.ToMicroseconds(), frame->mFrameID,
-                VideoQueue().GetSize());
+                VideoQueue().GetSize(), aClockTime);
     if (!wasSent) {
       PROFILER_MARKER("PlayVideo", MEDIA_PLAYBACK, {}, MediaSampleMarker,
                       frame->mTime.ToMicroseconds(),
