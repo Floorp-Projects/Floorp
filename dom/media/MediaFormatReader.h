@@ -767,8 +767,11 @@ class MediaFormatReader final
   // Seeking objects.
   void SetSeekTarget(const SeekTarget& aTarget);
   bool IsSeeking() const { return mPendingSeekTime.isSome(); }
-  bool IsVideoSeeking() const {
+  bool IsVideoOnlySeeking() const {
     return IsSeeking() && mOriginalSeekTarget.IsVideoOnly();
+  }
+  bool IsAudioOnlySeeking() const {
+    return IsSeeking() && mOriginalSeekTarget.IsAudioOnly();
   }
   void ScheduleSeek();
   void AttemptSeek();
