@@ -59,7 +59,7 @@ class LoadInfo final : public nsILoadInfo {
   friend already_AddRefed<T> mozilla::MakeAndAddRef(Args&&... aArgs);
 
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSILOADINFO
 
   // Used for TYPE_DOCUMENT load.
@@ -366,19 +366,6 @@ class LoadInfo final : public nsILoadInfo {
   nsCOMPtr<nsIURI> mUnstrippedURI;
 
   nsCOMPtr<nsIInterceptionInfo> mInterceptionInfo;
-
-#ifdef EARLY_BETA_OR_EARLIER
- public:
-  void SelfDestruct();
-
-  enum {
-    LIVE = 1,
-    DELETING = 2,
-    QUEUED_FOR_DELETION = 3,
-    DELETED = 4,
-  };
-  uint32_t mState = LoadInfo::LIVE;
-#endif
 };
 
 // This is exposed solely for testing purposes and should not be used outside of
