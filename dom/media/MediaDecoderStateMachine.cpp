@@ -1136,6 +1136,7 @@ class MediaDecoderStateMachine::LoopingDecodingState
                 PutDataOnWaiting(aVideo);
                 return;
               }
+              mMaster->mBypassingSkipToNextKeyFrameCheck = true;
               HandleVideoDecoded(aVideo);
               ProcessSamplesWaitingAdjustmentIfAny();
             },
@@ -3792,15 +3793,18 @@ void MediaDecoderStateMachine::RequestVideoData(
   MOZ_ASSERT(!IsWaitingVideoData());
   LOGV(
       "Queueing video task - queued=%zu, decoder-queued=%zo"
-      ", stime=%" PRId64,
+      ", stime=%" PRId64 ", by-pass-skip=%d",
       VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames(),
-      aCurrentTime.ToMicroseconds());
+      aCurrentTime.ToMicroseconds(), mBypassingSkipToNextKeyFrameCheck);
 
   PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::RequestData,
                                    Info().mVideo.mImage.height);
   perfRecorder.Start();
   RefPtr<MediaDecoderStateMachine> self = this;
-  mReader->RequestVideoData(aCurrentTime, aRequestNextKeyFrame)
+  mReader
+      ->RequestVideoData(
+          mBypassingSkipToNextKeyFrameCheck ? media::TimeUnit() : aCurrentTime,
+          mBypassingSkipToNextKeyFrameCheck ? false : aRequestNextKeyFrame)
       ->Then(
           OwnerThread(), __func__,
           [this, self, perfRecorder(std::move(perfRecorder))](
@@ -4107,6 +4111,10 @@ void MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically() {
     // of the media track, so the time over the end should be corrected.
     AdjustByLooping(clockTime);
     bool loopback = clockTime < GetMediaTime() && mLooping;
+    if (loopback && mBypassingSkipToNextKeyFrameCheck) {
+      LOG("media has looped back, no longer bypassing skip-to-next-key-frame");
+      mBypassingSkipToNextKeyFrameCheck = false;
+    }
 
     // Skip frames up to the frame at the playback position, and figure out
     // the time remaining until it's time to display the next frame and drop
