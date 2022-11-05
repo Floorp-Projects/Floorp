@@ -438,9 +438,10 @@
             </menu>
 #ifdef XP_MACOSX
             <menu id="windowMenu"
+                  onpopupshowing="macWindowMenuDidShow();"
+                  onpopuphidden="macWindowMenuDidHide();"
                    data-l10n-id="menu-window-menu">
                 <menupopup id="windowPopup">
-                    <menuseparator/>
                     <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
                     <menuitem command="zoomWindow"/>
                     <!-- decomment when "BringAllToFront" is implemented
