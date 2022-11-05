@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Seamless looping video canvas test</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="text/javascript" src="manifest.js"></script>
+</head>
+<canvas id="canvas"></canvas>
+<video id="v"></video>
+<script type="application/javascript">
+
+/**
+ * This test aims to check if the video is seamless looping by capturing the
+ * image when loop happens. We use a video contains only white frames, so the
+ * captured frame should always be a white frame. If looping is not seamless,
+ * the captured frame would become a black frame.
+ */
+const WIDTH = 10, HEIGHT = 10;
+
+add_task(async function testSeamlessLoopingVideoCanvas() {
+  info(`load video which only contains white frames`);
+  let video = document.getElementById("v");
+  video.loop = true;
+  video.src = "white-short.webm";
+  video.width = WIDTH;
+  video.height = HEIGHT;
+  await video.play();
+
+  info(`setup canvas`);
+  const cvs = document.getElementById("canvas");
+  cvs.width = WIDTH;
+  cvs.height = HEIGHT;
+
+  info(`test seamless looping multiples times`);
+  let MAX_LOOPING_COUNT = 10;
+  for (let count = 0; count < MAX_LOOPING_COUNT; count++) {
+    await once(video, "seeking");
+    assertPaintedFrameIsWhiteFrame();
+    await once(video, "seeked");
+    ok(true, `the round ${count} of the seamless looping succeeds`);
+  }
+});
+
+function assertPaintedFrameIsWhiteFrame() {
+  info(`catpure image from video`);
+  const cvs = document.getElementById("canvas");
+  let context = cvs.getContext('2d');
+  if (!context) {
+    ok(false, "can't get 2d context");
+  }
+
+  context.drawImage(document.getElementById("v"), 0, 0, WIDTH, HEIGHT);
+  let imageData = context.getImageData(0, 0, WIDTH, HEIGHT);
+  for (let idx = 0; idx < WIDTH * HEIGHT; idx++) {
+    let pixelCount = 4 * idx; // RGBA
+    let data = imageData.data;
+    // White frame's RGB value should be [255,255,255]
+    is(data[pixelCount + 0], 255, `R should be 255`);
+    is(data[pixelCount + 1], 255, `G should be 255`);
+    is(data[pixelCount + 2], 255, `B should be 255`);
+  }
+}
+</script>
+<body>
+</body>
+</html>
