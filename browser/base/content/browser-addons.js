@@ -1550,14 +1550,15 @@ var gUnifiedExtensions = {
 
   async togglePanel(aEvent) {
     if (!CustomizationHandler.isCustomizing()) {
+      if (aEvent && aEvent.button !== 0) {
+        return;
+      }
+
       let panel = this.panel;
       // The button should directly open `about:addons` when there is no active
-      // extension to show in the panel...
+      // extension to show in the panel.
       if ((await this.getActiveExtensions()).length === 0) {
-        // ...but only for the primary click.
-        if (aEvent.button === 0) {
-          await BrowserOpenAddonsMgr("addons://discover/");
-        }
+        await BrowserOpenAddonsMgr("addons://discover/");
         return;
       }
 
