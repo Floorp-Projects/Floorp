@@ -10,10 +10,23 @@
 using namespace mozilla;
 using mozilla::media::TimeUnit;
 
-MediaData* CreateDataRawPtr(int64_t aStartTime, int64_t aEndTime) {
+MediaData* CreateDataRawPtr(
+    int64_t aStartTime, int64_t aEndTime,
+    MediaData::Type aType = MediaData::Type::NULL_DATA) {
   const TimeUnit startTime = TimeUnit::FromMicroseconds(aStartTime);
   const TimeUnit endTime = TimeUnit::FromMicroseconds(aEndTime);
-  return new NullData(0, startTime, endTime - startTime);
+  MediaData* data;
+  if (aType == MediaData::Type::AUDIO_DATA) {
+    AlignedAudioBuffer samples;
+    data = new AudioData(0, startTime, std::move(samples), 2, 44100);
+    data->mDuration = endTime - startTime;
+  } else if (aType == MediaData::Type::VIDEO_DATA) {
+    data = new VideoData(0, startTime, endTime - startTime, true, startTime,
+                         gfx::IntSize(), 0);
+  } else {
+    data = new NullData(0, startTime, endTime - startTime);
+  }
+  return data;
 }
 
 already_AddRefed<MediaData> CreateData(int64_t aStartTime, int64_t aEndTime) {
@@ -194,6 +207,82 @@ TEST(MediaQueue, CallGetElementAfterOnMultipleElements)
   nsTArray<RefPtr<MediaData>> emptyResult;
   queue.GetElementsAfter(targetTime, &emptyResult);
   EXPECT_TRUE(emptyResult.IsEmpty());
+}
+
+TEST(MediaQueue, TimestampAdjustmentForSupportDataType)
+{
+  const size_t kOffSet = 30;
+  {
+    MediaQueue<AudioData> audioQueue;
+    audioQueue.Push(
+        CreateDataRawPtr(0, 10, MediaData::Type::AUDIO_DATA)->As<AudioData>());
+    audioQueue.SetOffset(TimeUnit::FromMicroseconds(kOffSet));
+    audioQueue.Push(
+        CreateDataRawPtr(0, 10, MediaData::Type::AUDIO_DATA)->As<AudioData>());
+
+    // Data stored before setting the offset shouldn't be changed
+    RefPtr<AudioData> data = audioQueue.PopFront();
+    EXPECT_EQ(data->mTime, TimeUnit::FromMicroseconds(0));
+    EXPECT_EQ(data->GetEndTime(), TimeUnit::FromMicroseconds(10));
+
+    // Data stored after setting the offset should be changed
+    data = audioQueue.PopFront();
+    EXPECT_EQ(data->mTime, TimeUnit::FromMicroseconds(0 + kOffSet));
+    EXPECT_EQ(data->GetEndTime(), TimeUnit::FromMicroseconds(10 + kOffSet));
+
+    // Reset will clean the offset.
+    audioQueue.Reset();
+    audioQueue.Push(
+        CreateDataRawPtr(0, 10, MediaData::Type::AUDIO_DATA)->As<AudioData>());
+    data = audioQueue.PopFront();
+    EXPECT_EQ(data->mTime, TimeUnit::FromMicroseconds(0));
+    EXPECT_EQ(data->GetEndTime(), TimeUnit::FromMicroseconds(10));
+  }
+
+  // Check another supported type
+  MediaQueue<VideoData> videoQueue;
+  videoQueue.Push(
+      CreateDataRawPtr(0, 10, MediaData::Type::VIDEO_DATA)->As<VideoData>());
+  videoQueue.SetOffset(TimeUnit::FromMicroseconds(kOffSet));
+  videoQueue.Push(
+      CreateDataRawPtr(0, 10, MediaData::Type::VIDEO_DATA)->As<VideoData>());
+
+  // Data stored before setting the offset shouldn't be changed
+  RefPtr<VideoData> data = videoQueue.PopFront();
+  EXPECT_EQ(data->mTime, TimeUnit::FromMicroseconds(0));
+  EXPECT_EQ(data->GetEndTime(), TimeUnit::FromMicroseconds(10));
+
+  // Data stored after setting the offset should be changed
+  data = videoQueue.PopFront();
+  EXPECT_EQ(data->mTime, TimeUnit::FromMicroseconds(0 + kOffSet));
+  EXPECT_EQ(data->GetEndTime(), TimeUnit::FromMicroseconds(10 + kOffSet));
+
+  // Reset will clean the offset.
+  videoQueue.Reset();
+  videoQueue.Push(
+      CreateDataRawPtr(0, 10, MediaData::Type::VIDEO_DATA)->As<VideoData>());
+  data = videoQueue.PopFront();
+  EXPECT_EQ(data->mTime, TimeUnit::FromMicroseconds(0));
+  EXPECT_EQ(data->GetEndTime(), TimeUnit::FromMicroseconds(10));
+}
+
+TEST(MediaQueue, TimestampAdjustmentForNotSupportDataType)
+{
+  const size_t kOffSet = 30;
+
+  MediaQueue<MediaData> queue;
+  queue.Push(CreateDataRawPtr(0, 10));
+  queue.SetOffset(TimeUnit::FromMicroseconds(kOffSet));
+  queue.Push(CreateDataRawPtr(0, 10));
+
+  // Offset won't affect any data at all.
+  RefPtr<MediaData> data = queue.PopFront();
+  EXPECT_EQ(data->mTime, TimeUnit::FromMicroseconds(0));
+  EXPECT_EQ(data->GetEndTime(), TimeUnit::FromMicroseconds(10));
+
+  data = queue.PopFront();
+  EXPECT_EQ(data->mTime, TimeUnit::FromMicroseconds(0));
+  EXPECT_EQ(data->GetEndTime(), TimeUnit::FromMicroseconds(10));
 }
 
 #undef EXPECT_EQUAL_SIZE_T
