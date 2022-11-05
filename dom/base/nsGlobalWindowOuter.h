@@ -109,6 +109,7 @@ class PrintPreviewResultInfo;
 struct RequestInit;
 class RequestOrUSVString;
 class Selection;
+struct SizeToContentConstraints;
 class SpeechSynthesis;
 class Timeout;
 class U2F;
@@ -624,9 +625,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   double GetScrollYOuter();
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void SizeToContentOuter(mozilla::dom::CallerType aCallerType,
-                          int32_t aMaxWidth, int32_t aMaxHeight,
-                          mozilla::ErrorResult& aError);
+  void SizeToContentOuter(mozilla::dom::CallerType,
+                          const mozilla::dom::SizeToContentConstraints&,
+                          mozilla::ErrorResult&);
   nsIControllers* GetControllersOuter(mozilla::ErrorResult& aError);
   nsresult GetControllers(nsIControllers** aControllers) override;
   float GetMozInnerScreenXOuter(mozilla::dom::CallerType aCallerType);
