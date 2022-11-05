@@ -3932,14 +3932,16 @@ void nsGlobalWindowInner::ResizeBy(int32_t aWidthDif, int32_t aHeightDif,
 
 void nsGlobalWindowInner::SizeToContent(CallerType aCallerType,
                                         ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(SizeToContentOuter, (aCallerType, {}, aError),
+  FORWARD_TO_OUTER_OR_THROW(SizeToContentOuter, (aCallerType, 0, 0, aError),
                             aError, );
 }
 
-void nsGlobalWindowInner::SizeToContentConstrained(
-    const SizeToContentConstraints& aConstraints, ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(
-      SizeToContentOuter, (CallerType::System, aConstraints, aError), aError, );
+void nsGlobalWindowInner::SizeToContentConstrained(int32_t aMaxWidth,
+                                                   int32_t aMaxHeight,
+                                                   ErrorResult& aError) {
+  FORWARD_TO_OUTER_OR_THROW(SizeToContentOuter,
+                            (CallerType::System, aMaxWidth, aMaxHeight, aError),
+                            aError, );
 }
 
 already_AddRefed<nsPIWindowRoot> nsGlobalWindowInner::GetTopWindowRoot() {

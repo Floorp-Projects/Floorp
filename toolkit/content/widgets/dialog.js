@@ -213,7 +213,7 @@
         }
         return 0;
       })();
-      window.sizeToContentConstrained({ prefWidth });
+      window.sizeToContentConstrained(prefWidth, 0);
     }
 
     moveToAlertPosition() {

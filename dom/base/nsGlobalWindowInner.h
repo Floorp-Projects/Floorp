@@ -125,7 +125,6 @@ struct RequestInit;
 class RequestOrUSVString;
 class SharedWorker;
 class Selection;
-struct SizeToContentConstraints;
 class WebTaskScheduler;
 class WebTaskSchedulerMainThread;
 class SpeechSynthesis;
@@ -863,8 +862,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
       mozilla::ErrorResult& aError);
   void SizeToContent(mozilla::dom::CallerType aCallerType,
                      mozilla::ErrorResult& aError);
-  void SizeToContentConstrained(const mozilla::dom::SizeToContentConstraints&,
-                                mozilla::ErrorResult&);
+  void SizeToContentConstrained(int32_t aMaxWidth, int32_t aMaxHeight,
+                                mozilla::ErrorResult& aError);
   mozilla::dom::Crypto* GetCrypto(mozilla::ErrorResult& aError);
   mozilla::dom::U2F* GetU2f(mozilla::ErrorResult& aError);
   nsIControllers* GetControllers(mozilla::ErrorResult& aError);
