@@ -401,6 +401,12 @@ Window includes GlobalCrypto;
 // https://fidoalliance.org/specifications/download/
 Window includes GlobalU2F;
 
+dictionary SizeToContentConstraints {
+  long maxWidth = 0;
+  long maxHeight = 0;
+  long prefWidth = 0;
+};
+
 #ifdef MOZ_WEBSPEECH
 // http://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html
 interface mixin SpeechSynthesisGetter {
@@ -434,7 +440,7 @@ partial interface Window {
    * Chrome-only method for sizing to content with a maximum-size constraint on
    * either (or both) directions.
    */
-  [Throws, ChromeOnly] undefined sizeToContentConstrained(long width, long height);
+  [Throws, ChromeOnly] undefined sizeToContentConstrained(optional SizeToContentConstraints constraints = {});
 
   // XXX Shouldn't this be in nsIDOMChromeWindow?
   [ChromeOnly, Replaceable, Throws] readonly attribute XULControllers controllers;

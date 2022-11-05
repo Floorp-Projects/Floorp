@@ -5466,8 +5466,7 @@ void nsGlobalWindowOuter::ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
 }
 
 void nsGlobalWindowOuter::SizeToContentOuter(CallerType aCallerType,
-                                             int32_t aMaxWidth,
-                                             int32_t aMaxHeight,
+                                             const SizeToContentConstraints& aConstraints,
                                              ErrorResult& aError) {
   if (!mDocShell) {
     return;
@@ -5490,7 +5489,7 @@ void nsGlobalWindowOuter::SizeToContentOuter(CallerType aCallerType,
     return aError.Throw(NS_ERROR_FAILURE);
   }
 
-  auto contentSize = cv->GetContentSize(aMaxWidth, aMaxHeight);
+  auto contentSize = cv->GetContentSize(aConstraints.mMaxWidth, aConstraints.mMaxHeight, aConstraints.mPrefWidth);
   if (!contentSize) {
     return aError.Throw(NS_ERROR_FAILURE);
   }
