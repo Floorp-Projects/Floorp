@@ -23,7 +23,7 @@ add_setup(async () => {
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.showSearchTerms.shouldShow", true]],
+    set: [["browser.urlbar.showSearchTerms.featureGate", true]],
   });
 
   await SearchTestUtils.installSearchExtension({

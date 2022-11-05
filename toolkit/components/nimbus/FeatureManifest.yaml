@@ -183,6 +183,10 @@ urlbar:
       description: >-
         The index of sponsored QuickSuggest results within the general group. A
         negative index is relative to the end of the group
+    showSearchTermsFeatureGate:
+      type: boolean
+      fallbackPref: browser.urlbar.showSearchTerms.featureGate
+      description: Gate for the show search terms feature. If false, the preference#search will not show the search terms feature checkbox, and search terms will never persist in the urlbar. If true, the preference checkbox will be shown on preferences#search, and the user can choose to persist search terms on or off in the urlbar.
 aboutwelcome:
   description: "The about:welcome page"
   owner: omc@mozilla.com
