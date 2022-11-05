@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Seamless looping test with resuming video decoding</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="text/javascript" src="manifest.js"></script>
+<script src="background_video.js"></script>
+</head>
+<script type="application/javascript">
+
+/**
+ * This test aims to check if seamless looping can work well with the mechanism
+ * of resuming video decoding. When resuming decoding, MDSM will leave the
+ * looping state and go to video only seek state. We want to ensure that the
+ * timestamp of new video data that state requests will also be adjusted in
+ * order to keep video playback ongoing without video being frozen because
+ * frames get discarded.
+ */
+add_task(async function testSeamlessLoopingResumeVideoDecoding() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.test.video-suspend", true],
+      ["media.suspend-bkgnd-video.enabled", true],
+      ["media.suspend-bkgnd-video.delay-ms", 0],
+    ],
+  });
+
+  info(`create video and play it`);
+  let video = document.createElement('video');
+  video.loop = true;
+  video.src = "gizmo.mp4";
+  document.body.appendChild(video);
+  // speed up the test.
+  video.playbackRate = 2;
+  await video.play();
+
+  info(`test seamless looping once`);
+  await once(video, "seeked");
+  ok(true, `loop back happened`);
+
+  info(`suspend video decoding`);
+  video.setVisible(false);
+  await nextVideoSuspends(video);
+  info(`suspended video decoding`);
+
+  info(`resume video decoding (enter video-only seek state)`);
+  video.setVisible(true);
+  await testVideoOnlySeekCompletedWhenShown(video);
+  info(`resumed video decoding and finished video-only seeking`);
+
+  const lastPaintedFramesAmount = video.mozPaintedFrames;
+  info(`end test after looping one more time`);
+  await once(video, "seeked");
+
+  const currentPaintedFrameAmount  = video.mozPaintedFrames;
+  ok(lastPaintedFramesAmount < currentPaintedFrameAmount,
+      `painted frames keeps growing from ${lastPaintedFramesAmount} to ${currentPaintedFrameAmount}`);
+});
+
+</script>
+<body>
+</body>
+</html>
