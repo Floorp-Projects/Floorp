@@ -277,19 +277,24 @@ interface nsIContentViewer : nsISupports
 
   /**
    * Returns the preferred width and height of the content, constrained to the
-   * given maximum values. If either maxWidth or maxHeight is less than zero,
-   * that dimension is not constrained.
+   * given maximum values. If either maxWidth or maxHeight is less than or
+   * equal to zero, that dimension is not constrained.
+   *
+   * If a pref width is provided, it is max'd with the min-content size.
    *
    * All input and output values are in CSS pixels.
    */
-  void getContentSize(in long maxWidth, in long maxHeight,
-                      out long width, out long height);
+  void getContentSize(in long maxWidth,
+                      in long maxHeight,
+                      in long prefWidth,
+                      out long width,
+                      out long height);
 
 %{C++
-  mozilla::Maybe<mozilla::CSSIntSize> GetContentSize(int32_t aMaxWidth = 0, int32_t aMaxHeight = 0) {
+  mozilla::Maybe<mozilla::CSSIntSize> GetContentSize(int32_t aMaxWidth = 0, int32_t aMaxHeight = 0, int32_t aPrefWidth = 0) {
     int32_t w = 0;
     int32_t h = 0;
-    if (NS_SUCCEEDED(GetContentSize(aMaxWidth, aMaxHeight, &w, &h))) {
+    if (NS_SUCCEEDED(GetContentSize(aMaxWidth, aMaxHeight, aPrefWidth, &w, &h))) {
       return mozilla::Some(mozilla::CSSIntSize(w, h));
     }
     return mozilla::Nothing();
