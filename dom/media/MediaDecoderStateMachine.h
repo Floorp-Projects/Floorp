@@ -512,6 +512,7 @@ class MediaDecoderStateMachine
   // to adjust sample time from clock time to media time.
   void AdjustByLooping(media::TimeUnit& aTime) const;
   Maybe<media::TimeUnit> mAudioDecodedDuration;
+  Maybe<media::TimeUnit> mVideoDecodedDuration;
 
   // Current playback position in the stream in bytes.
   int64_t mPlaybackOffset = 0;
