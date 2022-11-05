@@ -36,6 +36,7 @@ ACCEPTABLE_ERRATA_KEYS = set(
     [
         "fail-if",
         "skip-if",
+        "prefs",
     ]
 )
 
