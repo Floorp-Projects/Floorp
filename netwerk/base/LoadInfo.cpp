@@ -9,7 +9,6 @@
 #include "js/Array.h"               // JS::NewArrayObject
 #include "js/PropertyAndElement.h"  // JS_DefineElement
 #include "mozilla/Assertions.h"
-#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientIPCTypes.h"
@@ -778,127 +777,30 @@ void LoadInfo::ComputeIsThirdPartyContext(dom::WindowGlobalParent* aGlobal) {
   thirdPartyUtil->IsThirdPartyGlobal(aGlobal, &mIsThirdPartyContext);
 }
 
-NS_IMPL_QUERY_INTERFACE(LoadInfo, nsILoadInfo)
+NS_IMPL_ISUPPORTS(LoadInfo, nsILoadInfo)
 
 #ifdef EARLY_BETA_OR_EARLIER
-// To investigate Bug 1544127
-LoadInfo::~LoadInfo() { MOZ_ASSERT(mState == LoadInfo::DELETED); }
+void LoadInfo::ReleaseMembers() {
+  Unused << NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+      "LoadInfo::ReleasePrincipalAnUrl",
+      [loadinPrinciple{std::move(mLoadingPrincipal)},
+       principalToInherit{std::move(mPrincipalToInherit)},
+       topLevelPrincipal{std::move(mTopLevelPrincipal)},
+       resultPrincipalURI{std::move(mResultPrincipalURI)},
+       unstrippedURI{std::move(mUnstrippedURI)}]() {}));
 
-void LoadInfo::SelfDestruct() {
-  MOZ_ASSERT(mRefCnt == 1, "Bad refcount!");
-  MOZ_ASSERT(mState == LoadInfo::DELETING);
-  mState = LoadInfo::DELETED;
-  delete this;
+  Unused << NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+      "LoadInfo::ReleaseOther",
+      [cspEventListener{std::move(mCSPEventListener)},
+       performanceStorage{std::move(mPerformanceStorage)},
+       cspToInherit{std::move(mCspToInherit)}]() {}));
+
+  Unused << NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+      "LoadInfo::ReleaseCookieJarSettings",
+      [cookieJarSettings{std::move(mCookieJarSettings)}]() {}));
 }
 
-// XXX This could be much more c++-ey - template, etc
-class LoadInfoArray final {
- public:
-  LoadInfoArray() : mHead(0), mTail(0) {}
-  ~LoadInfoArray() {
-    while (mTail != mHead) {
-      mArray[mTail]->mState = LoadInfo::DELETING;
-      mArray[mTail]->SelfDestruct();
-      mTail = Next(mTail);
-    }
-  }
-
-  uint32_t Next(uint32_t index_val) const {
-    return (index_val + 1) % (sizeof(mArray) / sizeof(mArray[0]));
-  }
-
-  bool Empty() const { return mTail == mHead; }
-
-  bool Full() const {
-    return (mHead + 1) % (sizeof(mArray) / sizeof(mArray[0])) == mTail;
-  }
-
-  bool Has(const LoadInfo* aLoadInfo) const {
-    for (uint32_t i = mTail; i != mHead; i = Next(i)) {
-      if (aLoadInfo == mArray[i]) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  void Push(LoadInfo* aValue) {
-    mArray[mHead] = aValue;
-    mHead = Next(mHead);
-    MOZ_RELEASE_ASSERT(mHead != mTail);
-  }
-
-  LoadInfo* Pop() {
-    LoadInfo* value = mArray[mTail];
-    mTail = Next(mTail);
-    return value;
-  }
-
- private:
-  uint32_t mHead = 0;
-  uint32_t mTail = 0;
-  LoadInfo* mArray[1000];
-};
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-LoadInfo::Release() {
-  static UniquePtr<LoadInfoArray> sArray;
-  static bool sInitialized = false;
-  MOZ_RELEASE_ASSERT(mState == LoadInfo::LIVE);
-  MOZ_RELEASE_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-  nsrefcnt count = --mRefCnt;
-  NS_LOG_RELEASE(this, count, "LoadInfo");
-
-  if (!count) {
-    // Stabilize refcount.
-    mRefCnt = 1;
-    ReleaseMembers();
-
-    if (!sInitialized &&
-        !PastShutdownPhase(ShutdownPhase::XPCOMShutdownThreads)) {
-      sArray.reset(new LoadInfoArray);
-      ClearOnShutdown(
-          &sArray,
-          ShutdownPhase::XPCOMShutdownThreads);  // probably could be later
-      sInitialized = true;
-    } else if (!sArray.get()) {
-      // we're in shutdown, keep it simple
-      mState = LoadInfo::DELETING;
-      SelfDestruct();  // delete's this!
-      return count;
-    }
-    MOZ_RELEASE_ASSERT(!sArray->Has(this));
-    if (sArray->Full()) {
-      // array is full, delete an entry
-      LoadInfo* deleteMe = sArray->Pop();
-      MOZ_RELEASE_ASSERT(deleteMe->mState == LoadInfo::QUEUED_FOR_DELETION);
-      deleteMe->mState = LoadInfo::DELETING;
-
-      nsCOMPtr<nsIRunnable> runnable = NewNonOwningRunnableMethod(
-          "LoadInfo::SelfDestruct", deleteMe, &LoadInfo::SelfDestruct);
-      NS_WARNING_ASSERTION(runnable, "Couldn't make runnable!");
-
-      if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
-        // The only way this could fail is if we're in shutdown, and in that
-        // case threads should have been joined already. Deleting here isn't
-        // dangerous anymore because we won't spin the event loop waiting to
-        // join the thread.
-        deleteMe->SelfDestruct();
-      }
-    }
-    mState = LoadInfo::QUEUED_FOR_DELETION;
-    sArray->Push(this);
-  }
-
-  return count;
-}
 #else
-NS_IMPL_RELEASE(LoadInfo)
-
-LoadInfo::~LoadInfo() { ReleaseMembers(); }
-#endif
-
 void LoadInfo::ReleaseMembers() {
   mCSPEventListener = nullptr;
   mCookieJarSettings = nullptr;
@@ -912,8 +814,9 @@ void LoadInfo::ReleaseMembers() {
   mUnstrippedURI = nullptr;
   mAncestorPrincipals.Clear();
 }
+#endif
 
-NS_IMPL_ADDREF(LoadInfo)
+LoadInfo::~LoadInfo() { ReleaseMembers(); }
 
 already_AddRefed<nsILoadInfo> LoadInfo::Clone() const {
   RefPtr<LoadInfo> copy(new LoadInfo(*this));
