@@ -470,14 +470,6 @@ STDMETHODIMP nsDataObj::CMemStream::Stat(STATSTG* statstg, DWORD dwFlags) {
 }
 
 /*
- * deliberately not using MAX_PATH. This is because on platforms < XP
- * a file created with a long filename may be mishandled by the shell
- * resulting in it not being able to be deleted or moved.
- * See bug 250392 for more details.
- */
-#define NS_MAX_FILEDESCRIPTOR 128 + 1
-
-/*
  * Class nsDataObj
  */
 
@@ -1197,12 +1189,11 @@ nsDataObj ::GetFileDescriptorInternetShortcutA(FORMATETC& aFE,
   // get a valid filename in the following order: 1) from the page title,
   // 2) localized string for an untitled page, 3) just use "Untitled.URL"
   if (!CreateFilenameFromTextA(title, ".URL", fileGroupDescA->fgd[0].cFileName,
-                               NS_MAX_FILEDESCRIPTOR)) {
+                               MAX_PATH)) {
     nsAutoString untitled;
     if (!GetLocalizedString("noPageTitle", untitled) ||
         !CreateFilenameFromTextA(untitled, ".URL",
-                                 fileGroupDescA->fgd[0].cFileName,
-                                 NS_MAX_FILEDESCRIPTOR)) {
+                                 fileGroupDescA->fgd[0].cFileName, MAX_PATH)) {
       strcpy(fileGroupDescA->fgd[0].cFileName, "Untitled.URL");
     }
   }
@@ -1240,12 +1231,11 @@ nsDataObj ::GetFileDescriptorInternetShortcutW(FORMATETC& aFE,
   // get a valid filename in the following order: 1) from the page title,
   // 2) localized string for an untitled page, 3) just use "Untitled.URL"
   if (!CreateFilenameFromTextW(title, L".URL", fileGroupDescW->fgd[0].cFileName,
-                               NS_MAX_FILEDESCRIPTOR)) {
+                               MAX_PATH)) {
     nsAutoString untitled;
     if (!GetLocalizedString("noPageTitle", untitled) ||
         !CreateFilenameFromTextW(untitled, L".URL",
-                                 fileGroupDescW->fgd[0].cFileName,
-                                 NS_MAX_FILEDESCRIPTOR)) {
+                                 fileGroupDescW->fgd[0].cFileName, MAX_PATH)) {
       wcscpy(fileGroupDescW->fgd[0].cFileName, L"Untitled.URL");
     }
   }
@@ -2201,9 +2191,8 @@ HRESULT nsDataObj::GetFileDescriptor_IStreamA(FORMATETC& aFE, STGMEDIUM& aSTG) {
   nsAutoCString nativeFileName;
   NS_CopyUnicodeToNative(wideFileName, nativeFileName);
 
-  strncpy(fileGroupDescA->fgd[0].cFileName, nativeFileName.get(),
-          NS_MAX_FILEDESCRIPTOR - 1);
-  fileGroupDescA->fgd[0].cFileName[NS_MAX_FILEDESCRIPTOR - 1] = '\0';
+  strncpy(fileGroupDescA->fgd[0].cFileName, nativeFileName.get(), MAX_PATH - 1);
+  fileGroupDescA->fgd[0].cFileName[MAX_PATH - 1] = '\0';
 
   // one file in the file block
   fileGroupDescA->cItems = 1;
@@ -2237,9 +2226,8 @@ HRESULT nsDataObj::GetFileDescriptor_IStreamW(FORMATETC& aFE, STGMEDIUM& aSTG) {
     return res;
   }
 
-  wcsncpy(fileGroupDescW->fgd[0].cFileName, wideFileName.get(),
-          NS_MAX_FILEDESCRIPTOR - 1);
-  fileGroupDescW->fgd[0].cFileName[NS_MAX_FILEDESCRIPTOR - 1] = '\0';
+  wcsncpy(fileGroupDescW->fgd[0].cFileName, wideFileName.get(), MAX_PATH - 1);
+  fileGroupDescW->fgd[0].cFileName[MAX_PATH - 1] = '\0';
   // one file in the file block
   fileGroupDescW->cItems = 1;
   fileGroupDescW->fgd[0].dwFlags = FD_PROGRESSUI;
