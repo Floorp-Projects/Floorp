@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Seamless looping test duration</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="text/javascript" src="manifest.js"></script>
+</head>
+<script type="application/javascript">
+
+/**
+ * This test aims to check that the media duration shouldn't be changed during
+ * seamless looping.
+ */
+add_task(async function testSeamlessLoopingDuration() {
+  info(`create video and play it`);
+  let video = document.createElement('video');
+  video.loop = true;
+  video.src = "gizmo-short.mp4";
+  document.body.appendChild(video);
+  await video.play();
+
+  video.ondurationchange =
+      _ => ok(false, "shouldn't change duration during looping!");
+
+  info(`test seamless looping multiples times`);
+  let MAX_LOOPING_COUNT = 10;
+  for (let count = 0; count < MAX_LOOPING_COUNT; count++) {
+    await once(video, "seeking");
+    await once(video, "seeked");
+    ok(true, `the round ${count} of the seamless looping succeeds`);
+  }
+});
+
+// This one tests the situation where both tracks reached EOS before entering
+// looping state.
+add_task(async function testSeamlessLoopingDuration2() {
+  info(`create video and play it to the end`);
+  let video = document.createElement('video');
+  video.src = "gizmo-short.mp4";
+  document.body.appendChild(video);
+  await video.play();
+  await once(video, "ended");
+
+  info(`play video again`);
+  video.ondurationchange =
+      _ => ok(false, "shouldn't change duration during looping!");
+  video.loop = true;
+  await video.play();
+
+  info(`test seamless looping multiples times`);
+  let MAX_LOOPING_COUNT = 10;
+  for (let count = 0; count < MAX_LOOPING_COUNT; count++) {
+    await once(video, "seeking");
+    await once(video, "seeked");
+    ok(true, `the round ${count} of the seamless looping succeeds`);
+  }
+});
+
+</script>
+<body>
+</body>
+</html>

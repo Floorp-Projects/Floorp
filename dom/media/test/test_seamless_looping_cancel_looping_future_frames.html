@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Seamless looping test cancel looping - no future frame</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="text/javascript" src="manifest.js"></script>
+</head>
+<script type="application/javascript">
+
+/**
+ * This test aims to check whether the future frames, which are the frames
+ * beyond EOS and will be played in the next round of looping, would be discared
+ * correctly if we cancel looping in the first looping round.
+ */
+add_task(async function testSeamlessLoopingVideoCancelLoopingDiscardFutureFrames() {
+  info(`create video and play it`);
+  let video = document.createElement('video');
+  video.loop = true;
+  video.src = "gizmo.mp4";
+  document.body.appendChild(video);
+  // speed up the test.
+  video.playbackRate = 2;
+  await video.play();
+
+  info(`wait until the video reaches to near end`);
+  let checkPoint1, checkPoint2;
+  await new Promise(r => {
+    video.ontimeupdate = _ => {
+      // When media almost reaches to the end, the audio track should already
+      // reach to the end before and started storing some future frames for next
+      // round of looping.
+      if (video.currentTime > video.duration - 1.5) {
+        info(`cancel looping`);
+        video.loop = false;
+        video.ontimeupdate = null;
+        checkPoint1 = new Date();
+        r();
+      }
+    }
+  });
+
+  // Because we've canceled looping, playback should reach to the end soon
+  // (less than 0.5 seconds, but we use 1 second as a threshold to avoid
+  // intermittent failure) But if we didn't discard future frames correctly,
+  // that would cause that the video plays more audio frames and requires more
+  // time to reach the end. Note, in the error case I encountered, the playback
+  // didn't discard future frames and kept decoding since then, which causes
+  // playing extra a whole audio track again.
+  info(`wait until video reaches to the end within correct remaining time`);
+  await once(video, "ended");
+  checkPoint2 = new Date();
+  const diffInSeconds = Math.abs(checkPoint1 - checkPoint2) / 1000;
+  ok(diffInSeconds < 2,
+    `finished playing within ${diffInSeconds} without incorrectly playing any future frame`);
+});
+
+</script>
+<body>
+</body>
+</html>
