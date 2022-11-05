@@ -819,7 +819,7 @@ class MediaDecoderStateMachine::DecodingState
 /**
  * Purpose: decode audio data for playback when media is in seamless
  * looping, we will adjust media time to make samples time monotonically
- * increasing.
+ * increasing. All its methods runs on its owner thread (MDSM thread).
  *
  * Transition to:
  *   DORMANT if playback is paused for a while.
@@ -946,6 +946,15 @@ class MediaDecoderStateMachine::LoopingDecodingState
     const bool isAudio = aType == TrackInfo::TrackType::kAudioTrack;
     MOZ_ASSERT_IF(isAudio, mMaster->HasAudio());
     MOZ_ASSERT_IF(!isAudio, mMaster->HasVideo());
+
+    if (IsReaderSeeking()) {
+      MOZ_ASSERT(!mPendingSeekingType);
+      mPendingSeekingType = Some(aType);
+      SLOG("Delay %s seeking until the reader finishes current seeking",
+           isAudio ? "audio" : "video");
+      return;
+    }
+
     auto& seekRequest = isAudio ? mAudioSeekRequest : mVideoSeekRequest;
     Reader()->ResetDecode(aType);
     Reader()
@@ -978,6 +987,12 @@ class MediaDecoderStateMachine::LoopingDecodingState
                 RequestAudioDataFromReader();
               } else {
                 RequestVideoDataFromReader();
+              }
+              if (mPendingSeekingType) {
+                auto seekingType = *mPendingSeekingType;
+                mPendingSeekingType.reset();
+                SLOG("Perform pending %s seeking", TrackTypeToStr(seekingType));
+                RequestDataFromStartPosition(seekingType);
               }
             },
             [this, isAudio](const SeekRejectValue& aReject) mutable -> void {
@@ -1228,6 +1243,10 @@ class MediaDecoderStateMachine::LoopingDecodingState
     return !isWaitingForNewData && DecodingState::ShouldStopPrerolling();
   }
 
+  bool IsReaderSeeking() const {
+    return mAudioSeekRequest.Exists() || mVideoSeekRequest.Exists();
+  }
+
   bool mIsReachingAudioEOS;
   bool mIsReachingVideoEOS;
   media::TimeUnit mAudioLoopingOffset = media::TimeUnit::Zero();
@@ -1236,6 +1255,9 @@ class MediaDecoderStateMachine::LoopingDecodingState
   MozPromiseRequestHolder<MediaFormatReader::SeekPromise> mVideoSeekRequest;
   MozPromiseRequestHolder<AudioDataPromise> mAudioDataRequest;
   MozPromiseRequestHolder<VideoDataPromise> mVideoDataRequest;
+  // The media format reader only allows seeking a track at a time, if we're
+  // already in seeking, then delay the new seek until the current one finishes.
+  Maybe<TrackInfo::TrackType> mPendingSeekingType;
 };
 
 /**
