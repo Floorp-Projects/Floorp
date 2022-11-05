@@ -10104,6 +10104,12 @@
   value: true
   mirror: always
 
+# Should enable this in bug1799205.
+- name: media.seamless-looping-video
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 - name: media.autoplay.block-event.enabled
   type: bool
   value: false
