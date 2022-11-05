@@ -7630,6 +7630,14 @@ StringOperandId IRGenerator::emitToStringGuard(ValOperandId id,
     BooleanOperandId boolId = writer.guardToBoolean(id);
     return writer.booleanToString(boolId);
   }
+  if (v.isNull()) {
+    writer.guardIsNull(id);
+    return writer.loadConstantString(cx_->names().null);
+  }
+  if (v.isUndefined()) {
+    writer.guardIsUndefined(id);
+    return writer.loadConstantString(cx_->names().undefined);
+  }
   if (v.isInt32()) {
     Int32OperandId intId = writer.guardToInt32(id);
     return writer.callInt32ToString(intId);
@@ -11651,7 +11659,7 @@ AttachDecision BinaryArithIRGenerator::tryAttachStub() {
   // more specialized Int32 IC if it is possible.
   TRY_ATTACH(tryAttachDouble());
 
-  // String x {String,Number,Boolean}
+  // String x {String,Number,Boolean,Null,Undefined}
   TRY_ATTACH(tryAttachStringConcat());
 
   // String x Object
@@ -11842,7 +11850,8 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringConcat() {
   // One side must be a string, the other side a primitive value we can easily
   // convert to a string.
   auto canConvertToString = [](const Value& v) {
-    return v.isString() || v.isNumber() || v.isBoolean();
+    return v.isString() || v.isNumber() || v.isBoolean() ||
+           v.isNullOrUndefined();
   };
   if (!(lhs_.isString() && canConvertToString(rhs_)) &&
       !(canConvertToString(lhs_) && rhs_.isString())) {
