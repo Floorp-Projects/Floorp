@@ -15,6 +15,10 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Iskanje ali naslov strani</string>
 
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">Zgodovina iskanja</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">Iskanje po zaznamkih</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
     <string name="application_search_hint">Vnesite iskalni niz</string>
     <!-- No Open Tabs Message Description -->
@@ -459,8 +463,10 @@
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Nedavno obiskano</string>
     <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket">Pocket</string>
+    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_2">Zgodbe, ki spodbujajo k razmisleku</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">Sponzorirane zgodbe</string>
     <!-- Title for the opening wallpaper settings screen -->
@@ -643,6 +649,11 @@
     <string name="settings_title">Nastavitve</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zapri</string>
+
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">Odpri zavihke</string>
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">Prekliči</string>
 
     <!-- Text to show users they have one site in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
@@ -876,6 +887,10 @@
     <string name="bookmark_menu_open_in_new_tab_button">Odpri v novem zavihku</string>
     <!-- Bookmark overflow menu open in private tab button -->
     <string name="bookmark_menu_open_in_private_tab_button">Odpri v zasebnem zavihku</string>
+    <!-- Bookmark overflow menu open all in tabs button -->
+    <string name="bookmark_menu_open_all_in_tabs_button">Odpri vse v novih zavihkih</string>
+    <!-- Bookmark overflow menu open all in private tabs button -->
+    <string name="bookmark_menu_open_all_in_private_tabs_button">Odpri vse v zasebnih zavihkih</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Izbriši</string>
     <!--Bookmark overflow menu save button -->
@@ -1057,6 +1072,8 @@
     <string name="share_button_content_description">Deli</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Shrani kot PDF</string>
+    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <string name="unable_to_save_to_pdf_error">Datoteke PDF ni mogoče ustvariti</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Pošlji na napravo</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1926,7 +1943,9 @@
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Odkrijte več</string>
     <!-- Title of an app feature. Smaller than a heading.-->
-    <string name="pocket_stories_feature_title">Omogoča Pocket</string>
+    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Omogoča Pocket</string>
+    <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
+    <string name="pocket_stories_feature_title_2">Omogoča %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
     <string name="pocket_stories_feature_caption">Del družine Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->

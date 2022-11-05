@@ -18,6 +18,12 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">搜尋或輸入網址</string>
 
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">搜尋紀錄</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">搜尋書籤</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">搜尋分頁</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
     <string name="application_search_hint">輸入搜尋詞彙</string>
     <!-- No Open Tabs Message Description -->
@@ -131,13 +137,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">顯示所有近期分頁按鈕</string>
-    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
-        The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">「%1$s」的搜尋結果</string>
-
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d 個網站</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">檢視所有同步的分頁</string>
@@ -261,6 +260,9 @@
 
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">搜尋設定</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item">這次搜尋:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
@@ -468,8 +470,12 @@
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">最近造訪</string>
     <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket">Pocket</string>
+    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_2">發人深省的文章</string>
+    <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
+    <string name="customize_toggle_pocket_summary">由 %s 提供的文章</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">贊助內容</string>
     <!-- Title for the opening wallpaper settings screen -->
@@ -493,12 +499,6 @@
     <string name="wallpaper_select_error_snackbar_message">無法變更背景圖</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">了解更多</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">點擊 Firefox 首頁的圖示即可更改背景圖</string>
-
-    <!-- This is the accessibility content description for the wallpapers functionality. Users are
-    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox 圖示，點擊此圖示變更背景圖</string>
 
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">經典 %s</string>
@@ -657,6 +657,17 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">關閉</string>
 
+    <!-- Title to show in alert when a lot of tabs are to be opened
+    %d is a placeholder for the number of tabs that will be opened -->
+    <string name="open_all_warning_title">要一次開啟 %d 個分頁嗎？</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">一次開啟這麼多分頁會使 %s 於載入頁面時變得很慢。您確定要繼續嗎？</string>
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">開啟分頁</string>
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">取消</string>
+
     <!-- Text to show users they have one site in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
     <string name="history_search_group_site">%d 個網站</string>
@@ -687,10 +698,6 @@
     <string name="tab_view_list">清單</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">格線</string>
-    <!-- Option for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">搜尋分頁群組</string>
-    <!-- Summary text for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">將相關的網站放在一起</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">自動關閉分頁</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -844,19 +851,6 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">沒有紀錄</string>
 
-    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">從其他裝置同步過來</string>
-
-    <!-- The page title for browsing history coming from other devices. -->
-    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">來自其他裝置</string>
-
-    <!-- The synced history sign in dialog message -->
-    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">登入以檢視您其他裝置中的瀏覽紀錄。</string>
-    <!-- The synced history sign in dialog button text -->
-    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">登入</string>
-    <!-- The synced history sign in dialog create a new account link -->
-    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>或註冊 Firefox 帳號進行同步</u>]]></string>
-
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">已移除下載紀錄</string>
@@ -908,6 +902,10 @@
     <string name="bookmark_menu_open_in_new_tab_button">用新分頁開啟</string>
     <!-- Bookmark overflow menu open in private tab button -->
     <string name="bookmark_menu_open_in_private_tab_button">用新隱私分頁開啟</string>
+    <!-- Bookmark overflow menu open all in tabs button -->
+    <string name="bookmark_menu_open_all_in_tabs_button">用新分頁開啟全部</string>
+    <!-- Bookmark overflow menu open all in private tabs button -->
+    <string name="bookmark_menu_open_all_in_private_tabs_button">用隱私保護分頁開啟全部</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">刪除</string>
     <!--Bookmark overflow menu save button -->
@@ -1099,6 +1097,8 @@
     <string name="share_button_content_description">分享</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">儲存為 PDF</string>
+    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <string name="unable_to_save_to_pdf_error">無法產生 PDF</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">傳送到裝置</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1968,7 +1968,9 @@
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">探索更多</string>
     <!-- Title of an app feature. Smaller than a heading.-->
-    <string name="pocket_stories_feature_title">Powered by Pocket</string>
+    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Powered by Pocket</string>
+    <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
+    <string name="pocket_stories_feature_title_2">由 %s 提供。</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
     <string name="pocket_stories_feature_caption">Firefox 系列產品。%s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->

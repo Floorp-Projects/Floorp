@@ -14,6 +14,12 @@
     <string name="content_description_disable_private_browsing_button">Diweredekaat ar Merdeiñ Prevez</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Klask pe chomlecʼh</string>
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">Klask er roll istor</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">Klask er sinedoù</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">Klask en ivinelloù</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
     <string name="application_search_hint">Skrivit gerioù ar c’hlask</string>
     <!-- No Open Tabs Message Description -->
@@ -40,6 +46,8 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Sinedoù nevez</string>
 
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Enrollet nevez ’zo</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Diskouez an holl sinedoù enrollet</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
@@ -72,6 +80,15 @@
     <string name="open_in_app_cfr_positive_button_text">Mont en arventennoù</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Argas</string>
+
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Argas</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Hor c’heweriuster prevezded araoketañ betek-hen a lak an heulierien a-gostez.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Gouzout hiroc’h a-zivout ar gwarez toupinoù hollek</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Ezhomm a zo haeziñ ar c’hamera. Kit e Arventennoù Android, stokit war an aotreoù ha stokit war aotren.</string>
@@ -118,17 +135,13 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Diskouez an holl afelloù ivinelloù nevez</string>
-    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
-        The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Ho klask evit \&quot;%1$s\&quot;</string>
 
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">Lec’hiennoù %d</string>
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Gwelout an holl ivinelloù goubredet</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Trevnad goubredet</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Dilemel</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Dilemel</string>
@@ -263,6 +276,31 @@
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Gant ho pajenn Firefox personelaet eo aesoc’h da adstagañ lec’h m’ho peus paouezet. Klaskit e-touez hoc’h ivinelloù nevez, sinedoù ha disoc’hoù enklask.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Kejit gant ho pajenn degemer personelaet. Ivinelloù nevez, sinedoù ha disoc’hoù enklask a vo diskouezet amañ.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Donemat war un internet dizalc’h</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Donemat war un internet personeloc’h</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Muioc’h a livioù, muioc’h a brevezded. An hevelep youl da lakaat an dud a-raok ar gounidoù.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Tremenit deus ar pellgomz d’an urzhiataer hezoug hag ar c’hontrefed</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Cheñch skrammoù a zo aesoc’h c’hoazh bremañ</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Adkemerit an traoù e lec’h m’ho poa laosket anezho war un trevnad all, dre ho pajenn degemer.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Kregiñ ganti</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Kennaskañ</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Tremen</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Goubredet eo hoc’h ivinelloù! Tapit an traoù en-dro lec’h m’ho peus laosket anezho e lec’h all.</string>
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Serriñ</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -419,8 +457,12 @@
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Gweladennet nevez ’zo</string>
     <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket">Pocket</string>
+    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_2">Boued spered</string>
+    <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
+    <string name="customize_toggle_pocket_summary">Pennadoù kinniget gant %s</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">Istorioù paeroniet</string>
     <!-- Title for the opening wallpaper settings screen -->
@@ -435,11 +477,17 @@
     <string name="wallpaper_updated_snackbar_message">Drekleur hizivaet!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Gwelout</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Kemmit an drekleur en ur stekiñ ouzh arlun pajenn degemer Firefox</string>
-    <!-- This is the accessibility content description for the wallpapers functionality. Users are
-    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Arlun Firefox - kemmañ an drekleur, afell</string>
+
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">N’haller ket pellgargañ an drekleur</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Klask en-dro</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">N’haller ket kemmañ an drekleur</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">Gouzout hiroc’h</string>
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">%s klasel</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -611,10 +659,6 @@
     <string name="tab_view_list">Roll</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Grid</string>
-    <!-- Option for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Klask er strolladoù</string>
-    <!-- Summary text for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Strollañ al lec’hiennoù heñvel </string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Serriñ an ivinelloù</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -763,16 +807,6 @@
     <string name="history_older">Koshocʼh</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Roll istor ebet amañ</string>
-
-    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Goubredet gant trevnadoù all</string>
-    <!-- The page title for browsing history coming from other devices. -->
-    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Diwar trevnadoù all</string>
-    <!-- The synced history sign in dialog button text -->
-    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Kennaskañ</string>
-
-    <!-- The synced history sign in dialog create a new account link -->
-    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Pe grouit ur gont Firefox evit kregiñ gant ar c’houbredañ</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1010,10 +1044,10 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Eilet er golver</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Kennaskañ evit goubredañ</string>
+    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Kennaskañ evit goubredañ</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Kennaskañ ouzh Sync</string>
-    <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Kas dʼan holl drevnadoù</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Adkennaskañ da Sync</string>
@@ -1807,7 +1841,7 @@
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Dizoloiñ muioc’h</string>
     <!-- Title of an app feature. Smaller than a heading.-->
-    <string name="pocket_stories_feature_title">Galloudekaet gant Pocket.</string>
+    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Galloudekaet gant Pocket.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
     <string name="pocket_stories_feature_caption">Ezel eus familh Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
@@ -1821,4 +1855,5 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Mont d’an arventennoù</string>
     <string name="firefox_suggest_header">Firefox a ginnig</string>
-</resources>
+
+    </resources>
