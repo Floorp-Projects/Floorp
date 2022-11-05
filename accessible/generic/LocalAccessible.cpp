@@ -175,7 +175,7 @@ ENameValueFlag LocalAccessible::Name(nsString& aName) const {
     }
   }
 
-  aName.SetIsVoid(true);
+  if (nameFlag != eNoNameOnPurpose) aName.SetIsVoid(true);
 
   return nameFlag;
 }

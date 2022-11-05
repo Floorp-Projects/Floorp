@@ -91,13 +91,18 @@ uint64_t ImageAccessible::NativeState() const {
 }
 
 ENameValueFlag ImageAccessible::NativeName(nsString& aName) const {
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName);
+  bool hasAltAttrib =
+      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName);
   if (!aName.IsEmpty()) return eNameOK;
 
   ENameValueFlag nameFlag = LocalAccessible::NativeName(aName);
   if (!aName.IsEmpty()) return nameFlag;
 
-  return eNameOK;
+  // No accessible name but empty 'alt' attribute is present. If further name
+  // computation algorithm doesn't provide non empty name then it means
+  // an empty 'alt' attribute was used to indicate a decorative image (see
+  // LocalAccessible::Name() method for details).
+  return hasAltAttrib ? eNoNameOnPurpose : eNameOK;
 }
 
 role ImageAccessible::NativeRole() const { return roles::GRAPHIC; }
