@@ -59,6 +59,21 @@ struct SeekTarget {
   bool IsAudioOnly() const { return mTargetTrack == Track::AudioOnly; }
   bool IsAllTracks() const { return mTargetTrack == Track::All; }
   Type GetType() const { return mType; }
+  Track GetTrack() const { return mTargetTrack; }
+
+  static const char* TrackToStr(Track aTrack) {
+    switch (aTrack) {
+      case Track::All:
+        return "all tracks";
+      case Track::AudioOnly:
+        return "audio only";
+      case Track::VideoOnly:
+        return "video only";
+      default:
+        MOZ_ASSERT_UNREACHABLE("Not defined track!");
+        return "none";
+    }
+  }
 
  private:
   // Seek target time.
