@@ -26,10 +26,10 @@
   --in-content-border-invalid: var(--red-50);
   --in-content-border-color: #d7d7db;
   --in-content-error-text-color: #c50042;
-  --in-content-link-color: var(--blue-60);
-  --in-content-link-color-hover: var(--blue-70);
-  --in-content-link-color-active: var(--blue-80);
-  --in-content-link-color-visited: var(--blue-60);
+  --in-content-link-color: var(--in-content-primary-button-background);
+  --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
+  --in-content-link-color-active: var(--in-content-primary-button-background-active);
+  --in-content-link-color-visited: var(--in-content-link-color);
    /* button background states are also used for checkboxes and radiobuttons */
   --in-content-button-text-color: var(--in-content-text-color);
   --in-content-button-text-color-hover: var(--in-content-text-color);
@@ -79,8 +79,6 @@
   --blue-40: #45a1ff;
   --blue-50: #0a84ff;
   --blue-60: #0060df;
-  --blue-70: #003eaa;
-  --blue-80: #002275;
   --grey-30: #d7d7db;
   --grey-60: #4a4a4f;
   --grey-90-a10: rgba(12, 12, 13, 0.1);
@@ -161,11 +159,6 @@
     --in-content-danger-button-background-active: #ffdfe7;
 
     --in-content-table-background: rgb(35, 34, 43);
-
-    --in-content-link-color: var(--in-content-primary-button-background);
-    --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
-    --in-content-link-color-active: var(--in-content-primary-button-background-active);
-    --in-content-link-color-visited: var(--in-content-link-color);
 
     --card-outline-color: var(--grey-60);
 
