@@ -497,8 +497,13 @@ pref("browser.urlbar.richSuggestions.tail", true);
 // If true, top sites may include sponsored ones.
 pref("browser.urlbar.sponsoredTopSites", false);
 
-// If true, show the search term in the URL bar for the users default engine.
-pref("browser.urlbar.showSearchTerms.shouldShow", false);
+// Global toggle for whether the show search terms feature
+// can be used at all, and enabled/disabled by the user.
+pref("browser.urlbar.showSearchTerms.featureGate", false);
+
+// If true, show the search term in the Urlbar while on
+// a default search engine results page.
+pref("browser.urlbar.showSearchTerms.enabled", true);
 
 // Controls the empty search behavior in Search Mode:
 //  0 - Show nothing

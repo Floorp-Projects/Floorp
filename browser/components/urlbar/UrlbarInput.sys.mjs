@@ -337,7 +337,8 @@ export class UrlbarInput {
     if (!dontShowSearchTerms && this.window.gBrowser.userTypedValue == null) {
       this.window.gBrowser.selectedBrowser.showingSearchTerms = false;
       if (
-        lazy.UrlbarPrefs.get("showSearchTerms.shouldShow") &&
+        lazy.UrlbarPrefs.get("showSearchTermsFeatureGate") &&
+        lazy.UrlbarPrefs.get("showSearchTerms.enabled") &&
         !lazy.UrlbarPrefs.get("browser.search.widget.inNavBar")
       ) {
         let term = this._getSearchTermIfDefaultSerpUrl(
@@ -2632,7 +2633,8 @@ export class UrlbarInput {
     // No point in setting these because we'll handleRevert() a few rows below.
     if (openUILinkWhere == "current") {
       this.value =
-        lazy.UrlbarPrefs.get("showSearchTerms.shouldShow") &&
+        lazy.UrlbarPrefs.get("showSearchTermsFeatureGate") &&
+        lazy.UrlbarPrefs.get("showSearchTerms.enabled") &&
         resultDetails?.searchTerm
           ? resultDetails.searchTerm
           : url;
