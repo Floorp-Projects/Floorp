@@ -47,6 +47,7 @@
 #include "nsIFrameInlines.h"
 #include "nsBoxFrame.h"
 #include "nsBoxLayoutState.h"
+#include "nsTextBoxFrame.h"
 #include "nsTreeContentView.h"
 #include "nsTreeUtils.h"
 #include "nsStyleConsts.h"
@@ -1175,126 +1176,18 @@ void nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText, int32_t aRowIndex,
     }
   }
 
-  nscoord width;
-  if (widthIsGreater) {
-    // See if the width is even smaller than the ellipsis
-    // If so, clear the text completely.
-    const nsDependentString& kEllipsis = nsContentUtils::GetLocalizedEllipsis();
-    aFontMetrics.SetTextRunRTL(false);
-    nscoord ellipsisWidth = nsLayoutUtils::AppUnitWidthOfString(
-        kEllipsis, aFontMetrics, drawTarget);
-
-    width = maxWidth;
-    if (ellipsisWidth > width) {
-      aText.Truncate(0);
-    } else if (ellipsisWidth == width) {
-      aText.Assign(kEllipsis);
-    } else {
-      // We will be drawing an ellipsis, thank you very much.
-      // Subtract out the required width of the ellipsis.
-      // This is the total remaining width we have to play with.
-      width -= ellipsisWidth;
-
-      using mozilla::intl::GraphemeClusterBreakIteratorUtf16;
-      using mozilla::intl::GraphemeClusterBreakReverseIteratorUtf16;
-
-      // Now we crop. This is similar to what nsTextBoxFrame does, and for now
-      // is quite basic: it will not be accurate in the presence of complex
-      // scripts with contextual shaping, etc., as it measures each grapheme
-      // cluster in isolation, not in its proper context.
-      switch (aColumn->GetCropStyle()) {
-        default:
-        case 0: {
-          // Crop right.
-          const Span text(aText);
-          GraphemeClusterBreakIteratorUtf16 iter(text);
-          uint32_t pos = 0;
-          nscoord totalWidth = 0;
-
-          while (Maybe<uint32_t> nextPos = iter.Next()) {
-            const nscoord charWidth = nsLayoutUtils::AppUnitWidthOfString(
-                text.FromTo(pos, *nextPos), aFontMetrics, drawTarget);
-            if (totalWidth + charWidth > width) {
-              break;
-            }
-            pos = *nextPos;
-            totalWidth += charWidth;
-          }
-
-          if (pos < aText.Length()) {
-            aText.Replace(pos, aText.Length() - pos, kEllipsis);
-          }
-        } break;
-
-        case 2: {
-          // Crop left.
-          const Span text(aText);
-          GraphemeClusterBreakReverseIteratorUtf16 iter(text);
-          uint32_t pos = text.Length();
-          nscoord totalWidth = 0;
-
-          // nextPos is decreasing since we use a reverse iterator.
-          while (Maybe<uint32_t> nextPos = iter.Next()) {
-            const nscoord charWidth = nsLayoutUtils::AppUnitWidthOfString(
-                text.FromTo(*nextPos, pos), aFontMetrics, drawTarget);
-            if (totalWidth + charWidth > width) {
-              break;
-            }
-
-            pos = *nextPos;
-            totalWidth += charWidth;
-          }
-
-          if (pos > 0) {
-            aText.Replace(0, pos, kEllipsis);
-          }
-        } break;
-
-        case 1: {
-          // Crop center.
-          const Span text(aText);
-          nscoord totalWidth = 0;
-          GraphemeClusterBreakIteratorUtf16 leftIter(text);
-          GraphemeClusterBreakReverseIteratorUtf16 rightIter(text);
-          uint32_t leftPos = 0;
-          uint32_t rightPos = text.Length();
-
-          while (leftPos < rightPos) {
-            Maybe<uint32_t> nextPos = leftIter.Next();
-            nscoord charWidth = nsLayoutUtils::AppUnitWidthOfString(
-                text.FromTo(leftPos, *nextPos), aFontMetrics, drawTarget);
-            if (totalWidth + charWidth > width) {
-              break;
-            }
-
-            leftPos = *nextPos;
-            totalWidth += charWidth;
-
-            if (leftPos >= rightPos) {
-              break;
-            }
-
-            nextPos = rightIter.Next();
-            charWidth = nsLayoutUtils::AppUnitWidthOfString(
-                text.FromTo(*nextPos, rightPos), aFontMetrics, drawTarget);
-            if (totalWidth + charWidth > width) {
-              break;
-            }
-
-            rightPos = *nextPos;
-            totalWidth += charWidth;
-          }
-
-          if (leftPos < rightPos) {
-            aText.Replace(leftPos, rightPos - leftPos, kEllipsis);
-          }
-        } break;
-      }
-    }
+  using CroppingStyle = nsTextBoxFrame::CroppingStyle;
+  CroppingStyle cropType = CroppingStyle::CropRight;
+  if (aColumn->GetCropStyle() == 1) {
+    cropType = CroppingStyle::CropCenter;
+  } else if (aColumn->GetCropStyle() == 2) {
+    cropType = CroppingStyle::CropLeft;
   }
+  nsTextBoxFrame::CropStringForWidth(aText, aRenderingContext, aFontMetrics,
+                                     maxWidth, cropType);
 
-  width = nsLayoutUtils::AppUnitWidthOfStringBidi(aText, this, aFontMetrics,
-                                                  aRenderingContext);
+  nscoord width = nsLayoutUtils::AppUnitWidthOfStringBidi(
+      aText, this, aFontMetrics, aRenderingContext);
 
   switch (aColumn->GetTextAlignment()) {
     case mozilla::StyleTextAlign::Right:

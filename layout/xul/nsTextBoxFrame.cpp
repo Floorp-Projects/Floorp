@@ -566,149 +566,103 @@ void nsTextBoxFrame::CalculateUnderline(DrawTarget* aDrawTarget,
   }
 }
 
-nscoord nsTextBoxFrame::CalculateTitleForWidth(gfxContext& aRenderingContext,
-                                               nscoord aWidth) {
+void nsTextBoxFrame::CropStringForWidth(nsAString& aText,
+                                        gfxContext& aRenderingContext,
+                                        nsFontMetrics& aFontMetrics,
+                                        nscoord aWidth,
+                                        CroppingStyle aCropType) {
   DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
 
-  if (mTitle.IsEmpty()) {
-    mCroppedTitle.Truncate();
-    return 0;
-  }
-
-  RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsForFrame(this, 1.0f);
-
-  // see if the text will completely fit in the width given
-  nscoord titleWidth = nsLayoutUtils::AppUnitWidthOfStringBidi(
-      mTitle, this, *fm, aRenderingContext);
-  if (titleWidth <= aWidth) {
-    mCroppedTitle = mTitle;
-    if (HasRTLChars(mTitle) ||
-        StyleVisibility()->mDirection == StyleDirection::Rtl) {
-      AddStateBits(NS_FRAME_IS_BIDI);
-    }
-    return titleWidth;  // fits, done.
-  }
-
+  // See if the width is even smaller than the ellipsis
+  // If so, clear the text completely.
   const nsDependentString& kEllipsis = nsContentUtils::GetLocalizedEllipsis();
-  if (mCropType != CropNone) {
-    // start with an ellipsis
-    mCroppedTitle.Assign(kEllipsis);
+  aFontMetrics.SetTextRunRTL(false);
+  nscoord ellipsisWidth =
+      nsLayoutUtils::AppUnitWidthOfString(kEllipsis, aFontMetrics, drawTarget);
 
-    // see if the width is even smaller than the ellipsis
-    // if so, clear the text (XXX set as many '.' as we can?).
-    fm->SetTextRunRTL(false);
-    titleWidth =
-        nsLayoutUtils::AppUnitWidthOfString(kEllipsis, *fm, drawTarget);
-
-    if (titleWidth > aWidth) {
-      mCroppedTitle.SetLength(0);
-      return 0;
-    }
-
-    // if the ellipsis fits perfectly, no use in trying to insert
-    if (titleWidth == aWidth) return titleWidth;
-
-    aWidth -= titleWidth;
-  } else {
-    mCroppedTitle.Truncate(0);
-    titleWidth = 0;
+  if (ellipsisWidth > aWidth) {
+    aText.Truncate(0);
+    return;
   }
+  if (ellipsisWidth == aWidth) {
+    aText.Assign(kEllipsis);
+    return;
+  }
+
+  // We will be drawing an ellipsis, thank you very much.
+  // Subtract out the required width of the ellipsis.
+  // This is the total remaining width we have to play with.
+  aWidth -= ellipsisWidth;
 
   using mozilla::intl::GraphemeClusterBreakIteratorUtf16;
   using mozilla::intl::GraphemeClusterBreakReverseIteratorUtf16;
 
-  // ok crop things
-  switch (mCropType) {
+  // Now we crop. This is quite basic: it will not be really accurate in the
+  // presence of complex scripts with contextual shaping, etc., as it measures
+  // each grapheme cluster in isolation, not in its proper context.
+  switch (aCropType) {
     case CropAuto:
     case CropNone:
     case CropRight: {
-      const Span title(mTitle);
-      GraphemeClusterBreakIteratorUtf16 iter(title);
+      const Span text(aText);
+      GraphemeClusterBreakIteratorUtf16 iter(text);
       uint32_t pos = 0;
       nscoord totalWidth = 0;
 
       while (Maybe<uint32_t> nextPos = iter.Next()) {
         const nscoord charWidth = nsLayoutUtils::AppUnitWidthOfString(
-            title.FromTo(pos, *nextPos), *fm, drawTarget);
+            text.FromTo(pos, *nextPos), aFontMetrics, drawTarget);
         if (totalWidth + charWidth > aWidth) {
           break;
-        }
-
-        if (UTF16_CODE_UNIT_IS_BIDI(mTitle[pos])) {
-          AddStateBits(NS_FRAME_IS_BIDI);
         }
         pos = *nextPos;
         totalWidth += charWidth;
       }
 
-      if (pos == 0) {
-        return titleWidth;
+      if (pos < aText.Length()) {
+        aText.Replace(pos, aText.Length() - pos, kEllipsis);
       }
-
-      // insert what character we can in.
-      mCroppedTitle.Insert(title.To(pos), 0);
     } break;
 
     case CropLeft: {
-      const Span title(mTitle);
-      GraphemeClusterBreakReverseIteratorUtf16 iter(title);
-      uint32_t pos = title.Length();
+      const Span text(aText);
+      GraphemeClusterBreakReverseIteratorUtf16 iter(text);
+      uint32_t pos = text.Length();
       nscoord totalWidth = 0;
 
       // nextPos is decreasing since we use a reverse iterator.
       while (Maybe<uint32_t> nextPos = iter.Next()) {
         const nscoord charWidth = nsLayoutUtils::AppUnitWidthOfString(
-            title.FromTo(*nextPos, pos), *fm, drawTarget);
+            text.FromTo(*nextPos, pos), aFontMetrics, drawTarget);
         if (totalWidth + charWidth > aWidth) {
           break;
         }
 
-        if (UTF16_CODE_UNIT_IS_BIDI(mTitle[*nextPos])) {
-          AddStateBits(NS_FRAME_IS_BIDI);
-        }
         pos = *nextPos;
         totalWidth += charWidth;
       }
 
-      if (pos == title.Length()) {
-        return titleWidth;
+      if (pos > 0) {
+        aText.Replace(0, pos, kEllipsis);
       }
-
-      mCroppedTitle.Append(title.From(pos));
     } break;
 
     case CropCenter: {
-      nscoord stringWidth = nsLayoutUtils::AppUnitWidthOfStringBidi(
-          mTitle, this, *fm, aRenderingContext);
-      if (stringWidth <= aWidth) {
-        // the entire string will fit in the maximum width
-        mCroppedTitle.Insert(mTitle, 0);
-        break;
-      }
-
-      // determine how much of the string will fit in the max width
-      const Span title(mTitle);
+      const Span text(aText);
       nscoord totalWidth = 0;
-      GraphemeClusterBreakIteratorUtf16 leftIter(title);
-      GraphemeClusterBreakReverseIteratorUtf16 rightIter(title);
+      GraphemeClusterBreakIteratorUtf16 leftIter(text);
+      GraphemeClusterBreakReverseIteratorUtf16 rightIter(text);
       uint32_t leftPos = 0;
-      uint32_t rightPos = title.Length();
-      nsAutoString leftString, rightString;
+      uint32_t rightPos = text.Length();
 
       while (leftPos < rightPos) {
         Maybe<uint32_t> nextPos = leftIter.Next();
-        Span chars = title.FromTo(leftPos, *nextPos);
-        nscoord charWidth =
-            nsLayoutUtils::AppUnitWidthOfString(chars, *fm, drawTarget);
+        nscoord charWidth = nsLayoutUtils::AppUnitWidthOfString(
+            text.FromTo(leftPos, *nextPos), aFontMetrics, drawTarget);
         if (totalWidth + charWidth > aWidth) {
           break;
         }
 
-        if (UTF16_CODE_UNIT_IS_BIDI(mTitle[leftPos])) {
-          AddStateBits(NS_FRAME_IS_BIDI);
-        }
-
-        leftString.Append(chars);
         leftPos = *nextPos;
         totalWidth += charWidth;
 
@@ -717,27 +671,49 @@ nscoord nsTextBoxFrame::CalculateTitleForWidth(gfxContext& aRenderingContext,
         }
 
         nextPos = rightIter.Next();
-        chars = title.FromTo(*nextPos, rightPos);
-        charWidth = nsLayoutUtils::AppUnitWidthOfString(chars, *fm, drawTarget);
+        charWidth = nsLayoutUtils::AppUnitWidthOfString(
+            text.FromTo(*nextPos, rightPos), aFontMetrics, drawTarget);
         if (totalWidth + charWidth > aWidth) {
           break;
         }
 
-        if (UTF16_CODE_UNIT_IS_BIDI(mTitle[*nextPos])) {
-          AddStateBits(NS_FRAME_IS_BIDI);
-        }
-
-        rightString.Insert(chars, 0);
         rightPos = *nextPos;
         totalWidth += charWidth;
       }
 
-      mCroppedTitle = leftString + kEllipsis + rightString;
+      if (leftPos < rightPos) {
+        aText.Replace(leftPos, rightPos - leftPos, kEllipsis);
+      }
     } break;
   }
+}
 
-  return nsLayoutUtils::AppUnitWidthOfStringBidi(mCroppedTitle, this, *fm,
-                                                 aRenderingContext);
+nscoord nsTextBoxFrame::CalculateTitleForWidth(gfxContext& aRenderingContext,
+                                               nscoord aMaxWidth) {
+  if (mTitle.IsEmpty()) {
+    mCroppedTitle.Truncate();
+    return 0;
+  }
+
+  RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsForFrame(this, 1.0f);
+
+  // See if the text needs to be cropped to fit in the width given.
+  mCroppedTitle = mTitle;
+  nscoord width = nsLayoutUtils::AppUnitWidthOfStringBidi(
+      mCroppedTitle, this, *fm, aRenderingContext);
+  if (width > aMaxWidth && mCropType != CropNone) {
+    CropStringForWidth(mCroppedTitle, aRenderingContext, *fm, aMaxWidth,
+                       mCropType);
+    width = nsLayoutUtils::AppUnitWidthOfStringBidi(mCroppedTitle, this, *fm,
+                                                    aRenderingContext);
+  }
+
+  if (StyleVisibility()->mDirection == StyleDirection::Rtl ||
+      HasRTLChars(mCroppedTitle)) {
+    AddStateBits(NS_FRAME_IS_BIDI);
+  }
+
+  return width;
 }
 
 #define OLD_ELLIPSIS u"..."_ns
