@@ -597,8 +597,11 @@ class MediaDecoderStateMachine::DecodingState
   }
 
   void HandleVideoDecoded(VideoData* aVideo) override {
+    // We only do this check when we're not looping, which can be known by
+    // checking the queue's offset.
     const auto currentTime = mMaster->GetMediaTime();
-    if (aVideo->GetEndTime() < currentTime) {
+    if (aVideo->GetEndTime() < currentTime &&
+        VideoQueue().GetOffset() == media::TimeUnit::Zero()) {
       if (!mVideoFirstLateTime) {
         mVideoFirstLateTime = Some(TimeStamp::Now());
       }
