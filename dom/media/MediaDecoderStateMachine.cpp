@@ -2804,8 +2804,13 @@ void MediaDecoderStateMachine::DecodeMetadataState::OnMetadataRead(
                                        MediaDecoderEventVisibility::Observable);
 
   // Check whether the media satisfies the requirement of seamless looping.
-  // TODO : now we don't need to wait for metadata, can move it to other places.
+  // TODO : after we ensure video seamless looping is stable enough, then we can
+  // remove this to make the condition always true.
   mMaster->mSeamlessLoopingAllowed = StaticPrefs::media_seamless_looping();
+  if (mMaster->HasVideo()) {
+    mMaster->mSeamlessLoopingAllowed =
+        StaticPrefs::media_seamless_looping_video();
+  }
 
   SetState<DecodingFirstFrameState>();
 }
