@@ -914,18 +914,6 @@ bool nsMenuX::IsXULHelpMenu(nsIContent* aMenuContent) {
   return retval;
 }
 
-bool nsMenuX::IsXULWindowMenu(nsIContent* aMenuContent) {
-  bool retval = false;
-  if (aMenuContent && aMenuContent->IsElement()) {
-    nsAutoString id;
-    aMenuContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
-    if (id.Equals(u"windowMenu"_ns)) {
-      retval = true;
-    }
-  }
-  return retval;
-}
-
 //
 // nsChangeObserver
 //
