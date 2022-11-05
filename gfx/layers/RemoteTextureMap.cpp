@@ -346,6 +346,11 @@ void RemoteTextureMap::GetRemoteTextureHost(
       if (textureId == owner->mLatestTextureId) {
         MOZ_ASSERT(owner->mLatestTextureHost);
         MOZ_ASSERT(owner->mLatestTextureHost->GetSize() == size);
+        if (owner->mLatestTextureHost->GetSize() != size) {
+          gfxCriticalNoteOnce << "unexpected remote texture size: "
+                              << owner->mLatestTextureHost->GetSize()
+                              << " expected: " << size;
+        }
         textureHost = owner->mLatestTextureHost;
       } else {
         MOZ_ASSERT_UNREACHABLE("unexpected to be called");

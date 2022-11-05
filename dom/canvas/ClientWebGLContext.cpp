@@ -304,6 +304,8 @@ void ClientWebGLContext::Event_webglcontextrestored() const {
     return;
   }
 
+  mResetLayer = true;
+
   (void)DispatchEvent(u"webglcontextrestored"_ns);
 }
 
