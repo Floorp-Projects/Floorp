@@ -834,7 +834,9 @@ class MediaDecoderStateMachine::LoopingDecodingState
     : public MediaDecoderStateMachine::DecodingState {
  public:
   explicit LoopingDecodingState(Master* aPtr)
-      : DecodingState(aPtr), mIsReachingAudioEOS(!mMaster->IsAudioDecoding()) {
+      : DecodingState(aPtr),
+        mIsReachingAudioEOS(!mMaster->IsAudioDecoding()),
+        mIsReachingVideoEOS(!mMaster->IsVideoDecoding()) {
     MOZ_ASSERT(mMaster->mLooping);
   }
 
@@ -842,7 +844,7 @@ class MediaDecoderStateMachine::LoopingDecodingState
     if (mIsReachingAudioEOS) {
       SLOG("audio has ended, request the data again.");
       UpdatePlaybackPositionToZeroIfNeeded();
-      RequestAudioDataFromStartPosition();
+      RequestDataFromStartPosition(TrackInfo::TrackType::kAudioTrack);
     }
     DecodingState::Enter();
   }
@@ -856,7 +858,9 @@ class MediaDecoderStateMachine::LoopingDecodingState
       AudioQueue().Finish();
     }
     mAudioDataRequest.DisconnectIfExists();
+    mVideoDataRequest.DisconnectIfExists();
     mAudioSeekRequest.DisconnectIfExists();
+    mVideoSeekRequest.DisconnectIfExists();
     DecodingState::Exit();
   }
 
@@ -890,67 +894,130 @@ class MediaDecoderStateMachine::LoopingDecodingState
         "received EOS when seamless looping, starts seeking, "
         "AudioLoopingOffset=[%" PRId64 "]",
         mAudioLoopingOffset.ToMicroseconds());
-    RequestAudioDataFromStartPosition();
+    RequestDataFromStartPosition(TrackInfo::TrackType::kAudioTrack);
   }
 
  private:
-  void RequestAudioDataFromStartPosition() {
-    Reader()->ResetDecode(TrackInfo::kAudioTrack);
+  void RequestDataFromStartPosition(TrackInfo::TrackType aType) {
+    MOZ_DIAGNOSTIC_ASSERT(aType == TrackInfo::TrackType::kAudioTrack ||
+                          aType == TrackInfo::TrackType::kVideoTrack);
+
+    const bool isAudio = aType == TrackInfo::TrackType::kAudioTrack;
+    auto& seekRequest = isAudio ? mAudioSeekRequest : mVideoSeekRequest;
+    Reader()->ResetDecode(aType);
     Reader()
         ->Seek(SeekTarget(media::TimeUnit::Zero(), SeekTarget::Type::Accurate,
-                          SeekTarget::Track::AudioOnly))
+                          isAudio ? SeekTarget::Track::AudioOnly
+                                  : SeekTarget::Track::VideoOnly))
         ->Then(
             OwnerThread(), __func__,
-            [this]() -> void {
+            [this, isAudio]() mutable -> void {
               AUTO_PROFILER_LABEL(
-                  "LoopingDecodingState::RequestAudioDataFromStartPosition:"
-                  "SeekResolved",
+                  nsPrintfCString(
+                      "LoopingDecodingState::RequestDataFromStartPosition(%s)::"
+                      "SeekResolved",
+                      isAudio ? "audio" : "video")
+                      .get(),
                   MEDIA_PLAYBACK);
-              mAudioSeekRequest.Complete();
+              if (isAudio) {
+                mAudioSeekRequest.Complete();
+              } else {
+                mVideoSeekRequest.Complete();
+              }
               SLOG(
-                  "seeking completed, start to request first sample, "
-                  "queueing audio task - queued=%zu, decoder-queued=%zu",
-                  AudioQueue().GetSize(), Reader()->SizeOfAudioQueueInFrames());
-
-              Reader()
-                  ->RequestAudioData()
-                  ->Then(
-                      OwnerThread(), __func__,
-                      [this](const RefPtr<AudioData>& aAudio) {
-                        AUTO_PROFILER_LABEL(
-                            "LoopingDecodingState::"
-                            "RequestAudioDataFromStartPosition:"
-                            "RequestDataResolved",
-                            MEDIA_PLAYBACK);
-                        mIsReachingAudioEOS = false;
-                        mAudioDataRequest.Complete();
-                        SLOG(
-                            "got audio decoded sample "
-                            "[%" PRId64 ",%" PRId64 "]",
-                            aAudio->mTime.ToMicroseconds(),
-                            aAudio->GetEndTime().ToMicroseconds());
-                        HandleAudioDecoded(aAudio);
-                      },
-                      [this](const MediaResult& aError) {
-                        AUTO_PROFILER_LABEL(
-                            "LoopingDecodingState::"
-                            "RequestAudioDataFromStartPosition:"
-                            "RequestDataRejected",
-                            MEDIA_PLAYBACK);
-                        mAudioDataRequest.Complete();
-                        HandleError(aError);
-                      })
-                  ->Track(mAudioDataRequest);
+                  "seeking completed, start to request first %s sample "
+                  "(queued=%zu, decoder-queued=%zu)",
+                  isAudio ? "audio" : "video",
+                  isAudio ? AudioQueue().GetSize() : VideoQueue().GetSize(),
+                  isAudio ? Reader()->SizeOfAudioQueueInFrames()
+                          : Reader()->SizeOfVideoQueueInFrames());
+              if (isAudio) {
+                RequestAudioDataFromReader();
+              } else {
+                RequestVideoDataFromReader();
+              }
             },
-            [this](const SeekRejectValue& aReject) -> void {
+            [this, isAudio](const SeekRejectValue& aReject) mutable -> void {
               AUTO_PROFILER_LABEL(
-                  "LoopingDecodingState::RequestAudioDataFromStartPosition:"
-                  "SeekRejected",
+                  nsPrintfCString("LoopingDecodingState::"
+                                  "RequestDataFromStartPosition(%s)::"
+                                  "SeekRejected",
+                                  isAudio ? "audio" : "video")
+                      .get(),
                   MEDIA_PLAYBACK);
-              mAudioSeekRequest.Complete();
+              if (isAudio) {
+                mAudioSeekRequest.Complete();
+              } else {
+                mVideoSeekRequest.Complete();
+              }
               HandleError(aReject.mError);
             })
-        ->Track(mAudioSeekRequest);
+        ->Track(seekRequest);
+  }
+
+  void RequestAudioDataFromReader() {
+    Reader()
+        ->RequestAudioData()
+        ->Then(
+            OwnerThread(), __func__,
+            [this](const RefPtr<AudioData>& aAudio) {
+              AUTO_PROFILER_LABEL(
+                  "LoopingDecodingState::"
+                  "RequestAudioDataFromReader::"
+                  "RequestDataResolved",
+                  MEDIA_PLAYBACK);
+              mIsReachingAudioEOS = false;
+              mAudioDataRequest.Complete();
+              SLOG(
+                  "got audio decoded sample "
+                  "[%" PRId64 ",%" PRId64 "]",
+                  aAudio->mTime.ToMicroseconds(),
+                  aAudio->GetEndTime().ToMicroseconds());
+              HandleAudioDecoded(aAudio);
+            },
+            [this](const MediaResult& aError) {
+              AUTO_PROFILER_LABEL(
+                  "LoopingDecodingState::"
+                  "RequestAudioDataFromReader::"
+                  "RequestDataRejected",
+                  MEDIA_PLAYBACK);
+              mAudioDataRequest.Complete();
+              HandleError(aError);
+            })
+        ->Track(mAudioDataRequest);
+  }
+
+  void RequestVideoDataFromReader() {
+    Reader()
+        ->RequestVideoData(media::TimeUnit(),
+                           false /* aRequestNextVideoKeyFrame */)
+        ->Then(
+            OwnerThread(), __func__,
+            [this](const RefPtr<VideoData>& aVideo) {
+              AUTO_PROFILER_LABEL(
+                  "LoopingDecodingState::"
+                  "RequestVideoDataFromReader::"
+                  "RequestDataResolved",
+                  MEDIA_PLAYBACK);
+              mIsReachingVideoEOS = false;
+              mVideoDataRequest.Complete();
+              SLOG(
+                  "got video decoded sample "
+                  "[%" PRId64 ",%" PRId64 "]",
+                  aVideo->mTime.ToMicroseconds(),
+                  aVideo->GetEndTime().ToMicroseconds());
+              HandleVideoDecoded(aVideo);
+            },
+            [this](const MediaResult& aError) {
+              AUTO_PROFILER_LABEL(
+                  "LoopingDecodingState::"
+                  "RequestVideoDataFromReader::"
+                  "RequestDataRejected",
+                  MEDIA_PLAYBACK);
+              mVideoDataRequest.Complete();
+              HandleError(aError);
+            })
+        ->Track(mVideoDataRequest);
   }
 
   void UpdatePlaybackPositionToZeroIfNeeded() {
@@ -1038,9 +1105,12 @@ class MediaDecoderStateMachine::LoopingDecodingState
   }
 
   bool mIsReachingAudioEOS;
+  bool mIsReachingVideoEOS;
   media::TimeUnit mAudioLoopingOffset = media::TimeUnit::Zero();
   MozPromiseRequestHolder<MediaFormatReader::SeekPromise> mAudioSeekRequest;
+  MozPromiseRequestHolder<MediaFormatReader::SeekPromise> mVideoSeekRequest;
   MozPromiseRequestHolder<AudioDataPromise> mAudioDataRequest;
+  MozPromiseRequestHolder<VideoDataPromise> mVideoDataRequest;
 };
 
 /**
@@ -2562,7 +2632,7 @@ void MediaDecoderStateMachine::LoopingDecodingState::HandleError(
       HandleWaitingForAudio();
       break;
     case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
-      // This would happen after we've closed resouce so that we won't be able
+      // This would happen after we've closed resource so that we won't be able
       // to get any sample anymore.
       SetState<CompletedState>();
       break;
