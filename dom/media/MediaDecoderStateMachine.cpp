@@ -691,8 +691,26 @@ class MediaDecoderStateMachine::DecodingState
 
   virtual bool ShouldStopPrerolling() const {
     return mIsPrerolling &&
-           (DonePrerollingAudio() || mMaster->IsWaitingAudioData()) &&
-           (DonePrerollingVideo() || mMaster->IsWaitingVideoData());
+           (DonePrerollingAudio() ||
+            IsWaitingData(MediaData::Type::AUDIO_DATA)) &&
+           (DonePrerollingVideo() ||
+            IsWaitingData(MediaData::Type::VIDEO_DATA));
+  }
+
+  virtual bool IsWaitingData(MediaData::Type aType) const {
+    if (aType == MediaData::Type::AUDIO_DATA) {
+      return mMaster->IsWaitingAudioData();
+    }
+    MOZ_ASSERT(aType == MediaData::Type::VIDEO_DATA);
+    return mMaster->IsWaitingVideoData();
+  }
+
+  void MaybeStopPrerolling() {
+    if (ShouldStopPrerolling()) {
+      mIsPrerolling = false;
+      // Check if we can start playback.
+      mMaster->ScheduleStateMachine();
+    }
   }
 
  private:
@@ -726,14 +744,6 @@ class MediaDecoderStateMachine::DecodingState
     return !mMaster->IsVideoDecoding() ||
            static_cast<uint32_t>(mMaster->VideoQueue().GetSize()) >=
                VideoPrerollFrames();
-  }
-
-  void MaybeStopPrerolling() {
-    if (ShouldStopPrerolling()) {
-      mIsPrerolling = false;
-      // Check if we can start playback.
-      mMaster->ScheduleStateMachine();
-    }
   }
 
   void StartDormantTimer() {
@@ -1311,6 +1321,7 @@ class MediaDecoderStateMachine::LoopingDecodingState
     SLOG("put %s [%" PRId64 ",%" PRId64 "] on waiting",
          MediaData::TypeToStr(aData->mType), aData->mTime.ToMicroseconds(),
          aData->GetEndTime().ToMicroseconds());
+    MaybeStopPrerolling();
   }
 
   MediaResult LoopingAudioTimeAdjustment(AudioData* aAudio) {
@@ -1438,6 +1449,16 @@ class MediaDecoderStateMachine::LoopingDecodingState
 
   bool IsReaderSeeking() const {
     return mAudioSeekRequest.Exists() || mVideoSeekRequest.Exists();
+  }
+
+  bool IsWaitingData(MediaData::Type aType) const override {
+    if (aType == MediaData::Type::AUDIO_DATA) {
+      return mMaster->IsWaitingAudioData() ||
+             IsDataWaitingForTimestampAdjustment(MediaData::Type::AUDIO_DATA);
+    }
+    MOZ_DIAGNOSTIC_ASSERT(aType == MediaData::Type::VIDEO_DATA);
+    return mMaster->IsWaitingVideoData() ||
+           IsDataWaitingForTimestampAdjustment(MediaData::Type::VIDEO_DATA);
   }
 
   bool mIsReachingAudioEOS;
