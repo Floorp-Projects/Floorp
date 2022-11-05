@@ -1847,21 +1847,6 @@ bool DocAccessible::UpdateAccessibleOnAttrChange(dom::Element* aElement,
     return true;
   }
 
-  if (aElement->IsHTMLElement(nsGkAtoms::img) && aAttribute == nsGkAtoms::alt) {
-    // If alt text changes on an img element, we may want to create or remove an
-    // accessible for that img.
-    if (nsAccessibilityService::ShouldCreateImgAccessible(aElement, this)) {
-      if (GetAccessible(aElement)) {
-        // If the accessible already exists, there's no need to create one.
-        return false;
-      }
-      ContentInserted(aElement, aElement->GetNextSibling());
-    } else {
-      ContentRemoved(aElement);
-    }
-    return true;
-  }
-
   return false;
 }
 

@@ -225,7 +225,9 @@ ENameValueFlag RemoteAccessibleBase<Derived>::Name(nsString& aName) const {
   }
 
   MOZ_ASSERT(aName.IsEmpty());
-  aName.SetIsVoid(true);
+  if (nameFlag != eNoNameOnPurpose) {
+    aName.SetIsVoid(true);
+  }
   return nameFlag;
 }
 
