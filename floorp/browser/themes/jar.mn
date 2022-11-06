@@ -17,6 +17,7 @@ browser.jar:
   skin/classic/browser/options/bookmarkbar_autohide.css                   (designs/options/bookmarkbar_autohide.css)
   skin/classic/browser/options/browser-custum-dlmgr.css                   (designs/options/browser-custum-dlmgr.css)
   skin/classic/browser/options/downloading-redcolor.css                   (designs/options/downloading-redcolor.css)
+  skin/classic/browser/options/navbar-botttom.css                         (designs/options/navbar-botttom.css)
 
 # tabbar
   skin/classic/browser/tabbar/hide-tabbrowser.css                        (designs/tabbar/hide-tabbrowser.css)

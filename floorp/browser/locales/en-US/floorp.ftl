@@ -63,6 +63,10 @@ bookmarks-focus-mode =
 bookmarks-bottom-mode =
  .label = Bookmark bar at the bottom of the browser
 
+nav-bar-settings = Navigation Bar Settings
+show-nav-bar-bottom =
+ .label = Show the Navigation bar at the Bottom of { -brand-short-name }
+
 material-effect =
  .label = Allow Mica for Everyone to modify the browser design
 other-preference = Other Preferences

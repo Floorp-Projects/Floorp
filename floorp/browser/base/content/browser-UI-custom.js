@@ -86,11 +86,11 @@ if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
     document.getElementById("browser-bottombox").after(document.getElementById("PersonalToolbar"));
    }
    else {
-    document.getElementById("nav-bar").after(document.getElementById("PersonalToolbar"));
+    document.getElementById("TabsToolbar").after(document.getElementById("PersonalToolbar"));
    }
  })
 
-  if (Services.prefs.getBoolPref("floorp.search.top.mode", false)) {    
+  if (Services.prefs.getBoolPref("floorp.search.top.mode", false)) {
      var Tag = document.createElement("style");
      Tag.innerText = `@import url(chrome://browser/skin/options/move_page_inside_searchbar.css)` 
      document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
@@ -125,7 +125,7 @@ Services.prefs.addObserver("floorp.legacy.dlui.enable", function(){
    document.getElementById("dlmgrcss").remove();
  }});
 
- if (Services.prefs.getBoolPref("floorp.downloading.red.color", false)) {    
+ if (Services.prefs.getBoolPref("floorp.downloading.red.color", false)) {
   var Tag = document.createElement("style");
   Tag.innerText = `@import url(chrome://browser/skin/options/downloading-redcolor.css`
   document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
@@ -141,6 +141,27 @@ Services.prefs.addObserver("floorp.downloading.red.color", function(){
  else {
    document.getElementById("dlredcolor").remove();
  }});
+
+ if (Services.prefs.getBoolPref("floorp.navbar.bottom", false)) {
+   var Tag = document.createElement("style");
+   Tag.setAttribute("id", "navvarcss");
+   Tag.innerText = `@import url(chrome://browser/skin/options/navbar-botttom.css)`
+   document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
+   window.setTimeout(function () { document.getElementById("browser-bottombox").after(document.getElementById("nav-bar")); }, 1000);
+ }
+  Services.prefs.addObserver("floorp.navbar.bottom", function () {
+    if (Services.prefs.getBoolPref("floorp.navbar.bottom", false)) {
+      var Tag = document.createElement("style");
+      Tag.setAttribute("id", "navvarcss");
+      Tag.innerText = `@import url(chrome://browser/skin/options/navbar-botttom.css)`
+      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
+      document.getElementById("browser-bottombox").after(document.getElementById("nav-bar"));
+    } else {
+      document.getElementById("navvarcss").remove();
+      document.getElementById("TabsToolbar").after(document.getElementById("nav-bar"));
+    }
+  });
+
 
  /*------------------------------------------- sidebar -------------------------------------------*/
 

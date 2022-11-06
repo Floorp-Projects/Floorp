@@ -459,7 +459,7 @@ function setTabbarMode() {
     case 2:
       Tag.innerText = tabbarCSS.VerticalTab
       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-      window.setTimeout(function () { document.getElementById("titlebar").before(document.getElementById("toolbar-menubar")); }, 2000);
+      window.setTimeout(function () { document.getElementById("titlebar").before(document.getElementById("toolbar-menubar")); }, 500);
       break;
     //tabs_on_bottom
     case 3:

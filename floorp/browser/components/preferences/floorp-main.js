@@ -34,6 +34,7 @@ Preferences.addAll([
     { id: "floorp.browser.sidebar.enable", type : "bool"},
     { id: "floorp.browser.sidebar2.mode", type : "int"},
     { id: "floorp.browser.restore.sidebar.panel", type : "bool"},
+    { id: "floorp.navbar.bottom", type : "bool"},
   ]);
 
 

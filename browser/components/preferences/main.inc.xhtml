@@ -136,6 +136,20 @@
      <radio value="4" class="tabbar" data-l10n-id="tabbar-on-bottom"/>
     </radiogroup>
 
+   <html:h2 data-l10n-id="bookmarks-bar-settings"/>
+
+    <checkbox preference="floorp.bookmarks.bar.focus.mode"
+              id="bookmarkfocusmode" data-l10n-id="bookmarks-focus-mode"/>
+
+    <checkbox preference="floorp.bookmarks.fakestatus.mode"
+              id="bookmarkbottomofwindow" data-l10n-id="bookmarks-bottom-mode"/>
+
+   <html:h2 data-l10n-id="nav-bar-settings"/>
+
+    <checkbox preference="floorp.navbar.bottom"
+              id="nav-bar-bottom" data-l10n-id="show-nav-bar-bottom"/>
+
+
    <html:h2 id="sidebarUI" data-l10n-id="sidebar-preferences"/>
    <checkbox preference="floorp.browser.sidebar.enable" 
               id="enable-sidebar2" data-l10n-id="enable-sidebar2" class="needeboot"/>             
@@ -225,6 +239,10 @@
     <checkbox preference="floorp.enable.dualtheme"
               id="dualtheme_enable" data-l10n-id="dualtheme-enable"/> 
   </hbox>
+
+  <html:h2 data-l10n-id="operation-settings"/>
+     <checkbox preference="floorp.optimized.msbutton.ope"
+               id="MouseSideButton"  data-l10n-id="Mouse-side-button"/>
   #ifdef XP_WIN
   <hbox>
     <checkbox preference="floorp.material.effect.enable"
@@ -293,20 +311,6 @@
       <html:a id="web-appearance-manage-themes-link" class="text-link" data-l10n-name="themes-link" href="about:addons" target="_blank" />
     </html:div>
   </html:div>
-</groupbox>
-
-<groupbox id="browser-appearance" data-category="paneGeneral" hidden="true">
-   <html:h2 data-l10n-id="bookmarks-bar-settings"/>
-
-    <checkbox preference="floorp.bookmarks.bar.focus.mode"
-              id="bookmarkfocusmode" data-l10n-id="bookmarks-focus-mode"/>
-              
-    <checkbox preference="floorp.bookmarks.fakestatus.mode"
-              id="bookmarkbottomofwindow" data-l10n-id="bookmarks-bottom-mode"/>
-        
-   <html:h2 data-l10n-id="operation-settings"/>
-     <checkbox preference="floorp.optimized.msbutton.ope"
-               id="MouseSideButton"  data-l10n-id="Mouse-side-button"/>
 </groupbox>
 
 <!-- Colors -->
