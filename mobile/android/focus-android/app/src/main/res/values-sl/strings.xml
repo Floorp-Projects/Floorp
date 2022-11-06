@@ -1005,6 +1005,10 @@
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Prepustili vas bomo zasebnemu brskanju, vendar lahko naslednjič hitreje začnete s pripomočkom %1$s na domačem zaslonu.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
     <string name="promote_search_widget_button_text">Dodaj pripomoček na začetni zaslon</string>
 
     !-- This is te text of the snackbar that appears after the search widget was added successfully
