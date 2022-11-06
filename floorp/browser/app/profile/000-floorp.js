@@ -39,7 +39,7 @@ pref("floorp.Tree-type.verticaltab.optimization", false); //ツリー型タブ�
 pref("floorp.bookmarks.bar.focus.mode", false);//フォーカスした際にブックマークバーを展開
 pref("floorp.material.effect.enable", false);//マテリアルモードの実装
 pref("floorp.chrome.theme.mode", -1);
-pref("floorp.navbar.bottom", true);
+pref("floorp.navbar.bottom", false);
 
 pref("floorp.browser.user.interface", 3);// Floorp 10 系以降のインターフェーステーマ設定
 pref("floorp.browser.tabbar.settings", 0);// タブの設定
