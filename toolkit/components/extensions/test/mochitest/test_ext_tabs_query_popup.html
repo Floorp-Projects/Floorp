@@ -12,6 +12,15 @@
 <script type="text/javascript">
 "use strict";
 
+add_setup(async () => {
+  // TODO bug 1799344: remove this when the pref is true by default.
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["extensions.openPopupWithoutUserGesture.enabled", true],
+    ],
+  });
+});
+
 async function test_query(query) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
