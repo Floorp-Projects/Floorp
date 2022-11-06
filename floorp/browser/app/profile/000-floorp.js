@@ -75,56 +75,12 @@ pref("floorp.multitab.bottommode", false);
 //max is 20
 pref("floorp.browser.sidebar.right", true);// サイドバーの右側を表示
 pref("floorp.browser.sidebar.enable", true);// サイドバーを表示
-pref("floorp.browser.sidebar2.mode", 0);// サイドバーのモード
-pref("floorp.browser.sidebar2.customurl0", "https://freasearch.org");
-pref("floorp.browser.sidebar2.customurl1", "https://translate.google.com");
-pref("floorp.browser.sidebar2.customurl2", "");
-pref("floorp.browser.sidebar2.customurl3", "");
-pref("floorp.browser.sidebar2.customurl4", "");
-pref("floorp.browser.sidebar2.customurl5", "");
-pref("floorp.browser.sidebar2.customurl6", "");
-pref("floorp.browser.sidebar2.customurl7", "");
-pref("floorp.browser.sidebar2.customurl8", "");
-pref("floorp.browser.sidebar2.customurl9", "");
-pref("floorp.browser.sidebar2.customurl10", "");
-pref("floorp.browser.sidebar2.customurl11", "");
-pref("floorp.browser.sidebar2.customurl12", "");
-pref("floorp.browser.sidebar2.customurl13", "");
-pref("floorp.browser.sidebar2.customurl14", "");
-pref("floorp.browser.sidebar2.customurl15", "");
-pref("floorp.browser.sidebar2.customurl16", "");
-pref("floorp.browser.sidebar2.customurl17", "");
-pref("floorp.browser.sidebar2.customurl18", "");
-pref("floorp.browser.sidebar2.customurl19", "");
+pref("floorp.browser.sidebar2.page", "");//サイドバーで開いているページ
 
-pref("floorp.browser.sidebar2.width.mode0", 600);	
-pref("floorp.browser.sidebar2.width.mode1", 415);
-pref("floorp.browser.sidebar2.width.mode2", 415);
-pref("floorp.browser.sidebar2.width.mode3", 415);
-pref("floorp.browser.sidebar2.width.mode4", 415);
+// url:URL width:幅 userAgent:userAgent usercontext:コンテナタブ
+pref("floorp.browser.sidebar2.data", "{\"data\":{\"1\":{\"url\":\"floorp//bmt\",\"width\":600},\"2\":{\"url\":\"floorp//bookmarks\",\"width\":415},\"3\":{\"url\":\"floorp//history\",\"width\":415},\"4\":{\"url\":\"floorp//downloads\",\"width\":415},\"5\":{\"url\":\"floorp//tst\",\"width\":415},\"w1\":{\"url\":\"https://freasearch.org\"},\"w2\":{\"url\":\"https://translate.google.com\"}},\"index\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"w1\",\"w2\"]}");
+
 pref("floorp.browser.sidebar2.global.webpanel.width", 400);
-
-//container tab for sidebar2 webpanel
-pref("floorp.browser.sidebar2.customurl0.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl1.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl2.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl3.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl4.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl5.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl6.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl7.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl8.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl9.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl10.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl11.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl12.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl13.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl14.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl15.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl16.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl17.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl18.usercontext", 0);
-pref("floorp.browser.sidebar2.customurl19.usercontext", 0);
 
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
@@ -146,46 +102,7 @@ pref("services.sync.prefs.sync.browser.tabs.warnOnClose", false, locked); //た�
 
 // 同期を有効にする
 pref("services.sync.prefs.sync.floorp.browser.sidebar.right", true);// サイドバーの右側を表示
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl0", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl1", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl2", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl3", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl4", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl5", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl6", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl7", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl8", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl9", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl10", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl11", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl12", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl13", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl14", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl15", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl16", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl17", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl18", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl19", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl0.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl1.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl2.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl3.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl4.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl5.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl6.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl7.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl8.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl9.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl10.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl11.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl12.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl13.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl14.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl15.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl16.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl17.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl18.usercontext", true);
-pref("services.sync.prefs.sync.floorp.browser.sidebar2.customurl19.usercontext", true);
+pref("services.sync.prefs.sync.floorp.browser.sidebar2.data", true);// サイドバーのデータ
 pref("services.sync.prefs.sync.floorp.optimized.msbutton.ope", true); //サイドボタン付きマウス操作にブラウザーを最適化
 pref("services.sync.prefs.sync.floorp.optimized.verticaltab", true); //ツリー型垂直タブ等に最適化。8.7.2 からフォーカスした際の動作は別に
 pref("services.sync.prefs.sync.floorp.browser.user.interface", true);// Floorp 10 系以降のインターフェーステーマ設定

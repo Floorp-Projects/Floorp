@@ -26,9 +26,9 @@ this.webRequestExt = class extends ExtensionAPI {
             function listener(e) {
               if (typeof e.browserElement !== "undefined" &&
                   e.browserElement.id.startsWith("webpanel")) {
-                const webpanelid = e.browserElement.id;
-                const uaPref = `floorp.enable.useragent.override.${webpanelid}`;
-                if (Services.prefs.getBoolPref(uaPref, false)) {
+                const webpanelid = e.browserElement.id.replace("webpanel", "");
+  let sidebars = JSON.parse(Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, undefined))
+                if (sidebars.data[webpanelid].userAgent) {
                   return fire.async(e.requestId);
                 }
               }

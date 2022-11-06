@@ -3,45 +3,96 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+if (Services.prefs.getPrefType("floorp.browser.sidebar2.customurl0") != 0) {
+    if (Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, "") == "{\"data\":{\"1\":{\"url\":\"floorp//bmt\",\"width\":600},\"2\":{\"url\":\"floorp//bookmarks\",\"width\":415},\"3\":{\"url\":\"floorp//history\",\"width\":415},\"4\":{\"url\":\"floorp//downloads\",\"width\":415},\"5\":{\"url\":\"floorp//tst\",\"width\":415},\"w1\":{\"url\":\"https://freasearch.org\"},\"w2\":{\"url\":\"https://translate.google.com\"}},\"index\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"w1\",\"w2\"]}") {
+        let updateObject = { "data": {}, "index": [] }
+        let staticURL = ["floorp//bmt", "floorp//bookmarks", "floorp//history", "floorp//downloads", "floorp//tst"]
+        for (let i = 0; i <= 4; i++) {
+            let objectInObject = { "url": staticURL[i] }
+            if (Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${i}`, 0) != 0) {
+                objectInObject["width"] = Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${i}`, 0)
+            } else {
+                objectInObject["width"] = (i == 0 ? 600 : 415)
+            }
+            Services.prefs.clearUserPref(`floorp.browser.sidebar2.width.mode${i}`)
+            updateObject.data[String(i)] = objectInObject
+            updateObject.index.push(String(i))
+        }
+
+        for (let i = 0; i <= 19; i++) {
+            let objectInObject = {}
+            if (Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${i}`, "") != "") {
+                objectInObject["url"] = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${i}`, "")
+
+                if (Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${i}.usercontext`, 0) != 0) {
+                    objectInObject["usercontext"] = Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${i}.usercontext`, 0)
+                }
+
+                if (Services.prefs.getPrefType(`floorp.browser.sidebar2.width.mode${i + 5}`) != 0 && Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${i + 5}`, 0) != 0) {
+                    objectInObject["width"] = Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${i + 5}`, 0)
+                    Services.prefs.clearUserPref(`floorp.browser.sidebar2.width.mode${i + 5}`)
+                }
+            }
+            Services.prefs.clearUserPref(`floorp.browser.sidebar2.customurl${i}`)
+            Services.prefs.clearUserPref(`floorp.browser.sidebar2.customurl${i}.usercontext`)
+            Services.prefs.clearUserPref(`services.sync.prefs.sync.floorp.browser.sidebar2.customurl${i}`)
+            Services.prefs.clearUserPref(`services.sync.prefs.sync.floorp.browser.sidebar2.customurl${i}.usercontext`)
+            if (Object.keys(objectInObject).length != 0) {
+                updateObject.data[`w${String(i)}`] = objectInObject
+                updateObject.index.push(`w${String(i)}`)
+            }
+        }
+        if(updateObject.index["floorp.browser.sidebar2.page"] != undefined) Services.prefs.setStringPref(`floorp.browser.sidebar2.page`,updateObject.index["floorp.browser.sidebar2.page"])
+        Services.prefs.setStringPref(`floorp.browser.sidebar2.data`, JSON.stringify(updateObject))
+    } else {
+        for (let i = 0; i <= 4; i++) {
+            if (Services.prefs.getPrefType(`floorp.browser.sidebar2.width.mode${i}`) != 0) {
+                Services.prefs.clearUserPref(`floorp.browser.sidebar2.width.mode${i}`)
+            }
+        }
+      for (let i = 0; i <= 19; i++) {
+        if (Services.prefs.getPrefType(`floorp.browser.sidebar2.width.mode${i + 5}`) != 0) {
+            Services.prefs.clearUserPref(`floorp.browser.sidebar2.width.mode${i + 5}`)
+        }
+        Services.prefs.clearUserPref(`floorp.browser.sidebar2.customurl${i}`)
+        Services.prefs.clearUserPref(`floorp.browser.sidebar2.customurl${i}.usercontext`)
+        Services.prefs.clearUserPref(`services.sync.prefs.sync.floorp.browser.sidebar2.customurl${i}`)
+        Services.prefs.clearUserPref(`services.sync.prefs.sync.floorp.browser.sidebar2.customurl${i}.usercontext`)
+        Services.prefs.clearUserPref(`floorp.browser.sidebar2.page`)
+      }
+    }
+}
 
 // 初回起動時、UA を変更するようにするための処理
-Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 0);
-
 if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
-    Services.prefs.addObserver("floorp.browser.sidebar2.mode", function(){
-     setSidebarMode();
+    Services.prefs.addObserver("floorp.browser.sidebar2.page", function(){
+
+if(Services.prefs.getStringPref("floorp.browser.sidebar2.page") != "") setSidebarMode();
  })};
 
 const DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT = 5 /* Static sidebar modes, that are unchangable by user. Starts from 0 */
 const DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT = 19 /* CustomURL modes, that are editable by user. Starts from 0 */
- 
- if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
-    for (let sbar_id = 0; sbar_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; sbar_id++) {
-		Services.prefs.addObserver(`floorp.browser.sidebar2.customurl${sbar_id}`, function() {
-            setSidebarMode()
-            setCustomURLFavicon(sbar_id)
-            setSidebarIconView()
-        })
-    }
-
-    for (let webpanel_id = 0; webpanel_id <= DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT; webpanel_id++) {
-		Services.prefs.addObserver(`floorp.browser.sidebar2.customurl${webpanel_id}.usercontext`, function() {
-            let userContextChnagedWebpanel = document.getElementById(`webpanel${webpanel_id}`);
-
-        if(userContextChnagedWebpanel!= null) {
-                userContextChnagedWebpanel.remove();
-        }
-        setSidebarMode()
-        setCustomURLFavicon(webpanel_id)
-        setSidebarIconView()
-    })    
-  }
+const STATIC_SIDEBAR_L10N_LIST = {
+"floorp//bmt":`show-browser-manager-sidebar`,
+"floorp//bookmarks":`show-bookmark-sidebar`,
+"floorp//history":`show-history-sidebar`,
+"floorp//downloads":`show-download-sidebar`,
+"floorp//tst":`show-TST-sidebar`
+}
+let BROWSER_SIDEBAR_DATA = JSON.parse(Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, undefined))
+if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
+  Services.prefs.addObserver(`floorp.browser.sidebar2.data`, function() {
+    BROWSER_SIDEBAR_DATA = JSON.parse(Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, undefined))
+    setSidebarIconView()
+    setSidebarMode()
+    setAllfavicons()
+  })
  }
 
 //startup functions
 setSidebarIconView();
-setSidebarMode();
+if(Services.prefs.getStringPref("floorp.browser.sidebar2.page") != "") setSidebarMode();
 removeAttributeSelectedNode();
-getSelectedNode().setAttribute("checked", "true");
+if(Services.prefs.getStringPref("floorp.browser.sidebar2.page") != "") getSelectedNode().setAttribute("checked", "true");
 setAllfavicons();
 changeSidebarVisibility();
