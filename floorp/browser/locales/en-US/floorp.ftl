@@ -47,7 +47,7 @@ verticalTab-setting =
  .label = Browser optimized for vertical tabs
 
 move-tabbar-position =
- .label = Move the tab bar position to below the bookmark
+ .label = Show Tabbar on bottom of the Toolbar
 
 tabbar-on-bottom = 
  .label = Display at the Bottom of the Window
