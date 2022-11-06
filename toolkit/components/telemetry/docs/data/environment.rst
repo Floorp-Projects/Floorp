@@ -451,6 +451,10 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``media.gmp-manager.lastEmptyCheck``: When the gmp-manager last checked for updates and there was nothing to install as seconds since Jan 1, 1970.
 
+- ``nimbus.qa.pref-1``: Used to monitor the results of pref-setting test experiments.
+
+- ``nimbus.qa.pref-2``: Used to monitor the results of pref-setting test experiments.
+
 attribution
 ~~~~~~~~~~~
 

@@ -32,6 +32,25 @@ testFeature:
       type: string
       setPref: nimbus.testing.testSetString
       description: A string pref set by Nimbus tests
+nimbus-qa-1:
+  description: A feature for testing pref-setting on the default branch.
+  owner: barret@mozilla.com
+  hasExposure: false
+  variables:
+    value:
+      type: string
+      setPref: nimbus.qa.pref-1
+      description: The value to set for the pref.
+nimbus-qa-2:
+  description: A feature for testing pref-setting on the user branch.
+  owner: barret@mozilla.com
+  isEarlyStartup: true
+  hasExposure: false
+  variables:
+    value:
+      type: string
+      setPref: nimbus.qa.pref-2
+      description: The value to set for the pref.
 search:
   description: The Search Services
   owner: search-and-suggest-program@mozilla.com

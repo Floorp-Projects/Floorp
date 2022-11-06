@@ -1656,6 +1656,10 @@ pref("messaging-system.rsexperimentloader.collection_id", "nimbus-desktop-experi
 pref("nimbus.debug", false);
 pref("nimbus.validation.enabled", true);
 
+// Nimbus QA prefs. Used to monitor pref-setting test experiments.
+pref("nimbus.qa.pref-1", "default");
+pref("nimbus.qa.pref-2", "default");
+
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
 
