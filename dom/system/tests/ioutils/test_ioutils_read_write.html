@@ -494,6 +494,26 @@
       }
     });
 
+    add_task(async function test_write_appendOrCreate() {
+      const fileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_write_appendOrCreate.tmp");
+
+      await IOUtils.write(fileName, Uint8Array.of(0, 1, 2, 3, 4), { mode: "appendOrCreate" });
+
+      {
+        const contents = await IOUtils.read(fileName);
+        Assert.deepEqual(Array.from(contents), [0, 1, 2, 3, 4], "read bytes should be equal");
+      }
+
+      await IOUtils.write(fileName, Uint8Array.of(5, 6, 7, 8, 9), { mode: "appendOrCreate" });
+
+      {
+        const contents = await IOUtils.read(fileName);
+        Assert.deepEqual(Array.from(contents), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "read bytes should be equal after appendOrCreateing");
+      }
+
+      await cleanup(fileName);
+    });
+
     add_task(async function test_write_append() {
       const fileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_write_append.tmp");
 
@@ -506,10 +526,12 @@
 
       const afterAppend = await IOUtils.read(fileName);
       Assert.deepEqual(Array.from(afterAppend), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "read bytes should be equal after appending");
+
+      await cleanup(fileName);
     });
 
     add_task(async function test_write_append_no_create() {
-      const fileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_write_append_create.tmp");
+      const fileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_write_append_no_create.tmp");
 
       await Assert.rejects(
         IOUtils.write(fileName, Uint8Array.of(5, 6, 7, 8, 9), { mode: "append" }),
