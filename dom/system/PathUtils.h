@@ -13,7 +13,6 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Result.h"
-#include "mozilla/dom/PathUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
@@ -77,10 +76,6 @@ class PathUtils final {
 
   static void Split(const GlobalObject&, const nsAString& aPath,
                     nsTArray<nsString>& aResult, ErrorResult& aErr);
-
-  static void SplitRelative(const GlobalObject& aGlobal, const nsAString& aPath,
-                            const SplitRelativeOptions& aOptions,
-                            nsTArray<nsString>& aResult, ErrorResult& aErr);
 
   static void ToFileURI(const GlobalObject&, const nsAString& aPath,
                         nsCString& aResult, ErrorResult& aErr);
