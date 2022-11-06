@@ -86,7 +86,11 @@ if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
     document.getElementById("browser-bottombox").after(document.getElementById("PersonalToolbar"));
    }
    else {
-    document.getElementById("TabsToolbar").after(document.getElementById("PersonalToolbar"));
+    //Fix for the bug that bookmarksbar is on the navigation toolbar when the pref is cahaned to false
+    if (!Services.prefs.getBoolPref("floorp.navbar.bottom", false)) {
+      document.getElementById("navigator-toolbox").appendChild(document.getElementById("nav-bar"));
+    }
+    document.getElementById("navigator-toolbox").appendChild(document.getElementById("PersonalToolbar"));
    }
  })
 
@@ -158,7 +162,14 @@ Services.prefs.addObserver("floorp.downloading.red.color", function(){
       document.getElementById("browser-bottombox").after(document.getElementById("nav-bar"));
     } else {
       document.getElementById("navvarcss").remove();
-      document.getElementById("TabsToolbar").after(document.getElementById("nav-bar"));
+
+      //Fix for the bug that bookmarksbar is on the navigation toolbar when the pref is cahaned to false
+
+      document.getElementById("navigator-toolbox").appendChild(document.getElementById("nav-bar"));
+
+      if (!Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
+        document.getElementById("navigator-toolbox").appendChild(document.getElementById("PersonalToolbar"));
+      }
     }
   });
 
