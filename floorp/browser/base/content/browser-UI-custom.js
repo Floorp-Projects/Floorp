@@ -147,7 +147,7 @@ Services.prefs.addObserver("floorp.downloading.red.color", function(){
    Tag.setAttribute("id", "navvarcss");
    Tag.innerText = `@import url(chrome://browser/skin/options/navbar-botttom.css)`
    document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
-   window.setTimeout(function () { document.getElementById("browser-bottombox").after(document.getElementById("nav-bar")); }, 1000);
+   document.getElementById("browser-bottombox").after(document.getElementById("nav-bar"));
  }
   Services.prefs.addObserver("floorp.navbar.bottom", function () {
     if (Services.prefs.getBoolPref("floorp.navbar.bottom", false)) {

@@ -22,3 +22,7 @@
   border-inline-style: none !important;
   border-right-width: 0 !important;
 }
+
+.tabbrowser-tab{
+  z-index: 0 !important;
+}
