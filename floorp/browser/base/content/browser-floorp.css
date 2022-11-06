@@ -171,10 +171,3 @@
   :root[sizemode="fullscreen"] :is(#sidebar-select-box){
     display: none;
   }
-  
-  :root{
-    --usercontext-color-1: #00eeff;
-    --usercontext-color-2: #ff7f00;
-    --usercontext-color-3: #ffff00;
-    --usercontext-color-4: #00ff00;
-  }
