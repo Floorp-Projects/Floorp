@@ -662,6 +662,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Title to show in alert when a lot of tabs are to be opened
     %d is a placeholder for the number of tabs that will be opened -->
     <string name="open_all_warning_title">Ldi %d waccaren?</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">Tawaledyawt n wannect-a n waccaren yessaẓay %s mi ara d-ttalin yisebtar. D tidet tebɣiḍ ad tkemmleḍ?</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">Ldi accaren</string>
     <!-- Dialog button text for canceling open all tabs -->

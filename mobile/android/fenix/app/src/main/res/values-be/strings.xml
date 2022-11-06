@@ -654,7 +654,7 @@
     <string name="open_all_warning_title">Адкрыць %d картак?</string>
     <!-- Message to warn users that a large number of tabs will be opened
     %s will be replaced by app name. -->
-    <string name="open_all_warning_message">Адкрыццё такой колькасці ўкладак можа запаволіць %s падчас загрузкі старонак. Вы сапраўды хочаце гэта зрабіць?</string>
+    <string name="open_all_warning_message">Адкрыццё такой колькасці картак можа запаволіць %s падчас загрузкі старонак. Вы сапраўды хочаце гэта зрабіць?</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">Адкрыць карткі</string>
     <!-- Dialog button text for canceling open all tabs -->

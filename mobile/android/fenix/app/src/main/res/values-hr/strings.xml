@@ -424,7 +424,7 @@
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Nedavno posjećeno</string>
     <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket">Pocket</string>
+    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">Sponzorirane priče</string>
@@ -587,6 +587,11 @@
     <string name="settings_title">Postavke</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zatvori</string>
+
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">Otvori kartice</string>
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">Odustani</string>
 
     <!-- Text to show users they have one site in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
@@ -1825,7 +1830,7 @@
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Otkrij više</string>
     <!-- Title of an app feature. Smaller than a heading.-->
-    <string name="pocket_stories_feature_title">Pokreće Pocket.</string>
+    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Pokreće Pocket.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
     <string name="pocket_stories_feature_caption">Dio Firefoxove obitelji. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->

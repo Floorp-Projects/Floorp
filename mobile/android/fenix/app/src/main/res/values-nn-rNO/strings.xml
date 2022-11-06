@@ -17,6 +17,12 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Søk eller skriv inn ei adresse</string>
 
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">Søkjehistorikk</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">Søk i bokmerke</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">Søk i faner</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
     <string name="application_search_hint">Skriv inn søkjetekst</string>
     <!-- No Open Tabs Message Description -->
@@ -254,6 +260,9 @@
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Søkjeinnstillingar</string>
 
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item">Søk denne gongen:</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Kva er nytt i %1$s</string>
@@ -461,8 +470,12 @@
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Nyleg besøkte</string>
     <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket">Pocket</string>
+    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_2">Tankevekkjande artiklar</string>
+    <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
+    <string name="customize_toggle_pocket_summary">Artiklar levert av %s</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">Sponsa historier</string>
     <!-- Title for the opening wallpaper settings screen -->
@@ -643,6 +656,17 @@
     <string name="settings_title">Innstillingar</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Lat att</string>
+
+    <!-- Title to show in alert when a lot of tabs are to be opened
+    %d is a placeholder for the number of tabs that will be opened -->
+    <string name="open_all_warning_title">Opne %d faner?</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">Å opne så mange faner kan seinke %s medan sidene vert lasta. Er du sikker på at du vil halde fram?</string>
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">Opne faner</string>
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">Avbryt</string>
 
     <!-- Text to show users they have one site in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
@@ -876,6 +900,10 @@
     <string name="bookmark_menu_open_in_new_tab_button">Opne i ny fane</string>
     <!-- Bookmark overflow menu open in private tab button -->
     <string name="bookmark_menu_open_in_private_tab_button">Opne i privat fane</string>
+    <!-- Bookmark overflow menu open all in tabs button -->
+    <string name="bookmark_menu_open_all_in_tabs_button">Opne alle i nye faner</string>
+    <!-- Bookmark overflow menu open all in private tabs button -->
+    <string name="bookmark_menu_open_all_in_private_tabs_button">Opne alle i private faner</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Slett</string>
     <!--Bookmark overflow menu save button -->
@@ -1057,6 +1085,8 @@
     <string name="share_button_content_description">Del</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Lagre som PDF</string>
+    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <string name="unable_to_save_to_pdf_error">Klarte ikkje å generere PDF</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Send til eining</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1931,7 +1961,9 @@
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Oppdag meir</string>
     <!-- Title of an app feature. Smaller than a heading.-->
-    <string name="pocket_stories_feature_title">Levert av Pocket.</string>
+    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Levert av Pocket.</string>
+    <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
+    <string name="pocket_stories_feature_title_2">Driven av %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
     <string name="pocket_stories_feature_caption">Del av Firefox-familien. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
