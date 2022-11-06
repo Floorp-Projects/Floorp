@@ -280,7 +280,7 @@
 
     .context-menu-list .context-menu-item button span {
       /* Color */
-      -moz-context-properties: fill, fill-opacity !important;
+      -moz-context-properties: fill, fill-opacity, stroke !important;
       fill: currentColor !important;
       /* Layout */
       background-size: 16px !important;
@@ -513,11 +513,13 @@
   {
     /* Illustrations Position */
     #errorPageContainer,
+    .neterror > .container,
     .description-wrapper {
       min-height: 300px;
       background-position: left center;
       background-repeat: no-repeat;
       background-size: 38%;
+      background-image: var(--uc-error-llustration);
     }
 
     #errorPageContainer {
@@ -545,36 +547,42 @@
   }
   @-moz-document url-prefix("about:neterror?e=connectionFailure"),
   url-prefix("about:neterror?e=netInterrupt"),
-  url-prefix("about:neterror?e=netTimeout"),
   url-prefix("about:neterror?e=netReset"),
+  url-prefix("about:neterror?e=netTimeout"),
   url-prefix("about:neterror?e=netOffline"),
   url("about:restartrequired"), url("chrome://browser/content/aboutRestartRequired.xhtml")
   {
-    #errorPageContainer {
-      background-image: url("chrome://browser/skin/lepton/error-connection-failure.svg");
+    :root {
+      --uc-error-llustration: url(chrome://browser/skin/lepton/error-connection-failure.svg);
     }
   }
   @-moz-document url-prefix("about:neterror?e=dnsNotFound") {
-    #errorPageContainer {
-      background-image: url("chrome://browser/skin/lepton/error-server-not-found.svg");
+    :root {
+      --uc-error-llustration: url(chrome://browser/skin/lepton/error-server-not-found.svg);
     }
   }
-  @-moz-document url-prefix("about:neterror?e=malformedURI") {
-    #errorPageContainer {
-      background-image: url("chrome://browser/skin/illustrations/error-malformed-url.svg");
+  @-moz-document url-prefix("about:neterror?e=blockedByPolicy"),
+  url-prefix("about:neterror?e=deniedPortAccess"),
+  url-prefix("about:neterror?e=malformedURI") {
+    :root {
+      --uc-error-llustration: url(chrome://browser/skin/illustrations/error-malformed-url.svg);
     }
   }
   @-moz-document url-prefix("about:neterror?e=clockSkewError"),
   url-prefix("about:neterror?e=nssFailure") {
-    #errorPageContainer {
-      background-image: url("chrome://browser/skin/lepton/blue-berror.svg");
+    :root {
+      --uc-error-llustration: url(chrome://browser/skin/lepton/blue-berror.svg);
+    }
+
+    #errorPageContainer,
+    .neterror > .container {
       background-size: 18.5em;
     }
   }
   @-moz-document url("about:sessionrestore"), url("chrome://browser/content/aboutSessionRestore.xhtml")
   {
-    .description-wrapper {
-      background-image: url("chrome://browser/skin/lepton/error-session-restore.svg");
+    :root {
+      --uc-error-llustration: url(chrome://browser/skin/lepton/error-session-restore.svg);
     }
   }
   @-moz-document url-prefix("about:neterror?e=fileNotFound") {
@@ -2354,7 +2362,7 @@
       #forward-button,
       #clearDownloadsButton {
         fill: currentColor !important;
-        -moz-context-properties: fill !important;
+        -moz-context-properties: fill, fill-opacity, stroke !important;
       }
 
       /* Add */
@@ -3029,7 +3037,7 @@
         > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
       menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
         /* Color */
-        -moz-context-properties: fill, fill-opacity !important;
+        -moz-context-properties: fill, fill-opacity, stroke !important;
         fill: currentColor !important;
         /* Layout */
         background-size: 16px !important;
@@ -3395,7 +3403,7 @@
         }
 
         #fileImport {
-          --menuitem-image: url("chrome://browser/skin/save.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/toolbarButton-download.svg");
         }
 
         #fileExport {

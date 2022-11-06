@@ -153,6 +153,14 @@ browser.jar:
   skin/classic/browser/lepton/window-dev-tools.svg                          (designs/lepton/icons/window-dev-tools.svg)
   skin/classic/browser/lepton/window.svg                                    (designs/lepton/icons/window.svg)
   skin/classic/browser/lepton/wrench-filled.svg                             (designs/lepton/icons/wrench-filled.svg)
+  skin/classic/browser/lepton/error-malformed-url.svg                      (designs/lepton/icons/error-malformed-url.svg)
+  skin/classic/browser/lepton/merge.svg                                    (designs/lepton/icons/merge.svg)
+  skin/classic/browser/lepton/new-tab-forward.svg                          (designs/lepton/icons/new-tab-forward.svg)
+  skin/classic/browser/lepton/new-tab-skip-forward.svg                     (designs/lepton/icons/new-tab-skip-forward.svg)
+  skin/classic/browser/lepton/tab-desktop-multiple-bottom.svg              (designs/lepton/icons/tab-desktop-multiple-bottom.svg)
+  skin/classic/browser/lepton/timer10.svg                                  (designs/lepton/icons/timer10.svg)
+  skin/classic/browser/lepton/toolbarButton-download.svg                   (designs/lepton/icons/toolbarButton-download.svg)
+  skin/classic/browser/lepton/weather-snowflake.svg                        (designs/lepton/icons/weather-snowflake.svg)
 
 # gnomeUI
 
