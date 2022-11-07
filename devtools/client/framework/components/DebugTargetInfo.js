@@ -297,12 +297,11 @@ class DebugTargetInfo extends PureComponent {
     const checked = this.props.alwaysOnTop;
     const toolboxFocused = this.props.focusedState;
     return [
-      dom.div({ className: "toolbox-toolbar-spacer" }),
       Localized(
         {
           id: checked
-            ? "toolbox-always-on-top-enabled"
-            : "toolbox-always-on-top-disabled",
+            ? "toolbox-always-on-top-enabled2"
+            : "toolbox-always-on-top-disabled2",
           attrs: { title: true },
         },
         dom.button({

@@ -19,34 +19,31 @@
   color: var(--theme-toolbar-color);
 }
 
-.toolbox-toolbar-spacer {
-  flex: 1;
-}
 
 .toolbox-always-on-top {
-  aspect-ratio: 1 / 1;
-  padding: 8px;
-  margin-inline-end: 8px;
-  border: 0;
-  border-radius: 50%;
-  transition: background-color 0.5s ease-in-out;
+  display: flex;
+  padding: 6px;
+  margin-inline: 8px;
+  background-color: transparent;
+  border: 2px solid transparent;
+  border-radius: 2px;
+  align-items: center;
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
-@media (prefers-reduced-motion) {
-  .toolbox-always-on-top {
-    transition: none;
-  }
-}
-
-.toolbox-always-on-top::before {
+.toolbox-always-on-top::after {
   content: "";
   display: block;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   background-size: cover;
   background-image: url("chrome://devtools/skin/images/command-always-on-top-window.svg");
   -moz-context-properties: fill;
   fill: currentColor;
+  margin-inline-start: 5px;
 }
 
 .toolbox-always-on-top:focus {
@@ -60,14 +57,32 @@
 
 .toolbox-always-on-top:hover {
   background-color: var(--theme-toolbar-hover);
+  border-color: var(--tab-line-hover-color);
 }
 
-.toolbox-always-on-top.checked:not(.toolbox-is-focused) {
-  background-color: var(--theme-toolbar-background-highlighted);
+@media (prefers-reduced-motion: no-preference) {
+  .toolbox-always-on-top.checked:not(.toolbox-is-focused) {
+    animation: 0.5s linear 0s 1 normal blink-always-on-top;
+  }
+
+  @keyframes blink-always-on-top {
+    from {
+      background-color: var(--theme-toolbar-background-highlighted);
+    }
+    to {
+      background-color: transparent;
+    }
+  }
 }
 
-.toolbox-always-on-top:is(.checked, :active) {
+.toolbox-always-on-top.checked:not(:active),
+.toolbox-always-on-top:not(.checked):active {
   color: var(--theme-icon-checked-color);
+}
+
+.toolbox-always-on-top.checked:hover:not(:active),
+.toolbox-always-on-top:not(.checked):hover:active {
+  border-color: var(--tab-line-selected-color);
 }
 
 /*
@@ -152,9 +167,14 @@
 
 .debug-target-info .debug-target-url {
   display: flex;
-  flex-grow: 1;
-  padding-inline-end: var(--padding-inline-end-size);
+  flex: 1;
   align-self: center;
+  min-width: 0;
+}
+
+/* Add some inline-end padding when the debug target url is the last child */
+.debug-target-info .debug-target-url:is(:last-child) {
+  padding-inline-end: var(--padding-inline-end-size);
 }
 
 .debug-target-info .debug-target-url-input {
