@@ -16426,9 +16426,7 @@ void Document::ResetUserInteractionTimer() {
 }
 
 bool Document::IsExtensionPage() const {
-  return Preferences::GetBool("media.autoplay.allow-extension-background-pages",
-                              true) &&
-         BasePrincipal::Cast(NodePrincipal())->AddonPolicy();
+  return BasePrincipal::Cast(NodePrincipal())->AddonPolicy();
 }
 
 void Document::AddResizeObserver(ResizeObserver& aObserver) {

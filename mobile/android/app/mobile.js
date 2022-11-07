@@ -410,9 +410,6 @@ pref("media.video-queue.send-to-compositor-size", 1);
 
 pref("media.mediadrm-widevinecdm.visible", true);
 
-// Set Fennec to block autoplay by default.
-pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked
-
 // Enable WebSpeech speech synthesis
 pref("media.webspeech.synth.enabled", true);
 

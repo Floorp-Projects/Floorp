@@ -420,16 +420,6 @@ pref("media.recorder.audio_node.enabled", false);
 // to keep up under load. Useful for tests but beware of memory consumption!
 pref("media.recorder.video.frame_drops", true);
 
-// Whether to autostart a media element with an |autoplay| attribute.
-// ALLOWED=0, BLOCKED=1, defined in dom/media/Autoplay.idl
-pref("media.autoplay.default", 0);
-
-// By default, don't block WebAudio from playing automatically.
-pref("media.autoplay.block-webaudio", false);
-
-// By default, don't block the media from extension background script.
-pref("media.autoplay.allow-extension-background-pages", true);
-
 // The default number of decoded video frames that are enqueued in
 // MediaDecoderReader's mVideoQueue.
 pref("media.video-queue.default-size", 10);
