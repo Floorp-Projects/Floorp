@@ -103,7 +103,7 @@ Support for platform accessibility APIs. Accessibility APIs are used by 3rd part
     * - Group
       - dev-accessibility
     * - URL
-      - http://www.mozilla.org/access/
+      - https://developer.mozilla.org/docs/Web/Accessibility
     * - Bugzilla Components
       - Core::Disability Access APIs
 
@@ -276,7 +276,7 @@ The build system for Gecko and several mozilla.org hosted Gecko-based applicatio
     * - Group
       - dev-builds
     * - URL
-      - http://www.mozilla.org/build/
+      - :ref:`Build System`
     * - Bugzilla Components
       - Core::Build Config
 
@@ -470,7 +470,7 @@ Infrastructure and tools used to generate, submit and process crash reports. Thi
     * - Group
       - dev-platform
     * - URL
-      - https://firefox-source-docs.mozilla.org/toolkit/crashreporter/crashreporter/index.html
+      - :ref:`Crash Reporter`
     * - Bugzilla Components
       - Toolkit::Crash Reporting
 
@@ -689,7 +689,7 @@ Core: Editor
     * - Group
       - dev-platform
     * - URL
-      - http://www.mozilla.org/editor/
+      - :ref:`Editor`
     * - Bugzilla Components
       - Core::Editor
 
@@ -775,7 +775,7 @@ Gecko's built-in profiler
     * - Group
       - dev-platform
     * - URL
-      - https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler
+      - https://profiler.firefox.com/docs/
     * - Bugzilla Components
       - Core::Gecko Profiler
 
@@ -811,7 +811,7 @@ Framework for embedding Gecko into Android applications
 
 Core: Global Key Bindings
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-Global hot keys in Mozilla for the browser, editor, mail-news and widgets. Does not include underlined menu accelerators and the like, as those are part of i18n.
+Global hot keys for Firefox. Does not include underlined menu accelerators and the like, as those are part of i18n.
 
 
 .. list-table::
@@ -829,7 +829,7 @@ Global hot keys in Mozilla for the browser, editor, mail-news and widgets. Does 
     * - Group
       - dev-accessibility
     * - URL
-      - http://www.mozilla.org/projects/ui/accessibility/mozkeyintro.html
+      - https://support.mozilla.org/kb/keyboard-shortcuts-perform-firefox-tasks-quickly
     * - Bugzilla Components
       - Core::Keyboard: Navigation
 
@@ -940,7 +940,7 @@ Core: I18N Library
     * - Group
       - dev-i18n
     * - URL
-      - http://mozilla.org/projects/intl/index.html
+      - :ref:`Internationalization`
     * - Bugzilla Components
       - Core::Internationalization
 
@@ -1277,7 +1277,7 @@ MathML is a low-level specification for describing mathematics which provides a 
     * - Group
       - dev-tech-mathml
     * - URL
-      - http://www.mozilla.org/projects/mathml/
+      - https://developer.mozilla.org/docs/Web/MathML
     * - Bugzilla Components
       - Core::MathML
 
@@ -1510,7 +1510,7 @@ The Mozilla Networking Library
     * - Group
       - dev-tech-network
     * - URL
-      - http://www.mozilla.org/projects/netlib/, https://developer.mozilla.org/en/Necko
+      - :ref:`Networking`
     * - Bugzilla Components
       - Core::Networking, Core::Networking: Cache, Core::Networking: Cookies, Core::Networking: FTP, Core::Networking: File, Core::Networking: HTTP, Core::Networking: JAR, Core::Networking: Websockets, Core::DOM: Networking
 
@@ -1539,7 +1539,7 @@ Advises on the use of NodeJS and npm packages at build and runtime. Reviews addi
         | `package-lock.json <https://searchfox.org/mozilla-central/search?q=&path=package-lock.json>`__
         | `node_modules/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=node_modules/\*\*/\*>`__
     * - URL
-      - [https://wiki.mozilla.org/Firefox/firefox-dev firefox-dev], #nodejs on slack
+      - https://wiki.mozilla.org/Firefox/firefox-dev,
     * - Bugzilla Components
       - Various
 
@@ -1566,13 +1566,13 @@ Netscape Portable Runtime
     * - Group
       - dev-tech-nspr
     * - URL
-      - http://www.mozilla.org/projects/nspr/, http://www.mozilla.org/projects/nspr/reference/html/, http://www.mozilla.org/projects/nspr/release-notes/
+      - :ref:`NSPR`
     * - Bugzilla Components
       - NSPR
 
 Core: PDF
 ~~~~~~~~~
-Rendering code to display documents encoded in the ISO 32000-1 \`PDF' format.
+Rendering code to display documents encoded in the ISO 32000-1 PDF format.
 
 
 .. list-table::
@@ -1708,7 +1708,7 @@ Implementation of the Private Browsing mode, and the integration of other module
 
 Core: Privilege Manager
 ~~~~~~~~~~~~~~~~~~~~~~~
-"caps"
+Caps is the capabilities-based security system.
 
 
 .. list-table::
@@ -1822,7 +1822,7 @@ Sandboxing for the Windows platform
       -
         | `David Parks (handyman) <https://people.mozilla.org/s?query=handyman>`__
     * - Owner(s) Emeritus
-      - Tim Abraldes (https://mozillians.org/en-US/u/TimAbraldes)
+      - Tim Abraldes
     * - Peer(s) Emeritus
       - Brian Bondy, Aaron Klotz, Jim Mathies, Toshihito Kikuchi
     * - Includes
@@ -1874,7 +1874,7 @@ Crypto/PKI code, including NSS (Network Security Services) and JSS (NSS for Java
     * - Group
       - dev-tech-crypto
     * - URL
-      - http://mozilla.org/projects/security/pki/
+      - :ref:`Network Security Services (NSS)`
     * - Bugzilla Components
       - NSS, JSS, Core::Security, Core::Security: S/MIME
 
@@ -2006,7 +2006,7 @@ Core: String
     * - Group
       - dev-tech-xpcom
     * - URL
-      - https://developer.mozilla.org/En/Mozilla_internal_string_guide
+      - :ref:`String Guide`
     * - Bugzilla Components
       - Core::String
 
@@ -2067,7 +2067,7 @@ Scalable Vector Graphics
     * - Group
       - dev-tech-svg
     * - URL
-      - https://developer.mozilla.org/en-US/docs/Web/SVG
+      - https://developer.mozilla.org/docs/Web/SVG
     * - Bugzilla Components
       - Core::SVG
 
@@ -2093,7 +2093,7 @@ User Agent String
     * - Group
       - dev-platform
     * - URL
-      - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent/Firefox
+      - https://developer.mozilla.org/docs/Web/HTTP/Headers/User-Agent/Firefox
     * - Bugzilla Components
       - Core::Networking: HTTP
 
@@ -2178,7 +2178,7 @@ painting, display lists, and layer construction
     * - Group
       - dev-platform
     * - URL
-      - http://mozilla.org/newlayout/doc/, http://lxr.mozilla.org/mozilla/source/layout/doc/
+      - :ref:`Layout & CSS`
     * - Bugzilla Components
       - Core::Layout: Web Painting
 
@@ -2207,7 +2207,7 @@ Core: Web Workers
     * - Group
       - dev-platform
     * - URL
-      - https://developer.mozilla.org/En/Using_web_workers
+      - https://developer.mozilla.org/docs/Web/API/Web_Workers_API/Using_web_workers
     * - Bugzilla Components
       - Core::DOM: Workers
 
@@ -2421,7 +2421,7 @@ GTK widget support
     * - Group
       - dev-platform
     * - URL
-      - http://www.mozilla.org/unix/, http://www.gtk.org, http://www.mozilla.org/ports/gtk/
+      - http://www.mozilla.org/ports/gtk/
     * - Bugzilla Components
       - Core::Widget: Gtk
 
@@ -2523,8 +2523,6 @@ XML in Mozilla, including XML, XHTML, Namespaces in XML, Associating Style Sheet
         | `parser/expat/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=parser/expat/\*\*/\*>`__
     * - Group
       - dev-tech-xml
-    * - URL
-      - http://www.mozilla.org/newlayout/xml/
     * - Bugzilla Components
       - Core::XML
 
@@ -2551,8 +2549,6 @@ Cross-Platform Applications, mostly Navigator front end and application shell.
         | `xpfe/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=xpfe/\*\*/\*>`__
     * - Group
       - dev-apps-seamonkey
-    * - URL
-      - http://www.mozilla.org/xpapps/
 
 Core: XPCOM
 ~~~~~~~~~~~
@@ -2577,7 +2573,7 @@ The cross-platform object model and core data structures.
     * - Owner(s) Emeritus
       - Benjamin Smedberg
     * - Peer(s) Emeritus
-      - Doug Turner (https://mozillians.org/en-US/u/dougt/), Eric Rahm, Simon Giesecke
+      - Doug Turner, Eric Rahm, Simon Giesecke
     * - Includes
       -
         | `startupcache/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=startupcache/\*\*/\*>`__
@@ -2597,7 +2593,7 @@ The cross-platform object model and core data structures.
     * - Group
       - dev-platform
     * - URL
-      - http://developer.mozilla.org/en/XPCOM
+      - :ref:`XPCOM`
     * - Bugzilla Components
       - Core::XPCOM
 
@@ -2655,7 +2651,7 @@ Cross-platform IDL compiler; produces .h C++ header files and .xpt runtime type 
     * - Group
       - dev-tech-xpcom
     * - URL
-      - http://www.mozilla.org/scriptable/xpidl, http://www.mozilla.org/scriptable
+      - :ref:`XPIDL`
 
 Core: XSLT Processor
 ~~~~~~~~~~~~~~~~~~~~
@@ -2677,7 +2673,7 @@ XSLT transformations processor
     * - Group
       - dev-tech-xslt
     * - URL
-      - http://www.mozilla.org/projects/xslt/, http://www.w3.org/TR/xslt.html
+      - https://developer.mozilla.org/docs/Web/XSLT
     * - Bugzilla Components
       - Core::XSLT
 
@@ -2708,8 +2704,6 @@ Standalone Web Browser.
         | `toolkit/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=toolkit/\*\*/\*>`__
     * - Group
       - firefox-dev
-    * - URL
-      - `Code Review Guidelines <https://wiki.mozilla.org/Firefox/Code_Review>`__
     * - Bugzilla Components
       - Firefox, Toolkit
 
@@ -3621,8 +3615,6 @@ Components shared between desktop and mobile browsers.
         | `toolkit/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=toolkit/\*\*/\*>`__
     * - Group
       - firefox-dev
-    * - URL
-      - `Code Review Guidelines <https://wiki.mozilla.org/Firefox/Code_Review>`__
     * - Bugzilla Components
       - Firefox, Toolkit
 
@@ -3673,7 +3665,7 @@ The core infrastructure in the Firefox client to send back Telemetry and FHR dat
     * - Group
       - fx-data-dev
     * - URL
-      - https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/index.html
+      - :ref:`Telemetry`
 
 
 UI Widgets
