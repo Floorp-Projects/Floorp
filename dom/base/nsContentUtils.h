@@ -350,7 +350,6 @@ class nsContentUtils {
   static bool ShouldResistFingerprinting(nsIGlobalObject* aGlobalObject);
   static bool ShouldResistFingerprinting(nsIDocShell* aDocShell);
   // These functions are the new, nuanced functions
-  static bool ShouldResistFingerprinting(const Document* aDoc);
   static bool ShouldResistFingerprinting(nsIChannel* aChannel);
   static bool ShouldResistFingerprinting(nsILoadInfo* aPrincipal);
   // These functions are labeled as dangerous because they will do the wrong
