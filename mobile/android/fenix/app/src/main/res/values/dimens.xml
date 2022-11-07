@@ -174,6 +174,7 @@
     <dimen name="top_sites_favicon_corner_size">4dp</dimen>
 
     <dimen name="top_sites_card_size">60dp</dimen>
+    <dimen name="top_sites_card_margin_top">4dp</dimen>
     <dimen name="top_sites_card_padding">12dp</dimen>
     <dimen name="top_sites_card_elevation">6dp</dimen>
     <dimen name="top_sites_card_radius">8dp</dimen>
