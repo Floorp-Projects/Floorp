@@ -3799,7 +3799,7 @@
 
 - name: dom.sitepermsaddon-provider.enabled
   type: bool
-  value: false
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 # Whether automatic storage access granting heuristics should be turned on.

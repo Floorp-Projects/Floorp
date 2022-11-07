@@ -2763,8 +2763,3 @@ pref("browser.pdfjs.feature-tour", "{\"screen\":\"FEATURE_CALLOUT_1\",\"complete
 
 // Enables the cookie banner desktop UI.
 pref("cookiebanners.ui.desktop.enabled", false);
-
-// We only want to enable this pref for Desktop nightlies.
-#ifdef NIGHTLY_BUILD
-  pref("dom.sitepermsaddon-provider.enabled", true);
-#endif
