@@ -224,6 +224,11 @@ If you wish to use a Nimbus server during local development, you can add a `http
 
 Testing experimental branches should be possible without a server.
 
+### Using custom Glean servers during local development
+If you wish to use a custom Glean server during local development, you can add a `https://` endpoint to the `local.properties` file.
+
+- `glean.custom.server.url`
+
 ### GeckoView
 Specify a relative path to your local `mozilla-central` checkout via `dependencySubstitutions.geckoviewTopsrcdir`,
 and optional a path to m-c object directory via `dependencySubstitutions.geckoviewTopobjdir`.
