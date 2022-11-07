@@ -56,7 +56,7 @@ object Versions {
         const val fastlane = "2.1.1"
         const val junit = "5.9.1"
         const val ktlint = "0.47.1"
-        const val mockito = "3.12.4"
+        const val mockito = "4.8.1"
         const val mockwebserver = "4.10.0"
         const val robolectric = "4.9"
     }
