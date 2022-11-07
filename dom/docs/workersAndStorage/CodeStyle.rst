@@ -4,8 +4,6 @@ DOM Workers & Storage C++ Code Style
 
 This page describes the code style for the components maintained by the DOM Workers & Storage team. They live in-tree under the 'dom/docs/indexedDB' directory.
 
-This document is currently owned by Simon Giesecke <sgiesecke@mozilla.com>.
-
 .. contents::
    :depth: 4
 
