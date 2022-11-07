@@ -16,7 +16,8 @@ var certdialogs = Cc["@mozilla.org/nsCertificateDialogs;1"].getService(
 
 /**
  * List of certs currently selected in the active tab.
- * @type nsIX509Cert[]
+ *
+ * @type {nsIX509Cert[]}
  */
 var selected_certs = [];
 var selected_tree_items = [];
@@ -25,12 +26,14 @@ var certdb;
 
 /**
  * Cert tree for the "Authorities" tab.
- * @type nsICertTree
+ *
+ * @type {nsICertTree}
  */
 var caTreeView;
 /**
  * Cert tree for the "Servers" tab.
- * @type nsICertTree
+ *
+ * @type {nsICertTree}
  */
 var serverTreeView;
 
@@ -223,12 +226,14 @@ var serverRichList = {
 };
 /**
  * Cert tree for the "People" tab.
- * @type nsICertTree
+ *
+ * @type {nsICertTree}
  */
 var emailTreeView;
 /**
  * Cert tree for the "Your Certificates" tab.
- * @type nsICertTree
+ *
+ * @type {nsICertTree}
  */
 var userTreeView;
 
@@ -480,7 +485,7 @@ function getSelectedTreeItems() {
  * selection includes a container. Returns false otherwise.
  *
  * @param {nsICertTree} certTree
- * @returns {Boolean}
+ * @returns {boolean}
  */
 function nothingOrContainerSelected(certTree) {
   var certTreeSelection = certTree.selection;

@@ -157,15 +157,15 @@ add_setup(async function() {
 /**
  * Test helper for the tests below.
  *
- * @param {String} prefValue
+ * @param {string} prefValue
  *        Value to set the "security.default_personal_cert" pref to.
- * @param {String} expectedURL
+ * @param {string} expectedURL
  *        If the connection is expected to load successfully, the URL that
  *        should load. If the connection is expected to fail and result in an
  *        error page, |undefined|.
- * @param {Boolean} expectCallingChooseCertificate
+ * @param {boolean} expectCallingChooseCertificate
  *        Determines whether we expect chooseCertificate to be called.
- * @param {Object} options
+ * @param {object} options
  *        Optional options object to pass on to the window that gets opened.
  */
 async function testHelper(

@@ -6,18 +6,18 @@
 /**
  * @file Implements the functionality of setp12password.xhtml: a dialog that lets
  *       the user confirm the password to set on a PKCS #12 file.
- * @argument {nsISupports} window.arguments[0]
+ * @param {nsISupports} window.arguments.0
  *           Object to set the return values of calling the dialog on, queryable
  *           to the underlying type of SetP12PasswordReturnValues.
  */
 
 /**
  * @typedef SetP12PasswordReturnValues
- * @type nsIWritablePropertyBag2
- * @property {Boolean} confirmedPassword
+ * @type {nsIWritablePropertyBag2}
+ * @property {boolean} confirmedPassword
  *           Set to true if the user entered two matching passwords and
  *           confirmed the dialog.
- * @property {String} password
+ * @property {string} password
  *           The password the user entered. Undefined value if
  *           |confirmedPassword| is not true.
  */
@@ -61,9 +61,9 @@ function onDialogCancel() {
  *   - Non-alphanumeric chars
  *   - Upper case characters
  *
- * @param {String} password
+ * @param {string} password
  *        The password to calculate the strength of.
- * @returns {Number}
+ * @returns {number}
  *          The strength of the password in the range [0, 100].
  */
 function getPasswordStrength(password) {
@@ -109,7 +109,7 @@ function getPasswordStrength(password) {
 /**
  * oninput() handler for both password textboxes.
  *
- * @param {Boolean} recalculatePasswordStrength
+ * @param {boolean} recalculatePasswordStrength
  *                  Whether to recalculate the strength of the first password.
  */
 function onPasswordInput(recalculatePasswordStrength) {

@@ -5,6 +5,8 @@
 "use strict";
 
 module.exports = {
+  extends: ["plugin:mozilla/valid-jsdoc"],
+
   rules: {
     // Enforce return statements in callbacks of array methods.
     "array-callback-return": "error",
@@ -58,16 +60,6 @@ module.exports = {
 
     // Require "use strict" to be defined globally in the script.
     strict: ["error", "global"],
-
-    // Enforce valid JSDoc comments.
-    "valid-jsdoc": [
-      "error",
-      {
-        requireParamDescription: false,
-        requireReturn: false,
-        requireReturnDescription: false,
-      },
-    ],
 
     // Disallow Yoda conditions.
     yoda: ["error", "never"],

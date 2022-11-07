@@ -37,14 +37,14 @@ function loadCert(certFilename, trustString) {
  *
  * @param {Array} expectedNamesForOCSP
  *        An array of nicknames of the certs to be responded to.
- * @param {String} rootCertFileName
+ * @param {string} rootCertFileName
  *        The file name of the root cert. Can begin with ".." to reference
  *        certs in folders other than "test_validity/".
  * @param {Array} intCertFileNames
  *        An array of file names of any intermediate certificates.
- * @param {String} endEntityCertFileName
+ * @param {string} endEntityCertFileName
  *        The file name of the end entity cert.
- * @param {Boolean} expectedResult
+ * @param {boolean} expectedResult
  *        Whether the chain is expected to validate as EV.
  */
 async function doEVTest(

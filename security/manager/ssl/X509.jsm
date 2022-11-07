@@ -14,8 +14,9 @@ const X509v3 = 2;
 
 /**
  * Helper function to read a NULL tag from the given DER.
+ *
  * @param {DER} der a DER object to read a NULL from
- * @return {NULL} an object representing an ASN.1 NULL
+ * @returns {null} an object representing an ASN.1 NULL
  */
 function readNULL(der) {
   return new NULL(der.readTagAndGetContents(DER.NULL));
@@ -27,7 +28,7 @@ function readNULL(der) {
  */
 class NULL {
   /**
-   * @param {Number[]} bytes the contents of the NULL tag (should be empty)
+   * @param {number[]} bytes the contents of the NULL tag (should be empty)
    */
   constructor(bytes) {
     // Lint TODO: bytes should be an empty array
@@ -37,8 +38,9 @@ class NULL {
 
 /**
  * Helper function to read an OBJECT IDENTIFIER from the given DER.
+ *
  * @param {DER} der the DER to read an OBJECT IDENTIFIER from
- * @return {OID} the value of the OBJECT IDENTIFIER
+ * @returns {OID} the value of the OBJECT IDENTIFIER
  */
 function readOID(der) {
   return new OID(der.readTagAndGetContents(DER.OBJECT_IDENTIFIER));
@@ -47,7 +49,7 @@ function readOID(der) {
 /** Class representing an ASN.1 OBJECT IDENTIFIER */
 class OID {
   /**
-   * @param {Number[]} bytes the encoded contents of the OBJECT IDENTIFIER
+   * @param {number[]} bytes the encoded contents of the OBJECT IDENTIFIER
    *                   (not including the ASN.1 tag or length bytes)
    */
   constructor(bytes) {
@@ -94,7 +96,8 @@ class DecodedDER {
   /**
    * Returns the first exception encountered when decoding or null if none has
    * been encountered.
-   * @return {Error} the first exception encountered when decoding or null
+   *
+   * @returns {Error} the first exception encountered when decoding or null
    */
   get error() {
     return this._error;
@@ -115,7 +118,8 @@ class DecodedDER {
    * Public interface to be called to parse all data. Calls parseOverride inside
    * a try/catch block. If an exception is thrown, stashes the error, which can
    * be obtained via the error getter (above).
-   * @param {Number[]} bytes encoded DER to be decoded
+   *
+   * @param {number[]} bytes encoded DER to be decoded
    */
   parse(bytes) {
     this._der = new DER.DERDecoder(bytes);
@@ -130,8 +134,9 @@ class DecodedDER {
 /**
  * Helper function for reading the next SEQUENCE out of a DER and creating a new
  * DER out of the resulting bytes.
+ *
  * @param {DER} der the underlying DER object
- * @return {DER} the contents of the SEQUENCE
+ * @returns {DER} the contents of the SEQUENCE
  */
 function readSEQUENCEAndMakeDER(der) {
   return new DER.DERDecoder(der.readTagAndGetContents(DER.SEQUENCE));
@@ -140,9 +145,10 @@ function readSEQUENCEAndMakeDER(der) {
 /**
  * Helper function for reading the next item identified by tag out of a DER and
  * creating a new DER out of the resulting bytes.
+ *
  * @param {DER} der the underlying DER object
- * @param {Number} tag the expected next tag in the DER
- * @return {DER} the contents of the tag
+ * @param {number} tag the expected next tag in the DER
+ * @returns {DER} the contents of the tag
  */
 function readTagAndMakeDER(der, tag) {
   return new DER.DERDecoder(der.readTagAndGetContents(tag));
@@ -559,8 +565,9 @@ class Time extends DecodedDER {
   /**
    * Takes a byte that is supposed to be in the ASCII range for "0" to "9".
    * Validates the range and then converts it to the range 0 to 9.
-   * @param {Number} d the digit in question (as ASCII in the range ["0", "9"])
-   * @return {Number} the numerical value of the digit (in the range [0, 9])
+   *
+   * @param {number} d the digit in question (as ASCII in the range ["0", "9"])
+   * @returns {number} the numerical value of the digit (in the range [0, 9])
    */
   _validateDigit(d) {
     if (d < "0".charCodeAt(0) || d > "9".charCodeAt(0)) {

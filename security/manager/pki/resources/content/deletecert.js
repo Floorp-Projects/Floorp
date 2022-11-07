@@ -7,26 +7,27 @@
 /**
  * @file Implements the functionality of deletecert.xhtml: a dialog that allows a
  *       user to confirm whether to delete certain certificates.
- * @argument {String} window.arguments[0]
+ * @param {string} window.arguments.0
  *           One of the tab IDs listed in certManager.xhtml.
- * @argument {Object[]} window.arguments[1]
+ * @param {object[]} window.arguments.1
  *           An array of objects representing the certs to delete.
  *           Each must have a 'cert' property or a 'hostPort' property.
- * @argument {DeleteCertReturnValues} window.arguments[2]
+ * @param {DeleteCertReturnValues} window.arguments.2
  *           Object holding the return values of calling the dialog.
  */
 
 /**
  * @typedef DeleteCertReturnValues
- * @type Object
- * @property {Boolean} deleteConfirmed
+ * @type {object}
+ * @property {boolean} deleteConfirmed
  *           Set to true if the user confirmed deletion of the given certs,
  *           false otherwise.
  */
 
 /**
  * Returns the element to represent the given cert to delete.
- * @param {Object} certToDelete
+ *
+ * @param {object} certToDelete
  *        The item to represent.
  * @returns {Element}
  *          A element of each cert tree item.

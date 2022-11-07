@@ -68,9 +68,10 @@ add_task(async function testLongOID() {
 
 /**
  * Given a certificate, returns its PEMs (each one of the certificate chain) string in a url.
- * @param {Object} cert
+ *
+ * @param {object} cert
  *      A certificate object
- * @returns {String} an URL for opening the certificate viewer
+ * @returns {string} an URL for opening the certificate viewer
  */
 function getURL(cert) {
   // Note that we don't get the certificate chain as in e.g browser/base/content/browser.js,
@@ -84,9 +85,9 @@ function getURL(cert) {
  * Given an certificate URL, opens the new certificate viewer and check
  * if a certain element exists, with its expected result.
  *
- * @param {String} url
+ * @param {string} url
  *        The URL with the certificate info
- * @param {String} expectedTabName
+ * @param {string} expectedTabName
  *        The expected name of the tab in the certificate viewer
  */
 async function openCertViewerAndCheckTabName(url, expectedTabName) {

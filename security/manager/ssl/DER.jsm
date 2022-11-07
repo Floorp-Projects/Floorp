@@ -62,8 +62,8 @@ const ERROR_INVALID_BIT_STRING = "invalid BIT STRING encoding";
 /** Class representing a decoded BIT STRING. */
 class BitString {
   /**
-   * @param {Number} unusedBits the number of unused bits
-   * @param {Number[]} contents an array of bytes comprising the BIT STRING
+   * @param {number} unusedBits the number of unused bits
+   * @param {number[]} contents an array of bytes comprising the BIT STRING
    */
   constructor(unusedBits, contents) {
     this._unusedBits = unusedBits;
@@ -72,7 +72,8 @@ class BitString {
 
   /**
    * Get the number of unused bits in the BIT STRING
-   * @return {Number} the number of unused bits
+   *
+   * @returns {number} the number of unused bits
    */
   get unusedBits() {
     return this._unusedBits;
@@ -80,7 +81,8 @@ class BitString {
 
   /**
    * Get the contents of the BIT STRING
-   * @return {Number[]} an array of bytes representing the contents
+   *
+   * @returns {number[]} an array of bytes representing the contents
    */
   get contents() {
     return this._contents;
@@ -90,7 +92,7 @@ class BitString {
 /** Class representing DER-encoded data. Provides methods for decoding it. */
 class DERDecoder {
   /**
-   * @param {Number[]} bytes an array of bytes representing the encoded data
+   * @param {number[]} bytes an array of bytes representing the encoded data
    */
   constructor(bytes) {
     // Reject non-array inputs.
@@ -116,7 +118,8 @@ class DERDecoder {
 
   /**
    * Determines whether or not the decoder is at the end of the given data.
-   * @return {Boolean} true if the decoder is at the end and false otherwise
+   *
+   * @returns {boolean} true if the decoder is at the end and false otherwise
    */
   atEnd() {
     return this._cursor == this._bytes.length;
@@ -124,7 +127,8 @@ class DERDecoder {
 
   /**
    * Reads the next byte of data. Throws if no more data is available.
-   * @return {Number} the next byte of data
+   *
+   * @returns {number} the next byte of data
    */
   readByte() {
     if (this._cursor >= this._bytes.length) {
@@ -138,7 +142,8 @@ class DERDecoder {
   /**
    * Given the next expected tag, reads and asserts that the next tag is in fact
    * the given tag.
-   * @param {Number} expectedTag the expected next tag
+   *
+   * @param {number} expectedTag the expected next tag
    */
   _readExpectedTag(expectedTag) {
     let tag = this.readByte();
@@ -151,7 +156,8 @@ class DERDecoder {
    * Decodes and returns the length portion of an ASN.1 TLV tuple. Throws if the
    * length is incorrectly encoded or if it describes a length greater than
    * 65535 bytes. Indefinite-length encoding is not supported.
-   * @return {Number} the length of the value of the TLV tuple
+   *
+   * @returns {number} the length of the value of the TLV tuple
    */
   _readLength() {
     let nextByte = this.readByte();
@@ -183,8 +189,9 @@ class DERDecoder {
   /**
    * Reads <length> bytes of data if available. Throws if less than <length>
    * bytes are available.
-   * @param {Number} length the number of bytes to read. Must be non-negative.
-   * @return {Number[]} the next <length> bytes of data
+   *
+   * @param {number} length the number of bytes to read. Must be non-negative.
+   * @returns {number[]} the next <length> bytes of data
    */
   readBytes(length) {
     if (length < 0) {
@@ -202,8 +209,9 @@ class DERDecoder {
    * Given an expected next ASN.1 tag, ensures that that tag is next and returns
    * the contents of that tag. Throws if a different tag is encountered or if
    * the data is otherwise incorrectly encoded.
-   * @param {Number} tag the next expected ASN.1 tag
-   * @return {Number[]} the contents of the tag
+   *
+   * @param {number} tag the next expected ASN.1 tag
+   * @returns {number[]} the contents of the tag
    */
   readTagAndGetContents(tag) {
     this._readExpectedTag(tag);
@@ -214,7 +222,8 @@ class DERDecoder {
   /**
    * Returns the next byte without advancing the decoder. Throws if no more data
    * is available.
-   * @return {Number} the next available byte
+   *
+   * @returns {number} the next available byte
    */
   _peekByte() {
     if (this._cursor >= this._bytes.length) {
@@ -226,8 +235,9 @@ class DERDecoder {
   /**
    * Given an expected tag, reads the next entire ASN.1 TLV tuple, asserting
    * that the tag matches.
-   * @param {Number} tag the expected tag
-   * @return {Number[]} an array of bytes representing the TLV tuple
+   *
+   * @param {number} tag the expected tag
+   * @returns {number[]} an array of bytes representing the TLV tuple
    */
   _readExpectedTLV(tag) {
     let mark = this._cursor;
@@ -241,7 +251,8 @@ class DERDecoder {
   /**
    * Reads the next ASN.1 tag, length, and value and returns them as an array of
    * bytes.
-   * @return {Number[]} an array of bytes representing the next ASN.1 TLV
+   *
+   * @returns {number[]} an array of bytes representing the next ASN.1 TLV
    */
   readTLV() {
     let nextTag = this._peekByte();
@@ -252,7 +263,8 @@ class DERDecoder {
    * Convenience function for decoding a BIT STRING. Reads and returns the
    * contents of the expected next BIT STRING. Throws if the next TLV isn't a
    * BIT STRING or if the BIT STRING is incorrectly encoded.
-   * @return {BitString} the next BIT STRING
+   *
+   * @returns {BitString} the next BIT STRING
    */
   readBIT_STRING() {
     let contents = this.readTagAndGetContents(BIT_STRING);
@@ -272,8 +284,9 @@ class DERDecoder {
 
   /**
    * Looks to see if the next ASN.1 tag is the expected given tag.
-   * @param {Number} tag the expected next ASN.1 tag
-   * @return {Boolean} true if the next tag is the given one and false otherwise
+   *
+   * @param {number} tag the expected next ASN.1 tag
+   * @returns {boolean} true if the next tag is the given one and false otherwise
    */
   peekTag(tag) {
     if (this._cursor >= this._bytes.length) {
@@ -286,8 +299,9 @@ class DERDecoder {
    * Given a list of possible next ASN.1 tags, returns the next TLV if the next
    * tag is in the list. Throws if the next tag is not in the list or if the
    * data is incorrectly encoded.
-   * @param {Number[]} tagList the list of potential next tags
-   * @return {Number[]} the contents of the next TLV if the next tag is in
+   *
+   * @param {number[]} tagList the list of potential next tags
+   * @returns {number[]} the contents of the next TLV if the next tag is in
    *                    <tagList>
    */
   readTLVChoice(tagList) {

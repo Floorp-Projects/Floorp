@@ -84,7 +84,7 @@ const DEFAULT_CERT_EXTENSION = "crt";
  *
  * @param {nsIX509Cert} cert
  *        The cert to generate a filename for.
- * @returns {String}
+ * @returns {string}
  *          Generated filename.
  */
 function certToFilename(cert) {
@@ -217,7 +217,7 @@ const certificateUsages = {
  *
  * @param {nsIX509Cert} cert
  *        The certificate to determine valid usages for.
- * @return {Promise}
+ * @returns {Promise}
  *        A promise that will resolve with the results of the verifications.
  */
 function asyncDetermineUsages(cert) {
@@ -259,8 +259,6 @@ function asyncDetermineUsages(cert) {
  *
  * @param {Array} results
  *        An array of results from `asyncDetermineUsages`. See `displayUsages`.
- * @param {Number} usage
- *        A numerical value corresponding to a usage. See `certificateUsages`.
  * @returns {Array} An array of `nsIX509Cert` representing the verified
  *          certificate chain for the given usage, or null if there is none.
  */
@@ -287,7 +285,7 @@ function getBestChain(results) {
  *
  * @param {Array} results
  *        An array of results from `asyncDetermineUsages`. See `displayUsages`.
- * @param {Number} usage
+ * @param {number} usage
  *        A numerical value corresponding to a usage. See `certificateUsages`.
  * @returns {Array} An array of `nsIX509Cert` representing the verified
  *          certificate chain for the given usage, or null if there is none.
