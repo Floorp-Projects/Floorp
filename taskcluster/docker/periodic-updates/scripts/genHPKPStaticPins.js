@@ -152,8 +152,8 @@ function getSKDFromPem(pem) {
  * Hashes |input| using the SHA-256 algorithm in the following manner:
  *   btoa(sha256(atob(input)))
  *
- * @argument {String} input Base64 string to decode and return the hash of.
- * @returns {String} Base64 encoded SHA-256 hash.
+ * @param {string} input Base64 string to decode and return the hash of.
+ * @returns {string} Base64 encoded SHA-256 hash.
  */
 function sha256Base64(input) {
   let decodedValue;
