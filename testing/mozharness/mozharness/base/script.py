@@ -624,7 +624,7 @@ class ScriptMixin(PlatformMixin):
             retry_exceptions=(
                 HTTPError,
                 URLError,
-                httplib.BadStatusLine,
+                httplib.HTTPException,
                 socket.timeout,
                 socket.error,
             ),
@@ -778,7 +778,7 @@ class ScriptMixin(PlatformMixin):
             retry_exceptions=(
                 HTTPError,
                 URLError,
-                httplib.BadStatusLine,
+                httplib.HTTPException,
                 socket.timeout,
                 socket.error,
                 ContentLengthMismatch,
