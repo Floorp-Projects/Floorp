@@ -10,7 +10,6 @@ MAIN_BRANCH_NAME='main'
 PREP_BRANCH_NAME='focus-prep'
 TMP_REPO_PATH="/tmp/git/$REPO_NAME_TO_SYNC"
 TMP_REPO_BRANCH_NAME='firefox-android'
-TAG_PREFIX='focus-'
 MONOREPO_URL='git@github.com:mozilla-mobile/firefox-android.git'
 MERGE_COMMIT_MESSAGE=$(cat <<EOF
 Merge https://github.com/mozilla-mobile/$REPO_NAME_TO_SYNC repository
@@ -19,7 +18,6 @@ The history was slightly altered before merging it:
   * All files from $REPO_NAME_TO_SYNC are now under its own subdirectory
   * All commits messages were rewritten to link issues and pull requests to the former repository
   * All commits messages were prefixed with [focus]
-  * All tags were were prefixed with $TAG_PREFIX
 EOF
 )
 
@@ -74,15 +72,7 @@ function _rewrite_git_history() {
     git filter-repo \
         --to-subdirectory-filter "$REPO_NAME_TO_SYNC/" \
         --replace-message "$EXPRESSIONS_FILE_PATH" \
-        --tag-rename '':"$TAG_PREFIX" \
         --force
-}
-
-function _remove_old_tags() {
-    cd "$CURRENT_REPO_PATH"
-    set +e
-    git tag | grep "$TAG_PREFIX" | xargs -L 1 | xargs git push "$MONOREPO_URL" --delete
-    set -e
 }
 
 function _back_up_prep_branch() {
@@ -102,7 +92,7 @@ function _reset_prep_branch() {
 
 function _merge_histories() {
     cd "$CURRENT_REPO_PATH"
-    git pull --no-edit --tags --allow-unrelated-histories --no-rebase --force "$TMP_REPO_PATH"
+    git pull --no-edit --allow-unrelated-histories --no-rebase --force "$TMP_REPO_PATH"
     git commit --amend --message "$MERGE_COMMIT_MESSAGE"
 }
 
@@ -116,7 +106,6 @@ _setup_temporary_repo
 _update_repo_branch
 _update_repo_numbers
 _rewrite_git_history
-_remove_old_tags
 _reset_prep_branch
 _merge_histories
 _clean_up_temporary_repo
@@ -127,5 +116,4 @@ $REPO_NAME_TO_SYNC has been sync'd and merged to the current branch.
 You can now inspect the changes and push them once ready:
 
 git push
-git push --tags
 EOF
