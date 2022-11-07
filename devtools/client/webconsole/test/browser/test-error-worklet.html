@@ -12,7 +12,7 @@
 const context = new AudioContext();
 
 context.audioWorklet.addModule("test-syntaxerror-worklet.js").catch(
-  () => context.audioWorklet.addModule("test-error-worklet.js")
+  () => context.audioWorklet.addModule("test-error-worklet.mjs")
 ).then(() => {
   const workletNode = new AudioWorkletNode(context, "error");
   const oscillator = new OscillatorNode(context);
