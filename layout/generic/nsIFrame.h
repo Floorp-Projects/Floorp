@@ -52,7 +52,6 @@
 #include "CaretAssociationHint.h"
 #include "FrameProperties.h"
 #include "LayoutConstants.h"
-#include "mozilla/layout/FrameChildList.h"
 #include "mozilla/AspectRatio.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
