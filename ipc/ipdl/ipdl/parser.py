@@ -4,7 +4,7 @@
 
 import os
 from ply import lex, yacc
-
+from pathlib import Path
 from ipdl.ast import *
 
 # -----------------------------------------------------------------------------
@@ -58,6 +58,24 @@ class Parser:
 
     def parse(self, input, filename, includedirs):
         assert os.path.isabs(filename)
+
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1795158
+        # On Azure the absolute file paths for 'filename' that go through this function
+        # can originate from two different mount points (eg: "z:/build/workspace" and
+        # "Z:/task_XYZ/workspace"). Both file paths essentially point to the same logical
+        # file, but the file paths are ultimately different. We could not track down
+        # what was causing both mount points to be used on Azure, but not AWS, so the
+        # workaround we came up with is to strip the two leading path segments before
+        # doing the comparison.
+        #
+        # Example: "Z:/task_XYZ/workspace/obj/ipc.ipdl" and "z:/build/workspace/obj/ipc.ipdl"
+        # are being compared, by stripping the two leading path segments from both, they
+        # become "workspace/obj/ipc.ipdl" and "workspace/obj/ipc.ipdl", respectively.
+        #
+        # It would be ideal to find the root cause of this issue, rather than having this
+        # workaround here, because if the number of directories in the mount point changes,
+        # this will break.
+        filename = Path(*Path(filename).parts[2:]).as_posix()
 
         if self.tu.name in Parser.parsed:
             priorTU = Parser.parsed[self.tu.name].tu
