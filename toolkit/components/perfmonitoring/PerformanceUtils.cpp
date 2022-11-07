@@ -107,11 +107,21 @@ RefPtr<MemoryPromise> CollectMemoryInfo(
   // Getting Dom sizes. -- XXX should we reimplement GetTabSizes to async here ?
   nsTabSizes sizes;
 
+  using WindowSet = mozilla::HashSet<nsGlobalWindowOuter*>;
+  WindowSet windowsVisited;
   for (const auto& document : *aDocGroup) {
     nsGlobalWindowOuter* window =
         document ? nsGlobalWindowOuter::Cast(document->GetWindow()) : nullptr;
     if (window) {
-      AddWindowTabSizes(window, &sizes);
+      WindowSet::AddPtr p = windowsVisited.lookupForAdd(window);
+      if (!p) {
+        // We have not seen this window before.
+        AddWindowTabSizes(window, &sizes);
+        if (!windowsVisited.add(p, window)) {
+          // OOM.  Let us stop counting memory, we may undercount.
+          break;
+        }
+      }
     }
   }
 
