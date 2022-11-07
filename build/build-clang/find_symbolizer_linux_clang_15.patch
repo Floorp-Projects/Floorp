@@ -1,5 +1,5 @@
 diff --git a/compiler-rt/lib/sanitizer_common/sanitizer_file.cpp b/compiler-rt/lib/sanitizer_common/sanitizer_file.cpp
-index c3e08f58c2ce..b5c5b9e3e74a 100644
+index 7ef499ce07b1..8fd682f943fe 100644
 --- a/compiler-rt/lib/sanitizer_common/sanitizer_file.cpp
 +++ b/compiler-rt/lib/sanitizer_common/sanitizer_file.cpp
 @@ -21,6 +21,10 @@
@@ -13,38 +13,41 @@ index c3e08f58c2ce..b5c5b9e3e74a 100644
  namespace __sanitizer {
  
  void CatastrophicErrorWrite(const char *buffer, uptr length) {
-@@ -222,6 +226,34 @@ char *FindPathToBinary(const char *name) {
-     if (*end == '\0') break;
-     beg = end + 1;
+@@ -206,11 +210,35 @@ char *FindPathToBinary(const char *name) {
+     return internal_strdup(name);
    }
+ 
++  uptr name_len = internal_strlen(name);
++  InternalMmapVector<char> buffer(kMaxPathLength);
 +
 +#if SANITIZER_LINUX
 +  // If we cannot find the requested binary in PATH, we should try to locate
 +  // it next to the binary, in case it is shipped with the build itself
 +  // (e.g. llvm-symbolizer shipped with sanitizer build to symbolize on client.
-+  if (internal_readlink("/proc/self/exe", buffer.data(), kMaxPathLength) < 0)
-+    return nullptr;
++  if (internal_readlink("/proc/self/exe", buffer.data(), kMaxPathLength) >= 0) {
++    uptr buf_len = internal_strlen(buffer.data());
 +
-+  uptr buf_len = internal_strlen(buffer.data());
++    /* Avoid using dirname() here */
++    while (buf_len > 0) {
++      if (buffer[buf_len - 1] == '/')
++        break;
++      buf_len--;
++    }
 +
-+  /* Avoid using dirname() here */
-+  while (buf_len > 0) {
-+    if (buffer[buf_len - 1] == '/')
-+      break;
-+    buf_len--;
-+  }
-+
-+  if (!buf_len)
-+    return nullptr;
-+
-+  if (buf_len + name_len + 1 <= kMaxPathLength) {
-+    internal_memcpy(&buffer[buf_len], name, name_len);
-+    buffer[buf_len + name_len] = '\0';
-+    if (FileExists(buffer.data()))
-+      return internal_strdup(buffer.data());
++    if (buf_len && buf_len + name_len + 1 <= kMaxPathLength) {
++      internal_memcpy(&buffer[buf_len], name, name_len);
++      buffer[buf_len + name_len] = '\0';
++      if (FileExists(buffer.data()))
++        return internal_strdup(buffer.data());
++    }
 +  }
 +#endif
 +
-   return nullptr;
- }
- 
+   const char *path = GetEnv("PATH");
+   if (!path)
+     return nullptr;
+-  uptr name_len = internal_strlen(name);
+-  InternalMmapVector<char> buffer(kMaxPathLength);
+   const char *beg = path;
+   while (true) {
+     const char *end = internal_strchrnul(beg, kPathSeparator);
