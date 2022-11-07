@@ -23,7 +23,8 @@ void WebGLChild::ActorDestroy(ActorDestroyReason why) {
 
 // -
 
-Maybe<Range<uint8_t>> WebGLChild::AllocPendingCmdBytes(const size_t size) {
+Maybe<Range<uint8_t>> WebGLChild::AllocPendingCmdBytes(
+    const size_t size, const size_t fyiAlignmentOverhead) {
   if (!mPendingCmdsShmem) {
     size_t capacity = mDefaultCmdsShmemSize;
     if (capacity < size) {
@@ -37,6 +38,7 @@ Maybe<Range<uint8_t>> WebGLChild::AllocPendingCmdBytes(const size_t size) {
     }
     mPendingCmdsShmem = std::move(shmem);
     mPendingCmdsPos = 0;
+    mPendingCmdsAlignmentOverhead = 0;
 
     if (kIsDebug) {
       const auto range = mPendingCmdsShmem.ByteRange();
@@ -50,14 +52,16 @@ Maybe<Range<uint8_t>> WebGLChild::AllocPendingCmdBytes(const size_t size) {
   auto itr = range.begin() + mPendingCmdsPos;
   const auto offset = AlignmentOffset(kUniversalAlignment, itr.get());
   mPendingCmdsPos += offset;
+  mPendingCmdsAlignmentOverhead += offset;
   const auto required = mPendingCmdsPos + size;
   if (required > range.length()) {
     FlushPendingCmds();
-    return AllocPendingCmdBytes(size);
+    return AllocPendingCmdBytes(size, fyiAlignmentOverhead);
   }
   itr = range.begin() + mPendingCmdsPos;
   const auto remaining = Range<uint8_t>{itr, range.end()};
   mPendingCmdsPos += size;
+  mPendingCmdsAlignmentOverhead += fyiAlignmentOverhead;
   return Some(Range<uint8_t>{remaining.begin(), remaining.begin() + size});
 }
 
@@ -69,11 +73,20 @@ void WebGLChild::FlushPendingCmds() {
 
   mFlushedCmdInfo.flushes += 1;
   mFlushedCmdInfo.flushedCmdBytes += byteSize;
+  mFlushedCmdInfo.overhead += mPendingCmdsAlignmentOverhead;
 
   if (gl::GLContext::ShouldSpew()) {
-    printf_stderr("[WebGLChild] Flushed %zu bytes. (%zu over %zu flushes)\n",
-                  byteSize, mFlushedCmdInfo.flushedCmdBytes,
-                  mFlushedCmdInfo.flushes);
+    const auto overheadRatio = float(mPendingCmdsAlignmentOverhead) /
+                               (byteSize - mPendingCmdsAlignmentOverhead);
+    const auto totalOverheadRatio =
+        float(mFlushedCmdInfo.overhead) /
+        (mFlushedCmdInfo.flushedCmdBytes - mFlushedCmdInfo.overhead);
+    printf_stderr(
+        "[WebGLChild] Flushed %zu (%zu=%.2f%% overhead) bytes."
+        " (%zu (%.2f%% overhead) over %zu flushes)\n",
+        byteSize, mPendingCmdsAlignmentOverhead, 100 * overheadRatio,
+        mFlushedCmdInfo.flushedCmdBytes, 100 * totalOverheadRatio,
+        mFlushedCmdInfo.flushes);
   }
 }
 
