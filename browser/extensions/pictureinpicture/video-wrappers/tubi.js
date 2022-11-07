@@ -6,30 +6,16 @@
 
 class PictureInPictureVideoWrapper {
   setCaptionContainerObserver(video, updateCaptionsFunction) {
-    let container = document.getElementById("hls");
+    let container = document.querySelector(`[data-id="hls"]`);
 
     if (container) {
       updateCaptionsFunction("");
       const callback = function(mutationsList, observer) {
-        let textNodeList;
-        if (
-          container?.querySelector(
-            '#captionsComponent[style="display: block;"]'
-          )
-        ) {
-          textNodeList = container
-            ?.querySelector("#captionsComponent")
-            ?.querySelectorAll("span");
-        }
+        let text = container?.querySelector(
+          `[data-id="captionsComponent"]:not([style="display: none;"])`
+        )?.innerText;
 
-        if (!textNodeList) {
-          updateCaptionsFunction("");
-          return;
-        }
-
-        updateCaptionsFunction(
-          Array.from(textNodeList, x => x.innerText).join("\n")
-        );
+        updateCaptionsFunction(text);
       };
 
       // immediately invoke the callback function to add subtitles to the PiP window
