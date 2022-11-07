@@ -310,7 +310,7 @@ add_task(async function test_gifft_timespan() {
     10 * NANOS_IN_MILLIS - EPSILON
   );
   // Mirrored to milliseconds.
-  Assert.greaterOrEqual(scalarValue("telemetry.test.mirror_for_timespan"), 10);
+  Assert.greaterOrEqual(scalarValue("telemetry.test.mirror_for_timespan"), 9);
 });
 
 add_task(async function test_gifft_timespan_raw() {
