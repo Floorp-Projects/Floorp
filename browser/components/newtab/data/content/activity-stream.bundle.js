@@ -7048,7 +7048,7 @@ class DSLinkMenu extends (external_React_default()).PureComponent {
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 const TOP_SITES_SOURCE = "TOP_SITES";
 const TOP_SITES_CONTEXT_MENU_OPTIONS = ["CheckPinTopSite", "EditTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"];
-const TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS = ["PinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "ShowPrivacyInfo"];
+const TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS = ["OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "ShowPrivacyInfo"];
 const TOP_SITES_SPONSORED_POSITION_CONTEXT_MENU_OPTIONS = ["OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "AboutSponsored"]; // the special top site for search shortcut experiment can only have the option to unpin (which removes) the topsite
 
 const TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "BlockUrl"]; // minimum size necessary to show a rich icon instead of a screenshot
