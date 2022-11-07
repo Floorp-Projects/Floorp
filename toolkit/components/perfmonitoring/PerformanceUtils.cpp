@@ -125,12 +125,34 @@ RefPtr<MemoryPromise> CollectMemoryInfo(
     }
   }
 
-  BrowsingContextGroup* group = aDocGroup->GetBrowsingContextGroup();
-  // Getting GC Heap Usage
+  using ZoneSet = mozilla::HashSet<JS::Zone*>;
+  ZoneSet zonesVisited;
+  // Getting JS-related memory usage
   uint64_t jsMemUsed = 0;
-  JSObject* object = group->GetWrapper();
-  if (object != nullptr) {
-    jsMemUsed = js::GetMemoryUsageForObjectZone(object);
+  for (auto* doc : *aDocGroup) {
+    bool unused;
+    nsIGlobalObject* globalObject = doc->GetScriptHandlingObject(unused);
+    if (globalObject) {
+      JSObject* object = globalObject->GetGlobalJSObject();
+      if (object != nullptr) {
+        MOZ_ASSERT(NS_IsMainThread(),
+                   "We cannot get the object zone on another thread");
+        JS::Zone* zone = JS::GetObjectZone(object);
+        ZoneSet::AddPtr p = zonesVisited.lookupForAdd(zone);
+        if (!p) {
+          // We have not checked this zone before.
+          //
+          // GetMemoryUsageForObjectZone() can will include SharedArrayBuffers
+          // which may be shared between multiple zones, this can lead to an
+          // over-estimate.
+          jsMemUsed += js::GetMemoryUsageForObjectZone(object);
+          if (!zonesVisited.add(p, zone)) {
+            // OOM.  Let us stop counting memory, we may undercount.
+            break;
+          }
+        }
+      }
+    }
   }
 
   // Getting Media sizes.
