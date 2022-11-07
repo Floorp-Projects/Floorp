@@ -25,7 +25,7 @@ const callExpressionDefinitions = [
   /^loader\.lazyServiceGetter\(lazy, "(\w+)"/,
   /^loader\.lazyRequireGetter\(lazy, "(\w+)"/,
   /^XPCOMUtils\.defineLazyGetter\(lazy, "(\w+)"/,
-  /^Integration\.downloads\.defineModuleGetter\(lazy, "(\w+)"/,
+  /^Integration\.downloads\.defineESModuleGetter\(lazy, "(\w+)"/,
   /^XPCOMUtils\.defineLazyModuleGetter\(lazy, "(\w+)"/,
   /^ChromeUtils\.defineModuleGetter\(lazy, "(\w+)"/,
   /^XPCOMUtils\.defineLazyPreferenceGetter\(lazy, "(\w+)"/,

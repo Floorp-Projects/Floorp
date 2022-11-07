@@ -45,7 +45,7 @@ ruleTester.run("valid-lazy", rule, {
     `,
     `
       const lazy = {};
-      Integration.downloads.defineModuleGetter(lazy, "foo", "foo.jsm");
+      Integration.downloads.defineESModuleGetter(lazy, "foo", "foo.sys.mjs");
       if (x) { lazy.foo.bar(); }
     `,
     `

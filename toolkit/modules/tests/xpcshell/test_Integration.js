@@ -218,30 +218,21 @@ add_task(async function test_xpcom_throws() {
 });
 
 /**
- * Checks that getters defined by defineModuleGetter are able to retrieve the
+ * Checks that getters defined by defineESModuleGetter are able to retrieve the
  * latest version of the combined integration object.
  */
-add_task(async function test_defineModuleGetter() {
+add_task(async function test_defineESModuleGetter() {
   let objectForGetters = {};
 
-  // Test with and without the optional "symbol" parameter.
-  Integration.testModule.defineModuleGetter(
+  Integration.testModule.defineESModuleGetter(
     objectForGetters,
     "TestIntegration",
-    "resource://testing-common/TestIntegration.jsm"
-  );
-  Integration.testModule.defineModuleGetter(
-    objectForGetters,
-    "integration",
-    "resource://testing-common/TestIntegration.jsm",
-    "TestIntegration"
+    "resource://testing-common/TestIntegration.sys.mjs"
   );
 
   Integration.testModule.register(overrideFn);
-  await assertCombinedResults(objectForGetters.integration, 1);
   await assertCombinedResults(objectForGetters.TestIntegration, 1);
 
   Integration.testModule.unregister(overrideFn);
-  await assertCombinedResults(objectForGetters.integration, 0);
   await assertCombinedResults(objectForGetters.TestIntegration, 0);
 });

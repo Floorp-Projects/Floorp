@@ -39,10 +39,10 @@ XPCOMUtils.defineLazyServiceGetter(
   Ci.nsIExternalHelperAppService
 );
 
-Integration.downloads.defineModuleGetter(
+Integration.downloads.defineESModuleGetter(
   lazy,
   "DownloadIntegration",
-  "resource://gre/modules/DownloadIntegration.jsm"
+  "resource://gre/modules/DownloadIntegration.sys.mjs"
 );
 
 const BackgroundFileSaverStreamListener = Components.Constructor(
