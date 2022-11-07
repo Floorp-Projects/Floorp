@@ -750,7 +750,6 @@ class TestXUnitFormatter(FormatterTest):
         self.assertEqual(root.get("failures"), "0")
         self.assertEqual(root.get("errors"), "0")
         self.assertEqual(root.get("tests"), "1")
-        self.assertEqual(root.get("time"), "0.00")
 
     def test_time_is_not_rounded(self):
         # call formatter directly, it is easier here
