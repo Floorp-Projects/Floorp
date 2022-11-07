@@ -125,15 +125,27 @@ TimeDuration VsyncDispatcher::GetVsyncRate() {
   return state->mCurrentVsyncSource->GetVsyncRate();
 }
 
+static int32_t ComputeFrameRateDivisor(gfx::VsyncSource* aCurrentVsyncSource) {
+  int32_t maxRate = StaticPrefs::gfx_display_max_frame_rate();
+  if (maxRate == 0) {
+    return StaticPrefs::gfx_display_frame_rate_divisor();
+  }
+
+  // Compute the frame rate divisor based on max frame rates.
+  double frameDuration = aCurrentVsyncSource->GetVsyncRate().ToMilliseconds();
+
+  // Respect the pref gfx.display.frame-rate-divisor if larger.
+  return std::max(StaticPrefs::gfx_display_frame_rate_divisor(),
+                  int32_t(floor(1000.0 / frameDuration / maxRate)));
+}
+
 void VsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
   nsTArray<RefPtr<VsyncObserver>> observers;
   bool shouldDispatchToMainThread = false;
   {
     auto state = mState.Lock();
-
-    // Respect the pref gfx.display.frame-rate-divisor.
     if (++state->mVsyncSkipCounter <
-        StaticPrefs::gfx_display_frame_rate_divisor()) {
+        ComputeFrameRateDivisor(state->mCurrentVsyncSource)) {
       return;
     }
     state->mVsyncSkipCounter = 0;
