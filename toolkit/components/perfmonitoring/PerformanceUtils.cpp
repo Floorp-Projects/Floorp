@@ -147,35 +147,4 @@ RefPtr<MemoryPromise> CollectMemoryInfo(
       });
 }
 
-RefPtr<MemoryPromise> CollectMemoryInfo(
-    const RefPtr<BrowsingContext>& aContext,
-    const RefPtr<AbstractThread>& aEventTarget) {
-  // Getting Dom sizes. -- XXX should we reimplement GetTabSizes to async here ?
-  nsTabSizes sizes;
-  nsresult rv = GetTabSizes(aContext, &sizes);
-  if (NS_FAILED(rv)) {
-    return MemoryPromise::CreateAndReject(rv, __func__);
-  }
-
-  // Getting GC Heap Usage
-  JSObject* obj = aContext->GetWrapper();
-  uint64_t GCHeapUsage = 0;
-  if (obj != nullptr) {
-    GCHeapUsage = js::GetGCHeapUsageForObjectZone(obj);
-  }
-
-  // Getting Media sizes.
-  return GetMediaMemorySizes()->Then(
-      aEventTarget, __func__,
-      [GCHeapUsage, sizes](const MediaMemoryInfo& media) {
-        return MemoryPromise::CreateAndResolve(
-            PerformanceMemoryInfo(media, sizes.mDom, sizes.mStyle, sizes.mOther,
-                                  GCHeapUsage),
-            __func__);
-      },
-      [](const nsresult rv) {
-        return MemoryPromise::CreateAndReject(rv, __func__);
-      });
-}
-
 }  // namespace mozilla

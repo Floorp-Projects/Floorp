@@ -25,10 +25,6 @@ nsTArray<RefPtr<PerformanceInfoPromise>> CollectPerformanceInfo();
  * Asynchronously collects memory info for a given window
  */
 RefPtr<MemoryPromise> CollectMemoryInfo(
-    const RefPtr<dom::BrowsingContext>& aContext,
-    const RefPtr<AbstractThread>& aEventTarget);
-
-RefPtr<MemoryPromise> CollectMemoryInfo(
     const RefPtr<dom::DocGroup>& aDocGroup,
     const RefPtr<AbstractThread>& aEventTarget);
 
