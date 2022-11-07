@@ -901,7 +901,7 @@ modules:
   - name: mozilla-toplevel
     description: The top level directory for the mozilla tree.
     includes:
-      - README
+      - README.txt
         # TODO: verify, as this was toolkit/README
     meta:
       owners_emeritus:
@@ -1062,14 +1062,7 @@ modules:
       - build/**/*
       - config/**/*
       - python/mozbuild/**/*
-      - tools/cross-commit/**/*
-      - tools/cvs2hg-import.py
-      - tools/cvsmgmt/**/*
-      - tools/elf-dynstr-gc/**/*
-      - tools/trees.pl
       - browser/config/mozconfigs/**/*
-      - mobile/config/mozconfigs/**/*
-      - xulrunner/config/mozconfigs/**/*
     meta:
       owners_emeritus:
         - Chris Manchester
@@ -1134,22 +1127,10 @@ modules:
     description: Tools for debugging Mozilla code or for analyzing speed, memory use,
       and other characteristics of it.
     includes:
-      - tools/codesighs/**/*
-      - tools/debug/**/*
-      - tools/dreftool/**/*
-      - tools/dumpdeps/**/*
       - tools/jprof/**/*
       - tools/leak-gauge/**/*
-      - tools/leaky/**/*
-      - tools/memory/**/*
-      - tools/module-deps/**/*
       - tools/performance/**/*
-      - tools/post_compile/**/*
-      - tools/preloader/**/*
       - tools/rb/**/*
-      - tools/reorder/**/*
-      - tools/trace-malloc/**/*
-      - tools/uuiddeps/**/*
     meta:
       group: dev-performance
     owners:
@@ -1216,7 +1197,7 @@ modules:
       - toolkit/crashreporter/**/*
       - toolkit/components/crashes/**/*
       - tools/crashreporter/**/*
-      - ipc/glue/CrashReporter/**/*
+      - ipc/glue/CrashReporter*
       - mobile/android/geckoview/src/main/java/org/mozilla/geckoview/CrashReporter.java
     meta:
       peers_emeritus:
@@ -1790,7 +1771,7 @@ modules:
   - name: 'Core: js-tests'
     description: JavaScript test suite
     includes:
-      - js/tests/**/*
+      - js/src/tests/**/*
     meta:
       group: dev-tech-js-engine
       url: http://www.mozilla.org/js/tests/library.html
@@ -1805,10 +1786,9 @@ modules:
       - layout/**/*
       - layout/base/**/*
       - layout/build/**/*
-      - layout/doc/**/*
       - layout/forms/**/*
       - layout/generic/**/*
-      - layout/html/**/*
+      - dom/html/**/*
       - layout/printing/**/*
       - layout/tables/**/*
       - layout/tools/**/*
@@ -1916,13 +1896,12 @@ modules:
       - media/libnestegg/**/*
       - media/libogg/**/*
       - media/libopus/**/*
-      - media/libstagefright/**/*
       - media/libtheora/**/*
       - media/libtremor/**/*
       - media/libvorbis/**/*
       - media/libvpx/**/*
-      - media/omx-plugin/**/*
-      - media/rlz/**/*
+      - dom/media/platforms/omx/**/*
+      - dom/media/gmp/rlz/**/*
     meta:
       owners_emeritus:
         - Robert O'Callahan
@@ -1943,7 +1922,7 @@ modules:
   - name: 'Core: Media Transport'
     description: Pluggable transport for real-time media
     includes:
-      - media/mtransport/**/*
+      - dom/media/webrtc/transport/**/*
     meta:
       group: dev-media
       components:
@@ -2051,12 +2030,10 @@ modules:
       - netwerk/locales/**/*
       - netwerk/mime/**/*
       - netwerk/protocol/**/*
-      - netwerk/resources/**/*
       - netwerk/socket/**/*
       - netwerk/streamconv/**/*
       - netwerk/system/**/*
       - netwerk/test/**/*
-      - netwerk/testserver/**/*
       - dom/fetch/**/*
       - dom/xhr/**/*
       - dom/network/**/*
@@ -2189,7 +2166,6 @@ modules:
     description: ' NPAPI Plugin support.'
     includes:
       - dom/plugins/**/*
-      - modules/plugin/**/*
     meta:
       owners_emeritus:
         - *jimm
@@ -2342,13 +2318,7 @@ modules:
     description: Crypto/PKI code, including NSS (Network Security Services) and JSS
       (NSS for Java)
     includes:
-      - dbm/**/*
-      - security/coreconf/**/*
-      - security/dbm/**/*
-      - security/jss/**/*
       - security/nss/**/*
-      - security/tinderbox/**/*
-      - security/tinderlight/**/*
     meta:
       owners_emeritus:
         - Wan-Teh Chang
@@ -2441,7 +2411,7 @@ modules:
   - name: 'Core: storage'
     description: Storage APIs with a SQLite backend
     includes:
-      - db/sqlite3/**/*
+      - third_party/sqlite3/**/*
       - storage/**/*
     meta:
       group: dev-platform
@@ -2458,7 +2428,6 @@ modules:
   - name: 'Core: String'
     description: ''
     includes:
-      - string/**/*
       - xpcom/string/**/*
     meta:
       group: dev-tech-xpcom
@@ -2718,7 +2687,6 @@ modules:
     description: Top level Widget
     includes:
       - widget/**/*
-      - widget/xpwidgets/**/*
     meta:
       owners_emeritus:
         - Vladimir Vukicevic
@@ -2747,9 +2715,6 @@ modules:
     description: GTK widget support
     includes:
       - widget/gtk/**/*
-      - widget/gtk2/**/*
-      - widget/gtksuperwin/**/*
-      - widget/gtkxtbin/**/*
     meta:
       owners_emeritus:
         - Robert O'Callahan
@@ -2834,7 +2799,6 @@ modules:
       that are not covered by more specific projects.
     includes:
       - dom/xml/**/*
-      - extensions/xmlextras/**/*
       - parser/expat/**/*
     meta:
       peers_emeritus:
