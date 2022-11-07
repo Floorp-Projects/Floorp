@@ -10,6 +10,7 @@
 #include "nsContentUtils.h"
 #include "nsDeviceSensors.h"
 
+#include "nsGlobalWindowInner.h"
 #include "nsPIDOMWindow.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "mozilla/Preferences.h"
@@ -509,7 +510,8 @@ bool nsDeviceSensors::IsSensorAllowedByPref(uint32_t aType,
       // checks "device.sensors.motion.enabled" pref
       if (!StaticPrefs::device_sensors_motion_enabled()) {
         return false;
-      } else if (doc) {
+      }
+      if (doc) {
         doc->WarnOnceAbout(DeprecatedOperations::eMotionEvent);
       }
       break;
@@ -519,7 +521,8 @@ bool nsDeviceSensors::IsSensorAllowedByPref(uint32_t aType,
       // checks "device.sensors.orientation.enabled" pref
       if (!StaticPrefs::device_sensors_orientation_enabled()) {
         return false;
-      } else if (doc) {
+      }
+      if (doc) {
         doc->WarnOnceAbout(DeprecatedOperations::eOrientationEvent);
       }
       break;
@@ -527,7 +530,8 @@ bool nsDeviceSensors::IsSensorAllowedByPref(uint32_t aType,
       // checks "device.sensors.proximity.enabled" pref
       if (!StaticPrefs::device_sensors_proximity_enabled()) {
         return false;
-      } else if (doc) {
+      }
+      if (doc) {
         doc->WarnOnceAbout(DeprecatedOperations::eProximityEvent, true);
       }
       break;
@@ -535,7 +539,8 @@ bool nsDeviceSensors::IsSensorAllowedByPref(uint32_t aType,
       // checks "device.sensors.ambientLight.enabled" pref
       if (!StaticPrefs::device_sensors_ambientLight_enabled()) {
         return false;
-      } else if (doc) {
+      }
+      if (doc) {
         doc->WarnOnceAbout(DeprecatedOperations::eAmbientLightEvent, true);
       }
       break;
@@ -547,6 +552,5 @@ bool nsDeviceSensors::IsSensorAllowedByPref(uint32_t aType,
   if (!window) {
     return true;
   }
-
-  return !nsContentUtils::ShouldResistFingerprinting(doc);
+  return !nsGlobalWindowInner::Cast(window)->ShouldResistFingerprinting();
 }
