@@ -1079,31 +1079,6 @@ JavaScript engine's JIT compilers (IonMonkey, Baseline)
     * - Bugzilla Components
       - Core::JavaScript Engine: JIT
 
-Core: jsat
-~~~~~~~~~~
-Javascript screen reader that is used in Android and B2G
-
-
-.. list-table::
-    :stub-columns: 1
-    :widths: 30 70
-
-    * - Owner(s)
-      -
-        | `Eitan Isaacson (eeejay) <https://people.mozilla.org/s?query=eeejay>`__
-    * - Peer(s)
-      -
-        | `Yura Zenevich (yzen) <https://people.mozilla.org/s?query=yzen>`__
-    * - Includes
-      -
-        | `accessible/jsat/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=accessible/jsat/\*\*/\*>`__
-    * - Group
-      - dev-accessibility
-    * - URL
-      - http://www.mozilla.org/access/
-    * - Bugzilla Components
-      - Core::Disability Access APIs
-
 Core: js-tests
 ~~~~~~~~~~~~~~
 JavaScript test suite
