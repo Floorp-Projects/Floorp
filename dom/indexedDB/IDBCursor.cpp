@@ -56,6 +56,9 @@ IDBTypedCursor<CursorType>::~IDBTypedCursor() {
 
   DropJSObjects();
 
+  // Let's explicitly not leave any dangling CheckedUnsafePtr.
+  mTransaction = nullptr;
+
   if (mBackgroundActor) {
     (*mBackgroundActor)->SendDeleteMeInternal();
     MOZ_ASSERT(!mBackgroundActor, "SendDeleteMeInternal should have cleared!");
