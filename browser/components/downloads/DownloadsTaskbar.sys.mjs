@@ -13,9 +13,13 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  Downloads: "resource://gre/modules/Downloads.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  Downloads: "resource://gre/modules/Downloads.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "gWinTaskbar", function() {

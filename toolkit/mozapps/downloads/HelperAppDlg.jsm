@@ -118,14 +118,14 @@ const nsITimer = Ci.nsITimer;
 var downloadModule = ChromeUtils.import(
   "resource://gre/modules/DownloadLastDir.jsm"
 );
-const { DownloadPaths } = ChromeUtils.import(
-  "resource://gre/modules/DownloadPaths.jsm"
+const { DownloadPaths } = ChromeUtils.importESModule(
+  "resource://gre/modules/DownloadPaths.sys.mjs"
 );
 const { DownloadUtils } = ChromeUtils.import(
   "resource://gre/modules/DownloadUtils.jsm"
 );
-const { Downloads } = ChromeUtils.import(
-  "resource://gre/modules/Downloads.jsm"
+const { Downloads } = ChromeUtils.importESModule(
+  "resource://gre/modules/Downloads.sys.mjs"
 );
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"

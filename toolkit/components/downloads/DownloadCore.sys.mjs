@@ -14,14 +14,14 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  DownloadHistory: "resource://gre/modules/DownloadHistory.sys.mjs",
+  DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  DownloadHistory: "resource://gre/modules/DownloadHistory.jsm",
-  DownloadPaths: "resource://gre/modules/DownloadPaths.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   OS: "resource://gre/modules/osfile.jsm",
 });

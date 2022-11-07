@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var { Downloads } = ChromeUtils.import("resource://gre/modules/Downloads.jsm");
+var { Downloads } = ChromeUtils.importESModule(
+  "resource://gre/modules/Downloads.sys.mjs"
+);
 
 var gTestRoot = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content/",

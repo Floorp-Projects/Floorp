@@ -8,11 +8,9 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "DownloadSpamProtection",
-  "resource:///modules/DownloadSpamProtection.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  DownloadSpamProtection: "resource:///modules/DownloadSpamProtection.sys.mjs",
+});
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",

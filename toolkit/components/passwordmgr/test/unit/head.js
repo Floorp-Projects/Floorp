@@ -31,11 +31,8 @@ const { MockDocument } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(this, {
+  DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  DownloadPaths: "resource://gre/modules/DownloadPaths.jsm",
 });
 
 const LoginInfo = Components.Constructor(

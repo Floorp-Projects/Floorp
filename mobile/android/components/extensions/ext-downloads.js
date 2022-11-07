@@ -5,11 +5,9 @@
 "use strict";
 
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(
-  this,
-  "DownloadPaths",
-  "resource://gre/modules/DownloadPaths.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
+});
 XPCOMUtils.defineLazyModuleGetters(this, {
   DownloadTracker: "resource://gre/modules/GeckoViewWebExtension.jsm",
 });

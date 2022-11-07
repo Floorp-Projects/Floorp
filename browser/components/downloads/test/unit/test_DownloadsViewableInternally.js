@@ -20,7 +20,9 @@ const {
   PREF_BRANCH_WAS_REGISTERED,
   PREF_BRANCH_PREVIOUS_ACTION,
   PREF_BRANCH_PREVIOUS_ASK,
-} = ChromeUtils.import("resource:///modules/DownloadsViewableInternally.jsm");
+} = ChromeUtils.importESModule(
+  "resource:///modules/DownloadsViewableInternally.sys.mjs"
+);
 
 /* global DownloadIntegration */
 Integration.downloads.defineModuleGetter(

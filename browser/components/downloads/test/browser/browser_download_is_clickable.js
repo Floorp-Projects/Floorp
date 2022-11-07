@@ -3,11 +3,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "DownloadsViewUI",
-  "resource:///modules/DownloadsViewUI.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  DownloadsViewUI: "resource:///modules/DownloadsViewUI.sys.mjs",
+});
 
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"

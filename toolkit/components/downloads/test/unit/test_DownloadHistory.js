@@ -7,8 +7,8 @@
 
 "use strict";
 
-const { DownloadHistory } = ChromeUtils.import(
-  "resource://gre/modules/DownloadHistory.jsm"
+const { DownloadHistory } = ChromeUtils.importESModule(
+  "resource://gre/modules/DownloadHistory.sys.mjs"
 );
 
 let baseDate = new Date("2000-01-01");

@@ -14,16 +14,10 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Downloads",
-  "resource://gre/modules/Downloads.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DownloadError",
-  "resource://gre/modules/DownloadCore.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  DownloadError: "resource://gre/modules/DownloadCore.sys.mjs",
+  Downloads: "resource://gre/modules/Downloads.sys.mjs",
+});
 
 /**
  * nsITransfer implementation that provides a bridge to a Download object.

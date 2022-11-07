@@ -6,19 +6,23 @@
  * Provides functions to prevent multiple automatic downloads.
  */
 
-const { Download, DownloadError } = ChromeUtils.import(
-  "resource://gre/modules/DownloadCore.jsm"
-);
+import {
+  Download,
+  DownloadError,
+} from "resource://gre/modules/DownloadCore.sys.mjs";
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  DownloadList: "resource://gre/modules/DownloadList.sys.mjs",
+  Downloads: "resource://gre/modules/Downloads.sys.mjs",
+  DownloadsCommon: "resource:///modules/DownloadsCommon.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  Downloads: "resource://gre/modules/Downloads.jsm",
-  DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
-  DownloadList: "resource://gre/modules/DownloadList.jsm",
 });
 
 /**

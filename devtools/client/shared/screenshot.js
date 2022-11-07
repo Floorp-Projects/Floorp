@@ -8,12 +8,8 @@ const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Downloads",
-  "resource://gre/modules/Downloads.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  Downloads: "resource://gre/modules/Downloads.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
