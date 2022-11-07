@@ -33,7 +33,7 @@ task-defaults:
         using: gradlew
         use-caches: false
     run-on-tasks-for:
-        - github-pull-requests
+        - github-pull-request
         - github-push
     treeherder:
             kind: test
