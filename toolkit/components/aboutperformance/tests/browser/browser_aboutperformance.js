@@ -3,11 +3,16 @@
 
 "use strict";
 
-const URL =
-  "http://example.com/browser/toolkit/components/aboutperformance/tests/browser/browser_compartments.html?test=" +
-  Math.random();
+async function setup_tab(url) {
+  info(`Setting up ${url}`);
+  let tabContent = BrowserTestUtils.addTab(gBrowser, url);
 
-add_task(async function() {
+  await BrowserTestUtils.browserLoaded(tabContent.linkedBrowser);
+
+  return tabContent;
+}
+
+async function setup_about_performance() {
   info("Setting up about:performance");
   let tabAboutPerformance = (gBrowser.selectedTab = BrowserTestUtils.addTab(
     gBrowser,
@@ -15,10 +20,6 @@ add_task(async function() {
   ));
 
   await BrowserTestUtils.browserLoaded(tabAboutPerformance.linkedBrowser);
-
-  info(`Setting up ${URL}`);
-  let tabContent = BrowserTestUtils.addTab(gBrowser, URL);
-  await BrowserTestUtils.browserLoaded(tabContent.linkedBrowser);
 
   let doc = tabAboutPerformance.linkedBrowser.contentDocument;
   let tbody = doc.getElementById("dispatch-tbody");
@@ -36,35 +37,60 @@ add_task(async function() {
     observer.observe(tbody, { childList: true });
   });
 
+  return {
+    tab: tabAboutPerformance,
+    doc,
+    tbody,
+  };
+}
+
+function find_row(tbody, title, tab) {
   // Find the row for our test tab.
   let row = tbody.firstChild;
-  while (
-    row &&
-    row.firstChild.textContent !=
-      "Main frame for test browser_aboutperformance.js"
-  ) {
+  while (row && row.firstChild.textContent != title) {
     row = row.nextSibling;
   }
 
   Assert.ok(row, "found a table row for our test tab");
   Assert.equal(
     row.windowId,
-    tabContent.linkedBrowser.outerWindowID,
+    tab.linkedBrowser.outerWindowID,
     "the correct window id is set"
   );
 
-  // Ensure it is reported as a medium or high energy impact.
+  return row;
+}
+
+function checkEnergyMedHigh(row) {
   let l10nId = row.children[2].getAttribute("data-l10n-id");
   Assert.ok(
     ["energy-impact-medium", "energy-impact-high"].includes(l10nId),
     "our test tab is medium or high energy impact"
+  );
+}
+
+// Test that we can select the row for a tab and close it using the close
+// button.
+add_task(async function test_tab_operations() {
+  let tabContent = await setup_tab(
+    "http://example.com/browser/toolkit/components/aboutperformance/tests/browser/browser_compartments.html?test=" +
+      Math.random()
+  );
+
+  let aboutPerformance = await setup_about_performance();
+
+  // Find the row corresponding to our tab.
+  let row = find_row(
+    aboutPerformance.tbody,
+    "Main frame for test browser_aboutperformance.js",
+    tabContent
   );
 
   // Verify selecting a row works.
   EventUtils.synthesizeMouseAtCenter(
     row,
     {},
-    tabAboutPerformance.linkedBrowser.contentWindow
+    aboutPerformance.tab.linkedBrowser.contentWindow
   );
 
   Assert.equal(
@@ -76,13 +102,13 @@ add_task(async function() {
   // Verify selecting a tab with a double click.
   Assert.equal(
     gBrowser.selectedTab,
-    tabAboutPerformance,
+    aboutPerformance.tab,
     "the about:performance tab is selected"
   );
   EventUtils.synthesizeMouseAtCenter(
     row,
     { clickCount: 2 },
-    tabAboutPerformance.linkedBrowser.contentWindow
+    aboutPerformance.tab.linkedBrowser.contentWindow
   );
   Assert.equal(
     gBrowser.selectedTab,
@@ -93,7 +119,7 @@ add_task(async function() {
   info("Verify we can toggle subitems using a twisty image button");
 
   // Find the row with subtitems for twisty toggle test group.
-  let twistyBtn = doc.querySelector("tr > td.root > .twisty");
+  let twistyBtn = aboutPerformance.doc.querySelector("tr > td.root > .twisty");
 
   // When "toolkit.aboutPerformance.showInternals=false", there is no Twisty.
   if (
@@ -132,7 +158,7 @@ add_task(async function() {
     EventUtils.synthesizeMouseAtCenter(
       twistyBtn,
       {},
-      tabAboutPerformance.linkedBrowser.contentWindow
+      aboutPerformance.tab.linkedBrowser.contentWindow
     );
     Assert.ok(
       groupRow.nextSibling.children[0].classList.contains("indent"),
@@ -148,7 +174,7 @@ add_task(async function() {
     twistyBtn.focus();
     Assert.equal(
       twistyBtn,
-      doc.activeElement,
+      aboutPerformance.doc.activeElement,
       "the Twisty image button can be focused"
     );
     // Verify we can toggle subitems with a keyboard.
@@ -156,7 +182,7 @@ add_task(async function() {
     EventUtils.synthesizeKey(
       "KEY_Enter",
       {},
-      tabAboutPerformance.linkedBrowser.contentWindow
+      aboutPerformance.tab.linkedBrowser.contentWindow
     );
     Assert.ok(
       !groupRow.nextSibling.children[0].classList.contains("indent"),
@@ -169,14 +195,14 @@ add_task(async function() {
     );
     Assert.equal(
       twistyBtn,
-      doc.activeElement,
+      aboutPerformance.doc.activeElement,
       "the Twisty retains focus after the page is updated"
     );
     // Twisty is collapsed
     EventUtils.synthesizeKey(
       " ",
       {},
-      tabAboutPerformance.linkedBrowser.contentWindow
+      aboutPerformance.tab.linkedBrowser.contentWindow
     );
     Assert.ok(
       groupRow.nextSibling.children[0].classList.contains("indent"),
@@ -192,22 +218,22 @@ add_task(async function() {
 
     Assert.equal(
       twistyBtn,
-      doc.activeElement,
+      aboutPerformance.doc.activeElement,
       "the Twisty retains focus after the page is updated"
     );
     Assert.notEqual(
-      doc.activeElement.tagName,
+      aboutPerformance.doc.activeElement.tagName,
       "body",
       "the body does not pull the focus after the page is updated"
     );
     EventUtils.synthesizeKey(
       "KEY_Tab",
       { shiftKey: true },
-      tabAboutPerformance.linkedBrowser.contentWindow
+      aboutPerformance.tab.linkedBrowser.contentWindow
     );
     Assert.notEqual(
       twistyBtn,
-      doc.activeElement,
+      aboutPerformance.doc.activeElement,
       "the Twisty does not pull the focus after the page is updated"
     );
   } else {
@@ -219,15 +245,79 @@ add_task(async function() {
 
   info("Verify we can close a tab using the X button");
   // Switch back to about:performance...
-  await BrowserTestUtils.switchTab(gBrowser, tabAboutPerformance);
+  await BrowserTestUtils.switchTab(gBrowser, aboutPerformance.tab);
   // ... and click the X button at the end of the row.
   let tabClosing = BrowserTestUtils.waitForTabClosing(tabContent);
   EventUtils.synthesizeMouseAtCenter(
     row.children[4],
     {},
-    tabAboutPerformance.linkedBrowser.contentWindow
+    aboutPerformance.tab.linkedBrowser.contentWindow
   );
   await tabClosing;
 
-  BrowserTestUtils.removeTab(tabAboutPerformance);
+  BrowserTestUtils.removeTab(aboutPerformance.tab);
+});
+
+add_task(async function test_tab_energy() {
+  let tabContent = await setup_tab(
+    "http://example.com/browser/toolkit/components/aboutperformance/tests/browser/browser_compartments.html?test=" +
+      Math.random()
+  );
+
+  let aboutPerformance = await setup_about_performance();
+
+  // Find the row corresponding to our tab.
+  let row = find_row(
+    aboutPerformance.tbody,
+    "Main frame for test browser_aboutperformance.js",
+    tabContent
+  );
+
+  // Ensure it is reported as a medium or high energy impact.
+  checkEnergyMedHigh(row);
+
+  await BrowserTestUtils.removeTab(tabContent);
+  await BrowserTestUtils.removeTab(aboutPerformance.tab);
+});
+
+add_task(async function test_worker_energy() {
+  let tabContent = await setup_tab(
+    "http://example.com/browser/toolkit/components/aboutperformance/tests/browser/workers.html"
+  );
+
+  let aboutPerformance = await setup_about_performance();
+
+  // Find the row corresponding to our tab.
+  let row = find_row(
+    aboutPerformance.tbody,
+    "Main frame for test browser_aboutperformance.js",
+    tabContent
+  );
+
+  // Find the worker under this row.
+  let button = row.firstChild.firstChild;
+  Assert.ok(button && button.classList, "Has a span to create the button");
+  Assert.ok(button.classList.contains("twisty"), "Button is expandable.");
+  Assert.ok(!button.classList.contains("open"), "Not already open");
+
+  // Click the expand button.
+  EventUtils.synthesizeMouseAtCenter(
+    button,
+    {},
+    aboutPerformance.tab.linkedBrowser.contentWindow
+  );
+
+  Assert.ok(button.classList.contains("open"), "It's now open");
+
+  // Move to the next row which is the worker we want to imspect.
+  row = row.nextSibling;
+
+  // Check that it is a worker.
+  Assert.equal(row.children[1].getAttribute("data-l10n-id"), "type-worker");
+
+  // Ensure it is reported as a medium or high energy impact.
+  checkEnergyMedHigh(row);
+
+  await BrowserTestUtils.removeTab(tabContent);
+  await BrowserTestUtils.removeTab(aboutPerformance.tab);
 });
