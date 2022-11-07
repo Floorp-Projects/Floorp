@@ -131,6 +131,7 @@ RefPtr<MemoryPromise> CollectMemoryInfo(
   SharedSet sharedVisited;
   // Getting JS-related memory usage
   uint64_t jsMemUsed = 0;
+  nsTArray<RefPtr<MediaMemoryPromise>> mediaMemoryPromises;
   for (auto* doc : *aDocGroup) {
     bool unused;
     nsIGlobalObject* globalObject = doc->GetScriptHandlingObject(unused);
@@ -170,20 +171,34 @@ RefPtr<MemoryPromise> CollectMemoryInfo(
         }
       }
     }
+
+    mediaMemoryPromises.AppendElement(GetMediaMemorySizes(doc));
   }
 
   // Getting Media sizes.
-  return GetMediaMemorySizes()->Then(
-      aEventTarget, __func__,
-      [jsMemUsed, sizes](const MediaMemoryInfo& media) {
-        return MemoryPromise::CreateAndResolve(
-            PerformanceMemoryInfo(media, sizes.mDom, sizes.mStyle, sizes.mOther,
-                                  jsMemUsed),
-            __func__);
-      },
-      [](const nsresult rv) {
-        return MemoryPromise::CreateAndReject(rv, __func__);
-      });
+  return MediaMemoryPromise::All(aEventTarget, mediaMemoryPromises)
+      ->Then(
+          aEventTarget, __func__,
+          [jsMemUsed, sizes](const nsTArray<MediaMemoryInfo> mediaArray) {
+            size_t audioSize = 0;
+            size_t videoSize = 0;
+            size_t resourcesSize = 0;
+
+            for (auto media : mediaArray) {
+              audioSize += media.audioSize();
+              videoSize += media.videoSize();
+              resourcesSize += media.resourcesSize();
+            }
+
+            return MemoryPromise::CreateAndResolve(
+                PerformanceMemoryInfo(
+                    MediaMemoryInfo(audioSize, videoSize, resourcesSize),
+                    sizes.mDom, sizes.mStyle, sizes.mOther, jsMemUsed),
+                __func__);
+          },
+          [](const nsresult rv) {
+            return MemoryPromise::CreateAndReject(rv, __func__);
+          });
 }
 
 }  // namespace mozilla
