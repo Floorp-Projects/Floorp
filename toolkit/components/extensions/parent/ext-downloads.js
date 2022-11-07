@@ -208,7 +208,7 @@ class DownloadItem {
     return null;
   } // TODO
   get estimatedEndTime() {
-    // Based on the code in summarizeDownloads() in DownloadsCommon.jsm
+    // Based on the code in summarizeDownloads() in DownloadsCommon.sys.mjs
     if (this.download.hasProgress && this.download.speed > 0) {
       let sizeLeft = this.download.totalBytes - this.download.currentBytes;
       let timeLeftInSeconds = sizeLeft / this.download.speed;
@@ -317,7 +317,7 @@ class DownloadItem {
 }
 
 // DownloadMap maps back and forth between the numeric identifiers used in
-// the downloads WebExtension API and a Download object from the Downloads jsm.
+// the downloads WebExtension API and a Download object from the Downloads sys.mjs.
 // TODO Bug 1247794: make id and extension info persistent
 const DownloadMap = new (class extends EventEmitter {
   constructor() {

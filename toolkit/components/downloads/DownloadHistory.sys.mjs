@@ -11,16 +11,10 @@
  * exposed to allow the consumers to integrate with history view commands.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DownloadHistory"];
-
 const { DownloadList } = ChromeUtils.import(
   "resource://gre/modules/DownloadList.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -55,7 +49,7 @@ const METADATA_STATE_DIRTY = 8;
  * Provides methods to retrieve downloads from previous sessions and store
  * downloads for future sessions.
  */
-var DownloadHistory = {
+export var DownloadHistory = {
   /**
    * Retrieves the main DownloadHistoryList object which provides a unified view
    * on downloads from both previous browsing sessions and this session.

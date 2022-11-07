@@ -6,11 +6,7 @@
  * Provides methods for giving names and paths to files being downloaded.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DownloadPaths"];
-
-var DownloadPaths = {
+export var DownloadPaths = {
   /**
    * Sanitizes an arbitrary string via mimeSvc.validateFileNameForSaving.
    *

@@ -6,13 +6,8 @@
  * Main entry point to get references to all the back-end objects.
  */
 
-"use strict";
+import { Integration } from "resource://gre/modules/Integration.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["Downloads"];
-
-const { Integration } = ChromeUtils.importESModule(
-  "resource://gre/modules/Integration.sys.mjs"
-);
 const { Download, DownloadError } = ChromeUtils.import(
   "resource://gre/modules/DownloadCore.jsm"
 );
@@ -45,7 +40,7 @@ Integration.downloads.defineModuleGetter(
  * This object is exposed directly to the consumers of this JavaScript module,
  * and provides the only entry point to get references to back-end objects.
  */
-var Downloads = {
+export var Downloads = {
   /**
    * Work on downloads that were not started from a private browsing window.
    */

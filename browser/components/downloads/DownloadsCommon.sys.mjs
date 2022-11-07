@@ -4,10 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DownloadsCommon"];
-
 /**
  * Handles the Downloads panel shared methods and data access.
  *
@@ -30,9 +26,7 @@ var EXPORTED_SYMBOLS = ["DownloadsCommon"];
 
 // Globals
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -144,7 +138,7 @@ PrefObserver.register({
  * This object is exposed directly to the consumers of this JavaScript module,
  * and provides shared methods for all the instances of the user interface.
  */
-var DownloadsCommon = {
+export var DownloadsCommon = {
   // The following legacy constants are still returned by stateOfDownload, but
   // individual properties of the Download object should normally be used.
   DOWNLOAD_NOTSTARTED: -1,
@@ -1208,7 +1202,7 @@ const DownloadsViewPrototype = {
    * Called every time any state property of a Download may have changed,
    * including progress properties.
    *
-   * Note that progress notification changes are throttled at the Downloads.jsm
+   * Note that progress notification changes are throttled at the Downloads.sys.mjs
    * API level, and there is no throttling mechanism in the front-end.
    *
    * @note Subclasses should override this and still call the base method.

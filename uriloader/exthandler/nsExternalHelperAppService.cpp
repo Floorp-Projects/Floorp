@@ -191,7 +191,7 @@ static nsresult UnescapeFragment(const nsACString& aFragment, nsIURI* aURI,
  * Obtains the directory to use.  This tends to vary per platform, and
  * needs to be consistent throughout our codepaths. For platforms where
  * helper apps use the downloads directory, this should be kept in
- * sync with DownloadIntegration.jsm.
+ * sync with DownloadIntegration.sys.mjs.
  *
  * Optionally skip availability of the directory and storage.
  */

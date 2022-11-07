@@ -7,22 +7,13 @@
  * example the global prompts on shutdown.
  */
 
-"use strict";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["DownloadIntegration"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const { Downloads } = ChromeUtils.import(
   "resource://gre/modules/Downloads.jsm"
 );
-const { Integration } = ChromeUtils.importESModule(
-  "resource://gre/modules/Integration.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { Integration } from "resource://gre/modules/Integration.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -159,7 +150,7 @@ const kVerdictMap = {
  * Provides functions to integrate with the host application, handling for
  * example the global prompts on shutdown.
  */
-var DownloadIntegration = {
+export var DownloadIntegration = {
   /**
    * Main DownloadStore object for loading and saving the list of persistent
    * downloads, or null if the download list was never requested and thus it

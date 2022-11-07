@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests for the "DownloadPaths.jsm" JavaScript module.
+ * Tests for the "DownloadPaths.sys.mjs" JavaScript module.
  */
 
 function testSanitize(leafName, expectedLeafName, options = {}) {

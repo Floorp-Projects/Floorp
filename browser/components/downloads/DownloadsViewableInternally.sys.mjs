@@ -8,19 +8,7 @@
  * inconsistency.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = [
-  "DownloadsViewableInternally",
-  "PREF_ENABLED_TYPES",
-  "PREF_BRANCH_WAS_REGISTERED",
-  "PREF_BRANCH_PREVIOUS_ACTION",
-  "PREF_BRANCH_PREVIOUS_ASK",
-];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -42,14 +30,16 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 const PREF_BRANCH = "browser.download.viewableInternally.";
-const PREF_ENABLED_TYPES = PREF_BRANCH + "enabledTypes";
-const PREF_BRANCH_WAS_REGISTERED = PREF_BRANCH + "typeWasRegistered.";
-const PREF_BRANCH_PREVIOUS_ACTION =
+export const PREF_ENABLED_TYPES = PREF_BRANCH + "enabledTypes";
+export const PREF_BRANCH_WAS_REGISTERED = PREF_BRANCH + "typeWasRegistered.";
+
+export const PREF_BRANCH_PREVIOUS_ACTION =
   PREF_BRANCH + "previousHandler.preferredAction.";
-const PREF_BRANCH_PREVIOUS_ASK =
+
+export const PREF_BRANCH_PREVIOUS_ASK =
   PREF_BRANCH + "previousHandler.alwaysAskBeforeHandling.";
 
-let DownloadsViewableInternally = {
+export let DownloadsViewableInternally = {
   /**
    * Initially add/remove handlers, watch pref, register with Integration.downloads.
    */

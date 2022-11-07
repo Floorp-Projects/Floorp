@@ -6,16 +6,8 @@
  * Provides functions to handle status and messages in the user interface.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DownloadUIHelper"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -45,7 +37,7 @@ const kStringsRequiringFormatting = {
 /**
  * Provides functions to handle status and messages in the user interface.
  */
-var DownloadUIHelper = {
+export var DownloadUIHelper = {
   /**
    * Returns an object that can be used to display prompts related to downloads.
    *

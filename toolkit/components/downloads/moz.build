@@ -30,14 +30,14 @@ if CONFIG["OS_ARCH"] == "WINNT":
     ]
 
 EXTRA_JS_MODULES += [
-    "DownloadCore.jsm",
-    "DownloadIntegration.jsm",
-    "DownloadLegacy.jsm",
-    "DownloadList.jsm",
-    "DownloadPaths.jsm",
-    "Downloads.jsm",
-    "DownloadStore.jsm",
-    "DownloadUIHelper.jsm",
+    "DownloadCore.sys.mjs",
+    "DownloadIntegration.sys.mjs",
+    "DownloadLegacy.sys.mjs",
+    "DownloadList.sys.mjs",
+    "DownloadPaths.sys.mjs",
+    "Downloads.sys.mjs",
+    "DownloadStore.sys.mjs",
+    "DownloadUIHelper.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
@@ -46,7 +46,7 @@ XPCOM_MANIFESTS += [
 
 if CONFIG["MOZ_PLACES"]:
     EXTRA_JS_MODULES += [
-        "DownloadHistory.jsm",
+        "DownloadHistory.sys.mjs",
     ]
 
 FINAL_LIBRARY = "xul"

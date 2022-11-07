@@ -130,7 +130,7 @@ const NS_ERROR_MODULE_NETWORK = 6;
 
 // A reimplementation of NS_ERROR_GET_MODULE, which surprisingly doesn't seem
 // to exist anywhere in .js code in a way that can be reused.
-// This is taken from DownloadCore.jsm.
+// This is taken from DownloadCore.sys.mjs.
 function NS_ERROR_GET_MODULE(code) {
   return ((code & 0x7fff0000) >> 16) - NS_ERROR_MODULE_BASE_OFFSET;
 }
