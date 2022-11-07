@@ -572,8 +572,9 @@ void nsCSPContext::reportInlineViolation(
 }
 
 NS_IMETHODIMP
-nsCSPContext::GetAllowsInline(CSPDirective aDirective, const nsAString& aNonce,
-                              bool aParserCreated, Element* aTriggeringElement,
+nsCSPContext::GetAllowsInline(CSPDirective aDirective, bool aHasUnsafeHash,
+                              const nsAString& aNonce, bool aParserCreated,
+                              Element* aTriggeringElement,
                               nsICSPEventListener* aCSPEventListener,
                               const nsAString& aContentOfPseudoScript,
                               uint32_t aLineNumber, uint32_t aColumnNumber,
@@ -616,12 +617,20 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, const nsAString& aNonce,
         element->GetScriptText(content);
       }
     }
-
     if (content.IsEmpty()) {
       content = aContentOfPseudoScript;
     }
-    allowed =
-        mPolicies[i]->allows(aDirective, CSP_HASH, content, aParserCreated);
+
+    // Per https://w3c.github.io/webappsec-csp/#match-element-to-source-list
+    // Step 5. If type is "script" or "style", or unsafe-hashes flag is true:
+    //
+    // aHasUnsafeHash is true for event handlers (type "script attribute"),
+    // style= attributes (type "style attribute") and the javascript: protocol.
+    if (!aHasUnsafeHash || mPolicies[i]->allows(aDirective, CSP_UNSAFE_HASHES,
+                                                u""_ns, aParserCreated)) {
+      allowed =
+          mPolicies[i]->allows(aDirective, CSP_HASH, content, aParserCreated);
+    }
 
     if (!allowed) {
       // policy is violoated: deny the load unless policy is report only and

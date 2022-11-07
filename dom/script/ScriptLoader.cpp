@@ -801,8 +801,9 @@ static bool CSPAllowsInlineScript(nsIScriptElement* aElement,
 
   bool allowInlineScript = false;
   nsresult rv = csp->GetAllowsInline(
-      nsIContentSecurityPolicy::SCRIPT_SRC_ELEM_DIRECTIVE, nonce, parserCreated,
-      scriptContent, nullptr /* nsICSPEventListener */, u""_ns,
+      nsIContentSecurityPolicy::SCRIPT_SRC_ELEM_DIRECTIVE,
+      false /* aHasUnsafeHash */, nonce, parserCreated, scriptContent,
+      nullptr /* nsICSPEventListener */, u""_ns,
       aElement->GetScriptLineNumber(), aElement->GetScriptColumnNumber(),
       &allowInlineScript);
   return NS_SUCCEEDED(rv) && allowInlineScript;

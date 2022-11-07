@@ -125,7 +125,10 @@ interface nsIContentSecurityPolicy : nsISerializable
 
   /*
    * Whether this policy allows inline script or style.
-   * @param aContentPolicyType Either TYPE_SCRIPT or TYPE_STYLESHEET
+   * @param aContentPolicyType Either SCRIPT_SRC_(ELEM|ATTR)_DIRECTIVE or
+   *                           STYLE_SRC_(ELEM|ATTR)_DIRECTIVE.
+   * @param aHasUnsafeHash Only hash this when the 'unsafe-hashes' directive is
+   *                       also specified.
    * @param aNonce The nonce string to check against the policy
    * @param aParserCreated If the script element was created by the HTML Parser
    * @param aTriggeringElement The script element of the inline resource to
@@ -142,6 +145,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    *     (block the rules if false).
    */
   boolean getAllowsInline(in nsIContentSecurityPolicy_CSPDirective aDirective,
+                          in bool aHasUnsafeHash,
                           in AString aNonce,
                           in boolean aParserCreated,
                           in Element aTriggeringElement,
