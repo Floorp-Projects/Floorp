@@ -1625,7 +1625,7 @@ bool nsGlobalWindowInner::IsBlackForCC(bool aTracingNeeded) {
 
 bool nsGlobalWindowInner::ShouldResistFingerprinting() const {
   if (mDoc) {
-    return mDoc->ShouldResistFingerprinting();
+    return nsContentUtils::ShouldResistFingerprinting(mDoc);
   }
   return nsIScriptGlobalObject::ShouldResistFingerprinting();
 }
@@ -4982,8 +4982,10 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
   if (mDoc) {
     cookieJarSettings = mDoc->CookieJarSettings();
   } else {
+    bool shouldResistFingerprinting =
+        nsContentUtils::ShouldResistFingerprinting(this->GetExtantDoc());
     cookieJarSettings =
-        net::CookieJarSettings::GetBlockingAll(ShouldResistFingerprinting());
+        net::CookieJarSettings::GetBlockingAll(shouldResistFingerprinting);
   }
 
   // Note that this behavior is observable: if we grant storage permission to a
@@ -6582,7 +6584,7 @@ void nsGlobalWindowInner::DisableDeviceSensor(uint32_t aType) {
 
 #if defined(MOZ_WIDGET_ANDROID)
 void nsGlobalWindowInner::EnableOrientationChangeListener() {
-  if (!ShouldResistFingerprinting()) {
+  if (!nsContentUtils::ShouldResistFingerprinting(GetDocShell())) {
     mHasOrientationChangeListeners = true;
     mOrientationAngle = Orientation(CallerType::System);
   }
@@ -6909,7 +6911,7 @@ void nsGlobalWindowInner::GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads) {
 
   // navigator.getGamepads() always returns an empty array when
   // privacy.resistFingerprinting is true.
-  if (ShouldResistFingerprinting()) {
+  if (nsContentUtils::ShouldResistFingerprinting(GetDocShell())) {
     return;
   }
 
@@ -7557,7 +7559,7 @@ void nsGlobalWindowInner::SetReplaceableWindowCoord(
     return;
   }
 
-  if (ShouldResistFingerprinting()) {
+  if (nsContentUtils::ShouldResistFingerprinting(GetDocShell())) {
     bool innerWidthSpecified = false;
     bool innerHeightSpecified = false;
     bool outerWidthSpecified = false;
