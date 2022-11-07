@@ -213,7 +213,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    * policies.
    *
    * @param violationType
-   *     one of the VIOLATION_TYPE_* constants, e.g. inline-script or eval
+   *     one of the VIOLATION_TYPE_* constants, e.g. eval or wasm-eval
    * @param triggeringElement
    *     the element that triggers this CSP violation. It can be null.
    * @param sourceFile
@@ -244,16 +244,8 @@ interface nsIContentSecurityPolicy : nsISerializable
                            [optional] in AString nonce,
                            [optional] in AString content);
 
-  const unsigned short VIOLATION_TYPE_INLINE_SCRIPT          = 1;
-  const unsigned short VIOLATION_TYPE_EVAL                   = 2;
-  const unsigned short VIOLATION_TYPE_INLINE_STYLE           = 3;
-  const unsigned short VIOLATION_TYPE_NONCE_SCRIPT           = 4;
-  const unsigned short VIOLATION_TYPE_NONCE_STYLE            = 5;
-  const unsigned short VIOLATION_TYPE_HASH_SCRIPT            = 6;
-  const unsigned short VIOLATION_TYPE_HASH_STYLE             = 7;
-  const unsigned short VIOLATION_TYPE_REQUIRE_SRI_FOR_STYLE  = 8;
-  const unsigned short VIOLATION_TYPE_REQUIRE_SRI_FOR_SCRIPT = 9;
-  const unsigned short VIOLATION_TYPE_WASM_EVAL              = 10;
+  const unsigned short VIOLATION_TYPE_EVAL                   = 1;
+  const unsigned short VIOLATION_TYPE_WASM_EVAL              = 2;
 
   /**
    * Called after the CSP object is created to fill in appropriate request
