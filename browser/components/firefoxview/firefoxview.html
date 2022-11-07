@@ -104,8 +104,11 @@
             <ol hidden="true" class="synced-tabs-list"></ol>
           </tab-pickup-list>
           <div hidden id="synced-tabs-placeholder" class="placeholder-content">
-            <icon class="icon synced-tabs"></icon>
-            <p data-l10n-id="firefoxview-synced-tabs-placeholder" class="placeholder-text"></p>
+            <img id="tab-pickup-empty-image" src="chrome://browser/content/tab-pickup-empty.svg" role="presentation" alt=""/>
+            <div class="placeholder-text">
+              <h4 data-l10n-id="firefoxview-synced-tabs-placeholder-header" class="placeholder-header"></h4>
+              <p data-l10n-id="firefoxview-synced-tabs-placeholder-body" class="placeholder-body"></p>
+            </div>
           </div>
           <div class="loading-content">
             <icon class="icon sync"></icon>
@@ -173,8 +176,11 @@
             <ol hidden="true" class="closed-tabs-list"></ol>
           </recently-closed-tabs-list>
           <div hidden="true" id="recently-closed-tabs-placeholder" class="placeholder-content">
-            <icon class="icon history"></icon>
-            <p data-l10n-id="firefoxview-closed-tabs-placeholder" class="placeholder-text"></p>
+            <img id="recently-closed-empty-image" src="chrome://browser/content/recently-closed-empty.svg" role="presentation" alt=""/>
+            <div class="placeholder-text">
+              <h4 data-l10n-id="firefoxview-closed-tabs-placeholder-header" class="placeholder-header"></h4>
+              <p data-l10n-id="firefoxview-closed-tabs-placeholder-body" class="placeholder-body"></p>
+            </div>
           </div>
         </div>
       </details>
