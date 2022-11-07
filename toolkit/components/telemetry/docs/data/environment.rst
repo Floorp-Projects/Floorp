@@ -395,6 +395,8 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``browser.urlbar.quicksuggest.dataCollection.enabled``: Whether the user has opted in to data collection for Firefox Suggest. This pref is set to true when the user opts in to the Firefox Suggest onboarding dialog modal. The user can also toggle the pref using a toggle switch in the Firefox Suggest preferences UI.
 
+- ``browser.urlbar.showSearchTerms.enabled``: True if to show the search term in the urlbar while on a default search engine results page.
+
 - ``browser.urlbar.suggest.bestmatch``: True if to show best match result is enabled in the urlbar.
 
 - ``browser.urlbar.suggest.quicksuggest.nonsponsored``: True if non-sponsored Firefox Suggest suggestions are enabled in the urlbar.
