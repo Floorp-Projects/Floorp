@@ -292,94 +292,25 @@ class ProcessHandlerMixin(object):
         if isWin:
             # Redefine the execute child so that we can track process groups
             def _execute_child(self, *args_tuple):
-                # workaround for bug 1670130
-                if sys.hexversion >= 0x03090000:  # after 3.9.0
-                    (
-                        args,
-                        executable,
-                        preexec_fn,
-                        close_fds,
-                        pass_fds,
-                        cwd,
-                        env,
-                        startupinfo,
-                        creationflags,
-                        shell,
-                        p2cread,
-                        p2cwrite,
-                        c2pread,
-                        c2pwrite,
-                        errread,
-                        errwrite,
-                        restore_signals,
-                        gid,
-                        gids,
-                        uid,
-                        umask,
-                        start_new_session,
-                    ) = args_tuple
-                elif six.PY3:
-                    (
-                        args,
-                        executable,
-                        preexec_fn,
-                        close_fds,
-                        pass_fds,
-                        cwd,
-                        env,
-                        startupinfo,
-                        creationflags,
-                        shell,
-                        p2cread,
-                        p2cwrite,
-                        c2pread,
-                        c2pwrite,
-                        errread,
-                        errwrite,
-                        restore_signals,
-                        start_new_session,
-                    ) = args_tuple
-                # workaround for bug 950894
-                elif sys.hexversion < 0x02070600:  # prior to 2.7.6
-                    (
-                        args,
-                        executable,
-                        preexec_fn,
-                        close_fds,
-                        cwd,
-                        env,
-                        universal_newlines,
-                        startupinfo,
-                        creationflags,
-                        shell,
-                        p2cread,
-                        p2cwrite,
-                        c2pread,
-                        c2pwrite,
-                        errread,
-                        errwrite,
-                    ) = args_tuple
-                    to_close = set()
-                else:  # 2.7.6 and later
-                    (
-                        args,
-                        executable,
-                        preexec_fn,
-                        close_fds,
-                        cwd,
-                        env,
-                        universal_newlines,
-                        startupinfo,
-                        creationflags,
-                        shell,
-                        to_close,
-                        p2cread,
-                        p2cwrite,
-                        c2pread,
-                        c2pwrite,
-                        errread,
-                        errwrite,
-                    ) = args_tuple
+                (
+                    args,
+                    executable,
+                    preexec_fn,
+                    close_fds,
+                    pass_fds,
+                    cwd,
+                    env,
+                    startupinfo,
+                    creationflags,
+                    shell,
+                    p2cread,
+                    p2cwrite,
+                    c2pread,
+                    c2pwrite,
+                    errread,
+                    errwrite,
+                    *_,
+                ) = args_tuple
                 if not isinstance(args, six.string_types):
                     args = subprocess.list2cmdline(args)
 
