@@ -99,11 +99,6 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   /**
-   * For use during document.write where our inner window changes.
-   */
-  void SetWindow(nsPIDOMWindowInner* aInnerWindow);
-
-  /**
    * Called when the inner window navigates to a new page.
    */
   void OnNavigation();
