@@ -24,6 +24,15 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     return 0x2022;
   }
 
+  void RecordLookAndFeelSpecificTelemetry() override {
+    RecordAccessibilityTelemetry();
+  }
+
+  // Having a separate, static method allows us to rely on the same
+  // chunk of telemetry logging code at initialization and when we
+  // recieve an event that changes the value of our telemetry probe.
+  static void RecordAccessibilityTelemetry();
+
  protected:
   static bool SystemWantsDarkTheme();
   static bool IsSystemOrientationRTL();
