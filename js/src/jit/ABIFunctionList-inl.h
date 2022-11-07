@@ -19,6 +19,7 @@
 #include "builtin/Object.h"     // js::ObjectClassToString
 #include "builtin/RegExp.h"     // js::RegExpPrototypeOptimizableRaw,
                                 // js::RegExpInstanceOptimizableRaw
+#include "builtin/TestingFunctions.h"  // js::FuzzilliHash*
 
 #include "irregexp/RegExpAPI.h"
 // js::irregexp::CaseInsensitiveCompareNonUnicode,
@@ -78,6 +79,12 @@ namespace jit {
     _(js::wasm::PrintText)
 #else
 #  define ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)
+#endif
+
+#ifdef FUZZING_JS_FUZZILLI
+#  define ABIFUNCTION_FUZZILLI_LIST(_) _(js::FuzzilliHashBigInt)
+#else
+#  define ABIFUNCTION_FUZZILLI_LIST(_)
 #endif
 
 #define ABIFUNCTION_LIST(_)                                           \
@@ -157,6 +164,7 @@ namespace jit {
   _(js::jit::StringFromCharCodeNoGC)                                  \
   _(js::jit::TypeOfNameObject)                                        \
   _(js::jit::WrapObjectPure)                                          \
+  ABIFUNCTION_FUZZILLI_LIST(_)                                        \
   _(js::MapIteratorObject::next)                                      \
   _(js::NativeObject::addDenseElementPure)                            \
   _(js::NativeObject::growSlotsPure)                                  \
