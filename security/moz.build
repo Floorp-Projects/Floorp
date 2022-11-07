@@ -59,9 +59,11 @@ elif not CONFIG["MOZ_SYSTEM_NSS"]:
     ]
     gyp_vars["nspr_libs"] = "nspr"
 else:
-    # Build mozpkix and mozpkix-test only
     gyp_vars["nspr_libs"] = "nspr"
-    gyp_vars["mozpkix_only"] = 1
+    if not CONFIG["ENABLE_TESTS"]:
+        # If we're not building tests, then we don't need a static copy
+        # of NSS. Build mozpkix only.
+        gyp_vars["mozpkix_only"] = 1
 
 # This disables building some NSS tools.
 gyp_vars["mozilla_client"] = 1
