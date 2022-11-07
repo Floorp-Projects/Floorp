@@ -310,8 +310,7 @@ RefPtr<PerformanceInfoPromise> DocGroup::ReportPerformanceInfo() {
 
   MOZ_ASSERT(mainThread);
   RefPtr<DocGroup> self = this;
-  return (isTopLevel ? CollectMemoryInfo(top, mainThread)
-                     : CollectMemoryInfo(self, mainThread))
+  return CollectMemoryInfo(self, mainThread)
       ->Then(
           mainThread, __func__,
           [self, host, pid, windowID, duration, isTopLevel,
