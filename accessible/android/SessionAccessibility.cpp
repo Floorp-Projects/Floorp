@@ -1062,10 +1062,7 @@ void SessionAccessibility::UnregisterAccessible(Accessible* aAccessible) {
   }
 
   RefPtr<SessionAccessibility> sessionAcc = GetInstanceFor(aAccessible);
-  MOZ_ASSERT(sessionAcc, "Need SessionAccessibility to unregister Accessible!");
   if (sessionAcc) {
-    MOZ_ASSERT(sessionAcc->mIDToAccessibleMap.Contains(virtualViewID),
-               "Unregistering unregistered accessible");
     sessionAcc->mIDToAccessibleMap.Remove(virtualViewID);
   }
 
@@ -1084,21 +1081,7 @@ void SessionAccessibility::UnregisterAll(PresShell* aPresShell) {
 
   nsAccessibilityService::GetAndroidMonitor().AssertCurrentThreadOwns();
   RefPtr<SessionAccessibility> sessionAcc = GetInstanceFor(aPresShell);
-
-  if (!sessionAcc) {
-    return;
-  }
-
-  for (auto iter = sessionAcc->mIDToAccessibleMap.Iter(); !iter.Done();
-       iter.Next()) {
-    int32_t virtualViewID = iter.Key();
-    if (virtualViewID > kNoID) {
-      sIDSet.ReleaseID(virtualViewID);
-    }
-
-    Accessible* accessible = iter.Data();
-    AccessibleWrap::SetVirtualViewID(accessible, kUnsetID);
-
-    iter.Remove();
+  if (sessionAcc) {
+    sessionAcc->mIDToAccessibleMap.Clear();
   }
 }
