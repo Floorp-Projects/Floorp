@@ -26,17 +26,11 @@
  * }
  */
 
-"use strict";
-
 // Time after which insecure downloads that have not been dealt with on shutdown
 // get removed (5 minutes).
 const MAX_INSECURE_DOWNLOAD_AGE_MS = 5 * 60 * 1000;
 
-var EXPORTED_SYMBOLS = ["DownloadStore"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -63,7 +57,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gTextEncoder", function() {
  * @param aPath
  *        String containing the file path where data should be saved.
  */
-var DownloadStore = function(aList, aPath) {
+export var DownloadStore = function(aList, aPath) {
   this.list = aList;
   this.path = aPath;
 };

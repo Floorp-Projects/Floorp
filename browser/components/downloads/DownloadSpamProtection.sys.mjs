@@ -6,17 +6,11 @@
  * Provides functions to prevent multiple automatic downloads.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DownloadSpamProtection"];
-
 const { Download, DownloadError } = ChromeUtils.import(
   "resource://gre/modules/DownloadCore.jsm"
 );
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -66,7 +60,7 @@ class WindowSpamProtection {
    * A per-window DownloadList for blocked spam downloads. Registered views will
    * be sent notifications about downloads in this list, so that blocked spam
    * downloads can be represented in the UI. If spam downloads haven't been
-   * blocked in the window, this will be undefined. See DownloadList.jsm.
+   * blocked in the window, this will be undefined. See DownloadList.sys.mjs.
    * @type {DownloadList | undefined}
    */
   get spamList() {
@@ -82,7 +76,7 @@ class WindowSpamProtection {
   /**
    * A per-window downloads indicator whose state depends on notifications from
    * DownloadLists registered in the window (for example, the visual state of
-   * the downloads toolbar button). See DownloadsCommon.jsm for more details.
+   * the downloads toolbar button). See DownloadsCommon.sys.mjs for more details.
    * @type {DownloadsIndicatorData}
    */
   get indicator() {
@@ -198,9 +192,9 @@ class WindowSpamProtection {
 /**
  * Responsible for detecting events related to downloads spam and notifying the
  * relevant window's WindowSpamProtection object. This is a singleton object,
- * constructed by DownloadIntegration.jsm when the first download is blocked.
+ * constructed by DownloadIntegration.sys.mjs when the first download is blocked.
  */
-class DownloadSpamProtection {
+export class DownloadSpamProtection {
   /**
    * Stores spam protection data per-window.
    * @type {WeakMap<Window, WindowSpamProtection>}

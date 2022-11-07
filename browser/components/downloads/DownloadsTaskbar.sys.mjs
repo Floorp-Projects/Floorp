@@ -8,15 +8,10 @@
  * Handles the download progress indicator in the taskbar.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DownloadsTaskbar"];
-
 // Globals
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -54,7 +49,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gGtkTaskbarProgress", function() {
 /**
  * Handles the download progress indicator in the taskbar.
  */
-var DownloadsTaskbar = {
+export var DownloadsTaskbar = {
   /**
    * Underlying DownloadSummary providing the aggregate download information, or
    * null if the indicator has never been initialized.

@@ -6,13 +6,11 @@
  * This component implements the XPCOM interfaces required for integration with
  * the legacy download components.
  *
- * New code is expected to use the "Downloads.jsm" module directly, without
+ * New code is expected to use the "Downloads.sys.mjs" module directly, without
  * going through the interfaces implemented in this XPCOM component.  These
  * interfaces are only maintained for backwards compatibility with components
  * that still work synchronously on the main thread.
  */
-
-"use strict";
 
 const lazy = {};
 
@@ -55,7 +53,7 @@ ChromeUtils.defineModuleGetter(
  * expectations, for example by ensuring the target file exists when the
  * download is successful, even if the source has a size of zero bytes.
  */
-function DownloadLegacyTransfer() {
+export function DownloadLegacyTransfer() {
   this._promiseDownload = new Promise(r => (this._resolveDownload = r));
 }
 
@@ -509,5 +507,3 @@ DownloadLegacyTransfer.prototype = {
    */
   _signatureInfo: null,
 };
-
-var EXPORTED_SYMBOLS = ["DownloadLegacyTransfer"];

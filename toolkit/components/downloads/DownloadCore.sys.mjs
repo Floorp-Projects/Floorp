@@ -4,30 +4,12 @@
 
 /**
  * Main implementation of the Downloads API objects. Consumers should get
- * references to these objects through the "Downloads.jsm" module.
+ * references to these objects through the "Downloads.sys.mjs" module.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = [
-  "Download",
-  "DownloadSource",
-  "DownloadTarget",
-  "DownloadError",
-  "DownloadSaver",
-  "DownloadCopySaver",
-  "DownloadLegacySaver",
-];
-
-const { Integration } = ChromeUtils.importESModule(
-  "resource://gre/modules/Integration.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { Integration } from "resource://gre/modules/Integration.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -137,7 +119,7 @@ const kProgressUpdateIntervalMs = 400;
  * is transient, though it can be included in a DownloadList so that it can be
  * managed by the user interface and persisted across sessions.
  */
-var Download = function() {
+export var Download = function() {
   this._deferSucceeded = lazy.PromiseUtils.defer();
 };
 
@@ -1350,7 +1332,7 @@ const kPlainSerializableDownloadProperties = [
 
 /**
  * Creates a new Download object from a serializable representation.  This
- * function is used by the createDownload method of Downloads.jsm when a new
+ * function is used by the createDownload method of Downloads.sys.mjs when a new
  * Download object is requested, thus some properties may refer to live objects
  * in place of their serializable representations.
  *
@@ -1430,7 +1412,7 @@ Download.fromSerializable = function(aSerializable) {
 /**
  * Represents the source of a download, for example a document or an URI.
  */
-var DownloadSource = function() {};
+export var DownloadSource = function() {};
 
 DownloadSource.prototype = {
   /**
@@ -1671,7 +1653,7 @@ DownloadSource.fromSerializable = function(aSerializable) {
  * Represents the target of a download, for example a file in the global
  * downloads directory, or a file in the system temporary directory.
  */
-var DownloadTarget = function() {};
+export var DownloadTarget = function() {};
 
 DownloadTarget.prototype = {
   /**
@@ -1834,7 +1816,7 @@ DownloadTarget.fromSerializable = function(aSerializable) {
  *        The properties object may also contain any of the DownloadError's
  *        because properties, which will be set accordingly in the error object.
  */
-var DownloadError = function(aProperties) {
+export var DownloadError = function(aProperties) {
   const NS_ERROR_MODULE_BASE_OFFSET = 0x45;
   const NS_ERROR_MODULE_NETWORK = 6;
   const NS_ERROR_MODULE_FILES = 13;
@@ -2002,7 +1984,7 @@ DownloadError.fromSerializable = function(aSerializable) {
 /**
  * Template for an object that actually transfers the data for the download.
  */
-var DownloadSaver = function() {};
+export var DownloadSaver = function() {};
 
 DownloadSaver.prototype = {
   /**
@@ -2127,7 +2109,7 @@ DownloadSaver.fromSerializable = function(aSerializable) {
 /**
  * Saver object that simply copies the entire source file to the target.
  */
-var DownloadCopySaver = function() {};
+export var DownloadCopySaver = function() {};
 
 DownloadCopySaver.prototype = {
   __proto__: DownloadSaver.prototype,
@@ -2730,7 +2712,7 @@ DownloadCopySaver.fromSerializable = function(aSerializable) {
  *
  * For more background on the process, see the DownloadLegacyTransfer object.
  */
-var DownloadLegacySaver = function() {
+export var DownloadLegacySaver = function() {
   this.deferExecuted = lazy.PromiseUtils.defer();
   this.deferCanceled = lazy.PromiseUtils.defer();
 };

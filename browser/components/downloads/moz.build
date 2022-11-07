@@ -12,17 +12,17 @@ BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
 JAR_MANIFESTS += ["jar.mn"]
 
 EXTRA_JS_MODULES += [
-    "DownloadsCommon.jsm",
-    "DownloadSpamProtection.jsm",
-    "DownloadsTaskbar.jsm",
-    "DownloadsViewableInternally.jsm",
-    "DownloadsViewUI.jsm",
+    "DownloadsCommon.sys.mjs",
+    "DownloadSpamProtection.sys.mjs",
+    "DownloadsTaskbar.sys.mjs",
+    "DownloadsViewableInternally.sys.mjs",
+    "DownloadsViewUI.sys.mjs",
 ]
 
 toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
 
 if toolkit == "cocoa":
-    EXTRA_JS_MODULES += ["DownloadsMacFinderProgress.jsm"]
+    EXTRA_JS_MODULES += ["DownloadsMacFinderProgress.sys.mjs"]
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Downloads Panel")

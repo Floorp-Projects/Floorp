@@ -8,13 +8,7 @@
  * Handles the download progress indicator of the macOS Finder.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DownloadsMacFinderProgress"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -22,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Downloads: "resource://gre/modules/Downloads.jsm",
 });
 
-var DownloadsMacFinderProgress = {
+export var DownloadsMacFinderProgress = {
   /**
    * Maps the path of the download, to the according progress indicator instance.
    */

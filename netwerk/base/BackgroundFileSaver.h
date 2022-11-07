@@ -318,7 +318,7 @@ class BackgroundFileSaverOutputStream : public BackgroundFileSaver,
 
 ////////////////////////////////////////////////////////////////////////////////
 //// BackgroundFileSaverStreamListener. This class is instantiated by
-// nsExternalHelperAppService, DownloadCore.jsm, and possibly others.
+// nsExternalHelperAppService, DownloadCore.sys.mjs, and possibly others.
 
 class BackgroundFileSaverStreamListener final : public BackgroundFileSaver,
                                                 public nsIStreamListener {

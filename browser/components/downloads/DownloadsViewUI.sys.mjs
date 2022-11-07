@@ -7,13 +7,7 @@
  * provides prototypes for objects that handle input and display information.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DownloadsViewUI"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -43,9 +37,7 @@ XPCOMUtils.defineLazyServiceGetter(
   Ci.nsIApplicationReputationService
 );
 
-const { Integration } = ChromeUtils.importESModule(
-  "resource://gre/modules/Integration.sys.mjs"
-);
+import { Integration } from "resource://gre/modules/Integration.sys.mjs";
 
 Integration.downloads.defineModuleGetter(
   lazy,
@@ -112,7 +104,7 @@ var gDownloadElementButtons = {
  */
 var gDownloadListItemFragments = new WeakMap();
 
-var DownloadsViewUI = {
+export var DownloadsViewUI = {
   /**
    * Returns true if the given string is the name of a command that can be
    * handled by the Downloads user interface, including standard commands.
@@ -313,7 +305,7 @@ var DownloadsViewUI = {
     );
 
     /**
-     * In HelperAppDlg.jsm, we determine whether or not an "always open..." checkbox
+     * In HelperAppDlg.sys.mjs, we determine whether or not an "always open..." checkbox
      * should appear in the unknownContentType window. Here, we use similar checks to
      * determine if we should show the "always open similar files" context menu item.
      *
@@ -399,7 +391,7 @@ DownloadsViewUI.BaseView = class {
  *
  * The information to display is obtained through the associated Download object
  * from the JavaScript API for downloads, and commands are executed using a
- * combination of Download methods and DownloadsCommon.jsm helper functions.
+ * combination of Download methods and DownloadsCommon.sys.mjs helper functions.
  *
  * Specialized versions of this shell must be defined, and they are required to
  * implement the "download" property or getter. Currently these objects are the
