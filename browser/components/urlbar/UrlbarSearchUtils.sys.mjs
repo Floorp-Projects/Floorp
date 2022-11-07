@@ -279,6 +279,39 @@ class SearchUtils {
   }
 
   /**
+   * Checks if the given uri is constructed by the default search engine.
+   * When passing URI's to check against, it's best to use the "original" URI
+   * that was requested, as the server may have redirected the request.
+   *
+   * @param {nsIURI} uri
+   *   The uri to check.
+   * @returns {string}
+   *   The search terms used.
+   *   Will return an empty string if it's not a default SERP
+   *   or if the default engine hasn't been initialized.
+   */
+  getSearchTermIfDefaultSerpUri(uri) {
+    let searchTerm = "";
+    if (
+      uri &&
+      Services.search.isInitialized &&
+      Services.search.defaultEngine.getResultDomain() == uri.host
+    ) {
+      let { engine, terms } = Services.search.parseSubmissionURL(uri.spec);
+      if (engine && terms) {
+        let [expectedSearchUrl] = lazy.UrlbarUtils.getSearchQueryUrl(
+          engine,
+          terms
+        );
+        if (this.serpsAreEquivalent(uri.spec, expectedSearchUrl)) {
+          searchTerm = terms;
+        }
+      }
+    }
+    return searchTerm;
+  }
+
+  /**
    * Compares the query parameters of two SERPs to see if one is equivalent to
    * the other. URL `x` is equivalent to URL `y` if
    *   (a) `y` contains at least all the query parameters contained in `x`, and

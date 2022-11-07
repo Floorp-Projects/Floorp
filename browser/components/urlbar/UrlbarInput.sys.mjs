@@ -341,7 +341,7 @@ export class UrlbarInput {
         lazy.UrlbarPrefs.get("showSearchTerms.enabled") &&
         !lazy.UrlbarPrefs.get("browser.search.widget.inNavBar")
       ) {
-        let term = this._getSearchTermIfDefaultSerpUrl(
+        let term = lazy.UrlbarSearchUtils.getSearchTermIfDefaultSerpUri(
           this.window.gBrowser.selectedBrowser.originalURI ?? uri
         );
         if (term) {
@@ -2213,48 +2213,6 @@ export class UrlbarInput {
       return true;
     }
     return false;
-  }
-
-  /**
-   * Checks if the given uri is constructed by the default search engine.
-   * When passing URI's to check against, it's best to use the "original" URI
-   * that was requested, as the server may re-direct the URIs.
-   *
-   * @param {nsIURI} uri
-   *   The uri to check against
-   * @returns {string}
-   *   The search terms use.
-   *   Will return an empty string if it's not a default SERP
-   *   or if the default engine hasn't been initialized.
-   */
-  _getSearchTermIfDefaultSerpUrl(uri) {
-    try {
-      // nsIURI.host can throw for non-standard URI's
-      if (
-        Services.search.isInitialized &&
-        Services.io.newURI(Services.search.defaultEngine.searchForm).host ==
-          uri.host
-      ) {
-        let { engine, terms } = Services.search.parseSubmissionURL(uri.spec);
-        if (engine && terms) {
-          let [expectedSearchUrl] = lazy.UrlbarUtils.getSearchQueryUrl(
-            engine,
-            terms
-          );
-          if (
-            lazy.UrlbarSearchUtils.serpsAreEquivalent(
-              uri.spec,
-              expectedSearchUrl
-            )
-          ) {
-            return terms;
-          }
-        }
-      }
-    } catch (ex) {
-      return "";
-    }
-    return "";
   }
 
   /**
