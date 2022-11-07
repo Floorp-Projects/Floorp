@@ -34,6 +34,7 @@ class AutofillEditDialog {
 
   /**
    * Get storage and ensure it has been initialized.
+   *
    * @returns {object}
    */
   async getStorage() {
@@ -43,6 +44,7 @@ class AutofillEditDialog {
 
   /**
    * Asks FormAutofillParent to save or update an record.
+   *
    * @param  {object} record
    * @param  {string} guid [optional]
    */

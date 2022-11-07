@@ -251,7 +251,7 @@ async function waitForStorageChangedEvents(...eventTypes) {
 /**
  * Wait until the element found matches the expected autofill value
  *
- * @param {Object} target
+ * @param {object} target
  *        The target in which to run the task.
  * @param {string} selector
  *        A selector used to query the element.
@@ -306,9 +306,9 @@ function waitForSubDialogLoad(win, dialogUrl) {
  * This is guaranteed by first focusing on an element in the form to trigger
  * the 'FormAutofill:FieldsIdentified' message.
  *
- * @param {Object} target
+ * @param {object} target
  *        The target in which to run the task.
- * @param {Object} args
+ * @param {object} args
  * @param {string} args.focusSelector
  *        A selector used to query the element to be focused
  * @param {string} args.formId
@@ -316,7 +316,7 @@ function waitForSubDialogLoad(win, dialogUrl) {
  *        this argument is not present
  * @param {string} args.formSelector
  *        A selector used to query the form element
- * @param {Object} args.newValues
+ * @param {object} args.newValues
  *        Elements to be updated. Key is the element selector, value is the
  *        new value of the element.
  *
@@ -473,7 +473,7 @@ async function focusAndWaitForFieldsIdentified(browserOrContext, selector) {
 /**
  * Run the task and wait until the autocomplete popup is opened.
  *
- * @param {Object} browser A xul:browser.
+ * @param {object} browser A xul:browser.
  * @param {Function} taskFn Task that will trigger the autocomplete popup
  */
 async function runAndWaitForAutocompletePopupOpen(browser, taskFn) {
@@ -811,7 +811,7 @@ async function testDialog(url, testFn, arg = undefined) {
 /**
  * Initializes the test storage for a task.
  *
- * @param {...Object} items Can either be credit card or address objects
+ * @param {...object} items Can either be credit card or address objects
  */
 async function setStorage(...items) {
   for (let item of items) {
