@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<body>
+<script>
+
+'use strict';
+
+function remoteize(relpath) {
+  let curdir = location.href.replace(/\/[^\/]*$/, '/')
+  return curdir.replace('://', '://www1.') + relpath
+}
+
+function create_media_promise() {
+  return new Promise((resolve, reject) => {
+    let video = document.createElement('video')
+    video.autoplay = true
+    video.muted = true
+    video.onplay = () => resolve('ok')
+    video.onerror = () => reject('video error')
+    video.src = remoteize('fetch_video.py')
+  })
+}
+
+</script>
+</body>
