@@ -770,6 +770,11 @@ JS_PUBLIC_API uint64_t js::GetMemoryUsageForZone(Zone* zone) {
          zone->jitHeapSize.bytes();
 }
 
+JS_PUBLIC_API const gc::SharedMemoryMap& js::GetSharedMemoryUsageForZone(
+    Zone* zone) {
+  return zone->sharedMemoryUseCounts;
+}
+
 JS_PUBLIC_API uint64_t js::GetGCHeapUsage(JSContext* cx) {
   return cx->runtime()->gc.heapSize.bytes();
 }

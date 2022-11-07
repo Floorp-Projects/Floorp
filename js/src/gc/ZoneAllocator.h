@@ -13,6 +13,7 @@
 
 #include "mozilla/Maybe.h"
 
+#include "jsfriendapi.h"
 #include "jstypes.h"
 #include "gc/Cell.h"
 #include "gc/Scheduling.h"
