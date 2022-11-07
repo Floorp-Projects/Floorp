@@ -10,6 +10,7 @@
 #include <stdio.h> /* for FILE* */
 #include "nsDebug.h"
 #include "nsTArray.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/FunctionTypeTraits.h"
 #include "mozilla/RefPtr.h"
 
@@ -329,11 +330,14 @@ class nsFrameList {
   /**
    * If this frame list is non-empty then append it to aLists as the
    * aListID child list.
-   * (this method is implemented in FrameChildList.h for dependency reasons)
    */
   inline void AppendIfNonempty(
       nsTArray<mozilla::layout::FrameChildList>* aLists,
-      mozilla::layout::FrameChildListID aListID) const;
+      mozilla::layout::FrameChildListID aListID) const {
+    if (NotEmpty()) {
+      aLists->EmplaceBack(*this, aListID);
+    }
+  }
 
   /**
    * Return the frame before this frame in visual order (after Bidi reordering).
@@ -460,6 +464,23 @@ class nsFrameList {
 };
 
 namespace mozilla {
+namespace layout {
+
+#ifdef DEBUG_FRAME_DUMP
+extern const char* ChildListName(FrameChildListID aListID);
+#endif
+
+using FrameChildListIDs = EnumSet<FrameChildListID>;
+
+class FrameChildList {
+ public:
+  FrameChildList(const nsFrameList& aList, FrameChildListID aID)
+      : mList(aList.Clone()), mID(aID) {}
+  nsFrameList mList;
+  FrameChildListID mID;
+};
+
+}  // namespace layout
 
 /**
  * Simple "auto_ptr" for nsFrameLists allocated from the shell arena.

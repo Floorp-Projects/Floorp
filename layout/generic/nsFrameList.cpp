@@ -437,6 +437,49 @@ void nsFrameList::VerifyList() const {
 #endif
 
 namespace mozilla {
+namespace layout {
+
+#ifdef DEBUG_FRAME_DUMP
+const char* ChildListName(FrameChildListID aListID) {
+  switch (aListID) {
+    case kPrincipalList:
+      return "";
+    case kPopupList:
+      return "PopupList";
+    case kCaptionList:
+      return "CaptionList";
+    case kColGroupList:
+      return "ColGroupList";
+    case kAbsoluteList:
+      return "AbsoluteList";
+    case kFixedList:
+      return "FixedList";
+    case kOverflowList:
+      return "OverflowList";
+    case kOverflowContainersList:
+      return "OverflowContainersList";
+    case kExcessOverflowContainersList:
+      return "ExcessOverflowContainersList";
+    case kOverflowOutOfFlowList:
+      return "OverflowOutOfFlowList";
+    case kFloatList:
+      return "FloatList";
+    case kBulletList:
+      return "BulletList";
+    case kPushedFloatsList:
+      return "PushedFloatsList";
+    case kBackdropList:
+      return "BackdropList";
+    case kNoReflowPrincipalList:
+      return "NoReflowPrincipalList";
+  }
+
+  MOZ_ASSERT_UNREACHABLE("unknown list");
+  return "UNKNOWN_FRAME_CHILD_LIST";
+}
+#endif
+
+}  // namespace layout
 
 AutoFrameListPtr::~AutoFrameListPtr() {
   if (mFrameList) {
