@@ -416,9 +416,16 @@ bool FontFaceImpl::SetDescriptor(nsCSSFontDesc aFontDesc,
     return false;
   }
 
+  RefPtr<URLExtraData> url = mFontFaceSet->GetURLExtraData();
+  if (NS_WARN_IF(!url)) {
+    // This should only happen on worker threads, where we failed to initialize
+    // the worker before it was shutdown.
+    aRv.ThrowInvalidStateError("Missing URLExtraData");
+    return false;
+  }
+
   // FIXME(heycam): Should not allow modification of FontFaces that are
   // CSS-connected and whose rule is read only.
-  RefPtr<URLExtraData> url = mFontFaceSet->GetURLExtraData();
   bool changed;
   if (!Servo_FontFaceRule_SetDescriptor(GetData(), aFontDesc, &aValue, url,
                                         &changed)) {
