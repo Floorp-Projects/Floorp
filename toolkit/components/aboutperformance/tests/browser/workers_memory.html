@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>
+    Main frame for test browser_aboutperformance.js
+  </title>
+</head>
+<body>
+
+<p>
+Result: <span id="result">?</span>
+</p>
+
+</body>
+<script>
+  var result = document.querySelector('#result');
+  var worker = new Worker("workers_memory_script.js");
+  var n = 1;
+
+  var waitPromise = new Promise(ready => {
+    worker.onmessage = function(event) {
+      result.textContent = event.data;
+      ready();
+
+      // We seem to need to keep the worker doing something to keep the
+      // memory usage up.
+      setTimeout(() => {
+        n++;
+        worker.postMessage(n);
+      }, 1000);
+    };
+  });
+
+  worker.postMessage(n);
+
+  window.waitForTestReady = async () => {
+    await waitPromise;
+  };
+</script>
+</html>
