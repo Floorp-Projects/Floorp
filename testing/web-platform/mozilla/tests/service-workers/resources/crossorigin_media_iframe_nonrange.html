@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<body>
+<script>
+
+'use strict';
+
+function remoteize(relpath) {
+  let curdir = location.href.replace(/\/[^\/]*$/, '/')
+  return curdir.replace('://', '://www1.') + relpath
+}
+
+function create_media_promise() {
+  return new Promise((resolve, reject) => {
+    let image = document.createElement('img')
+    image.onload = () => resolve('ok')
+    image.onerror = () => reject('image error')
+    image.src = remoteize('blank.html') // sw will replace with an image
+  })
+}
+
+</script>
+</body>

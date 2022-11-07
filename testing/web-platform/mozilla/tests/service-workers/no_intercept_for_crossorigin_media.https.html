@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Don't intercept cross-origin media requests</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/service-workers/service-worker/resources/test-helpers.sub.js">
+</script>
+<body>
+<script>
+
+'use strict';
+
+const scope = './resources/';
+
+/**
+ * Ensure service workers don't intercept cross-origin media range requests.
+ */
+promise_test(async t => {
+  const registration = await service_worker_unregister_and_register(
+    t, scope + 'intercept_media_sw.js', scope);
+  t.add_cleanup(() => registration.unregister());
+  await wait_for_state(t, registration.installing, 'activated');
+
+  const frame = await with_iframe(scope + 'crossorigin_media_iframe.html');
+  return frame.contentWindow.create_media_promise()
+}, 'Service worker does not intercept a cross-origin media range request');
+
+/**
+ * Ensure service workers do intercept cross-origin media non-range requests.
+ */
+promise_test(async t => {
+  const registration = await service_worker_unregister_and_register(
+    t, scope + 'intercept_media_sw.js', scope);
+  t.add_cleanup(() => registration.unregister());
+  await wait_for_state(t, registration.installing, 'activated');
+
+  const frame = await with_iframe(scope + 'crossorigin_media_iframe_nonrange.html');
+  return frame.contentWindow.create_media_promise()
+}, 'Service worker intercepts a cross-origin non-range media request');
+
+</script>
+</body>
