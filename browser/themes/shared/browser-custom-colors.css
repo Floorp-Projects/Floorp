@@ -32,8 +32,6 @@
     --panel-disabled-color: color-mix(in srgb, currentColor 40%, transparent);
     --panel-shortcut-color: rgb(91,91,102);
 
-    --error-text-color: rgb(197,0,66);
-
     --input-color: rgb(21,20,26);
     --input-bgcolor: rgb(255,255,255);
     --input-border-color: color-mix(in srgb, currentColor 41%, transparent);
