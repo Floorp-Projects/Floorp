@@ -81,6 +81,8 @@ class ToolbarView(
                 false
             }
 
+            setDefaultIcon()
+
             setOnEditListener(
                 object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
                     override fun onCancelEditing(): Boolean {
@@ -110,7 +112,9 @@ class ToolbarView(
             view.editMode()
             isInitialized = true
         }
+    }
 
+    private fun setDefaultIcon() {
         val historySearchIcon = AppCompatResources.getDrawable(context, R.drawable.ic_history)
 
         historySearchIcon?.let {
