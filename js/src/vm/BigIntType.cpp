@@ -102,6 +102,7 @@
 #include "js/StableStringChars.h"
 #include "js/Utility.h"
 #include "util/CheckedArithmetic.h"
+#include "util/DifferentialTesting.h"
 #include "vm/JSContext.h"
 #include "vm/StaticStrings.h"
 
@@ -2153,6 +2154,9 @@ BigInt* BigInt::lshByAbsolute(JSContext* cx, HandleBigInt x, HandleBigInt y) {
   if (y->digitLength() > 1 || y->digit(0) > MaxBitLength) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_BIGINT_TOO_LARGE);
+    if (js::SupportDifferentialTesting()) {
+      fprintf(stderr, "ReportOutOfMemory called\n");
+    }
     return nullptr;
   }
   Digit shift = y->digit(0);

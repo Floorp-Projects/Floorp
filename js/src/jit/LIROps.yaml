@@ -3752,3 +3752,14 @@
 - name: WasmAtomicExchangeI64
   gen_boilerplate: false
 #endif
+
+#ifdef FUZZING_JS_FUZZILLI
+- name: FuzzilliHashT
+  gen_boilerplate: false
+
+- name: FuzzilliHashV
+  gen_boilerplate: false
+
+- name: FuzzilliHashStore
+  gen_boilerplate: false
+#endif

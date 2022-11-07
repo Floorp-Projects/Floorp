@@ -35,6 +35,7 @@
 #include "js/ScalarType.h"          // js::Scalar::Type
 #include "js/Wrapper.h"
 #include "proxy/DOMProxy.h"  // js::GetDOMProxyHandlerFamily
+#include "util/DifferentialTesting.h"
 #include "util/Unicode.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/BytecodeUtil.h"
@@ -9703,6 +9704,29 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(HandleFunction callee,
   return nativeGen.tryAttachStub();
 }
 
+#ifdef FUZZING_JS_FUZZILLI
+AttachDecision InlinableNativeIRGenerator::tryAttachFuzzilliHash() {
+  if (argc_ != 1) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Guard callee is the 'fuzzilli_hash' native function.
+  emitNativeCalleeGuard();
+
+  ValOperandId argValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+
+  writer.fuzzilliHashResult(argValId);
+  writer.returnFromIC();
+
+  trackAttached("FuzzilliHash");
+  return AttachDecision::Attach;
+}
+#endif
+
 AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
   if (!callee_->hasJitInfo() ||
       callee_->jitInfo()->type() != JSJitInfo::InlinableNative) {
@@ -10105,11 +10129,23 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
 
     // Testing functions.
     case InlinableNative::TestBailout:
+      if (js::SupportDifferentialTesting()) {
+        return AttachDecision::NoAction;
+      }
       return tryAttachBailout();
     case InlinableNative::TestAssertFloat32:
       return tryAttachAssertFloat32();
     case InlinableNative::TestAssertRecoveredOnBailout:
+      if (js::SupportDifferentialTesting()) {
+        return AttachDecision::NoAction;
+      }
       return tryAttachAssertRecoveredOnBailout();
+
+#ifdef FUZZING_JS_FUZZILLI
+    // Fuzzilli function
+    case InlinableNative::FuzzilliHash:
+      return tryAttachFuzzilliHash();
+#endif
 
     case InlinableNative::Limit:
       break;
