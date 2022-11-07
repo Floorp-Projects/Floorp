@@ -54,7 +54,7 @@ void ClipManager::BeginList(const StackingContextHelper& aStackingContext) {
            aStackingContext.AffectsClipPositioning(),
            aStackingContext.ReferenceFrameId().isSome());
 
-  ItemClips clips(nullptr, nullptr, false);
+  ItemClips clips(nullptr, nullptr, 0, false);
   if (!mItemClipStack.empty()) {
     clips = mItemClipStack.top();
   }
@@ -66,6 +66,10 @@ void ClipManager::BeginList(const StackingContextHelper& aStackingContext) {
     } else {
       // Start a new cache
       mCacheStack.emplace();
+    }
+    if (clips.mChain) {
+      clips.mClipChainId =
+          DefineClipChain(clips.mChain, clips.mAppUnitsPerDevPixel);
     }
   }
 
@@ -102,18 +106,23 @@ void ClipManager::PushOverrideForASR(const ActiveScrolledRoot* aASR,
 
   CLIP_LOG("Pushing %p override %zu -> %zu\n", aASR, space->id, aSpatialId.id);
 
-  if (!mItemClipStack.empty()) {
-    auto& top = mItemClipStack.top();
-    if (top.mASR == aASR) {
-      top.mScrollId = aSpatialId;
-    }
-  }
-
   auto it = mASROverride.insert({*space, std::stack<wr::WrSpatialId>()});
   it.first->second.push(aSpatialId);
 
   // Start a new cache
   mCacheStack.emplace();
+
+  // Fix up our cached item clip if needed.
+  if (!mItemClipStack.empty()) {
+    auto& top = mItemClipStack.top();
+    if (top.mASR == aASR) {
+      top.mScrollId = aSpatialId;
+      if (top.mChain) {
+        top.mClipChainId =
+            DefineClipChain(top.mChain, top.mAppUnitsPerDevPixel);
+      }
+    }
+  }
 }
 
 void ClipManager::PopOverrideForASR(const ActiveScrolledRoot* aASR) {
@@ -128,8 +137,8 @@ void ClipManager::PopOverrideForASR(const ActiveScrolledRoot* aASR) {
   if (it == mASROverride.end()) {
     MOZ_ASSERT_UNREACHABLE("Push/PopOverrideForASR should be balanced");
   } else {
-    CLIP_LOG("Popping %p override %zu -> %s\n", aASR, space->id,
-             ToString(it->second.top().id).c_str());
+    CLIP_LOG("Popping %p override %zu -> %zu\n", aASR, space->id,
+             it->second.top().id);
 
     it->second.pop();
   }
@@ -140,6 +149,10 @@ void ClipManager::PopOverrideForASR(const ActiveScrolledRoot* aASR) {
       top.mScrollId = (it == mASROverride.end() || it->second.empty())
                           ? *space
                           : it->second.top();
+      if (top.mChain) {
+        top.mClipChainId =
+            DefineClipChain(top.mChain, top.mAppUnitsPerDevPixel);
+      }
     }
   }
 
@@ -155,9 +168,7 @@ wr::WrSpatialId ClipManager::SpatialIdAfterOverride(
     return aSpatialId;
   }
   MOZ_ASSERT(!it->second.empty());
-  CLIP_LOG("Overriding %zu with %s\n", aSpatialId.id,
-           ToString(it->second.top().id).c_str());
-
+  CLIP_LOG("Overriding %zu with %zu\n", aSpatialId.id, it->second.top().id);
   return it->second.top();
 }
 
@@ -208,7 +219,17 @@ wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayListBuilder* aBuilder,
     separateLeaf = !aItem->GetChildren();
   }
 
-  ItemClips clips(asr, clip, separateLeaf);
+  // Zoom display items report their bounds etc using the parent document's
+  // APD because zoom items act as a conversion layer between the two different
+  // APDs.
+  const int32_t auPerDevPixel = [&] {
+    if (type == DisplayItemType::TYPE_ZOOM) {
+      return static_cast<nsDisplayZoom*>(aItem)->GetParentAppUnitsPerDevPixel();
+    }
+    return aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+  }();
+
+  ItemClips clips(asr, clip, auPerDevPixel, separateLeaf);
   MOZ_ASSERT(!mItemClipStack.empty());
   if (clips.HasSameInputs(mItemClipStack.top())) {
     // Early-exit because if the clips are the same as aItem's previous sibling,
@@ -224,17 +245,6 @@ wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayListBuilder* aBuilder,
   // Pop aItem's previous sibling's stuff from mBuilder in preparation for
   // pushing aItem's stuff.
   mItemClipStack.pop();
-
-  // Zoom display items report their bounds etc using the parent document's
-  // APD because zoom items act as a conversion layer between the two different
-  // APDs.
-  int32_t auPerDevPixel;
-  if (type == DisplayItemType::TYPE_ZOOM) {
-    auPerDevPixel =
-        static_cast<nsDisplayZoom*>(aItem)->GetParentAppUnitsPerDevPixel();
-  } else {
-    auPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
-  }
 
   // If the leaf of the clip chain is going to be merged with the display item's
   // clip rect, then we should create a clip chain id from the leaf's parent.
@@ -447,8 +457,12 @@ ClipManager::~ClipManager() {
 
 ClipManager::ItemClips::ItemClips(const ActiveScrolledRoot* aASR,
                                   const DisplayItemClipChain* aChain,
+                                  int32_t aAppUnitsPerDevPixel,
                                   bool aSeparateLeaf)
-    : mASR(aASR), mChain(aChain), mSeparateLeaf(aSeparateLeaf) {
+    : mASR(aASR),
+      mChain(aChain),
+      mAppUnitsPerDevPixel(aAppUnitsPerDevPixel),
+      mSeparateLeaf(aSeparateLeaf) {
   mScrollId = wr::wr_root_scroll_node_id();
 }
 
@@ -466,6 +480,7 @@ void ClipManager::ItemClips::UpdateSeparateLeaf(
 
 bool ClipManager::ItemClips::HasSameInputs(const ItemClips& aOther) {
   return mASR == aOther.mASR && mChain == aOther.mChain &&
+         mAppUnitsPerDevPixel == aOther.mAppUnitsPerDevPixel &&
          mSeparateLeaf == aOther.mSeparateLeaf;
 }
 
