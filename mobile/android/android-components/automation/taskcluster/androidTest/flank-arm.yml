@@ -19,10 +19,9 @@ gcloud:
   performance-metrics: true
 
   device:
-   - model: blueline
+   - model: Pixel2.arm
      version: 28
-   - model: Nexus6
-     version: 21
+     locale: en_US
 
 flank:
   project: GOOGLE_PROJECT
