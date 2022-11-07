@@ -79,6 +79,7 @@ class DocAccessibleParent : public RemoteAccessible,
   void MarkAsShutdown() {
     MOZ_ASSERT(mChildDocs.IsEmpty());
     MOZ_ASSERT(mAccessibles.Count() == 0);
+    MOZ_ASSERT(!mBrowsingContext);
     mShutdown = true;
   }
 
@@ -231,6 +232,8 @@ class DocAccessibleParent : public RemoteAccessible,
    * Return the accessible for given id.
    */
   RemoteAccessible* GetAccessible(uintptr_t aID) {
+    MOZ_ASSERT(!mShutdown, "Asking for an Accessible from a destroyed doc");
+
     if (!aID) return this;
 
     ProxyEntry* e = mAccessibles.GetEntry(aID);
