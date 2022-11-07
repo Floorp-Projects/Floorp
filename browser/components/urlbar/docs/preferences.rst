@@ -24,6 +24,11 @@ browser.urlbar.showSearchSuggestionsFirst (boolean, default: true)
   Whether to show search suggestions before general results.
   Can be controlled from Search Preferences.
 
+browser.urlbar.showSearchTerms.enabled (boolean, default: true)
+  Whether to show the search term in the urlbar
+  on a default search engine results page.
+  Can be controlled from Search Preferences.
+
 browser.urlbar.suggest.bookmark (boolean, default: true)
   Whether results will include the user's bookmarks.
   Can be controlled from Privacy Preferences.
