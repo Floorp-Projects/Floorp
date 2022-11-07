@@ -357,6 +357,9 @@ class WorkerPrivate final
 
   void MemoryPressureInternal();
 
+  typedef MozPromise<uint64_t, nsresult, true> JSMemoryUsagePromise;
+  RefPtr<JSMemoryUsagePromise> GetJSMemoryUsage();
+
   void SetFetchHandlerWasAdded() {
     MOZ_ASSERT(IsServiceWorker());
     AssertIsOnWorkerThread();

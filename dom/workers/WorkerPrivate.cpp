@@ -2081,6 +2081,28 @@ void WorkerPrivate::MemoryPressure() {
   Unused << NS_WARN_IF(!runnable->Dispatch());
 }
 
+RefPtr<WorkerPrivate::JSMemoryUsagePromise> WorkerPrivate::GetJSMemoryUsage() {
+  AssertIsOnMainThread();
+
+  {
+    MutexAutoLock lock(mMutex);
+    // If we have started shutting down the worker, do not dispatch a runnable
+    // to measure its memory.
+    if (ParentStatus() > Running) {
+      return nullptr;
+    }
+  }
+
+  return InvokeAsync(ControlEventTarget(), __func__, []() {
+    WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(wp);
+    wp->AssertIsOnWorkerThread();
+    MutexAutoLock lock(wp->mMutex);
+    return JSMemoryUsagePromise::CreateAndResolve(
+        js::GetGCHeapUsage(wp->mJSContext), __func__);
+  });
+}
+
 void WorkerPrivate::WorkerScriptLoaded() {
   AssertIsOnMainThread();
 
