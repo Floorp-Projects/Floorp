@@ -947,7 +947,7 @@ modules:
         - Yan Evan
         - Yura Zenevich
       group: dev-accessibility
-      url: http://www.mozilla.org/access/
+      url: https://developer.mozilla.org/docs/Web/Accessibility
       components:
         - Core::Disability Access APIs
     owners:
@@ -1086,7 +1086,7 @@ modules:
         - Ricky Stewart
         - David Major
       group: dev-builds
-      url: http://www.mozilla.org/build/
+      url: :ref:`Build System`
       components:
         - Core::Build Config
     owners:
@@ -1222,7 +1222,7 @@ modules:
       peers_emeritus:
         - Aria Beingessner
       group: dev-platform
-      url: https://firefox-source-docs.mozilla.org/toolkit/crashreporter/crashreporter/index.html
+      url: :ref:`Crash Reporter`
       components:
         - Toolkit::Crash Reporting
     owners:
@@ -1360,7 +1360,7 @@ modules:
     machine_name: core_document_object_model
 
   - name: 'Core: DOM File'
-    description: 'DOM Blob, File and FileSystem APIs '
+    description: 'DOM Blob, File and FileSystem APIs'
     includes:
       - dom/file/**/*
       - dom/filesystem/**/*
@@ -1400,7 +1400,7 @@ modules:
       owners_emeritus:
         - Ehsan Akhgari
       group: dev-platform
-      url: http://www.mozilla.org/editor/
+      url: :ref:`Editor`
       components:
         - Core::Editor
     owners:
@@ -1410,7 +1410,7 @@ modules:
     machine_name: core_editor
 
   - name: 'Core: Event Handling'
-    description: 'DOM Events and Event Handling '
+    description: 'DOM Events and Event Handling'
     includes:
       - dom/events/**/*
       # TODO "and event handling related code elsewhere"
@@ -1457,7 +1457,7 @@ modules:
         - Cervantes Yu (TaskTracer)
         - Nicholas Nethercote
       group: dev-platform
-      url: https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler
+      url: https://profiler.firefox.com/docs/
       components:
         - Core::Gecko Profiler
     owners:
@@ -1497,15 +1497,14 @@ modules:
     machine_name: core_geckoview
 
   - name: 'Core: Global Key Bindings'
-    description: Global hot keys in Mozilla for the browser, editor, mail-news and
-      widgets. Does not include underlined menu accelerators and the like, as those
-      are part of i18n.
+    description: Global hot keys for Firefox. Does not include underlined
+      menu accelerators and the like, as those are part of i18n.
     includes:
       - dom/events/**/*
       # TODO "and platform specific directories under it"
     meta:
       group: dev-accessibility
-      url: http://www.mozilla.org/projects/ui/accessibility/mozkeyintro.html
+      url: https://support.mozilla.org/kb/keyboard-shortcuts-perform-firefox-tasks-quickly
       components:
         - 'Core::Keyboard: Navigation'
       peers_emeritus:
@@ -1598,7 +1597,7 @@ modules:
         - Jungshik Shin
         - Simon Montagu
       group: dev-i18n
-      url: http://mozilla.org/projects/intl/index.html
+      url: :ref:`Internationalization`
       components:
         - Core::Internationalization
     owners:
@@ -1898,7 +1897,7 @@ modules:
       - layout/mathml/**/*
     meta:
       group: dev-tech-mathml
-      url: http://www.mozilla.org/projects/mathml/
+      url: https://developer.mozilla.org/docs/Web/MathML
       components:
         - Core::MathML
     owners:
@@ -2078,7 +2077,7 @@ modules:
         - Jason Duell
         - Junior Hsu
       group: dev-tech-network
-      url: http://www.mozilla.org/projects/netlib/, https://developer.mozilla.org/en/Necko
+      url: :ref:`Networking`
       components:
         - Core::Networking
         - 'Core::Networking: Cache'
@@ -2130,8 +2129,7 @@ modules:
       owners_emeritus:
         - Wan-Teh Chang
       group: dev-tech-nspr
-      url: http://www.mozilla.org/projects/nspr/, http://www.mozilla.org/projects/nspr/reference/html/,
-        http://www.mozilla.org/projects/nspr/release-notes/
+      url: :ref:`NSPR`
       components:
         - NSPR
     owners:
@@ -2234,7 +2232,7 @@ modules:
     includes:
     # TODO
     # Implementation and consumers of Private Browsing APIs in nsILoadContext,
-    # nsIPrivateBrowsingChannel, PrivateBrowsingUtils.sys.mjs and the related glue code. '
+    # nsIPrivateBrowsingChannel, PrivateBrowsingUtils.sys.mjs and the related glue code.'
     meta:
       owners_emeritus:
         - Ehsan Akhgari
@@ -2252,7 +2250,7 @@ modules:
     machine_name: core_private_browsing
 
   - name: 'Core: Privilege Manager'
-    description: '"caps"'
+    description: Caps is the capabilities-based security system.
     includes:
       - caps/**/*
     meta:
@@ -2295,7 +2293,7 @@ modules:
       - security/sandbox/linux/**/*
     meta:
       group: dev-platform
-      url: 'https://wiki.mozilla.org/Security/Sandbox '
+      url: 'https://wiki.mozilla.org/Security/Sandbox'
       components:
         - 'Core::Security: Process Sandboxing'
     owners:
@@ -2305,12 +2303,12 @@ modules:
     machine_name: core_sandboxing_linux
 
   - name: 'Core: Sandboxing (OSX)'
-    description: 'Sandboxing for the OSX platform '
+    description: 'Sandboxing for the OSX platform'
     includes:
       - security/sandbox/mac/**/*
     meta:
-      group: 'dev-platform '
-      url: 'https://wiki.mozilla.org/Security/Sandbox '
+      group: dev-platform
+      url: 'https://wiki.mozilla.org/Security/Sandbox'
       components:
         - 'Core::Security: Process Sandboxing'
     owners:
@@ -2319,19 +2317,19 @@ modules:
     machine_name: core_sandboxing_osx
 
   - name: 'Core: Sandboxing (Windows)'
-    description: 'Sandboxing for the Windows platform '
+    description: 'Sandboxing for the Windows platform'
     includes:
       - security/sandbox/win/**/*
     meta:
       owners_emeritus:
-        - Tim Abraldes (https://mozillians.org/en-US/u/TimAbraldes)
+        - Tim Abraldes
       peers_emeritus:
         - Brian Bondy
         - Aaron Klotz
         - *jimm
         - *toshi
       group: dev-platform
-      url: 'https://wiki.mozilla.org/Security/Sandbox '
+      url: 'https://wiki.mozilla.org/Security/Sandbox'
       components:
         - 'Core::Security: Process Sandboxing'
     owners:
@@ -2361,7 +2359,7 @@ modules:
         - Franziskus Kiefer
         - Kevin Jacobs
       group: dev-tech-crypto
-      url: http://mozilla.org/projects/security/pki/
+      url: :ref:`Network Security Services (NSS)`
       components:
         - NSS
         - JSS
@@ -2464,7 +2462,7 @@ modules:
       - xpcom/string/**/*
     meta:
       group: dev-tech-xpcom
-      url: https://developer.mozilla.org/En/Mozilla_internal_string_guide
+      url: :ref:`String Guide`
       components:
         - Core::String
     owners:
@@ -2503,7 +2501,7 @@ modules:
       - dom/smil/**/*
     meta:
       group: dev-tech-svg
-      url: https://developer.mozilla.org/en-US/docs/Web/SVG
+      url: https://developer.mozilla.org/docs/Web/SVG
       components:
         - Core::SVG
     owners:
@@ -2521,7 +2519,7 @@ modules:
       - netwerk/protocol/http/**/*
     meta:
       group: dev-platform
-      url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent/Firefox
+      url: https://developer.mozilla.org/docs/Web/HTTP/Headers/User-Agent/Firefox
       components:
         - 'Core::Networking: HTTP'
     owners:
@@ -2574,7 +2572,7 @@ modules:
       # TODO: "the display list and layer related methods on nsIFrame and its subclasses"
     meta:
       group: dev-platform
-      url: http://mozilla.org/newlayout/doc/, http://lxr.mozilla.org/mozilla/source/layout/doc/
+      url: :ref:`Layout & CSS`
       components:
         - 'Core::Layout: Web Painting'
       owners_emeritus:
@@ -2602,7 +2600,7 @@ modules:
         - Kyle Huey
         - Ben Kelly
       group: dev-platform
-      url: https://developer.mozilla.org/En/Using_web_workers
+      url: https://developer.mozilla.org/docs/Web/API/Web_Workers_API/Using_web_workers
       components:
         - 'Core::DOM: Workers'
     owners:
@@ -2756,7 +2754,7 @@ modules:
       owners_emeritus:
         - Robert O'Callahan
       group: dev-platform
-      url: http://www.mozilla.org/unix/, http://www.gtk.org, http://www.mozilla.org/ports/gtk/
+      url: http://www.mozilla.org/ports/gtk/
       components:
         - 'Core::Widget: Gtk'
     owners:
@@ -2845,7 +2843,6 @@ modules:
         - Boris Zbarsky
         - Eric Rahm
       group: dev-tech-xml
-      url: http://www.mozilla.org/newlayout/xml/
       components:
         - Core::XML
     owners:
@@ -2860,7 +2857,6 @@ modules:
       - xpfe/**/*
     meta:
       group: dev-apps-seamonkey
-      url: http://www.mozilla.org/xpapps/
       owners_emeritus:
         - Neil Rashbrook
       peers_emeritus:
@@ -2890,11 +2886,11 @@ modules:
       owners_emeritus:
         - Benjamin Smedberg
       peers_emeritus:
-        - Doug Turner (https://mozillians.org/en-US/u/dougt/)
+        - Doug Turner
         - Eric Rahm
         - Simon Giesecke
       group: dev-platform
-      url: http://developer.mozilla.org/en/XPCOM
+      url: :ref:`XPCOM`
       components:
         - Core::XPCOM
     owners:
@@ -2943,7 +2939,7 @@ modules:
         - Mike Shaver
         - Josh 'timeless' Soref
       group: dev-tech-xpcom
-      url: http://www.mozilla.org/scriptable/xpidl, http://www.mozilla.org/scriptable
+      url: :ref:`XPIDL`
     owners:
       - *nika
     peers:
@@ -2960,7 +2956,7 @@ modules:
         - Axel Hecht
         - Eric Rahm
       group: dev-tech-xslt
-      url: http://www.mozilla.org/projects/xslt/, http://www.w3.org/TR/xslt.html
+      url: https://developer.mozilla.org/docs/Web/XSLT
       components:
         - Core::XSLT
     owners:
@@ -2998,7 +2994,6 @@ modules:
         - Gregory Szorc
         - Tim Taubert
         - Johann Hofmann
-      url: '`Code Review Guidelines <https://wiki.mozilla.org/Firefox/Code_Review>`__'
       group: firefox-dev
       components:
         - Firefox
@@ -3606,7 +3601,6 @@ modules:
       - toolkit/**/*
     meta:
       group: firefox-dev
-      url: '`Code Review Guidelines <https://wiki.mozilla.org/Firefox/Code_Review>`__'
       components:
         - Firefox
         - Toolkit
@@ -3646,7 +3640,7 @@ modules:
           owners_emeritus:
             - Georg Fritzsche
           group: fx-data-dev
-          url: https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/index.html
+          url: :ref:`Telemetry`
         owners:
           - *chutten
         peers:
