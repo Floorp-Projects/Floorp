@@ -183,6 +183,41 @@ html {
     }
   }
 
+  @mixin arrow-icon-styles {
+    .arrow-icon {
+      -moz-context-properties: fill;
+      fill: currentColor;
+
+      &::after {
+        content: '';
+        padding-inline-end: 12px;
+        margin-inline-start: 4px;
+        background: url('chrome://browser/skin/forward.svg') no-repeat center / 12px;
+      }
+
+      &:dir(rtl)::after {
+        background-image: url('chrome://browser/skin/back.svg');
+      }
+    }
+  }
+
+  @mixin secondary-cta-styles {
+    // sass-lint:disable-block no-important
+    background-color: var(--in-content-button-background) !important;
+    border: 1px solid var(--in-content-button-border-color);
+    line-height: 12px;
+    font-size: 0.72em;
+    font-weight: 600;
+    padding: 8px 16px;
+
+    &:hover {
+      text-decoration: none;
+      // sass-lint:disable-block no-important
+      background-color: var(--in-content-button-background-hover) !important;
+      color: var(--in-content-button-text-color-hover);
+    }
+  }
+
   .screen {
     display: flex;
     position: relative;
@@ -251,6 +286,40 @@ html {
           background-color: var(--mr-welcome-background-color);
           border-radius: 8px;
           box-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
+          padding: 44px 85px 20px;
+
+          .welcome-text {
+            margin: 0;
+          }
+
+          .main-content-inner {
+            justify-content: space-between;
+          }
+
+          h1,
+          h2 {
+            align-self: start;
+          }
+
+          h1 {
+            font-size: 24px;
+            line-height: 28.8px;
+          }
+
+          h2 {
+            font-size: 15px;
+            line-height: 22px;
+          }
+
+          .secondary-cta {
+            @include arrow-icon-styles;
+            justify-content: end;
+
+            .secondary {
+              @include secondary-cta-styles;
+              color: var(--in-content-button-text-color);
+            }
+          }
         }
       }
     }
@@ -380,37 +449,9 @@ html {
               inset-inline-end: 0;
 
               .secondary {
-                // sass-lint:disable-block no-important
-                background-color: var(--in-content-button-background) !important;
-                border: 1px solid var(--in-content-button-border-color);
-                line-height: 12px;
-                font-size: 0.72em;
-                font-weight: 600;
-                padding: 8px 16px;
-
-                &:hover {
-                  text-decoration: none;
-                  // sass-lint:disable-block no-important
-                  background-color: var(--in-content-button-background-hover) !important;
-                  color: var(--in-content-button-text-color-hover);
-                }
+                @include secondary-cta-styles;
               }
-
-              .arrow-icon {
-                -moz-context-properties: fill;
-                fill: currentColor;
-
-                &::after {
-                  content: '';
-                  padding-inline-end: 12px;
-                  margin-inline-start: 4px;
-                  background: url('chrome://browser/skin/forward.svg') no-repeat center / 12px;
-                }
-
-                &:dir(rtl)::after {
-                  background-image: url('chrome://browser/skin/back.svg');
-                }
-              }
+              @include arrow-icon-styles;
             }
           }
 

@@ -428,6 +428,55 @@ html {
   background-color: var(--mr-welcome-background-color);
   border-radius: 8px;
   box-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
+  padding: 44px 85px 20px;
+}
+.onboardingContainer .screen[pos=center].with-video .main-content .welcome-text {
+  margin: 0;
+}
+.onboardingContainer .screen[pos=center].with-video .main-content .main-content-inner {
+  justify-content: space-between;
+}
+.onboardingContainer .screen[pos=center].with-video .main-content h1,
+.onboardingContainer .screen[pos=center].with-video .main-content h2 {
+  align-self: start;
+}
+.onboardingContainer .screen[pos=center].with-video .main-content h1 {
+  font-size: 24px;
+  line-height: 28.8px;
+}
+.onboardingContainer .screen[pos=center].with-video .main-content h2 {
+  font-size: 15px;
+  line-height: 22px;
+}
+.onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta {
+  justify-content: end;
+}
+.onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .arrow-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+.onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .arrow-icon::after {
+  content: "";
+  padding-inline-end: 12px;
+  margin-inline-start: 4px;
+  background: url("chrome://browser/skin/forward.svg") no-repeat center/12px;
+}
+.onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .arrow-icon:dir(rtl)::after {
+  background-image: url("chrome://browser/skin/back.svg");
+}
+.onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .secondary {
+  background-color: var(--in-content-button-background) !important;
+  border: 1px solid var(--in-content-button-border-color);
+  line-height: 12px;
+  font-size: 0.72em;
+  font-weight: 600;
+  padding: 8px 16px;
+  color: var(--in-content-button-text-color);
+}
+.onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .secondary:hover {
+  text-decoration: none;
+  background-color: var(--in-content-button-background-hover) !important;
+  color: var(--in-content-button-text-color-hover);
 }
 .onboardingContainer .screen:not([pos=split]) .secondary-cta .secondary {
   background: none;
