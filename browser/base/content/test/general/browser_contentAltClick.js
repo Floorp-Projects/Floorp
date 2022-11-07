@@ -12,11 +12,9 @@
  */
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Downloads",
-  "resource://gre/modules/Downloads.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  Downloads: "resource://gre/modules/Downloads.sys.mjs",
+});
 
 function setup() {
   Services.prefs.setBoolPref("browser.altClickSave", true);

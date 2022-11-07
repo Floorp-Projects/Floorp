@@ -8,13 +8,9 @@ const {
   AppConstants,
 } = window.docShell.chromeEventHandler.ownerGlobal;
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "DownloadPaths",
-  "resource://gre/modules/DownloadPaths.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+  DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
 });
 
 const PDF_JS_URI = "resource://pdf.js/web/viewer.html";

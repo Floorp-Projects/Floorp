@@ -11,20 +11,19 @@
  * exposed to allow the consumers to integrate with history view commands.
  */
 
-const { DownloadList } = ChromeUtils.import(
-  "resource://gre/modules/DownloadList.jsm"
-);
+import { DownloadList } from "resource://gre/modules/DownloadList.sys.mjs";
+
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  Downloads: "resource://gre/modules/Downloads.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Downloads: "resource://gre/modules/Downloads.jsm",
   OS: "resource://gre/modules/osfile.jsm",
 });
 

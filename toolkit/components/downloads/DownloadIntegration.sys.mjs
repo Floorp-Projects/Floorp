@@ -9,9 +9,7 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-const { Downloads } = ChromeUtils.import(
-  "resource://gre/modules/Downloads.jsm"
-);
+import { Downloads } from "resource://gre/modules/Downloads.sys.mjs";
 import { Integration } from "resource://gre/modules/Integration.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
@@ -24,18 +22,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineESModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+  DownloadSpamProtection: "resource:///modules/DownloadSpamProtection.sys.mjs",
+  DownloadStore: "resource://gre/modules/DownloadStore.sys.mjs",
+  DownloadUIHelper: "resource://gre/modules/DownloadUIHelper.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DownloadStore",
-  "resource://gre/modules/DownloadStore.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DownloadUIHelper",
-  "resource://gre/modules/DownloadUIHelper.jsm"
-);
 ChromeUtils.defineModuleGetter(
   lazy,
   "NetUtil",
@@ -75,12 +66,6 @@ XPCOMUtils.defineLazyGetter(lazy, "gParentalControlsService", function() {
   }
   return null;
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DownloadSpamProtection",
-  "resource:///modules/DownloadSpamProtection.jsm"
-);
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,

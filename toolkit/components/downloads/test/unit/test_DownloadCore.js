@@ -9,11 +9,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "DownloadError",
-  "resource://gre/modules/DownloadCore.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  DownloadError: "resource://gre/modules/DownloadCore.sys.mjs",
+});
 
 // Execution of common tests
 

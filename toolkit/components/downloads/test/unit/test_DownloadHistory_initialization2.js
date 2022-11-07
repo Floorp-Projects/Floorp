@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { DownloadHistory } = ChromeUtils.import(
-  "resource://gre/modules/DownloadHistory.jsm"
+const { DownloadHistory } = ChromeUtils.importESModule(
+  "resource://gre/modules/DownloadHistory.sys.mjs"
 );
 
 /**

@@ -3,8 +3,8 @@
 "use strict";
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { Downloads } = ChromeUtils.import(
-  "resource://gre/modules/Downloads.jsm"
+const { Downloads } = ChromeUtils.importESModule(
+  "resource://gre/modules/Downloads.sys.mjs"
 );
 
 const gServer = createHttpServer();

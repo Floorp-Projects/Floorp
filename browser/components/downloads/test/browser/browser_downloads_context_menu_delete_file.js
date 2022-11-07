@@ -3,8 +3,8 @@
 
 "use strict";
 
-var { DownloadHistory } = ChromeUtils.import(
-  "resource://gre/modules/DownloadHistory.jsm"
+var { DownloadHistory } = ChromeUtils.importESModule(
+  "resource://gre/modules/DownloadHistory.sys.mjs"
 );
 let gDownloadDir;
 let downloads = [];

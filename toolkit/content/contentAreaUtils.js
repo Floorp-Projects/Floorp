@@ -12,13 +12,13 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 ChromeUtils.defineESModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   Deprecated: "resource://gre/modules/Deprecated.sys.mjs",
+  DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
+  Downloads: "resource://gre/modules/Downloads.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Downloads: "resource://gre/modules/Downloads.jsm",
-  DownloadPaths: "resource://gre/modules/DownloadPaths.jsm",
   DownloadLastDir: "resource://gre/modules/DownloadLastDir.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
 });

@@ -10,8 +10,8 @@
 
 var EXPORTED_SYMBOLS = ["FileTestUtils"];
 
-const { DownloadPaths } = ChromeUtils.import(
-  "resource://gre/modules/DownloadPaths.jsm"
+const { DownloadPaths } = ChromeUtils.importESModule(
+  "resource://gre/modules/DownloadPaths.sys.mjs"
 );
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"

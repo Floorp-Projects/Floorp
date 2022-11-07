@@ -8,27 +8,18 @@
 
 import { Integration } from "resource://gre/modules/Integration.sys.mjs";
 
-const { Download, DownloadError } = ChromeUtils.import(
-  "resource://gre/modules/DownloadCore.jsm"
-);
+import {
+  Download,
+  DownloadError,
+} from "resource://gre/modules/DownloadCore.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DownloadCombinedList",
-  "resource://gre/modules/DownloadList.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DownloadList",
-  "resource://gre/modules/DownloadList.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DownloadSummary",
-  "resource://gre/modules/DownloadList.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  DownloadCombinedList: "resource://gre/modules/DownloadList.sys.mjs",
+  DownloadList: "resource://gre/modules/DownloadList.sys.mjs",
+  DownloadSummary: "resource://gre/modules/DownloadList.sys.mjs",
+});
 
 Integration.downloads.defineModuleGetter(
   lazy,
