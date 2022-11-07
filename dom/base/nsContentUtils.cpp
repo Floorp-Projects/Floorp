@@ -2179,18 +2179,27 @@ bool nsContentUtils::ShouldResistFingerprinting(const char* aJustification) {
 bool nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell) {
   if (!aDocShell) {
     MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
-            ("Called nsContentUtils::ShouldResistFingerprinting(nsIDocShell*) "
-             "with NULL docshell"));
+            ("Called nsContentUtils::ShouldResistFingerprinting(const "
+             "nsIDocShell* aDocShell) with NULL docshell"));
     return ShouldResistFingerprinting();
   }
-  Document* doc = aDocShell->GetDocument();
-  if (!doc) {
+  return ShouldResistFingerprinting(aDocShell->GetDocument());
+}
+
+// --------------------------------------------------------------------
+/* static */
+bool nsContentUtils::ShouldResistFingerprinting(const Document* aDoc) {
+  if (!aDoc) {
     MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
-            ("Called nsContentUtils::ShouldResistFingerprinting(nsIDocShell*) "
-             "with NULL doc"));
+            ("Called nsContentUtils::ShouldResistFingerprinting(const "
+             "Document* aDoc) with NULL document"));
     return ShouldResistFingerprinting();
   }
-  return doc->ShouldResistFingerprinting();
+  bool isChrome = nsContentUtils::IsChromeDoc(aDoc);
+  if (isChrome) {
+    return false;
+  }
+  return ShouldResistFingerprinting(aDoc->GetChannel());
 }
 
 // ----------------------------------------------------------------------
