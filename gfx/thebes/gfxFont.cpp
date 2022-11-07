@@ -1191,8 +1191,8 @@ static void HasLookupRuleWithGlyph(hb_face_t* aFace, hb_tag_t aTableTag,
   hb_set_destroy(otherLookups);
 }
 
-nsTHashMap<nsUint32HashKey, intl::Script>* gfxFont::sScriptTagToCode = nullptr;
-nsTHashSet<uint32_t>* gfxFont::sDefaultFeatures = nullptr;
+Atomic<nsTHashMap<nsUint32HashKey, intl::Script>*> gfxFont::sScriptTagToCode;
+Atomic<nsTHashSet<uint32_t>*> gfxFont::sDefaultFeatures;
 
 static inline bool HasSubstitution(uint32_t* aBitVector, intl::Script aScript) {
   return (aBitVector[static_cast<uint32_t>(aScript) >> 5] &
@@ -1243,12 +1243,12 @@ void gfxFont::CheckForFeaturesInvolvingSpace() const {
 
   // GSUB lookups - examine per script
   if (hb_ot_layout_has_substitution(face)) {
-    // set up the script ==> code hashtable if needed
-    if (!sScriptTagToCode) {
-      sScriptTagToCode = new nsTHashMap<nsUint32HashKey, Script>(
+    // Get the script ==> code hashtable, creating it on first use.
+    nsTHashMap<nsUint32HashKey, Script>* tagToCode = sScriptTagToCode;
+    if (!tagToCode) {
+      tagToCode = new nsTHashMap<nsUint32HashKey, Script>(
           size_t(Script::NUM_SCRIPT_CODES));
-      sScriptTagToCode->InsertOrUpdate(HB_TAG('D', 'F', 'L', 'T'),
-                                       Script::COMMON);
+      tagToCode->InsertOrUpdate(HB_TAG('D', 'F', 'L', 'T'), Script::COMMON);
       // Ensure that we don't try to look at script codes beyond what the
       // current version of ICU (at runtime -- in case of system ICU)
       // knows about.
@@ -1264,14 +1264,25 @@ void gfxFont::CheckForFeaturesInvolvingSpace() const {
                                             &scriptCount, scriptTags, nullptr,
                                             nullptr);
         for (unsigned int i = 0; i < scriptCount; i++) {
-          sScriptTagToCode->InsertOrUpdate(scriptTags[i], s);
+          tagToCode->InsertOrUpdate(scriptTags[i], s);
         }
       }
+      if (!sScriptTagToCode.compareExchange(nullptr, tagToCode)) {
+        // We lost a race! Discard our new table and use the winner.
+        delete tagToCode;
+        tagToCode = sScriptTagToCode;
+      }
+    }
 
+    // Set up the default-features hashset on first use.
+    if (!sDefaultFeatures) {
       uint32_t numDefaultFeatures = ArrayLength(defaultFeatures);
-      sDefaultFeatures = new nsTHashSet<uint32_t>(numDefaultFeatures);
+      auto* set = new nsTHashSet<uint32_t>(numDefaultFeatures);
       for (uint32_t i = 0; i < numDefaultFeatures; i++) {
-        sDefaultFeatures->Insert(defaultFeatures[i]);
+        set->Insert(defaultFeatures[i]);
+      }
+      if (!sDefaultFeatures.compareExchange(nullptr, set)) {
+        delete set;
       }
     }
 
@@ -1289,7 +1300,7 @@ void gfxFont::CheckForFeaturesInvolvingSpace() const {
         if (!HasLookupRuleWithGlyphByScript(
                 face, HB_OT_TAG_GSUB, scriptTags[i], offset + i, spaceGlyph,
                 *sDefaultFeatures, isDefaultFeature) ||
-            !sScriptTagToCode->Get(scriptTags[i], &s)) {
+            !tagToCode->Get(scriptTags[i], &s)) {
           continue;
         }
         flags = flags | gfxFontEntry::SpaceFeatures::HasFeatures;

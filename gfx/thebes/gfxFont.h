@@ -2074,8 +2074,8 @@ class gfxFont {
   bool HasFeatureSet(uint32_t aFeature, bool& aFeatureOn);
 
   // used when analyzing whether a font has space contextual lookups
-  static nsTHashMap<nsUint32HashKey, Script>* sScriptTagToCode;
-  static nsTHashSet<uint32_t>* sDefaultFeatures;
+  static mozilla::Atomic<nsTHashMap<nsUint32HashKey, Script>*> sScriptTagToCode;
+  static mozilla::Atomic<nsTHashSet<uint32_t>*> sDefaultFeatures;
 
   RefPtr<gfxFontEntry> mFontEntry;
   mutable mozilla::RWLock mLock;
