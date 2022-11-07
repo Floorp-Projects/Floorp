@@ -68,7 +68,6 @@ linux64-clang-14:
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang-14-stage1
 
 macosx64-clang-14-raw:
