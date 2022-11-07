@@ -19,15 +19,23 @@ fib(<span id="n">?</span>) = <span id="result">?</span>
   var worker = new Worker("workers_script.js");
   var n = 1;
 
-  worker.onmessage = function(event) {
-    result.textContent = event.data;
-    span_n.textContent = n;
-    console.log(`Got: fib($n) = $result\n`);
-    n++;
-    // Keep looping to keep the worker as "High energy use"
-    worker.postMessage(n);
-  };
+  var wait = new Promise(ready => {
+    worker.onmessage = function(event) {
+      result.textContent = event.data;
+      span_n.textContent = n;
+      console.log(`Got: fib($n) = $result\n`);
+      n++;
+      ready();
+      // Keep looping to keep the worker as "High energy use"
+      worker.postMessage(n);
+    };
+  });
 
   worker.postMessage(n);
+
+  window.waitForTestReady = async () => {
+    await wait;
+  };
+
 </script>
 </html>
