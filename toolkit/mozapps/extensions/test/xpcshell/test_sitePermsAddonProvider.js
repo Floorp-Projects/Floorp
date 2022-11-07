@@ -18,9 +18,6 @@ const { PermissionTestUtils } = ChromeUtils.import(
 
 const addonsBundle = new Localization(["toolkit/about/aboutAddons.ftl"], true);
 
-AddonTestUtils.init(this);
-createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-
 let ssm = Services.scriptSecurityManager;
 const PRINCIPAL_COM = ssm.createContentPrincipalFromOrigin(
   "https://example.com"
@@ -94,13 +91,17 @@ const expectAndHandleInstallPrompts = () => {
   );
 };
 
+add_setup(async () => {
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  AddonTestUtils.init(this);
+  await promiseStartupManager();
+});
+
 add_task(
   {
     pref_set: [[SITEPERMS_ADDON_PROVIDER_PREF, false]],
   },
   async function test_sitepermsaddon_provider_disabled() {
-    await promiseStartupManager();
-
     // The SitePermsAddonProvider does not register until the first content process
     // is launched, so we simulate that by firing this notification.
     Services.obs.notifyObservers(null, "ipc:first-content-process-created");
@@ -157,11 +158,17 @@ add_task(
       SITEPERMS_ADDON_TYPE,
       "addon has expected type"
     );
+
+    const localizedExtensionName = await addonsBundle.formatValue(
+      "addon-sitepermission-host",
+      {
+        host: PRINCIPAL_COM.host,
+      }
+    );
+    Assert.ok(!!localizedExtensionName, "retrieved addonName is not falsy");
     Assert.equal(
       comAddon.name,
-      await addonsBundle.formatValue("addon-sitepermission-host", {
-        host: PRINCIPAL_COM.host,
-      }),
+      localizedExtensionName,
       "addon has expected name"
     );
 
@@ -818,7 +825,5 @@ add_task(
 
     addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
     Assert.equal(addons.length, 1, "...and addon is uninstalled");
-
-    await promiseShutdownManager();
   }
 );
