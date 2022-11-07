@@ -29,8 +29,7 @@ using namespace mozilla::gfx;
 #define LATIN_SMALL_LETTER_DOTLESS_I 0x0131
 
 // Greek sigma needs custom handling for the lowercase transform; for details
-// see comments under "case NS_STYLE_TEXT_TRANSFORM_LOWERCASE" within
-// nsCaseTransformTextRunFactory::RebuildTextRun(), and bug 740120.
+// see bug 740120.
 #define GREEK_CAPITAL_LETTER_SIGMA 0x03A3
 #define GREEK_SMALL_LETTER_FINAL_SIGMA 0x03C2
 #define GREEK_SMALL_LETTER_SIGMA 0x03C3
