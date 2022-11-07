@@ -744,6 +744,35 @@ class MOZ_STACK_CLASS JS_PUBLIC_API AutoAssertNoContentJS {
  */
 extern JS_PUBLIC_API uint64_t GetMemoryUsageForZone(JS::Zone* zone);
 
+enum class MemoryUse : uint8_t;
+
+namespace gc {
+
+struct SharedMemoryUse {
+  explicit SharedMemoryUse(MemoryUse use) : count(0), nbytes(0) {
+#ifdef DEBUG
+    this->use = use;
+#endif
+  }
+
+  size_t count;
+  size_t nbytes;
+#ifdef DEBUG
+  MemoryUse use;
+#endif
+};
+
+// A map which tracks shared memory uses (shared in the sense that an allocation
+// can be referenced by more than one GC thing in a zone). This allows us to
+// only account for the memory once.
+using SharedMemoryMap =
+    HashMap<void*, SharedMemoryUse, DefaultHasher<void*>, SystemAllocPolicy>;
+
+} /* namespace gc */
+
+extern JS_PUBLIC_API const gc::SharedMemoryMap& GetSharedMemoryUsageForZone(
+    JS::Zone* zone);
+
 /**
  * This function only reports GC heap memory,
  * and not malloc allocated memory associated with GC things.

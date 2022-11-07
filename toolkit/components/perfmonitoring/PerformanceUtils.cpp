@@ -126,7 +126,9 @@ RefPtr<MemoryPromise> CollectMemoryInfo(
   }
 
   using ZoneSet = mozilla::HashSet<JS::Zone*>;
+  using SharedSet = mozilla::HashSet<void*>;
   ZoneSet zonesVisited;
+  SharedSet sharedVisited;
   // Getting JS-related memory usage
   uint64_t jsMemUsed = 0;
   for (auto* doc : *aDocGroup) {
@@ -138,17 +140,32 @@ RefPtr<MemoryPromise> CollectMemoryInfo(
         MOZ_ASSERT(NS_IsMainThread(),
                    "We cannot get the object zone on another thread");
         JS::Zone* zone = JS::GetObjectZone(object);
-        ZoneSet::AddPtr p = zonesVisited.lookupForAdd(zone);
-        if (!p) {
+        ZoneSet::AddPtr addZone = zonesVisited.lookupForAdd(zone);
+        if (!addZone) {
           // We have not checked this zone before.
-          //
-          // GetMemoryUsageForObjectZone() can will include SharedArrayBuffers
-          // which may be shared between multiple zones, this can lead to an
-          // over-estimate.
           jsMemUsed += js::GetMemoryUsageForZone(zone);
-          if (!zonesVisited.add(p, zone)) {
+          if (!zonesVisited.add(addZone, zone)) {
             // OOM.  Let us stop counting memory, we may undercount.
             break;
+          }
+
+          const js::gc::SharedMemoryMap& shared =
+              js::GetSharedMemoryUsageForZone(zone);
+          for (auto iter = shared.iter(); !iter.done(); iter.next()) {
+            void* sharedMem = iter.get().key();
+            SharedSet::AddPtr addShared = sharedVisited.lookupForAdd(sharedMem);
+            if (addShared) {
+              // We *have* seen this shared memory before.
+
+              // Because shared memory is already included in
+              // js::GetMemoryUsageForZone() above, and we've seen it for a
+              // previous zone, we subtract it here so it's not counted more
+              // than once.
+              jsMemUsed -= iter.get().value().nbytes;
+            } else if (!sharedVisited.add(addShared, sharedMem)) {
+              // As above, abort with an under-estimate.
+              break;
+            }
           }
         }
       }
