@@ -763,9 +763,7 @@ JS_PUBLIC_API JS::Value js::MaybeGetScriptPrivate(JSObject* object) {
   return object->as<ScriptSourceObject>().getPrivate();
 }
 
-JS_PUBLIC_API uint64_t js::GetMemoryUsageForObjectZone(JSObject* obj) {
-  Zone* zone = obj->zone();
-
+JS_PUBLIC_API uint64_t js::GetMemoryUsageForZone(Zone* zone) {
   // We do not include zone->sharedMemoryUseCounts since that's already included
   // in zone->mallocHeapSize.
   return zone->gcHeapSize.bytes() + zone->mallocHeapSize.bytes() +

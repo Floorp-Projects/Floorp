@@ -145,7 +145,7 @@ RefPtr<MemoryPromise> CollectMemoryInfo(
           // GetMemoryUsageForObjectZone() can will include SharedArrayBuffers
           // which may be shared between multiple zones, this can lead to an
           // over-estimate.
-          jsMemUsed += js::GetMemoryUsageForObjectZone(object);
+          jsMemUsed += js::GetMemoryUsageForZone(zone);
           if (!zonesVisited.add(p, zone)) {
             // OOM.  Let us stop counting memory, we may undercount.
             break;
