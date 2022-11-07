@@ -220,7 +220,8 @@ add_task(async function test_tab_operations() {
       aboutPerformance.tab.linkedBrowser.contentWindow
     );
     Assert.ok(
-      !groupRow.nextSibling.children[0].classList.contains("indent"),
+      !groupRow.nextSibling ||
+        !groupRow.nextSibling.children[0].classList.contains("indent"),
       "pressing Enter on expanded Twisty removes subitems after the row"
     );
     Assert.equal(
