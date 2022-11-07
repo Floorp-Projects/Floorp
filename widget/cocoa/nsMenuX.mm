@@ -117,6 +117,11 @@ nsMenuX::nsMenuX(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsI
   // menu gets selected, which is bad.
   RebuildMenu();
 
+  if (IsXULWindowMenu(mContent)) {
+    // Let the OS know that this is our Window menu.
+    NSApp.windowsMenu = mNativeMenu;
+  }
+
   mIcon = MakeUnique<nsMenuItemIconX>(this);
 
   if (mVisible) {
@@ -908,6 +913,18 @@ bool nsMenuX::IsXULHelpMenu(nsIContent* aMenuContent) {
     nsAutoString id;
     aMenuContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
     if (id.Equals(u"helpMenu"_ns)) {
+      retval = true;
+    }
+  }
+  return retval;
+}
+
+bool nsMenuX::IsXULWindowMenu(nsIContent* aMenuContent) {
+  bool retval = false;
+  if (aMenuContent && aMenuContent->IsElement()) {
+    nsAutoString id;
+    aMenuContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
+    if (id.Equals(u"windowMenu"_ns)) {
       retval = true;
     }
   }
