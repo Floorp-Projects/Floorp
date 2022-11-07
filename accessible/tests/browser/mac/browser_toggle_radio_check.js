@@ -18,7 +18,11 @@ addAccessibleTask(
   `<input type="checkbox" id="vehicle"><label for="vehicle"> Bike</label>`,
   async (browser, accDoc) => {
     let checkbox = getNativeInterface(accDoc, "vehicle");
-    is(checkbox.getAttributeValue("AXValue"), 0, "Correct initial value");
+    await untilCacheIs(
+      () => checkbox.getAttributeValue("AXValue"),
+      0,
+      "Correct initial value"
+    );
 
     let actions = checkbox.actionNames;
     ok(actions.includes("AXPress"), "Has press action");
@@ -26,12 +30,20 @@ addAccessibleTask(
     let evt = waitForMacEvent("AXValueChanged", "vehicle");
     checkbox.performAction("AXPress");
     await evt;
-    is(checkbox.getAttributeValue("AXValue"), 1, "Correct checked value");
+    await untilCacheIs(
+      () => checkbox.getAttributeValue("AXValue"),
+      1,
+      "Correct checked value"
+    );
 
     evt = waitForMacEvent("AXValueChanged", "vehicle");
     checkbox.performAction("AXPress");
     await evt;
-    is(checkbox.getAttributeValue("AXValue"), 0, "Correct checked value");
+    await untilCacheIs(
+      () => checkbox.getAttributeValue("AXValue"),
+      0,
+      "Correct checked value"
+    );
   }
 );
 
@@ -51,7 +63,11 @@ addAccessibleTask(
     });
 
     let toggle = getNativeInterface(accDoc, "toggle");
-    is(toggle.getAttributeValue("AXValue"), 0, "Correct initial value");
+    await untilCacheIs(
+      () => toggle.getAttributeValue("AXValue"),
+      0,
+      "Correct initial value"
+    );
 
     let actions = toggle.actionNames;
     ok(actions.includes("AXPress"), "Has press action");
@@ -59,12 +75,20 @@ addAccessibleTask(
     let evt = waitForMacEvent("AXValueChanged", "toggle");
     toggle.performAction("AXPress");
     await evt;
-    is(toggle.getAttributeValue("AXValue"), 1, "Correct checked value");
+    await untilCacheIs(
+      () => toggle.getAttributeValue("AXValue"),
+      1,
+      "Correct checked value"
+    );
 
     evt = waitForMacEvent("AXValueChanged", "toggle");
     toggle.performAction("AXPress");
     await evt;
-    is(toggle.getAttributeValue("AXValue"), 0, "Correct checked value");
+    await untilCacheIs(
+      () => toggle.getAttributeValue("AXValue"),
+      0,
+      "Correct checked value"
+    );
   }
 );
 
@@ -83,9 +107,12 @@ addAccessibleTask(
         e.target.setAttribute("aria-checked", nextState);
       };
     });
-
     let checkbox = getNativeInterface(accDoc, "checkbox");
-    is(checkbox.getAttributeValue("AXValue"), 0, "Correct initial value");
+    await untilCacheIs(
+      () => checkbox.getAttributeValue("AXValue"),
+      0,
+      "Correct initial value"
+    );
 
     let actions = checkbox.actionNames;
     ok(actions.includes("AXPress"), "Has press action");
@@ -93,12 +120,20 @@ addAccessibleTask(
     let evt = waitForMacEvent("AXValueChanged", "checkbox");
     checkbox.performAction("AXPress");
     await evt;
-    is(checkbox.getAttributeValue("AXValue"), 1, "Correct checked value");
+    await untilCacheIs(
+      () => checkbox.getAttributeValue("AXValue"),
+      1,
+      "Correct checked value"
+    );
 
     evt = waitForMacEvent("AXValueChanged", "checkbox");
     checkbox.performAction("AXPress");
     await evt;
-    is(checkbox.getAttributeValue("AXValue"), 2, "Correct checked value");
+    await untilCacheIs(
+      () => checkbox.getAttributeValue("AXValue"),
+      2,
+      "Correct checked value"
+    );
   }
 );
 
@@ -112,11 +147,15 @@ addAccessibleTask(
    <label for="dewey">Dewey</label>`,
   async (browser, accDoc) => {
     let huey = getNativeInterface(accDoc, "huey");
-    is(huey.getAttributeValue("AXValue"), 1, "Correct initial value for huey");
+    await untilCacheIs(
+      () => huey.getAttributeValue("AXValue"),
+      1,
+      "Correct initial value for huey"
+    );
 
     let dewey = getNativeInterface(accDoc, "dewey");
-    is(
-      dewey.getAttributeValue("AXValue"),
+    await untilCacheIs(
+      () => dewey.getAttributeValue("AXValue"),
       0,
       "Correct initial value for dewey"
     );
@@ -130,12 +169,16 @@ addAccessibleTask(
     ]);
     dewey.performAction("AXPress");
     await evt;
-    is(
-      dewey.getAttributeValue("AXValue"),
+    await untilCacheIs(
+      () => dewey.getAttributeValue("AXValue"),
       1,
       "Correct checked value for dewey"
     );
-    is(huey.getAttributeValue("AXValue"), 0, "Correct checked value for huey");
+    await untilCacheIs(
+      () => huey.getAttributeValue("AXValue"),
+      0,
+      "Correct checked value for huey"
+    );
   }
 );
 
@@ -146,7 +189,11 @@ addAccessibleTask(
   `<div role="switch" aria-checked="false" id="sw">hello</div>`,
   async (browser, accDoc) => {
     let sw = getNativeInterface(accDoc, "sw");
-    is(sw.getAttributeValue("AXValue"), 0, "Initially, switch is off");
+    await untilCacheIs(
+      () => sw.getAttributeValue("AXValue"),
+      0,
+      "Initially switch is off"
+    );
     is(sw.getAttributeValue("AXRole"), "AXCheckBox", "Has correct role");
     is(sw.getAttributeValue("AXSubrole"), "AXSwitch", "Has correct subrole");
 
@@ -164,6 +211,10 @@ addAccessibleTask(
 
     await stateChanged;
 
-    is(sw.getAttributeValue("AXValue"), 1, "Switch is now on");
+    await untilCacheIs(
+      () => sw.getAttributeValue("AXValue"),
+      1,
+      "Switch is now on"
+    );
   }
 );
