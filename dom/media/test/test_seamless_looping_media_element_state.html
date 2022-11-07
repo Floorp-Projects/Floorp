@@ -14,6 +14,12 @@
  * during seamless looping, we should always have current frame.
  */
 add_task(async function testSeamlessLoopingMediaElementState() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.seamless-looping-video", true],
+    ],
+  });
+
   info(`create video`);
   let video = document.createElement('video');
   video.loop = true;
