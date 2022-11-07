@@ -15,7 +15,6 @@
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MediaManager.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "nsContentUtils.h"
@@ -99,7 +98,8 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
     return true;
   }
 
-  if (currentDoc->IsExtensionPage()) {
+  if (StaticPrefs::media_autoplay_allow_extension_background_pages() &&
+      currentDoc->IsExtensionPage()) {
     AUTOPLAY_LOG("Allow autoplay as in extension document.");
     return true;
   }
@@ -108,8 +108,7 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
 }
 
 static uint32_t DefaultAutoplayBehaviour() {
-  int prefValue =
-      Preferences::GetInt("media.autoplay.default", nsIAutoplay::ALLOWED);
+  int32_t prefValue = StaticPrefs::media_autoplay_default();
   if (prefValue == nsIAutoplay::ALLOWED) {
     return nsIAutoplay::ALLOWED;
   }
@@ -141,7 +140,7 @@ static bool IsAudioContextAllowedToPlay(const AudioContext& aContext) {
 }
 
 static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
-  return Preferences::GetBool("media.autoplay.block-webaudio", false) &&
+  return StaticPrefs::media_autoplay_block_webaudio() &&
          StaticPrefs::media_autoplay_blocking_policy() ==
              sPOLICY_STICKY_ACTIVATION;
 }

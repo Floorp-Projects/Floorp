@@ -9112,6 +9112,25 @@
   value: 0
   mirror: always
 
+# Whether to allow autoplay on extension background pages.
+- name: media.autoplay.allow-extension-background-pages
+  type: bool
+  value: true
+  mirror: always
+
+# Block autoplay, asking for permission by default.
+# 0=Allowed, 1=Blocked, 5=All Blocked
+- name: media.autoplay.default
+  type: int32_t
+  value: 1
+  mirror: always
+
+# Wether to block autoplay for webaudio
+- name: media.autoplay.block-webaudio
+  type: bool
+  value: false
+  mirror: always
+
 # File-backed MediaCache size.
 - name: media.cache_size
   type: RelaxedAtomicUint32
