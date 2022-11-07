@@ -58,10 +58,16 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-//  1) The maximum time to wait for a "drag_received" arrived in microseconds.
-//  2) The maximum time to wait before temporary files resulting
-//     from drag'n'drop events will be removed
+//  The maximum time to wait for a "drag_received" arrived in microseconds.
 #define NS_DND_TIMEOUT 1000000
+
+//  The maximum time to wait before temporary files resulting
+//  from drag'n'drop events will be removed in miliseconds.
+//  It's set to 5 min as the file has to be present some time after drop
+//  event to give target application time to get the data.
+//  (A target application can throw a dialog to ask user what to do with
+//  the data and will access the tmp file after user action.)
+#define NS_DND_TMP_CLEANUP_TIMEOUT (1000 * 60 * 5)
 
 #define NS_SYSTEMINFO_CONTRACTID "@mozilla.org/system-info;1"
 
@@ -167,7 +173,10 @@ nsDragService::nsDragService()
 nsDragService::~nsDragService() {
   LOGDRAGSERVICE("nsDragService::~nsDragService");
   if (mTaskSource) g_source_remove(mTaskSource);
-  if (mTempFileTimerID) g_source_remove(mTempFileTimerID);
+  if (mTempFileTimerID) {
+    g_source_remove(mTempFileTimerID);
+    RemoveTempFiles();
+  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsDragService, nsBaseDragService, nsIObserver)
@@ -470,6 +479,8 @@ nsDragService::StartDragSession() {
 }
 
 bool nsDragService::RemoveTempFiles() {
+  LOGDRAGSERVICE("nsDragService::RemoveTempFiles");
+
   // We can not delete the temporary files immediately after the
   // drag has finished, because the target application might have not
   // copied the temporary file yet. The Qt toolkit does not provide a
@@ -480,12 +491,19 @@ bool nsDragService::RemoveTempFiles() {
   //
   // To work also with these applications we collect all temporary
   // files in mTemporaryFiles array and remove them here in the timer event.
-  int32_t count = mTemporaryFiles.Count();
-  for (int32_t pos = 0; pos < count; pos++) {
-    mTemporaryFiles[pos]->Remove(/* recursive = */ true);
+  auto files = std::move(mTemporaryFiles);
+  for (nsIFile* file : files) {
+#ifdef MOZ_LOGGING
+    if (MOZ_LOG_TEST(gWidgetDragLog, LogLevel::Debug)) {
+      nsAutoCString path;
+      if (NS_SUCCEEDED(file->GetNativePath(path))) {
+        LOGDRAGSERVICE("  removing %s", path.get());
+      }
+    }
+#endif
+    file->Remove(/* recursive = */ true);
   }
-  mTemporaryFiles.Clear();
-
+  MOZ_ASSERT(mTemporaryFiles.IsEmpty());
   mTempFileTimerID = 0;
   // Return false to remove the timer added by g_timeout_add_full().
   return false;
@@ -521,10 +539,11 @@ nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
 
   // start timer to remove temporary files
   if (mTemporaryFiles.Count() > 0 && !mTempFileTimerID) {
-    LOGDRAGSERVICE("  removing temporary files");
+    LOGDRAGSERVICE("  queue removing of temporary files");
     // |this| won't be used after nsDragService delete because the timer is
     // removed in the nsDragService destructor.
-    mTempFileTimerID = g_timeout_add(NS_DND_TIMEOUT, TaskRemoveTempFiles, this);
+    mTempFileTimerID =
+        g_timeout_add(NS_DND_TMP_CLEANUP_TIMEOUT, TaskRemoveTempFiles, this);
     mTempFileUrl.Truncate();
   }
 
