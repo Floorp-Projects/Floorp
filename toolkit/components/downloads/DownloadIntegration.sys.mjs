@@ -74,10 +74,10 @@ XPCOMUtils.defineLazyServiceGetter(
   Ci.nsIApplicationReputationService
 );
 
-Integration.downloads.defineModuleGetter(
+Integration.downloads.defineESModuleGetter(
   lazy,
   "DownloadIntegration",
-  "resource://gre/modules/DownloadIntegration.jsm"
+  "resource://gre/modules/DownloadIntegration.sys.mjs"
 );
 XPCOMUtils.defineLazyGetter(lazy, "gCombinedDownloadIntegration", () => {
   return lazy.DownloadIntegration;

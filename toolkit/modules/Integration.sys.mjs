@@ -104,8 +104,6 @@
  * reference changes when new integration overrides are registered.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 /**
  * Maps integration point names to IntegrationPoint objects.
  */
@@ -253,7 +251,7 @@ IntegrationPoint.prototype = {
   /**
    * Defines a getter to retrieve the dynamically generated object implementing
    * the integration methods, loading the root implementation lazily from the
-   * specified JSM module. For example:
+   * specified sys.mjs module. For example:
    *
    *   Integration.test.defineModuleGetter(this, "TestIntegration",
    *                    "resource://testing-common/TestIntegration.sys.mjs");
@@ -264,13 +262,13 @@ IntegrationPoint.prototype = {
    *        The name of the getter to define.
    * @param moduleUrl
    *        The URL used to obtain the module.
-   * @param symbol [optional]
-   *        The name of the symbol exported by the module. This can be omitted
-   *        if the name of the exported symbol is equal to the getter name.
    */
-  defineModuleGetter(targetObject, name, moduleUrl, symbol) {
+  defineESModuleGetter(targetObject, name, moduleUrl) {
     let moduleHolder = {};
-    XPCOMUtils.defineLazyModuleGetter(moduleHolder, name, moduleUrl, symbol);
+    // eslint-disable-next-line mozilla/lazy-getter-object-name
+    ChromeUtils.defineESModuleGetters(moduleHolder, {
+      [name]: moduleUrl,
+    });
     Object.defineProperty(targetObject, name, {
       get: () => this.getCombined(moduleHolder[name]),
       configurable: true,

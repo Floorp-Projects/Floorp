@@ -28,10 +28,10 @@ var { Integration } = ChromeUtils.importESModule(
   "resource://gre/modules/Integration.sys.mjs"
 );
 /* global DownloadIntegration */
-Integration.downloads.defineModuleGetter(
+Integration.downloads.defineESModuleGetter(
   this,
   "DownloadIntegration",
-  "resource://gre/modules/DownloadIntegration.jsm"
+  "resource://gre/modules/DownloadIntegration.sys.mjs"
 );
 
 var { PrivateBrowsingUtils } = ChromeUtils.importESModule(

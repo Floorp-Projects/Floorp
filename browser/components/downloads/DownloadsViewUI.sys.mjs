@@ -39,10 +39,10 @@ XPCOMUtils.defineLazyServiceGetter(
 
 import { Integration } from "resource://gre/modules/Integration.sys.mjs";
 
-Integration.downloads.defineModuleGetter(
+Integration.downloads.defineESModuleGetter(
   lazy,
   "DownloadIntegration",
-  "resource://gre/modules/DownloadIntegration.jsm"
+  "resource://gre/modules/DownloadIntegration.sys.mjs"
 );
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
