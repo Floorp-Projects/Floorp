@@ -19,6 +19,8 @@
     <string name="history_search_hint">Zgodovina iskanja</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
     <string name="bookmark_search_hint">Iskanje po zaznamkih</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">Išči po zavihkih</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
     <string name="application_search_hint">Vnesite iskalni niz</string>
     <!-- No Open Tabs Message Description -->
@@ -256,6 +258,9 @@
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Nastavitve iskanja</string>
 
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item">Tokrat išči:</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Kaj je novega v %1$su</string>
@@ -467,6 +472,8 @@
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Zgodbe, ki spodbujajo k razmisleku</string>
+    <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
+    <string name="customize_toggle_pocket_summary">Članke zagotavlja %s</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">Sponzorirane zgodbe</string>
     <!-- Title for the opening wallpaper settings screen -->
@@ -650,6 +657,12 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zapri</string>
 
+    <!-- Title to show in alert when a lot of tabs are to be opened
+    %d is a placeholder for the number of tabs that will be opened -->
+    <string name="open_all_warning_title">Odprem več zavihkov (%d)?</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">Odpiranje tako velikega števila zavihkov lahko upočasni %s med nalaganjem strani. Ali ste prepričani, da želite nadaljevati?</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">Odpri zavihke</string>
     <!-- Dialog button text for canceling open all tabs -->
@@ -1262,6 +1275,8 @@
     <string name="onboarding_account_sign_in_header">Nadaljujte, kjer ste končali</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Prinesite zaznamke, zgodovino in gesla v %1$s na tej napravi.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Sinhronizirajte zavihke in gesla med napravami za brezhibno preklapljanje med zasloni.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Prijava</string>
     <!-- Text for the button to manually sign into Firefox account. -->
@@ -1274,6 +1289,8 @@
     <string name="onboarding_tracking_protection_header">Privzeta zaščita zasebnosti</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s samodejno prepreči, da bi vas podjetja skrivaj spremljala po spletu.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Vključuje popolno zaščito pred piškotki, ki sledilcem onemogoča, da bi vas s pomočjo piškotkov zalezovali po spletnih mestih.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Običajno (privzeto)</string>
     <!-- text for standard blocking option button description -->

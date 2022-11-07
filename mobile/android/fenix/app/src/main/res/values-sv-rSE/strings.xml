@@ -262,6 +262,9 @@
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Sökinställningar</string>
 
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item">Denna sökning:</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Vad är nytt i %1$s</string>
