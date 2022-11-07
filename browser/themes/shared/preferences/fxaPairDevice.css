@@ -26,13 +26,16 @@
 }
 
 #qrCodeDisplay {
- padding: 30px 84px 0;
+  width: 450px;
+  margin: auto;
 }
 
 #qrWrapper {
   position: relative;
-  padding-inline-end: 18px;
+  width: 200px;
+  height: 200px;
   padding-top: 28px;
+  margin: auto;
 }
 
 #qrContainer {
@@ -53,18 +56,24 @@
 }
 
 #qrSpinner {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+}
+
+#qrSpinner::before {
   background-image: url("chrome://browser/skin/fxa/fxa-spinner.svg");
   animation: 0.9s spin infinite linear;
   background-size: 36px;
   background-repeat: no-repeat;
   background-position: center;
-  width: 100%;
   display: block;
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
+  height: 40px;
+  width: 40px;
+  content: "";
   transition: opacity 250ms cubic-bezier(.07,.95,0,1);
+  will-change: transform;
+  margin-inline: auto;
 }
 
 #qrWrapper:not([pairing-status="error"]) #qrError {
@@ -76,7 +85,7 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  width: 300px; /* Same as #qrContainer */
+  width: 200px; /* Same as #qrContainer */
   position: absolute;
   inset: 0;
   margin-inline: auto;
