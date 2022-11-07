@@ -82,29 +82,10 @@ void AddWindowTabSizes(nsGlobalWindowOuter* aWindow, nsTabSizes* aSizes) {
   aSizes->mOther += sizes.mOther;
 }
 
-nsresult GetTabSizes(BrowsingContext* aContext, nsTabSizes* aSizes) {
-  if (!aContext) {
-    return NS_OK;
-  }
-
-  // Add the window (and inner window) sizes. Might be cached.
-  nsGlobalWindowOuter* window =
-      nsGlobalWindowOuter::Cast(aContext->GetDOMWindow());
-  if (window) {
-    AddWindowTabSizes(window, aSizes);
-  }
-
-  // Measure this window's descendents.
-  for (const auto& child : aContext->Children()) {
-    MOZ_TRY(GetTabSizes(child, aSizes));
-  }
-  return NS_OK;
-}
-
 RefPtr<MemoryPromise> CollectMemoryInfo(
     const RefPtr<DocGroup>& aDocGroup,
     const RefPtr<AbstractThread>& aEventTarget) {
-  // Getting Dom sizes. -- XXX should we reimplement GetTabSizes to async here ?
+  // Getting Dom sizes.
   nsTabSizes sizes;
 
   using WindowSet = mozilla::HashSet<nsGlobalWindowOuter*>;
