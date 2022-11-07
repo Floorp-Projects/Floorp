@@ -53,7 +53,8 @@ nsTArray<RefPtr<PerformanceInfoPromise>> CollectPerformanceInfo() {
   return promises;
 }
 
-void AddWindowTabSizes(nsGlobalWindowOuter* aWindow, nsTabSizes* aSizes) {
+static void AddWindowTabSizes(nsGlobalWindowOuter* aWindow,
+                              nsTabSizes* aSizes) {
   Document* document = aWindow->GetDocument();
   if (document && document->GetCachedSizes(aSizes)) {
     // We got a cached version
