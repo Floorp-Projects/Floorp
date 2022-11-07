@@ -1850,10 +1850,6 @@ size_t Navigator::SizeOfIncludingThis(
   return n;
 }
 
-void Navigator::SetWindow(nsPIDOMWindowInner* aInnerWindow) {
-  mWindow = aInnerWindow;
-}
-
 void Navigator::OnNavigation() {
   if (!mWindow) {
     return;
