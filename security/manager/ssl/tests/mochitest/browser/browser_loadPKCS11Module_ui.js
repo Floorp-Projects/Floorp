@@ -148,7 +148,7 @@ function openLoadModuleDialog() {
  *
  * @param {window} win
  *        The dialog window.
- * @param {Boolean} cancel
+ * @param {boolean} cancel
  *        If true, the file picker is canceled. If false, gTempFile is chosen in
  *        the file picker and the file picker is accepted.
  */

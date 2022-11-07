@@ -9,7 +9,8 @@ var gCertDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
 );
 /**
  * Cert to edit the trust of.
- * @type nsIX509Cert
+ *
+ * @type {nsIX509Cert}
  */
 var gCert;
 

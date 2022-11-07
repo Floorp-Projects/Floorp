@@ -12,7 +12,8 @@ var gCertDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
 
 /**
  * The cert we're editing the trust of.
- * @type nsIX509Cert
+ *
+ * @type {nsIX509Cert}
  */
 var gCert;
 

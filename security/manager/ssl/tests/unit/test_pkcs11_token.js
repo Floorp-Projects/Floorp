@@ -57,7 +57,7 @@ function checkBasicAttributes(token) {
  *
  * @param {nsIPK11Token} token
  *        The token to test.
- * @param {String} initialPW
+ * @param {string} initialPW
  *        The password that the token should have been init with.
  */
 function checkPasswordFeaturesAndResetPassword(token, initialPW) {

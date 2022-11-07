@@ -16,16 +16,16 @@ const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
 /**
  * Tests a cert chain.
  *
- * @param {String} rootKeyType
+ * @param {string} rootKeyType
  *        The key type of the root certificate, or the name of an elliptic
  *        curve, as output by the 'openssl ecparam -list_curves' command.
- * @param {Number} rootKeySize
- * @param {String} intKeyType
- * @param {Number} intKeySize
- * @param {String} eeKeyType
- * @param {Number} eeKeySize
+ * @param {number} rootKeySize
+ * @param {string} intKeyType
+ * @param {number} intKeySize
+ * @param {string} eeKeyType
+ * @param {number} eeKeySize
  * @param {PRErrorCode} eeExpectedError
- * @return {Promise} a promise that will resolve when the verification has
+ * @returns {Promise} a promise that will resolve when the verification has
  *                   completed
  */
 function checkChain(
@@ -61,8 +61,8 @@ function checkChain(
 /**
  * Tests various RSA chains.
  *
- * @param {Number} inadequateKeySize
- * @param {Number} adequateKeySize
+ * @param {number} inadequateKeySize
+ * @param {number} adequateKeySize
  */
 async function checkRSAChains(inadequateKeySize, adequateKeySize) {
   // Chain with certs that have adequate sizes for DV

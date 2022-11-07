@@ -8,30 +8,31 @@
  * @file Implements the functionality of downloadcert.xhtml: a dialog that allows
  *       a user to confirm whether to import a certificate, and if so what trust
  *       to give it.
- * @argument {nsISupports} window.arguments[0]
+ * @param {nsISupports} window.arguments.0
  *           Certificate to confirm import of, queryable to nsIX509Cert.
- * @argument {nsISupports} window.arguments[1]
+ * @param {nsISupports} window.arguments.1
  *           Object to set the return values of calling the dialog on, queryable
  *           to the underlying type of DownloadCertReturnValues.
  */
 
 /**
  * @typedef DownloadCertReturnValues
- * @type nsIWritablePropertyBag2
- * @property {Boolean} importConfirmed
+ * @type {nsIWritablePropertyBag2}
+ * @property {boolean} importConfirmed
  *           Set to true if the user confirmed import of the cert and accepted
  *           the dialog, false otherwise.
- * @property {Boolean} trustForSSL
+ * @property {boolean} trustForSSL
  *           Set to true if the cert should be trusted for SSL, false otherwise.
  *           Undefined value if |importConfirmed| is not true.
- * @property {Boolean} trustForEmail
+ * @property {boolean} trustForEmail
  *           Set to true if the cert should be trusted for e-mail, false
  *           otherwise. Undefined value if |importConfirmed| is not true.
  */
 
 /**
  * The cert to potentially import.
- * @type nsIX509Cert
+ *
+ * @type {nsIX509Cert}
  */
 var gCert;
 

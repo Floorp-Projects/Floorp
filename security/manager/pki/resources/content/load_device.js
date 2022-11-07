@@ -31,7 +31,8 @@ async function onBrowseBtnPress() {
 
 /**
  * ondialogaccept() handler.
- * @param {Object} event
+ *
+ * @param {object} event
  *        The event causing this handler function to be called.
  */
 function onDialogAccept(event) {

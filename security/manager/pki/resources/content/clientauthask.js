@@ -35,49 +35,53 @@ const { parse, pemToDER } = certDecoderInitializer(
 /**
  * @file Implements the functionality of clientauthask.xhtml: a dialog that allows
  *       a user pick a client certificate for TLS client authentication.
- * @argument {String} window.arguments[0]
+ * @param {string} window.arguments.0
  *           The hostname of the server requesting client authentication.
- * @argument {String} window.arguments[1]
+ * @param {string} window.arguments.1
  *           The Organization of the server cert.
- * @argument {String} window.arguments[2]
+ * @param {string} window.arguments.2
  *           The Organization of the issuer of the server cert.
- * @argument {Number} window.arguments[3]
+ * @param {number} window.arguments.3
  *           The port of the server.
- * @argument {nsISupports} window.arguments[4]
+ * @param {nsISupports} window.arguments.4
  *           List of certificates the user can choose from, queryable to
  *           nsIArray<nsIX509Cert>.
- * @argument {nsISupports} window.arguments[5]
+ * @param {nsISupports} window.arguments.5
  *           Object to set the return values of calling the dialog on, queryable
  *           to the underlying type of ClientAuthAskReturnValues.
  */
 
 /**
  * @typedef ClientAuthAskReturnValues
- * @type nsIWritablePropertyBag2
- * @property {Boolean} certChosen
+ * @type {nsIWritablePropertyBag2}
+ * @property {boolean} certChosen
  *           Set to true if the user chose a cert and accepted the dialog, false
  *           otherwise.
- * @property {Boolean} rememberSelection
+ * @property {boolean} rememberSelection
  *           Set to true if the user wanted their cert selection to be
  *           remembered, false otherwise.
- * @property {Number} selectedIndex
+ * @property {number} selectedIndex
  *           The index the chosen cert is at for the given cert list. Undefined
  *           value if |certChosen| is not true.
  */
 
 /**
  * The pippki <stringbundle> element.
- * @type <stringbundle>
+ *
+ * @type {stringbundle}
+ * @see {@link toolkit/content/widgets/stringbundle.js}
  */
 var bundle;
 /**
  * The array of certs the user can choose from.
- * @type nsIArray<nsIX509Cert>
+ *
+ * @type {nsIArray<nsIX509Cert>}
  */
 var certArray;
 /**
  * The checkbox storing whether the user wants to remember the selected cert.
- * @type Element checkbox, has to have |checked| property.
+ *
+ * @type {HTMLInputElement} Element checkbox, has to have |checked| property.
  */
 var rememberBox;
 

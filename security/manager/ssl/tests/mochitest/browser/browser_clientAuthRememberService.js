@@ -5,7 +5,8 @@
 
 /**
  * Test certificate (i.e. build/pgo/certs/mochitest.client).
- * @type nsIX509Cert
+ *
+ * @type {nsIX509Cert}
  */
 var cert;
 var cert2;

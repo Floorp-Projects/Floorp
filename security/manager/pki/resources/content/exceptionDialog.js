@@ -348,7 +348,7 @@ function addException() {
 }
 
 /**
- * @returns {Boolean} Whether this dialog is in private browsing mode.
+ * @returns {boolean} Whether this dialog is in private browsing mode.
  */
 function inPrivateBrowsingMode() {
   return PrivateBrowsingUtils.isWindowPrivate(window);

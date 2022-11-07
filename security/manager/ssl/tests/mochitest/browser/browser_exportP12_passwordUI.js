@@ -7,21 +7,22 @@
 //   2. Calculates and displays the strength of said password.
 
 /**
- * @typedef {TestCase}
- * @type Object
- * @property {String} name
+ * @typedef TestCase
+ * @type {object}
+ * @property {string} name
  *           The name of the test case for display purposes.
- * @property {String} password1
+ * @property {string} password1
  *           The password to enter into the first password textbox.
- * @property {String} password2
+ * @property {string} password2
  *           The password to enter into the second password textbox.
- * @property {String} strength
+ * @property {string} strength
  *           The expected strength of the password in the range [0, 100].
  */
 
 /**
  * A list of test cases representing various inputs to the password textboxes.
- * @type TestCase[]
+ *
+ * @type {TestCase[]}
  */
 const TEST_CASES = [
   { name: "empty", password1: "", password2: "", strength: "0" },

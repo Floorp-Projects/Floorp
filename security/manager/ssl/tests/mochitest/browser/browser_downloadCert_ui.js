@@ -10,11 +10,11 @@ const { MockRegistrar } = ChromeUtils.import(
 );
 
 /**
- * @typedef {TestCase}
- * @type Object
- * @property {String} certFilename
+ * @typedef TestCase
+ * @type {object}
+ * @property {string} certFilename
  *           Filename of the cert for this test case.
- * @property {String} expectedDisplayString
+ * @property {string} expectedDisplayString
  *           The string we expect the UI to display to represent the given cert.
  * @property {nsIX509Cert} cert
  *           Handle to the cert once read in setup().
@@ -22,7 +22,8 @@ const { MockRegistrar } = ChromeUtils.import(
 
 /**
  * A list of test cases representing certs that get "downloaded".
- * @type TestCase[]
+ *
+ * @type {TestCase[]}
  */
 const TEST_CASES = [
   { certFilename: "has-cn.pem", expectedDisplayString: "Foo", cert: null },
