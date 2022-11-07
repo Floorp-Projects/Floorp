@@ -307,6 +307,16 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile* aLockFile,
   struct in_addr inaddr;
   inaddr.s_addr = htonl(INADDR_LOOPBACK);
 
+  // We still have not loaded the profile, so we may not have proxy information.
+  // Avoiding a DNS lookup in this stage makes sure any proxy is not bypassed.
+  // By default, the lookup is enabled, but when it is not, we use 127.0.0.1
+  // for the IP address portion of the lock signature.
+  // However, this may cause the browser to refuse to start in the rare case
+  // that all of the following conditions are met:
+  //   1. The browser profile is on a network file system.
+  //   2. The file system does not support fcntl() locking.
+  //   3. The browser is run from two different computers at the same time.
+#  ifndef MOZ_PROXY_BYPASS_PROTECTION
   char hostname[256];
   PRStatus status = PR_GetSystemInfo(PR_SI_HOSTNAME, hostname, sizeof hostname);
   if (status == PR_SUCCESS) {
@@ -315,6 +325,7 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile* aLockFile,
     status = PR_GetHostByName(hostname, netdbbuf, sizeof netdbbuf, &hostent);
     if (status == PR_SUCCESS) memcpy(&inaddr, hostent.h_addr, sizeof inaddr);
   }
+#  endif
 
   mozilla::SmprintfPointer signature =
       mozilla::Smprintf("%s:%s%lu", inet_ntoa(inaddr),
