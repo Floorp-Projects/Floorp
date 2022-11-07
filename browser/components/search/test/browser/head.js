@@ -108,8 +108,6 @@ XPCOMUtils.defineLazyGetter(this, "SEARCH_AD_CLICK_SCALARS", () => {
     "unknown",
   ];
   return [
-    "browser.search.with_ads",
-    "browser.search.ad_clicks",
     ...sources.map(v => `browser.search.withads.${v}`),
     ...sources.map(v => `browser.search.adclicks.${v}`),
   ];

@@ -157,7 +157,6 @@ add_task(async function test_track_ad() {
     { "example.in-content:sap:ff": 1 },
     {
       "browser.search.content.unknown": { "example:tagged:ff": 1 },
-      "browser.search.with_ads": { "example:sap": 1 },
       "browser.search.withads.unknown": { "example:tagged": 1 },
     }
   );
@@ -194,7 +193,6 @@ add_task(async function test_track_ad_on_DOMContentLoaded() {
     { "slow-page-load.in-content:sap:ff": 1 },
     {
       "browser.search.content.unknown": { "slow-page-load:tagged:ff": 1 },
-      "browser.search.with_ads": { "slow-page-load:sap": 1 },
       "browser.search.withads.unknown": { "slow-page-load:tagged": 1 },
     }
   );
@@ -221,7 +219,6 @@ add_task(async function test_track_ad_on_load_event() {
     { "slow-page-load.in-content:sap:ff": 1 },
     {
       "browser.search.content.unknown": { "slow-page-load:tagged:ff": 1 },
-      "browser.search.with_ads": { "slow-page-load:sap": 1 },
       "browser.search.withads.unknown": { "slow-page-load:tagged": 1 },
     }
   );
@@ -242,7 +239,6 @@ add_task(async function test_track_ad_organic() {
     { "example.in-content:organic:none": 1 },
     {
       "browser.search.content.unknown": { "example:organic:none": 1 },
-      "browser.search.with_ads": { "example:organic": 1 },
       "browser.search.withads.unknown": { "example:organic": 1 },
     }
   );
@@ -268,7 +264,6 @@ add_task(async function test_track_ad_new_window() {
     { "example.in-content:sap:ff": 1 },
     {
       "browser.search.content.unknown": { "example:tagged:ff": 1 },
-      "browser.search.with_ads": { "example:sap": 1 },
       "browser.search.withads.unknown": { "example:tagged": 1 },
     }
   );
@@ -300,7 +295,6 @@ add_task(async function test_track_ad_pages_without_ads() {
     { "example.in-content:sap:ff": 2 },
     {
       "browser.search.content.unknown": { "example:tagged:ff": 2 },
-      "browser.search.with_ads": { "example:sap": 1 },
       "browser.search.withads.unknown": { "example:tagged": 1 },
     }
   );
@@ -315,7 +309,6 @@ async function track_ad_click(testOrganic) {
   searchCounts.clear();
   Services.telemetry.clearScalars();
 
-  let expectedScalarKeyOld = `example:${testOrganic ? "organic" : "sap"}`;
   let expectedScalarKey = `example:${testOrganic ? "organic" : "tagged"}`;
   let expectedHistogramKey = `example.in-content:${
     testOrganic ? "organic:none" : "sap:ff"
@@ -333,7 +326,6 @@ async function track_ad_click(testOrganic) {
     { [expectedHistogramKey]: 1 },
     {
       "browser.search.content.unknown": { [expectedContentScalarKey]: 1 },
-      "browser.search.with_ads": { [expectedScalarKeyOld]: 1 },
       "browser.search.withads.unknown": {
         [expectedScalarKey.replace("sap", "tagged")]: 1,
       },
@@ -351,9 +343,7 @@ async function track_ad_click(testOrganic) {
     { [expectedHistogramKey]: 1 },
     {
       "browser.search.content.unknown": { [expectedContentScalarKey]: 1 },
-      "browser.search.with_ads": { [expectedScalarKeyOld]: 1 },
       "browser.search.withads.unknown": { [expectedScalarKey]: 1 },
-      "browser.search.ad_clicks": { [expectedScalarKeyOld]: 1 },
       "browser.search.adclicks.unknown": { [expectedScalarKey]: 1 },
     }
   );
@@ -370,10 +360,8 @@ async function track_ad_click(testOrganic) {
     {
       "browser.search.content.tabhistory": { [expectedContentScalarKey]: 1 },
       "browser.search.content.unknown": { [expectedContentScalarKey]: 1 },
-      "browser.search.with_ads": { [expectedScalarKeyOld]: 2 },
       "browser.search.withads.tabhistory": { [expectedScalarKey]: 1 },
       "browser.search.withads.unknown": { [expectedScalarKey]: 1 },
-      "browser.search.ad_clicks": { [expectedScalarKeyOld]: 1 },
       "browser.search.adclicks.unknown": { [expectedScalarKey]: 1 },
     }
   );
@@ -390,10 +378,8 @@ async function track_ad_click(testOrganic) {
     {
       "browser.search.content.tabhistory": { [expectedContentScalarKey]: 1 },
       "browser.search.content.unknown": { [expectedContentScalarKey]: 1 },
-      "browser.search.with_ads": { [expectedScalarKeyOld]: 2 },
       "browser.search.withads.tabhistory": { [expectedScalarKey]: 1 },
       "browser.search.withads.unknown": { [expectedScalarKey]: 1 },
-      "browser.search.ad_clicks": { [expectedScalarKeyOld]: 2 },
       "browser.search.adclicks.tabhistory": { [expectedScalarKey]: 1 },
       "browser.search.adclicks.unknown": { [expectedScalarKey]: 1 },
     }
@@ -420,7 +406,6 @@ add_task(async function test_track_ad_click_with_location_change_other_tab() {
     { "example.in-content:sap:ff": 1 },
     {
       "browser.search.content.unknown": { "example:tagged:ff": 1 },
-      "browser.search.with_ads": { "example:sap": 1 },
       "browser.search.withads.unknown": { "example:tagged": 1 },
     }
   );
@@ -442,9 +427,7 @@ add_task(async function test_track_ad_click_with_location_change_other_tab() {
     { "example.in-content:sap:ff": 1 },
     {
       "browser.search.content.unknown": { "example:tagged:ff": 1 },
-      "browser.search.with_ads": { "example:sap": 1 },
       "browser.search.withads.unknown": { "example:tagged": 1 },
-      "browser.search.ad_clicks": { "example:sap": 1 },
       "browser.search.adclicks.unknown": { "example:tagged": 1 },
     }
   );

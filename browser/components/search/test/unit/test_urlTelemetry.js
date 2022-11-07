@@ -23,7 +23,7 @@ const TESTS = [
     trackingUrl:
       "https://www.google.com/search?q=test&ie=utf-8&oe=utf-8&client=firefox-b-1-ab",
     expectedSearchCountEntry: "google.in-content:sap:firefox-b-1-ab",
-    expectedAdKey: "google:sap",
+    expectedAdKey: "google:tagged",
     adUrls: [
       "https://www.googleadservices.com/aclk=foobar",
       "https://www.googleadservices.com/pagead/aclk=foobar",
@@ -82,7 +82,7 @@ const TESTS = [
     title: "Bing search access point",
     trackingUrl: "https://www.bing.com/search?q=test&pc=MOZI&form=MOZLBR",
     expectedSearchCountEntry: "bing.in-content:sap:MOZI",
-    expectedAdKey: "bing:sap",
+    expectedAdKey: "bing:tagged",
     adUrls: [
       "https://www.bing.com/aclick?ld=foo",
       "https://www.bing.com/aclk?ld=foo",
@@ -142,7 +142,7 @@ const TESTS = [
     title: "DuckDuckGo search access point",
     trackingUrl: "https://duckduckgo.com/?q=test&t=ffab",
     expectedSearchCountEntry: "duckduckgo.in-content:sap:ffab",
-    expectedAdKey: "duckduckgo:sap",
+    expectedAdKey: "duckduckgo:tagged",
     adUrls: [
       "https://duckduckgo.com/y.js?ad_provider=foo",
       "https://duckduckgo.com/y.js?f=bar&ad_provider=foo",
@@ -190,7 +190,7 @@ const TESTS = [
     title: "Baidu search access point",
     trackingUrl: "https://www.baidu.com/baidu?wd=test&tn=monline_7_dg&ie=utf-8",
     expectedSearchCountEntry: "baidu.in-content:sap:monline_7_dg",
-    expectedAdKey: "baidu:sap",
+    expectedAdKey: "baidu:tagged",
     adUrls: ["https://www.baidu.com/baidu.php?url=encoded"],
     nonAdUrls: ["https://www.baidu.com/link?url=encoded"],
   },
@@ -249,13 +249,13 @@ async function testAdUrlClicked(serpUrl, adUrl, expectedAdKey) {
   const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
   if (!expectedAdKey) {
     Assert.ok(
-      !("browser.search.ad_clicks" in scalars),
+      !("browser.search.adclicks.unknown" in scalars),
       "Should not have recorded an ad click"
     );
   } else {
     TelemetryTestUtils.assertKeyedScalar(
       scalars,
-      "browser.search.ad_clicks",
+      "browser.search.adclicks.unknown",
       expectedAdKey,
       1
     );
