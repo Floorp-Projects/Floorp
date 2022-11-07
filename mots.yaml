@@ -1753,21 +1753,6 @@ modules:
       - *luke
     machine_name: core_javascript_jit
 
-  - name: 'Core: jsat'
-    description: Javascript screen reader that is used in Android and B2G
-    includes:
-      - accessible/jsat/**/*
-    meta:
-      group: dev-accessibility
-      url: http://www.mozilla.org/access/
-      components:
-        - Core::Disability Access APIs
-    owners:
-      - *eeejay
-    peers:
-      - *yzen
-    machine_name: core_jsat
-
   - name: 'Core: js-tests'
     description: JavaScript test suite
     includes:
