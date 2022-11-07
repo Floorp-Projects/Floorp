@@ -301,6 +301,15 @@
   value: false
   mirror: always
 
+# After a user has executed a pan gesture, we may receive momentum phase pan
+# gestures from the OS. This specifies how long we should wait following the
+# pan end gesture for possible momentum phase pan gestures before sending the
+# TransformEnd notification.
+- name: apz.scrollend-event.content.delay_ms
+  type: RelaxedAtomicInt32
+  value: 100
+  mirror: always
+
 - name: apz.wr.activate_all_scroll_frames
   type: RelaxedAtomicBool
   value: false
