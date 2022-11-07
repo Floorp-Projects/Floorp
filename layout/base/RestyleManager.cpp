@@ -6,6 +6,7 @@
 
 #include "mozilla/RestyleManager.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/AutoRestyleTimelineMarker.h"
 #include "mozilla/AutoTimelineMarker.h"
 #include "mozilla/ComputedStyle.h"
@@ -3270,7 +3271,13 @@ void RestyleManager::UpdateOnlyAnimationStyles() {
 
 void RestyleManager::ElementStateChanged(Element* aElement,
                                          ElementState aChangedBits) {
-  MOZ_DIAGNOSTIC_ASSERT(!mInStyleRefresh);
+#ifdef EARLY_BETA_OR_EARLIER
+  if (MOZ_UNLIKELY(mInStyleRefresh)) {
+    MOZ_CRASH_UNSAFE_PRINTF(
+        "Element state change during style refresh (%" PRIu64 ")",
+        aChangedBits.GetInternalValue());
+  }
+#endif
 
   const ElementState kVisitedAndUnvisited =
       ElementState::VISITED | ElementState::UNVISITED;
