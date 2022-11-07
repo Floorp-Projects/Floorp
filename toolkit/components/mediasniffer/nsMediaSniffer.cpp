@@ -84,15 +84,11 @@ nsMediaSnifferFtypEntry sFtypEntries[] = {
      PatternLabel::ftyp_3gp4},  // 3gp4 is based on MP4
     {PATTERN_ENTRY("\xFF\xFF\xFF", "3gp", VIDEO_3GPP),
      PatternLabel::ftyp_3gp},  // Could be 3gp5, ...
-    {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4V ", VIDEO_MP4),
-     PatternLabel::ftyp_M4V},
-    {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4A ", AUDIO_MP4),
-     PatternLabel::ftyp_M4A},
-    {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4P ", AUDIO_MP4),
-     PatternLabel::ftyp_M4P},
-    {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "qt  ", VIDEO_QUICKTIME),
-     PatternLabel::ftyp_qt},
-    {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "crx ", APPLICATION_OCTET_STREAM),
+    {PATTERN_ENTRY("\xFF\xFF\xFF", "M4V", VIDEO_MP4), PatternLabel::ftyp_M4V},
+    {PATTERN_ENTRY("\xFF\xFF\xFF", "M4A", AUDIO_MP4), PatternLabel::ftyp_M4A},
+    {PATTERN_ENTRY("\xFF\xFF\xFF", "M4P", AUDIO_MP4), PatternLabel::ftyp_M4P},
+    {PATTERN_ENTRY("\xFF\xFF", "qt", VIDEO_QUICKTIME), PatternLabel::ftyp_qt},
+    {PATTERN_ENTRY("\xFF\xFF\xFF", "crx", APPLICATION_OCTET_STREAM),
      PatternLabel::ftyp_crx},
     {PATTERN_ENTRY("\xFF\xFF\xFF", "iso", VIDEO_MP4),
      PatternLabel::ftyp_iso},  // Could be isom or iso2.
