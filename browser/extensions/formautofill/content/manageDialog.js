@@ -78,7 +78,7 @@ class ManageRecords {
   /**
    * Get the selected options on the addresses element.
    *
-   * @returns {array<DOMElement>}
+   * @returns {Array<DOMElement>}
    */
   get _selectedOptions() {
     return Array.from(this._elements.records.selectedOptions);
@@ -86,6 +86,7 @@ class ManageRecords {
 
   /**
    * Get storage and ensure it has been initialized.
+   *
    * @returns {object}
    */
   async getStorage() {
@@ -138,7 +139,7 @@ class ManageRecords {
    * Render the records onto the page while maintaining selected options if
    * they still exist.
    *
-   * @param  {array<object>} records
+   * @param  {Array<object>} records
    */
   async renderRecordElements(records) {
     let selectedGuids = this._selectedOptions.map(option => option.value);
@@ -173,7 +174,7 @@ class ManageRecords {
   /**
    * Remove records by selected options.
    *
-   * @param  {array<DOMElement>} options
+   * @param  {Array<DOMElement>} options
    */
   async removeRecords(options) {
     let storage = await this.getStorage();

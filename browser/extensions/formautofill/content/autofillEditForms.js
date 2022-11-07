@@ -21,6 +21,7 @@ class EditAutofillForm {
 
   /**
    * Fill the form with a record object.
+   *
    * @param  {object} [record = {}]
    */
   loadRecord(record = {}) {
@@ -57,6 +58,7 @@ class EditAutofillForm {
 
   /**
    * Get a record from the form suitable for a save/update in storage.
+   *
    * @returns {object}
    */
   buildFormObject() {
@@ -257,6 +259,7 @@ class EditAddress extends EditAutofillForm {
   /**
    * Format the form based on country. The address-level1 and postal-code labels
    * should be specific to the given country.
+   *
    * @param  {string} country
    */
   formatForm(country) {

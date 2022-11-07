@@ -291,10 +291,10 @@ function getSyncChangeCounter(records, guid) {
  * Performs a partial deep equality check to determine if an object contains
  * the given fields.
  *
- * @param   {Object} object
+ * @param   {object} object
  *          The object to check. Unlike `ObjectUtils.deepEqual`, properties in
  *          `object` that are not in `fields` will be ignored.
- * @param   {Object} fields
+ * @param   {object} fields
  *          The fields to match.
  * @returns {boolean}
  *          Does `object` contain `fields` with matching values?
