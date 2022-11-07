@@ -718,17 +718,6 @@ static const struct EVInfo kEVInfos[] = {
     "OGPe+A==",
   },
   {
-    // CN=Staat der Nederlanden EV Root CA,O=Staat der Nederlanden,C=NL
-    "2.16.528.1.1003.1.2.7",
-    "Staat der Nederlanden EV OID",
-    { 0x4D, 0x24, 0x91, 0x41, 0x4C, 0xFE, 0x95, 0x67, 0x46, 0xEC, 0x4C,
-      0xEF, 0xA6, 0xCF, 0x6F, 0x72, 0xE2, 0x8A, 0x13, 0x29, 0x43, 0x2F,
-      0x9D, 0x8A, 0x90, 0x7A, 0xC4, 0xCB, 0x5D, 0xAD, 0xC1, 0x5A },
-    "MFgxCzAJBgNVBAYTAk5MMR4wHAYDVQQKDBVTdGFhdCBkZXIgTmVkZXJsYW5kZW4x"
-    "KTAnBgNVBAMMIFN0YWF0IGRlciBOZWRlcmxhbmRlbiBFViBSb290IENB",
-    "AJiWjQ==",
-  },
-  {
     // CN=Entrust Root Certification Authority - G2,OU="(c) 2009 Entrust, Inc. - for authorized use only",OU=See www.entrust.net/legal-terms,O="Entrust, Inc.",C=US
     "2.16.840.1.114028.10.1.2",
     "Entrust EV OID",
