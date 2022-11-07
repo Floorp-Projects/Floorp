@@ -482,14 +482,6 @@ enum class StyleObjectFit : uint8_t {
 #define NS_STYLE_TEXT_DECORATION_STYLE_WAVY 5
 #define NS_STYLE_TEXT_DECORATION_STYLE_MAX NS_STYLE_TEXT_DECORATION_STYLE_WAVY
 
-// See nsStyleText
-#define NS_STYLE_TEXT_TRANSFORM_NONE 0
-#define NS_STYLE_TEXT_TRANSFORM_CAPITALIZE 1
-#define NS_STYLE_TEXT_TRANSFORM_LOWERCASE 2
-#define NS_STYLE_TEXT_TRANSFORM_UPPERCASE 3
-#define NS_STYLE_TEXT_TRANSFORM_FULL_WIDTH 4
-#define NS_STYLE_TEXT_TRANSFORM_FULL_SIZE_KANA 5
-
 // See nsStyleDisplay
 enum class StyleTopLayer : uint8_t {
   None,
@@ -571,16 +563,6 @@ enum class StyleEmptyCells : uint8_t {
 #define NS_STYLE_CELL_SCOPE_COL 1
 #define NS_STYLE_CELL_SCOPE_ROWGROUP 2
 #define NS_STYLE_CELL_SCOPE_COLGROUP 3
-
-// See nsStylePage
-#define NS_STYLE_PAGE_MARKS_NONE 0x00
-#define NS_STYLE_PAGE_MARKS_CROP 0x01
-#define NS_STYLE_PAGE_MARKS_REGISTER 0x02
-
-// See nsStylePage
-#define NS_STYLE_PAGE_SIZE_AUTO 0
-#define NS_STYLE_PAGE_SIZE_PORTRAIT 1
-#define NS_STYLE_PAGE_SIZE_LANDSCAPE 2
 
 // See nsStyleUIReset
 enum class StyleImeMode : uint8_t {
