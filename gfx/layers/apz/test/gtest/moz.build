@@ -22,6 +22,7 @@ UNIFIED_SOURCES += [
     "TestScrollHandoff.cpp",
     "TestSnapping.cpp",
     "TestSnappingOnMomentum.cpp",
+    "TestTransformNotifications.cpp",
     "TestTreeManager.cpp",
     "TestWRScrollData.cpp",
 ]
