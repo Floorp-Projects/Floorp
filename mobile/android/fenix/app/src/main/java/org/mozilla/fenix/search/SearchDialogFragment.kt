@@ -47,6 +47,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.searchEngines
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.menu.candidate.DrawableMenuIcon
@@ -758,6 +759,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         toolbarView.view.addEditActionStart(
             SearchSelectorToolbarAction(
                 store = store,
+                defaultSearchEngine = requireComponents.core.store.state.search.selectedOrDefaultSearchEngine,
                 menu = searchSelectorMenu,
             ),
         )

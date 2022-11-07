@@ -48,7 +48,6 @@ import java.util.UUID
 @RunWith(FenixRobolectricTestRunner::class)
 class SearchSelectorToolbarActionTest {
 
-    @MockK(relaxed = true)
     private lateinit var store: SearchDialogFragmentStore
 
     @MockK(relaxed = true)
@@ -66,6 +65,7 @@ class SearchSelectorToolbarActionTest {
     @Before
     fun setup() {
         MockKAnnotations.init(this)
+        store = SearchDialogFragmentStore(testSearchFragmentState)
 
         every { testContext.settings() } returns settings
     }
@@ -75,6 +75,7 @@ class SearchSelectorToolbarActionTest {
         val action = spyk(
             SearchSelectorToolbarAction(
                 store = store,
+                defaultSearchEngine = null,
                 menu = menu,
             ),
         )
@@ -103,8 +104,7 @@ class SearchSelectorToolbarActionTest {
         mockkStatic("org.mozilla.fenix.search.toolbar.SearchSelectorToolbarActionKt") {
             val searchEngineIcon: BitmapDrawable = mockk(relaxed = true)
             every { any<SearchEngine>().getScaledIcon(any()) } returns searchEngineIcon
-            val store = SearchDialogFragmentStore(testSearchFragmentState)
-            val selector = SearchSelectorToolbarAction(store, mockk())
+            val selector = SearchSelectorToolbarAction(store, mockk(), mockk())
             val view = spyk(SearchSelector(testContext))
 
             selector.bind(view)
@@ -132,8 +132,7 @@ class SearchSelectorToolbarActionTest {
         mockkStatic("org.mozilla.fenix.search.toolbar.SearchSelectorToolbarActionKt") {
             val searchEngineIcon: BitmapDrawable = mockk(relaxed = true)
             every { any<SearchEngine>().getScaledIcon(any()) } returns searchEngineIcon
-            val store = SearchDialogFragmentStore(testSearchFragmentState)
-            val selector = SearchSelectorToolbarAction(store, mockk())
+            val selector = SearchSelectorToolbarAction(store, mockk(), mockk())
             val view = spyk(SearchSelector(testContext))
 
             selector.bind(view)
@@ -162,8 +161,7 @@ class SearchSelectorToolbarActionTest {
         mockkStatic("org.mozilla.fenix.search.toolbar.SearchSelectorToolbarActionKt") {
             val searchEngineIcon: BitmapDrawable = mockk(relaxed = true)
             every { any<SearchEngine>().getScaledIcon(any()) } returns searchEngineIcon
-            val store = SearchDialogFragmentStore(testSearchFragmentState)
-            val selector = SearchSelectorToolbarAction(store, mockk())
+            val selector = SearchSelectorToolbarAction(store, mockk(), mockk())
             val view = spyk(SearchSelector(testContext))
 
             // Test an initial change
