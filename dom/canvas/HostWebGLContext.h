@@ -594,7 +594,7 @@ class HostWebGLContext final : public SupportsWeakPtr {
   // ------------------------ Uniforms and attributes ------------------------
 
   void UniformData(uint32_t loc, bool transpose,
-                   const RawBuffer<>& data) const {
+                   const RawBuffer<webgl::UniformDataVal>& data) const {
     mContext->UniformData(loc, transpose, data.Data());
   }
 

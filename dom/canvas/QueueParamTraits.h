@@ -95,6 +95,13 @@ static_assert(!BytesAlwaysValidT<bool[4]>::value);
 
 // -
 
+template <>
+struct BytesAlwaysValidT<webgl::UniformDataVal> {
+  static constexpr bool value = true;
+};
+
+// -
+
 /**
  * Used to give QueueParamTraits a way to write to the Producer without
  * actually altering it, in case the transaction fails.

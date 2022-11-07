@@ -356,8 +356,9 @@ void ClientWebGLContext::Run(Args&&... args) const {
 
   const auto id = IdByMethod<MethodType, method>();
 
-  const auto size = webgl::SerializedSize(id, args...);
-  const auto maybeDest = child->AllocPendingCmdBytes(size);
+  const auto info = webgl::SerializationInfo(id, args...);
+  const auto maybeDest = child->AllocPendingCmdBytes(info.requiredByteCount,
+                                                     info.alignmentOverhead);
   if (!maybeDest) {
     JsWarning("Failed to allocate internal command buffer.");
     OnContextLoss(webgl::ContextLossReason::None);
@@ -4710,9 +4711,11 @@ void ClientWebGLContext::UniformData(const GLenum funcElemType,
 
   // -
 
-  const auto ptr = bytes.begin().get() + (elemOffset * sizeof(float));
-  const auto range = Range<const uint8_t>{ptr, availCount * sizeof(float)};
-  Run<RPROC(UniformData)>(locId, transpose, RawBuffer<>(range));
+  const auto begin =
+      reinterpret_cast<const webgl::UniformDataVal*>(bytes.begin().get()) +
+      elemOffset;
+  const auto range = Range{begin, availCount};
+  Run<RPROC(UniformData)>(locId, transpose, RawBuffer{range});
 }
 
 // -

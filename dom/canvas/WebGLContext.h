@@ -670,7 +670,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   //////////////////////////
 
   void UniformData(uint32_t loc, bool transpose,
-                   const Range<const uint8_t>& data) const;
+                   const Range<const webgl::UniformDataVal>& data) const;
 
   ////////////////////////////////////
 

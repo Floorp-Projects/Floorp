@@ -1285,8 +1285,9 @@ void WebGLContext::StencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail,
 ////////////////////////////////////////////////////////////////////////////////
 // Uniform setters.
 
-void WebGLContext::UniformData(const uint32_t loc, const bool transpose,
-                               const Range<const uint8_t>& data) const {
+void WebGLContext::UniformData(
+    const uint32_t loc, const bool transpose,
+    const Range<const webgl::UniformDataVal>& data) const {
   const FuncScope funcScope(*this, "uniform setter");
 
   if (!IsWebGL2() && transpose) {
@@ -1312,7 +1313,7 @@ void WebGLContext::UniformData(const uint32_t loc, const bool transpose,
 
   // -
 
-  const auto lengthInType = data.length() / sizeof(float);
+  const auto lengthInType = data.length();
   const auto elemCount = lengthInType / channels;
   if (elemCount > 1 && !validationInfo.isArray) {
     GenerateError(

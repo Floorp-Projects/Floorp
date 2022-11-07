@@ -1191,6 +1191,13 @@ namespace webgl {
 // now.
 // (http://opengl.gpuinfo.org/gl_stats_caps_single.php?listreportsbycap=GL_MAX_COLOR_ATTACHMENTS)
 inline constexpr size_t kMaxDrawBuffers = 8;
+
+union UniformDataVal {
+  float f32;
+  int32_t i32;
+  uint32_t u32;
+};
+
 }  // namespace webgl
 
 }  // namespace mozilla
