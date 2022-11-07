@@ -73,13 +73,13 @@ class BrowsingContextModule extends Module {
   #unsubscribeEvent(event) {
     switch (event) {
       case "browsingContext._documentInteractive":
-        this.#subscribedEvents.remove("browsingContext._documentInteractive");
+        this.#subscribedEvents.delete("browsingContext._documentInteractive");
         break;
       case "browsingContext.domContentLoaded":
-        this.#subscribedEvents.remove("browsingContext.domContentLoaded");
+        this.#subscribedEvents.delete("browsingContext.domContentLoaded");
         break;
       case "browsingContext.load":
-        this.#subscribedEvents.remove("browsingContext.load");
+        this.#subscribedEvents.delete("browsingContext.load");
         break;
     }
 
