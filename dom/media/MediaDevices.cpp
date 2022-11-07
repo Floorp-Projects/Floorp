@@ -24,6 +24,7 @@
 #include "nsINamed.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsQueryObject.h"
 
 namespace mozilla::dom {
@@ -226,8 +227,7 @@ RefPtr<MediaDeviceSetRefCnt> MediaDevices::FilterExposedDevices(
       !Preferences::GetBool("media.setsinkid.enabled") ||
       !FeaturePolicyUtils::IsFeatureAllowed(doc, u"speaker-selection"_ns);
 
-  bool resistFingerprinting = nsContentUtils::ShouldResistFingerprinting(doc);
-  if (resistFingerprinting) {
+  if (doc->ShouldResistFingerprinting()) {
     RefPtr fakeEngine = new MediaEngineFake();
     fakeEngine->EnumerateDevices(MediaSourceEnum::Microphone,
                                  MediaSinkEnum::Other, exposed);
@@ -731,8 +731,7 @@ void MediaDevices::OnDeviceChange() {
       return;
     }
 
-    Document* doc = window->GetExtantDoc();
-    if (nsContentUtils::ShouldResistFingerprinting(doc)) {
+    if (nsGlobalWindowInner::Cast(window)->ShouldResistFingerprinting()) {
       return;
     }
   }
