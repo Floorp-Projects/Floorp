@@ -10020,8 +10020,9 @@ var FirefoxViewHandler = {
   handleEvent(e) {
     switch (e.type) {
       case "TabSelect":
-        this.button?.toggleAttribute("open", e.target == this.tab);
-        this.button?.setAttribute("aria-selected", e.target == this.tab);
+        const selected = e.target == this.tab;
+        this.button?.toggleAttribute("open", selected);
+        this.button?.setAttribute("aria-pressed", selected);
         this._recordViewIfTabSelected();
         this._onTabForegrounded();
         break;

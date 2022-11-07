@@ -5,8 +5,8 @@ add_task(async function aria_attributes() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   is(
     win.FirefoxViewHandler.button.getAttribute("role"),
-    "tab",
-    "Firefox View button should have the 'tab' ARIA role"
+    "button",
+    "Firefox View button should have the 'button' ARIA role"
   );
   await openFirefoxViewTab(win);
   isnot(
@@ -20,15 +20,15 @@ add_task(async function aria_attributes() {
     "Firefox View button should refence the hidden tab's linked panel via `aria-controls`"
   );
   is(
-    win.FirefoxViewHandler.button.getAttribute("aria-selected"),
+    win.FirefoxViewHandler.button.getAttribute("aria-pressed"),
     "true",
-    'Firefox View button should have `aria-selected="true"` upon selecting it'
+    'Firefox View button should have `aria-pressed="true"` upon selecting it'
   );
   win.BrowserOpenTab();
   is(
-    win.FirefoxViewHandler.button.getAttribute("aria-selected"),
+    win.FirefoxViewHandler.button.getAttribute("aria-pressed"),
     "false",
-    'Firefox View button should have `aria-selected="false"` upon selecting a different tab'
+    'Firefox View button should have `aria-pressed="false"` upon selecting a different tab'
   );
   await BrowserTestUtils.closeWindow(win);
 });
