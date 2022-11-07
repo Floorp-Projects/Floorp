@@ -19,3 +19,5 @@ browser.jar:
     content/browser/callout-colorways-dark.svg (content/callout-colorways-dark.svg)
     content/browser/cfr-lightning.svg (content/cfr-lightning.svg)
     content/browser/cfr-lightning-dark.svg (content/cfr-lightning-dark.svg)
+    content/browser/recently-closed-empty.svg (content/recently-closed-empty.svg)
+    content/browser/tab-pickup-empty.svg (content/tab-pickup-empty.svg)

@@ -363,6 +363,11 @@ button.close {
   border: 1px solid var(--fxview-contrast-border);
 }
 
+#collapsible-tabs-container,
+#tabpickup-tabs-container {
+  margin-block-start: 0.5em;
+}
+
 .empty-container {
   border-radius: 4px;
 }
@@ -382,8 +387,39 @@ button.close {
 
 .placeholder-content {
   color: var(--fxview-text-secondary-color);
-  text-align: center;
-  padding: 24px 16px;
+  display: flex;
+  padding: 1.8em 1.1em;
+}
+
+#recently-closed-empty-image,
+#tab-pickup-empty-image {
+  margin-inline-end: 1.1em;
+  -moz-context-properties: fill, stroke, fill-opacity;
+  fill: var(--newtab-background-color);
+  stroke: var(--newtab-text-primary-color);
+  fill-opacity: 0.07;
+}
+
+@media (prefers-color-scheme: dark) {
+  #recently-closed-empty-image,
+  #tab-pickup-empty-image {
+    fill: var(--newtab-background-color-secondary);
+    fill-opacity: 0.15;
+  }
+}
+
+.placeholder-text {
+  margin: 0;
+}
+
+.placeholder-header {
+  margin-block: 0 0.27em;
+  font-weight: 600;
+}
+
+.placeholder-body {
+  margin-block: 0;
+  line-height: 1.3em;
 }
 
 .page-section-header {
@@ -630,7 +666,7 @@ details[open] > .page-section-header > .twisty {
 
 .closed-tabs-list {
   padding-inline-start: 0;
-  margin-block-start: 8px;
+  margin-block-start: 0;
   display: grid;
   grid-template-columns: min-content repeat(5, 1fr) min-content;
   column-gap: 8px;
@@ -737,7 +773,7 @@ details[open] > .page-section-header > .twisty {
 
 .synced-tabs-list {
   padding: 0;
-  margin-block-start: 8px;
+  margin-block-start: 0;
   list-style: none;
   display: grid;
   grid-template-columns: 4fr 4fr;
