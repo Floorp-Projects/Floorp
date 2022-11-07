@@ -59,7 +59,6 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
 
   void Init();
 
-  bool CanTake();
   bool CanAllocate();
   void AllocateAfterDelay(bool aStartup = false);
   void AllocateOnIdle();
@@ -74,6 +73,7 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
   static bool IsShutdown() {
     return AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed);
   }
+  bool IsEnabled() { return mEnabled && !IsShutdown(); }
 
   bool mEnabled;
   uint32_t mNumberPreallocs;
@@ -194,7 +194,7 @@ void PreallocatedProcessManagerImpl::RereadPrefs() {
 
 already_AddRefed<ContentParent> PreallocatedProcessManagerImpl::Take(
     const nsACString& aRemoteType) {
-  if (!CanTake()) {
+  if (!IsEnabled()) {
     return nullptr;
   }
   RefPtr<ContentParent> process;
@@ -234,7 +234,7 @@ void PreallocatedProcessManagerImpl::Enable(uint32_t aProcesses) {
   mNumberPreallocs = aProcesses;
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
           ("Enabling preallocation: %u", aProcesses));
-  if (mEnabled) {
+  if (mEnabled || IsShutdown()) {
     return;
   }
 
@@ -270,19 +270,15 @@ void PreallocatedProcessManagerImpl::RemoveBlocker(ContentParent* aParent) {
   }
 }
 
-bool PreallocatedProcessManagerImpl::CanTake() {
-  return mEnabled && !IsShutdown();
-}
-
 bool PreallocatedProcessManagerImpl::CanAllocate() {
-  return mEnabled && sNumBlockers == 0 &&
+  return IsEnabled() && sNumBlockers == 0 &&
          mPreallocatedProcesses.Length() < mNumberPreallocs && !IsShutdown() &&
          (FissionAutostart() ||
           !ContentParent::IsMaxProcessCountReached(DEFAULT_REMOTE_TYPE));
 }
 
 void PreallocatedProcessManagerImpl::AllocateAfterDelay(bool aStartup) {
-  if (!mEnabled) {
+  if (!IsEnabled()) {
     return;
   }
   long delay = aStartup ? StaticPrefs::dom_ipc_processPrelaunch_startupDelayMs()
@@ -296,7 +292,7 @@ void PreallocatedProcessManagerImpl::AllocateAfterDelay(bool aStartup) {
 }
 
 void PreallocatedProcessManagerImpl::AllocateOnIdle() {
-  if (!mEnabled) {
+  if (!IsEnabled()) {
     return;
   }
 
@@ -312,7 +308,7 @@ void PreallocatedProcessManagerImpl::AllocateNow() {
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
           ("Trying to start process now"));
   if (!CanAllocate()) {
-    if (mEnabled && !IsShutdown() && IsEmpty() && sNumBlockers > 0) {
+    if (IsEnabled() && IsEmpty() && sNumBlockers > 0) {
       // If it's too early to allocate a process let's retry later.
       AllocateAfterDelay();
     }
@@ -345,7 +341,7 @@ void PreallocatedProcessManagerImpl::AllocateNow() {
                 if (mPreallocatedProcesses.Length() < mNumberPreallocs) {
                   AllocateOnIdle();
                 }
-              } else if (!mEnabled || IsShutdown()) {
+              } else if (!IsEnabled()) {
                 // if this has a remote type set, it's been allocated for use
                 // already
                 if (process->mRemoteType == PREALLOC_REMOTE_TYPE) {
@@ -398,7 +394,7 @@ PreallocatedProcessManager::GetPPMImpl() {
 /* static */
 bool PreallocatedProcessManager::Enabled() {
   if (auto impl = GetPPMImpl()) {
-    return impl->mEnabled;
+    return impl->IsEnabled();
   }
   return false;
 }
