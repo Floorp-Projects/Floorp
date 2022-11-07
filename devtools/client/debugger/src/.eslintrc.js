@@ -298,11 +298,6 @@ module.exports = {
     strict: [2, "global"],
     // Disallow comparisons with the value NaN.
     "use-isnan": 2,
-    // Warn about invalid JSDoc comments.
-    // Disabled for now because of https://github.com/eslint/eslint/issues/2270
-    // The rule fails on some jsdoc comments like in:
-    // devtools/client/webconsole/console-output.js
-    "valid-jsdoc": 0,
     // Ensure that the results of typeof are compared against a valid string.
     "valid-typeof": 2,
     // Allow vars to be declared anywhere in the scope.
