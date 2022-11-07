@@ -9,6 +9,12 @@ async function setup_tab(url) {
 
   await BrowserTestUtils.browserLoaded(tabContent.linkedBrowser);
 
+  // For some of these tests we have to wait for the test to consume some
+  // computation or memory.
+  await SpecialPowers.spawn(tabContent.linkedBrowser, [], async () => {
+    await content.wrappedJSObject.waitForTestReady();
+  });
+
   return tabContent;
 }
 
@@ -67,6 +73,24 @@ function checkEnergyMedHigh(row) {
     ["energy-impact-medium", "energy-impact-high"].includes(l10nId),
     "our test tab is medium or high energy impact"
   );
+}
+
+function checkMemoryAtLeast(bytes, row) {
+  let memCell = row.children[3];
+  ok(memCell, "Found the cell containing the amount of memory");
+
+  let text = memCell.textContent;
+  ok(text, "Found the text from the memory cell");
+  // We only bother to work in Megabytes, there's currently no reason to
+  // make this more complex.
+  info(`Text is ${text}.`);
+  let mbStr = text.match(/^(\d+(\.\d+)?) MB$/);
+  ok(mbStr && mbStr[1], "Matched a memory size in Megabytes");
+  if (!mbStr) {
+    return;
+  }
+
+  ok(bytes < Number(mbStr[1]) * 1024 * 1024, "Memory usage is high enough");
 }
 
 // Test that we can select the row for a tab and close it using the close
@@ -275,6 +299,28 @@ add_task(async function test_tab_energy() {
 
   // Ensure it is reported as a medium or high energy impact.
   checkEnergyMedHigh(row);
+
+  await BrowserTestUtils.removeTab(tabContent);
+  await BrowserTestUtils.removeTab(aboutPerformance.tab);
+});
+
+add_task(async function test_tab_memory() {
+  let tabContent = await setup_tab(
+    "http://example.com/browser/toolkit/components/aboutperformance/tests/browser/tab_use_memory.html"
+  );
+
+  let aboutPerformance = await setup_about_performance();
+
+  // Find the row corresponding to our tab.
+  let row = find_row(
+    aboutPerformance.tbody,
+    "Main frame for test browser_aboutperformance.js",
+    tabContent
+  );
+
+  // The page is using at least 32 MB, due to the big array that it
+  // contains.
+  checkMemoryAtLeast(32 * 1024 * 1024, row);
 
   await BrowserTestUtils.removeTab(tabContent);
   await BrowserTestUtils.removeTab(aboutPerformance.tab);
