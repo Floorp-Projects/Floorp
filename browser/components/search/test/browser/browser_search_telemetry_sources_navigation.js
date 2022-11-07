@@ -144,7 +144,6 @@ add_task(async function test_search() {
     },
     {
       "browser.search.content.urlbar": { "example:tagged:ff": 1 },
-      "browser.search.with_ads": { "example:sap": 1 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
     }
   );
@@ -164,7 +163,6 @@ add_task(async function test_reload() {
     {
       "browser.search.content.urlbar": { "example:tagged:ff": 1 },
       "browser.search.content.reload": { "example:tagged:ff": 1 },
-      "browser.search.with_ads": { "example:sap": 2 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
       "browser.search.withads.reload": { "example:tagged": 1 },
     }
@@ -184,10 +182,8 @@ add_task(async function test_reload() {
     {
       "browser.search.content.urlbar": { "example:tagged:ff": 1 },
       "browser.search.content.reload": { "example:tagged:ff": 1 },
-      "browser.search.with_ads": { "example:sap": 2 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
       "browser.search.withads.reload": { "example:tagged": 1 },
-      "browser.search.ad_clicks": { "example:sap": 1 },
       "browser.search.adclicks.reload": { "example:tagged": 1 },
     }
   );
@@ -211,7 +207,6 @@ add_task(async function test_fresh_search() {
     },
     {
       "browser.search.content.urlbar": { "example:tagged:ff": 1 },
-      "browser.search.with_ads": { "example:sap": 1 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
     }
   );
@@ -231,9 +226,7 @@ add_task(async function test_click_ad() {
     },
     {
       "browser.search.content.urlbar": { "example:tagged:ff": 1 },
-      "browser.search.with_ads": { "example:sap": 1 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
-      "browser.search.ad_clicks": { "example:sap": 1 },
       "browser.search.adclicks.urlbar": { "example:tagged": 1 },
     }
   );
@@ -253,10 +246,8 @@ add_task(async function test_go_back() {
     {
       "browser.search.content.urlbar": { "example:tagged:ff": 1 },
       "browser.search.content.tabhistory": { "example:tagged:ff": 1 },
-      "browser.search.with_ads": { "example:sap": 2 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
       "browser.search.withads.tabhistory": { "example:tagged": 1 },
-      "browser.search.ad_clicks": { "example:sap": 1 },
       "browser.search.adclicks.urlbar": { "example:tagged": 1 },
     }
   );
@@ -275,10 +266,8 @@ add_task(async function test_go_back() {
     {
       "browser.search.content.urlbar": { "example:tagged:ff": 1 },
       "browser.search.content.tabhistory": { "example:tagged:ff": 1 },
-      "browser.search.with_ads": { "example:sap": 2 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
       "browser.search.withads.tabhistory": { "example:tagged": 1 },
-      "browser.search.ad_clicks": { "example:sap": 2 },
       "browser.search.adclicks.urlbar": { "example:tagged": 1 },
       "browser.search.adclicks.tabhistory": { "example:tagged": 1 },
     }
@@ -303,7 +292,6 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
     },
     {
       "browser.search.content.urlbar": { "example:tagged:ff": 1 },
-      "browser.search.with_ads": { "example:sap": 1 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
     }
   );
@@ -319,7 +307,6 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
     {
       "browser.search.content.urlbar": { "example:tagged:ff": 1 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
-      "browser.search.with_ads": { "example:sap": 2 },
       "browser.search.content.urlbar_persisted": { "example:tagged:ff": 1 },
       "browser.search.withads.urlbar_persisted": { "example:tagged": 1 },
     }
@@ -340,10 +327,8 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
     {
       "browser.search.content.urlbar": { "example:tagged:ff": 1 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
-      "browser.search.with_ads": { "example:sap": 2 },
       "browser.search.content.urlbar_persisted": { "example:tagged:ff": 1 },
       "browser.search.withads.urlbar_persisted": { "example:tagged": 1 },
-      "browser.search.ad_clicks": { "example:sap": 1 },
       "browser.search.adclicks.urlbar_persisted": { "example:tagged": 1 },
     }
   );

@@ -18,9 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 // The various histograms and scalars that we report to.
 const SEARCH_COUNTS_HISTOGRAM_KEY = "SEARCH_COUNTS";
 const SEARCH_CONTENT_SCALAR_BASE = "browser.search.content.";
-const SEARCH_WITH_ADS_SCALAR_OLD = "browser.search.with_ads";
 const SEARCH_WITH_ADS_SCALAR_BASE = "browser.search.withads.";
-const SEARCH_AD_CLICKS_SCALAR_OLD = "browser.search.ad_clicks";
 const SEARCH_AD_CLICKS_SCALAR_BASE = "browser.search.adclicks.";
 const SEARCH_DATA_TRANSFERRED_SCALAR = "browser.search.data_transferred";
 const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
@@ -603,9 +601,6 @@ class TelemetryHandler {
 /**
  * ContentHandler deals with handling telemetry of the content within a tab -
  * when ads detected and when they are selected.
- *
- * It handles the "browser.search.with_ads" and "browser.search.ad_clicks"
- * scalars.
  */
 class ContentHandler {
   /**
@@ -789,11 +784,6 @@ class ContentHandler {
           URL
         );
         Services.telemetry.keyedScalarAdd(
-          SEARCH_AD_CLICKS_SCALAR_OLD,
-          `${info.telemetryId}:${item.info.oldType}`,
-          1
-        );
-        Services.telemetry.keyedScalarAdd(
           SEARCH_AD_CLICKS_SCALAR_BASE + item.source,
           `${info.telemetryId}:${item.info.type}`,
           1
@@ -853,11 +843,6 @@ class ContentHandler {
       item.info.type,
       item.source,
       info.url
-    );
-    Services.telemetry.keyedScalarAdd(
-      SEARCH_WITH_ADS_SCALAR_OLD,
-      `${item.info.provider}:${item.info.oldType}`,
-      1
     );
     Services.telemetry.keyedScalarAdd(
       SEARCH_WITH_ADS_SCALAR_BASE + item.source,
