@@ -116,6 +116,7 @@ inline CSPDirective CSP_StringToCSPDirective(const nsAString& aDir) {
   MACRO(CSP_SELF, "'self'")                                     \
   MACRO(CSP_UNSAFE_INLINE, "'unsafe-inline'")                   \
   MACRO(CSP_UNSAFE_EVAL, "'unsafe-eval'")                       \
+  MACRO(CSP_UNSAFE_HASHES, "'unsafe-hashes'")                   \
   MACRO(CSP_NONE, "'none'")                                     \
   MACRO(CSP_NONCE, "'nonce-")                                   \
   MACRO(CSP_REPORT_SAMPLE, "'report-sample'")                   \

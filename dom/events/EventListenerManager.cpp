@@ -1044,6 +1044,7 @@ nsresult EventListenerManager::SetEventHandler(nsAtom* aName,
       bool allowsInlineScript = true;
       rv = csp->GetAllowsInline(
           nsIContentSecurityPolicy::SCRIPT_SRC_ATTR_DIRECTIVE,
+          true,    // aHasUnsafeHash
           u""_ns,  // aNonce
           true,    // aParserCreated (true because attribute event handler)
           aElement,

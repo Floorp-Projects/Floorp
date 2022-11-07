@@ -306,12 +306,11 @@ bool nsStyleUtil::CSPAllowsInlineStyle(
     return true;
   }
 
-  nsIContentSecurityPolicy::CSPDirective directive =
-      nsIContentSecurityPolicy::STYLE_SRC_ATTR_DIRECTIVE;
+  bool isStyleElement = false;
   // query the nonce
   nsAutoString nonce;
   if (aElement && aElement->NodeInfo()->NameAtom() == nsGkAtoms::style) {
-    directive = nsIContentSecurityPolicy::STYLE_SRC_ELEM_DIRECTIVE;
+    isStyleElement = true;
     nsString* cspNonce =
         static_cast<nsString*>(aElement->GetProperty(nsGkAtoms::nonce));
     if (cspNonce) {
@@ -320,11 +319,13 @@ bool nsStyleUtil::CSPAllowsInlineStyle(
   }
 
   bool allowInlineStyle = true;
-  rv = csp->GetAllowsInline(directive, nonce,
-                            false,  // aParserCreated only applies to scripts
-                            aElement, nullptr,  // nsICSPEventListener
-                            aStyleText, aLineNumber, aColumnNumber,
-                            &allowInlineStyle);
+  rv = csp->GetAllowsInline(
+      isStyleElement ? nsIContentSecurityPolicy::STYLE_SRC_ELEM_DIRECTIVE
+                     : nsIContentSecurityPolicy::STYLE_SRC_ATTR_DIRECTIVE,
+      !isStyleElement /* aHasUnsafeHash */, nonce,
+      false,              // aParserCreated only applies to scripts
+      aElement, nullptr,  // nsICSPEventListener
+      aStyleText, aLineNumber, aColumnNumber, &allowInlineStyle);
   NS_ENSURE_SUCCESS(rv, false);
 
   return allowInlineStyle;
