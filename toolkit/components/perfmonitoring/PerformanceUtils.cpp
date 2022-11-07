@@ -127,19 +127,19 @@ RefPtr<MemoryPromise> CollectMemoryInfo(
 
   BrowsingContextGroup* group = aDocGroup->GetBrowsingContextGroup();
   // Getting GC Heap Usage
-  uint64_t GCHeapUsage = 0;
+  uint64_t jsMemUsed = 0;
   JSObject* object = group->GetWrapper();
   if (object != nullptr) {
-    GCHeapUsage = js::GetGCHeapUsageForObjectZone(object);
+    jsMemUsed = js::GetMemoryUsageForObjectZone(object);
   }
 
   // Getting Media sizes.
   return GetMediaMemorySizes()->Then(
       aEventTarget, __func__,
-      [GCHeapUsage, sizes](const MediaMemoryInfo& media) {
+      [jsMemUsed, sizes](const MediaMemoryInfo& media) {
         return MemoryPromise::CreateAndResolve(
             PerformanceMemoryInfo(media, sizes.mDom, sizes.mStyle, sizes.mOther,
-                                  GCHeapUsage),
+                                  jsMemUsed),
             __func__);
       },
       [](const nsresult rv) {

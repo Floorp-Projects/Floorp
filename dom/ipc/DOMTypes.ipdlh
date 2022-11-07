@@ -238,7 +238,7 @@ struct PerformanceMemoryInfo {
   uint64_t domDom;
   uint64_t domStyle;
   uint64_t domOther;
-  uint64_t GCHeapUsage;
+  uint64_t jsMemUsage;
 };
 
 struct CategoryDispatch

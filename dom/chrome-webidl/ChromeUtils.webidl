@@ -825,7 +825,7 @@ dictionary MemoryInfoDictionary {
   unsigned long long domDom = 0;
   unsigned long long domStyle = 0;
   unsigned long long domOther = 0;
-  unsigned long long GCHeapUsage = 0;
+  unsigned long long jsMemUsage = 0;
   required MediaMemoryInfoDictionary media;
 };
 

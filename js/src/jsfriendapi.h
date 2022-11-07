@@ -733,10 +733,16 @@ class MOZ_STACK_CLASS JS_PUBLIC_API AutoAssertNoContentJS {
 };
 
 /**
- * This function only reports GC heap memory,
- * and not malloc allocated memory associated with GC things.
+ * This function reports memory used by a JS object's zone, this includes:
+ *  * The size of this object's JS GC zone.
+ *  * Malloc memory referred to from this zone.
+ *  * JIT memory for this zone.
+ *
+ * Note that malloc memory referred to from this zone can include
+ * SharedArrayBuffers which may also be referred to from other zones. Adding the
+ * memory usage of multiple zones may lead to an over-estimate.
  */
-extern JS_PUBLIC_API uint64_t GetGCHeapUsageForObjectZone(JSObject* obj);
+extern JS_PUBLIC_API uint64_t GetMemoryUsageForObjectZone(JSObject* obj);
 
 /**
  * This function only reports GC heap memory,
