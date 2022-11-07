@@ -63,7 +63,7 @@ add_task(async function test() {
           }
           sharedWorker =
             entry.host.endsWith("shared_worker.js") || sharedWorker;
-          heapUsage += entry.memoryInfo.GCHeapUsage;
+          heapUsage += entry.memoryInfo.jsMemUsage;
           mediaMemory +=
             entry.memoryInfo.media.audioSize +
             entry.memoryInfo.media.resourcesSize;

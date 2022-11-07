@@ -145,7 +145,7 @@ void AggregatedResults::AppendResult(
     data->mMemoryInfo.mDomDom = result.memory().domDom();
     data->mMemoryInfo.mDomStyle = result.memory().domStyle();
     data->mMemoryInfo.mDomOther = result.memory().domOther();
-    data->mMemoryInfo.mGCHeapUsage = result.memory().GCHeapUsage();
+    data->mMemoryInfo.mJsMemUsage = result.memory().jsMemUsage();
     data->mMemoryInfo.mMedia.mAudioSize = result.memory().media().audioSize();
     data->mMemoryInfo.mMedia.mVideoSize = result.memory().media().videoSize();
     data->mMemoryInfo.mMedia.mResourcesSize =

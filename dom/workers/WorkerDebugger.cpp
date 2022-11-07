@@ -589,7 +589,7 @@ RefPtr<PerformanceInfoPromise> WorkerDebugger::ReportPerformanceInfo() {
        items = std::move(items), _w = std::move(workerRef),
        memoryUsagePromise](uint64_t jsMem) {
         PerformanceMemoryInfo memInfo;
-        memInfo.GCHeapUsage() = jsMem;
+        memInfo.jsMemUsage() = jsMem;
         return PerformanceInfoPromise::CreateAndResolve(
             PerformanceInfo(url, pid, windowID, duration, perfId, true,
                             isTopLevel, memInfo, items),
