@@ -738,6 +738,13 @@ class MOZ_STACK_CLASS JS_PUBLIC_API AutoAssertNoContentJS {
  */
 extern JS_PUBLIC_API uint64_t GetGCHeapUsageForObjectZone(JSObject* obj);
 
+/**
+ * This function only reports GC heap memory,
+ * and not malloc allocated memory associated with GC things.
+ * It reports the total of all memory for the whole Runtime.
+ */
+extern JS_PUBLIC_API uint64_t GetGCHeapUsage(JSContext* cx);
+
 class JS_PUBLIC_API CompartmentTransplantCallback {
  public:
   virtual JSObject* getObjectToTransplant(JS::Compartment* compartment) = 0;

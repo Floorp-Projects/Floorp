@@ -767,6 +767,10 @@ JS_PUBLIC_API uint64_t js::GetGCHeapUsageForObjectZone(JSObject* obj) {
   return obj->zone()->gcHeapSize.bytes();
 }
 
+JS_PUBLIC_API uint64_t js::GetGCHeapUsage(JSContext* cx) {
+  return cx->runtime()->gc.heapSize.bytes();
+}
+
 #ifdef DEBUG
 JS_PUBLIC_API bool js::RuntimeIsBeingDestroyed() {
   JSRuntime* runtime = TlsContext.get()->runtime();
