@@ -59,23 +59,18 @@ class IDBEncryptionPBM(MarionetteTestCase):
             script_args=(self.IDBName, self.IDBStoreName, "blobKey", self.IDBValue),
         )
 
-        Wait(self.marionette, timeout=60).until(
-            lambda _: self.sqliteWALReleased(),
-            message="WAL still around even after 60s",
+        self.ensureInvariantHolds(lambda _: self.sqliteWALReleased())
+        self.ensureInvariantHolds(
+            lambda _: self.findDirObj(self.idbStoragePath, ".files", False) is not None
         )
 
         idbBlobDir = self.findDirObj(self.idbStoragePath, ".files", False)
-        if idbBlobDir is None:
-            raise Exception(f"unable to find '.files' dir in {self.idbStoragePath}")
 
         # seems like there's a timing issue here. There are sometimes no blob file
         # even after WAL is released. Allowing some buffer time and ensuring blob file
         # exists before validating it's contents
         idbBlobPath = os.path.join(idbBlobDir, "1")
-        Wait(self.marionette, timeout=10).until(
-            lambda _: os.path.exists(idbBlobPath),
-            message="Blob file does not exist even after waiting 10s",
-        )
+        self.ensureInvariantHolds(lambda _: os.path.exists(idbBlobPath))
 
         foundRawValue = False
         with open(idbBlobPath, "rb") as f_binary:
@@ -94,15 +89,12 @@ class IDBEncryptionPBM(MarionetteTestCase):
             script_args=(self.IDBName, self.IDBStoreName, "textKey", self.IDBValue),
         )
 
-        Wait(self.marionette, timeout=60).until(
-            lambda _: self.sqliteWALReleased(),
-            message="WAL still around even after 60s",
+        self.ensureInvariantHolds(lambda _: self.sqliteWALReleased())
+        self.ensureInvariantHolds(
+            lambda _: self.findDirObj(self.idbStoragePath, ".sqlite", True) is not None
         )
 
         sqliteDBFile = self.findDirObj(self.idbStoragePath, ".sqlite", True)
-        self.assertIsNotNone(
-            sqliteDBFile, f"unable to find .sqlite file in {self.idbStoragePath}"
-        )
 
         foundRawValue = False
         with open(sqliteDBFile, "rb") as f_binary:
@@ -137,3 +129,10 @@ class IDBEncryptionPBM(MarionetteTestCase):
         if not os.path.exists(self.idbStoragePath):
             return False
         return self.findDirObj(self.idbStoragePath, ".sqlite-wal", True) is None
+
+    def ensureInvariantHolds(self, op):
+        maxWaitTime = 60
+        Wait(self.marionette, timeout=maxWaitTime).until(
+            op,
+            message=f"operation did not yield success even after waiting {maxWaitTime} time",
+        )
