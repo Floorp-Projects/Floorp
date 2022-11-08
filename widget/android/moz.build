@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
-    BUG_COMPONENT = ("Core", "Widget: Android")
+    BUG_COMPONENT = ("GeckoView", "General")
     SCHEDULES.exclusive = ["android"]
 
 with Files("*CompositorWidget*"):
