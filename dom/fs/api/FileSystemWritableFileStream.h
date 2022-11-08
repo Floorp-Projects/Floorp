@@ -41,8 +41,9 @@ class Promise;
 
 class FileSystemWritableFileStream final : public WritableStream {
  public:
-  // No cycle-collection DECL/IMPL macros, because WritableStream calls
-  // HoldJSObjects()
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemWritableFileStream,
+                                           WritableStream)
 
   static already_AddRefed<FileSystemWritableFileStream> MaybeCreate(
       nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
@@ -76,8 +77,6 @@ class FileSystemWritableFileStream final : public WritableStream {
   bool IsClosed() const { return !mActor || !mActor->MutableFileDescPtr(); }
 
  protected:
-  // XXX Hack, want to inherit from FileSystemHandle as well
-  // nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<FileSystemManager> mManager;
   fs::FileSystemEntryMetadata mMetadata;
 
