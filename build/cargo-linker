@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env python3
 
 # If you want to use a custom linker with Cargo, Cargo requires that you
 # specify it in Cargo.toml or via the matching environment variable.
@@ -7,12 +7,12 @@
 # was difficult.
 #
 # Our solution to these problems is to use this wrapper script.  We pass
-# in the LD and the LDFLAGS to use via environment variables.  Note that
-# we do *not* quote either MOZ_CARGO_WRAP variable:
+# in the LD and the LDFLAGS to use via environment variables.
 #
 # * MOZ_CARGO_WRAP_LD is equivalent to CC on Unix-y platforms, and CC
 #   frequently has additional arguments in addition to the compiler
 #   itself.
+#
 # * MOZ_CARGO_WRAP_LDFLAGS contains space-separated arguments to pass,
 #   and not quoting it ensures that each of those arguments is passed
 #   as a separate argument to the actual LD.
@@ -23,16 +23,37 @@
 #   However, in the case of sanitizer runtimes, there is a separate
 #   runtime for C and C++ and linking C++ code with the C runtime can
 #   fail if the requested feature is in the C++ runtime only (bug 1747298).
-#
-# $@ is doubly quoted for the eval. See bug 1418598.
 
-WRAP_LD=${MOZ_CARGO_WRAP_LD}
-for opt; do
-  case "$opt" in
-  -lc++|-lstdc++)
-    WRAP_LD=${MOZ_CARGO_WRAP_LD_CXX};
-    break;
-    ;;
-  esac
-done
-eval ${WRAP_LD} ${MOZ_CARGO_WRAP_LDFLAGS} '"$@"'
+import os
+import sys
+
+
+SANITIZERS = {
+    "asan": "address",
+    "hwasan": "hwaddress",
+    "lsan": "leak",
+    "msan": "memory",
+    "tsan": "thread",
+}
+
+use_clang_sanitizer = os.environ.get("MOZ_CLANG_NEWER_THAN_RUSTC_LLVM")
+wrap_ld = os.environ["MOZ_CARGO_WRAP_LD"]
+args = os.environ["MOZ_CARGO_WRAP_LDFLAGS"].split()
+for arg in sys.argv[1:]:
+    if arg in ["-lc++", "-lstdc++"]:
+        wrap_ld = os.environ["MOZ_CARGO_WRAP_LD_CXX"]
+    elif use_clang_sanitizer and arg.endswith("san.a"):
+        # When clang is newer than rustc's LLVM, we replace rust's sanitizer
+        # runtimes with clang's.
+        filename = os.path.basename(arg)
+        prefix, dot, suffix = filename[:-2].rpartition(".")
+        if (
+            prefix.startswith("librustc-")
+            and prefix.endswith("_rt") and dot == "."
+        ):
+            args.append(f"-fsanitize={SANITIZERS[suffix]}")
+            continue
+    args.append(arg)
+
+wrap_ld = wrap_ld.split()
+os.execvp(wrap_ld[0], wrap_ld + args)
