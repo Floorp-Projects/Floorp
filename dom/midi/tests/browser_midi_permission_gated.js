@@ -135,7 +135,7 @@ add_task(async function testRequestMIDIAccess() {
     installDialog.querySelector(".popup-notification-description").textContent,
     gNavigatorBundle.getFormattedString(
       "webextSitePerms.headerWithGatedPerms.midi-sysex",
-      [`Site Permissions for ${testPageHost}`, testPageHost]
+      [testPageHost]
     ),
     "Install dialog has expected header text"
   );
@@ -220,7 +220,7 @@ add_task(async function testRequestMIDIAccess() {
     installDialog.querySelector(".popup-notification-description").textContent,
     gNavigatorBundle.getFormattedString(
       "webextSitePerms.headerWithGatedPerms.midi",
-      [`Site Permissions for ${testPageHost}`, testPageHost]
+      [testPageHost]
     ),
     "Install dialog has expected header text"
   );

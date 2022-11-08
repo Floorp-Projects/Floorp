@@ -430,9 +430,22 @@ var ExtensionsUI = {
         popupIconClass: icon ? "" : "addon-warning-icon",
         persistent: true,
         eventCallback,
-        name: strings.addonName,
         removeOnDismissal: true,
       };
+      // The prompt/notification machinery has a special affordance wherein
+      // certain subsets of the header string can be designated "names", and
+      // referenced symbolically as "<>" and "{}" to receive special formatting.
+      // That code assumes that the existence of |name| and |secondName| in the
+      // options object imply the presence of "<>" and "{}" (respectively) in
+      // in the string.
+      //
+      // At present, WebExtensions use this affordance while SitePermission
+      // add-ons don't, so we need to conditionally set the |name| field.
+      //
+      // NB: This could potentially be cleaned up, see bug 1799710.
+      if (strings.header.includes("<>")) {
+        options.name = strings.addonName;
+      }
 
       let action = {
         label: strings.acceptText,
