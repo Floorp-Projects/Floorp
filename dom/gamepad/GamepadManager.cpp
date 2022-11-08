@@ -144,8 +144,7 @@ void GamepadManager::AddListener(nsGlobalWindowInner* aWindow) {
     }
   }
 
-  if (!mEnabled || mShuttingDown ||
-      nsContentUtils::ShouldResistFingerprinting(aWindow->GetExtantDoc())) {
+  if (!mEnabled || mShuttingDown || aWindow->ShouldResistFingerprinting()) {
     return;
   }
 
@@ -280,8 +279,7 @@ void GamepadManager::NewConnectionEvent(GamepadHandle aHandle,
 
       // Do not fire gamepadconnected and gamepaddisconnected events when
       // privacy.resistFingerprinting is true.
-      if (nsContentUtils::ShouldResistFingerprinting(
-              listeners[i]->GetExtantDoc())) {
+      if (listeners[i]->ShouldResistFingerprinting()) {
         continue;
       }
 
@@ -314,8 +312,7 @@ void GamepadManager::NewConnectionEvent(GamepadHandle aHandle,
 
       // Do not fire gamepadconnected and gamepaddisconnected events when
       // privacy.resistFingerprinting is true.
-      if (nsContentUtils::ShouldResistFingerprinting(
-              listeners[i]->GetExtantDoc())) {
+      if (listeners[i]->ShouldResistFingerprinting()) {
         continue;
       }
 
@@ -350,8 +347,7 @@ void GamepadManager::FireConnectionEvent(EventTarget* aTarget,
 void GamepadManager::SyncGamepadState(GamepadHandle aHandle,
                                       nsGlobalWindowInner* aWindow,
                                       Gamepad* aGamepad) {
-  if (mShuttingDown || !mEnabled ||
-      nsContentUtils::ShouldResistFingerprinting(aWindow->GetExtantDoc())) {
+  if (mShuttingDown || !mEnabled || aWindow->ShouldResistFingerprinting()) {
     return;
   }
 

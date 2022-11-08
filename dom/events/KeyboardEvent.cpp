@@ -360,23 +360,22 @@ void KeyboardEvent::InitKeyboardEventJS(
 
 bool KeyboardEvent::ShouldResistFingerprinting(CallerType aCallerType) {
   // There are five situations we don't need to spoof this keyboard event.
-  //   1. This event is initialized by scripts.
-  //   2. This event is from Numpad.
-  //   3. This event is in the system group.
-  //   4. The caller type is system.
-  //   5. The pref privcy.resistFingerprinting' is false, we fast return here
+  //   1. The pref privcy.resistFingerprinting' is false, we fast return here
   //      since we don't need to do any QI of following codes.
-  if (mInitializedByJS || aCallerType == CallerType::System ||
-      mEvent->mFlags.mInSystemGroup ||
-      !nsContentUtils::ShouldResistFingerprinting() ||
+  //   2. This event is initialized by scripts.
+  //   3. This event is from Numpad.
+  //   4. This event is in the system group.
+  //   5. The caller type is system.
+  if (!nsContentUtils::ShouldResistFingerprinting() || mInitializedByJS ||
+      aCallerType == CallerType::System || mEvent->mFlags.mInSystemGroup ||
       mEvent->AsKeyboardEvent()->mLocation ==
           KeyboardEvent_Binding::DOM_KEY_LOCATION_NUMPAD) {
     return false;
   }
 
   nsCOMPtr<Document> doc = GetDocument();
-
-  return nsContentUtils::ShouldResistFingerprinting(doc);
+  // We've checked the pref above, so use true as fallback if doc is null.
+  return doc ? doc->ShouldResistFingerprinting() : true;
 }
 
 bool KeyboardEvent::GetSpoofedModifierStates(const Modifiers aModifierKey,
