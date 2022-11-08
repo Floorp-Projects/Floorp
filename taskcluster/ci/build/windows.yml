@@ -1042,6 +1042,56 @@ win64-ccov/opt:
             - nsis
             - sysroot-wasm32-wasi
 
+win64-fuzzing-ccov/opt:
+    description: "Win64 Fuzzing Opt w/ Coverage"
+    index:
+        product: firefox
+        job-name: win64-ccov-fuzzing-opt
+    treeherder:
+        platform: windows2012-64/ccov
+        symbol: Bocf
+    worker-type: b-win2012
+    worker:
+        artifacts:
+            - name: public/code-coverage-grcov.zip
+              path: workspace\obj-build\code-coverage-grcov.zip
+              type: file
+        max-run-time: 9000
+        env:
+            RUSTC_BOOTSTRAP: '1'
+            PERFHERDER_EXTRA_OPTIONS: "fuzzing-ccov"
+    run:
+        using: mozharness
+        actions: [get-secrets, build]
+        options: [append-env-variables-from-configs]
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/ccov_opt.py
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        mozconfig-variant: fuzzing-ccov
+        tooltool-downloads: public
+    run-on-projects: ['mozilla-central']
+    use-sccache: false
+    fetches:
+        toolchain:
+            - win64-clang
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-grcov
+            - win64-sccache
+            - win64-nasm
+            - win64-node
+            - win64-winchecksec
+            - win64-mozmake
+            - win64-dump_syms
+            - win64-vs2017
+            - nsis
+            - sysroot-wasm32-wasi
+
 win64-asan/debug:
     description: "Win64 Debug ASAN"
     index:
