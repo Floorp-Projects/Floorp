@@ -215,3 +215,15 @@ firefoxview-spotlight-promo-title = Say hello to { -firefoxview-brand-name }
 firefoxview-spotlight-promo-subtitle = Want that open tab on your phone? Grab it. Need that site you just visited? Poof, it’s back with { -firefoxview-brand-name }.
 firefoxview-spotlight-promo-primarybutton = See how it works
 firefoxview-spotlight-promo-secondarybutton = Skip
+
+## Colorways expiry reminder CFR
+
+colorways-cfr-primarybutton = Choose colorway
+  .accesskey = C
+
+# "shades" refers to the different color options available to users in colorways.
+colorways-cfr-body = Color your browser with { -brand-short-name } exclusive shades inspired by voices that changed culture.
+colorways-cfr-header-28days = Independent Voices colorways expire January 16
+colorways-cfr-header-14days = Independent Voices colorways expire in two weeks
+colorways-cfr-header-7days =  Independent Voices colorways expire this week
+colorways-cfr-header-today = Independent Voices colorways expire today
