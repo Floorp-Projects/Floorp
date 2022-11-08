@@ -3846,6 +3846,15 @@
   value: false
   mirror: always
 
+# Whether the WritableFileStream is enabled on the main thread.
+# WritableFileStream currently does all IO on the current thread which is okish
+# for workers but not for the main thread. The situation will change after bug
+# 1798513.
+- name: dom.fs.main_thread_writable_file_stream
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # LocalStorage data limit as determined by summing up the lengths of all string
 # keys and values. This is consistent with the legacy implementation and other
 # browser engines. This value should really only ever change in unit testing
