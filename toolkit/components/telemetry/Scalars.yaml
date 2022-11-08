@@ -2843,7 +2843,7 @@ devtools.tooltip:
     bug_numbers:
       - 1553471
     description: >
-      Number of times a tooltip was shown, keyed by tooltip type. Currently supported types are "image", "font-family", "inactive-css", "css-compatibility" and "variable."
+      Number of times a tooltip was shown, keyed by tooltip type. Currently supported types are "image", "font-family", "inactive-css", "css-compatibility", "css-query-container" and "variable."
     expires: never
     kind: uint
     keyed: true

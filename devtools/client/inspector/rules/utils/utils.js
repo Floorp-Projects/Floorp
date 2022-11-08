@@ -5,6 +5,7 @@
 "use strict";
 
 const {
+  VIEW_NODE_CSS_QUERY_CONTAINER,
   VIEW_NODE_FONT_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE,
   VIEW_NODE_INACTIVE_CSS,
@@ -134,6 +135,18 @@ function getNodeInfo(node, elementStyle) {
   } else if (declaration && classList.contains("ruleview-unused-warning")) {
     type = VIEW_NODE_INACTIVE_CSS;
     value = declaration.isUsed();
+  } else if (
+    node.closest(".container-query-declaration") &&
+    // @backward-compat { version 108 } The hasGetQueryContainerForNode trait, and the
+    // check on the line below should be removed once 108 hits release
+    rule.domRule.traits.hasGetQueryContainerForNode
+  ) {
+    type = VIEW_NODE_CSS_QUERY_CONTAINER;
+    const li = node.closest("li.container-query");
+    value = {
+      ancestorIndex: li.getAttribute("data-ancestor-index"),
+      rule,
+    };
   } else if (declaration && classList.contains("ruleview-shapeswatch")) {
     type = VIEW_NODE_SHAPE_SWATCH;
     value = {

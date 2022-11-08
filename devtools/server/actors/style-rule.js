@@ -1123,24 +1123,45 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     });
   },
 
-  getQueryContainerForNode(ancestorRuleIndex, nodeFront) {
+  /**
+   * Get the eligible query container for a given @container rule and a given node
+   *
+   * @param {Number} ancestorRuleIndex: The index of the @container rule in this.ancestorRules
+   * @param {NodeActor} nodeActor: The nodeActor for which we want to retrieve the query container
+   * @returns {Object} An object with the following properties:
+   *          - node: {NodeActor|null} The nodeActor representing the query container,
+   *            null if none were found
+   *          - containerType: {string} The computed `containerType` value of the query container
+   *          - inlineSize: {string} The computed `inlineSize` value of the query container (e.g. `120px`)
+   *          - blockSize: {string} The computed `blockSize` value of the query container (e.g. `812px`)
+   */
+  getQueryContainerForNode(ancestorRuleIndex, nodeActor) {
     const ancestorRule = this.ancestorRules[ancestorRuleIndex];
     if (!ancestorRule) {
       console.error(
         `Couldn't not find an ancestor rule at index ${ancestorRuleIndex}`
       );
-      return null;
+      return { node: null };
     }
 
     const containerEl = ancestorRule.rawRule.queryContainerFor(
-      nodeFront.rawNode
+      nodeActor.rawNode
     );
 
+    // queryContainerFor returns null when the container name wasn't find in any ancestor.
+    // In practice this shouldn't happen, as if the rule is applied, it means that an
+    // elligible container was found.
     if (!containerEl) {
-      return null;
+      return { node: null };
     }
 
-    return this.pageStyle.walker.getNode(containerEl);
+    const computedStyle = CssLogic.getComputedStyle(containerEl);
+    return {
+      node: this.pageStyle.walker.getNode(containerEl),
+      containerType: computedStyle.containerType,
+      inlineSize: computedStyle.inlineSize,
+      blockSize: computedStyle.blockSize,
+    };
   },
 
   /**

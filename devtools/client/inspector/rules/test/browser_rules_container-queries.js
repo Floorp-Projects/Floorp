@@ -8,7 +8,7 @@ const TEST_URI = `
   <!DOCTYPE html>
   <style type="text/css">
     body {
-      container: mycontainer / inline-size;
+      container: mycontainer / size;
     }
 
     section {
@@ -41,12 +41,14 @@ const TEST_URI = `
       }
     }
   </style>
-  <h1>Hello @container!</h1>
-  <section>
-    <div>
-      <h2>You rock</h2>
-    </div>
-  </section>
+  <body id=myBody class="a-container test">
+    <h1>Hello @container!</h1>
+    <section>
+      <div>
+        <h2>You rock</h2>
+      </div>
+    </section>
+  </body>
 `;
 
 add_task(async function() {
@@ -71,6 +73,33 @@ add_task(async function() {
     },
   ]);
 
+  info("Check that the query container tooltip works as expected");
+  // Retrieve query containers sizes
+  const {
+    bodyInlineSize,
+    bodyBlockSize,
+    sectionInlineSize,
+  } = await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    const body = content.document.body;
+    const section = content.document.querySelector("section");
+    return {
+      bodyInlineSize: content.getComputedStyle(body).inlineSize,
+      bodyBlockSize: content.getComputedStyle(body).blockSize,
+      sectionInlineSize: content.getComputedStyle(section).inlineSize,
+    };
+  });
+
+  await assertQueryContainerTooltip({
+    view,
+    ruleIndex: 1,
+    expectedHeaderText: "<body#myBody.a-container.test>",
+    expectedBodyText: [
+      "container-type: size",
+      `inline-size: ${bodyInlineSize}`,
+      `block-size: ${bodyBlockSize}`,
+    ],
+  });
+
   info("Check that the 'jump to container' button works as expected");
   await assertJumpToContainerButton(inspector, view, 1, "body");
 
@@ -88,6 +117,29 @@ add_task(async function() {
       ancestorRulesData: ["@container mycontainer (1px < width < 10000px)"],
     },
   ]);
+
+  info(
+    "Check that the query container tooltip works as expected for inherited rules as well"
+  );
+  await assertQueryContainerTooltip({
+    view,
+    ruleIndex: 1,
+    expectedHeaderText: "<section>",
+    expectedBodyText: [
+      "container-type: inline-size",
+      `inline-size: ${sectionInlineSize}`,
+    ],
+  });
+  await assertQueryContainerTooltip({
+    view,
+    ruleIndex: 2,
+    expectedHeaderText: "<body#myBody.a-container.test>",
+    expectedBodyText: [
+      "container-type: size",
+      `inline-size: ${bodyInlineSize}`,
+      `block-size: ${bodyBlockSize}`,
+    ],
+  });
 
   info(
     "Check that the 'jump to container' button works as expected for inherited rules"
@@ -194,4 +246,52 @@ async function assertJumpToContainerButton(
 
   await onNodeUnhighlight;
   ok("Highlighter was hidden when clicking on icon");
+}
+
+async function assertQueryContainerTooltip({
+  view,
+  ruleIndex,
+  expectedHeaderText,
+  expectedBodyText,
+}) {
+  const tooltipTriggerEl = getRuleViewAncestorRulesDataElementByIndex(
+    view,
+    ruleIndex
+  ).querySelector(".container-query-declaration");
+
+  // Ensure that the element can be targetted from EventUtils.
+  tooltipTriggerEl.scrollIntoView();
+
+  const tooltip = view.tooltips.getTooltip("interactiveTooltip");
+
+  const onTooltipReady = tooltip.once("shown");
+  EventUtils.synthesizeMouseAtCenter(
+    tooltipTriggerEl,
+    { type: "mousemove" },
+    tooltipTriggerEl.ownerDocument.defaultView
+  );
+  await onTooltipReady;
+
+  is(
+    tooltip.panel.querySelector("header").textContent,
+    expectedHeaderText,
+    "Tooltip has expected header content"
+  );
+
+  const lis = Array.from(tooltip.panel.querySelectorAll("li")).map(
+    li => li.textContent
+  );
+  Assert.deepEqual(lis, expectedBodyText, "Tooltip has expected body items");
+
+  info("Hide the tooltip");
+  const onHidden = tooltip.once("hidden");
+  // Move the mouse elsewhere to hide the tooltip
+  EventUtils.synthesizeMouse(
+    tooltipTriggerEl.ownerDocument.body,
+    1,
+    1,
+    { type: "mousemove" },
+    tooltipTriggerEl.ownerDocument.defaultView
+  );
+  await onHidden;
 }

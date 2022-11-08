@@ -704,12 +704,18 @@ ul.ruleview-rule-ancestor-data {
 }
 
 .ruleview-rule-ancestor-data li {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   /* When there's a search and this element is highlighted, this prevents the background
      color to be applied to the whole width of the parent ul block */
   max-width: max-content;
+}
+
+.ruleview-rule-ancestor-data li.has-tooltip:hover .container-query-declaration {
+  text-decoration: underline;
+  text-decoration-color: var(--theme-highlight-blue);
+  text-decoration-style: dotted;
+  text-decoration-skip-ink: none;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
 }
 
 .ruleview-rule-ancestor-data li button.open-inspector {
