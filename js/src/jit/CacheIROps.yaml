@@ -2775,6 +2775,13 @@
     set: ObjId
     obj: ObjId
 
+- name: SetSizeResult
+  shared: true
+  transpile: false
+  cost_estimate: 1
+  args:
+    set: ObjId
+
 - name: MapHasResult
   shared: true
   transpile: true
@@ -2870,6 +2877,13 @@
   args:
     map: ObjId
     obj: ObjId
+
+- name: MapSizeResult
+  shared: true
+  transpile: false
+  cost_estimate: 1
+  args:
+    map: ObjId
 
 - name: ArrayFromArgumentsObjectResult
   shared: true

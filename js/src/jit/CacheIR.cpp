@@ -401,6 +401,8 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
       TRY_ATTACH(tryAttachDataView(obj, objId, id));
       TRY_ATTACH(tryAttachArrayBufferMaybeShared(obj, objId, id));
       TRY_ATTACH(tryAttachRegExp(obj, objId, id));
+      TRY_ATTACH(tryAttachMap(obj, objId, id));
+      TRY_ATTACH(tryAttachSet(obj, objId, id));
       TRY_ATTACH(tryAttachNative(obj, objId, id, receiverId));
       TRY_ATTACH(tryAttachModuleNamespace(obj, objId, id));
       TRY_ATTACH(tryAttachWindowProxy(obj, objId, id));
@@ -2034,6 +2036,100 @@ AttachDecision GetPropIRGenerator::tryAttachRegExp(HandleObject obj,
   writer.returnFromIC();
 
   trackAttached("RegExpFlag");
+  return AttachDecision::Attach;
+}
+
+AttachDecision GetPropIRGenerator::tryAttachMap(HandleObject obj,
+                                                ObjOperandId objId,
+                                                HandleId id) {
+  if (!obj->is<MapObject>()) {
+    return AttachDecision::NoAction;
+  }
+  auto* mapObj = &obj->as<MapObject>();
+
+  if (mode_ != ICState::Mode::Specialized) {
+    return AttachDecision::NoAction;
+  }
+
+  // Receiver should be the object.
+  if (isSuper()) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!id.isAtom(cx_->names().size)) {
+    return AttachDecision::NoAction;
+  }
+
+  NativeObject* holder = nullptr;
+  Maybe<PropertyInfo> prop;
+  NativeGetPropKind kind =
+      CanAttachNativeGetProp(cx_, obj, id, &holder, &prop, pc_);
+  if (kind != NativeGetPropKind::NativeGetter) {
+    return AttachDecision::NoAction;
+  }
+
+  auto& fun = holder->getGetter(*prop)->as<JSFunction>();
+  if (!MapObject::isOriginalSizeGetter(fun.native())) {
+    return AttachDecision::NoAction;
+  }
+
+  maybeEmitIdGuard(id);
+
+  // Emit all the normal guards for calling this native, but specialize
+  // callNativeGetterResult.
+  EmitCallGetterResultGuards(writer, mapObj, holder, id, *prop, objId, mode_);
+
+  writer.mapSizeResult(objId);
+  writer.returnFromIC();
+
+  trackAttached("MapSize");
+  return AttachDecision::Attach;
+}
+
+AttachDecision GetPropIRGenerator::tryAttachSet(HandleObject obj,
+                                                ObjOperandId objId,
+                                                HandleId id) {
+  if (!obj->is<SetObject>()) {
+    return AttachDecision::NoAction;
+  }
+  auto* setObj = &obj->as<SetObject>();
+
+  if (mode_ != ICState::Mode::Specialized) {
+    return AttachDecision::NoAction;
+  }
+
+  // Receiver should be the object.
+  if (isSuper()) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!id.isAtom(cx_->names().size)) {
+    return AttachDecision::NoAction;
+  }
+
+  NativeObject* holder = nullptr;
+  Maybe<PropertyInfo> prop;
+  NativeGetPropKind kind =
+      CanAttachNativeGetProp(cx_, obj, id, &holder, &prop, pc_);
+  if (kind != NativeGetPropKind::NativeGetter) {
+    return AttachDecision::NoAction;
+  }
+
+  auto& fun = holder->getGetter(*prop)->as<JSFunction>();
+  if (!SetObject::isOriginalSizeGetter(fun.native())) {
+    return AttachDecision::NoAction;
+  }
+
+  maybeEmitIdGuard(id);
+
+  // Emit all the normal guards for calling this native, but specialize
+  // callNativeGetterResult.
+  EmitCallGetterResultGuards(writer, setObj, holder, id, *prop, objId, mode_);
+
+  writer.setSizeResult(objId);
+  writer.returnFromIC();
+
+  trackAttached("SetSize");
   return AttachDecision::Attach;
 }
 

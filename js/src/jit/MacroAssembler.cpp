@@ -5585,6 +5585,28 @@ void MacroAssembler::mapObjectGet(Register mapObj, ValueOperand value,
   bind(&done);
 }
 
+template <typename OrderedHashTable>
+void MacroAssembler::loadOrderedHashTableCount(Register setOrMapObj,
+                                               Register result) {
+  // Inline implementation of |OrderedHashTable::count()|.
+
+  // Load the |ValueSet| or |ValueMap|.
+  static_assert(SetObject::getDataSlotOffset() ==
+                MapObject::getDataSlotOffset());
+  loadPrivate(Address(setOrMapObj, SetObject::getDataSlotOffset()), result);
+
+  // Load the live count.
+  load32(Address(result, OrderedHashTable::offsetOfImplLiveCount()), result);
+}
+
+void MacroAssembler::loadSetObjectSize(Register setObj, Register result) {
+  loadOrderedHashTableCount<ValueSet>(setObj, result);
+}
+
+void MacroAssembler::loadMapObjectSize(Register mapObj, Register result) {
+  loadOrderedHashTableCount<ValueMap>(mapObj, result);
+}
+
 // Can't push large frames blindly on windows, so we must touch frame memory
 // incrementally, with no more than 4096 - 1 bytes between touches.
 //

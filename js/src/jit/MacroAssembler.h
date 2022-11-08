@@ -4890,6 +4890,14 @@ class MacroAssembler : public MacroAssemblerSpecific {
                         temp5, IsBigInt::Maybe);
   }
 
+ private:
+  template <typename OrderedHashTable>
+  void loadOrderedHashTableCount(Register setOrMapObj, Register result);
+
+ public:
+  void loadSetObjectSize(Register setObj, Register result);
+  void loadMapObjectSize(Register mapObj, Register result);
+
   // Inline version of js_TypedArray_uint8_clamp_double.
   // This function clobbers the input register.
   void clampDoubleToUint8(FloatRegister input, Register output) PER_ARCH;
