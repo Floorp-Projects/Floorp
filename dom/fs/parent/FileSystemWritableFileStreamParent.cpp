@@ -15,11 +15,27 @@ FileSystemWritableFileStreamParent::FileSystemWritableFileStreamParent(
     RefPtr<FileSystemManagerParent> aManager, const fs::EntryId& aEntryId)
     : mManager(std::move(aManager)), mEntryId(aEntryId) {}
 
-FileSystemWritableFileStreamParent::~FileSystemWritableFileStreamParent() =
-    default;
+FileSystemWritableFileStreamParent::~FileSystemWritableFileStreamParent() {
+  MOZ_ASSERT(mClosed);
+}
+
+mozilla::ipc::IPCResult FileSystemWritableFileStreamParent::RecvClose() {
+  Close();
+
+  return IPC_OK();
+}
 
 void FileSystemWritableFileStreamParent::ActorDestroy(ActorDestroyReason aWhy) {
+  if (!IsClosed()) {
+    Close();
+  }
+}
+
+void FileSystemWritableFileStreamParent::Close() {
   LOG(("Closing WritableFileStream"));
+
+  mClosed.Flip();
+
   mManager->DataManagerStrongRef()->UnlockShared(mEntryId);
 }
 

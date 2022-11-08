@@ -12,6 +12,8 @@ async protocol PFileSystemWritableFileStream
   manager PFileSystemManager;
 
  parent:
+  async Close();
+
   async __delete__();
 };
 

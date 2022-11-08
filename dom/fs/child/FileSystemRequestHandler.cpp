@@ -118,11 +118,15 @@ RefPtr<FileSystemWritableFileStream> MakeResolution(
     const RefPtr<FileSystemWritableFileStream>& /* aReturns */,
     const FileSystemEntryMetadata& aMetadata,
     RefPtr<FileSystemManager>& aManager) {
+  const auto& properties =
+      aResponse.get_FileSystemWritableFileStreamProperties();
+
   auto* const actor = static_cast<FileSystemWritableFileStreamChild*>(
-      aResponse.get_PFileSystemWritableFileStreamChild());
+      properties.writableFileStreamChild());
 
   RefPtr<FileSystemWritableFileStream> result =
-      FileSystemWritableFileStream::Create(aGlobal, aManager, actor, aMetadata);
+      FileSystemWritableFileStream::Create(
+          aGlobal, aManager, actor, properties.fileDescriptor(), aMetadata);
   return result;
 }
 
