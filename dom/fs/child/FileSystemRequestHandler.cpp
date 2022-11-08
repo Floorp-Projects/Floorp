@@ -449,7 +449,7 @@ void FileSystemRequestHandler::GetAccessHandle(
   }
 
   aManager->BeginRequest(
-      [request = FileSystemGetFileRequest(aFile.entryId()),
+      [request = FileSystemGetAccessHandleRequest(aFile.entryId()),
        onResolve = SelectResolveCallback<FileSystemGetAccessHandleResponse,
                                          RefPtr<FileSystemSyncAccessHandle>>(
            aPromise, aFile, aManager),
