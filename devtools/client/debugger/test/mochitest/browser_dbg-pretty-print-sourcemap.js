@@ -85,6 +85,14 @@ add_task(async () => {
   const source1 = findSource(dbg, "js1.min.js");
   await selectSource(dbg, source1);
 
+  // The source may be reported as pretty printable while we are fetching the sourcemap,
+  // but once the sourcemap is reported to be failing, we no longer report to be pretty printable.
+  await waitFor(
+    () =>
+      dbg.selectors.getSourceActorsForSource(source1.id)[0].sourceMapURL === "",
+    "Wait for the selector source to clear its sourceMapURL"
+  );
+
   assertPrettyPrintButton(dbg, L10N.getStr("sourceTabs.prettyPrint"), false);
 
   info(
@@ -108,7 +116,11 @@ add_task(async () => {
 });
 
 add_task(async () => {
-  const dbg = await initDebugger("doc-sourcemaps2.html", "main.min.js");
+  const dbg = await initDebugger(
+    "doc-sourcemaps2.html",
+    "main.min.js",
+    "main.js"
+  );
 
   info(
     " - Test source with sourceMappingURL, sourcemap and original files exist"

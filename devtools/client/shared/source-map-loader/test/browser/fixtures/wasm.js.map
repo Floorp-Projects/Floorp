@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "file": "wasm.js",
+  "names": [],
+  "sources": ["one.js"],
+  "mappings": "CAAC,IAAM"
+}
