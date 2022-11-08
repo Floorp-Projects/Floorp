@@ -15,11 +15,9 @@
  * the content side, just the overhead of spawning a new content process.
  */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "TalosParentProfiler",
-  "resource://talos-powers/TalosParentProfiler.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  TalosParentProfiler: "resource://talos-powers/TalosParentProfiler.sys.mjs",
+});
 
 const PREALLOCATED_PREF = "dom.ipc.processPrelaunch.enabled";
 const MESSAGES = ["CPStartup:Go", "CPStartup:BrowserChildReady"];

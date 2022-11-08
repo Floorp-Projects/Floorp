@@ -5,12 +5,12 @@
 /* globals ExtensionAPI, Services, XPCOMUtils */
 
 ChromeUtils.defineESModuleGetters(this, {
+  TalosParentProfiler: "resource://talos-powers/TalosParentProfiler.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  TalosParentProfiler: "resource://talos-powers/TalosParentProfiler.jsm",
 });
 
 const SCALAR_KEY = "timestamps.about_home_topsites_first_paint";

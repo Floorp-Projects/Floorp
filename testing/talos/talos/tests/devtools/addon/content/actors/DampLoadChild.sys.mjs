@@ -4,11 +4,7 @@
 
 /* eslint-disable no-restricted-globals */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["DampLoadChild"];
-
-class DampLoadChild extends JSWindowActorChild {
+export class DampLoadChild extends JSWindowActorChild {
   handleEvent(evt) {
     this.sendAsyncMessage("DampLoadChild:PageShow", {
       browsingContext: this.browsingContext,
