@@ -36,11 +36,11 @@ class TestInterfaceAsyncIterableSingleWithArgs final
                              const TestInterfaceAsyncIteratorOptions& aOptions,
                              ErrorResult& aError);
 
-  already_AddRefed<Promise> GetNextIterationResult(Iterator* aIterator,
-                                                   ErrorResult& aRv);
+  already_AddRefed<Promise> GetNextIterationResult(
+      Iterator* aIterator, ErrorResult& aRv) MOZ_CAN_RUN_SCRIPT;
   already_AddRefed<Promise> IteratorReturn(JSContext* aCx, Iterator* aIterator,
                                            JS::Handle<JS::Value> aValue,
-                                           ErrorResult& aRv);
+                                           ErrorResult& aRv) MOZ_CAN_RUN_SCRIPT;
 
   uint32_t ReturnCallCount() { return mReturnCallCount; }
   void GetReturnLastCalledWith(JSContext* aCx,

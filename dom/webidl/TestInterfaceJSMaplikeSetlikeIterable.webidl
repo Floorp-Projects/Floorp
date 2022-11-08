@@ -109,10 +109,14 @@ interface TestInterfaceAsyncIterableSingle {
   async iterable<long>;
 };
 
+callback TestThrowingCallback = undefined();
+
 dictionary TestInterfaceAsyncIteratorOptions {
   unsigned long multiplier = 1;
   sequence<Promise<any>> blockingPromises = [];
   unsigned long failNextAfter = 4294967295;
+  boolean throwFromNext = false;
+  TestThrowingCallback throwFromReturn;
 };
 
 [Pref="dom.expose_test_interfaces",
