@@ -251,7 +251,9 @@ class PerfParser(CompareParser):
                 "default": [],
                 "dest": "requested_variants",
                 "choices": list(variants.keys()),
-                "help": "Show android test categories.",
+                "help": "Select variants to display in the selector from: "
+                + ", ".join(list(variants.keys())),
+                "metavar": "",
             },
         ],
         [
@@ -263,7 +265,9 @@ class PerfParser(CompareParser):
                 "dest": "requested_platforms",
                 "choices": list(platforms.keys()),
                 "help": "Select specific platforms to target. Android only "
-                "available with --android.",
+                "available with --android. Available platforms: "
+                + ", ".join(list(platforms.keys())),
+                "metavar": "",
             },
         ],
         [
@@ -274,7 +278,9 @@ class PerfParser(CompareParser):
                 "default": [],
                 "dest": "requested_apps",
                 "choices": list(apps.keys()),
-                "help": "Select specific applications to target.",
+                "help": "Select specific applications to target from: "
+                + ", ".join(list(apps.keys())),
+                "metavar": "",
             },
         ],
     ]
@@ -644,6 +650,10 @@ class PerfParser(CompareParser):
         else:
             selected_tasks = PerfParser.get_tasks(base_cmd, queries, None, all_tasks)
 
+        if len(selected_tasks) == 0:
+            print("No tasks selected")
+            return None
+
         return PerfParser.perf_push_to_try(
             selected_tasks, selected_categories, queries, try_config, dry_run
         )
@@ -675,6 +685,9 @@ def run(
         requested_apps=requested_apps,
         **kwargs
     )
+
+    if revisions is None:
+        return
 
     # Provide link to perfherder for comparisons now
     perfcompare_url = PERFHERDER_BASE_URL % revisions
