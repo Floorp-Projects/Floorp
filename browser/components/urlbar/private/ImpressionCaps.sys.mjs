@@ -179,7 +179,10 @@ export class ImpressionCaps extends BaseFeature {
 
     // Validate stats against any changes to the impression caps in the config.
     this._onConfigSet = () => this.#validateStats();
-    lazy.QuickSuggest.remoteSettings.on("config-set", this._onConfigSet);
+    lazy.QuickSuggest.remoteSettings.emitter.on(
+      "config-set",
+      this._onConfigSet
+    );
 
     // Periodically record impression counters reset telemetry.
     this.#setCountersResetInterval();
@@ -193,7 +196,10 @@ export class ImpressionCaps extends BaseFeature {
   }
 
   #uninit() {
-    lazy.QuickSuggest.remoteSettings.off("config-set", this._onConfigSet);
+    lazy.QuickSuggest.remoteSettings.emitter.off(
+      "config-set",
+      this._onConfigSet
+    );
     this._onConfigSet = null;
 
     lazy.clearInterval(this._impressionCountersResetInterval);

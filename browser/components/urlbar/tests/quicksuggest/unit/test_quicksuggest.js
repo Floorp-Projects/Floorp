@@ -735,7 +735,7 @@ add_task(async function setupAndTeardown() {
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
   await QuickSuggest.remoteSettings.readyPromise;
   Assert.ok(
-    !QuickSuggest.remoteSettings._rs,
+    !QuickSuggest.remoteSettings._test_rs,
     "Settings client is null after disabling suggest prefs"
   );
 
@@ -745,56 +745,56 @@ add_task(async function setupAndTeardown() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   await QuickSuggest.remoteSettings.readyPromise;
   Assert.ok(
-    QuickSuggest.remoteSettings._rs,
+    QuickSuggest.remoteSettings._test_rs,
     "Settings client is non-null after enabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
   await QuickSuggest.remoteSettings.readyPromise;
   Assert.ok(
-    !QuickSuggest.remoteSettings._rs,
+    !QuickSuggest.remoteSettings._test_rs,
     "Settings client is null after disabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   await QuickSuggest.remoteSettings.readyPromise;
   Assert.ok(
-    QuickSuggest.remoteSettings._rs,
+    QuickSuggest.remoteSettings._test_rs,
     "Settings client is non-null after enabling suggest.quicksuggest.sponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   await QuickSuggest.remoteSettings.readyPromise;
   Assert.ok(
-    QuickSuggest.remoteSettings._rs,
+    QuickSuggest.remoteSettings._test_rs,
     "Settings client remains non-null after enabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
   await QuickSuggest.remoteSettings.readyPromise;
   Assert.ok(
-    QuickSuggest.remoteSettings._rs,
+    QuickSuggest.remoteSettings._test_rs,
     "Settings client remains non-null after disabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
   await QuickSuggest.remoteSettings.readyPromise;
   Assert.ok(
-    !QuickSuggest.remoteSettings._rs,
+    !QuickSuggest.remoteSettings._test_rs,
     "Settings client is null after disabling suggest.quicksuggest.sponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   await QuickSuggest.remoteSettings.readyPromise;
   Assert.ok(
-    QuickSuggest.remoteSettings._rs,
+    QuickSuggest.remoteSettings._test_rs,
     "Settings client is non-null after enabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("quicksuggest.enabled", false);
   await QuickSuggest.remoteSettings.readyPromise;
   Assert.ok(
-    !QuickSuggest.remoteSettings._rs,
+    !QuickSuggest.remoteSettings._test_rs,
     "Settings client is null after disabling quicksuggest.enabled"
   );
 
@@ -804,7 +804,7 @@ add_task(async function setupAndTeardown() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
   await QuickSuggest.remoteSettings.readyPromise;
   Assert.ok(
-    !QuickSuggest.remoteSettings._rs,
+    !QuickSuggest.remoteSettings._test_rs,
     "Settings client remains null at end of task"
   );
 });
@@ -1223,14 +1223,14 @@ add_task(async function remoteSettingsDataType() {
   // below, so remove the stub by calling the cleanup function it returned.
   await cleanUpQuickSuggest();
 
-  // We need to spy on `QuickSuggest.remoteSettings._rs.get()`, but `_rs` is
+  // We need to spy on `QuickSuggest.remoteSettings.#rs.get()`, but `#rs` is
   // created lazily. Set `suggest.quicksuggest.sponsored` to trigger its
   // creation.
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   await QuickSuggest.remoteSettings.readyPromise;
 
   let sandbox = sinon.createSandbox();
-  let spy = sandbox.spy(QuickSuggest.remoteSettings._rs, "get");
+  let spy = sandbox.spy(QuickSuggest.remoteSettings._test_rs, "get");
 
   for (let dataType of [undefined, "test-data-type"]) {
     // Set up a mock Nimbus rollout with the data type.
@@ -1240,13 +1240,15 @@ add_task(async function remoteSettingsDataType() {
     }
     let cleanUpNimbus = await QuickSuggestTestUtils.initNimbusFeature(value);
 
-    // This call will trigger `QuickSuggest.remoteSettings._rs.get()`.
-    await QuickSuggest.remoteSettings._queueSettingsSync();
+    // Re-enable remote settings to trigger `remoteSettings.#rs.get()`.
+    await QuickSuggest.remoteSettings.enable(false);
+    await QuickSuggest.remoteSettings.enable(true);
+    await QuickSuggest.remoteSettings.readyPromise;
 
     let expectedDataType = dataType || "data";
     Assert.ok(
       spy.calledWith({ filters: { type: expectedDataType } }),
-      "_rs.get() called with expected data type: " + expectedDataType
+      "#rs.get() called with expected data type: " + expectedDataType
     );
 
     spy.resetHistory();

@@ -7,8 +7,6 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  QuickSuggestRemoteSettingsClient:
-    "resource:///modules/QuickSuggestRemoteSettingsClient.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
@@ -24,6 +22,8 @@ const FEATURES = {
   BlockedSuggestions:
     "resource:///modules/urlbar/private/BlockedSuggestions.sys.mjs",
   ImpressionCaps: "resource:///modules/urlbar/private/ImpressionCaps.sys.mjs",
+  RemoteSettingsClient:
+    "resource:///modules/urlbar/private/RemoteSettingsClient.sys.mjs",
 };
 
 const TIMESTAMP_TEMPLATE = "%YYYYMMDDHH%";
@@ -97,12 +97,12 @@ class _QuickSuggest {
   }
 
   /**
-   * @returns {QuickSuggestRemoteSettingsClient}
+   * @returns {RemoteSettingsClient}
    *   Quick suggest's remote settings client, which manages configuration and
    *   suggestions stored in remote settings.
    */
   get remoteSettings() {
-    return this._remoteSettings;
+    return this.#features.RemoteSettingsClient;
   }
 
   /**
@@ -133,21 +133,33 @@ class _QuickSuggest {
    * quick suggest. It's safe to call more than once.
    */
   init() {
-    if (this._remoteSettings) {
+    if (Object.keys(this.#features).length) {
+      // Already initialized.
       return;
     }
 
     // Create an instance of each feature and keep it in `#features`.
     for (let [name, uri] of Object.entries(FEATURES)) {
       let { [name]: ctor } = ChromeUtils.importESModule(uri);
-      this.#features[name] = new ctor();
-    }
+      let feature = new ctor();
+      this.#features[name] = feature;
 
-    this._remoteSettings = new lazy.QuickSuggestRemoteSettingsClient();
+      // Update the map from enabling preferences to features.
+      let prefs = feature.enablingPreferences;
+      if (prefs) {
+        for (let p of prefs) {
+          let features = this.#featuresByEnablingPrefs.get(p);
+          if (!features) {
+            features = new Set();
+            this.#featuresByEnablingPrefs.set(p, features);
+          }
+          features.add(feature);
+        }
+      }
+    }
 
     this._updateFeatureState();
     lazy.NimbusFeatures.urlbar.onUpdate(() => this._updateFeatureState());
-
     lazy.UrlbarPrefs.addObserver(this);
   }
 
@@ -158,6 +170,14 @@ class _QuickSuggest {
    *   The name of the pref relative to `browser.urlbar`.
    */
   onPrefChanged(pref) {
+    // If any feature's enabling preference changed, update it now.
+    let features = this.#featuresByEnablingPrefs.get(pref);
+    if (features) {
+      for (let f of features) {
+        f.update();
+      }
+    }
+
     switch (pref) {
       case "quicksuggest.dataCollection.enabled":
         if (!lazy.UrlbarPrefs.updatingFirefoxSuggestScenario) {
@@ -443,8 +463,8 @@ class _QuickSuggest {
   // Maps from quick suggest feature class names to feature instances.
   #features = {};
 
-  // The quick suggest remote settings client.
-  _remoteSettings = null;
+  // Maps from preference names to the `Set` of feature instances they enable.
+  #featuresByEnablingPrefs = new Map();
 }
 
 export const QuickSuggest = new _QuickSuggest();

@@ -15,7 +15,6 @@ EXTRA_JS_MODULES += [
     "MerinoClient.sys.mjs",
     "QuickActionsLoaderDefault.sys.mjs",
     "QuickSuggest.sys.mjs",
-    "QuickSuggestRemoteSettingsClient.sys.mjs",
     "UrlbarController.sys.mjs",
     "UrlbarEventBufferer.sys.mjs",
     "UrlbarInput.sys.mjs",
@@ -58,6 +57,7 @@ EXTRA_JS_MODULES["urlbar/private"] += [
     "private/BaseFeature.sys.mjs",
     "private/BlockedSuggestions.sys.mjs",
     "private/ImpressionCaps.sys.mjs",
+    "private/RemoteSettingsClient.sys.mjs",
 ]
 
 TESTING_JS_MODULES += [

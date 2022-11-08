@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Tests the chunking feature of
-// `QuickSuggestRemoteSettingsClient._addResults()`.
+// Tests the chunking feature of `RemoteSettingsClient.#addResults()`.
 
 "use strict";
 
@@ -100,26 +99,26 @@ async function doChunkingTest(resultCount, keywordCountPerResult) {
   }
 
   // Add the results.
-  QuickSuggest.remoteSettings._resultsByKeyword.clear();
-  await QuickSuggest.remoteSettings._addResults(results);
+  QuickSuggest.remoteSettings._test_resultsByKeyword.clear();
+  await QuickSuggest.remoteSettings._test_addResults(results);
 
   // Make sure all keyword-result pairs have been added.
   for (let i = 0; i < resultCount; i++) {
     for (let k = 0; k < keywordCountPerResult; k++) {
       let keyword = `keyword-${i}-${k}`;
 
-      // Check the `_resultsByKeyword` map. Logging all assertions takes a ton
-      // of time and makes the test run much longer than it otherwise would,
+      // Check the resultsByKeyword map. Logging all assertions takes a ton of
+      // time and makes the test run much longer than it otherwise would,
       // especially if `_addResultsChunkSize` is large, so only log failing
       // assertions.
-      let actualResult = QuickSuggest.remoteSettings._resultsByKeyword.get(
+      let actualResult = QuickSuggest.remoteSettings._test_resultsByKeyword.get(
         keyword
       );
       if (!ObjectUtils.deepEqual(actualResult, results[i])) {
         Assert.deepEqual(
           actualResult,
           results[i],
-          `Result ${i} is in _resultsByKeyword for keyword ${keyword}`
+          `Result ${i} is in _test_resultsByKeyword for keyword ${keyword}`
         );
       }
 
@@ -141,7 +140,7 @@ async function doChunkingTest(resultCount, keywordCountPerResult) {
           advertiser: "TestAdvertiser",
           iab_category: "22 - Shopping",
           is_sponsored: true,
-          score: QuickSuggestRemoteSettingsClient.DEFAULT_SUGGESTION_SCORE,
+          score: RemoteSettingsClient.DEFAULT_SUGGESTION_SCORE,
           source: "remote-settings",
           icon: null,
           position: undefined,
