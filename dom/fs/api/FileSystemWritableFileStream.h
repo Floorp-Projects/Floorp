@@ -52,6 +52,10 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   void ClearActor();
 
+  bool IsClosed() const { return !mActor || !mActor->MutableFileDescPtr(); }
+
+  already_AddRefed<Promise> Close(ErrorResult& aRv);
+
   // WebIDL Boilerplate
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -66,10 +70,6 @@ class FileSystemWritableFileStream final : public WritableStream {
   already_AddRefed<Promise> Seek(uint64_t aPosition, ErrorResult& aError);
 
   already_AddRefed<Promise> Truncate(uint64_t aSize, ErrorResult& aError);
-
-  already_AddRefed<Promise> Close(ErrorResult& aRv);
-
-  bool IsClosed() const { return !mActor || !mActor->MutableFileDescPtr(); }
 
  protected:
   RefPtr<FileSystemManager> mManager;
