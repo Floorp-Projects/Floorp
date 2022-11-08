@@ -13,9 +13,6 @@ commands_list = [
         r"wget -O - https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.win64-clang-14.pushdate.2022.11.03.20221103155535/artifacts/public%2Fbuild%2Fclang.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/win-crosstool"
     ],
     [
-        r"./mach --no-interactive bootstrap --application-choice browser"
-    ],
-    [
         r"sudo apt install -y msitools python3-pip",
         r"pip install six zstandard pyyaml",
         r"cp third_party/python/vsdownload/vsdownload.py vsdownload.py",
