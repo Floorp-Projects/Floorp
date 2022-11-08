@@ -9,8 +9,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 
-#include <tuple>
-
 #include "jsapi.h"
 #include "jsmath.h"
 
@@ -5516,8 +5514,8 @@ InlinableNativeIRGenerator::emitNativeCalleeGuardAndLoadArgsArray() {
     MOZ_ASSERT(generator_.writer.numOperandIds() > 0, "argcId is initialized");
 
     Int32OperandId argcId(0);
-    std::tie(calleeObjId, argObjId) =
-        generator_.emitFunApplyGuard(argcId, flags_.getArgFormat());
+    calleeObjId = generator_.emitFunApplyGuard(argcId);
+    argObjId = generator_.emitFunApplyArgsGuard(flags_.getArgFormat());
   } else {
     ValOperandId calleeValId =
         writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_, flags_);
@@ -5560,10 +5558,7 @@ ObjOperandId CallIRGenerator::emitFunCallGuard(Int32OperandId argcId) {
   return writer.guardToObject(thisValId);
 }
 
-std::pair<ObjOperandId, ObjOperandId> CallIRGenerator::emitFunApplyGuard(
-    Int32OperandId argcId, CallFlags::ArgFormat format) {
-  MOZ_ASSERT(argc_ == 2);
-
+ObjOperandId CallIRGenerator::emitFunApplyGuard(Int32OperandId argcId) {
   JSFunction* callee = &callee_.toObject().as<JSFunction>();
   MOZ_ASSERT(callee->native() == fun_apply);
 
@@ -5576,7 +5571,12 @@ std::pair<ObjOperandId, ObjOperandId> CallIRGenerator::emitFunApplyGuard(
   // Guard that |this| is an object.
   ValOperandId thisValId =
       writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId);
-  ObjOperandId thisObjId = writer.guardToObject(thisValId);
+  return writer.guardToObject(thisValId);
+}
+
+ObjOperandId CallIRGenerator::emitFunApplyArgsGuard(
+    CallFlags::ArgFormat format) {
+  MOZ_ASSERT(argc_ == 2);
 
   ValOperandId argValId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
@@ -5598,7 +5598,7 @@ std::pair<ObjOperandId, ObjOperandId> CallIRGenerator::emitFunApplyGuard(
     writer.guardArrayIsPacked(argObjId);
   }
 
-  return {thisObjId, argObjId};
+  return argObjId;
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachArrayPush() {
@@ -9451,7 +9451,7 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
     return AttachDecision::NoAction;
   }
 
-  if (argc_ != 2) {
+  if (argc_ > 2) {
     return AttachDecision::NoAction;
   }
 
@@ -9468,7 +9468,11 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   }
 
   CallFlags::ArgFormat format = CallFlags::Standard;
-  if (args_[1].isObject() && args_[1].toObject().is<ArgumentsObject>()) {
+  if (argc_ < 2) {
+    // |fun.apply()| and |fun.apply(thisValue)| are equivalent to |fun.call()|
+    // resp. |fun.call(thisValue)|.
+    format = CallFlags::FunCall;
+  } else if (args_[1].isObject() && args_[1].toObject().is<ArgumentsObject>()) {
     auto* argsObj = &args_[1].toObject().as<ArgumentsObject>();
     if (argsObj->hasOverriddenElement() || argsObj->anyArgIsForwarded() ||
         argsObj->hasOverriddenLength() ||
@@ -9508,12 +9512,23 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
     TRY_ATTACH(nativeGen.tryAttachStub());
   }
 
-  ObjOperandId thisObjId;
-  std::tie(thisObjId, std::ignore) = emitFunApplyGuard(argcId, format);
+  ObjOperandId thisObjId = emitFunApplyGuard(argcId);
 
-  // We always MaxUnrolledArgCopy here because the fixed argc is meaningless
-  // in a FunApply case.
-  uint32_t fixedArgc = MaxUnrolledArgCopy;
+  uint32_t fixedArgc;
+  if (format == CallFlags::FunApplyArray ||
+      format == CallFlags::FunApplyArgsObj) {
+    emitFunApplyArgsGuard(format);
+
+    // We always use MaxUnrolledArgCopy here because the fixed argc is
+    // meaningless in a FunApply case.
+    fixedArgc = MaxUnrolledArgCopy;
+  } else {
+    MOZ_ASSERT(format == CallFlags::FunCall);
+
+    // Whereas for the FunCall case we need to use the actual fixed argc value.
+    fixedArgc = ClampFixedArgc(argc_);
+  }
+
   if (mode_ == ICState::Mode::Specialized) {
     // Ensure that |this| is the expected target function.
     emitCalleeGuard(thisObjId, target);

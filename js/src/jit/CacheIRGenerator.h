@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 
 #include <stdint.h>
-#include <utility>
 
 #include "jstypes.h"
 #include "NamespaceImports.h"
@@ -491,8 +490,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
                                              MutableHandle<Shape*> result);
 
   ObjOperandId emitFunCallGuard(Int32OperandId argcId);
-  std::pair<ObjOperandId, ObjOperandId> emitFunApplyGuard(
-      Int32OperandId argcId, CallFlags::ArgFormat format);
+  ObjOperandId emitFunApplyGuard(Int32OperandId argcId);
+  ObjOperandId emitFunApplyArgsGuard(CallFlags::ArgFormat format);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);
