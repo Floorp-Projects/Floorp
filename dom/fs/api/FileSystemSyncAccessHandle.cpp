@@ -162,7 +162,9 @@ void FileSystemSyncAccessHandle::Close() {
   mStream->OutputStream()->Close();
   mStream = nullptr;
 
-  mActor->SendClose();
+  if (mActor) {
+    mActor->SendClose();
+  }
 }
 
 // WebIDL Boilerplate

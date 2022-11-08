@@ -76,6 +76,10 @@ NS_IMPL_CYCLE_COLLECTION(FileSystemManager, mGlobal, mStorageManager);
 void FileSystemManager::Shutdown() {
   mShutdown.Flip();
 
+  if (mBackgroundRequestHandler->FileSystemManagerChildStrongRef()) {
+    mBackgroundRequestHandler->FileSystemManagerChildStrongRef()->CloseAll();
+  }
+
   mBackgroundRequestHandler->Shutdown();
 
   mCreateFileSystemManagerChildPromiseRequestHolder.DisconnectIfExists();
