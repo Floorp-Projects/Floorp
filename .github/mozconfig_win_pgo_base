@@ -7,6 +7,8 @@ ac_add_options --enable-proxy-bypass-protection
 ac_add_options --disable-verify-mar
 ac_add_options --enable-update-channel=release
 ac_add_options --enable-optimize="-O2"
+ac_add_options --enable-rust-simd
+ac_add_options --enable-release
 MOZ_REQUIRE_SIGNING=
 MOZ_DATA_REPORTING=
 MOZ_TELEMETRY_REPORTING=
