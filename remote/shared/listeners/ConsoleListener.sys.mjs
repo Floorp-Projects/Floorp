@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
  * The ConsoleListener can be used to listen for console messages related to
  * Javascript errors, certain warnings which all happen within a specific
  * windowGlobal. Consumers can listen for the message types "error",
- * "warning" and "info".
+ * "warn" and "info".
  *
  * Example:
  * ```
@@ -36,9 +36,9 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
  * ```
  *
  * @emits message
- *    The ConsoleListener emits "error", "warning" and "info" events, with the
+ *    The ConsoleListener emits "error", "warn" and "info" events, with the
  *    following object as payload:
- *      - {String} level - Importance, one of `info`, `warning`, `error`,
+ *      - {String} level - Importance, one of `info`, `warn`, `error`,
  *        `debug`, `trace`.
  *      - {String} message - Actual message from the console entry.
  *      - {Array<StackFrame>} stacktrace - List of stack frames,
@@ -129,7 +129,7 @@ export class ConsoleListener {
     let level;
 
     if ((message.flags & warningFlag) == warningFlag) {
-      level = "warning";
+      level = "warn";
     } else if ((message.flags & infoFlag) == infoFlag) {
       level = "info";
     } else if ((message.flags & errorFlag) == errorFlag) {

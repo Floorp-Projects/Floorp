@@ -20,7 +20,7 @@ add_task(async function test_message_properties() {
 });
 
 add_task(async function test_level() {
-  for (const level of ["error", "info", "warning"]) {
+  for (const level of ["error", "info", "warn"]) {
     const listenerId = await listenToConsoleMessage(level);
     await logConsoleMessage({ message: "foo", level });
     const message = await getConsoleMessage(listenerId);
@@ -72,7 +72,7 @@ function logConsoleMessage(options = {}) {
     const levelToFlags = {
       error: Ci.nsIScriptError.errorFlag,
       info: Ci.nsIScriptError.infoFlag,
-      warning: Ci.nsIScriptError.warningFlag,
+      warn: Ci.nsIScriptError.warningFlag,
     };
 
     const scriptError = Cc["@mozilla.org/scripterror;1"].createInstance(
