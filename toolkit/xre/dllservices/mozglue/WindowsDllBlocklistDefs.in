@@ -302,6 +302,9 @@ BROWSER_PROCESS += [
 
     # Avast (bug 1794064)
     DllBlocklistEntry("aswJsFlt.dll", (18, 0, 1473, 0)),
+
+    # ASUS Web Storage (bug 1714940)
+    DllBlocklistEntry("asuswsshellext64.dll", (1, 1, 0, 27)),
 ]
 
 CHILD_PROCESSES += [
