@@ -207,6 +207,10 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
                                               &fileHandle)),
          IPC_OK(), reportError);
 
+  auto autoClose = MakeScopeExit([fileHandle]() {
+    QM_WARNONLY_TRY(MOZ_TO_RESULT(0 == fclose(fileHandle)));
+  });
+
   FileDescriptor fileDescriptor =
       mozilla::ipc::FILEToFileDescriptor(fileHandle);
 
