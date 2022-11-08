@@ -4,10 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    "utils",
-]
-
 DevToolsModules(
     "channel-event-sink.js",
     "eventsource-actor.js",
@@ -16,8 +12,6 @@ DevToolsModules(
     "network-event.js",
     "network-monitor.js",
     "network-parent.js",
-    "NetworkObserver.sys.mjs",
-    "NetworkResponseListener.sys.mjs",
     "stack-trace-collector.js",
     "websocket-actor.js",
 )

@@ -17,6 +17,7 @@ DIRS += [
     "layout",
     "loader",
     "locales",
+    "network-observer",
     "node-properties",
     "performance-new",
     "platform",

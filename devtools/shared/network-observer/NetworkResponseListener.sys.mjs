@@ -8,7 +8,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CacheEntry: "resource://devtools/shared/platform/CacheEntry.sys.mjs",
-  NetworkHelper: "resource://devtools/shared/webconsole/NetworkHelper.sys.mjs",
+  NetworkHelper:
+    "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {

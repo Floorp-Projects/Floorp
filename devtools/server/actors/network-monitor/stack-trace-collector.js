@@ -8,7 +8,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   NetworkUtils:
-    "resource://devtools/server/actors/network-monitor/utils/NetworkUtils.sys.mjs",
+    "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
 });
 
 loader.lazyRequireGetter(

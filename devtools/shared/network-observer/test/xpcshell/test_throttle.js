@@ -6,7 +6,7 @@
 /* eslint-disable mozilla/use-chromeutils-generateqi */
 
 const { NetworkThrottleManager } = ChromeUtils.importESModule(
-  "resource://devtools/shared/webconsole/Throttle.sys.mjs"
+  "resource://devtools/shared/network-observer/NetworkThrottleManager.sys.mjs"
 );
 const nsIScriptableInputStream = Ci.nsIScriptableInputStream;
 

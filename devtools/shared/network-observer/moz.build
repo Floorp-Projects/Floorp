@@ -4,8 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+
 DevToolsModules(
     "ChannelMap.sys.mjs",
+    "NetworkHelper.sys.mjs",
+    "NetworkObserver.sys.mjs",
+    "NetworkResponseListener.sys.mjs",
+    "NetworkThrottleManager.sys.mjs",
     "NetworkUtils.sys.mjs",
     "WildcardToRegexp.sys.mjs",
 )

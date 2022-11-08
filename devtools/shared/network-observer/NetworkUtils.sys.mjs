@@ -7,9 +7,10 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  NetworkHelper: "resource://devtools/shared/webconsole/NetworkHelper.sys.mjs",
+  NetworkHelper:
+    "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
   wildcardToRegExp:
-    "resource://devtools/server/actors/network-monitor/utils/WildcardToRegexp.sys.mjs",
+    "resource://devtools/shared/network-observer/WildcardToRegexp.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "tpFlagsMask", () => {

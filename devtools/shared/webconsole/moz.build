@@ -29,7 +29,5 @@ DevToolsModules(
     "analyze-input-string.js",
     "js-property-provider.js",
     "messages.js",
-    "NetworkHelper.sys.mjs",
     "parser-helper.js",
-    "Throttle.sys.mjs",
 )

@@ -19,7 +19,8 @@ ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
-  NetworkHelper: "resource://devtools/shared/webconsole/NetworkHelper.sys.mjs",
+  NetworkHelper:
+    "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
 });
 
 ChromeUtils.defineModuleGetter(
