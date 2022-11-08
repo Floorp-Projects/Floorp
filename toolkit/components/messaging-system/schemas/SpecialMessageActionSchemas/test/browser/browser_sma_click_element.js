@@ -9,6 +9,7 @@ const { ASRouter } = ChromeUtils.import(
 
 const TEST_MESSAGE = {
   message: {
+    template: "feature_callout",
     content: {
       id: "TEST_MESSAGE",
       template: "multistage",

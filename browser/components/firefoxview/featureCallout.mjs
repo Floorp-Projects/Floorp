@@ -44,6 +44,24 @@ async function _handlePrefChange() {
   if (document.visibilityState === "hidden") {
     return;
   }
+
+  // If we have more than one screen, it means that we're
+  // displaying a feature tour, and transitions are handled
+  // based on the value of a tour progress pref. Otherwise,
+  // just show the feature callout.
+  if (CONFIG?.screens.length === 1) {
+    showFeatureCallout();
+    return;
+  }
+
+  // If a pref change results from an event in a Spotlight message,
+  // reload the page to clear the Spotlight and initialize the
+  // feature callout with the next message in the tour.
+  if (CURRENT_SCREEN == "spotlight") {
+    location.reload();
+    return;
+  }
+
   let prefVal = lazy.featureTourProgress;
   // End the tour according to the tour progress pref or if the user disabled
   // contextual feature recommendations.
@@ -103,6 +121,7 @@ let READY = false;
 let LISTENERS_REGISTERED = false;
 let AWSetup = false;
 let SAVED_ACTIVE_ELEMENT;
+let LOADING_CONFIG = false;
 
 const TRANSITION_MS = 500;
 const CONTAINER_ID = "root";
@@ -519,6 +538,10 @@ function _observeRender(container) {
 }
 
 async function _loadConfig() {
+  if (LOADING_CONFIG) {
+    return false;
+  }
+  LOADING_CONFIG = true;
   await lazy.ASRouter.waitForInitialized;
   let result = await lazy.ASRouter.sendTriggerMessage({
     browser: window.docShell.chromeEventHandler,
@@ -526,6 +549,13 @@ async function _loadConfig() {
     id: "featureCalloutCheck",
     context: { source: document.location.pathname.toLowerCase() },
   });
+  LOADING_CONFIG = false;
+
+  if (result.message.template !== "feature_callout") {
+    CURRENT_SCREEN = result.message.template;
+    return false;
+  }
+
   CONFIG = result.message.content;
 
   let newScreen = CONFIG?.screens?.[CONFIG?.startScreen || 0];
@@ -732,12 +762,5 @@ window.addEventListener("DOMContentLoaded", () => {
 // When the window is focused, ensure tour is synced with tours in
 // any other instances of the parent page
 window.addEventListener("visibilitychange", () => {
-  // If we have more than one screen, it means that we're
-  // displaying a feature tour, in which transitions are handled
-  // by the pref change observer.
-  if (CONFIG?.screens.length > 1) {
-    _handlePrefChange();
-  } else {
-    showFeatureCallout();
-  }
+  _handlePrefChange();
 });

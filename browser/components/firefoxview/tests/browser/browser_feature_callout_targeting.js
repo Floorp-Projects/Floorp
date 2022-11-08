@@ -14,9 +14,9 @@ const { ASRouter } = ChromeUtils.import(
 
 add_task(async function test_firefox_view_colorways_reminder_targeting() {
   const sandbox = sinon.createSandbox();
-
   ASRouter.resetMessageState();
 
+  const PICKUP_REMINDER_ID = "FIREFOX_VIEW_TAB_PICKUP_REMINDER";
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.firefox-view.feature-tour", `{"screen":"","complete":true}`],
@@ -26,6 +26,10 @@ add_task(async function test_firefox_view_colorways_reminder_targeting() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.firefox-view.view-count", 4]],
   });
+
+  // Block the tab pickup reminder to mimic it already having been viewed,
+  // otherwise it would have priority over the colorways message
+  ASRouter.blockMessageById(PICKUP_REMINDER_ID);
 
   await BrowserTestUtils.withNewTab(
     {
@@ -43,6 +47,7 @@ add_task(async function test_firefox_view_colorways_reminder_targeting() {
       sandbox.restore();
       SpecialPowers.popPrefEnv();
       SpecialPowers.popPrefEnv();
+      ASRouter.unblockMessageById(PICKUP_REMINDER_ID);
     }
   );
 });
