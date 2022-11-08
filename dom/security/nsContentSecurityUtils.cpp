@@ -952,8 +952,8 @@ nsresult nsContentSecurityUtils::GetHttpChannelFromPotentialMultiPart(
   return NS_OK;
 }
 
-nsresult ParseCSPAndEnforceFrameAncestorCheck(
-    nsIChannel* aChannel, nsIContentSecurityPolicy** aOutCSP) {
+nsresult CheckCSPFrameAncestorPolicy(nsIChannel* aChannel,
+                                     nsIContentSecurityPolicy** aOutCSP) {
   MOZ_ASSERT(aChannel);
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
@@ -1054,7 +1054,6 @@ nsresult ParseCSPAndEnforceFrameAncestorCheck(
 
   if (NS_FAILED(rv) || !safeAncestry) {
     // stop!  ERROR page!
-    aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
     return NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION;
   }
 
@@ -1064,12 +1063,40 @@ nsresult ParseCSPAndEnforceFrameAncestorCheck(
   return NS_OK;
 }
 
+void EnforceCSPFrameAncestorPolicy(nsIChannel* aChannel,
+                                   const nsresult& aError) {
+  if (aError == NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION) {
+    aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
+  }
+}
+
 void EnforceXFrameOptionsCheck(nsIChannel* aChannel,
                                nsIContentSecurityPolicy* aCsp) {
   MOZ_ASSERT(aChannel);
-  if (!FramingChecker::CheckFrameOptions(aChannel, aCsp)) {
+  bool isFrameOptionsIgnored = false;
+  // check for XFO options
+  // XFO checks can be skipped if there are frame ancestors
+  if (!FramingChecker::CheckFrameOptions(aChannel, aCsp,
+                                         isFrameOptionsIgnored)) {
     // stop!  ERROR page!
     aChannel->Cancel(NS_ERROR_XFO_VIOLATION);
+  }
+
+  if (isFrameOptionsIgnored) {
+    // log warning to console that xfo is ignored because of CSP
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    uint64_t innerWindowID = loadInfo->GetInnerWindowID();
+    bool privateWindow = !!loadInfo->GetOriginAttributes().mPrivateBrowsingId;
+    AutoTArray<nsString, 2> params = {u"x-frame-options"_ns,
+                                      u"frame-ancestors"_ns};
+    CSP_LogLocalizedStr("IgnoringSrcBecauseOfDirective", params,
+                        u""_ns,  // no sourcefile
+                        u""_ns,  // no scriptsample
+                        0,       // no linenumber
+                        0,       // no columnnumber
+                        nsIScriptError::warningFlag,
+                        "IgnoringSrcBecauseOfDirective"_ns, innerWindowID,
+                        privateWindow);
   }
 }
 
@@ -1077,9 +1104,10 @@ void EnforceXFrameOptionsCheck(nsIChannel* aChannel,
 void nsContentSecurityUtils::PerformCSPFrameAncestorAndXFOCheck(
     nsIChannel* aChannel) {
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsresult rv =
-      ParseCSPAndEnforceFrameAncestorCheck(aChannel, getter_AddRefs(csp));
+  nsresult rv = CheckCSPFrameAncestorPolicy(aChannel, getter_AddRefs(csp));
+
   if (NS_FAILED(rv)) {
+    EnforceCSPFrameAncestorPolicy(aChannel, rv);
     return;
   }
 
@@ -1087,6 +1115,21 @@ void nsContentSecurityUtils::PerformCSPFrameAncestorAndXFOCheck(
   // checks because if frame-ancestors is present, then x-frame-options
   // will be discarded
   EnforceXFrameOptionsCheck(aChannel, csp);
+}
+/* static */
+bool nsContentSecurityUtils::CheckCSPFrameAncestorAndXFO(nsIChannel* aChannel) {
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  nsresult rv = CheckCSPFrameAncestorPolicy(aChannel, getter_AddRefs(csp));
+
+  if (NS_FAILED(rv)) {
+    EnforceCSPFrameAncestorPolicy(aChannel, rv);
+    return false;
+  }
+
+  bool isFrameOptionsIgnored = false;
+
+  return FramingChecker::CheckFrameOptions(aChannel, csp,
+                                           isFrameOptionsIgnored);
 }
 
 #if defined(DEBUG)
