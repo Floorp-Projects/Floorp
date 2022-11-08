@@ -4,14 +4,18 @@
 
 /* eslint camelcase: 0*/
 
-const { decodeExpr } = require("./wasmDwarfExpressions");
+"use strict";
+
+const {
+  decodeExpr,
+} = require("resource://devtools/client/shared/source-map-loader/wasm-dwarf/wasmDwarfExpressions");
 
 const xScopes = new Map();
 
 function indexLinkingNames(items) {
   const result = new Map();
   let queue = [...items];
-  while (queue.length > 0) {
+  while (queue.length) {
     const item = queue.shift();
     if ("uid" in item) {
       result.set(item.uid, item);

@@ -15,7 +15,7 @@ DIRS += [
     "fluent-l10n",
     "redux",
     "remote-debugging",
-    "source-map",
+    "source-map-loader",
     "sourceeditor",
     "vendor",
     "widgets",

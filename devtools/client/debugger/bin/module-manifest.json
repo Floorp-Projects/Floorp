@@ -2372,10 +2372,8 @@
     "usedIds": {
       "0": 0,
       "1": 1,
-      "3": 3,
       "4": 4,
-      "5": 5,
-      "6": 6
+      "5": 5
     }
   },
   "extract-text-webpack-plugin ../../extract-text-webpack-plugin/dist ../../css-loader/index.js??ref--3-1!../../postcss-loader/lib/index.js!../../../packages/devtools-contextmenu/menu.css": [
@@ -2499,7 +2497,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -2520,7 +2518,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }

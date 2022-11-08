@@ -166,7 +166,12 @@ describe("pause", () => {
       await dispatch(actions.paused(mockPauseInfo));
       expect(selectors.getFrames(getState(), "FakeThread")).toEqual([
         {
-          generatedLocation: { column: 0, line: 1, sourceId: "foo" },
+          generatedLocation: {
+            column: 0,
+            line: 1,
+            sourceId: "foo",
+            sourceActorId: "foo-1-actor",
+          },
           id: mockFrameId,
           location: {
             column: 0,

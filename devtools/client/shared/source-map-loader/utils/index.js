@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+"use strict";
+
 const md5 = require("resource://devtools/client/shared/vendor/md5.js");
 
 function originalToGeneratedId(sourceId) {

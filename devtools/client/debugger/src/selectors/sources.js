@@ -15,7 +15,7 @@ import {
 import { findPosition } from "../utils/breakpoint/breakpointPositions";
 import { isFulfilled } from "../utils/async-value";
 
-import { originalToGeneratedId } from "devtools/client/shared/source-map/index";
+import { originalToGeneratedId } from "devtools/client/shared/source-map-loader/index";
 import { prefs } from "../utils/prefs";
 
 import {

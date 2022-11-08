@@ -186,7 +186,7 @@ function waitForSourceMapWorker(hud) {
     const onAvailable = ({ targetFront }) => {
       if (
         targetFront.url.endsWith(
-          "devtools/client/shared/source-map/worker.js"
+          "devtools/client/shared/source-map-loader/worker.js"
         ) &&
         !seenWorkerTargets.has(targetFront)
       ) {

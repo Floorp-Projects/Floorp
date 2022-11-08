@@ -13,6 +13,7 @@ const TEST_LIB_BABEL = URL_ROOT_SSL + "lib_babel_6.21.0_min.js";
 const TEST_EXTERNAL_LISTENERS = URL_ROOT_SSL + "react_external_listeners.js";
 const TEST_URL =
   URL_ROOT_SSL + "doc_markup_events_react_development_15.4.1_jsx.html";
+const TEST_INLINE_BABEL_ORIGINAL = URL_ROOT_SSL + "Inline%20Babel%20script:9";
 
 loadHelperScript("helper_events_test_runner.js");
 
@@ -20,6 +21,7 @@ loadHelperScript("helper_events_test_runner.js");
 const TEST_DATA = [
   {
     selector: "#inlinejsx",
+    isSourceMapped: true,
     expected: [
       {
         type: "click",
@@ -29,7 +31,7 @@ const TEST_DATA = [
       },
       {
         type: "onClick",
-        filename: TEST_LIB_BABEL + ":11:41",
+        filename: TEST_INLINE_BABEL_ORIGINAL,
         attributes: ["React", "Bubbling"],
         handler: `
           function inlineFunction() {

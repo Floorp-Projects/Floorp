@@ -2,12 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { networkRequest } = require("./network-request");
+"use strict";
 
-const { getSourceMap, setSourceMap } = require("./sourceMapRequests");
-const { WasmRemap } = require("./wasmRemap");
-const { convertToJSON } = require("../wasm-dwarf/convertToJSON");
-const { createConsumer } = require("./createConsumer");
+const {
+  networkRequest,
+} = require("resource://devtools/client/shared/source-map-loader/utils/network-request");
+
+const {
+  getSourceMap,
+  setSourceMap,
+} = require("resource://devtools/client/shared/source-map-loader/utils/sourceMapRequests");
+const {
+  WasmRemap,
+} = require("resource://devtools/client/shared/source-map-loader/utils/wasmRemap");
+const {
+  convertToJSON,
+} = require("resource://devtools/client/shared/source-map-loader/wasm-dwarf/convertToJSON");
+const {
+  createConsumer,
+} = require("resource://devtools/client/shared/source-map-loader/utils/createConsumer");
 
 // URLs which have been seen in a completed source map request.
 const originalURLs = new Set();

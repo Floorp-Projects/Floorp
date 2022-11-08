@@ -4,7 +4,11 @@
 
 /* eslint camelcase: 0*/
 
-const { getDwarfToWasmData } = require("./wasmAsset.js");
+"use strict";
+
+const {
+  getDwarfToWasmData,
+} = require("resource://devtools/client/shared/source-map-loader/wasm-dwarf/wasmAsset.js");
 
 let cachedWasmModule;
 let utf8Decoder;

@@ -8,7 +8,6 @@
  */
 
 import { combineReducers } from "redux";
-import sourceMaps from "devtools/client/shared/source-map/index";
 import reducers from "../reducers";
 import actions from "../actions";
 import * as selectors from "../selectors";
@@ -16,6 +15,12 @@ import { parserWorker, evaluationsParser } from "../test/tests-setup";
 import configureStore from "../actions/utils/create-store";
 import sourceQueue from "../utils/source-queue";
 import { setupCreate } from "../client/firefox/create";
+
+// Import the internal module used by the source-map worker
+// as node doesn't have Web Worker support and require path mapping
+// doesn't work from nodejs worker thread and break mappings to devtools/ folder.
+import sourceMaps from "devtools/client/shared/source-map-loader/source-map";
+
 /**
  * This file contains older interfaces used by tests that have not been
  * converted to use test-mockup.js

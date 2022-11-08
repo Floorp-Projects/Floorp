@@ -11,7 +11,7 @@ import {
   getSpecificSourceByURL,
   getSourcesMap,
 } from "./sources";
-import { isOriginalId } from "devtools/client/shared/source-map/index";
+import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
 import { isSimilarTab } from "../utils/tabs";
 
 export const getTabs = state => state.tabs.tabs;
