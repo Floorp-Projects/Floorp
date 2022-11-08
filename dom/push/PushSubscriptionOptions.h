@@ -22,6 +22,8 @@ class ErrorResult;
 
 namespace dom {
 
+bool ServiceWorkerVisible(JSContext* aCx, JSObject* aGlobal);
+
 class PushSubscriptionOptions final : public nsISupports,
                                       public nsWrapperCache {
  public:
