@@ -191,16 +191,13 @@ def lint(paths, config, fix=None, **lintargs):
     cmd_args_common = ["--manifest-path"]
     cmd_args_clippy = [cargo]
 
-    if fix:
-        cmd_args_clippy += ["+nightly"]
-
     cmd_args_clippy += [
         "clippy",
         "--message-format=json",
     ]
 
     if fix:
-        cmd_args_clippy += ["--fix", "-Z", "unstable-options"]
+        cmd_args_clippy += ["--fix"]
 
     lock_files_to_delete = []
     for p in paths:
