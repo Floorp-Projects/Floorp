@@ -39,10 +39,6 @@ namespace dom {
 class ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams;
 class Promise;
 
-namespace fs {
-class FileSystemRequestHandler;
-}
-
 class FileSystemWritableFileStream final : public WritableStream {
  public:
   // No cycle-collection DECL/IMPL macros, because WritableStream calls
@@ -57,12 +53,6 @@ class FileSystemWritableFileStream final : public WritableStream {
       nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
       const fs::FileSystemEntryMetadata& aMetadata,
       RefPtr<FileSystemWritableFileStreamChild>& aActor);
-
-  FileSystemWritableFileStream(
-      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-      const fs::FileSystemEntryMetadata& aMetadata,
-      RefPtr<FileSystemWritableFileStreamChild>& aActor,
-      fs::FileSystemRequestHandler* aRequestHandler);
 
   void ClearActor();
 
@@ -90,7 +80,6 @@ class FileSystemWritableFileStream final : public WritableStream {
   // nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<FileSystemManager> mManager;
   fs::FileSystemEntryMetadata mMetadata;
-  const UniquePtr<fs::FileSystemRequestHandler> mRequestHandler;
 
  private:
   nsresult WriteBlob(Blob* aBlob, uint64_t& aWritten);
