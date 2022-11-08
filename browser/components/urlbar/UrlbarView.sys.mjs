@@ -295,30 +295,6 @@ export class UrlbarView {
   }
 
   /**
-   * Returns the element closest to the given element that can be
-   * selected/picked.  If the element itself can be selected, it's returned.  If
-   * there is no such element, null is returned.
-   *
-   * @param {Element} element
-   *   An element in the view.
-   * @returns {Element}
-   *   The closest element that can be picked including the element itself, or
-   *   null if there is no such element.
-   */
-  getClosestSelectableElement(element) {
-    let closest = element.closest(SELECTABLE_ELEMENT_SELECTOR);
-    if (!closest) {
-      let row = element.closest(".urlbarView-row");
-      if (row && row.querySelector(UNSELECTABLE_ELEMENT_SELECTOR)) {
-        return null;
-      } else if (row && !row.querySelector(SELECTABLE_ELEMENT_SELECTOR)) {
-        closest = row;
-      }
-    }
-    return this._isElementVisible(closest) ? closest : null;
-  }
-
-  /**
    * @param {UrlbarResult} result A result.
    * @returns {boolean} True if the given result is selected.
    */
@@ -2023,6 +1999,30 @@ export class UrlbarView {
   }
 
   /**
+   * Returns the element closest to the given element that can be
+   * selected/picked.  If the element itself can be selected, it's returned.  If
+   * there is no such element, null is returned.
+   *
+   * @param {Element} element
+   *   An element in the view.
+   * @returns {Element}
+   *   The closest element that can be picked including the element itself, or
+   *   null if there is no such element.
+   */
+  _getClosestSelectableElement(element) {
+    let closest = element.closest(SELECTABLE_ELEMENT_SELECTOR);
+    if (!closest) {
+      let row = element.closest(".urlbarView-row");
+      if (row && row.querySelector(UNSELECTABLE_ELEMENT_SELECTOR)) {
+        return null;
+      } else if (row && !row.querySelector(SELECTABLE_ELEMENT_SELECTOR)) {
+        closest = row;
+      }
+    }
+    return this._isElementVisible(closest) ? closest : null;
+  }
+
+  /**
    * Returns true if the given element is selectable.
    *
    * @param {Element} element
@@ -2031,7 +2031,7 @@ export class UrlbarView {
    *   True if the element is selectable and false if not.
    */
   _isSelectableElement(element) {
-    return this.getClosestSelectableElement(element) == element;
+    return this._getClosestSelectableElement(element) == element;
   }
 
   /**
@@ -2641,7 +2641,7 @@ export class UrlbarView {
       return;
     }
 
-    let element = this.getClosestSelectableElement(event.target);
+    let element = this._getClosestSelectableElement(event.target);
     if (!element) {
       // Ignore clicks on elements that can't be selected/picked.
       return;
@@ -2671,7 +2671,7 @@ export class UrlbarView {
       return;
     }
 
-    let element = this.getClosestSelectableElement(event.target);
+    let element = this._getClosestSelectableElement(event.target);
     if (!element) {
       // Ignore clicks on elements that can't be selected/picked.
       return;
