@@ -10,13 +10,6 @@
 
 nsGTKToolkit* nsGTKToolkit::gToolkit = nullptr;
 
-//-------------------------------------------------------------------------
-//
-// constructor
-//
-//-------------------------------------------------------------------------
-nsGTKToolkit::nsGTKToolkit() : mFocusTimestamp(0) {}
-
 //-------------------------------------------------------------------------------
 // Return the toolkit. If a toolkit does not yet exist, then one will be
 // created.

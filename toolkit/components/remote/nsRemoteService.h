@@ -32,7 +32,7 @@ class nsRemoteService final : public nsIObserver {
   void LockStartup();
   void UnlockStartup();
 
-  RemoteResult StartClient(const char* aDesktopStartupID);
+  RemoteResult StartClient(const char* aStartupToken);
   void StartupServer();
   void ShutdownServer();
 

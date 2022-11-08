@@ -8,6 +8,7 @@
 #include "nsWindow.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <dlfcn.h>
 #include <gdk/gdkkeysyms.h>
 #include <wchar.h>
@@ -3018,33 +3019,33 @@ void nsWindow::MoveToWorkspace(const nsAString& workspaceIDStr) {
 #endif
 }
 
-using SetUserTimeFunc = void (*)(GdkWindow*, guint32);
+void nsWindow::SetUserTimeAndStartupTokenForActivatedWindow() {
+  nsGTKToolkit* toolkit = nsGTKToolkit::GetToolkit();
+  if (!toolkit) {
+    return;
+  }
 
-static void SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow) {
-  nsGTKToolkit* GTKToolkit = nsGTKToolkit::GetToolkit();
-  if (!GTKToolkit) return;
-
-  nsAutoCString desktopStartupID;
-  GTKToolkit->GetDesktopStartupID(&desktopStartupID);
-  if (desktopStartupID.IsEmpty()) {
+  mWindowActivationTokenFromEnv = toolkit->GetStartupToken();
+  if (!mWindowActivationTokenFromEnv.IsEmpty()) {
+    if (!GdkIsWaylandDisplay()) {
+      gtk_window_set_startup_id(GTK_WINDOW(mShell),
+                                mWindowActivationTokenFromEnv.get());
+      // In the case of X11, the above call is all we need. For wayland we need
+      // to keep the token around until we take it in RequestFocusWaylandWindow.
+      mWindowActivationTokenFromEnv.Truncate();
+    }
+  } else if (uint32_t timestamp = toolkit->GetFocusTimestamp()) {
     // We don't have the data we need. Fall back to an
     // approximation ... using the timestamp of the remote command
     // being received as a guess for the timestamp of the user event
     // that triggered it.
-    uint32_t timestamp = GTKToolkit->GetFocusTimestamp();
-    if (timestamp) {
-      gdk_window_focus(gtk_widget_get_window(aWindow), timestamp);
-      GTKToolkit->SetFocusTimestamp(0);
-    }
-    return;
+    gdk_window_focus(gtk_widget_get_window(mShell), timestamp);
   }
-
-  gtk_window_set_startup_id(GTK_WINDOW(aWindow), desktopStartupID.get());
 
   // If we used the startup ID, that already contains the focus timestamp;
   // we don't want to reuse the timestamp next time we raise the window
-  GTKToolkit->SetFocusTimestamp(0);
-  GTKToolkit->SetDesktopStartupID(""_ns);
+  toolkit->SetFocusTimestamp(0);
+  toolkit->SetStartupToken(""_ns);
 }
 
 /* static */
@@ -3074,10 +3075,12 @@ guint32 nsWindow::GetLastUserInputTime() {
 
 #ifdef MOZ_WAYLAND
 void nsWindow::FocusWaylandWindow(const char* aTokenID) {
-  auto releaseToken = mozilla::MakeScopeExit(
-      [&]() { MozClearPointer(mXdgToken, xdg_activation_token_v1_destroy); });
+  MOZ_DIAGNOSTIC_ASSERT(aTokenID);
+  auto releaseToken = MakeScopeExit([&] {
+    MozClearPointer(mXdgToken, xdg_activation_token_v1_destroy);
+  });
 
-  LOG("nsWindow::SetFocusWayland");
+  LOG("nsWindow::FocusWaylandWindow(%s)", aTokenID);
   if (IsDestroyed()) {
     LOG("  already destroyed, quit.");
     return;
@@ -3091,8 +3094,10 @@ void nsWindow::FocusWaylandWindow(const char* aTokenID) {
 
   LOG("  requesting xdg-activation, surface ID %d",
       wl_proxy_get_id((struct wl_proxy*)surface));
-
   xdg_activation_v1* xdg_activation = WaylandDisplayGet()->GetXdgActivation();
+  if (!xdg_activation) {
+    return;
+  }
   xdg_activation_v1_activate(xdg_activation, aTokenID, surface);
 }
 
@@ -3109,8 +3114,15 @@ static const struct xdg_activation_token_v1_listener token_listener = {
 };
 
 void nsWindow::RequestFocusWaylandWindow(RefPtr<nsWindow> aWindow) {
-  LOGW("nsWindow::RequestFocusWaylandWindow(%p) gFocusWindow %p",
-       (void*)aWindow, gFocusWindow);
+  LOGW("nsWindow::RequestFocusWaylandWindow(%p) gFocusWindow %p", aWindow.get(),
+       gFocusWindow);
+
+  auto existingToken = std::move(aWindow->mWindowActivationTokenFromEnv);
+  if (!existingToken.IsEmpty()) {
+    LOGW("  has existing activation token.");
+    aWindow->FocusWaylandWindow(existingToken.get());
+    return;
+  }
 
   if (!gFocusWindow || gFocusWindow->IsDestroyed()) {
     LOGW("  missing gFocusWindow, quit.");
@@ -3204,24 +3216,25 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
   if (aRaise == Raise::Yes) {
     // means request toplevel activation.
 
-    // This is asynchronous.
-    // If and when the window manager accepts the request, then the focus
-    // widget will get a focus-in-event signal.
+    // This is asynchronous. If and when the window manager accepts the request,
+    // then the focus widget will get a focus-in-event signal.
     if (StaticPrefs::mozilla_widget_raise_on_setfocus_AtStartup() &&
         toplevelWindow->mIsShown && toplevelWindow->mShell &&
         !gtk_window_is_active(GTK_WINDOW(toplevelWindow->mShell))) {
-      uint32_t timestamp = GDK_CURRENT_TIME;
+      LOG("  requesting toplevel activation [%p]\n", toplevelWindow.get());
 
-      nsGTKToolkit* GTKToolkit = nsGTKToolkit::GetToolkit();
-      if (GTKToolkit) {
-        timestamp = GTKToolkit->GetFocusTimestamp();
-        GTKToolkit->SetFocusTimestamp(0);
-      }
-      if (!timestamp) {
-        timestamp = GetLastUserInputTime();
-      }
+      // Take the time here explicitly for the call below.
+      const uint32_t timestamp = [&] {
+        if (nsGTKToolkit* toolkit = nsGTKToolkit::GetToolkit()) {
+          if (uint32_t t = toolkit->GetFocusTimestamp()) {
+            toolkit->SetFocusTimestamp(0);
+            return t;
+          }
+        }
+        return GetLastUserInputTime();
+      }();
 
-      LOG("  requesting toplevel activation [%p]\n", (void*)toplevelWindow);
+      toplevelWindow->SetUserTimeAndStartupTokenForActivatedWindow();
       gtk_window_present_with_time(GTK_WINDOW(toplevelWindow->mShell),
                                    timestamp);
 
@@ -6604,7 +6617,7 @@ void nsWindow::NativeShow(bool aAction) {
     }
     // Set up usertime/startupID metadata for the created window.
     if (mWindowType != eWindowType_invisible) {
-      SetUserTimeAndStartupIDForActivatedWindow(mShell);
+      SetUserTimeAndStartupTokenForActivatedWindow();
     }
     if (GdkIsWaylandDisplay()) {
       if (IsWaylandPopup()) {
@@ -6612,6 +6625,12 @@ void nsWindow::NativeShow(bool aAction) {
       } else {
         ShowWaylandToplevelWindow();
       }
+#ifdef MOZ_WAYLAND
+      auto token = std::move(mWindowActivationTokenFromEnv);
+      if (!token.IsEmpty()) {
+        FocusWaylandWindow(token.get());
+      }
+#endif
     } else {
       LOG("  calling gtk_widget_show(mShell)\n");
       gtk_widget_show(mShell);

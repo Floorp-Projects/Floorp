@@ -85,7 +85,7 @@ void nsRemoteService::UnlockStartup() {
   }
 }
 
-RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID) {
+RemoteResult nsRemoteService::StartClient(const char* aStartupToken) {
   if (mProfile.IsEmpty()) {
     return REMOTE_NOT_FOUND;
   }
@@ -110,9 +110,9 @@ RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID) {
 
   nsCString response;
   bool success = false;
-  rv = client->SendCommandLine(mProgram.get(), mProfile.get(), gArgc, gArgv,
-                               aDesktopStartupID, getter_Copies(response),
-                               &success);
+  rv =
+      client->SendCommandLine(mProgram.get(), mProfile.get(), gArgc, gArgv,
+                              aStartupToken, getter_Copies(response), &success);
   // did the command fail?
   if (!success) return REMOTE_NOT_FOUND;
 

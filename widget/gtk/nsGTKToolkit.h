@@ -17,37 +17,36 @@
  * execute within the same thread that created the widget under Win32.
  */
 
-class nsGTKToolkit {
+class nsGTKToolkit final {
  public:
-  nsGTKToolkit();
+  nsGTKToolkit() = default;
 
   static nsGTKToolkit* GetToolkit();
-
   static void Shutdown() {
     delete gToolkit;
     gToolkit = nullptr;
   }
 
   /**
-   * Get/set our value of DESKTOP_STARTUP_ID. When non-empty, this is applied
-   * to the next toplevel window to be shown or focused (and then immediately
-   * cleared).
+   * Get/set our startup token value. (XDG_ACTIVATION_TOKEN/DESKTOP_STARTUP_ID)
+   * When non-empty, this is applied to the next toplevel window to be shown or
+   * focused (and then immediately cleared).
    */
-  void SetDesktopStartupID(const nsACString& aID) { mDesktopStartupID = aID; }
-  void GetDesktopStartupID(nsACString* aID) { *aID = mDesktopStartupID; }
+  void SetStartupToken(const nsACString& aToken) { mStartupToken = aToken; }
+  const nsCString& GetStartupToken() const { return mStartupToken; }
 
   /**
    * Get/set the timestamp value to be used, if non-zero, to focus the
    * next top-level window to be shown or focused (upon which it is cleared).
    */
   void SetFocusTimestamp(uint32_t aTimestamp) { mFocusTimestamp = aTimestamp; }
-  uint32_t GetFocusTimestamp() { return mFocusTimestamp; }
+  uint32_t GetFocusTimestamp() const { return mFocusTimestamp; }
 
  private:
   static nsGTKToolkit* gToolkit;
 
-  nsCString mDesktopStartupID;
-  uint32_t mFocusTimestamp;
+  nsCString mStartupToken;
+  uint32_t mFocusTimestamp = 0;
 };
 
 #endif  // GTKTOOLKIT_H

@@ -61,14 +61,14 @@ void nsDBusRemoteClient::Shutdown(void) {
 
 nsresult nsDBusRemoteClient::SendCommandLine(
     const char* aProgram, const char* aProfile, int32_t argc, char** argv,
-    const char* aDesktopStartupID, char** aResponse, bool* aWindowFound) {
+    const char* aStartupToken, char** aResponse, bool* aWindowFound) {
   NS_ENSURE_TRUE(aProgram, NS_ERROR_INVALID_ARG);
 
   LOG("nsDBusRemoteClient::SendCommandLine");
 
   int commandLineLength;
   char* commandLine =
-      ConstructCommandLine(argc, argv, aDesktopStartupID, &commandLineLength);
+      ConstructCommandLine(argc, argv, aStartupToken, &commandLineLength);
   if (!commandLine) {
     LOG("  failed to create command line");
     return NS_ERROR_FAILURE;

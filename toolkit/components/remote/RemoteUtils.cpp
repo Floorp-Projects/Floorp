@@ -40,8 +40,7 @@ static char* estrcpy(const char* s, char* d) {
 /* Construct a command line from given args and desktop startup ID.
  * Returned buffer must be released by free().
  */
-char* ConstructCommandLine(int32_t argc, char** argv,
-                           const char* aDesktopStartupID,
+char* ConstructCommandLine(int32_t argc, char** argv, const char* aStartupToken,
                            int* aCommandLineLength) {
   char cwdbuf[MAX_PATH];
   if (!getcwd(cwdbuf, MAX_PATH)) return nullptr;
@@ -52,13 +51,13 @@ char* ConstructCommandLine(int32_t argc, char** argv,
   // [argc][offsetargv0][offsetargv1...]<workingdir>\0<argv[0]>\0argv[1]...\0
   // (offset is from the beginning of the buffer)
 
-  static char desktopStartupPrefix[] = " DESKTOP_STARTUP_ID=";
+  static char startupTokenPrefix[] = " STARTUP_TOKEN=";
 
   int32_t argvlen = strlen(cwdbuf);
   for (int i = 0; i < argc; ++i) {
     int32_t len = strlen(argv[i]);
-    if (i == 0 && aDesktopStartupID) {
-      len += sizeof(desktopStartupPrefix) - 1 + strlen(aDesktopStartupID);
+    if (i == 0 && aStartupToken) {
+      len += sizeof(startupTokenPrefix) - 1 + strlen(aStartupToken);
     }
     argvlen += len;
   }
@@ -76,9 +75,9 @@ char* ConstructCommandLine(int32_t argc, char** argv,
   for (int i = 0; i < argc; ++i) {
     buffer[i + 1] = TO_LITTLE_ENDIAN32(bufend - ((char*)buffer));
     bufend = estrcpy(argv[i], bufend);
-    if (i == 0 && aDesktopStartupID) {
-      bufend = estrcpy(desktopStartupPrefix, bufend - 1);
-      bufend = estrcpy(aDesktopStartupID, bufend - 1);
+    if (i == 0 && aStartupToken) {
+      bufend = estrcpy(startupTokenPrefix, bufend - 1);
+      bufend = estrcpy(aStartupToken, bufend - 1);
     }
   }
 
