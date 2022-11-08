@@ -215,8 +215,8 @@ async function test(window) {
     return;
   }
 
-  TalosParentProfiler = ChromeUtils.import(
-    "resource://talos-powers/TalosParentProfiler.jsm"
+  TalosParentProfiler = ChromeUtils.importESModule(
+    "resource://talos-powers/TalosParentProfiler.sys.mjs"
   ).TalosParentProfiler;
 
   let testURLs = [];

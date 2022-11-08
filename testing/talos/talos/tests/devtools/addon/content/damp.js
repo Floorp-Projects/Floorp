@@ -536,10 +536,12 @@ Damp.prototype = {
     ChromeUtils.registerWindowActor("DampLoad", {
       kind: "JSWindowActor",
       parent: {
-        moduleURI: "resource://damp-test/content/actors/DampLoadParent.jsm",
+        esModuleURI:
+          "resource://damp-test/content/actors/DampLoadParent.sys.mjs",
       },
       child: {
-        moduleURI: "resource://damp-test/content/actors/DampLoadChild.jsm",
+        esModuleURI:
+          "resource://damp-test/content/actors/DampLoadChild.sys.mjs",
         events: {
           pageshow: { mozSystemGroup: true },
         },

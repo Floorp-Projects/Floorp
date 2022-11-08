@@ -20,11 +20,9 @@
  *    for certain types of links (_blank links for example) to open new tabs.
  */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "TalosParentProfiler",
-  "resource://talos-powers/TalosParentProfiler.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  TalosParentProfiler: "resource://talos-powers/TalosParentProfiler.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   this,
   "BrowserWindowTracker",

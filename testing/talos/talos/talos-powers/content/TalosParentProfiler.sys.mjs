@@ -14,9 +14,7 @@
  * TalosContentProfiler.js utility script instead.
  */
 
-var EXPORTED_SYMBOLS = ["TalosParentProfiler"];
-
-const TalosParentProfiler = {
+export const TalosParentProfiler = {
   // Whether or not this TalosContentProfiler object has had initFromObject
   // or initFromURLQueryParams called on it. Any functions that change the
   // state of the Gecko Profiler should only be called after calling either

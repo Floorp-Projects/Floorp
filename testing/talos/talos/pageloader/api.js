@@ -118,7 +118,9 @@ this.pageloader = class extends ExtensionAPI {
       // before continuing.
       async function tryLoad() {
         try {
-          ChromeUtils.import("resource://talos-powers/TalosParentProfiler.jsm");
+          ChromeUtils.importESModule(
+            "resource://talos-powers/TalosParentProfiler.sys.mjs"
+          );
         } catch (err) {
           await new Promise(resolve => setTimeout(resolve, 500));
           return tryLoad();
