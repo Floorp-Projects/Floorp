@@ -82,7 +82,6 @@ class FileSystemWritableFileStream final : public WritableStream {
 
  private:
   nsresult WriteBlob(Blob* aBlob, uint64_t& aWritten);
-  //  nsresult WriteBlobImpl(BlobImpl* aBlobImpl, uint64_t& aWritten);
 
   virtual ~FileSystemWritableFileStream();
 
