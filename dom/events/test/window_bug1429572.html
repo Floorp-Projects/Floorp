@@ -39,6 +39,9 @@
         var rys = [];
         var angles = [];
         var forces = [];
+        var tiltXs = [];
+        var tiltYs = [];
+        var twists = [];
         for (var i = 0; i < targets.length; ++i) {
           touches.push(++touchCounter);
           var rect = targets[i].getBoundingClientRect();
@@ -52,11 +55,14 @@
           rys.push(1);
           angles.push(0);
           forces.push(1);
+          tiltXs.push(0);
+          tiltYs.push(0);
+          twists.push(0);
         }
         winUtils.sendTouchEvent("touchstart",
-          touches, xs, ys, rxs, rys, angles, forces, 0);
+          touches, xs, ys, rxs, rys, angles, forces, tiltXs, tiltYs, twists, 0);
         winUtils.sendTouchEvent("touchend",
-          touches, xs, ys, rxs, rys, angles, forces, 0);
+          touches, xs, ys, rxs, rys, angles, forces, tiltXs, tiltYs, twists, 0);
       }
 
       function next() {

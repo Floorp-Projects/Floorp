@@ -36,6 +36,9 @@ class Touch final : public nsISupports,
         float aRotationAngle, float aForce);
   Touch(int32_t aIdentifier, LayoutDeviceIntPoint aPoint,
         LayoutDeviceIntPoint aRadius, float aRotationAngle, float aForce);
+  Touch(int32_t aIdentifier, LayoutDeviceIntPoint aPoint,
+        LayoutDeviceIntPoint aRadius, float aRotationAngle, float aForce,
+        int32_t aTiltX, int32_t aTiltY, int32_t aTwist);
   Touch(const Touch& aOther);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

@@ -2042,6 +2042,9 @@ class MultiTouchEventData extends PointerEventData {
     this.ry = [];
     this.angle = [];
     this.force = [];
+    this.tiltx = [];
+    this.tilty = [];
+    this.twist = [];
     this.#setGlobalState = false;
   }
 
@@ -2059,6 +2062,9 @@ class MultiTouchEventData extends PointerEventData {
     this.ry.push(action.height || 1);
     this.angle.push(0);
     this.force.push(action.pressure || (this.type === "touchend" ? 0 : 1));
+    this.tiltx.push(action.tiltX || 0);
+    this.tilty.push(action.tiltY || 0);
+    this.twist.push(action.twist || 0);
   }
 
   update(state, inputSource) {

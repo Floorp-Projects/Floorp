@@ -22,6 +22,8 @@
  *  synthesizeDrop
  *  synthesizePlainDragAndDrop
  *  synthesizePlainDragAndCancel
+ *  synthesizeTouch
+ *  synthesizeTouchAtCenter
  *
  *  When adding methods to this file, please add a performance test for it.
  */
@@ -691,6 +693,9 @@ function synthesizeTouchAtPoint(left, top, aEvent, aWindow = window) {
     var ry = aEvent.ry || 1;
     var angle = aEvent.angle || 0;
     var force = aEvent.force || (aEvent.type === "touchend" ? 0 : 1);
+    var tiltX = aEvent.tiltX || 0;
+    var tiltY = aEvent.tiltY || 0;
+    var twist = aEvent.twist || 0;
     var modifiers = _parseModifiers(aEvent, aWindow);
 
     if ("type" in aEvent && aEvent.type) {
@@ -703,6 +708,9 @@ function synthesizeTouchAtPoint(left, top, aEvent, aWindow = window) {
         [ry],
         [angle],
         [force],
+        [tiltX],
+        [tiltY],
+        [twist],
         modifiers
       );
     } else {
@@ -715,6 +723,9 @@ function synthesizeTouchAtPoint(left, top, aEvent, aWindow = window) {
         [ry],
         [angle],
         [force],
+        [tiltX],
+        [tiltY],
+        [twist],
         modifiers
       );
       utils.sendTouchEvent(
@@ -726,6 +737,9 @@ function synthesizeTouchAtPoint(left, top, aEvent, aWindow = window) {
         [ry],
         [angle],
         [force],
+        [tiltX],
+        [tiltY],
+        [twist],
         modifiers
       );
     }
@@ -746,7 +760,12 @@ function synthesizeMouseAtCenter(aTarget, aEvent, aWindow) {
 }
 function synthesizeTouchAtCenter(aTarget, aEvent, aWindow) {
   var rect = aTarget.getBoundingClientRect();
-  synthesizeTouch(aTarget, rect.width / 2, rect.height / 2, aEvent, aWindow);
+  synthesizeTouchAtPoint(
+    rect.left + rect.width / 2,
+    rect.top + rect.height / 2,
+    aEvent,
+    aWindow
+  );
 }
 
 /**

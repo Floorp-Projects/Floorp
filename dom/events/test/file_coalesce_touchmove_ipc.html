@@ -34,14 +34,14 @@
         var y = Math.floor(rect.y + (rect.height / 4));
         var endY = Math.floor(rect.y + ((rect.height / 4) * 2));
         utils.sendTouchEvent("touchstart", [0], [x], [y], [1], [1], [0], [1],
-                             0, false);
+                             [0], [0], [0], 0, false);
         while (y != endY) {
           utils.sendTouchEvent("touchmove", [0], [x], [y], [1], [1], [0], [1],
-                               0, false);
+                               [0], [0], [0], 0, false);
           ++y;
         }
         utils.sendTouchEvent("touchend", [0], [x], [y], [1], [1], [0], [1],
-                             0, false);
+                             [0], [0], [0], 0, false);
 
       });
 
@@ -68,13 +68,13 @@
         var startY = Math.floor(rect.y + (rect.height / 4));
         var endY = Math.floor(rect.y + ((rect.height / 4) * 2));
         utils.sendTouchEvent("touchstart", [0], [x], [startY], [1], [1], [0],
-                             [1], 0, false);
+                             [1], [0], [0], [0], 0, false);
         utils.sendTouchEvent("touchmove", [0], [x], [startY], [1], [1], [0],
-                             [1], 0, false);
+                             [1], [0], [0], [0], 0, false);
         utils.sendTouchEvent("touchmove", [0], [x], [startY + 1], [1], [1], [0],
-                             [1], 0, false);
+                             [1], [0], [0], [0], 0, false);
         utils.sendTouchEvent("touchend", [0], [x], [endY], [1], [1], [0],
-                             [1], 0, false);
+                             [1], [0], [0], [0], 0, false);
       });
 
       touchmoveEvents = [];
@@ -101,15 +101,16 @@
         var endY = Math.floor(rect.y + ((rect.height / 4) * 2));
         utils.sendTouchEvent("touchstart", [0, 1], [x, x + 1],
                              [startY, startY + 1], [1, 1], [1, 1], [0, 0],
-                             [1, 1], 0, false);
+                             [1, 1], [0, 0], [0, 0], [0, 0], 0, false);
         while (startY != endY) {
           utils.sendTouchEvent("touchmove", [0, 1], [x, x + 1],
                                [startY, startY + 1], [1, 1], [1, 1], [0, 0],
-                               [1, 1], 0, false);
+                               [1, 1], [0, 0], [0, 0], [0, 0], 0, false);
           ++startY;
         }
         utils.sendTouchEvent("touchend", [0, 1], [x, x + 1], [endY, endY + 1],
-                             [1, 1], [1, 1], [0, 0], [1, 1], 0, false);
+                             [1, 1], [1, 1], [0, 0], [1, 1], [0, 0], [0, 0],
+                             [0, 0], 0, false);
 
       });
 

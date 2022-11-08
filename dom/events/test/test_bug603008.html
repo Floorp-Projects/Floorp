@@ -75,7 +75,7 @@ function checkTouch(aFakeTouch, aTouch) {
 
 function sendTouchEvent(windowUtils, aType, aEvent, aModifiers) {
   var ids = [], xs=[], ys=[], rxs = [], rys = [],
-      rotations = [], forces = [];
+      rotations = [], forces = [], tiltXs = [], tiltYs = [], twists = [];
 
   for (var touchType of ["touches", "changedTouches", "targetTouches"]) {
     for (var i = 0; i < aEvent[touchType].length; i++) {
@@ -87,12 +87,15 @@ function sendTouchEvent(windowUtils, aType, aEvent, aModifiers) {
         rys.push(aEvent[touchType][i].radius.y);
         rotations.push(aEvent[touchType][i].rotationAngle);
         forces.push(aEvent[touchType][i].force);
+        tiltXs.push(0);
+        tiltYs.push(0);
+        twists.push(0);
       }
     }
   }
   return windowUtils.sendTouchEvent(aType,
                                     ids, xs, ys, rxs, rys,
-                                    rotations, forces,
+                                    rotations, forces, tiltXs, tiltYs, twists,
                                     aModifiers, 0);
 }
 

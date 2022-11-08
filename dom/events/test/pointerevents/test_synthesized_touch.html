@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test synthesized touch input</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+
+<style>
+  #container {
+    width: 100px;
+    height: 100px;
+    background-color: green;
+  }
+</style>
+
+<div id="container"></div>
+
+<script>
+function waitForEvent(aTarget, aEvent, aCheckFn) {
+  return new Promise(aResolve => {
+    aTarget.addEventListener(aEvent, function(e) {
+      info(`${aEvent} received`);
+      aCheckFn(e);
+      aResolve();
+    }, { once: true });
+  });
+}
+
+add_task(async function test() {
+  const tiltX = 10;
+  const tiltY = -10;
+  const twist = 5;
+  const check = function(aEvent) {
+    is(aEvent.tiltX, tiltX, "check tiltX");
+    is(aEvent.tiltY, tiltY, "check tiltY");
+    is(aEvent.twist, twist, "check twist");
+  };
+
+  const container = document.getElementById("container");
+  const pointerDownPromise = waitForEvent(container, "pointerdown", check);
+  const pointerUpPromise = waitForEvent(container, "pointerup", check);
+
+  synthesizeTouchAtCenter(container, {tiltX, tiltY, twist});
+
+  await Promise.all([pointerDownPromise, pointerUpPromise]);
+});
+</script>
