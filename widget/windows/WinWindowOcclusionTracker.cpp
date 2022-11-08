@@ -371,15 +371,22 @@ void WinWindowOcclusionTracker::ShutDown() {
 
   sTracker->Destroy();
 
+  // Our shutdown task could hang. Since we're shutting down,
+  // that's not a critical problem. We set a reasonable amount
+  // of time to wait for shutdown, and if it succeeds within
+  // that time, we correctly stop our tracker thread. If it
+  // times out, we just leak the memory and proceed.
+  static const PRIntervalTime TIMEOUT = PR_TicksPerSecond() * 2;
   layers::SynchronousTask task("WinWindowOcclusionTracker");
   RefPtr<Runnable> runnable =
       WrapRunnable(RefPtr<WindowOcclusionCalculator>(
                        WindowOcclusionCalculator::GetInstance()),
                    &WindowOcclusionCalculator::Shutdown, &task);
   OcclusionCalculatorLoop()->PostTask(runnable.forget());
-  task.Wait();
-
-  sTracker->mThread->Stop();
+  nsresult rv = task.Wait(TIMEOUT);
+  if (rv == NS_OK) {
+    sTracker->mThread->Stop();
+  }
 
   WindowOcclusionCalculator::ClearInstance();
   sTracker = nullptr;
