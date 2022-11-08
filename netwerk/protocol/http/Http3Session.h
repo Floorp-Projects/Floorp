@@ -159,7 +159,6 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
                                     WebTransportStreamType aStreamType,
                                     uint64_t* aStreamId);
   void CloseStream(Http3StreamBase* aStream, nsresult aResult);
-  void CloseStreamInternal(Http3StreamBase* aStream, nsresult aResult);
 
   void SetCleanShutdown(bool aCleanShutdown) {
     mCleanShutdown = aCleanShutdown;
@@ -193,14 +192,6 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
                                    bool aPriorityIncremental);
 
   void ConnectSlowConsumer(Http3StreamBase* stream);
-
-  nsresult TryActivatingWebTransportStream(uint64_t* aStreamId,
-                                           Http3StreamBase* aStream);
-  void CloseWebTransportStream(Http3WebTransportStream* aStream,
-                               nsresult aResult);
-  void StreamHasDataToWrite(Http3StreamBase* aStream);
-  void ResetWebTransportStream(Http3WebTransportStream* aStream,
-                               uint8_t aErrorCode);
 
  private:
   ~Http3Session();
@@ -334,7 +325,6 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   void WebTransportNegotiationDone();
 
   nsTArray<RefPtr<Http3StreamBase>> mWebTransportSessions;
-  nsTArray<RefPtr<Http3StreamBase>> mWebTransportStreams;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Http3Session, NS_HTTP3SESSION_IID);

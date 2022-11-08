@@ -116,8 +116,6 @@
 
 namespace mozilla::net {
 
-class WebTransportStreamCallbackWrapper;
-
 class WebTransportSessionProxy final : public nsIWebTransport,
                                        public WebTransportSessionEventListener,
                                        public nsIStreamListener,
@@ -155,8 +153,6 @@ class WebTransportSessionProxy final : public nsIWebTransport,
   WebTransportSessionProxyState mState MOZ_GUARDED_BY(mMutex) =
       WebTransportSessionProxyState::INIT;
   void ChangeState(WebTransportSessionProxyState newState);
-  void CreateStreamInternal(WebTransportStreamCallbackWrapper* aCallback,
-                            bool aBidi);
 
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIChannel> mRedirectChannel;

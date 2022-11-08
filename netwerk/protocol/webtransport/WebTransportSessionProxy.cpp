@@ -6,12 +6,10 @@
 #include "WebTransportLog.h"
 #include "Http3WebTransportSession.h"
 #include "WebTransportSessionProxy.h"
-#include "WebTransportStreamProxy.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIHttpChannel.h"
 #include "nsIRequest.h"
 #include "nsNetUtil.h"
-#include "nsProxyRelease.h"
 #include "nsSocketTransportService2.h"
 #include "mozilla/Logging.h"
 
@@ -164,151 +162,16 @@ void WebTransportSessionProxy::CloseSessionInternal() {
   }
 }
 
-class WebTransportStreamCallbackWrapper final {
- public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebTransportStreamCallbackWrapper)
-
-  explicit WebTransportStreamCallbackWrapper(
-      nsIWebTransportStreamCallback* aCallback, bool aBidi)
-      : mCallback(aCallback), mTarget(GetCurrentEventTarget()), mBidi(aBidi) {}
-
-  void CallOnError(nsresult aError) {
-    if (!mTarget->IsOnCurrentThread()) {
-      RefPtr<WebTransportStreamCallbackWrapper> self(this);
-      Unused << mTarget->Dispatch(NS_NewRunnableFunction(
-          "WebTransportStreamCallbackWrapper::CallOnError",
-          [self{std::move(self)}, error{aError}]() {
-            self->CallOnError(error);
-          }));
-      return;
-    }
-
-    LOG(("WebTransportStreamCallbackWrapper::OnError aError=0x%" PRIx32,
-         aError));
-    Unused << mCallback->OnError(nsIWebTransport::INVALID_STATE_ERROR);
-  }
-
-  void CallOnStreamReady(WebTransportStreamProxy* aStream) {
-    if (!mTarget->IsOnCurrentThread()) {
-      RefPtr<WebTransportStreamCallbackWrapper> self(this);
-      RefPtr<WebTransportStreamProxy> stream = aStream;
-      Unused << mTarget->Dispatch(NS_NewRunnableFunction(
-          "WebTransportStreamCallbackWrapper::CallOnStreamReady",
-          [self{std::move(self)}, stream{std::move(stream)}]() {
-            self->CallOnStreamReady(stream);
-          }));
-      return;
-    }
-
-    if (mBidi) {
-      Unused << mCallback->OnBidirectionalStreamReady(aStream);
-      return;
-    }
-
-    Unused << mCallback->OnUnidirectionalStreamReady(aStream);
-  }
-
- private:
-  virtual ~WebTransportStreamCallbackWrapper() {
-    NS_ProxyRelease(
-        "WebTransportStreamCallbackWrapper::~WebTransportStreamCallbackWrapper",
-        mTarget, mCallback.forget());
-  }
-
-  nsCOMPtr<nsIWebTransportStreamCallback> mCallback;
-  nsCOMPtr<nsIEventTarget> mTarget;
-  bool mBidi = false;
-};
-
-void WebTransportSessionProxy::CreateStreamInternal(
-    WebTransportStreamCallbackWrapper* aCallback, bool aBidi) {
-  if (!OnSocketThread()) {
-    RefPtr<WebTransportSessionProxy> self(this);
-    RefPtr<WebTransportStreamCallbackWrapper> wrapper(aCallback);
-    Unused << gSocketTransportService->Dispatch(NS_NewRunnableFunction(
-        "WebTransportSessionProxy::CreateStreamInternal",
-        [self{std::move(self)}, wrapper{std::move(wrapper)}, bidi(aBidi)]() {
-          self->CreateStreamInternal(wrapper, bidi);
-        }));
-    return;
-  }
-
-  RefPtr<WebTransportStreamCallbackWrapper> wrapper(aCallback);
-  auto callback =
-      [wrapper{std::move(wrapper)}](
-          Result<RefPtr<Http3WebTransportStream>, nsresult>&& aResult) {
-        if (aResult.isErr()) {
-          wrapper->CallOnError(aResult.unwrapErr());
-          return;
-        }
-
-        RefPtr<Http3WebTransportStream> stream = aResult.unwrap();
-        RefPtr<WebTransportStreamProxy> streamProxy =
-            new WebTransportStreamProxy(stream);
-        wrapper->CallOnStreamReady(streamProxy);
-      };
-
-  if (aBidi) {
-    mWebTransportSession->CreateOutgoingBidirectionalStream(
-        std::move(callback));
-  } else {
-    mWebTransportSession->CreateOutgoingUnidirectionalStream(
-        std::move(callback));
-  }
-}
-
 NS_IMETHODIMP
 WebTransportSessionProxy::CreateOutgoingUnidirectionalStream(
     nsIWebTransportStreamCallback* callback) {
-  if (!callback) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  {
-    MutexAutoLock lock(mMutex);
-    if (mState != WebTransportSessionProxyState::ACTIVE ||
-        !mWebTransportSession) {
-      nsCOMPtr<nsIWebTransportStreamCallback> cb(callback);
-      NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-          "WebTransportSessionProxy::CreateOutgoingUnidirectionalStream",
-          [cb{std::move(cb)}]() {
-            cb->OnError(nsIWebTransport::INVALID_STATE_ERROR);
-          }));
-      return NS_OK;
-    }
-  }
-
-  RefPtr<WebTransportStreamCallbackWrapper> wrapper =
-      new WebTransportStreamCallbackWrapper(callback, false);
-  CreateStreamInternal(wrapper, false);
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 WebTransportSessionProxy::CreateOutgoingBidirectionalStream(
     nsIWebTransportStreamCallback* callback) {
-  if (!callback) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  {
-    MutexAutoLock lock(mMutex);
-    if (mState != WebTransportSessionProxyState::ACTIVE ||
-        !mWebTransportSession) {
-      nsCOMPtr<nsIWebTransportStreamCallback> cb(callback);
-      NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-          "WebTransportSessionProxy::CreateOutgoingBidirectionalStream",
-          [cb{std::move(cb)}]() {
-            cb->OnError(nsIWebTransport::INVALID_STATE_ERROR);
-          }));
-      return NS_OK;
-    }
-  }
-
-  RefPtr<WebTransportStreamCallbackWrapper> wrapper =
-      new WebTransportStreamCallbackWrapper(callback, true);
-  CreateStreamInternal(wrapper, true);
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-----------------------------------------------------------------------------

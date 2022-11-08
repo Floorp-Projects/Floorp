@@ -32,9 +32,6 @@ class Http3Stream final : public nsAHttpSegmentReader,
   Http3WebTransportSession* GetHttp3WebTransportSession() override {
     return nullptr;
   }
-  Http3WebTransportStream* GetHttp3WebTransportStream() override {
-    return nullptr;
-  }
   Http3Stream* GetHttp3Stream() override { return this; }
 
   nsresult TryActivating();
@@ -48,6 +45,10 @@ class Http3Stream final : public nsAHttpSegmentReader,
 
   void Close(nsresult aResult) override;
   bool RecvdData() const { return mDataReceived; }
+
+  bool RecvdFin() const { return mFin; }
+  bool RecvdReset() const { return mResetRecv; }
+  void SetRecvdReset() { mResetRecv = true; }
 
   void StopSending();
 
@@ -136,6 +137,7 @@ class Http3Stream final : public nsAHttpSegmentReader,
 
   nsCString mFlatHttpRequestHeaders;
   bool mDataReceived{false};
+  bool mResetRecv{false};
   nsTArray<uint8_t> mFlatResponseHeaders;
   uint64_t mTransactionTabId{0};
   uint64_t mCurrentTopBrowsingContextId;
@@ -145,6 +147,8 @@ class Http3Stream final : public nsAHttpSegmentReader,
   // For Progress Events
   uint64_t mTotalSent{0};
   uint64_t mTotalRead{0};
+
+  bool mFin{false};
 
   bool mAttempting0RTT = false;
 

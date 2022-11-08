@@ -115,7 +115,6 @@ UNIFIED_SOURCES += [
     "Http3Session.cpp",
     "Http3Stream.cpp",
     "Http3WebTransportSession.cpp",
-    "Http3WebTransportStream.cpp",
     "HttpAuthUtils.cpp",
     "HttpBackgroundChannelChild.cpp",
     "HttpBackgroundChannelParent.cpp",

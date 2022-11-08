@@ -16,7 +16,6 @@ namespace mozilla::net {
 class Http3Session;
 class Http3Stream;
 class Http3WebTransportSession;
-class Http3WebTransportStream;
 
 class Http3StreamBase : public SupportsWeakPtr, public ARefBase {
  public:
@@ -24,7 +23,6 @@ class Http3StreamBase : public SupportsWeakPtr, public ARefBase {
       : mTransaction(trans), mSession(session) {}
 
   virtual Http3WebTransportSession* GetHttp3WebTransportSession() = 0;
-  virtual Http3WebTransportStream* GetHttp3WebTransportStream() = 0;
   virtual Http3Stream* GetHttp3Stream() = 0;
 
   bool HasStreamId() const { return mStreamId != UINT64_MAX; }
@@ -49,18 +47,12 @@ class Http3StreamBase : public SupportsWeakPtr, public ARefBase {
   virtual bool Do0RTT() { return false; }
   virtual nsresult Finish0RTT(bool aRestart) { return NS_OK; }
 
-  virtual bool RecvdFin() const { return mFin; }
-  virtual bool RecvdReset() const { return mResetRecv; }
-  virtual void SetRecvdReset() { mResetRecv = true; }
-
  protected:
   ~Http3StreamBase() = default;
   uint64_t mStreamId{UINT64_MAX};
   RefPtr<nsAHttpTransaction> mTransaction;
   Http3Session* mSession;
   bool mQueued{false};
-  bool mFin{false};
-  bool mResetRecv{false};
 };
 
 }  // namespace mozilla::net
