@@ -8,34 +8,22 @@
 #define DOM_FS_FILESYSTEMWRITABLEFILESTREAM_H_
 
 #include "mozilla/Logging.h"
-#include "mozilla/dom/Blob.h"
-#include "mozilla/dom/FileSystemManager.h"
-#include "mozilla/dom/FileSystemWritableFileStreamChild.h"
 #include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/WritableStream.h"
-#include "mozilla/ipc/FileDescriptor.h"
-#include "nsISupports.h"
-#include "nsWrapperCache.h"
-#include "prio.h"
-#include "private/pprio.h"
 
 class nsIGlobalObject;
 
 namespace mozilla {
 extern LazyLogModule gOPFSLog;
-}
-
-namespace mozilla::ipc {
-class FileDescriptor;
-}  // namespace mozilla::ipc
-
-namespace mozilla {
 
 class ErrorResult;
 
 namespace dom {
 
 class ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams;
+class Blob;
+class FileSystemManager;
+class FileSystemWritableFileStreamChild;
 class Promise;
 
 class FileSystemWritableFileStream final : public WritableStream {
@@ -51,7 +39,7 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   void ClearActor();
 
-  bool IsClosed() const { return !mActor || !mActor->MutableFileDescPtr(); }
+  bool IsClosed() const;
 
   already_AddRefed<Promise> Close(ErrorResult& aRv);
 

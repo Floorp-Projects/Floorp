@@ -10,6 +10,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemAccessHandleParent.h"
+#include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/FileSystemWritableFileStreamParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"

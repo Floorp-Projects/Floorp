@@ -8,8 +8,6 @@
 #define DOM_FS_PARENT_FILESYSTEMMANAGERPARENT_H_
 
 #include "ErrorList.h"
-#include "mozilla/StaticMutex.h"
-#include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/PFileSystemManagerParent.h"
 #include "nsISupports.h"

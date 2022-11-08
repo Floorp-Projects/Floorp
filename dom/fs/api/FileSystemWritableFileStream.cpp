@@ -6,11 +6,12 @@
 
 #include "FileSystemWritableFileStream.h"
 
-#include <string.h>
-
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/Blob.h"
 #include "mozilla/dom/FileSystemHandle.h"
+#include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemWritableFileStreamBinding.h"
+#include "mozilla/dom/FileSystemWritableFileStreamChild.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WritableStreamDefaultController.h"
 #include "nsIInputStream.h"
@@ -166,6 +167,10 @@ void FileSystemWritableFileStream::ClearActor() {
   MOZ_ASSERT(mActor);
 
   mActor = nullptr;
+}
+
+bool FileSystemWritableFileStream::IsClosed() const {
+  return !mActor || !mActor->MutableFileDescPtr();
 }
 
 already_AddRefed<Promise> FileSystemWritableFileStream::Close(
