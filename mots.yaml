@@ -2070,8 +2070,7 @@ modules:
     meta:
       components:
         - Various
-      url: '[https://wiki.mozilla.org/Firefox/firefox-dev firefox-dev], #nodejs on
-        slack'
+      url: 'https://wiki.mozilla.org/Firefox/firefox-dev, #nodejs on slack'
     owners:
       - *dmosedale
     peers:
@@ -2100,7 +2099,7 @@ modules:
     machine_name: core_nspr
 
   - name: 'Core: PDF'
-    description: Rendering code to display documents encoded in the ISO 32000-1 `PDF'
+    description: Rendering code to display documents encoded in the ISO 32000-1 PDF
       format.
     includes:
       - toolkit/components/pdfjs/**/*
