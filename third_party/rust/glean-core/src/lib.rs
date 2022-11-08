@@ -15,6 +15,7 @@
 //! ## [The Glean SDK Book](https://mozilla.github.io/glean)
 
 use std::collections::HashMap;
+use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -189,6 +190,25 @@ fn setup_state(state: State) {
     }
 }
 
+/// An error returned from callbacks.
+#[derive(Debug)]
+pub enum CallbackError {
+    /// An unexpected error occured.
+    UnexpectedError,
+}
+
+impl fmt::Display for CallbackError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Unexpected error")
+    }
+}
+
+impl From<uniffi::UnexpectedUniFFICallbackError> for CallbackError {
+    fn from(_: uniffi::UnexpectedUniFFICallbackError) -> CallbackError {
+        CallbackError::UnexpectedError
+    }
+}
+
 /// A callback object used to trigger actions on the foreign-language side.
 ///
 /// A callback object is stored in glean-core for the entire lifetime of the application.
@@ -204,13 +224,13 @@ pub trait OnGleanEvents: Send {
     ///
     /// This should not block.
     /// The uploader needs to asynchronously poll Glean for new pings to upload.
-    fn trigger_upload(&self);
+    fn trigger_upload(&self) -> Result<(), CallbackError>;
 
     /// Start the Metrics Ping Scheduler.
     fn start_metrics_ping_scheduler(&self) -> bool;
 
     /// Called when upload is disabled and uploads should be stopped
-    fn cancel_uploads(&self);
+    fn cancel_uploads(&self) -> Result<(), CallbackError>;
 }
 
 /// Initializes Glean.
@@ -348,7 +368,9 @@ fn initialize_inner(
                 // 1. Pings were submitted through Glean and it is ready to upload those pings;
                 // 2. Upload is disabled, to upload a possible deletion-request ping.
                 if pings_submitted || !upload_enabled {
-                    state.callbacks.trigger_upload();
+                    if let Err(e) = state.callbacks.trigger_upload() {
+                        log::error!("Triggering upload failed. Error: {}", e);
+                    }
                 }
             }
 
@@ -371,7 +393,9 @@ fn initialize_inner(
                 // ping startup check should be performed before any other ping, since it relies
                 // on being dispatched to the API context before any other metric.
                 if state.callbacks.start_metrics_ping_scheduler() {
-                    state.callbacks.trigger_upload();
+                    if let Err(e) = state.callbacks.trigger_upload() {
+                        log::error!("Triggering upload failed. Error: {}", e);
+                    }
                 }
             }
 
@@ -388,7 +412,9 @@ fn initialize_inner(
                     // Note that unwrapping below is safe: the function will return an
                     // `Ok` value for a known ping.
                     if glean.submit_ping_by_name("baseline", Some("dirty_startup")) {
-                        state.callbacks.trigger_upload();
+                        if let Err(e) = state.callbacks.trigger_upload() {
+                            log::error!("Triggering upload failed. Error: {}", e);
+                        }
                     }
                 }
 
@@ -599,7 +625,9 @@ pub fn glean_set_upload_enabled(enabled: bool) {
             // Stop the MPS if its handled within Rust.
             glean.cancel_metrics_ping_scheduler();
             // Stop wrapper-controlled uploader.
-            state.callbacks.cancel_uploads();
+            if let Err(e) = state.callbacks.cancel_uploads() {
+                log::error!("Canceling upload failed. Error: {}", e);
+            }
         }
 
         glean.set_upload_enabled(enabled);
@@ -609,7 +637,9 @@ pub fn glean_set_upload_enabled(enabled: bool) {
         }
 
         if original_enabled && !enabled {
-            state.callbacks.trigger_upload();
+            if let Err(e) = state.callbacks.trigger_upload() {
+                log::error!("Triggering upload failed. Error: {}", e);
+            }
         }
     })
 }
@@ -756,7 +786,9 @@ pub fn glean_handle_client_active() {
         // the uploader. It's fine to trigger it if no ping was generated:
         // it will bail out.
         let state = global_state().lock().unwrap();
-        state.callbacks.trigger_upload();
+        if let Err(e) = state.callbacks.trigger_upload() {
+            log::error!("Triggering upload failed. Error: {}", e);
+        }
     });
 
     // The previous block of code may send a ping containing the `duration` metric,
@@ -787,7 +819,9 @@ pub fn glean_handle_client_inactive() {
         // the uploader. It's fine to trigger it if no ping was generated:
         // it will bail out.
         let state = global_state().lock().unwrap();
-        state.callbacks.trigger_upload();
+        if let Err(e) = state.callbacks.trigger_upload() {
+            log::error!("Triggering upload failed. Error: {}", e);
+        }
     })
 }
 
@@ -799,7 +833,9 @@ pub fn glean_submit_ping_by_name(ping_name: String, reason: Option<String>) {
 
         if sent {
             let state = global_state().lock().unwrap();
-            state.callbacks.trigger_upload();
+            if let Err(e) = state.callbacks.trigger_upload() {
+                log::error!("Triggering upload failed. Error: {}", e);
+            }
         }
     })
 }

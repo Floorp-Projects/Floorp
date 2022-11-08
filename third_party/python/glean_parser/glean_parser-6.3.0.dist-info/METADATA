@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: glean-parser
-Version: 6.1.2
+Version: 6.3.0
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: The Glean Team
@@ -85,6 +85,19 @@ $ glean_parser check < ping.json
 # Changelog
 
 ## Unreleased
+
+## 6.3.0
+
+- events: Increase extras limit to 15 ([bug 1798713](https://bugzilla.mozilla.org/show_bug.cgi?id=1798713))
+
+## 6.2.1
+
+- Add support for Rate, Denominator and Numerator metrics for JavaScript. ([bug 1793777](https://bugzilla.mozilla.org/show_bug.cgi?id=1793777))
+
+## 6.2.0
+
+- [data-review] Use a template to generate the Data Review Request template ([bug 1772605](https://bugzilla.mozilla.org/show_bug.cgi?id=1772605))
+- Make tag and no\_lint order deterministic ([#518](https://github.com/mozilla/glean_parser/pull/518))
 
 ## 6.1.2
 

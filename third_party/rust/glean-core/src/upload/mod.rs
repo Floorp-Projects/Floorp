@@ -1280,7 +1280,7 @@ mod test {
                 .unwrap()
         );
         assert_eq!(
-            n as i32,
+            n,
             upload_manager
                 .upload_metrics
                 .pending_pings

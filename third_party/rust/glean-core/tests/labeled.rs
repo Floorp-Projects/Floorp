@@ -373,7 +373,7 @@ fn seen_labels_get_reloaded_from_disk() {
         // Set the maximum number of labels
         for i in 1..=16 {
             let label = format!("label{}", i);
-            labeled.get(&label).add_sync(&glean, i);
+            labeled.get(label).add_sync(&glean, i);
         }
 
         let snapshot = StorageManager
@@ -439,7 +439,7 @@ fn caching_metrics_with_dynamic_labels() {
     let metrics = (1..=20)
         .map(|i| {
             let label = format!("label{}", i);
-            labeled.get(&label)
+            labeled.get(label)
         })
         .collect::<Vec<_>>();
 
@@ -473,7 +473,7 @@ fn caching_metrics_with_dynamic_labels_across_pings() {
     let metrics = (1..=20)
         .map(|i| {
             let label = format!("label{}", i);
-            labeled.get(&label)
+            labeled.get(label)
         })
         .collect::<Vec<_>>();
 

@@ -390,7 +390,7 @@ definitions:
                 - quantity
           required:
             - description
-        maxProperties: 10
+        maxProperties: 15
         default: {}
 
       gecko_datapoint:

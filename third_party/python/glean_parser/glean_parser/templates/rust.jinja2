@@ -53,7 +53,7 @@ pub static {{ obj.name|snake_case }}: ::glean::private::__export::Lazy<::glean::
 {% else %}
 pub mod {{ category.name|snake_case }} {
     #[allow(unused_imports)] // HistogramType might be unusued, let's avoid warnings
-    use glean::{private::*, traits::ExtraKeys, CommonMetricData, HistogramType, Lifetime, TimeUnit, MemoryUnit};
+    use glean::{private::*, traits::ExtraKeys, traits::NoExtraKeys, CommonMetricData, HistogramType, Lifetime, TimeUnit, MemoryUnit};
     {% for obj in category.objs.values() %}
 
     {% if obj|attr("_generate_enums") %}

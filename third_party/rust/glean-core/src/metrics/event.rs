@@ -11,7 +11,7 @@ use crate::util::truncate_string_at_boundary_with_error;
 use crate::CommonMetricData;
 use crate::Glean;
 
-const MAX_LENGTH_EXTRA_KEY_VALUE: usize = 100;
+const MAX_LENGTH_EXTRA_KEY_VALUE: usize = 500;
 
 /// An event metric.
 ///

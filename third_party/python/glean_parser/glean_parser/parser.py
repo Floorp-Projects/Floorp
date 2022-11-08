@@ -244,9 +244,9 @@ def _instantiate_metrics(
                     metric_obj = None
 
             if metric_obj is not None:
-                metric_obj.no_lint = list(set(metric_obj.no_lint + global_no_lint))
+                metric_obj.no_lint = sorted(set(metric_obj.no_lint + global_no_lint))
                 if len(global_tags):
-                    metric_obj.metadata["tags"] = list(
+                    metric_obj.metadata["tags"] = sorted(
                         set(metric_obj.metadata.get("tags", []) + global_tags)
                     )
 
@@ -311,7 +311,7 @@ def _instantiate_pings(
             continue
 
         if ping_obj is not None:
-            ping_obj.no_lint = list(set(ping_obj.no_lint + global_no_lint))
+            ping_obj.no_lint = sorted(set(ping_obj.no_lint + global_no_lint))
 
         if isinstance(filepath, Path) and ping_obj.defined_in is not None:
             ping_obj.defined_in["filepath"] = str(filepath)
@@ -363,7 +363,7 @@ def _instantiate_tags(
             continue
 
         if tag_obj is not None:
-            tag_obj.no_lint = list(set(tag_obj.no_lint + global_no_lint))
+            tag_obj.no_lint = sorted(set(tag_obj.no_lint + global_no_lint))
 
             if isinstance(filepath, Path) and tag_obj.defined_in is not None:
                 tag_obj.defined_in["filepath"] = str(filepath)

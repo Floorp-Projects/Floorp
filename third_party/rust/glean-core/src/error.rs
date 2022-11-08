@@ -16,7 +16,7 @@ use rkv::StoreError;
 ///
 /// [`Result`]: https://doc.rust-lang.org/stable/std/result/enum.Result.html
 /// [`Error`]: std.struct.Error.html
-pub type Result<T> = result::Result<T, Error>;
+pub type Result<T, E = Error> = result::Result<T, E>;
 
 /// A list enumerating the categories of errors in this crate.
 ///
