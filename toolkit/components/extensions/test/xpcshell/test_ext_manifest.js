@@ -144,14 +144,19 @@ add_task(async function test_mv2_scripting_permission_always_enabled() {
   Assert.deepEqual(warnings, [], "Got no warnings");
 });
 
-add_task(async function test_mv3_scripting_permission_always_enabled() {
-  let warnings = await testManifest({
-    manifest_version: 3,
-    permissions: ["scripting"],
-  });
+add_task(
+  {
+    pref_set: [["extensions.manifestV3.enabled", true]],
+  },
+  async function test_mv3_scripting_permission_always_enabled() {
+    let warnings = await testManifest({
+      manifest_version: 3,
+      permissions: ["scripting"],
+    });
 
-  Assert.deepEqual(warnings, [], "Got no warnings");
-});
+    Assert.deepEqual(warnings, [], "Got no warnings");
+  }
+);
 
 add_task(async function test_simpler_version_format() {
   const TEST_CASES = [
@@ -256,15 +261,20 @@ add_task(async function test_applications() {
   await extension.unload();
 });
 
-add_task(async function test_applications_key_mv3() {
-  let warnings = await testManifest({
-    manifest_version: 3,
-    applications: {},
-  });
+add_task(
+  {
+    pref_set: [["extensions.manifestV3.enabled", true]],
+  },
+  async function test_applications_key_mv3() {
+    let warnings = await testManifest({
+      manifest_version: 3,
+      applications: {},
+    });
 
-  Assert.deepEqual(
-    warnings,
-    [`Property "applications" is unsupported in Manifest Version 3`],
-    `Manifest v3 with "applications" key logs an error.`
-  );
-});
+    Assert.deepEqual(
+      warnings,
+      [`Property "applications" is unsupported in Manifest Version 3`],
+      `Manifest v3 with "applications" key logs an error.`
+    );
+  }
+);
