@@ -1,0 +1,3 @@
+HTTP 401 UNAUTHORIZED
+X-Frame-Options: SAMEORIGIN
+WWW-Authenticate: basic realm="login required"
