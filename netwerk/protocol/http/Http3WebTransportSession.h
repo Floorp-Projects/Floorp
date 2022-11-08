@@ -32,6 +32,9 @@ class Http3WebTransportSession final : public Http3StreamBase,
   Http3WebTransportSession* GetHttp3WebTransportSession() override {
     return this;
   }
+  Http3WebTransportStream* GetHttp3WebTransportStream() override {
+    return nullptr;
+  }
   Http3Stream* GetHttp3Stream() override { return nullptr; }
 
   [[nodiscard]] nsresult ReadSegments() override;
@@ -53,10 +56,23 @@ class Http3WebTransportSession final : public Http3StreamBase,
   void CloseSession(uint32_t aStatus, nsACString& aReason);
   void OnSessionClosed(uint32_t aStatus, nsACString& aReason);
 
+  void CreateOutgoingBidirectionalStream(
+      std::function<void(Result<RefPtr<Http3WebTransportStream>, nsresult>&&)>&&
+          aCallback);
+  void CreateOutgoingUnidirectionalStream(
+      std::function<void(Result<RefPtr<Http3WebTransportStream>, nsresult>&&)>&&
+          aCallback);
+  void RemoveWebTransportStream(Http3WebTransportStream* aStream);
+
  private:
-  ~Http3WebTransportSession() = default;
+  virtual ~Http3WebTransportSession();
 
   bool ConsumeHeaders(const char* buf, uint32_t avail, uint32_t* countUsed);
+
+  void CreateStreamInternal(
+      bool aBidi,
+      std::function<void(Result<RefPtr<Http3WebTransportStream>, nsresult>&&)>&&
+          aCallback);
 
   enum RecvStreamState {
     BEFORE_HEADERS,
@@ -75,6 +91,7 @@ class Http3WebTransportSession final : public Http3StreamBase,
 
   nsCString mFlatHttpRequestHeaders;
   nsTArray<uint8_t> mFlatResponseHeaders;
+  nsTArray<RefPtr<Http3WebTransportStream>> mStreams;
 
   nsresult mSocketInCondition = NS_ERROR_NOT_INITIALIZED;
   nsresult mSocketOutCondition = NS_ERROR_NOT_INITIALIZED;

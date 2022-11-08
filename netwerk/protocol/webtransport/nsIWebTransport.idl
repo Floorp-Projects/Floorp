@@ -9,6 +9,8 @@
 
 interface WebTransportSessionEventListener;
 interface nsIWebTransportStreamCallback;
+interface nsIWebTransportBidirectionalStream;
+interface nsIWebTransportSendStream;
 
 %{C++
 namespace mozilla::net {
@@ -20,6 +22,11 @@ class Http3WebTransportSession;
 
 [builtinclass, scriptable, uuid(c20d6e77-8cb1-4838-a88d-fff826080aa3)]
 interface nsIWebTransport : nsISupports {
+  cenum WebTransportError : 16 {
+    UNKNOWN_ERROR,
+    INVALID_STATE_ERROR,
+  };
+
   // When called, perform steps in "Initialization WebTransport over HTTP".
   void asyncConnect(in nsIURI aURI,
                     in nsIPrincipal aLoadingPrincipal,
@@ -70,7 +77,7 @@ interface WebTransportSessionEventListener : nsISupports {
 // unidirectional or bidirectional stream.
 [scriptable, uuid(c6eeff1d-599b-40a8-9157-c7a40c3d51a2)]
 interface nsIWebTransportStreamCallback : nsISupports {
-  // void onStreamReady(in nsIWebTransportSendStream aStream);
-  
+  void onBidirectionalStreamReady(in nsIWebTransportBidirectionalStream aStream);
+  void onUnidirectionalStreamReady(in nsIWebTransportSendStream aStream);
   void onError(in uint8_t aError);
 };
