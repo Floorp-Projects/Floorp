@@ -372,7 +372,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   _recordEngagementTelemetry(result, isPrivate, selType) {
     // Update impression stats.
-    lazy.QuickSuggest.updateImpressionStats(
+    lazy.QuickSuggest.impressionCaps.updateStats(
       result.payload.isSponsored ? "sponsored" : "nonsponsored"
     );
 
@@ -595,7 +595,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
         lazy.UrlbarPrefs.get("quickSuggestImpressionCapsNonSponsoredEnabled"))
     ) {
       let type = suggestion.is_sponsored ? "sponsored" : "nonsponsored";
-      let hitStats = lazy.QuickSuggest.impressionCapHitStats(type);
+      let hitStats = lazy.QuickSuggest.impressionCaps.getHitStats(type);
       if (hitStats) {
         this.logger.info("Impression cap(s) hit, not adding suggestion");
         this.logger.debug(JSON.stringify({ type, hitStats }));

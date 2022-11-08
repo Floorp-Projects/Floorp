@@ -54,6 +54,11 @@ EXTRA_JS_MODULES += [
     "UrlbarView.sys.mjs",
 ]
 
+EXTRA_JS_MODULES["urlbar/private"] += [
+    "private/BaseFeature.sys.mjs",
+    "private/ImpressionCaps.sys.mjs",
+]
+
 TESTING_JS_MODULES += [
     "tests/quicksuggest/MerinoTestUtils.sys.mjs",
     "tests/quicksuggest/QuickSuggestTestUtils.sys.mjs",
