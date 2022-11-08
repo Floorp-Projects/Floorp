@@ -2532,6 +2532,14 @@
   alias_set: custom
   possibly_calls: true
 
+- name: SetObjectSize
+  operands:
+    set: Object
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+
 - name: MapObjectHasNonBigInt
   operands:
     map: Object
@@ -2611,6 +2619,14 @@
   congruent_to: if_operands_equal
   alias_set: custom
   possibly_calls: true
+
+- name: MapObjectSize
+  operands:
+    map: Object
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
 
 - name: WasmNeg
   gen_boilerplate: false
