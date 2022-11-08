@@ -17,9 +17,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * You can extend this class as an alternative to implementing your feature
  * directly in `QuickSuggest`. Doing so has the following advantages:
  *
- * - If your feature is gated on a Nimbus variable, `QuickSuggest` will manage
- *   its lifetime automatically. This is really only useful if the feature has
- *   state that must be initialized when the feature is enabled and
+ * - If your feature is gated on a Nimbus variable or preference, `QuickSuggest`
+ *   will manage its lifetime automatically. This is really only useful if the
+ *   feature has state that must be initialized when the feature is enabled and
  *   uninitialized when it's disabled.
  *
  * - Encapsulation. You can keep all the code related to your feature in one
@@ -44,6 +44,18 @@ export class BaseFeature {
    */
   get shouldEnable() {
     throw new Error("`shouldEnable` must be overridden");
+  }
+
+  /**
+   * @returns {Array}
+   *   If the subclass's `shouldEnable` implementation depends on preferences
+   *   instead of Nimbus variables, the subclass should override this getter and
+   *   return their names in this array so that `enable()` can be called when
+   *   they change. Names should be in the same format that `UrlbarPrefs.get()`
+   *   expects.
+   */
+  get enablingPreferences() {
+    return null;
   }
 
   /**

@@ -3,18 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
+import { BaseFeature } from "resource:///modules/urlbar/private/BaseFeature.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
   TaskQueue: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
 });
 
@@ -26,7 +25,7 @@ const NONSPONSORED_IAB_CATEGORIES = new Set(["5 - Education"]);
 // Default score for remote settings suggestions.
 const DEFAULT_SUGGESTION_SCORE = 0.2;
 
-// Entries are added to the `_resultsByKeyword` map in chunks, and each chunk
+// Entries are added to the `#resultsByKeyword` map in chunks, and each chunk
 // will add at most this many entries.
 const ADD_RESULTS_CHUNK_SIZE = 1000;
 
@@ -36,7 +35,7 @@ const TELEMETRY_LATENCY = "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS";
  * Fetches the suggestions data from RemoteSettings and builds the structures
  * to provide suggestions for UrlbarProviderQuickSuggest.
  */
-export class QuickSuggestRemoteSettingsClient extends EventEmitter {
+export class RemoteSettingsClient extends BaseFeature {
   /**
    * @returns {number}
    *   The default score for remote settings suggestions, a value in the range
@@ -50,9 +49,30 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
 
   constructor() {
     super();
-    lazy.UrlbarPrefs.addObserver(this);
-    lazy.NimbusFeatures.urlbar.onUpdate(() => this._queueSettingsSetup());
-    this._queueSettingsSetup();
+    this.#taskQueue = new lazy.TaskQueue();
+    this.#emitter = new lazy.EventEmitter();
+  }
+
+  get shouldEnable() {
+    return (
+      lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
+      lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored")
+    );
+  }
+
+  get enablingPreferences() {
+    return [
+      "suggest.quicksuggest.nonsponsored",
+      "suggest.quicksuggest.sponsored",
+    ];
+  }
+
+  /**
+   * @returns {EventEmitter}
+   *   The client will emit events on this object.
+   */
+  get emitter() {
+    return this.#emitter;
   }
 
   /**
@@ -60,12 +80,14 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
    *   Resolves when any ongoing updates to the suggestions data are done.
    */
   get readyPromise() {
-    return this._settingsTaskQueue.emptyPromise;
+    return this.#taskQueue.emptyPromise;
   }
 
   /**
    * @returns {object}
-   *   Global quick suggest configuration from remote settings:
+   *   Global quick suggest configuration stored in remote settings. When the
+   *   config changes the `emitter` property will emit a "config-set" event. The
+   *   config is an object that looks like this:
    *
    *   {
    *     best_match: {
@@ -89,16 +111,11 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
    *   }
    */
   get config() {
-    return this._config;
+    return this.#config;
   }
 
-  get logger() {
-    if (!this._logger) {
-      this._logger = lazy.UrlbarUtils.getLogger({
-        prefix: "QuickSuggestRemoteSettingsClient",
-      });
-    }
-    return this._logger;
+  enable(enabled) {
+    this.#queueSettingsSetup(enabled);
   }
 
   /**
@@ -112,10 +129,10 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
    */
   async fetch(searchString) {
     let suggestions;
-    let stopwatchInstance = (this._telemetryStopwatchInstance = {});
+    let stopwatchInstance = {};
     TelemetryStopwatch.start(TELEMETRY_LATENCY, stopwatchInstance);
     try {
-      suggestions = await this._fetchHelper(searchString);
+      suggestions = await this.#fetchHelper(searchString);
       TelemetryStopwatch.finish(TELEMETRY_LATENCY, stopwatchInstance);
     } catch (error) {
       TelemetryStopwatch.cancel(TELEMETRY_LATENCY, stopwatchInstance);
@@ -134,11 +151,11 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
    *   The matched suggestion objects. If there are no matches, an empty array
    *   is returned.
    */
-  async _fetchHelper(phrase) {
+  async #fetchHelper(phrase) {
     this.logger.info("Handling query: " + JSON.stringify(phrase));
 
     phrase = phrase.toLowerCase();
-    let object = this._resultsByKeyword.get(phrase);
+    let object = this.#resultsByKeyword.get(phrase);
     if (!object) {
       return [];
     }
@@ -149,7 +166,7 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
 
     // Start each icon fetch at the same time and wait for them all to finish.
     let icons = await Promise.all(
-      results.map(({ icon }) => this._fetchIcon(icon))
+      results.map(({ icon }) => this.#fetchIcon(icon))
     );
 
     return results.map(result => ({
@@ -226,67 +243,23 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
   }
 
   /**
-   * Called when a urlbar pref changes. The onboarding dialog will set the
-   * `browser.urlbar.suggest.quicksuggest` prefs if the user has opted in, at
-   * which point we can start showing results.
-   *
-   * @param {string} pref
-   *   The name of the pref relative to `browser.urlbar`.
-   */
-  onPrefChanged(pref) {
-    switch (pref) {
-      case "suggest.quicksuggest.nonsponsored":
-      case "suggest.quicksuggest.sponsored":
-        this._queueSettingsSetup();
-        break;
-    }
-  }
-
-  // The RemoteSettings client.
-  _rs = null;
-
-  // Task queue for serializing access to remote settings and related data.
-  // Methods in this class should use this when they need to to modify or access
-  // the settings client. It ensures settings accesses are serialized, do not
-  // overlap, and happen only one at a time. It also lets clients, especially
-  // tests, use this class without having to worry about whether a settings sync
-  // or initialization is ongoing; see `readyPromise`.
-  _settingsTaskQueue = new lazy.TaskQueue();
-
-  // Configuration data synced from remote settings. See the `config` getter.
-  _config = {};
-
-  // Maps each keyword in the dataset to one or more results for the keyword. If
-  // only one result uses a keyword, the keyword's value in the map will be the
-  // result object. If more than one result uses the keyword, the value will be
-  // an array of the results. The reason for not always using an array is that
-  // we expect the vast majority of keywords to be used by only one result, and
-  // since there are potentially very many keywords and results and we keep them
-  // in memory all the time, we want to save as much memory as possible.
-  _resultsByKeyword = new Map();
-
-  // This is only defined as a property so that tests can override it.
-  _addResultsChunkSize = ADD_RESULTS_CHUNK_SIZE;
-
-  /**
    * Queues a task to ensure our remote settings client is initialized or torn
    * down as appropriate.
+   *
+   * @param {boolean} enabled
+   *   Whether the feature should be enabled.
    */
-  _queueSettingsSetup() {
-    this._settingsTaskQueue.queue(() => {
-      let enabled =
-        lazy.UrlbarPrefs.get("quickSuggestEnabled") &&
-        (lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
-          lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored"));
-      if (enabled && !this._rs) {
-        this._onSettingsSync = (...args) => this._queueSettingsSync(...args);
-        this._rs = lazy.RemoteSettings(RS_COLLECTION);
-        this._rs.on("sync", this._onSettingsSync);
-        this._queueSettingsSync();
-      } else if (!enabled && this._rs) {
-        this._rs.off("sync", this._onSettingsSync);
-        this._rs = null;
-        this._onSettingsSync = null;
+  #queueSettingsSetup(enabled) {
+    this.#taskQueue.queue(() => {
+      if (enabled && !this.#rs) {
+        this.#onSettingsSync = (...args) => this.#queueSettingsSync(...args);
+        this.#rs = lazy.RemoteSettings(RS_COLLECTION);
+        this.#rs.on("sync", this.#onSettingsSync);
+        this.#queueSettingsSync();
+      } else if (!enabled && this.#rs) {
+        this.#rs.off("sync", this.#onSettingsSync);
+        this.#rs = null;
+        this.#onSettingsSync = null;
       }
     });
   }
@@ -299,9 +272,9 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
    *   The event object passed to the "sync" event listener if you're calling
    *   this from the listener.
    */
-  async _queueSettingsSync(event = null) {
-    await this._settingsTaskQueue.queue(async () => {
-      if (!this._rs) {
+  async #queueSettingsSync(event = null) {
+    await this.#taskQueue.queue(async () => {
+      if (!this.#rs || this._test_ignoreSettingsSync) {
         return;
       }
 
@@ -312,8 +285,8 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
             .filter(d => d.attachment)
             .map(entry =>
               Promise.all([
-                this._rs.attachments.deleteDownloaded(entry), // type: data
-                this._rs.attachments.deleteFromDisk(entry), // type: icon
+                this.#rs.attachments.deleteDownloaded(entry), // type: data
+                this.#rs.attachments.deleteFromDisk(entry), // type: icon
               ])
             )
         );
@@ -323,26 +296,26 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
       this.logger.debug("Loading data with type: " + dataType);
 
       let [configArray, data] = await Promise.all([
-        this._rs.get({ filters: { type: "configuration" } }),
-        this._rs.get({ filters: { type: dataType } }),
-        this._rs
+        this.#rs.get({ filters: { type: "configuration" } }),
+        this.#rs.get({ filters: { type: dataType } }),
+        this.#rs
           .get({ filters: { type: "icon" } })
           .then(icons =>
-            Promise.all(icons.map(i => this._rs.attachments.downloadToDisk(i)))
+            Promise.all(icons.map(i => this.#rs.attachments.downloadToDisk(i)))
           ),
       ]);
 
       this.logger.debug("Got configuration: " + JSON.stringify(configArray));
-      this._setConfig(configArray?.[0]?.configuration || {});
+      this.#setConfig(configArray?.[0]?.configuration || {});
 
-      this._resultsByKeyword.clear();
+      this.#resultsByKeyword.clear();
 
       this.logger.debug(`Got data with ${data.length} records`);
       for (let record of data) {
-        let { buffer } = await this._rs.attachments.download(record);
+        let { buffer } = await this.#rs.attachments.download(record);
         let results = JSON.parse(new TextDecoder("utf-8").decode(buffer));
         this.logger.debug(`Adding ${results.length} results`);
-        await this._addResults(results);
+        await this.#addResults(results);
       }
     });
   }
@@ -353,9 +326,9 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
    * @param {object} config
    *   The config object.
    */
-  _setConfig(config) {
-    this._config = config || {};
-    this.emit("config-set");
+  #setConfig(config) {
+    this.#config = config || {};
+    this.#emitter.emit("config-set");
   }
 
   /**
@@ -365,7 +338,7 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
    * @param {Array} results
    *   Array of result objects.
    */
-  async _addResults(results) {
+  async #addResults(results) {
     // There can be many results, and each result can have many keywords. To
     // avoid blocking the main thread for too long, update the map in chunks,
     // and to avoid blocking the UI and other higher priority work, do each
@@ -392,13 +365,13 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
             }
             // If the keyword's only result is `result`, store it directly as
             // the value. Otherwise store an array of results. For details, see
-            // the `_resultsByKeyword` comment.
+            // the `#resultsByKeyword` comment.
             let keyword = result.keywords[keywordIndex];
-            let object = this._resultsByKeyword.get(keyword);
+            let object = this.#resultsByKeyword.get(keyword);
             if (!object) {
-              this._resultsByKeyword.set(keyword, result);
+              this.#resultsByKeyword.set(keyword, result);
             } else if (!Array.isArray(object)) {
-              this._resultsByKeyword.set(keyword, [object, result]);
+              this.#resultsByKeyword.set(keyword, [object, result]);
             } else {
               object.push(result);
             }
@@ -419,18 +392,63 @@ export class QuickSuggestRemoteSettingsClient extends EventEmitter {
    * @param {string} path
    *   The icon's remote settings path.
    */
-  async _fetchIcon(path) {
-    if (!path || !this._rs) {
+  async #fetchIcon(path) {
+    if (!path || !this.#rs) {
       return null;
     }
     let record = (
-      await this._rs.get({
+      await this.#rs.get({
         filters: { id: `icon-${path}` },
       })
     ).pop();
     if (!record) {
       return null;
     }
-    return this._rs.attachments.downloadToDisk(record);
+    return this.#rs.attachments.downloadToDisk(record);
   }
+
+  get _test_rs() {
+    return this.#rs;
+  }
+
+  get _test_resultsByKeyword() {
+    return this.#resultsByKeyword;
+  }
+
+  _test_setConfig(config) {
+    this.#setConfig(config);
+  }
+
+  async _test_addResults(results) {
+    await this.#addResults(results);
+  }
+
+  // The RemoteSettings client.
+  #rs = null;
+
+  // Task queue for serializing access to remote settings and related data.
+  // Methods in this class should use this when they need to to modify or access
+  // the settings client. It ensures settings accesses are serialized, do not
+  // overlap, and happen only one at a time. It also lets clients, especially
+  // tests, use this class without having to worry about whether a settings sync
+  // or initialization is ongoing; see `readyPromise`.
+  #taskQueue = null;
+
+  // Configuration data synced from remote settings. See the `config` getter.
+  #config = {};
+
+  // Maps each keyword in the dataset to one or more results for the keyword. If
+  // only one result uses a keyword, the keyword's value in the map will be the
+  // result object. If more than one result uses the keyword, the value will be
+  // an array of the results. The reason for not always using an array is that
+  // we expect the vast majority of keywords to be used by only one result, and
+  // since there are potentially very many keywords and results and we keep them
+  // in memory all the time, we want to save as much memory as possible.
+  #resultsByKeyword = new Map();
+
+  // This is only defined as a property so that tests can override it.
+  _addResultsChunkSize = ADD_RESULTS_CHUNK_SIZE;
+
+  #onSettingsSync = null;
+  #emitter = null;
 }

@@ -4,9 +4,9 @@
 /* import-globals-from ../../unit/head.js */
 
 ChromeUtils.defineESModuleGetters(this, {
+  RemoteSettingsClient:
+    "resource:///modules/urlbar/private/RemoteSettingsClient.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
-  QuickSuggestRemoteSettingsClient:
-    "resource:///modules/QuickSuggestRemoteSettingsClient.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
 });

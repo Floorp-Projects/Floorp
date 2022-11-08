@@ -154,16 +154,17 @@ export class QuickSuggestTestUtils {
     await lazy.QuickSuggest.remoteSettings.readyPromise;
     this.info?.("ensureQuickSuggestInit done awaiting readyPromise");
 
-    // Stub _queueSettingsSync() so any actual remote settings syncs that happen
+    // Ignore settings syncs so any actual remote settings syncs that happen
     // during the test are ignored.
-    let sandbox = lazy.sinon.createSandbox();
-    sandbox.stub(lazy.QuickSuggest.remoteSettings, "_queueSettingsSync");
-    let cleanup = () => sandbox.restore();
+    lazy.QuickSuggest.remoteSettings._test_ignoreSettingsSync = true;
+    let cleanup = () => {
+      delete lazy.QuickSuggest.remoteSettings._test_ignoreSettingsSync;
+    };
     this.registerCleanupFunction?.(cleanup);
 
     if (results) {
-      lazy.QuickSuggest.remoteSettings._resultsByKeyword.clear();
-      await lazy.QuickSuggest.remoteSettings._addResults(results);
+      lazy.QuickSuggest.remoteSettings._test_resultsByKeyword.clear();
+      await lazy.QuickSuggest.remoteSettings._test_addResults(results);
     }
     if (config) {
       this.setConfig(config);
@@ -218,7 +219,7 @@ export class QuickSuggestTestUtils {
    *   {@link QuickSuggestRemoteSettingsClient._setConfig}
    */
   setConfig(config) {
-    lazy.QuickSuggest.remoteSettings._setConfig(config);
+    lazy.QuickSuggest.remoteSettings._test_setConfig(config);
   }
 
   /**
