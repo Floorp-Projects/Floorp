@@ -42,7 +42,7 @@ add_task(function() {
       type: CustomizableUI.TYPE_TOOLBAR,
     });
     CustomizableUI.registerArea("area-996364-3", {
-      type: CustomizableUI.TYPE_MENU_PANEL,
+      type: CustomizableUI.TYPE_PANEL,
     });
   } catch (ex) {
     exceptionThrown = ex;
@@ -60,7 +60,7 @@ add_task(function() {
   let exceptionThrown;
   try {
     CustomizableUI.registerArea("area-996364-4", {
-      type: CustomizableUI.TYPE_MENU_PANEL,
+      type: CustomizableUI.TYPE_PANEL,
     });
     CustomizableUI.registerArea("area-996364-4", {
       type: CustomizableUI.TYPE_TOOLBAR,
@@ -82,12 +82,12 @@ add_task(function() {
   try {
     CustomizableUI.registerArea("area-996899-1", {
       anchor: "PanelUI-menu-button",
-      type: CustomizableUI.TYPE_MENU_PANEL,
+      type: CustomizableUI.TYPE_PANEL,
       defaultPlacements: [],
     });
     CustomizableUI.registerArea("area-996899-1", {
       anchor: "home-button",
-      type: CustomizableUI.TYPE_MENU_PANEL,
+      type: CustomizableUI.TYPE_PANEL,
       defaultPlacements: [],
     });
   } catch (ex) {
@@ -106,12 +106,12 @@ add_task(function() {
   try {
     CustomizableUI.registerArea("area-996899-2", {
       anchor: "PanelUI-menu-button",
-      type: CustomizableUI.TYPE_MENU_PANEL,
+      type: CustomizableUI.TYPE_PANEL,
       defaultPlacements: [],
     });
     CustomizableUI.registerArea("area-996899-2", {
       anchor: "PanelUI-menu-button",
-      type: CustomizableUI.TYPE_MENU_PANEL,
+      type: CustomizableUI.TYPE_PANEL,
       defaultPlacements: ["new-window-button"],
     });
   } catch (ex) {

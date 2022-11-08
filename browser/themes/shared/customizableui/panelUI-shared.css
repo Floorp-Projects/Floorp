@@ -197,8 +197,8 @@ toolbarseparator + .panel-subview-body {
   padding: 4px;
 }
 
-#wrapper-edit-controls:is([place="palette"],[place="menu-panel"]) > #edit-controls,
-#wrapper-zoom-controls:is([place="palette"],[place="menu-panel"]) > #zoom-controls,
+#wrapper-edit-controls:is([place="palette"],[place="panel"]) > #edit-controls,
+#wrapper-zoom-controls:is([place="palette"],[place="panel"]) > #zoom-controls,
 :is(panelview, #widget-overflow-fixed-list) .toolbaritem-combined-buttons {
   margin: var(--arrowpanel-menuitem-margin);
 }
@@ -399,15 +399,15 @@ panelview[id^=PanelUI-webext-] {
   }
 }
 
-toolbarpaletteitem[place="menu-panel"] > .toolbarbutton-1 {
+toolbarpaletteitem[place="panel"] > .toolbarbutton-1 {
   -moz-box-flex: 1;
 }
 
 /* Help webextension buttons fit in. */
 toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .toolbarbutton-icon,
 toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton-icon,
-toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-icon,
+toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   height: var(--panel-and-palette-icon-size);
   width: var(--panel-and-palette-icon-size);
 }
@@ -1364,12 +1364,12 @@ toolbarpaletteitem[place="palette"] > #search-container {
   -moz-box-orient: horizontal;
 }
 
-toolbarpaletteitem[place="menu-panel"],
-toolbarpaletteitem[place="menu-panel"] > toolbaritem {
+toolbarpaletteitem[place="panel"],
+toolbarpaletteitem[place="panel"] > toolbaritem {
   -moz-box-flex: 1;
 }
 
-.toolbaritem-combined-buttons[cui-areatype="menu-panel"] > .toolbarbutton-combined-buttons-dropmarker,
+.toolbaritem-combined-buttons[cui-areatype="panel"] > .toolbarbutton-combined-buttons-dropmarker,
 .toolbaritem-combined-buttons[overflowedItem] > .toolbarbutton-combined-buttons-dropmarker {
   display: none;
 }

@@ -97,7 +97,7 @@ const PanelUI = {
     this.overflowFixedList.hidden = false;
     // Also unhide the separator. We use CSS to hide/show it based on the panel's content.
     this.overflowFixedList.previousElementSibling.hidden = false;
-    CustomizableUI.registerMenuPanel(
+    CustomizableUI.registerPanelNode(
       this.overflowFixedList,
       CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
     );

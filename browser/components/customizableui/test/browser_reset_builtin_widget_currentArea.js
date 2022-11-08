@@ -13,7 +13,7 @@ add_task(async function reset_should_not_keep_currentArea() {
   // We can't check currentArea directly; check areaType which is based on it:
   is(
     CustomizableUI.getWidget("save-page-button").areaType,
-    CustomizableUI.TYPE_MENU_PANEL,
+    CustomizableUI.TYPE_PANEL,
     "Button should know it's in the overflow panel"
   );
   CustomizableUI.reset();

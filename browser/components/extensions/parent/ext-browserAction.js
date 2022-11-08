@@ -429,7 +429,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
       return;
     }
 
-    if (this.widget.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+    if (this.widget.areaType == CustomizableUI.TYPE_PANEL) {
       await window.document.getElementById("nav-bar").overflowable.show();
     }
 

@@ -21,7 +21,7 @@ add_task(async function() {
   gLazyArea.hidden = true;
   popupSet.appendChild(gLazyArea);
   CustomizableUI.registerArea(kLazyAreaId, {
-    type: CustomizableUI.TYPE_MENU_PANEL,
+    type: CustomizableUI.TYPE_PANEL,
     defaultPlacements: [],
   });
   CustomizableUI.addWidgetToArea(kButtonId, kLazyAreaId);

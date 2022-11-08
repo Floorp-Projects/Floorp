@@ -25,7 +25,7 @@
   margin-inline: var(--urlbar-margin-inline);
 }
 
-#search-container[cui-areatype="menu-panel"] {
+#search-container[cui-areatype="panel"] {
   margin: var(--arrowpanel-menuitem-margin);
 }
 
@@ -649,7 +649,7 @@
   -moz-box-flex: 1;
 }
 
-#search-container[cui-areatype="menu-panel"] > #searchbar:-moz-lwtheme {
+#search-container[cui-areatype="panel"] > #searchbar:-moz-lwtheme {
   /* Theme authors usually only consider contrast against the toolbar when
      picking a border color for the search bar. Since the search bar can be
      dragged into the overflow panel, we need to show a high-contrast border
