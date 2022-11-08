@@ -1274,7 +1274,10 @@ static void TargetArrayAddTarget(nsTArray<GtkTargetEntry*>& aTargetArray,
 }
 
 GtkTargetList* nsDragService::GetSourceList(void) {
-  if (!mSourceDataItems) return nullptr;
+  if (!mSourceDataItems) {
+    return nullptr;
+  }
+
   nsTArray<GtkTargetEntry*> targetArray;
   GtkTargetEntry* targets;
   GtkTargetList* targetList = 0;
@@ -1700,19 +1703,23 @@ nsresult nsDragService::CreateTempFile(nsITransferable* aItem,
   return NS_ERROR_FAILURE;
 }
 
+// We're asked to get data from mSourceDataItems and pass it to
+// GtkSelectionData (Gtk D&D interface).
+// We need to check mSourceDataItems data type and try to convert it
+// to data type accepted by Gtk.
 void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
                                   GtkSelectionData* aSelectionData,
                                   guint32 aTime) {
   LOGDRAGSERVICE("nsDragService::SourceDataGet(%p)", aContext);
 
   GdkAtom target = gtk_selection_data_get_target(aSelectionData);
-  GUniquePtr<gchar> typeName(gdk_atom_name(target));
-  if (!typeName) {
+  GUniquePtr<gchar> requestedTypeName(gdk_atom_name(target));
+  if (!requestedTypeName) {
     LOGDRAGSERVICE("  failed to get atom name.\n");
     return;
   }
 
-  LOGDRAGSERVICE("  Type is %s\n", typeName.get());
+  LOGDRAGSERVICE("  Gtk asks us for %s data type\n", requestedTypeName.get());
   // check to make sure that we have data items to return.
   if (!mSourceDataItems) {
     LOGDRAGSERVICE("  Failed to get our data items\n");
@@ -1736,27 +1743,27 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
   bool needToDoConversionToPlainText = false;
   bool needToDoConversionToImage = false;
 
-  nsDependentCString mimeFlavor(typeName.get());
+  nsDependentCString mimeFlavor(requestedTypeName.get());
   const char* actualFlavor = nullptr;
   if (mimeFlavor.EqualsLiteral(kTextMime) ||
       mimeFlavor.EqualsLiteral(gTextPlainUTF8Type)) {
     actualFlavor = kUnicodeMime;
     needToDoConversionToPlainText = true;
-    LOGDRAGSERVICE("  convert %s => %s", typeName.get(), actualFlavor);
+    LOGDRAGSERVICE("  convert %s => %s", actualFlavor, requestedTypeName.get());
   }
   // if someone was asking for _NETSCAPE_URL we need to convert to
   // plain text but we also need to look for x-moz-url
   else if (mimeFlavor.EqualsLiteral(gMozUrlType)) {
     actualFlavor = kURLMime;
     needToDoConversionToPlainText = true;
-    LOGDRAGSERVICE("  convert %s => %s", typeName.get(), actualFlavor);
+    LOGDRAGSERVICE("  convert %s => %s", actualFlavor, requestedTypeName.get());
   }
   // if someone was asking for text/uri-list we need to convert to
   // plain text.
   else if (mimeFlavor.EqualsLiteral(gTextUriListType)) {
     actualFlavor = gTextUriListType;
     needToDoConversionToPlainText = true;
-    LOGDRAGSERVICE("  convert %s => %s", typeName.get(), actualFlavor);
+    LOGDRAGSERVICE("  convert %s => %s", actualFlavor, requestedTypeName.get());
 
     // The desktop or file manager expects for drags of promise-file data
     // the text/uri-list flavor set to a temporary file that contains the
@@ -1874,10 +1881,10 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
              mimeFlavor.EqualsLiteral(kGIFImageMime)) {
     actualFlavor = kNativeImageMime;
     needToDoConversionToImage = true;
-    LOGDRAGSERVICE("  convert %s => %s", typeName.get(), actualFlavor);
+    LOGDRAGSERVICE("  convert %s => %s", actualFlavor, requestedTypeName.get());
   } else {
-    actualFlavor = typeName.get();
-    LOGDRAGSERVICE("  use %s", typeName.get());
+    actualFlavor = requestedTypeName.get();
+    LOGDRAGSERVICE("  use %s", requestedTypeName.get());
   }
   nsresult rv;
   nsCOMPtr<nsISupports> data;
@@ -1938,7 +1945,7 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
   } else {
     if (mimeFlavor.EqualsLiteral(gTextUriListType)) {
       // fall back for text/uri-list
-      LOGDRAGSERVICE("  fall back to %s\n", typeName.get());
+      LOGDRAGSERVICE("  fall back to %s\n", requestedTypeName.get());
       nsAutoCString list;
       CreateURIList(mSourceDataItems, list);
       gtk_selection_data_set(aSelectionData, target, 8, (guchar*)list.get(),
