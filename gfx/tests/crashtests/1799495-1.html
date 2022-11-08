@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+      window.addEventListener('load', async () => {
+        const canvas1 = document.createElement('canvas')
+        document.documentElement.appendChild(canvas1)
+        const context1 = canvas1.getContext('2d')
+        context1.globalCompositeOperation = 'destination-atop'
+        const path = new Path2D()
+        context1.fill(path, 'nonzero')
+        const canvas2 = document.createElement('canvas')
+        const context2 = canvas2.getContext('2d', {})
+        await window.createImageBitmap(canvas1, 124, 233, 2147483647, 1, {})
+        context2.filter = 'invert( 90% )'
+        context2.fillRect(-1, -128, 4096, 1024)
+      })
+    </script>
+</head>
+</html>

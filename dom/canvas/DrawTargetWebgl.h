@@ -309,7 +309,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     void ClearEmptyTextureMemory();
     void ClearCachesIfNecessary();
 
-    void WaitForShmem();
+    void WaitForShmem(DrawTargetWebgl* aTarget);
   };
 
   RefPtr<SharedContext> mSharedContext;
@@ -486,7 +486,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   void WaitForShmem() {
     if (mSharedContext->mWaitForShmem) {
-      mSharedContext->WaitForShmem();
+      mSharedContext->WaitForShmem(this);
     }
   }
 

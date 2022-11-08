@@ -224,7 +224,7 @@ DrawTargetWebgl::~DrawTargetWebgl() {
       // Force any Skia snapshots to copy the shmem before it deallocs.
       mSkia->DetachAllSnapshots();
       // Ensure we're done using the shmem before dealloc.
-      mSharedContext->WaitForShmem();
+      mSharedContext->WaitForShmem(this);
       auto* child = mSharedContext->mWebgl->GetChild();
       if (child && child->CanSend()) {
         child->DeallocShmem(mShmem);
@@ -3226,7 +3226,7 @@ void DrawTargetWebgl::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
   mSkia->FillGlyphs(aFont, aBuffer, aPattern, aOptions);
 }
 
-void DrawTargetWebgl::SharedContext::WaitForShmem() {
+void DrawTargetWebgl::SharedContext::WaitForShmem(DrawTargetWebgl* aTarget) {
   if (mWaitForShmem) {
     // GetError is a sync IPDL call that forces all dispatched commands to be
     // flushed. Once it returns, we are certain that any commands processing
@@ -3235,7 +3235,9 @@ void DrawTargetWebgl::SharedContext::WaitForShmem() {
     mWaitForShmem = false;
     // The sync IPDL call can cause expensive round-trips to add up over time,
     // so account for that here.
-    mCurrentTarget->mProfile.OnReadback();
+    if (aTarget) {
+      aTarget->mProfile.OnReadback();
+    }
   }
 }
 
