@@ -1773,7 +1773,6 @@ modules:
       - layout/build/**/*
       - layout/forms/**/*
       - layout/generic/**/*
-      - dom/html/**/*
       - layout/printing/**/*
       - layout/tables/**/*
       - layout/tools/**/*
