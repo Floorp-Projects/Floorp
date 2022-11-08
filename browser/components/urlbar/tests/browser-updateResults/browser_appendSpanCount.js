@@ -65,7 +65,7 @@ add_task(async function viewUpdateAppendHidden() {
   Assert.greater(tipResultSpan, 1, "Sanity check: Tip has large result span");
   let expectedRowCount = maxResults - tipResultSpan + 1;
   Assert.equal(
-    gURLBar.view._rows.children.length,
+    UrlbarTestUtils.getResultCount(window),
     expectedRowCount,
     "Sanity check: Initial row count takes tip result span into account"
   );
@@ -100,14 +100,16 @@ add_task(async function viewUpdateAppendHidden() {
   let newExpectedRowCount = 2 * expectedRowCount - 2;
   let mutationPromise = new Promise(resolve => {
     let observer = new MutationObserver(mutations => {
-      let childCount = gURLBar.view._rows.children.length;
+      let childCount = UrlbarTestUtils.getResultCount(window);
       info(`Rows mutation observer called, childCount now ${childCount}`);
-      if (newExpectedRowCount <= gURLBar.view._rows.children.length) {
+      if (newExpectedRowCount <= childCount) {
         observer.disconnect();
         resolve();
       }
     });
-    observer.observe(gURLBar.view._rows, { childList: true });
+    observer.observe(UrlbarTestUtils.getResultsContainer(window), {
+      childList: true,
+    });
   });
 
   // Now do the second search but don't wait for it to finish.
@@ -126,20 +128,21 @@ add_task(async function viewUpdateAppendHidden() {
   // Check the rows.  We can't use UrlbarTestUtils.getDetailsOfResultAt() here
   // because it waits for the query to finish.
   Assert.equal(
-    gURLBar.view._rows.children.length,
+    UrlbarTestUtils.getResultCount(window),
     newExpectedRowCount,
     "New expected row count"
   );
   // stale search rows
+  let rows = UrlbarTestUtils.getResultsContainer(window).children;
   for (let i = 2; i < expectedRowCount; i++) {
-    let row = gURLBar.view._rows.children[i];
+    let row = rows[i];
     Assert.equal(
       row.result.type,
       UrlbarUtils.RESULT_TYPE.SEARCH,
       `Result at index ${i} is a search result`
     );
     Assert.ok(
-      gURLBar.view._isElementVisible(row),
+      BrowserTestUtils.is_visible(row),
       `Search result at index ${i} is visible`
     );
     Assert.equal(
@@ -150,14 +153,14 @@ add_task(async function viewUpdateAppendHidden() {
   }
   // new hidden history rows
   for (let i = expectedRowCount; i < newExpectedRowCount; i++) {
-    let row = gURLBar.view._rows.children[i];
+    let row = rows[i];
     Assert.equal(
       row.result.type,
       UrlbarUtils.RESULT_TYPE.URL,
       `Result at index ${i} is a URL result`
     );
     Assert.ok(
-      !gURLBar.view._isElementVisible(row),
+      !BrowserTestUtils.is_visible(row),
       `URL result at index ${i} is hidden`
     );
     Assert.ok(

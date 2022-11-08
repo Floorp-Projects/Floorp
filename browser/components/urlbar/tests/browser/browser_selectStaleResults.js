@@ -64,7 +64,7 @@ add_task(async function viewContainsStaleRows() {
 
   // Below we'll do a search for "xx".  Get the row that will show the last
   // result in that search.
-  let row = gURLBar.view._rows.children[halfResults];
+  let row = UrlbarTestUtils.getRowAt(window, halfResults);
 
   // Add a mutation listener on that row.  Wait for its "stale" attribute to be
   // removed.
@@ -103,9 +103,9 @@ add_task(async function viewContainsStaleRows() {
   Assert.equal(queryContext.results.length, halfResults + 1);
 
   // But there should be maxResults visible rows in the view.
-  let items = Array.from(gURLBar.view._rows.children).filter(r =>
-    gURLBar.view._isElementVisible(r)
-  );
+  let items = Array.from(
+    UrlbarTestUtils.getResultsContainer(window).children
+  ).filter(r => BrowserTestUtils.is_visible(r));
   Assert.equal(items.length, maxResults);
 
   // Arrow down through all the results.  After arrowing down from the last "xx"
@@ -241,13 +241,13 @@ add_task(async function staleReplacedWithFresh() {
   //   test1
   let mutationPromise = new Promise(resolve => {
     let observer = new MutationObserver(mutations => {
-      let row = gURLBar.view._rows.children[maxResults - 2];
+      let row = UrlbarTestUtils.getRowAt(window, maxResults - 2);
       if (row && row._elements.get("title").textContent == "test2") {
         observer.disconnect();
         resolve();
       }
     });
-    observer.observe(gURLBar.view._rows, {
+    observer.observe(UrlbarTestUtils.getResultsContainer(window), {
       subtree: true,
       characterData: true,
       childList: true,
