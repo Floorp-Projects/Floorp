@@ -26,7 +26,7 @@ mv depot_tools.git depot_tools
 
 
 # Generating a new version of the preloaded depot_tools download can be done by:
-# 1) Running the task, uncommenting the variable assignment below, uncommenting the 
+# 1) Running the task, uncommenting the variable assignment below, uncommenting the
 #    _GENERATE_DEPOT_TOOLS_BINARIES_ section in taskcluster/ci/updatebot/kind.yml,
 #    and ensuring that an angle update will actually take place (so it downloads the depot_tools)
 # 2) Downloading and sanity-checking the depot_tools-preloaded-binaries-GIT_HASH-DATE.zip artifact
@@ -53,13 +53,13 @@ fi
 cp "$MOZ_FETCHES_DIR/vcruntime140.dll" "$MOZ_FETCHES_DIR/php-win"
 cp "$GECKO_PATH/taskcluster/docker/updatebot/windows-php.ini" "$MOZ_FETCHES_DIR/php-win/php.ini"
 
-cd "$MOZ_FETCHES_DIR/arcanist.git"
+cd "$MOZ_FETCHES_DIR/arcanist"
 patch -p1 < "$GECKO_PATH/taskcluster/docker/updatebot/arcanist_windows_stream.patch"
 patch -p1 < "$GECKO_PATH/taskcluster/docker/updatebot/arcanist_patch_size.patch"
 cd "$MOZ_FETCHES_DIR"
 
 export PATH="$MOZ_FETCHES_PATH/php-win:$PATH"
-export PATH="$MOZ_FETCHES_PATH/arcanist.git/bin:$PATH"
+export PATH="$MOZ_FETCHES_PATH/arcanist/bin:$PATH"
 
 # get Updatebot
 cd "$MOZ_FETCHES_DIR"
