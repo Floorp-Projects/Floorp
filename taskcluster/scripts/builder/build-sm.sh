@@ -31,10 +31,12 @@ if [ "$upload" = "1" ]; then
 
     # Fuzzing users want the correct version of llvm-symbolizer available in the
     # same directory as the built output.
-    for f in "$MOZ_FETCHES_DIR/clang/bin/llvm-symbolizer"*; do
-        gzip -c "$f" > "$UPLOAD_DIR/llvm-symbolizer.gz" || echo "gzip $f failed" >&2
-        break
-    done
+    if [ -d "$MOZ_FETCHES_DIR/llvm-symbolizer"]; then
+        for f in "$MOZ_FETCHES_DIR/llvm-symbolizer/bin/llvm-symbolizer"*; do
+            gzip -c "$f" > "$UPLOAD_DIR/llvm-symbolizer.gz" || echo "gzip $f failed" >&2
+            break
+        done
+    fi
 else # !upload
 # Provide a note for users on why we don't include artifacts for these builds
 # by default, and how they can get the artifacts if they really need them.
