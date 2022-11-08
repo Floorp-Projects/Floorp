@@ -82,6 +82,14 @@ namespace PathUtils {
   sequence<DOMString> split(DOMString path);
 
   /**
+   * Split a relative path into its components.
+   *
+   * @param path A relative path.
+   */
+  [Throws]
+  sequence<DOMString> splitRelative(DOMString path, optional SplitRelativeOptions options = {});
+
+  /**
    * Transform a file path into a file: URI
    *
    * @param path An absolute path.
@@ -165,4 +173,15 @@ partial namespace PathUtils {
    */
   [NewObject, BinaryName="GetXulLibraryPathAsync"]
   Promise<DOMString> getXulLibraryPath();
+};
+
+dictionary SplitRelativeOptions {
+  /** Allow for a path that contains empty components. */
+  boolean allowEmpty = false;
+
+  /** Allow for a path that contains ".." components. */
+  boolean allowParentDir = false;
+
+  /** Allow for a path that contains "." components. */
+  boolean allowCurrentDir = false;
 };
