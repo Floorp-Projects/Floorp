@@ -36,12 +36,13 @@ class FileSystemFileManager;
 class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
  public:
   FileSystemDatabaseManagerVersion001(
+      FileSystemDataManager* aDataManager,
       fs::data::FileSystemConnection&& aConnection,
       UniquePtr<FileSystemFileManager>&& aFileManager,
-      FileSystemDataManager* aDataManager, const EntryId& aRootEntry)
-      : mConnection(aConnection),
+      const EntryId& aRootEntry)
+      : mDataManager(aDataManager),
+        mConnection(aConnection),
         mFileManager(std::move(aFileManager)),
-        mDataManager(aDataManager),
         mRootEntry(aRootEntry) {}
 
   virtual Result<int64_t, QMResult> GetUsage() const override;
@@ -82,11 +83,12 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
  private:
   nsresult UpdateUsage(int64_t aDelta);
 
+  // This is a raw pointer since we're owned by the FileSystemDataManager.
+  FileSystemDataManager* MOZ_NON_OWNING_REF mDataManager;
+
   FileSystemConnection mConnection;
 
   UniquePtr<FileSystemFileManager> mFileManager;
-  // raw ptr since we're owned by the DataManager
-  FileSystemDataManager* mDataManager;
 
   const EntryId mRootEntry;
 };

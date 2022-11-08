@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
+#include "mozilla/dom/quota/CommonMetadata.h"
 #include "nsString.h"
 
 namespace testing::internal {
@@ -38,3 +39,12 @@ GTEST_API_ ::testing::AssertionResult CmpHelperSTREQ(const char* s1_expression,
 }
 
 }  // namespace testing::internal
+
+namespace mozilla::dom::fs::test {
+
+quota::OriginMetadata GetTestOriginMetadata() {
+  return quota::OriginMetadata{""_ns, "example.com"_ns, "http://example.com"_ns,
+                               quota::PERSISTENCE_TYPE_DEFAULT};
+}
+
+}  // namespace mozilla::dom::fs::test
