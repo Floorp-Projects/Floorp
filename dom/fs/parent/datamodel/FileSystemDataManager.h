@@ -7,6 +7,7 @@
 #ifndef DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATAMANAGER_H_
 #define DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATAMANAGER_H_
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/ThreadBound.h"
@@ -50,6 +51,7 @@ class FileSystemDataManager
     : public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  public:
   enum struct State : uint8_t { Initial = 0, Opening, Open, Closing, Closed };
+  enum AccessMode { EXCLUSIVE, SHARED };
 
   FileSystemDataManager(const quota::OriginMetadata& aOriginMetadata,
                         MovingNotNull<nsCOMPtr<nsIEventTarget>> aIOTarget,
@@ -105,12 +107,20 @@ class FileSystemDataManager
 
   RefPtr<BoolPromise> OnClose();
 
+  bool IsLocked(const EntryId& aEntryId) const;
+
   bool LockExclusive(const EntryId& aEntryId);
 
   void UnlockExclusive(const EntryId& aEntryId);
 
+  bool LockShared(const EntryId& aEntryId);
+
+  void UnlockShared(const EntryId& aEntryId);
+
+  const uint32_t kMaxSharedLocks = UINT32_MAX;
+
  protected:
-  ~FileSystemDataManager();
+  virtual ~FileSystemDataManager();
 
   bool IsInactive() const;
 
@@ -132,6 +142,7 @@ class FileSystemDataManager
 
   const quota::OriginMetadata mOriginMetadata;
   nsTHashSet<EntryId> mExclusiveLocks;
+  nsTHashMap<EntryId, CheckedUint32> mSharedLocks;
   const NotNull<nsCOMPtr<nsISerialEventTarget>> mBackgroundTarget;
   const NotNull<nsCOMPtr<nsIEventTarget>> mIOTarget;
   const NotNull<RefPtr<TaskQueue>> mIOTaskQueue;

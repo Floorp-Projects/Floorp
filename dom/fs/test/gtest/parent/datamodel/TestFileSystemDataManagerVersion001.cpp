@@ -21,11 +21,13 @@
 #include "mozilla/Result.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/PFileSystemManager.h"
+#include "mozilla/dom/quota/CommonMetadata.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsContentUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsLiteralString.h"
+#include "nsNetCID.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
@@ -42,8 +44,25 @@ static const Origin& getTestOrigin() {
   return orig;
 }
 
+// This is a minimal mock  to allow us to safely call the lock methods
+// while avoiding assertions
+class MockFileSystemDataManager final : public data::FileSystemDataManager {
+ public:
+  MockFileSystemDataManager(const quota::OriginMetadata& aOriginMetadata,
+                            MovingNotNull<nsCOMPtr<nsIEventTarget>> aIOTarget,
+                            MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue)
+      : FileSystemDataManager(aOriginMetadata, std::move(aIOTarget),
+                              std::move(aIOTaskQueue)) {}
+
+  virtual ~MockFileSystemDataManager() {
+    // Need to avoid assertions
+    mState = State::Closed;
+  }
+};
+
 static void MakeDatabaseManagerVersion001(
-    FileSystemDatabaseManagerVersion001*& aResult) {
+    FileSystemDatabaseManagerVersion001*& aResult,
+    RefPtr<MockFileSystemDataManager>& aDataManager) {
   TEST_TRY_UNWRAP(auto storageService,
                   MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<mozIStorageService>,
                                           MOZ_SELECT_OVERLOAD(do_GetService),
@@ -75,16 +94,34 @@ static void MakeDatabaseManagerVersion001(
       FileSystemFileManager::CreateFileSystemFileManager(std::move(testPath));
   ASSERT_FALSE(fmRes.isErr());
 
+  QM_TRY_UNWRAP(auto streamTransportService,
+                MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIEventTarget>,
+                                        MOZ_SELECT_OVERLOAD(do_GetService),
+                                        NS_STREAMTRANSPORTSERVICE_CONTRACTID),
+                QM_VOID);
+
+  quota::OriginMetadata originmetadata = GetTestOriginMetadata();
+  nsCString taskQueueName("OPFS "_ns + originmetadata.mOrigin);
+
+  RefPtr<TaskQueue> ioTaskQueue =
+      TaskQueue::Create(do_AddRef(streamTransportService), taskQueueName.get());
+
+  auto dataManager = MakeRefPtr<MockFileSystemDataManager>(
+      originmetadata, WrapMovingNotNull(streamTransportService),
+      WrapMovingNotNull(ioTaskQueue));
+
   aResult = new FileSystemDatabaseManagerVersion001(
       std::move(connection), MakeUnique<FileSystemFileManager>(fmRes.unwrap()),
-      rootId);
+      dataManager, rootId);
 }
 
 TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveDirectories)
 {
   nsresult rv = NS_OK;
   FileSystemDatabaseManagerVersion001* rdm = nullptr;
-  ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(rdm));
+  // Ensure it lives for the lifetime of the test
+  RefPtr<MockFileSystemDataManager> dataManager;
+  ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(rdm, dataManager));
   UniquePtr<FileSystemDatabaseManagerVersion001> dm(rdm);
   // if any of these exit early, we have to close
   auto autoClose = MakeScopeExit([rdm] { rdm->Close(); });
@@ -163,9 +200,10 @@ TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveDirectories)
 TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles)
 {
   nsresult rv = NS_OK;
-  // Create data manager
+  // Ensure it lives for the lifetime of the test
+  RefPtr<MockFileSystemDataManager> datamanager;
   FileSystemDatabaseManagerVersion001* rdm = nullptr;
-  ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(rdm));
+  ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(rdm, datamanager));
   UniquePtr<FileSystemDatabaseManagerVersion001> dm(rdm);
 
   TEST_TRY_UNWRAP(EntryId rootId, data::GetRootHandle(getTestOrigin()));
@@ -294,8 +332,10 @@ TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles)
 
 TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateMoveDirectories)
 {
+  // Ensure it lives for the lifetime of the test
+  RefPtr<MockFileSystemDataManager> datamanager;
   FileSystemDatabaseManagerVersion001* rdm = nullptr;
-  ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(rdm));
+  ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(rdm, datamanager));
   UniquePtr<FileSystemDatabaseManagerVersion001> dm(rdm);
   auto closeAtExit = MakeScopeExit([&dm]() { dm->Close(); });
 

@@ -12,6 +12,8 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
+#include "prio.h"
+#include "private/pprio.h"
 
 namespace mozilla {
 extern LazyLogModule gOPFSLog;
@@ -36,6 +38,13 @@ extern LazyLogModule gOPFSLog;
 class ErrorResult;
 
 namespace dom {
+
+/**
+ * TODO: Duplicated from netwerk/cache2/CacheFileIOManager.cpp
+ * Please remove after bug 1286601 is fixed,
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=1286601
+ */
+nsresult TruncFile(PRFileDesc* aFD, int64_t aEOF);
 
 class FileSystemDirectoryHandle;
 class FileSystemFileHandle;
