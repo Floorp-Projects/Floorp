@@ -4238,6 +4238,8 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
   // -
 
   mozilla::ipc::Shmem* pShmem = nullptr;
+  // Image to release after Ping response.
+  RefPtr<layers::Image> imageWaitPingResponse;
 
   if (desc->sd) {
     const auto& sd = *(desc->sd);
@@ -4269,6 +4271,10 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
       if (sdType == layers::SurfaceDescriptor::TSurfaceDescriptorD3D10) {
         const auto& sdD3D = sd.get_SurfaceDescriptorD3D10();
         const auto& inProcess = mNotLost->inProcess;
+        if (!inProcess) {
+          MOZ_ASSERT(desc->image);
+          imageWaitPingResponse = desc->image;
+        }
         if (sdD3D.gpuProcessTextureId().isSome() && inProcess) {
           return Some(
               std::string{"gpuProcessTextureId works only in GPU process."});
@@ -4373,12 +4379,14 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     (void)child->SendTexImage(static_cast<uint32_t>(level), respecFormat,
                               CastUvec3(offset), pi, std::move(*desc));
 
-    if (tempShmem) {
+    if (tempShmem || imageWaitPingResponse) {
       const auto eventTarget = GetCurrentSerialEventTarget();
       MOZ_ASSERT(eventTarget);
-      child->SendPing()->Then(eventTarget, __func__, [tempShmem]() {
-        // Cleans up when (our copy of) sendableShmem goes out of scope.
-      });
+      child->SendPing()->Then(eventTarget, __func__,
+                              [tempShmem, imageWaitPingResponse]() {
+                                // Cleans up when (our copy of)
+                                // sendableShmem/image goes out of scope.
+                              });
     }
   }
 }
