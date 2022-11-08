@@ -63,7 +63,6 @@ devtools/client/debugger/bin/
 devtools/client/debugger/configs/
 devtools/client/debugger/dist/
 devtools/client/debugger/images/
-devtools/client/debugger/packages/
 devtools/client/debugger/test/mochitest/examples/
 devtools/client/debugger/index.html
 devtools/client/debugger/webpack.config.js
@@ -76,6 +75,7 @@ devtools/shared/css/generated/properties-db.js
 devtools/client/webconsole/test/node/fixtures/stubs/*.js
 !devtools/client/webconsole/test/node/fixtures/stubs/index.js
 devtools/client/shared/components/test/node/stubs/reps/*.js
+devtools/client/shared/source-map-loader/test/browser/fixtures/*.js
 
 # Ignore devtools files testing sourcemaps / code style
 devtools/client/framework/test/code_*
