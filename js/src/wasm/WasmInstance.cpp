@@ -1676,6 +1676,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
           *addressOfTypeId(typeIndex) = &typeDef;
           break;
         }
+#ifdef ENABLE_WASM_GC
         case TypeDefKind::Struct:
         case TypeDefKind::Array: {
           Rooted<RttValue*> rttValue(
@@ -1690,6 +1691,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
           hasGcTypes_ = true;
           break;
         }
+#endif
         default:
           MOZ_CRASH();
       }
