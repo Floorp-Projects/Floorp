@@ -32093,8 +32093,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm6-android-fenix-web-de.manifest
-   * **playback version**: 6.0.2
+   * **playback pageset manifest**: mitm7-android-gve-p2-web-de.manifest
+   * **playback version**: 7.0.4
    * **test url**: `<https://web.de/magazine/politik/politologe-glaubt-grossen-koalition-herbst-knallen-33563566>`__
    * **type**: pageload
    * **unit**: ms
