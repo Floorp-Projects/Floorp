@@ -5478,7 +5478,11 @@ void InlinableNativeIRGenerator::emitNativeCalleeGuard() {
     MOZ_ASSERT(generator_.writer.numOperandIds() > 0, "argcId is initialized");
 
     Int32OperandId argcId(0);
-    calleeObjId = generator_.emitFunCallGuard(argcId);
+    if (callee_->native() == js::fun_call) {
+      calleeObjId = generator_.emitFunCallGuard(argcId);
+    } else {
+      calleeObjId = generator_.emitFunApplyGuard(argcId);
+    }
   } else {
     ValOperandId calleeValId =
         writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_, flags_);
@@ -9505,6 +9509,21 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
     Rooted<ArrayObject*> aobj(cx_, &args_[1].toObject().as<ArrayObject>());
     HandleValueArray args = HandleValueArray::fromMarkedLocation(
         aobj->length(), aobj->getDenseElements());
+
+    // Check for specific native-function optimizations.
+    InlinableNativeIRGenerator nativeGen(*this, target, newTarget, thisValue,
+                                         args, targetFlags);
+    TRY_ATTACH(nativeGen.tryAttachStub());
+  }
+
+  // Don't inline when no arguments are passed, cf. |tryAttachFunCall()|.
+  if (mode_ == ICState::Mode::Specialized && !isScripted &&
+      format == CallFlags::FunCall && argc_ > 0) {
+    MOZ_ASSERT(argc_ == 1);
+
+    HandleValue newTarget = NullHandleValue;
+    HandleValue thisValue = args_[0];
+    HandleValueArray args = HandleValueArray::empty();
 
     // Check for specific native-function optimizations.
     InlinableNativeIRGenerator nativeGen(*this, target, newTarget, thisValue,
