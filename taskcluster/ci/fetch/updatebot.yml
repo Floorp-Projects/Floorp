@@ -23,7 +23,7 @@ arcanist:
     description: checkout of arcanist for running on Windows
     fetch:
         type: git
-        repo: https://github.com/phacility/arcanist.git
+        repo: https://github.com/phacility/arcanist
         revision: a028291f8e5e79b6446ad67ed8b0be9c5ec8f029
 depot_tools:
     description: Google's depot_tools package
