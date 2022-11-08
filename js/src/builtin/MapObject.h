@@ -164,6 +164,10 @@ class MapObject : public NativeObject {
   [[nodiscard]] static bool get(JSContext* cx, unsigned argc, Value* vp);
   [[nodiscard]] static bool set(JSContext* cx, unsigned argc, Value* vp);
 
+  static bool isOriginalSizeGetter(Native native) {
+    return native == static_cast<Native>(MapObject::size);
+  }
+
  private:
   static const ClassSpec classSpec_;
   static const JSClassOps classOps_;
@@ -309,6 +313,10 @@ class SetObject : public NativeObject {
   }
 
   ValueSet* getData() { return getTableUnchecked(); }
+
+  static bool isOriginalSizeGetter(Native native) {
+    return native == static_cast<Native>(SetObject::size);
+  }
 
  private:
   static const ClassSpec classSpec_;

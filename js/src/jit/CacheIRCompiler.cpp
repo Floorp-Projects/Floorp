@@ -8546,6 +8546,18 @@ bool CacheIRCompiler::emitSetHasObjectResult(ObjOperandId setId,
   return true;
 }
 
+bool CacheIRCompiler::emitSetSizeResult(ObjOperandId setId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register set = allocator.useRegister(masm, setId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  masm.loadSetObjectSize(set, scratch);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitMapHasResult(ObjOperandId mapId, ValOperandId valId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
@@ -8782,6 +8794,18 @@ bool CacheIRCompiler::emitMapGetObjectResult(ObjOperandId mapId,
 
   masm.mapObjectGetNonBigInt(map, output.valueReg(), scratch1,
                              output.valueReg(), scratch2, scratch3, scratch4);
+  return true;
+}
+
+bool CacheIRCompiler::emitMapSizeResult(ObjOperandId mapId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register map = allocator.useRegister(masm, mapId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  masm.loadMapObjectSize(map, scratch);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 

@@ -624,6 +624,9 @@ class OrderedHashTable {
   static constexpr size_t offsetOfHashShift() {
     return offsetof(OrderedHashTable, hashShift);
   }
+  static constexpr size_t offsetOfLiveCount() {
+    return offsetof(OrderedHashTable, liveCount);
+  }
   static constexpr size_t offsetOfDataElement() {
     static_assert(offsetof(Data, element) == 0,
                   "RangeFront and RangePopFront depend on offsetof(Data, "
@@ -893,6 +896,9 @@ class OrderedHashMap {
   static constexpr size_t offsetOfImplHashShift() {
     return Impl::offsetOfHashShift();
   }
+  static constexpr size_t offsetOfImplLiveCount() {
+    return Impl::offsetOfLiveCount();
+  }
   static constexpr size_t offsetOfImplDataElement() {
     return Impl::offsetOfDataElement();
   }
@@ -966,6 +972,9 @@ class OrderedHashSet {
   }
   static constexpr size_t offsetOfImplHashShift() {
     return Impl::offsetOfHashShift();
+  }
+  static constexpr size_t offsetOfImplLiveCount() {
+    return Impl::offsetOfLiveCount();
   }
   static constexpr size_t offsetOfImplDataElement() {
     return Impl::offsetOfDataElement();
