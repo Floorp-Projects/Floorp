@@ -123,6 +123,10 @@ struct LaunchOptions {
 #if defined(OS_WIN)
   bool start_hidden = false;
 
+  // Start as an independent process rather than a process that is closed by the
+  // parent job. This will pass the flag CREATE_BREAKAWAY_FROM_JOB.
+  bool start_independent = false;
+
   // Environment variables to be applied in addition to the current
   // process's environment, replacing them where necessary.
   EnvironmentMap env_map;
