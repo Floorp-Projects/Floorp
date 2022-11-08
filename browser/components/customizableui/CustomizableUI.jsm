@@ -236,7 +236,7 @@ var CustomizableUIInternal = {
     this.registerArea(
       CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
       {
-        type: CustomizableUI.TYPE_MENU_PANEL,
+        type: CustomizableUI.TYPE_PANEL,
         defaultPlacements: [],
         anchor: "nav-bar-overflow-button",
       },
@@ -857,10 +857,7 @@ var CustomizableUIInternal = {
       throw new Error("defaultCollapsed only applies for TYPE_TOOLBAR areas.");
     }
     // Sanity check type:
-    let allTypes = [
-      CustomizableUI.TYPE_TOOLBAR,
-      CustomizableUI.TYPE_MENU_PANEL,
-    ];
+    let allTypes = [CustomizableUI.TYPE_TOOLBAR, CustomizableUI.TYPE_PANEL];
     if (!allTypes.includes(props.get("type"))) {
       throw new Error("Invalid area type " + props.get("type"));
     }
@@ -1049,7 +1046,7 @@ var CustomizableUIInternal = {
     let inPrivateWindow = lazy.PrivateBrowsingUtils.isWindowPrivate(window);
     let container = this.getCustomizationTarget(aAreaNode);
     let areaIsPanel =
-      gAreas.get(aArea).get("type") == CustomizableUI.TYPE_MENU_PANEL;
+      gAreas.get(aArea).get("type") == CustomizableUI.TYPE_PANEL;
 
     if (!container) {
       throw new Error(
@@ -1227,7 +1224,7 @@ var CustomizableUIInternal = {
     let currentContextMenu =
       aNode.getAttribute("context") || aNode.getAttribute("contextmenu");
     let contextMenuForPlace =
-      forcePanel || "menu-panel" == CustomizableUI.getPlaceForItem(aAreaNode)
+      forcePanel || "panel" == CustomizableUI.getPlaceForItem(aAreaNode)
         ? kPanelItemContextMenu
         : null;
     if (contextMenuForPlace && !currentContextMenu) {
@@ -1297,29 +1294,29 @@ var CustomizableUIInternal = {
     return [null, null];
   },
 
-  registerMenuPanel(aPanelContents, aArea) {
-    if (gBuildAreas.has(aArea) && gBuildAreas.get(aArea).has(aPanelContents)) {
+  registerPanelNode(aNode, aArea) {
+    if (gBuildAreas.has(aArea) && gBuildAreas.get(aArea).has(aNode)) {
       return;
     }
 
-    aPanelContents._customizationTarget = aPanelContents;
-    this.addPanelCloseListeners(this._getPanelForNode(aPanelContents));
+    aNode._customizationTarget = aNode;
+    this.addPanelCloseListeners(this._getPanelForNode(aNode));
 
     let placements = gPlacements.get(aArea);
-    this.buildArea(aArea, placements, aPanelContents);
-    this.notifyListeners("onAreaNodeRegistered", aArea, aPanelContents);
+    this.buildArea(aArea, placements, aNode);
+    this.notifyListeners("onAreaNodeRegistered", aArea, aNode);
 
-    for (let child of aPanelContents.children) {
+    for (let child of aNode.children) {
       if (child.localName != "toolbarbutton") {
         if (child.localName == "toolbaritem") {
-          this.ensureButtonContextMenu(child, aPanelContents, true);
+          this.ensureButtonContextMenu(child, aNode, true);
         }
         continue;
       }
-      this.ensureButtonContextMenu(child, aPanelContents, true);
+      this.ensureButtonContextMenu(child, aNode, true);
     }
 
-    this.registerBuildArea(aArea, aPanelContents);
+    this.registerBuildArea(aArea, aNode);
   },
 
   onWidgetAdded(aWidgetId, aArea, aPosition) {
@@ -2096,7 +2093,7 @@ var CustomizableUIInternal = {
 
     if (
       aWidget.disallowSubView &&
-      (areaType == CustomizableUI.TYPE_MENU_PANEL ||
+      (areaType == CustomizableUI.TYPE_PANEL ||
         aNode.hasAttribute("overflowedItem"))
     ) {
       // Close the containing panel (e.g. overflow), PanelUI will reopen.
@@ -2105,7 +2102,7 @@ var CustomizableUIInternal = {
         this.hidePanelForNode(aNode);
         anchor = wrapper.anchor;
       }
-    } else if (areaType != CustomizableUI.TYPE_MENU_PANEL) {
+    } else if (areaType != CustomizableUI.TYPE_PANEL) {
       let wrapper = this.wrapWidget(aWidget.id).forWindow(ownerWindow);
 
       let hasMultiView = !!aNode.closest("panelmultiview");
@@ -2361,7 +2358,7 @@ var CustomizableUIInternal = {
     // Hack: don't want special widgets in the panel (need to check here as well
     // as in canWidgetMoveToArea because the menu panel is lazy):
     if (
-      gAreas.get(aArea).get("type") == CustomizableUI.TYPE_MENU_PANEL &&
+      gAreas.get(aArea).get("type") == CustomizableUI.TYPE_PANEL &&
       this.isSpecialWidget(aWidgetId)
     ) {
       return;
@@ -3369,7 +3366,7 @@ var CustomizableUIInternal = {
     if (
       this.isSpecialWidget(aWidgetId) &&
       gAreas.has(aArea) &&
-      gAreas.get(aArea).get("type") == CustomizableUI.TYPE_MENU_PANEL
+      gAreas.get(aArea).get("type") == CustomizableUI.TYPE_PANEL
     ) {
       return false;
     }
@@ -3607,9 +3604,9 @@ var CustomizableUI = {
   AREA_FIXED_OVERFLOW_PANEL: "widget-overflow-fixed-list",
 
   /**
-   * Constant indicating the area is a menu panel.
+   * Constant indicating the area is a panel.
    */
-  TYPE_MENU_PANEL: "menu-panel",
+  TYPE_PANEL: "panel",
   /**
    * Constant indicating the area is a toolbar.
    */
@@ -3778,7 +3775,7 @@ var CustomizableUI = {
    * @param aProps  the properties of the area. The following properties are
    *                recognized:
    *                - type:   the type of area. Either TYPE_TOOLBAR (default) or
-   *                          TYPE_MENU_PANEL;
+   *                          TYPE_PANEL;
    *                - anchor: for a menu panel or overflowable toolbar, the
    *                          anchoring node for the panel.
    *                - overflowable: set to true if your toolbar is overflowable.
@@ -3809,13 +3806,15 @@ var CustomizableUI = {
     CustomizableUIInternal.registerToolbarNode(aToolbar);
   },
   /**
-   * Register the menu panel node. This method should not be called by anyone
-   * apart from the built-in PanelUI.
+   * Register a panel node. A panel treated slightly differently from a toolbar in
+   * terms of what items can be moved into it. For example, a panel cannot have a
+   * spacer or a spring put into it.
+   *
    * @param aPanelContents the panel contents DOM node being registered.
    * @param aArea the area for which to register this node.
    */
-  registerMenuPanel(aPanelContents, aArea) {
-    CustomizableUIInternal.registerMenuPanel(aPanelContents, aArea);
+  registerPanelNode(aNode, aArea) {
+    CustomizableUIInternal.registerPanelNode(aNode, aArea);
   },
   /**
    * Unregister a customizable area. The inverse of registerArea.
@@ -4224,7 +4223,7 @@ var CustomizableUI = {
    * property (areaType) for this purpose.
    *
    * @param aArea the ID of the area whose type you want to know
-   * @return TYPE_TOOLBAR or TYPE_MENU_PANEL depending on the area, null if
+   * @return TYPE_TOOLBAR or TYPE_PANEL depending on the area, null if
    *         the area is unknown.
    */
   getAreaType(aArea) {
@@ -4565,7 +4564,7 @@ var CustomizableUI = {
       if (node.localName == "toolbar") {
         place = "toolbar";
       } else if (node.id == CustomizableUI.AREA_FIXED_OVERFLOW_PANEL) {
-        place = "menu-panel";
+        place = "panel";
       } else if (node.id == "customization-palette") {
         place = "palette";
       }

@@ -154,7 +154,7 @@
   align-items: center;
 }
 
-#widget-overflow-fixed-list > toolbarpaletteitem:not([notransition])[place="menu-panel"],
+#widget-overflow-fixed-list > toolbarpaletteitem:not([notransition])[place="panel"],
 toolbarpaletteitem:not([notransition])[place="toolbar"] {
   transition: border-width var(--drag-drop-transition-duration) ease-in-out;
 }
@@ -164,7 +164,7 @@ toolbarpaletteitem[mousedown] {
 }
 
 toolbarpaletteitem:not([notransition])[place="palette"],
-toolbarpaletteitem:not([notransition])[place="menu-panel"] {
+toolbarpaletteitem:not([notransition])[place="panel"] {
   transition: transform var(--drag-drop-transition-duration) ease-in-out;
 }
 
@@ -216,7 +216,7 @@ toolbarpaletteitem[place="toolbar"] {
   border-inline-width: 0;
   margin-inline: 0;
 }
-#widget-overflow-fixed-list > toolbarpaletteitem[place="menu-panel"] {
+#widget-overflow-fixed-list > toolbarpaletteitem[place="panel"] {
   border-block: 0 solid transparent;
 }
 
@@ -226,13 +226,13 @@ toolbarpaletteitem[place="toolbar"] {
 
 
 toolbarpaletteitem[place="palette"]:-moz-focusring,
-toolbarpaletteitem[place="menu-panel"]:-moz-focusring,
+toolbarpaletteitem[place="panel"]:-moz-focusring,
 toolbarpaletteitem[place="toolbar"]:-moz-focusring {
   outline-width: 0;
 }
 
 toolbarpaletteitem[place="palette"]:not([mousedown="true"]):-moz-focusring,
-toolbarpaletteitem[place="menu-panel"]:not([mousedown="true"]):-moz-focusring,
+toolbarpaletteitem[place="panel"]:not([mousedown="true"]):-moz-focusring,
 toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   /* Delay adding the focusring back until after the transform transition completes. */
   transition: outline-width .01s linear var(--drag-drop-transition-duration);

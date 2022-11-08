@@ -1044,7 +1044,7 @@ CustomizeMode.prototype = {
     }
     let currentContextMenu = aNode.getAttribute(contextMenuAttrName);
     let contextMenuForPlace =
-      aPlace == "menu-panel" ? kPanelItemContextMenu : kPaletteItemContextMenu;
+      aPlace == "panel" ? kPanelItemContextMenu : kPaletteItemContextMenu;
     if (aPlace != "toolbar") {
       wrapper.setAttribute("context", contextMenuForPlace);
     }
@@ -1133,7 +1133,7 @@ CustomizeMode.prototype = {
       toolbarItem.setAttribute(contextAttrName, wrappedContext);
       toolbarItem.removeAttribute("wrapped-contextAttrName");
       toolbarItem.removeAttribute("wrapped-context");
-    } else if (place == "menu-panel") {
+    } else if (place == "panel") {
       toolbarItem.setAttribute("context", kPanelItemContextMenu);
     }
 
@@ -1794,7 +1794,7 @@ CustomizeMode.prototype = {
         item.hidden = true;
         lazy.DragPositionManager.start(this.window);
         let canUsePrevSibling =
-          placeForItem == "toolbar" || placeForItem == "menu-panel";
+          placeForItem == "toolbar" || placeForItem == "panel";
         if (item.nextElementSibling) {
           this._setDragActive(
             item.nextElementSibling,
@@ -1923,7 +1923,7 @@ CustomizeMode.prototype = {
             ? aEvent.clientX > dropTargetCenter
             : aEvent.clientX < dropTargetCenter;
           dragValue = before ? "before" : "after";
-        } else if (targetAreaType == "menu-panel") {
+        } else if (targetAreaType == "panel") {
           let itemRect = this._getBoundsWithoutFlushing(dragOverItem);
           let dropTargetCenter = itemRect.top + itemRect.height / 2;
           let existingDir = dragOverItem.getAttribute("dragover");
@@ -2485,7 +2485,7 @@ CustomizeMode.prototype = {
     dragY = Math.min(bounds.bottom, Math.max(dragY, bounds.top));
 
     let targetNode;
-    if (aAreaType == "toolbar" || aAreaType == "menu-panel") {
+    if (aAreaType == "toolbar" || aAreaType == "panel") {
       targetNode = aAreaElement.ownerDocument.elementFromPoint(dragX, dragY);
       while (targetNode && targetNode.parentNode != expectedParent) {
         targetNode = targetNode.parentNode;

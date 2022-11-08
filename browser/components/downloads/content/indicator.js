@@ -503,7 +503,7 @@ const DownloadsIndicatorView = {
     // Check if the downloads button is in the menu panel, to determine which
     // button needs to get a badge.
     let widgetGroup = CustomizableUI.getWidget("downloads-button");
-    let inMenu = widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL;
+    let inMenu = widgetGroup.areaType == CustomizableUI.TYPE_PANEL;
 
     // For arrow-Styled indicator, suppress success attention if we have
     // progress in toolbar
@@ -613,7 +613,7 @@ const DownloadsIndicatorView = {
 
   get indicatorAnchor() {
     let widgetGroup = CustomizableUI.getWidget("downloads-button");
-    if (widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+    if (widgetGroup.areaType == CustomizableUI.TYPE_PANEL) {
       let overflowIcon = widgetGroup.forWindow(window).anchor;
       return overflowIcon.icon;
     }

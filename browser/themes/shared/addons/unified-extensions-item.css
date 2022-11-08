@@ -101,7 +101,7 @@ unified-extensions-item:not([secondary-button-hovered="true"]) .unified-extensio
 
 /* Hide secondary (menu) button when the widget is in the list of widgets in
  * customization mode */
-toolbaritem:not([cui-areatype="menu-panel"], [overflowedItem=true]).unified-extensions-item .unified-extensions-item-open-menu {
+toolbaritem:not([cui-areatype="panel"], [overflowedItem=true]).unified-extensions-item .unified-extensions-item-open-menu {
   display: none;
 }
 

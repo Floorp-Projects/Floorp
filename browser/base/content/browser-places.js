@@ -418,7 +418,7 @@ var StarUI = {
         let element = document.getElementById(id);
         if (
           element &&
-          element.getAttribute("cui-areatype") != "menu-panel" &&
+          element.getAttribute("cui-areatype") != "panel" &&
           element.getAttribute("overflowedItem") != "true"
         ) {
           anchor = element;
@@ -1201,7 +1201,7 @@ var PlacesToolbarHelper = {
     let widget = widgetGroup.forWindow(window);
     if (
       widget.overflowed ||
-      widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL
+      widgetGroup.areaType == CustomizableUI.TYPE_PANEL
     ) {
       PlacesCommandHook.showPlacesOrganizer("BookmarksToolbar");
     }
@@ -1396,8 +1396,7 @@ var BookmarkingUI = {
     // Separately, in Photon, if the button is in the dynamic portion of the
     // overflow panel, we want to show a subview instead.
     if (
-      this.button.getAttribute("cui-areatype") ==
-        CustomizableUI.TYPE_MENU_PANEL ||
+      this.button.getAttribute("cui-areatype") == CustomizableUI.TYPE_PANEL ||
       this.button.hasAttribute("overflowedItem")
     ) {
       this._showSubView();
@@ -1967,9 +1966,7 @@ var BookmarkingUI = {
     }
 
     // Handle special case when the button is in the panel.
-    if (
-      this.button.getAttribute("cui-areatype") == CustomizableUI.TYPE_MENU_PANEL
-    ) {
+    if (this.button.getAttribute("cui-areatype") == CustomizableUI.TYPE_PANEL) {
       this._showSubView(aEvent);
       return;
     }
