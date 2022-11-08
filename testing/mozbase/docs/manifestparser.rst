@@ -254,9 +254,9 @@ test-specific. TestManifest facilitates `skip-if` logic.
 from TestManifest if more harness-specific customization is desired at
 the manifest level.
 
-See the source code at https://github.com/mozilla/mozbase/tree/master/manifestparser
+See the source code at https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/manifestparser
 and
-https://github.com/mozilla/mozbase/blob/master/manifestparser/manifestparser.py
+https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/manifestparser/manifestparser/manifestparser.py
 in particular.
 
 Filtering Manifests
