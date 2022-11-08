@@ -427,7 +427,7 @@ NS_IMPL_RELEASE_INHERITED(CrossRealmWritableUnderlyingSinkAlgorithms,
                           UnderlyingSinkAlgorithmsBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
     CrossRealmWritableUnderlyingSinkAlgorithms)
-NS_INTERFACE_MAP_END_INHERITING(CrossRealmWritableUnderlyingSinkAlgorithms)
+NS_INTERFACE_MAP_END_INHERITING(UnderlyingSinkAlgorithmsBase)
 
 // https://streams.spec.whatwg.org/#abstract-opdef-setupcrossrealmtransformwritable
 MOZ_CAN_RUN_SCRIPT static void SetUpCrossRealmTransformWritable(
@@ -765,7 +765,7 @@ NS_IMPL_RELEASE_INHERITED(CrossRealmReadableUnderlyingSourceAlgorithms,
                           UnderlyingSourceAlgorithmsBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
     CrossRealmReadableUnderlyingSourceAlgorithms)
-NS_INTERFACE_MAP_END_INHERITING(CrossRealmReadableUnderlyingSourceAlgorithms)
+NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceAlgorithmsBase)
 
 // https://streams.spec.whatwg.org/#abstract-opdef-setupcrossrealmtransformreadable
 MOZ_CAN_RUN_SCRIPT static void SetUpCrossRealmTransformReadable(
