@@ -303,8 +303,9 @@ void WaylandVsyncSource::FrameCallback(wl_callback* aCallback, uint32_t aTime) {
   MutexAutoLock lock(mMutex);
   mCallbackRequested = false;
 
-  if (aCallback) {
-    MOZ_RELEASE_ASSERT(aCallback == mCallback);
+  // NotifyOcclusionState() can clear and create new mCallback by
+  // EnableVsync()/Refresh(). So don't delete newly created frame callback.
+  if (aCallback && aCallback == mCallback) {
     MozClearPointer(mCallback, wl_callback_destroy);
   }
 
