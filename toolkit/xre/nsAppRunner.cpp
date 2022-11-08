@@ -3787,8 +3787,11 @@ class XREMain {
   UniquePtr<XREAppData> mAppData;
 
   nsXREDirProvider mDirProvider;
+
+#ifdef MOZ_WIDGET_GTK
   nsAutoCString mXDGActivationToken;
   nsAutoCString mDesktopStartupID;
+#endif
 
   bool mStartOffline = false;
   bool mShuttingDown = false;
@@ -4693,7 +4696,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 #endif /* XP_WIN */
 
-#if defined(MOZ_WIDGET_GTK)
+#ifdef MOZ_WIDGET_GTK
   // Stash startup token in owned memory because gtk_init will clear
   // DESKTOP_STARTUP_ID it.
   if (const char* v = PR_GetEnv("DESKTOP_STARTUP_ID")) {
@@ -4865,7 +4868,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     return 1;
   }
 
-#if defined(MOZ_WIDGET_GTK)
+#ifdef MOZ_WIDGET_GTK
   // startup token might be cleared now, we recover it in case we need a
   // restart.
   if (!mDesktopStartupID.IsEmpty()) {
@@ -4929,8 +4932,12 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     if (!mDisableRemoteClient) {
       // Try to remote the entire command line. If this fails, start up
       // normally.
+#  ifdef MOZ_WIDGET_GTK
       const auto& startupToken =
           GdkIsWaylandDisplay() ? mXDGActivationToken : mDesktopStartupID;
+#  else
+      const nsCString startupToken;
+#  endif
       RemoteResult rr = mRemoteService->StartClient(
           startupToken.IsEmpty() ? nullptr : startupToken.get());
       if (rr == REMOTE_FOUND) {
