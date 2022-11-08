@@ -283,7 +283,7 @@ class SearchUtils {
    * When passing URI's to check against, it's best to use the "original" URI
    * that was requested, as the server may have redirected the request.
    *
-   * @param {nsIURI} uri
+   * @param {nsIURI | string} uri
    *   The uri to check.
    * @returns {string}
    *   The search terms used.
@@ -291,12 +291,25 @@ class SearchUtils {
    *   or if the default engine hasn't been initialized.
    */
   getSearchTermIfDefaultSerpUri(uri) {
-    let searchTerm = "";
-    if (
-      uri &&
-      Services.search.isInitialized &&
-      Services.search.defaultEngine.getResultDomain() == uri.host
-    ) {
+    if (!Services.search.isInitialized || !uri) {
+      return "";
+    }
+
+    let uriHost;
+    let searchUri, searchHost;
+    // Creating a URI and accessing nsIURI.host can throw.
+    try {
+      if (typeof uri == "string") {
+        uri = Services.io.newURI(uri);
+      }
+      uriHost = uri.host;
+      searchUri = Services.io.newURI(Services.search.defaultEngine.searchForm);
+      searchHost = searchUri.host;
+    } catch (e) {
+      return "";
+    }
+
+    if (searchHost == uriHost && searchUri.scheme == uri.scheme) {
       let { engine, terms } = Services.search.parseSubmissionURL(uri.spec);
       if (engine && terms) {
         let [expectedSearchUrl] = lazy.UrlbarUtils.getSearchQueryUrl(
@@ -304,11 +317,11 @@ class SearchUtils {
           terms
         );
         if (this.serpsAreEquivalent(uri.spec, expectedSearchUrl)) {
-          searchTerm = terms;
+          return terms;
         }
       }
     }
-    return searchTerm;
+    return "";
   }
 
   /**
