@@ -2,8 +2,8 @@
   "name": "네이버",
   "description": "네이버 검색",
   "manifest_version": 2,
-  "version": "1.0",
-  "applications": {
+  "version": "1.1",
+  "browser_specific_settings": {
     "gecko": {
       "id": "naver-kr@search.mozilla.org"
     }

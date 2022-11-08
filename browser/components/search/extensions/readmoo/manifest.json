@@ -2,8 +2,8 @@
   "name": "Readmoo 讀墨電子書",
   "description": "Readmoo 讀墨電子書",
   "manifest_version": 2,
-  "version": "1.0",
-  "applications": {
+  "version": "1.1",
+  "browser_specific_settings": {
     "gecko": {
       "id": "readmoo@search.mozilla.org"
     }

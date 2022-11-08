@@ -2,8 +2,8 @@
   "name": "Vatera.hu",
   "description": "Keresés a Vatera.hu piacterén",
   "manifest_version": 2,
-  "version": "1.2",
-  "applications": {
+  "version": "1.3",
+  "browser_specific_settings": {
     "gecko": {
       "id": "vatera@search.mozilla.org"
     }

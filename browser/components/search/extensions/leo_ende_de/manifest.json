@@ -2,8 +2,8 @@
   "name": "LEO Eng-Deu",
   "description": "Deutsch-Englisch Wörterbuch von LEO",
   "manifest_version": 2,
-  "version": "1.0",
-  "applications": {
+  "version": "1.1",
+  "browser_specific_settings": {
     "gecko": {
       "id": "leo_ende_de@search.mozilla.org"
     }

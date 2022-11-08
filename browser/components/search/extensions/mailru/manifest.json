@@ -2,8 +2,8 @@
   "name": "Поиск Mail.Ru",
   "description": "Search with Поиск Mail.Ru",
   "manifest_version": 2,
-  "version": "1.0",
-  "applications": {
+  "version": "1.1",
+  "browser_specific_settings": {
     "gecko": {
       "id": "mailru@search.mozilla.org"
     }
