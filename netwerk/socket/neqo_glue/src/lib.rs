@@ -600,19 +600,6 @@ pub extern "C" fn neqo_http3conn_cancel_fetch(
     }
 }
 
-// Reset a stream with streamId.
-#[no_mangle]
-pub extern "C" fn neqo_http3conn_reset_stream(
-    conn: &mut NeqoHttp3Conn,
-    stream_id: u64,
-    error: u64,
-) -> nsresult {
-    match conn.conn.stream_reset_send(StreamId::from(stream_id), error) {
-        Ok(()) => NS_OK,
-        Err(_) => NS_ERROR_INVALID_ARG,
-    }
-}
-
 // Close sending side of a stream with stream_id
 #[no_mangle]
 pub extern "C" fn neqo_http3conn_close_stream(

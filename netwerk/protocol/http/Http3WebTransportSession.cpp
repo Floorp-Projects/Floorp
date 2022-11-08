@@ -6,7 +6,6 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 #include "Http3WebTransportSession.h"
-#include "Http3WebTransportStream.h"
 #include "Http3Session.h"
 #include "Http3Stream.h"
 #include "nsHttpRequestHead.h"
@@ -22,8 +21,6 @@ namespace mozilla::net {
 Http3WebTransportSession::Http3WebTransportSession(nsAHttpTransaction* trans,
                                                    Http3Session* aHttp3Session)
     : Http3StreamBase(trans, aHttp3Session) {}
-
-Http3WebTransportSession::~Http3WebTransportSession() = default;
 
 nsresult Http3WebTransportSession::ReadSegments() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
@@ -349,54 +346,6 @@ void Http3WebTransportSession::CloseSession(uint32_t aStatus,
 void Http3WebTransportSession::TransactionIsDone(nsresult aResult) {
   mTransaction->Close(aResult);
   mTransaction = nullptr;
-}
-
-void Http3WebTransportSession::CreateOutgoingBidirectionalStream(
-    std::function<void(Result<RefPtr<Http3WebTransportStream>, nsresult>&&)>&&
-        aCallback) {
-  return CreateStreamInternal(true, std::move(aCallback));
-}
-
-void Http3WebTransportSession::CreateOutgoingUnidirectionalStream(
-    std::function<void(Result<RefPtr<Http3WebTransportStream>, nsresult>&&)>&&
-        aCallback) {
-  return CreateStreamInternal(false, std::move(aCallback));
-}
-
-void Http3WebTransportSession::CreateStreamInternal(
-    bool aBidi,
-    std::function<void(Result<RefPtr<Http3WebTransportStream>, nsresult>&&)>&&
-        aCallback) {
-  LOG(("Http3WebTransportSession::CreateStreamInternal this=%p aBidi=%d", this,
-       aBidi));
-  if (mRecvState != ACTIVE) {
-    aCallback(Err(NS_ERROR_NOT_AVAILABLE));
-    return;
-  }
-
-  RefPtr<Http3WebTransportStream> stream =
-      aBidi ? new Http3WebTransportStream(mSession, mStreamId,
-                                          WebTransportStreamType::BiDi,
-                                          std::move(aCallback))
-            : new Http3WebTransportStream(mSession, mStreamId,
-                                          WebTransportStreamType::UniDi,
-                                          std::move(aCallback));
-  mSession->StreamHasDataToWrite(stream);
-  // Put the newly created stream in to |mStreams| to keep it alive.
-  mStreams.AppendElement(std::move(stream));
-}
-
-// This is called by Http3Session::TryActivatingWebTransportStream. When called,
-// this means a WebTransport stream is successfully activated and the stream
-// will be managed by Http3Session.
-void Http3WebTransportSession::RemoveWebTransportStream(
-    Http3WebTransportStream* aStream) {
-  LOG(
-      ("Http3WebTransportSession::RemoveWebTransportStream "
-       "this=%p aStream=%p",
-       this, aStream));
-  DebugOnly<bool> existed = mStreams.RemoveElement(aStream);
-  MOZ_ASSERT(existed);
 }
 
 }  // namespace mozilla::net
