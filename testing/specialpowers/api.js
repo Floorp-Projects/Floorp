@@ -27,7 +27,11 @@ this.specialpowers = class extends ExtensionAPI {
     // Register special testing modules.
     Components.manager
       .QueryInterface(Ci.nsIComponentRegistrar)
-      .autoRegister(FileUtils.getFile("ProfD", ["tests.manifest"]));
+      .autoRegister(
+        new FileUtils.File(
+          PathUtils.join(PathUtils.profileDir, "tests.manifest")
+        )
+      );
 
     ChromeUtils.registerWindowActor("SpecialPowers", {
       allFrames: true,

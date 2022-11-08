@@ -117,7 +117,9 @@ XPCOMUtils.defineLazyGetter(
     // system. This makes a simple nsIFile.createUnique call unreliable, and we
     // have to use a random number to make a collision unlikely.
     let randomNumber = Math.floor(Math.random() * 1000000);
-    let dir = FileUtils.getFile("TmpD", ["testdir-" + randomNumber]);
+    let dir = new FileUtils.File(
+      PathUtils.join(PathUtils.tempDir, `testdir-${randomNumber}`)
+    );
     dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
     // We need to run this *after* the profile-before-change phase because
@@ -128,7 +130,7 @@ XPCOMUtils.defineLazyGetter(
     OS.File.shutdown.addBlocker("Removing test files", async () => {
       // Remove the files we know about first.
       for (let path of gPathsToRemove) {
-        await this.tolerantRemove(path);
+        await FileTestUtils.tolerantRemove(path);
       }
 
       if (!(await OS.File.exists(dir.path))) {
@@ -139,7 +141,7 @@ XPCOMUtils.defineLazyGetter(
       let iterator = new OS.File.DirectoryIterator(dir.path);
       try {
         await iterator.forEach(entry =>
-          this.tolerantRemove(entry.path, entry.isDir)
+          FileTestUtils.tolerantRemove(entry.path, entry.isDir)
         );
       } finally {
         iterator.close();
