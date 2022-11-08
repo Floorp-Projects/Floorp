@@ -144,21 +144,9 @@ void HTMLTableCellAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
       aAttribute == nsGkAtoms::scope) {
     mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
                            this);
-    if (TableAccessible* table = Table()) {
-      // Modifying these attributes can also modify our table's classification
-      // as either a layout or data table. Queue an update on the table itself
-      // to re-compute our "layout guess"
-      mDoc->QueueCacheUpdate(table->AsAccessible(), CacheDomain::Table);
-    }
     mDoc->QueueCacheUpdate(this, CacheDomain::Table);
   } else if (aAttribute == nsGkAtoms::rowspan ||
              aAttribute == nsGkAtoms::colspan) {
-    if (TableAccessible* table = Table()) {
-      // Modifying these attributes can also modify our table's classification
-      // as either a layout or data table. Queue an update on the table itself
-      // to re-compute our "layout guess"
-      mDoc->QueueCacheUpdate(table->AsAccessible(), CacheDomain::Table);
-    }
     mDoc->QueueCacheUpdate(this, CacheDomain::Table);
   }
 }
@@ -443,7 +431,6 @@ void HTMLTableAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
 
     mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
                            this);
-    mDoc->QueueCacheUpdate(this, CacheDomain::Table);
   }
 }
 
