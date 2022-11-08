@@ -38,7 +38,7 @@
 
 :root[uidensity=compact] {
   --arrowpanel-menuitem-margin-inline: 4px;
-  --arrowpanel-menuitem-padding-block: 0;
+  --arrowpanel-menuitem-padding-block: 0px;
   --panel-separator-margin-horizontal: 4px;
   --panel-subview-body-padding-block: 4px;
 }

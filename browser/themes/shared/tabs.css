@@ -620,19 +620,15 @@ toolbar[brighttext] {
   --tab-attention-icon-color: var(--lwt-tab-attention-icon-color, rgb(84,255,189));
 }
 
+/* Please keep this attention UI in sync with the one defined in
+ * browser/themes/shared/addons/unified-extensions-item.css */
 .tabbrowser-tab:is([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]),
-#firefox-view-button[attention],
-#unified-extensions-button[attention="true"],
-.webextension-browser-action[attention="true"] {
+#firefox-view-button[attention] {
   background-image: radial-gradient(circle, var(--tab-attention-icon-color), var(--tab-attention-icon-color) 2px, transparent 2px);
   background-position: center bottom calc(6.5px + var(--tabs-navbar-shadow-size));
   background-size: 4px 4px;
   background-repeat: no-repeat;
-}
-
-:root[uidensity="compact"] :is(#unified-extensions-button, .webextension-browser-action)[attention="true"] {
-  background-position-y: bottom 4.5px;
 }
 
 .tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([pinned], [selected="true"]) {

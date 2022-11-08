@@ -77,21 +77,21 @@ async function testOriginControls(
     `Testing ${extension.id} on ${win.gBrowser.currentURI.spec} with contextMenuId=${contextMenuId}.`
   );
 
-  let button;
+  let buttonOrWidget;
   let menu;
   let manageExtensionClassName;
 
   switch (contextMenuId) {
     case "toolbar-context-menu":
       let target = `#${CSS.escape(makeWidgetId(extension.id))}-BAP`;
-      button = win.document.querySelector(target);
+      buttonOrWidget = win.document.querySelector(target).parentElement;
       menu = await openChromeContextMenu(contextMenuId, target, win);
       manageExtensionClassName = "customize-context-manageExtension";
       break;
 
     case "unified-extensions-context-menu":
       await openExtensionsPanel(win);
-      button = getUnifiedExtensionsItem(win, extension.id);
+      buttonOrWidget = getUnifiedExtensionsItem(win, extension.id);
       menu = await openUnifiedExtensionsContextMenu(win, extension.id);
       manageExtensionClassName =
         "unified-extensions-context-menu-manage-extension";
@@ -126,8 +126,8 @@ async function testOriginControls(
   }
 
   is(
-    button.getAttribute("attention"),
-    attention ? "true" : "false",
+    buttonOrWidget.hasAttribute("attention"),
+    !!attention,
     "Expected attention badge before clicking."
   );
 
@@ -234,9 +234,8 @@ const originControlsInContextMenu = async options => {
     await testOriginControls(ext5, options, { items: [] });
 
     if (unifiedButton) {
-      is(
-        unifiedButton.getAttribute("attention"),
-        "false",
+      ok(
+        !unifiedButton.hasAttribute("attention"),
         "No extension will have attention indicator on about:blank."
       );
     }
@@ -274,9 +273,8 @@ const originControlsInContextMenu = async options => {
     // MV2 extension, has no origin controls, and never flags for attention.
     await testOriginControls(ext5, options, { items: [], attention: false });
     if (unifiedButton) {
-      is(
-        unifiedButton.getAttribute("attention"),
-        "true",
+      ok(
+        unifiedButton.hasAttribute("attention"),
         "Both ext2 and ext3 are WHEN_CLICKED for example.com, so show attention indicator."
       );
     }
@@ -313,9 +311,8 @@ const originControlsInContextMenu = async options => {
     await testOriginControls(ext5, options, { items: [], attention: false });
 
     if (unifiedButton) {
-      is(
-        unifiedButton.getAttribute("attention"),
-        "true",
+      ok(
+        unifiedButton.hasAttribute("attention"),
         "ext2 is WHEN_CLICKED for example.com, show attention indicator."
       );
     }
@@ -329,9 +326,8 @@ const originControlsInContextMenu = async options => {
       attention: true,
     });
     if (unifiedButton) {
-      is(
-        unifiedButton.getAttribute("attention"),
-        "false",
+      ok(
+        !unifiedButton.hasAttribute("attention"),
         "Bot ext2 and ext3 are ALWAYS_ON for example.com, so no attention indicator."
       );
     }
@@ -344,9 +340,8 @@ const originControlsInContextMenu = async options => {
       attention: false,
     });
     if (unifiedButton) {
-      is(
-        unifiedButton.getAttribute("attention"),
-        "true",
+      ok(
+        unifiedButton.hasAttribute("attention"),
         "ext3 is now WHEN_CLICKED for example.com, show attention indicator."
       );
     }
@@ -364,9 +359,8 @@ const originControlsInContextMenu = async options => {
     });
 
     if (unifiedButton) {
-      is(
-        unifiedButton.getAttribute("attention"),
-        "true",
+      ok(
+        unifiedButton.hasAttribute("attention"),
         "Still showing the attention indicator."
       );
     }
