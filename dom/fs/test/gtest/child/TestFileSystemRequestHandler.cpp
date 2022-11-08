@@ -264,7 +264,13 @@ TEST_F(TestFileSystemRequestHandler, isGetWritableBlockedAfterShutdown) {
       mManager, mEntry, /* aKeepData */ false, GetSimplePromise(), error);
 
   ASSERT_TRUE(error.Failed());
+  // XXX This should be reverted back to check NS_ERROR_ILLEGAL_DURING_SHUTDOWN
+  // once bug 1798513 is fixed.
+#if 0
   ASSERT_TRUE(error.ErrorCodeIs(NS_ERROR_ILLEGAL_DURING_SHUTDOWN));
+#else
+  ASSERT_TRUE(error.ErrorCodeIs(NS_ERROR_NOT_IMPLEMENTED));
+#endif
 }
 
 TEST_F(TestFileSystemRequestHandler, isGetEntriesSuccessful) {
