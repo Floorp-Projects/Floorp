@@ -2,8 +2,8 @@
   "name": "MercadoLivre",
   "description": "Onde comprar e vender de Tudo.",
   "manifest_version": 2,
-  "version": "1.0",
-  "applications": {
+  "version": "1.1",
+  "browser_specific_settings": {
     "gecko": {
       "id": "mercadolivre@search.mozilla.org"
     }

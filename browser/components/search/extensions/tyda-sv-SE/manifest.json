@@ -2,8 +2,8 @@
   "name": "Tyda.se",
   "description": "Tyda.se, lexikon, ordlista och översättning.",
   "manifest_version": 2,
-  "version": "1.0",
-  "applications": {
+  "version": "1.1",
+  "browser_specific_settings": {
     "gecko": {
       "id": "tyda-sv-SE@search.mozilla.org"
     }

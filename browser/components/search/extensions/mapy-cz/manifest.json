@@ -2,8 +2,8 @@
   "name": "Mapy.cz",
   "description": "Vyhledávání na Mapy.cz",
   "manifest_version": 2,
-  "version": "1.0",
-  "applications": {
+  "version": "1.1",
+  "browser_specific_settings": {
     "gecko": {
       "id": "mapy-cz@search.mozilla.org"
     }

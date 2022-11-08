@@ -2,8 +2,8 @@
   "name": "Azerdict",
   "description": "Azərbaycanın Online Lüğəti",
   "manifest_version": 2,
-  "version": "1.0",
-  "applications": {
+  "version": "1.1",
+  "browser_specific_settings": {
     "gecko": {
       "id": "azerdict@search.mozilla.org"
     }

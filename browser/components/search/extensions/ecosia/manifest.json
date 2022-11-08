@@ -2,8 +2,8 @@
   "name": "Ecosia",
   "description": "Search Ecosia",
   "manifest_version": 2,
-  "version": "1.1",
-  "applications": {
+  "version": "1.2",
+  "browser_specific_settings": {
     "gecko": {
       "id": "ecosia@search.mozilla.org"
     }

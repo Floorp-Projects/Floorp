@@ -2,8 +2,8 @@
   "name": "百度",
   "description": "百度网页搜索",
   "manifest_version": 2,
-  "version": "1.2",
-  "applications": {
+  "version": "1.3",
+  "browser_specific_settings": {
     "gecko": {
       "id": "baidu@search.mozilla.org"
     }

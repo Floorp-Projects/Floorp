@@ -2,8 +2,8 @@
   "name": "Cốc Cốc",
   "description": "Use Cốc Cốc to search on coccoc.com",
   "manifest_version": 2,
-  "version": "1.0",
-  "applications": {
+  "version": "1.1",
+  "browser_specific_settings": {
     "gecko": {
       "id": "coccoc@search.mozilla.org"
     }

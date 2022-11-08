@@ -2,8 +2,8 @@
   "name": "__MSG_extensionName__",
   "description": "__MSG_extensionName__",
   "manifest_version": 2,
-  "version": "1.1",
-  "applications": {
+  "version": "1.2",
+  "browser_specific_settings": {
     "gecko": {
       "id": "gmx@search.mozilla.org"
     }
