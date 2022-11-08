@@ -169,6 +169,19 @@ nsresult nsCookieInjector::MaybeInjectCookies(nsIHttpChannel* aChannel,
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
+  // Skip non browser tab loads, e.g. extension panels.
+  RefPtr<mozilla::dom::BrowsingContext> browsingContext;
+  nsresult rv = loadInfo->GetBrowsingContext(getter_AddRefs(browsingContext));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!browsingContext ||
+      !browsingContext->GetMessageManagerGroup().EqualsLiteral("browsers")) {
+    MOZ_LOG(
+        gCookieInjectorLog, LogLevel::Verbose,
+        ("%s: Skip load for BC message manager group != browsers.", aTopic));
+    return NS_OK;
+  }
+
   // Skip non-toplevel loads.
   if (!loadInfo->GetIsTopLevelLoad()) {
     MOZ_LOG(gCookieInjectorLog, LogLevel::Debug,
@@ -177,7 +190,7 @@ nsresult nsCookieInjector::MaybeInjectCookies(nsIHttpChannel* aChannel,
   }
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  rv = aChannel->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get hostPort string, used for logging only.

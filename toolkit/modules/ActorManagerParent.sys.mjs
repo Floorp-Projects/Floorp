@@ -207,9 +207,11 @@ let JSWINDOWACTORS = {
         load: { capture: true },
       },
     },
-    // We only handle cookie banners for HTTP/S scheme. Avoid initializing
-    // actors for other schemes.
+    // Only need handle cookie banners for HTTP/S scheme.
     matches: ["https://*/*", "http://*/*"],
+    // Only handle banners for browser tabs (including sub-frames).
+    messageManagerGroups: ["browsers"],
+    // Cookie banners can be shown in sub-frames so we need to include them.
     allFrames: true,
     enablePreference: "cookiebanners.bannerClicking.enabled",
   },
