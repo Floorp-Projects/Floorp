@@ -35,7 +35,13 @@ window.addEventListener("load", function onload(event) {
     window.removeEventListener("load", onload);
     Troubleshoot.snapshot(async function(snapshot) {
       for (let prop in snapshotFormatters) {
-        await snapshotFormatters[prop](snapshot[prop]);
+        try {
+          await snapshotFormatters[prop](snapshot[prop]);
+        } catch (e) {
+          Cu.reportError(
+            "stack of snapshot error for about:support: " + e + ": " + e.stack
+          );
+        }
       }
       if (location.hash) {
         scrollToSection();
@@ -427,6 +433,9 @@ var snapshotFormatters = {
   },
 
   places(data) {
+    if (!AppConstants.MOZ_PLACES) {
+      return;
+    }
     const statsBody = $("place-database-stats-tbody");
     $.append(
       statsBody,
