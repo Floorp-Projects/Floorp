@@ -293,6 +293,10 @@ bool LaunchApp(const std::wstring& cmdline, const LaunchOptions& options,
   }
 
   dwCreationFlags |= CREATE_UNICODE_ENVIRONMENT;
+  if (options.start_independent) {
+    dwCreationFlags |= CREATE_BREAKAWAY_FROM_JOB;
+  }
+
   LPTCH original_environment = GetEnvironmentStrings();
   base::NativeEnvironmentString new_environment =
       AlterEnvironment(original_environment, options.env_map);
