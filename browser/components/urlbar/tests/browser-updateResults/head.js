@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// The files in this directory test UrlbarView._updateResults().
+// The files in this directory test UrlbarView.#updateResults().
 
 "use strict";
 
@@ -399,20 +399,22 @@ async function doSuggestedIndexTest({ search1, search2, duringUpdate }) {
       // The last row during the update is expected to become stale. Wait for
       // the stale attribute to be set on it. We'll actually just wait for any
       // attribute.
-      let { children } = gURLBar.view._rows;
+      let { children } = UrlbarTestUtils.getResultsContainer(window);
       observer.observe(children[children.length - 1], { attributes: true });
     } else if (search1.viewCount == rowCountDuringUpdate) {
       // No rows are expected to be added during the view update, so it must be
       // the case that some rows will be updated for results in the the second
       // search. Wait for any change to an existing row.
-      observer.observe(gURLBar.view._rows, {
+      observer.observe(UrlbarTestUtils.getResultsContainer(window), {
         subtree: true,
         attributes: true,
         characterData: true,
       });
     } else {
       // Rows are expected to be added during the update. Wait for them.
-      observer.observe(gURLBar.view._rows, { childList: true });
+      observer.observe(UrlbarTestUtils.getResultsContainer(window), {
+        childList: true,
+      });
     }
   });
 
@@ -432,14 +434,15 @@ async function doSuggestedIndexTest({ search1, search2, duringUpdate }) {
   // Check the rows. We can't use UrlbarTestUtils.getDetailsOfResultAt() here
   // because it waits for the search to finish.
   Assert.equal(
-    gURLBar.view._rows.children.length,
+    UrlbarTestUtils.getResultCount(window),
     rowCountDuringUpdate,
     "Row count during update"
   );
+  let rows = UrlbarTestUtils.getResultsContainer(window).children;
   let rowIndex = 0;
   for (let rowState of duringUpdate) {
     for (let i = 0; i < rowState.count; i++) {
-      let row = gURLBar.view._rows.children[rowIndex];
+      let row = rows[rowIndex];
 
       // type
       if ("type" in rowState) {
@@ -522,7 +525,7 @@ async function doSuggestedIndexTest({ search1, search2, duringUpdate }) {
     "Row count after update"
   );
   for (let i = 0; i < search2.viewCount; i++) {
-    let result = gURLBar.view._rows.children[i].result;
+    let result = rows[i].result;
     let tuple = suggestedIndexesByRealIndex.get(i);
     if (tuple) {
       let [suggestedIndex, resultSpan] = tuple;

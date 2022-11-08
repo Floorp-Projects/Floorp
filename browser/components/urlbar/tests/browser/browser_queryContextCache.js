@@ -233,11 +233,11 @@ add_task(async function topSites_disabled_2() {
 
 add_task(async function evict() {
   await withNewBrowserWindow(async win => {
-    let cache = win.gURLBar.view._queryContextCache;
+    let cache = win.gURLBar.view.queryContextCache;
     Assert.equal(
       typeof cache.size,
       "number",
-      "Sanity check: _queryContextCache.size is a number"
+      "Sanity check: queryContextCache.size is a number"
     );
 
     // Open the view to show top sites and then close it.
@@ -303,7 +303,7 @@ async function openViewAndAssertCached({
   urls = TEST_URLS,
   ignoreOrder = false,
 }) {
-  let cache = win.gURLBar.view._queryContextCache;
+  let cache = win.gURLBar.view.queryContextCache;
   let getContext = () =>
     searchString ? cache.get(searchString) : cache.topSitesContext;
 

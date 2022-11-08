@@ -177,10 +177,11 @@ export var UrlbarTestUtils = {
   async waitForAutocompleteResultAt(win, index) {
     // TODO Bug 1530338: Quantum Bar doesn't yet implement lazy results replacement.
     await this.promiseSearchComplete(win);
-    if (index >= win.gURLBar.view._rows.children.length) {
+    let container = this.getResultsContainer(win);
+    if (index >= container.children.length) {
       throw new Error("Not enough results");
     }
-    return win.gURLBar.view._rows.children[index];
+    return container.children[index];
   },
 
   /**
@@ -284,6 +285,17 @@ export var UrlbarTestUtils = {
   },
 
   /**
+   * Gets the row at a specific index.
+   *
+   * @param {object} win The window containing the urlbar.
+   * @param {number} index The index to look for.
+   * @returns {HTMLElement|XulElement} The selected row.
+   */
+  getRowAt(win, index) {
+    return this.getResultsContainer(win).children.item(index);
+  },
+
+  /**
    * Gets the currently selected row. If the selected element is a descendant of
    * a row, this will return the ancestor row.
    *
@@ -291,7 +303,7 @@ export var UrlbarTestUtils = {
    * @returns {HTMLElement|XulElement} The selected row.
    */
   getSelectedRow(win) {
-    return win.gURLBar.view._getSelectedRow() || null;
+    return this.getRowAt(win, this.getSelectedRowIndex(win));
   },
 
   /**
@@ -314,6 +326,10 @@ export var UrlbarTestUtils = {
     win.gURLBar.view.selectedRowIndex = index;
   },
 
+  getResultsContainer(win) {
+    return win.gURLBar.view.panel.querySelector(".urlbarView-results");
+  },
+
   /**
    * Gets the number of results.
    * You must wait for the query to be complete before using this.
@@ -322,7 +338,7 @@ export var UrlbarTestUtils = {
    * @returns {number} the number of results.
    */
   getResultCount(win) {
-    return win.gURLBar.view._rows.children.length;
+    return this.getResultsContainer(win).children.length;
   },
 
   /**
@@ -971,7 +987,7 @@ class TestProvider extends UrlbarProvider {
    *   method is called.
    * @param {Function} [options.onSelection]
    *   If given, a function that will be called when
-   *   {@link UrlbarView._selectElement} method is called.
+   *   {@link UrlbarView.#selectElement} method is called.
    */
   constructor({
     results,
