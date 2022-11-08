@@ -842,6 +842,7 @@ export class UrlbarInput {
           ? result.payload.url
           : undefined,
       },
+      private: this.isPrivate,
     };
 
     if (
@@ -2661,6 +2662,12 @@ export class UrlbarInput {
       params.avoidBrowserFocus = true;
       this._keyDownEnterDeferred.loadedContent = true;
       this._keyDownEnterDeferred.resolve(browser);
+    }
+
+    // Ensure the window gets the `private` feature if the current window
+    // is private, unless the caller explicitly requested not to.
+    if (this.isPrivate && !("private" in params)) {
+      params.private = true;
     }
 
     // Focus the content area before triggering loads, since if the load
