@@ -156,7 +156,7 @@ static nsIFrame::ChildListID ChildListIDForOutOfFlow(
     return nsIFrame::kFloatList;
   }
   if (aPlaceholderState & PLACEHOLDER_FOR_POPUP) {
-    return nsIFrame::kAbsoluteList;
+    return nsIFrame::kPopupList;
   }
   if (aPlaceholderState & PLACEHOLDER_FOR_FIXEDPOS) {
     return nsLayoutUtils::MayBeReallyFixedPos(aChild) ? nsIFrame::kFixedList
