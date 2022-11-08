@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: Mismatched stream start time playback test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+runWithMSE(async (ms, el) => {
+  el.controls = true;
+  el.autoplay = true;
+  for (let i = 0; i <= 0.5; i += 0.1) {
+    const offset = i.toFixed(1);
+
+    info("----------------------");
+    info("Running test for mismatched stream start times with offset of: " + offset);
+    info("----------------------");
+
+    ms = new MediaSource();
+    el.removeAttribute("src");
+    el.src = URL.createObjectURL(ms);
+
+    await once(ms, "sourceopen");
+    logEvents(el);
+    const videosb = ms.addSourceBuffer("video/mp4");
+    ok(true, "Receive a sourceopen event");
+
+    el.addEventListener("error", e => {
+      ok(false, `should not fire ${e.type} event`);
+      SimpleTest.finish();
+    });
+
+    let p = once(el, "loadedmetadata");
+    await fetchAndLoad(videosb, "bipbop/bipbop_offset_" + offset + "-", ["init"], ".mp4");
+    await p;
+    ok(true, "got loadedmetadata event");
+
+    p = Promise.all(["loadeddata", "canplay", "play", "playing"].map(e => once(el, e)));
+    await fetchAndLoad(videosb, "bipbop/bipbop_offset_" + offset + "-", range(1, 2), ".m4s");
+    el.play();
+    await p;
+  }
+  ok(true, "got all required event");
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
