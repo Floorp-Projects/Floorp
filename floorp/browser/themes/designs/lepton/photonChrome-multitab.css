@@ -8959,6 +8959,13 @@
       #appMenu-quit-button2 {
         list-style-image: url("chrome://browser/skin/lepton/quit.svg");
       }
+      #rebootappmenu {
+        list-style-image: url("chrome://browser/skin/lepton/refresh-cw.svg");
+      }
+      
+      #usercssloader-menu {
+        --menuitem-image: url("chrome://browser/skin/lepton/developer.svg");
+      }
     }
     /*= Panel - Account ==========================================================*/
     #PanelUI-fxa-menu-connect-device-button .toolbarbutton-icon,
