@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_toolkit_system_windowsproxy_ProxyUtils_h
-#define mozilla_toolkit_system_windowsproxy_ProxyUtils_h
+#ifndef mozilla_toolkit_system_commonproxy_ProxyUtils_h
+#define mozilla_toolkit_system_commonproxy_ProxyUtils_h
 
 #include "nsString.h"
 
@@ -18,4 +18,4 @@ bool IsHostProxyEntry(const nsACString& aHost, const nsACString& aOverride);
 }  // namespace toolkit
 }  // namespace mozilla
 
-#endif  // mozilla_toolkit_system_windowsproxy_ProxyUtils_h
+#endif  // mozilla_toolkit_system_commonproxy_ProxyUtils_h

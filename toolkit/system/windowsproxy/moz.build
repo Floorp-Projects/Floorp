@@ -7,9 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Networking")
 
-TEST_DIRS += ["tests/gtest"]
-
-SOURCES += ["nsWindowsSystemProxySettings.cpp", "ProxyUtils.cpp"]
+SOURCES += ["nsWindowsSystemProxySettings.cpp"]
 
 XPCOM_MANIFESTS += [
     "components.conf",
@@ -18,5 +16,6 @@ XPCOM_MANIFESTS += [
 FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
+    "../commonproxy",
     "/netwerk/base",
 ]

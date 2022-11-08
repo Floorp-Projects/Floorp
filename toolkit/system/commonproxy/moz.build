@@ -7,17 +7,12 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Networking")
 
-SOURCES += [
-    "nsOSXSystemProxySettings.mm",
-]
+TEST_DIRS += ["tests/gtest"]
 
-XPCOM_MANIFESTS += [
-    "components.conf",
-]
+SOURCES += ["ProxyUtils.cpp"]
 
 FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    "../commonproxy",
     "/netwerk/base",
 ]
