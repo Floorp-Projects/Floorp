@@ -26,14 +26,13 @@ exported_symbols.test0 = async function() {
 
   // Read it back
   // Get size of the file.
-  let handle = await testFile.createSyncAccessHandle();
+  let file = await testFile.getFile();
   Assert.ok(
-    !!handle,
-    "Can't create SyncAccessHandle to file written with WritableFileStream"
+    !!file,
+    "Can't create File to file written with WritableFileStream"
   );
-  let fileSize = await handle.getSize();
+  let fileSize = file.size;
   Assert.ok(fileSize == writeBuffer.byteLength);
-  await handle.close();
 };
 
 for (const [key, value] of Object.entries(exported_symbols)) {
