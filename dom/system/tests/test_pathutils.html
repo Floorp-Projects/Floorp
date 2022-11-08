@@ -20,6 +20,10 @@
   const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
   const UNRECOGNIZED_PATH = /Could not initialize path: NS_ERROR_FILE_UNRECOGNIZED_PATH/;
+  const SPLIT_RELATIVE_ABSOLUTE = /PathUtils.splitRelative requires a relative path/;
+  const SPLIT_RELATIVE_EMPTY = /PathUtils.splitRelative: Empty directory components \(""\) not allowed by options/;
+  const SPLIT_RELATIVE_PARENT = /PathUtils.splitRelative: Parent directory components \("\.\."\) not allowed by options/;
+  const SPLIT_RELATIVE_CURRENT = /PathUtils.splitRelative: Current directory components \("\."\) not allowed by options/;
   const EMPTY_PATH = /PathUtils does not support empty paths/;
   const JOIN = /Could not append to path/;
 
@@ -396,6 +400,118 @@
         "PathUtils.split() on absolute path with trailing slash"
       );
     }
+  });
+
+  add_task(function test_splitRelative() {
+    Assert.throws(
+      () => PathUtils.splitRelative(""),
+      EMPTY_PATH,
+      "PathUtils.splitRelative() should throw with empty path"
+    );
+
+    if (Services.appinfo.OS === "WINNT") {
+      Assert.throws(
+        () => PathUtils.splitRelative("C:\\"),
+        SPLIT_RELATIVE_ABSOLUTE,
+        "PathUtils.splitRelative() should throw with a drive path"
+      );
+
+      Assert.throws(
+        () => PathUtils.splitRelative("\\\\server\\share\\"),
+        SPLIT_RELATIVE_ABSOLUTE,
+        "PathUtils.splitRelative() should throw with a UNC path"
+      );
+
+      Assert.throws(
+        () => PathUtils.splitRelative("foo\\\\bar"),
+        SPLIT_RELATIVE_EMPTY,
+        "PathUtils.splitRelative() should throw with empty component by default"
+      );
+
+      Assert.deepEqual(
+        PathUtils.splitRelative("foo\\\\bar", { allowEmpty: true }),
+        ["foo", "", "bar"],
+        "PathUtils.splitRelative() with an empty component is allowed with option"
+      );
+
+      Assert.deepEqual(
+        PathUtils.splitRelative("foo"),
+        ["foo"],
+        "PathUtils.splitRelative() on a relative path with one component"
+      );
+
+      Assert.deepEqual(
+        PathUtils.splitRelative("foo\\"),
+        ["foo"],
+        "PathUtils.splitRelative() on a relative path with one component and a trailing slash"
+      );
+
+      Assert.deepEqual(
+        PathUtils.splitRelative("foo\\bar"),
+        ["foo", "bar"],
+        "PathUtils.splitRelative() on a relative path with two components"
+      );
+    } else {
+      Assert.throws(
+        () => PathUtils.splitRelative("/foo/bar"),
+        SPLIT_RELATIVE_ABSOLUTE,
+        "PathUtils.splitRelative() should throw with an absolute path"
+      );
+
+      Assert.throws(
+        () => PathUtils.splitRelative("foo//bar"),
+        SPLIT_RELATIVE_EMPTY,
+        "PathUtils.splitRelative() should throw with empty component by default"
+      );
+
+      Assert.deepEqual(
+        PathUtils.splitRelative("foo//bar", { allowEmpty: true }),
+        ["foo", "", "bar"],
+        "PathUtils.splitRelative() with an empty component is allowed with option"
+      );
+
+      Assert.deepEqual(
+        PathUtils.splitRelative("foo"),
+        ["foo"],
+        "PathUtils.splitRelative() on a relative path with one component"
+      );
+
+      Assert.deepEqual(
+        PathUtils.splitRelative("foo/"),
+        ["foo"],
+        "PathUtils.splitRelative() on a relative path with one component and a trailing slash"
+      );
+
+      Assert.deepEqual(
+        PathUtils.splitRelative("foo/bar"),
+        ["foo", "bar"],
+        "PathUtils.splitRelative() on a relative path with two components",
+      );
+    }
+
+    Assert.throws(
+      () => PathUtils.splitRelative("."),
+      SPLIT_RELATIVE_CURRENT,
+      "PathUtils.splitRelative() with a current dir component is disallowed by default"
+    );
+
+    Assert.throws(
+      () => PathUtils.splitRelative(".."),
+      SPLIT_RELATIVE_PARENT,
+      "PathUtils.splitRelative() with a parent dir component is disallowed by default"
+    );
+
+    Assert.deepEqual(
+      PathUtils.splitRelative(".", { allowCurrentDir: true }),
+      ["."],
+      "PathUtils.splitRelative() with a current dir component is allowed with option"
+    );
+
+    Assert.deepEqual(
+      PathUtils.splitRelative("..", { allowParentDir: true }),
+      [".."],
+      "PathUtils.splitRelative() with a parent dir component is allowed with option"
+    );
   });
 
   add_task(function test_toFileURI() {

@@ -326,6 +326,64 @@ void PathUtils::Split(const GlobalObject&, const nsAString& aPath,
   aResult.Reverse();
 }
 
+void PathUtils::SplitRelative(const GlobalObject& aGlobal,
+                              const nsAString& aPath,
+                              const SplitRelativeOptions& aOptions,
+                              nsTArray<nsString>& aResult, ErrorResult& aErr) {
+  if (aPath.IsEmpty()) {
+    aErr.ThrowNotAllowedError(ERROR_EMPTY_PATH);
+    return;
+  }
+
+  if (DoWindowsPathCheck()) {
+    MOZ_RELEASE_ASSERT(!aPath.Contains(u'/'),
+                       "Windows paths cannot include forward slashes");
+  }
+
+  if (IsAbsolute(aGlobal, aPath)) {
+    aErr.ThrowNotAllowedError(
+        "PathUtils.splitRelative requires a relative path"_ns);
+    return;
+  }
+
+#ifdef XP_WIN
+  constexpr auto SEPARATOR = u'\\';
+#else
+  constexpr auto SEPARATOR = u'/';
+#endif
+
+  constexpr auto PARENT = u".."_ns;
+  constexpr auto CURRENT = u"."_ns;
+
+  for (const nsAString& pathComponent :
+       nsCharSeparatedTokenizerTemplate<NS_TokenizerIgnoreNothing>{aPath,
+                                                                   SEPARATOR}
+           .ToRange()) {
+    if (!aOptions.mAllowEmpty && pathComponent.IsEmpty()) {
+      aErr.ThrowNotAllowedError(
+          "PathUtils.splitRelative: Empty directory components (\"\") not "
+          "allowed by options");
+      return;
+    }
+
+    if (!aOptions.mAllowParentDir && pathComponent == PARENT) {
+      aErr.ThrowNotAllowedError(
+          "PathUtils.splitRelative: Parent directory components (\"..\") not "
+          "allowed by options");
+      return;
+    }
+
+    if (!aOptions.mAllowCurrentDir && pathComponent == CURRENT) {
+      aErr.ThrowNotAllowedError(
+          "PathUtils.splitRelative: Current directory components (\".\") not "
+          "allowed by options");
+      return;
+    }
+
+    aResult.AppendElement(pathComponent);
+  }
+}
+
 void PathUtils::ToFileURI(const GlobalObject&, const nsAString& aPath,
                           nsCString& aResult, ErrorResult& aErr) {
   if (aPath.IsEmpty()) {
