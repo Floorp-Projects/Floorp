@@ -131,10 +131,7 @@ const MESSAGES = () => {
           },
         ],
       },
-      priority: 1,
-      frequency: {
-        lifetime: 1,
-      },
+      priority: 3,
       trigger: {
         id: "featureCalloutCheck",
       },
@@ -210,7 +207,7 @@ const MESSAGES = () => {
           EMPTY_SCREEN,
         ],
       },
-      priority: 1,
+      priority: 3,
       targeting: `!inMr2022Holdback && source == "firefoxview" && colorwaysActive && ${matchCurrentScreenTargeting(
         FIREFOX_VIEW_PREF,
         "FEATURE_CALLOUT_1"
@@ -281,7 +278,7 @@ const MESSAGES = () => {
           EMPTY_SCREEN,
         ],
       },
-      priority: 1,
+      priority: 3,
       targeting: `!inMr2022Holdback && source == "firefoxview" && !colorwaysActive && ${matchCurrentScreenTargeting(
         FIREFOX_VIEW_PREF,
         "FEATURE_CALLOUT_1"
@@ -348,7 +345,7 @@ const MESSAGES = () => {
           EMPTY_SCREEN,
         ],
       },
-      priority: 1,
+      priority: 3,
       targeting: `!inMr2022Holdback && source == "firefoxview" && colorwaysActive && ${matchCurrentScreenTargeting(
         FIREFOX_VIEW_PREF,
         "FEATURE_CALLOUT_2"
@@ -414,7 +411,7 @@ const MESSAGES = () => {
           },
         ],
       },
-      priority: 1,
+      priority: 3,
       targeting: `!inMr2022Holdback && source == "firefoxview" && !colorwaysActive && ${matchCurrentScreenTargeting(
         FIREFOX_VIEW_PREF,
         "FEATURE_CALLOUT_2"
@@ -487,7 +484,7 @@ const MESSAGES = () => {
           },
         ],
       },
-      priority: 1,
+      priority: 3,
       targeting: `!inMr2022Holdback && source == "firefoxview" && colorwaysActive && ${matchCurrentScreenTargeting(
         FIREFOX_VIEW_PREF,
         "FEATURE_CALLOUT_3"
@@ -537,7 +534,7 @@ const MESSAGES = () => {
           },
         ],
       },
-      priority: 3,
+      priority: 1,
       targeting: `!inMr2022Holdback && source == "firefoxview" && "browser.firefox-view.view-count" | preferenceValue > 3 && colorwaysActive && !userEnabledActiveColorway`,
       frequency: { lifetime: 1 },
       trigger: { id: "featureCalloutCheck" },

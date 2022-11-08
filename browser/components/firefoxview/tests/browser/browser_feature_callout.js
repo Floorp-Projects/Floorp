@@ -382,17 +382,16 @@ add_task(async function feature_callout_dismiss_on_page_click() {
   await SpecialPowers.pushPrefEnv({
     set: [[featureTourPref, `{"message":"","screen":"","complete":true}`]],
   });
-  Services.prefs.setIntPref("browser.firefox-view.view-count", 4);
-  Services.prefs.setBoolPref("identity.fxaccounts.enabled", false);
-  ASRouter.resetMessageState();
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("browser.firefox-view.view-count");
-    Services.prefs.clearUserPref("identity.fxaccounts.enabled");
-  });
+  const screenId = "FIREFOX_VIEW_COLORWAYS_REMINDER";
+  const testMessage = {
+    message: FeatureCalloutMessages.getMessages().find(m => m.id === screenId),
+  };
+  const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
+  sendTriggerStub.resolves(testMessage);
+
   const spy = sandbox
     .spy(AboutWelcomeParent.prototype, "onContentMessage")
     .withArgs("AWPage:TELEMETRY_EVENT");
-  const screenId = "FIREFOX_VIEW_COLORWAYS_REMINDER";
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -548,17 +547,18 @@ add_task(async function test_firefox_view_spotlight_promo() {
         () => dialogBrowser.document.querySelector("main.DEFAULT_MODAL_UI"),
         `Should render main.DEFAULT_MODAL_UI`
       );
-      await BrowserTestUtils.waitForCondition(
-        () => dialogBrowser.document.querySelector(primaryBtnSelector),
-        `waiting for selector ${primaryBtnSelector}`,
-        200, // interval
-        100 // maxTries
-      );
+
       dialogBrowser.document.querySelector(primaryBtnSelector).click();
+      info("Fx View Spotlight promo clicked");
 
-      info("Fx View Spotlight promo clicked, entering feature tour");
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          browser.contentWindow.performance.navigation.type ==
+          browser.contentWindow.performance.navigation.TYPE_RELOAD
+      );
+      info("Spotlight modal cleared, entering feature tour");
+
       const { document } = browser.contentWindow;
-
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
       ok(
         document.querySelector(calloutSelector),
