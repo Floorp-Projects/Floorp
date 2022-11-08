@@ -257,13 +257,198 @@ if (true) {
 
 /***/ }),
 
+/***/ 1084:
+/***/ (function(module, exports, __webpack_require__) {
+
+!function (t, n) {
+   true ? module.exports = n() : "function" == typeof define && define.amd ? define([], n) : "object" == typeof exports ? exports.MD5 = n() : t.MD5 = n();
+}(this, function () {
+  return function (t) {
+    function n(o) {
+      if (r[o]) return r[o].exports;
+      var e = r[o] = {
+        i: o,
+        l: !1,
+        exports: {}
+      };
+      return t[o].call(e.exports, e, e.exports, n), e.l = !0, e.exports;
+    }
+
+    var r = {};
+    return n.m = t, n.c = r, n.i = function (t) {
+      return t;
+    }, n.d = function (t, r, o) {
+      n.o(t, r) || Object.defineProperty(t, r, {
+        configurable: !1,
+        enumerable: !0,
+        get: o
+      });
+    }, n.n = function (t) {
+      var r = t && t.__esModule ? function () {
+        return t.default;
+      } : function () {
+        return t;
+      };
+      return n.d(r, "a", r), r;
+    }, n.o = function (t, n) {
+      return Object.prototype.hasOwnProperty.call(t, n);
+    }, n.p = "", n(n.s = 4);
+  }([function (t, n) {
+    var r = {
+      utf8: {
+        stringToBytes: function (t) {
+          return r.bin.stringToBytes(unescape(encodeURIComponent(t)));
+        },
+        bytesToString: function (t) {
+          return decodeURIComponent(escape(r.bin.bytesToString(t)));
+        }
+      },
+      bin: {
+        stringToBytes: function (t) {
+          for (var n = [], r = 0; r < t.length; r++) n.push(255 & t.charCodeAt(r));
+
+          return n;
+        },
+        bytesToString: function (t) {
+          for (var n = [], r = 0; r < t.length; r++) n.push(String.fromCharCode(t[r]));
+
+          return n.join("");
+        }
+      }
+    };
+    t.exports = r;
+  }, function (t, n, r) {
+    !function () {
+      var n = r(2),
+          o = r(0).utf8,
+          e = r(3),
+          u = r(0).bin,
+          i = function (t, r) {
+        t.constructor == String ? t = r && "binary" === r.encoding ? u.stringToBytes(t) : o.stringToBytes(t) : e(t) ? t = Array.prototype.slice.call(t, 0) : Array.isArray(t) || t.constructor === Uint8Array || (t = t.toString());
+
+        for (var f = n.bytesToWords(t), s = 8 * t.length, c = 1732584193, a = -271733879, p = -1732584194, l = 271733878, g = 0; g < f.length; g++) f[g] = 16711935 & (f[g] << 8 | f[g] >>> 24) | 4278255360 & (f[g] << 24 | f[g] >>> 8);
+
+        f[s >>> 5] |= 128 << s % 32, f[14 + (s + 64 >>> 9 << 4)] = s;
+
+        for (var h = i._ff, y = i._gg, d = i._hh, v = i._ii, g = 0; g < f.length; g += 16) {
+          var b = c,
+              x = a,
+              T = p,
+              B = l;
+          c = h(c, a, p, l, f[g + 0], 7, -680876936), l = h(l, c, a, p, f[g + 1], 12, -389564586), p = h(p, l, c, a, f[g + 2], 17, 606105819), a = h(a, p, l, c, f[g + 3], 22, -1044525330), c = h(c, a, p, l, f[g + 4], 7, -176418897), l = h(l, c, a, p, f[g + 5], 12, 1200080426), p = h(p, l, c, a, f[g + 6], 17, -1473231341), a = h(a, p, l, c, f[g + 7], 22, -45705983), c = h(c, a, p, l, f[g + 8], 7, 1770035416), l = h(l, c, a, p, f[g + 9], 12, -1958414417), p = h(p, l, c, a, f[g + 10], 17, -42063), a = h(a, p, l, c, f[g + 11], 22, -1990404162), c = h(c, a, p, l, f[g + 12], 7, 1804603682), l = h(l, c, a, p, f[g + 13], 12, -40341101), p = h(p, l, c, a, f[g + 14], 17, -1502002290), a = h(a, p, l, c, f[g + 15], 22, 1236535329), c = y(c, a, p, l, f[g + 1], 5, -165796510), l = y(l, c, a, p, f[g + 6], 9, -1069501632), p = y(p, l, c, a, f[g + 11], 14, 643717713), a = y(a, p, l, c, f[g + 0], 20, -373897302), c = y(c, a, p, l, f[g + 5], 5, -701558691), l = y(l, c, a, p, f[g + 10], 9, 38016083), p = y(p, l, c, a, f[g + 15], 14, -660478335), a = y(a, p, l, c, f[g + 4], 20, -405537848), c = y(c, a, p, l, f[g + 9], 5, 568446438), l = y(l, c, a, p, f[g + 14], 9, -1019803690), p = y(p, l, c, a, f[g + 3], 14, -187363961), a = y(a, p, l, c, f[g + 8], 20, 1163531501), c = y(c, a, p, l, f[g + 13], 5, -1444681467), l = y(l, c, a, p, f[g + 2], 9, -51403784), p = y(p, l, c, a, f[g + 7], 14, 1735328473), a = y(a, p, l, c, f[g + 12], 20, -1926607734), c = d(c, a, p, l, f[g + 5], 4, -378558), l = d(l, c, a, p, f[g + 8], 11, -2022574463), p = d(p, l, c, a, f[g + 11], 16, 1839030562), a = d(a, p, l, c, f[g + 14], 23, -35309556), c = d(c, a, p, l, f[g + 1], 4, -1530992060), l = d(l, c, a, p, f[g + 4], 11, 1272893353), p = d(p, l, c, a, f[g + 7], 16, -155497632), a = d(a, p, l, c, f[g + 10], 23, -1094730640), c = d(c, a, p, l, f[g + 13], 4, 681279174), l = d(l, c, a, p, f[g + 0], 11, -358537222), p = d(p, l, c, a, f[g + 3], 16, -722521979), a = d(a, p, l, c, f[g + 6], 23, 76029189), c = d(c, a, p, l, f[g + 9], 4, -640364487), l = d(l, c, a, p, f[g + 12], 11, -421815835), p = d(p, l, c, a, f[g + 15], 16, 530742520), a = d(a, p, l, c, f[g + 2], 23, -995338651), c = v(c, a, p, l, f[g + 0], 6, -198630844), l = v(l, c, a, p, f[g + 7], 10, 1126891415), p = v(p, l, c, a, f[g + 14], 15, -1416354905), a = v(a, p, l, c, f[g + 5], 21, -57434055), c = v(c, a, p, l, f[g + 12], 6, 1700485571), l = v(l, c, a, p, f[g + 3], 10, -1894986606), p = v(p, l, c, a, f[g + 10], 15, -1051523), a = v(a, p, l, c, f[g + 1], 21, -2054922799), c = v(c, a, p, l, f[g + 8], 6, 1873313359), l = v(l, c, a, p, f[g + 15], 10, -30611744), p = v(p, l, c, a, f[g + 6], 15, -1560198380), a = v(a, p, l, c, f[g + 13], 21, 1309151649), c = v(c, a, p, l, f[g + 4], 6, -145523070), l = v(l, c, a, p, f[g + 11], 10, -1120210379), p = v(p, l, c, a, f[g + 2], 15, 718787259), a = v(a, p, l, c, f[g + 9], 21, -343485551), c = c + b >>> 0, a = a + x >>> 0, p = p + T >>> 0, l = l + B >>> 0;
+        }
+
+        return n.endian([c, a, p, l]);
+      };
+
+      i._ff = function (t, n, r, o, e, u, i) {
+        var f = t + (n & r | ~n & o) + (e >>> 0) + i;
+        return (f << u | f >>> 32 - u) + n;
+      }, i._gg = function (t, n, r, o, e, u, i) {
+        var f = t + (n & o | r & ~o) + (e >>> 0) + i;
+        return (f << u | f >>> 32 - u) + n;
+      }, i._hh = function (t, n, r, o, e, u, i) {
+        var f = t + (n ^ r ^ o) + (e >>> 0) + i;
+        return (f << u | f >>> 32 - u) + n;
+      }, i._ii = function (t, n, r, o, e, u, i) {
+        var f = t + (r ^ (n | ~o)) + (e >>> 0) + i;
+        return (f << u | f >>> 32 - u) + n;
+      }, i._blocksize = 16, i._digestsize = 16, t.exports = function (t, r) {
+        if (void 0 === t || null === t) throw new Error("Illegal argument " + t);
+        var o = n.wordsToBytes(i(t, r));
+        return r && r.asBytes ? o : r && r.asString ? u.bytesToString(o) : n.bytesToHex(o);
+      };
+    }();
+  }, function (t, n) {
+    !function () {
+      var n = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+          r = {
+        rotl: function (t, n) {
+          return t << n | t >>> 32 - n;
+        },
+        rotr: function (t, n) {
+          return t << 32 - n | t >>> n;
+        },
+        endian: function (t) {
+          if (t.constructor == Number) return 16711935 & r.rotl(t, 8) | 4278255360 & r.rotl(t, 24);
+
+          for (var n = 0; n < t.length; n++) t[n] = r.endian(t[n]);
+
+          return t;
+        },
+        randomBytes: function (t) {
+          for (var n = []; t > 0; t--) n.push(Math.floor(256 * Math.random()));
+
+          return n;
+        },
+        bytesToWords: function (t) {
+          for (var n = [], r = 0, o = 0; r < t.length; r++, o += 8) n[o >>> 5] |= t[r] << 24 - o % 32;
+
+          return n;
+        },
+        wordsToBytes: function (t) {
+          for (var n = [], r = 0; r < 32 * t.length; r += 8) n.push(t[r >>> 5] >>> 24 - r % 32 & 255);
+
+          return n;
+        },
+        bytesToHex: function (t) {
+          for (var n = [], r = 0; r < t.length; r++) n.push((t[r] >>> 4).toString(16)), n.push((15 & t[r]).toString(16));
+
+          return n.join("");
+        },
+        hexToBytes: function (t) {
+          for (var n = [], r = 0; r < t.length; r += 2) n.push(parseInt(t.substr(r, 2), 16));
+
+          return n;
+        },
+        bytesToBase64: function (t) {
+          for (var r = [], o = 0; o < t.length; o += 3) for (var e = t[o] << 16 | t[o + 1] << 8 | t[o + 2], u = 0; u < 4; u++) 8 * o + 6 * u <= 8 * t.length ? r.push(n.charAt(e >>> 6 * (3 - u) & 63)) : r.push("=");
+
+          return r.join("");
+        },
+        base64ToBytes: function (t) {
+          t = t.replace(/[^A-Z0-9+\/]/gi, "");
+
+          for (var r = [], o = 0, e = 0; o < t.length; e = ++o % 4) 0 != e && r.push((n.indexOf(t.charAt(o - 1)) & Math.pow(2, -2 * e + 8) - 1) << 2 * e | n.indexOf(t.charAt(o)) >>> 6 - 2 * e);
+
+          return r;
+        }
+      };
+      t.exports = r;
+    }();
+  }, function (t, n) {
+    function r(t) {
+      return !!t.constructor && "function" == typeof t.constructor.isBuffer && t.constructor.isBuffer(t);
+    }
+
+    function o(t) {
+      return "function" == typeof t.readFloatLE && "function" == typeof t.slice && r(t.slice(0, 0));
+    }
+    /*!
+    * Determine if an object is a Buffer
+    *
+    * @author   Feross Aboukhadijeh <https://feross.org>
+    * @license  MIT
+    */
+
+
+    t.exports = function (t) {
+      return null != t && (r(t) || o(t) || !!t._isBuffer);
+    };
+  }, function (t, n, r) {
+    t.exports = r(1);
+  }]);
+});
+
+/***/ }),
+
 /***/ 584:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const md5 = __webpack_require__(644);
+const md5 = __webpack_require__(1084);
 
 function originalToGeneratedId(sourceId) {
   if (isGeneratedId(sourceId)) {
@@ -362,344 +547,6 @@ module.exports = {
   getContentType,
   contentMapForTesting: contentMap
 };
-
-/***/ }),
-
-/***/ 585:
-/***/ (function(module, exports) {
-
-var charenc = {
-  // UTF-8 encoding
-  utf8: {
-    // Convert a string to a byte array
-    stringToBytes: function(str) {
-      return charenc.bin.stringToBytes(unescape(encodeURIComponent(str)));
-    },
-
-    // Convert a byte array to a string
-    bytesToString: function(bytes) {
-      return decodeURIComponent(escape(charenc.bin.bytesToString(bytes)));
-    }
-  },
-
-  // Binary encoding
-  bin: {
-    // Convert a string to a byte array
-    stringToBytes: function(str) {
-      for (var bytes = [], i = 0; i < str.length; i++)
-        bytes.push(str.charCodeAt(i) & 0xFF);
-      return bytes;
-    },
-
-    // Convert a byte array to a string
-    bytesToString: function(bytes) {
-      for (var str = [], i = 0; i < bytes.length; i++)
-        str.push(String.fromCharCode(bytes[i]));
-      return str.join('');
-    }
-  }
-};
-
-module.exports = charenc;
-
-
-/***/ }),
-
-/***/ 644:
-/***/ (function(module, exports, __webpack_require__) {
-
-(function(){
-  var crypt = __webpack_require__(645),
-      utf8 = __webpack_require__(585).utf8,
-      isBuffer = __webpack_require__(646),
-      bin = __webpack_require__(585).bin,
-
-  // The core
-  md5 = function (message, options) {
-    // Convert to byte array
-    if (message.constructor == String)
-      if (options && options.encoding === 'binary')
-        message = bin.stringToBytes(message);
-      else
-        message = utf8.stringToBytes(message);
-    else if (isBuffer(message))
-      message = Array.prototype.slice.call(message, 0);
-    else if (!Array.isArray(message))
-      message = message.toString();
-    // else, assume byte array already
-
-    var m = crypt.bytesToWords(message),
-        l = message.length * 8,
-        a =  1732584193,
-        b = -271733879,
-        c = -1732584194,
-        d =  271733878;
-
-    // Swap endian
-    for (var i = 0; i < m.length; i++) {
-      m[i] = ((m[i] <<  8) | (m[i] >>> 24)) & 0x00FF00FF |
-             ((m[i] << 24) | (m[i] >>>  8)) & 0xFF00FF00;
-    }
-
-    // Padding
-    m[l >>> 5] |= 0x80 << (l % 32);
-    m[(((l + 64) >>> 9) << 4) + 14] = l;
-
-    // Method shortcuts
-    var FF = md5._ff,
-        GG = md5._gg,
-        HH = md5._hh,
-        II = md5._ii;
-
-    for (var i = 0; i < m.length; i += 16) {
-
-      var aa = a,
-          bb = b,
-          cc = c,
-          dd = d;
-
-      a = FF(a, b, c, d, m[i+ 0],  7, -680876936);
-      d = FF(d, a, b, c, m[i+ 1], 12, -389564586);
-      c = FF(c, d, a, b, m[i+ 2], 17,  606105819);
-      b = FF(b, c, d, a, m[i+ 3], 22, -1044525330);
-      a = FF(a, b, c, d, m[i+ 4],  7, -176418897);
-      d = FF(d, a, b, c, m[i+ 5], 12,  1200080426);
-      c = FF(c, d, a, b, m[i+ 6], 17, -1473231341);
-      b = FF(b, c, d, a, m[i+ 7], 22, -45705983);
-      a = FF(a, b, c, d, m[i+ 8],  7,  1770035416);
-      d = FF(d, a, b, c, m[i+ 9], 12, -1958414417);
-      c = FF(c, d, a, b, m[i+10], 17, -42063);
-      b = FF(b, c, d, a, m[i+11], 22, -1990404162);
-      a = FF(a, b, c, d, m[i+12],  7,  1804603682);
-      d = FF(d, a, b, c, m[i+13], 12, -40341101);
-      c = FF(c, d, a, b, m[i+14], 17, -1502002290);
-      b = FF(b, c, d, a, m[i+15], 22,  1236535329);
-
-      a = GG(a, b, c, d, m[i+ 1],  5, -165796510);
-      d = GG(d, a, b, c, m[i+ 6],  9, -1069501632);
-      c = GG(c, d, a, b, m[i+11], 14,  643717713);
-      b = GG(b, c, d, a, m[i+ 0], 20, -373897302);
-      a = GG(a, b, c, d, m[i+ 5],  5, -701558691);
-      d = GG(d, a, b, c, m[i+10],  9,  38016083);
-      c = GG(c, d, a, b, m[i+15], 14, -660478335);
-      b = GG(b, c, d, a, m[i+ 4], 20, -405537848);
-      a = GG(a, b, c, d, m[i+ 9],  5,  568446438);
-      d = GG(d, a, b, c, m[i+14],  9, -1019803690);
-      c = GG(c, d, a, b, m[i+ 3], 14, -187363961);
-      b = GG(b, c, d, a, m[i+ 8], 20,  1163531501);
-      a = GG(a, b, c, d, m[i+13],  5, -1444681467);
-      d = GG(d, a, b, c, m[i+ 2],  9, -51403784);
-      c = GG(c, d, a, b, m[i+ 7], 14,  1735328473);
-      b = GG(b, c, d, a, m[i+12], 20, -1926607734);
-
-      a = HH(a, b, c, d, m[i+ 5],  4, -378558);
-      d = HH(d, a, b, c, m[i+ 8], 11, -2022574463);
-      c = HH(c, d, a, b, m[i+11], 16,  1839030562);
-      b = HH(b, c, d, a, m[i+14], 23, -35309556);
-      a = HH(a, b, c, d, m[i+ 1],  4, -1530992060);
-      d = HH(d, a, b, c, m[i+ 4], 11,  1272893353);
-      c = HH(c, d, a, b, m[i+ 7], 16, -155497632);
-      b = HH(b, c, d, a, m[i+10], 23, -1094730640);
-      a = HH(a, b, c, d, m[i+13],  4,  681279174);
-      d = HH(d, a, b, c, m[i+ 0], 11, -358537222);
-      c = HH(c, d, a, b, m[i+ 3], 16, -722521979);
-      b = HH(b, c, d, a, m[i+ 6], 23,  76029189);
-      a = HH(a, b, c, d, m[i+ 9],  4, -640364487);
-      d = HH(d, a, b, c, m[i+12], 11, -421815835);
-      c = HH(c, d, a, b, m[i+15], 16,  530742520);
-      b = HH(b, c, d, a, m[i+ 2], 23, -995338651);
-
-      a = II(a, b, c, d, m[i+ 0],  6, -198630844);
-      d = II(d, a, b, c, m[i+ 7], 10,  1126891415);
-      c = II(c, d, a, b, m[i+14], 15, -1416354905);
-      b = II(b, c, d, a, m[i+ 5], 21, -57434055);
-      a = II(a, b, c, d, m[i+12],  6,  1700485571);
-      d = II(d, a, b, c, m[i+ 3], 10, -1894986606);
-      c = II(c, d, a, b, m[i+10], 15, -1051523);
-      b = II(b, c, d, a, m[i+ 1], 21, -2054922799);
-      a = II(a, b, c, d, m[i+ 8],  6,  1873313359);
-      d = II(d, a, b, c, m[i+15], 10, -30611744);
-      c = II(c, d, a, b, m[i+ 6], 15, -1560198380);
-      b = II(b, c, d, a, m[i+13], 21,  1309151649);
-      a = II(a, b, c, d, m[i+ 4],  6, -145523070);
-      d = II(d, a, b, c, m[i+11], 10, -1120210379);
-      c = II(c, d, a, b, m[i+ 2], 15,  718787259);
-      b = II(b, c, d, a, m[i+ 9], 21, -343485551);
-
-      a = (a + aa) >>> 0;
-      b = (b + bb) >>> 0;
-      c = (c + cc) >>> 0;
-      d = (d + dd) >>> 0;
-    }
-
-    return crypt.endian([a, b, c, d]);
-  };
-
-  // Auxiliary functions
-  md5._ff  = function (a, b, c, d, x, s, t) {
-    var n = a + (b & c | ~b & d) + (x >>> 0) + t;
-    return ((n << s) | (n >>> (32 - s))) + b;
-  };
-  md5._gg  = function (a, b, c, d, x, s, t) {
-    var n = a + (b & d | c & ~d) + (x >>> 0) + t;
-    return ((n << s) | (n >>> (32 - s))) + b;
-  };
-  md5._hh  = function (a, b, c, d, x, s, t) {
-    var n = a + (b ^ c ^ d) + (x >>> 0) + t;
-    return ((n << s) | (n >>> (32 - s))) + b;
-  };
-  md5._ii  = function (a, b, c, d, x, s, t) {
-    var n = a + (c ^ (b | ~d)) + (x >>> 0) + t;
-    return ((n << s) | (n >>> (32 - s))) + b;
-  };
-
-  // Package private blocksize
-  md5._blocksize = 16;
-  md5._digestsize = 16;
-
-  module.exports = function (message, options) {
-    if (message === undefined || message === null)
-      throw new Error('Illegal argument ' + message);
-
-    var digestbytes = crypt.wordsToBytes(md5(message, options));
-    return options && options.asBytes ? digestbytes :
-        options && options.asString ? bin.bytesToString(digestbytes) :
-        crypt.bytesToHex(digestbytes);
-  };
-
-})();
-
-
-/***/ }),
-
-/***/ 645:
-/***/ (function(module, exports) {
-
-(function() {
-  var base64map
-      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
-
-  crypt = {
-    // Bit-wise rotation left
-    rotl: function(n, b) {
-      return (n << b) | (n >>> (32 - b));
-    },
-
-    // Bit-wise rotation right
-    rotr: function(n, b) {
-      return (n << (32 - b)) | (n >>> b);
-    },
-
-    // Swap big-endian to little-endian and vice versa
-    endian: function(n) {
-      // If number given, swap endian
-      if (n.constructor == Number) {
-        return crypt.rotl(n, 8) & 0x00FF00FF | crypt.rotl(n, 24) & 0xFF00FF00;
-      }
-
-      // Else, assume array and swap all items
-      for (var i = 0; i < n.length; i++)
-        n[i] = crypt.endian(n[i]);
-      return n;
-    },
-
-    // Generate an array of any length of random bytes
-    randomBytes: function(n) {
-      for (var bytes = []; n > 0; n--)
-        bytes.push(Math.floor(Math.random() * 256));
-      return bytes;
-    },
-
-    // Convert a byte array to big-endian 32-bit words
-    bytesToWords: function(bytes) {
-      for (var words = [], i = 0, b = 0; i < bytes.length; i++, b += 8)
-        words[b >>> 5] |= bytes[i] << (24 - b % 32);
-      return words;
-    },
-
-    // Convert big-endian 32-bit words to a byte array
-    wordsToBytes: function(words) {
-      for (var bytes = [], b = 0; b < words.length * 32; b += 8)
-        bytes.push((words[b >>> 5] >>> (24 - b % 32)) & 0xFF);
-      return bytes;
-    },
-
-    // Convert a byte array to a hex string
-    bytesToHex: function(bytes) {
-      for (var hex = [], i = 0; i < bytes.length; i++) {
-        hex.push((bytes[i] >>> 4).toString(16));
-        hex.push((bytes[i] & 0xF).toString(16));
-      }
-      return hex.join('');
-    },
-
-    // Convert a hex string to a byte array
-    hexToBytes: function(hex) {
-      for (var bytes = [], c = 0; c < hex.length; c += 2)
-        bytes.push(parseInt(hex.substr(c, 2), 16));
-      return bytes;
-    },
-
-    // Convert a byte array to a base-64 string
-    bytesToBase64: function(bytes) {
-      for (var base64 = [], i = 0; i < bytes.length; i += 3) {
-        var triplet = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
-        for (var j = 0; j < 4; j++)
-          if (i * 8 + j * 6 <= bytes.length * 8)
-            base64.push(base64map.charAt((triplet >>> 6 * (3 - j)) & 0x3F));
-          else
-            base64.push('=');
-      }
-      return base64.join('');
-    },
-
-    // Convert a base-64 string to a byte array
-    base64ToBytes: function(base64) {
-      // Remove non-base-64 characters
-      base64 = base64.replace(/[^A-Z0-9+\/]/ig, '');
-
-      for (var bytes = [], i = 0, imod4 = 0; i < base64.length;
-          imod4 = ++i % 4) {
-        if (imod4 == 0) continue;
-        bytes.push(((base64map.indexOf(base64.charAt(i - 1))
-            & (Math.pow(2, -2 * imod4 + 8) - 1)) << (imod4 * 2))
-            | (base64map.indexOf(base64.charAt(i)) >>> (6 - imod4 * 2)));
-      }
-      return bytes;
-    }
-  };
-
-  module.exports = crypt;
-})();
-
-
-/***/ }),
-
-/***/ 646:
-/***/ (function(module, exports) {
-
-/*!
- * Determine if an object is a Buffer
- *
- * @author   Feross Aboukhadijeh <https://feross.org>
- * @license  MIT
- */
-
-// The _isBuffer check is for Safari 5-7 support, because it's missing
-// Object.prototype.constructor. Remove this eventually
-module.exports = function (obj) {
-  return obj != null && (isBuffer(obj) || isSlowBuffer(obj) || !!obj._isBuffer)
-}
-
-function isBuffer (obj) {
-  return !!obj.constructor && typeof obj.constructor.isBuffer === 'function' && obj.constructor.isBuffer(obj)
-}
-
-// For Node v0.10 support. Remove this eventually.
-function isSlowBuffer (obj) {
-  return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
-}
-
 
 /***/ }),
 

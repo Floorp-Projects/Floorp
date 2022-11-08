@@ -1232,7 +1232,9 @@
       "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-source-map/assets.js": 1080,
       "../packages/devtools-source-map/node_modules/source-map/lib/mappings.wasm": 1081,
       "../packages/devtools-source-map/wasm/dwarf_to_json.wasm": 1082,
-      "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-source-map/src/wasm-dwarf/wasmAssetBrowser.js": 1083
+      "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-source-map/src/wasm-dwarf/wasmAssetBrowser.js": 1083,
+      "../node_modules/babel-loader/lib/index.js??ref--1!../../shared/vendor/md5.js": 1084,
+      "../../../../node_modules/is-buffer/index.js": 1085
     },
     "usedIds": {
       "0": 0,
@@ -2318,7 +2320,9 @@
       "1080": 1080,
       "1081": 1081,
       "1082": 1082,
-      "1083": 1083
+      "1083": 1083,
+      "1084": 1084,
+      "1085": 1085
     }
   },
   "chunks": {
