@@ -422,7 +422,7 @@ NS_IMPL_ADDREF_INHERITED(TransformStreamUnderlyingSinkAlgorithms,
 NS_IMPL_RELEASE_INHERITED(TransformStreamUnderlyingSinkAlgorithms,
                           UnderlyingSinkAlgorithmsBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransformStreamUnderlyingSinkAlgorithms)
-NS_INTERFACE_MAP_END_INHERITING(TransformStreamUnderlyingSinkAlgorithms)
+NS_INTERFACE_MAP_END_INHERITING(UnderlyingSinkAlgorithmsBase)
 
 // https://streams.spec.whatwg.org/#initialize-transform-stream
 class TransformStreamUnderlyingSourceAlgorithms final
@@ -505,7 +505,7 @@ NS_IMPL_RELEASE_INHERITED(TransformStreamUnderlyingSourceAlgorithms,
                           UnderlyingSourceAlgorithmsBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
     TransformStreamUnderlyingSourceAlgorithms)
-NS_INTERFACE_MAP_END_INHERITING(TransformStreamUnderlyingSourceAlgorithms)
+NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceAlgorithmsBase)
 
 // https://streams.spec.whatwg.org/#transform-stream-set-backpressure
 void TransformStream::SetBackpressure(bool aBackpressure, ErrorResult& aRv) {
