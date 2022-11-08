@@ -23,6 +23,7 @@
 #include "nsIObserverService.h"
 #include "nsISizeOf.h"
 #include "mozilla/net/MozURL.h"
+#include "mozilla/BackgroundTasksRunner.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Services.h"
@@ -35,7 +36,6 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "nsNetUtil.h"
-#include "prproces.h"
 
 // include files for ftruncate (or equivalent)
 #if defined(XP_UNIX)
@@ -4096,14 +4096,6 @@ nsresult CacheFileIOManager::DispatchPurgeTask(
   rv = XRE_GetBinaryPath(getter_AddRefs(lf));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoCString exePath;
-#if !defined(XP_WIN)
-  rv = lf->GetNativePath(exePath);
-#else
-  rv = lf->GetNativeTarget(exePath);
-#endif
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsAutoCString path;
 #if !defined(XP_WIN)
   rv = profileDir->GetNativePath(path);
@@ -4112,17 +4104,8 @@ nsresult CacheFileIOManager::DispatchPurgeTask(
 #endif
   NS_ENSURE_SUCCESS(rv, rv);
 
-  const char* const argv[] = {exePath.get(),         "--backgroundtask",
-                              "removeDirectory",     path.get(),
-                              aCacheDirName.get(),   aSecondsToWait.get(),
-                              aPurgeExtension.get(), nullptr};
-  if (NS_WARN_IF(PR_FAILURE == PR_CreateProcessDetached(exePath.get(),
-                                                        (char* const*)argv,
-                                                        nullptr, nullptr))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return BackgroundTasksRunner::RemoveDirectoryInDetachedProcess(
+      path, aCacheDirName, aSecondsToWait, aPurgeExtension);
 }
 
 void CacheFileIOManager::SyncRemoveAllCacheFiles() {

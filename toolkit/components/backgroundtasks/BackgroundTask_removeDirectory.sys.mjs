@@ -166,7 +166,7 @@ async function cleanupOtherDirectories(parentDirPath, otherFoldersSuffix) {
 }
 
 // Usage:
-// removeDirectory parentDirPath childDirName secondsToWait [otherFoldersSuffix]
+// removeDirectory parentDirPath childDirName secondsToWait [otherFoldersSuffix] [--test-sleep testSleep]
 //                  arg0           arg1     arg2            arg3
 // parentDirPath - The path to the parent directory that includes the target directory
 // childDirName - The "leaf name" of the moved cache directory
@@ -175,7 +175,13 @@ async function cleanupOtherDirectories(parentDirPath, otherFoldersSuffix) {
 // otherFoldersSuffix - [optional] The suffix of directories that should be removed
 //                      When not empty, this task will also attempt to remove all directories in
 //                      the parent dir that end with this suffix
+// testSleep - [optional] A test-only argument to sleep for a given milliseconds before removal.
+//             This exists to test whether a long-running task can survive.
 export async function runBackgroundTask(commandLine) {
+  const testSleep = Number.parseInt(
+    commandLine.handleFlagWithParam("test-sleep", false)
+  );
+
   if (commandLine.length < 3) {
     throw new Error("Insufficient arguments");
   }
@@ -186,12 +192,25 @@ export async function runBackgroundTask(commandLine) {
   if (isNaN(secondsToWait)) {
     secondsToWait = 10;
   }
+  commandLine.removeArguments(0, 2);
+
   let otherFoldersSuffix = "";
-  if (commandLine.length >= 4) {
-    otherFoldersSuffix = commandLine.getArgument(3);
+  if (commandLine.length) {
+    otherFoldersSuffix = commandLine.getArgument(0);
+    commandLine.removeArguments(0, 0);
+  }
+
+  if (commandLine.length) {
+    throw new Error(
+      `${commandLine.length} unknown command args exist, closing.`
+    );
   }
 
   console.error(parentDirPath, childDirName, secondsToWait, otherFoldersSuffix);
+
+  if (!Number.isNaN(testSleep)) {
+    await new Promise(resolve => lazy.setTimeout(resolve, testSleep));
+  }
 
   await deleteChildDirectory(parentDirPath, childDirName, secondsToWait);
   await cleanupOtherDirectories(parentDirPath, otherFoldersSuffix);
