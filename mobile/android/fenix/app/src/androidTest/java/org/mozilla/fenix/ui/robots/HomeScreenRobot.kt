@@ -199,26 +199,10 @@ class HomeScreenRobot {
                     .waitForExists(waitingTimeShort),
             )
         } else {
-            assertFalse(
+            assertTrue(
                 mDevice.findObject(UiSelector().text(searchTerm))
                     .getFromParent(UiSelector().text("$groupSize sites"))
-                    .waitForExists(waitingTimeShort),
-            )
-        }
-    }
-
-    fun verifyCurrentSearchGroupIsDisplayed(shouldBeDisplayed: Boolean, searchTerm: String, groupSize: Int = 0) {
-        // checks search group in the Jump back in section
-        if (shouldBeDisplayed) {
-            assertTrue(
-                mDevice.findObject(UiSelector().text("""Your search for "$searchTerm""""))
-                    .getFromParent(UiSelector().textContains("$groupSize sites"))
-                    .waitForExists(waitingTimeShort),
-            )
-        } else {
-            assertFalse(
-                mDevice.findObject(UiSelector().text("""Your search for "$searchTerm""""))
-                    .waitForExists(waitingTimeShort),
+                    .waitUntilGone(waitingTimeShort),
             )
         }
     }
@@ -577,6 +561,7 @@ class HomeScreenRobot {
         }
 
         fun openRecentlyVisitedSearchGroupHistoryList(title: String, interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
+            scrollToElementByText("Recently visited")
             val searchGroup = mDevice.findObject(UiSelector().text(title))
             searchGroup.waitForExists(waitingTimeShort)
             searchGroup.click()
