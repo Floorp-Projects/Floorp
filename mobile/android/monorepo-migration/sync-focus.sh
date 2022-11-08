@@ -96,10 +96,6 @@ function _merge_histories() {
     git commit --amend --message "$MERGE_COMMIT_MESSAGE"
 }
 
-function _clean_up_temporary_repo() {
-    rm -rf "$TMP_REPO_PATH"
-}
-
 
 _test_prerequisites
 _setup_temporary_repo
@@ -108,7 +104,6 @@ _update_repo_numbers
 _rewrite_git_history
 _reset_prep_branch
 _merge_histories
-_clean_up_temporary_repo
 
 
 cat <<EOF
