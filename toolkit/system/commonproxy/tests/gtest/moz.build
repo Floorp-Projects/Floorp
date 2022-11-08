@@ -9,7 +9,7 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    "/toolkit/system/windowsproxy",
+    "../..",
 ]
 
 FINAL_LIBRARY = "xul-gtest"

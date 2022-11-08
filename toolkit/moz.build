@@ -49,9 +49,13 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     DIRS += ["system/unixproxy"]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
-    DIRS += ["system/osxproxy"]
+    DIRS += [
+        "system/commonproxy",
+        "system/osxproxy",
+    ]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     DIRS += [
+        "system/commonproxy",
         "system/windowsproxy",
         "system/windowsDHCPClient",
         "system/windowsPackageManager",

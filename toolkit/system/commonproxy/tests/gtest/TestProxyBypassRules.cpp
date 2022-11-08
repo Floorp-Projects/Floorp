@@ -9,7 +9,7 @@
 
 using namespace mozilla::toolkit::system;
 
-TEST(OSXProxy, TestProxyBypassRules)
+TEST(CommonProxy, TestProxyBypassRules)
 {
   EXPECT_TRUE(IsHostProxyEntry("mozilla.org"_ns, "mozilla.org"_ns));
   EXPECT_TRUE(IsHostProxyEntry("mozilla.org"_ns, "*mozilla.org"_ns));
@@ -20,7 +20,7 @@ TEST(OSXProxy, TestProxyBypassRules)
   EXPECT_TRUE(IsHostProxyEntry("www.mozilla.com"_ns, "*.mozilla.*"_ns));
 }
 
-TEST(OSXProxy, TestProxyBypassRulesIPv4)
+TEST(CommonProxy, TestProxyBypassRulesIPv4)
 {
   EXPECT_TRUE(IsHostProxyEntry("192.168.1.1"_ns, "192.168.1.*"_ns));
   EXPECT_FALSE(IsHostProxyEntry("192.168.1.1"_ns, "192.168.2.*"_ns));
@@ -32,7 +32,7 @@ TEST(OSXProxy, TestProxyBypassRulesIPv4)
   EXPECT_TRUE(IsHostProxyEntry("192.168.1.1"_ns, "192.168.1.1/32"_ns));
 }
 
-TEST(OSXProxy, TestProxyBypassRulesIPv6)
+TEST(CommonProxy, TestProxyBypassRulesIPv6)
 {
   EXPECT_TRUE(IsHostProxyEntry("2001:0DB8:ABCD:0012:0123:4567:89AB:CDEF"_ns,
                                "2001:db8:abcd:0012::0/64"_ns));
