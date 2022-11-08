@@ -3381,6 +3381,14 @@ var CustomizableUIInternal = {
     ) {
       return false;
     }
+
+    if (
+      aArea == CustomizableUI.AREA_ADDONS &&
+      !CustomizableUI.isWebExtensionWidget(aWidgetId)
+    ) {
+      return false;
+    }
+
     let placement = this.getPlacementOfWidget(aWidgetId);
     // Items in the palette can move, and items can move within their area:
     if (!placement || placement.area == aArea) {
