@@ -79,12 +79,6 @@ class WritableFileStreamUnderlyingSinkAlgorithms final
 
 }  // namespace
 
-void FileSystemWritableFileStream::ClearActor() {
-  MOZ_ASSERT(mActor);
-
-  mActor = nullptr;
-}
-
 FileSystemWritableFileStream::FileSystemWritableFileStream(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
     RefPtr<FileSystemWritableFileStreamChild> aActor,
@@ -167,6 +161,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileSystemWritableFileStream,
                                                   WritableStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+void FileSystemWritableFileStream::ClearActor() {
+  MOZ_ASSERT(mActor);
+
+  mActor = nullptr;
+}
 
 already_AddRefed<Promise> FileSystemWritableFileStream::Close(
     ErrorResult& aRv) {
