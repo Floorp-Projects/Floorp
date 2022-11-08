@@ -30,6 +30,7 @@ EOF
 
 EXPRESSIONS_FILE_PATH="$SCRIPT_DIR/data/message-expressions.txt"
 UTC_NOW="$(date -u '+%Y%m%d%H%M%S')"
+PREP_BRANCH_BACKUP_SUFFIX="backup-$UTC_NOW"
 
 
 function _is_github_authenticated() {
@@ -87,7 +88,7 @@ function _back_up_prep_branch() {
 
     cd "$CURRENT_REPO_PATH"
     if git rev-parse --quiet --verify "$prep_branch" > /dev/null; then
-        git branch --move "$prep_branch" "$prep_branch-backup-$UTC_NOW"
+        git branch --move "$prep_branch" "$prep_branch-$PREP_BRANCH_BACKUP_SUFFIX"
     fi
 }
 
@@ -140,4 +141,8 @@ $REPO_NAME_TO_SYNC has been sync'd and merged to the following branches:
 
 You are currently on ${PREP_BRANCHES[0]}.
 You can now inspect the changes and push them once ready.
+
+If something went wrong, you still have a copy of the former branches.
+They're suffixed by '$PREP_BRANCH_BACKUP_SUFFIX'
+
 EOF
