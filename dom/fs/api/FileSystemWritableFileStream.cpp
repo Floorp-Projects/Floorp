@@ -199,69 +199,6 @@ JSObject* FileSystemWritableFileStream::WrapObject(
 
 // WebIDL Interface
 
-already_AddRefed<Promise> FileSystemWritableFileStream::Seek(
-    uint64_t aPosition, ErrorResult& aError) {
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
-  if (aError.Failed()) {
-    return nullptr;
-  }
-  if (IsClosed()) {
-    promise->MaybeRejectWithTypeError("WritableFileStream closed");
-    return promise.forget();
-  }
-  if (DoSeek(promise, aPosition)) {
-    promise->MaybeResolveWithUndefined();
-  }  // on errors DoSeek rejects the promise
-
-  return promise.forget();
-}
-
-already_AddRefed<Promise> FileSystemWritableFileStream::Truncate(
-    uint64_t aSize, ErrorResult& aError) {
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
-  if (aError.Failed()) {
-    return nullptr;
-  }
-  if (IsClosed()) {
-    promise->MaybeRejectWithTypeError("WritableFileStream closed");
-    return promise.forget();
-  }
-
-  // XXX!!! this should be submitted to a TaskQueue instead of sync IO on
-  // mainthread! submit async truncate
-  // XXX what happens if we read/write before seek finishes?
-  // Should we block read/write if an async operation is pending?
-  // What if there's an error, and several operations are pending?
-  // Spec issues raised.
-
-  // truncate filehandle (can extend with 0's)
-  if (mActor->MutableFileDescPtr()) {
-    LOG(("%p: Truncate to %" PRIu64, mActor->MutableFileDescPtr(), aSize));
-    if (NS_WARN_IF(NS_FAILED(TruncFile(mActor->MutableFileDescPtr(), aSize)))) {
-      promise->MaybeReject(NS_ErrorAccordingToNSPR());
-    } else {
-      // We truncated; per non-normative text in the spec (2.5.3) we should
-      // adjust the cursor position to be within the new file size
-      int64_t where = PR_Seek(mActor->MutableFileDescPtr(), 0, PR_SEEK_CUR);
-      if (where == -1) {
-        promise->MaybeReject(NS_ErrorAccordingToNSPR());
-        return promise.forget();
-      }
-      if (where > (int64_t)aSize) {
-        where = PR_Seek(mActor->MutableFileDescPtr(), 0, PR_SEEK_END);
-        if (where == -1) {
-          promise->MaybeReject(NS_ErrorAccordingToNSPR());
-        }
-      }
-      promise->MaybeResolveWithUndefined();
-    }
-  } else {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-
-  return promise.forget();
-}
-
 already_AddRefed<Promise> FileSystemWritableFileStream::Write(
     const ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams& aData,
     ErrorResult& aError) {
@@ -409,6 +346,69 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Write(
                      length);  // XXX  errors?
   promise->MaybeResolve(written);
 #endif
+  return promise.forget();
+}
+
+already_AddRefed<Promise> FileSystemWritableFileStream::Seek(
+    uint64_t aPosition, ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
+  if (IsClosed()) {
+    promise->MaybeRejectWithTypeError("WritableFileStream closed");
+    return promise.forget();
+  }
+  if (DoSeek(promise, aPosition)) {
+    promise->MaybeResolveWithUndefined();
+  }  // on errors DoSeek rejects the promise
+
+  return promise.forget();
+}
+
+already_AddRefed<Promise> FileSystemWritableFileStream::Truncate(
+    uint64_t aSize, ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
+  if (IsClosed()) {
+    promise->MaybeRejectWithTypeError("WritableFileStream closed");
+    return promise.forget();
+  }
+
+  // XXX!!! this should be submitted to a TaskQueue instead of sync IO on
+  // mainthread! submit async truncate
+  // XXX what happens if we read/write before seek finishes?
+  // Should we block read/write if an async operation is pending?
+  // What if there's an error, and several operations are pending?
+  // Spec issues raised.
+
+  // truncate filehandle (can extend with 0's)
+  if (mActor->MutableFileDescPtr()) {
+    LOG(("%p: Truncate to %" PRIu64, mActor->MutableFileDescPtr(), aSize));
+    if (NS_WARN_IF(NS_FAILED(TruncFile(mActor->MutableFileDescPtr(), aSize)))) {
+      promise->MaybeReject(NS_ErrorAccordingToNSPR());
+    } else {
+      // We truncated; per non-normative text in the spec (2.5.3) we should
+      // adjust the cursor position to be within the new file size
+      int64_t where = PR_Seek(mActor->MutableFileDescPtr(), 0, PR_SEEK_CUR);
+      if (where == -1) {
+        promise->MaybeReject(NS_ErrorAccordingToNSPR());
+        return promise.forget();
+      }
+      if (where > (int64_t)aSize) {
+        where = PR_Seek(mActor->MutableFileDescPtr(), 0, PR_SEEK_END);
+        if (where == -1) {
+          promise->MaybeReject(NS_ErrorAccordingToNSPR());
+        }
+      }
+      promise->MaybeResolveWithUndefined();
+    }
+  } else {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
+
   return promise.forget();
 }
 
