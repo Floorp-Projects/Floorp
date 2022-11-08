@@ -314,7 +314,7 @@ class HomeScreenRobot {
     fun getSponsoredShortcutTitle(position: Int): String {
         val sponsoredShortcut = mDevice.findObject(
             UiSelector()
-                .className("android.widget.FrameLayout")
+                .resourceId("$packageName:id/top_site_item")
                 .index(position - 1),
         ).getChild(
             UiSelector()
@@ -843,7 +843,7 @@ private fun assertSponsoredSubtitleIsDisplayed(position: Int) =
     assertTrue(
         mDevice.findObject(
             UiSelector()
-                .className("android.widget.FrameLayout")
+                .resourceId("$packageName:id/top_site_item")
                 .index(position - 1),
         ).getChild(
             UiSelector()
@@ -855,7 +855,7 @@ private fun assertSponsoredShortcutTitle(sponsoredShortcutTitle: String, positio
     assertTrue(
         mDevice.findObject(
             UiSelector()
-                .className("android.widget.FrameLayout")
+                .resourceId("$packageName:id/top_site_item")
                 .index(position - 1),
         ).getChild(
             UiSelector()
