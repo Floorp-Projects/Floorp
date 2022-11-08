@@ -61,7 +61,6 @@ TestCase<char> testCases[] = {
      ALPHA_IN_UTF16 L" " OMEGA_IN_UTF16},
 
     // More single-argument cases
-    {{"", nullptr}, L""},
     {{"a\fb", nullptr}, L"\"a\fb\""},
     {{"a\nb", nullptr}, L"\"a\nb\""},
     {{"a\rb", nullptr}, L"\"a\rb\""},
@@ -74,6 +73,12 @@ TestCase<char> testCases[] = {
      ALPHA_IN_UTF16 L"\\" OMEGA_IN_UTF16},
     {{ALPHA_IN_UTF8 " " OMEGA_IN_UTF8, nullptr},
      L"\"" ALPHA_IN_UTF16 L" " OMEGA_IN_UTF16 L"\""},
+
+    // Empty string cases
+    {{"", nullptr}, L"\"\""},
+    {{"foo", "", nullptr}, L"foo \"\""},
+    {{"", "bar", nullptr}, L"\"\" bar"},
+    {{"foo", "", "bar", nullptr}, L"foo \"\" bar"},
 };
 
 TEST(AssembleCommandLineWin, assembleCmdLine)
