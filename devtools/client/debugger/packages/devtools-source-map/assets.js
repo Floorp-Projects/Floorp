@@ -3,6 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 module.exports = {
-  "source-map-mappings.wasm": require.resolve("source-map/lib/mappings.wasm"),
+  "source-map-mappings.wasm": "resource://devtools/client/shared/vendor/source-map/lib/mappings.wasm",
   "dwarf_to_json.wasm": require.resolve("./wasm/dwarf_to_json.wasm"),
 };

@@ -12,8 +12,5 @@
   "scripts": {
     "license-check": "devtools-license-check",
     "test": "jest --projects jest.config.js"
-  },
-  "dependencies": {
-    "source-map": "0.8.0-beta.0"
   }
 }
