@@ -199,38 +199,6 @@ JSObject* FileSystemWritableFileStream::WrapObject(
 
 // WebIDL Interface
 
-bool FileSystemWritableFileStream::DoSeek(RefPtr<Promise>& aPromise,
-                                          uint64_t aPosition) {
-  // submit async seek
-  // XXX!!! this should be submitted to a TaskQueue instead of sync IO on
-  // mainthread!
-  // XXX what happens if we read/write before seek finishes?
-  // Should we block read/write if an async operation is pending?
-  // Handle seek before write ('at')
-  LOG_VERBOSE(
-      ("%p: Seeking to %" PRIu64, mActor->MutableFileDescPtr(), aPosition));
-  const CheckedInt<PROffset32> checkedPosition(aPosition);
-  if (NS_WARN_IF(!checkedPosition.isValid())) {
-    return false;
-  }
-  int64_t where = PR_Seek(mActor->MutableFileDescPtr(), checkedPosition.value(),
-                          PR_SEEK_SET);
-  if (where == -1) {
-    LOG(("Failed to seek to %" PRIu64 " (errno %d)", aPosition, errno));
-    aPromise->MaybeReject(NS_ERROR_FAILURE);  // XXX
-    return false;
-  }
-
-  if (where != (int64_t)aPosition) {
-    LOG(("Failed to seek to %" PRIu64 " (errno %d), ended up at %" PRId64,
-         aPosition, errno, where));
-    aPromise->MaybeReject(NS_ERROR_FAILURE);  // XXX
-    return false;
-  }
-  // caller resolves the promise for success
-  return true;
-}
-
 already_AddRefed<Promise> FileSystemWritableFileStream::Seek(
     uint64_t aPosition, ErrorResult& aError) {
   RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
@@ -470,6 +438,38 @@ nsresult FileSystemWritableFileStream::WriteBlob(Blob* aBlob,
       PR_Write(mActor->MutableFileDescPtr(), data, length);  // XXX errors?
   free(data);
   return NS_OK;
+}
+
+bool FileSystemWritableFileStream::DoSeek(RefPtr<Promise>& aPromise,
+                                          uint64_t aPosition) {
+  // submit async seek
+  // XXX!!! this should be submitted to a TaskQueue instead of sync IO on
+  // mainthread!
+  // XXX what happens if we read/write before seek finishes?
+  // Should we block read/write if an async operation is pending?
+  // Handle seek before write ('at')
+  LOG_VERBOSE(
+      ("%p: Seeking to %" PRIu64, mActor->MutableFileDescPtr(), aPosition));
+  const CheckedInt<PROffset32> checkedPosition(aPosition);
+  if (NS_WARN_IF(!checkedPosition.isValid())) {
+    return false;
+  }
+  int64_t where = PR_Seek(mActor->MutableFileDescPtr(), checkedPosition.value(),
+                          PR_SEEK_SET);
+  if (where == -1) {
+    LOG(("Failed to seek to %" PRIu64 " (errno %d)", aPosition, errno));
+    aPromise->MaybeReject(NS_ERROR_FAILURE);  // XXX
+    return false;
+  }
+
+  if (where != (int64_t)aPosition) {
+    LOG(("Failed to seek to %" PRIu64 " (errno %d), ended up at %" PRId64,
+         aPosition, errno, where));
+    aPromise->MaybeReject(NS_ERROR_FAILURE);  // XXX
+    return false;
+  }
+  // caller resolves the promise for success
+  return true;
 }
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(
