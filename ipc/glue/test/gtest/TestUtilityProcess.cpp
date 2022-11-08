@@ -13,6 +13,11 @@
 #  include "nsServiceManagerUtils.h"
 #endif  // defined(MOZ_WIDGET_ANDROID) || defined(XP_MACOSX)
 
+#if defined(XP_WIN)
+#  include "TestUtils.h"
+#  include "mozilla/ipc/UtilityProcessImpl.h"
+#endif  // defined(XP_WIN)
+
 #ifdef MOZ_WIDGET_ANDROID
 #  define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/widget/appshell/android;1"
 #endif  // MOZ_WIDGET_ANDROID
@@ -133,5 +138,18 @@ TEST_F(UtilityProcess, DestroyProcess) {
 
   WAIT_FOR_EVENTS;
 }
+
+#if defined(XP_WIN)
+static void LoadLibraryCrash_Test() {
+  DisableCrashReporter();
+  // Just a uuidgen name to have something random
+  UtilityProcessImpl::LoadLibraryOrCrash(
+      L"2b49036e-6ba3-400c-a297-38fa1f6c5255.dll");
+}
+
+TEST_F(UtilityProcess, LoadLibraryCrash) {
+  ASSERT_DEATH_IF_SUPPORTED(LoadLibraryCrash_Test(), "");
+}
+#endif  // defined(XP_WIN)
 
 #undef WAIT_FOR_EVENTS
