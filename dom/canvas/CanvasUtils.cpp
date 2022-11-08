@@ -53,20 +53,12 @@ namespace mozilla::CanvasUtils {
 bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
                               Maybe<nsIPrincipal*> aPrincipal) {
   // Do the rest of the checks only if privacy.resistFingerprinting is on.
-  if (!nsContentUtils::ShouldResistFingerprinting()) {
-    return true;
-  }
-
-  if (!aDocument) {
-    return false;
-  }
-
-  if (!aDocument->ShouldResistFingerprinting()) {
+  if (!nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return true;
   }
 
   // Don't proceed if we don't have a document or JavaScript context.
-  if (!aCx || !aPrincipal) {
+  if (!aDocument || !aCx || !aPrincipal) {
     return false;
   }
 
