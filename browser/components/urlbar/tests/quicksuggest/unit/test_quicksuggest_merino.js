@@ -628,3 +628,71 @@ add_task(async function bestMatch() {
   MerinoTestUtils.server.reset();
   gClient.resetSession();
 });
+
+add_task(async function topPick() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
+  UrlbarPrefs.set("bestMatch.enabled", true);
+  UrlbarPrefs.set("suggest.bestmatch", true);
+
+  let topPickSuggestion = createSuggestion(2, 2);
+  topPickSuggestion.is_top_pick = true;
+
+  MerinoTestUtils.server.response.body = {
+    request_id: "request_id",
+    suggestions: [
+      createSuggestion(0, 0.1),
+      createSuggestion(1, 1),
+      topPickSuggestion,
+    ],
+  };
+
+  let context = createContext(SEARCH_STRING, {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [
+      {
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        heuristic: false,
+        isBestMatch: true,
+        payload: {
+          title: "multipleMerinoSuggestions 2 title",
+          url: "multipleMerinoSuggestions 2 url",
+          originalUrl: "multipleMerinoSuggestions 2 url",
+          icon: "multipleMerinoSuggestions 2 icon",
+          sponsoredImpressionUrl: "multipleMerinoSuggestions 2 impression_url",
+          sponsoredClickUrl: "multipleMerinoSuggestions 2 click_url",
+          sponsoredBlockId: 2,
+          sponsoredAdvertiser: "multipleMerinoSuggestions 2 advertiser",
+          isSponsored: true,
+          helpUrl: QuickSuggest.HELP_URL,
+          helpL10nId: "firefox-suggest-urlbar-learn-more",
+          displayUrl: "multipleMerinoSuggestions 2 url",
+          requestId: "request_id",
+          source: "merino",
+        },
+      },
+    ],
+  });
+
+  UrlbarPrefs.clear("bestMatch.enabled");
+  UrlbarPrefs.clear("suggest.bestmatch");
+});
+
+let createSuggestion = (n, score) => ({
+  full_keyword: `multipleMerinoSuggestions ${n} full_keyword`,
+  title: `multipleMerinoSuggestions ${n} title`,
+  url: `multipleMerinoSuggestions ${n} url`,
+  icon: `multipleMerinoSuggestions ${n} icon`,
+  impression_url: `multipleMerinoSuggestions ${n} impression_url`,
+  click_url: `multipleMerinoSuggestions ${n} click_url`,
+  block_id: n,
+  advertiser: `multipleMerinoSuggestions ${n} advertiser`,
+  is_sponsored: true,
+  score,
+});
