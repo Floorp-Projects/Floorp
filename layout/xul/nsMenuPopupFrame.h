@@ -252,6 +252,9 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // Return true if the popup is for a menulist.
   bool IsMenuList();
 
+  bool IsDragSource() const { return mIsDragSource; }
+  void SetIsDragSource(bool aIsDragSource) { mIsDragSource = aIsDragSource; }
+
   static nsIContent* GetTriggerContent(nsMenuPopupFrame* aMenuPopupFrame);
   void ClearTriggerContent() { mTriggerContent = nullptr; }
   void ClearTriggerContentIncludingDocument();
@@ -630,6 +633,10 @@ class nsMenuPopupFrame final : public nsBoxFrame,
 
   // Whether we have a pending `popuppositioned` event.
   bool mPendingPositionedEvent = false;
+
+  // Whether this popup is source of D&D operation. We can't close such
+  // popup on Wayland as it cancel whole D&D operation.
+  bool mIsDragSource = false;
 
   // When POPUPPOSITION_SELECTION is used, this indicates the vertical offset
   // that the original selected item was. This needs to be used in case the

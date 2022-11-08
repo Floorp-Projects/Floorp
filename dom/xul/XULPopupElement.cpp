@@ -17,6 +17,9 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/XULPopupElement.h"
 #include "mozilla/dom/XULPopupElementBinding.h"
+#ifdef MOZ_WAYLAND
+#  include "mozilla/WidgetUtilsGtk.h"
+#endif
 
 namespace mozilla::dom {
 
@@ -271,6 +274,23 @@ void XULPopupElement::SetConstraintRect(dom::DOMRectReadOnly& aRect) {
     menuPopupFrame->SetOverrideConstraintRect(LayoutDeviceIntRect::Truncate(
         aRect.Left(), aRect.Top(), aRect.Width(), aRect.Height()));
   }
+}
+
+bool XULPopupElement::IsWaylandDragSource() const {
+#ifdef MOZ_WAYLAND
+  nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
+  return menuPopupFrame->IsDragSource();
+#else
+  return false;
+#endif
+}
+
+bool XULPopupElement::IsWaylandPopup() const {
+#ifdef MOZ_WAYLAND
+  return widget::GdkIsWaylandDisplay();
+#else
+  return false;
+#endif
 }
 
 }  // namespace mozilla::dom

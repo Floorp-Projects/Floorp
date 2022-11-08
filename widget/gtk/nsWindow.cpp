@@ -931,7 +931,12 @@ void nsWindow::Show(bool aState) {
 
   mIsShown = aState;
 
+#ifdef MOZ_LOGGING
   LOG("nsWindow::Show state %d frame %s\n", aState, GetFrameTag().get());
+  if (!aState && mSourceDragContext && GdkIsWaylandDisplay()) {
+    LOG("  closing Drag&Drop source window, D&D will be canceled!");
+  }
+#endif
 
   if (aState) {
     // Now that this window is shown, mHasMappedToplevel needs to be
@@ -9909,4 +9914,9 @@ void nsWindow::NotifyOcclusionState(mozilla::widget::OcclusionState aState) {
 
 void nsWindow::SetDragSource(GdkDragContext* aSourceDragContext) {
   mSourceDragContext = aSourceDragContext;
+  if (IsWaylandPopup()) {
+    if (auto* menuPopupFrame = GetMenuPopupFrame(GetFrame())) {
+      menuPopupFrame->SetIsDragSource(!!aSourceDragContext);
+    }
+  }
 }

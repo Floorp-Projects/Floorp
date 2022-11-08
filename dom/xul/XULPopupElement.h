@@ -86,6 +86,9 @@ class XULPopupElement : public nsXULElement {
 
   void SetConstraintRect(DOMRectReadOnly& aRect);
 
+  bool IsWaylandDragSource() const;
+  bool IsWaylandPopup() const;
+
  protected:
   virtual ~XULPopupElement() = default;
 
