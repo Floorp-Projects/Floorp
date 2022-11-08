@@ -158,6 +158,7 @@ add_task(async function() {
       ...qsResult,
       block_id: qsResult.id,
       is_sponsored: isSponsored,
+      is_top_pick: false,
       score:
         typeof score == "number"
           ? score

@@ -189,6 +189,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
     let isSuggestionBestMatch = false;
     if (typeof suggestion._test_is_best_match == "boolean") {
       isSuggestionBestMatch = suggestion._test_is_best_match;
+    } else if (suggestion?.is_top_pick) {
+      isSuggestionBestMatch = true;
     } else if (lazy.QuickSuggest.remoteSettings.config.best_match) {
       let { best_match } = lazy.QuickSuggest.remoteSettings.config;
       isSuggestionBestMatch =
