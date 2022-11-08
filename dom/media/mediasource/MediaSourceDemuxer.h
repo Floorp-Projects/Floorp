@@ -65,6 +65,15 @@ class MediaSourceDemuxer : public MediaDataDemuxer,
   static constexpr media::TimeUnit EOS_FUZZ =
       media::TimeUnit::FromMicroseconds(500000);
 
+  // Largest gap allowed between muxed streams with different
+  // start times. The specs suggest up to a "reasonably short" gap of
+  // one second. We conservatively choose to allow a gap up to a bit over
+  // a half-second here, which is still twice our previous effective value
+  // and should resolve embedded playback issues on Twitter, DokiDoki, etc.
+  // See: https://www.w3.org/TR/media-source-2/#presentation-start-time
+  static constexpr media::TimeUnit EOS_FUZZ_START =
+      media::TimeUnit::FromMicroseconds(550000);
+
  private:
   ~MediaSourceDemuxer();
   friend class MediaSourceTrackDemuxer;

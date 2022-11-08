@@ -32,6 +32,7 @@ MediaSourceDemuxer::MediaSourceDemuxer(AbstractThread* aAbstractMainThread)
 }
 
 constexpr TimeUnit MediaSourceDemuxer::EOS_FUZZ;
+constexpr TimeUnit MediaSourceDemuxer::EOS_FUZZ_START;
 
 RefPtr<MediaSourceDemuxer::InitPromise> MediaSourceDemuxer::Init() {
   RefPtr<MediaSourceDemuxer> self = this;
@@ -416,15 +417,20 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples) {
 
   MOZ_ASSERT(OnTaskQueue());
   if (mReset) {
-    // If a seek (or reset) was recently performed, we ensure that the data
+    // If a reset was recently performed, we ensure that the data
     // we are about to retrieve is still available.
     TimeIntervals buffered = mManager->Buffered(mType);
-    buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
-
     if (buffered.IsEmpty() && mManager->IsEnded()) {
       return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                              __func__);
     }
+
+    // We use a larger fuzz to determine the presentation start
+    // time than the fuzz we use to determine acceptable gaps between
+    // frames. This is needed to fix embedded video issues as seen in the wild
+    // from different muxed stream start times.
+    // See: https://www.w3.org/TR/media-source-2/#presentation-start-time
+    buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ_START);
     if (!buffered.ContainsWithStrictEnd(TimeUnit::Zero())) {
       return SamplesPromise::CreateAndReject(
           NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA, __func__);
