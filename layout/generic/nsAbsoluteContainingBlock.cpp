@@ -816,59 +816,65 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
   ReflowOutput kidDesiredSize(kidReflowInput);
   aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowInput, aStatus);
 
-  const LogicalSize kidSize = kidDesiredSize.Size(outerWM);
+  // Position the child relative to our padding edge. Don't do this for popups,
+  // which handle their own positioning.
+  if (!aKidFrame->IsMenuPopupFrame()) {
+    const LogicalSize kidSize = kidDesiredSize.Size(outerWM);
 
-  LogicalMargin offsets = kidReflowInput.ComputedLogicalOffsets(outerWM);
-  LogicalMargin margin = kidReflowInput.ComputedLogicalMargin(outerWM);
+    LogicalMargin offsets = kidReflowInput.ComputedLogicalOffsets(outerWM);
+    LogicalMargin margin = kidReflowInput.ComputedLogicalMargin(outerWM);
 
-  // If we're doing CSS Box Alignment in either axis, that will apply the
-  // margin for us in that axis (since the thing that's aligned is the margin
-  // box).  So, we clear out the margin here to avoid applying it twice.
-  if (kidReflowInput.mFlags.mIOffsetsNeedCSSAlign) {
-    margin.IStart(outerWM) = margin.IEnd(outerWM) = 0;
-  }
-  if (kidReflowInput.mFlags.mBOffsetsNeedCSSAlign) {
-    margin.BStart(outerWM) = margin.BEnd(outerWM) = 0;
-  }
+    // If we're doing CSS Box Alignment in either axis, that will apply the
+    // margin for us in that axis (since the thing that's aligned is the margin
+    // box).  So, we clear out the margin here to avoid applying it twice.
+    if (kidReflowInput.mFlags.mIOffsetsNeedCSSAlign) {
+      margin.IStart(outerWM) = margin.IEnd(outerWM) = 0;
+    }
+    if (kidReflowInput.mFlags.mBOffsetsNeedCSSAlign) {
+      margin.BStart(outerWM) = margin.BEnd(outerWM) = 0;
+    }
 
-  // If we're solving for start in either inline or block direction,
-  // then compute it now that we know the dimensions.
-  ResolveSizeDependentOffsets(aPresContext, kidReflowInput, kidSize, margin,
-                              &offsets, &logicalCBSize);
+    // If we're solving for start in either inline or block direction,
+    // then compute it now that we know the dimensions.
+    ResolveSizeDependentOffsets(aPresContext, kidReflowInput, kidSize, margin,
+                                &offsets, &logicalCBSize);
 
-  if (kidReflowInput.mFrame->HasIntrinsicKeywordForBSize()) {
-    ResolveAutoMarginsAfterLayout(kidReflowInput, &logicalCBSize, kidSize,
-                                  margin, offsets);
-  }
+    if (kidReflowInput.mFrame->HasIntrinsicKeywordForBSize()) {
+      ResolveAutoMarginsAfterLayout(kidReflowInput, &logicalCBSize, kidSize,
+                                    margin, offsets);
+    }
 
-  // Position the child relative to our padding edge
-  LogicalRect rect(
-      outerWM,
-      border.IStart(outerWM) + offsets.IStart(outerWM) + margin.IStart(outerWM),
-      border.BStart(outerWM) + offsets.BStart(outerWM) + margin.BStart(outerWM),
-      kidSize.ISize(outerWM), kidSize.BSize(outerWM));
-  nsRect r = rect.GetPhysicalRect(
-      outerWM, logicalCBSize.GetPhysicalSize(wm) +
-                   border.Size(outerWM).GetPhysicalSize(outerWM));
+    LogicalRect rect(outerWM,
+                     border.IStart(outerWM) + offsets.IStart(outerWM) +
+                         margin.IStart(outerWM),
+                     border.BStart(outerWM) + offsets.BStart(outerWM) +
+                         margin.BStart(outerWM),
+                     kidSize.ISize(outerWM), kidSize.BSize(outerWM));
+    nsRect r = rect.GetPhysicalRect(
+        outerWM, logicalCBSize.GetPhysicalSize(wm) +
+                     border.Size(outerWM).GetPhysicalSize(outerWM));
 
-  // Offset the frame rect by the given origin of the absolute containing block.
-  r.x += aContainingBlock.x;
-  r.y += aContainingBlock.y;
+    // Offset the frame rect by the given origin of the absolute containing
+    // block.
+    r.x += aContainingBlock.x;
+    r.y += aContainingBlock.y;
 
-  aKidFrame->SetRect(r);
+    aKidFrame->SetRect(r);
 
-  nsView* view = aKidFrame->GetView();
-  if (view) {
-    // Size and position the view and set its opacity, visibility, content
-    // transparency, and clip
-    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
-                                               kidDesiredSize.InkOverflow());
-  } else {
-    nsContainerFrame::PositionChildViews(aKidFrame);
+    nsView* view = aKidFrame->GetView();
+    if (view) {
+      // Size and position the view and set its opacity, visibility, content
+      // transparency, and clip
+      nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
+                                                 kidDesiredSize.InkOverflow());
+    } else {
+      nsContainerFrame::PositionChildViews(aKidFrame);
+    }
   }
 
   aKidFrame->DidReflow(aPresContext, &kidReflowInput);
 
+  const nsRect r = aKidFrame->GetRect();
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
     nsIFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent - 1);

@@ -172,6 +172,10 @@ class nsMenuPopupFrame final : public nsBoxFrame,
    */
   ConsumeOutsideClicksResult ConsumeOutsideClicks();
 
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
+
   bool IsContextMenu() override { return mIsContextMenu; }
 
   bool MenuClosed() override { return true; }
