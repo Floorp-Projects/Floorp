@@ -3499,7 +3499,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 130;
+    const UI_VERSION = 132;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
@@ -4298,6 +4298,20 @@ BrowserGlue.prototype = {
     // Bug 1793366: migrate sidebar persisted attribute from width to style.
     if (currentUIVersion < 130) {
       migrateXULAttributeToStyle("sidebar-box", "width");
+    }
+
+    // Migration 131 was moved to 133 to allow for an uplift.
+
+    if (currentUIVersion < 132) {
+      // These attributes are no longer persisted, thus remove them from xulstore.
+      for (let url of [
+        "chrome://browser/content/places/bookmarkProperties.xhtml",
+        "chrome://browser/content/places/bookmarkProperties2.xhtml",
+      ]) {
+        for (let attr of ["width", "screenX", "screenY"]) {
+          xulStore.removeValue(url, "bookmarkproperties", attr);
+        }
+      }
     }
 
     // Update the migration version.
