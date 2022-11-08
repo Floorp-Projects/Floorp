@@ -91,8 +91,7 @@ class LogModule extends Module {
       case "trace":
         return "debug";
       case "warn":
-      case "warning":
-        return "warning";
+        return "warn";
       default:
         return "info";
     }

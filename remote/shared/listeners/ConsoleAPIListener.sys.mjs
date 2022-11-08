@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyGetter(lazy, "ConsoleAPIStorage", () => {
  *    The ConsoleAPIListener emits "message" events, with the following object as
  *    payload:
  *      - {Array<Object>} arguments - Arguments as passed-in when the method was called.
- *      - {String} level - Importance, one of `info`, `warning`, `error`, `debug`, `trace`.
+ *      - {String} level - Importance, one of `info`, `warn`, `error`, `debug`, `trace`.
  *      - {Array<Object>} stacktrace - List of stack frames, starting from most recent.
  *      - {Number} timeStamp - Timestamp when the method was called.
  */
