@@ -6411,12 +6411,13 @@ nsresult HTMLEditor::AlignContentsAtRanges(AutoRangeArray& aRanges,
 
   if (createEmptyDivElement) {
     if (MOZ_UNLIKELY(!pointToPutCaret.IsSet() && !aRanges.IsInContent())) {
-      NS_WARNING("Mutaiton event listener might have changed the selection");
+      NS_WARNING("Mutation event listener might have changed the selection");
       return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
     }
     const EditorDOMPoint pointToInsertDivElement =
-        pointToPutCaret.IsSet() ? pointToPutCaret
-                                : GetFirstSelectionStartPoint<EditorDOMPoint>();
+        pointToPutCaret.IsSet()
+            ? pointToPutCaret
+            : aRanges.GetFirstRangeStartPoint<EditorDOMPoint>();
     Result<CreateElementResult, nsresult> insertNewDivElementResult =
         InsertDivElementToAlignContents(pointToInsertDivElement, aAlignType,
                                         aEditingHost);
