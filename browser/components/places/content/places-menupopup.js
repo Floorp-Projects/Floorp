@@ -7,6 +7,23 @@
 /* eslint-env mozilla/browser-window */
 /* import-globals-from controller.js */
 
+// On Wayland when D&D source popup is closed,
+// D&D operation is canceled by window manager.
+function closingPopupEndsDrag(popup) {
+  if (!popup.isWaylandPopup) {
+    return false;
+  }
+  if (popup.isWaylandDragSource) {
+    return true;
+  }
+  for (let childPopup of popup.querySelectorAll("menu > menupopup")) {
+    if (childPopup.isWaylandDragSource) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
@@ -134,7 +151,7 @@
             // Close any parent folders which aren't being dragged over.
             // (This is necessary because of the above code that keeps a folder
             // open while its children are being dragged over.)
-            if (!draggingOverChild) {
+            if (!draggingOverChild && !closingPopupEndsDrag(this._self)) {
               this.closeParentMenus();
             }
           } else if (aTimer == this.closeMenuTimer) {
@@ -142,19 +159,23 @@
             var popup = this._self;
             // if we are no more dragging we can leave the menu open to allow
             // for better D&D bookmark organization
-            if (
+            var hidePopup =
               PlacesControllerDragHelper.getSession() &&
               !PlacesControllerDragHelper.draggingOverChildNode(
                 popup.parentNode
-              )
-            ) {
-              popup.hidePopup();
-              // Close any parent menus that aren't being dragged over;
-              // otherwise they'll stay open because they couldn't close
-              // while this menu was being dragged over.
-              this.closeParentMenus();
+              );
+            if (hidePopup) {
+              if (!closingPopupEndsDrag(popup)) {
+                popup.hidePopup();
+                // Close any parent menus that aren't being dragged over;
+                // otherwise they'll stay open because they couldn't close
+                // while this menu was being dragged over.
+                this.closeParentMenus();
+              } else if (popup.isWaylandDragSource) {
+                // Postpone popup hide until drag end on Wayland.
+                this._closeMenuTimer = this.setTimer(this.hoverTime);
+              }
             }
-            this._closeMenuTimer = null;
           }
         },
 
@@ -184,8 +205,12 @@
         //  timers for opening/closing it.
         clear: function OF__clear() {
           if (this._folder.elt && this._folder.elt.lastElementChild) {
-            if (!this._folder.elt.lastElementChild.hasAttribute("dragover")) {
-              this._folder.elt.lastElementChild.hidePopup();
+            var popup = this._folder.elt.lastElementChild;
+            if (
+              !popup.hasAttribute("dragover") &&
+              !closingPopupEndsDrag(popup)
+            ) {
+              popup.hidePopup();
             }
             // remove menuactive style
             this._folder.elt.removeAttribute("_moz-menuactive");
