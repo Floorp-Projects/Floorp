@@ -33,7 +33,7 @@ For options that accept ``true`` or ``false``, ``=true`` can be left off to get 
   If this is set, then ``InstallDirectoryPath`` will be ignored.
 
 ``/TaskbarShortcut={true,false}``
-  Set to ``false`` to disable pinning a shortcut to the taskbar. ``true`` by default. This feature only works on Windows 7 and 8; it isn't possible to create taskbar pins from the installer on later Windows versions.
+  Set to ``false`` to disable pinning a shortcut to the taskbar. ``true`` by default.
 
 ``/DesktopShortcut={true,false}``
   Set to ``false`` to disable creating a shortcut on the desktop. ``true`` by default.
