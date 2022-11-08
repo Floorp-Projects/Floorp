@@ -1543,6 +1543,13 @@ var gUnifiedExtensions = {
       );
       template.replaceWith(template.content);
       this._panel = document.getElementById("unified-extensions-panel");
+      let customizationArea = this._panel.querySelector(
+        "#unified-extensions-area"
+      );
+      CustomizableUI.registerPanelNode(
+        customizationArea,
+        CustomizableUI.AREA_ADDONS
+      );
       CustomizableUI.addPanelCloseListeners(this._panel);
     }
     return this._panel;
