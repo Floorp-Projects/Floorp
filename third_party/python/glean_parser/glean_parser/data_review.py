@@ -46,119 +46,34 @@ def generate(
     reobj = re.compile(f"\\W{bug}\\W|\\W{bug}$")
     durations = set()
     responsible_emails = set()
-    metrics_table = ""
-    for category_name, metrics in all_objects.value.items():
+    filtered_metrics = list()
+    for metrics in all_objects.value.values():
         for metric in metrics.values():
             if not any([len(reobj.findall(bug)) == 1 for bug in metric.bugs]):
                 continue
 
-            metric_name = util.snake_case(metric.name)
-            category_name = util.snake_case(category_name)
-            one_line_desc = metric.description.replace("\n", " ")
-            sensitivity = ", ".join([s.name for s in metric.data_sensitivity])
-            last_bug = metric.bugs[-1]
-            metrics_table += f"`{category_name}.{metric_name}` | "
-            metrics_table += f"{one_line_desc} | {sensitivity} | {last_bug}\n"
-            if metric.type == "event" and len(metric.allowed_extra_keys):
-                for extra_name, extra_detail in metric.extra_keys.items():
-                    extra_one_line_desc = extra_detail["description"].replace("\n", " ")
-                    metrics_table += f"`{category_name}.{metric_name}#{extra_name}` | "
-                    metrics_table += (
-                        f"{extra_one_line_desc} | {sensitivity} | {last_bug}\n"
-                    )
+            filtered_metrics.append(metric)
 
             durations.add(metric.expires)
 
             if metric.expires == "never":
                 responsible_emails.update(metric.notification_emails)
 
-    if len(durations) == 1:
-        duration = next(iter(durations))
-        if duration == "never":
-            collection_duration = "This collection will be collected permanently."
-        else:
-            collection_duration = f"This collection has expiry '{duration}'"
-    else:
-        collection_duration = "Parts of this collection expire at different times: "
-        collection_duration += f"{durations}"
-
-    if "never" in durations:
-        collection_duration += "\n" + ", ".join(responsible_emails) + " "
-        collection_duration += "will be responsible for the permanent collections."
-
-    if len(durations) == 0:
+    if len(filtered_metrics) == 0:
         print(f"I'm sorry, I couldn't find metrics matching the bug number {bug}.")
         return 1
 
-    # This template is pulled from
-    # https://github.com/mozilla/data-review/blob/main/request.md
-    print(
-        """
-!! Reminder: it is your responsibility to complete and check the correctness of
-!! this automatically-generated request skeleton before requesting Data
-!! Collection Review. See https://wiki.mozilla.org/Data_Collection for details.
-
-DATA REVIEW REQUEST
-1. What questions will you answer with this data?
-
-TODO: Fill this in.
-
-2. Why does Mozilla need to answer these questions? Are there benefits for users?
-   Do we need this information to address product or business requirements?
-
-TODO: Fill this in.
-
-3. What alternative methods did you consider to answer these questions?
-   Why were they not sufficient?
-
-TODO: Fill this in.
-
-4. Can current instrumentation answer these questions?
-
-TODO: Fill this in.
-
-5. List all proposed measurements and indicate the category of data collection for each
-   measurement, using the Firefox data collection categories found on the Mozilla wiki.
-
-Measurement Name | Measurement Description | Data Collection Category | Tracking Bug
----------------- | ----------------------- | ------------------------ | ------------"""
+    template = util.get_jinja2_template(
+        "data_review.jinja2",
+        filters=(("snake_case", util.snake_case),),
     )
-    print(metrics_table)
+
     print(
-        """
-6. Please provide a link to the documentation for this data collection which
-   describes the ultimate data set in a public, complete, and accurate way.
-
-This collection is Glean so is documented
-[in the Glean Dictionary](https://dictionary.telemetry.mozilla.org).
-
-7. How long will this data be collected?
-"""
-    )
-    print(collection_duration)
-    print(
-        """
-8. What populations will you measure?
-
-All channels, countries, and locales. No filters.
-
-9. If this data collection is default on, what is the opt-out mechanism for users?
-
-These collections are Glean. The opt-out can be found in the product's preferences.
-
-10. Please provide a general description of how you will analyze this data.
-
-TODO: Fill this in.
-
-11. Where do you intend to share the results of your analysis?
-
-TODO: Fill this in.
-
-12. Is there a third-party tool (i.e. not Glean or Telemetry) that you
-    are proposing to use for this data collection?
-
-No.
-"""
+        template.render(
+            metrics=filtered_metrics,
+            durations=durations,
+            responsible_emails=responsible_emails,
+        )
     )
 
     return 0

@@ -563,6 +563,12 @@ criteria = "safe-to-deploy"
 delta = "51.4.0 -> 51.5.0"
 notes = "Maintained by the Glean team at Mozilla"
 
+[[audits.glean]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "51.7.0 -> 51.8.0"
+notes = "Maintained by the Glean team at Mozilla"
+
 [[audits.glean-core]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -614,6 +620,12 @@ delta = "51.2.0 -> 51.4.0"
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "51.4.0 -> 51.5.0"
+notes = "Maintained by the Glean team at Mozilla"
+
+[[audits.glean-core]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "51.7.0 -> 51.8.0"
 notes = "Maintained by the Glean team at Mozilla"
 
 [[audits.goblin]]

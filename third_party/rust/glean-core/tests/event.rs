@@ -230,9 +230,16 @@ fn extra_keys_must_be_recorded_and_truncated_if_needed() {
     );
 
     let test_value = "LeanGleanByFrank";
+    let test_value_long = test_value.to_string().repeat(32);
+    // max length for extra values.
+    let test_value_cap = 500;
+    assert!(
+        test_value_long.len() > test_value_cap,
+        "test value is not long enough"
+    );
     let mut extra = HashMap::new();
     extra.insert("extra1".into(), test_value.to_string());
-    extra.insert("truncatedExtra".into(), test_value.to_string().repeat(10));
+    extra.insert("truncatedExtra".into(), test_value_long.clone());
 
     test_event.record_sync(&glean, 0, extra);
 
@@ -247,7 +254,7 @@ fn extra_keys_must_be_recorded_and_truncated_if_needed() {
     assert_eq!(2, event["extra"].as_object().unwrap().len());
     assert_eq!(test_value, event["extra"]["extra1"]);
     assert_eq!(
-        test_value.to_string().repeat(10)[0..100],
+        test_value_long[0..test_value_cap],
         event["extra"]["truncatedExtra"]
     );
 }

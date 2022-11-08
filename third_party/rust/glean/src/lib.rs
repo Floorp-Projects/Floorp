@@ -81,8 +81,9 @@ impl glean_core::OnGleanEvents for GleanEvents {
         // intentionally left empty
     }
 
-    fn trigger_upload(&self) {
+    fn trigger_upload(&self) -> Result<(), glean_core::CallbackError> {
         self.upload_manager.trigger_upload();
+        Ok(())
     }
 
     fn start_metrics_ping_scheduler(&self) -> bool {
@@ -91,8 +92,9 @@ impl glean_core::OnGleanEvents for GleanEvents {
         true
     }
 
-    fn cancel_uploads(&self) {
+    fn cancel_uploads(&self) -> Result<(), glean_core::CallbackError> {
         // intentionally left empty
+        Ok(())
     }
 }
 

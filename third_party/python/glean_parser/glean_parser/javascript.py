@@ -10,7 +10,6 @@ Outputter to generate Javascript code for metrics.
 
 import enum
 import json
-import sys
 from pathlib import Path
 from typing import Any, Dict, Optional, Callable
 
@@ -22,12 +21,27 @@ from . import util
 def javascript_datatypes_filter(value: util.JSONType) -> str:
     """
     A Jinja2 filter that renders Javascript literals.
+
+    Based on Python's JSONEncoder, but overrides:
+      - lists to use listOf
+      - sets to use setOf
+      - Rate objects to a CommonMetricData initializer
+        (for external Denominators' Numerators lists)
     """
 
     class JavascriptEncoder(json.JSONEncoder):
         def iterencode(self, value):
             if isinstance(value, enum.Enum):
                 yield from super().iterencode(util.camelize(value.name))
+            elif isinstance(value, list):
+                yield "["
+                first = True
+                for subvalue in value:
+                    if not first:
+                        yield ", "
+                    yield from self.iterencode(subvalue)
+                    first = False
+                yield "]"
             elif isinstance(value, set):
                 yield "["
                 first = True
@@ -37,6 +51,17 @@ def javascript_datatypes_filter(value: util.JSONType) -> str:
                     yield from self.iterencode(subvalue)
                     first = False
                 yield "]"
+            elif isinstance(value, metrics.Rate):
+                yield "CommonMetricData("
+                first = True
+                for arg_name in util.common_metric_args:
+                    if hasattr(value, arg_name):
+                        if not first:
+                            yield ", "
+                        yield f"{util.camelize(arg_name)} = "
+                        yield from self.iterencode(getattr(value, arg_name))
+                        first = False
+                yield ")"
             else:
                 yield from super().iterencode(value)
 
@@ -148,16 +173,11 @@ def output(
                         it will use that date.
                         Other values will throw an error.
                         If not set it will use the current date & time.
-        - `fail_rates`: When `true` it fails when encountering rate metrics.
-                        When `false` it will warn and skip rate metrics.
-                        Defaults to "true".
     """
 
     if options is None:
         options = {}
 
-    fail_rates = options.get("fail_rates", "true").lower() == "true"
-    fail_rate_level = "ERROR" if fail_rates else "WARN"
     platform = options.get("platform", "webext")
     accepted_platforms = ["qt", "webext", "node"]
     if platform not in accepted_platforms:
@@ -185,26 +205,6 @@ def output(
         extension = ".js" if lang == "javascript" else ".ts"
         filename = util.camelize(category_key) + extension
         filepath = output_dir / filename
-
-        # FIXME: Add support for rate (and numerator & denominator) in Glean.js
-        todelete = []
-        for key, metric in category_val.items():
-            if isinstance(metric, metrics.Rate):
-                print(
-                    f"{fail_rate_level}: Rate metric not supported. Metric: {category_key}.{metric.name}",  # noqa: E501
-                    file=sys.stderr,
-                )
-                todelete.append(key)
-            if isinstance(metric, metrics.Denominator):
-                print(
-                    f"{fail_rate_level}: Rate metric not supported. Dropping numerators. Metric: {category_key}.{metric.name}",  # noqa: E501
-                    file=sys.stderr,
-                )
-                del metric.numerators
-
-        if fail_rates and todelete:
-            print("Failed due to previous errors.", file=sys.stderr)
-            raise ValueError("Unsupported metric type encountered.")
 
         types = set(
             [

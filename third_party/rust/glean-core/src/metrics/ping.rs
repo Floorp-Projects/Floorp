@@ -107,7 +107,9 @@ impl PingType {
                 crate::core::with_glean(move |glean| ping.submit_sync(glean, reason.as_deref()));
             if sent {
                 let state = crate::global_state().lock().unwrap();
-                state.callbacks.trigger_upload();
+                if let Err(e) = state.callbacks.trigger_upload() {
+                    log::error!("Triggering upload failed. Error: {}", e);
+                }
             }
         })
     }
@@ -125,6 +127,13 @@ impl PingType {
         }
 
         let ping = &self.0;
+
+        // Allowing `clippy::manual_filter`.
+        // This causes a false positive.
+        // We have a side-effect in the `else` branch,
+        // so shouldn't delete it.
+        #[allow(unknown_lints)]
+        #[allow(clippy::manual_filter)]
         let corrected_reason = match reason {
             Some(reason) => {
                 if ping.reason_codes.contains(&reason.to_string()) {

@@ -1,0 +1,82 @@
+!! Reminder: it is your responsibility to complete and check the correctness of
+!! this automatically-generated request skeleton before requesting Data
+!! Collection Review. See https://wiki.mozilla.org/Data_Collection for details.
+{# Data Review Request Template pulled from
+   https://github.com/mozilla/data-review/blob/main/request.md #}
+
+DATA REVIEW REQUEST
+1. What questions will you answer with this data?
+
+{{ "TODO: Fill this in." if not questions }}
+
+2. Why does Mozilla need to answer these questions? Are there benefits for users?
+   Do we need this information to address product or business requirements?
+
+{{ "TODO: Fill this in." if not why }}
+
+3. What alternative methods did you consider to answer these questions?
+   Why were they not sufficient?
+
+{{ "TODO: Fill this in." if not methods }}
+
+4. Can current instrumentation answer these questions?
+
+{{ "TODO: Fill this in." if not current_instrumentation_answers }}
+
+5. List all proposed measurements and indicate the category of data collection for each
+   measurement, using the Firefox data collection categories found on the Mozilla wiki.
+
+Measurement Name | Measurement Description | Data Collection Category | Tracking Bug
+---------------- | ----------------------- | ------------------------ | ------------
+{% for metric in metrics %}
+{% if metric.type == "event" and metric.allowed_extra_keys %}
+{% for extra_name, extra_detail in metric.extra_keys.items() %}
+`{{ metric.category|snake_case }}.{{ metric.name|snake_case }}#{{ extra_name }} | {{ extra_detail["description"]|replace("\n", " ") }} | {{ metric.data_sensitivity|join(", ", attribute="name") }} | {{ metric.bugs|last }}
+{% endfor %}
+{% else %}
+`{{ metric.category|snake_case }}.{{ metric.name|snake_case }}` | {{ metric.description|replace("\n", " ") }} | {{ metric.data_sensitivity|join(", ", attribute="name") }} | {{ metric.bugs|last }}
+{% endif %}
+{% endfor %}
+
+6. Please provide a link to the documentation for this data collection which
+   describes the ultimate data set in a public, complete, and accurate way.
+
+This collection is Glean so is documented [in the Glean Dictionary](https://dictionary.telemetry.mozilla.org).
+
+7. How long will this data be collected?
+
+{% if durations|length == 1 %}
+{% for duration in durations %}
+{% if duration == "never" %}
+This collection will be collected permanently.
+{% else %}
+This collection has expiry '{{duration}}'.
+{% endif %}
+{% endfor %}
+{% else %}
+Parts of this collection expire at different times: {{ durations|join(", ") }}.
+{% endif %}
+{% if "never" in durations %}
+{{ responsible_emails|join(", ") }} will be responsible for the permanent collections.
+{% endif %}
+
+8. What populations will you measure?
+
+All channels, countries, and locales. No filters.
+
+9. If this data collection is default on, what is the opt-out mechanism for users?
+
+These collections are Glean. The opt-out can be found in the product's preferences.
+
+10. Please provide a general description of how you will analyze this data.
+
+{{ "TODO: Fill this in." if not analysis_how }}
+
+11. Where do you intend to share the results of your analysis?
+
+{{ "TODO: Fill this in." if not analysis_where }}
+
+12. Is there a third-party tool (i.e. not Glean or Telemetry) that you
+    are proposing to use for this data collection?
+
+No.

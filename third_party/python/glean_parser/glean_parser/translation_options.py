@@ -41,9 +41,6 @@ JavaScript:
         it will use that date.
         Other values will throw an error.
         If not set it will use the current date & time.
-- `fail_rates`: When `true` it fails when encountering rate metrics.
-                When `false` it will warn and skip rate metrics.
-                Defaults to "true".
 
 Markdown:
 - `project_title`: The project's title.

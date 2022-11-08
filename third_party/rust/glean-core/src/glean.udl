@@ -82,6 +82,11 @@ dictionary ClientInfoMetrics {
     string? android_sdk_version = null;
 };
 
+[Error]
+enum CallbackError {
+  "UnexpectedError",
+};
+
 // A callback object, that is stored within the core logic for the entire lifetime of the application.
 //
 // This is used to trigger certain actions that need to happen on the foreign-language side.
@@ -97,6 +102,7 @@ callback interface OnGleanEvents {
     //
     // This should not block.
     // The uploader needs to asynchronously poll Glean for new pings to upload.
+    [Throws=CallbackError]
     void trigger_upload();
 
     // Start the Metrics Ping Scheduler.
@@ -109,6 +115,7 @@ callback interface OnGleanEvents {
     boolean start_metrics_ping_scheduler();
 
     // Called when upload is disabled and uploads should be stopped
+    [Throws=CallbackError]
     void cancel_uploads();
 };
 
