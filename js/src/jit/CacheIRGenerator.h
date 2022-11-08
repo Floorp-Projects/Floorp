@@ -531,7 +531,7 @@ class MOZ_RAII InlinableNativeIRGenerator {
 
   void emitNativeCalleeGuard();
 
-  ObjOperandId emitNativeCalleeGuardAndLoadArgsArray();
+  ObjOperandId emitLoadArgsArray();
 
   void initializeInputOperand() {
     // The input operand is already initialized for FunCall and FunApplyArray.
