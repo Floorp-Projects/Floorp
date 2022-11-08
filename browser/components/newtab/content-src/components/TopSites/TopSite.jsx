@@ -22,6 +22,15 @@ import { TopSiteImpressionWrapper } from "./TopSiteImpressionWrapper";
 const SPOC_TYPE = "SPOC";
 const NEWTAB_SOURCE = "newtab";
 
+// For cases if we want to know if this is sponsored by either sponsored_position or type.
+// We have two sources for sponsored topsites, and
+// sponsored_position is set by one sponsored source, and type is set by another.
+// This is not called in all cases, sometimes we want to know if it's one source
+// or the other. This function is only applicable in cases where we only care if it's either.
+function isSponsored(link) {
+  return link?.sponsored_position || link?.type === SPOC_TYPE;
+}
+
 export class TopSiteLink extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -37,8 +46,7 @@ export class TopSiteLink extends React.PureComponent {
    */
   _allowDrop(e) {
     return (
-      (this.dragged ||
-        (!this.props.link.sponsored_position && !this.props.link.shim)) &&
+      (this.dragged || !isSponsored(this.props.link)) &&
       e.dataTransfer.types.includes("text/topsite-index")
     );
   }
@@ -53,7 +61,7 @@ export class TopSiteLink extends React.PureComponent {
         break;
       case "dragstart":
         event.target.blur();
-        if (this.props.link.sponsored_position || this.props.link.shim) {
+        if (isSponsored(this.props.link)) {
           event.preventDefault();
           break;
         }
@@ -393,10 +401,7 @@ export class TopSite extends React.PureComponent {
       value.card_type = "search";
       value.search_vendor = this.props.link.hostname;
     }
-    if (
-      this.props.link.type === SPOC_TYPE ||
-      this.props.link.sponsored_position
-    ) {
+    if (isSponsored(this.props.link)) {
       value.card_type = "spoc";
     }
     return { value };
@@ -712,10 +717,10 @@ export class TopSiteList extends React.PureComponent {
     const topSites = this._getTopSites();
     topSites[this.state.draggedIndex] = null;
     const preview = topSites.map(site =>
-      site && (site.isPinned || site.sponsored_position) ? site : null
+      site && (site.isPinned || isSponsored(site)) ? site : null
     );
     const unpinned = topSites.filter(
-      site => site && !site.isPinned && !site.sponsored_position
+      site => site && !site.isPinned && !isSponsored(site)
     );
     const siteToInsert = Object.assign({}, this.state.draggedSite, {
       isPinned: true,
@@ -739,7 +744,7 @@ export class TopSiteList extends React.PureComponent {
         index > this.state.draggedIndex ? holeIndex < index : holeIndex > index
       ) {
         let nextIndex = holeIndex + shiftingStep;
-        while (preview[nextIndex] && preview[nextIndex].sponsored_position) {
+        while (isSponsored(preview[nextIndex])) {
           nextIndex += shiftingStep;
         }
         preview[holeIndex] = preview[nextIndex];

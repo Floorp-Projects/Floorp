@@ -491,8 +491,8 @@ describe("<TopSiteLink>", () => {
       const result = wrapper.instance()._allowDrop(event);
       assert.isFalse(result);
     });
-    it("should not be droppable for link.shim", () => {
-      wrapper.setProps({ link: { shim: "foo" } });
+    it("should not be droppable for link.type", () => {
+      wrapper.setProps({ link: { type: "SPOC" } });
       const result = wrapper.instance()._allowDrop(event);
       assert.isFalse(result);
     });
@@ -569,7 +569,7 @@ describe("<TopSiteLink>", () => {
     it("should prevent dragging with link.shim from dragstart", () => {
       const preventDefault = sinon.stub();
       const blur = sinon.stub();
-      wrapper.setProps({ link: { shim: "foo" } });
+      wrapper.setProps({ link: { type: "SPOC" } });
       wrapper.instance().onDragEvent({
         type: "dragstart",
         preventDefault,
@@ -1599,6 +1599,41 @@ describe("<TopSiteList>", () => {
       site1,
       site3,
       draggedSite,
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]);
+    site2.type = "SPOC";
+    instance.setState({
+      draggedIndex: 2,
+      draggedSite: site3,
+      draggedTitle: "baz",
+    });
+    draggedSite = Object.assign({}, site3, { isPinned: true, isDragged: true });
+    assert.deepEqual(instance._makeTopSitesPreview(0), [
+      draggedSite,
+      site2,
+      site1,
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]);
+    site2.type = "";
+    site2.sponsored_position = 2;
+    instance.setState({
+      draggedIndex: 2,
+      draggedSite: site3,
+      draggedTitle: "baz",
+    });
+    draggedSite = Object.assign({}, site3, { isPinned: true, isDragged: true });
+    assert.deepEqual(instance._makeTopSitesPreview(0), [
+      draggedSite,
+      site2,
+      site1,
       null,
       null,
       null,
