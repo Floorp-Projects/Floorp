@@ -27,6 +27,8 @@ class WebTransportStreamProxy final : public nsIWebTransportReceiveStream,
   NS_IMETHOD SendStopSending(uint8_t aError) override;
   NS_IMETHOD SendFin() override;
   NS_IMETHOD Reset(uint8_t aErrorCode) override;
+  NS_IMETHOD GetSendStreamStats(
+      nsIWebTransportSendStreamStatsCallback* aCallback) override;
 
   NS_IMETHOD Close() override;
   NS_IMETHOD Available(uint64_t* aAvailable) override;
@@ -52,12 +54,14 @@ class WebTransportStreamProxy final : public nsIWebTransportReceiveStream,
 
  private:
   virtual ~WebTransportStreamProxy();
+  void EnsureWriter();
 
   static nsresult WriteFromSegments(nsIInputStream*, void*, const char*,
                                     uint32_t offset, uint32_t count,
                                     uint32_t* countRead);
 
   RefPtr<Http3WebTransportStream> mWebTransportStream;
+  nsCOMPtr<nsIAsyncOutputStream> mWriter;
 };
 
 }  // namespace mozilla::net

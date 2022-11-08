@@ -41,11 +41,86 @@ NS_IMETHODIMP WebTransportStreamProxy::SendStopSending(uint8_t aError) {
 }
 
 NS_IMETHODIMP WebTransportStreamProxy::SendFin(void) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!OnSocketThread()) {
+    RefPtr<WebTransportStreamProxy> self(this);
+    return gSocketTransportService->Dispatch(
+        NS_NewRunnableFunction("WebTransportStreamProxy::SendFin",
+                               [self{std::move(self)}]() { self->SendFin(); }));
+  }
+
+  mWebTransportStream->SendFin();
+  return NS_OK;
 }
 
 NS_IMETHODIMP WebTransportStreamProxy::Reset(uint8_t aErrorCode) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!OnSocketThread()) {
+    RefPtr<WebTransportStreamProxy> self(this);
+    return gSocketTransportService->Dispatch(NS_NewRunnableFunction(
+        "WebTransportStreamProxy::Reset",
+        [self{std::move(self)}, error(aErrorCode)]() { self->Reset(error); }));
+  }
+
+  mWebTransportStream->Reset(aErrorCode);
+  return NS_OK;
+}
+
+namespace {
+
+class StatsCallbackWrapper : public nsIWebTransportSendStreamStatsCallback {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  explicit StatsCallbackWrapper(
+      nsIWebTransportSendStreamStatsCallback* aCallback)
+      : mCallback(aCallback), mTarget(GetCurrentEventTarget()) {}
+
+  NS_IMETHOD OnStatsAvailable(nsIWebTransportSendStreamStats* aStats) override {
+    if (!mTarget->IsOnCurrentThread()) {
+      RefPtr<StatsCallbackWrapper> self(this);
+      nsCOMPtr<nsIWebTransportSendStreamStats> stats = aStats;
+      Unused << mTarget->Dispatch(NS_NewRunnableFunction(
+          "StatsCallbackWrapper::OnStatsAvailable",
+          [self{std::move(self)}, stats{std::move(stats)}]() {
+            self->OnStatsAvailable(stats);
+          }));
+      return NS_OK;
+    }
+
+    mCallback->OnStatsAvailable(aStats);
+    return NS_OK;
+  }
+
+ private:
+  virtual ~StatsCallbackWrapper() {
+    NS_ProxyRelease("StatsCallbackWrapper::~StatsCallbackWrapper", mTarget,
+                    mCallback.forget());
+  }
+
+  nsCOMPtr<nsIWebTransportSendStreamStatsCallback> mCallback;
+  nsCOMPtr<nsIEventTarget> mTarget;
+};
+
+NS_IMPL_ISUPPORTS(StatsCallbackWrapper, nsIWebTransportSendStreamStatsCallback)
+
+}  // namespace
+
+NS_IMETHODIMP WebTransportStreamProxy::GetSendStreamStats(
+    nsIWebTransportSendStreamStatsCallback* aCallback) {
+  if (!OnSocketThread()) {
+    RefPtr<WebTransportStreamProxy> self(this);
+    nsCOMPtr<nsIWebTransportSendStreamStatsCallback> callback =
+        new StatsCallbackWrapper(aCallback);
+    return gSocketTransportService->Dispatch(NS_NewRunnableFunction(
+        "WebTransportStreamProxy::GetSendStreamStats",
+        [self{std::move(self)}, callback{std::move(callback)}]() {
+          self->GetSendStreamStats(callback);
+        }));
+  }
+
+  nsCOMPtr<nsIWebTransportSendStreamStats> stats =
+      mWebTransportStream->GetSendStreamStats();
+  aCallback->OnStatsAvailable(stats);
+  return NS_OK;
 }
 
 NS_IMETHODIMP WebTransportStreamProxy::Close() {
@@ -86,22 +161,36 @@ NS_IMETHODIMP WebTransportStreamProxy::Flush() {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void WebTransportStreamProxy::EnsureWriter() {
+  if (mWriter) {
+    return;
+  }
+
+  mWriter = mWebTransportStream->GetWriter();
+}
+
 NS_IMETHODIMP WebTransportStreamProxy::Write(const char* aBuf, uint32_t aCount,
                                              uint32_t* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  EnsureWriter();
+  if (!mWriter) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return mWriter->Write(aBuf, aCount, aResult);
 }
 
 // static
 nsresult WebTransportStreamProxy::WriteFromSegments(
     nsIInputStream* input, void* closure, const char* fromSegment,
     uint32_t offset, uint32_t count, uint32_t* countRead) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  WebTransportStreamProxy* self = (WebTransportStreamProxy*)closure;
+  return self->Write(fromSegment, count, countRead);
 }
 
 NS_IMETHODIMP WebTransportStreamProxy::WriteFrom(nsIInputStream* aFromStream,
                                                  uint32_t aCount,
                                                  uint32_t* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return aFromStream->ReadSegments(WriteFromSegments, this, aCount, aResult);
 }
 
 NS_IMETHODIMP WebTransportStreamProxy::WriteSegments(nsReadSegmentFun aReader,

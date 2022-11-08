@@ -15,17 +15,21 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 
+class nsIWebTransportSendStreamStats;
+
 namespace mozilla::net {
 
 class Http3WebTransportSession;
 
 class Http3WebTransportStream final : public Http3StreamBase,
                                       public nsAHttpSegmentWriter,
-                                      public nsAHttpSegmentReader {
+                                      public nsAHttpSegmentReader,
+                                      public nsIInputStreamCallback {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Http3WebTransportSession, override)
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSAHTTPSEGMENTWRITER
   NS_DECL_NSAHTTPSEGMENTREADER
+  NS_DECL_NSIINPUTSTREAMCALLBACK
 
   explicit Http3WebTransportStream(
       Http3Session* aSession, uint64_t aSessionId, WebTransportStreamType aType,
@@ -55,12 +59,18 @@ class Http3WebTransportStream final : public Http3StreamBase,
   void SendFin();
   void Reset(uint8_t aErrorCode);
 
+  already_AddRefed<nsIAsyncOutputStream> GetWriter();
+  already_AddRefed<nsIWebTransportSendStreamStats> GetSendStreamStats();
+
  private:
   virtual ~Http3WebTransportStream();
 
   nsresult TryActivating();
   static nsresult ReadRequestSegment(nsIInputStream*, void*, const char*,
                                      uint32_t, uint32_t, uint32_t*);
+  nsresult InitOutputPipe();
+  void ResetInternal(bool aDispatch);
+
   uint64_t mSessionId{UINT64_MAX};
   WebTransportStreamType mStreamType{WebTransportStreamType::BiDi};
 
@@ -74,6 +84,18 @@ class Http3WebTransportStream final : public Http3StreamBase,
 
   std::function<void(Result<RefPtr<Http3WebTransportStream>, nsresult>&&)>
       mStreamReadyCallback;
+
+  Mutex mMutex{"Http3WebTransportStream::mMutex"};
+  nsCOMPtr<nsIAsyncInputStream> mSendStreamPipeIn;
+  nsCOMPtr<nsIAsyncOutputStream> mSendStreamPipeOut MOZ_GUARDED_BY(mMutex);
+
+  uint64_t mTotalWritten = 0;
+  uint64_t mTotalSent = 0;
+  // TODO: neqo doesn't expose this information for now.
+  uint64_t mTotalAcknowledged = 0;
+  bool mSendFin{false};
+  // The error code used to reset the stream. Should be only set once.
+  Maybe<uint8_t> mResetError;
 };
 
 }  // namespace mozilla::net
