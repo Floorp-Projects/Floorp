@@ -199,4 +199,7 @@ interface XULPopupElement : XULElement
   undefined sizeTo(long width, long height);
 
   undefined setConstraintRect(DOMRectReadOnly rect);
+
+  readonly attribute boolean isWaylandDragSource;
+  readonly attribute boolean isWaylandPopup;
 };
