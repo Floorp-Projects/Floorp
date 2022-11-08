@@ -558,12 +558,6 @@ enum class StyleEmptyCells : uint8_t {
   Show,
 };
 
-// constants for cell "scope" attribute
-#define NS_STYLE_CELL_SCOPE_ROW 0
-#define NS_STYLE_CELL_SCOPE_COL 1
-#define NS_STYLE_CELL_SCOPE_ROWGROUP 2
-#define NS_STYLE_CELL_SCOPE_COLGROUP 3
-
 // See nsStyleUIReset
 enum class StyleImeMode : uint8_t {
   Auto,

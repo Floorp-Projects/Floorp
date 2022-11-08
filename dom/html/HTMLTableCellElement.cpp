@@ -14,6 +14,10 @@
 #include "celldata.h"
 #include "mozilla/dom/HTMLTableCellElementBinding.h"
 
+namespace {
+enum class StyleCellScope : uint8_t { Row, Col, Rowgroup, Colgroup };
+}  // namespace
+
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableCell)
 
 namespace mozilla::dom {
@@ -100,10 +104,10 @@ void HTMLTableCellElement::GetAlign(DOMString& aValue) {
 }
 
 static const nsAttrValue::EnumTable kCellScopeTable[] = {
-    {"row", NS_STYLE_CELL_SCOPE_ROW},
-    {"col", NS_STYLE_CELL_SCOPE_COL},
-    {"rowgroup", NS_STYLE_CELL_SCOPE_ROWGROUP},
-    {"colgroup", NS_STYLE_CELL_SCOPE_COLGROUP},
+    {"row", StyleCellScope::Row},
+    {"col", StyleCellScope::Col},
+    {"rowgroup", StyleCellScope::Rowgroup},
+    {"colgroup", StyleCellScope::Colgroup},
     {nullptr, 0}};
 
 void HTMLTableCellElement::GetScope(DOMString& aScope) {
