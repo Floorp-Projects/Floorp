@@ -1476,7 +1476,7 @@ Advises on the use of NodeJS and npm packages at build and runtime. Reviews addi
         | `package-lock.json <https://searchfox.org/mozilla-central/search?q=&path=package-lock.json>`__
         | `node_modules/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=node_modules/\*\*/\*>`__
     * - URL
-      - https://wiki.mozilla.org/Firefox/firefox-dev,
+      - https://wiki.mozilla.org/Firefox/firefox-dev, #nodejs on slack
     * - Bugzilla Components
       - Various
 
