@@ -113,6 +113,8 @@ already_AddRefed<Promise> AsyncIterableNextImpl::NextSteps(
   {
     ErrorResult error;
     nextPromise = GetNextResult(error);
+
+    error.WouldReportJSException();
     if (error.Failed()) {
       nextPromise = Promise::Reject(aGlobalObject, std::move(error), aRv);
     }
@@ -256,6 +258,8 @@ already_AddRefed<Promise> AsyncIterableReturnImpl::ReturnSteps(
   // for interface, given object’s target, object, and value.
   ErrorResult error;
   RefPtr<Promise> returnPromise = GetReturnPromise(aCx, aValue, error);
+
+  error.WouldReportJSException();
   if (error.Failed()) {
     return Promise::Reject(aGlobalObject, std::move(error), aRv);
   }

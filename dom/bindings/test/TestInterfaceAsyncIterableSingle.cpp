@@ -119,10 +119,12 @@ void TestInterfaceAsyncIterableSingle::IteratorData::Traverse(
     nsCycleCollectionTraversalCallback& cb) {
   TestInterfaceAsyncIterableSingle::IteratorData* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBlockingPromises);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mThrowFromReturn);
 }
 void TestInterfaceAsyncIterableSingle::IteratorData::Unlink() {
   TestInterfaceAsyncIterableSingle::IteratorData* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBlockingPromises);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mThrowFromReturn);
 }
 
 }  // namespace mozilla::dom

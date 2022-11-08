@@ -17,7 +17,6 @@ add_task(async function init() {
 const singleValues = Array(10).fill(0).map((_, i) => i * 9 % 7);
 
 async function check_single_result_values(values, multiplier = 1) {
-  dump(JSON.stringify(values));
   is(values.length, 10, `AsyncIterableSingle: should return 10 elements`);
   for (let i = 0; i < 10; i++) {
     let expected = singleValues[i] * multiplier;
@@ -167,7 +166,7 @@ async function test_data_single() {
   // eslint-disable-next-line no-undef
   itr = new TestInterfaceAsyncIterableSingleWithArgs();
   itrValues = itr.values({ failNextAfter: 1 });
-  itrValues.next().then(({ value, done }) => {
+  await itrValues.next().then(({ value, done }) => {
     is(value, singleValues[0], "First value is correct");
     ok(!done, "Expecting more values");
     return itrValues.next();
@@ -181,6 +180,24 @@ async function test_data_single() {
     ok(done, "An earlier failure in next() should set the async iterator's 'is finished' flag to true.");
   }).catch(() => {
     ok(false, "An earlier failure in next() shouldn't cause subsequent calls to return a rejected promise.");
+  });
+
+  // eslint-disable-next-line no-undef
+  itr = new TestInterfaceAsyncIterableSingleWithArgs();
+  itrValues = itr.values({ throwFromNext: true });
+  await itrValues.next().then(() => {
+    ok(false, "Should have rejected from the exception");
+  }).catch(() => {
+    ok(true, "Should have rejected from the exception");
+  });
+
+  // eslint-disable-next-line no-undef
+  itr = new TestInterfaceAsyncIterableSingleWithArgs();
+  itrValues = itr.values({ throwFromReturn: () => { throw new DOMException("Throw from return", "InvalidStateError"); } });
+  await itrValues.return().then(() => {
+    ok(false, "Should have rejected from the exception");
+  }).catch(() => {
+    ok(true, "Should have rejected from the exception");
   });
 }
 

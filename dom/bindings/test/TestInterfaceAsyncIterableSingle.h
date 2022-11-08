@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
 #include "nsTArray.h"
+#include "mozilla/dom/TestInterfaceJSMaplikeSetlikeIterableBinding.h"
 
 class nsPIDOMWindowInner;
 
@@ -53,6 +54,8 @@ class TestInterfaceAsyncIterableSingle : public nsISupports,
     Sequence<OwningNonNull<Promise>> mBlockingPromises;
     size_t mBlockingPromisesIndex = 0;
     uint32_t mFailNextAfter = 4294967295;
+    bool mThrowFromNext = false;
+    RefPtr<TestThrowingCallback> mThrowFromReturn;
   };
 
   void InitAsyncIteratorData(IteratorData& aData, Iterator::IteratorType aType,

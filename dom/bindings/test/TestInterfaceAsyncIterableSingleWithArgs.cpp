@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/TestInterfaceAsyncIterableSingleWithArgs.h"
+#include "ScriptSettings.h"
 #include "js/Value.h"
 #include "mozilla/dom/TestInterfaceJSMaplikeSetlikeIterableBinding.h"
 #include "nsPIDOMWindow.h"
@@ -66,11 +67,24 @@ void TestInterfaceAsyncIterableSingleWithArgs::InitAsyncIteratorData(
   aData.mMultiplier = aOptions.mMultiplier;
   aData.mBlockingPromises = aOptions.mBlockingPromises;
   aData.mFailNextAfter = aOptions.mFailNextAfter;
+  aData.mThrowFromNext = aOptions.mThrowFromNext;
+  if (aOptions.mThrowFromReturn.WasPassed()) {
+    aData.mThrowFromReturn = &aOptions.mThrowFromReturn.Value();
+  }
 }
 
 already_AddRefed<Promise>
 TestInterfaceAsyncIterableSingleWithArgs::GetNextIterationResult(
     Iterator* aIterator, ErrorResult& aRv) {
+  if (aIterator->Data().mThrowFromNext) {
+    AutoJSAPI jsapi;
+    MOZ_RELEASE_ASSERT(jsapi.Init(GetParentObject()));
+    JS_ReportErrorASCII(jsapi.cx(), "Throwing from next().");
+    aRv.MightThrowJSException();
+    aRv.StealExceptionFromJSContext(jsapi.cx());
+    return nullptr;
+  }
+
   if (aIterator->Data().mIndex == aIterator->Data().mFailNextAfter) {
     aRv.ThrowTypeError("Failed because we of 'failNextAfter'.");
     return nullptr;
@@ -84,6 +98,12 @@ TestInterfaceAsyncIterableSingleWithArgs::IteratorReturn(
     JSContext* aCx, Iterator* aIterator, JS::Handle<JS::Value> aValue,
     ErrorResult& aRv) {
   ++mReturnCallCount;
+
+  if (RefPtr<TestThrowingCallback> throwFromReturn =
+          aIterator->Data().mThrowFromReturn) {
+    throwFromReturn->Call(aRv, nullptr, CallbackFunction::eRethrowExceptions);
+    return nullptr;
+  }
 
   RefPtr<Promise> promise = Promise::Create(GetParentObject()->AsGlobal(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
