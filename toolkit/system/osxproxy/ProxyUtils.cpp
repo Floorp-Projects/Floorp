@@ -45,19 +45,23 @@ static void MaskIPv6Addr(PRIPv6Addr& aAddr, uint16_t aMaskLen) {
   }
 
   if (aMaskLen > 96) {
-    aAddr.pr_s6_addr32[3] = PR_htonl(PR_ntohl(aAddr.pr_s6_addr32[3]) & (~0L << (128 - aMaskLen)));
+    aAddr.pr_s6_addr32[3] =
+        PR_htonl(PR_ntohl(aAddr.pr_s6_addr32[3]) & (~0L << (128 - aMaskLen)));
   } else if (aMaskLen > 64) {
     aAddr.pr_s6_addr32[3] = 0;
-    aAddr.pr_s6_addr32[2] = PR_htonl(PR_ntohl(aAddr.pr_s6_addr32[2]) & (~0L << (96 - aMaskLen)));
+    aAddr.pr_s6_addr32[2] =
+        PR_htonl(PR_ntohl(aAddr.pr_s6_addr32[2]) & (~0L << (96 - aMaskLen)));
   } else if (aMaskLen > 32) {
     aAddr.pr_s6_addr32[3] = 0;
     aAddr.pr_s6_addr32[2] = 0;
-    aAddr.pr_s6_addr32[1] = PR_htonl(PR_ntohl(aAddr.pr_s6_addr32[1]) & (~0L << (64 - aMaskLen)));
+    aAddr.pr_s6_addr32[1] =
+        PR_htonl(PR_ntohl(aAddr.pr_s6_addr32[1]) & (~0L << (64 - aMaskLen)));
   } else {
     aAddr.pr_s6_addr32[3] = 0;
     aAddr.pr_s6_addr32[2] = 0;
     aAddr.pr_s6_addr32[1] = 0;
-    aAddr.pr_s6_addr32[0] = PR_htonl(PR_ntohl(aAddr.pr_s6_addr32[0]) & (~0L << (32 - aMaskLen)));
+    aAddr.pr_s6_addr32[0] =
+        PR_htonl(PR_ntohl(aAddr.pr_s6_addr32[0]) & (~0L << (32 - aMaskLen)));
   }
 
   return;
@@ -71,7 +75,8 @@ static bool IsMatchMask(const nsACString& aHost, const nsACString& aOverride) {
     return false;
   }
 
-  nsAutoCString prefixStr(Substring(aOverride, tokenEnd + 1, aOverride.Length() - tokenEnd - 1));
+  nsAutoCString prefixStr(
+      Substring(aOverride, tokenEnd + 1, aOverride.Length() - tokenEnd - 1));
   auto maskLen = prefixStr.ToInteger(&rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
@@ -82,25 +87,30 @@ static bool IsMatchMask(const nsACString& aHost, const nsACString& aOverride) {
 
   PRNetAddr prAddrHost;
   PRNetAddr prAddrOverride;
-  if (PR_SUCCESS != PR_StringToNetAddr(PromiseFlatCString(aHost).get(), &prAddrHost) ||
+  if (PR_SUCCESS !=
+          PR_StringToNetAddr(PromiseFlatCString(aHost).get(), &prAddrHost) ||
       PR_SUCCESS != PR_StringToNetAddr(override.get(), &prAddrOverride)) {
     return false;
   }
 
-  if (prAddrHost.raw.family == PR_AF_INET && prAddrOverride.raw.family == PR_AF_INET) {
+  if (prAddrHost.raw.family == PR_AF_INET &&
+      prAddrOverride.raw.family == PR_AF_INET) {
     return MaskIPv4Addr(prAddrHost.inet.ip, maskLen) ==
            MaskIPv4Addr(prAddrOverride.inet.ip, maskLen);
-  } else if (prAddrHost.raw.family == PR_AF_INET6 && prAddrOverride.raw.family == PR_AF_INET6) {
+  } else if (prAddrHost.raw.family == PR_AF_INET6 &&
+             prAddrOverride.raw.family == PR_AF_INET6) {
     MaskIPv6Addr(prAddrHost.ipv6.ip, maskLen);
     MaskIPv6Addr(prAddrOverride.ipv6.ip, maskLen);
 
-    return memcmp(&prAddrHost.ipv6.ip, &prAddrOverride.ipv6.ip, sizeof(PRIPv6Addr)) == 0;
+    return memcmp(&prAddrHost.ipv6.ip, &prAddrOverride.ipv6.ip,
+                  sizeof(PRIPv6Addr)) == 0;
   }
 
   return false;
 }
 
-static bool IsMatchWildcard(const nsACString& aHost, const nsACString& aOverride) {
+static bool IsMatchWildcard(const nsACString& aHost,
+                            const nsACString& aOverride) {
   nsAutoCString host(aHost);
   nsAutoCString override(aOverride);
 
@@ -118,7 +128,8 @@ static bool IsMatchWildcard(const nsACString& aHost, const nsACString& aOverride
       // If the character following the '*' is a '.' character then skip
       // it so that "*.foo.com" allows "foo.com".
       if (override.FindChar('.', tokenStart) == tokenStart) {
-        nsAutoCString token(Substring(override, tokenStart + 1, overrideLength - tokenStart - 1));
+        nsAutoCString token(Substring(override, tokenStart + 1,
+                                      overrideLength - tokenStart - 1));
         if (host.Equals(token)) {
           return true;
         }
@@ -127,7 +138,8 @@ static bool IsMatchWildcard(const nsACString& aHost, const nsACString& aOverride
       if (tokenEnd == -1) {
         tokenEnd = overrideLength;  // no '*' char, match rest of string
       }
-      nsAutoCString token(Substring(override, tokenStart, tokenEnd - tokenStart));
+      nsAutoCString token(
+          Substring(override, tokenStart, tokenEnd - tokenStart));
       offset = host.Find(token, offset);
       if (offset == -1 || (!star && offset)) {
         return false;
