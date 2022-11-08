@@ -12268,6 +12268,7 @@ void DR_State::InitFrameTypeTable() {
   AddFrameTypeInfo(LayoutFrameType::Viewport, "VP", "viewport");
   AddFrameTypeInfo(LayoutFrameType::Box, "Box", "Box");
   AddFrameTypeInfo(LayoutFrameType::Slider, "Slider", "Slider");
+  AddFrameTypeInfo(LayoutFrameType::PopupSet, "PopupSet", "PopupSet");
   AddFrameTypeInfo(LayoutFrameType::None, "unknown", "unknown");
 }
 

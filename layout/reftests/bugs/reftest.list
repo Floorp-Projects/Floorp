@@ -1270,6 +1270,7 @@ pref(layout.css.caption-side-non-standard.enabled,true) == 478614-7.html 478614-
 == 478811-4.html 478811-4-ref.html
 == 478956-1a.html 478956-1-ref.html
 == 478956-1b.html 478956-1-ref.html
+== chrome://reftest/content/bugs/480017-1.html chrome://reftest/content/bugs/480017-1-ref.html
 == 480880-1a.html 480880-1-ref.html
 == 480880-1b.html 480880-1-ref.html
 == 480880-1c.html 480880-1-ref.html
