@@ -6766,6 +6766,10 @@ AliasSet MSetObjectHasValueVMCall::getAliasSet() const {
   return AliasSet::Load(AliasSet::MapOrSetHashTable);
 }
 
+AliasSet MSetObjectSize::getAliasSet() const {
+  return AliasSet::Load(AliasSet::MapOrSetHashTable);
+}
+
 AliasSet MMapObjectHasNonBigInt::getAliasSet() const {
   return AliasSet::Load(AliasSet::MapOrSetHashTable);
 }
@@ -6795,6 +6799,10 @@ AliasSet MMapObjectGetValue::getAliasSet() const {
 }
 
 AliasSet MMapObjectGetValueVMCall::getAliasSet() const {
+  return AliasSet::Load(AliasSet::MapOrSetHashTable);
+}
+
+AliasSet MMapObjectSize::getAliasSet() const {
   return AliasSet::Load(AliasSet::MapOrSetHashTable);
 }
 

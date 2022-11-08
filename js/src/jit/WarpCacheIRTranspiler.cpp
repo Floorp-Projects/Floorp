@@ -4189,6 +4189,16 @@ bool WarpCacheIRTranspiler::emitSetHasResult(ObjOperandId setId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitSetSizeResult(ObjOperandId setId) {
+  MDefinition* set = getOperand(setId);
+
+  auto* ins = MSetObjectSize::New(alloc(), set);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitMapHasNonGCThingResult(ObjOperandId mapId,
                                                        ValOperandId valId) {
   MDefinition* map = getOperand(mapId);
@@ -4392,6 +4402,16 @@ bool WarpCacheIRTranspiler::emitMapGetResult(ObjOperandId mapId,
   auto* ins = MMapObjectGetValueVMCall::New(alloc(), map, val);
   add(ins);
 #endif
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitMapSizeResult(ObjOperandId mapId) {
+  MDefinition* map = getOperand(mapId);
+
+  auto* ins = MMapObjectSize::New(alloc(), map);
+  add(ins);
 
   pushResult(ins);
   return true;

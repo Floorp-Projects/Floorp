@@ -17198,6 +17198,13 @@ void CodeGenerator::visitSetObjectHasValueVMCall(
   callVM<Fn, jit::SetObjectHas>(ins);
 }
 
+void CodeGenerator::visitSetObjectSize(LSetObjectSize* ins) {
+  Register setObj = ToRegister(ins->setObject());
+  Register output = ToRegister(ins->output());
+
+  masm.loadSetObjectSize(setObj, output);
+}
+
 void CodeGenerator::visitMapObjectHasNonBigInt(LMapObjectHasNonBigInt* ins) {
   Register mapObj = ToRegister(ins->mapObject());
   ValueOperand input = ToValue(ins, LMapObjectHasNonBigInt::InputIndex);
@@ -17294,6 +17301,13 @@ void CodeGenerator::visitMapObjectGetValueVMCall(
   using Fn =
       bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
   callVM<Fn, jit::MapObjectGet>(ins);
+}
+
+void CodeGenerator::visitMapObjectSize(LMapObjectSize* ins) {
+  Register mapObj = ToRegister(ins->mapObject());
+  Register output = ToRegister(ins->output());
+
+  masm.loadMapObjectSize(mapObj, output);
 }
 
 template <size_t NumDefs>

@@ -3303,6 +3303,11 @@
     setObject: WordSized
     input: BoxedValue
 
+- name: SetObjectSize
+  result_type: WordSized
+  operands:
+    setObject: WordSized
+
 - name: MapObjectHasNonBigInt
   result_type: WordSized
   operands:
@@ -3364,6 +3369,11 @@
   operands:
     mapObject: WordSized
     input: BoxedValue
+
+- name: MapObjectSize
+  result_type: WordSized
+  operands:
+    mapObject: WordSized
 
 - name: BigIntAsUintN
   result_type: WordSized
