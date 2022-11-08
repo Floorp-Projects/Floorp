@@ -42,9 +42,11 @@ class nsRemoteClient {
    *
    * @param argv The command-line arguments.
    *
-   * @param aDesktopStartupID the contents of the DESKTOP_STARTUP_ID environment
-   * variable defined by the Startup Notification specification
+   * @param aStartupToken the contents of the DESKTOP_STARTUP_ID environment
+   * variable defined by the Startup Notification specification, or the
+   * XDG_ACTIVATION_TOKEN defined by Wayland.
    * http://standards.freedesktop.org/startup-notification-spec/startup-notification-0.1.txt
+   * https://wayland.app/protocols/xdg-activation-v1
    *
    * @param aResponse If there is a response, it will be here.  This
    * includes error messages.  The string is allocated using stdlib
@@ -55,8 +57,8 @@ class nsRemoteClient {
    */
   virtual nsresult SendCommandLine(const char* aProgram, const char* aProfile,
                                    int32_t argc, char** argv,
-                                   const char* aDesktopStartupID,
-                                   char** aResponse, bool* aSucceeded) = 0;
+                                   const char* aStartupToken, char** aResponse,
+                                   bool* aSucceeded) = 0;
 };
 
 #endif  // TOOLKIT_COMPONENTS_REMOTE_NSREMOTECLIENT_H_

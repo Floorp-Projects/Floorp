@@ -141,7 +141,7 @@ static int HandleBadWindow(Display* display, XErrorEvent* event) {
 
 nsresult nsXRemoteClient::SendCommandLine(
     const char* aProgram, const char* aProfile, int32_t argc, char** argv,
-    const char* aDesktopStartupID, char** aResponse, bool* aWindowFound) {
+    const char* aStartupToken, char** aResponse, bool* aWindowFound) {
   NS_ENSURE_TRUE(aProgram, NS_ERROR_INVALID_ARG);
 
   MOZ_LOG(sRemoteLm, LogLevel::Debug, ("nsXRemoteClient::SendCommandLine"));
@@ -175,7 +175,7 @@ nsresult nsXRemoteClient::SendCommandLine(
 
     if (NS_SUCCEEDED(rv)) {
       // send our command
-      rv = DoSendCommandLine(w, argc, argv, aDesktopStartupID, aResponse,
+      rv = DoSendCommandLine(w, argc, argv, aStartupToken, aResponse,
                              &destroyed);
 
       // if the window was destroyed, don't bother trying to free the
@@ -529,14 +529,14 @@ nsresult nsXRemoteClient::FreeLock(Window aWindow) {
 
 nsresult nsXRemoteClient::DoSendCommandLine(Window aWindow, int32_t argc,
                                             char** argv,
-                                            const char* aDesktopStartupID,
+                                            const char* aStartupToken,
                                             char** aResponse,
                                             bool* aDestroyed) {
   *aDestroyed = false;
 
   int commandLineLength;
   char* commandLine =
-      ConstructCommandLine(argc, argv, aDesktopStartupID, &commandLineLength);
+      ConstructCommandLine(argc, argv, aStartupToken, &commandLineLength);
   XChangeProperty(mDisplay, aWindow, mMozCommandLineAtom, XA_STRING, 8,
                   PropModeReplace, (unsigned char*)commandLine,
                   commandLineLength);

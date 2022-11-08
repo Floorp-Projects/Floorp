@@ -17,11 +17,10 @@ class nsDBusRemoteClient : public nsRemoteClient {
   nsDBusRemoteClient();
   ~nsDBusRemoteClient();
 
-  virtual nsresult Init() override;
-  virtual nsresult SendCommandLine(const char* aProgram, const char* aProfile,
-                                   int32_t argc, char** argv,
-                                   const char* aDesktopStartupID,
-                                   char** aResponse, bool* aSucceeded) override;
+  nsresult Init() override;
+  nsresult SendCommandLine(const char* aProgram, const char* aProfile,
+                           int32_t argc, char** argv, const char* aStartupToken,
+                           char** aResponse, bool* aSucceeded) override;
   void Shutdown();
 
  private:

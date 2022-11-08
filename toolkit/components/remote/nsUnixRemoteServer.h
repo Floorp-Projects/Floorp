@@ -20,8 +20,8 @@
 
 class nsUnixRemoteServer {
  protected:
-  void SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
-                                      uint32_t aTimestamp);
+  void SetStartupTokenOrTimestamp(const nsACString& aStartupToken,
+                                  uint32_t aTimestamp);
   const char* HandleCommandLine(const char* aBuffer, uint32_t aTimestamp);
 };
 
