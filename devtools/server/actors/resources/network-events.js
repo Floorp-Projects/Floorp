@@ -22,9 +22,9 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   NetworkObserver:
-    "resource://devtools/server/actors/network-monitor/NetworkObserver.sys.mjs",
+    "resource://devtools/shared/network-observer/NetworkObserver.sys.mjs",
   NetworkUtils:
-    "resource://devtools/server/actors/network-monitor/utils/NetworkUtils.sys.mjs",
+    "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
 });
 
 loader.lazyRequireGetter(

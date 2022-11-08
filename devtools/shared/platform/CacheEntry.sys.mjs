@@ -5,7 +5,8 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  NetworkHelper: "resource://devtools/shared/webconsole/NetworkHelper.sys.mjs",
+  NetworkHelper:
+    "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
 });
 
 /**

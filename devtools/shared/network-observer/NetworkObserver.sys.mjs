@@ -15,15 +15,15 @@ const lazy = {};
 import { DevToolsInfaillibleUtils } from "resource://devtools/shared/DevToolsInfaillibleUtils.sys.mjs";
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  ChannelMap:
-    "resource://devtools/server/actors/network-monitor/utils/ChannelMap.sys.mjs",
-  NetworkHelper: "resource://devtools/shared/webconsole/NetworkHelper.sys.mjs",
+  ChannelMap: "resource://devtools/shared/network-observer/ChannelMap.sys.mjs",
+  NetworkHelper:
+    "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
   NetworkResponseListener:
-    "resource://devtools/server/actors/network-monitor/NetworkResponseListener.sys.mjs",
+    "resource://devtools/shared/network-observer/NetworkResponseListener.sys.mjs",
   NetworkThrottleManager:
-    "resource://devtools/shared/webconsole/Throttle.sys.mjs",
+    "resource://devtools/shared/network-observer/NetworkThrottleManager.sys.mjs",
   NetworkUtils:
-    "resource://devtools/server/actors/network-monitor/utils/NetworkUtils.sys.mjs",
+    "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
 });
 
 const gActivityDistributor = Cc[
