@@ -457,11 +457,17 @@ void FileSystemRequestHandler::GetAccessHandle(
 void FileSystemRequestHandler::GetWritable(RefPtr<FileSystemManager>& aManager,
                                            const FileSystemEntryMetadata& aFile,
                                            bool aKeepData,
-                                           const RefPtr<Promise>& aPromise) {
+                                           const RefPtr<Promise>& aPromise,
+                                           ErrorResult& aError) {
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aPromise);
   LOG(("GetWritable %s keep %d", NS_ConvertUTF16toUTF8(aFile.entryName()).get(),
        aKeepData));
+
+  if (aManager->IsShutdown()) {
+    aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    return;
+  }
 
   aManager->BeginRequest(
       [request = FileSystemGetWritableRequest(aFile.entryId(), aKeepData),

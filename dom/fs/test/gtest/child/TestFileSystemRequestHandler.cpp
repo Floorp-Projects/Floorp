@@ -245,6 +245,28 @@ TEST_F(TestFileSystemRequestHandler, isGetFileBlockedAfterShutdown) {
   ASSERT_TRUE(error.ErrorCodeIs(NS_ERROR_ILLEGAL_DURING_SHUTDOWN));
 }
 
+TEST_F(TestFileSystemRequestHandler, isGetAccessHandleBlockedAfterShutdown) {
+  mManager->Shutdown();
+
+  IgnoredErrorResult error;
+  GetFileSystemRequestHandler()->GetAccessHandle(mManager, mEntry,
+                                                 GetSimplePromise(), error);
+
+  ASSERT_TRUE(error.Failed());
+  ASSERT_TRUE(error.ErrorCodeIs(NS_ERROR_ILLEGAL_DURING_SHUTDOWN));
+}
+
+TEST_F(TestFileSystemRequestHandler, isGetWritableBlockedAfterShutdown) {
+  mManager->Shutdown();
+
+  IgnoredErrorResult error;
+  GetFileSystemRequestHandler()->GetWritable(
+      mManager, mEntry, /* aKeepData */ false, GetSimplePromise(), error);
+
+  ASSERT_TRUE(error.Failed());
+  ASSERT_TRUE(error.ErrorCodeIs(NS_ERROR_ILLEGAL_DURING_SHUTDOWN));
+}
+
 TEST_F(TestFileSystemRequestHandler, isGetEntriesSuccessful) {
   auto fakeResponse = [](const auto& /* aRequest */, auto&& aResolve,
                          auto&& /* aReject */) {
