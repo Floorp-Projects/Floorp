@@ -386,7 +386,7 @@ function changeWebpanelUA() {
 function setBrowserDesign() {
   let floorpinterfacenum = Services.prefs.getIntPref("floorp.browser.user.interface")
   let updateNumberDate = new Date()
-  let updateNumber = `${updateNumberDate.getFullYear()}${updateNumberDate.getMonth()}${updateNumberDate.getDate()}${updateNumberDate.getHours()}${updateNumberDate.getMinutes()}${updateNumberDate.getSeconds()}`
+  let updateNumber = `${updateNumberDate.getFullYear()}${updateNumberDate.getMonth()}${updateNumberDate.getDate()}${updateNumberDate.getHours()}${updateNumberDate.getMinutes()}${updateNumberDate.getSeconds()}${Math.floor(Math.random()*1000)}`
   const ThemeCSS = {
     ProtonfixUI: `@import url(chrome://browser/skin/protonfix/protonfix.css);`,
     LeptonUI:    `@import url(chrome://browser/skin/lepton/userChrome.css?${updateNumber});

@@ -86,7 +86,6 @@ function setLeptonUI() {
   Services.prefs.setBoolPref("userChrome.tab.bottom_rounded_corner", true);
   Services.prefs.setBoolPref("userChrome.tab.dynamic_separator" ,true);
   Services.prefs.setBoolPref("userChrome.tab.lepton_like_padding" ,true);
-  Services.prefs.setBoolPref("userChrome.icon.panel_photon", false);	
   Services.prefs.setBoolPref("userChrome.rounding.square_tab", false);
   Services.prefs.setBoolPref("userChrome.tab.photon_like_contextline",false);
   Services.prefs.setBoolPref("userChrome.tab.photon_like_padding",false);
