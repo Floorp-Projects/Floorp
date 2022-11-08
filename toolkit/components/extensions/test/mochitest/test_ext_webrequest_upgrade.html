@@ -26,6 +26,9 @@ add_task(async function test_webRequest_upgrade() {
         // At this point, the request should have been upgraded.
         browser.test.assertTrue(details.url.startsWith("https:"), "request is upgraded");
         browser.test.assertTrue(details.url.includes("file_sample"), "redirect after upgrade worked");
+        // Note: although not significant for the test assertions, note that
+        // the requested file won't load - https://mochi.test:8888/ does not
+        // resolve to anything on the test server.
         browser.test.sendMessage("finished");
       }, {urls: ["*://mochi.test/tests/*"]});
 
@@ -79,6 +82,53 @@ add_task(async function test_webRequest_redirect_wins() {
 
   await extension.startup();
   let win = window.open("http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_mixed.html");
+  await extension.awaitMessage("finished");
+  win.close();
+  await extension.unload();
+});
+
+// Test that there is no infinite redirect loop when upgradeToSecure is used on
+// https. This test checks that the redirect chain is: http -> https -> done.
+add_task(async function upgradeToSecure_for_https_is_noop() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+        "*://example.com/tests/*",
+      ],
+    },
+    background() {
+      let count = 0;
+      browser.webRequest.onBeforeRequest.addListener(
+        details => {
+          browser.test.log(`onBeforeRequest ${details.requestId} ${details.url}`);
+          ++count;
+          if (details.url.startsWith("http:")) {
+            browser.test.assertEq(1, count, "Initial request is http:");
+          } else {
+            browser.test.assertEq(2, count, "Second request is https:");
+          }
+          return {upgradeToSecure: true};
+        },
+        { urls: ["*://example.com/tests/*file_sample.html"] },
+        ["blocking"]
+      );
+      browser.webRequest.onCompleted.addListener(
+        details => {
+          browser.test.log(`onCompleted ${details.requestId} ${details.url}`);
+          browser.test.assertTrue(details.url.startsWith("https"), "is https");
+          browser.test.assertEq(2, count, "Seen two requests (http + https)");
+          browser.test.sendMessage("finished");
+        },
+        { urls: ["*://example.com/tests/*file_sample.html"] },
+      );
+    },
+  });
+
+  await extension.startup();
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+  let win = window.open("http://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
   await extension.awaitMessage("finished");
   win.close();
   await extension.unload();
