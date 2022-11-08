@@ -92,21 +92,10 @@ union FileSystemGetEntriesResponse
 
 /**
  * Contains entry handle information.
- * Used for File, SyncAccessHandle, and WritableFileStream
  */
 struct FileSystemGetFileRequest
 {
   EntryId entryId;
-};
-
-/**
- * Contains entry handle information.
- * Used for File, SyncAccessHandle, and WritableFileStream
- */
-struct FileSystemGetWritableRequest
-{
-  EntryId entryId;
-  bool keepData;
 };
 
 /**
@@ -131,6 +120,14 @@ union FileSystemGetFileResponse
   FileSystemFileProperties;
 };
 
+/**
+ * Contains entry handle information.
+ */
+struct FileSystemGetAccessHandleRequest
+{
+  EntryId entryId;
+};
+
 struct FileSystemAccessHandleProperties
 {
   RandomAccessStreamParams streamParams;
@@ -141,6 +138,15 @@ union FileSystemGetAccessHandleResponse
 {
   nsresult;
   FileSystemAccessHandleProperties;
+};
+
+/**
+ * Contains entry handle information.
+ */
+struct FileSystemGetWritableRequest
+{
+  EntryId entryId;
+  bool keepData;
 };
 
 struct FileSystemWritableFileStreamProperties
@@ -321,7 +327,7 @@ async protocol PFileSystemManager
    * TODO: documentation
    */
   [VirtualSendImpl]
-  async GetAccessHandle(FileSystemGetFileRequest request)
+  async GetAccessHandle(FileSystemGetAccessHandleRequest request)
       returns(FileSystemGetAccessHandleResponse response);
 
   /**

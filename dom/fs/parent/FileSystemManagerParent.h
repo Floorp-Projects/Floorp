@@ -48,7 +48,8 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
       FileSystemGetHandleRequest&& aRequest, GetFileHandleResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvGetAccessHandle(
-      FileSystemGetFileRequest&& aRequest, GetAccessHandleResolver&& aResolver);
+      FileSystemGetAccessHandleRequest&& aRequest,
+      GetAccessHandleResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvGetWritable(
       FileSystemGetWritableRequest&& aRequest, GetWritableResolver&& aResolver);
