@@ -5483,11 +5483,7 @@ void InlinableNativeIRGenerator::emitNativeCalleeGuard() {
     MOZ_ASSERT(generator_.writer.numOperandIds() > 0, "argcId is initialized");
 
     Int32OperandId argcId(0);
-    if (callee_->native() == js::fun_call) {
-      calleeObjId = generator_.emitFunCallGuard(argcId);
-    } else {
-      calleeObjId = generator_.emitFunApplyGuard(argcId);
-    }
+    calleeObjId = generator_.emitFunCallOrApplyGuard(argcId);
   } else {
     MOZ_ASSERT(flags_.getArgFormat() == CallFlags::FunApplyArray);
     MOZ_ASSERT(generator_.writer.numOperandIds() > 0, "argcId is initialized");
@@ -5533,11 +5529,11 @@ void IRGenerator::emitCalleeGuard(ObjOperandId calleeId, JSFunction* callee) {
   }
 }
 
-ObjOperandId CallIRGenerator::emitFunCallGuard(Int32OperandId argcId) {
+ObjOperandId CallIRGenerator::emitFunCallOrApplyGuard(Int32OperandId argcId) {
   JSFunction* callee = &callee_.toObject().as<JSFunction>();
-  MOZ_ASSERT(callee->native() == fun_call);
+  MOZ_ASSERT(callee->native() == fun_call || callee->native() == fun_apply);
 
-  // Guard that callee is the |fun_call| native function.
+  // Guard that callee is the |fun_call| or |fun_apply| native function.
   ValOperandId calleeValId =
       writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId);
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
@@ -5549,20 +5545,16 @@ ObjOperandId CallIRGenerator::emitFunCallGuard(Int32OperandId argcId) {
   return writer.guardToObject(thisValId);
 }
 
+ObjOperandId CallIRGenerator::emitFunCallGuard(Int32OperandId argcId) {
+  MOZ_ASSERT(callee_.toObject().as<JSFunction>().native() == fun_call);
+
+  return emitFunCallOrApplyGuard(argcId);
+}
+
 ObjOperandId CallIRGenerator::emitFunApplyGuard(Int32OperandId argcId) {
-  JSFunction* callee = &callee_.toObject().as<JSFunction>();
-  MOZ_ASSERT(callee->native() == fun_apply);
+  MOZ_ASSERT(callee_.toObject().as<JSFunction>().native() == fun_apply);
 
-  // Guard that callee is the |fun_apply| native function.
-  ValOperandId calleeValId =
-      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId);
-  ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
-  writer.guardSpecificFunction(calleeObjId, callee);
-
-  // Guard that |this| is an object.
-  ValOperandId thisValId =
-      writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId);
-  return writer.guardToObject(thisValId);
+  return emitFunCallOrApplyGuard(argcId);
 }
 
 ObjOperandId CallIRGenerator::emitFunApplyArgsGuard(

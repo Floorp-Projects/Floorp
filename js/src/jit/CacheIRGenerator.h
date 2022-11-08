@@ -489,6 +489,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   ScriptedThisResult getThisShapeForScripted(HandleFunction calleeFunc,
                                              MutableHandle<Shape*> result);
 
+  ObjOperandId emitFunCallOrApplyGuard(Int32OperandId argcId);
   ObjOperandId emitFunCallGuard(Int32OperandId argcId);
   ObjOperandId emitFunApplyGuard(Int32OperandId argcId);
   ObjOperandId emitFunApplyArgsGuard(CallFlags::ArgFormat format);
