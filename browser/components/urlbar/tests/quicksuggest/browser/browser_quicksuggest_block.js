@@ -61,8 +61,8 @@ add_setup(async function() {
   await PlacesUtils.bookmarks.eraseEverything();
   await UrlbarTestUtils.formHistory.clear();
 
-  await QuickSuggest._blockTaskQueue.emptyPromise;
-  await QuickSuggest.clearBlockedSuggestions();
+  await QuickSuggest.blockedSuggestions._test_readyPromise;
+  await QuickSuggest.blockedSuggestions.clear();
 
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
@@ -175,7 +175,7 @@ async function doBasicBlockTest({ suggestion, isBestMatch, block }) {
 
   // The URL should be blocked.
   Assert.ok(
-    await QuickSuggest.isSuggestionBlocked(suggestion.url),
+    await QuickSuggest.blockedSuggestions.has(suggestion.url),
     "Suggestion is blocked"
   );
 
@@ -244,7 +244,7 @@ async function doBasicBlockTest({ suggestion, isBestMatch, block }) {
   ]);
 
   await UrlbarTestUtils.promisePopupClose(window);
-  await QuickSuggest.clearBlockedSuggestions();
+  await QuickSuggest.blockedSuggestions.clear();
 }
 
 // Blocks multiple suggestions one after the other.
@@ -271,7 +271,7 @@ add_task(async function blockMultiple() {
       EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: 2 });
       EventUtils.synthesizeKey("KEY_Enter");
       Assert.ok(
-        await QuickSuggest.isSuggestionBlocked(url),
+        await QuickSuggest.blockedSuggestions.has(url),
         "Suggestion is blocked after picking block button"
       );
 
@@ -279,7 +279,7 @@ add_task(async function blockMultiple() {
       // suggestions are blocked yet.
       for (let j = 0; j < SUGGESTIONS.length; j++) {
         Assert.equal(
-          await QuickSuggest.isSuggestionBlocked(SUGGESTIONS[j].url),
+          await QuickSuggest.blockedSuggestions.has(SUGGESTIONS[j].url),
           j <= i,
           `Suggestion at index ${j} is blocked or not as expected`
         );
@@ -287,7 +287,7 @@ add_task(async function blockMultiple() {
     }
 
     await UrlbarTestUtils.promisePopupClose(window);
-    await QuickSuggest.clearBlockedSuggestions();
+    await QuickSuggest.blockedSuggestions.clear();
     UrlbarPrefs.clear("bestMatch.enabled");
   }
 });
@@ -386,7 +386,7 @@ async function doDisabledTest({
       isSponsored: suggestion.keywords[0] == "sponsored",
     });
     Assert.ok(
-      !(await QuickSuggest.isSuggestionBlocked(suggestion.url)),
+      !(await QuickSuggest.blockedSuggestions.has(suggestion.url)),
       "Suggestion is not blocked"
     );
   } else {
@@ -399,10 +399,10 @@ async function doDisabledTest({
     );
     await QuickSuggestTestUtils.assertNoQuickSuggestResults(window);
     Assert.ok(
-      await QuickSuggest.isSuggestionBlocked(suggestion.url),
+      await QuickSuggest.blockedSuggestions.has(suggestion.url),
       "Suggestion is blocked"
     );
-    await QuickSuggest.clearBlockedSuggestions();
+    await QuickSuggest.blockedSuggestions.clear();
   }
 
   await UrlbarTestUtils.promisePopupClose(window);

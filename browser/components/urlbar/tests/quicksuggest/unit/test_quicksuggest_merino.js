@@ -574,7 +574,7 @@ add_task(async function block() {
   UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   for (const suggestion of MerinoTestUtils.server.response.body.suggestions) {
-    await QuickSuggest.blockSuggestion(suggestion.url);
+    await QuickSuggest.blockedSuggestions.add(suggestion.url);
   }
 
   const context = createContext(SEARCH_STRING, {
@@ -587,7 +587,7 @@ add_task(async function block() {
     matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
   });
 
-  await QuickSuggest.clearBlockedSuggestions();
+  await QuickSuggest.blockedSuggestions.clear();
   MerinoTestUtils.server.reset();
   gClient.resetSession();
 });
