@@ -26,14 +26,8 @@ section in the `clippy.yml <https://searchfox.org/mozilla-central/source/tools/l
 Autofix
 -------
 
-This linter provides a ``--fix`` option. It requires using nightly
-which can be installed with:
-
-.. code-block:: shell
-
-   $ rustup component add clippy --toolchain nightly-x86_64-unknown-linux-gnu
-
-
+This linter provides a ``--fix`` option.
+Please note that this option does not fix all detected issues.
 
 Sources
 -------
