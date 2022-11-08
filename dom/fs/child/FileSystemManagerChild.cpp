@@ -11,6 +11,26 @@
 
 namespace mozilla::dom {
 
+void FileSystemManagerChild::CloseAll() {
+  // NOTE: getFile() creates blobs that read the data from the child;
+  // we'll need to abort any reads and resolve this call only when all
+  // blobs are closed.
+
+  for (const auto& item : ManagedPFileSystemAccessHandleChild()) {
+    auto* child = static_cast<FileSystemAccessHandleChild*>(item);
+
+    child->MutableAccessHandlePtr()->Close();
+  }
+}
+
+void FileSystemManagerChild::Shutdown() {
+  if (!CanSend()) {
+    return;
+  }
+
+  Close();
+}
+
 already_AddRefed<PFileSystemAccessHandleChild>
 FileSystemManagerChild::AllocPFileSystemAccessHandleChild() {
   return MakeAndAddRef<FileSystemAccessHandleChild>();
@@ -18,17 +38,9 @@ FileSystemManagerChild::AllocPFileSystemAccessHandleChild() {
 
 ::mozilla::ipc::IPCResult FileSystemManagerChild::RecvCloseAll(
     CloseAllResolver&& aResolver) {
-  // NOTE: getFile() creates blobs that read the data from the child;
-  // we'll need to abort any reads and resolve this call only when all
-  // blobs are closed.
-  for (const auto& item : ManagedPFileSystemAccessHandleChild()) {
-    auto* child = static_cast<FileSystemAccessHandleChild*>(item);
-
-    child->MutableAccessHandlePtr()->Close();
-  }
+  CloseAll();
 
   aResolver(NS_OK);
-
   return IPC_OK();
 }
 
