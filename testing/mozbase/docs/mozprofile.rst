@@ -3,7 +3,7 @@
 
 Mozprofile_ is a python tool for creating and managing profiles for Mozilla's
 applications (Firefox, Thunderbird, etc.). In addition to creating profiles,
-mozprofile can install addons_ and set preferences_ Mozprofile can be utilized
+mozprofile can install addons_ and set preferences. Mozprofile can be utilized
 from the command line or as an API.
 
 The preferred way of setting up profile data (addons, permissions, preferences
@@ -83,17 +83,12 @@ Other Mozilla programs offer additional and overlapping functionality
 for profiles.  There is also substantive documentation on profiles and
 their management.
 
-- ProfileManager_: XULRunner application for managing profiles. Has a GUI and CLI.
-- python-profilemanager_: python CLI interface similar to ProfileManager
 - profile documentation_
 
 
-.. _Mozprofile: https://github.com/mozilla/mozbase/tree/master/mozprofile
+.. _Mozprofile: https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/mozprofile
 .. _addons: https://developer.mozilla.org/en/addons
-.. _preferences: https://developer.mozilla.org/En/A_Brief_Guide_to_Mozilla_Preferences
-.. _mozprofile.profile: https://github.com/mozilla/mozbase/tree/master/mozprofile/mozprofile/profile.py
-.. _AddonManager: https://github.com/mozilla/mozbase/tree/master/mozprofile/mozprofile/addons.py
-.. _here: https://github.com/mozilla/mozbase/blob/master/mozprofile/mozprofile/permissions.py
-.. _ProfileManager: https://developer.mozilla.org/en/Profile_Manager
-.. _python-profilemanager: http://k0s.org/mozilla/hg/profilemanager/
+.. _mozprofile.profile: https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/mozprofile/mozprofile/profile.py
+.. _AddonManager: https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/mozprofile/mozprofile/addons.py
+.. _here: https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/mozprofile/mozprofile/permissions.py
 .. _documentation: http://support.mozilla.com/en-US/kb/Profiles
