@@ -10,7 +10,7 @@
 import {
   isOriginalId,
   originalToGeneratedId,
-} from "devtools/client/shared/source-map/index";
+} from "devtools/client/shared/source-map-loader/index";
 import { recordEvent } from "../../utils/telemetry";
 import { getSourceActorsForSource, isSourceBlackBoxed } from "../../selectors";
 
@@ -31,13 +31,16 @@ async function blackboxSourceActors(
       // (which might be a bundle including other files).
       if (isOriginalId(source.id)) {
         sourceId = originalToGeneratedId(source.id);
-        ranges = [await sourceMaps.getFileGeneratedRange(source.id)];
-        if (ranges.length) {
-          // TODO: Investigate blackboxing lines in original files,
+        const range = await sourceMaps.getFileGeneratedRange(source.id);
+        ranges = [];
+        if (range) {
+          ranges.push(range);
+          // TODO bug 1752108: Investigate blackboxing lines in original files,
           // there is likely to be issues as the whole genrated file
           // representing the original file will always be blackboxed.
           console.warn(
-            "The might be unxpected issues when ignoring lines in an original file."
+            "The might be unxpected issues when ignoring lines in an original file. " +
+              "The whole original source is being blackboxed."
           );
         }
       }

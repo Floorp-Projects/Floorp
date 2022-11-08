@@ -14,7 +14,7 @@ import { comparePosition, createLocation } from "../../utils/location";
 import {
   originalToGeneratedId,
   isOriginalId,
-} from "devtools/client/shared/source-map/index";
+} from "devtools/client/shared/source-map-loader/index";
 import { getSource } from "../../selectors";
 import { addBreakpoint, removeBreakpointAtGeneratedLocation } from ".";
 

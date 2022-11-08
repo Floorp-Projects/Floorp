@@ -11,11 +11,6 @@ import { setupHelper } from "../utils/dbg";
 import { prefs } from "../utils/prefs";
 
 import {
-  startSourceMapWorker,
-  stopSourceMapWorker,
-} from "devtools/client/shared/source-map/index";
-
-import {
   start as startPrettyPrintWorker,
   stop as stopPrettyPrintWorker,
 } from "../workers/pretty-print";
@@ -41,10 +36,6 @@ export const parserWorker = new ParserDispatcher();
 export const evaluationsParser = new ParserDispatcher();
 
 beforeAll(() => {
-  startSourceMapWorker(
-    path.join(rootPath, "node_modules/devtools-source-map/src/worker.js"),
-    ""
-  );
   startPrettyPrintWorker(
     path.join(rootPath, "src/workers/pretty-print/worker.js")
   );
@@ -55,7 +46,6 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  stopSourceMapWorker();
   stopPrettyPrintWorker();
   parserWorker.stop();
   evaluationsParser.stop();

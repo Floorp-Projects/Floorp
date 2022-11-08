@@ -42,7 +42,11 @@ add_task(async function() {
     "resource://devtools/client/shared/redux/subscriber.js",
     "resource://devtools/client/shared/worker-utils.js",
     "resource://devtools/client/debugger/src/workers/parser/index.js",
-    "resource://devtools/client/shared/source-map/index.js",
+
+    "resource://devtools/client/shared/source-map-loader/index.js",
+    "resource://devtools/client/shared/source-map-loader/utils/index.js",
+    "resource://devtools/client/shared/vendor/md5.js",
+
     "resource://devtools/client/shared/components/menu/MenuButton.js",
     "resource://devtools/client/shared/components/menu/MenuItem.js",
     "resource://devtools/client/shared/components/menu/MenuList.js",

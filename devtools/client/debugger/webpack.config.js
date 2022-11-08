@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const sourceMapAssets = require("devtools-source-map/assets");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const webpack = require("webpack");
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
@@ -31,8 +30,6 @@ module.exports = {
     "parser-worker": getEntry("src/workers/parser/worker.js"),
     "pretty-print-worker": getEntry("src/workers/pretty-print/worker.js"),
     "search-worker": getEntry("src/workers/search/worker.js"),
-    "source-map-worker": getEntry("packages/devtools-source-map/src/worker.js"),
-    "source-map-index": getEntry("packages/devtools-source-map/src/index.js"),
     vendors: getEntry("src/vendors.js"),
   },
 
@@ -44,12 +41,6 @@ module.exports = {
   },
 
   plugins: [
-    new CopyWebpackPlugin(
-      Object.entries(sourceMapAssets).filter(([name, filePath]) => !filePath.startsWith("resource:")).map(([name, filePath]) => ({
-        from: filePath,
-        to: `source-map-worker-assets/${name}`,
-      }))
-    ),
     new webpack.BannerPlugin({
       banner: `/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -59,16 +50,6 @@ module.exports = {
     }),
     new ObjectRestSpreadPlugin(),
     new ExtractTextPlugin("[name].css"),
-    new webpack.NormalModuleReplacementPlugin(
-      /\.\/utils\/network-request/,
-      "./utils/privileged-network-request"
-    ),
-    // This additional NormalModuleReplacementPlugin is for files in the same
-    // folder as network-request which use require("./network-request");
-    new webpack.NormalModuleReplacementPlugin(
-      /\.\/network-request/,
-      "./privileged-network-request"
-    ),
     new webpack.DefinePlugin({
       "process.env": {
         NODE_ENV: JSON.stringify(process.env.NODE_ENV || "production"),

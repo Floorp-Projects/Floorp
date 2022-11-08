@@ -2,22 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-let root;
-function setAssetRootURL(assetRoot) {
-  root = assetRoot;
-}
+"use strict";
 
 async function getDwarfToWasmData(name) {
-  if (!root) {
-    throw new Error(`No wasm path - Unable to resolve ${name}`);
-  }
-
-  const response = await fetch(`${root}/dwarf_to_json.wasm`);
+  const response = await fetch(
+    "resource://devtools/client/shared/source-map-loader/wasm-dwarf/dwarf_to_json.wasm"
+  );
 
   return response.arrayBuffer();
 }
 
 module.exports = {
-  setAssetRootURL,
   getDwarfToWasmData,
 };

@@ -4,7 +4,7 @@
 
 import { createSelector } from "reselect";
 
-import { isGeneratedId } from "devtools/client/shared/source-map/index";
+import { isGeneratedId } from "devtools/client/shared/source-map-loader/index";
 import { makeBreakpointId } from "../utils/breakpoint";
 
 // This method is only used from the main test helper

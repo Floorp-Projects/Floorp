@@ -50,7 +50,7 @@ const {
   isGeneratedId,
   isOriginalId,
   originalToGeneratedId,
-} = require("devtools/client/shared/source-map/index");
+} = require("devtools/client/shared/source-map-loader/index");
 
 /**
  * Waits for `predicate()` to be true. `state` is the redux app state.

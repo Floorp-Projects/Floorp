@@ -20,17 +20,17 @@ const { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/shared/",
   window: dampWindow,
 });
-const sourceMap = browserRequire("devtools/client/shared/source-map/index");
+const sourceMap = browserRequire(
+  "devtools/client/shared/source-map-loader/index"
+);
 
 const SOURCE_MAP_WORKER =
-  "resource://devtools/client/shared/source-map/worker.js";
-const SOURCE_MAP_WORKER_ASSETS =
-  "resource://devtools/client/shared/source-map/assets/";
+  "resource://devtools/client/shared/source-map-loader/worker.js";
 
 module.exports = async function() {
   await testSetup("data:text/html,source-map");
 
-  sourceMap.startSourceMapWorker(SOURCE_MAP_WORKER, SOURCE_MAP_WORKER_ASSETS);
+  sourceMap.startSourceMapWorker(SOURCE_MAP_WORKER);
   const fakeGeneratedSource = {
     id: "fake-id",
     url:

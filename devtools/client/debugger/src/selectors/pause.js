@@ -5,7 +5,7 @@
 import { getThreadPauseState } from "../reducers/pause";
 import { getSelectedSourceId, getSelectedLocation } from "./sources";
 
-import { isGeneratedId } from "devtools/client/shared/source-map/index";
+import { isGeneratedId } from "devtools/client/shared/source-map-loader/index";
 
 // eslint-disable-next-line
 import { getSelectedLocation as _getSelectedLocation } from "../utils/selected-location";

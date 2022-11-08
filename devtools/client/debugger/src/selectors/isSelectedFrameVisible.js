@@ -5,7 +5,7 @@
 import {
   originalToGeneratedId,
   isOriginalId,
-} from "devtools/client/shared/source-map/index";
+} from "devtools/client/shared/source-map-loader/index";
 import { getSelectedFrame, getSelectedLocation, getCurrentThread } from ".";
 
 function getGeneratedId(sourceId) {

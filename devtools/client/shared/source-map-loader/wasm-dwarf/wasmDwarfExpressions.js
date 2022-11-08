@@ -5,6 +5,8 @@
 /* eslint camelcase: 0*/
 /* eslint-disable no-inline-comments */
 
+"use strict";
+
 class Value {
   val;
 

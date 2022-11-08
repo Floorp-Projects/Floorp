@@ -22,7 +22,6 @@ module.exports = {
     "src/test/mochitest/examples/",
     "<rootDir>/firefox",
     "package.json",
-    "<rootDir>/packages",
   ],
   modulePathIgnorePatterns: ["test/mochitest"],
   collectCoverageFrom: [

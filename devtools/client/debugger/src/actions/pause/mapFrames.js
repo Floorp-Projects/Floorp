@@ -13,7 +13,7 @@ import { isFrameBlackBoxed } from "../../utils/source";
 
 import assert from "../../utils/assert";
 
-import { isGeneratedId } from "devtools/client/shared/source-map/index";
+import { isGeneratedId } from "devtools/client/shared/source-map-loader/index";
 
 function getSelectedFrameId(state, thread, frames) {
   let selectedFrame = getSelectedFrame(state, thread);
