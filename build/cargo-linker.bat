@@ -1,3 +1,2 @@
 @echo off
-REM See comment in cargo-linker (without extension)
-%MOZ_CARGO_WRAP_LD% %MOZ_CARGO_WRAP_LDFLAGS% %*
+%PYTHON3% %~dp0\cargo-linker %*

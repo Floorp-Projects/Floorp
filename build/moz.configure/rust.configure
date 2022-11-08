@@ -125,6 +125,14 @@ set_config(
     depends(rustc_info)(lambda info: str(info.llvm_version) if info else None),
 )
 
+set_config(
+    "MOZ_CLANG_NEWER_THAN_RUSTC_LLVM",
+    depends(c_compiler, rustc_info)(
+        lambda c_compiler, rustc_info: c_compiler.type == "clang"
+        and c_compiler.version.major > rustc_info.llvm_version.major
+    ),
+)
+
 
 @depends_if(cargo)
 @checking("cargo version", lambda info: info.version)
