@@ -357,52 +357,26 @@ add_task(async function test_list_active_extensions_only() {
   mockProvider.unregister();
 });
 
-add_task(async function test_unified_extensions_and_addons_themes_widget() {
+add_task(async function test_no_addons_themes_widget_when_pref_is_enabled() {
+  if (
+    !Services.prefs.getBoolPref("extensions.unifiedExtensions.enabled", false)
+  ) {
+    ok(true, "Skip task because unifiedExtensions pref is disabled");
+    return;
+  }
+
   const addonsAndThemesWidgetId = "add-ons-button";
 
-  // Let's start with the unified extensions feature is disabled.
-  let anotherWindow = await promiseDisableUnifiedExtensions();
-
-  // Add the button to the navbar.
+  // Add the button to the navbar, which should not do anything because the
+  // add-ons and themes button should not exist when the unified extensions
+  // pref is enabled.
   CustomizableUI.addWidgetToArea(
     addonsAndThemesWidgetId,
     CustomizableUI.AREA_NAVBAR
   );
-  let cleanupDone = false;
-  const cleanup = () => {
-    if (cleanupDone) {
-      return;
-    }
-    cleanupDone = true;
 
-    CustomizableUI.reset();
-  };
-  registerCleanupFunction(cleanup);
-
-  let addonsButton = anotherWindow.document.getElementById(
-    addonsAndThemesWidgetId
-  );
-  ok(addonsButton, "expected add-ons and themes button");
-
-  await BrowserTestUtils.closeWindow(anotherWindow);
-  // Now we enable the unified extensions feature, which should remove the
-  // add-ons button.
-  anotherWindow = await promiseEnableUnifiedExtensions();
-
-  addonsButton = anotherWindow.document.getElementById(addonsAndThemesWidgetId);
+  let addonsButton = win.document.getElementById(addonsAndThemesWidgetId);
   is(addonsButton, null, "expected no add-ons and themes button");
-
-  await BrowserTestUtils.closeWindow(anotherWindow);
-  // Disable the unified extensions feature again. We expect the add-ons and
-  // themes button to be back (i.e. visible).
-  anotherWindow = await promiseDisableUnifiedExtensions();
-
-  addonsButton = anotherWindow.document.getElementById(addonsAndThemesWidgetId);
-  ok(addonsButton, "expected add-ons and themes button");
-
-  cleanup();
-
-  await BrowserTestUtils.closeWindow(anotherWindow);
 });
 
 add_task(async function test_button_opens_discopane_when_no_extension() {
