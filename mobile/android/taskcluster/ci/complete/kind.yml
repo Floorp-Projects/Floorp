@@ -33,8 +33,8 @@ task-defaults:
     notifications:
         by-geckoview-bump:
             nightly:
-                subject: "[Android-Components] Failed to update to geckoview nightly {geckoview_timestamp}"
-                message: "Please check https://github.com/mozilla-mobile/android-components/pull/{pull_request_number}"
+                subject: "[Android-Components] Failed to update geckoview nightly PR#{pull_request_number}"
+                message: "Please check {repository}/pull/{pull_request_number}"
                 emails:
                     - android-components-team@mozilla.com
                     - geckoview-core@mozilla.com
