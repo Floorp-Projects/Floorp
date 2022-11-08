@@ -116,14 +116,13 @@ RefPtr<FileSystemWritableFileStream> MakeResolution(
     nsIGlobalObject* aGlobal,
     FileSystemGetWritableFileStreamResponse&& aResponse,
     const RefPtr<FileSystemWritableFileStream>& /* aReturns */,
-    const FileSystemEntryMetadata& aFile, RefPtr<FileSystemManager>& aManager) {
-  RefPtr<FileSystemWritableFileStreamChild> actor =
-      static_cast<FileSystemWritableFileStreamChild*>(
-          aResponse.get_PFileSystemWritableFileStreamChild());
+    const FileSystemEntryMetadata& aMetadata,
+    RefPtr<FileSystemManager>& aManager) {
+  auto* const actor = static_cast<FileSystemWritableFileStreamChild*>(
+      aResponse.get_PFileSystemWritableFileStreamChild());
 
   RefPtr<FileSystemWritableFileStream> result =
-      FileSystemWritableFileStream::MaybeCreate(aGlobal, aManager, aFile,
-                                                actor);
+      FileSystemWritableFileStream::Create(aGlobal, aManager, actor, aMetadata);
   return result;
 }
 
