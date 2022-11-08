@@ -123,7 +123,9 @@ object FeatureFlags {
     const val saveToPDF = true
 
     /**
-     * Enables storage maintenance feature
+     * Enables storage maintenance feature.
+     *
+     * Feature flag tracking: https://github.com/mozilla-mobile/fenix/issues/27759
      * */
     val storageMaintenanceFeature = Config.channel.isNightlyOrDebug
 }
