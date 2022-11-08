@@ -6,6 +6,7 @@
 
 DevToolsModules(
     "css-compatibility-tooltip-helper.js",
+    "css-query-container-tooltip-helper.js",
     "EventTooltipHelper.js",
     "HTMLTooltip.js",
     "ImageTooltipHelper.js",

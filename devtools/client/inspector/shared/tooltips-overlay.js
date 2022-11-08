@@ -11,10 +11,11 @@
 
 const flags = require("resource://devtools/shared/flags.js");
 const {
-  VIEW_NODE_VALUE_TYPE,
+  VIEW_NODE_CSS_QUERY_CONTAINER,
   VIEW_NODE_FONT_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE,
   VIEW_NODE_INACTIVE_CSS,
+  VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_VARIABLE_TYPE,
 } = require("resource://devtools/client/inspector/shared/node-types.js");
 
@@ -56,6 +57,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "CssQueryContainerTooltipHelper",
+  "resource://devtools/client/shared/widgets/tooltip/css-query-container-tooltip-helper.js",
+  false
+);
+loader.lazyRequireGetter(
+  this,
   "Telemetry",
   "resource://devtools/client/shared/telemetry.js",
   false
@@ -65,8 +72,9 @@ const PREF_IMAGE_TOOLTIP_SIZE = "devtools.inspector.imagePreviewTooltipSize";
 
 // Types of existing tooltips
 const TOOLTIP_CSS_COMPATIBILITY = "css-compatibility";
-const TOOLTIP_IMAGE_TYPE = "image";
+const TOOLTIP_CSS_QUERY_CONTAINER = "css-query-info";
 const TOOLTIP_FONTFAMILY_TYPE = "font-family";
+const TOOLTIP_IMAGE_TYPE = "image";
 const TOOLTIP_INACTIVE_CSS = "inactive-css";
 const TOOLTIP_VARIABLE_TYPE = "variable";
 
@@ -117,6 +125,7 @@ TooltipsOverlay.prototype = {
 
     this.inactiveCssTooltipHelper = new InactiveCssTooltipHelper();
     this.compatibilityTooltipHelper = new CssCompatibilityTooltipHelper();
+    this.cssQueryContainerTooltipHelper = new CssQueryContainerTooltipHelper();
 
     // Instantiate the interactiveTooltip and preview tooltip when the
     // rule/computed view is hovered over in order to call
@@ -255,6 +264,11 @@ TooltipsOverlay.prototype = {
       tooltipType = TOOLTIP_VARIABLE_TYPE;
     }
 
+    // Container info tooltip
+    if (type === VIEW_NODE_CSS_QUERY_CONTAINER) {
+      tooltipType = TOOLTIP_CSS_QUERY_CONTAINER;
+    }
+
     return tooltipType;
   },
 
@@ -389,6 +403,22 @@ TooltipsOverlay.prototype = {
       }
 
       await this.inactiveCssTooltipHelper.setContent(
+        nodeInfo.value,
+        this.getTooltip("interactiveTooltip")
+      );
+
+      this.sendOpenScalarToTelemetry(type);
+
+      return true;
+    }
+
+    if (type === TOOLTIP_CSS_QUERY_CONTAINER) {
+      // Ensure this is the correct node and not a parent.
+      if (!target.closest(".container-query .container-query-declaration")) {
+        return false;
+      }
+
+      await this.cssQueryContainerTooltipHelper.setContent(
         nodeInfo.value,
         this.getTooltip("interactiveTooltip")
       );

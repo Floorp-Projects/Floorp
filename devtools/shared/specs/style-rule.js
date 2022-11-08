@@ -7,10 +7,18 @@ const {
   Arg,
   RetVal,
   generateActorSpec,
+  types,
 } = require("resource://devtools/shared/protocol.js");
 
 // Load the shared types for style actors
 require("resource://devtools/shared/specs/style/style-types.js");
+
+types.addDictType("domstylerule.queryContainerForNodeReturn", {
+  node: "nullable:domnode",
+  containerType: "nullable:string",
+  blockSize: "nullable:string",
+  inlineSize: "nullable:string",
+});
 
 const styleRuleSpec = generateActorSpec({
   typeName: "domstylerule",
@@ -57,9 +65,7 @@ const styleRuleSpec = generateActorSpec({
         ancestorRuleIndex: Arg(0, "number"),
         node: Arg(1, "domnode"),
       },
-      response: {
-        node: RetVal("nullable:domnode"),
-      },
+      response: RetVal("domstylerule.queryContainerForNodeReturn"),
     },
   },
 });

@@ -8,6 +8,7 @@
 @import url(chrome://devtools/content/shared/widgets/cubic-bezier.css);
 @import url(chrome://devtools/content/shared/widgets/filter-widget.css);
 @import url(chrome://devtools/content/shared/widgets/spectrum.css);
+@import url(chrome://devtools/skin/variables.css);
 
 /* Tooltip specific theme variables */
 
@@ -163,6 +164,50 @@ strong {
   -moz-context-properties: fill;
   fill: var(--theme-tooltip-icon-dimmed-color);
 }
+
+/* Tooltip: query container info */
+.devtools-tooltip-query-container {
+  color: var(--theme-arrowpanel-color);
+  margin: 0;
+  padding: 10px 14px 12px;
+  font-size: 12px;
+  user-select: text;
+  -moz-user-focus: normal;
+}
+
+.devtools-tooltip-query-container header {
+  --block-end-space: 5px;
+  border-block-end: 1px solid var(--theme-arrowpanel-dimmed);
+  padding-block-end: var(--block-end-space);
+  margin-block-end: var(--block-end-space);
+  max-width: 100%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  color: var(--theme-body-color);
+}
+
+.devtools-tooltip-query-container ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.devtools-tooltip-query-container .objectBox-node .tag-name {
+  color: var(--theme-highlight-blue);
+}
+
+.devtools-tooltip-query-container .objectBox-node .attribute-name {
+  color: var(--theme-highlight-red);
+}
+
+.devtools-tooltip-query-container .property-name {
+  color: var(--theme-highlight-blue);
+}
+
+.devtools-tooltip-query-container .property-value {
+  color: var(--theme-highlight-red);
+}
+
 
 /* Tooltip: Tiles */
 

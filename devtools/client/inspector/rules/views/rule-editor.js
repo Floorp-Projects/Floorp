@@ -147,8 +147,10 @@ RuleEditor.prototype = {
           if (ancestorData.type == "container") {
             const container = this.doc.createElement("li");
             container.classList.add("container-query");
+            container.setAttribute("data-ancestor-index", index);
 
             createChild(container, "span", {
+              class: "container-query-declaration",
               textContent: `@container${
                 ancestorData.containerName
                   ? " " + ancestorData.containerName
@@ -158,6 +160,8 @@ RuleEditor.prototype = {
 
             // @backward-compat { version 108 } Actors from older server don't implement getQueryContainerForNode.
             if (this.rule.domRule.traits.hasGetQueryContainerForNode) {
+              container.classList.add("has-tooltip");
+
               const jumpToNodeButton = createChild(container, "button", {
                 class: "open-inspector",
                 title: l10n(
@@ -168,11 +172,12 @@ RuleEditor.prototype = {
               let containerNodeFront;
               const getNodeFront = async () => {
                 if (!containerNodeFront) {
-                  containerNodeFront = await this.rule.domRule.getQueryContainerForNode(
+                  const res = await this.rule.domRule.getQueryContainerForNode(
                     index,
                     this.rule.inherited ||
                       this.ruleView.inspector.selection.nodeFront
                   );
+                  containerNodeFront = res.node;
                 }
                 return containerNodeFront;
               };
@@ -234,25 +239,10 @@ RuleEditor.prototype = {
         }
       );
 
-      // We force the string to be LTR in CSS, but as @ is listed as having neutral
-      // directionality and starting a string with this char would default to RTL for that
-      // character (when in RTL locale), and then the next char (`m` of `media`, or `l` of `layer`)
-      // would start a new LTR visual run, since it is strongly LTR (through `direction` CSS property).
-      // To have the `@` properly displayed, we force LTR with \u202A
-      const title = parts
-        .map(part => {
-          if (typeof part == "string") {
-            return part;
-          }
-          return part.textContent;
-        })
-        .join("\n")
-        .replaceAll("@", "\u202A@");
-
       this.ancestorDataEl = createChild(this.element, "ul", {
         class: "ruleview-rule-ancestor-data theme-link",
-        title,
       });
+
       for (const part of parts) {
         if (typeof part == "string") {
           createChild(this.ancestorDataEl, "li", {
