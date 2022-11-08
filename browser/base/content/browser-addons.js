@@ -1358,7 +1358,7 @@ customElements.define(
       this.setAttribute("extension-id", this.addon.id);
 
       let policy = WebExtensionPolicy.getByID(this.addon.id);
-      this.setAttribute(
+      this.toggleAttribute(
         "attention",
         lazy.OriginControls.getAttention(policy, this.ownerGlobal)
       );
@@ -1451,12 +1451,12 @@ var gUnifiedExtensions = {
       // Only show for extensions which are not already visible in the toolbar.
       if (!widget || widget.areaType !== CustomizableUI.TYPE_TOOLBAR) {
         if (lazy.OriginControls.getAttention(policy, window)) {
-          this.button.setAttribute("attention", true);
+          this.button.toggleAttribute("attention", true);
           return;
         }
       }
     }
-    this.button.setAttribute("attention", false);
+    this.button.toggleAttribute("attention", false);
   },
 
   getPopupAnchorID(aBrowser, aWindow) {

@@ -18,16 +18,22 @@ unified-extensions-item {
   display: flex;
 }
 
-/* Larger attention indicator for use below larger icons, see for reference:
+/* This is based on the attention UI defined in:
  * https://searchfox.org/mozilla-central/rev/560b7b1b17/browser/themes/shared/tabs.css#624 */
-unified-extensions-item[attention="true"] {
-  background-image: radial-gradient(circle, var(--tab-attention-icon-color), var(--tab-attention-icon-color) 3px, transparent 3px);
-  background-position: left var(--dot-position) bottom 3px;
+#unified-extensions-button[attention],
+.unified-extensions-item[attention],
+unified-extensions-item[attention] {
+  background-image: radial-gradient(circle, var(--tab-attention-icon-color), var(--tab-attention-icon-color) 2px, transparent 2px);
+  background-position: center bottom max(0px, calc(var(--arrowpanel-menuitem-padding-block) - 4px));
   background-size: 8px 8px;
   background-repeat: no-repeat;
 }
 
-unified-extensions-item[attention="true"]:-moz-locale-dir(rtl) {
+unified-extensions-item[attention] {
+  background-position-x: left var(--dot-position);
+}
+
+unified-extensions-item[attention]:-moz-locale-dir(rtl) {
   background-position-x: right var(--dot-position);
 }
 
@@ -102,4 +108,12 @@ toolbaritem:not([cui-areatype="menu-panel"], [overflowedItem=true]).unified-exte
 /* Don't flex the menu/cog/gear button when displayed in panel */
 toolbaritem.unified-extensions-item .unified-extensions-item-open-menu.subviewbutton {
   -moz-box-flex: 0;
+}
+
+.widget-overflow-list .unified-extensions-item[attention] {
+  background-position: left 12px bottom;
+}
+
+.widget-overflow-list .unified-extensions-item[attention]:-moz-locale-dir(rtl) {
+  background-position: right 12px bottom;
 }

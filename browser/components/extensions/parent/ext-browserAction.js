@@ -683,7 +683,8 @@ this.browserAction = class extends ExtensionAPIPersistent {
       button.setAttribute("tooltiptext", title);
       button.setAttribute("label", title);
 
-      button.setAttribute("attention", attention);
+      // This is set on the node so that it looks good in the toolbar.
+      node.toggleAttribute("attention", attention);
 
       if (tabData.badgeText) {
         button.setAttribute("badge", tabData.badgeText);
