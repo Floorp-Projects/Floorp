@@ -14,7 +14,6 @@
     "test": "jest --projects jest.config.js"
   },
   "dependencies": {
-    "md5": "^2.2.1",
     "source-map": "0.8.0-beta.0"
   }
 }
