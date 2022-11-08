@@ -194,7 +194,7 @@ host_fetches = {
             "type": "static-url",
             "url": "https://github.com/mozilla/perf-automation/releases/download/FFMPEG-v4.4.1/ffmpeg-4.4.1-full_build.zip",  # noqa
             # An extension to `fetch` syntax.
-            "path": "ffmpeg-4.4.1-full_build-win",
+            "path": "ffmpeg-4.4.1-full_build",
         },
     },
 }
