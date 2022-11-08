@@ -37,9 +37,10 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   FileSystemDatabaseManagerVersion001(
       fs::data::FileSystemConnection&& aConnection,
       UniquePtr<FileSystemFileManager>&& aFileManager,
-      const EntryId& aRootEntry)
+      FileSystemDataManager* aDataManager, const EntryId& aRootEntry)
       : mConnection(aConnection),
         mFileManager(std::move(aFileManager)),
+        mDataManager(aDataManager),
         mRootEntry(aRootEntry) {}
 
   virtual Result<int64_t, QMResult> GetUsage() const override;
@@ -83,6 +84,8 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   FileSystemConnection mConnection;
 
   UniquePtr<FileSystemFileManager> mFileManager;
+  // raw ptr since we're owned by the DataManager
+  FileSystemDataManager* mDataManager;
 
   const EntryId mRootEntry;
 };

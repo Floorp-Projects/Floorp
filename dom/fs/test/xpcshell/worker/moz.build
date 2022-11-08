@@ -9,4 +9,5 @@ TESTING_JS_MODULES.dom.fs.test.xpcshell.worker += [
     "test_basics_worker.js",
     "test_fileSystemDirectoryHandle_worker.js",
     "test_syncAccessHandle_worker.js",
+    "test_writableFileStream_worker.js",
 ]
