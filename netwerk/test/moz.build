@@ -26,5 +26,9 @@ TESTING_JS_MODULES += [
 
 PERFTESTS_MANIFESTS += ["perf/perftest.ini", "unit/perftest.ini"]
 
+MARIONETTE_UNIT_MANIFESTS += [
+    "marionette/manifest.ini",
+]
+
 if CONFIG["FUZZING_INTERFACES"]:
     TEST_DIRS += ["fuzz"]

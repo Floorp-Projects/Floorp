@@ -17,10 +17,12 @@ for var in ("MOZ_APP_VENDOR",):
 
 UNIFIED_SOURCES += [
     "BackgroundTasks.cpp",
+    "BackgroundTasksRunner.cpp",
 ]
 
 EXPORTS.mozilla += [
     "BackgroundTasks.h",
+    "BackgroundTasksRunner.h",
 ]
 
 XPCOM_MANIFESTS += [
@@ -92,3 +94,6 @@ if CONFIG["MOZ_BUILD_APP"] == "browser":
 FINAL_TARGET_FILES.defaults.backgroundtasks += [
     "defaults/backgroundtasks.js",
 ]
+
+# For base::LaunchApp
+include("/ipc/chromium/chromium-config.mozbuild")
