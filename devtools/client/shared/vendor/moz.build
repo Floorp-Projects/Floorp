@@ -18,6 +18,7 @@ DevToolsModules(
     'reselect.js',
     'WasmDis.js',
     'WasmParser.js',
+    'whatwg-url.js',
 )
 
 # react dev versions are used if enable-debug-js-modules is set in .mozconfig.

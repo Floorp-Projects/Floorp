@@ -68,6 +68,9 @@ function moveFile(src, dest) {
   );
 
   for (const filename of Object.keys(sourceMapAssets)) {
+    if (filename.startsWith("resource:")) {
+      continue;
+    }
     moveFile(
       path.join(bundlePath, "source-map-worker-assets", filename),
       path.join(clientPath, "shared/source-map/assets", filename)

@@ -8,7 +8,7 @@
  */
 
 const { networkRequest } = require("./utils/network-request");
-const { SourceMapConsumer, SourceMapGenerator } = require("source-map");
+const { SourceMapConsumer, SourceMapGenerator } = require("devtools/client/shared/vendor/source-map/source-map.js");
 
 const { createConsumer } = require("./utils/createConsumer");
 const assert = require("./utils/assert");

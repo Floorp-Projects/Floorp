@@ -45,7 +45,7 @@ module.exports = {
 
   plugins: [
     new CopyWebpackPlugin(
-      Object.entries(sourceMapAssets).map(([name, filePath]) => ({
+      Object.entries(sourceMapAssets).filter(([name, filePath]) => !filePath.startsWith("resource:")).map(([name, filePath]) => ({
         from: filePath,
         to: `source-map-worker-assets/${name}`,
       }))
