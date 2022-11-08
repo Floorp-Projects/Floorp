@@ -388,15 +388,17 @@ RefPtr<BoolPromise> FileSystemDataManager::OnClose() {
 }
 
 bool FileSystemDataManager::IsLocked(const EntryId& aEntryId) const {
-  return mExclusiveLocks.Contains(aEntryId) || mSharedLocks.Contains(aEntryId);
+  return mExclusiveLocks.Contains(aEntryId);
 }
 
 bool FileSystemDataManager::LockExclusive(const EntryId& aEntryId) {
   if (IsLocked(aEntryId)) {
     return false;
   }
+
   LOG_VERBOSE(("ExclusiveLock"));
   mExclusiveLocks.Insert(aEntryId);
+
   return true;
 }
 
@@ -408,35 +410,11 @@ void FileSystemDataManager::UnlockExclusive(const EntryId& aEntryId) {
 }
 
 bool FileSystemDataManager::LockShared(const EntryId& aEntryId) {
-  if (mExclusiveLocks.Contains(aEntryId)) {
-    return false;
-  }
-
-  auto& count = mSharedLocks.LookupOrInsert(aEntryId);
-  if ((count + 1).isValid()) {  // don't make the count invalid
-    count++;
-    LOG_VERBOSE(("SharedLock %u", count.value()));
-    return true;
-  }
-  return false;
+  return LockExclusive(aEntryId);
 }
 
 void FileSystemDataManager::UnlockShared(const EntryId& aEntryId) {
-  MOZ_ASSERT(!mExclusiveLocks.Contains(aEntryId));
-  MOZ_ASSERT(mSharedLocks.Contains(aEntryId));
-
-  const auto& result =
-      mSharedLocks.WithEntryHandle(aEntryId, [&](auto&& entry) {
-        auto& count = *entry;
-        count--;
-        LOG_VERBOSE(("SharedUnlock %u", count.value()));
-        MOZ_ASSERT(count.isValid());
-        if (count == 0) {
-          entry.Remove();
-        }
-        return true;
-      });
-  Unused << result;
+  UnlockExclusive(aEntryId);
 }
 
 bool FileSystemDataManager::IsInactive() const {
