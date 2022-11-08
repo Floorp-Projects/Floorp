@@ -298,21 +298,6 @@ const CustomizableWidgets = [
     },
   },
   {
-    id: "add-ons-button",
-    shortcutId: "key_openAddons",
-    l10nId: "toolbar-addons-themes-button",
-    onBeforeCreated() {
-      // If the pref is set to `true`, we won't create this widget.
-      return !Services.prefs.getBoolPref(
-        "extensions.unifiedExtensions.enabled"
-      );
-    },
-    onCommand(aEvent) {
-      let win = aEvent.target.ownerGlobal;
-      win.BrowserOpenAddonsMgr();
-    },
-  },
-  {
     id: "zoom-controls",
     type: "custom",
     tooltiptext: "zoom-controls.tooltiptext2",
@@ -637,6 +622,19 @@ if (PrivateBrowsingUtils.enabled) {
     onCommand(e) {
       let win = e.target.ownerGlobal;
       win.OpenBrowserWindow({ private: true });
+    },
+  });
+}
+
+// If the pref is set to `true`, we don't register this widget.
+if (!Services.prefs.getBoolPref("extensions.unifiedExtensions.enabled")) {
+  CustomizableWidgets.push({
+    id: "add-ons-button",
+    shortcutId: "key_openAddons",
+    l10nId: "toolbar-addons-themes-button",
+    onCommand(aEvent) {
+      let win = aEvent.target.ownerGlobal;
+      win.BrowserOpenAddonsMgr();
     },
   });
 }
