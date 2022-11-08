@@ -54,6 +54,7 @@ object SupportUtils {
         ALLOWLIST("focus-android-allowlist"),
         STUDIES("how-opt-out-studies-firefox-focus-android"),
         HTTPS_ONLY("https-only-prefs-focus"),
+        COOKIE_BANNER("auto-cookie-banner"),
     }
 
     fun getGenericSumoURLForTopic(topic: SumoTopic): String {

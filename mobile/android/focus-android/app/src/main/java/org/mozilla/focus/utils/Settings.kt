@@ -17,6 +17,7 @@ import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.booleanPreference
 import org.mozilla.focus.R
+import org.mozilla.focus.cookiebanner.CookieBannerOption
 import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsPreferences
 import org.mozilla.focus.utils.AppConstants.isKlarBuild
@@ -432,6 +433,32 @@ class Settings(
             Engine.HttpsOnlyMode.ENABLED
         } else {
             Engine.HttpsOnlyMode.DISABLED
+        }
+    }
+
+    fun saveCurrentCookieBannerOptionInSharePref(
+        cookieBannerOption: CookieBannerOption,
+    ) {
+        preferences.edit()
+            .putString(
+                context.getString(R.string.pref_key_cookie_banner_settings),
+                context.getString(cookieBannerOption.prefKeyId),
+            ).apply()
+    }
+
+    fun getCurrentCookieBannerOptionFromSharePref(): CookieBannerOption {
+        val optionValue = preferences.getString(
+            context.getString(R.string.pref_key_cookie_banner_settings),
+            context.getString(CookieBannerOption.CookieBannerRejectAll().prefKeyId),
+        )
+        return when (optionValue) {
+            context.getString(CookieBannerOption.CookieBannerDisabled().prefKeyId) ->
+                CookieBannerOption.CookieBannerDisabled()
+            context.getString(CookieBannerOption.CookieBannerRejectAll().prefKeyId) ->
+                CookieBannerOption.CookieBannerRejectAll()
+            context.getString(CookieBannerOption.CookieBannerRejectOrAccept().prefKeyId) ->
+                CookieBannerOption.CookieBannerRejectOrAccept()
+            else -> CookieBannerOption.CookieBannerDisabled()
         }
     }
 

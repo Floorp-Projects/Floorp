@@ -104,6 +104,7 @@ sealed class Screen {
 
             PrivacyExceptions,
             PrivacyExceptionsRemove,
+            CookieBanner,
             SitePermissions,
             Studies,
             SecretSettings,

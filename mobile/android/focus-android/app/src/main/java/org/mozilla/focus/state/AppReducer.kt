@@ -271,6 +271,7 @@ private fun navigateUp(state: AppState, action: AppAction.NavigateUp): AppState 
         )
         Screen.Settings.Page.About -> Screen.Settings(page = Screen.Settings.Page.Mozilla)
         Screen.Settings.Page.Locale -> Screen.Settings(page = Screen.Settings.Page.General)
+        Screen.Settings.Page.CookieBanner -> Screen.Settings(page = Screen.Settings.Page.Privacy)
     }
 
     return state.copy(screen = screen)

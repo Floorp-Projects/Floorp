@@ -13,6 +13,7 @@ import org.mozilla.focus.autocomplete.AutocompleteListFragment
 import org.mozilla.focus.autocomplete.AutocompleteRemoveFragment
 import org.mozilla.focus.autocomplete.AutocompleteSettingsFragment
 import org.mozilla.focus.biometrics.BiometricAuthenticationFragment
+import org.mozilla.focus.cookiebanner.CookieBannerFragment
 import org.mozilla.focus.exceptions.ExceptionsListFragment
 import org.mozilla.focus.exceptions.ExceptionsRemoveFragment
 import org.mozilla.focus.ext.components
@@ -284,6 +285,7 @@ class MainActivityNavigation(
             Screen.Settings.Page.SearchAutocompleteRemove -> AutocompleteRemoveFragment()
             Screen.Settings.Page.About -> AboutFragment()
             Screen.Settings.Page.Locale -> LanguageFragment()
+            Screen.Settings.Page.CookieBanner -> CookieBannerFragment()
         }
 
         val tag = "settings_" + fragment::class.java.simpleName

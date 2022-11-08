@@ -110,6 +110,7 @@ class Components(
             webFontsEnabled = !settings.shouldBlockWebFonts(),
             httpsOnlyMode = settings.getHttpsOnlyMode(),
             preferredColorScheme = settings.getPreferredColorScheme(),
+            cookieBannerHandlingModePrivateBrowsing = settings.getCurrentCookieBannerOptionFromSharePref().mode,
         )
     }
 

@@ -640,6 +640,27 @@
     <!-- Preference for site permissions -->
     <string name="preference_site_permissions">Site permissions</string>
 
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">Cookie Banner Reduction</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">On</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">Off</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title">Cookie Banner Reduction</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">See fewer banners by automatically rejecting cookie requests, when possible.</string>
+
+    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_title">Further reduce cookie banners</string>
+
+    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
+    <string name="cookie_banner_further_reduce_option_summary">Cookie banner requests will be accepted to dismiss more banners.</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Autoplay</string>
 
