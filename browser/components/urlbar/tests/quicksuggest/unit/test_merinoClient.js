@@ -35,6 +35,18 @@ add_task(async function init() {
   }
 });
 
+// Checks client names.
+add_task(async function name() {
+  Assert.equal(
+    gClient.name,
+    "anonymous",
+    "gClient name is 'anonymous' since it wasn't given a name"
+  );
+
+  let client = new MerinoClient("New client");
+  Assert.equal(client.name, "New client", "newClient name is correct");
+});
+
 // Basic test that checks fetched suggestions.
 add_task(async function basic() {
   let histograms = MerinoTestUtils.getAndClearHistograms();
@@ -175,26 +187,53 @@ add_task(async function httpError() {
 
 // Tests a client timeout.
 add_task(async function clientTimeout() {
-  await doClientTimeoutTest(200);
+  await doClientTimeoutTest();
 });
 
 // Tests a client timeout followed by an HTTP error. Only the timeout should be
 // recorded.
 add_task(async function clientTimeoutFollowedByHTTPError() {
   MerinoTestUtils.server.response = { status: 500 };
-  await doClientTimeoutTest(500);
+  await doClientTimeoutTest({ expectedResponseStatus: 500 });
 });
 
-async function doClientTimeoutTest(expectedResponseStatus) {
+// Tests a client timeout when a timeout value is passed to `fetch()`, which
+// should override the value in the `merino.timeoutMs` pref.
+add_task(async function timeoutPassedToFetch() {
+  // Set up a timeline like this:
+  //
+  //     1ms: The timeout passed to `fetch()` elapses
+  //   400ms: Merino returns a response
+  // 30000ms: The timeout in the pref elapses
+  //
+  // The expected behavior is that the 1ms timeout is hit, the request fails
+  // with a timeout, and Merino later returns a response. If the 1ms timeout is
+  // not hit, then Merino will return a response before the 30000ms timeout
+  // elapses and the request will complete successfully.
+
+  UrlbarPrefs.set("merino.timeoutMs", 30000);
+
+  await doClientTimeoutTest({
+    responseDelay: 400,
+    fetchArgs: { query: "search", timeoutMs: 1 },
+  });
+
+  UrlbarPrefs.clear("merino.timeoutMs");
+});
+
+async function doClientTimeoutTest({
+  responseDelay = 2 * UrlbarPrefs.get("merino.timeoutMs"),
+  fetchArgs = { query: "search" },
+  expectedResponseStatus = 200,
+} = {}) {
   let histograms = MerinoTestUtils.getAndClearHistograms();
 
   // Make the server return a delayed response so the client times out waiting
   // for it.
-  MerinoTestUtils.server.response.delay =
-    2 * UrlbarPrefs.get("merino.timeoutMs");
+  MerinoTestUtils.server.response.delay = responseDelay;
 
   let responsePromise = gClient.waitForNextResponse();
-  await fetchAndCheckSuggestions({ expected: [] });
+  await fetchAndCheckSuggestions({ args: fetchArgs, expected: [] });
 
   Assert.equal(gClient.lastFetchStatus, "timeout", "The request timed out");
 

@@ -27,7 +27,9 @@ const HISTOGRAM_LATENCY = "FX_URLBAR_MERINO_LATENCY_MS";
 const HISTOGRAM_RESPONSE = "FX_URLBAR_MERINO_RESPONSE";
 
 /**
- * Client class for querying the Merino server.
+ * Client class for querying the Merino server. Each instance maintains its own
+ * session state including a session ID and sequence number that is included in
+ * its requests to Merino.
  */
 export class MerinoClient {
   /**
@@ -38,10 +40,23 @@ export class MerinoClient {
     return { ...SEARCH_PARAMS };
   }
 
-  constructor() {
+  /**
+   * @param {string} name
+   *   An optional name for the client. It will be included in log messages.
+   */
+  constructor(name = "anonymous") {
+    this.#name = name;
     XPCOMUtils.defineLazyGetter(this, "logger", () =>
-      lazy.UrlbarUtils.getLogger({ prefix: "MerinoClient" })
+      lazy.UrlbarUtils.getLogger({ prefix: `MerinoClient [${name}]` })
     );
+  }
+
+  /**
+   * @returns {string}
+   *   The name of the client.
+   */
+  get name() {
+    return this.#name;
   }
 
   /**
@@ -95,11 +110,21 @@ export class MerinoClient {
    *   Array of provider names to request from Merino. If this is given it will
    *   override the `merinoProviders` Nimbus variable and its fallback pref
    *   `browser.urlbar.merino.providers`.
+   * @param {number} options.timeoutMs
+   *   Timeout in milliseconds. This method will return once the timeout
+   *   elapses, a response is received, or an error occurs, whichever happens
+   *   first.
    * @returns {Array}
    *   The Merino suggestions or null if there's an error or unexpected
    *   response.
    */
-  async fetch({ query, providers = null }) {
+  async fetch({
+    query,
+    providers = null,
+    timeoutMs = lazy.UrlbarPrefs.get("merinoTimeoutMs"),
+  }) {
+    this.logger.info(`Fetch starting with query: "${query}"`);
+
     // Set up the Merino session ID and related state. The session ID is a UUID
     // without leading and trailing braces.
     if (!this.#sessionID) {
@@ -128,7 +153,7 @@ export class MerinoClient {
     try {
       url = new URL(endpointString);
     } catch (error) {
-      this.logger.error("Could not make Merino endpoint URL: " + error);
+      this.logger.error("Error creating endpoint URL: " + error);
       return null;
     }
     url.searchParams.set(SEARCH_PARAMS.QUERY, query);
@@ -162,21 +187,24 @@ export class MerinoClient {
       url.searchParams.set(SEARCH_PARAMS.PROVIDERS, providersString);
     }
 
+    let details = { query, providers, timeoutMs, url };
+    this.logger.debug("Fetch details: " + JSON.stringify(details));
+
     let recordResponse = category => {
+      this.logger.info("Fetch done with status: " + category);
       Services.telemetry.getHistogramById(HISTOGRAM_RESPONSE).add(category);
       this.#lastFetchStatus = category;
       recordResponse = null;
     };
 
     // Set up the timeout timer.
-    let timeout = lazy.UrlbarPrefs.get("merinoTimeoutMs");
     let timer = (this.#timeoutTimer = new lazy.SkippableTimer({
       name: "Merino timeout",
-      time: timeout,
+      time: timeoutMs,
       logger: this.logger,
       callback: () => {
         // The fetch timed out.
-        this.logger.info(`Merino fetch timed out (timeout = ${timeout}ms)`);
+        this.logger.info(`Fetch timed out (timeout = ${timeoutMs}ms)`);
         recordResponse?.("timeout");
       },
     }));
@@ -187,7 +215,7 @@ export class MerinoClient {
     try {
       this.#fetchController?.abort();
     } catch (error) {
-      this.logger.error("Could not abort Merino fetch: " + error);
+      this.logger.error("Error aborting previous fetch: " + error);
     }
 
     // Do the fetch.
@@ -209,11 +237,15 @@ export class MerinoClient {
           // returned by `Promise.race`.
           response = await fetch(url, { signal: controller.signal });
           TelemetryStopwatch.finish(HISTOGRAM_LATENCY, stopwatchInstance);
+          this.logger.debug(
+            "Got response: " +
+              JSON.stringify({ "response.status": response.status, ...details })
+          );
           recordResponse?.(response.ok ? "success" : "http_error");
         } catch (error) {
           TelemetryStopwatch.cancel(HISTOGRAM_LATENCY, stopwatchInstance);
           if (error.name != "AbortError") {
-            this.logger.error("Could not fetch Merino endpoint: " + error);
+            this.logger.error("Fetch error: " + error);
             recordResponse?.("network_error");
           }
         } finally {
@@ -238,7 +270,11 @@ export class MerinoClient {
     try {
       body = await response?.json();
     } catch (error) {
-      this.logger.error("Could not get Merino response as JSON: " + error);
+      this.logger.error("Error getting response as JSON: " + error);
+    }
+
+    if (body) {
+      this.logger.debug("Response body: " + JSON.stringify(body));
     }
 
     if (!body?.suggestions?.length) {
@@ -247,7 +283,7 @@ export class MerinoClient {
 
     let { suggestions, request_id } = body;
     if (!Array.isArray(suggestions)) {
-      this.logger.error("Unexpected Merino response: " + JSON.stringify(body));
+      this.logger.error("Unexpected response: " + JSON.stringify(body));
       return [];
     }
 
@@ -327,6 +363,7 @@ export class MerinoClient {
   #sessionTimer = null;
   #sessionTimeoutMs = SESSION_TIMEOUT_MS;
 
+  #name;
   #timeoutTimer = null;
   #fetchController = null;
   #latencyStopwatchInstance = null;
