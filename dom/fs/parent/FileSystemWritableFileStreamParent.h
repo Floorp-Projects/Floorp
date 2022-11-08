@@ -8,6 +8,7 @@
 #define DOM_FS_PARENT_FILESYSTEMWRITABLEFILESTREAM_H_
 
 #include "mozilla/dom/FileSystemTypes.h"
+#include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/PFileSystemWritableFileStreamParent.h"
 
 namespace mozilla::dom {
@@ -23,14 +24,22 @@ class FileSystemWritableFileStreamParent
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemWritableFileStreamParent,
                                         override)
 
+  mozilla::ipc::IPCResult RecvClose();
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
   virtual ~FileSystemWritableFileStreamParent();
 
+  bool IsClosed() const { return mClosed; }
+
+  void Close();
+
   const RefPtr<FileSystemManagerParent> mManager;
 
   const fs::EntryId mEntryId;
+
+  FlippedOnce<false> mClosed;
 };
 
 }  // namespace mozilla::dom

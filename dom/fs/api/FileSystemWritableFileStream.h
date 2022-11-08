@@ -31,17 +31,20 @@ class FileSystemWritableFileStream final : public WritableStream {
   static already_AddRefed<FileSystemWritableFileStream> Create(
       nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
       RefPtr<FileSystemWritableFileStreamChild> aActor,
+      const ::mozilla::ipc::FileDescriptor& aFileDescriptor,
       const fs::FileSystemEntryMetadata& aMetadata);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemWritableFileStream,
                                            WritableStream)
 
+  void LastRelease() override;
+
   void ClearActor();
 
-  bool IsClosed() const;
+  bool IsClosed() const { return mClosed; }
 
-  already_AddRefed<Promise> Close(ErrorResult& aRv);
+  void Close();
 
   // WebIDL Boilerplate
   JSObject* WrapObject(JSContext* aCx,
@@ -57,10 +60,11 @@ class FileSystemWritableFileStream final : public WritableStream {
   already_AddRefed<Promise> Truncate(uint64_t aSize, ErrorResult& aError);
 
  private:
-  FileSystemWritableFileStream(nsIGlobalObject* aGlobal,
-                               RefPtr<FileSystemManager>& aManager,
-                               RefPtr<FileSystemWritableFileStreamChild> aActor,
-                               const fs::FileSystemEntryMetadata& aMetadata);
+  FileSystemWritableFileStream(
+      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
+      RefPtr<FileSystemWritableFileStreamChild> aActor,
+      const ::mozilla::ipc::FileDescriptor& aFileDescriptor,
+      const fs::FileSystemEntryMetadata& aMetadata);
 
   virtual ~FileSystemWritableFileStream();
 
@@ -72,7 +76,11 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   RefPtr<FileSystemWritableFileStreamChild> mActor;
 
+  PRFileDesc* mFileDesc;
+
   fs::FileSystemEntryMetadata mMetadata;
+
+  bool mClosed;
 };
 
 }  // namespace dom

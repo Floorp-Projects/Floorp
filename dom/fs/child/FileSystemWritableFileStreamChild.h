@@ -16,16 +16,16 @@ class FileSystemWritableFileStream;
 class FileSystemWritableFileStreamChild
     : public PFileSystemWritableFileStreamChild {
  public:
-  explicit FileSystemWritableFileStreamChild(
-      const FileDescriptor& aFileDescriptor);
+  FileSystemWritableFileStreamChild();
 
   NS_INLINE_DECL_REFCOUNTING(FileSystemWritableFileStreamChild, override)
 
+  FileSystemWritableFileStream* MutableWritableFileStreamPtr() const {
+    MOZ_ASSERT(mStream);
+    return mStream;
+  }
+
   void SetStream(FileSystemWritableFileStream* aStream);
-
-  PRFileDesc* MutableFileDescPtr() const;
-
-  void Close();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -33,10 +33,8 @@ class FileSystemWritableFileStreamChild
   virtual ~FileSystemWritableFileStreamChild();
 
   // Use a weak ref so actor does not hold DOM object alive past content use.
-  // The weak reference is cleared in FileSystemWritableFileStream destructor.
+  // The weak reference is cleared in FileSystemWritableFileStream::LastRelease.
   FileSystemWritableFileStream* MOZ_NON_OWNING_REF mStream;
-
-  PRFileDesc* mFileDesc;
 };
 
 }  // namespace mozilla::dom
