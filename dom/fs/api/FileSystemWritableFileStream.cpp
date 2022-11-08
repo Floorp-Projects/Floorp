@@ -8,7 +8,6 @@
 
 #include <string.h>
 
-#include "fs/FileSystemRequestHandler.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemHandle.h"
 #include "mozilla/dom/FileSystemWritableFileStreamBinding.h"
@@ -140,18 +139,9 @@ FileSystemWritableFileStream::FileSystemWritableFileStream(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
     const fs::FileSystemEntryMetadata& aMetadata,
     RefPtr<FileSystemWritableFileStreamChild>& aActor)
-    : FileSystemWritableFileStream(aGlobal, aManager, aMetadata, aActor,
-                                   new fs::FileSystemRequestHandler()) {}
-
-FileSystemWritableFileStream::FileSystemWritableFileStream(
-    nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-    const fs::FileSystemEntryMetadata& aMetadata,
-    RefPtr<FileSystemWritableFileStreamChild>& aActor,
-    fs::FileSystemRequestHandler* aRequestHandler)
     : WritableStream(aGlobal),
       mManager(aManager),
       mMetadata(aMetadata),
-      mRequestHandler(aRequestHandler),
       mActor(std::move(aActor)) {
   LOG(("Created WritableFileStream %p for fd %p", this,
        mActor->MutableFileDescPtr()));
