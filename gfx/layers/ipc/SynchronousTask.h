@@ -20,10 +20,21 @@ class MOZ_STACK_CLASS SynchronousTask {
   explicit SynchronousTask(const char* name)
       : mMonitor(name), mAutoEnter(mMonitor), mDone(false) {}
 
-  void Wait() {
-    while (!mDone) {
+  nsresult Wait(PRIntervalTime aInterval = PR_INTERVAL_NO_TIMEOUT) {
+    // For indefinite timeouts, wait in a while loop to handle spurious
+    // wakeups.
+    while (aInterval == PR_INTERVAL_NO_TIMEOUT && !mDone) {
       mMonitor.Wait();
     }
+
+    // For finite timeouts, we only check once for completion, and otherwise
+    // rely on the ReentrantMonitor to manage the interval. If the monitor
+    // returns too early, we'll never know.
+    if (!mDone) {
+      return mMonitor.Wait(aInterval);
+    }
+
+    return NS_OK;
   }
 
  private:
