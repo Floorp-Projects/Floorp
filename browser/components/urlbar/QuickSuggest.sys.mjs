@@ -4,17 +4,13 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-import {
-  TaskQueue,
-  UrlbarUtils,
-} from "resource:///modules/UrlbarUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggestRemoteSettingsClient:
     "resource:///modules/QuickSuggestRemoteSettingsClient.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -25,6 +21,8 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 // Quick suggest features. On init, QuickSuggest creates an instance of each and
 // keeps it in the `#features` map. See `BaseFeature`.
 const FEATURES = {
+  BlockedSuggestions:
+    "resource:///modules/urlbar/private/BlockedSuggestions.sys.mjs",
   ImpressionCaps: "resource:///modules/urlbar/private/ImpressionCaps.sys.mjs",
 };
 
@@ -108,6 +106,14 @@ class _QuickSuggest {
   }
 
   /**
+   * @returns {BlockedSuggestions}
+   *   The blocked suggestions feature.
+   */
+  get blockedSuggestions() {
+    return this.#features.BlockedSuggestions;
+  }
+
+  /**
    * @returns {ImpressionCaps}
    *   The impression caps feature.
    */
@@ -117,7 +123,7 @@ class _QuickSuggest {
 
   get logger() {
     if (!this._logger) {
-      this._logger = UrlbarUtils.getLogger({ prefix: "QuickSuggest" });
+      this._logger = lazy.UrlbarUtils.getLogger({ prefix: "QuickSuggest" });
     }
     return this._logger;
   }
@@ -146,62 +152,6 @@ class _QuickSuggest {
   }
 
   /**
-   * Blocks a suggestion.
-   *
-   * @param {string} originalUrl
-   *   The suggestion's original URL with its unreplaced timestamp template.
-   */
-  async blockSuggestion(originalUrl) {
-    this.logger.debug(`Queueing blockSuggestion: ${originalUrl}`);
-    await this._blockTaskQueue.queue(async () => {
-      this.logger.info(`Blocking suggestion: ${originalUrl}`);
-      let digest = await this._getDigest(originalUrl);
-      this.logger.debug(`Got digest for '${originalUrl}': ${digest}`);
-      this._blockedDigests.add(digest);
-      let json = JSON.stringify([...this._blockedDigests]);
-      this._updatingBlockedDigests = true;
-      try {
-        lazy.UrlbarPrefs.set("quicksuggest.blockedDigests", json);
-      } finally {
-        this._updatingBlockedDigests = false;
-      }
-      this.logger.debug(`All blocked suggestions: ${json}`);
-    });
-  }
-
-  /**
-   * Gets whether a suggestion is blocked.
-   *
-   * @param {string} originalUrl
-   *   The suggestion's original URL with its unreplaced timestamp template.
-   * @returns {boolean}
-   *   Whether the suggestion is blocked.
-   */
-  async isSuggestionBlocked(originalUrl) {
-    this.logger.debug(`Queueing isSuggestionBlocked: ${originalUrl}`);
-    return this._blockTaskQueue.queue(async () => {
-      this.logger.info(`Getting blocked status: ${originalUrl}`);
-      let digest = await this._getDigest(originalUrl);
-      this.logger.debug(`Got digest for '${originalUrl}': ${digest}`);
-      let isBlocked = this._blockedDigests.has(digest);
-      this.logger.info(`Blocked status for '${originalUrl}': ${isBlocked}`);
-      return isBlocked;
-    });
-  }
-
-  /**
-   * Unblocks all suggestions.
-   */
-  async clearBlockedSuggestions() {
-    this.logger.debug(`Queueing clearBlockedSuggestions`);
-    await this._blockTaskQueue.queue(() => {
-      this.logger.info(`Clearing all blocked suggestions`);
-      this._blockedDigests.clear();
-      lazy.UrlbarPrefs.clear("quicksuggest.blockedDigests");
-    });
-  }
-
-  /**
    * Called when a urlbar pref changes.
    *
    * @param {string} pref
@@ -209,14 +159,6 @@ class _QuickSuggest {
    */
   onPrefChanged(pref) {
     switch (pref) {
-      case "quicksuggest.blockedDigests":
-        if (!this._updatingBlockedDigests) {
-          this.logger.info(
-            "browser.urlbar.quicksuggest.blockedDigests changed"
-          );
-          this._loadBlockedDigests();
-        }
-        break;
       case "quicksuggest.dataCollection.enabled":
         if (!lazy.UrlbarPrefs.updatingFirefoxSuggestScenario) {
           Services.telemetry.recordEvent(
@@ -478,48 +420,6 @@ class _QuickSuggest {
   }
 
   /**
-   * Loads blocked suggestion digests from the pref into `_blockedDigests`.
-   */
-  async _loadBlockedDigests() {
-    this.logger.debug(`Queueing _loadBlockedDigests`);
-    await this._blockTaskQueue.queue(() => {
-      this.logger.info(`Loading blocked suggestion digests`);
-      let json = lazy.UrlbarPrefs.get("quicksuggest.blockedDigests");
-      this.logger.debug(
-        `browser.urlbar.quicksuggest.blockedDigests value: ${json}`
-      );
-      if (!json) {
-        this.logger.info(`There are no blocked suggestion digests`);
-        this._blockedDigests.clear();
-      } else {
-        try {
-          this._blockedDigests = new Set(JSON.parse(json));
-          this.logger.info(`Successfully loaded blocked suggestion digests`);
-        } catch (error) {
-          this.logger.error(
-            `Error loading blocked suggestion digests: ${error}`
-          );
-        }
-      }
-    });
-  }
-
-  /**
-   * Returns the SHA-1 digest of a string as a 40-character hex-encoded string.
-   *
-   * @param {string} string
-   *   The string to convert to SHA-1
-   * @returns {string}
-   *   The hex-encoded digest of the given string.
-   */
-  async _getDigest(string) {
-    let stringArray = new TextEncoder().encode(string);
-    let hashBuffer = await crypto.subtle.digest("SHA-1", stringArray);
-    let hashArray = new Uint8Array(hashBuffer);
-    return Array.from(hashArray, b => b.toString(16).padStart(2, "0")).join("");
-  }
-
-  /**
    * Updates state based on whether quick suggest and its features are enabled.
    */
   _updateFeatureState() {
@@ -534,16 +434,10 @@ class _QuickSuggest {
 
     // Update state related to quick suggest as a whole.
     let enabled = lazy.UrlbarPrefs.get("quickSuggestEnabled");
-    if (enabled != this._quickSuggestEnabled) {
-      this._quickSuggestEnabled = enabled;
-      Services.telemetry.setEventRecordingEnabled(
-        TELEMETRY_EVENT_CATEGORY,
-        enabled
-      );
-      if (enabled) {
-        this._loadBlockedDigests();
-      }
-    }
+    Services.telemetry.setEventRecordingEnabled(
+      TELEMETRY_EVENT_CATEGORY,
+      enabled
+    );
   }
 
   // Maps from quick suggest feature class names to feature instances.
@@ -551,33 +445,6 @@ class _QuickSuggest {
 
   // The quick suggest remote settings client.
   _remoteSettings = null;
-
-  // The most recently cached value of `UrlbarPrefs.get("quickSuggestEnabled")`.
-  // The purpose of this property is only to detect changes in the feature's
-  // enabled status. To determine the current status, call
-  // `UrlbarPrefs.get("quickSuggestEnabled")` directly instead.
-  _quickSuggestEnabled = false;
-
-  // Set of digests of the original URLs of blocked suggestions. A suggestion's
-  // "original URL" is its URL straight from the source with an unreplaced
-  // timestamp template. For details on the digests, see `_getDigest()`.
-  //
-  // The only reason we use URL digests is that suggestions currently do not
-  // have persistent IDs. We could use the URLs themselves but SHA-1 digests are
-  // only 40 chars long, so they save a little space. This is also consistent
-  // with how blocked tiles on the newtab page are stored, but they use MD5. We
-  // do *not* store digests for any security or obfuscation reason.
-  //
-  // This value is serialized as a JSON'ed array to the
-  // `browser.urlbar.quicksuggest.blockedDigests` pref.
-  _blockedDigests = new Set();
-
-  // Used to serialize access to blocked suggestions. This is only necessary
-  // because getting a suggestion's URL digest is async.
-  _blockTaskQueue = new TaskQueue();
-
-  // Whether blocked digests are currently being updated.
-  _updatingBlockedDigests = false;
 }
 
 export const QuickSuggest = new _QuickSuggest();

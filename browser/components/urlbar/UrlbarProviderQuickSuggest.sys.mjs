@@ -297,7 +297,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     }
 
     this.logger.info("Blocking result: " + JSON.stringify(result));
-    lazy.QuickSuggest.blockSuggestion(result.payload.originalUrl);
+    lazy.QuickSuggest.blockedSuggestions.add(result.payload.originalUrl);
     this._recordEngagementTelemetry(result, queryContext.isPrivate, "block");
     return true;
   }
@@ -604,7 +604,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     }
 
     // Return false if the suggestion is blocked.
-    if (await lazy.QuickSuggest.isSuggestionBlocked(suggestion.url)) {
+    if (await lazy.QuickSuggest.blockedSuggestions.has(suggestion.url)) {
       this.logger.info("Suggestion blocked, not adding suggestion");
       return false;
     }

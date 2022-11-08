@@ -1049,11 +1049,11 @@ add_task(async function dedupeAgainstURL_timestamps() {
 // Tests the API for blocking suggestions and the backing pref.
 add_task(async function blockedSuggestionsAPI() {
   // Start with no blocked suggestions.
-  await QuickSuggest.clearBlockedSuggestions();
+  await QuickSuggest.blockedSuggestions.clear();
   Assert.equal(
-    QuickSuggest._blockedDigests.size,
+    QuickSuggest.blockedSuggestions._test_digests.size,
     0,
-    "_blockedDigests is empty"
+    "blockedSuggestions._test_digests is empty"
   );
   Assert.equal(
     UrlbarPrefs.get("quicksuggest.blockedDigests"),
@@ -1070,10 +1070,10 @@ add_task(async function blockedSuggestionsAPI() {
   // Block each URL in turn and make sure previously blocked URLs are still
   // blocked and the remaining URLs are not blocked.
   for (let i = 0; i < urls.length; i++) {
-    await QuickSuggest.blockSuggestion(urls[i]);
+    await QuickSuggest.blockedSuggestions.add(urls[i]);
     for (let j = 0; j < urls.length; j++) {
       Assert.equal(
-        await QuickSuggest.isSuggestionBlocked(urls[j]),
+        await QuickSuggest.blockedSuggestions.has(urls[j]),
         j <= i,
         `Suggestion at index ${j} is blocked or not as expected`
       );
@@ -1083,52 +1083,53 @@ add_task(async function blockedSuggestionsAPI() {
   // Make sure all URLs are blocked for good measure.
   for (let url of urls) {
     Assert.ok(
-      await QuickSuggest.isSuggestionBlocked(url),
+      await QuickSuggest.blockedSuggestions.has(url),
       `Suggestion is blocked: ${url}`
     );
   }
 
-  // Check `_blockedDigests` and `quicksuggest.blockedDigests`.
+  // Check `blockedSuggestions._test_digests` and `quicksuggest.blockedDigests`.
   Assert.equal(
-    QuickSuggest._blockedDigests.size,
+    QuickSuggest.blockedSuggestions._test_digests.size,
     urls.length,
-    "_blockedDigests has correct size"
+    "blockedSuggestions._test_digests has correct size"
   );
   let array = JSON.parse(UrlbarPrefs.get("quicksuggest.blockedDigests"));
   Assert.ok(Array.isArray(array), "Parsed value of pref is an array");
   Assert.equal(array.length, urls.length, "Array has correct length");
 
-  // Write some junk to `quicksuggest.blockedDigests`. `_blockedDigests` should
-  // not be changed and all previously blocked URLs should remain blocked.
+  // Write some junk to `quicksuggest.blockedDigests`.
+  // `blockedSuggestions._test_digests` should not be changed and all previously
+  // blocked URLs should remain blocked.
   UrlbarPrefs.set("quicksuggest.blockedDigests", "not a json array");
-  await QuickSuggest._blockTaskQueue.emptyPromise;
+  await QuickSuggest.blockedSuggestions._test_readyPromise;
   for (let url of urls) {
     Assert.ok(
-      await QuickSuggest.isSuggestionBlocked(url),
+      await QuickSuggest.blockedSuggestions.has(url),
       `Suggestion remains blocked: ${url}`
     );
   }
   Assert.equal(
-    QuickSuggest._blockedDigests.size,
+    QuickSuggest.blockedSuggestions._test_digests.size,
     urls.length,
-    "_blockedDigests still has correct size"
+    "blockedSuggestions._test_digests still has correct size"
   );
 
   // Block a new URL. All URLs should remain blocked and the pref should be
   // updated.
   let newURL = "http://example.com/new-block";
-  await QuickSuggest.blockSuggestion(newURL);
+  await QuickSuggest.blockedSuggestions.add(newURL);
   urls.push(newURL);
   for (let url of urls) {
     Assert.ok(
-      await QuickSuggest.isSuggestionBlocked(url),
+      await QuickSuggest.blockedSuggestions.has(url),
       `Suggestion is blocked: ${url}`
     );
   }
   Assert.equal(
-    QuickSuggest._blockedDigests.size,
+    QuickSuggest.blockedSuggestions._test_digests.size,
     urls.length,
-    "_blockedDigests has correct size"
+    "blockedSuggestions._test_digests has correct size"
   );
   array = JSON.parse(UrlbarPrefs.get("quicksuggest.blockedDigests"));
   Assert.ok(Array.isArray(array), "Parsed value of pref is an array");
@@ -1138,66 +1139,66 @@ add_task(async function blockedSuggestionsAPI() {
   newURL = "http://example.com/direct-to-pref";
   urls.push(newURL);
   array = JSON.parse(UrlbarPrefs.get("quicksuggest.blockedDigests"));
-  array.push(await QuickSuggest._getDigest(newURL));
+  array.push(await QuickSuggest.blockedSuggestions._test_getDigest(newURL));
   UrlbarPrefs.set("quicksuggest.blockedDigests", JSON.stringify(array));
-  await QuickSuggest._blockTaskQueue.emptyPromise;
+  await QuickSuggest.blockedSuggestions._test_readyPromise;
 
   // All URLs should remain blocked and the new URL should be blocked.
   for (let url of urls) {
     Assert.ok(
-      await QuickSuggest.isSuggestionBlocked(url),
+      await QuickSuggest.blockedSuggestions.has(url),
       `Suggestion is blocked: ${url}`
     );
   }
   Assert.equal(
-    QuickSuggest._blockedDigests.size,
+    QuickSuggest.blockedSuggestions._test_digests.size,
     urls.length,
-    "_blockedDigests has correct size"
+    "blockedSuggestions._test_digests has correct size"
   );
 
   // Clear the pref. All URLs should be unblocked.
   UrlbarPrefs.clear("quicksuggest.blockedDigests");
-  await QuickSuggest._blockTaskQueue.emptyPromise;
+  await QuickSuggest.blockedSuggestions._test_readyPromise;
   for (let url of urls) {
     Assert.ok(
-      !(await QuickSuggest.isSuggestionBlocked(url)),
+      !(await QuickSuggest.blockedSuggestions.has(url)),
       `Suggestion is no longer blocked: ${url}`
     );
   }
   Assert.equal(
-    QuickSuggest._blockedDigests.size,
+    QuickSuggest.blockedSuggestions._test_digests.size,
     0,
-    "_blockedDigests is now empty"
+    "blockedSuggestions._test_digests is now empty"
   );
 
-  // Block all the URLs again and test `clearBlockedSuggestions()`.
+  // Block all the URLs again and test `blockedSuggestions.clear()`.
   for (let url of urls) {
-    await QuickSuggest.blockSuggestion(url);
+    await QuickSuggest.blockedSuggestions.add(url);
   }
   for (let url of urls) {
     Assert.ok(
-      await QuickSuggest.isSuggestionBlocked(url),
+      await QuickSuggest.blockedSuggestions.has(url),
       `Suggestion is blocked: ${url}`
     );
   }
-  await QuickSuggest.clearBlockedSuggestions();
+  await QuickSuggest.blockedSuggestions.clear();
   for (let url of urls) {
     Assert.ok(
-      !(await QuickSuggest.isSuggestionBlocked(url)),
+      !(await QuickSuggest.blockedSuggestions.has(url)),
       `Suggestion is no longer blocked: ${url}`
     );
   }
   Assert.equal(
-    QuickSuggest._blockedDigests.size,
+    QuickSuggest.blockedSuggestions._test_digests.size,
     0,
-    "_blockedDigests is now empty"
+    "blockedSuggestions._test_digests is now empty"
   );
 });
 
 // Test whether the blocking for remote settings results works.
 add_task(async function block() {
   for (const suggestion of REMOTE_SETTINGS_DATA) {
-    await QuickSuggest.blockSuggestion(suggestion.url);
+    await QuickSuggest.blockedSuggestions.add(suggestion.url);
   }
 
   for (const suggestion of REMOTE_SETTINGS_DATA) {
@@ -1211,7 +1212,7 @@ add_task(async function block() {
     });
   }
 
-  await QuickSuggest.clearBlockedSuggestions();
+  await QuickSuggest.blockedSuggestions.clear();
 });
 
 // Makes sure remote settings data is fetched using the correct `type` based on
