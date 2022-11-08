@@ -178,6 +178,9 @@ event.synthesizeMultiTouch = function(opts, win) {
     opts.ry,
     opts.angle,
     opts.force,
+    opts.tiltx,
+    opts.tilty,
+    opts.twist,
     modifiers
   );
 };

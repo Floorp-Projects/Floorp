@@ -27,24 +27,24 @@
         var endYForFirstTouch = Math.floor(rect.y + ((rect.height / 4) * 2));
         var endYForSecondTouch = Math.floor(rect.y + ((rect.height / 4) * 4));
         utils.sendTouchEvent("touchstart", [0], [x], [y], [1], [1], [0], [1],
-                             0, false);
+                             [0], [0], [0], 0, false);
         while (y != endYForFirstTouch) {
           utils.sendTouchEvent("touchmove", [0], [x], [y], [1], [1], [0], [1],
-                               0, false);
+                               [0], [0], [0], 0, false);
           ++y;
         }
 
         // Add a new touch and move this touch
         utils.sendTouchEvent("touchstart", [0, 1], [x, x], [endYForFirstTouch, endYForFirstTouch], [1, 1], [1, 1], [0, 0], [1, 1],
-                             0, false);
+                             [0, 0], [0, 0], [0, 0], 0, false);
         while (y != endYForSecondTouch) {
           utils.sendTouchEvent("touchmove", [0, 1], [x, x], [endYForFirstTouch, y], [1, 1], [1, 1], [0, 0], [1, 1],
-                               0, false);
+                               [0, 0], [0, 0], [0, 0], 0, false);
           ++y;
         }
 
         utils.sendTouchEvent("touchend", [0, 1], [x, x], [endYForFirstTouch, endYForSecondTouch], [1, 1], [1, 1], [0, 0], [1, 1],
-                             0, false);
+                             [0, 0], [0, 0], [0, 0], 0, false);
       });
 
       let touchStartCount = 0;

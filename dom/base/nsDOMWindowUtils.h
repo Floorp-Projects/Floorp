@@ -101,8 +101,9 @@ class nsDOMWindowUtils final : public nsIDOMWindowUtils,
       const nsTArray<int32_t>& aXs, const nsTArray<int32_t>& aYs,
       const nsTArray<uint32_t>& aRxs, const nsTArray<uint32_t>& aRys,
       const nsTArray<float>& aRotationAngles, const nsTArray<float>& aForces,
-      int32_t aModifiers, bool aIgnoreRootScrollFrame, bool aToWindow,
-      bool* aPreventDefault);
+      const nsTArray<int32_t>& aTiltXs, const nsTArray<int32_t>& aTiltYs,
+      const nsTArray<int32_t>& aTwists, int32_t aModifiers,
+      bool aIgnoreRootScrollFrame, bool aToWindow, bool* aPreventDefault);
 
   void ReportErrorMessageForWindow(const nsAString& aErrorMessage,
                                    const char* aClassification,

@@ -24,17 +24,22 @@ var touches = {
   rys: [],
   angles: [],
   forces: [],
+  tiltXs: [],
+  tiltYs: [],
+  twists: [],
 };
 
-function synthesizeTouchEvent(aType, aIds, aLefts, aTops, aRxs, aRys, aAngles, aForces) {
+function synthesizeTouchEvent(aType, aTouches) {
   var utils = _getDOMWindowUtils(window);
   if (!utils) {
     ok(false, "unable to get nsIDOMWindowUtils");
     return;
   }
 
-  utils.sendTouchEvent(aType, aIds, aLefts, aTops, aRxs, aRys,
-                       aAngles, aForces, 0 /* modifiers */);
+  utils.sendTouchEvent(aType, aTouches.ids, aTouches.lefts, aTouches.tops,
+                       aTouches.rxs, aTouches.rys, aTouches.angles,
+                       aTouches.forces, aTouches.tiltXs, aTouches.tiltYs,
+                       aTouches.twists, 0 /* modifiers */);
 }
 
 function synthesizeTouchStart(aTarget, aId, aOffsetX, aOffsetY) {
@@ -51,9 +56,11 @@ function synthesizeTouchStart(aTarget, aId, aOffsetX, aOffsetY) {
   touches.rys.push(1);
   touches.angles.push(0);
   touches.forces.push(1);
+  touches.tiltXs.push(0);
+  touches.tiltYs.push(0);
+  touches.twists.push(0);
 
-  synthesizeTouchEvent("touchstart", touches.ids, touches.lefts, touches.tops,
-                       touches.rxs, touches.rys, touches.angles, touches.forces);
+  synthesizeTouchEvent("touchstart", touches);
 }
 
 function synthesizeTouchEnd(aTarget, aId, aOffsetX, aOffsetY) {
@@ -63,17 +70,20 @@ function synthesizeTouchEnd(aTarget, aId, aOffsetX, aOffsetY) {
     return;
   }
 
-  let rect = aTarget.getBoundingClientRect();
-  touches.ids.splice(index, 1);
-  touches.lefts.splice(index, 1);
-  touches.tops.splice(index, 1);
-  touches.rxs.splice(index, 1);
-  touches.rys.splice(index, 1);
-  touches.angles.splice(index, 1);
-  touches.forces.splice(index, 1);
+  var removedTouches = {
+    ids: touches.ids.splice(index, 1),
+    lefts: touches.lefts.splice(index, 1),
+    tops: touches.tops.splice(index, 1),
+    rxs: touches.rxs.splice(index, 1),
+    rys: touches.rys.splice(index, 1),
+    angles: touches.angles.splice(index, 1),
+    forces: touches.forces.splice(index, 1),
+    tiltXs: touches.tiltXs.splice(index, 1),
+    tiltYs: touches.tiltYs.splice(index, 1),
+    twists: touches.twists.splice(index, 1),
+  };
 
-  synthesizeTouchEvent("touchend", [aId], [rect.left + aOffsetX], [rect.top + aOffsetY],
-                       [1], [1], [0], [1]);
+  synthesizeTouchEvent("touchend", removedTouches);
 }
 
 function synthesizeTouchMove(aTarget, aId, aOffsetX, aOffsetY) {
@@ -87,8 +97,7 @@ function synthesizeTouchMove(aTarget, aId, aOffsetX, aOffsetY) {
   touches.lefts[index] = rect.left + aOffsetX;
   touches.tops[index] = rect.top + aOffsetY;
 
-  synthesizeTouchEvent("touchmove", touches.ids, touches.lefts, touches.tops,
-                       touches.rxs, touches.rys, touches.angles, touches.forces);
+  synthesizeTouchEvent("touchmove", touches);
 }
 
 var target0 = document.getElementById("target0");

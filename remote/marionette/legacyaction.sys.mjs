@@ -207,6 +207,9 @@ action.Chain.prototype.emitTouchEvent = function(doc, type, touch) {
     [touch.radiusY],
     [touch.rotationAngle],
     [touch.force],
+    [0],
+    [0],
+    [0],
     0
   );
 };

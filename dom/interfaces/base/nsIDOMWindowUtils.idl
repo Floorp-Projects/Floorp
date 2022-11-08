@@ -393,6 +393,9 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param rys array of radii in CSS pixels for each touch to be sent
    * @param rotationAngles array of angles in degrees for each touch to be sent
    * @param forces array of forces (floats from 0 to 1) for each touch to be sent
+   * @param tiltXs array of tiltX for each touch to be sent
+   * @param tiltYs array of tiltY for each touch to be sent
+   * @param twists array of twist for each touch to be sent
    * @param count number of touches in this set
    * @param aModifiers modifiers pressed, using constants defined as MODIFIER_*
    * @param aIgnoreRootScrollFrame whether the event should ignore viewport bounds
@@ -409,6 +412,9 @@ interface nsIDOMWindowUtils : nsISupports {
                          in Array<uint32_t> aRys,
                          in Array<float> aRotationAngles,
                          in Array<float> aForces,
+                         in Array<long> aTiltXs,
+                         in Array<long> aTiltYs,
+                         in Array<long> aTwists,
                          in long aModifiers,
                          [optional] in boolean aIgnoreRootScrollFrame);
 
@@ -442,6 +448,9 @@ interface nsIDOMWindowUtils : nsISupports {
                                  in Array<uint32_t> aRys,
                                  in Array<float> aRotationAngles,
                                  in Array<float> aForces,
+                                 in Array<long> aTiltXs,
+                                 in Array<long> aTiltYs,
+                                 in Array<long> aTwists,
                                  in long aModifiers,
                                  [optional] in boolean aIgnoreRootScrollFrame);
 
