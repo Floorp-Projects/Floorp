@@ -10,6 +10,7 @@
 
 #include "fs/FileSystemRequestHandler.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/FileSystemHandle.h"
 #include "mozilla/dom/FileSystemWritableFileStreamBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WritableStreamDefaultController.h"
@@ -150,7 +151,12 @@ bool FileSystemWritableFileStream::DoSeek(RefPtr<Promise>& aPromise,
   // Handle seek before write ('at')
   LOG_VERBOSE(
       ("%p: Seeking to %" PRIu64, mActor->MutableFileDescPtr(), aPosition));
-  int64_t where = PR_Seek(mActor->MutableFileDescPtr(), aPosition, PR_SEEK_SET);
+  const CheckedInt<PROffset32> checkedPosition(aPosition);
+  if (NS_WARN_IF(!checkedPosition.isValid())) {
+    return false;
+  }
+  int64_t where = PR_Seek(mActor->MutableFileDescPtr(), checkedPosition.value(),
+                          PR_SEEK_SET);
   if (where == -1) {
     LOG(("Failed to seek to %" PRIu64 " (errno %d)", aPosition, errno));
     aPromise->MaybeReject(NS_ERROR_FAILURE);  // XXX
