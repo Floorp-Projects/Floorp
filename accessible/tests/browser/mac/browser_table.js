@@ -315,9 +315,10 @@ async function testIsLayout(table, elem, event, change, isLayout) {
   );
   await change();
   await toWait;
-  is(
-    table.getAttributeValue("AXRole"),
-    isLayout ? "AXGroup" : "AXTable",
+  let intendedRole = isLayout ? "AXGroup" : "AXTable";
+  await untilCacheIs(
+    () => table.getAttributeValue("AXRole"),
+    intendedRole,
     "Table role correct after change"
   );
 }
