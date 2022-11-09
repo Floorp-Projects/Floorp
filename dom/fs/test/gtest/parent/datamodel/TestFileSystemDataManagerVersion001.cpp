@@ -46,11 +46,6 @@ const Origin& getTestOrigin() {
   return orig;
 }
 
-quota::OriginMetadata TestOriginMetadataForDataManager() {
-  return quota::OriginMetadata{""_ns, "example.com"_ns, getTestOrigin(),
-                               quota::PERSISTENCE_TYPE_DEFAULT};
-}
-
 }  // namespace
 
 // This is a minimal mock  to allow us to safely call the lock methods
@@ -109,19 +104,20 @@ static void MakeDatabaseManagerVersion001(
                                         NS_STREAMTRANSPORTSERVICE_CONTRACTID),
                 QM_VOID);
 
-  quota::OriginMetadata originmetadata = TestOriginMetadataForDataManager();
-  nsCString taskQueueName("OPFS "_ns + originmetadata.mOrigin);
+  quota::OriginMetadata originMetadata = GetTestOriginMetadata();
+
+  nsCString taskQueueName("OPFS "_ns + originMetadata.mOrigin);
 
   RefPtr<TaskQueue> ioTaskQueue =
       TaskQueue::Create(do_AddRef(streamTransportService), taskQueueName.get());
 
   auto dataManager = MakeRefPtr<MockFileSystemDataManager>(
-      originmetadata, WrapMovingNotNull(streamTransportService),
+      originMetadata, WrapMovingNotNull(streamTransportService),
       WrapMovingNotNull(ioTaskQueue));
 
   aResult = new FileSystemDatabaseManagerVersion001(
-      std::move(connection), MakeUnique<FileSystemFileManager>(fmRes.unwrap()),
-      dataManager, rootId);
+      dataManager, std::move(connection),
+      MakeUnique<FileSystemFileManager>(fmRes.unwrap()), rootId);
 }
 
 TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveDirectories)
