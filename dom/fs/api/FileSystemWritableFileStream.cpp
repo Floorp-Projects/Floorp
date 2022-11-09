@@ -148,6 +148,19 @@ FileSystemWritableFileStream::FileSystemWritableFileStream(
   mActor->SetStream(this);
 }
 
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(FileSystemWritableFileStream,
+                                               WritableStream)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(FileSystemWritableFileStream)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FileSystemWritableFileStream,
+                                                WritableStream)
+  // Per the comment for the FileSystemManager class, don't unlink mManager!
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileSystemWritableFileStream,
+                                                  WritableStream)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 // WebIDL Boilerplate
 
 JSObject* FileSystemWritableFileStream::WrapObject(
