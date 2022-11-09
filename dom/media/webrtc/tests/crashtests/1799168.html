@@ -1,0 +1,16 @@
+<script>
+window.addEventListener('load', async () => {
+  const offerer = new RTCPeerConnection();
+  const answerer = new RTCPeerConnection();
+  offerer.addTransceiver('audio');
+  await offerer.setLocalDescription();
+  await answerer.setRemoteDescription(offerer.localDescription);
+  const answer = await answerer.createAnswer();
+  await offerer.setRemoteDescription(answer);
+  // relay candidate with TCP!
+  const candidate = 'candidate:3 1 tcp 18087935 20.253.151.225 3478 typ relay raddr 10.0.48.153 rport 3478 tcptype passive';
+  await offerer.addIceCandidate({candidate, sdpMLineIndex: 0});
+  await new Promise(r => setTimeout(r, 2000));
+  self.close();
+})
+</script>
