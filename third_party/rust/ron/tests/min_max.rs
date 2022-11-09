@@ -32,7 +32,6 @@ fn test_i64_max() {
     );
 }
 
-#[cfg(feature = "integer128")]
 #[test]
 fn test_i128_min() {
     assert_eq!(
@@ -41,7 +40,6 @@ fn test_i128_min() {
     );
 }
 
-#[cfg(feature = "integer128")]
 #[test]
 fn test_i128_max() {
     assert_eq!(
@@ -50,7 +48,6 @@ fn test_i128_max() {
     );
 }
 
-#[cfg(feature = "integer128")]
 #[test]
 fn test_u128_min() {
     assert_eq!(
@@ -59,7 +56,6 @@ fn test_u128_min() {
     );
 }
 
-#[cfg(feature = "integer128")]
 #[test]
 fn test_u128_max() {
     assert_eq!(

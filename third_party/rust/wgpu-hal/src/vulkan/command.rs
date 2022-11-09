@@ -98,7 +98,7 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
         let _ = self
             .device
             .raw
-            .reset_command_pool(self.raw, vk::CommandPoolResetFlags::default());
+            .reset_command_pool(self.raw, vk::CommandPoolResetFlags::RELEASE_RESOURCES);
     }
 
     unsafe fn transition_buffers<'a, T>(&mut self, barriers: T)

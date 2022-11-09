@@ -1029,7 +1029,6 @@ impl<'w> BlockContext<'w> {
                     };
 
                 enum Cast {
-                    Identity,
                     Unary(spirv::Op),
                     Binary(spirv::Op, Word),
                     Ternary(spirv::Op, Word, Word),
@@ -1040,13 +1039,6 @@ impl<'w> BlockContext<'w> {
                     Cast::Unary(spirv::Op::CopyObject)
                 } else {
                     match (src_kind, kind, convert) {
-                        // Filter out identity casts. Some Adreno drivers are
-                        // confused by no-op OpBitCast instructions.
-                        (src_kind, kind, convert)
-                            if src_kind == kind && convert.unwrap_or(src_width) == src_width =>
-                        {
-                            Cast::Identity
-                        }
                         (Sk::Bool, Sk::Bool, _) => Cast::Unary(spirv::Op::CopyObject),
                         (_, _, None) => Cast::Unary(spirv::Op::Bitcast),
                         // casting to a bool - generate `OpXxxNotEqual`
@@ -1152,30 +1144,16 @@ impl<'w> BlockContext<'w> {
 
                 let id = self.gen_id();
                 let instruction = match cast {
-                    Cast::Identity => None,
-                    Cast::Unary(op) => Some(Instruction::unary(op, result_type_id, id, expr_id)),
-                    Cast::Binary(op, operand) => Some(Instruction::binary(
-                        op,
-                        result_type_id,
-                        id,
-                        expr_id,
-                        operand,
-                    )),
-                    Cast::Ternary(op, op1, op2) => Some(Instruction::ternary(
-                        op,
-                        result_type_id,
-                        id,
-                        expr_id,
-                        op1,
-                        op2,
-                    )),
+                    Cast::Unary(op) => Instruction::unary(op, result_type_id, id, expr_id),
+                    Cast::Binary(op, operand) => {
+                        Instruction::binary(op, result_type_id, id, expr_id, operand)
+                    }
+                    Cast::Ternary(op, op1, op2) => {
+                        Instruction::ternary(op, result_type_id, id, expr_id, op1, op2)
+                    }
                 };
-                if let Some(instruction) = instruction {
-                    block.body.push(instruction);
-                    id
-                } else {
-                    expr_id
-                }
+                block.body.push(instruction);
+                id
             }
             crate::Expression::ImageLoad {
                 image,

@@ -76,12 +76,13 @@ impl super::CommandState {
         let slot = stage_info.sizes_slot?;
 
         result_sizes.clear();
-        result_sizes.extend(stage_info.sized_bindings.iter().map(|br| {
-            self.storage_buffer_length_map
-                .get(br)
-                .map(|size| u32::try_from(size.get()).unwrap_or(u32::MAX))
-                .unwrap_or_default()
-        }));
+        result_sizes.extend(
+            stage_info
+                .sized_bindings
+                .iter()
+                .filter_map(|br| self.storage_buffer_length_map.get(br))
+                .map(|size| size.get().min(!0u32 as u64) as u32),
+        );
 
         if !result_sizes.is_empty() {
             Some((slot as _, result_sizes))
@@ -101,12 +102,12 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
             } else {
                 queue.new_command_buffer_with_unretained_references()
             };
-            if let Some(label) = label {
-                cmd_buf_ref.set_label(label);
-            }
             cmd_buf_ref.to_owned()
         });
 
+        if let Some(label) = label {
+            raw.set_label(label);
+        }
         self.raw_cmd_buf = Some(raw);
 
         Ok(())
@@ -227,21 +228,15 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
                 .buffer_layout
                 .bytes_per_row
                 .map_or(0, |v| v.get() as u64);
-            let image_byte_stride = if extent.depth > 1 {
-                copy.buffer_layout
-                    .rows_per_image
-                    .map_or(0, |v| v.get() as u64 * bytes_per_row)
-            } else {
-                // Don't pass a stride when updating a single layer, otherwise metal validation
-                // fails when updating a subset of the image due to the stride being larger than
-                // the amount of data to copy.
-                0
-            };
+            let bytes_per_image = copy
+                .buffer_layout
+                .rows_per_image
+                .map_or(0, |v| v.get() as u64 * bytes_per_row);
             encoder.copy_from_buffer_to_texture(
                 &src.raw,
                 copy.buffer_layout.offset,
                 bytes_per_row,
-                image_byte_stride,
+                bytes_per_image,
                 conv::map_copy_extent(&extent),
                 &dst.raw,
                 copy.texture_base.array_layer as u64,

@@ -2,8 +2,6 @@ use glow::HasContext;
 use std::sync::Arc;
 use wgt::AstcChannel;
 
-use crate::auxil::db;
-
 // https://webgl2fundamentals.org/webgl/lessons/webgl-data-textures.html
 
 const GL_UNMASKED_VENDOR_WEBGL: u32 = 0x9245;
@@ -122,7 +120,7 @@ impl super::Adapter {
             "mali",
             "intel",
             "v3d",
-            "apple m", // all apple m are integrated
+            "apple m1",
         ];
         let strings_that_imply_cpu = ["mesa offscreen", "swiftshader", "llvmpipe"];
 
@@ -147,34 +145,28 @@ impl super::Adapter {
 
         // source: Sascha Willems at Vulkan
         let vendor_id = if vendor.contains("amd") {
-            db::amd::VENDOR
+            0x1002
         } else if vendor.contains("imgtec") {
-            db::imgtec::VENDOR
+            0x1010
         } else if vendor.contains("nvidia") {
-            db::nvidia::VENDOR
+            0x10DE
         } else if vendor.contains("arm") {
-            db::arm::VENDOR
+            0x13B5
         } else if vendor.contains("qualcomm") {
-            db::qualcomm::VENDOR
+            0x5143
         } else if vendor.contains("intel") {
-            db::intel::VENDOR
+            0x8086
         } else if vendor.contains("broadcom") {
-            db::broadcom::VENDOR
-        } else if vendor.contains("mesa") {
-            db::mesa::VENDOR
-        } else if vendor.contains("apple") {
-            db::apple::VENDOR
+            0x14e4
         } else {
             0
         };
 
         wgt::AdapterInfo {
             name: renderer_orig,
-            vendor: vendor_id as usize,
+            vendor: vendor_id,
             device: 0,
             device_type: inferred_device_type,
-            driver: String::new(),
-            driver_info: String::new(),
             backend: wgt::Backend::Gl,
         }
     }
@@ -355,22 +347,11 @@ impl super::Adapter {
             // This is a part of GLES-3 but not WebGL2 core
             !cfg!(target_arch = "wasm32") || extensions.contains("WEBGL_compressed_texture_etc"),
         );
-        // `OES_texture_compression_astc` provides 2D + 3D, LDR + HDR support
-        if extensions.contains("WEBGL_compressed_texture_astc")
-            || extensions.contains("GL_OES_texture_compression_astc")
-        {
-            features.insert(wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR);
-            features.insert(wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR);
-        } else {
-            features.set(
-                wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR,
-                extensions.contains("GL_KHR_texture_compression_astc_ldr"),
-            );
-            features.set(
-                wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR,
-                extensions.contains("GL_KHR_texture_compression_astc_hdr"),
-            );
-        }
+        features.set(
+            wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR,
+            extensions.contains("GL_KHR_texture_compression_astc_ldr")
+                || extensions.contains("WEBGL_compressed_texture_astc"),
+        );
 
         let mut private_caps = super::PrivateCapabilities::empty();
         private_caps.set(
@@ -679,7 +660,6 @@ impl crate::Adapter<super::Api> for super::Adapter {
         let bcn_features = feature_fn(wgt::Features::TEXTURE_COMPRESSION_BC, filterable);
         let etc2_features = feature_fn(wgt::Features::TEXTURE_COMPRESSION_ETC2, filterable);
         let astc_features = feature_fn(wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR, filterable);
-        let astc_hdr_features = feature_fn(wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR, filterable);
 
         let private_caps_fn = |f, caps| {
             if self.shared.private_caps.contains(f) {
@@ -739,12 +719,11 @@ impl crate::Adapter<super::Api> for super::Adapter {
             Tf::Rgba32Uint => renderable | storage,
             Tf::Rgba32Sint => renderable | storage,
             Tf::Rgba32Float => unfilterable | storage | float_renderable,
-            //Tf::Stencil8 |
-            Tf::Depth16Unorm
-            | Tf::Depth32Float
+            Tf::Depth32Float
             | Tf::Depth32FloatStencil8
             | Tf::Depth24Plus
-            | Tf::Depth24PlusStencil8 => depth,
+            | Tf::Depth24PlusStencil8
+            | Tf::Depth24UnormStencil8 => depth,
             Tf::Rgb9e5Ufloat => filterable,
             Tf::Bc1RgbaUnorm
             | Tf::Bc1RgbaUnormSrgb
@@ -777,7 +756,7 @@ impl crate::Adapter<super::Api> for super::Adapter {
             Tf::Astc {
                 block: _,
                 channel: AstcChannel::Hdr,
-            } => astc_hdr_features,
+            } => Tfc::empty(),
         }
     }
 
@@ -785,31 +764,23 @@ impl crate::Adapter<super::Api> for super::Adapter {
         &self,
         surface: &super::Surface,
     ) -> Option<crate::SurfaceCapabilities> {
-        let mut formats = if surface.supports_srgb() {
-            vec![
-                wgt::TextureFormat::Rgba8UnormSrgb,
-                #[cfg(not(target_arch = "wasm32"))]
-                wgt::TextureFormat::Bgra8UnormSrgb,
-            ]
-        } else {
-            vec![
-                wgt::TextureFormat::Rgba8Unorm,
-                #[cfg(not(target_arch = "wasm32"))]
-                wgt::TextureFormat::Bgra8Unorm,
-            ]
-        };
-        if self
-            .shared
-            .private_caps
-            .contains(super::PrivateCapabilities::COLOR_BUFFER_HALF_FLOAT)
-        {
-            formats.push(wgt::TextureFormat::Rgba16Float)
-        }
         if surface.presentable {
             Some(crate::SurfaceCapabilities {
-                formats,
+                formats: if surface.supports_srgb() {
+                    vec![
+                        wgt::TextureFormat::Rgba8UnormSrgb,
+                        #[cfg(not(target_arch = "wasm32"))]
+                        wgt::TextureFormat::Bgra8UnormSrgb,
+                    ]
+                } else {
+                    vec![
+                        wgt::TextureFormat::Rgba8Unorm,
+                        #[cfg(not(target_arch = "wasm32"))]
+                        wgt::TextureFormat::Bgra8Unorm,
+                    ]
+                },
                 present_modes: vec![wgt::PresentMode::Fifo], //TODO
-                composite_alpha_modes: vec![wgt::CompositeAlphaMode::Opaque], //TODO
+                composite_alpha_modes: vec![crate::CompositeAlphaMode::Opaque], //TODO
                 swap_chain_sizes: 2..=2,
                 current_extent: None,
                 extents: wgt::Extent3d {

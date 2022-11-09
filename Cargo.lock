@@ -834,6 +834,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "copyless"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a2df960f5d869b2dd8532793fde43eb5427cceb126c929747a26823ab0eeb536"
+
+[[package]]
 name = "core-foundation"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3570,8 +3576,8 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 
 [[package]]
 name = "naga"
-version = "0.10.0"
-source = "git+https://github.com/gfx-rs/naga?rev=c52d9102#c52d91023d43092323615fcc746162e478033f26"
+version = "0.9.0"
+source = "git+https://github.com/gfx-rs/naga?rev=b209d911#b209d911681c4ef563f7d9048623667743e6248f"
 dependencies = [
  "bit-set",
  "bitflags",
@@ -4485,9 +4491,9 @@ dependencies = [
 
 [[package]]
 name = "ron"
-version = "0.8.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "300a51053b1cb55c80b7a9fde4120726ddf25ca241a1cbb926626f62fb136bff"
+checksum = "88073939a61e5b7680558e6be56b419e208420c2adb92be54921fa6b72283f1a"
 dependencies = [
  "base64",
  "bitflags",
@@ -6198,14 +6204,15 @@ dependencies = [
 
 [[package]]
 name = "wgpu-core"
-version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=261069d04fc1263d8e587c18936b9db90b077abb#261069d04fc1263d8e587c18936b9db90b077abb"
+version = "0.13.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=b752c7d2#b752c7d248a1668ffd954685259b80902307af94"
 dependencies = [
  "arrayvec",
  "bit-vec",
  "bitflags",
  "cfg_aliases",
  "codespan-reporting",
+ "copyless",
  "fxhash",
  "log",
  "naga",
@@ -6222,8 +6229,8 @@ dependencies = [
 
 [[package]]
 name = "wgpu-hal"
-version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=261069d04fc1263d8e587c18936b9db90b077abb#261069d04fc1263d8e587c18936b9db90b077abb"
+version = "0.13.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=b752c7d2#b752c7d248a1668ffd954685259b80902307af94"
 dependencies = [
  "android_system_properties",
  "arrayvec",
@@ -6260,8 +6267,8 @@ dependencies = [
 
 [[package]]
 name = "wgpu-types"
-version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=261069d04fc1263d8e587c18936b9db90b077abb#261069d04fc1263d8e587c18936b9db90b077abb"
+version = "0.13.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=b752c7d2#b752c7d248a1668ffd954685259b80902307af94"
 dependencies = [
  "bitflags",
  "bitflags_serde_shim",

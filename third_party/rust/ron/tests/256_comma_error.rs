@@ -1,6 +1,4 @@
-#![allow(dead_code)]
-
-use ron::error::{Error, Position, SpannedError};
+use ron::error::{Error, ErrorCode, Position};
 
 #[derive(Debug, serde::Deserialize)]
 struct Test {
@@ -17,8 +15,8 @@ fn test_missing_comma_error() {
 
     assert_eq!(
         ron::from_str::<(i32, i32)>(tuple_string).unwrap_err(),
-        SpannedError {
-            code: Error::ExpectedComma,
+        Error {
+            code: ErrorCode::ExpectedComma,
             position: Position { line: 3, col: 9 }
         }
     );
@@ -31,8 +29,8 @@ fn test_missing_comma_error() {
 
     assert_eq!(
         ron::from_str::<Vec<i32>>(list_string).unwrap_err(),
-        SpannedError {
-            code: Error::ExpectedComma,
+        Error {
+            code: ErrorCode::ExpectedComma,
             position: Position { line: 4, col: 9 }
         }
     );
@@ -44,8 +42,8 @@ fn test_missing_comma_error() {
 
     assert_eq!(
         ron::from_str::<Test>(struct_string).unwrap_err(),
-        SpannedError {
-            code: Error::ExpectedComma,
+        Error {
+            code: ErrorCode::ExpectedComma,
             position: Position { line: 3, col: 9 }
         }
     );
@@ -57,8 +55,8 @@ fn test_missing_comma_error() {
 
     assert_eq!(
         ron::from_str::<std::collections::HashMap<String, i32>>(map_string).unwrap_err(),
-        SpannedError {
-            code: Error::ExpectedComma,
+        Error {
+            code: ErrorCode::ExpectedComma,
             position: Position { line: 3, col: 9 }
         }
     );
