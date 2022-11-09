@@ -778,7 +778,7 @@ static mozilla::Atomic<bool> sWeakRefsExposeCleanupSome(false);
 static mozilla::Atomic<bool> sIteratorHelpersEnabled(false);
 static mozilla::Atomic<bool> sShadowRealmsEnabled(false);
 #ifdef NIGHTLY_BUILD
-static mozilla::Atomic<bool> sArrayGroupingEnabled(true);
+static mozilla::Atomic<bool> sArrayGroupingEnabled(false);
 #endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 static mozilla::Atomic<bool> sChangeArrayByCopyEnabled(false);
