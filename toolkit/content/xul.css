@@ -270,7 +270,6 @@ panel {
 menupopup,
 panel,
 tooltip {
-  display: -moz-popup;
   position: absolute;
   -moz-top-layer: top;
   /* Popups can't have overflow */
