@@ -1,0 +1,112 @@
+Metadata-Version: 2.1
+Name: jinxed
+Version: 1.2.0
+Summary: Jinxed Terminal Library
+Home-page: https://github.com/Rockhopper-Technologies/jinxed
+Author: Avram Lubkin
+Author-email: avylove@rockhopper.net
+Maintainer: Avram Lubkin
+Maintainer-email: avylove@rockhopper.net
+License: MPLv2.0
+Keywords: terminal console blessed curses
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Topic :: Terminals
+License-File: LICENSE
+Requires-Dist: ansicon ; platform_system == "Windows"
+
+.. start-badges
+
+| |docs| |appveyor| |travis| |codecov|
+| |pypi| |supported-versions| |supported-implementations|
+| |linux| |windows| |mac| |bsd|
+
+.. |docs| image:: https://img.shields.io/readthedocs/jinxed.svg?style=plastic&logo=read-the-docs
+    :target: https://jinxed.readthedocs.org
+    :alt: Documentation Status
+
+.. |appveyor| image:: https://img.shields.io/appveyor/ci/Rockhopper-Technologies/jinxed.svg?style=plastic&logo=appveyor
+    :target: https://ci.appveyor.com/project/Rockhopper-Technologies/jinxed
+    :alt: Appveyor Build Status
+
+.. |travis| image:: https://img.shields.io/travis/com/Rockhopper-Technologies/jinxed.svg?style=plastic&logo=travis
+    :target: https://travis-ci.com/Rockhopper-Technologies/jinxed
+    :alt: Travis-CI Build Status
+
+.. |codecov| image:: https://img.shields.io/codecov/c/github/Rockhopper-Technologies/jinxed.svg?style=plastic&logo=codecov
+    :target: https://codecov.io/gh/Rockhopper-Technologies/jinxed
+    :alt: Coverage Status
+
+.. |pypi| image:: https://img.shields.io/pypi/v/jinxed.svg?style=plastic&logo=pypi
+    :alt: PyPI Package latest release
+    :target: https://pypi.python.org/pypi/jinxed
+
+.. |supported-versions| image:: https://img.shields.io/pypi/pyversions/jinxed.svg?style=plastic&logo=pypi
+    :alt: Supported versions
+    :target: https://pypi.python.org/pypi/jinxed
+
+.. |supported-implementations| image:: https://img.shields.io/pypi/implementation/jinxed.svg?style=plastic&logo=pypi
+    :alt: Supported implementations
+    :target: https://pypi.python.org/pypi/jinxed
+
+.. |linux| image:: https://img.shields.io/badge/Linux-yes-success?style=plastic&logo=linux
+    :alt: Linux supported
+    :target: https://pypi.python.org/pypi/jinxed
+
+.. |windows| image:: https://img.shields.io/badge/Windows-yes-success?style=plastic&logo=windows
+    :alt: Windows supported
+    :target: https://pypi.python.org/pypi/jinxed
+
+.. |mac| image:: https://img.shields.io/badge/MacOS-yes-success?style=plastic&logo=apple
+    :alt: MacOS supported
+    :target: https://pypi.python.org/pypi/jinxed
+
+.. |bsd| image:: https://img.shields.io/badge/BSD-yes-success?style=plastic&logo=freebsd
+    :alt: BSD supported
+    :target: https://pypi.python.org/pypi/jinxed
+
+.. end-badges
+
+
+Overview
+========
+
+Jinxed is an implementation of a subset of the Python curses_ library.
+It provides pure Python implementations of terminfo functions such as `tigetstr()`_
+and `tparm()`_ as well as convenience methods for working with Windows terminals.
+
+Jinxed was initially written to support Blessed_ on Windows, but will work on all platforms.
+
+
+Installation
+============
+
+.. code-block:: console
+
+    $ pip install jinxed
+
+
+Documentation
+=============
+
+Jinxed documentation can be found on `Read the Docs <https://jinxed.readthedocs.io/en/stable/>`_.
+
+.. _Blessed: https://pypi.org/project/blessed
+.. _curses: https://docs.python.org/library/curses.html
+.. _tigetstr(): https://docs.python.org/library/curses.html#curses.tigetstr
+.. _tparm(): https://docs.python.org/library/curses.html#curses.tparm
+

@@ -30,6 +30,12 @@ EXCLUDED_PACKAGES = {
     # The moz.build file isn't a vendored module, so don't delete it.
     "moz.build",
     "requirements.in",
+    # The ansicon package contains DLLs and we don't want to arbitrarily vendor
+    # them since they could be unsafe. This module should rarely be used in practice
+    # (it's a fallback for old versions of windows). We've intentionally vendored a
+    # modified 'dummy' version of it so that the dependency checks still succeed, but
+    # if it ever is attempted to be used, it will fail gracefully.
+    "ansicon",
 }
 
 
