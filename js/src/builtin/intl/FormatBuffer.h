@@ -39,7 +39,20 @@ class FormatBuffer {
   FormatBuffer& operator=(FormatBuffer&& other) noexcept = default;
 
   explicit FormatBuffer(AllocPolicy aP = AllocPolicy())
-      : buffer_(std::move(aP)) {}
+      : buffer_(std::move(aP)) {
+    // The initial capacity matches the requested minimum inline capacity, as
+    // long as it doesn't exceed |Vector::kMaxInlineBytes / sizeof(CharT)|. If
+    // this assertion should ever fail, either reduce |MinInlineCapacity| or
+    // make the FormatBuffer initialization fallible.
+    MOZ_ASSERT(buffer_.capacity() == MinInlineCapacity);
+    if constexpr (MinInlineCapacity > 0) {
+      // Ensure the full capacity is marked as reserved.
+      //
+      // Reserving the minimum inline capacity can never fail, even when
+      // simulating OOM.
+      MOZ_ALWAYS_TRUE(buffer_.reserve(MinInlineCapacity));
+    }
+  }
 
   // Implicitly convert to a Span.
   operator mozilla::Span<CharType>() { return buffer_; }
@@ -48,7 +61,11 @@ class FormatBuffer {
   /**
    * Ensures the buffer has enough space to accommodate |size| elements.
    */
-  [[nodiscard]] bool reserve(size_t size) { return buffer_.reserve(size); }
+  [[nodiscard]] bool reserve(size_t size) {
+    // Call |reserve| a second time to ensure its full capacity is marked as
+    // reserved.
+    return buffer_.reserve(size) && buffer_.reserve(buffer_.capacity());
+  }
 
   /**
    * Returns the raw data inside the buffer.
@@ -73,8 +90,12 @@ class FormatBuffer {
     // This sets |buffer_|'s internal size so that it matches how much was
     // written. This is necessary because the write happens across FFI
     // boundaries.
-    mozilla::DebugOnly<bool> result = buffer_.resizeUninitialized(amount);
-    MOZ_ASSERT(result);
+    size_t curLength = length();
+    if (amount > curLength) {
+      buffer_.infallibleGrowByUninitialized(amount - curLength);
+    } else {
+      buffer_.shrinkBy(curLength - amount);
+    }
   }
 
   /**
