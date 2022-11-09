@@ -9,6 +9,8 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.mozilla.focus.R
+import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.pressEnterKey
@@ -55,6 +57,11 @@ class SearchRobot {
     fun verifySearchEditBarContainsText(text: String) {
         mDevice.findObject(UiSelector().textContains(text)).waitForExists(waitingTime)
         assertTrue(searchBar.text.equals(text))
+    }
+
+    fun verifySearchEditBarIsEmpty() {
+        searchBar.waitForExists(waitingTime)
+        assertTrue(searchBar.text.equals(getStringResource(R.string.urlbar_hint)))
     }
 
     fun clickToolbar() {

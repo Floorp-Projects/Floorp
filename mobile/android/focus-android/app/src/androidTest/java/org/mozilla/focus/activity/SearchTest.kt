@@ -15,11 +15,13 @@ import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.pressEnterKey
+import org.mozilla.focus.helpers.TestHelper.verifyKeyboardVisibility
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.testAnnotations.SmokeTest
 
 // This test checks the search engine can be changed and that search suggestions appear
 class SearchTest {
+    private lateinit var searchString: String
     private val enginesList = listOf("DuckDuckGo", "Google", "Amazon.com", "Wikipedia")
     private val featureSettingsHelper = FeatureSettingsHelper()
 
@@ -66,7 +68,7 @@ class SearchTest {
     @SmokeTest
     @Test
     fun enableSearchSuggestionOnFirstRunTest() {
-        val searchString = "mozilla "
+        searchString = "mozilla "
 
         searchScreen {
             // type and check search suggestions are displayed
@@ -86,7 +88,7 @@ class SearchTest {
     @SmokeTest
     @Test
     fun disableSearchSuggestionOnFirstRunTest() {
-        val searchString = "mozilla "
+        searchString = "mozilla "
 
         searchScreen {
             typeInSearchBar(searchString)
@@ -116,7 +118,7 @@ class SearchTest {
 
     @Test
     fun testSearchBarShowsSearchTermOnEdit() {
-        val searchString = "mozilla focus"
+        searchString = "mozilla focus"
 
         searchScreen {
             typeInSearchBar(searchString)
@@ -134,7 +136,7 @@ class SearchTest {
     @SmokeTest
     @Test
     fun disableSearchSuggestionsTest() {
-        val searchString = "mozilla "
+        searchString = "mozilla "
 
         searchScreen {
             // Search on blank spaces should not do anything
@@ -154,6 +156,29 @@ class SearchTest {
         searchScreen {
             typeInSearchBar(searchString)
             verifySearchSuggestionsAreNotShown()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun clearSearchButtonTest() {
+        searchString = "mozilla "
+
+        homeScreen {
+        }.openSearchBar {
+            typeInSearchBar(searchString)
+            verifyKeyboardVisibility(true)
+            verifySearchEditBarContainsText(searchString)
+            clearSearchBar()
+            verifyKeyboardVisibility(true)
+            verifySearchEditBarIsEmpty()
+        }
+
+        searchString = "firefox"
+
+        searchScreen {
+            typeInSearchBar(searchString)
+            verifySearchEditBarContainsText(searchString)
         }
     }
 }

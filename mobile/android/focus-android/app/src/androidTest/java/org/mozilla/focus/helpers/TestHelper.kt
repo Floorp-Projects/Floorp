@@ -20,6 +20,7 @@ import android.os.storage.StorageManager
 import android.os.storage.StorageVolume
 import android.util.Log
 import android.view.KeyEvent
+import android.view.inputmethod.InputMethodManager
 import androidx.annotation.RequiresApi
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
@@ -42,6 +43,7 @@ import okio.Buffer
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.junit.Assert
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.IntentReceiverActivity
@@ -353,5 +355,16 @@ object TestHelper {
     @JvmStatic
     fun waitForWebSiteTitleLoad() {
         Web.onWebView(ViewMatchers.withText("focus test page"))
+    }
+
+    @JvmStatic
+    fun verifyKeyboardVisibility(isExpectedToBeVisible: Boolean) {
+        val imm = getTargetContext.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
+        if (isExpectedToBeVisible) {
+            assertTrue(imm.isAcceptingText)
+        } else {
+            assertFalse(imm.isAcceptingText)
+        }
     }
 }

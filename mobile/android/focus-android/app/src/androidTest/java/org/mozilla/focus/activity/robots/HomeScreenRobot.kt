@@ -127,6 +127,14 @@ class HomeScreenRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun openSearchBar(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
+            editURLBar.waitForExists(waitingTime)
+            editURLBar.click()
+
+            SearchRobot().interact()
+            return SearchRobot.Transition()
+        }
     }
 }
 
