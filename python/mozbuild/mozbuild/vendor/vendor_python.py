@@ -39,6 +39,9 @@ EXCLUDED_PACKAGES = {
 
 
 class VendorPython(MozbuildObject):
+    def __init__(self, *args, **kwargs):
+        MozbuildObject.__init__(self, *args, virtualenv_name="vendor", **kwargs)
+
     def vendor(self, keep_extra_files=False):
         from mach.python_lockfile import PoetryHandle
 
