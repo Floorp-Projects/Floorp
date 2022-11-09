@@ -132,10 +132,17 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
 }
 
 .at-rule-label {
-  display: flex;
+  display: grid;
+  /*
+   * +----------------------------------------------+
+   * |        Rule information        | line number |
+   * +----------------------------------------------+
+   */
+  grid-template-columns: 1fr max-content;
   padding: 4px;
-  cursor: pointer;
   border-bottom: 1px solid var(--theme-splitter-color);
+  cursor: pointer;
+  word-break: break-word;
 }
 
 .media-responsive-mode-toggle {
@@ -149,11 +156,6 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
 
 .media-condition-unmatched {
   opacity: 0.4;
-}
-
-.at-rule-condition {
-  flex: 1;
-  overflow: hidden;
 }
 
 .stylesheet-toggle {

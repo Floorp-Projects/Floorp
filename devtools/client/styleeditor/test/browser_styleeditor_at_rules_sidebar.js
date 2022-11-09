@@ -34,6 +34,8 @@ const NEW_RULE = `
 waitForExplicitFinish();
 
 add_task(async function() {
+  await pushPref("layout.css.container-queries.enabled", true);
+
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 4, "correct number of editors");
@@ -82,7 +84,7 @@ async function testInlineMediaEditor(ui, editor) {
   is(sidebar.hidden, false, "sidebar is showing on editor with @media");
 
   const entries = sidebar.querySelectorAll(".at-rule-label");
-  is(entries.length, 2, "2 @media rules displayed in sidebar");
+  is(entries.length, 5, "5 @media rules displayed in sidebar");
 
   await testRule({
     ui,
@@ -91,15 +93,45 @@ async function testInlineMediaEditor(ui, editor) {
     conditionText: "screen",
     matches: true,
     line: 2,
+    type: "media",
   });
 
   await testRule({
     ui,
     editor,
     rule: entries[1],
+    conditionText: "(display: flex)",
+    line: 7,
+    type: "support",
+  });
+
+  await testRule({
+    ui,
+    editor,
+    rule: entries[2],
     conditionText: "(1px < height < 10000px)",
     matches: true,
     line: 8,
+    type: "media",
+  });
+
+  await testRule({
+    ui,
+    editor,
+    rule: entries[3],
+    conditionText: "",
+    line: 16,
+    type: "layer",
+    layerName: "myLayer",
+  });
+
+  await testRule({
+    ui,
+    editor,
+    rule: entries[4],
+    conditionText: "(min-width: 1px)",
+    line: 17,
+    type: "container",
   });
 }
 
@@ -215,24 +247,45 @@ async function testMediaRuleAdded(ui, editor) {
  * @param {Element} options.rule: The rule element in the media sidebar
  * @param {String} options.conditionText: media query condition text
  * @param {Boolean} options.matches: Whether or not the document matches the rule
+ * @param {String} options.layerName: Optional name of the @layer
  * @param {Number} options.line: Line of the rule
+ * @param {String} options.type: The type of the rule (container, layer, media, support ).
+ *                               Defaults to "media".
  */
-async function testRule({ ui, editor, rule, conditionText, matches, line }) {
+async function testRule({
+  ui,
+  editor,
+  rule,
+  conditionText,
+  matches,
+  layerName,
+  line,
+  type = "media",
+}) {
+  const atTypeEl = rule.querySelector(".at-rule-type");
+  is(
+    atTypeEl.textContent,
+    `@${type}\u00A0${layerName ? `${layerName}\u00A0` : ""}`,
+    "label for at-rule type is correct"
+  );
+
   const cond = rule.querySelector(".at-rule-condition");
   is(
     cond.textContent,
     conditionText,
-    "media label is correct for " + conditionText
+    "condition label is correct for " + conditionText
   );
 
-  const matched = !cond.classList.contains("media-condition-unmatched");
-  ok(
-    matches ? matched : !matched,
-    "media rule is " + (matches ? "matched" : "unmatched")
-  );
+  if (type == "media") {
+    const matched = !cond.classList.contains("media-condition-unmatched");
+    ok(
+      matches ? matched : !matched,
+      "media rule is " + (matches ? "matched" : "unmatched")
+    );
+  }
 
-  const mediaRuleLine = rule.querySelector(".at-rule-line");
-  is(mediaRuleLine.textContent, ":" + line, "correct line number shown");
+  const ruleLine = rule.querySelector(".at-rule-line");
+  is(ruleLine.textContent, ":" + line, "correct line number shown");
 
   info(
     "Check that clicking on the rule jumps to the expected position in the stylesheet"

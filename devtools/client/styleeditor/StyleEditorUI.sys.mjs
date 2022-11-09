@@ -1329,31 +1329,42 @@ export class StyleEditorUI extends EventEmitter {
         inSource = true;
 
         const div = this.#panelDoc.createElementNS(HTML_NS, "div");
-        div.className = "at-rule-label";
+        div.classList.add("at-rule-label", rule.type);
         div.addEventListener(
           "click",
           this.#jumpToLocation.bind(this, location)
         );
 
-        const cond = this.#panelDoc.createElementNS(HTML_NS, "div");
+        const ruleTextContainer = this.#panelDoc.createElementNS(
+          HTML_NS,
+          "div"
+        );
+        const type = this.#panelDoc.createElementNS(HTML_NS, "span");
+        type.className = "at-rule-type";
+        type.append(this.#panelDoc.createTextNode(`@${rule.type}\u00A0`));
+        if (rule.type == "layer" && rule.layerName) {
+          type.append(this.#panelDoc.createTextNode(`${rule.layerName}\u00A0`));
+        }
+
+        const cond = this.#panelDoc.createElementNS(HTML_NS, "span");
         cond.className = "at-rule-condition";
-        if (!rule.matches) {
+        if (rule.type == "media" && !rule.matches) {
           cond.classList.add("media-condition-unmatched");
         }
         if (this.#commands.descriptorFront.isLocalTab) {
-          this.#setConditionContents(cond, rule.conditionText);
+          this.#setConditionContents(cond, rule.conditionText, rule.type);
         } else {
           cond.textContent = rule.conditionText;
         }
-        div.appendChild(cond);
 
         const link = this.#panelDoc.createElementNS(HTML_NS, "div");
         link.className = "at-rule-line theme-link";
         if (location.line != -1) {
           link.textContent = ":" + location.line;
         }
-        div.appendChild(link);
 
+        ruleTextContainer.append(type, cond);
+        div.append(ruleTextContainer, link);
         list.appendChild(div);
       }
 
@@ -1366,38 +1377,55 @@ export class StyleEditorUI extends EventEmitter {
   };
 
   /**
-   * Used to safely inject media query links
+   * Set the condition text for the at-rule element.
+   * For media queries, it also injects links to open RDM at a specific size.
    *
    * @param {HTMLElement} element
    *        The element corresponding to the media sidebar condition
-   * @param {String} rawText
-   *        The raw condition text to parse
+   * @param {String} ruleConditionText
+   *        The rule conditionText
+   * @param {String} type
+   *        The type of the at-rule (e.g. "media", "layer", "supports", …)
    */
-  #setConditionContents(element, rawText) {
+  #setConditionContents(element, ruleConditionText, type) {
+    if (!ruleConditionText) {
+      return;
+    }
+
+    // For non-media rules, we don't do anything more than displaying the conditionText
+    // as there are no other condition text that would justify opening RDM at a specific
+    // size (e.g. `@container` condition is relative to a container size, which varies
+    // depending the node the rule applies to).
+    if (type !== "media") {
+      const node = this.#panelDoc.createTextNode(ruleConditionText);
+      element.appendChild(node);
+      return;
+    }
+
     const minMaxPattern = /(min\-|max\-)(width|height):\s\d+(px)/gi;
 
-    let match = minMaxPattern.exec(rawText);
+    let match = minMaxPattern.exec(ruleConditionText);
     let lastParsed = 0;
     while (match && match.index != minMaxPattern.lastIndex) {
       const matchEnd = match.index + match[0].length;
       const node = this.#panelDoc.createTextNode(
-        rawText.substring(lastParsed, match.index)
+        ruleConditionText.substring(lastParsed, match.index)
       );
       element.appendChild(node);
 
       const link = this.#panelDoc.createElementNS(HTML_NS, "a");
       link.href = "#";
       link.className = "media-responsive-mode-toggle";
-      link.textContent = rawText.substring(match.index, matchEnd);
+      link.textContent = ruleConditionText.substring(match.index, matchEnd);
       link.addEventListener("click", this.#onMediaConditionClick.bind(this));
       element.appendChild(link);
 
-      match = minMaxPattern.exec(rawText);
+      match = minMaxPattern.exec(ruleConditionText);
       lastParsed = matchEnd;
     }
 
     const node = this.#panelDoc.createTextNode(
-      rawText.substring(lastParsed, rawText.length)
+      ruleConditionText.substring(lastParsed, ruleConditionText.length)
     );
     element.appendChild(node);
   }
