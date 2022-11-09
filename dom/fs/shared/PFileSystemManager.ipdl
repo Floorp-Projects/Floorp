@@ -143,10 +143,16 @@ union FileSystemGetAccessHandleResponse
   FileSystemAccessHandleProperties;
 };
 
+struct FileSystemWritableFileStreamProperties
+{
+  FileDescriptor fileDescriptor;
+  PFileSystemWritableFileStream writableFileStream;
+};
+
 union FileSystemGetWritableFileStreamResponse
 {
   nsresult;
-  PFileSystemWritableFileStream;
+  FileSystemWritableFileStreamProperties;
 };
 
 /**
@@ -402,7 +408,7 @@ async protocol PFileSystemManager
 
  child:
   async PFileSystemAccessHandle();
-  async PFileSystemWritableFileStream(FileDescriptor fileDescriptor);
+  async PFileSystemWritableFileStream();
 
   async CloseAll()
       returns(nsresult rv);

@@ -7,7 +7,6 @@
 #include "FileSystemWritableFileStreamChild.h"
 
 #include "mozilla/dom/FileSystemWritableFileStream.h"
-#include "private/pprio.h"
 
 namespace mozilla {
 extern LazyLogModule gOPFSLog;
@@ -20,11 +19,8 @@ extern LazyLogModule gOPFSLog;
 
 namespace mozilla::dom {
 
-FileSystemWritableFileStreamChild::FileSystemWritableFileStreamChild(
-    const ::mozilla::ipc::FileDescriptor& aFileDescriptor)
+FileSystemWritableFileStreamChild::FileSystemWritableFileStreamChild()
     : mStream(nullptr) {
-  auto rawFD = aFileDescriptor.ClonePlatformHandle();
-  mFileDesc = PR_ImportFile(PROsfd(rawFD.release()));
   LOG(("Created new WritableFileStreamChild %p", this));
 }
 
@@ -36,28 +32,8 @@ void FileSystemWritableFileStreamChild::SetStream(
   mStream = aStream;
 }
 
-PRFileDesc* FileSystemWritableFileStreamChild::MutableFileDescPtr() const {
-  MOZ_ASSERT(mFileDesc);
-
-  return mFileDesc;
-}
-
-void FileSystemWritableFileStreamChild::Close() {
-  MOZ_ASSERT(mFileDesc);
-
-  LOG(("Closing WritableFileStreamChild %p", this));
-  PR_Close(mFileDesc);
-  mFileDesc = nullptr;
-
-  PFileSystemWritableFileStreamChild::Send__delete__(this);
-}
-
 void FileSystemWritableFileStreamChild::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("Destroy WritableFileStreamChild %p", this));
-  if (mFileDesc) {
-    PR_Close(mFileDesc);
-    mFileDesc = nullptr;
-  }
 
   if (mStream) {
     mStream->ClearActor();

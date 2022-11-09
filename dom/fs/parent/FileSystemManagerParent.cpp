@@ -216,13 +216,13 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
   auto writableFileStreamParent =
       MakeRefPtr<FileSystemWritableFileStreamParent>(this, aRequest.entryId());
 
-  if (!SendPFileSystemWritableFileStreamConstructor(writableFileStreamParent,
-                                                    fileDescriptor)) {
+  if (!SendPFileSystemWritableFileStreamConstructor(writableFileStreamParent)) {
     aResolver(NS_ERROR_FAILURE);
     return IPC_OK();
   }
 
-  aResolver(FileSystemGetWritableFileStreamResponse(writableFileStreamParent));
+  aResolver(FileSystemWritableFileStreamProperties(
+      fileDescriptor, writableFileStreamParent, nullptr));
   return IPC_OK();
 }
 

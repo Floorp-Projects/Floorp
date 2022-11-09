@@ -24,8 +24,7 @@ class FileSystemManagerChild : public PFileSystemManagerChild {
   AllocPFileSystemAccessHandleChild();
 
   already_AddRefed<PFileSystemWritableFileStreamChild>
-  AllocPFileSystemWritableFileStreamChild(
-      const FileDescriptor& aFileDescriptor);
+  AllocPFileSystemWritableFileStreamChild();
 
   ::mozilla::ipc::IPCResult RecvCloseAll(CloseAllResolver&& aResolver);
 
