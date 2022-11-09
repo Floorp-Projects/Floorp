@@ -7,6 +7,10 @@
  * Tests the cookie banner handling section in the protections panel.
  */
 
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
+
 const {
   MODE_DISABLED,
   MODE_REJECT,
@@ -257,6 +261,36 @@ function assertSwitchAndPrefState({ win, isPBM, expectEnabled }) {
 }
 
 /**
+ * Test the telemetry associated with the cookie banner toggle. To be called
+ * after interacting with the toggle.
+ * @param {*} options
+ * @param {boolean|null} - Expected telemetry state matching the button state.
+ * button on = true = cookieb_toggle_on event. Pass null to expect no event
+ * recorded.
+ */
+function assertTelemetryState({ expectEnabled = null } = {}) {
+  info("Test telemetry state.");
+
+  let events = [];
+  const CATEGORY = "security.ui.protectionspopup";
+  const METHOD = "click";
+
+  if (expectEnabled != null) {
+    events.push({
+      category: CATEGORY,
+      method: METHOD,
+      object: expectEnabled ? "cookieb_toggle_on" : "cookieb_toggle_off",
+    });
+  }
+
+  // Assert event state and clear event list.
+  TelemetryTestUtils.assertEvents(events, {
+    category: CATEGORY,
+    method: METHOD,
+  });
+}
+
+/**
  * Tests the cookie banner section per-site preference toggle.
  */
 add_task(async function test_section_toggle() {
@@ -294,6 +328,7 @@ add_task(async function test_section_toggle() {
           switchEl,
           expectEnabled: true,
         });
+        assertTelemetryState();
 
         info("Testing switch state after toggle OFF");
         switchEl.click();
@@ -303,6 +338,7 @@ add_task(async function test_section_toggle() {
           switchEl,
           expectEnabled: false,
         });
+        assertTelemetryState({ expectEnabled: false });
 
         info("Reopen the panel to test the initial switch OFF state.");
         await closeProtectionsPanel(win);
@@ -313,6 +349,7 @@ add_task(async function test_section_toggle() {
           switchEl,
           expectEnabled: false,
         });
+        assertTelemetryState();
 
         info("Testing switch state after toggle ON.");
         switchEl.click();
@@ -322,6 +359,7 @@ add_task(async function test_section_toggle() {
           switchEl,
           expectEnabled: true,
         });
+        assertTelemetryState({ expectEnabled: true });
 
         info("Reopen the panel to test the initial switch ON state.");
         await closeProtectionsPanel(win);
@@ -332,6 +370,7 @@ add_task(async function test_section_toggle() {
           switchEl,
           expectEnabled: true,
         });
+        assertTelemetryState();
       }
     );
 
