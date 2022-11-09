@@ -19,7 +19,6 @@ async function require_module(id) {
       Assert,
       Cr: SpecialPowers.Cr,
       navigator,
-      TextEncoder,
     };
 
     require_module.moduleLoader = new ModuleLoader(base, depth, proto);

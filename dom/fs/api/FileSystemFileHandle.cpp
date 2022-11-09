@@ -68,11 +68,7 @@ already_AddRefed<Promise> FileSystemFileHandle::CreateWritable(
     return nullptr;
   }
 
-  mRequestHandler->GetWritable(mManager, mMetadata, aOptions.mKeepExistingData,
-                               promise, aError);
-  if (aError.Failed()) {
-    return nullptr;
-  }
+  promise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
 
   return promise.forget();
 }

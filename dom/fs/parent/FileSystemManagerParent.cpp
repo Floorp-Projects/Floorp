@@ -12,14 +12,12 @@
 #include "mozilla/dom/FileSystemAccessHandleParent.h"
 #include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemTypes.h"
-#include "mozilla/dom/FileSystemWritableFileStreamParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/QMResult.h"
 #include "mozilla/dom/quota/ForwardDecls.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/RandomAccessStreamUtils.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
@@ -115,15 +113,14 @@ IPCResult FileSystemManagerParent::RecvGetFileHandle(
   return IPC_OK();
 }
 
-// Could use a template, but you need several types
 mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
-    FileSystemGetAccessHandleRequest&& aRequest,
+    const FileSystemGetAccessHandleRequest& aRequest,
     GetAccessHandleResolver&& aResolver) {
   AssertIsOnIOTarget();
   MOZ_ASSERT(mDataManager);
 
   if (!mDataManager->LockExclusive(aRequest.entryId())) {
-    aResolver(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    aResolver(NS_ERROR_FAILURE);
     return IPC_OK();
   }
 
@@ -145,7 +142,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
   if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
     nsAutoString path;
     if (NS_SUCCEEDED(file->GetPath(path))) {
-      LOG(("Opening SyncAccessHandle %s", NS_ConvertUTF16toUTF8(path).get()));
+      LOG(("Opening %s", NS_ConvertUTF16toUTF8(path).get()));
     }
   }
 
@@ -159,10 +156,6 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
   auto accessHandleParent =
       MakeRefPtr<FileSystemAccessHandleParent>(this, aRequest.entryId());
 
-  // Release the auto unlock helper just before calling
-  // SendPFileSystemAccessHandleConstructor which is responsible for destroying
-  // the actor if the sending fails (we call `UnlockExclusive` when the actor is
-  // destroyed).
   autoUnlock.release();
 
   if (!SendPFileSystemAccessHandleConstructor(accessHandleParent)) {
@@ -172,71 +165,6 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
 
   aResolver(FileSystemAccessHandleProperties(streamParams, accessHandleParent,
                                              nullptr));
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
-    FileSystemGetWritableRequest&& aRequest, GetWritableResolver&& aResolver) {
-  AssertIsOnIOTarget();
-  MOZ_ASSERT(mDataManager);
-
-  if (!mDataManager->LockShared(aRequest.entryId())) {
-    aResolver(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
-    return IPC_OK();
-  }
-
-  auto autoUnlock =
-      MakeScopeExit([self = RefPtr<FileSystemManagerParent>(this), aRequest] {
-        self->mDataManager->UnlockShared(aRequest.entryId());
-      });
-
-  auto reportError = [aResolver](nsresult rv) { aResolver(rv); };
-
-  nsString type;
-  fs::TimeStamp lastModifiedMilliSeconds;
-  fs::Path path;
-  nsCOMPtr<nsIFile> file;
-  QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             aRequest.entryId(), type, lastModifiedMilliSeconds, path, file)),
-         IPC_OK(), reportError);
-
-  if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
-    nsAutoString path;
-    if (NS_SUCCEEDED(file->GetPath(path))) {
-      LOG(("Opening Writable %s", NS_ConvertUTF16toUTF8(path).get()));
-    }
-  }
-
-  FILE* fileHandle;
-  QM_TRY(MOZ_TO_RESULT(file->OpenANSIFileDesc(aRequest.keepData() ? "r+" : "w",
-                                              &fileHandle)),
-         IPC_OK(), reportError);
-
-  auto autoClose = MakeScopeExit([fileHandle]() {
-    QM_WARNONLY_TRY(MOZ_TO_RESULT(0 == fclose(fileHandle)));
-  });
-
-  FileDescriptor fileDescriptor =
-      mozilla::ipc::FILEToFileDescriptor(fileHandle);
-
-  LOG(("Opened"));
-
-  auto writableFileStreamParent =
-      MakeRefPtr<FileSystemWritableFileStreamParent>(this, aRequest.entryId());
-
-  // Release the auto unlock helper just before calling
-  // SendPFileSystemWritableFileStreamConstructor which is responsible for
-  // destroying the actor if the sending fails (we call `UnlockExclusive` when
-  // the actor is destroyed).
-  autoUnlock.release();
-
-  if (!SendPFileSystemWritableFileStreamConstructor(writableFileStreamParent)) {
-    aResolver(NS_ERROR_FAILURE);
-    return IPC_OK();
-  }
-
-  aResolver(FileSystemWritableFileStreamProperties(
-      fileDescriptor, writableFileStreamParent, nullptr));
   return IPC_OK();
 }
 
@@ -266,7 +194,7 @@ IPCResult FileSystemManagerParent::RecvGetFile(
   if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
     nsAutoString path;
     if (NS_SUCCEEDED(fileObject->GetPath(path))) {
-      LOG(("Opening File as blob: %s", NS_ConvertUTF16toUTF8(path).get()));
+      LOG(("Opening %s", NS_ConvertUTF16toUTF8(path).get()));
     }
   }
 
@@ -430,6 +358,16 @@ IPCResult FileSystemManagerParent::RecvRenameEntry(
 
   fs::FileSystemMoveEntryResponse response(moved ? NS_OK : NS_ERROR_FAILURE);
   aResolver(response);
+  return IPC_OK();
+}
+
+IPCResult FileSystemManagerParent::RecvGetWritable(
+    FileSystemGetFileRequest&& aRequest, GetWritableResolver&& aResolver) {
+  AssertIsOnIOTarget();
+
+  FileSystemGetAccessHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
+  aResolver(response);
+
   return IPC_OK();
 }
 

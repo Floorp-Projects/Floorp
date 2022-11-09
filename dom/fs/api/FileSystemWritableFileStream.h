@@ -7,46 +7,68 @@
 #ifndef DOM_FS_FILESYSTEMWRITABLEFILESTREAM_H_
 #define DOM_FS_FILESYSTEMWRITABLEFILESTREAM_H_
 
-#include "mozilla/Logging.h"
-#include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/WritableStream.h"
 
-class nsIGlobalObject;
-
 namespace mozilla {
-extern LazyLogModule gOPFSLog;
 
-template <typename T>
-class Buffer;
 class ErrorResult;
 
 namespace dom {
 
 class ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams;
-class Blob;
-class FileSystemManager;
-class FileSystemWritableFileStreamChild;
-class Promise;
 
 class FileSystemWritableFileStream final : public WritableStream {
  public:
-  static already_AddRefed<FileSystemWritableFileStream> Create(
-      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-      RefPtr<FileSystemWritableFileStreamChild> aActor,
-      const ::mozilla::ipc::FileDescriptor& aFileDescriptor,
-      const fs::FileSystemEntryMetadata& aMetadata);
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemWritableFileStream,
                                            WritableStream)
 
-  void LastRelease() override;
+  class StreamAlgorithms final : public UnderlyingSinkAlgorithmsBase {
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(StreamAlgorithms,
+                                             UnderlyingSinkAlgorithmsBase)
 
-  void ClearActor();
+    explicit StreamAlgorithms(FileSystemWritableFileStream& aStream)
+        : mStream(&aStream) {}
 
-  bool IsClosed() const { return mClosed; }
+    // Streams algorithms
+    void StartCallback(JSContext* aCx,
+                       WritableStreamDefaultController& aController,
+                       JS::MutableHandle<JS::Value> aRetVal,
+                       ErrorResult& aRv) override {
+      // https://streams.spec.whatwg.org/#writablestream-set-up
+      // Step 1. Let startAlgorithm be an algorithm that returns undefined.
+      aRetVal.setUndefined();
+    }
 
-  void Close();
+    MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> WriteCallback(
+        JSContext* aCx, JS::Handle<JS::Value> aChunk,
+        WritableStreamDefaultController& aController,
+        ErrorResult& aRv) override;
+
+    MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> AbortCallback(
+        JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
+        ErrorResult& aRv) override {
+      // https://streams.spec.whatwg.org/#writablestream-set-up
+      // Step 3.3. Return a promise resolved with undefined.
+      // (No abort algorithm is defined for this interface)
+      return Promise::CreateResolvedWithUndefined(mStream->GetParentObject(),
+                                                  aRv);
+    }
+
+    MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CloseCallback(
+        JSContext* aCx, ErrorResult& aRv) override {
+      return mStream->Close(aRv);
+    };
+
+   private:
+    ~StreamAlgorithms() = default;
+
+    RefPtr<FileSystemWritableFileStream> mStream;
+  };
+
+  static already_AddRefed<FileSystemWritableFileStream> MaybeCreate(
+      nsIGlobalObject* aGlobal);
 
   // WebIDL Boilerplate
   JSObject* WrapObject(JSContext* aCx,
@@ -61,40 +83,13 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   already_AddRefed<Promise> Truncate(uint64_t aSize, ErrorResult& aError);
 
+  already_AddRefed<Promise> Close(ErrorResult& aRv);
+
  private:
-  FileSystemWritableFileStream(
-      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-      RefPtr<FileSystemWritableFileStreamChild> aActor,
-      const ::mozilla::ipc::FileDescriptor& aFileDescriptor,
-      const fs::FileSystemEntryMetadata& aMetadata);
+  explicit FileSystemWritableFileStream(nsIGlobalObject* aGlobal)
+      : WritableStream(aGlobal) {}
 
-  virtual ~FileSystemWritableFileStream();
-
-  template <typename T>
-  void Write(const T& aData, const Maybe<uint64_t> aPosition,
-             RefPtr<Promise> aPromise);
-
-  void Seek(uint64_t aPosition, RefPtr<Promise> aPromise);
-
-  void Truncate(uint64_t aSize, RefPtr<Promise> aPromise);
-
-  Result<uint64_t, nsresult> WriteBuffer(Buffer<char>&& aBuffer,
-                                         const Maybe<uint64_t> aPosition);
-
-  Result<uint64_t, nsresult> WriteStream(nsCOMPtr<nsIInputStream> aStream,
-                                         const Maybe<uint64_t> aPosition);
-
-  Result<Ok, nsresult> SeekPosition(uint64_t aPosition);
-
-  RefPtr<FileSystemManager> mManager;
-
-  RefPtr<FileSystemWritableFileStreamChild> mActor;
-
-  PRFileDesc* mFileDesc;
-
-  fs::FileSystemEntryMetadata mMetadata;
-
-  bool mClosed;
+  ~FileSystemWritableFileStream() = default;
 };
 
 }  // namespace dom
