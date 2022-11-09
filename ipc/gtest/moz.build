@@ -12,6 +12,7 @@ SOURCES += [
     "TestLogging.cpp",
     "TestRandomAccessStreamUtils.cpp",
     "TestSharedMemory.cpp",
+    "TestUnsafeSharedMemoryHandle.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
