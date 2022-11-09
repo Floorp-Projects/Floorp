@@ -33,6 +33,7 @@ bitflags_serial! {
 fn test_bitflags() {
     // Test case provided by jaynus in
     // https://github.com/ron-rs/ron/issues/152#issue-421298302
+
     let flag_good = TestGood::ONE | TestGood::TWO;
 
     let json_ser_good = serde_json::ser::to_string(&flag_good).unwrap();

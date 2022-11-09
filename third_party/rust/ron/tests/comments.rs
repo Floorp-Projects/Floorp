@@ -1,4 +1,4 @@
-use ron::de::{from_str, Error as RonErr, ErrorCode, Position};
+use ron::de::{from_str, Error, Position, SpannedError as RonErr};
 
 #[test]
 fn test_simple() {
@@ -45,7 +45,7 @@ fn test_unclosed() {
 "
         ),
         Err(RonErr {
-            code: ErrorCode::UnclosedBlockComment,
+            code: Error::UnclosedBlockComment,
             position: Position { col: 1, line: 9 }
         })
     );

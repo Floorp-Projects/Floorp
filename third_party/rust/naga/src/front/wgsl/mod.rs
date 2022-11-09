@@ -71,6 +71,8 @@ pub enum ExpectedToken<'a> {
     Constant,
     /// Expected: constant, parenthesized expression, identifier
     PrimaryExpression,
+    /// Expected: assignment, increment/decrement expression
+    Assignment,
     /// Expected: '}', identifier
     FieldName,
     /// Expected: attribute for a type
@@ -95,9 +97,16 @@ pub enum NumberError {
     UnimplementedF16,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum InvalidAssignmentType {
+    Other,
+    Swizzle,
+    ImmutableBinding,
+}
+
 #[derive(Clone, Debug)]
 pub enum Error<'a> {
-    Unexpected(TokenSpan<'a>, ExpectedToken<'a>),
+    Unexpected(Span, ExpectedToken<'a>),
     UnexpectedComponents(Span),
     BadNumber(Span, NumberError),
     /// A negative signed integer literal where both signed and unsigned,
@@ -151,6 +160,10 @@ pub enum Error<'a> {
     Pointer(&'static str, Span),
     NotPointer(Span),
     NotReference(&'static str, Span),
+    InvalidAssignment {
+        span: Span,
+        ty: InvalidAssignmentType,
+    },
     ReservedKeyword(Span),
     Redefinition {
         previous: Span,
@@ -162,7 +175,7 @@ pub enum Error<'a> {
 impl<'a> Error<'a> {
     fn as_parse_error(&self, source: &'a str) -> ParseError {
         match *self {
-            Error::Unexpected((_, ref unexpected_span), expected) => {
+            Error::Unexpected(ref unexpected_span, expected) => {
                 let expected_str = match expected {
                         ExpectedToken::Token(token) => {
                             match token {
@@ -195,6 +208,7 @@ impl<'a> Error<'a> {
                         ExpectedToken::Integer => "unsigned/signed integer literal".to_string(),
                         ExpectedToken::Constant => "constant".to_string(),
                         ExpectedToken::PrimaryExpression => "expression".to_string(),
+                        ExpectedToken::Assignment => "assignment or increment/decrement".to_string(),
                         ExpectedToken::FieldName => "field name or a closing curly bracket to signify the end of the struct".to_string(),
                         ExpectedToken::TypeAttribute => "type attribute".to_string(),
                         ExpectedToken::Statement => "statement".to_string(),
@@ -202,7 +216,7 @@ impl<'a> Error<'a> {
                         ExpectedToken::WorkgroupSizeSeparator => "workgroup size separator (',') or a closing parenthesis".to_string(),
                         ExpectedToken::GlobalItem => "global item ('struct', 'let', 'var', 'type', ';', 'fn') or the end of the file".to_string(),
                     };
-                    ParseError {
+                ParseError {
                     message: format!(
                         "expected {}, found '{}'",
                         expected_str,
@@ -214,17 +228,14 @@ impl<'a> Error<'a> {
                     )],
                     notes: vec![],
                 }
-            },
+            }
             Error::UnexpectedComponents(ref bad_span) => ParseError {
                 message: "unexpected components".to_string(),
                 labels: vec![(bad_span.clone(), "unexpected components".into())],
                 notes: vec![],
             },
             Error::BadNumber(ref bad_span, ref err) => ParseError {
-                message: format!(
-                    "{}: `{}`",
-                    err,&source[bad_span.clone()],
-                ),
+                message: format!("{}: `{}`", err, &source[bad_span.clone()],),
                 labels: vec![(bad_span.clone(), err.to_string().into())],
                 notes: vec![],
             },
@@ -244,12 +255,11 @@ impl<'a> Error<'a> {
                 labels: vec![(bad_span.clone(), "expected unsigned integer".into())],
                 notes: vec![],
             },
-            Error::BadMatrixScalarKind(
-                ref span,
-                kind,
-                width,
-             ) => ParseError {
-                message: format!("matrix scalar type must be floating-point, but found `{}`", kind.to_wgsl(width)),
+            Error::BadMatrixScalarKind(ref span, kind, width) => ParseError {
+                message: format!(
+                    "matrix scalar type must be floating-point, but found `{}`",
+                    kind.to_wgsl(width)
+                ),
                 labels: vec![(span.clone(), "must be floating-point (e.g. `f32`)".into())],
                 notes: vec![],
             },
@@ -269,39 +279,67 @@ impl<'a> Error<'a> {
             Error::UnknownScalarType(ref bad_span) => ParseError {
                 message: format!("unknown scalar type: '{}'", &source[bad_span.clone()]),
                 labels: vec![(bad_span.clone(), "unknown scalar type".into())],
-                notes: vec!["Valid scalar types are f16, f32, f64, i8, i16, i32, i64, u8, u16, u32, u64, bool".into()],
+                notes: vec!["Valid scalar types are f16, f32, f64, \
+                             i8, i16, i32, i64, \
+                             u8, u16, u32, u64, bool"
+                    .into()],
             },
-            Error::BadTextureSampleType { ref span, kind, width } => ParseError {
-                message: format!("texture sample type must be one of f32, i32 or u32, but found {}", kind.to_wgsl(width)),
+            Error::BadTextureSampleType {
+                ref span,
+                kind,
+                width,
+            } => ParseError {
+                message: format!(
+                    "texture sample type must be one of f32, i32 or u32, but found {}",
+                    kind.to_wgsl(width)
+                ),
                 labels: vec![(span.clone(), "must be one of f32, i32 or u32".into())],
                 notes: vec![],
             },
             Error::BadIncrDecrReferenceType(ref span) => ParseError {
-                message: "increment/decrement operation requires reference type to be one of i32 or u32".to_string(),
-                labels: vec![(span.clone(), "must be a reference type of i32 or u32".into())],
+                message:
+                    "increment/decrement operation requires reference type to be one of i32 or u32"
+                        .to_string(),
+                labels: vec![(
+                    span.clone(),
+                    "must be a reference type of i32 or u32".into(),
+                )],
                 notes: vec![],
             },
             Error::BadTexture(ref bad_span) => ParseError {
-                message: format!("expected an image, but found '{}' which is not an image", &source[bad_span.clone()]),
+                message: format!(
+                    "expected an image, but found '{}' which is not an image",
+                    &source[bad_span.clone()]
+                ),
                 labels: vec![(bad_span.clone(), "not an image".into())],
                 notes: vec![],
             },
-            Error::BadTypeCast { ref span, ref from_type, ref to_type } => {
+            Error::BadTypeCast {
+                ref span,
+                ref from_type,
+                ref to_type,
+            } => {
                 let msg = format!("cannot cast a {} to a {}", from_type, to_type);
                 ParseError {
                     message: msg.clone(),
                     labels: vec![(span.clone(), msg.into())],
                     notes: vec![],
                 }
-            },
+            }
             Error::InvalidResolve(ref resolve_error) => ParseError {
                 message: resolve_error.to_string(),
                 labels: vec![],
                 notes: vec![],
             },
             Error::InvalidForInitializer(ref bad_span) => ParseError {
-                message: format!("for(;;) initializer is not an assignment or a function call: '{}'", &source[bad_span.clone()]),
-                labels: vec![(bad_span.clone(), "not an assignment or function call".into())],
+                message: format!(
+                    "for(;;) initializer is not an assignment or a function call: '{}'",
+                    &source[bad_span.clone()]
+                ),
+                labels: vec![(
+                    bad_span.clone(),
+                    "not an assignment or function call".into(),
+                )],
                 notes: vec![],
             },
             Error::InvalidBreakIf(ref bad_span) => ParseError {
@@ -310,22 +348,34 @@ impl<'a> Error<'a> {
                 notes: vec![],
             },
             Error::InvalidGatherComponent(ref bad_span, component) => ParseError {
-                message: format!("textureGather component {} doesn't exist, must be 0, 1, 2, or 3", component),
+                message: format!(
+                    "textureGather component {} doesn't exist, must be 0, 1, 2, or 3",
+                    component
+                ),
                 labels: vec![(bad_span.clone(), "invalid component".into())],
                 notes: vec![],
             },
             Error::InvalidConstructorComponentType(ref bad_span, component) => ParseError {
-                message: format!("invalid type for constructor component at index [{}]", component),
+                message: format!(
+                    "invalid type for constructor component at index [{}]",
+                    component
+                ),
                 labels: vec![(bad_span.clone(), "invalid component type".into())],
                 notes: vec![],
             },
             Error::InvalidIdentifierUnderscore(ref bad_span) => ParseError {
                 message: "Identifier can't be '_'".to_string(),
                 labels: vec![(bad_span.clone(), "invalid identifier".into())],
-                notes: vec!["Use phony assignment instead ('_ =' notice the absence of 'let' or 'var')".to_string()],
+                notes: vec![
+                    "Use phony assignment instead ('_ =' notice the absence of 'let' or 'var')"
+                        .to_string(),
+                ],
             },
             Error::ReservedIdentifierPrefix(ref bad_span) => ParseError {
-                message: format!("Identifier starts with a reserved prefix: '{}'", &source[bad_span.clone()]),
+                message: format!(
+                    "Identifier starts with a reserved prefix: '{}'",
+                    &source[bad_span.clone()]
+                ),
                 labels: vec![(bad_span.clone(), "invalid identifier".into())],
                 notes: vec![],
             },
@@ -360,7 +410,10 @@ impl<'a> Error<'a> {
                 notes: vec![],
             },
             Error::UnknownConservativeDepth(ref bad_span) => ParseError {
-                message: format!("unknown conservative depth: '{}'", &source[bad_span.clone()]),
+                message: format!(
+                    "unknown conservative depth: '{}'",
+                    &source[bad_span.clone()]
+                ),
                 labels: vec![(bad_span.clone(), "unknown conservative depth".into())],
                 notes: vec![],
             },
@@ -371,12 +424,18 @@ impl<'a> Error<'a> {
             },
             Error::SizeAttributeTooLow(ref bad_span, min_size) => ParseError {
                 message: format!("struct member size must be at least {}", min_size),
-                labels: vec![(bad_span.clone(), format!("must be at least {}", min_size).into())],
+                labels: vec![(
+                    bad_span.clone(),
+                    format!("must be at least {}", min_size).into(),
+                )],
                 notes: vec![],
             },
             Error::AlignAttributeTooLow(ref bad_span, min_align) => ParseError {
                 message: format!("struct member alignment must be at least {}", min_align),
-                labels: vec![(bad_span.clone(), format!("must be at least {}", min_align).into())],
+                labels: vec![(
+                    bad_span.clone(),
+                    format!("must be at least {}", min_align).into(),
+                )],
                 notes: vec![],
             },
             Error::NonPowerOfTwoAlignAttribute(ref bad_span) => ParseError {
@@ -386,7 +445,10 @@ impl<'a> Error<'a> {
             },
             Error::InconsistentBinding(ref span) => ParseError {
                 message: "input/output binding is not consistent".to_string(),
-                labels: vec![(span.clone(), "input/output binding is not consistent".into())],
+                labels: vec![(
+                    span.clone(),
+                    "input/output binding is not consistent".into(),
+                )],
                 notes: vec![],
             },
             Error::UnknownLocalFunction(ref span) => ParseError {
@@ -405,18 +467,35 @@ impl<'a> Error<'a> {
                 notes: vec![],
             },
             Error::InitializationTypeMismatch(ref name_span, ref expected_ty) => ParseError {
-                message: format!("the type of `{}` is expected to be `{}`", &source[name_span.clone()], expected_ty),
-                labels: vec![(name_span.clone(), format!("definition of `{}`", &source[name_span.clone()]).into())],
+                message: format!(
+                    "the type of `{}` is expected to be `{}`",
+                    &source[name_span.clone()],
+                    expected_ty
+                ),
+                labels: vec![(
+                    name_span.clone(),
+                    format!("definition of `{}`", &source[name_span.clone()]).into(),
+                )],
                 notes: vec![],
             },
             Error::MissingType(ref name_span) => ParseError {
                 message: format!("variable `{}` needs a type", &source[name_span.clone()]),
-                labels: vec![(name_span.clone(), format!("definition of `{}`", &source[name_span.clone()]).into())],
+                labels: vec![(
+                    name_span.clone(),
+                    format!("definition of `{}`", &source[name_span.clone()]).into(),
+                )],
                 notes: vec![],
             },
             Error::MissingAttribute(name, ref name_span) => ParseError {
-                message: format!("variable `{}` needs a '{}' attribute", &source[name_span.clone()], name),
-                labels: vec![(name_span.clone(), format!("definition of `{}`", &source[name_span.clone()]).into())],
+                message: format!(
+                    "variable `{}` needs a '{}' attribute",
+                    &source[name_span.clone()],
+                    name
+                ),
+                labels: vec![(
+                    name_span.clone(),
+                    format!("definition of `{}`", &source[name_span.clone()]).into(),
+                )],
                 notes: vec![],
             },
             Error::InvalidAtomicPointer(ref span) => ParseError {
@@ -439,20 +518,51 @@ impl<'a> Error<'a> {
                 labels: vec![(span.clone(), "expression is not a reference".into())],
                 notes: vec![],
             },
+            Error::InvalidAssignment { ref span, ty } => ParseError {
+                message: "invalid left-hand side of assignment".into(),
+                labels: vec![(span.clone(), "cannot assign to this expression".into())],
+                notes: match ty {
+                    InvalidAssignmentType::Swizzle => vec![
+                        "WGSL does not support assignments to swizzles".into(),
+                        "consider assigning each component individually".into(),
+                    ],
+                    InvalidAssignmentType::ImmutableBinding => vec![
+                        format!("'{}' is an immutable binding", &source[span.clone()]),
+                        "consider declaring it with `var` instead of `let`".into(),
+                    ],
+                    InvalidAssignmentType::Other => vec![],
+                },
+            },
             Error::Pointer(what, ref span) => ParseError {
                 message: format!("{} must not be a pointer", what),
                 labels: vec![(span.clone(), "expression is a pointer".into())],
                 notes: vec![],
             },
             Error::ReservedKeyword(ref name_span) => ParseError {
-                message: format!("name `{}` is a reserved keyword", &source[name_span.clone()]),
-                labels: vec![(name_span.clone(), format!("definition of `{}`", &source[name_span.clone()]).into())],
+                message: format!(
+                    "name `{}` is a reserved keyword",
+                    &source[name_span.clone()]
+                ),
+                labels: vec![(
+                    name_span.clone(),
+                    format!("definition of `{}`", &source[name_span.clone()]).into(),
+                )],
                 notes: vec![],
             },
-            Error::Redefinition { ref previous, ref current } => ParseError {
+            Error::Redefinition {
+                ref previous,
+                ref current,
+            } => ParseError {
                 message: format!("redefinition of `{}`", &source[current.clone()]),
-                labels: vec![(current.clone(), format!("redefinition of `{}`", &source[current.clone()]).into()),
-                             (previous.clone(), format!("previous definition of `{}`", &source[previous.clone()]).into())
+                labels: vec![
+                    (
+                        current.clone(),
+                        format!("redefinition of `{}`", &source[current.clone()]).into(),
+                    ),
+                    (
+                        previous.clone(),
+                        format!("previous definition of `{}`", &source[previous.clone()]).into(),
+                    ),
                 ],
                 notes: vec![],
             },
@@ -749,7 +859,7 @@ impl<'a> StringValueLookup<'a> for FastHashMap<&'a str, TypedExpression> {
 }
 
 struct StatementContext<'input, 'temp, 'out> {
-    lookup_ident: &'temp mut FastHashMap<&'input str, TypedExpression>,
+    symbol_table: &'temp mut super::SymbolTable<&'input str, TypedExpression>,
     typifier: &'temp mut super::Typifier,
     variables: &'out mut Arena<crate::LocalVariable>,
     expressions: &'out mut Arena<crate::Expression>,
@@ -764,7 +874,7 @@ struct StatementContext<'input, 'temp, 'out> {
 impl<'a, 'temp> StatementContext<'a, 'temp, '_> {
     fn reborrow(&mut self) -> StatementContext<'a, '_, '_> {
         StatementContext {
-            lookup_ident: self.lookup_ident,
+            symbol_table: self.symbol_table,
             typifier: self.typifier,
             variables: self.variables,
             expressions: self.expressions,
@@ -786,7 +896,7 @@ impl<'a, 'temp> StatementContext<'a, 'temp, '_> {
         'temp: 't,
     {
         ExpressionContext {
-            lookup_ident: self.lookup_ident,
+            symbol_table: self.symbol_table,
             typifier: self.typifier,
             expressions: self.expressions,
             types: self.types,
@@ -807,7 +917,7 @@ struct SamplingContext {
 }
 
 struct ExpressionContext<'input, 'temp, 'out> {
-    lookup_ident: &'temp FastHashMap<&'input str, TypedExpression>,
+    symbol_table: &'temp mut super::SymbolTable<&'input str, TypedExpression>,
     typifier: &'temp mut super::Typifier,
     expressions: &'out mut Arena<crate::Expression>,
     types: &'out mut UniqueArena<crate::Type>,
@@ -823,7 +933,7 @@ struct ExpressionContext<'input, 'temp, 'out> {
 impl<'a> ExpressionContext<'a, '_, '_> {
     fn reborrow(&mut self) -> ExpressionContext<'a, '_, '_> {
         ExpressionContext {
-            lookup_ident: self.lookup_ident,
+            symbol_table: self.symbol_table,
             typifier: self.typifier,
             expressions: self.expressions,
             types: self.types,
@@ -878,7 +988,7 @@ impl<'a> ExpressionContext<'a, '_, '_> {
             ExpressionContext<'a, '_, '_>,
         ) -> Result<TypedExpression, Error<'a>>,
     ) -> Result<TypedExpression, Error<'a>> {
-        let start = lexer.current_byte_offset() as u32;
+        let start = lexer.start_byte_offset() as u32;
         let mut accumulator = parser(lexer, self.reborrow())?;
         while let Some(op) = classifier(lexer.peek().0) {
             let _ = lexer.next();
@@ -886,7 +996,7 @@ impl<'a> ExpressionContext<'a, '_, '_> {
             let mut left = self.apply_load_rule(accumulator);
             let unloaded_right = parser(lexer, self.reborrow())?;
             let right = self.apply_load_rule(unloaded_right);
-            let end = lexer.current_byte_offset() as u32;
+            let end = lexer.end_byte_offset() as u32;
             left = self.expressions.append(
                 crate::Expression::Binary { op, left, right },
                 NagaSpan::new(start, end),
@@ -906,7 +1016,7 @@ impl<'a> ExpressionContext<'a, '_, '_> {
             ExpressionContext<'a, '_, '_>,
         ) -> Result<TypedExpression, Error<'a>>,
     ) -> Result<TypedExpression, Error<'a>> {
-        let start = lexer.current_byte_offset() as u32;
+        let start = lexer.start_byte_offset() as u32;
         let mut accumulator = parser(lexer, self.reborrow())?;
         while let Some(op) = classifier(lexer.peek().0) {
             let _ = lexer.next();
@@ -914,37 +1024,51 @@ impl<'a> ExpressionContext<'a, '_, '_> {
             let mut left = self.apply_load_rule(accumulator);
             let unloaded_right = parser(lexer, self.reborrow())?;
             let mut right = self.apply_load_rule(unloaded_right);
-            let end = lexer.current_byte_offset() as u32;
+            let end = lexer.end_byte_offset() as u32;
 
-            // Insert splats, if needed by the non-'*' operations.
-            // (`BinaryOperator::Multiply` handles splats itself.)
-            if op != crate::BinaryOperator::Multiply {
-                let left_size = match *self.resolve_type(left)? {
-                    crate::TypeInner::Vector { size, .. } => Some(size),
-                    _ => None,
-                };
-                match (left_size, self.resolve_type(right)?) {
-                    (Some(size), &crate::TypeInner::Scalar { .. }) => {
-                        right = self.expressions.append(
-                            crate::Expression::Splat { size, value: right },
-                            self.expressions.get_span(right),
-                        );
-                    }
-                    (None, &crate::TypeInner::Vector { size, .. }) => {
-                        left = self.expressions.append(
-                            crate::Expression::Splat { size, value: left },
-                            self.expressions.get_span(left),
-                        );
-                    }
-                    _ => {}
-                }
-            }
+            self.binary_op_splat(op, &mut left, &mut right)?;
+
             accumulator = TypedExpression::non_reference(self.expressions.append(
                 crate::Expression::Binary { op, left, right },
                 NagaSpan::new(start, end),
             ));
         }
         Ok(accumulator)
+    }
+
+    /// Insert splats, if needed by the non-'*' operations.
+    fn binary_op_splat(
+        &mut self,
+        op: crate::BinaryOperator,
+        left: &mut Handle<crate::Expression>,
+        right: &mut Handle<crate::Expression>,
+    ) -> Result<(), Error<'a>> {
+        if op != crate::BinaryOperator::Multiply {
+            let left_size = match *self.resolve_type(*left)? {
+                crate::TypeInner::Vector { size, .. } => Some(size),
+                _ => None,
+            };
+            match (left_size, self.resolve_type(*right)?) {
+                (Some(size), &crate::TypeInner::Scalar { .. }) => {
+                    *right = self.expressions.append(
+                        crate::Expression::Splat {
+                            size,
+                            value: *right,
+                        },
+                        self.expressions.get_span(*right),
+                    );
+                }
+                (None, &crate::TypeInner::Vector { size, .. }) => {
+                    *left = self.expressions.append(
+                        crate::Expression::Splat { size, value: *left },
+                        self.expressions.get_span(*left),
+                    );
+                }
+                _ => {}
+            }
+        }
+
+        Ok(())
     }
 
     /// Add a single expression to the expression table that is not covered by `self.emitter`.
@@ -1154,10 +1278,14 @@ struct TypeAttributes {
     // Therefore, we are leaving the plumbing in for now.
 }
 
+/// Which grammar rule we are in the midst of parsing.
+///
+/// This is used for error checking. `Parser` maintains a stack of
+/// these and (occasionally) checks that it is being pushed and popped
+/// as expected.
 #[derive(Clone, Debug, PartialEq)]
-pub enum Scope {
+enum Rule {
     Attribute,
-    ImportDecl,
     VariableDecl,
     TypeDecl,
     FunctionDecl,
@@ -1348,7 +1476,7 @@ impl std::error::Error for ParseError {
 }
 
 pub struct Parser {
-    scopes: Vec<(Scope, usize)>,
+    rules: Vec<(Rule, usize)>,
     module_scope_identifiers: FastHashMap<String, Span>,
     lookup_type: FastHashMap<String, Handle<crate::Type>>,
     layouter: Layouter,
@@ -1357,7 +1485,7 @@ pub struct Parser {
 impl Parser {
     pub fn new() -> Self {
         Parser {
-            scopes: Vec::new(),
+            rules: Vec::new(),
             module_scope_identifiers: FastHashMap::default(),
             lookup_type: FastHashMap::default(),
             layouter: Default::default(),
@@ -1365,23 +1493,23 @@ impl Parser {
     }
 
     fn reset(&mut self) {
-        self.scopes.clear();
+        self.rules.clear();
         self.module_scope_identifiers.clear();
         self.lookup_type.clear();
         self.layouter.clear();
     }
 
-    fn push_scope(&mut self, scope: Scope, lexer: &Lexer<'_>) {
-        self.scopes.push((scope, lexer.current_byte_offset()));
+    fn push_rule_span(&mut self, rule: Rule, lexer: &mut Lexer<'_>) {
+        self.rules.push((rule, lexer.start_byte_offset()));
     }
 
-    fn pop_scope(&mut self, lexer: &Lexer<'_>) -> Span {
-        let (_, initial) = self.scopes.pop().unwrap();
+    fn pop_rule_span(&mut self, lexer: &Lexer<'_>) -> Span {
+        let (_, initial) = self.rules.pop().unwrap();
         lexer.span_from(initial)
     }
 
-    fn peek_scope(&mut self, lexer: &Lexer<'_>) -> Span {
-        let &(_, initial) = self.scopes.last().unwrap();
+    fn peek_rule_span(&mut self, lexer: &Lexer<'_>) -> Span {
+        let &(_, initial) = self.rules.last().unwrap();
         lexer.span_from(initial)
     }
 
@@ -1391,7 +1519,7 @@ impl Parser {
             Token::Number(Ok(Number::U32(num))) if uint => Ok(num as i32),
             Token::Number(Ok(Number::I32(num))) if !uint => Ok(num),
             Token::Number(Err(e)) => Err(Error::BadNumber(token_span.1, e)),
-            _ => Err(Error::Unexpected(token_span, ExpectedToken::Integer)),
+            _ => Err(Error::Unexpected(token_span.1, ExpectedToken::Integer)),
         }
     }
 
@@ -1404,7 +1532,7 @@ impl Parser {
             }
             (Token::Number(Err(e)), span) => Err(Error::BadNumber(span, e)),
             other => Err(Error::Unexpected(
-                other,
+                other.1,
                 ExpectedToken::Number(NumberType::I32),
             )),
         }
@@ -1421,7 +1549,7 @@ impl Parser {
             (Token::Number(Ok(Number::U32(num))), _) => Ok(num),
             (Token::Number(Err(e)), span) => Err(Error::BadNumber(span, e)),
             other => Err(Error::Unexpected(
-                other,
+                other.1,
                 ExpectedToken::Number(NumberType::I32),
             )),
         }
@@ -1519,7 +1647,7 @@ impl Parser {
         Ok(result)
     }
 
-    /// Expects [`Scope::PrimaryExpr`] or [`Scope::SingularExpr`] on top; does not pop it.
+    /// Expects [`Rule::PrimaryExpr`] or [`Rule::SingularExpr`] on top; does not pop it.
     /// Expects `word` to be peeked (still in lexer), doesn't consume if returning None.
     fn parse_function_call_inner<'a>(
         &mut self,
@@ -1527,7 +1655,7 @@ impl Parser {
         name: &'a str,
         mut ctx: ExpressionContext<'a, '_, '_>,
     ) -> Result<Option<CalledFunction>, Error<'a>> {
-        assert!(self.scopes.last().is_some());
+        assert!(self.rules.last().is_some());
         let expr = if let Some(fun) = conv::map_relational_fun(name) {
             let _ = lexer.next();
             lexer.open_arguments()?;
@@ -1738,7 +1866,7 @@ impl Parser {
                         _ => return Err(Error::InvalidAtomicOperandType(value_span)),
                     };
 
-                    let span = NagaSpan::from(self.peek_scope(lexer));
+                    let span = NagaSpan::from(self.peek_rule_span(lexer));
                     let result = ctx.interrupt_emitter(expression, span);
                     ctx.block.push(
                         crate::Statement::Atomic {
@@ -2130,7 +2258,7 @@ impl Parser {
                     let result =
                         match self.parse_local_function_call(lexer, name, ctx.reborrow())? {
                             Some((function, arguments)) => {
-                                let span = NagaSpan::from(self.peek_scope(lexer));
+                                let span = NagaSpan::from(self.peek_rule_span(lexer));
                                 ctx.block.extend(ctx.emitter.finish(ctx.expressions));
                                 let result = ctx.functions[function].result.as_ref().map(|_| {
                                     ctx.expressions
@@ -2153,7 +2281,7 @@ impl Parser {
                 }
             }
         };
-        let span = NagaSpan::from(self.peek_scope(lexer));
+        let span = NagaSpan::from(self.peek_rule_span(lexer));
         let handle = ctx.expressions.append(expr, span);
         Ok(Some(CalledFunction {
             result: Some(handle),
@@ -2168,7 +2296,7 @@ impl Parser {
         type_arena: &mut UniqueArena<crate::Type>,
         const_arena: &mut Arena<crate::Constant>,
     ) -> Result<Handle<crate::Constant>, Error<'a>> {
-        self.push_scope(Scope::ConstantExpr, lexer);
+        self.push_rule_span(Rule::ConstantExpr, lexer);
         let inner = match first_token_span {
             (Token::Word("true"), _) => crate::ConstantInner::boolean(true),
             (Token::Word("false"), _) => crate::ConstantInner::boolean(false),
@@ -2193,7 +2321,7 @@ impl Parser {
                 for (handle, var) in const_arena.iter() {
                     match var.name {
                         Some(ref string) if string == name => {
-                            self.pop_scope(lexer);
+                            self.pop_rule_span(lexer);
                             return Ok(handle);
                         }
                         _ => {}
@@ -2221,12 +2349,12 @@ impl Parser {
                     components,
                 }
             }
-            other => return Err(Error::Unexpected(other, ExpectedToken::Constant)),
+            other => return Err(Error::Unexpected(other.1, ExpectedToken::Constant)),
         };
 
         // Only set span if it's a named constant. Otherwise, the enclosing Expression should have
         // the span.
-        let span = self.pop_scope(lexer);
+        let span = self.pop_rule_span(lexer);
         let handle = if let Some(name) = register_name {
             if crate::keywords::wgsl::RESERVED.contains(&name) {
                 return Err(Error::ReservedKeyword(span));
@@ -2268,34 +2396,34 @@ impl Parser {
         mut ctx: ExpressionContext<'a, '_, '_>,
     ) -> Result<TypedExpression, Error<'a>> {
         // Will be popped inside match, possibly inside parse_function_call_inner or parse_construction
-        self.push_scope(Scope::PrimaryExpr, lexer);
+        self.push_rule_span(Rule::PrimaryExpr, lexer);
         let expr = match lexer.peek() {
             (Token::Paren('('), _) => {
                 let _ = lexer.next();
                 let (expr, _span) =
                     self.parse_general_expression_for_reference(lexer, ctx.reborrow())?;
                 lexer.expect(Token::Paren(')'))?;
-                self.pop_scope(lexer);
+                self.pop_rule_span(lexer);
                 expr
             }
             (Token::Word("true" | "false") | Token::Number(..), _) => {
                 let const_handle = self.parse_const_expression(lexer, ctx.types, ctx.constants)?;
-                let span = NagaSpan::from(self.pop_scope(lexer));
+                let span = NagaSpan::from(self.pop_rule_span(lexer));
                 TypedExpression::non_reference(
                     ctx.interrupt_emitter(crate::Expression::Constant(const_handle), span),
                 )
             }
             (Token::Word(word), span) => {
-                if let Some(definition) = ctx.lookup_ident.get(word) {
+                if let Some(definition) = ctx.symbol_table.lookup(word) {
                     let _ = lexer.next();
-                    self.pop_scope(lexer);
+                    self.pop_rule_span(lexer);
 
                     *definition
                 } else if let Some(CalledFunction { result: Some(expr) }) =
                     self.parse_function_call_inner(lexer, word, ctx.reborrow())?
                 {
                     //TODO: resolve the duplicate call in `parse_singular_expression`
-                    self.pop_scope(lexer);
+                    self.pop_rule_span(lexer);
                     TypedExpression::non_reference(expr)
                 } else {
                     let _ = lexer.next();
@@ -2312,7 +2440,7 @@ impl Parser {
                     }
                 }
             }
-            other => return Err(Error::Unexpected(other, ExpectedToken::PrimaryExpression)),
+            other => return Err(Error::Unexpected(other.1, ExpectedToken::PrimaryExpression)),
         };
         Ok(expr)
     }
@@ -2487,7 +2615,7 @@ impl Parser {
         lexer: &mut Lexer<'a>,
         mut ctx: ExpressionContext<'a, '_, '_>,
     ) -> Result<TypedExpression, Error<'a>> {
-        self.push_scope(Scope::UnaryExpr, lexer);
+        self.push_rule_span(Rule::UnaryExpr, lexer);
         //TODO: refactor this to avoid backing up
         let expr = match lexer.peek().0 {
             Token::Operation('-') => {
@@ -2498,7 +2626,7 @@ impl Parser {
                     op: crate::UnaryOperator::Negate,
                     expr,
                 };
-                let span = NagaSpan::from(self.peek_scope(lexer));
+                let span = NagaSpan::from(self.peek_rule_span(lexer));
                 TypedExpression::non_reference(ctx.expressions.append(expr, span))
             }
             Token::Operation('!' | '~') => {
@@ -2509,7 +2637,7 @@ impl Parser {
                     op: crate::UnaryOperator::Not,
                     expr,
                 };
-                let span = NagaSpan::from(self.peek_scope(lexer));
+                let span = NagaSpan::from(self.peek_rule_span(lexer));
                 TypedExpression::non_reference(ctx.expressions.append(expr, span))
             }
             Token::Operation('*') => {
@@ -2529,7 +2657,7 @@ impl Parser {
                         .expressions
                         .get_span(pointer)
                         .to_range()
-                        .unwrap_or_else(|| self.peek_scope(lexer));
+                        .unwrap_or_else(|| self.peek_rule_span(lexer));
                     return Err(Error::NotPointer(span));
                 }
 
@@ -2548,7 +2676,7 @@ impl Parser {
                         .expressions
                         .get_span(operand.handle)
                         .to_range()
-                        .unwrap_or_else(|| self.peek_scope(lexer));
+                        .unwrap_or_else(|| self.peek_rule_span(lexer));
                     return Err(Error::NotReference("the operand of the `&` operator", span));
                 }
 
@@ -2561,7 +2689,7 @@ impl Parser {
             _ => self.parse_singular_expression(lexer, ctx.reborrow())?,
         };
 
-        self.pop_scope(lexer);
+        self.pop_rule_span(lexer);
         Ok(expr)
     }
 
@@ -2571,11 +2699,11 @@ impl Parser {
         lexer: &mut Lexer<'a>,
         mut ctx: ExpressionContext<'a, '_, '_>,
     ) -> Result<TypedExpression, Error<'a>> {
-        let start = lexer.current_byte_offset();
-        self.push_scope(Scope::SingularExpr, lexer);
+        let start = lexer.start_byte_offset();
+        self.push_rule_span(Rule::SingularExpr, lexer);
         let primary_expr = self.parse_primary_expression(lexer, ctx.reborrow())?;
         let singular_expr = self.parse_postfix(start, lexer, ctx.reborrow(), primary_expr)?;
-        self.pop_scope(lexer);
+        self.pop_rule_span(lexer);
 
         Ok(singular_expr)
     }
@@ -2681,7 +2809,7 @@ impl Parser {
         lexer: &mut Lexer<'a>,
         mut context: ExpressionContext<'a, '_, '_>,
     ) -> Result<(TypedExpression, Span), Error<'a>> {
-        self.push_scope(Scope::GeneralExpr, lexer);
+        self.push_rule_span(Rule::GeneralExpr, lexer);
         // logical_or_expression
         let handle = context.parse_binary_op(
             lexer,
@@ -2737,7 +2865,7 @@ impl Parser {
                 )
             },
         )?;
-        Ok((handle, self.pop_scope(lexer)))
+        Ok((handle, self.pop_rule_span(lexer)))
     }
 
     fn parse_variable_ident_decl<'a>(
@@ -2758,7 +2886,7 @@ impl Parser {
         type_arena: &mut UniqueArena<crate::Type>,
         const_arena: &mut Arena<crate::Constant>,
     ) -> Result<ParsedVariable<'a>, Error<'a>> {
-        self.push_scope(Scope::VariableDecl, lexer);
+        self.push_rule_span(Rule::VariableDecl, lexer);
         let mut space = None;
 
         if lexer.skip(Token::Paren('<')) {
@@ -2788,7 +2916,7 @@ impl Parser {
             None
         };
         lexer.expect(Token::Separator(';'))?;
-        let name_span = self.pop_scope(lexer);
+        let name_span = self.pop_rule_span(lexer);
         Ok(ParsedVariable {
             name,
             name_span,
@@ -2813,12 +2941,12 @@ impl Parser {
         while !lexer.skip(Token::Paren('}')) {
             if !ready {
                 return Err(Error::Unexpected(
-                    lexer.next(),
+                    lexer.next().1,
                     ExpectedToken::Token(Token::Separator(',')),
                 ));
             }
             let (mut size_attr, mut align_attr) = (None, None);
-            self.push_scope(Scope::Attribute, lexer);
+            self.push_rule_span(Rule::Attribute, lexer);
             let mut bind_parser = BindingParser::default();
             while lexer.skip(Token::Attribute) {
                 match lexer.next_ident_with_span()? {
@@ -2840,12 +2968,12 @@ impl Parser {
                 }
             }
 
-            let bind_span = self.pop_scope(lexer);
+            let bind_span = self.pop_rule_span(lexer);
             let mut binding = bind_parser.finish(bind_span)?;
 
             let (name, span) = match lexer.next() {
                 (Token::Word(word), span) => (word, span),
-                other => return Err(Error::Unexpected(other, ExpectedToken::FieldName)),
+                other => return Err(Error::Unexpected(other.1, ExpectedToken::FieldName)),
             };
             if crate::keywords::wgsl::RESERVED.contains(&name) {
                 return Err(Error::ReservedKeyword(span));
@@ -3231,7 +3359,7 @@ impl Parser {
             None => {
                 match self.parse_type_decl_impl(lexer, attribute, name, type_arena, const_arena)? {
                     Some(inner) => {
-                        let span = name_span.start..lexer.current_byte_offset();
+                        let span = name_span.start..lexer.end_byte_offset();
                         type_arena.insert(
                             crate::Type {
                                 name: debug_name.map(|s| s.to_string()),
@@ -3253,12 +3381,12 @@ impl Parser {
         type_arena: &mut UniqueArena<crate::Type>,
         const_arena: &mut Arena<crate::Constant>,
     ) -> Result<Handle<crate::Type>, Error<'a>> {
-        self.push_scope(Scope::TypeDecl, lexer);
+        self.push_rule_span(Rule::TypeDecl, lexer);
         let attribute = TypeAttributes::default();
 
         if lexer.skip(Token::Attribute) {
             let other = lexer.next();
-            return Err(Error::Unexpected(other, ExpectedToken::TypeAttribute));
+            return Err(Error::Unexpected(other.1, ExpectedToken::TypeAttribute));
         }
 
         let (name, name_span) = lexer.next_ident_with_span()?;
@@ -3271,7 +3399,7 @@ impl Parser {
             type_arena,
             const_arena,
         )?;
-        self.pop_scope(lexer);
+        self.pop_rule_span(lexer);
         // Only set span if it's the first occurrence of the type.
         // Type spans therefore should only be used for errors in type declarations;
         // use variable spans/expression spans/etc. otherwise
@@ -3282,23 +3410,42 @@ impl Parser {
     fn parse_assignment_statement<'a, 'out>(
         &mut self,
         lexer: &mut Lexer<'a>,
-        mut context: ExpressionContext<'a, '_, 'out>,
+        mut context: StatementContext<'a, '_, 'out>,
+        block: &mut crate::Block,
+        emitter: &mut super::Emitter,
     ) -> Result<(), Error<'a>> {
         use crate::BinaryOperator as Bo;
 
-        let span_start = lexer.current_byte_offset();
-        context.emitter.start(context.expressions);
-        let reference = self.parse_unary_expression(lexer, context.reborrow())?;
+        let span_start = lexer.start_byte_offset();
+        emitter.start(context.expressions);
+        let (reference, lhs_span) = self
+            .parse_general_expression_for_reference(lexer, context.as_expression(block, emitter))?;
+        let op = lexer.next();
         // The left hand side of an assignment must be a reference.
-        let lhs_span = span_start..lexer.current_byte_offset();
-        if !reference.is_reference {
-            return Err(Error::NotReference(
-                "the left-hand side of an assignment",
-                lhs_span,
-            ));
+        if !matches!(
+            op.0,
+            Token::Operation('=')
+                | Token::AssignmentOperation(_)
+                | Token::IncrementOperation
+                | Token::DecrementOperation
+        ) {
+            return Err(Error::Unexpected(lhs_span, ExpectedToken::Assignment));
+        } else if !reference.is_reference {
+            let ty = if context.named_expressions.contains_key(&reference.handle) {
+                InvalidAssignmentType::ImmutableBinding
+            } else {
+                match *context.expressions.get_mut(reference.handle) {
+                    crate::Expression::Swizzle { .. } => InvalidAssignmentType::Swizzle,
+                    _ => InvalidAssignmentType::Other,
+                }
+            };
+
+            return Err(Error::InvalidAssignment { span: lhs_span, ty });
         }
 
-        let value = match lexer.next() {
+        let mut context = context.as_expression(block, emitter);
+
+        let value = match op {
             (Token::Operation('='), _) => {
                 self.parse_general_expression(lexer, context.reborrow())?
             }
@@ -3317,13 +3464,16 @@ impl Parser {
                     //Note: `consume_token` shouldn't produce any other assignment ops
                     _ => unreachable!(),
                 };
-                let left = context.expressions.append(
+                let mut left = context.expressions.append(
                     crate::Expression::Load {
                         pointer: reference.handle,
                     },
                     lhs_span.into(),
                 );
-                let right = self.parse_general_expression(lexer, context.reborrow())?;
+                let mut right = self.parse_general_expression(lexer, context.reborrow())?;
+
+                context.binary_op_splat(op, &mut left, &mut right)?;
+
                 context
                     .expressions
                     .append(crate::Expression::Binary { op, left, right }, span.into())
@@ -3385,10 +3535,10 @@ impl Parser {
                     op_span.into(),
                 )
             }
-            other => return Err(Error::Unexpected(other, ExpectedToken::SwitchItem)),
+            other => return Err(Error::Unexpected(other.1, ExpectedToken::SwitchItem)),
         };
 
-        let span_end = lexer.current_byte_offset();
+        let span_end = lexer.end_byte_offset();
         context
             .block
             .extend(context.emitter.finish(context.expressions));
@@ -3409,7 +3559,7 @@ impl Parser {
         ident: &'a str,
         mut context: ExpressionContext<'a, '_, 'out>,
     ) -> Result<(), Error<'a>> {
-        self.push_scope(Scope::SingularExpr, lexer);
+        self.push_rule_span(Rule::SingularExpr, lexer);
         context.emitter.start(context.expressions);
         if self
             .parse_function_call_inner(lexer, ident, context.reborrow())?
@@ -3421,7 +3571,7 @@ impl Parser {
         context
             .block
             .extend(context.emitter.finish(context.expressions));
-        self.pop_scope(lexer);
+        self.pop_rule_span(lexer);
 
         Ok(())
     }
@@ -3432,6 +3582,9 @@ impl Parser {
         mut context: StatementContext<'a, '_, 'out>,
     ) -> Result<(bool, crate::Block), Error<'a>> {
         let mut body = crate::Block::new();
+        // Push a new lexical scope for the switch case body
+        context.symbol_table.push_scope();
+
         lexer.expect(Token::Paren('{'))?;
         let fall_through = loop {
             // default statements
@@ -3445,6 +3598,8 @@ impl Parser {
             }
             self.parse_statement(lexer, context.reborrow(), &mut body, false)?;
         };
+        // Pop the switch case body lexical scope
+        context.symbol_table.pop_scope();
 
         Ok((fall_through, body))
     }
@@ -3456,15 +3611,18 @@ impl Parser {
         block: &'out mut crate::Block,
         is_uniform_control_flow: bool,
     ) -> Result<(), Error<'a>> {
-        self.push_scope(Scope::Statement, lexer);
+        self.push_rule_span(Rule::Statement, lexer);
         match lexer.peek() {
             (Token::Separator(';'), _) => {
                 let _ = lexer.next();
-                self.pop_scope(lexer);
+                self.pop_rule_span(lexer);
                 return Ok(());
             }
             (Token::Paren('{'), _) => {
-                self.push_scope(Scope::Block, lexer);
+                self.push_rule_span(Rule::Block, lexer);
+                // Push a new lexical scope for the block statement
+                context.symbol_table.push_scope();
+
                 let _ = lexer.next();
                 let mut statements = crate::Block::new();
                 while !lexer.skip(Token::Paren('}')) {
@@ -3475,8 +3633,11 @@ impl Parser {
                         is_uniform_control_flow,
                     )?;
                 }
-                self.pop_scope(lexer);
-                let span = NagaSpan::from(self.pop_scope(lexer));
+                // Pop the block statement lexical scope
+                context.symbol_table.pop_scope();
+
+                self.pop_rule_span(lexer);
+                let span = NagaSpan::from(self.pop_rule_span(lexer));
                 block.push(crate::Statement::Block(statements), span);
                 return Ok(());
             }
@@ -3539,7 +3700,7 @@ impl Parser {
                             }
                         }
                         block.extend(emitter.finish(context.expressions));
-                        context.lookup_ident.insert(
+                        context.symbol_table.add(
                             name,
                             TypedExpression {
                                 handle: expr_id,
@@ -3655,7 +3816,7 @@ impl Parser {
                         let expr_id = context
                             .expressions
                             .append(crate::Expression::LocalVariable(var_id), Default::default());
-                        context.lookup_ident.insert(
+                        context.symbol_table.add(
                             name,
                             TypedExpression {
                                 handle: expr_id,
@@ -3700,7 +3861,7 @@ impl Parser {
                         let accept = self.parse_block(lexer, context.reborrow(), false)?;
 
                         let mut elsif_stack = Vec::new();
-                        let mut elseif_span_start = lexer.current_byte_offset();
+                        let mut elseif_span_start = lexer.start_byte_offset();
                         let mut reject = loop {
                             if !lexer.skip(Token::Word("else")) {
                                 break crate::Block::new();
@@ -3727,10 +3888,10 @@ impl Parser {
                                 other_emit,
                                 other_block,
                             ));
-                            elseif_span_start = lexer.current_byte_offset();
+                            elseif_span_start = lexer.start_byte_offset();
                         };
 
-                        let span_end = lexer.current_byte_offset();
+                        let span_end = lexer.end_byte_offset();
                         // reverse-fold the else-if blocks
                         //Note: we may consider uplifting this to the IR
                         for (other_span_start, other_cond, other_emit, other_block) in
@@ -3811,7 +3972,10 @@ impl Parser {
                                 }
                                 (Token::Paren('}'), _) => break,
                                 other => {
-                                    return Err(Error::Unexpected(other, ExpectedToken::SwitchItem))
+                                    return Err(Error::Unexpected(
+                                        other.1,
+                                        ExpectedToken::SwitchItem,
+                                    ))
                                 }
                             }
                         }
@@ -3843,10 +4007,14 @@ impl Parser {
                             },
                             NagaSpan::from(span),
                         );
+                        // Push a lexical scope for the while loop body
+                        context.symbol_table.push_scope();
 
                         while !lexer.skip(Token::Paren('}')) {
                             self.parse_statement(lexer, context.reborrow(), &mut body, false)?;
                         }
+                        // Pop the while loop body lexical scope
+                        context.symbol_table.pop_scope();
 
                         Some(crate::Statement::Loop {
                             body,
@@ -3857,6 +4025,9 @@ impl Parser {
                     "for" => {
                         let _ = lexer.next();
                         lexer.expect(Token::Paren('('))?;
+                        // Push a lexical scope for the for loop
+                        context.symbol_table.push_scope();
+
                         if !lexer.skip(Token::Separator(';')) {
                             let num_statements = block.len();
                             let (_, span) = lexer.capture_span(|lexer| {
@@ -3904,7 +4075,9 @@ impl Parser {
                         let mut continuing = crate::Block::new();
                         if !lexer.skip(Token::Paren(')')) {
                             match lexer.peek().0 {
-                                Token::Word(ident) if context.lookup_ident.get(ident).is_none() => {
+                                Token::Word(ident)
+                                    if context.symbol_table.lookup(ident).is_none() =>
+                                {
                                     self.parse_function_statement(
                                         lexer,
                                         ident,
@@ -3913,7 +4086,9 @@ impl Parser {
                                 }
                                 _ => self.parse_assignment_statement(
                                     lexer,
-                                    context.as_expression(&mut continuing, &mut emitter),
+                                    context.reborrow(),
+                                    &mut continuing,
+                                    &mut emitter,
                                 )?,
                             }
                             lexer.expect(Token::Paren(')'))?;
@@ -3923,6 +4098,8 @@ impl Parser {
                         while !lexer.skip(Token::Paren('}')) {
                             self.parse_statement(lexer, context.reborrow(), &mut body, false)?;
                         }
+                        // Pop the for loop lexical scope
+                        context.symbol_table.pop_scope();
 
                         Some(crate::Statement::Loop {
                             body,
@@ -4013,10 +4190,12 @@ impl Parser {
                     }
                     // assignment or a function call
                     ident => {
-                        match context.lookup_ident.get(ident) {
+                        match context.symbol_table.lookup(ident) {
                             Some(_) => self.parse_assignment_statement(
                                 lexer,
-                                context.as_expression(block, &mut emitter),
+                                context,
+                                block,
+                                &mut emitter,
                             )?,
                             None => self.parse_function_statement(
                                 lexer,
@@ -4028,15 +4207,15 @@ impl Parser {
                         None
                     }
                 };
-                let span = NagaSpan::from(self.pop_scope(lexer));
+                let span = NagaSpan::from(self.pop_rule_span(lexer));
                 if let Some(statement) = statement {
                     block.push(statement, span);
                 }
             }
             _ => {
                 let mut emitter = super::Emitter::default();
-                self.parse_assignment_statement(lexer, context.as_expression(block, &mut emitter))?;
-                self.pop_scope(lexer);
+                self.parse_assignment_statement(lexer, context, block, &mut emitter)?;
+                self.pop_rule_span(lexer);
             }
         }
         Ok(())
@@ -4052,6 +4231,10 @@ impl Parser {
         let mut body = crate::Block::new();
         let mut continuing = crate::Block::new();
         let mut break_if = None;
+
+        // Push a lexical scope for the loop body
+        context.symbol_table.push_scope();
+
         lexer.expect(Token::Paren('{'))?;
 
         loop {
@@ -4113,6 +4296,9 @@ impl Parser {
             self.parse_statement(lexer, context.reborrow(), &mut body, false)?;
         }
 
+        // Pop the loop body lexical scope
+        context.symbol_table.pop_scope();
+
         Ok(crate::Statement::Loop {
             body,
             continuing,
@@ -4126,7 +4312,10 @@ impl Parser {
         mut context: StatementContext<'a, '_, '_>,
         is_uniform_control_flow: bool,
     ) -> Result<crate::Block, Error<'a>> {
-        self.push_scope(Scope::Block, lexer);
+        self.push_rule_span(Rule::Block, lexer);
+        // Push a lexical scope for the block
+        context.symbol_table.push_scope();
+
         lexer.expect(Token::Paren('{'))?;
         let mut block = crate::Block::new();
         while !lexer.skip(Token::Paren('}')) {
@@ -4137,7 +4326,10 @@ impl Parser {
                 is_uniform_control_flow,
             )?;
         }
-        self.pop_scope(lexer);
+        //Pop the block lexical scope
+        context.symbol_table.pop_scope();
+
+        self.pop_rule_span(lexer);
         Ok(block)
     }
 
@@ -4146,14 +4338,14 @@ impl Parser {
         lexer: &mut Lexer<'a>,
     ) -> Result<Option<crate::Binding>, Error<'a>> {
         let mut bind_parser = BindingParser::default();
-        self.push_scope(Scope::Attribute, lexer);
+        self.push_rule_span(Rule::Attribute, lexer);
 
         while lexer.skip(Token::Attribute) {
             let (word, span) = lexer.next_ident_with_span()?;
             bind_parser.parse(lexer, word, span)?;
         }
 
-        let span = self.pop_scope(lexer);
+        let span = self.pop_rule_span(lexer);
         bind_parser.finish(span)
     }
 
@@ -4163,9 +4355,9 @@ impl Parser {
         module: &mut crate::Module,
         lookup_global_expression: &FastHashMap<&'a str, crate::Expression>,
     ) -> Result<(crate::Function, &'a str), Error<'a>> {
-        self.push_scope(Scope::FunctionDecl, lexer);
+        self.push_rule_span(Rule::FunctionDecl, lexer);
         // read function name
-        let mut lookup_ident = FastHashMap::default();
+        let mut symbol_table = super::SymbolTable::default();
         let (fun_name, span) = lexer.next_ident_with_span()?;
         if crate::keywords::wgsl::RESERVED.contains(&fun_name) {
             return Err(Error::ReservedKeyword(span));
@@ -4191,7 +4383,7 @@ impl Parser {
                 _ => unreachable!(),
             };
             let expression = expressions.append(expression.clone(), span);
-            lookup_ident.insert(
+            symbol_table.add(
                 name,
                 TypedExpression {
                     handle: expression,
@@ -4206,7 +4398,7 @@ impl Parser {
         while !lexer.skip(Token::Paren(')')) {
             if !ready {
                 return Err(Error::Unexpected(
-                    lexer.next(),
+                    lexer.next().1,
                     ExpectedToken::Token(Token::Separator(',')),
                 ));
             }
@@ -4221,7 +4413,7 @@ impl Parser {
                 crate::Expression::FunctionArgument(param_index),
                 NagaSpan::from(param_name_span),
             );
-            lookup_ident.insert(
+            symbol_table.add(
                 param_name,
                 TypedExpression {
                     handle: expression,
@@ -4266,7 +4458,7 @@ impl Parser {
         fun.body = self.parse_block(
             lexer,
             StatementContext {
-                lookup_ident: &mut lookup_ident,
+                symbol_table: &mut symbol_table,
                 typifier: &mut typifier,
                 variables: &mut fun.local_variables,
                 expressions: &mut fun.expressions,
@@ -4282,7 +4474,7 @@ impl Parser {
         // fixup the IR
         ensure_block_returns(&mut fun.body);
         // done
-        self.pop_scope(lexer);
+        self.pop_rule_span(lexer);
 
         // Set named expressions after block parsing ends
         fun.named_expressions = named_expressions;
@@ -4303,7 +4495,7 @@ impl Parser {
         let mut early_depth_test = None;
         let (mut bind_index, mut bind_group) = (None, None);
 
-        self.push_scope(Scope::Attribute, lexer);
+        self.push_rule_span(Rule::Attribute, lexer);
         while lexer.skip(Token::Attribute) {
             match lexer.next_ident_with_span()? {
                 ("binding", _) => {
@@ -4335,7 +4527,7 @@ impl Parser {
                             (Token::Separator(','), _) if i != 2 => (),
                             other => {
                                 return Err(Error::Unexpected(
-                                    other,
+                                    other.1,
                                     ExpectedToken::WorkgroupSizeSeparator,
                                 ))
                             }
@@ -4357,7 +4549,7 @@ impl Parser {
             }
         }
 
-        let attrib_scope = self.pop_scope(lexer);
+        let attrib_span = self.pop_rule_span(lexer);
         match (bind_group, bind_index) {
             (Some(group), Some(index)) => {
                 binding = Some(crate::ResourceBinding {
@@ -4365,13 +4557,13 @@ impl Parser {
                     binding: index,
                 });
             }
-            (Some(_), None) => return Err(Error::MissingAttribute("binding", attrib_scope)),
-            (None, Some(_)) => return Err(Error::MissingAttribute("group", attrib_scope)),
+            (Some(_), None) => return Err(Error::MissingAttribute("binding", attrib_span)),
+            (None, Some(_)) => return Err(Error::MissingAttribute("group", attrib_span)),
             (None, None) => {}
         }
 
         // read items
-        let start = lexer.current_byte_offset();
+        let start = lexer.start_byte_offset();
         match lexer.next() {
             (Token::Separator(';'), _) => {}
             (Token::Word("struct"), _) => {
@@ -4521,7 +4713,7 @@ impl Parser {
                 }
             }
             (Token::End, _) => return Ok(false),
-            other => return Err(Error::Unexpected(other, ExpectedToken::GlobalItem)),
+            other => return Err(Error::Unexpected(other.1, ExpectedToken::GlobalItem)),
         }
 
         match binding {
@@ -4542,8 +4734,8 @@ impl Parser {
                 Err(error) => return Err(error.as_parse_error(lexer.source)),
                 Ok(true) => {}
                 Ok(false) => {
-                    if !self.scopes.is_empty() {
-                        log::error!("Reached the end of file, but scopes are not closed");
+                    if !self.rules.is_empty() {
+                        log::error!("Reached the end of file, but rule stack is not empty");
                         return Err(Error::Other.as_parse_error(lexer.source));
                     };
                     return Ok(module);
