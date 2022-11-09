@@ -185,7 +185,7 @@ class WebTransportStreamCallbackWrapper final {
     }
 
     LOG(("WebTransportStreamCallbackWrapper::OnError aError=0x%" PRIx32,
-         aError));
+         static_cast<uint32_t>(aError)));
     Unused << mCallback->OnError(nsIWebTransport::INVALID_STATE_ERROR);
   }
 
