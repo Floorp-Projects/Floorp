@@ -1001,9 +1001,6 @@ MsaaAccessible::get_accName(
   nsAutoString name;
   Acc()->Name(name);
 
-  // The name was not provided, e.g. no alt attribute for an image. A screen
-  // reader may choose to invent its own accessible name, e.g. from an image src
-  // attribute. Refer to eNoNameOnPurpose return value.
   if (name.IsVoid()) return S_FALSE;
 
   *pszName = ::SysAllocStringLen(name.get(), name.Length());
