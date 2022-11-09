@@ -19,6 +19,12 @@
 const WIDTH = 10, HEIGHT = 10;
 
 add_task(async function testSeamlessLoopingVideoCanvas() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.seamless-looping-video", true],
+    ],
+  });
+
   info(`load video which only contains white frames`);
   let video = document.getElementById("v");
   video.loop = true;
