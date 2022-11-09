@@ -152,6 +152,47 @@ const kImpliedEOFCharacters = [
   0,
 ];
 
+//
+const ARGS_LENGTH_MAX = 500 * 1000;
+
+/**
+ * Several methods in this helper can reach the 500000 limit for arguments in
+ * Firefox, see Bug 1414361.
+ *
+ * This will apply the provided method, on the provided scope with an array of
+ * arguments which can exceed the 500k limit supported by Firefox.
+ *
+ * In practice, the arguments array will be split in several chunks of 500k
+ * items maximum and each chunk will be applied separately.
+ *
+ * !! Note that if you are expecting to use the return value of the method, here
+ * we will return an array of each return value for each chunk. It will be up to
+ * the consumer to decide how to combine the results into a meaningful final
+ * result !!
+ *
+ * @param {Function} method
+ *     The method to apply.
+ * @param {*} scope
+ *     The scope ("this") to use when applying the method.
+ * @param {Array} args
+ *     The array of arguments to apply.
+ *
+ * @returns {Array}
+ *     The array of return values, one item for each chunk that had to be
+ *     created.
+ */
+function safeApply(method, scope, args) {
+  let i = 0;
+  const res = [];
+  const length = args.length;
+  while (i < length) {
+    const _start = i;
+    i += ARGS_LENGTH_MAX;
+    res.push(method.apply(scope, args.slice(_start, i)));
+  }
+  return res;
+}
+
 /**
  * Ensure that the character is valid.  If it is valid, return it;
  * otherwise, return the replacement character.
@@ -639,9 +680,8 @@ Scanner.prototype = {
     resultToken.tokenType = token.mType;
     resultToken.startOffset = this.mTokenOffset;
     resultToken.endOffset = this.mOffset;
-
     const constructText = () => {
-      return String.fromCharCode.apply(null, token.mIdent);
+      return safeApply(String.fromCharCode, null, token.mIdent).join("");
     };
 
     switch (token.mType) {
@@ -903,8 +943,8 @@ Scanner.prototype = {
         n++;
       }
       if (n > this.mOffset) {
-        const substr = this.mBuffer.slice(this.mOffset, n);
-        Array.prototype.push.apply(aText, stringToCodes(substr));
+        const codes = stringToCodes(this.mBuffer.slice(this.mOffset, n));
+        safeApply(Array.prototype.push, aText, codes);
         this.mOffset = n;
       }
       if (n == this.mCount) {
