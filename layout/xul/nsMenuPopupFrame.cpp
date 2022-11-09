@@ -16,7 +16,6 @@
 #include "nsWidgetsCID.h"
 #include "nsMenuFrame.h"
 #include "nsMenuBarFrame.h"
-#include "nsPopupSetFrame.h"
 #include "nsPIDOMWindow.h"
 #include "nsFrameManager.h"
 #include "mozilla/dom/Document.h"
@@ -550,6 +549,27 @@ void nsMenuPopupFrame::ConstrainSizeForWayland(nsSize& aSize) const {
     aSize.height = waylandSize.height;
   }
 #endif
+}
+
+void nsMenuPopupFrame::Reflow(nsPresContext* aPresContext,
+                              ReflowOutput& aDesiredSize,
+                              const ReflowInput& aReflowInput,
+                              nsReflowStatus& aStatus) {
+  MarkInReflow();
+  DO_GLOBAL_REFLOW_COUNT("nsMenuPopupFrame");
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+
+  nsBoxLayoutState state(aPresContext, aReflowInput.mRenderingContext,
+                         &aReflowInput, aReflowInput.mReflowDepth);
+  LayoutPopup(state, nullptr, false);
+
+  const auto wm = GetWritingMode();
+  LogicalSize boxSize = GetLogicalSize(wm);
+  aDesiredSize.SetSize(wm, boxSize);
+  aDesiredSize.SetBlockStartAscent(boxSize.BSize(wm));
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
+  FinishAndStoreOverflow(&aDesiredSize, aReflowInput.mStyleDisplay);
 }
 
 void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
