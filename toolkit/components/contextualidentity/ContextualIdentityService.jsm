@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+var EXPORTED_SYMBOLS = ["ContextualIdentityService"];
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 // The maximum valid numeric value for the userContextId.
 const MAX_USER_CONTEXT_ID = -1 >>> 0;
@@ -640,4 +644,4 @@ let path = PathUtils.join(
   Services.dirsvc.get("ProfD", Ci.nsIFile).path,
   "containers.json"
 );
-export var ContextualIdentityService = new _ContextualIdentityService(path);
+var ContextualIdentityService = new _ContextualIdentityService(path);
