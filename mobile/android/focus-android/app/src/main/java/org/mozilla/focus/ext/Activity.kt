@@ -5,6 +5,7 @@
 package org.mozilla.focus.ext
 
 import android.app.Activity
+import android.os.Build
 import android.view.WindowManager
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
@@ -28,7 +29,13 @@ fun Activity.setNavigationIcon(
 fun Activity.updateSecureWindowFlags() {
     if (this.settings.shouldUseSecureMode()) {
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            setRecentsScreenshotEnabled(false)
+        }
     } else {
         window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            setRecentsScreenshotEnabled(true)
+        }
     }
 }
