@@ -41,7 +41,11 @@ endif
 # of cargo when running via `mach`.
 ifdef MACH_STDOUT_ISATTY
 ifeq (,$(findstring --color,$(cargo_build_flags)))
+ifdef NO_ANSI
+cargo_build_flags += --color=never
+else
 cargo_build_flags += --color=always
+endif
 endif
 endif
 
