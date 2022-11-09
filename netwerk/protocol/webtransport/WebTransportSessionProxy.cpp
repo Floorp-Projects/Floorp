@@ -5,6 +5,7 @@
 
 #include "WebTransportLog.h"
 #include "Http3WebTransportSession.h"
+#include "Http3WebTransportStream.h"
 #include "WebTransportSessionProxy.h"
 #include "WebTransportStreamProxy.h"
 #include "nsIAsyncVerifyRedirectCallback.h"

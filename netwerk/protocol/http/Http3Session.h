@@ -199,6 +199,8 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   void CloseWebTransportStream(Http3WebTransportStream* aStream,
                                nsresult aResult);
   void StreamHasDataToWrite(Http3StreamBase* aStream);
+  void ResetWebTransportStream(Http3WebTransportStream* aStream,
+                               uint8_t aErrorCode);
 
  private:
   ~Http3Session();

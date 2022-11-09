@@ -1646,6 +1646,16 @@ void Http3Session::CloseWebTransportStream(Http3WebTransportStream* aStream,
   CloseStreamInternal(aStream, aResult);
 }
 
+void Http3Session::ResetWebTransportStream(Http3WebTransportStream* aStream,
+                                           uint8_t aErrorCode) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  LOG3(("Http3Session::ResetWebTransportStream %p %p 0x%" PRIx32, this, aStream,
+        static_cast<uint32_t>(aErrorCode)));
+  mHttp3Connection->ResetStream(aStream->StreamId(), aErrorCode);
+
+  CloseStreamInternal(aStream, NS_ERROR_ABORT);
+}
+
 nsresult Http3Session::TakeTransport(nsISocketTransport**,
                                      nsIAsyncInputStream**,
                                      nsIAsyncOutputStream**) {

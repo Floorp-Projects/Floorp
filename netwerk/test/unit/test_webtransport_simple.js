@@ -7,6 +7,10 @@
 var h3Port;
 var host;
 
+var { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
+
 let WebTransportListener = function() {};
 
 WebTransportListener.prototype = {
@@ -173,6 +177,67 @@ add_task(async function test_wt_stream_create() {
 
   await streamCreatePromise(webTransport, true);
   await streamCreatePromise(webTransport, false);
+
+  webTransport.closeSession(0, "");
+});
+
+function SendStreamStatsCallback() {}
+
+SendStreamStatsCallback.prototype = {
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIWebTransportSendStreamStatsCallback",
+  ]),
+
+  onStatsAvailable(aStats) {
+    Assert.ok(aStats != null);
+    this.finish(aStats);
+  },
+};
+
+function sendStreamStatsPromise(stream) {
+  return new Promise(resolve => {
+    let listener = new SendStreamStatsCallback().QueryInterface(
+      Ci.nsIWebTransportSendStreamStatsCallback
+    );
+    listener.finish = resolve;
+
+    stream.QueryInterface(Ci.nsIWebTransportSendStream);
+    stream.getSendStreamStats(listener);
+  });
+}
+
+add_task(async function test_wt_stream_send_and_stats() {
+  let webTransport = NetUtil.newWebTransport().QueryInterface(
+    Ci.nsIWebTransport
+  );
+
+  await new Promise(resolve => {
+    let listener = new WebTransportListener().QueryInterface(
+      Ci.WebTransportSessionEventListener
+    );
+    listener.ready = resolve;
+
+    webTransport.asyncConnect(
+      NetUtil.newURI("https://" + host + "/success"),
+      Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal),
+      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+      listener
+    );
+  });
+
+  let stream = await streamCreatePromise(webTransport, false);
+  stream.QueryInterface(Ci.nsIAsyncOutputStream);
+
+  let data = "123456";
+  stream.write(data, data.length);
+
+  // We need some time to send the packet out.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  let stats = await sendStreamStatsPromise(stream);
+  Assert.equal(stats.bytesWritten, data.length);
+  Assert.equal(stats.bytesSent, data.length);
 
   webTransport.closeSession(0, "");
 });
