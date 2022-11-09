@@ -97,7 +97,12 @@ class JS_PUBLIC_API Value;
 //   for ECMAScript) we must convert that to the canonical NaN. See
 //   JS::CanonicalizeNaN.
 //
-// We have two boxing modes defined: NUNBOX32 and PUNBOX64.
+// We have two boxing modes defined: NUNBOX32 and PUNBOX64.The first is
+// "NaN unboxed boxing" (or Nunboxing), as non-Number payload are stored
+// unaltered in the lower bits. The second is "Packed NaN boxing" (or
+// punboxing), which is 'logically like nunboxing, but with all the unused bits
+// sucked out' [1],  as we rely on unused bits of the payload to pack the
+// payload in the lower bits using Nunboxing.
 //
 // - In NUNBOX32 the tag is stored in the least-significant bits of the high
 //   word of the NaN. Since it's used on 32-bit systems, this has the nice
@@ -136,6 +141,9 @@ class JS_PUBLIC_API Value;
 //    left to allocate new tags.)
 //
 //    * But see JS_NONCANONICAL_HARDWARE_NAN below.
+//
+// [1]:
+// https://wingolog.org/archives/2011/05/18/value-representation-in-javascript-implementations#969f63bbe4eb912778c9da85feb0f5763e7a7862
 
 /* JS::Value can store a full int32_t. */
 #define JSVAL_INT_BITS 32
