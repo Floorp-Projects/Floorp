@@ -85,9 +85,11 @@ const BASE_MESSAGES = () => [
     id: "CFR_FIREFOX_VIEW",
     groups: ["cfr"],
     template: "cfr_doorhanger",
+    //If Firefox View button has been moved to the overflow menu, we want to change the anchor element
     content: {
       bucket_id: "CFR_FIREFOX_VIEW",
       anchor_id: "firefox-view-button",
+      alt_anchor_id: "nav-bar-overflow-button",
       layout: "icon_and_message",
       icon: "chrome://browser/content/cfr-lightning.svg",
       icon_dark_theme: "chrome://browser/content/cfr-lightning-dark.svg",
@@ -128,8 +130,7 @@ const BASE_MESSAGES = () => [
       id: "nthTabClosed",
     },
     // Avoid breaking existing tests that close tabs for now.
-    targeting:
-      "!inMr2022Holdback && (currentDate|date - profileAgeCreated) / 86400000 >= 2 && tabsClosedCount >= 3 && 'browser.firefox-view.view-count'|preferenceValue == 0 && !'browser.newtabpage.activity-stream.asrouter.providers.cfr'|preferenceIsUserSet",
+    targeting: `!inMr2022Holdback && fxViewButtonAreaType != null && (currentDate|date - profileAgeCreated) / 86400000 >= 2 && tabsClosedCount >= 3 && 'browser.firefox-view.view-count'|preferenceValue == 0 && !'browser.newtabpage.activity-stream.asrouter.providers.cfr'|preferenceIsUserSet`,
   },
   {
     id: "FX_MR_106_UPGRADE",

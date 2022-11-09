@@ -60,6 +60,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [userEnabledActiveColorway](#userEnabledActiveColorway)
 * [inMr2022Holdback](#inMr2022Holdback)
 * [distributionId](#distributionId)
+* [fxViewButtonAreaType](#fxViewButtonAreaType)
 
 ## Detailed usage
 
@@ -869,3 +870,7 @@ A boolean. `true` when the user is in the Major Release 2022 holdback study.
 
 A string containing the id of the distribution, or the empty string if there
 is no distribution associated with the build.
+
+### `fxViewButtonAreaType`
+
+A string of the name of the container where the Firefox View button is shown, null if the button has been removed.

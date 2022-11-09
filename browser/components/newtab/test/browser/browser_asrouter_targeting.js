@@ -1285,3 +1285,28 @@ add_task(async function test_distributionId() {
     "Should return the correct distribution Id"
   );
 });
+
+add_task(async function test_fxViewButtonAreaType_default() {
+  is(
+    typeof (await ASRouterTargeting.Environment.fxViewButtonAreaType),
+    "string",
+    "Should return a string"
+  );
+
+  is(
+    await ASRouterTargeting.Environment.fxViewButtonAreaType,
+    "toolbar",
+    "Should return name of container if button hasn't been removed"
+  );
+});
+
+add_task(async function test_fxViewButtonAreaType_removed() {
+  CustomizableUI.removeWidgetFromArea("firefox-view-button");
+
+  is(
+    await ASRouterTargeting.Environment.fxViewButtonAreaType,
+    null,
+    "Should return null if button has been removed"
+  );
+  CustomizableUI.reset();
+});

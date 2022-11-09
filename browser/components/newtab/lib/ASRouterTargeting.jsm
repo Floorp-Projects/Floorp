@@ -41,6 +41,12 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "CustomizableUI",
+  "resource:///modules/CustomizableUI.jsm"
+);
+
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.import(
     "resource://gre/modules/FxAccounts.jsm"
@@ -793,6 +799,15 @@ const TargetingGetters = {
     return Services.prefs
       .getDefaultBranch(null)
       .getCharPref("distribution.id", "");
+  },
+
+  /** Where the Firefox View button is shown, if at all.
+   * @return {string} container of the button if it is shown in the toolbar/overflow menu
+   * @return {string} `null` if the button has been removed
+   */
+  get fxViewButtonAreaType() {
+    let button = lazy.CustomizableUI.getWidget("firefox-view-button");
+    return button.areaType;
   },
 };
 
