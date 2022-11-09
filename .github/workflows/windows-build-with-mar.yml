@@ -81,7 +81,7 @@ jobs:
         fi
 
         if [ ! -f /home/runner/work/wine.tar.zst ]; then
-            aria2c  -x5 -d /home/runner/work https://firefoxci.taskcluster-artifacts.net/CMNlM0vLSlGmZ4gzVFVu1w/0/public/build/wine.tar.zst
+            aria2c  -x5 -d /home/runner/work https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-1.toolchains.v3.linux64-wine.latest/artifacts/public%2Fbuild%2Fwine.tar.zst
             if [ ! -d /home/runner/work/win-cross/wine ]; then
                 zstd -dc /home/runner/work/wine.tar.zst | tar -xf - -C /home/runner/work/win-cross
             fi
