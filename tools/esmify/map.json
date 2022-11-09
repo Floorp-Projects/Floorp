@@ -222,7 +222,7 @@
   "resource:///modules/AboutNewTab.jsm": "browser/modules/AboutNewTab.jsm",
   "resource:///modules/AboutNewTabService.jsm":
     "browser/components/newtab/AboutNewTabService.jsm",
-  "resource:///modules/AppUpdater.jsm": "browser/modules/AppUpdater.jsm",
+  "resource://gre/modules/AppUpdater.jsm": "toolkit/mozapps/update/AppUpdater.jsm",
   "resource:///modules/AsyncTabSwitcher.jsm":
     "browser/modules/AsyncTabSwitcher.jsm",
   "resource:///modules/AttributionCode.jsm":
