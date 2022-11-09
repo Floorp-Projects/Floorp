@@ -168,6 +168,28 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileSystemWritableFileStream,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+already_AddRefed<Promise> FileSystemWritableFileStream::Close(
+    ErrorResult& aRv) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  if (IsClosed()) {
+    promise->MaybeRejectWithTypeError("WritableFileStream closed");
+    return promise.forget();
+  }
+
+  if (mActor) {
+    // close file, tell parent file is closed
+    LOG(("WritableFileStream %p: Closing", mActor->MutableFileDescPtr()));
+    mActor->Close();
+    MOZ_ASSERT(!mActor);
+  }
+
+  promise->MaybeResolveWithUndefined();
+  return promise.forget();
+}
+
 // WebIDL Boilerplate
 
 JSObject* FileSystemWritableFileStream::WrapObject(
@@ -448,28 +470,6 @@ nsresult FileSystemWritableFileStream::WriteBlob(Blob* aBlob,
       PR_Write(mActor->MutableFileDescPtr(), data, length);  // XXX errors?
   free(data);
   return NS_OK;
-}
-
-already_AddRefed<Promise> FileSystemWritableFileStream::Close(
-    ErrorResult& aRv) {
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  if (IsClosed()) {
-    promise->MaybeRejectWithTypeError("WritableFileStream closed");
-    return promise.forget();
-  }
-
-  if (mActor) {
-    // close file, tell parent file is closed
-    LOG(("WritableFileStream %p: Closing", mActor->MutableFileDescPtr()));
-    mActor->Close();
-    MOZ_ASSERT(!mActor);
-  }
-
-  promise->MaybeResolveWithUndefined();
-  return promise.forget();
 }
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(
