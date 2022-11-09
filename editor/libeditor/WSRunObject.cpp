@@ -7,6 +7,7 @@
 
 #include "EditorDOMPoint.h"
 #include "EditorUtils.h"
+#include "ErrorList.h"
 #include "HTMLEditHelpers.h"  // for MoveNodeResult, SplitNodeResult
 #include "HTMLEditor.h"
 #include "HTMLEditUtils.h"
@@ -508,6 +509,9 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
       // out of its block.
       pointToMoveFirstLineContent = atLeftBlockChild;
     } else {
+      if (NS_WARN_IF(!aLeftContentInBlock.IsInComposedDoc())) {
+        return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      }
       // We try to work as well as possible with HTML that's already invalid.
       // Although "right block" is a block, and a block must not be contained
       // in inline elements, reality is that broken documents do exist.  The
