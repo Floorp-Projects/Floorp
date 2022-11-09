@@ -415,24 +415,6 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Write(
   return promise.forget();
 }
 
-/*
-nsresult FileSystemWritableFileStream::WriteBlob(Blob& aBlob, uint64_t&
-aWritten) {
-  // If aBlobImpl is a MultipartBlobImpl, let's write the sub-blobImpls
-  // instead.
-  const nsTArray<RefPtr<BlobImpl>>* subBlobs = aBlob.GetSubBlobImpls();
-  if (subBlobs) {
-    for (BlobImpl* subBlob : *subBlobs) {
-      nsresult rv = WriteBlobImpl(subBlob, aWritten);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
-    return NS_OK;
-  }
-  return WriteBlobImpl(aBlob.Impl(), aWritten);
-}
-*/
 nsresult FileSystemWritableFileStream::WriteBlob(Blob* aBlob,
                                                  uint64_t& aWritten) {
   NS_ENSURE_ARG_POINTER(aBlob);
