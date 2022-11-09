@@ -1552,7 +1552,7 @@ void nsXULPopupManager::BeginShowingPopup(const PendingPopup& aPendingPopup,
   RefPtr<nsPresContext> presContext = popupFrame->PresContext();
   RefPtr<PresShell> presShell = presContext->PresShell();
   presShell->FrameNeedsReflow(popupFrame, IntrinsicDirty::TreeChange,
-                              NS_FRAME_HAS_DIRTY_CHILDREN);
+                              NS_FRAME_IS_DIRTY);
 
   nsPopupType popupType = popupFrame->PopupType();
 
