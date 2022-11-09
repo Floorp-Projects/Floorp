@@ -1801,13 +1801,9 @@ class nsContextMenu {
         // some other error occured; notify the user...
         if (!Components.isSuccessCode(aRequest.status)) {
           try {
-            const bundle = Services.strings.createBundle(
-              "chrome://mozapps/locale/downloads/downloads.properties"
-            );
+            const l10n = new Localization(["browser/downloads.ftl"], true);
 
-            const title = bundle.GetStringFromName("downloadErrorAlertTitle");
-            let msg = bundle.GetStringFromName("downloadErrorGeneric");
-
+            let msg = null;
             try {
               const channel = aRequest.QueryInterface(Ci.nsIChannel);
               const reason = channel.loadInfo.requestBlockingReason;
@@ -1817,17 +1813,19 @@ class nsContextMenu {
                 try {
                   const properties = channel.QueryInterface(Ci.nsIPropertyBag);
                   const id = properties.getProperty("cancelledByExtension");
-                  msg = bundle.formatStringFromName("downloadErrorBlockedBy", [
-                    WebExtensionPolicy.getByID(id).name,
-                  ]);
+                  msg = l10n.formatValueSync("downloads-error-blocked-by", {
+                    extension: WebExtensionPolicy.getByID(id).name,
+                  });
                 } catch (err) {
                   // "cancelledByExtension" doesn't have to be available.
-                  msg = bundle.GetStringFromName("downloadErrorExtension");
+                  msg = l10n.formatValueSync("downloads-error-extension");
                 }
               }
             } catch (ex) {}
+            msg ??= l10n.formatValueSync("downloads-error-generic");
 
-            let window = Services.wm.getOuterWindowWithId(windowID);
+            const window = Services.wm.getOuterWindowWithId(windowID);
+            const title = l10n.formatValueSync("downloads-error-alert-title");
             Services.prompt.alert(window, title, msg);
           } catch (ex) {}
           return;
