@@ -443,13 +443,6 @@ JS_PUBLIC_API bool js::NukeCrossCompartmentWrappers(
         continue;
       }
 
-      // We never nuke ScriptSourceObjects, since they are only ever used
-      // internally by the JS engine, and are expected to remain valid
-      // throughout a script's lifetime.
-      if (MOZ_UNLIKELY(wrapped->is<ScriptSourceObject>())) {
-        continue;
-      }
-
       // We only skip nuking window references that point to a target
       // compartment, not the ones that belong to it.
       if (nukeReferencesToWindow == DontNukeWindowReferences &&
@@ -468,16 +461,9 @@ JS_PUBLIC_API bool js::NukeCrossCompartmentWrappers(
 
 JS_PUBLIC_API bool js::AllowNewWrapper(JS::Compartment* target, JSObject* obj) {
   // Disallow creating new wrappers if we nuked the object realm or target
-  // compartment. However, we always need to provide live wrappers for
-  // ScriptSourceObjects, since they're used for cross-compartment cloned
-  // scripts, and need to remain accessible even after the original realm has
-  // been nuked.
+  // compartment.
 
   MOZ_ASSERT(obj->compartment() != target);
-
-  if (obj->is<ScriptSourceObject>()) {
-    return true;
-  }
 
   if (target->nukedOutgoingWrappers ||
       obj->nonCCWRealm()->nukedIncomingWrappers) {
