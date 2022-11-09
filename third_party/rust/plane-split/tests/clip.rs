@@ -1,11 +1,14 @@
-use euclid::{point3, rect, vec3, Angle, Rect, Transform3D};
+use euclid::{
+    default::{Rect, Transform3D},
+    point3, rect, vec3, Angle,
+};
 use plane_split::{Clipper, Plane, Polygon};
 
-use std::f32::consts::FRAC_PI_4;
+use std::f64::consts::FRAC_PI_4;
 
 #[test]
 fn clip_in() {
-    let plane: Plane<f32, ()> = Plane::from_unnormalized(vec3(1.0, 0.0, 1.0), 20.0)
+    let plane = Plane::from_unnormalized(vec3(1.0, 0.0, 1.0), 20.0)
         .unwrap()
         .unwrap();
     let mut clipper = Clipper::new();
@@ -29,7 +32,7 @@ fn clip_in() {
 
 #[test]
 fn clip_out() {
-    let plane: Plane<f32, ()> = Plane::from_unnormalized(vec3(1.0, 0.0, 1.0), -20.0)
+    let plane = Plane::from_unnormalized(vec3(1.0, 0.0, 1.0), -20.0)
         .unwrap()
         .unwrap();
     let mut clipper = Clipper::new();
@@ -52,7 +55,7 @@ fn clip_out() {
 
 #[test]
 fn clip_parallel() {
-    let plane: Plane<f32, ()> = Plane {
+    let plane = Plane {
         normal: vec3(0.0, 0.0, 1.0),
         offset: 0.0,
     };
@@ -76,7 +79,7 @@ fn clip_parallel() {
 
 #[test]
 fn clip_repeat() {
-    let plane: Plane<f32, ()> = Plane::from_unnormalized(vec3(1.0, 0.0, 1.0), 0.0)
+    let plane = Plane::from_unnormalized(vec3(1.0, 0.0, 1.0), 0.0)
         .unwrap()
         .unwrap();
     let mut clipper = Clipper::new();
@@ -101,13 +104,12 @@ fn clip_repeat() {
 
 #[test]
 fn clip_transformed() {
-    let t_rot: Transform3D<f32, (), ()> =
-        Transform3D::rotation(0.0, 1.0, 0.0, Angle::radians(-FRAC_PI_4));
-    let t_div: Transform3D<f32, (), ()> = Transform3D::perspective(5.0);
+    let t_rot: Transform3D<f64> = Transform3D::rotation(0.0, 1.0, 0.0, Angle::radians(-FRAC_PI_4));
+    let t_div: Transform3D<f64> = Transform3D::perspective(5.0);
     let transform = t_rot.then(&t_div);
 
     let polygon = Polygon::from_rect(rect(-10.0, -10.0, 20.0, 20.0), 0);
-    let bounds: Rect<f32, ()> = rect(-1.0, -1.0, 2.0, 2.0);
+    let bounds: Rect<f64> = rect(-1.0, -1.0, 2.0, 2.0);
 
     let mut clipper = Clipper::new();
     let results = clipper.clip_transformed(polygon, &transform, Some(bounds));
@@ -117,7 +119,7 @@ fn clip_transformed() {
 
 #[test]
 fn clip_badly_transformed() {
-    let mut tx = Transform3D::<f32, (), ()>::identity();
+    let mut tx = Transform3D::<f64>::identity();
     tx.m14 = -0.0000001;
     tx.m44 = 0.0;
 
@@ -129,7 +131,7 @@ fn clip_badly_transformed() {
 
 #[test]
 fn clip_near_coplanar() {
-    let tx = Transform3D::<f32, (), ()>::new(
+    let tx = Transform3D::<f64>::new(
         1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -960.0, -625.0, 1.0, -1.0, 100.0, -2852.0, 0.0, 1.0,
     );
     let mut clipper = Clipper::new();

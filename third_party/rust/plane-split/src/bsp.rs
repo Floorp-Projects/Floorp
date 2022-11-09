@@ -1,152 +1,187 @@
-use crate::{is_zero, Intersection, Plane, Polygon, Splitter};
+use crate::{Plane, PlaneCut, Polygon};
 
-use binary_space_partition::{BspNode, Plane as BspPlane, PlaneCut};
-use euclid::{approxeq::ApproxEq, Point3D, Vector3D};
-use num_traits::{Float, One, Zero};
+use euclid::default::{Point3D, Vector3D};
+use smallvec::SmallVec;
 
-use std::{fmt, iter, ops};
+use std::fmt;
 
-impl<T, U, A> BspPlane for Polygon<T, U, A>
-where
-    T: Copy
-        + fmt::Debug
-        + ApproxEq<T>
-        + ops::Sub<T, Output = T>
-        + ops::Add<T, Output = T>
-        + ops::Mul<T, Output = T>
-        + ops::Div<T, Output = T>
-        + Zero
-        + Float,
-    U: fmt::Debug,
-    A: Copy + fmt::Debug,
-{
-    fn cut(&self, mut poly: Self) -> PlaneCut<Self> {
-        log::debug!("\tCutting anchor {:?} by {:?}", poly.anchor, self.anchor);
-        log::trace!("\t\tbase {:?}", self.plane);
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct PolygonIdx(usize);
 
-        //Note: we treat `self` as a plane, and `poly` as a concrete polygon here
-        let (intersection, dist) = match self.plane.intersect(&poly.plane) {
-            None => {
-                let ndot = self.plane.normal.dot(poly.plane.normal);
-                log::debug!("\t\tNormals are aligned with {:?}", ndot);
-                let dist = self.plane.offset - ndot * poly.plane.offset;
-                (Intersection::Coplanar, dist)
-            }
-            Some(_) if self.plane.are_outside(&poly.points) => {
-                //Note: we can't start with `are_outside` because it's subject to FP precision
-                let dist = self.plane.signed_distance_sum_to(&poly);
-                (Intersection::Outside, dist)
-            }
-            Some(line) => {
-                //Note: distance isn't relevant here
-                (Intersection::Inside(line), T::zero())
-            }
-        };
-
-        match intersection {
-            //Note: we deliberately make the comparison wider than just with T::epsilon().
-            // This is done to avoid mistakenly ordering items that should be on the same
-            // plane but end up slightly different due to the floating point precision.
-            Intersection::Coplanar if is_zero(dist) => {
-                log::debug!("\t\tCoplanar at {:?}", dist);
-                PlaneCut::Sibling(poly)
-            }
-            Intersection::Coplanar | Intersection::Outside => {
-                log::debug!("\t\tOutside at {:?}", dist);
-                if dist > T::zero() {
-                    PlaneCut::Cut {
-                        front: vec![poly],
-                        back: vec![],
-                    }
-                } else {
-                    PlaneCut::Cut {
-                        front: vec![],
-                        back: vec![poly],
-                    }
-                }
-            }
-            Intersection::Inside(line) => {
-                log::debug!("\t\tCut across {:?}", line);
-                let (res_add1, res_add2) = poly.split_with_normal(&line, &self.plane.normal);
-                let mut front = Vec::new();
-                let mut back = Vec::new();
-
-                for sub in iter::once(poly)
-                    .chain(res_add1)
-                    .chain(res_add2)
-                    .filter(|p| !p.is_empty())
-                {
-                    let dist = self.plane.signed_distance_sum_to(&sub);
-                    if dist > T::zero() {
-                        log::trace!("\t\t\tdist {:?} -> front: {:?}", dist, sub);
-                        front.push(sub)
-                    } else {
-                        log::trace!("\t\t\tdist {:?} -> back: {:?}", dist, sub);
-                        back.push(sub)
-                    }
-                }
-
-                PlaneCut::Cut { front, back }
-            }
-        }
-    }
-
-    fn is_aligned(&self, other: &Self) -> bool {
-        self.plane.normal.dot(other.plane.normal) > T::zero()
-    }
-}
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct NodeIdx(usize);
 
 /// Binary Space Partitioning splitter, uses a BSP tree.
-pub struct BspSplitter<T, U, A> {
-    tree: BspNode<Polygon<T, U, A>>,
-    result: Vec<Polygon<T, U, A>>,
+pub struct BspSplitter<A: Copy> {
+    result: Vec<Polygon<A>>,
+    nodes: Vec<BspNode>,
+    polygons: Vec<Polygon<A>>,
 }
 
-impl<T, U, A> BspSplitter<T, U, A> {
+impl<A: Copy> BspSplitter<A> {
     /// Create a new BSP splitter.
     pub fn new() -> Self {
         BspSplitter {
-            tree: BspNode::new(),
             result: Vec::new(),
+            nodes: vec![BspNode::new()],
+            polygons: Vec::new(),
         }
     }
 }
 
-impl<T, U, A> Splitter<T, U, A> for BspSplitter<T, U, A>
+impl<A> BspSplitter<A>
 where
-    T: Copy
-        + fmt::Debug
-        + ApproxEq<T>
-        + ops::Sub<T, Output = T>
-        + ops::Add<T, Output = T>
-        + ops::Mul<T, Output = T>
-        + ops::Div<T, Output = T>
-        + Zero
-        + One
-        + Float,
-    U: fmt::Debug,
     A: Copy + fmt::Debug + Default,
 {
-    fn reset(&mut self) {
-        self.tree = BspNode::new();
+    /// Put the splitter back in it initial state.
+    ///
+    /// Call this at the beginning of every frame when reusing the splitter.
+    pub fn reset(&mut self) {
+        self.polygons.clear();
+        self.nodes.clear();
+        self.nodes.push(BspNode::new());
     }
 
-    fn add(&mut self, poly: Polygon<T, U, A>) {
-        self.tree.insert(poly);
+    /// Add a polygon to the plane splitter.
+    ///
+    /// This is where most of the expensive computation happens.
+    pub fn add(&mut self, poly: Polygon<A>) {
+        let root = NodeIdx(0);
+        self.insert(root, &poly);
     }
 
-    fn sort(&mut self, view: Vector3D<T, U>) -> &[Polygon<T, U, A>] {
+    /// Sort the added and split polygons against the view vector.
+    ///
+    /// Call this towards the end of the frame after having added all polygons.
+    pub fn sort(&mut self, view: Vector3D<f64>) -> &[Polygon<A>] {
         //debug!("\t\ttree before sorting {:?}", self.tree);
         let poly = Polygon {
             points: [Point3D::origin(); 4],
             plane: Plane {
                 normal: -view, //Note: BSP `order()` is back to front
-                offset: T::zero(),
+                offset: 0.0,
             },
             anchor: A::default(),
         };
-        self.result.clear();
-        self.tree.order(&poly, &mut self.result);
+
+        let root = NodeIdx(0);
+        let mut result = std::mem::take(&mut self.result);
+        result.clear();
+        self.order(root, &poly, &mut result);
+        self.result = result;
+
         &self.result
+    }
+
+    /// Process a set of polygons at once.
+    pub fn solve(&mut self, input: &[Polygon<A>], view: Vector3D<f64>) -> &[Polygon<A>]
+    where
+        A: Copy,
+    {
+        self.reset();
+        for p in input {
+            self.add(p.clone());
+        }
+        self.sort(view)
+    }
+
+    /// Insert a value into the sub-tree starting with this node.
+    /// This operation may spawn additional leafs/branches of the tree.
+    fn insert(&mut self, node_idx: NodeIdx, value: &Polygon<A>) {
+        let node = &mut self.nodes[node_idx.0];
+        if node.values.is_empty() {
+            node.values.push(add_polygon(&mut self.polygons, value));
+            return;
+        }
+
+        let mut front: SmallVec<[Polygon<A>; 2]> = SmallVec::new();
+        let mut back: SmallVec<[Polygon<A>; 2]> = SmallVec::new();
+        let first = node.values[0].0;
+        match self.polygons[first].cut(value, &mut front, &mut back) {
+            PlaneCut::Sibling => {
+                node.values.push(add_polygon(&mut self.polygons, value));
+            }
+            PlaneCut::Cut => {
+                if front.len() != 0 {
+                    if self.nodes[node_idx.0].front.is_none() {
+                        self.nodes[node_idx.0].front = Some(add_node(&mut self.nodes));
+                    }
+                    let node_front = self.nodes[node_idx.0].front.unwrap();
+                    for p in &front {
+                        self.insert(node_front, p)
+                    }
+                }
+                if back.len() != 0 {
+                    if self.nodes[node_idx.0].back.is_none() {
+                        self.nodes[node_idx.0].back = Some(add_node(&mut self.nodes));
+                    }
+                    let node_back = self.nodes[node_idx.0].back.unwrap();
+                    for p in &back {
+                        self.insert(node_back, p)
+                    }
+                }
+            }
+        }
+    }
+
+    /// Build the draw order of this sub-tree into an `out` vector,
+    /// so that the contained planes are sorted back to front according
+    /// to the view vector defined as the `base` plane front direction.
+    pub fn order(&self, node: NodeIdx, base: &Polygon<A>, out: &mut Vec<Polygon<A>>) {
+        let node = &self.nodes[node.0];
+        let (former, latter) = match node.values.first() {
+            None => return,
+            Some(first) => {
+                if base.is_aligned(&self.polygons[first.0]) {
+                    (node.front, node.back)
+                } else {
+                    (node.back, node.front)
+                }
+            }
+        };
+
+        if let Some(node) = former {
+            self.order(node, base, out);
+        }
+
+        out.reserve(node.values.len());
+        for poly_idx in &node.values {
+            out.push(self.polygons[poly_idx.0].clone());
+        }
+
+        if let Some(node) = latter {
+            self.order(node, base, out);
+        }
+    }
+}
+
+pub fn add_polygon<A: Copy>(polygons: &mut Vec<Polygon<A>>, poly: &Polygon<A>) -> PolygonIdx {
+    let index = PolygonIdx(polygons.len());
+    polygons.push(poly.clone());
+    index
+}
+
+pub fn add_node(nodes: &mut Vec<BspNode>) -> NodeIdx {
+    let index = NodeIdx(nodes.len());
+    nodes.push(BspNode::new());
+    index
+}
+
+/// A node in the `BspTree`, which can be considered a tree itself.
+#[derive(Clone, Debug)]
+pub struct BspNode {
+    values: SmallVec<[PolygonIdx; 4]>,
+    front: Option<NodeIdx>,
+    back: Option<NodeIdx>,
+}
+
+impl BspNode {
+    /// Create a new node.
+    pub fn new() -> Self {
+        BspNode {
+            values: SmallVec::new(),
+            front: None,
+            back: None,
+        }
     }
 }

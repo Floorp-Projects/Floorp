@@ -1,19 +1,23 @@
-use euclid::{approxeq::ApproxEq, point2, point3, vec3, Angle, Rect, Size2D, Transform3D};
+use euclid::{
+    approxeq::ApproxEq,
+    default::{Rect, Size2D, Transform3D},
+    point2, point3, vec3, Angle,
+};
 use plane_split::{Intersection, Line, LineProjection, NegativeHemisphereError, Plane, Polygon};
 
 #[test]
 fn line_proj_bounds() {
     assert_eq!(
-        (-5i8, 4),
+        (-5.0f64, 4.0),
         LineProjection {
-            markers: [-5i8, 1, 4, 2]
+            markers: [-5.0f64, 1.0, 4.0, 2.0]
         }
         .get_bounds()
     );
     assert_eq!(
-        (1f32, 4.0),
+        (1f64, 4.0),
         LineProjection {
-            markers: [4f32, 3.0, 2.0, 1.0]
+            markers: [4f64, 3.0, 2.0, 1.0]
         }
         .get_bounds()
     );
@@ -21,7 +25,7 @@ fn line_proj_bounds() {
 
 #[test]
 fn valid() {
-    let poly_a: Polygon<f32, (), usize> = Polygon {
+    let poly_a: Polygon<usize> = Polygon {
         points: [
             point3(0.0, 0.0, 0.0),
             point3(1.0, 1.0, 1.0),
@@ -35,7 +39,7 @@ fn valid() {
         anchor: 0,
     };
     assert!(!poly_a.is_valid()); // points[0] is outside
-    let poly_b: Polygon<f32, (), usize> = Polygon {
+    let poly_b: Polygon<usize> = Polygon {
         points: [
             point3(0.0, 1.0, 0.0),
             point3(1.0, 1.0, 1.0),
@@ -49,7 +53,7 @@ fn valid() {
         anchor: 0,
     };
     assert!(!poly_b.is_valid()); // winding is incorrect
-    let poly_c: Polygon<f32, (), usize> = Polygon {
+    let poly_c: Polygon<usize> = Polygon {
         points: [
             point3(0.0, 0.0, 1.0),
             point3(1.0, 0.0, 1.0),
@@ -67,19 +71,19 @@ fn valid() {
 
 #[test]
 fn empty() {
-    let poly = Polygon::<f32, (), usize>::from_points(
+    let poly = Polygon::from_points(
         [
             point3(0.0, 0.0, 1.0),
             point3(0.0, 0.0, 1.0),
-            point3(0.0, 0.00001, 1.0),
+            point3(0.0, 0.00000001, 1.0),
             point3(1.0, 0.0, 0.0),
         ],
-        1,
+        1usize,
     );
     assert_eq!(None, poly);
 }
 
-fn test_transformed(rect: Rect<f32, ()>, transform: Transform3D<f32, (), ()>) {
+fn test_transformed(rect: Rect<f64>, transform: Transform3D<f64>) {
     let poly = Polygon::from_transformed_rect(rect, transform, 0).unwrap();
     assert!(poly.is_valid());
 
@@ -94,7 +98,7 @@ fn test_transformed(rect: Rect<f32, ()>, transform: Transform3D<f32, (), ()>) {
 #[test]
 fn from_transformed_rect() {
     let rect = Rect::new(point2(10.0, 10.0), Size2D::new(20.0, 30.0));
-    let transform = Transform3D::rotation(0.5f32.sqrt(), 0.0, 0.5f32.sqrt(), Angle::radians(5.0))
+    let transform = Transform3D::rotation(0.5f64.sqrt(), 0.0, 0.5f64.sqrt(), Angle::radians(5.0))
         .pre_translate(vec3(0.0, 0.0, 10.0));
     test_transformed(rect, transform);
 }
@@ -109,7 +113,7 @@ fn from_transformed_rect_perspective() {
 
 #[test]
 fn untransform_point() {
-    let poly: Polygon<f32, (), usize> = Polygon {
+    let poly: Polygon<usize> = Polygon {
         points: [
             point3(0.0, 0.0, 0.0),
             point3(0.5, 1.0, 0.0),
@@ -130,7 +134,7 @@ fn untransform_point() {
 
 #[test]
 fn are_outside() {
-    let plane: Plane<f32, ()> = Plane {
+    let plane = Plane {
         normal: vec3(0.0, 0.0, 1.0),
         offset: -1.0,
     };
@@ -141,7 +145,7 @@ fn are_outside() {
 
 #[test]
 fn intersect() {
-    let poly_a: Polygon<f32, (), usize> = Polygon {
+    let poly_a: Polygon<usize> = Polygon {
         points: [
             point3(0.0, 0.0, 1.0),
             point3(1.0, 0.0, 1.0),
@@ -155,7 +159,7 @@ fn intersect() {
         anchor: 0,
     };
     assert!(poly_a.is_valid());
-    let poly_b: Polygon<f32, (), usize> = Polygon {
+    let poly_b: Polygon<usize> = Polygon {
         points: [
             point3(0.5, 0.0, 2.0),
             point3(0.5, 1.0, 2.0),
@@ -188,7 +192,7 @@ fn intersect() {
     assert!(poly_a.plane.normal.dot(intersection.dir).approx_eq(&0.0));
     assert!(poly_b.plane.normal.dot(intersection.dir).approx_eq(&0.0));
 
-    let poly_c: Polygon<f32, (), usize> = Polygon {
+    let poly_c: Polygon<usize> = Polygon {
         points: [
             point3(0.0, -1.0, 2.0),
             point3(0.0, -1.0, 0.0),
@@ -202,7 +206,7 @@ fn intersect() {
         anchor: 0,
     };
     assert!(poly_c.is_valid());
-    let poly_d: Polygon<f32, (), usize> = Polygon {
+    let poly_d: Polygon<usize> = Polygon {
         points: [
             point3(0.0, 0.0, 0.5),
             point3(1.0, 0.0, 0.5),
@@ -221,7 +225,7 @@ fn intersect() {
     assert!(poly_a.intersect(&poly_d).is_outside());
 }
 
-fn test_cut(poly_base: &Polygon<f32, (), usize>, extra_count: u8, line: Line<f32, ()>) {
+fn test_cut(poly_base: &Polygon<usize>, extra_count: u8, line: Line) {
     assert!(line.is_valid());
 
     let normal = poly_base.plane.normal.cross(line.dir).normalize();
@@ -240,7 +244,7 @@ fn test_cut(poly_base: &Polygon<f32, (), usize>, extra_count: u8, line: Line<f32
 
 #[test]
 fn split() {
-    let poly: Polygon<f32, (), usize> = Polygon {
+    let poly: Polygon<usize> = Polygon {
         points: [
             point3(0.0, 1.0, 0.0),
             point3(1.0, 1.0, 0.0),
@@ -280,7 +284,7 @@ fn split() {
         2,
         Line {
             origin: point3(0.0, 1.0, 0.5),
-            dir: vec3(0.5f32.sqrt(), 0.0, -0.5f32.sqrt()),
+            dir: vec3(0.5f64.sqrt(), 0.0, -0.5f64.sqrt()),
         },
     );
 
@@ -290,7 +294,7 @@ fn split() {
         2,
         Line {
             origin: point3(0.5, 1.0, 0.0),
-            dir: vec3(0.5f32.sqrt(), 0.0, 0.5f32.sqrt()),
+            dir: vec3(0.5f64.sqrt(), 0.0, 0.5f64.sqrt()),
         },
     );
 
@@ -300,7 +304,7 @@ fn split() {
         2,
         Line {
             origin: point3(0.5, 1.0, 0.0),
-            dir: vec3(-0.5f32.sqrt(), 0.0, 0.5f32.sqrt()),
+            dir: vec3(-0.5f64.sqrt(), 0.0, 0.5f64.sqrt()),
         },
     );
 
@@ -310,7 +314,7 @@ fn split() {
         1,
         Line {
             origin: point3(0.0, 1.0, 0.0),
-            dir: vec3(0.5f32.sqrt(), 0.0, 0.5f32.sqrt()),
+            dir: vec3(0.5f64.sqrt(), 0.0, 0.5f64.sqrt()),
         },
     );
 }
@@ -318,19 +322,20 @@ fn split() {
 #[test]
 fn plane_unnormalized() {
     let zero_vec = vec3(0.0000001, 0.0, 0.0);
-    let mut plane: Result<Option<Plane<f32, ()>>, _> = Plane::from_unnormalized(zero_vec, 1.0);
+    let mut plane: Result<Option<Plane>, _> = Plane::from_unnormalized(zero_vec, 1.0);
     assert_eq!(plane, Ok(None));
     plane = Plane::from_unnormalized(zero_vec, 0.0);
     assert_eq!(plane, Err(NegativeHemisphereError));
     plane = Plane::from_unnormalized(zero_vec, -0.5);
     assert_eq!(plane, Err(NegativeHemisphereError));
 
-    plane = Plane::from_unnormalized(vec3(-3.0, 4.0, 0.0), 2.0);
-    assert_eq!(
-        plane,
-        Ok(Some(Plane {
-            normal: vec3(-3.0 / 5.0, 4.0 / 5.0, 0.0),
-            offset: 2.0 / 5.0,
-        }))
-    );
+    let plane = Plane::from_unnormalized(vec3(-3.0, 4.0, 0.0), 2.0)
+        .unwrap()
+        .unwrap();
+    let expected = Plane {
+        normal: vec3(-3.0 / 5.0, 4.0 / 5.0, 0.0),
+        offset: 2.0 / 5.0,
+    };
+    assert!(plane.normal.approx_eq(&expected.normal));
+    assert!(plane.offset.approx_eq(&expected.offset));
 }
