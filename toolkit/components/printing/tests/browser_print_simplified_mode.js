@@ -238,3 +238,25 @@ add_task(async function testSimplifyNonArticleTabModal() {
     await helper.closeDialog();
   }, "simplifyNonArticleSample.html");
 });
+
+add_task(async function testSimplifyHiddenReaderMode() {
+  await PrintHelper.withTestPage(async helper => {
+    let tab = gBrowser.selectedTab;
+
+    // Trigger reader mode for the tab
+    let readerButton = document.getElementById("reader-mode-button");
+    await TestUtils.waitForCondition(() => !readerButton.hidden);
+    readerButton.click();
+    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+    // Print from reader mode
+    await helper.startPrint();
+    await helper.openMoreSettings();
+    let sourceVersionSection = helper.get("source-version-section");
+    ok(
+      BrowserTestUtils.is_hidden(sourceVersionSection),
+      "Source version is hidden in reader mode"
+    );
+    await helper.closeDialog();
+  }, "simplifyArticleSample.html");
+});
