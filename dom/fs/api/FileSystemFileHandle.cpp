@@ -69,7 +69,10 @@ already_AddRefed<Promise> FileSystemFileHandle::CreateWritable(
   }
 
   mRequestHandler->GetWritable(mManager, mMetadata, aOptions.mKeepExistingData,
-                               promise);
+                               promise, aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
 
   return promise.forget();
 }
