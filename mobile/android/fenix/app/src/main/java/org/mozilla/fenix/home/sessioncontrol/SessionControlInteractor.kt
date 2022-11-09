@@ -27,6 +27,8 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGrou
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
+import org.mozilla.fenix.search.toolbar.SearchSelectorInteractor
+import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.wallpapers.WallpaperState
 
 /**
@@ -270,7 +272,8 @@ class SessionControlInteractor(
     RecentBookmarksInteractor,
     RecentVisitsInteractor,
     CustomizeHomeIteractor,
-    PocketStoriesInteractor {
+    PocketStoriesInteractor,
+    SearchSelectorInteractor {
 
     override fun onCollectionAddTabTapped(collection: TabCollection) {
         controller.handleCollectionAddTabTapped(collection)
@@ -484,5 +487,9 @@ class SessionControlInteractor(
 
     override fun onMessageClosedClicked(message: Message) {
         controller.handleMessageClosed(message)
+    }
+
+    override fun onMenuItemTapped(item: SearchSelectorMenu.Item) {
+        controller.handleMenuItemTapped(item)
     }
 }

@@ -26,7 +26,7 @@ typealias MozSearchEngine = SearchEngine
  */
 class SearchSelectorMenu(
     private val context: Context,
-    private val interactor: ToolbarInteractor,
+    private val interactor: SearchSelectorInteractor,
 ) {
 
     /**

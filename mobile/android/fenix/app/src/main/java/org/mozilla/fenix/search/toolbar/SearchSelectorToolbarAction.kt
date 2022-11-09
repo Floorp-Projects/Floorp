@@ -55,6 +55,7 @@ class SearchSelectorToolbarAction(
                 menu.menuController.show(anchor = it, orientation = orientation, forceOrientation = true)
             }
 
+            setTopMargin(resources.getDimensionPixelSize(R.dimen.search_engine_engine_icon_top_margin))
             setBackgroundResource(
                 context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless),
             )

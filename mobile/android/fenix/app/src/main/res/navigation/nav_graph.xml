@@ -214,6 +214,11 @@
             android:name="search_access_point"
             android:defaultValue="NONE"
             app:argType="org.mozilla.fenix.components.metrics.MetricsUtils$Source" />
+        <argument
+            android:name="search_engine"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
     </dialog>
 
     <fragment

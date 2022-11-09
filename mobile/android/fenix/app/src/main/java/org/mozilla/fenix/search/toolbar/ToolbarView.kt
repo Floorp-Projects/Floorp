@@ -24,7 +24,7 @@ import org.mozilla.fenix.utils.Settings
  * Interface for the Toolbar Interactor. This interface is implemented by objects that want
  * to respond to user interaction on the [ToolbarView].
  */
-interface ToolbarInteractor {
+interface ToolbarInteractor : SearchSelectorInteractor {
 
     /**
      * Called when a user hits the return key while [ToolbarView] has focus.
@@ -45,13 +45,6 @@ interface ToolbarInteractor {
      * @param text The current text displayed by [ToolbarView].
      */
     fun onTextChanged(text: String)
-
-    /**
-     * Called when an user taps on a search selector menu item.
-     *
-     * @param item The [SearchSelectorMenu.Item] that was tapped.
-     */
-    fun onMenuItemTapped(item: SearchSelectorMenu.Item)
 }
 
 /**

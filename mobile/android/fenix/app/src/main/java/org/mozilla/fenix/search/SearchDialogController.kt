@@ -32,6 +32,7 @@ import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.crashes.CrashListActivity
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.search.toolbar.SearchSelectorInteractor
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
@@ -54,7 +55,7 @@ interface SearchController {
     fun handleSearchEngineSuggestionClicked(searchEngine: SearchEngine)
 
     /**
-     * @see [ToolbarInteractor.onMenuItemTapped]
+     * @see [SearchSelectorInteractor.onMenuItemTapped]
      */
     fun handleMenuItemTapped(item: SearchSelectorMenu.Item)
 }

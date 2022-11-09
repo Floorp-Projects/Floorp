@@ -117,12 +117,14 @@ data class SearchFragmentState(
 /**
  * Creates the initial state for the search fragment.
  */
+@Suppress("LongParameterList")
 fun createInitialSearchFragmentState(
     activity: HomeActivity,
     components: Components,
     tabId: String?,
     pastedText: String?,
     searchAccessPoint: MetricsUtils.Source,
+    searchEngine: SearchEngine? = null,
 ): SearchFragmentState {
     val settings = components.settings
     val tab = tabId?.let { components.core.store.state.findTab(it) }
@@ -134,11 +136,17 @@ fun createInitialSearchFragmentState(
             settings.shouldShowSearchSuggestions && settings.shouldShowSearchSuggestionsInPrivate
     }
 
+    val searchEngineSource = if (searchEngine != null) {
+        SearchEngineSource.Shortcut(searchEngine)
+    } else {
+        SearchEngineSource.None
+    }
+
     return SearchFragmentState(
         query = url,
         url = url,
         searchTerms = tab?.content?.searchTerms.orEmpty(),
-        searchEngineSource = SearchEngineSource.None,
+        searchEngineSource = searchEngineSource,
         defaultEngine = null,
         showSearchSuggestions = shouldShowSearchSuggestions,
         showSearchSuggestionsHint = false,

@@ -178,6 +178,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 tabId = args.sessionId,
                 pastedText = args.pastedText,
                 searchAccessPoint = args.searchAccessPoint,
+                searchEngine = requireComponents.core.store.state.search.searchEngines.firstOrNull {
+                    it.id == args.searchEngine
+                },
             ),
         )
 

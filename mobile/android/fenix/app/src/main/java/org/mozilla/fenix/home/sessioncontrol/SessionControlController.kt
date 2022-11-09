@@ -40,6 +40,7 @@ import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.collections.SaveCollectionStep
@@ -57,6 +58,8 @@ import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment.Companion.THUMBNAILS_SELECTION_COUNT
+import org.mozilla.fenix.search.toolbar.SearchSelectorInteractor
+import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS
 import org.mozilla.fenix.utils.Settings
@@ -209,6 +212,11 @@ interface SessionControlController {
      * @see [SessionControlInteractor.reportSessionMetrics]
      */
     fun handleReportSessionMetrics(state: AppState)
+
+    /**
+     * @see [SearchSelectorInteractor.onMenuItemTapped]
+     */
+    fun handleMenuItemTapped(item: SearchSelectorMenu.Item)
 }
 
 @Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
@@ -659,5 +667,27 @@ class DefaultSessionControlController(
         }
 
         RecentBookmarks.recentBookmarksCount.set(state.recentBookmarks.size.toLong())
+    }
+
+    override fun handleMenuItemTapped(item: SearchSelectorMenu.Item) {
+        when (item) {
+            SearchSelectorMenu.Item.SearchSettings -> {
+                navController.nav(
+                    R.id.homeFragment,
+                    HomeFragmentDirections.actionGlobalSearchEngineFragment(),
+                )
+            }
+            is SearchSelectorMenu.Item.SearchEngine -> {
+                val directions = HomeFragmentDirections.actionGlobalSearchDialog(
+                    sessionId = null,
+                    searchEngine = item.searchEngine.id,
+                )
+                navController.nav(
+                    R.id.homeFragment,
+                    directions,
+                    BrowserAnimator.getToolbarNavOptions(activity),
+                )
+            }
+        }
     }
 }
