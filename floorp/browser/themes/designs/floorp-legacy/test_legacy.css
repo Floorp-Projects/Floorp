@@ -1332,7 +1332,7 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
 }
 
 
-#navigator-toolbox :-moz-any(toolbar, #nav-bar-customization-target):not(#toolbar-menubar) {
+#navigator-toolbox :-moz-any(toolbar:not(#TabsToolbar), #nav-bar-customization-target):not(#toolbar-menubar) {
   -moz-box-align: center !important;
   min-height: 36px !important;
 }
