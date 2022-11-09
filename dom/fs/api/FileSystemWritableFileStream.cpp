@@ -92,14 +92,26 @@ nsresult TruncFile(PRFileDesc* aFD, int64_t aEOF) {
     return NS_ERROR_FAILURE;
   }
 #elif defined(XP_WIN)
+  const int64_t currentOffset = PR_Seek64(aFD, 0, PR_SEEK_CUR);
+  if (currentOffset == -1) {
+    return NS_ERROR_FAILURE;
+  }
+
   int64_t cnt = PR_Seek64(aFD, aEOF, PR_SEEK_SET);
   if (cnt == -1) {
     return NS_ERROR_FAILURE;
   }
+
   if (!SetEndOfFile((HANDLE)PR_FileDesc2NativeHandle(aFD))) {
     NS_ERROR("SetEndOfFile failed");
     return NS_ERROR_FAILURE;
   }
+
+  if (PR_Seek64(aFD, currentOffset, PR_SEEK_SET) == -1) {
+    NS_ERROR("Restoring seek offset failed");
+    return NS_ERROR_FAILURE;
+  }
+
 #else
   MOZ_ASSERT(false, "Not implemented!");
   return NS_ERROR_NOT_IMPLEMENTED;
