@@ -269,12 +269,8 @@ class nsMenuChainItem {
   // set the parent of this item to aParent, also changing the parent
   // to have this as a child.
   void SetParent(mozilla::UniquePtr<nsMenuChainItem> aParent);
-
-  // Removes an item from the chain. The root pointer must be supplied in case
-  // the item is the first item in the chain in which case the pointer will be
-  // set to the next item, or null if there isn't another item. After this call,
-  // the item is not usable anymore.
-  void Detach(mozilla::UniquePtr<nsMenuChainItem>& aRoot);
+  // Removes the parent pointer and returns it.
+  mozilla::UniquePtr<nsMenuChainItem> Detach();
 };
 
 // this class is used for dispatching popuphiding events asynchronously.
@@ -758,6 +754,9 @@ class nsXULPopupManager final : public nsIDOMEventListener,
 
   // return the topmost menu, skipping over invisible popups
   nsMenuChainItem* GetTopVisibleMenu();
+
+  // Removes the chain item from the chain and deletes it.
+  void RemoveMenuChainItem(nsMenuChainItem*);
 
   // Hide all of the visible popups from the given list. This function can
   // cause style changes and frame destruction.
