@@ -211,8 +211,9 @@ void DMDFuncs::StatusMsg(const char* aFmt, va_list aAp) {
   __android_log_vprint(ANDROID_LOG_INFO, "DMD", aFmt, aAp);
 #else
   // The +64 is easily enough for the "DMD[<pid>] " prefix and the NUL.
-  char* fmt = (char*)InfallibleAllocPolicy::malloc_(strlen(aFmt) + 64);
-  sprintf(fmt, "DMD[%d] %s", getpid(), aFmt);
+  size_t size = strlen(aFmt) + 64;
+  char* fmt = (char*)InfallibleAllocPolicy::malloc_(size);
+  snprintf(fmt, size, "DMD[%d] %s", getpid(), aFmt);
   vfprintf(stderr, fmt, aAp);
   InfallibleAllocPolicy::free_(fmt);
 #endif
