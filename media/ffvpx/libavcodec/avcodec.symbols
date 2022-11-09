@@ -10,11 +10,6 @@ av_get_exact_bits_per_sample
 av_get_pcm_codec
 av_get_profile_name
 av_grow_packet
-av_hwdevice_ctx_init
-av_hwdevice_ctx_alloc
-av_hwdevice_ctx_create_derived
-av_hwframe_transfer_get_formats
-av_hwframe_ctx_alloc
 av_init_packet
 av_new_packet
 av_packet_copy_props
