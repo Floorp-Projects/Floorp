@@ -19,6 +19,8 @@
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/FileSystemSyncAccessHandle.h"
+#include "mozilla/dom/FileSystemWritableFileStream.h"
+#include "mozilla/dom/FileSystemWritableFileStreamChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
@@ -107,9 +109,21 @@ RefPtr<FileSystemSyncAccessHandle> MakeResolution(
 
   RefPtr<FileSystemSyncAccessHandle> result = new FileSystemSyncAccessHandle(
       aGlobal, aManager, actor, std::move(stream), aMetadata);
+  return result;
+}
 
-  actor->SetAccessHandle(result);
+RefPtr<FileSystemWritableFileStream> MakeResolution(
+    nsIGlobalObject* aGlobal,
+    FileSystemGetWritableFileStreamResponse&& aResponse,
+    const RefPtr<FileSystemWritableFileStream>& /* aReturns */,
+    const FileSystemEntryMetadata& aFile, RefPtr<FileSystemManager>& aManager) {
+  RefPtr<FileSystemWritableFileStreamChild> actor =
+      static_cast<FileSystemWritableFileStreamChild*>(
+          aResponse.get_PFileSystemWritableFileStreamChild());
 
+  RefPtr<FileSystemWritableFileStream> result =
+      FileSystemWritableFileStream::MaybeCreate(aGlobal, aManager, aFile,
+                                                actor);
   return result;
 }
 
@@ -139,14 +153,15 @@ void ResolveCallback(
     return;
   }
 
-  auto result = MakeResolution(aPromise->GetParentObject(),
-                               std::forward<TResponse>(aResponse),
-                               std::forward<Args>(args)...);
-  if (!result) {
-    aPromise->MaybeReject(NS_ERROR_FAILURE);
+  auto resolution = MakeResolution(aPromise->GetParentObject(),
+                                   std::forward<TResponse>(aResponse),
+                                   std::forward<Args>(args)...);
+  if (!resolution) {
+    aPromise->MaybeReject(NS_ERROR_UNEXPECTED);
+    return;
   }
 
-  aPromise->MaybeResolve(result);
+  aPromise->MaybeResolve(resolution);
 }
 
 template <>
@@ -413,8 +428,9 @@ void FileSystemRequestHandler::GetFileHandle(
 void FileSystemRequestHandler::GetAccessHandle(
     RefPtr<FileSystemManager>& aManager, const FileSystemEntryMetadata& aFile,
     const RefPtr<Promise>& aPromise, ErrorResult& aError) {
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(aPromise);
-  LOG(("getAccessHandle"));
+  LOG(("GetAccessHandle %s", NS_ConvertUTF16toUTF8(aFile.entryName()).get()));
 
   if (aManager->IsShutdown()) {
     aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
@@ -422,13 +438,37 @@ void FileSystemRequestHandler::GetAccessHandle(
   }
 
   aManager->BeginRequest(
-      [request = FileSystemGetAccessHandleRequest(aFile.entryId()),
+      [request = FileSystemGetFileRequest(aFile.entryId()),
        onResolve = SelectResolveCallback<FileSystemGetAccessHandleResponse,
                                          RefPtr<FileSystemSyncAccessHandle>>(
            aPromise, aFile, aManager),
        onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
         actor->SendGetAccessHandle(request, std::move(onResolve),
                                    std::move(onReject));
+      },
+      [promise = aPromise](const auto&) {
+        promise->MaybeRejectWithUnknownError("Could not create actor");
+      });
+}
+
+void FileSystemRequestHandler::GetWritable(RefPtr<FileSystemManager>& aManager,
+                                           const FileSystemEntryMetadata& aFile,
+                                           bool aKeepData,
+                                           const RefPtr<Promise>& aPromise) {
+  MOZ_ASSERT(aManager);
+  MOZ_ASSERT(aPromise);
+  LOG(("GetWritable %s keep %d", NS_ConvertUTF16toUTF8(aFile.entryName()).get(),
+       aKeepData));
+
+  aManager->BeginRequest(
+      [request = FileSystemGetWritableRequest(aFile.entryId(), aKeepData),
+       onResolve =
+           SelectResolveCallback<FileSystemGetWritableFileStreamResponse,
+                                 RefPtr<FileSystemWritableFileStream>>(
+               aPromise, aFile, aManager),
+       onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
+        actor->SendGetWritable(request, std::move(onResolve),
+                               std::move(onReject));
       },
       [promise = aPromise](const auto&) {
         promise->MaybeRejectWithUnknownError("Could not create actor");
@@ -442,6 +482,7 @@ void FileSystemRequestHandler::GetFile(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aFile.entryId().IsEmpty());
   MOZ_ASSERT(aPromise);
+  LOG(("GetFile %s", NS_ConvertUTF16toUTF8(aFile.entryName()).get()));
 
   if (aManager->IsShutdown()) {
     aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);

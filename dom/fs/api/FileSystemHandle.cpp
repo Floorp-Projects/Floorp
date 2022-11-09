@@ -20,6 +20,34 @@
 
 namespace mozilla::dom {
 
+/**
+ * TODO: Duplicated from netwerk/cache2/CacheFileIOManager.cpp
+ * Please remove after bug 1286601 is fixed,
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=1286601
+ */
+nsresult TruncFile(PRFileDesc* aFD, int64_t aEOF) {
+#if defined(XP_UNIX)
+  if (ftruncate(PR_FileDesc2NativeHandle(aFD), aEOF) != 0) {
+    NS_ERROR("ftruncate failed");
+    return NS_ERROR_FAILURE;
+  }
+#elif defined(XP_WIN)
+  int64_t cnt = PR_Seek64(aFD, aEOF, PR_SEEK_SET);
+  if (cnt == -1) {
+    return NS_ERROR_FAILURE;
+  }
+  if (!SetEndOfFile((HANDLE)PR_FileDesc2NativeHandle(aFD))) {
+    NS_ERROR("SetEndOfFile failed");
+    return NS_ERROR_FAILURE;
+  }
+#else
+  MOZ_ASSERT(false, "Not implemented!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+
+  return NS_OK;
+}
+
 namespace {
 
 bool ConstructHandleMetadata(JSContext* aCx, JSStructuredCloneReader* aReader,

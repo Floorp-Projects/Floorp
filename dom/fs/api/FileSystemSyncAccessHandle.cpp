@@ -107,6 +107,7 @@ FileSystemSyncAccessHandle::FileSystemSyncAccessHandle(
       mMetadata(aMetadata),
       mClosed(false) {
   LOG(("Created SyncAccessHandle %p for stream %p", this, mStream.get()));
+  mActor->SetAccessHandle(this);
 }
 
 FileSystemSyncAccessHandle::~FileSystemSyncAccessHandle() {
