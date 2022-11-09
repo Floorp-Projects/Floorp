@@ -491,6 +491,51 @@ add_task(async function test_messages_origin_controls() {
       expectedActionButtonDisabled: true,
     },
     {
+      title: "MV2 - content script",
+      manifest: {
+        manifest_version: 2,
+        content_scripts: [
+          {
+            js: ["script.js"],
+            matches: ["*://example.com/*"],
+          },
+        ],
+      },
+      expectedDefaultMessage: ALWAYS_ON,
+      expectedHoverMessage: ALWAYS_ON,
+      expectedActionButtonDisabled: true,
+    },
+    {
+      title: "MV2 - non-matching content script",
+      manifest: {
+        manifest_version: 2,
+        content_scripts: [
+          {
+            js: ["script.js"],
+            matches: ["*://foobar.net/*"],
+          },
+        ],
+      },
+      expectedDefaultMessage: NO_ACCESS,
+      expectedHoverMessage: NO_ACCESS,
+      expectedActionButtonDisabled: true,
+    },
+    {
+      title: "MV2 - all_urls content script",
+      manifest: {
+        manifest_version: 2,
+        content_scripts: [
+          {
+            js: ["script.js"],
+            matches: ["<all_urls>"],
+          },
+        ],
+      },
+      expectedDefaultMessage: ALWAYS_ON,
+      expectedHoverMessage: ALWAYS_ON,
+      expectedActionButtonDisabled: true,
+    },
+    {
       title: "MV2 - when clicked",
       manifest: {
         manifest_version: 2,
@@ -561,6 +606,9 @@ add_task(async function test_messages_origin_controls() {
             name: title,
             browser_specific_settings: { gecko: { id } },
             ...manifest,
+          },
+          files: {
+            "script.js": "",
           },
           useAddonManager: "temporary",
         });
