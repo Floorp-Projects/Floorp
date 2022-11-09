@@ -35,7 +35,6 @@ use crate::surface::SurfaceBuilder;
 use std::{f32, mem};
 use crate::util::{VecHelper, Preallocator};
 use crate::visibility::{update_prim_visibility, FrameVisibilityState, FrameVisibilityContext};
-use plane_split::Splitter;
 
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]

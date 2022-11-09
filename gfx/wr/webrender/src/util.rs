@@ -1225,11 +1225,11 @@ pub fn project_rect<F, T>(
     // Otherwise, it will be clamped to the screen bounds anyway.
     if homogens.iter().any(|h| h.w <= 0.0 || h.w.is_nan()) {
         let mut clipper = Clipper::new();
-        let polygon = Polygon::from_rect(rect.to_rect(), 1);
+        let polygon = Polygon::from_rect(rect.to_rect().cast().cast_unit(), 1);
 
-        let planes = match Clipper::<_, _, usize>::frustum_planes(
-            transform,
-            Some(bounds.to_rect()),
+        let planes = match Clipper::<usize>::frustum_planes(
+            &transform.cast_unit().cast(),
+            Some(bounds.to_rect().cast_unit().to_f64()),
         ) {
             Ok(planes) => planes,
             Err(..) => return None,
@@ -1249,7 +1249,7 @@ pub fn project_rect<F, T>(
             // filter out parts behind the view plane
             .flat_map(|poly| &poly.points)
             .map(|p| {
-                let mut homo = transform.transform_point2d_homogeneous(p.to_2d());
+                let mut homo = transform.transform_point2d_homogeneous(p.to_2d().to_f32().cast_unit());
                 homo.w = homo.w.max(0.00000001); // avoid infinite values
                 homo.to_point2d().unwrap()
             })

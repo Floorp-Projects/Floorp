@@ -116,7 +116,7 @@ use crate::internal_types::{PlaneSplitterIndex, PlaneSplitAnchor, TextureSource}
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{UvRectKind, ZBufferId};
-use plane_split::{Clipper, Polygon, Splitter};
+use plane_split::{Clipper, Polygon};
 use crate::prim_store::{PrimitiveTemplateKind, PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
 use crate::prim_store::{ColorBindingStorage, ColorBindingIndex, PrimitiveScratchBuffer};
 use crate::print_tree::{PrintTree, PrintTreePrinter};
@@ -5914,7 +5914,7 @@ impl PicturePrimitive {
     ) -> bool {
         let transform = spatial_tree
             .get_world_transform(prim_spatial_node_index);
-        let matrix = transform.clone().into_transform().cast();
+        let matrix = transform.clone().into_transform().cast().to_untyped();
 
         // Apply the local clip rect here, before splitting. This is
         // because the local clip rect can't be applied in the vertex
@@ -5941,7 +5941,7 @@ impl PicturePrimitive {
             CoordinateSpaceMapping::ScaleOffset(scale_offset) if scale_offset.scale == Vector2D::new(1.0, 1.0) => {
                 let inv_matrix = scale_offset.inverse().to_transform().cast();
                 let polygon = Polygon::from_transformed_rect_with_inverse(
-                    local_rect.to_rect(),
+                    local_rect.to_rect().to_untyped(),
                     &matrix,
                     &inv_matrix,
                     plane_split_anchor,
@@ -5953,11 +5953,11 @@ impl PicturePrimitive {
                 let mut clipper = Clipper::new();
                 let results = clipper.clip_transformed(
                     Polygon::from_rect(
-                        local_rect.to_rect(),
+                        local_rect.to_rect().to_untyped(),
                         plane_split_anchor,
                     ),
                     &matrix,
-                    Some(world_rect.to_rect()),
+                    Some(world_rect.to_rect().to_untyped()),
                 );
                 if let Ok(results) = results {
                     for poly in results {
@@ -5993,10 +5993,10 @@ impl PicturePrimitive {
             };
 
             let local_points = [
-                transform.transform_point3d(poly.points[0].cast()),
-                transform.transform_point3d(poly.points[1].cast()),
-                transform.transform_point3d(poly.points[2].cast()),
-                transform.transform_point3d(poly.points[3].cast()),
+                transform.transform_point3d(poly.points[0].cast_unit().to_f32()),
+                transform.transform_point3d(poly.points[1].cast_unit().to_f32()),
+                transform.transform_point3d(poly.points[2].cast_unit().to_f32()),
+                transform.transform_point3d(poly.points[3].cast_unit().to_f32()),
             ];
 
             // If any of the points are un-transformable, just drop this
