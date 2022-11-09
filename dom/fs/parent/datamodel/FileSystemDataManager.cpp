@@ -553,8 +553,8 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
 
               self->mDatabaseManager =
                   MakeUnique<FileSystemDatabaseManagerVersion001>(
-                      std::move(connection),
-                      MakeUnique<FileSystemFileManager>(std::move(fmRes)), self,
+                      self, std::move(connection),
+                      MakeUnique<FileSystemFileManager>(std::move(fmRes)),
                       rootId);
             }
 

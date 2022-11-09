@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileSystemDataManager.h"
+#include "TestHelpers.h"
 #include "gtest/gtest.h"
 #include "mozIStorageService.h"
 #include "mozStorageCID.h"
@@ -19,15 +20,6 @@
 #include "nsIQuotaRequests.h"
 
 namespace mozilla::dom::fs::test {
-
-namespace {
-
-quota::OriginMetadata GetTestOriginMetadata() {
-  return quota::OriginMetadata{""_ns, "example.com"_ns, "http://example.com"_ns,
-                               quota::PERSISTENCE_TYPE_DEFAULT};
-}
-
-}  // namespace
 
 class TestFileSystemDataManager : public ::testing::Test {
  public:
