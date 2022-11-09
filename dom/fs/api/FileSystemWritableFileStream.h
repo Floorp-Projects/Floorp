@@ -7,7 +7,26 @@
 #ifndef DOM_FS_FILESYSTEMWRITABLEFILESTREAM_H_
 #define DOM_FS_FILESYSTEMWRITABLEFILESTREAM_H_
 
+#include "mozilla/Logging.h"
+#include "mozilla/TaskQueue.h"
+#include "mozilla/dom/Blob.h"
+#include "mozilla/dom/FileSystemWritableFileStreamChild.h"
 #include "mozilla/dom/WritableStream.h"
+#include "mozilla/ipc/FileDescriptor.h"
+#include "nsISupports.h"
+#include "nsWrapperCache.h"
+#include "prio.h"
+#include "private/pprio.h"
+
+class nsIGlobalObject;
+
+namespace mozilla {
+extern LazyLogModule gOPFSLog;
+}
+
+namespace mozilla::ipc {
+class FileDescriptor;
+}  // namespace mozilla::ipc
 
 namespace mozilla {
 
@@ -16,13 +35,16 @@ class ErrorResult;
 namespace dom {
 
 class ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams;
+class Promise;
+
+namespace fs {
+class FileSystemRequestHandler;
+}
 
 class FileSystemWritableFileStream final : public WritableStream {
  public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemWritableFileStream,
-                                           WritableStream)
-
+  // No cycle-collection DECL/IMPL macros, because WritableStream calls
+  // HoldJSObjects()
   class StreamAlgorithms final : public UnderlyingSinkAlgorithmsBase {
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(StreamAlgorithms,
@@ -68,7 +90,22 @@ class FileSystemWritableFileStream final : public WritableStream {
   };
 
   static already_AddRefed<FileSystemWritableFileStream> MaybeCreate(
-      nsIGlobalObject* aGlobal);
+      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
+      const fs::FileSystemEntryMetadata& aMetadata,
+      RefPtr<FileSystemWritableFileStreamChild>& aActor);
+
+  FileSystemWritableFileStream(
+      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
+      const fs::FileSystemEntryMetadata& aMetadata,
+      RefPtr<FileSystemWritableFileStreamChild>& aActor);
+
+  FileSystemWritableFileStream(
+      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
+      const fs::FileSystemEntryMetadata& aMetadata,
+      RefPtr<FileSystemWritableFileStreamChild>& aActor,
+      fs::FileSystemRequestHandler* aRequestHandler);
+
+  void ClearActor();
 
   // WebIDL Boilerplate
   JSObject* WrapObject(JSContext* aCx,
@@ -79,17 +116,31 @@ class FileSystemWritableFileStream final : public WritableStream {
       const ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams& aData,
       ErrorResult& aError);
 
+  bool DoSeek(RefPtr<Promise>& aPromise, uint64_t aPosition);
+
   already_AddRefed<Promise> Seek(uint64_t aPosition, ErrorResult& aError);
 
   already_AddRefed<Promise> Truncate(uint64_t aSize, ErrorResult& aError);
 
   already_AddRefed<Promise> Close(ErrorResult& aRv);
 
- private:
-  explicit FileSystemWritableFileStream(nsIGlobalObject* aGlobal)
-      : WritableStream(aGlobal) {}
+  bool IsClosed() const { return !mActor || !mActor->MutableFileDescPtr(); }
 
-  ~FileSystemWritableFileStream() = default;
+ protected:
+  // XXX Hack, want to inherit from FileSystemHandle as well
+  // nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<FileSystemManager> mManager;
+  fs::FileSystemEntryMetadata mMetadata;
+  const UniquePtr<fs::FileSystemRequestHandler> mRequestHandler;
+
+ private:
+  nsresult WriteBlob(Blob* aBlob, uint64_t& aWritten);
+  //  nsresult WriteBlobImpl(BlobImpl* aBlobImpl, uint64_t& aWritten);
+
+  virtual ~FileSystemWritableFileStream();
+
+  RefPtr<FileSystemWritableFileStreamChild> mActor;
+  RefPtr<TaskQueue> mTaskQueue;
 };
 
 }  // namespace dom

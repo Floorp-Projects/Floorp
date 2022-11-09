@@ -8,6 +8,8 @@
 #define DOM_FS_PARENT_FILESYSTEMMANAGERPARENT_H_
 
 #include "ErrorList.h"
+#include "mozilla/StaticMutex.h"
+#include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/PFileSystemManagerParent.h"
 #include "nsISupports.h"
@@ -48,8 +50,10 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
       FileSystemGetHandleRequest&& aRequest, GetFileHandleResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvGetAccessHandle(
-      const FileSystemGetAccessHandleRequest& aRequest,
-      GetAccessHandleResolver&& aResolver);
+      FileSystemGetFileRequest&& aRequest, GetAccessHandleResolver&& aResolver);
+
+  mozilla::ipc::IPCResult RecvGetWritable(
+      FileSystemGetWritableRequest&& aRequest, GetWritableResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvGetFile(FileSystemGetFileRequest&& aRequest,
                                       GetFileResolver&& aResolver);
@@ -68,9 +72,6 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
 
   mozilla::ipc::IPCResult RecvRenameEntry(
       FileSystemRenameEntryRequest&& aRequest, MoveEntryResolver&& aResolver);
-
-  mozilla::ipc::IPCResult RecvGetWritable(FileSystemGetFileRequest&& aRequest,
-                                          GetWritableResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvNeedQuota(FileSystemQuotaRequest&& aRequest,
                                         NeedQuotaResolver&& aResolver);

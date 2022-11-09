@@ -18,6 +18,7 @@ FINAL_LIBRARY = "xul"
 IPDL_SOURCES += [
     "PFileSystemAccessHandle.ipdl",
     "PFileSystemManager.ipdl",
+    "PFileSystemWritableFileStream.ipdl",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

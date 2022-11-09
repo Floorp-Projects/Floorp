@@ -6,7 +6,7 @@
 enum WriteCommandType {
   "write",
   "seek",
-  "truncate",
+  "truncate"
 };
 
 dictionary WriteParams {
@@ -20,7 +20,7 @@ typedef (BufferSource or Blob or USVString or WriteParams) FileSystemWriteChunkT
 
 [Exposed=(Window,Worker), SecureContext, Pref="dom.fs.enabled"]
 interface FileSystemWritableFileStream : WritableStream {
-  [NewObject]
+  [NewObject, Throws]
   Promise<undefined> write(FileSystemWriteChunkType data);
   [NewObject]
   Promise<undefined> seek(unsigned long long position);

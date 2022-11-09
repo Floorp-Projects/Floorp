@@ -34,6 +34,17 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
+namespace mozilla {
+extern LazyLogModule gOPFSLog;
+}
+
+#define LOG(args) MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
+
+#define LOG_DEBUG(args) \
+  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
+#define LOG_VERBOSE(args) \
+  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
+
 namespace mozilla::dom::fs::data {
 
 namespace {
@@ -376,11 +387,15 @@ RefPtr<BoolPromise> FileSystemDataManager::OnClose() {
   return mClosePromiseHolder.Ensure(__func__);
 }
 
+bool FileSystemDataManager::IsLocked(const EntryId& aEntryId) const {
+  return mExclusiveLocks.Contains(aEntryId) || mSharedLocks.Contains(aEntryId);
+}
+
 bool FileSystemDataManager::LockExclusive(const EntryId& aEntryId) {
-  if (mExclusiveLocks.Contains(aEntryId)) {
+  if (IsLocked(aEntryId)) {
     return false;
   }
-
+  LOG_VERBOSE(("ExclusiveLock"));
   mExclusiveLocks.Insert(aEntryId);
   return true;
 }
@@ -388,7 +403,40 @@ bool FileSystemDataManager::LockExclusive(const EntryId& aEntryId) {
 void FileSystemDataManager::UnlockExclusive(const EntryId& aEntryId) {
   MOZ_ASSERT(mExclusiveLocks.Contains(aEntryId));
 
+  LOG_VERBOSE(("ExclusiveUnlock"));
   mExclusiveLocks.Remove(aEntryId);
+}
+
+bool FileSystemDataManager::LockShared(const EntryId& aEntryId) {
+  if (mExclusiveLocks.Contains(aEntryId)) {
+    return false;
+  }
+
+  auto& count = mSharedLocks.LookupOrInsert(aEntryId);
+  if ((count + 1).isValid()) {  // don't make the count invalid
+    count++;
+    LOG_VERBOSE(("SharedLock %u", count.value()));
+    return true;
+  }
+  return false;
+}
+
+void FileSystemDataManager::UnlockShared(const EntryId& aEntryId) {
+  MOZ_ASSERT(!mExclusiveLocks.Contains(aEntryId));
+  MOZ_ASSERT(mSharedLocks.Contains(aEntryId));
+
+  const auto& result =
+      mSharedLocks.WithEntryHandle(aEntryId, [&](auto&& entry) {
+        auto& count = *entry;
+        count--;
+        LOG_VERBOSE(("SharedUnlock %u", count.value()));
+        MOZ_ASSERT(count.isValid());
+        if (count == 0) {
+          entry.Remove();
+        }
+        return true;
+      });
+  Unused << result;
 }
 
 bool FileSystemDataManager::IsInactive() const {
@@ -506,7 +554,7 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
               self->mDatabaseManager =
                   MakeUnique<FileSystemDatabaseManagerVersion001>(
                       std::move(connection),
-                      MakeUnique<FileSystemFileManager>(std::move(fmRes)),
+                      MakeUnique<FileSystemFileManager>(std::move(fmRes)), self,
                       rootId);
             }
 
