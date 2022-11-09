@@ -749,11 +749,12 @@ const ASRouterTriggerListeners = new Map([
       _idleThreshold: 60,
       _idleSince: null,
       _quietSince: null,
+      _awaitingVisibilityChange: false,
       // Fire the trigger 2 seconds after activity resumes to ensure user is
       // actively using the browser when it fires.
       _triggerDelay: 2000,
       _triggerTimeout: null,
-      _listenedEvents: ["TabClose", "TabAttrModified"],
+      _listenedEvents: ["visibilitychange", "TabClose", "TabAttrModified"],
       // When the OS goes to sleep or the process is suspended, we want to drop
       // the idle time, since the time between sleep and wake is expected to be
       // very long (e.g. overnight). Otherwise, this would trigger on the first
@@ -767,6 +768,11 @@ const ASRouterTriggerListeners = new Map([
         "mac_app_activate",
       ],
 
+      get _isVisible() {
+        return [...Services.wm.getEnumerator("navigator:browser")].some(
+          win => !win.closed && !win.document?.hidden
+        );
+      },
       get _soundPlaying() {
         return [...Services.wm.getEnumerator("navigator:browser")].some(win =>
           win.gBrowser?.tabs.some(tab => tab.soundPlaying)
@@ -782,7 +788,10 @@ const ASRouterTriggerListeners = new Map([
             "@mozilla.org/widget/useridleservice;1"
           ].getService(Ci.nsIUserIdleService);
         }
-        if (!this._initialized) {
+        if (
+          !this._initialized &&
+          !lazy.PrivateBrowsingUtils.permanentPrivateBrowsing
+        ) {
           this._idleService.addIdleObserver(this, this._idleThreshold);
           for (let topic of this._observedTopics) {
             Services.obs.addObserver(this, topic);
@@ -800,13 +809,6 @@ const ASRouterTriggerListeners = new Map([
               }
             }
           );
-          // If user has already been idle for 1 minute, set the idle time
-          // manually since the idle service won't notify for a long time.
-          let { idleTime } = this._idleService;
-          if (idleTime && idleTime / (60 * 1000) >= 1) {
-            this._idleSince = Date.now() - idleTime;
-          }
-          // Set the quiet time manually for the same reason.
           if (!this._soundPlaying) {
             this._quietSince = Date.now();
           }
@@ -821,8 +823,15 @@ const ASRouterTriggerListeners = new Map([
               break;
             case "active":
               // Trigger when user returns from being idle.
-              this._onActive();
-            // fall through
+              if (this._isVisible) {
+                this._onActive();
+                this._idleSince = null;
+              } else if (this._idleSince) {
+                // If the window is not visible, we want to wait until it is
+                // visible before triggering.
+                this._awaitingVisibilityChange = true;
+              }
+              break;
             default:
               // OS/process notifications
               this._idleSince = null;
@@ -832,6 +841,13 @@ const ASRouterTriggerListeners = new Map([
       handleEvent(event) {
         if (this._initialized) {
           switch (event.type) {
+            case "visibilitychange":
+              if (this._awaitingVisibilityChange && this._isVisible) {
+                this._onActive();
+                this._idleSince = null;
+                this._awaitingVisibilityChange = false;
+              }
+              break;
             case "TabAttrModified":
               // Listen for DOMAudioPlayback* events.
               if (!event.detail?.changed?.includes("soundplaying")) {
@@ -850,13 +866,13 @@ const ASRouterTriggerListeners = new Map([
       },
       _onActive() {
         if (this._idleSince && this._quietSince) {
-          const browser = Services.wm.getMostRecentBrowserWindow();
-          if (browser) {
+          const win = Services.wm.getMostRecentBrowserWindow();
+          if (win && !isPrivateWindow(win) && !this._triggerTimeout) {
             // Number of ms since the last user interaction/audio playback
             const idleForMilliseconds =
               Date.now() - Math.min(this._idleSince, this._quietSince);
             this._triggerTimeout = lazy.setTimeout(() => {
-              this._triggerHandler(browser.gBrowser.selectedBrowser, {
+              this._triggerHandler(win.gBrowser.selectedBrowser, {
                 id: this.id,
                 context: { idleForMilliseconds },
               });
