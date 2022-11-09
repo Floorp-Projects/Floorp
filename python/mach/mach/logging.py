@@ -8,51 +8,17 @@
 
 from __future__ import absolute_import, unicode_literals
 
+try:
+    import blessings
+except ImportError:
+    blessings = None
+
 import codecs
 import json
 import logging
-import os
+import six
 import sys
 import time
-
-import blessed
-import six
-from looseversion import LooseVersion as Version
-from mozbuild.util import mozilla_build_version
-
-IS_WINDOWS = sys.platform.startswith("win")
-
-if IS_WINDOWS:
-    import msvcrt
-    from ctypes import byref, windll
-    from ctypes.wintypes import DWORD
-
-    ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
-
-    def enable_virtual_terminal_processing(file_descriptor):
-        handle = msvcrt.get_osfhandle(file_descriptor)
-        try:
-            mode = DWORD()
-            windll.kernel32.GetConsoleMode(handle, byref(mode))
-            mode.value |= ENABLE_VIRTUAL_TERMINAL_PROCESSING
-            windll.kernel32.SetConsoleMode(handle, mode.value)
-        except Exception as e:
-            raise e
-
-
-def enable_blessed():
-    # Only Windows has issues with enabling blessed
-    # and interpreting ANSI escape sequences
-    if not IS_WINDOWS:
-        return True
-
-    if os.environ.get("NO_ANSI"):
-        return False
-
-    # MozillaBuild 4.0.2 is the first Release that supports
-    # ANSI escape sequences, so if we're greater than that
-    # version, we can enable them (via Blessed).
-    return mozilla_build_version() >= Version("4.0.2")
 
 
 # stdout and stderr may not necessarily be set up to write Unicode output, so
@@ -151,7 +117,7 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
 
     def set_terminal(self, terminal):
         self.terminal = terminal
-        self._sgr0 = terminal.normal if terminal else ""
+        self._sgr0 = terminal.normal if terminal and blessings else ""
 
     def format(self, record):
         formatted_msg = record.msg.format(**record.params)
@@ -257,19 +223,19 @@ class LoggingManager(object):
 
         self._terminal = None
 
-    def create_terminal(self):
-        if enable_blessed():
-            # Sometimes blessed fails to set up the terminal, in that case, silently fail.
+    @property
+    def terminal(self):
+        if not self._terminal and blessings:
+            # Sometimes blessings fails to set up the terminal. In that case,
+            # silently fail.
             try:
-                terminal = blessed.Terminal(stream=_wrap_stdstream(sys.stdout))
+                terminal = blessings.Terminal(stream=_wrap_stdstream(sys.stdout))
 
                 if terminal.is_a_tty:
                     self._terminal = terminal
             except Exception:
                 pass
 
-    @property
-    def terminal(self):
         return self._terminal
 
     def add_json_handler(self, fh):
@@ -290,11 +256,6 @@ class LoggingManager(object):
         self, fh=sys.stdout, level=logging.INFO, write_interval=False, write_times=True
     ):
         """Enable logging to the terminal."""
-        self.create_terminal()
-
-        if IS_WINDOWS:
-            enable_virtual_terminal_processing(sys.stdout.fileno())
-            enable_virtual_terminal_processing(sys.stderr.fileno())
 
         fh = _wrap_stdstream(fh)
         formatter = StructuredHumanFormatter(

@@ -15,28 +15,6 @@ from mozbuild.base import MozbuildObject
 from mozfile import TemporaryDirectory
 from mozpack.files import FileFinder
 
-EXCLUDED_PACKAGES = {
-    # dlmanager's package on PyPI only has metadata, but is missing the code.
-    # https://github.com/parkouss/dlmanager/issues/1
-    "dlmanager",
-    # gyp's package on PyPI doesn't have any downloadable files.
-    "gyp",
-    # We keep some wheels vendored in "_venv" for use in Mozharness
-    "_venv",
-    # We manage vendoring "vsdownload" with a moz.yaml file (there is no module
-    # on PyPI).
-    "vsdownload",
-    # The moz.build file isn't a vendored module, so don't delete it.
-    "moz.build",
-    "requirements.in",
-    # The ansicon package contains DLLs and we don't want to arbitrarily vendor
-    # them since they could be unsafe. This module should rarely be used in practice
-    # (it's a fallback for old versions of windows). We've intentionally vendored a
-    # modified 'dummy' version of it so that the dependency checks still succeed, but
-    # if it ever is attempted to be used, it will fail gracefully.
-    "ansicon",
-}
-
 
 class VendorPython(MozbuildObject):
     def vendor(self, keep_extra_files=False):
@@ -120,13 +98,6 @@ class VendorPython(MozbuildObject):
                 package_name, version, spec, abi, platform_and_suffix = archive.rsplit(
                     "-", 4
                 )
-
-                if package_name in EXCLUDED_PACKAGES:
-                    print(
-                        f"'{package_name}' is on the exclusion list and will not be vendored."
-                    )
-                    continue
-
                 target_package_dir = os.path.join(dest, package_name)
                 os.mkdir(target_package_dir)
 
@@ -141,12 +112,6 @@ class VendorPython(MozbuildObject):
                 # specifier.
                 package_name, archive_postfix = archive.rsplit("-", 1)
                 package_dir = os.path.join(dest, package_name)
-
-                if package_name in EXCLUDED_PACKAGES:
-                    print(
-                        f"'{package_name}' is on the exclusion list and will not be vendored."
-                    )
-                    continue
 
                 # The archive should only contain one top-level directory, which has
                 # the source files. We extract this directory directly to
@@ -206,8 +171,24 @@ def remove_environment_markers_from_requirements_txt(requirements_txt: Path):
 
 
 def _purge_vendor_dir(vendor_dir):
+    excluded_packages = [
+        # dlmanager's package on PyPI only has metadata, but is missing the code.
+        # https://github.com/parkouss/dlmanager/issues/1
+        "dlmanager",
+        # gyp's package on PyPI doesn't have any downloadable files.
+        "gyp",
+        # We keep some wheels vendored in "_venv" for use in Mozharness
+        "_venv",
+        # We manage vendoring "vsdownload" with a moz.yaml file (there is no module
+        # on PyPI).
+        "vsdownload",
+        # The moz.build file isn't a vendored module, so don't delete it.
+        "moz.build",
+        "requirements.in",
+    ]
+
     for child in Path(vendor_dir).iterdir():
-        if child.name not in EXCLUDED_PACKAGES:
+        if child.name not in excluded_packages:
             mozfile.remove(str(child))
 
 
