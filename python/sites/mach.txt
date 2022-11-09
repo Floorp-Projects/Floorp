@@ -56,9 +56,11 @@ vendored:testing/web-platform/tests/tools/wptserve
 vendored:testing/web-platform/tests/tools/wptrunner
 pth:testing/xpcshell
 vendored:third_party/python/aiohttp
+vendored:third_party/python/ansicon
 vendored:third_party/python/appdirs
 vendored:third_party/python/async_timeout
 vendored:third_party/python/attrs
+vendored:third_party/python/blessed
 vendored:third_party/python/blessings
 vendored:third_party/python/cbor2
 vendored:third_party/python/certifi
@@ -82,6 +84,7 @@ vendored:third_party/python/idna-ssl
 vendored:third_party/python/importlib_metadata
 vendored:third_party/python/iso8601
 vendored:third_party/python/Jinja2
+vendored:third_party/python/jinxed
 vendored:third_party/python/jsmin
 vendored:third_party/python/json-e
 vendored:third_party/python/jsonschema
@@ -120,6 +123,7 @@ vendored:third_party/python/tqdm
 vendored:third_party/python/typing_extensions
 vendored:third_party/python/urllib3
 vendored:third_party/python/voluptuous
+vendored:third_party/python/wcwidth
 vendored:third_party/python/wheel
 vendored:third_party/python/yamllint
 vendored:third_party/python/yarl
