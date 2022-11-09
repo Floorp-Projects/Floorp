@@ -5,7 +5,7 @@
 
 // https rather than chrome to improve coverage
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
-const MEDIA_PREF = "devtools.styleeditor.showMediaSidebar";
+const SIDEBAR_PREF = "devtools.styleeditor.showAtRulesSidebar";
 
 const RESIZE_W = 300;
 const RESIZE_H = 450;
@@ -38,32 +38,32 @@ add_task(async function() {
 
   is(ui.editors.length, 4, "correct number of editors");
 
-  // Test first plain css editor
+  info("Test first plain css editor");
   const plainEditor = ui.editors[0];
   await openEditor(plainEditor);
   testPlainEditor(plainEditor);
 
-  // Test editor for inline sheet with @media rules
+  info("Test editor for inline sheet with @media rules");
   const inlineMediaEditor = ui.editors[3];
   await openEditor(inlineMediaEditor);
   await testInlineMediaEditor(ui, inlineMediaEditor);
 
-  // Test editor with @media rules
+  info("Test editor with @media rules");
   const mediaEditor = ui.editors[1];
   await openEditor(mediaEditor);
   await testMediaEditor(ui, mediaEditor);
 
-  // Test that sidebar hides when flipping pref
+  info("Test that sidebar hides when flipping pref");
   await testShowHide(ui, mediaEditor);
 
-  // Test adding a rule updates the list
+  info("Test adding a rule updates the list");
   await testMediaRuleAdded(ui, mediaEditor);
 
-  // Test resizing and seeing @media matching state change
+  info("Test resizing and seeing @media matching state change");
   const originalWidth = window.outerWidth;
   const originalHeight = window.outerHeight;
 
-  const onMatchesChange = listenForMediaChange(ui);
+  const onMatchesChange = ui.once("at-rules-list-changed");
   window.resizeTo(RESIZE_W, RESIZE_H);
   await onMatchesChange;
 
@@ -81,7 +81,7 @@ async function testInlineMediaEditor(ui, editor) {
   const sidebar = editor.details.querySelector(".stylesheet-sidebar");
   is(sidebar.hidden, false, "sidebar is showing on editor with @media");
 
-  const entries = sidebar.querySelectorAll(".media-rule-label");
+  const entries = sidebar.querySelectorAll(".at-rule-label");
   is(entries.length, 2, "2 @media rules displayed in sidebar");
 
   await testRule({
@@ -107,7 +107,7 @@ async function testMediaEditor(ui, editor) {
   const sidebar = editor.details.querySelector(".stylesheet-sidebar");
   is(sidebar.hidden, false, "sidebar is showing on editor with @media");
 
-  const entries = [...sidebar.querySelectorAll(".media-rule-label")];
+  const entries = [...sidebar.querySelectorAll(".at-rule-label")];
   is(entries.length, 4, "four @media rules displayed in sidebar");
 
   await testRule({
@@ -147,7 +147,7 @@ async function testMediaEditor(ui, editor) {
 function testMediaMatchChanged(editor) {
   const sidebar = editor.details.querySelector(".stylesheet-sidebar");
 
-  const cond = sidebar.querySelectorAll(".media-rule-condition")[2];
+  const cond = sidebar.querySelectorAll(".at-rule-condition")[2];
   is(
     cond.textContent,
     "(max-width: 550px)",
@@ -160,15 +160,15 @@ function testMediaMatchChanged(editor) {
 }
 
 async function testShowHide(ui, editor) {
-  let sidebarChange = listenForMediaChange(ui);
-  Services.prefs.setBoolPref(MEDIA_PREF, false);
+  let sidebarChange = ui.once("at-rules-list-changed");
+  Services.prefs.setBoolPref(SIDEBAR_PREF, false);
   await sidebarChange;
 
   const sidebar = editor.details.querySelector(".stylesheet-sidebar");
   is(sidebar.hidden, true, "sidebar is hidden after flipping pref");
 
-  sidebarChange = listenForMediaChange(ui);
-  Services.prefs.clearUserPref(MEDIA_PREF);
+  sidebarChange = ui.once("at-rules-list-changed");
+  Services.prefs.clearUserPref(SIDEBAR_PREF);
   await sidebarChange;
 
   is(sidebar.hidden, false, "sidebar is showing after flipping pref back");
@@ -179,12 +179,12 @@ async function testMediaRuleAdded(ui, editor) {
   let text = editor.sourceEditor.getText();
   text += NEW_RULE;
 
-  const listChange = listenForMediaChange(ui);
+  const listChange = ui.once("at-rules-list-changed");
   editor.sourceEditor.setText(text);
   await listChange;
 
   const sidebar = editor.details.querySelector(".stylesheet-sidebar");
-  const entries = [...sidebar.querySelectorAll(".media-rule-label")];
+  const entries = [...sidebar.querySelectorAll(".at-rule-label")];
   is(entries.length, 6, "six @media rules after changing text");
 
   await testRule({
@@ -218,7 +218,7 @@ async function testMediaRuleAdded(ui, editor) {
  * @param {Number} options.line: Line of the rule
  */
 async function testRule({ ui, editor, rule, conditionText, matches, line }) {
-  const cond = rule.querySelector(".media-rule-condition");
+  const cond = rule.querySelector(".at-rule-condition");
   is(
     cond.textContent,
     conditionText,
@@ -231,7 +231,7 @@ async function testRule({ ui, editor, rule, conditionText, matches, line }) {
     "media rule is " + (matches ? "matched" : "unmatched")
   );
 
-  const mediaRuleLine = rule.querySelector(".media-rule-line");
+  const mediaRuleLine = rule.querySelector(".at-rule-line");
   is(mediaRuleLine.textContent, ":" + line, "correct line number shown");
 
   info(
@@ -252,14 +252,6 @@ function openEditor(editor) {
   getLinkFor(editor).click();
 
   return editor.getSourceEditor();
-}
-
-function listenForMediaChange(ui) {
-  return new Promise(resolve => {
-    ui.once("media-list-changed", () => {
-      resolve();
-    });
-  });
 }
 
 function getLinkFor(editor) {

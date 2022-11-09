@@ -24,7 +24,7 @@ loader.lazyRequireGetter(
   "resource://devtools/client/framework/menu-item.js"
 );
 
-const PREF_MEDIA_SIDEBAR = "devtools.styleeditor.showMediaSidebar";
+const PREF_AT_RULES_SIDEBAR = "devtools.styleeditor.showAtRulesSidebar";
 const PREF_ORIG_SOURCES = "devtools.source-map.client-service.enabled";
 
 /**
@@ -181,12 +181,12 @@ export function showFilePicker(
  * Returns a Popup Menu for the Options ("gear") Button
  * @param {function} toggleOrigSources
  *        To toggle the original source pref
- * @param {function} toggleMediaSources
- *        To toggle the pref to show @media side bar
+ * @param {function} toggleAtRulesSidebar
+ *        To toggle the pref to show at-rules side bar
  * @return {object} popupMenu
  *         A Menu object holding the MenuItems
  */
-export function optionsPopupMenu(toggleOrigSources, toggleMediaSidebar) {
+export function optionsPopupMenu(toggleOrigSources, toggleAtRulesSidebar) {
   const popupMenu = new lazy.Menu();
   popupMenu.append(
     new lazy.MenuItem({
@@ -200,12 +200,12 @@ export function optionsPopupMenu(toggleOrigSources, toggleMediaSidebar) {
   );
   popupMenu.append(
     new lazy.MenuItem({
-      id: "options-show-media",
-      label: getString("showMediaSidebar.label"),
-      accesskey: getString("showMediaSidebar.accesskey"),
+      id: "options-show-at-rules",
+      label: getString("showAtRulesSidebar.label"),
+      accesskey: getString("showAtRulesSidebar.accesskey"),
       type: "checkbox",
-      checked: Services.prefs.getBoolPref(PREF_MEDIA_SIDEBAR),
-      click: () => toggleMediaSidebar(),
+      checked: Services.prefs.getBoolPref(PREF_AT_RULES_SIDEBAR),
+      click: () => toggleAtRulesSidebar(),
     })
   );
 

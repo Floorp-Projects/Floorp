@@ -63,8 +63,8 @@ const MAX_CHECK_COUNT = 10;
 // gets highlighted?
 const SELECTOR_HIGHLIGHT_TIMEOUT = 500;
 
-// Minimum delay between firing two media-rules-changed events.
-const EMIT_MEDIA_RULES_THROTTLING = 500;
+// Minimum delay between firing two at-rules-changed events.
+const EMIT_AT_RULES_THROTTLING = 500;
 
 const STYLE_SHEET_UPDATE_CAUSED_BY_STYLE_EDITOR = "styleeditor";
 
@@ -117,7 +117,7 @@ export function StyleSheetEditor(resource, win, styleSheetFriendlyIndex) {
   }
 
   this.onPropertyChange = this.onPropertyChange.bind(this);
-  this.onMediaRulesChanged = this.onMediaRulesChanged.bind(this);
+  this.onAtRulesChanged = this.onAtRulesChanged.bind(this);
   this.checkLinkedFileForChanges = this.checkLinkedFileForChanges.bind(this);
   this.markLinkedFileBroken = this.markLinkedFileBroken.bind(this);
   this.saveToFile = this.saveToFile.bind(this);
@@ -129,13 +129,13 @@ export function StyleSheetEditor(resource, win, styleSheetFriendlyIndex) {
   this.savedFile = this.styleSheet.file;
   this.linkCSSFile();
 
-  this.emitMediaRulesChanged = throttle(
-    this.emitMediaRulesChanged,
-    EMIT_MEDIA_RULES_THROTTLING,
+  this.emitAtRulesChanged = throttle(
+    this.emitAtRulesChanged,
+    EMIT_AT_RULES_THROTTLING,
     this
   );
 
-  this.mediaRules = [];
+  this.atRules = [];
 }
 
 StyleSheetEditor.prototype = {
@@ -424,26 +424,26 @@ StyleSheetEditor.prototype = {
   },
 
   /**
-   * Handles changes to the list of @media rules in the stylesheet.
-   * Emits 'media-rules-changed' if the list has changed.
+   * Handles changes to the list of at-rules (@media, @layer, @container, …) in the stylesheet.
+   * Emits 'at-rules-changed' if the list has changed.
    *
    * @param  {array} rules
    *         Array of MediaRuleFronts for new media rules of sheet.
    */
-  onMediaRulesChanged(rules) {
-    if (!rules.length && !this.mediaRules.length) {
+  onAtRulesChanged(rules) {
+    if (!rules.length && !this.atRules.length) {
       return;
     }
 
-    this.mediaRules = rules;
-    this.emitMediaRulesChanged();
+    this.atRules = rules;
+    this.emitAtRulesChanged();
   },
 
   /**
-   * Forward media-rules-changed event from stylesheet.
+   * Forward at-rules-changed event from stylesheet.
    */
-  emitMediaRulesChanged() {
-    this.emit("media-rules-changed", this.mediaRules);
+  emitAtRulesChanged() {
+    this.emit("at-rules-changed", this.atRules);
   },
 
   /**

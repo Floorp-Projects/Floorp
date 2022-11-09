@@ -2515,8 +2515,8 @@ pref("devtools.storage.enabled", true);
 // Enable the Style Editor.
 pref("devtools.styleeditor.enabled", true);
 pref("devtools.styleeditor.autocompletion-enabled", true);
-pref("devtools.styleeditor.showMediaSidebar", true);
-pref("devtools.styleeditor.mediaSidebarWidth", 238);
+pref("devtools.styleeditor.showAtRulesSidebar", true);
+pref("devtools.styleeditor.atRulesSidebarWidth", 238);
 pref("devtools.styleeditor.navSidebarWidth", 245);
 pref("devtools.styleeditor.transitions", true);
 
