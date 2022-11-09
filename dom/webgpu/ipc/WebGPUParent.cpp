@@ -346,22 +346,26 @@ WebGPUParent::BufferMapData* WebGPUParent::GetBufferMapData(RawId aBufferId) {
   return &iter->second;
 }
 
-ipc::IPCResult WebGPUParent::RecvCreateBuffer(RawId aDeviceId, RawId aBufferId,
-                                              dom::GPUBufferDescriptor&& aDesc,
-                                              MaybeShmem&& aShmem) {
+ipc::IPCResult WebGPUParent::RecvCreateBuffer(
+    RawId aDeviceId, RawId aBufferId, dom::GPUBufferDescriptor&& aDesc,
+    ipc::UnsafeSharedMemoryHandle&& aShmem) {
   webgpu::StringHelper label(aDesc.mLabel);
 
-  if (aShmem.type() == MaybeShmem::TShmem) {
-    bool hasMapFlags = aDesc.mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
-                                       dom::GPUBufferUsage_Binding::MAP_READ);
+  auto shmem =
+      ipc::WritableSharedMemoryMapping::Open(std::move(aShmem)).value();
+
+  bool hasMapFlags = aDesc.mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
+                                     dom::GPUBufferUsage_Binding::MAP_READ);
+  if (hasMapFlags || aDesc.mMappedAtCreation) {
     uint64_t offset = 0;
     uint64_t size = 0;
     if (aDesc.mMappedAtCreation) {
       size = aDesc.mSize;
-      MOZ_RELEASE_ASSERT(aShmem.get_Shmem().Size<uint8_t>() >= size);
+      MOZ_RELEASE_ASSERT(shmem.Size() >= aDesc.mSize);
     }
-    mSharedMemoryMap[aBufferId] = {aShmem.get_Shmem(), hasMapFlags, offset,
-                                   size};
+
+    BufferMapData data = {std::move(shmem), hasMapFlags, offset, size};
+    mSharedMemoryMap.insert(std::make_pair(aBufferId, std::move(data)));
   }
 
   ErrorBuffer error;
@@ -436,10 +440,10 @@ static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
       const auto src = ffi::wgpu_server_buffer_get_mapped_range(
           req->mContext, req->mBufferId, offset, size);
 
-      MOZ_RELEASE_ASSERT(mapData->mShmem.Size<uint8_t>() >= offset + size);
+      MOZ_RELEASE_ASSERT(mapData->mShmem.Size() >= offset + size);
       if (src.ptr != nullptr && src.length >= size) {
-        auto dstPtr = mapData->mShmem.get<uint8_t>() + offset;
-        memcpy(dstPtr, src.ptr, size);
+        auto dst = mapData->mShmem.Bytes().Subspan(offset, size);
+        memcpy(dst.data(), src.ptr, size);
       }
     }
 
@@ -509,16 +513,16 @@ ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aDeviceId, RawId aBufferId,
     uint64_t offset = mapData->mMappedOffset;
     uint64_t size = mapData->mMappedSize;
 
-    uint8_t* srcPtr = mapData->mShmem.get<uint8_t>() + offset;
-
     const auto mapped = ffi::wgpu_server_buffer_get_mapped_range(
         mContext.get(), aBufferId, offset, size);
 
     if (mapped.ptr != nullptr && mapped.length >= size) {
-      auto shmSize = mapData->mShmem.Size<uint8_t>();
+      auto shmSize = mapData->mShmem.Size();
       MOZ_RELEASE_ASSERT(offset <= shmSize);
       MOZ_RELEASE_ASSERT(size <= shmSize - offset);
-      memcpy(mapped.ptr, srcPtr, size);
+
+      auto src = mapData->mShmem.Bytes().Subspan(offset, size);
+      memcpy(mapped.ptr, src.data(), size);
     }
 
     mapData->mMappedOffset = 0;
@@ -541,7 +545,6 @@ ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aDeviceId, RawId aBufferId,
 void WebGPUParent::DeallocBufferShmem(RawId aBufferId) {
   const auto iter = mSharedMemoryMap.find(aBufferId);
   if (iter != mSharedMemoryMap.end()) {
-    DeallocShmem(iter->second.mShmem);
     mSharedMemoryMap.erase(iter);
   }
 }

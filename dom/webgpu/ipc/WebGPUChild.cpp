@@ -16,6 +16,7 @@
 #include "DeviceLostInfo.h"
 #include "Sampler.h"
 #include "CompilationInfo.h"
+#include "mozilla/ipc/RawShmem.h"
 
 namespace mozilla::webgpu {
 
@@ -356,9 +357,9 @@ Maybe<DeviceRequest> WebGPUChild::AdapterRequestDevice(
 
 RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
                                       const dom::GPUBufferDescriptor& aDesc,
-                                      MaybeShmem&& aShmem) {
+                                      ipc::UnsafeSharedMemoryHandle&& aShmem) {
   RawId bufferId = ffi::wgpu_client_make_buffer_id(mClient.get(), aSelfId);
-  if (!SendCreateBuffer(aSelfId, bufferId, aDesc, aShmem)) {
+  if (!SendCreateBuffer(aSelfId, bufferId, aDesc, std::move(aShmem))) {
     MOZ_CRASH("IPC failure");
   }
   return bufferId;

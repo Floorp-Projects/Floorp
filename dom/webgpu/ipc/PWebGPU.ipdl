@@ -13,6 +13,7 @@ using dom::GPUCommandBufferDescriptor from "mozilla/dom/WebGPUBinding.h";
 using dom::GPUBufferDescriptor from "mozilla/dom/WebGPUBinding.h";
 using MaybeScopedError from "mozilla/webgpu/WebGPUTypes.h";
 using WebGPUCompilationMessage from "mozilla/webgpu/WebGPUTypes.h";
+[MoveOnly] using class mozilla::ipc::UnsafeSharedMemoryHandle from "mozilla/ipc/RawShmem.h";
 
 include "mozilla/ipc/ByteBufUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
@@ -40,7 +41,7 @@ parent:
   async CommandEncoderAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
   async BumpImplicitBindGroupLayout(RawId pipelineId, bool isCompute, uint32_t index, RawId assignId);
 
-  async CreateBuffer(RawId deviceId, RawId bufferId, GPUBufferDescriptor desc, MaybeShmem shmem);
+  async CreateBuffer(RawId deviceId, RawId bufferId, GPUBufferDescriptor desc, UnsafeSharedMemoryHandle shm);
 
   async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (ByteBuf byteBuf);
   async AdapterRequestDevice(RawId selfId, ByteBuf buf, RawId newId) returns (bool success);
