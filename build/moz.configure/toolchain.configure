@@ -1863,8 +1863,11 @@ set_config("MOZ_DEBUG_FLAGS", debug_flags)
 add_old_configure_assignment("MOZ_DEBUG_FLAGS", debug_flags)
 
 
-@depends(c_compiler)
-def color_cflags(info):
+@depends(c_compiler, host)
+@imports(
+    _from="mach.logging", _import="enable_blessed", _as="_enable_ansi_escape_codes"
+)
+def color_cflags(info, host):
     # We could test compiling with flags. By why incur the overhead when
     # color support should always be present in a specific toolchain
     # version?
@@ -1878,7 +1881,10 @@ def color_cflags(info):
     if info.type == "gcc":
         return "-fdiagnostics-color"
     elif info.type in ["clang", "clang-cl"]:
-        return "-fcolor-diagnostics"
+        if host.os == "WINNT" and _enable_ansi_escape_codes():
+            return "-fcolor-diagnostics -fansi-escape-codes"
+        else:
+            return "-fcolor-diagnostics"
     else:
         return ""
 
