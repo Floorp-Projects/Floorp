@@ -21,6 +21,7 @@ async function require_module(id) {
       navigator: {
         storage,
       },
+      TextEncoder,
     };
 
     require_module.moduleLoader = new ModuleLoader(base, depth, proto);
