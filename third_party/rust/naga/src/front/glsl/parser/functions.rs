@@ -422,7 +422,7 @@ impl<'source> ParsingContext<'source> {
             TokenValue::For => {
                 let mut meta = self.bump(parser)?.meta;
 
-                ctx.symbol_table.push_scope();
+                ctx.push_scope();
                 self.expect(parser, TokenValue::LeftParen)?;
 
                 if self.bump_if(parser, TokenValue::Semicolon).is_none() {
@@ -520,7 +520,7 @@ impl<'source> ParsingContext<'source> {
                     meta,
                 );
 
-                ctx.symbol_table.pop_scope();
+                ctx.remove_current_scope();
 
                 meta
             }
@@ -528,6 +528,7 @@ impl<'source> ParsingContext<'source> {
                 let meta = self.bump(parser)?.meta;
 
                 let mut block = Block::new();
+                ctx.push_scope();
 
                 let mut block_terminator = None;
                 let meta = self.parse_compound_statement(
@@ -537,6 +538,8 @@ impl<'source> ParsingContext<'source> {
                     &mut block,
                     &mut block_terminator,
                 )?;
+
+                ctx.remove_current_scope();
 
                 body.push(Statement::Block(block), meta);
                 if block_terminator.is_some() {
@@ -569,8 +572,6 @@ impl<'source> ParsingContext<'source> {
         body: &mut Block,
         terminator: &mut Option<usize>,
     ) -> Result<Span> {
-        ctx.symbol_table.push_scope();
-
         loop {
             if let Some(Token {
                 meta: brace_meta, ..
@@ -590,8 +591,6 @@ impl<'source> ParsingContext<'source> {
         if let Some(idx) = *terminator {
             body.cull(idx..)
         }
-
-        ctx.symbol_table.pop_scope();
 
         Ok(meta)
     }

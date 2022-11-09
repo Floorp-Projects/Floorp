@@ -1,11 +1,7 @@
 use serde::Deserialize;
 use serde_bytes;
 
-use crate::{
-    de::from_str,
-    error::{Error, Position, SpannedError, SpannedResult},
-    parse::{AnyNum, Bytes},
-};
+use super::*;
 
 #[derive(Debug, PartialEq, Deserialize)]
 struct EmptyStruct1;
@@ -153,8 +149,8 @@ y: 2.0 // 2!
     );
 }
 
-fn err<T>(kind: Error, line: usize, col: usize) -> SpannedResult<T> {
-    Err(SpannedError {
+fn err<T>(kind: ErrorCode, line: usize, col: usize) -> Result<T> {
+    Err(Error {
         code: kind,
         position: Position { line, col },
     })
@@ -162,31 +158,31 @@ fn err<T>(kind: Error, line: usize, col: usize) -> SpannedResult<T> {
 
 #[test]
 fn test_err_wrong_value() {
-    use self::Error::*;
+    use self::ErrorCode::*;
     use std::collections::HashMap;
 
     assert_eq!(from_str::<f32>("'c'"), err(ExpectedFloat, 1, 1));
     assert_eq!(from_str::<String>("'c'"), err(ExpectedString, 1, 1));
     assert_eq!(from_str::<HashMap<u32, u32>>("'c'"), err(ExpectedMap, 1, 1));
-    assert_eq!(from_str::<[u8; 5]>("'c'"), err(ExpectedStructLike, 1, 1));
+    assert_eq!(from_str::<[u8; 5]>("'c'"), err(ExpectedArray, 1, 1));
     assert_eq!(from_str::<Vec<u32>>("'c'"), err(ExpectedArray, 1, 1));
     assert_eq!(from_str::<MyEnum>("'c'"), err(ExpectedIdentifier, 1, 1));
     assert_eq!(
         from_str::<MyStruct>("'c'"),
-        err(ExpectedNamedStructLike("MyStruct"), 1, 1)
+        err(ExpectedNamedStruct("MyStruct"), 1, 1)
     );
     assert_eq!(
         from_str::<MyStruct>("NotMyStruct(x: 4, y: 2)"),
         err(
-            ExpectedDifferentStructName {
+            ExpectedStructName {
                 expected: "MyStruct",
                 found: String::from("NotMyStruct")
             },
             1,
-            12
+            1
         )
     );
-    assert_eq!(from_str::<(u8, bool)>("'c'"), err(ExpectedStructLike, 1, 1));
+    assert_eq!(from_str::<(u8, bool)>("'c'"), err(ExpectedArray, 1, 1));
     assert_eq!(from_str::<bool>("notabool"), err(ExpectedBoolean, 1, 1));
 
     assert_eq!(
@@ -238,38 +234,38 @@ fn rename() {
 
 #[test]
 fn forgot_apostrophes() {
-    let de: SpannedResult<(i32, String)> = from_str("(4, \"Hello)");
+    let de: Result<(i32, String)> = from_str("(4, \"Hello)");
 
-    assert!(matches!(
-        de,
-        Err(SpannedError {
-            code: Error::ExpectedStringEnd,
+    assert!(match de {
+        Err(Error {
+            code: ErrorCode::ExpectedStringEnd,
             position: _,
-        })
-    ));
+        }) => true,
+        _ => false,
+    });
 }
 
 #[test]
 fn expected_attribute() {
-    let de: SpannedResult<String> = from_str("#\"Hello\"");
+    let de: Result<String> = from_str("#\"Hello\"");
 
-    assert_eq!(de, err(Error::ExpectedAttribute, 1, 2));
+    assert_eq!(de, err(ErrorCode::ExpectedAttribute, 1, 2));
 }
 
 #[test]
 fn expected_attribute_end() {
-    let de: SpannedResult<String> = from_str("#![enable(unwrap_newtypes) \"Hello\"");
+    let de: Result<String> = from_str("#![enable(unwrap_newtypes) \"Hello\"");
 
-    assert_eq!(de, err(Error::ExpectedAttributeEnd, 1, 28));
+    assert_eq!(de, err(ErrorCode::ExpectedAttributeEnd, 1, 28));
 }
 
 #[test]
 fn invalid_attribute() {
-    let de: SpannedResult<String> = from_str("#![enable(invalid)] \"Hello\"");
+    let de: Result<String> = from_str("#![enable(invalid)] \"Hello\"");
 
     assert_eq!(
         de,
-        err(Error::NoSuchExtension("invalid".to_string()), 1, 18)
+        err(ErrorCode::NoSuchExtension("invalid".to_string()), 1, 18)
     );
 }
 
@@ -277,7 +273,7 @@ fn invalid_attribute() {
 fn multiple_attributes() {
     #[derive(Debug, Deserialize, PartialEq)]
     struct New(String);
-    let de: SpannedResult<New> =
+    let de: Result<New> =
         from_str("#![enable(unwrap_newtypes)] #![enable(unwrap_newtypes)] \"Hello\"");
 
     assert_eq!(de, Ok(New("Hello".to_owned())));
@@ -285,7 +281,7 @@ fn multiple_attributes() {
 
 #[test]
 fn uglified_attribute() {
-    let de: SpannedResult<()> = from_str(
+    let de: Result<()> = from_str(
         "#   !\
     // We definitely want to add a comment here
     [\t\tenable( // best style ever

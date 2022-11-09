@@ -5,7 +5,7 @@ use std::io;
 use serde::{de, ser, Deserialize, Serialize};
 
 use crate::de::Deserializer;
-use crate::error::{Result, SpannedResult};
+use crate::error::Result;
 use crate::extensions::Extensions;
 use crate::ser::{PrettyConfig, Serializer};
 
@@ -26,7 +26,6 @@ use crate::ser::{PrettyConfig, Serializer};
 /// ```
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
-#[non_exhaustive]
 pub struct Options {
     /// Extensions that are enabled by default during serialization and
     ///  deserialization.
@@ -36,12 +35,16 @@ pub struct Options {
     ///  activation is NOT included in the output RON.
     /// No extensions are enabled by default.
     pub default_extensions: Extensions,
+    /// Private field to ensure adding a field is non-breaking.
+    #[serde(skip)]
+    _future_proof: (),
 }
 
 impl Default for Options {
     fn default() -> Self {
         Self {
             default_extensions: Extensions::empty(),
+            _future_proof: (),
         }
     }
 }
@@ -65,7 +68,7 @@ impl Options {
 impl Options {
     /// A convenience function for building a deserializer
     /// and deserializing a value of type `T` from a reader.
-    pub fn from_reader<R, T>(&self, mut rdr: R) -> SpannedResult<T>
+    pub fn from_reader<R, T>(&self, mut rdr: R) -> Result<T>
     where
         R: io::Read,
         T: de::DeserializeOwned,
@@ -78,7 +81,7 @@ impl Options {
 
     /// A convenience function for building a deserializer
     /// and deserializing a value of type `T` from a string.
-    pub fn from_str<'a, T>(&self, s: &'a str) -> SpannedResult<T>
+    pub fn from_str<'a, T>(&self, s: &'a str) -> Result<T>
     where
         T: de::Deserialize<'a>,
     {
@@ -87,7 +90,7 @@ impl Options {
 
     /// A convenience function for building a deserializer
     /// and deserializing a value of type `T` from bytes.
-    pub fn from_bytes<'a, T>(&self, s: &'a [u8]) -> SpannedResult<T>
+    pub fn from_bytes<'a, T>(&self, s: &'a [u8]) -> Result<T>
     where
         T: de::Deserialize<'a>,
     {
@@ -97,7 +100,7 @@ impl Options {
     /// A convenience function for building a deserializer
     /// and deserializing a value of type `T` from a reader
     /// and a seed.
-    pub fn from_reader_seed<R, S, T>(&self, mut rdr: R, seed: S) -> SpannedResult<T>
+    pub fn from_reader_seed<R, S, T>(&self, mut rdr: R, seed: S) -> Result<T>
     where
         R: io::Read,
         S: for<'a> de::DeserializeSeed<'a, Value = T>,
@@ -111,7 +114,7 @@ impl Options {
     /// A convenience function for building a deserializer
     /// and deserializing a value of type `T` from a string
     /// and a seed.
-    pub fn from_str_seed<'a, S, T>(&self, s: &'a str, seed: S) -> SpannedResult<T>
+    pub fn from_str_seed<'a, S, T>(&self, s: &'a str, seed: S) -> Result<T>
     where
         S: de::DeserializeSeed<'a, Value = T>,
     {
@@ -121,17 +124,15 @@ impl Options {
     /// A convenience function for building a deserializer
     /// and deserializing a value of type `T` from bytes
     /// and a seed.
-    pub fn from_bytes_seed<'a, S, T>(&self, s: &'a [u8], seed: S) -> SpannedResult<T>
+    pub fn from_bytes_seed<'a, S, T>(&self, s: &'a [u8], seed: S) -> Result<T>
     where
         S: de::DeserializeSeed<'a, Value = T>,
     {
         let mut deserializer = Deserializer::from_bytes_with_options(s, self.clone())?;
 
-        let value = seed
-            .deserialize(&mut deserializer)
-            .map_err(|e| deserializer.span_error(e))?;
+        let value = seed.deserialize(&mut deserializer)?;
 
-        deserializer.end().map_err(|e| deserializer.span_error(e))?;
+        deserializer.end()?;
 
         Ok(value)
     }

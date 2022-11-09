@@ -704,12 +704,11 @@ impl NumericType {
                 (NumericDimension::Vector(Vs::Quad), Sk::Sint)
             }
             Tf::Rg11b10Float => (NumericDimension::Vector(Vs::Tri), Sk::Float),
-            //Tf::Stencil8 |
-            Tf::Depth16Unorm
-            | Tf::Depth32Float
+            Tf::Depth32Float
             | Tf::Depth32FloatStencil8
             | Tf::Depth24Plus
-            | Tf::Depth24PlusStencil8 => {
+            | Tf::Depth24PlusStencil8
+            | Tf::Depth24UnormStencil8 => {
                 panic!("Unexpected depth format")
             }
             Tf::Rgb9e5Ufloat => (NumericDimension::Vector(Vs::Tri), Sk::Float),

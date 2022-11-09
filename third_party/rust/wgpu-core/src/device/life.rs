@@ -12,6 +12,7 @@ use crate::{
 };
 use smallvec::SmallVec;
 
+use copyless::VecHelper as _;
 use hal::Device as _;
 use parking_lot::Mutex;
 use thiserror::Error;
@@ -338,7 +339,7 @@ impl<A: hal::Api> LifetimeTracker<A> {
             }
         }
 
-        self.active.push(ActiveSubmission {
+        self.active.alloc().init(ActiveSubmission {
             index,
             last_resources,
             mapped: Vec::new(),

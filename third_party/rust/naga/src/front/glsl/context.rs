@@ -49,7 +49,9 @@ pub struct Context {
     pub parameters: Vec<Handle<Type>>,
     pub parameters_info: Vec<ParameterInfo>,
 
-    pub symbol_table: crate::front::SymbolTable<String, VariableReference>,
+    //TODO: Find less allocation heavy representation
+    pub scopes: Vec<FastHashMap<String, VariableReference>>,
+    pub lookup_global_var_exps: FastHashMap<String, VariableReference>,
     pub samplers: FastHashMap<Handle<Expression>, Handle<Expression>>,
 
     pub typifier: Typifier,
@@ -67,7 +69,11 @@ impl Context {
             parameters: Vec::new(),
             parameters_info: Vec::new(),
 
-            symbol_table: crate::front::SymbolTable::default(),
+            scopes: vec![FastHashMap::default()],
+            lookup_global_var_exps: FastHashMap::with_capacity_and_hasher(
+                parser.global_variables.len(),
+                Default::default(),
+            ),
             samplers: FastHashMap::default(),
 
             typifier: Typifier::new(),
@@ -161,7 +167,7 @@ impl Context {
             entry_arg,
         };
 
-        self.symbol_table.add(name.into(), var);
+        self.lookup_global_var_exps.insert(name.into(), var);
     }
 
     /// Starts the expression emitter
@@ -214,25 +220,42 @@ impl Context {
         handle
     }
 
-    /// Add variable to current scope
-    ///
-    /// Returns a variable if a variable with the same name was already defined,
-    /// otherwise returns `None`
-    pub fn add_local_var(
-        &mut self,
-        name: String,
-        expr: Handle<Expression>,
-        mutable: bool,
-    ) -> Option<VariableReference> {
-        let var = VariableReference {
-            expr,
-            load: true,
-            mutable,
-            constant: None,
-            entry_arg: None,
-        };
+    pub fn lookup_local_var(&self, name: &str) -> Option<VariableReference> {
+        for scope in self.scopes.iter().rev() {
+            if let Some(var) = scope.get(name) {
+                return Some(var.clone());
+            }
+        }
+        None
+    }
 
-        self.symbol_table.add(name, var)
+    pub fn lookup_global_var(&mut self, name: &str) -> Option<VariableReference> {
+        self.lookup_global_var_exps.get(name).cloned()
+    }
+
+    #[cfg(feature = "glsl-validate")]
+    pub fn lookup_local_var_current_scope(&self, name: &str) -> Option<VariableReference> {
+        if let Some(current) = self.scopes.last() {
+            current.get(name).cloned()
+        } else {
+            None
+        }
+    }
+
+    /// Add variable to current scope
+    pub fn add_local_var(&mut self, name: String, expr: Handle<Expression>, mutable: bool) {
+        if let Some(current) = self.scopes.last_mut() {
+            (*current).insert(
+                name,
+                VariableReference {
+                    expr,
+                    load: true,
+                    mutable,
+                    constant: None,
+                    entry_arg: None,
+                },
+            );
+        }
     }
 
     /// Add function argument to current scope
@@ -283,7 +306,7 @@ impl Context {
             let mutable = qualifier != ParameterQualifier::Const && !opaque;
             let load = qualifier.is_lhs();
 
-            let var = if mutable && !load {
+            if mutable && !load {
                 let handle = self.locals.append(
                     LocalVariable {
                         name: Some(name.clone()),
@@ -304,25 +327,40 @@ impl Context {
                     meta,
                 );
 
-                VariableReference {
-                    expr: local_expr,
-                    load: true,
-                    mutable,
-                    constant: None,
-                    entry_arg: None,
+                if let Some(current) = self.scopes.last_mut() {
+                    (*current).insert(
+                        name,
+                        VariableReference {
+                            expr: local_expr,
+                            load: true,
+                            mutable,
+                            constant: None,
+                            entry_arg: None,
+                        },
+                    );
                 }
-            } else {
-                VariableReference {
-                    expr,
-                    load,
-                    mutable,
-                    constant: None,
-                    entry_arg: None,
-                }
-            };
-
-            self.symbol_table.add(name, var);
+            } else if let Some(current) = self.scopes.last_mut() {
+                (*current).insert(
+                    name,
+                    VariableReference {
+                        expr,
+                        load,
+                        mutable,
+                        constant: None,
+                        entry_arg: None,
+                    },
+                );
+            }
         }
+    }
+
+    /// Add new empty scope
+    pub fn push_scope(&mut self) {
+        self.scopes.push(FastHashMap::default());
+    }
+
+    pub fn remove_current_scope(&mut self) {
+        self.scopes.pop();
     }
 
     /// Returns a [`StmtContext`](StmtContext) to be used in parsing and lowering

@@ -7,8 +7,7 @@ use crate::{
         BufferInitTracker, BufferInitTrackerAction, MemoryInitKind, TextureInitRange,
         TextureInitTracker, TextureInitTrackerAction,
     },
-    instance::{self, Adapter, Surface},
-    pipeline, present,
+    instance, pipeline, present,
     resource::{self, BufferMapState},
     resource::{BufferAccessError, BufferMapAsyncStatus, BufferMapOperation},
     track::{BindGroupStates, TextureSelector, Tracker},
@@ -18,6 +17,7 @@ use crate::{
 };
 
 use arrayvec::ArrayVec;
+use copyless::VecHelper as _;
 use hal::{CommandEncoder as _, Device as _};
 use parking_lot::{Mutex, MutexGuard};
 use smallvec::SmallVec;
@@ -588,20 +588,6 @@ impl<A: HalApi> Device<A> {
             return Err(resource::CreateBufferError::EmptyUsage);
         }
 
-        if !self
-            .features
-            .contains(wgt::Features::MAPPABLE_PRIMARY_BUFFERS)
-        {
-            use wgt::BufferUsages as Bu;
-            let write_mismatch = desc.usage.contains(Bu::MAP_WRITE)
-                && !(Bu::MAP_WRITE | Bu::COPY_SRC).contains(desc.usage);
-            let read_mismatch = desc.usage.contains(Bu::MAP_READ)
-                && !(Bu::MAP_READ | Bu::COPY_DST).contains(desc.usage);
-            if write_mismatch || read_mismatch {
-                return Err(resource::CreateBufferError::UsageMismatch(desc.usage));
-            }
-        }
-
         if desc.mapped_at_creation {
             if desc.size % wgt::COPY_BUFFER_ALIGNMENT != 0 {
                 return Err(resource::CreateBufferError::UnalignedSize);
@@ -695,7 +681,7 @@ impl<A: HalApi> Device<A> {
     fn create_texture(
         &self,
         self_id: id::DeviceId,
-        adapter: &Adapter<A>,
+        adapter: &crate::instance::Adapter<A>,
         desc: &resource::TextureDescriptor,
     ) -> Result<resource::Texture<A>, resource::CreateTextureError> {
         use resource::{CreateTextureError, TextureDimensionError};
@@ -1215,7 +1201,7 @@ impl<A: HalApi> Device<A> {
                         inner,
                     })
                 })?;
-                (Cow::Owned(module), code.into_owned())
+                (module, code.into_owned())
             }
             pipeline::ShaderModuleSource::Naga(module) => (module, String::new()),
         };
@@ -2457,7 +2443,7 @@ impl<A: HalApi> Device<A> {
     fn create_render_pipeline<G: GlobalIdentityHandlerFactory>(
         &self,
         self_id: id::DeviceId,
-        adapter: &Adapter<A>,
+        adapter: &crate::instance::Adapter<A>,
         desc: &pipeline::RenderPipelineDescriptor,
         implicit_context: Option<ImplicitPipelineContext>,
         hub: &Hub<A, G>,
@@ -2517,7 +2503,7 @@ impl<A: HalApi> Device<A> {
         let mut vertex_buffers = Vec::with_capacity(desc.vertex.buffers.len());
         let mut total_attributes = 0;
         for (i, vb_state) in desc.vertex.buffers.iter().enumerate() {
-            vertex_steps.push(pipeline::VertexStep {
+            vertex_steps.alloc().init(pipeline::VertexStep {
                 stride: vb_state.array_stride,
                 mode: vb_state.step_mode,
             });
@@ -2537,7 +2523,7 @@ impl<A: HalApi> Device<A> {
                     stride: vb_state.array_stride,
                 });
             }
-            vertex_buffers.push(hal::VertexBufferLayout {
+            vertex_buffers.alloc().init(hal::VertexBufferLayout {
                 array_stride: vb_state.array_stride,
                 step_mode: vb_state.step_mode,
                 attributes: vb_state.attributes.as_ref(),
@@ -2624,14 +2610,7 @@ impl<A: HalApi> Device<A> {
                     {
                         break Some(pipeline::ColorStateError::FormatNotRenderable(cs.format));
                     }
-                    let blendable = format_features.flags.contains(Tfff::BLENDABLE);
-                    let filterable = format_features.flags.contains(Tfff::FILTERABLE);
-                    let adapter_specific = self
-                        .features
-                        .contains(wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES);
-                    // according to WebGPU specifications the texture needs to be [`TextureFormatFeatureFlags::FILTERABLE`]
-                    // if blending is set - use [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] to elude this limitation
-                    if cs.blend.is_some() && (!blendable || (!filterable && !adapter_specific)) {
+                    if cs.blend.is_some() && !format_features.flags.contains(Tfff::FILTERABLE) {
                         break Some(pipeline::ColorStateError::FormatNotBlendable(cs.format));
                     }
                     if !hal::FormatAspects::from(cs.format).contains(hal::FormatAspects::COLOR) {
@@ -2951,7 +2930,7 @@ impl<A: HalApi> Device<A> {
 
     fn describe_format_features(
         &self,
-        adapter: &Adapter<A>,
+        adapter: &crate::instance::Adapter<A>,
         format: TextureFormat,
     ) -> Result<wgt::TextureFormatFeatures, MissingFeatures> {
         let format_desc = format.describe();
@@ -3172,56 +3151,12 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
             .map_err(|_| instance::IsSurfaceSupportedError::InvalidSurface)?;
         Ok(adapter.is_surface_supported(surface))
     }
-
     pub fn surface_get_supported_formats<A: HalApi>(
         &self,
         surface_id: id::SurfaceId,
         adapter_id: id::AdapterId,
     ) -> Result<Vec<TextureFormat>, instance::GetSurfaceSupportError> {
         profiling::scope!("Surface::get_supported_formats");
-        self.fetch_adapter_and_surface::<A, _, Vec<TextureFormat>>(
-            surface_id,
-            adapter_id,
-            |adapter, surface| surface.get_supported_formats(adapter),
-        )
-    }
-
-    pub fn surface_get_supported_present_modes<A: HalApi>(
-        &self,
-        surface_id: id::SurfaceId,
-        adapter_id: id::AdapterId,
-    ) -> Result<Vec<wgt::PresentMode>, instance::GetSurfaceSupportError> {
-        profiling::scope!("Surface::get_supported_present_modes");
-        self.fetch_adapter_and_surface::<A, _, Vec<wgt::PresentMode>>(
-            surface_id,
-            adapter_id,
-            |adapter, surface| surface.get_supported_present_modes(adapter),
-        )
-    }
-
-    pub fn surface_get_supported_alpha_modes<A: HalApi>(
-        &self,
-        surface_id: id::SurfaceId,
-        adapter_id: id::AdapterId,
-    ) -> Result<Vec<wgt::CompositeAlphaMode>, instance::GetSurfaceSupportError> {
-        profiling::scope!("Surface::get_supported_alpha_modes");
-        self.fetch_adapter_and_surface::<A, _, Vec<wgt::CompositeAlphaMode>>(
-            surface_id,
-            adapter_id,
-            |adapter, surface| surface.get_supported_alpha_modes(adapter),
-        )
-    }
-
-    fn fetch_adapter_and_surface<
-        A: HalApi,
-        F: FnOnce(&Adapter<A>, &Surface) -> Result<B, instance::GetSurfaceSupportError>,
-        B,
-    >(
-        &self,
-        surface_id: id::SurfaceId,
-        adapter_id: id::AdapterId,
-        get_supported_callback: F,
-    ) -> Result<B, instance::GetSurfaceSupportError> {
         let hub = A::hub(self);
         let mut token = Token::root();
 
@@ -3234,7 +3169,27 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
             .get(surface_id)
             .map_err(|_| instance::GetSurfaceSupportError::InvalidSurface)?;
 
-        get_supported_callback(adapter, surface)
+        surface.get_supported_formats(adapter)
+    }
+    pub fn surface_get_supported_modes<A: HalApi>(
+        &self,
+        surface_id: id::SurfaceId,
+        adapter_id: id::AdapterId,
+    ) -> Result<Vec<wgt::PresentMode>, instance::GetSurfaceSupportError> {
+        profiling::scope!("Surface::get_supported_modes");
+        let hub = A::hub(self);
+        let mut token = Token::root();
+
+        let (surface_guard, mut token) = self.surfaces.read(&mut token);
+        let (adapter_guard, mut _token) = hub.adapters.read(&mut token);
+        let adapter = adapter_guard
+            .get(adapter_id)
+            .map_err(|_| instance::GetSurfaceSupportError::InvalidAdapter)?;
+        let surface = surface_guard
+            .get(surface_id)
+            .map_err(|_| instance::GetSurfaceSupportError::InvalidSurface)?;
+
+        surface.get_supported_modes(adapter)
     }
 
     pub fn device_features<A: HalApi>(
@@ -4759,10 +4714,6 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
             .push(id::Valid(query_set_id));
     }
 
-    pub fn query_set_label<A: HalApi>(&self, id: id::QuerySetId) -> String {
-        A::hub(self).query_sets.label_for_resource(id)
-    }
-
     pub fn device_create_render_pipeline<A: HalApi>(
         &self,
         device_id: id::DeviceId,
@@ -5119,40 +5070,6 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                     available: caps.formats.clone(),
                 });
             }
-            if !caps
-                .composite_alpha_modes
-                .contains(&config.composite_alpha_mode)
-            {
-                let new_alpha_mode = 'b: loop {
-                    // Automatic alpha mode checks.
-                    let fallbacks = match config.composite_alpha_mode {
-                        wgt::CompositeAlphaMode::Auto => &[
-                            wgt::CompositeAlphaMode::Opaque,
-                            wgt::CompositeAlphaMode::Inherit,
-                        ][..],
-                        _ => {
-                            return Err(E::UnsupportedAlphaMode {
-                                requested: config.composite_alpha_mode,
-                                available: caps.composite_alpha_modes.clone(),
-                            });
-                        }
-                    };
-
-                    for &fallback in fallbacks {
-                        if caps.composite_alpha_modes.contains(&fallback) {
-                            break 'b fallback;
-                        }
-                    }
-
-                    unreachable!("Fallback system failed to choose alpha mode. This is a bug. AlphaMode: {:?}, Options: {:?}", config.composite_alpha_mode, &caps.composite_alpha_modes);
-                };
-
-                log::info!(
-                    "Automatically choosing alpha mode by rule {:?}. Chose {new_alpha_mode:?}",
-                    config.composite_alpha_mode
-                );
-                config.composite_alpha_mode = new_alpha_mode;
-            }
             if !caps.usage.contains(config.usage) {
                 return Err(E::UnsupportedUsage);
             }
@@ -5190,7 +5107,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
             let caps = unsafe {
                 let suf = A::get_surface(surface);
                 let adapter = &adapter_guard[device.adapter_id.value];
-                match adapter.raw.adapter.surface_capabilities(&suf.unwrap().raw) {
+                match adapter.raw.adapter.surface_capabilities(&suf.raw) {
                     Some(caps) => caps,
                     None => break E::UnsupportedQueueFamily,
                 }
@@ -5202,7 +5119,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
             let mut hal_config = hal::SurfaceConfiguration {
                 swap_chain_size: num_frames,
                 present_mode: config.present_mode,
-                composite_alpha_mode: config.alpha_mode,
+                composite_alpha_mode: hal::CompositeAlphaMode::Opaque,
                 format: config.format,
                 extent: wgt::Extent3d {
                     width: config.width,
@@ -5218,7 +5135,6 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
 
             match unsafe {
                 A::get_surface_mut(surface)
-                    .unwrap()
                     .raw
                     .configure(&device.raw, &hal_config)
             } {

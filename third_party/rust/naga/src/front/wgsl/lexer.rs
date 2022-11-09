@@ -163,8 +163,6 @@ fn is_word_part(c: char) -> bool {
 pub(super) struct Lexer<'a> {
     input: &'a str,
     pub(super) source: &'a str,
-    // The byte offset of the end of the last non-trivia token.
-    last_end_offset: usize,
 }
 
 impl<'a> Lexer<'a> {
@@ -172,7 +170,6 @@ impl<'a> Lexer<'a> {
         Lexer {
             input,
             source: input,
-            last_end_offset: 0,
         }
     }
 
@@ -199,22 +196,6 @@ impl<'a> Lexer<'a> {
         Ok((res, start..end))
     }
 
-    pub(super) fn start_byte_offset(&mut self) -> usize {
-        loop {
-            // Eat all trivia because `next` doesn't eat trailing trivia.
-            let (token, rest) = consume_token(self.input, false);
-            if let Token::Trivia = token {
-                self.input = rest;
-            } else {
-                return self.current_byte_offset();
-            }
-        }
-    }
-
-    pub(super) const fn end_byte_offset(&self) -> usize {
-        self.last_end_offset
-    }
-
     fn peek_token_and_rest(&mut self) -> (TokenSpan<'a>, &'a str) {
         let mut cloned = self.clone();
         let token = cloned.next();
@@ -222,12 +203,12 @@ impl<'a> Lexer<'a> {
         (token, rest)
     }
 
-    const fn current_byte_offset(&self) -> usize {
+    pub(super) const fn current_byte_offset(&self) -> usize {
         self.source.len() - self.input.len()
     }
 
     pub(super) const fn span_from(&self, offset: usize) -> Span {
-        offset..self.end_byte_offset()
+        offset..self.current_byte_offset()
     }
 
     #[must_use]
@@ -238,10 +219,7 @@ impl<'a> Lexer<'a> {
             self.input = rest;
             match token {
                 Token::Trivia => start_byte_offset = self.current_byte_offset(),
-                _ => {
-                    self.last_end_offset = self.current_byte_offset();
-                    return (token, start_byte_offset..self.last_end_offset);
-                }
+                _ => return (token, start_byte_offset..self.current_byte_offset()),
             }
         }
     }
@@ -273,7 +251,7 @@ impl<'a> Lexer<'a> {
         if next.0 == expected {
             Ok(next.1)
         } else {
-            Err(Error::Unexpected(next.1, ExpectedToken::Token(expected)))
+            Err(Error::Unexpected(next, ExpectedToken::Token(expected)))
         }
     }
 
@@ -288,7 +266,7 @@ impl<'a> Lexer<'a> {
             Ok(())
         } else {
             Err(Error::Unexpected(
-                next.1,
+                next,
                 ExpectedToken::Token(Token::Paren(expected)),
             ))
         }
@@ -314,7 +292,7 @@ impl<'a> Lexer<'a> {
                 Err(Error::ReservedIdentifierPrefix(span))
             }
             (Token::Word(word), span) => Ok((word, span)),
-            other => Err(Error::Unexpected(other.1, ExpectedToken::Identifier)),
+            other => Err(Error::Unexpected(other, ExpectedToken::Identifier)),
         }
     }
 

@@ -343,6 +343,10 @@ criteria = "safe-to-deploy"
 version = "0.16.0"
 criteria = "safe-to-run"
 
+[[exemptions.copyless]]
+version = "0.1.5"
+criteria = "safe-to-deploy"
+
 [[exemptions.core-foundation]]
 version = "0.9.3"
 criteria = "safe-to-deploy"

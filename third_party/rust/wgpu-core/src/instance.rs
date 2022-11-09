@@ -8,7 +8,7 @@ use crate::{
 
 use wgt::{Backend, Backends, PowerPreference};
 
-use hal::{Adapter as _, Instance as _, SurfaceCapabilities};
+use hal::{Adapter as _, Instance as _};
 use thiserror::Error;
 
 pub type RequestAdapterOptions = wgt::RequestAdapterOptions<SurfaceId>;
@@ -156,44 +156,37 @@ impl Surface {
         &self,
         adapter: &Adapter<A>,
     ) -> Result<Vec<wgt::TextureFormat>, GetSurfaceSupportError> {
-        self.get_capabilities(adapter).map(|mut caps| {
-            // TODO: maybe remove once we support texture view changing srgb-ness
-            caps.formats.sort_by_key(|f| !f.describe().srgb);
-            caps.formats
-        })
-    }
-
-    pub fn get_supported_present_modes<A: HalApi>(
-        &self,
-        adapter: &Adapter<A>,
-    ) -> Result<Vec<wgt::PresentMode>, GetSurfaceSupportError> {
-        self.get_capabilities(adapter)
-            .map(|caps| caps.present_modes)
-    }
-
-    pub fn get_supported_alpha_modes<A: HalApi>(
-        &self,
-        adapter: &Adapter<A>,
-    ) -> Result<Vec<wgt::CompositeAlphaMode>, GetSurfaceSupportError> {
-        self.get_capabilities(adapter)
-            .map(|caps| caps.composite_alpha_modes)
-    }
-
-    fn get_capabilities<A: HalApi>(
-        &self,
-        adapter: &Adapter<A>,
-    ) -> Result<SurfaceCapabilities, GetSurfaceSupportError> {
-        let suf = A::get_surface(self).ok_or(GetSurfaceSupportError::Unsupported)?;
-        profiling::scope!("surface_capabilities");
-        let caps = unsafe {
+        let suf = A::get_surface(self);
+        let mut caps = unsafe {
+            profiling::scope!("surface_capabilities");
             adapter
                 .raw
                 .adapter
                 .surface_capabilities(&suf.raw)
-                .ok_or(GetSurfaceSupportError::Unsupported)?
+                .ok_or(GetSurfaceSupportError::UnsupportedQueueFamily)?
         };
 
-        Ok(caps)
+        // TODO: maybe remove once we support texture view changing srgb-ness
+        caps.formats.sort_by_key(|f| !f.describe().srgb);
+
+        Ok(caps.formats)
+    }
+
+    pub fn get_supported_modes<A: HalApi>(
+        &self,
+        adapter: &Adapter<A>,
+    ) -> Result<Vec<wgt::PresentMode>, GetSurfaceSupportError> {
+        let suf = A::get_surface(self);
+        let caps = unsafe {
+            profiling::scope!("surface_capabilities");
+            adapter
+                .raw
+                .adapter
+                .surface_capabilities(&suf.raw)
+                .ok_or(GetSurfaceSupportError::UnsupportedQueueFamily)?
+        };
+
+        Ok(caps.present_modes)
     }
 }
 
@@ -212,15 +205,7 @@ impl<A: HalApi> Adapter<A> {
 
     pub fn is_surface_supported(&self, surface: &Surface) -> bool {
         let suf = A::get_surface(surface);
-
-        // If get_surface returns None, then the API does not advertise support for the surface.
-        //
-        // This could occur if the user is running their app on Wayland but Vulkan does not support
-        // VK_KHR_wayland_surface.
-        match suf {
-            Some(suf) => unsafe { self.raw.adapter.surface_capabilities(&suf.raw) }.is_some(),
-            None => false,
-        }
+        unsafe { self.raw.adapter.surface_capabilities(&suf.raw) }.is_some()
     }
 
     pub(crate) fn get_texture_format_features(
@@ -257,14 +242,14 @@ impl<A: HalApi> Adapter<A> {
             caps.contains(Tfc::STORAGE_READ_WRITE),
         );
 
+        // We are currently taking the filtering and blending together,
+        // but we may reconsider this in the future if there are formats
+        // in the wild for which these two capabilities do not match.
         flags.set(
             wgt::TextureFormatFeatureFlags::FILTERABLE,
-            caps.contains(Tfc::SAMPLED_LINEAR),
-        );
-
-        flags.set(
-            wgt::TextureFormatFeatureFlags::BLENDABLE,
-            caps.contains(Tfc::COLOR_ATTACHMENT_BLEND),
+            caps.contains(Tfc::SAMPLED_LINEAR)
+                && (!caps.contains(Tfc::COLOR_ATTACHMENT)
+                    || caps.contains(Tfc::COLOR_ATTACHMENT_BLEND)),
         );
 
         flags.set(
@@ -380,8 +365,8 @@ pub enum GetSurfaceSupportError {
     InvalidAdapter,
     #[error("invalid surface")]
     InvalidSurface,
-    #[error("surface is not supported by the adapter")]
-    Unsupported,
+    #[error("surface does not support the adapter's queue family")]
+    UnsupportedQueueFamily,
 }
 
 #[derive(Clone, Debug, Error)]
@@ -729,14 +714,9 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                         adapters.retain(|exposed| exposed.info.device_type == wgt::DeviceType::Cpu);
                     }
                     if let Some(surface) = compatible_surface {
-                        let surface = &A::get_surface(surface);
+                        let suf_raw = &A::get_surface(surface).raw;
                         adapters.retain(|exposed| unsafe {
-                            // If the surface does not exist for this backend, then the surface is not supported.
-                            surface.is_some()
-                                && exposed
-                                    .adapter
-                                    .surface_capabilities(&surface.unwrap().raw)
-                                    .is_some()
+                            exposed.adapter.surface_capabilities(suf_raw).is_some()
                         });
                     }
                     device_types.extend(adapters.iter().map(|ad| ad.info.device_type));
